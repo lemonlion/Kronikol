@@ -189,6 +189,71 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
         Assert.Contains("Copy box text", menuResult);
     }
 
+    // ── Client-side chunked with step delimiters + database/collections (real-world scenario) ──
+
+    [Fact]
+    public async Task Chunked_database_note_continuation_fragment_has_hover_rects()
+    {
+        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedDbContHovers.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+
+        // Wait for rendering (default is truncated — expand to trigger chunking)
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                return c && !c._noteRendering && !window._plantumlRendering && c.querySelector('svg');
+            }
+        """, null, new() { Timeout = 60000, PollingInterval = 200 });
+
+        // Expand to trigger chunkLargeNotes
+        await Page.Locator(".toolbar-row .details-radio-btn[data-state='expanded']").ClickAsync();
+
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                if (!c || c._noteRendering || window._plantumlRendering) return false;
+                var frags = c.querySelectorAll('.puml-fragment');
+                if (frags.length < 2) return false;
+                for (var i = 0; i < frags.length; i++) {
+                    if (!frags[i].querySelector('svg')) return false;
+                }
+                return true;
+            }
+        """, null, new() { Timeout = 120000, PollingInterval = 200 });
+
+        // Check continuation fragments for hover rects
+        var result = await Page.EvaluateAsync<string>("""
+            (() => {
+                var frags = document.querySelectorAll('.puml-fragment');
+                var info = [];
+                for (var i = 0; i < frags.length; i++) {
+                    var src = frags[i].getAttribute('data-plantuml') || '';
+                    var hasCont = src.indexOf('Continued From Previous Diagram') >= 0;
+                    var svg = frags[i].querySelector('svg');
+                    var noteGroups = svg ? window._findNoteGroups(svg).length : 0;
+                    var noteBlocks = window._parseNoteBlocks(src).length;
+                    var hoverRects = frags[i].querySelectorAll('.note-hover-rect').length;
+                    var toggleIcons = frags[i].querySelectorAll('.note-toggle-icon').length;
+                    info.push('frag' + i + ':cont=' + hasCont + ',groups=' + noteGroups
+                        + ',blocks=' + noteBlocks + ',hovers=' + hoverRects + ',icons=' + toggleIcons);
+                }
+                return info.join(' | ');
+            })()
+        """);
+
+        // Every fragment with note blocks should have hover rects
+        Assert.DoesNotContain("blocks=0,hovers=0", result);
+        // Specifically check the continuation fragment has hover rects
+        Assert.True(
+            result.Contains("cont=true") && !result.Contains("cont=true,groups=0"),
+            $"Continuation fragment should have note groups. Full: {result}");
+        Assert.False(
+            result.Contains("cont=true") && result.Split(" | ").Any(f => f.Contains("cont=true") && f.Contains("hovers=0")),
+            $"Continuation fragment should have hover rects. Full: {result}");
+    }
+
     // ── Client-side chunked (puml-fragment inside one container) ──
 
     private async Task RenderLargeNoteExpandedAndWaitForFragments(string fileName)

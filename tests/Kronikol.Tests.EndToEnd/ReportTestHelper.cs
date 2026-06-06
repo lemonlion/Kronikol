@@ -2347,4 +2347,124 @@ public static class ReportTestHelper
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }
+
+    /// <summary>
+    /// Generates a single-container report where a large note (>15k chars) triggers
+    /// client-side chunkLargeNotes splitting, with step delimiters and database/collections
+    /// participants matching the real-world Data Insights API scenario.
+    /// </summary>
+    public static string GenerateReportWithChunkedDatabaseNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+
+        var largeQuery = string.Concat(Enumerable.Repeat(
+            "        SAFE_DIVIDE((t.total_cards - t.total_cards_lag), t.total_cards_lag) AS unique_customers_change,\n", 200));
+
+        var queryParams = string.Join("\n",
+            new[] { "LocationId", "reportDate", "comparisonPeriod", "cadence", "ChartWeeksCount" }
+                .Select(name =>
+                    "    {\n" +
+                    $"      \"name\": \"{name}\",\n" +
+                    "      \"parameterType\": {\n" +
+                    "        \"type\": \"STRING\"\n" +
+                    "      },\n" +
+                    "      \"parameterValue\": {\n" +
+                    "        \"value\": \"test-value\"\n" +
+                    "      }\n" +
+                    "    },"));
+
+        var source = $$"""
+            @startuml
+            !pragma teoz true
+            <style>
+             .assertionNote {
+                 FontSize 11
+                 RoundCorner 5
+             }
+            </style>
+            skinparam wrapWidth 800
+            autonumber 1
+
+            actor "Caller" as caller
+            entity "Data Insights API" as dataInsightsAPI
+            collections "Redis" as redis
+            database "BigQuery" as bigQuery
+
+
+            hnote across <<stepDelimiter>> #black:<color:white>Given I use a location id "756152205962546"
+
+
+            hnote across <<stepDelimiter>> #black:<color:white>When I call the insights data endpoint
+
+            caller -[#438DD5]> dataInsightsAPI: POST /api/data-products/insights
+            note left
+            <color:gray>[traceparent=00-abc-def-00]
+
+            {
+              "context": {
+                "reportDate": "2025-11-10"
+              }
+            }
+            end note
+            dataInsightsAPI -[#F39C12]> redis: Get cache
+            redis -[#F39C12]-> dataInsightsAPI: OK
+            dataInsightsAPI -[#E74C3C]> bigQuery: Query /data
+            note left
+            {
+              "configuration": {
+                "query": {
+                  "parameterMode": "named",
+                  "query": "SELECT
+            {{largeQuery}}
+                  FROM `data.transactions` t;",
+                  "queryParameters": [
+            {{queryParams}}
+                  ],
+                  "useLegacySql": false
+                }
+              },
+              "jobReference": {
+                "jobId": "job_33daedff",
+                "projectId": "data-prod"
+              }
+            }
+            end note
+            bigQuery -[#E74C3C]-> dataInsightsAPI: OK
+            note right
+            <color:gray>[Date=Fri, 05 Jun 2026 15:23:43 GMT]
+
+            {
+              "status": {
+                "state": "DONE"
+              }
+            }
+            end note
+            dataInsightsAPI -[#438DD5]-> caller: OK
+            note right
+            {
+              "metrics": {},
+              "charts": {}
+            }
+            end note
+
+            hnote across <<stepDelimiter>> #black:<color:white>Then the response should be successful
+
+            @enduml
+            """;
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", source)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
 }
