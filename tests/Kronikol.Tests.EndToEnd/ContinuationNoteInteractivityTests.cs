@@ -80,6 +80,115 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
         """, null, new() { Timeout = 5000, PollingInterval = 200 });
     }
 
+    // ── Separate container with database/collections participants (real-world split) ──
+
+    private async Task SetupDatabaseContinuationDiagram(string fileName)
+    {
+        await Page.GotoAsync(GenerateDatabaseContinuationSplitReport(fileName));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await RenderAllDiagramsAndWait();
+        await WaitForNoteElements();
+    }
+
+    [Fact]
+    public async Task Database_continuation_note_has_hover_rects_and_toggle_icons()
+    {
+        await SetupDatabaseContinuationDiagram("DbContNoteHoverRects.html");
+
+        // puml-1 has the continuation diagram with database + collections participants
+        var result = await Page.EvaluateAsync<string>("""
+            (() => {
+                var c = document.getElementById('puml-1');
+                if (!c) return 'NO_CONTAINER';
+                var svg = c.querySelector('svg');
+                if (!svg) return 'NO_SVG';
+                var src = c._noteOriginalSource || c.getAttribute('data-plantuml') || '';
+                var noteBlocks = window._parseNoteBlocks(src).length;
+                var noteGroups = window._findNoteGroups(svg).length;
+                var hoverRects = c.querySelectorAll('.note-hover-rect').length;
+                var toggleIcons = c.querySelectorAll('.note-toggle-icon').length;
+                return 'blocks=' + noteBlocks + ',groups=' + noteGroups
+                    + ',hovers=' + hoverRects + ',icons=' + toggleIcons;
+            })()
+        """);
+
+        Assert.DoesNotContain("NO_", result);
+        // The continuation diagram has 2 notes — both should have hover rects
+        Assert.True(result.Contains("hovers=2") || result.Contains("hovers=3"),
+            $"Expected 2+ hover rects in continuation diagram with database participants. Got: {result}");
+    }
+
+    [Fact]
+    public async Task Database_continuation_note_hover_shows_buttons()
+    {
+        await SetupDatabaseContinuationDiagram("DbContNoteHoverButtons.html");
+
+        // Find and hover the first note hover rect in puml-1
+        var hoverRect = Page.Locator("#puml-1 .note-hover-rect").First;
+        await hoverRect.WaitForAsync(new() { Timeout = 10000 });
+        await hoverRect.ScrollIntoViewIfNeededAsync();
+
+        await hoverRect.EvaluateAsync(
+            "el => el.dispatchEvent(new MouseEvent('mouseenter', {bubbles:true}))");
+
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.getElementById('puml-1');
+                if (!c) return false;
+                var icons = c.querySelectorAll('.note-toggle-icon');
+                for (var i = 0; i < icons.length; i++) {
+                    if (icons[i].style.opacity !== '0') return true;
+                }
+                return false;
+            }
+        """, null, new() { Timeout = 5000, PollingInterval = 200 });
+    }
+
+    [Fact]
+    public async Task Database_continuation_note_has_copy_box_text_in_context_menu()
+    {
+        await SetupDatabaseContinuationDiagram("DbContNoteCopyBox.html");
+
+        var menuResult = await Page.EvaluateAsync<string>("""
+            (() => {
+                var c = document.getElementById('puml-1');
+                if (!c) return 'NO_CONTAINER';
+                var svg = c.querySelector('svg');
+                if (!svg) return 'NO_SVG';
+                var noteGroups = window._findNoteGroups(svg);
+                var targetEl = null;
+                for (var i = 0; i < noteGroups.length; i++) {
+                    if (noteGroups[i].texts.length > 0) {
+                        targetEl = noteGroups[i].texts[0];
+                    }
+                }
+                if (!targetEl) return 'NO_NOTE_TEXT';
+                targetEl.scrollIntoView ? targetEl.scrollIntoView() : null;
+                var rect = targetEl.getBoundingClientRect();
+                var evt = new MouseEvent('contextmenu', {
+                    bubbles: true, cancelable: true,
+                    clientX: rect.left + rect.width / 2,
+                    clientY: rect.top + rect.height / 2,
+                    pageX: rect.left + rect.width / 2 + window.scrollX,
+                    pageY: rect.top + rect.height / 2 + window.scrollY
+                });
+                targetEl.dispatchEvent(evt);
+
+                var menu = document.querySelector('.diagram-ctx-menu');
+                if (!menu) return 'NO_MENU';
+                var items = Array.from(menu.children)
+                    .map(function(it) { return it.textContent.trim(); })
+                    .filter(function(it) { return it; });
+                return 'ITEMS:' + items.join('|');
+            })()
+        """);
+
+        Assert.DoesNotContain("NO_", menuResult);
+        Assert.Contains("Copy box text", menuResult);
+    }
+
     // ── Client-side chunked (puml-fragment inside one container) ──
 
     private async Task RenderLargeNoteExpandedAndWaitForFragments(string fileName)

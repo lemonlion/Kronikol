@@ -2249,4 +2249,102 @@ public static class ReportTestHelper
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }
+
+    /// <summary>
+    /// Generates a report with a continuation diagram that includes database and collections
+    /// participant types. Reproduces a real-world scenario where the continuation diagram has
+    /// actor + entity + collections (Redis) + database (BigQuery) participants, which can cause
+    /// findNoteGroups to misidentify participant shapes (especially database cylinders) as notes.
+    /// </summary>
+    public static string GenerateReportWithDatabaseContinuationSplit(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+
+        var continuedContent = string.Join("\n",
+            Enumerable.Range(1, 80).Select(i =>
+                $"    \"field_{i}\": {{\"type\": \"string\", \"description\": \"Field {i} description\"}},"
+            ));
+
+        // Diagram 1: request with a large response note ending in "..Continued On Next Diagram.."
+        var source1 = $$"""
+            @startuml
+            !pragma teoz true
+            skinparam wrapWidth 800
+            autonumber 1
+            actor "Caller" as caller
+            entity "Data Insights API" as api
+            collections "Redis" as redis
+            database "BigQuery" as bq
+
+            caller -[#438DD5]> api : POST /api/query
+            note left
+            <color:gray>[traceparent=00-abc-def-00]
+            end note
+            api -[#E74C3C]> bq : Query /data
+            note left
+            SELECT * FROM dataset.table
+            end note
+            bq -[#E74C3C]-> api : OK
+            note right
+            <color:gray>[X-Correlation-Id=test-456]
+
+            {
+              "configuration": {
+                "jobType": "QUERY",
+                "query": {
+                  "query": "SELECT * FROM dataset.table WHERE date > '2026-01-01'",
+                  "queryParameters": [
+            {{continuedContent}}
+              ..Continued On Next Diagram..
+            end note
+            @enduml
+            """;
+
+        // Diagram 2: continuation note with database + collections participants
+        var source2 = $$"""
+            @startuml
+            !pragma teoz true
+            skinparam wrapWidth 800
+            autonumber 5
+            actor "Caller" as caller
+            entity "Data Insights API" as api
+            collections "Redis" as redis
+            database "BigQuery" as bq
+
+            bq -[#E74C3C]-> api : OK
+            note right
+            ..Continued From Previous Diagram..
+            {{continuedContent}}
+                }
+              }
+            }
+            end note
+            api -[#438DD5]-> caller : OK
+            note right
+            {
+              "configuration": {
+                "jobType": "QUERY",
+                "status": "DONE"
+              }
+            }
+            end note
+            @enduml
+            """;
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", source1),
+            new DiagramAsCode("t1", "", source2)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
 }
