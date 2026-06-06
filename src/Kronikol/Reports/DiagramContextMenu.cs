@@ -1273,7 +1273,10 @@ public static class DiagramContextMenu
                 closeMenu();
 
                 var diagramType = container.getAttribute('data-diagram-type');
-                var svg = getSvg(container);
+                // Find the SVG that contains the click target (handles puml-fragment splits).
+                // Use ownerSVGElement for SVG child elements, closest for HTML elements.
+                var svg = e.target.ownerSVGElement || (e.target.closest ? e.target.closest('svg') : null) || (e.target.tagName === 'svg' ? e.target : null);
+                if (!svg || !container.contains(svg)) svg = getSvg(container);
                 var isHtmlContent = !svg && (diagramType === 'flamechart' || diagramType === 'calltree');
 
                 // Need either an SVG or a recognized HTML content type
@@ -1318,12 +1321,54 @@ public static class DiagramContextMenu
                         if (found) { clickedNoteIdx = ni; break; }
                     }
                     if (clickedNoteIdx >= 0) {
-                        // Get full original content from the original source
+                        // Resolve the note source and global index.
+                        // For puml-fragment splits, use the fragment's source and
+                        // compute the global index offset from preceding fragments.
+                        var fragEl = svg.closest ? svg.closest('.puml-fragment') : null;
                         var origSrc = container._noteOriginalSource || getSource(container);
-                        var noteBlocks = window._parseNoteBlocks(origSrc);
+                        var noteSrc;
+                        if (fragEl && fragEl !== container) {
+                            noteSrc = fragEl.getAttribute('data-plantuml') || '';
+                        } else {
+                            noteSrc = origSrc;
+                        }
+                        var noteBlocks = window._parseNoteBlocks(noteSrc);
+
+                        // When findNoteGroups returns more SVG groups than source
+                        // note blocks (participant shapes misidentified as notes),
+                        // match the clicked group to the correct block by content.
+                        var resolvedBlockIdx = clickedNoteIdx;
+                        if (noteGroups.length > noteBlocks.length && noteBlocks.length > 0) {
+                            var grpText = noteGroups[clickedNoteIdx].texts.map(function(t) {
+                                return t.textContent.trim();
+                            }).join(' ').trim();
+                            resolvedBlockIdx = -1;
+                            for (var bi = 0; bi < noteBlocks.length; bi++) {
+                                var blkText = noteBlocks[bi].contentLines.map(function(l) {
+                                    return l.replace(/<[^>]*>/g, '').trim();
+                                }).filter(function(l) { return l; }).join(' ').trim();
+                                var blkStart = blkText.substring(0, Math.min(30, blkText.length));
+                                if (blkStart && grpText.indexOf(blkStart) >= 0) {
+                                    resolvedBlockIdx = bi;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Compute global note index for _noteSteps lookup
+                        var globalNoteIdx = resolvedBlockIdx >= 0 ? resolvedBlockIdx : clickedNoteIdx;
+                        if (fragEl && fragEl !== container) {
+                            var fragIdx = parseInt(fragEl.dataset.fragment || '0', 10);
+                            var siblingFrags = container.querySelectorAll('.puml-fragment');
+                            for (var ofi = 0; ofi < fragIdx && ofi < siblingFrags.length; ofi++) {
+                                var sibSrc = siblingFrags[ofi].getAttribute('data-plantuml');
+                                if (sibSrc) globalNoteIdx += window._parseNoteBlocks(sibSrc).length;
+                            }
+                        }
+
                         var noteText;
-                        if (noteBlocks[clickedNoteIdx]) {
-                            noteText = noteBlocks[clickedNoteIdx].contentLines.map(function(l) {
+                        if (resolvedBlockIdx >= 0 && noteBlocks[resolvedBlockIdx]) {
+                            noteText = noteBlocks[resolvedBlockIdx].contentLines.map(function(l) {
                                 return l.replace(/^\s*<color:gray>/, '');
                             }).join('\n').trim();
                         } else {
@@ -1331,18 +1376,18 @@ public static class DiagramContextMenu
                         }
 
                         // Check if note is truncated or collapsed
-                        var noteStep = container._noteSteps && container._noteSteps[clickedNoteIdx];
+                        var noteStep = container._noteSteps && container._noteSteps[globalNoteIdx];
                         var isNotExpanded = noteStep !== undefined && noteStep !== 2;
                         _fullNoteText = noteText;
                         _noteIsNotExpanded = isNotExpanded;
 
                         if (isNotExpanded) {
-                            // Get current visible text from current source
-                            var currentSrc = getSource(container);
+                            var currentSrc = fragEl ? (fragEl.getAttribute('data-plantuml') || '') : getSource(container);
                             var currentNoteBlocks = window._parseNoteBlocks(currentSrc);
+                            var curBlockIdx = resolvedBlockIdx >= 0 ? resolvedBlockIdx : clickedNoteIdx;
                             var currentText;
-                            if (currentNoteBlocks[clickedNoteIdx]) {
-                                currentText = currentNoteBlocks[clickedNoteIdx].contentLines.map(function(l) {
+                            if (currentNoteBlocks[curBlockIdx]) {
+                                currentText = currentNoteBlocks[curBlockIdx].contentLines.map(function(l) {
                                     return l.replace(/^\s*<color:gray>/, '');
                                 }).join('\n').trim();
                             } else {

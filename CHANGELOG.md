@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.28] - 2026-06-06
+
+### Fixed
+- **Context menu "Copy box text" now works on continuation notes in client-side-chunked diagrams** — When a large note (>15,000 chars) was expanded and split into multiple diagram fragments by `chunkLargeNotes`, right-clicking on the continuation note ("..Continued From Previous Diagram..") in a later fragment showed the context menu without the "Copy box text" option. The handler was searching for notes only in the first fragment's SVG. Now resolves the correct SVG via `ownerSVGElement` and matches the clicked note group to its source block even when `findNoteGroups` returns extra participant-shape candidates.
+
 ## [3.0.27] - 2026-05-24
 
 ### Changed
