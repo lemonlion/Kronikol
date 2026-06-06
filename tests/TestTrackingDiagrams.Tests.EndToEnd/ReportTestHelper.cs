@@ -566,7 +566,7 @@ public static class ReportTestHelper
         var longContent1 = string.Join("\n",
             Enumerable.Range(1, 50).Select(i => $"  \"field{i}\": \"value {i}\","));
         var longContent2 = string.Join("\n",
-            new[] { "..Continued From Previous Diagram.." }.Concat(
+            new[] { "<color:gray>[Continued From Previous Diagram]</color>" }.Concat(
                 Enumerable.Range(1, 50).Select(i => $"  \"continued_{i}\": \"data {i}\",")));
 
         var source1 = $$"""
@@ -586,7 +586,7 @@ public static class ReportTestHelper
 
             {
             {{longContent1}}
-            ..Continued On Next Diagram..
+            <color:gray>[Continued On Next Diagram]</color>
             end note
             @enduml
             """;
@@ -627,7 +627,7 @@ public static class ReportTestHelper
     /// Generates a report with THREE diagram containers for ONE scenario, matching a real-world
     /// split diagram with a very large response body (like an AsyncAPI spec).
     /// Structure: diagram 1 has no notes, diagram 2 has 2 notes (short header + long body),
-    /// diagram 3 has 1 note (continuation with "..Continued From Previous Diagram..").
+    /// diagram 3 has 1 note (continuation with "<color:gray>[Continued From Previous Diagram]</color>").
     /// </summary>
     public static string GenerateReportWithThreeDiagramSplit(string tempDir, string outputDir, string fileName)
     {
@@ -674,12 +674,12 @@ public static class ReportTestHelper
               "components": {
                 "schemas": {
             {{longJsonContent}}
-              ..Continued On Next Diagram..
+              <color:gray>[Continued On Next Diagram]</color>
             end note
             @enduml
             """;
 
-        // Diagram 3: continuation note with "..Continued From Previous Diagram.."
+        // Diagram 3: continuation note with "<color:gray>[Continued From Previous Diagram]</color>"
         var continuedContent = string.Join("\n",
             Enumerable.Range(201, 100).Select(i =>
                 $"    \"continued_{i}\": {{\"type\": \"integer\", \"description\": \"Continued field {i}\"}},"
@@ -693,7 +693,7 @@ public static class ReportTestHelper
             entity "Service" as svc
             svc -[#438DD5]-> caller: OK
             note right
-            ..Continued From Previous Diagram..
+            <color:gray>[Continued From Previous Diagram]</color>
             {{continuedContent}}
                 }
               }

@@ -1042,12 +1042,12 @@ public class PlantUmlCreatorTests
         var diagrams = results.Single().PlantUmls.ToList();
 
         var firstDiagram = diagrams.First().PlainText;
-        Assert.Contains("..Continued On Next Diagram..", firstDiagram);
+        Assert.Contains("Continued On Next Diagram", firstDiagram);
 
         if (diagrams.Count > 1)
         {
             var secondDiagram = diagrams[1].PlainText;
-            Assert.Contains("..Continued From Previous Diagram..", secondDiagram);
+            Assert.Contains("Continued From Previous Diagram", secondDiagram);
         }
     }
 
@@ -3383,8 +3383,8 @@ public class PlantUmlCreatorTests
         // Should be exactly 1 diagram (no chunking split)
         Assert.Single(diagrams);
         // Should NOT contain continuation markers
-        Assert.DoesNotContain("..Continued On Next Diagram..", diagrams[0].PlainText);
-        Assert.DoesNotContain("..Continued From Previous Diagram..", diagrams[0].PlainText);
+        Assert.DoesNotContain("Continued On Next Diagram", diagrams[0].PlainText);
+        Assert.DoesNotContain("Continued From Previous Diagram", diagrams[0].PlainText);
     }
 
     [Fact]
@@ -3421,6 +3421,6 @@ public class PlantUmlCreatorTests
         var diagrams = results.Single().PlantUmls.ToList();
 
         Assert.True(diagrams.Count >= 2, $"Expected chunking to produce multiple diagrams but got {diagrams.Count}");
-        Assert.Contains("..Continued On Next Diagram..", diagrams[0].PlainText);
+        Assert.Contains("Continued On Next Diagram", diagrams[0].PlainText);
     }
 }

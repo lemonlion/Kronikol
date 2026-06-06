@@ -6,10 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
-## [3.0.28] - 2026-06-06
+## [3.0.29] - 2026-06-06
 
 ### Fixed
-- **Context menu "Copy box text" now works on continuation notes in client-side-chunked diagrams** — When a large note (>15,000 chars) was expanded and split into multiple diagram fragments by `chunkLargeNotes`, right-clicking on the continuation note ("..Continued From Previous Diagram..") in a later fragment showed the context menu without the "Copy box text" option. The handler was searching for notes only in the first fragment's SVG. Now resolves the correct SVG via `ownerSVGElement` and matches the clicked note group to its source block even when `findNoteGroups` returns extra participant-shape candidates.
+- **Hover buttons and context menu now work on continuation notes in chunked diagram fragments** — When a large note (>15,000 chars) was split into multiple diagram fragments by `chunkLargeNotes`, the continuation notes ("..Continued From Previous Diagram..") had no hover buttons (minus, up/down arrows) and no "Copy box text" in the right-click menu. Two root causes fixed:
+  1. **Hover buttons missing**: The `..text..` PlantUML Creole separator syntax used for continuation markers created extra SVG path elements that broke `findNoteGroups` detection. Changed to `<color:gray>[text]</color>` which renders as plain gray text without disrupting the SVG note structure.
+  2. **Context menu "Copy box text" missing**: The handler searched for notes only in the first fragment's SVG via `getSvg(container)`. Now resolves the correct SVG via `ownerSVGElement` and matches clicked note groups to source blocks even when `findNoteGroups` returns extra participant-shape candidates.
 
 ## [3.0.27] - 2026-05-24
 
