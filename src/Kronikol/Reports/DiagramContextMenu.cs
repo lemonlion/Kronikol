@@ -655,8 +655,8 @@ public static class DiagramContextMenu
                                 var chunks = chunkString(noteContent, maxChars);
                                 for (var ci = 0; ci < chunks.length; ci++) {
                                     var chunk = chunks[ci];
-                                    if (ci > 0) chunk = '<color:gray>[Continued From Previous Diagram]</color>\n' + chunk;
-                                    if (ci < chunks.length - 1) chunk = chunk + '\n<color:gray>[Continued On Next Diagram]</color>';
+                                    if (ci > 0) chunk = '[Continued From Previous Diagram]\n' + chunk;
+                                    if (ci < chunks.length - 1) chunk = chunk + '\n[Continued On Next Diagram]';
                                     // For continuation chunks, anchor note to participant so
                                     // PlantUML renders it even without a preceding message
                                     if (ci > 0 && anchorParticipant) {
@@ -2412,20 +2412,27 @@ public static class DiagramContextMenu
             function hasNoteFoldTriangle(paths) {
                 if (paths.length < 2) return false;
                 try {
-                    var bodyBB = paths[0].getBBox();
-                    if (bodyBB.width <= 0 || bodyBB.height <= 0) return false;
-                    for (var pi = 1; pi < paths.length; pi++) {
+                    // Find the largest path as the body reference (not always paths[0]
+                    // when PlantUML adds extra decorative paths for large/anchored notes)
+                    var bodyBB = null;
+                    var bodyIdx = -1;
+                    for (var bi = 0; bi < paths.length; bi++) {
+                        var bb = paths[bi].getBBox();
+                        if (bb.width <= 0 || bb.height <= 0) continue;
+                        if (!bodyBB || (bb.width * bb.height) > (bodyBB.width * bodyBB.height)) {
+                            bodyBB = bb;
+                            bodyIdx = bi;
+                        }
+                    }
+                    if (!bodyBB) return false;
+                    for (var pi = 0; pi < paths.length; pi++) {
+                        if (pi === bodyIdx) continue;
                         var fBB = paths[pi].getBBox();
                         if (fBB.width <= 0 || fBB.height <= 0) continue;
-                        // Fold is small: either < 50% of body in both dimensions,
-                        // or < 25px absolute (handles tiny collapsed notes where
-                        // the fold is a large % of the body)
                         var smallEnough = (fBB.width < bodyBB.width * 0.5 && fBB.height < bodyBB.height * 0.5)
                             || (fBB.width < 25 && fBB.height < 25);
                         if (!smallEnough) continue;
-                        // Must not be body-sized (would be a duplicate/shadow path)
                         if (fBB.width > bodyBB.width * 0.9 && fBB.height > bodyBB.height * 0.9) continue;
-                        // Fold sits at a corner of the body (shares edges on two sides)
                         var tol = 3;
                         var atRight = Math.abs((fBB.x + fBB.width) - (bodyBB.x + bodyBB.width)) < tol;
                         var atLeft = Math.abs(fBB.x - bodyBB.x) < tol;
