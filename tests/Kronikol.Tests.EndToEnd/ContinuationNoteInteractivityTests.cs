@@ -254,6 +254,66 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
             $"Continuation fragment should have hover rects. Full: {result}");
     }
 
+    /// <summary>
+    /// Regression test: findNoteGroups must not merge consecutive paths with
+    /// different fill colors into one group. When a transparent path (#00000000)
+    /// sits between two notes with different fills (#e2e2f0 and #feffdd), they
+    /// must be detected as separate groups with correct bounding boxes.
+    /// </summary>
+    [Fact]
+    public async Task Chunked_continuation_note_not_merged_with_adjacent_paths()
+    {
+        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedNoMerge.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                return c && !c._noteRendering && !window._plantumlRendering && c.querySelector('svg');
+            }
+        """, null, new() { Timeout = 60000, PollingInterval = 200 });
+
+        await Page.Locator(".toolbar-row .details-radio-btn[data-state='expanded']").ClickAsync();
+
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                if (!c || c._noteRendering || window._plantumlRendering) return false;
+                var frags = c.querySelectorAll('.puml-fragment');
+                if (frags.length < 2) return false;
+                for (var i = 0; i < frags.length; i++) {
+                    if (!frags[i].querySelector('svg')) return false;
+                }
+                return true;
+            }
+        """, null, new() { Timeout = 120000, PollingInterval = 200 });
+
+        // No note group should have width > 800px (a merged group spanning
+        // multiple notes would be much wider than any single note)
+        var result = await Page.EvaluateAsync<string>("""
+            (() => {
+                var frags = document.querySelectorAll('.puml-fragment');
+                var failures = [];
+                for (var fi = 0; fi < frags.length; fi++) {
+                    var svg = frags[fi].querySelector('svg');
+                    if (!svg) continue;
+                    var groups = window._findNoteGroups(svg);
+                    for (var gi = 0; gi < groups.length; gi++) {
+                        var bb = window._getNoteBBox(groups[gi]);
+                        if (bb.width > 800 && bb.height > 800) {
+                            failures.push('frag[' + fi + '] g[' + gi + ']: merged group ' + bb.width.toFixed(0) + 'x' + bb.height.toFixed(0));
+                        }
+                    }
+                }
+                return failures.length > 0 ? failures.join('; ') : 'OK';
+            })()
+        """);
+
+        Assert.True(result == "OK", $"Note groups merged across different notes: {result}");
+    }
+
     // ── Client-side chunked (puml-fragment inside one container) ──
 
     private async Task RenderLargeNoteExpandedAndWaitForFragments(string fileName)

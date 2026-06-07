@@ -2457,7 +2457,13 @@ public static class DiagramContextMenu
                     if (children[ci].tagName === 'g') { ci++; continue; }
                     if (children[ci].tagName === 'path' && hasNoteFill(children[ci])) {
                         var grp = { paths: [], texts: [] };
+                        var startFill = (children[ci].getAttribute('fill') || '').toLowerCase();
                         while (ci < children.length && children[ci].tagName === 'path') {
+                            var pFill = (children[ci].getAttribute('fill') || '').toLowerCase();
+                            var sameFill = pFill === startFill;
+                            var transparent = !pFill || pFill === 'none' || pFill === 'transparent'
+                                || pFill === '#00000000' || /^#[0-9a-f]{6}00$/.test(pFill);
+                            if (!sameFill && !transparent && hasNoteFill(children[ci])) break;
                             grp.paths.push(children[ci]);
                             ci++;
                         }

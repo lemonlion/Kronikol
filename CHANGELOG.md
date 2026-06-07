@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.35] - 2026-06-07
+
+### Fixed
+- **`findNoteGroups` no longer merges adjacent notes with different fill colors** — When a transparent path (`fill=#00000000`) appeared between two notes with different fills (e.g. `#e2e2f0` and `#feffdd`), the path collection loop merged them into one giant group. The hover buttons were positioned on the merged bounding box instead of the individual note. Now stops collecting paths when the fill color changes to a different visible fill, keeping each note as its own group with correctly positioned buttons.
+
 ## [3.0.34] - 2026-06-07
 
 ### Fixed
