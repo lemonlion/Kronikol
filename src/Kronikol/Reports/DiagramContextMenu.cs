@@ -2461,21 +2461,30 @@ public static class DiagramContextMenu
                             grp.paths.push(children[ci]);
                             ci++;
                         }
-                        // Compute note bounding box from the collected paths
+                        // Compute note bounding box as the union of ALL collected paths
                         var noteBox = null;
-                        try {
-                            var bb = grp.paths[0].getBBox();
-                            noteBox = { x: bb.x, y: bb.y, right: bb.x + bb.width, bottom: bb.y + bb.height };
-                        } catch(e) {}
-                        // Collect text elements. PlantUML Creole separator markup
-                        // (e.g. ..text..) inserts <line> elements inside notes
-                        // between paths and texts. Skip line/rect/circle elements
-                        // that are visually inside the note bounding box.
+                        for (var nbi = 0; nbi < grp.paths.length; nbi++) {
+                            try {
+                                var bb = grp.paths[nbi].getBBox();
+                                if (bb.width <= 0 && bb.height <= 0) continue;
+                                if (!noteBox) {
+                                    noteBox = { x: bb.x, y: bb.y, right: bb.x + bb.width, bottom: bb.y + bb.height };
+                                } else {
+                                    if (bb.x < noteBox.x) noteBox.x = bb.x;
+                                    if (bb.y < noteBox.y) noteBox.y = bb.y;
+                                    if (bb.x + bb.width > noteBox.right) noteBox.right = bb.x + bb.width;
+                                    if (bb.y + bb.height > noteBox.bottom) noteBox.bottom = bb.y + bb.height;
+                                }
+                            } catch(e) {}
+                        }
+                        // Collect text elements. PlantUML Creole markup (e.g. ..text..
+                        // separators) inserts <line>, <path>, <rect>, <circle> elements
+                        // inside notes between paths and texts. Skip any non-text
+                        // element that is visually inside the note bounding box.
                         while (ci < children.length) {
                             var tag = children[ci].tagName;
                             if (tag === 'text') { grp.texts.push(children[ci]); ci++; }
-                            else if (noteBox && (tag === 'line' || tag === 'rect' || tag === 'circle')) {
-                                // Only skip if the element is inside the note bounding box
+                            else if (noteBox && tag !== 'g') {
                                 try {
                                     var ebb = children[ci].getBBox();
                                     if (ebb.x >= noteBox.x - 2 && ebb.x + ebb.width <= noteBox.right + 2

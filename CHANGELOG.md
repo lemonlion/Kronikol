@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.32] - 2026-06-07
+
+### Fixed
+- **Hover buttons now appear on continuation notes with `..text..` Creole separators** — `findNoteGroups` computed the note bounding box from only the first path element. For notes containing PlantUML Creole `..text..` separators (like `..Continued From Previous Diagram..`), the first path could be a tiny decorative element, causing all subsequent text and line elements to be rejected as "outside the note." The continuation note was invisible to hover button detection even though it rendered correctly. Fixed by computing the note bounding box as the union of ALL collected path elements.
+
 ## [3.0.31] - 2026-06-07
 
 ### Fixed
