@@ -6,11 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.31] - 2026-06-07
+
+### Fixed
+- **Hover buttons now work on all continuation notes including large ones** — Reverted continuation markers back to the original `..Continued From Previous Diagram..` Creole separator syntax (v3.0.29-v3.0.30 used `<color:gray>[...]</color>` and `[...]` which triggered PlantUML Creole link/color rendering that also broke SVG note detection). The underlying `hasNoteFoldTriangle` fix from v3.0.30 now correctly handles notes with 4+ SVG path elements (created by the Creole separator rendering) by using the largest path as the body reference instead of assuming `paths[0]`.
+
 ## [3.0.30] - 2026-06-06
 
 ### Fixed
 - **`findNoteGroups` now detects large notes with extra SVG paths** — Notes with 4+ path elements (common for large anchored notes like `note left of X` with 100+ lines) were not detected as notes because `hasNoteFoldTriangle` assumed the first path was the body. Now uses the largest path as the body reference, correctly identifying the fold triangle regardless of path order.
-- **Continuation markers no longer disappear when headers are hidden** — Changed continuation markers from `<color:gray>[...]</color>` to plain `[...]` so they remain visible when the "Hide Headers" toggle strips gray header lines.
 
 ## [3.0.29] - 2026-06-06
 

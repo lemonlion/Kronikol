@@ -655,8 +655,8 @@ public static class DiagramContextMenu
                                 var chunks = chunkString(noteContent, maxChars);
                                 for (var ci = 0; ci < chunks.length; ci++) {
                                     var chunk = chunks[ci];
-                                    if (ci > 0) chunk = '[Continued From Previous Diagram]\n' + chunk;
-                                    if (ci < chunks.length - 1) chunk = chunk + '\n[Continued On Next Diagram]';
+                                    if (ci > 0) chunk = '..Continued From Previous Diagram..\n' + chunk;
+                                    if (ci < chunks.length - 1) chunk = chunk + '\n..Continued On Next Diagram..';
                                     // For continuation chunks, anchor note to participant so
                                     // PlantUML renders it even without a preceding message
                                     if (ci > 0 && anchorParticipant) {

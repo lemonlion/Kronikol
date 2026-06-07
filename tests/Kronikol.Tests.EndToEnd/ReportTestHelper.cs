@@ -566,7 +566,7 @@ public static class ReportTestHelper
         var longContent1 = string.Join("\n",
             Enumerable.Range(1, 50).Select(i => $"  \"field{i}\": \"value {i}\","));
         var longContent2 = string.Join("\n",
-            new[] { "[Continued From Previous Diagram]" }.Concat(
+            new[] { "..Continued From Previous Diagram.." }.Concat(
                 Enumerable.Range(1, 50).Select(i => $"  \"continued_{i}\": \"data {i}\",")));
 
         var source1 = $$"""
@@ -586,7 +586,7 @@ public static class ReportTestHelper
 
             {
             {{longContent1}}
-            [Continued On Next Diagram]
+            ..Continued On Next Diagram..
             end note
             @enduml
             """;
@@ -627,7 +627,7 @@ public static class ReportTestHelper
     /// Generates a report with THREE diagram containers for ONE scenario, matching a real-world
     /// split diagram with a very large response body (like an AsyncAPI spec).
     /// Structure: diagram 1 has no notes, diagram 2 has 2 notes (short header + long body),
-    /// diagram 3 has 1 note (continuation with "[Continued From Previous Diagram]").
+    /// diagram 3 has 1 note (continuation with "..Continued From Previous Diagram..").
     /// </summary>
     public static string GenerateReportWithThreeDiagramSplit(string tempDir, string outputDir, string fileName)
     {
@@ -674,12 +674,12 @@ public static class ReportTestHelper
               "components": {
                 "schemas": {
             {{longJsonContent}}
-              [Continued On Next Diagram]
+              ..Continued On Next Diagram..
             end note
             @enduml
             """;
 
-        // Diagram 3: continuation note with "[Continued From Previous Diagram]"
+        // Diagram 3: continuation note with "..Continued From Previous Diagram.."
         var continuedContent = string.Join("\n",
             Enumerable.Range(201, 100).Select(i =>
                 $"    \"continued_{i}\": {{\"type\": \"integer\", \"description\": \"Continued field {i}\"}},"
@@ -693,7 +693,7 @@ public static class ReportTestHelper
             entity "Service" as svc
             svc -[#438DD5]-> caller: OK
             note right
-            [Continued From Previous Diagram]
+            ..Continued From Previous Diagram..
             {{continuedContent}}
                 }
               }
@@ -2265,7 +2265,7 @@ public static class ReportTestHelper
                 $"    \"field_{i}\": {{\"type\": \"string\", \"description\": \"Field {i} description\"}},"
             ));
 
-        // Diagram 1: request with a large response note ending in "[Continued On Next Diagram]"
+        // Diagram 1: request with a large response note ending in "..Continued On Next Diagram.."
         var source1 = $$"""
             @startuml
             !pragma teoz true
@@ -2295,7 +2295,7 @@ public static class ReportTestHelper
                   "query": "SELECT * FROM dataset.table WHERE date > '2026-01-01'",
                   "queryParameters": [
             {{continuedContent}}
-              [Continued On Next Diagram]
+              ..Continued On Next Diagram..
             end note
             @enduml
             """;
@@ -2313,7 +2313,7 @@ public static class ReportTestHelper
 
             bq -[#E74C3C]-> api : OK
             note right
-            [Continued From Previous Diagram]
+            ..Continued From Previous Diagram..
             {{continuedContent}}
                 }
               }

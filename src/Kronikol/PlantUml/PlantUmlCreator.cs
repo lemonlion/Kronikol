@@ -289,8 +289,8 @@ public static partial class PlantUmlCreator
         int truncateNotesAfterLines = 0,
         bool clientSideSplitting = false)
     {
-        var prefix = "[Continued From Previous Diagram]" + Environment.NewLine;
-        var suffix = Environment.NewLine + "[Continued On Next Diagram]";
+        var prefix = "..Continued From Previous Diagram.." + Environment.NewLine;
+        var suffix = Environment.NewLine + "..Continued On Next Diagram..";
         var maxResponseLength = MaxResponseNoteChunkLength + suffix.Length + prefix.Length;
 
         if (!clientSideSplitting && noteContent.Length > maxResponseLength)

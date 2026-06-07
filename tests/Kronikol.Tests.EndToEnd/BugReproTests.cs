@@ -8,7 +8,7 @@ public class BugReproTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Chunked_continuation_fragment_all_notes_have_hover_rects()
     {
-        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedDbContFragHover.html"));
+        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedDbContAllHovers.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -35,68 +35,108 @@ public class BugReproTests : DiagramNotePlaywrightBase
             }
         """, null, new() { Timeout = 120000, PollingInterval = 200 });
 
+        // Every continuation fragment must have hover rects for ALL its note blocks
         var result = await Page.EvaluateAsync<string>("""
             (() => {
                 var failures = [];
                 var frags = document.querySelectorAll('.puml-fragment');
                 for (var i = 0; i < frags.length; i++) {
                     var src = frags[i].getAttribute('data-plantuml') || '';
-                    var blocks = window._parseNoteBlocks(src).length;
+                    var blocks = window._parseNoteBlocks(src);
                     var svg = frags[i].querySelector('svg');
-                    var groups = svg ? window._findNoteGroups(svg).length : 0;
+                    var groups = svg ? window._findNoteGroups(svg) : [];
                     var hovers = frags[i].querySelectorAll('.note-hover-rect').length;
-                    if (blocks > 0 && hovers < blocks) {
-                        var bs = window._parseNoteBlocks(src);
-                        var blockInfo = bs.map(function(b, bi) {
+                    if (blocks.length > 0 && hovers < blocks.length) {
+                        var blockInfo = blocks.map(function(b, bi) {
                             return 'block[' + bi + ']: lines=' + b.contentLines.length
-                                + ' first="' + b.contentLines[0].substring(0, 60) + '"';
+                                + ' "' + b.contentLines[0].substring(0, 50) + '"';
                         });
-                        var gs = svg ? window._findNoteGroups(svg) : [];
-                        var groupInfo = gs.map(function(g, gi) {
-                            var txt = g.texts.slice(0, 2).map(function(t) { return t.textContent; }).join(' ').substring(0, 60);
-                            var fill = g.paths[0] ? g.paths[0].getAttribute('fill') : 'none';
-                            return 'group[' + gi + ']: fill=' + fill + ' paths=' + g.paths.length + ' texts=' + g.texts.length + ' "' + txt + '"';
+                        var groupInfo = groups.map(function(g, gi) {
+                            return 'group[' + gi + ']: paths=' + g.paths.length + ' texts=' + g.texts.length;
                         });
-                        // Also count raw candidates before fold filtering
-                        var mainG = svg.querySelector('g');
-                        var children = mainG ? Array.from(mainG.children) : [];
-                        var rawCandidates = [];
-                        var ci2 = 0;
-                        while (ci2 < children.length) {
-                            if (children[ci2].tagName === 'g') { ci2++; continue; }
-                            if (children[ci2].tagName === 'path') {
-                                var fill2 = (children[ci2].getAttribute('fill') || '').toLowerCase().trim();
-                                var hasFill = fill2 && fill2 !== 'none' && fill2 !== 'transparent'
-                                    && fill2 !== '#000000' && fill2 !== '#000' && fill2 !== 'black';
-                                if (hasFill) {
-                                    var candPaths = [];
-                                    while (ci2 < children.length && children[ci2].tagName === 'path') {
-                                        candPaths.push(children[ci2]); ci2++;
-                                    }
-                                    var candTexts = 0;
-                                    while (ci2 < children.length && (children[ci2].tagName === 'text' || children[ci2].tagName === 'line' || children[ci2].tagName === 'rect' || children[ci2].tagName === 'circle')) {
-                                        if (children[ci2].tagName === 'text') candTexts++;
-                                        ci2++;
-                                    }
-                                    if (candPaths.length > 0 && candTexts > 0) {
-                                        rawCandidates.push('cand:fill=' + fill2 + ',paths=' + candPaths.length + ',texts=' + candTexts);
-                                    }
-                                } else { ci2++; }
-                            } else { ci2++; }
-                        }
-
-                        failures.push('frag[' + i + ']: blocks=' + blocks + ' groups=' + groups + ' hovers=' + hovers
-                            + ' rawCandidates=' + rawCandidates.length
+                        failures.push('frag[' + i + ']: blocks=' + blocks.length
+                            + ' groups=' + groups.length + ' hovers=' + hovers
                             + '\n  ' + blockInfo.join('\n  ')
-                            + '\n  ' + groupInfo.join('\n  ')
-                            + '\n  ' + rawCandidates.join('\n  '));
+                            + '\n  ' + groupInfo.join('\n  '));
                     }
                 }
-                return failures.length > 0 ? failures.join('; ') : 'OK';
+                return failures.length > 0 ? failures.join('\n') : 'OK';
             })()
         """);
 
         Assert.True(result == "OK",
-            $"Some fragments have fewer hover rects than note blocks: {result}");
+            $"Some fragments have fewer hover rects than note blocks:\n{result}");
+    }
+
+    [Fact]
+    public async Task Chunked_continuation_note_hover_on_path_shows_buttons()
+    {
+        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedDbContPathHover.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                return c && !c._noteRendering && !window._plantumlRendering && c.querySelector('svg');
+            }
+        """, null, new() { Timeout = 60000, PollingInterval = 200 });
+
+        await Page.Locator(".toolbar-row .details-radio-btn[data-state='expanded']").ClickAsync();
+
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                if (!c || c._noteRendering || window._plantumlRendering) return false;
+                var frags = c.querySelectorAll('.puml-fragment');
+                if (frags.length < 2) return false;
+                for (var i = 0; i < frags.length; i++) {
+                    if (!frags[i].querySelector('svg')) return false;
+                }
+                return true;
+            }
+        """, null, new() { Timeout = 120000, PollingInterval = 200 });
+
+        // Hover on the continuation note's path and check buttons appear
+        var hoverResult = await Page.EvaluateAsync<string>("""
+            (() => {
+                var frags = document.querySelectorAll('.puml-fragment');
+                for (var fi = 0; fi < frags.length; fi++) {
+                    var src = frags[fi].getAttribute('data-plantuml') || '';
+                    if (src.indexOf('Continued From Previous Diagram') < 0) continue;
+                    var svg = frags[fi].querySelector('svg');
+                    if (!svg) return 'NO_SVG';
+                    var groups = window._findNoteGroups(svg);
+                    if (groups.length === 0) return 'NO_GROUPS(blocks=' + window._parseNoteBlocks(src).length + ')';
+
+                    // Dispatch mouseenter on the first group's largest path
+                    var bestPath = groups[0].paths[0];
+                    var bestArea = 0;
+                    for (var pi = 0; pi < groups[0].paths.length; pi++) {
+                        try {
+                            var bb = groups[0].paths[pi].getBBox();
+                            var area = bb.width * bb.height;
+                            if (area > bestArea) { bestArea = area; bestPath = groups[0].paths[pi]; }
+                        } catch(e) {}
+                    }
+                    bestPath.scrollIntoView();
+                    bestPath.dispatchEvent(new MouseEvent('mouseenter', {bubbles:true}));
+
+                    var icons = frags[fi].querySelectorAll('.note-toggle-icon');
+                    var visible = 0;
+                    for (var i = 0; i < icons.length; i++) {
+                        if (icons[i].style.opacity !== '0') visible++;
+                    }
+                    return 'groups=' + groups.length + ' icons=' + icons.length + ' visible=' + visible;
+                }
+                return 'NO_CONTINUATION_FRAGMENT';
+            })()
+        """);
+
+        Assert.False(hoverResult.Contains("visible=0"),
+            $"Hover on continuation note path shows no buttons: {hoverResult}");
+        Assert.False(hoverResult.StartsWith("NO_"),
+            $"Setup issue: {hoverResult}");
     }
 }
