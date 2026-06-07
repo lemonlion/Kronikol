@@ -2873,16 +2873,25 @@ public static class DiagramContextMenu
                 if (fragNoteBlocks.length === 0) return;
                 if (!owner._noteSteps) owner._noteSteps = {};
 
-                // For fragments, compute the global note index offset based on which
-                // notes from the full source appear before this fragment
+                // For fragments, compute the global note index offset and mapping.
+                // When chunkLargeNotes splits a note across fragments, the continuation
+                // block in later fragments maps to the SAME original note (index 0),
+                // not to the next sequential index.
                 var noteIndexOffset = 0;
+                var fragContinuationMap = null;
                 if (container.classList.contains('puml-fragment')) {
                     var fragIdx = parseInt(container.dataset.fragment || '0', 10);
-                    // Sum up notes in all preceding fragments
                     var siblingFrags = owner.querySelectorAll('.puml-fragment');
                     for (var fi = 0; fi < fragIdx && fi < siblingFrags.length; fi++) {
                         var sibSource = siblingFrags[fi].getAttribute('data-plantuml');
                         if (sibSource) noteIndexOffset += parseNoteBlocks(sibSource).length;
+                    }
+                    if (fragNoteBlocks.length > 0 && fragNoteBlocks[0].contentLines[0] &&
+                        fragNoteBlocks[0].contentLines[0].indexOf('Continued From Previous Diagram') >= 0) {
+                        fragContinuationMap = [0];
+                        for (var fci = 1; fci < fragNoteBlocks.length; fci++) {
+                            fragContinuationMap.push(noteIndexOffset + fci - 1);
+                        }
                     }
                 }
 
@@ -2986,7 +2995,8 @@ public static class DiagramContextMenu
                 if (noteGroups.length < noteBlocks.length) {
                     sourceIndexMap = [];
                     for (var si = 0; si < noteBlocks.length; si++) {
-                        var sStep = owner._noteSteps[si + noteIndexOffset] || 0;
+                        var sGlobalIdx = fragContinuationMap ? (si < fragContinuationMap.length ? fragContinuationMap[si] : si + noteIndexOffset) : si + noteIndexOffset;
+                        var sStep = owner._noteSteps[sGlobalIdx] || 0;
                         var sState = noteStepState(sStep);
                         var noteEmpty = false;
                         if (sState === 'collapsed') {
@@ -3015,7 +3025,7 @@ public static class DiagramContextMenu
 
                 for (var ni = 0; ni < loopCount; ni++) {
                     (function(svgIdx, srcIdx) {
-                        var globalFilteredIdx = srcIdx + noteIndexOffset;
+                        var globalFilteredIdx = fragContinuationMap ? srcIdx : srcIdx + noteIndexOffset;
                         var globalIdx = filteredToOrigMap ? (globalFilteredIdx < filteredToOrigMap.length ? filteredToOrigMap[globalFilteredIdx] : globalFilteredIdx) : globalFilteredIdx;
                         var grp = noteGroups[svgIdx];
                         var bbox = getNoteBBox(grp);
@@ -3042,7 +3052,7 @@ public static class DiagramContextMenu
                                 setNoteState(owner, globalIdx, nextStep);
                             },
                             origContentLines, grp, container);
-                    })(ni, sourceIndexMap ? sourceIndexMap[ni] : ni);
+                    })(ni, sourceIndexMap ? sourceIndexMap[ni] : (fragContinuationMap ? fragContinuationMap[ni] : ni));
                 }
             }
 

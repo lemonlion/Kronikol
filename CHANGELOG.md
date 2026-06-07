@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.37] - 2026-06-07
+
+### Fixed
+- **Expand/collapse buttons on continuation notes now affect the correct note** — When `chunkLargeNotes` splits a note across diagram fragments, the continuation block in the second fragment shares the same original note index (0) as the first chunk. `makeNotesCollapsible` used a simple `noteIndexOffset` that counted all blocks in preceding fragments, causing the continuation note's buttons to accidentally control a different note (e.g., the response note at the wrong index). Fixed by building a `fragContinuationMap` that maps the continuation block to original index 0 and subsequent blocks to their correct offset indices.
+
 ## [3.0.36] - 2026-06-07
 
 ### Changed

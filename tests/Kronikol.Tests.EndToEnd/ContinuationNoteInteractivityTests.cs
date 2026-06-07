@@ -255,6 +255,129 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
     }
 
     /// <summary>
+    /// Regression: clicking expand on the continuation note's down-arrow button
+    /// must expand THAT note, not the response note. The issue was that
+    /// makeNotesCollapsible used a simple noteIndexOffset that didn't account
+    /// for chunked continuation blocks sharing an original note index.
+    /// </summary>
+    [Fact]
+    public async Task Chunked_continuation_note_expand_button_expands_correct_note()
+    {
+        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedExpandCorrect.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                return c && !c._noteRendering && !window._plantumlRendering && c.querySelector('svg');
+            }
+        """, null, new() { Timeout = 60000, PollingInterval = 200 });
+
+        // Expand to trigger chunkLargeNotes (creates fragments)
+        await Page.Locator(".toolbar-row .details-radio-btn[data-state='expanded']").ClickAsync();
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                if (!c || c._noteRendering || window._plantumlRendering) return false;
+                var frags = c.querySelectorAll('.puml-fragment');
+                if (frags.length < 2) return false;
+                for (var i = 0; i < frags.length; i++) {
+                    if (!frags[i].querySelector('svg')) return false;
+                }
+                return true;
+            }
+        """, null, new() { Timeout = 120000, PollingInterval = 200 });
+
+        // Find the continuation fragment, get first note's height,
+        // click its MINUS button, verify THAT note shrinks (not the response note)
+        var result = await Page.EvaluateAsync<string>("""
+            (() => {
+                var frags = document.querySelectorAll('.puml-fragment');
+                for (var fi = 0; fi < frags.length; fi++) {
+                    var src = frags[fi].getAttribute('data-plantuml') || '';
+                    if (src.indexOf('Continued From Previous Diagram') < 0) continue;
+                    var svg = frags[fi].querySelector('svg');
+                    if (!svg) continue;
+                    var groups = window._findNoteGroups(svg);
+                    if (groups.length === 0) continue;
+                    var bbox = window._getNoteBBox(groups[0]);
+                    var heightBefore = bbox.height;
+                    // Also record second note's height (if it wrongly collapses)
+                    var secondHeight = groups.length > 1 ? window._getNoteBBox(groups[1]).height : -1;
+                    // Hover to show buttons
+                    groups[0].paths[0].dispatchEvent(new MouseEvent('mouseenter', {bubbles:true}));
+                    // Find minus button on this note
+                    var icons = frags[fi].querySelectorAll('.note-toggle-icon');
+                    var minusBtn = null;
+                    for (var i = 0; i < icons.length; i++) {
+                        if (icons[i].style.opacity === '0') continue;
+                        if (icons[i].getAttribute('data-note-btn') !== 'minus') continue;
+                        var rect = icons[i].querySelector('rect');
+                        if (!rect) continue;
+                        var ix = parseFloat(rect.getAttribute('x'));
+                        var iy = parseFloat(rect.getAttribute('y'));
+                        if (ix >= bbox.x-5 && ix <= bbox.x+bbox.width+5
+                            && iy >= bbox.y-5 && iy <= bbox.y+bbox.height+5) {
+                            minusBtn = icons[i]; break;
+                        }
+                    }
+                    if (!minusBtn) return 'NO_MINUS_BTN';
+                    minusBtn.querySelector('rect').dispatchEvent(new MouseEvent('click', {bubbles:true}));
+                    return 'CLICKED h1=' + heightBefore.toFixed(0) + ' h2=' + secondHeight.toFixed(0);
+                }
+                return 'NO_CONTINUATION_FRAG';
+            })()
+        """);
+
+        Assert.Contains("CLICKED", result);
+
+        await Page.WaitForTimeoutAsync(2000);
+        await Page.WaitForFunctionAsync("() => !window._plantumlRendering", null, new() { Timeout = 30000, PollingInterval = 200 });
+        await Page.WaitForFunctionAsync("() => { var c = document.querySelectorAll('[data-diagram-type=\"plantuml\"]'); for(var i=0;i<c.length;i++) if(c[i]._noteRendering) return false; return true; }", null, new() { Timeout = 30000, PollingInterval = 200 });
+
+        // After collapsing the continuation note, it should be shorter.
+        // The second note (response) should NOT have changed height.
+        var afterResult = await Page.EvaluateAsync<string>("""
+            (() => {
+                var frags = document.querySelectorAll('.puml-fragment');
+                for (var fi = 0; fi < frags.length; fi++) {
+                    var src = frags[fi].getAttribute('data-plantuml') || '';
+                    if (src.indexOf('Continued From Previous Diagram') < 0 && src.indexOf('Continued') < 0) continue;
+                    var svg = frags[fi].querySelector('svg');
+                    if (!svg) continue;
+                    var groups = window._findNoteGroups(svg);
+                    if (groups.length === 0) return 'NO_GROUPS_AFTER';
+                    var h1 = window._getNoteBBox(groups[0]).height;
+                    var h2 = groups.length > 1 ? window._getNoteBBox(groups[1]).height : -1;
+                    return 'h1After=' + h1.toFixed(0) + ' h2After=' + h2.toFixed(0);
+                }
+                return 'NO_CONTINUATION_AFTER';
+            })()
+        """);
+
+        // The critical check: _noteSteps[0] should have changed (the continuation
+        // note IS original note 0). If the bug is present, _noteSteps[noteIndexOffset]
+        // changes instead (wrong note).
+        var stepsResult = await Page.EvaluateAsync<string>("""
+            (() => {
+                var container = document.querySelector('[data-diagram-type="plantuml"]');
+                if (!container) return 'NO_CONTAINER';
+                var steps = container._noteSteps || [];
+                return 'step0=' + (steps[0] || 0) + ' step1=' + (steps[1] || 0) + ' step2=' + (steps[2] || 0);
+            })()
+        """);
+
+        // The continuation note is original note 0. After clicking minus, step[0] should be 0 (collapsed).
+        // If the wrong note collapsed, step[0] would still be 2 (expanded).
+        Assert.Contains("step0=0", stepsResult);
+        // Before the fix, step[2] would be 0 (wrong note collapsed) instead of step[0]
+        Assert.True(!stepsResult.Contains("step0=2"),
+            $"Wrong note collapsed (step[0] should be 0 after minus). Steps: {stepsResult}");
+    }
+
+    /// <summary>
     /// Regression test: findNoteGroups must not merge consecutive paths with
     /// different fill colors into one group. When a transparent path (#00000000)
     /// sits between two notes with different fills (#e2e2f0 and #feffdd), they

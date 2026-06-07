@@ -30,7 +30,7 @@ public class BugReproTests : IAsyncLifetime
         try { Directory.Delete(_tmp, true); } catch { }
     }
 
-    private const string SrcPath = @"C:\Users\cex\Downloads\bug (2)\TestRunReport.html";
+    private const string SrcPath = @"C:\Users\cex\Downloads\buglatest\TestRunReport.html";
 
     private async Task NavigateExpandAndRender(string htmlPath)
     {
@@ -47,91 +47,196 @@ public class BugReproTests : IAsyncLifetime
     }
 
     /// <summary>
-    /// Hovers the WoW note, checks if a minus/plus button is positioned within
-    /// the note's SVG bounding box. Uses SVG coordinates (not screen coords).
-    /// </summary>
-    private const string CheckButtonsOnWoWNoteJs = """
-        (() => {
-            var s = document.querySelector('details.scenario');
-            var svgs = s.querySelectorAll('[data-diagram-type="plantuml"] svg');
-            for (var si = 0; si < svgs.length; si++) {
-                var texts = svgs[si].querySelectorAll('text');
-                var wowEl = null;
-                for (var ti = 0; ti < texts.length; ti++) {
-                    if (texts[ti].textContent.indexOf('"WoW"') >= 0) { wowEl = texts[ti]; break; }
-                }
-                if (!wowEl) continue;
-                var groups = window._findNoteGroups(svgs[si]);
-                var wowGroup = null;
-                for (var gi = 0; gi < groups.length; gi++) {
-                    var bb = window._getNoteBBox(groups[gi]);
-                    try {
-                        var tb = wowEl.getBBox();
-                        if (tb.x >= bb.x-2 && tb.x+tb.width <= bb.x+bb.width+2
-                            && tb.y >= bb.y-2 && tb.y+tb.height <= bb.y+bb.height+2) {
-                            wowGroup = groups[gi]; break;
-                        }
-                    } catch(e) {}
-                }
-                if (!wowGroup) return 'WOW_NOT_IN_GROUP(groups=' + groups.length + ')';
-                var bbox = window._getNoteBBox(wowGroup);
-                var frag = svgs[si].closest('.puml-fragment') || svgs[si].closest('[data-diagram-type]');
-                wowGroup.paths[0].dispatchEvent(new MouseEvent('mouseenter', {bubbles:true}));
-                var icons = frag.querySelectorAll('.note-toggle-icon');
-                var onNote = 0;
-                for (var i = 0; i < icons.length; i++) {
-                    if (icons[i].style.opacity === '0') continue;
-                    var rect = icons[i].querySelector('rect');
-                    if (!rect) continue;
-                    var ix = parseFloat(rect.getAttribute('x'));
-                    var iy = parseFloat(rect.getAttribute('y'));
-                    if (ix >= bbox.x-5 && ix <= bbox.x+bbox.width+5
-                        && iy >= bbox.y-5 && iy <= bbox.y+bbox.height+5) onNote++;
-                }
-                return 'buttonsOnNote=' + onNote + ' noteSize=' + bbox.width.toFixed(0) + 'x' + bbox.height.toFixed(0);
-            }
-            return 'NOT_FOUND';
-        })()
-    """;
-
-    /// <summary>
-    /// RED: v3.0.31 HTML merges the WoW note's paths with adjacent paths,
-    /// so buttons end up on the wrong note.
+    /// Reproduces: hover buttons appear on the WoW note, but clicking the
+    /// expand (down arrow) button expands the WRONG note (the sister response
+    /// note to the right) instead of the WoW note itself.
     /// </summary>
     [Fact]
-    public async Task BugTest_original_no_buttons_on_wow_note()
+    public async Task BugTest_expand_button_expands_wrong_note()
     {
         var dest = Path.Combine(_tmp, "BugTest.html");
         File.Copy(SrcPath, dest, true);
         await NavigateExpandAndRender(dest);
-        var result = await _pg.EvaluateAsync<string>(CheckButtonsOnWoWNoteJs);
-        // The bug: the note group containing WoW is merged with other notes into
-        // a giant group (930x2186) instead of being its own small group (229x179).
-        // The buttons are on the giant group, not visually on the small note.
-        Assert.True(result.Contains("noteSize=930x") || result.Contains("noteSize=9"),
-            $"Expected merged mega-group, got: {result}");
-    }
 
-    /// <summary>
-    /// GREEN: After patching findNoteGroups to stop merging paths with
-    /// different fill colors, the WoW note gets its own buttons.
-    /// </summary>
-    [Fact]
-    public async Task BugTestMonkeyPatch_buttons_on_wow_note()
-    {
-        var dest = Path.Combine(_tmp, "BugTestMonkeyPatch.html");
-        File.Copy(SrcPath, dest, true);
+        // Find the WoW note, get its height BEFORE clicking expand
+        var before = await _pg.EvaluateAsync<string>("""
+            (() => {
+                var s = document.querySelector('details.scenario');
+                var svgs = s.querySelectorAll('[data-diagram-type="plantuml"] svg');
+                for (var si = 0; si < svgs.length; si++) {
+                    var texts = svgs[si].querySelectorAll('text');
+                    var wowEl = null;
+                    for (var ti = 0; ti < texts.length; ti++) {
+                        if (texts[ti].textContent.indexOf('"WoW"') >= 0) { wowEl = texts[ti]; break; }
+                    }
+                    if (!wowEl) continue;
+                    // Find the note path containing WoW (smallest enclosing path)
+                    var mainG = svgs[si].querySelector('g');
+                    var children = Array.from(mainG.children);
+                    var wowBB = wowEl.getBBox();
+                    var notePath = null;
+                    for (var ci = 0; ci < children.length; ci++) {
+                        if (children[ci].tagName !== 'path') continue;
+                        var fill = (children[ci].getAttribute('fill') || '').toLowerCase();
+                        if (!fill || fill === 'none' || fill === '#000' || fill === '#000000') continue;
+                        try {
+                            var pb = children[ci].getBBox();
+                            if (wowBB.x >= pb.x-2 && wowBB.x+wowBB.width <= pb.x+pb.width+2
+                                && wowBB.y >= pb.y-2 && wowBB.y+wowBB.height <= pb.y+pb.height+2) {
+                                if (!notePath || (pb.width*pb.height < notePath.area))
+                                    notePath = {el:children[ci], area:pb.width*pb.height, x:pb.x, y:pb.y, w:pb.width, h:pb.height};
+                            }
+                        } catch(e) {}
+                    }
+                    if (!notePath) return 'NO_NOTE_PATH';
+                    return 'BEFORE:noteSize=' + notePath.w.toFixed(0) + 'x' + notePath.h.toFixed(0)
+                        + ' notePos=' + notePath.x.toFixed(0) + ',' + notePath.y.toFixed(0);
+                }
+                return 'NO_WOW';
+            })()
+        """);
 
-        var html = File.ReadAllText(dest);
-        html = html.Replace(
-            "while (ci < children.length && children[ci].tagName === 'path') {\n                    grp.paths.push(children[ci]);\n                    ci++;\n                }",
-            "var startFill = (children[ci].getAttribute('fill') || '').toLowerCase();\n                while (ci < children.length && children[ci].tagName === 'path') {\n                    var pFill = (children[ci].getAttribute('fill') || '').toLowerCase();\n                    if (pFill !== startFill && pFill !== 'none' && pFill !== 'transparent' && pFill !== '#00000000' && !/^#[0-9a-f]{6}00$/.test(pFill) && hasNoteFill(children[ci])) break;\n                    grp.paths.push(children[ci]);\n                    ci++;\n                }");
-        Assert.True(html.Contains("startFill"), "Patch did not match");
-        File.WriteAllText(dest, html);
+        Assert.StartsWith("BEFORE:", before);
 
-        await NavigateExpandAndRender(dest);
-        var result = await _pg.EvaluateAsync<string>(CheckButtonsOnWoWNoteJs);
-        Assert.True(result.Contains("buttonsOnNote=") && !result.Contains("buttonsOnNote=0"),
-            $"Patch should fix: {result}");
+        // Hover the note to show buttons, then click the expand (down arrow) button
+        var expandResult = await _pg.EvaluateAsync<string>("""
+            (() => {
+                var s = document.querySelector('details.scenario');
+                var svgs = s.querySelectorAll('[data-diagram-type="plantuml"] svg');
+                for (var si = 0; si < svgs.length; si++) {
+                    var texts = svgs[si].querySelectorAll('text');
+                    var wowEl = null;
+                    for (var ti = 0; ti < texts.length; ti++) {
+                        if (texts[ti].textContent.indexOf('"WoW"') >= 0) { wowEl = texts[ti]; break; }
+                    }
+                    if (!wowEl) continue;
+                    var groups = window._findNoteGroups(svgs[si]);
+                    var wowGroup = null;
+                    var wowBB = wowEl.getBBox();
+                    for (var gi = 0; gi < groups.length; gi++) {
+                        var bb = window._getNoteBBox(groups[gi]);
+                        if (wowBB.x >= bb.x-2 && wowBB.x+wowBB.width <= bb.x+bb.width+2
+                            && wowBB.y >= bb.y-2 && wowBB.y+wowBB.height <= bb.y+bb.height+2) {
+                            wowGroup = groups[gi]; break;
+                        }
+                    }
+                    if (!wowGroup) return 'WOW_NOT_IN_GROUP';
+                    // Trigger hover to show buttons
+                    wowGroup.paths[0].dispatchEvent(new MouseEvent('mouseenter', {bubbles:true}));
+                    // Find the expand (down arrow ▼) button on this note
+                    var frag = svgs[si].closest('.puml-fragment') || svgs[si].closest('[data-diagram-type]');
+                    var icons = frag.querySelectorAll('.note-toggle-icon');
+                    var bbox = window._getNoteBBox(wowGroup);
+                    // Find the down-arrow (▼) button — it's a note-toggle-icon without
+                    // data-note-btn attr (not minus/plus), containing ▼ text
+                    var expandBtn = null;
+                    for (var i = 0; i < icons.length; i++) {
+                        if (icons[i].style.opacity === '0') continue;
+                        var btn = icons[i].getAttribute('data-note-btn');
+                        if (btn === 'minus' || btn === 'plus') continue;
+                        var txt = icons[i].querySelector('text');
+                        if (!txt || txt.textContent.indexOf('▼') < 0) continue;
+                        var rect = icons[i].querySelector('rect');
+                        if (!rect) continue;
+                        var ix = parseFloat(rect.getAttribute('x'));
+                        var iy = parseFloat(rect.getAttribute('y'));
+                        if (ix >= bbox.x-5 && ix <= bbox.x+bbox.width+5
+                            && iy >= bbox.y-5 && iy <= bbox.y+bbox.height+5) {
+                            expandBtn = icons[i]; break;
+                        }
+                    }
+                    if (!expandBtn) return 'NO_EXPAND_BTN_ON_NOTE';
+                    // Click the expand button's rect
+                    var clickTarget = expandBtn.querySelector('rect');
+                    clickTarget.dispatchEvent(new MouseEvent('click', {bubbles:true}));
+                    return 'CLICKED';
+                }
+                return 'NO_WOW';
+            })()
+        """);
+
+        Assert.Equal("CLICKED", expandResult);
+
+        // Wait for re-render
+        await _pg.WaitForTimeoutAsync(2000);
+        await _pg.WaitForFunctionAsync("() => !window._plantumlRendering", null, new() { Timeout = 30000, PollingInterval = 200 });
+        await _pg.WaitForFunctionAsync("() => { var c = document.querySelectorAll('[data-diagram-type=\"plantuml\"]'); for(var i=0;i<c.length;i++) if(c[i]._noteRendering) return false; return true; }", null, new() { Timeout = 30000, PollingInterval = 200 });
+
+        // Check: did the WoW note expand (get taller)?
+        var after = await _pg.EvaluateAsync<string>("""
+            (() => {
+                var s = document.querySelector('details.scenario');
+                var svgs = s.querySelectorAll('[data-diagram-type="plantuml"] svg');
+                for (var si = 0; si < svgs.length; si++) {
+                    var texts = svgs[si].querySelectorAll('text');
+                    var wowEl = null;
+                    for (var ti = 0; ti < texts.length; ti++) {
+                        if (texts[ti].textContent.indexOf('"WoW"') >= 0) { wowEl = texts[ti]; break; }
+                    }
+                    if (!wowEl) continue;
+                    var mainG = svgs[si].querySelector('g');
+                    var children = Array.from(mainG.children);
+                    var wowBB = wowEl.getBBox();
+                    var notePath = null;
+                    for (var ci = 0; ci < children.length; ci++) {
+                        if (children[ci].tagName !== 'path') continue;
+                        var fill = (children[ci].getAttribute('fill') || '').toLowerCase();
+                        if (!fill || fill === 'none' || fill === '#000' || fill === '#000000') continue;
+                        try {
+                            var pb = children[ci].getBBox();
+                            if (wowBB.x >= pb.x-2 && wowBB.x+wowBB.width <= pb.x+pb.width+2
+                                && wowBB.y >= pb.y-2 && wowBB.y+wowBB.height <= pb.y+pb.height+2) {
+                                if (!notePath || (pb.width*pb.height < notePath.area))
+                                    notePath = {area:pb.width*pb.height, w:pb.width, h:pb.height};
+                            }
+                        } catch(e) {}
+                    }
+                    if (!notePath) return 'NO_NOTE_PATH_AFTER';
+                    return 'AFTER:noteSize=' + notePath.w.toFixed(0) + 'x' + notePath.h.toFixed(0);
+                }
+                return 'NO_WOW_AFTER';
+            })()
+        """);
+
+        Assert.StartsWith("AFTER:", after);
+
+        // The WoW note should have grown (expanded). If it's still 179px tall,
+        // the wrong note expanded instead.
+        var beforeHeight = int.Parse(before.Split("noteSize=")[1].Split("x")[1].Split(" ")[0]);
+        var afterHeight = int.Parse(after.Split("noteSize=")[1].Split("x")[1]);
+
+        // Diagnose: what's the sourceIndexMap and group ordering?
+        var diagnosis = await _pg.EvaluateAsync<string>("""
+            (() => {
+                var s = document.querySelector('details.scenario');
+                var svgs = s.querySelectorAll('[data-diagram-type="plantuml"] svg');
+                for (var si = 0; si < svgs.length; si++) {
+                    var texts = svgs[si].querySelectorAll('text');
+                    var hasWoW = false;
+                    for (var ti = 0; ti < texts.length; ti++) {
+                        if (texts[ti].textContent.indexOf('"WoW"') >= 0) { hasWoW = true; break; }
+                    }
+                    if (!hasWoW) continue;
+                    var frag = svgs[si].closest('.puml-fragment') || svgs[si].closest('[data-diagram-type]');
+                    var src = frag.getAttribute('data-plantuml') || '';
+                    var blocks = window._parseNoteBlocks(src);
+                    var groups = window._findNoteGroups(svgs[si]);
+                    var info = ['blocks=' + blocks.length + ' groups=' + groups.length];
+                    for (var bi = 0; bi < blocks.length; bi++) {
+                        info.push('block[' + bi + ']: "' + blocks[bi].contentLines[0].substring(0, 50) + '"');
+                    }
+                    for (var gi = 0; gi < groups.length; gi++) {
+                        var bb = window._getNoteBBox(groups[gi]);
+                        var firstTxt = groups[gi].texts.length > 0 ? groups[gi].texts[0].textContent.substring(0, 30) : '(none)';
+                        info.push('group[' + gi + ']: (' + bb.x.toFixed(0) + ',' + bb.y.toFixed(0) + ' ' + bb.width.toFixed(0) + 'x' + bb.height.toFixed(0) + ') "' + firstTxt + '"');
+                    }
+                    return info.join('\n');
+                }
+                return 'NO_WOW';
+            })()
+        """);
+
+        Assert.True(afterHeight > beforeHeight,
+            $"WoW note did not expand (wrong note expanded instead).\n{before}\n{after}");
     }
 }
