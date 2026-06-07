@@ -3434,8 +3434,8 @@ public static class ReportGenerator
     private static bool ShouldRenderCombinedTable(ScenarioStep[] steps)
     {
         var afterThen = false;
-        var hasSetupTable = false;
-        var hasAssertionTable = false;
+        TabularParameterValue? setupTable = null;
+        TabularParameterValue? assertionTable = null;
         foreach (var step in steps)
         {
             var keyword = step.Keyword?.Trim();
@@ -3445,14 +3445,30 @@ public static class ReportGenerator
                      keyword?.Equals("When", StringComparison.OrdinalIgnoreCase) == true)
                 afterThen = false;
 
-            var hasTabular = step.Parameters?.Any(p => p.Kind == StepParameterKind.Tabular && p.TabularValue is not null) == true;
-            if (hasTabular)
+            var tab = step.Parameters?.FirstOrDefault(
+                p => p.Kind == StepParameterKind.Tabular && p.TabularValue is not null)?.TabularValue;
+            if (tab is not null)
             {
-                if (afterThen) hasAssertionTable = true;
-                else hasSetupTable = true;
+                if (afterThen) assertionTable ??= tab;
+                else setupTable ??= tab;
             }
         }
-        return hasSetupTable && hasAssertionTable;
+
+        if (setupTable is null || assertionTable is null) return false;
+
+        if (assertionTable.IsLinkedOutput) return true;
+
+        var outputKeyNames = assertionTable.Columns
+            .Where(c => c.IsKey).Select(c => c.Name).ToHashSet();
+        if (outputKeyNames.Count > 0 &&
+            setupTable.Columns.Any(c => outputKeyNames.Contains(c.Name)))
+            return true;
+
+        if (setupTable.Rows.Length > 1 &&
+            setupTable.Rows.Length == assertionTable.Rows.Length)
+            return true;
+
+        return false;
     }
 
     private static void RenderCombinedTabularParameters(StringBuilder body, ScenarioStep[] steps)
@@ -3467,15 +3483,79 @@ public static class ReportGenerator
         if (namedParams.Length == 0) return;
 
         var hasSeparator = namedParams.Length > 1;
+        var inputParams = namedParams.Length > 1 ? namedParams[..^1] : namedParams;
+        var outputParam = namedParams.Length > 1 ? namedParams[^1] : ((string Name, TabularParameterValue Table)?)null;
+
+        // Determine alignment mode
+        var useKeyAlignment = false;
+        HashSet<string>? sharedKeyNames = null;
+        if (outputParam is not null && !outputParam.Value.Table.IsLinkedOutput)
+        {
+            var outputKeyNames = outputParam.Value.Table.Columns
+                .Where(c => c.IsKey).Select(c => c.Name).ToHashSet();
+            if (outputKeyNames.Count > 0)
+            {
+                sharedKeyNames = new HashSet<string>(
+                    inputParams.SelectMany(p => p.Table.Columns)
+                        .Where(c => outputKeyNames.Contains(c.Name))
+                        .Select(c => c.Name));
+                useKeyAlignment = sharedKeyNames.Count > 0;
+            }
+        }
+
+        // Build aligned row pairs when using key-based alignment
+        int[]? inputRowOrder = null;
+        int maxRows;
+        if (useKeyAlignment && outputParam is not null && inputParams.Length > 0)
+        {
+            var primaryInput = inputParams[0];
+            var keyColIndicesInput = sharedKeyNames!
+                .Select(k => Array.FindIndex(primaryInput.Table.Columns, c => c.Name == k))
+                .Where(i => i >= 0).ToArray();
+            var keyColIndicesOutput = sharedKeyNames!
+                .Select(k => Array.FindIndex(outputParam.Value.Table.Columns, c => c.Name == k))
+                .Where(i => i >= 0).ToArray();
+
+            var inputKeyLookup = new Dictionary<string, int>();
+            for (var i = 0; i < primaryInput.Table.Rows.Length; i++)
+            {
+                var key = string.Join("\0", keyColIndicesInput.Select(ci =>
+                    ci < primaryInput.Table.Rows[i].Values.Length ? primaryInput.Table.Rows[i].Values[ci].Value : ""));
+                inputKeyLookup.TryAdd(key, i);
+            }
+
+            var alignedInput = new List<int>();
+            var matchedInputRows = new HashSet<int>();
+            foreach (var outputRow in outputParam.Value.Table.Rows)
+            {
+                var outputKey = string.Join("\0", keyColIndicesOutput.Select(ci =>
+                    ci < outputRow.Values.Length ? outputRow.Values[ci].Value : ""));
+                if (inputKeyLookup.TryGetValue(outputKey, out var inputIdx) && matchedInputRows.Add(inputIdx))
+                    alignedInput.Add(inputIdx);
+                else
+                    alignedInput.Add(-1); // no matching input row
+            }
+
+            // Append orphaned input rows
+            for (var i = 0; i < primaryInput.Table.Rows.Length; i++)
+            {
+                if (!matchedInputRows.Contains(i))
+                    alignedInput.Add(i);
+            }
+
+            inputRowOrder = alignedInput.ToArray();
+            maxRows = inputRowOrder.Length;
+        }
+        else
+        {
+            maxRows = namedParams.Max(t => t.Table.Rows.Length);
+        }
+
         var showRowIndicator = namedParams.Any(t => t.Table.Rows.Any(r => r.Type != TableRowType.Matching));
 
         body.Append(showRowIndicator
             ? "<div class=\"step-param-combined-table\"><table><thead><tr><th></th>"
             : "<div class=\"step-param-combined-table\"><table><thead><tr>");
-
-        // Input columns (all tables except the last)
-        var inputParams = namedParams.Length > 1 ? namedParams[..^1] : namedParams;
-        var outputParam = namedParams.Length > 1 ? namedParams[^1] : ((string Name, TabularParameterValue Table)?)null;
 
         foreach (var param in inputParams)
         {
@@ -3495,16 +3575,17 @@ public static class ReportGenerator
 
         body.Append("</tr></thead><tbody>");
 
-        // Determine row count from the table with the most rows
-        var maxRows = namedParams.Max(t => t.Table.Rows.Length);
-
         for (var ri = 0; ri < maxRows; ri++)
         {
-            // Row type is determined by the output (last) table if it has this row, otherwise input
-            var rowType = outputParam is not null && ri < outputParam.Value.Table.Rows.Length
-                ? outputParam.Value.Table.Rows[ri].Type
-                : inputParams[0].Table.Rows.Length > ri
-                    ? inputParams[0].Table.Rows[ri].Type
+            var inputRi = inputRowOrder is not null ? inputRowOrder[ri] : ri;
+            var outputRi = inputRowOrder is not null
+                ? (ri < (outputParam?.Table.Rows.Length ?? 0) ? ri : -1)
+                : ri;
+
+            var rowType = outputParam is not null && outputRi >= 0 && outputRi < outputParam.Value.Table.Rows.Length
+                ? outputParam.Value.Table.Rows[outputRi].Type
+                : inputRi >= 0 && inputParams[0].Table.Rows.Length > inputRi
+                    ? inputParams[0].Table.Rows[inputRi].Type
                     : TableRowType.Matching;
 
             var rowIndicator = rowType switch
@@ -3519,13 +3600,12 @@ public static class ReportGenerator
                 ? $"<tr class=\"row-{rowType.ToString().ToLowerInvariant()}\"><td>{rowIndicator}</td>"
                 : $"<tr class=\"row-{rowType.ToString().ToLowerInvariant()}\">");
 
-            // Input cells
             foreach (var param in inputParams)
             {
                 var encodedName = System.Net.WebUtility.HtmlEncode(param.Name);
-                if (ri < param.Table.Rows.Length)
+                if (inputRi >= 0 && inputRi < param.Table.Rows.Length)
                 {
-                    foreach (var cell in param.Table.Rows[ri].Values)
+                    foreach (var cell in param.Table.Rows[inputRi].Values)
                         RenderCell(body, cell, encodedName);
                 }
                 else
@@ -3540,10 +3620,9 @@ public static class ReportGenerator
                 body.Append("<td class=\"combined-separator\"></td>");
 
                 var encodedOutputName = System.Net.WebUtility.HtmlEncode(outputParam!.Value.Name);
-                // Output cells
-                if (ri < outputParam!.Value.Table.Rows.Length)
+                if (outputRi >= 0 && outputRi < outputParam!.Value.Table.Rows.Length)
                 {
-                    foreach (var cell in outputParam.Value.Table.Rows[ri].Values)
+                    foreach (var cell in outputParam.Value.Table.Rows[outputRi].Values)
                         RenderCell(body, cell, encodedOutputName);
                 }
                 else

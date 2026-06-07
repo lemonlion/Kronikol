@@ -12,4 +12,5 @@ public interface ITabularParameterData
 {
     TabularColumn[] GetColumns();
     TabularRow[] GetRows();
+    bool IsLinkedOutput => false;
 }

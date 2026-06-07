@@ -249,7 +249,7 @@ public class ParameterRenderingReportTests
     }
 
     [Fact]
-    public void Tabular_parameters_from_multiple_steps_are_combined_after_steps()
+    public void Single_row_tables_without_keys_render_inline_not_combined()
     {
         var features = new[]
         {
@@ -265,7 +265,7 @@ public class ParameterRenderingReportTests
                         [
                             new ScenarioStep
                             {
-                                Keyword = "Given", Text = "requests with data [inputs: \"<$inputs>\"]",
+                                Keyword = "Given", Text = "requests with data",
                                 Parameters =
                                 [
                                     new StepParameter
@@ -276,20 +276,14 @@ public class ParameterRenderingReportTests
                                             [new TabularColumn("Field", false), new TabularColumn("Value", false)],
                                             [new TabularRow(TableRowType.Matching,
                                                 [new TabularCell("Name", null, VerificationStatus.NotApplicable),
-                                                 new TabularCell("Alice", null, VerificationStatus.NotApplicable)]),
-                                             new TabularRow(TableRowType.Matching,
-                                                [new TabularCell("Age", null, VerificationStatus.NotApplicable),
-                                                 new TabularCell("30", null, VerificationStatus.NotApplicable)])])
+                                                 new TabularCell("Alice", null, VerificationStatus.NotApplicable)])])
                                     }
                                 ]
                             },
+                            new ScenarioStep { Keyword = "When", Text = "the requests are sent" },
                             new ScenarioStep
                             {
-                                Keyword = "When", Text = "the requests are sent"
-                            },
-                            new ScenarioStep
-                            {
-                                Keyword = "Then", Text = "the responses should match [expectedOutputs: \"<$expectedOutputs>\"]",
+                                Keyword = "Then", Text = "the responses should match",
                                 Parameters =
                                 [
                                     new StepParameter
@@ -297,13 +291,9 @@ public class ParameterRenderingReportTests
                                         Name = "expectedOutputs",
                                         Kind = StepParameterKind.Tabular,
                                         TabularValue = new TabularParameterValue(
-                                            [new TabularColumn("Status", false), new TabularColumn("Message", false)],
+                                            [new TabularColumn("Status", false)],
                                             [new TabularRow(TableRowType.Matching,
-                                                [new TabularCell("200", "200", VerificationStatus.Success),
-                                                 new TabularCell("OK", "OK", VerificationStatus.Success)]),
-                                             new TabularRow(TableRowType.Matching,
-                                                [new TabularCell("400", "400", VerificationStatus.Success),
-                                                 new TabularCell("Bad", "Bad", VerificationStatus.Success)])])
+                                                [new TabularCell("200", "200", VerificationStatus.Success)])])
                                     }
                                 ]
                             }
@@ -315,44 +305,14 @@ public class ParameterRenderingReportTests
 
         var content = GenerateReport(features);
 
-        // The combined table should appear after the steps, not inline with each step
-        Assert.Contains("step-param-combined-table", content);
-
-        // Input columns should appear
-        Assert.Contains("Field", content);
-        Assert.Contains("Value", content);
-
-        // Separator column
-        Assert.Contains("<th class=\"combined-separator\">=</th>", content);
-
-        // Output columns should appear
-        Assert.Contains("Status", content);
-        Assert.Contains("Message", content);
-
-        // Data from both tables
-        Assert.Contains("Alice", content);
-        Assert.Contains("OK", content);
-
-        // Given step table should render inline even when combined table exists
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
         Assert.Contains("<div class=\"step-param-table\" data-param=\"inputs\"", content);
-        // Then step table should NOT render inline (only in combined table)
-        Assert.DoesNotContain("data-param=\"expectedOutputs\"", content.Split("step-param-combined-table")[0]);
-
-        // Combined table should be inside the scenario-steps details, not after it
-        var stepsIdx = content.IndexOf("class=\"scenario-steps\"");
-        var combinedIdx = content.IndexOf("<div class=\"step-param-combined-table\">");
-        Assert.True(combinedIdx > stepsIdx,
-            "Combined table div should appear after scenario-steps opening");
-        // Find the next </details> after the combined table — it should be the scenario-steps closer
-        var closingAfterCombined = content.IndexOf("</details>", combinedIdx);
-        // The scenario-steps details should close right after the combined table
-        // Verify no other <details> opens between the combined table and that </details>
-        var intervening = content.Substring(combinedIdx, closingAfterCombined - combinedIdx);
-        Assert.DoesNotContain("<details", intervening);
+        Assert.Contains("<div class=\"step-param-table\" data-param=\"expectedOutputs\"", content);
+        Assert.Contains("Alice", content);
     }
 
     [Fact]
-    public void Given_step_table_renders_inline_when_combined_table_exists()
+    public void Given_and_Then_tables_both_render_inline()
     {
         var features = new[]
         {
@@ -408,19 +368,21 @@ public class ParameterRenderingReportTests
 
         var content = GenerateReport(features);
 
-        // Combined table should exist
-        Assert.Contains("step-param-combined-table", content);
+        // No combined table
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
 
-        // Given step's table should render inline
+        // Given step's table renders inline
         Assert.Contains("<div class=\"step-param-table\" data-param=\"inputs\"", content);
-        // The inline table should contain the Given step's data
         var inlineTableIdx = content.IndexOf("data-param=\"inputs\"");
         var inlineSection = content.Substring(inlineTableIdx, 500);
         Assert.Contains("2025-10-01", inlineSection);
+
+        // Then step's table also renders inline
+        Assert.Contains("<div class=\"step-param-table\" data-param=\"results\"", content);
     }
 
     [Fact]
-    public void Then_step_table_does_not_render_inline_when_combined_table_exists()
+    public void Then_step_table_renders_inline()
     {
         var features = new[]
         {
@@ -475,12 +437,11 @@ public class ParameterRenderingReportTests
 
         var content = GenerateReport(features);
 
-        // Combined table should exist
-        Assert.Contains("step-param-combined-table", content);
+        // No combined table
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
 
-        // Then step's table should NOT render inline (suppressed in favor of combined table)
-        var beforeCombined = content.Split("step-param-combined-table")[0];
-        Assert.DoesNotContain("data-param=\"results\"", beforeCombined);
+        // Then step's table renders inline
+        Assert.Contains("<div class=\"step-param-table\" data-param=\"results\"", content);
     }
 
     [Fact]
@@ -541,76 +502,17 @@ public class ParameterRenderingReportTests
 
         var content = GenerateReport(features);
 
-        // Combined table should exist
-        Assert.Contains("step-param-combined-table", content);
+        // No combined table
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
 
         // And step's table (which follows Given) should render inline
         Assert.Contains("<div class=\"step-param-table\" data-param=\"params\"", content);
+        // Then step's table also renders inline
+        Assert.Contains("<div class=\"step-param-table\" data-param=\"results\"", content);
     }
 
     [Fact]
-    public void Combined_table_cells_have_data_param_attributes()
-    {
-        var features = new[]
-        {
-            new Feature
-            {
-                DisplayName = "F",
-                Scenarios =
-                [
-                    new Scenario
-                    {
-                        Id = "s1", DisplayName = "Test",
-                        Steps =
-                        [
-                            new ScenarioStep
-                            {
-                                Keyword = "Given", Text = "requests",
-                                Parameters =
-                                [
-                                    new StepParameter
-                                    {
-                                        Name = "inputs",
-                                        Kind = StepParameterKind.Tabular,
-                                        TabularValue = new TabularParameterValue(
-                                            [new TabularColumn("Field", false)],
-                                            [new TabularRow(TableRowType.Matching,
-                                                [new TabularCell("Name", null, VerificationStatus.NotApplicable)])])
-                                    }
-                                ]
-                            },
-                            new ScenarioStep { Keyword = "When", Text = "sent" },
-                            new ScenarioStep
-                            {
-                                Keyword = "Then", Text = "should match",
-                                Parameters =
-                                [
-                                    new StepParameter
-                                    {
-                                        Name = "expectedOutputs",
-                                        Kind = StepParameterKind.Tabular,
-                                        TabularValue = new TabularParameterValue(
-                                            [new TabularColumn("Status", false)],
-                                            [new TabularRow(TableRowType.Matching,
-                                                [new TabularCell("200", "200", VerificationStatus.Success)])])
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        };
-
-        var content = GenerateReport(features);
-
-        // Combined table cells should have data-param attributes for JS highlighting
-        Assert.Contains("data-param=\"inputs\"", content);
-        Assert.Contains("data-param=\"expectedOutputs\"", content);
-    }
-
-    [Fact]
-    public void Combined_table_preserves_verification_status_css_classes()
+    public void Then_inline_table_preserves_verification_status_css_classes()
     {
         var features = new[]
         {
@@ -663,14 +565,13 @@ public class ParameterRenderingReportTests
         };
 
         var content = GenerateReport(features);
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
         Assert.Contains("param-failure", content);
         Assert.Contains("Fail/Pass", content);
-        // All rows are Matching → no row indicator column in combined table
-        Assert.DoesNotContain("<td>=</td>", content);
     }
 
     [Fact]
-    public void Single_tabular_parameter_renders_as_combined_table_without_separator()
+    public void Single_tabular_parameter_renders_inline_without_combined_table()
     {
         var features = new[]
         {
@@ -712,13 +613,13 @@ public class ParameterRenderingReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.DoesNotContain("<div class=\"step-param-combined-table\"", content);
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
         Assert.Contains("step-param-table", content);
         Assert.Contains("Alice", content);
     }
 
     [Fact]
-    public void Combined_table_handles_row_type_indicators_from_output_table()
+    public void Then_inline_table_handles_row_type_indicators()
     {
         var features = new[]
         {
@@ -744,9 +645,7 @@ public class ParameterRenderingReportTests
                                         TabularValue = new TabularParameterValue(
                                             [new TabularColumn("Name", false)],
                                             [new TabularRow(TableRowType.Matching,
-                                                [new TabularCell("Alice", null, VerificationStatus.NotApplicable)]),
-                                             new TabularRow(TableRowType.Matching,
-                                                [new TabularCell("Bob", null, VerificationStatus.NotApplicable)])])
+                                                [new TabularCell("Alice", null, VerificationStatus.NotApplicable)])])
                                     }
                                 ]
                             },
@@ -775,11 +674,473 @@ public class ParameterRenderingReportTests
         };
 
         var content = GenerateReport(features);
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
+        Assert.Contains("<div class=\"step-param-table\" data-param=\"result\"", content);
         Assert.Contains("row-surplus", content);
-        Assert.Contains("+", content);
-        // Mixed row types → indicator column IS present
-        Assert.Contains("<td>=</td>", content);
         Assert.Contains("<td>+</td>", content);
+    }
+
+    // === Tier 1: Tabular Attributes (IsLinkedOutput) ===
+
+    [Fact]
+    public void Combined_table_renders_when_Then_table_has_IsLinkedOutput()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Test",
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Given", Text = "inputs",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "inputs",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Field", false), new TabularColumn("Value", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("Name", null, VerificationStatus.NotApplicable),
+                                                 new TabularCell("Alice", null, VerificationStatus.NotApplicable)])])
+                                    }
+                                ]
+                            },
+                            new ScenarioStep { Keyword = "When", Text = "sent" },
+                            new ScenarioStep
+                            {
+                                Keyword = "Then", Text = "matches",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "outputs",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Status", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("200", "200", VerificationStatus.Success)])],
+                                            IsLinkedOutput: true)
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var content = GenerateReport(features);
+        Assert.Contains("step-param-combined-table", content);
+        Assert.Contains("<th class=\"combined-separator\">=</th>", content);
+        Assert.Contains("<div class=\"step-param-table\" data-param=\"inputs\"", content);
+        var beforeCombined = content.Split("step-param-combined-table")[0];
+        Assert.DoesNotContain("data-param=\"outputs\"", beforeCombined);
+    }
+
+    // === Tier 2: Key-based alignment (LightBDD-style) ===
+
+    [Fact]
+    public void Combined_table_renders_when_tables_share_key_columns()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Test",
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Given", Text = "users",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "users",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Name", false), new TabularColumn("Email", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("Alice", null, VerificationStatus.NotApplicable),
+                                                 new TabularCell("a@test.com", null, VerificationStatus.NotApplicable)]),
+                                             new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("Bob", null, VerificationStatus.NotApplicable),
+                                                 new TabularCell("b@test.com", null, VerificationStatus.NotApplicable)])])
+                                    }
+                                ]
+                            },
+                            new ScenarioStep { Keyword = "When", Text = "processed" },
+                            new ScenarioStep
+                            {
+                                Keyword = "Then", Text = "results",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "results",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Name", true), new TabularColumn("Status", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("Bob", "Bob", VerificationStatus.Success),
+                                                 new TabularCell("OK", "OK", VerificationStatus.Success)]),
+                                             new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("Alice", "Alice", VerificationStatus.Success),
+                                                 new TabularCell("OK", "OK", VerificationStatus.Success)])])
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var content = GenerateReport(features);
+        Assert.Contains("step-param-combined-table", content);
+        Assert.Contains("<th class=\"combined-separator\">=</th>", content);
+    }
+
+    [Fact]
+    public void Key_based_alignment_reorders_input_rows_to_match_output()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Test",
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Given", Text = "data",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "input",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Id", false), new TabularColumn("Value", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("1", null, VerificationStatus.NotApplicable),
+                                                 new TabularCell("AAA", null, VerificationStatus.NotApplicable)]),
+                                             new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("2", null, VerificationStatus.NotApplicable),
+                                                 new TabularCell("BBB", null, VerificationStatus.NotApplicable)])])
+                                    }
+                                ]
+                            },
+                            new ScenarioStep { Keyword = "When", Text = "processed" },
+                            new ScenarioStep
+                            {
+                                Keyword = "Then", Text = "results",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "output",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Id", true), new TabularColumn("Status", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("2", "2", VerificationStatus.Success),
+                                                 new TabularCell("OK", "OK", VerificationStatus.Success)]),
+                                             new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("1", "1", VerificationStatus.Success),
+                                                 new TabularCell("OK", "OK", VerificationStatus.Success)])])
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var content = GenerateReport(features);
+        Assert.Contains("step-param-combined-table", content);
+
+        // Output row 1 has Id=2, so input row with Id=2 (BBB) should be first
+        var combinedSection = content.Substring(content.IndexOf("<div class=\"step-param-combined-table\">"));
+        var bbbIdx = combinedSection.IndexOf("BBB");
+        var aaaIdx = combinedSection.IndexOf("AAA");
+        Assert.True(bbbIdx < aaaIdx, "Input row with Id=2 (BBB) should appear before Id=1 (AAA) due to key-based alignment");
+    }
+
+    [Fact]
+    public void Key_based_alignment_handles_surplus_output_row()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Test",
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Given", Text = "data",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "input",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Id", false), new TabularColumn("Val", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("1", null, VerificationStatus.NotApplicable),
+                                                 new TabularCell("A", null, VerificationStatus.NotApplicable)])])
+                                    }
+                                ]
+                            },
+                            new ScenarioStep { Keyword = "When", Text = "processed" },
+                            new ScenarioStep
+                            {
+                                Keyword = "Then", Text = "results",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "output",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Id", true), new TabularColumn("Status", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("1", "1", VerificationStatus.Success),
+                                                 new TabularCell("OK", "OK", VerificationStatus.Success)]),
+                                             new TabularRow(TableRowType.Surplus,
+                                                [new TabularCell("99", null, VerificationStatus.NotApplicable),
+                                                 new TabularCell("Extra", null, VerificationStatus.NotApplicable)])])
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var content = GenerateReport(features);
+        Assert.Contains("step-param-combined-table", content);
+        Assert.Contains("row-surplus", content);
+    }
+
+    // === Tier 3: Row-count fallback ===
+
+    [Fact]
+    public void Combined_table_renders_with_matching_row_count_greater_than_one()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Test",
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Given", Text = "data",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "input",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Ingredient", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("Eggs", null, VerificationStatus.NotApplicable)]),
+                                             new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("Flour", null, VerificationStatus.NotApplicable)])])
+                                    }
+                                ]
+                            },
+                            new ScenarioStep { Keyword = "When", Text = "baked" },
+                            new ScenarioStep
+                            {
+                                Keyword = "Then", Text = "results",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "output",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Status", false), new TabularColumn("Message", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("OK", "OK", VerificationStatus.Success),
+                                                 new TabularCell("Good", "Good", VerificationStatus.Success)]),
+                                             new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("OK", "OK", VerificationStatus.Success),
+                                                 new TabularCell("Fine", "Fine", VerificationStatus.Success)])])
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var content = GenerateReport(features);
+        Assert.Contains("step-param-combined-table", content);
+        Assert.Contains("<th class=\"combined-separator\">=</th>", content);
+    }
+
+    [Fact]
+    public void No_combined_table_when_single_row_and_no_keys_or_linked()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Test",
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Given", Text = "data",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "input",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Field", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("X", null, VerificationStatus.NotApplicable)])])
+                                    }
+                                ]
+                            },
+                            new ScenarioStep { Keyword = "When", Text = "processed" },
+                            new ScenarioStep
+                            {
+                                Keyword = "Then", Text = "results",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "output",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Status", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("OK", "OK", VerificationStatus.Success)])])
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var content = GenerateReport(features);
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
+        Assert.Contains("<div class=\"step-param-table\" data-param=\"output\"", content);
+    }
+
+    [Fact]
+    public void No_combined_table_when_different_row_counts_and_no_keys()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Test",
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Given", Text = "data",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "input",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Field", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("A", null, VerificationStatus.NotApplicable)]),
+                                             new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("B", null, VerificationStatus.NotApplicable)]),
+                                             new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("C", null, VerificationStatus.NotApplicable)])])
+                                    }
+                                ]
+                            },
+                            new ScenarioStep { Keyword = "When", Text = "processed" },
+                            new ScenarioStep
+                            {
+                                Keyword = "Then", Text = "results",
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "output",
+                                        Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Status", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("OK", "OK", VerificationStatus.Success)]),
+                                             new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("OK", "OK", VerificationStatus.Success)])])
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var content = GenerateReport(features);
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
+        Assert.Contains("<div class=\"step-param-table\" data-param=\"input\"", content);
+        Assert.Contains("<div class=\"step-param-table\" data-param=\"output\"", content);
     }
 
     [Fact]
@@ -1005,7 +1366,7 @@ public class ParameterRenderingReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("step-param-combined-table", content);
+        Assert.DoesNotContain("<div class=\"step-param-combined-table\">", content);
         Assert.Contains("<pre>null</pre>", content);
     }
 

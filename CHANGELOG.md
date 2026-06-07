@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.36] - 2026-06-07
+
+### Changed
+- **Combined table in THEN section is now conditional by data source** — ReqNRoll Then-step tables now render inline with their step instead of being merged into a combined input/output table, since ReqNRoll inputs and outputs don't have a guaranteed 1:1 row relationship. Kronikol Tabular Attributes (always positional 1:1) continue to use the combined table. LightBDD tables use key-based row alignment when shared key columns exist, or a row-count fallback when both tables have more than one row. Single-row tables without keys or linked output render inline.
+
 ## [3.0.35] - 2026-06-07
 
 ### Fixed

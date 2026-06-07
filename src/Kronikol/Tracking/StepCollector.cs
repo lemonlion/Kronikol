@@ -369,7 +369,8 @@ public static class StepCollector
                     Kind = StepParameterKind.Tabular,
                     TabularValue = new TabularParameterValue(
                         tabular.GetColumns(),
-                        tabular.GetRows())
+                        tabular.GetRows(),
+                        tabular.IsLinkedOutput)
                 };
             }
             else

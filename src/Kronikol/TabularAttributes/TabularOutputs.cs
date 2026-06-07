@@ -106,6 +106,8 @@ public class TabularOutputs<T> : IReadOnlyList<T>, ITabularParameterData, IDispo
             Verify();
     }
 
+    public bool IsLinkedOutput => true;
+
     public TabularColumn[] GetColumns() =>
         _columnNames.Select(n => new TabularColumn(n, false)).ToArray();
 

@@ -31,7 +31,7 @@ public enum StepParameterKind
 public record InlineParameterValue(string Value, string? Expectation, VerificationStatus Status);
 
 /// <summary>A tabular step parameter value with column definitions and data rows.</summary>
-public record TabularParameterValue(TabularColumn[] Columns, TabularRow[] Rows);
+public record TabularParameterValue(TabularColumn[] Columns, TabularRow[] Rows, bool IsLinkedOutput = false);
 
 /// <summary>A column in a tabular step parameter.</summary>
 public record TabularColumn(string Name, bool IsKey);
