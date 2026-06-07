@@ -255,6 +255,81 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
     }
 
     /// <summary>
+    /// Regression: the continuation note in a chunked fragment must show an
+    /// expand (▼) button when it's a long note. The fragContinuationMap maps
+    /// to ownerNoteBlocks[0] which may have truncated lines from the initial
+    /// render — must use the fragment's actual block content for isLongNote.
+    /// </summary>
+    [Fact]
+    public async Task Chunked_continuation_note_has_expand_button()
+    {
+        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedExpandBtn.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                return c && !c._noteRendering && !window._plantumlRendering && c.querySelector('svg');
+            }
+        """, null, new() { Timeout = 60000, PollingInterval = 200 });
+
+        await Page.Locator(".toolbar-row .details-radio-btn[data-state='expanded']").ClickAsync();
+
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                if (!c || c._noteRendering || window._plantumlRendering) return false;
+                var frags = c.querySelectorAll('.puml-fragment');
+                if (frags.length < 2) return false;
+                for (var i = 0; i < frags.length; i++) {
+                    if (!frags[i].querySelector('svg')) return false;
+                }
+                return true;
+            }
+        """, null, new() { Timeout = 120000, PollingInterval = 200 });
+
+        // Switch to truncated to get ▼ button, but since truncated may not chunk,
+        // just check in expanded mode: the continuation note should have a minus
+        // button AND an expand arrow (▼) if it's long
+        var result = await Page.EvaluateAsync<string>("""
+            (() => {
+                var frags = document.querySelectorAll('.puml-fragment');
+                for (var fi = 0; fi < frags.length; fi++) {
+                    var src = frags[fi].getAttribute('data-plantuml') || '';
+                    if (src.indexOf('Continued From Previous Diagram') < 0) continue;
+                    var svg = frags[fi].querySelector('svg');
+                    if (!svg) continue;
+                    var groups = window._findNoteGroups(svg);
+                    if (groups.length === 0) continue;
+                    var bbox = window._getNoteBBox(groups[0]);
+                    groups[0].paths[0].dispatchEvent(new MouseEvent('mouseenter', {bubbles:true}));
+                    var icons = frags[fi].querySelectorAll('.note-toggle-icon');
+                    var hasMinus = false, hasExpand = false;
+                    for (var i = 0; i < icons.length; i++) {
+                        if (icons[i].style.opacity === '0') continue;
+                        var rect = icons[i].querySelector('rect');
+                        if (!rect) continue;
+                        var ix = parseFloat(rect.getAttribute('x'));
+                        var iy = parseFloat(rect.getAttribute('y'));
+                        if (!(ix >= bbox.x-5 && ix <= bbox.x+bbox.width+5
+                            && iy >= bbox.y-5 && iy <= bbox.y+bbox.height+5)) continue;
+                        if (icons[i].getAttribute('data-note-btn') === 'minus') hasMinus = true;
+                        var txt = icons[i].querySelector('text');
+                        if (txt && (txt.textContent.indexOf('▼') >= 0 || txt.textContent.indexOf('▲') >= 0)) hasExpand = true;
+                    }
+                    return 'hasMinus=' + hasMinus + ' hasExpand=' + hasExpand;
+                }
+                return 'NO_CONTINUATION_FRAG';
+            })()
+        """);
+
+        Assert.Contains("hasMinus=true", result);
+        Assert.Contains("hasExpand=true", result);
+    }
+
+    /// <summary>
     /// Regression: clicking expand on the continuation note's down-arrow button
     /// must expand THAT note, not the response note. The issue was that
     /// makeNotesCollapsible used a simple noteIndexOffset that didn't account

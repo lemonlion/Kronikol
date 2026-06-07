@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.38] - 2026-06-07
+
+### Fixed
+- **Continuation notes now show expand (▼) button correctly** — Regression from v3.0.37's `fragContinuationMap` fix: the continuation note mapped to `ownerNoteBlocks[0]` for long-note detection, but that original block had truncated content from its initial render state (17 lines). `isLongNote` returned false, hiding the expand button. Fixed by using the fragment's actual block content for the continuation note's long-note check, which reflects the true chunk size.
+
 ## [3.0.37] - 2026-06-07
 
 ### Fixed

@@ -3030,8 +3030,15 @@ public static class DiagramContextMenu
                         var grp = noteGroups[svgIdx];
                         var bbox = getNoteBBox(grp);
                         var step = owner._noteSteps[globalIdx] || 0;
-                        // Use original content lines for long-note detection (current source may be collapsed/truncated)
-                        var origContentLines = ownerNoteBlocks[globalIdx] ? ownerNoteBlocks[globalIdx].contentLines : noteBlocks[srcIdx].contentLines;
+                        // For continuation notes (fragContinuationMap[0]), use the fragment's
+                        // block content since ownerNoteBlocks[0] may be truncated from its
+                        // initial render state and not reflect the actual chunk content.
+                        var origContentLines;
+                        if (fragContinuationMap && svgIdx === 0) {
+                            origContentLines = noteBlocks[0].contentLines;
+                        } else {
+                            origContentLines = ownerNoteBlocks[globalIdx] ? ownerNoteBlocks[globalIdx].contentLines : noteBlocks[srcIdx].contentLines;
+                        }
                         // Short notes only have steps 0 (collapsed) and 2 (expanded)
                         if (!isLongNote(origContentLines, container._truncateLines, owner._headersHidden) && step === 1) step = 2;
                         createNoteButtons(svg, bbox, step,
