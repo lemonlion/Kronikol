@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.34] - 2026-06-07
+
+### Fixed
+- **Hover buttons on tall notes now reposition to stay visible in the viewport** — For notes taller than the viewport (e.g. large SQL queries that wrap to many lines), the minus/plus button at the top-right corner was scrolled off-screen when viewing the middle of the note. The button now repositions to the visible portion of the note on each hover, using the SVG screen transform to calculate the current scroll position.
+
 ## [3.0.33] - 2026-06-07
 
 ### Fixed

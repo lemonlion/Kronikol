@@ -2738,6 +2738,38 @@ public static class DiagramContextMenu
                 var _noteHideTimeout;
                 function _noteShowButtons() {
                     clearTimeout(_noteHideTimeout);
+                    // For tall notes, reposition top-right buttons to the visible
+                    // portion of the note so they're not scrolled off-screen
+                    if (bbox.height > 500 && svg.getScreenCTM) {
+                        try {
+                            var ctm = svg.getScreenCTM();
+                            if (ctm) {
+                                var noteScreenTop = bbox.y * ctm.d + ctm.f;
+                                var noteScreenBot = (bbox.y + bbox.height) * ctm.d + ctm.f;
+                                var visTop = Math.max(0, noteScreenTop);
+                                var visSvgY = (visTop - ctm.f) / ctm.d;
+                                var btnY = Math.max(bbox.y + pad, Math.min(visSvgY + pad, bbox.y + bbox.height - topSize * 2 - pad));
+                                buttons.forEach(function(b) {
+                                    var btn = b.getAttribute('data-note-btn');
+                                    if (btn === 'minus' || btn === 'plus') {
+                                        var rects = b.querySelectorAll('rect');
+                                        var lines = b.querySelectorAll('line');
+                                        var txts = b.querySelectorAll('text');
+                                        if (rects.length > 0) {
+                                            rects[0].setAttribute('y', btnY);
+                                            lines.forEach(function(l) {
+                                                l.setAttribute('y1', btnY + topSize / 2);
+                                                l.setAttribute('y2', btnY + topSize / 2);
+                                            });
+                                            txts.forEach(function(t) {
+                                                t.setAttribute('y', btnY + topSize - 3);
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        } catch(e) {}
+                    }
                     buttons.forEach(function(b) { b.style.opacity = '1'; });
                 }
                 function _noteScheduleHide() {
