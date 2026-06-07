@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.33] - 2026-06-07
+
+### Fixed
+- **Hover buttons now appear on continuation notes with Creole separators (proper fix)** — PlantUML renders `..text..` Creole separators as text/line/polygon elements that appear BEFORE the note's path elements in SVG DOM order. `findNoteGroups` only scanned forward from paths to texts, so these pre-path text elements were orphaned — the continuation note was detected as a group but its "Continued From Previous Diagram" text wasn't included, and hover events on that text area didn't trigger the buttons. Fixed by adding a sweep after group detection that collects orphaned text elements within each note's bounding box regardless of DOM order. Verified by monkey-patching the user's original HTML (v3.0.31) to confirm the fix resolves the exact bug.
+
 ## [3.0.32] - 2026-06-07
 
 ### Fixed

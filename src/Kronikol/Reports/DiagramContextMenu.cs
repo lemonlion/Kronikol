@@ -2502,6 +2502,40 @@ public static class DiagramContextMenu
                         ci++;
                     }
                 }
+                // Sweep for orphaned text elements that fall within a candidate's
+                // bounding box but weren't collected in the forward scan. This
+                // handles PlantUML Creole separators (..text..) which render text
+                // and line elements BEFORE the note's path elements in DOM order.
+                candidates.forEach(function(grp) {
+                    var nb = null;
+                    for (var nbi = 0; nbi < grp.paths.length; nbi++) {
+                        try {
+                            var pbb = grp.paths[nbi].getBBox();
+                            if (pbb.width <= 0 && pbb.height <= 0) continue;
+                            if (!nb) { nb = { x: pbb.x, y: pbb.y, r: pbb.x + pbb.width, b: pbb.y + pbb.height }; }
+                            else {
+                                if (pbb.x < nb.x) nb.x = pbb.x;
+                                if (pbb.y < nb.y) nb.y = pbb.y;
+                                if (pbb.x + pbb.width > nb.r) nb.r = pbb.x + pbb.width;
+                                if (pbb.y + pbb.height > nb.b) nb.b = pbb.y + pbb.height;
+                            }
+                        } catch(e) {}
+                    }
+                    if (!nb) return;
+                    var collected = new Set(grp.texts);
+                    for (var oi = 0; oi < children.length; oi++) {
+                        if (children[oi].tagName !== 'text') continue;
+                        if (collected.has(children[oi])) continue;
+                        try {
+                            var tb = children[oi].getBBox();
+                            if (tb.x >= nb.x - 2 && tb.x + tb.width <= nb.r + 2
+                                && tb.y >= nb.y - 2 && tb.y + tb.height <= nb.b + 2) {
+                                grp.texts.push(children[oi]);
+                            }
+                        } catch(e) {}
+                    }
+                });
+
                 // Filter to groups with the note fold triangle — this excludes
                 // participant shapes (entity/database/queue boxes) that also
                 // produce path+text groups but lack the fold. Falls back to all
