@@ -2587,13 +2587,13 @@ public static class DiagramContextMenu
                 return 'truncated';
             }
 
-            function createNoteButtons(svg, bbox, noteStep, onExpand, onContract, onTruncate, onCycle, contentLines, grp, container) {
+            function createNoteButtons(svg, bbox, noteStep, onExpand, onContract, onTruncate, onCycle, contentLines, grp, container, forceIsLong) {
                 var size = 12;
                 var topSize = 14;
                 var pad = 3;
                 var state = noteStepState(noteStep);
                 var hdrHidden = container._headersHidden !== undefined ? container._headersHidden : (container.parentElement && container.parentElement._headersHidden) || window._headersHidden;
-                var longNote = isLongNote(contentLines, container._truncateLines, hdrHidden);
+                var longNote = forceIsLong || isLongNote(contentLines, container._truncateLines, hdrHidden);
                 var buttons = [];
 
                 // Top-right area: contract buttons — shown when expanded or truncated
@@ -3030,20 +3030,15 @@ public static class DiagramContextMenu
                         var grp = noteGroups[svgIdx];
                         var bbox = getNoteBBox(grp);
                         var step = owner._noteSteps[globalIdx] || 0;
-                        // For continuation notes (fragContinuationMap[0]), use the fragment's
-                        // block content since ownerNoteBlocks[0] may be truncated from its
-                        // initial render state and not reflect the actual chunk content.
-                        var origContentLines;
-                        if (fragContinuationMap && svgIdx === 0) {
-                            origContentLines = noteBlocks[0].contentLines;
-                        } else {
-                            origContentLines = ownerNoteBlocks[globalIdx] ? ownerNoteBlocks[globalIdx].contentLines : noteBlocks[srcIdx].contentLines;
-                        }
+                        var origContentLines = ownerNoteBlocks[globalIdx] ? ownerNoteBlocks[globalIdx].contentLines : noteBlocks[srcIdx].contentLines;
+                        // Continuation notes are always "long" — they're chunks of a
+                        // larger note, and expand should reveal the full original content.
+                        var forceIsLong = !!(fragContinuationMap && svgIdx === 0);
                         // Short notes only have steps 0 (collapsed) and 2 (expanded)
-                        if (!isLongNote(origContentLines, container._truncateLines, owner._headersHidden) && step === 1) step = 2;
+                        if (!forceIsLong && !isLongNote(origContentLines, container._truncateLines, owner._headersHidden) && step === 1) step = 2;
                         createNoteButtons(svg, bbox, step,
                             function() {
-                                var long = isLongNote(origContentLines, container._truncateLines, owner._headersHidden);
+                                var long = forceIsLong || isLongNote(origContentLines, container._truncateLines, owner._headersHidden);
                                 var curStep = owner._noteSteps[globalIdx] || 0;
                                 setNoteState(owner, globalIdx, (long && curStep === 0) ? 1 : 2);
                             },
@@ -3051,14 +3046,14 @@ public static class DiagramContextMenu
                             function() { setNoteState(owner, globalIdx, 1); },
                             function() {
                                 var curStep = owner._noteSteps[globalIdx] || 0;
-                                var long = isLongNote(origContentLines, container._truncateLines, owner._headersHidden);
+                                var long = forceIsLong || isLongNote(origContentLines, container._truncateLines, owner._headersHidden);
                                 var nextStep;
                                 if (curStep === 2) nextStep = long ? 1 : 0;
                                 else if (curStep === 1) nextStep = 0;
                                 else nextStep = long ? 1 : 2;
                                 setNoteState(owner, globalIdx, nextStep);
                             },
-                            origContentLines, grp, container);
+                            origContentLines, grp, container, forceIsLong);
                     })(ni, sourceIndexMap ? sourceIndexMap[ni] : (fragContinuationMap ? fragContinuationMap[ni] : ni));
                 }
             }
