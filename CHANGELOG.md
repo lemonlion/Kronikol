@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
-## [3.0.38] - 2026-06-08
+## [3.0.39] - 2026-06-12
 
 ### Fixed
 - **Continuation notes now always show expand (▼) button** — Continuation notes are chunks of a larger note, so they must always be treated as "long" regardless of chunk size. The expand button allows revealing the full original note content. Previously, `isLongNote` returned false for small chunks (e.g. 11 lines < 40 truncateLines), hiding the expand button. Fixed by adding `forceIsLong` flag for continuation notes that bypasses the `isLongNote` check throughout `createNoteButtons` and the expand/cycle callbacks. Verified by monkey-patching the user's original v3.0.37 HTML.
