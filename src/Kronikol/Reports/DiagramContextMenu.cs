@@ -780,10 +780,12 @@ public static class DiagramContextMenu
                         item.el.dataset.rendered = '1';
                         var hookTarget = item.isFragment ? item.el : item.el;
                         var iflowSource = item.parentEl ? item.parentEl._fullSource || item.source : item.source;
-                        bindIflowLinks(hookTarget, iflowSource);
-                        if (window._makeNotesCollapsible) window._makeNotesCollapsible(hookTarget);
-                        if (window._addAssertionTooltips) window._addAssertionTooltips(hookTarget);
-                        requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(hookTarget); });
+                        try {
+                            bindIflowLinks(hookTarget, iflowSource);
+                            if (window._makeNotesCollapsible) window._makeNotesCollapsible(hookTarget);
+                            if (window._addAssertionTooltips) window._addAssertionTooltips(hookTarget);
+                            requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(hookTarget); });
+                        } catch(hookErr) { console.error('Post-render hook error:', hookErr); }
                         rendering = false;
                         window._plantumlRendering = false;
                         processQueue();
@@ -2884,7 +2886,15 @@ public static class DiagramContextMenu
                     var siblingFrags = owner.querySelectorAll('.puml-fragment');
                     for (var fi = 0; fi < fragIdx && fi < siblingFrags.length; fi++) {
                         var sibSource = siblingFrags[fi].getAttribute('data-plantuml');
-                        if (sibSource) noteIndexOffset += parseNoteBlocks(sibSource).length;
+                        if (sibSource) {
+                            var sibNotes = parseNoteBlocks(sibSource);
+                            var sibCount = sibNotes.length;
+                            if (sibCount > 0 && sibNotes[0].contentLines[0] &&
+                                sibNotes[0].contentLines[0].indexOf('Continued From Previous Diagram') >= 0) {
+                                sibCount--;
+                            }
+                            noteIndexOffset += sibCount;
+                        }
                     }
                     if (fragNoteBlocks.length > 0 && fragNoteBlocks[0].contentLines[0] &&
                         fragNoteBlocks[0].contentLines[0].indexOf('Continued From Previous Diagram') >= 0) {
@@ -3024,13 +3034,17 @@ public static class DiagramContextMenu
                     : Math.min(noteGroups.length, noteBlocks.length);
 
                 for (var ni = 0; ni < loopCount; ni++) {
-                    (function(svgIdx, srcIdx) {
-                        var globalFilteredIdx = fragContinuationMap ? srcIdx : srcIdx + noteIndexOffset;
+                    (function(svgIdx, localIdx) {
+                        var globalFilteredIdx = fragContinuationMap
+                            ? (localIdx < fragContinuationMap.length ? fragContinuationMap[localIdx] : localIdx + noteIndexOffset)
+                            : localIdx + noteIndexOffset;
                         var globalIdx = filteredToOrigMap ? (globalFilteredIdx < filteredToOrigMap.length ? filteredToOrigMap[globalFilteredIdx] : globalFilteredIdx) : globalFilteredIdx;
                         var grp = noteGroups[svgIdx];
                         var bbox = getNoteBBox(grp);
                         var step = owner._noteSteps[globalIdx] || 0;
-                        var origContentLines = ownerNoteBlocks[globalIdx] ? ownerNoteBlocks[globalIdx].contentLines : noteBlocks[srcIdx].contentLines;
+                        var origContentLines = ownerNoteBlocks[globalIdx]
+                            ? ownerNoteBlocks[globalIdx].contentLines
+                            : (noteBlocks[localIdx] ? noteBlocks[localIdx].contentLines : []);
                         // Continuation notes are always "long" — they're chunks of a
                         // larger note, and expand should reveal the full original content.
                         var forceIsLong = !!(fragContinuationMap && svgIdx === 0);
@@ -3054,7 +3068,7 @@ public static class DiagramContextMenu
                                 setNoteState(owner, globalIdx, nextStep);
                             },
                             origContentLines, grp, container, forceIsLong);
-                    })(ni, sourceIndexMap ? sourceIndexMap[ni] : (fragContinuationMap ? fragContinuationMap[ni] : ni));
+                    })(ni, sourceIndexMap ? sourceIndexMap[ni] : ni);
                 }
             }
 

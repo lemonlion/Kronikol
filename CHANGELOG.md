@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.40] - 2026-06-12
+
+### Fixed
+- **Three-fragment continuation notes no longer crash `makeNotesCollapsible`** — When a large note spanned 3+ client-side fragments, `noteIndexOffset` counted all note blocks from previous fragments including continuation blocks. Since continuation blocks don't represent new global notes, this inflated the offset, causing out-of-bounds access into `ownerNoteBlocks` and `noteBlocks`. The uncaught exception halted the render queue, preventing all subsequent diagrams from appearing. Fixed by subtracting continuation notes from previous fragments' counts, restructuring the index mapping to always pass local indices into the IIFE (with local→global conversion via `fragContinuationMap` inside), using safe fallback for `origContentLines`, and wrapping post-render hooks in try-catch to prevent any future error from stalling the queue.
+
 ## [3.0.39] - 2026-06-12
 
 ### Fixed

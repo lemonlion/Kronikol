@@ -70,6 +70,9 @@ public abstract class DiagramNotePlaywrightBase : PlaywrightTestBase
     protected string GenerateChunkedDatabaseNoteReport(string fileName) =>
         ReportTestHelper.GenerateReportWithChunkedDatabaseNote(TempDir, OutputDir, fileName);
 
+    protected string GenerateThreeFragmentContinuationReport(string fileName) =>
+        ReportTestHelper.GenerateReportWithThreeFragmentContinuation(TempDir, OutputDir, fileName);
+
     protected async Task ExpandAndRenderLongNoteDiagram(string fileName)
     {
         await Page.GotoAsync(GenerateLongNoteReport(fileName));

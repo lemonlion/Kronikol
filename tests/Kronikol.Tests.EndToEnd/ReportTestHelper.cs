@@ -2467,4 +2467,82 @@ public static class ReportTestHelper
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }
+
+    /// <summary>
+    /// Generates a report with a note large enough to span 3+ client-side fragments,
+    /// plus additional notes after it. This exercises the noteIndexOffset continuation
+    /// overcounting bug: when fragment 1 has a continuation, its note count inflates
+    /// the offset for fragment 2, causing out-of-bounds access.
+    /// </summary>
+    public static string GenerateReportWithThreeFragmentContinuation(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+
+        // A very large query that forces the note to span 3+ fragments
+        var hugeQuery = string.Concat(Enumerable.Repeat(
+            "        SAFE_DIVIDE((t.total_cards - t.total_cards_lag), t.total_cards_lag) AS metric_change,\n", 500));
+
+        var source = $$"""
+            @startuml
+            !pragma teoz true
+            skinparam wrapWidth 800
+            autonumber 1
+
+            actor "Caller" as caller
+            entity "API" as api
+            database "BigQuery" as bq
+
+            caller -[#438DD5]> api: POST /api/data
+            note left
+            {
+              "context": { "reportDate": "2025-11-10" }
+            }
+            end note
+            api -[#E74C3C]> bq: Query /data
+            note left
+            {
+              "configuration": {
+                "query": {
+                  "query": "SELECT
+            {{hugeQuery}}
+                  FROM `data.transactions` t;"
+                }
+              }
+            }
+            end note
+            bq -[#E74C3C]-> api: OK
+            note right
+            {
+              "status": { "state": "DONE" },
+              "rows": [
+                { "f": [{ "v": "42" }] }
+              ]
+            }
+            end note
+            api -[#438DD5]-> caller: OK
+            note right
+            {
+              "metrics": { "total": 42 },
+              "charts": { "count": 1 }
+            }
+            end note
+
+            @enduml
+            """;
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", source)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
 }
