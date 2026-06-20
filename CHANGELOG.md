@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.42] - 2026-06-20
+
+### Added
+- **Full step-detail fidelity in merged reports** — The mergeable report format (`GenerateMergeableData`) now carries everything needed to render steps exactly as a single combined run would: inline parameter highlighting (`TextSegments`), tabular/tree/inline step parameters, doc-strings, comments and bypass reasons (in addition to the step text, status, durations, substeps and attachments already carried). `kronikol merge` therefore reproduces step parameter tables, table-ref toggles and inline-highlighted values in the combined report. The standard `TestRunReport.json` format is unchanged — the extra detail is only emitted in the enriched mergeable file.
+
 ## [3.0.41] - 2026-06-20
 
 ### Added

@@ -106,11 +106,107 @@ public static class MergeableReportReader
             Duration = s.TryGetProperty("durationSeconds", out var sd) && sd.ValueKind == JsonValueKind.Number
                 ? TimeSpan.FromSeconds(sd.GetDouble())
                 : null,
+            BypassReason = GetString(s, "bypassReason"),
+            DocString = GetString(s, "docString"),
+            DocStringMediaType = GetString(s, "docStringMediaType"),
+            Comments = ReadStringArray(s, "comments"),
             SubSteps = ReadSteps(s, "subSteps"),
-            Attachments = ReadAttachments(s, "attachments")
+            Attachments = ReadAttachments(s, "attachments"),
+            Parameters = ReadParameters(s),
+            TextSegments = ReadTextSegments(s)
         }).ToArray();
 
         return steps.Length > 0 ? steps : null;
+    }
+
+    private static StepParameter[]? ReadParameters(JsonElement step)
+    {
+        if (!step.TryGetProperty("parameters", out var arr) || arr.ValueKind != JsonValueKind.Array)
+            return null;
+
+        var list = arr.EnumerateArray().Select(p => new StepParameter
+        {
+            Name = GetString(p, "name") ?? "",
+            Kind = ReadEnum(GetString(p, "kind"), StepParameterKind.Inline),
+            InlineValue = ReadInlineValue(p, "inlineValue"),
+            TabularValue = ReadTabular(p),
+            TreeValue = ReadTree(p)
+        }).ToArray();
+
+        return list.Length > 0 ? list : null;
+    }
+
+    private static InlineParameterValue? ReadInlineValue(JsonElement parent, string name)
+    {
+        if (!parent.TryGetProperty(name, out var v) || v.ValueKind != JsonValueKind.Object)
+            return null;
+        return new InlineParameterValue(
+            GetString(v, "value") ?? "",
+            GetString(v, "expectation"),
+            ReadEnum(GetString(v, "status"), VerificationStatus.NotApplicable));
+    }
+
+    private static TabularParameterValue? ReadTabular(JsonElement parent)
+    {
+        if (!parent.TryGetProperty("tabularValue", out var t) || t.ValueKind != JsonValueKind.Object)
+            return null;
+
+        var columns = EnumerateArray(t, "columns")
+            .Select(c => new TabularColumn(GetString(c, "name") ?? "", c.TryGetProperty("isKey", out var k) && k.ValueKind == JsonValueKind.True))
+            .ToArray();
+
+        var rows = EnumerateArray(t, "rows")
+            .Select(r => new TabularRow(
+                ReadEnum(GetString(r, "type"), TableRowType.Matching),
+                EnumerateArray(r, "values").Select(ReadCell).ToArray()))
+            .ToArray();
+
+        var isLinkedOutput = t.TryGetProperty("isLinkedOutput", out var lo) && lo.ValueKind == JsonValueKind.True;
+        return new TabularParameterValue(columns, rows, isLinkedOutput);
+    }
+
+    private static TabularCell ReadCell(JsonElement c) => new(
+        GetString(c, "value") ?? "",
+        GetString(c, "expectation"),
+        ReadEnum(GetString(c, "status"), VerificationStatus.NotApplicable));
+
+    private static TreeParameterValue? ReadTree(JsonElement parent)
+    {
+        if (!parent.TryGetProperty("treeValue", out var t) || t.ValueKind != JsonValueKind.Object
+            || !t.TryGetProperty("root", out var root) || root.ValueKind != JsonValueKind.Object)
+            return null;
+        return new TreeParameterValue(ReadTreeNode(root));
+    }
+
+    private static TreeNode ReadTreeNode(JsonElement n)
+    {
+        var children = n.TryGetProperty("children", out var ch) && ch.ValueKind == JsonValueKind.Array
+            ? ch.EnumerateArray().Select(ReadTreeNode).ToArray()
+            : null;
+        return new TreeNode(
+            GetString(n, "path") ?? "",
+            GetString(n, "node") ?? "",
+            GetString(n, "value") ?? "",
+            GetString(n, "expectation"),
+            ReadEnum(GetString(n, "status"), VerificationStatus.NotApplicable),
+            children);
+    }
+
+    private static StepTextSegment[]? ReadTextSegments(JsonElement step)
+    {
+        if (!step.TryGetProperty("textSegments", out var arr) || arr.ValueKind != JsonValueKind.Array)
+            return null;
+
+        var list = arr.EnumerateArray().Select(s => new StepTextSegment
+        {
+            Text = GetString(s, "text"),
+            ParameterName = GetString(s, "parameterName"),
+            Parameter = ReadInlineValue(s, "parameter"),
+            TableReference = GetString(s, "tableReference"),
+            TableReferenceFormattedValue = GetString(s, "tableReferenceFormattedValue")
+        }).ToArray();
+
+        return list.Length > 0 ? list : null;
     }
 
     private static FileAttachment[]? ReadAttachments(JsonElement parent, string name)

@@ -182,6 +182,115 @@ public class MergeableReportTests
     }
 
     [Fact]
+    public void Roundtrip_preserves_full_step_detail()
+    {
+        var step = new ScenarioStep
+        {
+            Keyword = "Given",
+            Text = "a muffin recipe",
+            Status = ExecutionResult.Bypassed,
+            BypassReason = "not implemented",
+            Duration = TimeSpan.FromSeconds(0.25),
+            DocString = "{ \"k\": 1 }",
+            DocStringMediaType = "application/json",
+            Comments = ["note one", "note two"],
+            TextSegments =
+            [
+                StepTextSegment.Literal("a muffin "),
+                StepTextSegment.Param("size", new InlineParameterValue("large", "small", VerificationStatus.Failure)),
+                StepTextSegment.TableRef("recipe", "see table")
+            ],
+            Parameters =
+            [
+                new StepParameter
+                {
+                    Name = "qty",
+                    Kind = StepParameterKind.Inline,
+                    InlineValue = new InlineParameterValue("2", null, VerificationStatus.Success)
+                },
+                new StepParameter
+                {
+                    Name = "recipe",
+                    Kind = StepParameterKind.Tabular,
+                    TabularValue = new TabularParameterValue(
+                        [new TabularColumn("Name", true), new TabularColumn("Flour", false)],
+                        [new TabularRow(TableRowType.Matching,
+                            [new TabularCell("Classic", null, VerificationStatus.NotApplicable),
+                             new TabularCell("Plain", "Plain", VerificationStatus.Success)])],
+                        IsLinkedOutput: true)
+                },
+                new StepParameter
+                {
+                    Name = "tree",
+                    Kind = StepParameterKind.Tree,
+                    TreeValue = new TreeParameterValue(
+                        new TreeNode("$", "root", "", null, VerificationStatus.NotApplicable,
+                            [new TreeNode("$.a", "a", "1", "1", VerificationStatus.Success, null)]))
+                }
+            ],
+            SubSteps =
+            [
+                new ScenarioStep { Keyword = "And", Text = "sugar", Status = ExecutionResult.Passed,
+                    TextSegments = [StepTextSegment.Literal("sugar")] }
+            ]
+        };
+
+        var features = new[]
+        {
+            new Feature { DisplayName = "Baking", Scenarios = [ new Scenario { Id = "b1", DisplayName = "Bake", Result = ExecutionResult.Passed, Steps = [step] } ] }
+        };
+
+        var json = ReportGenerator.GenerateMergeableReportJson(
+            features, new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc), new DateTime(2026, 1, 1, 10, 1, 0, DateTimeKind.Utc),
+            diagramLookup: null, componentRelationships: null, internalFlowSegmentData: null, wholeTestFlow: null,
+            WholeTestFlowVisualization.None, ciMetadata: null);
+
+        var report = MergeableReportReader.Parse(json);
+        var s = report.Features[0].Scenarios[0].Steps![0];
+
+        Assert.Equal(ExecutionResult.Bypassed, s.Status);
+        Assert.Equal("not implemented", s.BypassReason);
+        Assert.Equal("{ \"k\": 1 }", s.DocString);
+        Assert.Equal("application/json", s.DocStringMediaType);
+        Assert.Equal(["note one", "note two"], s.Comments!);
+
+        // Text segments
+        Assert.NotNull(s.TextSegments);
+        Assert.Equal(3, s.TextSegments!.Length);
+        Assert.Equal("a muffin ", s.TextSegments[0].Text);
+        Assert.Equal("size", s.TextSegments[1].ParameterName);
+        Assert.Equal("large", s.TextSegments[1].Parameter!.Value);
+        Assert.Equal(VerificationStatus.Failure, s.TextSegments[1].Parameter!.Status);
+        Assert.Equal("recipe", s.TextSegments[2].TableReference);
+        Assert.Equal("see table", s.TextSegments[2].TableReferenceFormattedValue);
+
+        // Parameters: inline, tabular, tree
+        Assert.NotNull(s.Parameters);
+        Assert.Equal(3, s.Parameters!.Length);
+
+        var inline = s.Parameters.Single(p => p.Name == "qty");
+        Assert.Equal(StepParameterKind.Inline, inline.Kind);
+        Assert.Equal("2", inline.InlineValue!.Value);
+        Assert.Equal(VerificationStatus.Success, inline.InlineValue.Status);
+
+        var tabular = s.Parameters.Single(p => p.Name == "recipe");
+        Assert.True(tabular.TabularValue!.IsLinkedOutput);
+        Assert.Equal(2, tabular.TabularValue.Columns.Length);
+        Assert.True(tabular.TabularValue.Columns[0].IsKey);
+        Assert.Equal(TableRowType.Matching, tabular.TabularValue.Rows[0].Type);
+        Assert.Equal("Classic", tabular.TabularValue.Rows[0].Values[0].Value);
+
+        var tree = s.Parameters.Single(p => p.Name == "tree");
+        Assert.Equal("root", tree.TreeValue!.Root.Node);
+        Assert.Single(tree.TreeValue.Root.Children!);
+        Assert.Equal("1", tree.TreeValue.Root.Children![0].Value);
+
+        // Sub-step detail preserved
+        Assert.NotNull(s.SubSteps);
+        Assert.Equal("sugar", s.SubSteps![0].TextSegments![0].Text);
+    }
+
+    [Fact]
     public void Render_produces_combined_html_with_features_component_diagram_and_flow()
     {
         var reportA = MergeableReportReader.Parse(SerializeA());

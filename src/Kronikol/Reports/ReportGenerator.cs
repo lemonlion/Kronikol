@@ -3752,8 +3752,10 @@ public static class ReportGenerator
     /// and the enriched "mergeable" JSON. Keeping a single source of truth ensures the mergeable
     /// format remains a strict superset that the merge reader can parse.
     /// </summary>
-    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup) =>
-        features.OrderBy(f => f.DisplayName).Select(f => (object)new Dictionary<string, object?>
+    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false)
+    {
+        Func<ScenarioStep, object> stepMapper = fullStepDetail ? MapStepJsonFull : MapStepJson;
+        return features.OrderBy(f => f.DisplayName).Select(f => (object)new Dictionary<string, object?>
         {
             ["name"] = f.DisplayName,
             ["endpoint"] = f.Endpoint,
@@ -3778,8 +3780,8 @@ public static class ReportGenerator
                     ["exampleValues"] = s.ExampleValues,
                     ["exampleDisplayName"] = s.ExampleDisplayName,
                     ["attachments"] = (s.Attachments ?? []).Select(a => new { a.Name, a.RelativePath }).ToArray(),
-                    ["backgroundSteps"] = (s.BackgroundSteps ?? []).Select(MapStepJson).ToArray(),
-                    ["steps"] = (s.Steps ?? []).Select(MapStepJson).ToArray()
+                    ["backgroundSteps"] = (s.BackgroundSteps ?? []).Select(stepMapper).ToArray(),
+                    ["steps"] = (s.Steps ?? []).Select(stepMapper).ToArray()
                 };
 
                 if (diagramLookup != null)
@@ -3791,6 +3793,7 @@ public static class ReportGenerator
                 return scenario;
             }).ToArray()
         }).ToArray();
+    }
 
     /// <summary>
     /// Assembles the enriched "mergeable" report from in-process state captured during a test run:
@@ -3878,7 +3881,7 @@ public static class ReportGenerator
             ["mergeableFormatVersion"] = 1,
             ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup: null),
+            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup: null, fullStepDetail: true),
             ["wholeTestVisualization"] = wholeTestVisualization.ToString(),
             ["componentRelationships"] = (componentRelationships ?? []).Select(r => new
             {
@@ -3935,6 +3938,79 @@ public static class ReportGenerator
         DurationSeconds = step.Duration?.TotalSeconds,
         SubSteps = (step.SubSteps ?? []).Select(MapStepJson).ToArray(),
         Attachments = (step.Attachments ?? []).Select(a => new { a.Name, a.RelativePath }).ToArray()
+    };
+
+    /// <summary>
+    /// Step mapping for the mergeable report — a superset of <see cref="MapStepJson"/> that also carries
+    /// the data needed for full rendering fidelity when merging: inline parameter highlighting
+    /// (<see cref="ScenarioStep.TextSegments"/>), tabular/tree/inline parameters, doc-strings, comments
+    /// and bypass reason.
+    /// </summary>
+    private static object MapStepJsonFull(ScenarioStep step) => new
+    {
+        step.Keyword,
+        step.Text,
+        Status = step.Status?.ToString(),
+        DurationSeconds = step.Duration?.TotalSeconds,
+        step.BypassReason,
+        step.DocString,
+        step.DocStringMediaType,
+        Comments = step.Comments ?? [],
+        SubSteps = (step.SubSteps ?? []).Select(MapStepJsonFull).ToArray(),
+        Attachments = (step.Attachments ?? []).Select(a => new { a.Name, a.RelativePath }).ToArray(),
+        Parameters = (step.Parameters ?? []).Select(MapStepParameterJson).ToArray(),
+        TextSegments = step.TextSegments?.Select(MapTextSegmentJson).ToArray()
+    };
+
+    private static object MapStepParameterJson(StepParameter p) => new
+    {
+        p.Name,
+        Kind = p.Kind.ToString(),
+        InlineValue = p.InlineValue is null ? null : MapInlineValueJson(p.InlineValue),
+        TabularValue = p.TabularValue is null ? null : new
+        {
+            Columns = p.TabularValue.Columns.Select(c => new { c.Name, c.IsKey }).ToArray(),
+            Rows = p.TabularValue.Rows.Select(r => new
+            {
+                Type = r.Type.ToString(),
+                Values = r.Values.Select(MapCellJson).ToArray()
+            }).ToArray(),
+            p.TabularValue.IsLinkedOutput
+        },
+        TreeValue = p.TreeValue is null ? null : new { Root = MapTreeNodeJson(p.TreeValue.Root) }
+    };
+
+    private static object MapInlineValueJson(InlineParameterValue v) => new
+    {
+        v.Value,
+        v.Expectation,
+        Status = v.Status.ToString()
+    };
+
+    private static object MapCellJson(TabularCell c) => new
+    {
+        c.Value,
+        c.Expectation,
+        Status = c.Status.ToString()
+    };
+
+    private static object MapTreeNodeJson(TreeNode n) => new
+    {
+        n.Path,
+        n.Node,
+        n.Value,
+        n.Expectation,
+        Status = n.Status.ToString(),
+        Children = n.Children?.Select(MapTreeNodeJson).ToArray()
+    };
+
+    private static object MapTextSegmentJson(StepTextSegment s) => new
+    {
+        s.Text,
+        s.ParameterName,
+        Parameter = s.Parameter is null ? null : MapInlineValueJson(s.Parameter),
+        s.TableReference,
+        s.TableReferenceFormattedValue
     };
 
     private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup)

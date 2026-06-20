@@ -327,7 +327,31 @@ public static class ReportTestHelper
                 DisplayName = "Order Feature",
                 Scenarios =
                 [
-                    new Scenario { Id = "m1", DisplayName = "Create order successfully", IsHappyPath = true, Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2), Categories = ["Smoke"] },
+                    new Scenario
+                    {
+                        Id = "m1", DisplayName = "Create order successfully", IsHappyPath = true, Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2), Categories = ["Smoke"],
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Given", Text = "a muffin recipe", Status = ExecutionResult.Passed,
+                                TextSegments = [StepTextSegment.Literal("a muffin "), StepTextSegment.TableRef("recipe")],
+                                Parameters =
+                                [
+                                    new StepParameter
+                                    {
+                                        Name = "recipe", Kind = StepParameterKind.Tabular,
+                                        TabularValue = new TabularParameterValue(
+                                            [new TabularColumn("Name", false), new TabularColumn("Flour", false)],
+                                            [new TabularRow(TableRowType.Matching,
+                                                [new TabularCell("Classic", null, VerificationStatus.NotApplicable),
+                                                 new TabularCell("Plain Flour", null, VerificationStatus.NotApplicable)])])
+                                    }
+                                ]
+                            },
+                            new ScenarioStep { Keyword = "Then", Text = "the order is created", Status = ExecutionResult.Passed }
+                        ]
+                    },
                     new Scenario { Id = "m2", DisplayName = "Delete order fails gracefully", Result = ExecutionResult.Failed, ErrorMessage = "404", Duration = TimeSpan.FromSeconds(1) }
                 ]
             }
