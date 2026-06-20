@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks />
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>kronikol</ToolCommandName>
+    <PackageId>Kronikol.Tool</PackageId>
+    <Title>Kronikol CLI</Title>
+    <Description>Command-line companion for Kronikol. Includes `kronikol merge`, which combines several mergeable TestRunReport.json files (produced with GenerateMergeableData enabled — e.g. by parallel CI runners) into a single combined TestRunReport.html with the same information as a single combined run.</Description>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
+  </ItemGroup>
+
+</Project>

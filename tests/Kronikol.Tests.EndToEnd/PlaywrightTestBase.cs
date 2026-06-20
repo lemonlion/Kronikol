@@ -53,6 +53,9 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
     protected string GenerateReportWithEmbeddedComponentDiagram(string fileName) =>
         ReportTestHelper.GenerateReportWithEmbeddedComponentDiagram(TempDir, OutputDir, fileName);
 
+    protected string GenerateMergedReport(string fileName) =>
+        ReportTestHelper.GenerateMergedReport(TempDir, OutputDir, fileName);
+
     protected string GenerateReportWithStepTableToggle(string fileName) =>
         ReportTestHelper.GenerateReportWithStepTableToggle(TempDir, OutputDir, fileName);
 

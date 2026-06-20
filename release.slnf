@@ -3,6 +3,7 @@
     "path": "Kronikol.sln",
     "projects": [
       "src/Kronikol/Kronikol.csproj",
+      "src/Kronikol.Tool/Kronikol.Tool.csproj",
       "src/Kronikol.BDDfy.xUnit3/Kronikol.BDDfy.xUnit3.csproj",
       "src/Kronikol.Extensions.AtlasDataApi/Kronikol.Extensions.AtlasDataApi.csproj",
       "src/Kronikol.Extensions.BigQuery/Kronikol.Extensions.BigQuery.csproj",

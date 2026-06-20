@@ -24,6 +24,35 @@ public static class InternalFlowHtmlGenerator
         InternalFlowSpanGranularity granularity = InternalFlowSpanGranularity.AutoInstrumentation,
         string[]? configuredActivitySources = null)
     {
+        var data = BuildSegmentData(segments, diagramStyle, showFlameChart, flameChartPosition, noDataBehavior, granularity, configuredActivitySources);
+        return WrapSegmentData(data);
+    }
+
+    /// <summary>
+    /// Wraps a precomputed segment-data map in the <c>window.__iflowSegments</c> script block.
+    /// Used both by <see cref="GenerateSegmentDataScript"/> and when re-rendering a merged report
+    /// from previously serialized segment data.
+    /// </summary>
+    public static string WrapSegmentData(Dictionary<string, object> data)
+    {
+        var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false });
+        return $"<script>window.__iflowSegments = {json};</script>";
+    }
+
+    /// <summary>
+    /// Builds the per-segment data map (segment key → { title, content, flameData }) that the popup
+    /// JavaScript consumes. The rendered fragments inline their compressed payloads (no shared
+    /// <c>diagramDataMap</c>), so the map is fully self-contained and safe to serialize and merge.
+    /// </summary>
+    public static Dictionary<string, object> BuildSegmentData(
+        Dictionary<string, InternalFlowSegment> segments,
+        InternalFlowDiagramStyle diagramStyle,
+        bool showFlameChart = false,
+        InternalFlowFlameChartPosition flameChartPosition = InternalFlowFlameChartPosition.BehindWithToggle,
+        InternalFlowNoDataBehavior noDataBehavior = InternalFlowNoDataBehavior.HideLink,
+        InternalFlowSpanGranularity granularity = InternalFlowSpanGranularity.AutoInstrumentation,
+        string[]? configuredActivitySources = null)
+    {
         var data = new Dictionary<string, object>();
 
         foreach (var (key, segment) in segments)
@@ -90,8 +119,7 @@ public static class InternalFlowHtmlGenerator
             }
         }
 
-        var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false });
-        return $"<script>window.__iflowSegments = {json};</script>";
+        return data;
     }
 
     private static string BuildEmptyDiagnosticMessage(

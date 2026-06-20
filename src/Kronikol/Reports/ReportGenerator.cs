@@ -178,7 +178,16 @@ public static class ReportGenerator
 
         if (options.GenerateTestRunReportData)
         {
-            actions.Add(() => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, trackedLogs));
+            if (options.GenerateMergeableData && options.TestRunReportDataFormat == DataFormat.Json)
+            {
+                actions.Add(() => WriteFile(
+                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, trackedLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options),
+                    $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"));
+            }
+            else
+            {
+                actions.Add(() => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, trackedLogs));
+            }
         }
 
         if (options.GenerateTestRunReportSchema)
@@ -270,7 +279,8 @@ public static class ReportGenerator
         bool groupParameterizedTests = true,
         int maxParameterColumns = 10,
         bool titleizeParameterNames = true,
-        string? componentDiagramPlantUml = null)
+        string? componentDiagramPlantUml = null,
+        Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -1785,7 +1795,17 @@ public static class ReportGenerator
 
         // Pre-compute median span count for outlier detection
         var medianSpanCount = 0;
-        if (wholeTestSegments is not null && wholeTestSegments.Count > 0)
+        if (precomputedWholeTestContent is { Count: > 0 })
+        {
+            var spanCounts = precomputedWholeTestContent.Values
+                .Where(f => f.SpanCount > 0)
+                .Select(f => f.SpanCount)
+                .OrderBy(c => c)
+                .ToArray();
+            if (spanCounts.Length > 0)
+                medianSpanCount = spanCounts[(spanCounts.Length - 1) / 2];
+        }
+        else if (wholeTestSegments is not null && wholeTestSegments.Count > 0)
         {
             var spanCounts = wholeTestSegments.Values
                 .Where(s => s.Spans.Length > 0)
@@ -1977,7 +1997,8 @@ public static class ReportGenerator
                         scenarioAnchorIds: scenarioAnchorIds,
                         featureDisplayName: feature.DisplayName,
                         featureDescription: feature.Description,
-                        featureLabels: feature.Labels);
+                        featureLabels: feature.Labels,
+                        precomputedWholeTestContent: precomputedWholeTestContent);
                     continue;
                 }
 
@@ -2122,18 +2143,8 @@ public static class ReportGenerator
                 var diagramsForTest = diagramsByTestId[scenario.Id].ToArray();
 
                 // Get whole-test-flow content (activity + flame) if available
-                (string ActivityHtml, string FlameHtml, int SpanCount)? wholeTestContent = null;
-                if (wholeTestSegments is not null && wholeTestVisualization != WholeTestFlowVisualization.None)
-                {
-                    var boundaryLogs = trackedLogs?
-                        .Where(l => l.TestId == scenario.Id && l.Type == RequestResponseType.Request && l.Timestamp.HasValue)
-                        .OrderBy(l => l.Timestamp!.Value)
-                        .Select(l => ($"{l.Method.Value}: {l.Uri.PathAndQuery}", l.Timestamp!.Value))
-                        .ToArray() ?? [];
-
-                    wholeTestContent = InternalFlowHtmlGenerator.GetWholeTestFlowContent(
-                        wholeTestSegments, scenario.Id, boundaryLogs, wholeTestVisualization, diagramDataMap);
-                }
+                var wholeTestContent = ResolveWholeTestFlowContent(
+                    scenario.Id, precomputedWholeTestContent, wholeTestSegments, trackedLogs, wholeTestVisualization, diagramDataMap);
 
                 var hasSequenceDiagrams = diagramsForTest.Length > 0;
                 var hasWholeTestFlow = wholeTestContent is not null;
@@ -2500,6 +2511,37 @@ public static class ReportGenerator
         return false;
     }
 
+    /// <summary>
+    /// Resolves the whole-test-flow content for a scenario. When precomputed fragments are supplied
+    /// (the merge path), they are returned verbatim; otherwise the content is rendered live from the
+    /// in-process segments and tracked logs.
+    /// </summary>
+    private static (string ActivityHtml, string FlameHtml, int SpanCount)? ResolveWholeTestFlowContent(
+        string scenarioId,
+        Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent,
+        Dictionary<string, InternalFlowSegment>? wholeTestSegments,
+        RequestResponseLog[]? trackedLogs,
+        WholeTestFlowVisualization wholeTestVisualization,
+        Dictionary<string, string> diagramDataMap)
+    {
+        if (precomputedWholeTestContent is not null)
+            return precomputedWholeTestContent.TryGetValue(scenarioId, out var frag)
+                ? (frag.ActivityHtml, frag.FlameHtml, frag.SpanCount)
+                : null;
+
+        if (wholeTestSegments is null || wholeTestVisualization == WholeTestFlowVisualization.None)
+            return null;
+
+        var boundaryLogs = trackedLogs?
+            .Where(l => l.TestId == scenarioId && l.Type == RequestResponseType.Request && l.Timestamp.HasValue)
+            .OrderBy(l => l.Timestamp!.Value)
+            .Select(l => ($"{l.Method.Value}: {l.Uri.PathAndQuery}", l.Timestamp!.Value))
+            .ToArray() ?? [];
+
+        return InternalFlowHtmlGenerator.GetWholeTestFlowContent(
+            wholeTestSegments, scenarioId, boundaryLogs, wholeTestVisualization, diagramDataMap);
+    }
+
     private static void RenderParameterizedGroup(
         StringBuilder body,
         ParameterizedGroup group,
@@ -2524,7 +2566,8 @@ public static class ReportGenerator
         Dictionary<string, string>? scenarioAnchorIds = null,
         string? featureDisplayName = null,
         string? featureDescription = null,
-        string[]? featureLabels = null)
+        string[]? featureLabels = null,
+        Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null)
     {
         var scenarios = group.Scenarios;
 
@@ -2880,18 +2923,12 @@ public static class ReportGenerator
 
         // Compute whole-test-flow content per scenario
         var wholeTestContents = new (string ActivityHtml, string FlameHtml, int SpanCount)?[scenarios.Length];
-        if (wholeTestSegments is not null && wholeTestVisualization != WholeTestFlowVisualization.None)
+        if (precomputedWholeTestContent is not null || (wholeTestSegments is not null && wholeTestVisualization != WholeTestFlowVisualization.None))
         {
             for (var ri = 0; ri < scenarios.Length; ri++)
             {
-                var s = scenarios[ri];
-                var boundaryLogs = trackedLogs?
-                    .Where(l => l.TestId == s.Id && l.Type == RequestResponseType.Request && l.Timestamp.HasValue)
-                    .OrderBy(l => l.Timestamp!.Value)
-                    .Select(l => ($"{l.Method.Value}: {l.Uri.PathAndQuery}", l.Timestamp!.Value))
-                    .ToArray() ?? [];
-                wholeTestContents[ri] = InternalFlowHtmlGenerator.GetWholeTestFlowContent(
-                    wholeTestSegments, s.Id, boundaryLogs, wholeTestVisualization, diagramDataMap);
+                wholeTestContents[ri] = ResolveWholeTestFlowContent(
+                    scenarios[ri].Id, precomputedWholeTestContent, wholeTestSegments, trackedLogs, wholeTestVisualization, diagramDataMap);
             }
         }
 
@@ -3705,43 +3742,172 @@ public static class ReportGenerator
             KronikolVersion = KronikolVersion,
             StartTime = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             EndTime = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            Features = features.OrderBy(f => f.DisplayName).Select(f => new
+            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup)
+        };
+        return JsonSerializer.Serialize(data, options);
+    }
+
+    /// <summary>
+    /// Builds the serializable feature/scenario model shared by the standard test-run report JSON
+    /// and the enriched "mergeable" JSON. Keeping a single source of truth ensures the mergeable
+    /// format remains a strict superset that the merge reader can parse.
+    /// </summary>
+    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup) =>
+        features.OrderBy(f => f.DisplayName).Select(f => (object)new Dictionary<string, object?>
+        {
+            ["name"] = f.DisplayName,
+            ["endpoint"] = f.Endpoint,
+            ["description"] = f.Description,
+            ["labels"] = f.Labels ?? [],
+            ["scenarios"] = f.Scenarios.Select(s =>
             {
-                Name = f.DisplayName,
-                f.Endpoint,
-                f.Description,
-                Labels = f.Labels ?? [],
-                Scenarios = f.Scenarios.Select(s =>
+                var scenario = new Dictionary<string, object?>
                 {
-                    var scenario = new Dictionary<string, object?>
-                    {
-                        ["id"] = s.Id,
-                        ["stableId"] = ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId),
-                        ["name"] = s.DisplayName,
-                        ["result"] = s.Result.ToString(),
-                        ["durationSeconds"] = s.Duration?.TotalSeconds ?? 0.0,
-                        ["isHappyPath"] = s.IsHappyPath,
-                        ["errorMessage"] = s.ErrorMessage,
-                        ["errorStackTrace"] = s.ErrorStackTrace,
-                        ["labels"] = s.Labels ?? [],
-                        ["categories"] = s.Categories ?? [],
-                        ["rule"] = s.Rule,
-                        ["outlineId"] = s.OutlineId,
-                        ["exampleValues"] = s.ExampleValues,
-                        ["attachments"] = (s.Attachments ?? []).Select(a => new { a.Name, a.RelativePath }).ToArray(),
-                        ["backgroundSteps"] = (s.BackgroundSteps ?? []).Select(MapStepJson).ToArray(),
-                        ["steps"] = (s.Steps ?? []).Select(MapStepJson).ToArray()
-                    };
+                    ["id"] = s.Id,
+                    ["stableId"] = ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId),
+                    ["name"] = s.DisplayName,
+                    ["result"] = s.Result.ToString(),
+                    ["durationSeconds"] = s.Duration?.TotalSeconds ?? 0.0,
+                    ["isHappyPath"] = s.IsHappyPath,
+                    ["errorMessage"] = s.ErrorMessage,
+                    ["errorStackTrace"] = s.ErrorStackTrace,
+                    ["labels"] = s.Labels ?? [],
+                    ["categories"] = s.Categories ?? [],
+                    ["rule"] = s.Rule,
+                    ["outlineId"] = s.OutlineId,
+                    ["exampleValues"] = s.ExampleValues,
+                    ["exampleDisplayName"] = s.ExampleDisplayName,
+                    ["attachments"] = (s.Attachments ?? []).Select(a => new { a.Name, a.RelativePath }).ToArray(),
+                    ["backgroundSteps"] = (s.BackgroundSteps ?? []).Select(MapStepJson).ToArray(),
+                    ["steps"] = (s.Steps ?? []).Select(MapStepJson).ToArray()
+                };
 
-                    if (diagramLookup != null)
-                        scenario["diagrams"] = diagramLookup[s.Id].ToArray();
+                if (diagramLookup != null)
+                    scenario["diagrams"] = diagramLookup[s.Id].ToArray();
 
-                    if (logLookup != null)
-                        scenario["httpInteractions"] = logLookup[s.Id].Select(MapLogJson).ToArray();
+                if (logLookup != null)
+                    scenario["httpInteractions"] = logLookup[s.Id].Select(MapLogJson).ToArray();
 
-                    return scenario;
-                }).ToArray()
+                return scenario;
             }).ToArray()
+        }).ToArray();
+
+    /// <summary>
+    /// Assembles the enriched "mergeable" report from in-process state captured during a test run:
+    /// extracts component relationships from the tracked logs, precomputes the self-contained
+    /// internal-flow segment data and per-scenario whole-test-flow fragments (inlining their payloads
+    /// so no shared diagram-data map is required), then serializes everything to JSON.
+    /// </summary>
+    private static string BuildMergeableReportJson(
+        Feature[] features,
+        DateTime startTime,
+        DateTime endTime,
+        DefaultDiagramsFetcher.DiagramAsCode[]? diagrams,
+        RequestResponseLog[]? trackedLogs,
+        Dictionary<string, InternalFlowSegment>? perBoundarySegments,
+        Dictionary<string, InternalFlowSegment>? wholeTestSegments,
+        CiMetadata? ciMetadata,
+        ReportConfigurationOptions options)
+    {
+        var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
+
+        var componentOptions = options.ComponentDiagramOptions ?? new ComponentDiagramOptions();
+        var componentLogs = (trackedLogs ?? RequestResponseLogger.RequestAndResponseLogs.Where(x => !(x?.TrackingIgnore ?? true)).ToArray());
+        var relationships = ComponentDiagramGenerator.ExtractRelationships(componentLogs, componentOptions.ParticipantFilter);
+
+        Dictionary<string, object>? internalFlowSegmentData = null;
+        if (perBoundarySegments is not null)
+        {
+            internalFlowSegmentData = InternalFlowHtmlGenerator.BuildSegmentData(
+                perBoundarySegments,
+                options.InternalFlowDiagramStyle,
+                options.InternalFlowShowFlameChart,
+                options.InternalFlowFlameChartPosition,
+                options.InternalFlowNoDataBehavior,
+                options.InternalFlowSpanGranularity,
+                options.InternalFlowActivitySources);
+        }
+
+        Dictionary<string, Merge.WholeTestFlowFragment>? wholeTestFlow = null;
+        if (wholeTestSegments is not null && options.WholeTestFlowVisualization != WholeTestFlowVisualization.None)
+        {
+            wholeTestFlow = new Dictionary<string, Merge.WholeTestFlowFragment>();
+            foreach (var scenario in features.SelectMany(f => f.Scenarios))
+            {
+                var boundaryLogs = trackedLogs?
+                    .Where(l => l.TestId == scenario.Id && l.Type == RequestResponseType.Request && l.Timestamp.HasValue)
+                    .OrderBy(l => l.Timestamp!.Value)
+                    .Select(l => ($"{l.Method.Value}: {l.Uri.PathAndQuery}", l.Timestamp!.Value))
+                    .ToArray() ?? [];
+
+                // diagramDataMap left null so payloads are inlined into the fragment HTML.
+                var content = InternalFlowHtmlGenerator.GetWholeTestFlowContent(
+                    wholeTestSegments, scenario.Id, boundaryLogs, options.WholeTestFlowVisualization, diagramDataMap: null);
+
+                if (content is { } c)
+                    wholeTestFlow[scenario.Id] = new Merge.WholeTestFlowFragment(c.ActivityHtml, c.FlameHtml, c.SpanCount);
+            }
+        }
+
+        return GenerateMergeableReportJson(
+            features, startTime, endTime, diagramLookup,
+            relationships, internalFlowSegmentData, wholeTestFlow,
+            options.WholeTestFlowVisualization, ciMetadata);
+    }
+
+    /// <summary>
+    /// Serializes the enriched "mergeable" test-run report: the standard JSON model plus everything
+    /// needed to reconstruct a full HTML report when merging multiple files — component relationships,
+    /// precomputed internal-flow segment data, precomputed whole-test-flow fragments, and CI metadata.
+    /// </summary>
+    internal static string GenerateMergeableReportJson(
+        Feature[] features,
+        DateTime startTime,
+        DateTime endTime,
+        ILookup<string, string>? diagramLookup,
+        Kronikol.ComponentDiagram.ComponentRelationship[]? componentRelationships,
+        Dictionary<string, object>? internalFlowSegmentData,
+        Dictionary<string, Merge.WholeTestFlowFragment>? wholeTestFlow,
+        WholeTestFlowVisualization wholeTestVisualization,
+        CiMetadata? ciMetadata)
+    {
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
+        var data = new Dictionary<string, object?>
+        {
+            ["kronikolVersion"] = KronikolVersion,
+            ["mergeableFormatVersion"] = 1,
+            ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup: null),
+            ["wholeTestVisualization"] = wholeTestVisualization.ToString(),
+            ["componentRelationships"] = (componentRelationships ?? []).Select(r => new
+            {
+                r.Caller,
+                r.Service,
+                r.Protocol,
+                Methods = r.Methods.OrderBy(m => m).ToArray(),
+                r.CallCount,
+                r.TestCount,
+                r.DependencyCategory
+            }).ToArray(),
+            ["internalFlowSegments"] = internalFlowSegmentData ?? new Dictionary<string, object>(),
+            ["wholeTestFlow"] = (wholeTestFlow ?? new Dictionary<string, Merge.WholeTestFlowFragment>())
+                .ToDictionary(kvp => kvp.Key, kvp => (object)new
+                {
+                    kvp.Value.ActivityHtml,
+                    kvp.Value.FlameHtml,
+                    kvp.Value.SpanCount
+                }),
+            ["ciMetadata"] = ciMetadata is null ? null : new
+            {
+                Provider = ciMetadata.Provider.ToString(),
+                ciMetadata.BuildNumber,
+                ciMetadata.Branch,
+                ciMetadata.CommitSha,
+                ciMetadata.PipelineUrl,
+                ciMetadata.Repository,
+                ciMetadata.RunId
+            }
         };
         return JsonSerializer.Serialize(data, options);
     }

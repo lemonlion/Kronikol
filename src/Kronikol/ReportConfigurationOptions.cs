@@ -143,6 +143,16 @@ public record ReportConfigurationOptions
     /// <summary>When <c>true</c>, the test run report schema file is generated. Default: <c>true</c>.</summary>
     public bool GenerateTestRunReportSchema { get; set; } = true;
 
+    /// <summary>
+    /// When <c>true</c>, the test run report data file (JSON) is enriched with everything required to
+    /// reconstruct a full HTML report later: component relationships, precomputed internal-flow segment
+    /// data, precomputed whole-test-flow fragments, and CI metadata. This enables several such files
+    /// (e.g. from parallel CI runners) to be merged into a single combined <c>TestRunReport.html</c>
+    /// via <c>kronikol merge</c>. The enriched file is larger than the standard report. Default: <c>false</c>.
+    /// Only honoured when <see cref="GenerateTestRunReportData"/> is also <c>true</c> and the format is JSON.
+    /// </summary>
+    public bool GenerateMergeableData { get; set; }
+
     /// <summary>When <c>true</c>, writes a test summary to the CI job summary (e.g. GitHub Actions).</summary>
     public bool WriteCiSummary { get; set; }
 

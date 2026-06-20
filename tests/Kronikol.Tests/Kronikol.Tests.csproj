@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol\Kronikol.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.Tool\Kronikol.Tool.csproj" />
     <ProjectReference Include="..\..\src\Kronikol.Extensions.AtlasDataApi\Kronikol.Extensions.AtlasDataApi.csproj" />
     <ProjectReference Include="..\..\src\Kronikol.Extensions.BigQuery\Kronikol.Extensions.BigQuery.csproj" />
     <ProjectReference Include="..\..\src\Kronikol.Extensions.OpenTelemetry\Kronikol.Extensions.OpenTelemetry.csproj" />

@@ -139,6 +139,17 @@ Enable `WriteCiSummary = true` on your `ReportConfigurationOptions` to surface t
 
 Enable `PublishCiArtifacts = true` to automatically publish generated report files as CI artifacts. On **Azure DevOps**, reports are uploaded directly via `##vso[artifact.upload]` logging commands during test execution — no additional pipeline configuration needed. On **GitHub Actions**, the library writes the reports directory path and retention days to `$GITHUB_OUTPUT` so you can add a single `upload-artifact` step to your workflow. Artifact retention defaults to 1 day (`CiArtifactRetentionDays`). See the [CI Artifact Upload](https://github.com/lemonlion/Kronikol/wiki/CI-Artifact-Upload) wiki page for configuration and workflow examples.
 
+### Merging parallel reports
+
+Splitting a large suite across several parallel CI runners is faster, but you still want one report. Set `GenerateMergeableData = true` so each runner emits an enriched `TestRunReport.json`, then run the `kronikol` .NET tool in a final job to combine them into a single `TestRunReport.html` — with the same information as a single combined run, including one merged Component Diagram across all runners:
+
+```bash
+dotnet tool install --global Kronikol.Tool
+kronikol merge ./artifacts -o TestRunReport.html
+```
+
+See the [Merging Parallel Reports](https://github.com/lemonlion/Kronikol/wiki/Merging-Parallel-Reports) wiki page for a full GitHub Actions example.
+
 ---
 
 ## <a name="deterministic-vs-ai"></a>Deterministic vs AI-Generated Diagrams [↑](#top)

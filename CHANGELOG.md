@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.41] - 2026-06-20
+
+### Added
+- **Merge multiple test-run reports into one combined `TestRunReport.html`** — When a test suite is split across several parallel CI runners (e.g. 10 GitHub Actions runners each executing a subset), you can now combine their outputs into a single report identical to one produced had all tests run together. There are two new pieces:
+  - **`ReportConfigurationOptions.GenerateMergeableData`** (default `false`): when enabled, each runner's `TestRunReport.json` is enriched into a complete, round-trippable artifact containing the features/scenarios/steps, per-scenario diagram source, the run's component-diagram relationships, precomputed internal-flow segment data and whole-test-flow fragments, and CI metadata.
+  - **`kronikol merge`** (a new packable .NET tool, `Kronikol.Tool`): `kronikol merge ./artifacts -o TestRunReport.html` reads all the mergeable JSON files in the given files/directories/globs, combines them (features grouped by name with scenarios unioned, component relationships re-aggregated, internal-flow and whole-test-flow data unioned, CI metadata reconciled, earliest start / latest end times), and renders a single combined HTML report — including one merged Component Diagram across all runners' traffic, internal-flow popups, and flame charts.
+  - Programmatic equivalents are available via `Kronikol.Reports.Merge.MergeableReportReader`, `MergeableReportMerger`, and `MergeableReportRenderer` (e.g. `MergeableReportRenderer.MergeFilesToHtml(paths, "TestRunReport.html")`).
+  - Note: inline step-parameter highlighting and step doc-strings are not yet carried through the merge data format; step text, status, durations, substeps and attachments are.
+
 ## [3.0.40] - 2026-06-12
 
 ### Fixed

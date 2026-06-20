@@ -1,4 +1,6 @@
+using Kronikol.ComponentDiagram;
 using Kronikol.Reports;
+using Kronikol.Reports.Merge;
 using static Kronikol.DefaultDiagramsFetcher;
 
 namespace Kronikol.Tests.EndToEnd;
@@ -306,6 +308,65 @@ public static class ReportTestHelper
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// Generates a combined report by simulating two parallel CI runners: each emits a mergeable
+    /// TestRunReport.json (disjoint features, diagrams and component relationships), then the two are
+    /// merged and rendered into a single HTML report. Exercises the full merge pipeline end-to-end.
+    /// </summary>
+    public static string GenerateMergedReport(string tempDir, string outputDir, string fileName)
+    {
+        var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+
+        // Runner 1: the "Order Feature".
+        var runner1 = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Order Feature",
+                Scenarios =
+                [
+                    new Scenario { Id = "m1", DisplayName = "Create order successfully", IsHappyPath = true, Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2), Categories = ["Smoke"] },
+                    new Scenario { Id = "m2", DisplayName = "Delete order fails gracefully", Result = ExecutionResult.Failed, ErrorMessage = "404", Duration = TimeSpan.FromSeconds(1) }
+                ]
+            }
+        };
+        var json1 = ReportGenerator.GenerateMergeableReportJson(
+            runner1, start, start.AddMinutes(3),
+            new[] { new DiagramAsCode("m1", "", PlantUmlSource), new DiagramAsCode("m2", "", PlantUmlSource) }.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind),
+            [ new ComponentRelationship("Caller", "OrderService", "HTTP", new HashSet<string> { "POST /api/orders" }, 2, 1, "http"),
+              new ComponentRelationship("OrderService", "Database", "SQL", new HashSet<string> { "INSERT" }, 2, 1, "sql") ],
+            internalFlowSegmentData: null, wholeTestFlow: null, WholeTestFlowVisualization.None, ciMetadata: null);
+
+        // Runner 2: the "Payment Feature".
+        var runner2 = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Payment Feature",
+                Scenarios =
+                [
+                    new Scenario { Id = "m3", DisplayName = "Process payment", IsHappyPath = true, Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(500) }
+                ]
+            }
+        };
+        var json2 = ReportGenerator.GenerateMergeableReportJson(
+            runner2, start.AddMinutes(1), start.AddMinutes(4),
+            new[] { new DiagramAsCode("m3", "", PlantUmlSource) }.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind),
+            [ new ComponentRelationship("Caller", "PaymentService", "HTTP", new HashSet<string> { "POST /api/pay" }, 1, 1, "http") ],
+            internalFlowSegmentData: null, wholeTestFlow: null, WholeTestFlowVisualization.None, ciMetadata: null);
+
+        var file1 = Path.Combine(tempDir, "runner1.json");
+        var file2 = Path.Combine(tempDir, "runner2.json");
+        File.WriteAllText(file1, json1);
+        File.WriteAllText(file2, json2);
+
+        var outputPath = Path.Combine(tempDir, fileName);
+        MergeableReportRenderer.MergeFilesToHtml([file1, file2], outputPath, "Combined Test Run Report");
+
+        File.Copy(outputPath, Path.Combine(outputDir, fileName), true);
+        return new Uri(outputPath).AbsoluteUri;
     }
 
     /// <summary>
