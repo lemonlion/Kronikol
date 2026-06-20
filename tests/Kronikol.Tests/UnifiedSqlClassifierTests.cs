@@ -364,4 +364,98 @@ public class UnifiedSqlClassifierTests
         Assert.Equal(UnifiedSqlOperation.DropTable, result.Operation);
         Assert.Equal("Users", result.TableName);
     }
+
+    // ─── ClickHouse dialect ─────────────────────────────────────
+
+    [Fact]
+    public void ClickHouse_alter_table_update_mutation_is_classified_as_Update()
+    {
+        var result = UnifiedSqlClassifier.Classify("ALTER TABLE events UPDATE status = 'done' WHERE id = 1");
+        Assert.Equal(UnifiedSqlOperation.Update, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Fact]
+    public void ClickHouse_alter_table_delete_mutation_is_classified_as_Delete()
+    {
+        var result = UnifiedSqlClassifier.Classify("ALTER TABLE events DELETE WHERE id = 1");
+        Assert.Equal(UnifiedSqlOperation.Delete, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Fact]
+    public void ClickHouse_alter_table_update_on_cluster_is_classified_as_Update()
+    {
+        var result = UnifiedSqlClassifier.Classify("ALTER TABLE db.events ON CLUSTER my_cluster UPDATE x = 1 WHERE y = 2");
+        Assert.Equal(UnifiedSqlOperation.Update, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Fact]
+    public void ClickHouse_alter_table_add_column_remains_AlterTable()
+    {
+        var result = UnifiedSqlClassifier.Classify("ALTER TABLE events ADD COLUMN amount Int32");
+        Assert.Equal(UnifiedSqlOperation.AlterTable, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Fact]
+    public void ClickHouse_optimize_table_is_classified()
+    {
+        var result = UnifiedSqlClassifier.Classify("OPTIMIZE TABLE events FINAL");
+        Assert.Equal(UnifiedSqlOperation.Optimize, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Fact]
+    public void ClickHouse_rename_table_is_classified()
+    {
+        var result = UnifiedSqlClassifier.Classify("RENAME TABLE events TO events_old");
+        Assert.Equal(UnifiedSqlOperation.Rename, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Fact]
+    public void ClickHouse_attach_table_is_classified()
+    {
+        var result = UnifiedSqlClassifier.Classify("ATTACH TABLE events");
+        Assert.Equal(UnifiedSqlOperation.Attach, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Fact]
+    public void ClickHouse_detach_table_is_classified()
+    {
+        var result = UnifiedSqlClassifier.Classify("DETACH TABLE events");
+        Assert.Equal(UnifiedSqlOperation.Detach, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Fact]
+    public void ClickHouse_insert_with_format_is_classified_as_Insert()
+    {
+        var result = UnifiedSqlClassifier.Classify("INSERT INTO events FORMAT JSONEachRow");
+        Assert.Equal(UnifiedSqlOperation.Insert, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Fact]
+    public void ClickHouse_create_table_with_engine_is_classified()
+    {
+        var result = UnifiedSqlClassifier.Classify("CREATE TABLE events (id UInt64) ENGINE = MergeTree() ORDER BY id");
+        Assert.Equal(UnifiedSqlOperation.CreateTable, result.Operation);
+        Assert.Equal("events", result.TableName);
+    }
+
+    [Theory]
+    [InlineData(UnifiedSqlOperation.Optimize, "OPTIMIZE events", "OPTIMIZE")]
+    [InlineData(UnifiedSqlOperation.Rename, "RENAME events", "RENAME")]
+    [InlineData(UnifiedSqlOperation.Attach, "ATTACH events", "ATTACH")]
+    [InlineData(UnifiedSqlOperation.Detach, "DETACH events", "DETACH")]
+    public void Label_ClickHouse_ops(UnifiedSqlOperation op, string expectedDetailed, string expectedSummarised)
+    {
+        var info = new UnifiedSqlOperationInfo(op, "events");
+        Assert.Equal(expectedDetailed, UnifiedSqlClassifier.GetDiagramLabel(info, SqlTrackingVerbosityLevel.Detailed));
+        Assert.Equal(expectedSummarised, UnifiedSqlClassifier.GetDiagramLabel(info, SqlTrackingVerbosityLevel.Summarised));
+    }
 }

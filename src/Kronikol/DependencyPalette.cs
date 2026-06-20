@@ -36,6 +36,7 @@ public static class DependencyPalette
             [DependencyCategories.MySQL] = DependencyType.Database,
             [DependencyCategories.SQLite] = DependencyType.Database,
             [DependencyCategories.Oracle] = DependencyType.Database,
+            [DependencyCategories.ClickHouse] = DependencyType.Database,
         }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Default hex colors for each <see cref="DependencyType"/>. Palette A (Vivid).</summary>

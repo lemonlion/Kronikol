@@ -22,8 +22,24 @@ public static partial class UnifiedSqlClassifier
     private static partial Regex CtePrefixRegex();
 
     // Matches the first keyword after prefix stripping
-    [GeneratedRegex(@"^\s*(?<keyword>SELECT|INSERT|UPDATE|DELETE|MERGE|EXEC|EXECUTE|CALL|EXPLAIN|COPY|LOAD|BULK|TRUNCATE|BEGIN|COMMIT|ROLLBACK|CREATE|ALTER|DROP)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    [GeneratedRegex(@"^\s*(?<keyword>SELECT|INSERT|UPDATE|DELETE|MERGE|EXEC|EXECUTE|CALL|EXPLAIN|COPY|LOAD|BULK|TRUNCATE|BEGIN|COMMIT|ROLLBACK|CREATE|ALTER|DROP|OPTIMIZE|RENAME|ATTACH|DETACH)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex FirstKeywordRegex();
+
+    // ClickHouse lightweight mutations: ALTER TABLE [db.]t [ON CLUSTER c] UPDATE|DELETE ...
+    [GeneratedRegex(@"^\s*ALTER\s+TABLE\s+" + @"(?:[\[\]""`]?[\w=+/]+[\[\]""`]?\.)*[\[\]""`]?(?<table>[\w=+/]+)[\[\]""`]?" + @"(?:\s+ON\s+CLUSTER\s+\S+)?\s+(?<mutation>UPDATE|DELETE)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    private static partial Regex AlterMutationRegex();
+
+    // OPTIMIZE TABLE name (ClickHouse)
+    [GeneratedRegex(@"^\s*OPTIMIZE\s+TABLE\s+" + @"(?:[\[\]""`]?[\w=+/]+[\[\]""`]?\.)*[\[\]""`]?(?<table>[\w=+/]+)[\[\]""`]?", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    private static partial Regex OptimizeTableRegex();
+
+    // RENAME TABLE name TO ... (ClickHouse, MySQL) — captures the source table
+    [GeneratedRegex(@"^\s*RENAME\s+(?:TABLE|DICTIONARY|DATABASE)\s+" + @"(?:[\[\]""`]?[\w=+/]+[\[\]""`]?\.)*[\[\]""`]?(?<table>[\w=+/]+)[\[\]""`]?", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    private static partial Regex RenameTableRegex();
+
+    // ATTACH/DETACH TABLE|DATABASE|DICTIONARY|VIEW name (ClickHouse)
+    [GeneratedRegex(@"^\s*(?:ATTACH|DETACH)\s+(?:TABLE|DATABASE|DICTIONARY|VIEW|PERMANENTLY\s+TABLE)\s+(?:IF\s+(?:NOT\s+)?EXISTS\s+)?" + @"(?:[\[\]""`]?[\w=+/]+[\[\]""`]?\.)*[\[\]""`]?(?<table>[\w=+/]+)[\[\]""`]?", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    private static partial Regex AttachDetachRegex();
 
     // Matches INSERT OR (UPDATE|REPLACE|IGNORE) INTO pattern
     [GeneratedRegex(@"^\s*INSERT\s+OR\s+(?<modifier>UPDATE|REPLACE|IGNORE)\s+(?:INTO\s+)?", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
@@ -106,8 +122,12 @@ public static partial class UnifiedSqlClassifier
             "EXEC" or "EXECUTE" => new UnifiedSqlOperationInfo(UnifiedSqlOperation.StoredProcedure, ExtractExecProc(sql), commandText),
             "CALL" => new UnifiedSqlOperationInfo(UnifiedSqlOperation.StoredProcedure, ExtractCallProc(sql), commandText),
             "CREATE" => ClassifyDdl(sql, commandText, UnifiedSqlOperation.CreateTable),
-            "ALTER" => ClassifyDdl(sql, commandText, UnifiedSqlOperation.AlterTable),
+            "ALTER" => ClassifyAlter(sql, commandText),
             "DROP" => ClassifyDdl(sql, commandText, UnifiedSqlOperation.DropTable),
+            "OPTIMIZE" => new UnifiedSqlOperationInfo(UnifiedSqlOperation.Optimize, ExtractOptimizeTable(sql), commandText),
+            "RENAME" => new UnifiedSqlOperationInfo(UnifiedSqlOperation.Rename, ExtractRenameTable(sql), commandText),
+            "ATTACH" => new UnifiedSqlOperationInfo(UnifiedSqlOperation.Attach, ExtractAttachDetachTable(sql), commandText),
+            "DETACH" => new UnifiedSqlOperationInfo(UnifiedSqlOperation.Detach, ExtractAttachDetachTable(sql), commandText),
             "TRUNCATE" => new UnifiedSqlOperationInfo(UnifiedSqlOperation.Truncate, ExtractTruncateTable(sql), commandText),
             "BEGIN" => new UnifiedSqlOperationInfo(UnifiedSqlOperation.BeginTransaction, null, commandText),
             "COMMIT" => new UnifiedSqlOperationInfo(UnifiedSqlOperation.Commit, null, commandText),
@@ -138,6 +158,10 @@ public static partial class UnifiedSqlClassifier
                 UnifiedSqlOperation.DropTable => $"DROP TABLE {op.TableName ?? "?"}",
                 UnifiedSqlOperation.CreateIndex => $"CREATE INDEX {op.TableName ?? "?"}",
                 UnifiedSqlOperation.Truncate => $"TRUNCATE {op.TableName ?? "?"}",
+                UnifiedSqlOperation.Optimize => $"OPTIMIZE {op.TableName ?? "?"}",
+                UnifiedSqlOperation.Rename => $"RENAME {op.TableName ?? "?"}",
+                UnifiedSqlOperation.Attach => $"ATTACH {op.TableName ?? "?"}",
+                UnifiedSqlOperation.Detach => $"DETACH {op.TableName ?? "?"}",
                 _ => op.Operation.ToString()
             },
             SqlTrackingVerbosityLevel.Summarised => op.Operation switch
@@ -154,6 +178,10 @@ public static partial class UnifiedSqlClassifier
                 UnifiedSqlOperation.DropTable => "DROP TABLE",
                 UnifiedSqlOperation.CreateIndex => "CREATE INDEX",
                 UnifiedSqlOperation.Truncate => "TRUNCATE",
+                UnifiedSqlOperation.Optimize => "OPTIMIZE",
+                UnifiedSqlOperation.Rename => "RENAME",
+                UnifiedSqlOperation.Attach => "ATTACH",
+                UnifiedSqlOperation.Detach => "DETACH",
                 UnifiedSqlOperation.BeginTransaction => "BEGIN",
                 UnifiedSqlOperation.Commit => "COMMIT",
                 UnifiedSqlOperation.Rollback => "ROLLBACK",
@@ -229,6 +257,21 @@ public static partial class UnifiedSqlClassifier
             return new UnifiedSqlOperationInfo(UnifiedSqlOperation.Upsert, table, originalText);
 
         return new UnifiedSqlOperationInfo(UnifiedSqlOperation.Insert, table, originalText);
+    }
+
+    private static UnifiedSqlOperationInfo ClassifyAlter(string sql, string? originalText)
+    {
+        // ClickHouse lightweight mutations: ALTER TABLE t UPDATE/DELETE behave like UPDATE/DELETE DML
+        var mutation = AlterMutationRegex().Match(sql);
+        if (mutation.Success)
+        {
+            var table = StripQuotes(mutation.Groups["table"].Value);
+            return mutation.Groups["mutation"].Value.ToUpperInvariant() == "DELETE"
+                ? new UnifiedSqlOperationInfo(UnifiedSqlOperation.Delete, table, originalText)
+                : new UnifiedSqlOperationInfo(UnifiedSqlOperation.Update, table, originalText);
+        }
+
+        return ClassifyDdl(sql, originalText, UnifiedSqlOperation.AlterTable);
     }
 
     private static UnifiedSqlOperationInfo ClassifyDdl(string sql, string? originalText, UnifiedSqlOperation defaultOp)
@@ -309,6 +352,24 @@ public static partial class UnifiedSqlClassifier
     private static string? ExtractTruncateTable(string sql)
     {
         var match = TruncateTableRegex().Match(sql);
+        return match.Success ? StripQuotes(match.Groups["table"].Value) : null;
+    }
+
+    private static string? ExtractOptimizeTable(string sql)
+    {
+        var match = OptimizeTableRegex().Match(sql);
+        return match.Success ? StripQuotes(match.Groups["table"].Value) : null;
+    }
+
+    private static string? ExtractRenameTable(string sql)
+    {
+        var match = RenameTableRegex().Match(sql);
+        return match.Success ? StripQuotes(match.Groups["table"].Value) : null;
+    }
+
+    private static string? ExtractAttachDetachTable(string sql)
+    {
+        var match = AttachDetachRegex().Match(sql);
         return match.Success ? StripQuotes(match.Groups["table"].Value) : null;
     }
 

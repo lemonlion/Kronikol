@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.43] - 2026-06-20
+
+### Added
+- **ClickHouse support (`Kronikol.Extensions.ClickHouse`)** — A new first-class extension that tracks ClickHouse operations in test diagrams via `DbConnection` wrapping. It works with **both** common .NET ClickHouse ADO.NET clients — `ClickHouse.Client` (`ClickHouse.Client.ADO.ClickHouseConnection`) and `Octonica.ClickHouseClient` (`Octonica.ClickHouseClient.ClickHouseConnection`) — and takes no hard dependency on either package (both derive from `DbConnection`).
+  - **Manual wrapping:** `connection.WithClickHouseTestTracking(options)` returns a `TrackingClickHouseConnection` that intercepts all six command-execution methods (ExecuteReader/NonQuery/Scalar × sync/async) plus transactions, classifying and logging each operation.
+  - **Dependency injection:** `services.AddClickHouseTestTracking(...)` decorates all registered `DbConnection`s, wrapping only ClickHouse connections (from either client) and leaving other connections untouched.
+  - New `ClickHouse` dependency category, rendered as a database participant in sequence and component diagrams.
+- **ClickHouse SQL dialect in `UnifiedSqlClassifier`** (shared by all SQL tracking extensions) — ClickHouse lightweight mutations `ALTER TABLE … UPDATE` / `ALTER TABLE … DELETE` (including `ON CLUSTER`) are now classified as `Update` / `Delete` rather than generic `ALTER TABLE`; and `OPTIMIZE TABLE`, `RENAME TABLE`, `ATTACH`, and `DETACH` are recognised as new operations (`Optimize`, `Rename`, `Attach`, `Detach`) with Detailed and Summarised diagram labels. Standard `ALTER TABLE … ADD/DROP COLUMN` continues to classify as `AlterTable`.
+
 ## [3.0.42] - 2026-06-20
 
 ### Added

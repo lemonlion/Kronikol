@@ -36,6 +36,8 @@ public static class DependencyCategories
     public const string SQLite = "SQLite";
     /// <summary>Oracle Database.</summary>
     public const string Oracle = "Oracle";
+    /// <summary>ClickHouse (via ClickHouse.Client or Octonica.ClickHouseClient).</summary>
+    public const string ClickHouse = "ClickHouse";
 
     // ─── Caches ──────────────────────────────────────────────
     /// <summary>Redis cache.</summary>

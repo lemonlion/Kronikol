@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework />
+    <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
+    <Title>Test Tracking Diagrams ClickHouse Extension</Title>
+    <Description>ClickHouse tracking for test diagrams via DbConnection wrapping. Works with both ClickHouse.Client and Octonica.ClickHouseClient (any ADO.NET ClickHouse provider). Intercepts and classifies SQL operations — including ClickHouse mutations (ALTER TABLE ... UPDATE/DELETE), OPTIMIZE, RENAME, ATTACH/DETACH — with configurable verbosity. No hard dependency on a specific client package.</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.ClickHouse" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
+  </ItemGroup>
+</Project>

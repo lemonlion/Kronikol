@@ -50,6 +50,18 @@ public enum UnifiedSqlOperation
     /// <summary>A ROLLBACK statement.</summary>
     Rollback,
 
+    /// <summary>An OPTIMIZE TABLE statement (ClickHouse).</summary>
+    Optimize,
+
+    /// <summary>A RENAME TABLE statement (ClickHouse, MySQL).</summary>
+    Rename,
+
+    /// <summary>An ATTACH TABLE/DATABASE statement (ClickHouse).</summary>
+    Attach,
+
+    /// <summary>A DETACH TABLE/DATABASE statement (ClickHouse).</summary>
+    Detach,
+
     /// <summary>An unrecognised SQL operation.</summary>
     Other
 }
