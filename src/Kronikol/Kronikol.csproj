@@ -27,6 +27,7 @@
 		<EmbeddedResource Include="Reports\toggle-script.js" />
 		<EmbeddedResource Include="Reports\flame-chart-render-script.js" />
 		<EmbeddedResource Include="Reports\collapsible-notes-script.js" />
+		<EmbeddedResource Include="Reports\plantuml-browser-render-script.js" />
 	</ItemGroup>
 
 	<ItemGroup>
