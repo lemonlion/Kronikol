@@ -122,9 +122,15 @@ public static partial class ComponentDiagramGenerator
         // Discover all unique participants
         var allCallers = new HashSet<string>(relationships.Select(r => r.Caller));
         var allServices = new HashSet<string>(relationships.Select(r => r.Service));
-        var pureCallers = new HashSet<string>(allCallers.Except(allServices)); // only appear as callers
+        var pureCallers = new HashSet<string>(allCallers.Except(allServices)); // membership only
 
-        var allParticipants = new HashSet<string>(allCallers.Union(allServices));
+        // Deterministic first-seen order (callers, then services) — parity-hardening: a HashSet's
+        // iteration order is not stable across runtimes/process runs, which would desync golden
+        // fixtures and the periodic cross-runtime parity-diff (JAVA_PORT_PLAN §6.5, HIGH hazard).
+        var allParticipants = relationships.Select(r => r.Caller)
+            .Concat(relationships.Select(r => r.Service))
+            .Distinct()
+            .ToList();
 
         foreach (var participant in allParticipants)
         {
