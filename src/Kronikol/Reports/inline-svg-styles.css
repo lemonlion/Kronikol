@@ -1,0 +1,71 @@
+.plantuml-inline-svg svg,
+.plantuml-browser svg,
+.puml-fragment svg {
+    max-width: 100%;
+    height: auto;
+}
+.plantuml-inline-svg,
+.plantuml-browser {
+    overflow-x: auto;
+    padding-left: 1em;
+}
+.puml-fragment {
+    margin-bottom: 0.5em;
+}
+@keyframes pulse-loading { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+.plantuml-browser:not([data-rendered]) {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    color: #999;
+}
+.plantuml-browser:not([data-rendered])::before {
+    animation: pulse-loading 2s ease-in-out infinite;
+}
+.plantuml-browser:not([data-rendered])::before {
+    content: 'Waiting for page load to complete\2026';
+}
+body.plantuml-ready .plantuml-browser:not([data-rendered])::before {
+    content: 'Rendering diagram\2026';
+}
+.diagram-selected {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+    border-radius: 4px;
+}
+.diagram-zoom-controls {
+    position: sticky;
+    top: 2em;
+    left: 2em;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    height: 0;
+    overflow: visible;
+}
+[data-diagram-type]:hover > .diagram-zoom-controls {
+    opacity: 0.4;
+    pointer-events: auto;
+}
+.diagram-zoom-controls:hover {
+    opacity: 1 !important;
+}
+.diagram-selected > .diagram-zoom-controls {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.diagram-zoom-slider {
+    width: 100px;
+    height: 6px;
+    cursor: pointer;
+    accent-color: rgb(59, 130, 246);
+}
+@media (max-width: 768px) {
+    .diagram-zoom-controls {
+        display: none !important;
+    }
+}

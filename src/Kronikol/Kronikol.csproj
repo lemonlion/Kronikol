@@ -18,6 +18,10 @@
 		<EmbeddedResource Include="PlantUml\plantuml-render.js" />
 		<EmbeddedResource Include="Reports\advanced-search.js" />
 		<EmbeddedResource Include="Reports\stylesheets.css" />
+		<EmbeddedResource Include="Reports\context-menu-styles.css" />
+		<EmbeddedResource Include="Reports\inline-svg-styles.css" />
+		<EmbeddedResource Include="Reports\collapsible-notes-styles.css" />
+		<EmbeddedResource Include="Reports\internal-flow-popup-styles.css" />
 	</ItemGroup>
 
 	<ItemGroup>

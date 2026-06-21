@@ -1,0 +1,113 @@
+.diagram-ctx-menu {
+    position: fixed;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    padding: 4px 0;
+    z-index: 20001;
+    font: 13px -apple-system, 'Segoe UI', sans-serif;
+    min-width: 200px;
+}
+.diagram-ctx-menu > div {
+    padding: 6px 24px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.diagram-ctx-menu > div:hover {
+    background: #e8f0fe;
+}
+.diagram-ctx-menu hr {
+    margin: 4px 0;
+    border: none;
+    border-top: 1px solid #e0e0e0;
+}
+.diagram-ctx-menu .submenu-parent {
+    position: relative;
+    padding-right: 32px;
+}
+.diagram-ctx-menu .submenu-parent::after {
+    content: '\25B6';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 8px;
+    color: #666;
+}
+.diagram-ctx-menu .submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -4px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    padding: 4px 0;
+    min-width: 200px;
+    z-index: 20002;
+}
+.diagram-ctx-menu .submenu-parent:hover > .submenu {
+    display: block;
+}
+.diagram-ctx-menu .submenu.flip-left {
+    left: auto;
+    right: 100%;
+}
+.diagram-ctx-menu .submenu > div {
+    padding: 6px 24px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.diagram-ctx-menu .submenu > div:hover {
+    background: #e8f0fe;
+}
+@media (max-width: 768px) {
+    .diagram-ctx-menu {
+        position: fixed;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+        padding: 8px 0 env(safe-area-inset-bottom, 8px);
+        min-width: unset;
+        animation: ctx-slide-up 0.2s ease-out;
+    }
+    @keyframes ctx-slide-up {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    .diagram-ctx-menu > div {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+    .diagram-ctx-menu .submenu-parent {
+        padding-right: 40px;
+    }
+    .diagram-ctx-menu .submenu {
+        position: fixed;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+        padding: 8px 0 env(safe-area-inset-bottom, 8px);
+        min-width: unset;
+    }
+    .diagram-ctx-menu .submenu > div {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+    .diagram-ctx-menu .submenu.flip-left {
+        left: 0;
+        right: 0;
+    }
+}
