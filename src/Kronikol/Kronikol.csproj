@@ -22,6 +22,11 @@
 		<EmbeddedResource Include="Reports\inline-svg-styles.css" />
 		<EmbeddedResource Include="Reports\collapsible-notes-styles.css" />
 		<EmbeddedResource Include="Reports\internal-flow-popup-styles.css" />
+		<EmbeddedResource Include="Reports\context-menu-script.js" />
+		<EmbeddedResource Include="Reports\internal-flow-popup-script.js" />
+		<EmbeddedResource Include="Reports\toggle-script.js" />
+		<EmbeddedResource Include="Reports\flame-chart-render-script.js" />
+		<EmbeddedResource Include="Reports\collapsible-notes-script.js" />
 	</ItemGroup>
 
 	<ItemGroup>
