@@ -32,7 +32,29 @@ public sealed class IngestRequest
 
     /// <summary>When true, the report is generated even if no scenario could be synthesised (it will be empty). Default <c>false</c>.</summary>
     public bool AllowEmpty { get; init; }
+
+    /// <summary>
+    /// Emit each response immediately after its request (pairs ordered by request time) instead of
+    /// strictly by timestamp. Default <c>true</c>: externally captured traffic is usually concurrent, and
+    /// a chronologically interleaved diagram makes it impossible to tell which reply answers which call
+    /// (and defeats <c>CollapseConsecutiveIdenticalCalls</c>, which works on adjacent pairs). Set
+    /// <c>false</c> for a strict timeline.
+    /// </summary>
+    public bool PairResponsesWithRequests { get; init; } = true;
+
+    /// <summary>
+    /// When set, interactions whose <c>testId</c> is not a test in the tests records — or every
+    /// interaction, when there are no tests records — are re-attributed to this one scenario (typically
+    /// "Traffic outside any test": warm-ups, health probes, manual browsing, background jobs). Leave
+    /// null to render each unknown test id as its own scenario.
+    /// </summary>
+    public UnknownTestFold? FoldUnknownTestsInto { get; init; }
 }
+
+/// <summary>The single scenario that collects interactions of unknown tests (<see cref="IngestRequest.FoldUnknownTestsInto"/>).</summary>
+/// <param name="ScenarioName">Display name, e.g. "Traffic outside any test".</param>
+/// <param name="ScenarioId">Scenario id (also the <c>testId</c> the folded interactions take).</param>
+public sealed record UnknownTestFold(string ScenarioName, string ScenarioId = "outside-any-test");
 
 /// <summary>Outcome of <see cref="IngestPipeline.Run"/>.</summary>
 /// <param name="InteractionCount">Interaction lines replayed into the store.</param>
@@ -127,6 +149,21 @@ public static class IngestPipeline
             .Select(x => x.record)
             .ToList();
 
+        if (request.FoldUnknownTestsInto is { } fold)
+        {
+            var known = new HashSet<string>(
+                testRecords.Where(t => !string.IsNullOrWhiteSpace(t.TestId)).Select(t => t.TestId!),
+                StringComparer.Ordinal);
+            ordered = ordered
+                .Select(r => known.Contains(r.TestId) || r.TestId == fold.ScenarioId
+                    ? r
+                    : r with { TestId = fold.ScenarioId, TestName = fold.ScenarioName })
+                .ToList();
+        }
+
+        if (request.PairResponsesWithRequests)
+            ordered = PairResponsesWithRequests(ordered);
+
         // Names from the tests file win over whatever each hop knew.
         var namesFromTests = testRecords
             .Where(t => !string.IsNullOrWhiteSpace(t.TestId) && !string.IsNullOrWhiteSpace(t.TestName))
@@ -165,5 +202,32 @@ public static class IngestPipeline
         DefaultDiagramsFetcher.Reset();
 
         return new IngestResult(logs.Count, scenarioCount, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: true);
+    }
+
+    /// <summary>
+    /// Re-orders a timestamp-sorted list so that each response sits directly after its request (matched
+    /// by <c>requestResponseId</c>); units keep the order of their first record, so pairs are ordered by
+    /// request time. Responses with no earlier request, and records without an id, keep their place.
+    /// </summary>
+    internal static List<InteractionRecord> PairResponsesWithRequests(IReadOnlyList<InteractionRecord> ordered)
+    {
+        var units = new List<List<InteractionRecord>>(ordered.Count);
+        var open = new Dictionary<string, List<InteractionRecord>>(StringComparer.Ordinal);
+        foreach (var record in ordered)
+        {
+            var isResponse = string.Equals(record.Type, "Response", StringComparison.OrdinalIgnoreCase);
+            if (isResponse && record.RequestResponseId is { Length: > 0 } id && open.Remove(id, out var unit))
+            {
+                unit.Add(record);
+                continue;
+            }
+
+            var fresh = new List<InteractionRecord>(2) { record };
+            units.Add(fresh);
+            if (!isResponse && record.RequestResponseId is { Length: > 0 } requestId)
+                open[requestId] = fresh;
+        }
+
+        return units.SelectMany(u => u).ToList();
     }
 }

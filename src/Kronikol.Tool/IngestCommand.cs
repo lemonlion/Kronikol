@@ -29,6 +29,8 @@ internal static class IngestCommand
         var redactHeaders = new List<string>();
         var featureName = "Ingested";
         var allowEmpty = false;
+        var pairResponses = true;
+        string? foldUnknown = null;
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -92,6 +94,13 @@ internal static class IngestCommand
                     break;
                 case "--allow-empty":
                     allowEmpty = true;
+                    break;
+                case "--chronological":
+                    pairResponses = false;
+                    break;
+                case "--fold-unknown":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    foldUnknown = args[i];
                     break;
                 case "-h" or "--help":
                     PrintUsage(@out);
@@ -163,6 +172,8 @@ internal static class IngestCommand
                 Options = options,
                 DefaultFeatureName = featureName,
                 AllowEmpty = allowEmpty,
+                PairResponsesWithRequests = pairResponses,
+                FoldUnknownTestsInto = foldUnknown is null ? null : new UnknownTestFold(foldUnknown),
             });
 
             if (!result.Generated)
@@ -227,6 +238,9 @@ internal static class IngestCommand
         w.WriteLine("  --no-redact              Do not redact credential headers at ingest (default: redact).");
         w.WriteLine("  --redact-header <name>   Additional header to redact (repeatable).");
         w.WriteLine("  --allow-empty            Generate even when nothing was ingested.");
+        w.WriteLine("  --chronological          Strict timestamp order (default: each response follows its request).");
+        w.WriteLine("  --fold-unknown <name>    Collect interactions of test ids absent from --tests into one scenario");
+        w.WriteLine("                           with this name (e.g. \"Traffic outside any test\").");
         w.WriteLine("  -h, --help               Show this help.");
         w.WriteLine();
         w.WriteLine("Example:");

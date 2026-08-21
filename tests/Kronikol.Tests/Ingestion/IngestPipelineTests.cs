@@ -152,4 +152,73 @@ public class IngestPipelineTests : IDisposable
         Assert.True(options.CollapseConsecutiveIdenticalCalls);
         Assert.Equal(PlantUmlRendering.BrowserJs, options.PlantUmlRendering);
     }
+
+    [Fact]
+    public void Responses_follow_their_requests_by_default_so_concurrent_calls_stay_paired()
+    {
+        const string testId = "pairing";
+        // Two overlapping calls: A starts first and finishes last. Chronologically that is A B B A.
+        var (reqA, respA) = InteractionRecord.Pair(testId, "T", "GET", "http://a/one", "A", "Test", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddSeconds(3));
+        var (reqB, respB) = InteractionRecord.Pair(testId, "T", "GET", "http://a/two", "A", "Test", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(2));
+        var file = WriteCapture("c.ndjson", reqA, reqB, respB, respA);
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "R1");
+
+        IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], Options = options });
+        var paired = RequestResponseLogger.RequestAndResponseLogs.Select(l => $"{l.Type} {l.Uri}").ToArray();
+        Assert.Equal(["Request http://a/one", "Response http://a/one", "Request http://a/two", "Response http://a/two"], paired);
+
+        options.ReportsFolderPath = Path.Combine(_dir, "R2");
+        IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], Options = options, PairResponsesWithRequests = false });
+        var chronological = RequestResponseLogger.RequestAndResponseLogs.Select(l => $"{l.Type} {l.Uri}").ToArray();
+        Assert.Equal(["Request http://a/one", "Request http://a/two", "Response http://a/two", "Response http://a/one"], chronological);
+
+        // Orphans and id-less records keep their place.
+        var orphan = respB with { RequestResponseId = "never-requested", Timestamp = T0.AddSeconds(-1) };
+        var reordered = IngestPipeline.PairResponsesWithRequests([orphan, reqA, reqB, respB, respA]);
+        Assert.Equal([orphan, reqA, respA, reqB, respB], reordered);
+    }
+
+    [Fact]
+    public void Unknown_test_ids_can_be_folded_into_one_scenario()
+    {
+        const string known = "known-test";
+        var (r1, s1) = InteractionRecord.Pair(known, null, "GET", "http://a/k", "A", "Test", statusCode: "200", requestTimestamp: T0, responseTimestamp: T0.AddSeconds(1));
+        var (r2, s2) = InteractionRecord.Pair("warmup-1", null, "GET", "http://a/w1", "A", "Test", statusCode: "200", requestTimestamp: T0.AddSeconds(2), responseTimestamp: T0.AddSeconds(3));
+        var (r3, s3) = InteractionRecord.Pair("warmup-2", null, "GET", "http://a/w2", "A", "Test", statusCode: "200", requestTimestamp: T0.AddSeconds(4), responseTimestamp: T0.AddSeconds(5));
+        var file = WriteCapture("c.ndjson", r1, s1, r2, s2, r3, s3);
+        var tests = WriteTests(
+            new TestRunRecord { Event = "start", TestId = known, TestName = "known › test", Timestamp = T0 },
+            new TestRunRecord { Event = "end", TestId = known, Status = "passed", Timestamp = T0.AddSeconds(1) });
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "R1");
+
+        // Default: every unknown test id is its own scenario.
+        var separate = IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], TestsFile = tests, Options = options });
+        Assert.Equal(3, separate.ScenarioCount);
+
+        options.ReportsFolderPath = Path.Combine(_dir, "R2");
+        var folded = IngestPipeline.Run(new IngestRequest
+        {
+            InteractionFiles = [file], TestsFile = tests, Options = options,
+            FoldUnknownTestsInto = new UnknownTestFold("Traffic outside any test", "outside"),
+        });
+        Assert.Equal(2, folded.ScenarioCount);
+        var outside = folded.Features.SelectMany(f => f.Scenarios).Single(s => s.Id == "outside");
+        Assert.Equal("Traffic outside any test", outside.DisplayName);
+        Assert.Equal(4, RequestResponseLogger.RequestAndResponseLogs.Count(l => l.TestId == "outside"));
+        Assert.Equal(2, RequestResponseLogger.RequestAndResponseLogs.Count(l => l.TestId == known));
+
+        // No tests records at all: everything is outside any test.
+        options.ReportsFolderPath = Path.Combine(_dir, "R3");
+        var all = IngestPipeline.Run(new IngestRequest
+        {
+            InteractionFiles = [file], Options = options,
+            FoldUnknownTestsInto = new UnknownTestFold("Traffic outside any test", "outside"),
+        });
+        Assert.Equal(1, all.ScenarioCount);
+        Assert.Equal("outside", all.Features.Single().Scenarios.Single().Id);
+    }
 }

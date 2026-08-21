@@ -97,4 +97,42 @@ public class IngestCommandTests : IDisposable
         Assert.Equal(PlantUmlRendering.Server, server);
         Assert.False(IngestCommand.TryParseRender("x", out _));
     }
+
+    [Fact]
+    public void Fold_unknown_and_chronological_flags_reach_the_pipeline()
+    {
+        const string testId = "cafe651916cd43dd8448eb211c80319c";
+        var captures = Path.Combine(_dir, "captures");
+        Directory.CreateDirectory(captures);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://a/known", "A", "Test", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddSeconds(1));
+        var (wReq, wResp) = InteractionRecord.Pair("warm-up-trace", null, "GET", "http://a/warm", "A", "Test", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(2), responseTimestamp: T0.AddSeconds(3));
+        File.WriteAllLines(Path.Combine(captures, "c.ndjson"), [req.ToJson(), resp.ToJson(), wReq.ToJson(), wResp.ToJson()]);
+        File.WriteAllLines(Path.Combine(captures, "tests.ndjson"),
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › known", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        var output = Path.Combine(_dir, "out");
+        var @out = new StringWriter();
+        var err = new StringWriter();
+
+        var exit = IngestCommand.Run(
+            [captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", output, "--fold-unknown", "Traffic outside any test", "--chronological"],
+            @out, err);
+
+        Assert.Equal(0, exit);
+        Assert.Contains("into 2 scenario(s)", @out.ToString());
+        Assert.Contains("Traffic outside any test", File.ReadAllText(Path.Combine(output, "TestRunReport.html")));
+        Assert.Contains("--fold-unknown", Usage());
+        Assert.Contains("--chronological", Usage());
+
+        static string Usage()
+        {
+            var w = new StringWriter();
+            IngestCommand.PrintUsage(w);
+            return w.ToString();
+        }
+    }
 }
