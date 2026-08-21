@@ -60,7 +60,8 @@ public static class NdjsonTestRunReader
     /// <summary>Reads every record in <paramref name="path"/>.</summary>
     public static List<TestRunRecord> ReadFile(string path)
     {
-        using var reader = new StreamReader(path);
+        // FileShare.ReadWrite: captures are tailed while a writer (a proxy tap, a fixture) still holds them open.
+        using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         return Read(reader, path);
     }
 

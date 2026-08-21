@@ -125,6 +125,35 @@ public class InteractionRecordTests
     }
 
     [Fact]
+    public void Readers_can_tail_files_a_writer_still_holds_open()
+    {
+        // Live reporting reads the capture while the proxy tap's writer (FileShare.Read) and the test
+        // fixture's appender still have the files open — the readers must not demand exclusive access.
+        var dir = Directory.CreateTempSubdirectory("kronikol-tail-").FullName;
+        try
+        {
+            var capture = Path.Combine(dir, "capture.ndjson");
+            var tests = Path.Combine(dir, "tests.jsonl");
+            using var writer = new NdjsonInteractionWriter(capture);
+            using var testsWriter = new StreamWriter(new FileStream(tests, FileMode.Create, FileAccess.Write, FileShare.Read)) { AutoFlush = true };
+
+            writer.Write(InteractionRecord.Pair("t1", "Test", "GET", "http://a/1", "A", "Test", statusCode: "200"));
+            testsWriter.WriteLine("""{"event":"start","testId":"t1","testName":"Test","timestamp":"2026-01-01T00:00:00Z"}""");
+
+            Assert.Equal(2, NdjsonInteractionReader.ReadFile(capture).Count);
+            Assert.Single(NdjsonTestRunReader.ReadFile(tests));
+
+            // And they see what was appended since, without reopening anything on the writer side.
+            writer.Write(InteractionRecord.Pair("t1", "Test", "GET", "http://a/2", "A", "Test", statusCode: "200"));
+            Assert.Equal(4, NdjsonInteractionReader.ReadFile(capture).Count);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, recursive: true); } catch (IOException) { }
+        }
+    }
+
+    [Fact]
     public void Reader_reports_the_offending_line_number()
     {
         using var reader = new StringReader("{\"type\":\"Request\",\"uri\":\"/\",\"serviceName\":\"S\",\"callerName\":\"C\",\"testId\":\"t\"}\n\nnot json\n");
