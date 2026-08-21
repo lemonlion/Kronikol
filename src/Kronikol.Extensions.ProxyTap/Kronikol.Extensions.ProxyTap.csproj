@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework />
+    <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
+    <Title>Kronikol Proxy-Tap Extension</Title>
+    <Description>Out-of-process HTTP capture for Kronikol: a transparent tee proxy that sits on a service-to-service hop, forwards byte-for-byte, attributes each exchange to the running test via the test-tracking headers (or the W3C trace id), re-injects the correlation headers across non-cooperating hops, redacts secrets at capture, and writes to the Kronikol log store and/or an NDJSON file for `kronikol ingest`. Enables sequence diagrams for polyglot, third-party or legacy backends that cannot be instrumented.</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageTags>$(PackageTags);proxy;tee;e2e;playwright;polyglot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Hosting/DI abstractions arrive transitively through Kronikol (Microsoft.AspNetCore.Mvc.Testing). -->
+    <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.ProxyTap" />
+  </ItemGroup>
+
+</Project>

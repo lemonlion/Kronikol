@@ -10,7 +10,7 @@
     <ToolCommandName>kronikol</ToolCommandName>
     <PackageId>Kronikol.Tool</PackageId>
     <Title>Kronikol CLI</Title>
-    <Description>Command-line companion for Kronikol. Includes `kronikol merge`, which combines several mergeable TestRunReport.json files (produced with GenerateMergeableData enabled — e.g. by parallel CI runners) into a single combined TestRunReport.html with the same information as a single combined run.</Description>
+    <Description>Command-line companion for Kronikol. Includes `kronikol merge`, which combines several mergeable TestRunReport.json files (produced with GenerateMergeableData enabled — e.g. by parallel CI runners) into a single combined TestRunReport.html, and `kronikol ingest`, which replays language-neutral NDJSON interaction captures (from an out-of-process proxy tap or any non-.NET capturer) into a full Kronikol report.</Description>
     <RollForward>Major</RollForward>
   </PropertyGroup>
 

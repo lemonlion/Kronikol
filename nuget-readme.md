@@ -45,6 +45,9 @@ See the [Quick Start guide](https://github.com/lemonlion/Kronikol/wiki/Quick-Sta
 | EF Core (Relational) | `Kronikol.Extensions.EfCore.Relational` |
 | Redis | `Kronikol.Extensions.Redis` |
 | Local PlantUML (IKVM) | `Kronikol.PlantUml.Ikvm` |
+| Proxy tap (out-of-process capture for uninstrumentable backends) | `Kronikol.Extensions.ProxyTap` |
+| Playwright (browser-driven E2E identity) | `Kronikol.Playwright` |
+| CLI (`kronikol merge`, `kronikol ingest`) | `Kronikol.Tool` |
 
 ## Use Cases
 

@@ -37,6 +37,7 @@ public static class DependencyPalette
             [DependencyCategories.SQLite] = DependencyType.Database,
             [DependencyCategories.Oracle] = DependencyType.Database,
             [DependencyCategories.ClickHouse] = DependencyType.Database,
+            [DependencyCategories.AI] = DependencyType.AI,
         }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Default hex colors for each <see cref="DependencyType"/>. Palette A (Vivid).</summary>
@@ -48,6 +49,7 @@ public static class DependencyPalette
             [DependencyType.Cache] = "#F39C12",
             [DependencyType.MessageQueue] = "#9B59B6",
             [DependencyType.Storage] = "#2ECC71",
+            [DependencyType.AI] = "#16A085",
             [DependencyType.Unknown] = "#95A5A6",
         }.ToFrozenDictionary();
 
@@ -80,6 +82,7 @@ public static class DependencyPalette
         DependencyType.Cache => "collections",
         DependencyType.MessageQueue => "queue",
         DependencyType.Storage => "database",
+        DependencyType.AI => "control",
         DependencyType.Unknown => "participant",
         _ => "participant"
     };

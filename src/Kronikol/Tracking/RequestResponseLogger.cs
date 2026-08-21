@@ -19,13 +19,31 @@ public static class RequestResponseLogger
     /// </summary>
     public static int? MaxContentLength { get; set; }
 
+    /// <summary>
+    /// Capture-time redaction applied to every entry before it is stored (see <see cref="CaptureRedaction"/>).
+    /// Default <c>null</c> (no redaction). Set to <c>CaptureRedaction.Secrets()</c> to keep credential
+    /// headers out of the in-memory store and every data file derived from it. This is the security
+    /// boundary; <c>ReportConfigurationOptions.ExcludedHeaders</c> only hides headers in the diagram.
+    /// </summary>
+    public static CaptureRedaction? Redaction { get; set; }
+
     public static void Log(RequestResponseLog log)
     {
+        if (Redaction is { } redaction)
+        {
+            var redacted = redaction.Apply(log);
+            if (redacted is null)
+                return;
+            log = redacted;
+        }
+
         if (MaxContentLength is { } max && log.Content is { Length: var len } && len > max)
             log = log with { Content = $"{log.Content[..max]}\n\n…truncated ({len} chars total)" };
 
         RequestsAndResponses.Enqueue(log);
-    }    public static RequestResponseLog[] RequestAndResponseLogs => RequestsAndResponses.ToArray();
+    }
+
+    public static RequestResponseLog[] RequestAndResponseLogs => RequestsAndResponses.ToArray();
     public static void Clear() => RequestsAndResponses.Clear();
 
     /// <summary>

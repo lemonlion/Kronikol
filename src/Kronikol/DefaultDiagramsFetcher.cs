@@ -12,6 +12,18 @@ public static class DefaultDiagramsFetcher
 {
     private static DiagramAsCode[]? _diagrams;
 
+    /// <summary>
+    /// Clears the process-wide diagram cache so the next fetcher call regenerates diagrams from the
+    /// logs currently held by <see cref="RequestResponseLogger"/>. Diagrams are memoised for the
+    /// lifetime of the process because the standard test-framework adapters generate exactly one
+    /// report per run; hosts that generate several reports in one process (live/incremental
+    /// reporting, <c>kronikol ingest</c>, multi-run dashboards) must call this between runs.
+    /// </summary>
+    public static void Reset() => _diagrams = null;
+
+    /// <summary>Whether a diagram set is currently cached (see <see cref="Reset"/>).</summary>
+    public static bool HasCachedDiagrams => _diagrams is not null;
+
     public static Func<DiagramAsCode[]> GetDiagramsFetcher(DiagramsFetcherOptions? options = null)
     {
         options ??= new DiagramsFetcherOptions();
@@ -115,7 +127,10 @@ public static class DefaultDiagramsFetcher
             dependencyColors: options.DependencyColors,
             serviceTypeOverrides: options.ServiceTypeOverrides,
             graphQlBodyFormat: options.GraphQlBodyFormat,
-            clientSideSplitting: clientSideSplitting).ToArray();
+            clientSideSplitting: clientSideSplitting,
+            collapseConsecutiveIdenticalCalls: options.CollapseConsecutiveIdenticalCalls,
+            collapseThreshold: options.CollapseThreshold,
+            maxArrowsPerDiagram: options.MaxArrowsPerDiagram).ToArray();
     }
 
     public static (DiagramAsCode[] TruncatedDiagrams, DiagramAsCode[] FullDiagrams) GetCiSummaryDiagrams(DiagramsFetcherOptions options, int truncateNotesAfterLines = 10)

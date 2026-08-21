@@ -36,7 +36,7 @@ public static class ComponentDiagramReportGenerator
 
         var plantUml = ComponentDiagramGenerator.GeneratePlantUml(relationships, options, useC4: !useBrowserJs);
 
-        var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
+        var directory = Reports.ReportGenerator.ResolveReportsDirectory(reportOptions);
         Directory.CreateDirectory(directory);
 
         var imgSrc = useBrowserJs

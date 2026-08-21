@@ -249,6 +249,7 @@ public static partial class ComponentDiagramGenerator
         DependencyType.Storage => "database",
         DependencyType.Cache => "collections",
         DependencyType.MessageQueue => "queue",
+        DependencyType.AI => "hexagon",
         _ => "rectangle"
     };
 

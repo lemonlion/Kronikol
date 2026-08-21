@@ -33,6 +33,10 @@ jobs:
               tests/Kronikol.Tests.CosmosDB
               tests/Kronikol.Tests.EfCore.Relational
               tests/Kronikol.Tests.Redis
+              tests/Kronikol.Tests.ProxyTap
+          - name: Playwright Adapter Tests
+            projects: tests/Kronikol.Tests.Playwright
+            needs-playwright: true
           - name: PlantUml IKVM Tests
             projects: tests/Kronikol.Tests.PlantUml.Ikvm
             needs-disk-cleanup: true

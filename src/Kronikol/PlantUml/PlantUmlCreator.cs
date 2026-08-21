@@ -56,7 +56,10 @@ public static partial class PlantUmlCreator
         Dictionary<string, string>? dependencyColors = null,
         Dictionary<string, string>? serviceTypeOverrides = null,
         GraphQlBodyFormat graphQlBodyFormat = GraphQlBodyFormat.FormattedWithMetadata,
-        bool clientSideSplitting = false)
+        bool clientSideSplitting = false,
+        bool collapseConsecutiveIdenticalCalls = false,
+        int collapseThreshold = 2,
+        int? maxArrowsPerDiagram = null)
     {
         excludedHeaders ??= DefaultExcludedHeaders;
 
@@ -94,7 +97,10 @@ public static partial class PlantUmlCreator
                 dependencyColors,
                 serviceTypeOverrides,
                 graphQlBodyFormat,
-                clientSideSplitting);
+                clientSideSplitting,
+                collapseConsecutiveIdenticalCalls,
+                collapseThreshold,
+                maxArrowsPerDiagram);
             var imageTags = results.Select(x => x.GetPlantUmlImageTag(plantUmlServerRendererUrl, lazyLoadImages)).ToArray();
             return new PlantUmlForTest(testTraces.Key, testName, results.Select(result => (result.PlantUml, result.PlantUmlEncoded)), testTraces.ToList(), imageTags);
         });
@@ -127,8 +133,18 @@ public static partial class PlantUmlCreator
         Dictionary<string, string>? dependencyColors = null,
         Dictionary<string, string>? serviceTypeOverrides = null,
         GraphQlBodyFormat graphQlBodyFormat = GraphQlBodyFormat.FormattedWithMetadata,
-        bool clientSideSplitting = false)
+        bool clientSideSplitting = false,
+        bool collapseConsecutiveIdenticalCalls = false,
+        int collapseThreshold = 2,
+        int? maxArrowsPerDiagram = null)
     {
+        // Collapse poll/retry bursts and apply the arrow cap before rendering (no-op when both are off).
+        var collapsed = SequenceCollapser.Apply(tracesForTest, collapseConsecutiveIdenticalCalls, collapseThreshold, maxArrowsPerDiagram);
+        tracesForTest = collapsed.Traces;
+        var omittedPairs = collapsed.OmittedPairs;
+        if (tracesForTest.Count == 0)
+            return [];
+
         var builder = new DiagramBuilder(tracesForTest, plantUmlTheme, clientSideSplitting ? int.MaxValue : maxEncodedDiagramLength,
             sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides);
         var lastTrace = tracesForTest[^1];
@@ -224,6 +240,14 @@ public static partial class PlantUmlCreator
                     if (internalFlowTracking)
                         requestLabel = $"[[#iflow-{trace.RequestResponseId} {requestLabel}]]";
 
+                    if (trace.CollapsedCount > 1)
+                    {
+                        var loopLabel = trace.CollapsedSummary is { Length: > 0 } summary
+                            ? $"loop ×{trace.CollapsedCount} · {summary}"
+                            : $"loop ×{trace.CollapsedCount}";
+                        builder.OpenLoop(loopLabel, trace.RequestResponseId);
+                    }
+
                     var arrowColor = builder.GetArrowColor(trace.ServiceName, trace.DependencyCategory, trace.CallerName, trace.CallerDependencyCategory);
                     builder.AppendLine($"{callerShortName} -{arrowColor}> {serviceShortName}: {requestLabel}");
                     builder.AddArrowHeight();
@@ -251,14 +275,23 @@ public static partial class PlantUmlCreator
                         noteContent = responsePostFormattingProcessor(noteContent);
 
                     AppendResponseNoteContent(builder, noteContent, trace, serviceShortName, callerShortName, internalFlowTracking, truncateNotesAfterLines, clientSideSplitting);
+                    if (builder.OpenLoopRequestResponseId == trace.RequestResponseId)
+                        builder.CloseLoop();
                     break;
                 }
             }
 
             builder.IncrementStep();
 
-            if (!clientSideSplitting && (builder.EncodedDiagramExceedsMaxLength || builder.EstimatedHeightExceedsMax) && trace != lastTrace)
+            if (!clientSideSplitting && !builder.HasOpenLoop && (builder.EncodedDiagramExceedsMaxLength || builder.EstimatedHeightExceedsMax) && trace != lastTrace)
                 builder.FinishAndStartNewDiagram();
+        }
+
+        builder.CloseLoop();
+        if (omittedPairs > 0)
+        {
+            builder.AppendLine($"...+{omittedPairs} more call{(omittedPairs == 1 ? "" : "s")} omitted (MaxArrowsPerDiagram)...");
+            builder.AddArrowHeight();
         }
 
         builder.FinishAndStartNewDiagram();
@@ -783,6 +816,34 @@ public static partial class PlantUmlCreator
             }
         }
 
+        private string? _openLoopLine;
+        private Guid? _openLoopRequestResponseId;
+
+        /// <summary>A <c>loop</c> fragment is open (collapsed run in progress) — see <see cref="SequenceCollapser"/>.</summary>
+        public bool HasOpenLoop => _openLoopLine != null;
+
+        /// <summary>The request/response id whose response closes the open loop, if any.</summary>
+        public Guid? OpenLoopRequestResponseId => _openLoopRequestResponseId;
+
+        public void OpenLoop(string loopLine, Guid requestResponseId)
+        {
+            CloseLoop();
+            AppendLine(loopLine);
+            AddArrowHeight();
+            _openLoopLine = loopLine;
+            _openLoopRequestResponseId = requestResponseId;
+        }
+
+        public void CloseLoop()
+        {
+            if (_openLoopLine != null)
+            {
+                AppendLine("end");
+                _openLoopLine = null;
+                _openLoopRequestResponseId = null;
+            }
+        }
+
         public bool EncodedDiagramExceedsMaxLength
         {
             get
@@ -803,6 +864,9 @@ public static partial class PlantUmlCreator
         public void FinishAndStartNewDiagram()
         {
             var partitionToReopen = _openPartitionLine;
+            var loopToReopen = _openLoopLine;
+            if (_openLoopLine != null)
+                AppendLine("end");
             if (_openPartitionLine != null)
                 AppendLine("end");
 
@@ -820,6 +884,12 @@ public static partial class PlantUmlCreator
             {
                 AppendLine(partitionToReopen);
                 _openPartitionLine = partitionToReopen;
+            }
+
+            if (loopToReopen != null)
+            {
+                AppendLine(loopToReopen);
+                _openLoopLine = loopToReopen;
             }
         }
 

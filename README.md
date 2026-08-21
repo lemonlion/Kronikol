@@ -150,6 +150,16 @@ kronikol merge ./artifacts -o TestRunReport.html
 
 See the [Merging Parallel Reports](https://github.com/lemonlion/Kronikol/wiki/Merging-Parallel-Reports) wiki page for a full GitHub Actions example.
 
+### Diagramming backends you cannot instrument (proxy taps + NDJSON ingest)
+
+Not every system under test is .NET, or yours to change. `Kronikol.Extensions.ProxyTap` is a transparent HTTP tee you put on each service-to-service hop: it forwards byte-for-byte, attributes every exchange to the running test by the `test-tracking-*` headers (or the W3C `traceparent` trace id a browser fixture minted), re-injects the correlation headers across hops that drop them, redacts secrets at capture, and records the call — to the in-process store, or to a language-neutral **NDJSON** file that `kronikol ingest` replays into a full report:
+
+```bash
+kronikol ingest ./captures --tests ./captures/tests.ndjson -o ./Reports
+```
+
+`Kronikol.Playwright` stamps the identity on every browser request (`browser.NewTrackedContextAsync(identity)`). See [ProxyTap](https://github.com/lemonlion/Kronikol/wiki/Integration-ProxyTap-Extension), [Ingesting External Captures](https://github.com/lemonlion/Kronikol/wiki/Ingesting-External-Captures) and [Playwright](https://github.com/lemonlion/Kronikol/wiki/Integration-Playwright).
+
 ---
 
 ## <a name="deterministic-vs-ai"></a>Deterministic vs AI-Generated Diagrams [↑](#top)
@@ -184,6 +194,7 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 | **ReqNRoll** | `Kronikol.ReqNRoll.xUnit2` | xUnit v2 | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.ReqNRoll.xUnit2)](https://www.nuget.org/packages/Kronikol.ReqNRoll.xUnit2) |
 | **ReqNRoll** | `Kronikol.ReqNRoll.xUnit3` | xUnit v3 | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.ReqNRoll.xUnit3)](https://www.nuget.org/packages/Kronikol.ReqNRoll.xUnit3) |
 | **ReqNRoll** | `Kronikol.ReqNRoll.TUnit` | TUnit | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.ReqNRoll.TUnit)](https://www.nuget.org/packages/Kronikol.ReqNRoll.TUnit) |
+| **Playwright** (browser E2E) | `Kronikol.Playwright` | any (xUnit/NUnit/MSTest/TUnit) | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Playwright)](https://www.nuget.org/packages/Kronikol.Playwright) |
 
 ### Extensions — Databases & Caches
 
@@ -240,6 +251,9 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 | **MediatR** | `Kronikol.Extensions.MediatR` | Wraps `IMediator` and `ISender` with `TrackingProxy` to record Send, Publish, and CreateStream calls with command/query type names | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.MediatR)](https://www.nuget.org/packages/Kronikol.Extensions.MediatR) |
 | **OpenTelemetry** | `Kronikol.Extensions.OpenTelemetry` | Captures internal SUT spans during tests for internal flow visualization in sequence diagram popups | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.OpenTelemetry)](https://www.nuget.org/packages/Kronikol.Extensions.OpenTelemetry) |
 | **PlantUML IKVM** | `Kronikol.PlantUml.Ikvm` | Local PlantUML rendering via IKVM — no remote server or Java installation required | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.PlantUml.Ikvm)](https://www.nuget.org/packages/Kronikol.PlantUml.Ikvm) |
+| **Proxy Tap** | `Kronikol.Extensions.ProxyTap` | Out-of-process HTTP tee that captures any hop of an uninstrumentable (polyglot / third-party / legacy) backend, attributes by `test-tracking-*` headers or the W3C trace id, re-injects correlation, redacts secrets at capture | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.ProxyTap)](https://www.nuget.org/packages/Kronikol.Extensions.ProxyTap) |
+| **Playwright** | `Kronikol.Playwright` | Browser-driven E2E client: per-test identity stamped on every `BrowserContext`/`Page` request (+ `traceparent`), in-process scope bridge | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Playwright)](https://www.nuget.org/packages/Kronikol.Playwright) |
+| **CLI** | `Kronikol.Tool` | `kronikol merge` (combine parallel runners' reports) and `kronikol ingest` (replay language-neutral NDJSON captures into a full report) | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Tool)](https://www.nuget.org/packages/Kronikol.Tool) |
 | **Step Tracking** | `Kronikol.StepTracking` | IL weaver that instruments `[GivenStep]`, `[WhenStep]`, `[ThenStep]` methods with BDD step tracking and timing | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.StepTracking)](https://www.nuget.org/packages/Kronikol.StepTracking) |
 
 All packages from 1.23.X onwards target **.NET 8.0**, **.NET 9.0**, and **.NET 10.0** (multi-target).

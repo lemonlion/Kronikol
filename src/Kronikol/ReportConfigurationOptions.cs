@@ -38,7 +38,12 @@ public record ReportConfigurationOptions
     /// <summary>File name (without extension) for the YAML specifications data file. Default: <c>"Specifications"</c>.</summary>
     public string YamlSpecificationsFileName { get; set; } = "Specifications";
 
-    /// <summary>Folder path (relative to the test output directory) where reports are written. Default: <c>"Reports"</c>.</summary>
+    /// <summary>
+    /// Folder where reports are written. A relative path is resolved against the test output directory
+    /// (<c>AppDomain.CurrentDomain.BaseDirectory</c>); an absolute path is used as-is. Honoured by every
+    /// file the standard pipeline emits (HTML, data, schema, component diagram, CI summary, diagnostic
+    /// report, copied attachments). Default: <c>"Reports"</c>.
+    /// </summary>
     public string ReportsFolderPath { get; set; } = "Reports";
 
     /// <summary>HTTP headers to exclude from diagram annotations. Default: empty.</summary>
@@ -209,6 +214,30 @@ public record ReportConfigurationOptions
 
     /// <summary>When <c>true</c>, sequence diagram participant headers get colored backgrounds matching their dependency type. Default: <c>false</c>.</summary>
     public bool SequenceDiagramParticipantColors { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, maximal runs of consecutive identical calls within one test — same caller,
+    /// service, method, path+query, GraphQL operation and status code — are collapsed into a single
+    /// request/response pair wrapped in a PlantUML <c>loop ×N</c> fragment (with the min–max duration
+    /// when timestamps are available). Keeps poll/retry-heavy traffic legible. Default: <c>false</c>.
+    /// </summary>
+    public bool CollapseConsecutiveIdenticalCalls { get; set; }
+
+    /// <summary>Minimum run length that triggers collapsing when <see cref="CollapseConsecutiveIdenticalCalls"/> is on. Default: <c>2</c>.</summary>
+    public int CollapseThreshold { get; set; } = 2;
+
+    /// <summary>
+    /// Maximum number of request/response pairs rendered per test's sequence diagram (counted after
+    /// collapsing). The remainder is summarised as a single <c>… +N more calls omitted …</c> line.
+    /// Default: <c>null</c> (unlimited).
+    /// </summary>
+    public int? MaxArrowsPerDiagram { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, a scenario whose id matched no tracked interaction renders an explicit
+    /// "No interactions captured" marker instead of silently omitting the diagram section. Default: <c>true</c>.
+    /// </summary>
+    public bool ShowNoInteractionsMarker { get; set; } = true;
 
     /// <summary>User overrides for dependency-type colors. Keys are <see cref="Tracking.RequestResponseLog.DependencyCategory"/> strings (e.g. <c>"CosmosDB"</c>), values are hex colors (e.g. <c>"#E74C3C"</c>).</summary>
     public Dictionary<string, string>? DependencyColors { get; set; }

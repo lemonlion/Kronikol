@@ -47,6 +47,16 @@ public record RequestResponseLog(
     /// verbosity overrides are configured and the phase is unknown at capture time.
     /// </summary>
     public PhaseVariant? ActionVariant { get; set; }
+
+    /// <summary>
+    /// When greater than one, this entry stands for a run of that many consecutive identical calls
+    /// that were collapsed into one (see <c>ReportConfigurationOptions.CollapseConsecutiveIdenticalCalls</c>).
+    /// Set by the diagram pipeline, never by capturers.
+    /// </summary>
+    public int CollapsedCount { get; set; }
+
+    /// <summary>Human-readable summary of a collapsed run (e.g. <c>12–48 ms</c>), rendered in the loop label.</summary>
+    public string? CollapsedSummary { get; set; }
 };
 
 /// <summary>

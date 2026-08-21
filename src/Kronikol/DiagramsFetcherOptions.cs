@@ -33,4 +33,13 @@ public record DiagramsFetcherOptions
     public Dictionary<string, string>? DependencyColors { get; set; }
     public Dictionary<string, string>? ServiceTypeOverrides { get; set; }
     public GraphQlBodyFormat GraphQlBodyFormat { get; set; } = GraphQlBodyFormat.FormattedWithMetadata;
+
+    /// <summary>See <see cref="ReportConfigurationOptions.CollapseConsecutiveIdenticalCalls"/>.</summary>
+    public bool CollapseConsecutiveIdenticalCalls { get; set; }
+
+    /// <summary>See <see cref="ReportConfigurationOptions.CollapseThreshold"/>.</summary>
+    public int CollapseThreshold { get; set; } = 2;
+
+    /// <summary>See <see cref="ReportConfigurationOptions.MaxArrowsPerDiagram"/>.</summary>
+    public int? MaxArrowsPerDiagram { get; set; }
 }

@@ -23,6 +23,10 @@ public static class ReportGenerator
 
     internal static bool ShouldEmbedComponentDiagram(ReportConfigurationOptions options) =>
         (options.ComponentDiagramOptions ?? new ComponentDiagramOptions()).EmbedInTestRunReport;
+
+    /// <summary>Rendered in place of the diagram section for a scenario whose id matched no tracked interaction.</summary>
+    internal const string NoInteractionsMarkerHtml =
+        "<div class=\"no-interactions\" data-no-interactions=\"true\">No interactions captured for this scenario.</div>";
     private static readonly Lazy<string> AdvancedSearchJs = new(() =>
     {
         var assembly = Assembly.GetExecutingAssembly();
@@ -48,7 +52,43 @@ public static class ReportGenerator
         return reader.ReadToEnd();
     });
 
+    // The output directory for the report generation currently in flight. Flows (via ExecutionContext)
+    // into the Parallel.Invoke workers that call WriteFile, so every file of one run lands in the
+    // directory resolved from that run's ReportConfigurationOptions.ReportsFolderPath.
+    private static readonly AsyncLocal<string?> ActiveReportsDirectory = new();
+
+    /// <summary>
+    /// Resolves the directory reports are written to for the given options: <see cref="ReportConfigurationOptions.ReportsFolderPath"/>
+    /// as-is when absolute, otherwise relative to <c>AppDomain.CurrentDomain.BaseDirectory</c>. Defaults to
+    /// <c>&lt;BaseDirectory&gt;/Reports</c> when options are <c>null</c> or the folder is blank.
+    /// </summary>
+    public static string ResolveReportsDirectory(ReportConfigurationOptions? options = null)
+    {
+        var folder = options?.ReportsFolderPath;
+        if (string.IsNullOrWhiteSpace(folder))
+            folder = "Reports";
+        return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folder));
+    }
+
+    /// <summary>The directory the current (or default) report generation writes to.</summary>
+    internal static string CurrentReportsDirectory =>
+        ActiveReportsDirectory.Value ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
+
     public static void CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options)
+    {
+        var previous = ActiveReportsDirectory.Value;
+        ActiveReportsDirectory.Value = ResolveReportsDirectory(options);
+        try
+        {
+            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options);
+        }
+        finally
+        {
+            ActiveReportsDirectory.Value = previous;
+        }
+    }
+
+    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options)
     {
         // Guard: skip report generation entirely when there are zero scenarios.
         // This prevents the xUnit v3 test-discovery pass (which triggers
@@ -114,7 +154,10 @@ public static class ReportGenerator
             SequenceDiagramParticipantColors = options.SequenceDiagramParticipantColors,
             DependencyColors = options.DependencyColors,
             ServiceTypeOverrides = options.ServiceTypeOverrides,
-            GraphQlBodyFormat = options.GraphQlBodyFormat
+            GraphQlBodyFormat = options.GraphQlBodyFormat,
+            CollapseConsecutiveIdenticalCalls = options.CollapseConsecutiveIdenticalCalls,
+            CollapseThreshold = options.CollapseThreshold,
+            MaxArrowsPerDiagram = options.MaxArrowsPerDiagram
         };
         var diagrams = DefaultDiagramsFetcher.GetDiagramsFetcher(fetcherOptions)();
 
@@ -152,6 +195,13 @@ public static class ReportGenerator
 
         var ciMetadata = CiMetadataDetector.Detect();
 
+        // The data file's httpInteractions block must not depend on internal-flow tracking being on:
+        // externally captured traffic (proxy taps, ingested NDJSON) has no in-process spans but the
+        // interactions are the whole point of the data export.
+        var dataLogs = trackedLogs ?? RequestResponseLogger.RequestAndResponseLogs
+            .Where(x => !(x?.TrackingIgnore ?? true))
+            .ToArray();
+
         var specsDataExtension = GetDataFormatExtension(options.SpecificationsDataFormat);
         var testRunDataExtension = GetDataFormatExtension(options.TestRunReportDataFormat);
 
@@ -169,7 +219,7 @@ public static class ReportGenerator
 
         // Copy attachment files into the Reports directory so that HTML links resolve
         // when reports are uploaded to GitHub Pages or CI artifacts.
-        var reportsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
+        var reportsDir = CurrentReportsDirectory;
         Directory.CreateDirectory(reportsDir);
         CopyAttachmentsToReportsFolder(features, reportsDir);
 
@@ -177,12 +227,12 @@ public static class ReportGenerator
 
         if (options.GenerateSpecificationsReport)
         {
-            actions.Add(() => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames));
+            actions.Add(() => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker));
         }
 
         if (options.GenerateTestRunReport)
         {
-            actions.Add(() => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null));
+            actions.Add(() => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker));
         }
 
         if (options.GenerateSpecificationsData)
@@ -200,7 +250,7 @@ public static class ReportGenerator
             }
             else
             {
-                actions.Add(() => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, trackedLogs));
+                actions.Add(() => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs));
             }
         }
 
@@ -235,7 +285,7 @@ public static class ReportGenerator
             var markdown = CiSummaryGenerator.GenerateMarkdown(features, truncatedDiagrams, fullDiagrams, startRunTime, endRunTime, options.MaxCiSummaryDiagrams,
                 options.DiagramFormat, options.PlantUmlServerBaseUrl, options.LocalDiagramRenderer);
 
-            var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
+            var directory = CurrentReportsDirectory;
             Directory.CreateDirectory(directory);
             File.WriteAllText(Path.Combine(directory, "CiSummary.md"), markdown);
 
@@ -246,7 +296,7 @@ public static class ReportGenerator
         if (options.PublishCiArtifacts)
         {
             var ciEnv = CiEnvironmentDetector.Detect();
-            var ciReportsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
+            var ciReportsDir = CurrentReportsDirectory;
             if (Directory.Exists(ciReportsDir))
             {
                 var reportFiles = Directory.GetFiles(ciReportsDir)
@@ -294,7 +344,8 @@ public static class ReportGenerator
         int maxParameterColumns = 10,
         bool titleizeParameterNames = true,
         string? componentDiagramPlantUml = null,
-        Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null)
+        Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
+        bool showNoInteractionsMarker = false)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -970,6 +1021,7 @@ public static class ReportGenerator
                         hasAssertionNotes: hasAssertionNotes,
                         hasStepDelimiters: hasStepDelimiters,
                         hasDatabaseParticipants: hasDatabaseParticipants,
+                        showNoInteractionsMarker: showNoInteractionsMarker,
                         scenarioAnchorIds: scenarioAnchorIds,
                         featureDisplayName: feature.DisplayName,
                         featureDescription: feature.Description,
@@ -1259,6 +1311,10 @@ public static class ReportGenerator
 
                     body.Append("</details>");
                 }
+                else if (showNoInteractionsMarker)
+                {
+                    body.Append(NoInteractionsMarkerHtml);
+                }
 
                 body.Append("</details>");
             }
@@ -1543,7 +1599,8 @@ public static class ReportGenerator
         string? featureDisplayName = null,
         string? featureDescription = null,
         string[]? featureLabels = null,
-        Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null)
+        Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
+        bool showNoInteractionsMarker = false)
     {
         var scenarios = group.Scenarios;
 
@@ -2009,6 +2066,8 @@ public static class ReportGenerator
                         var display = ri == 0 ? "" : " style=\"display:none\"";
                         body.Append($"<div id=\"{prefix}-diagram-{ri}\"{display}>");
                         var diagrams = diagramsByTestId[s.Id].ToArray();
+                        if (diagrams.Length == 0 && showNoInteractionsMarker)
+                            body.Append(NoInteractionsMarkerHtml);
                         if (diagrams.Length > 0)
                             RenderDiagramsForScenario(body, diagrams, isPlantUmlBrowser, isInlineSvg, lazyLoadImages, ref plantUmlBrowserCounter, diagramDataMap);
                         body.Append("</div>");
@@ -3493,7 +3552,7 @@ public static class ReportGenerator
 
     private static string WriteFile(string text, string fileName)
     {
-        var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
+        var directory = CurrentReportsDirectory;
         Directory.CreateDirectory(directory);
         var filePath = Path.Combine(directory, fileName);
         try

@@ -1651,3 +1651,10 @@
                 display: none;
             }
         }
+        /* K9: explicit state for scenarios with no tracked interactions */
+        .no-interactions {
+            color: #8a8f98;
+            font-style: italic;
+            font-size: 0.9em;
+            margin: 4px 0 10px;
+        }

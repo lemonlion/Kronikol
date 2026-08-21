@@ -65,6 +65,10 @@ public static class DependencyCategories
     /// <summary>gRPC service.</summary>
     public const string Grpc = "gRPC";
 
+    // ─── AI / LLM ────────────────────────────────────────────
+    /// <summary>A large-language-model / AI provider call (Gemini, OpenAI, Ollama, Bedrock, …).</summary>
+    public const string AI = "AI";
+
     // ─── Extension-specific (not in DependencyPalette) ───────
     /// <summary>MongoDB Atlas Data API (REST-based MongoDB access).</summary>
     public const string AtlasDataApi = "AtlasDataApi";
