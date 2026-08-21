@@ -69,6 +69,10 @@ public static class DependencyCategories
     /// <summary>A large-language-model / AI provider call (Gemini, OpenAI, Ollama, Bedrock, …).</summary>
     public const string AI = "AI";
 
+    // ─── People ──────────────────────────────────────────────
+    /// <summary>A human (or the test driving a browser as one) acting on the system — the caller of UI actions. Renders as an actor.</summary>
+    public const string User = "User";
+
     // ─── Extension-specific (not in DependencyPalette) ───────
     /// <summary>MongoDB Atlas Data API (REST-based MongoDB access).</summary>
     public const string AtlasDataApi = "AtlasDataApi";

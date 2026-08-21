@@ -8,7 +8,12 @@ namespace Kronikol.Ingestion;
 /// <c>kronikol ingest</c> / <see cref="IngestPipeline"/>. Three event kinds:
 /// <list type="bullet">
 /// <item><c>start</c> — the test began (<c>testId</c>, <c>testName</c>, optional <c>feature</c>, <c>timestamp</c>).</item>
-/// <item><c>step</c> — a named step boundary inside the test (<c>text</c>, optional <c>keyword</c>, <c>status</c>, <c>durationMs</c>).</item>
+/// <item><c>step</c> — a named step inside the test (<c>text</c>, optional <c>keyword</c>, <c>status</c>, <c>durationMs</c>, <c>error</c>, <c>level</c>).
+/// Top-level steps (<c>level</c> 0 or absent) also draw a step delimiter bar in the sequence diagram at their
+/// <c>timestamp</c>, exactly like Kronikol's step tracking; nested steps (<c>level</c> &gt; 0) appear as sub-steps in the step list.</item>
+/// <item><c>assertion</c> — an assertion the test made (<c>text</c>, <c>status</c>: passed | failed, optional <c>error</c>).
+/// Draws a green ✓ / red ✗ assertion note in the sequence diagram at its <c>timestamp</c>, exactly like Kronikol's
+/// assertion tracking, and appears as a sub-step of the enclosing step.</item>
 /// <item><c>end</c> — the verdict (<c>status</c>: passed | failed | skipped | timedOut | interrupted | bypassed; <c>durationMs</c>; optional <c>error</c>).</item>
 /// </list>
 /// <c>testId</c> must equal the <c>testId</c> stamped on the interaction records for attribution to work.
@@ -44,6 +49,15 @@ public sealed record TestRunRecord
 
     /// <summary>Optional Gherkin-style keyword for <c>step</c> events (<c>Given</c>, <c>When</c>, …).</summary>
     [JsonPropertyName("keyword")] public string? Keyword { get; init; }
+
+    /// <summary>Steps only: nesting depth. 0 / absent = top level (draws a delimiter); &gt; 0 = sub-step of the preceding top-level step.</summary>
+    [JsonPropertyName("level")] public int? Level { get; init; }
+
+    /// <summary><c>true</c> for <c>step</c> and <c>assertion</c> events that carry a timestamp — the ones that draw something in the diagram.</summary>
+    [JsonIgnore] public bool IsDiagramMarker =>
+        Timestamp is not null
+        && (string.Equals(Event, "assertion", StringComparison.OrdinalIgnoreCase)
+            || (string.Equals(Event, "step", StringComparison.OrdinalIgnoreCase) && (Level ?? 0) == 0));
 
     /// <summary>Serialises this record as one NDJSON line.</summary>
     public string ToJson() => JsonSerializer.Serialize(this, InteractionRecord.JsonOptions);

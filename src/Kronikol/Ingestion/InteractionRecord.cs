@@ -84,6 +84,51 @@ public sealed record InteractionRecord
     /// <summary><c>Default</c> (request/response) or <c>Event</c> (fire-and-forget styling).</summary>
     [JsonPropertyName("metaType")] public string? MetaType { get; init; }
 
+    /// <summary>
+    /// What this record is. Absent/<c>interaction</c> = a request or response (the default).
+    /// <c>ui</c> = a user action on the system (a browser click, navigation, keystroke…): renders as a single
+    /// one-way arrow from <see cref="CallerName"/> (an actor, normally "User") to <see cref="ServiceName"/>
+    /// labelled <see cref="Method"/>, with <see cref="Content"/> as its note; <see cref="DurationMs"/> is the
+    /// span during which the calls it caused happened (they nest under it in call-tree order).
+    /// <c>step</c> / <c>assertion</c> = diagram markers — a step delimiter bar or a ✓/✗ assertion note at
+    /// <see cref="Timestamp"/> (see <see cref="Text"/>, <see cref="Keyword"/>, <see cref="Passed"/>, <see cref="Message"/>).
+    /// The tests NDJSON (<see cref="TestRunRecord"/>) is the usual source of markers; this lets an interaction
+    /// capturer emit them too.
+    /// </summary>
+    [JsonPropertyName("kind")] public string? Kind { get; init; }
+
+    /// <summary>How long this record's activity lasted (ms). For <c>ui</c> records: the interval the action owns — calls starting inside it nest under it.</summary>
+    [JsonPropertyName("durationMs")] public double? DurationMs { get; init; }
+
+    /// <summary>Markers: the step text or the assertion text.</summary>
+    [JsonPropertyName("text")] public string? Text { get; init; }
+
+    /// <summary>Step markers: optional Given/When/Then keyword shown before the text.</summary>
+    [JsonPropertyName("keyword")] public string? Keyword { get; init; }
+
+    /// <summary>Assertion markers: whether it passed (default <c>true</c>).</summary>
+    [JsonPropertyName("passed")] public bool? Passed { get; init; }
+
+    /// <summary>Assertion markers: the failure message shown under a failed assertion.</summary>
+    [JsonPropertyName("message")] public string? Message { get; init; }
+
+    /// <summary>Record kinds (<see cref="Kind"/>).</summary>
+    public static class Kinds
+    {
+        public const string Interaction = "interaction";
+        public const string Ui = "ui";
+        public const string Step = "step";
+        public const string Assertion = "assertion";
+    }
+
+    /// <summary><see cref="Kind"/> is <c>ui</c>.</summary>
+    [JsonIgnore] public bool IsUserAction => string.Equals(Kind, Kinds.Ui, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary><see cref="Kind"/> is <c>step</c> or <c>assertion</c>: a zero-length diagram marker, never a request.</summary>
+    [JsonIgnore] public bool IsMarker =>
+        string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(Kind, Kinds.Assertion, StringComparison.OrdinalIgnoreCase);
+
     /// <summary>W3C trace id of the distributed trace this call belongs to (cross-link to Tempo/Jaeger).</summary>
     [JsonPropertyName("activityTraceId")] public string? ActivityTraceId { get; init; }
 
@@ -129,6 +174,7 @@ public sealed record InteractionRecord
         ActivityTraceId = log.ActivityTraceId,
         ActivitySpanId = log.ActivitySpanId,
         TrackingIgnore = log.TrackingIgnore ? true : null,
+        Kind = log.IsUserAction ? Kinds.Ui : null,
     };
 
     /// <summary>
@@ -176,14 +222,121 @@ public sealed record InteractionRecord
             status,
             metaType,
             DependencyCategory,
-            CallerDependencyCategory)
+            // A user action's caller is a person: default it to the User category so it renders as an actor.
+            CallerDependencyCategory ?? (IsUserAction ? Constants.DependencyCategories.User : null))
         {
             Timestamp = Timestamp,
             Phase = phase,
             ActivityTraceId = ActivityTraceId,
             ActivitySpanId = ActivitySpanId,
+            IsUserAction = IsUserAction,
         };
     }
+
+    /// <summary>
+    /// Maps this record to the log entries it stands for: one <see cref="RequestResponseLog"/> for requests,
+    /// responses and user actions; for <c>step</c> / <c>assertion</c> markers, the override pair that injects
+    /// the delimiter bar or assertion note into the sequence diagram (the same PlantUML Kronikol's step and
+    /// assertion tracking emit, so the report's Show/Hide Steps and Show/Hide Assertions toggles apply).
+    /// </summary>
+    public IEnumerable<RequestResponseLog> ToLogs(string? testNameOverride = null)
+    {
+        if (!IsMarker)
+        {
+            yield return ToLog(testNameOverride);
+            yield break;
+        }
+
+        var plantUml = string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase)
+            ? StepDelimiterPlantUml(Keyword, Text)
+            : AssertionNotePlantUml(Text, Passed ?? true, Message);
+        var name = testNameOverride ?? TestName ?? TestIdentityScope.UnknownTestName;
+
+        yield return OverrideLog(name, TestId, isStart: true, plantUml);
+        yield return OverrideLog(name, TestId, isStart: false, null);
+    }
+
+    /// <summary>The step delimiter bar Kronikol's step tracking draws: <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;</c>.</summary>
+    public static string StepDelimiterPlantUml(string? keyword, string? text)
+    {
+        var label = string.IsNullOrWhiteSpace(keyword) ? text ?? "step" : $"{keyword} {text}";
+        return $"hnote across <<stepDelimiter>> #black:<color:white>{EscapeNoteLine(label)}";
+    }
+
+    /// <summary>The assertion note Kronikol's assertion tracking draws: green ✓ / red ✗ <c>hnote across &lt;&lt;assertionNote&gt;&gt;</c>.</summary>
+    public static string AssertionNotePlantUml(string? text, bool passed, string? message)
+    {
+        var color = passed ? Track.PassColor : Track.FailColor;
+        var symbol = passed ? Track.PassSymbol : Track.FailSymbol;
+        var body = $"{symbol} {EscapeNoteLine(text ?? "assertion")}";
+        if (!passed && !string.IsNullOrWhiteSpace(message))
+            body += "\n" + EscapeNoteLine(message!);
+        return $"hnote across <<assertionNote>> {color}\n{body}\nend note";
+    }
+
+    private static string EscapeNoteLine(string text) =>
+        text.Replace("\r", string.Empty).Replace("\n", "\\n").Trim();
+
+    private RequestResponseLog OverrideLog(string testName, string testId, bool isStart, string? plantUml) =>
+        new(testName, testId, "", "", new Uri("http://override.com"), [], "", "",
+            RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        {
+            IsOverrideStart = isStart,
+            IsOverrideEnd = !isStart,
+            PlantUml = plantUml is null ? null : $"\n{plantUml}\n\n",
+            Timestamp = Timestamp,
+        };
+
+    /// <summary>A user action (<c>kind: ui</c>): one arrow from <paramref name="callerName"/> (an actor) to <paramref name="serviceName"/>.</summary>
+    public static InteractionRecord UserAction(
+        string testId, string label, string? pageUrl, DateTimeOffset timestamp, double? durationMs = null,
+        string? detail = null, string callerName = "User", string serviceName = "web", string? testName = null) => new()
+    {
+        Kind = Kinds.Ui,
+        Type = "Request",
+        Method = label,
+        Uri = pageUrl ?? "http://unknown/",
+        ServiceName = serviceName,
+        CallerName = callerName,
+        CallerDependencyCategory = Constants.DependencyCategories.User,
+        Content = detail,
+        Timestamp = timestamp,
+        DurationMs = durationMs,
+        TestId = testId,
+        TestName = testName,
+        RequestResponseId = Guid.NewGuid().ToString("N"),
+    };
+
+    /// <summary>A step delimiter marker (<c>kind: step</c>).</summary>
+    public static InteractionRecord StepMarker(string testId, string text, DateTimeOffset timestamp, string? keyword = null, string? testName = null) => new()
+    {
+        Kind = Kinds.Step,
+        Type = "Request",
+        Uri = "http://override.com/",
+        ServiceName = "",
+        CallerName = "",
+        Text = text,
+        Keyword = keyword,
+        Timestamp = timestamp,
+        TestId = testId,
+        TestName = testName,
+    };
+
+    /// <summary>An assertion note marker (<c>kind: assertion</c>).</summary>
+    public static InteractionRecord AssertionMarker(string testId, string text, bool passed, DateTimeOffset timestamp, string? message = null, string? testName = null) => new()
+    {
+        Kind = Kinds.Assertion,
+        Type = "Request",
+        Uri = "http://override.com/",
+        ServiceName = "",
+        CallerName = "",
+        Text = text,
+        Passed = passed,
+        Message = message,
+        Timestamp = timestamp,
+        TestId = testId,
+        TestName = testName,
+    };
 
     /// <summary>
     /// Builds the Request/Response pair for one synchronous call — the shape every capturer needs most.

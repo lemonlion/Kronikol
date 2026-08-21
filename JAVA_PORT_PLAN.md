@@ -613,3 +613,11 @@ The .NET codebase now ships three generic assets the Java port must mirror byte-
 3. **Playwright / browser identity (`kronikol4j-playwright`).** `TestTrackingIdentity` (testName, testId, callerName = `Browser`, traceId UUID whose 32-hex form is the W3C trace id; `testId` defaults to that 32-hex); `toHeaders()` = the four tracking headers + a sampled `traceparent`; header values ISO-8859-1-safe, ≤ 512 chars; `newTrackedContext(identity)` / `useTestTracking(context, identity)`; `beginScope()` bridges to the in-process identity scope.
 4. **Capture-time redaction hook** on the logger (`RequestResponseLogger.Redaction` ↔ `CaptureRedaction`: header denylist, content regex patterns, custom hook, applied before enqueue, before truncation).
 5. **Core additions to mirror:** `DependencyCategories.AI` (+ `DependencyType.AI`, colour `#16A085`, sequence shape `control`, component shape `hexagon`); `ReportsFolderPath` honoured (absolute or relative to base dir); resettable diagram cache (`DefaultDiagramsFetcher.Reset()`); `CollapseConsecutiveIdenticalCalls` / `CollapseThreshold` / `MaxArrowsPerDiagram` (PlantUML `loop ×N · min–max ms` fragment, `...+N more calls omitted (MaxArrowsPerDiagram)...` delay line, key = caller+service+method+pathAndQuery+GraphQL op+status+metaType); `ShowNoInteractionsMarker` (`<div class="no-interactions" data-no-interactions="true">No interactions captured for this scenario.</div>`); `httpInteractions` always emitted in the data file regardless of internal-flow tracking.
+
+### User actions / steps / assertions from external captures (added with .NET 3.0.44, P7)
+
+Ingest parity: `InteractionRecord.kind = "ui"` (one actor→service arrow, `durationMs` interval for nesting) and
+tests-NDJSON `step` (with `level`/`status`/`durationMs`/`error`) and `assertion` events map onto the same step
+delimiter / assertion note PlantUML the in-process step & assertion tracking emit. Java has no Playwright
+reporter API equivalent in scope; the ingest side is what needs porting (`IngestPipeline` marker handling,
+`FeatureSynthesizer.BuildStepTree`, `DependencyCategories.User`).

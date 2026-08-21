@@ -1185,3 +1185,25 @@ These land in .NET first and define the wire contracts the Node packages must ma
 - **NDJSON + `kronikol ingest`** — `@kronikol/core` gets `InteractionRecord` (the `httpInteraction` shape + `testId`/`testName` + optional extras), `NdjsonInteractionWriter` (an `IRequestResponseSink`), `NdjsonInteractionReader`, `TestRunRecord`, `FeatureSynthesizer`, `IngestPipeline`; `@kronikol/cli ingest <inputs…> [--tests f] [-o dir] [--render …] [-t title] [--collapse|--no-collapse] [--collapse-threshold n] [--max-arrows n] [--no-component-diagram] [--no-redact] [--redact-header h] [--feature name] [--allow-empty]`, exit codes 0/1/2. This is **the** cross-runtime glue: a Node capturer can feed the .NET report and vice-versa.
 - **`@kronikol/playwright`** — exactly the `TestTrackingIdentity` contract: `create(testName, testId?)` with `testId` defaulting to the 32-hex W3C trace id; `toHeaders()` = `test-tracking-current-test-name`, `-current-test-id`, `-caller-name` (`Browser`), `-trace-id` (UUID form) + sampled `traceparent`; `context.setExtraHTTPHeaders(...)` merge semantics; a `step()` helper and a per-run tests NDJSON writer (start/step/end) so `ingest --tests` can attribute outcome/duration/steps. The sink is downstream (server or tap), never the fixture.
 - **Core parity items:** capture-time redaction hook (`Redaction` on the logger; secure preset opt-in), `ReportsFolderPath` honoured, resettable diagram cache, `CollapseConsecutiveIdenticalCalls`/`CollapseThreshold`/`MaxArrowsPerDiagram` (+ exact PlantUML `loop`/delay-line text), `ShowNoInteractionsMarker` (+ exact HTML), `DependencyCategories.AI`, `httpInteractions` always in the data file.
+
+### `@kronikol/playwright` reporter — the user in the diagram (added with .NET 3.0.44, P7)
+
+The reporter is the first concrete piece of `@kronikol/playwright`; the reference implementation is
+`tests/kronikol-reporter.ts` (+ label helpers in `tests/kronikol.ts`) in the sidekick-intelligence-e2e repo.
+Contract (all records are the ingest NDJSON shapes above):
+
+- `onTestEnd(test, result)`: find the scenario id in the `kronikol-test-id` attachment (the fixture attaches
+  `identity.testId`); walk `result.steps` recursively, skipping `hook`/`fixture` subtrees.
+- `pw:api` steps whose title starts with an action verb (`Navigate to`, `Click`, `Double click`, `Right click`,
+  `Fill`, `Type`, `Press`, `Check`, `Uncheck`, `Select option`, `Hover`, `Tap`, `Focus`, `Drag`, `Upload files`,
+  `Reload`, `Go back`, `Go forward`, `Scroll into view`, `Set checked`) → `{"kind":"ui","type":"Request",
+  "method":<label>,"uri":<current page url>,"serviceName":"web","callerName":"User","callerDependencyCategory":"User",
+  "content":<raw title>,"timestamp":<step.startTime>,"durationMs":<next action start − this start, or test end>,
+  "testId":…,"requestResponseId":<uuid>}` appended to `ui.ndjson`.
+- `test.step` → tests NDJSON `{"event":"step","text","keyword?","level":<test.step depth>,"timestamp","durationMs",
+  "status":"passed|failed","error?"}`; `Given|When|Then|And|But ` prefix becomes `keyword`.
+- `expect` → `{"event":"assertion","text","status":"passed|failed","error?","timestamp"}`.
+- Labels: `trimmed` (default) — `Navigate to "url"` → `Open /path`; `Click getByRole('button', { name: 'X' })` →
+  `Click "X"`; `Fill "v" getByLabel('L')` → `Fill "L" with "v"`; `Press "Enter"`; `Select option locator('#s')` →
+  `Select option in "#s"`; `Expect "toHaveText" getByRole('heading')` → `"heading" to have text` — or `raw`.
+- Config knob (suite-level): `uiActions: { enabled, labelStyle: "trimmed"|"raw", assertions, stepDelimiters }`.

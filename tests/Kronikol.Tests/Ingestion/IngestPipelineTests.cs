@@ -256,4 +256,82 @@ public class IngestPipelineTests : IDisposable
         Assert.Equal(1, all.ScenarioCount);
         Assert.Equal("outside", all.Features.Single().Scenarios.Single().Id);
     }
+
+    [Fact]
+    public void User_actions_steps_and_assertions_render_like_the_in_process_extensions()
+    {
+        const string testId = "p7";
+        // The user opens the page (owning the next 5 s), the app calls graphql → data-insights meanwhile,
+        // then a top-level step, a click that triggers one more call, a passing and a failing assertion.
+        var open = InteractionRecord.UserAction(testId, "Open /intelligence-pro/overview", "http://localhost:4000/intelligence-pro/overview",
+            T0, durationMs: 5000, detail: "Navigate to \"/intelligence-pro/overview\"");
+        var (gqlReq, gqlResp) = InteractionRecord.Pair(testId, null, "POST", "http://localhost:8081/sidekick", "graphql", "web", statusCode: "200",
+            requestContent: """{"query":"query AppStartup { app }"}""", requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(3));
+        var (diReq, diResp) = InteractionRecord.Pair(testId, null, "POST", "http://localhost:9091/api/insights", "data-insights", "graphql", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(1.5), responseTimestamp: T0.AddSeconds(2.5));
+        var click = InteractionRecord.UserAction(testId, "Click \"Accept trial\"", "http://localhost:4000/intelligence-pro/overview",
+            T0.AddSeconds(6), durationMs: 4000, detail: "Click getByRole('button', { name: 'Accept trial' })");
+        var (trialReq, trialResp) = InteractionRecord.Pair(testId, null, "POST", "http://localhost:8081/sidekick", "graphql", "web", statusCode: "200",
+            requestContent: """{"query":"mutation AcceptIntelligenceTrial { ok }"}""", requestTimestamp: T0.AddSeconds(6.5), responseTimestamp: T0.AddSeconds(7));
+        var file = WriteCapture("c.ndjson", open, gqlReq, gqlResp, diReq, diResp, click, trialReq, trialResp);
+        var tests = WriteTests(
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "overview › accepts the trial", Feature = "overview.spec.ts", Timestamp = T0 },
+            new TestRunRecord { Event = "step", TestId = testId, Text = "the user accepts the trial", Keyword = "When", Timestamp = T0.AddSeconds(5.5), DurationMs = 4500, Status = "passed" },
+            new TestRunRecord { Event = "step", TestId = testId, Text = "the button is clicked", Level = 1, Timestamp = T0.AddSeconds(5.9), Status = "passed" },
+            new TestRunRecord { Event = "assertion", TestId = testId, Text = "the trial banner is visible", Status = "passed", Timestamp = T0.AddSeconds(8) },
+            new TestRunRecord { Event = "assertion", TestId = testId, Text = "the customers figure equals 42", Status = "failed", Error = "Expected 42, received 41", Timestamp = T0.AddSeconds(9) },
+            new TestRunRecord { Event = "end", TestId = testId, Status = "failed", DurationMs = 10000, Error = "Expected 42, received 41", Timestamp = T0.AddSeconds(10) });
+        var output = Path.Combine(_dir, "R-p7");
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = output;
+
+        var result = IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], TestsFile = tests, Options = options });
+
+        Assert.True(result.Generated);
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
+        var diagram = scenario.GetProperty("diagrams")[0].GetString()!;
+        var lines = diagram.Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
+
+        // The user is the actor; web is an ordinary participant.
+        Assert.Contains(lines, l => l.StartsWith("actor \"User\""));
+        Assert.DoesNotContain(lines, l => l.StartsWith("actor \"web\""));
+
+        // Arrows in call-tree order: Open → (graphql → data-insights) → step bar → Click → mutation → ✓ → ✗.
+        // Requests render as `a -[#col]> b`, responses as `b -[#col]-> a`; markers as hnote lines.
+        var arrows = lines.Where(l => l.Contains("]> ") || l.Contains("]-> ") || l.Contains("hnote")).ToArray();
+        var open0 = Array.FindIndex(arrows, l => l.Contains("user -") && l.Contains("Open /intelligence-pro/overview"));
+        var gql = Array.FindIndex(arrows, l => l.Contains("web -") && l.Contains("(query AppStartup)"));
+        var di = Array.FindIndex(arrows, l => l.Contains("graphql -") && l.Contains("dataInsights") && l.Contains("/api/insights"));
+        var gqlBack = Array.FindIndex(arrows, l => l.StartsWith("graphql -") && l.Contains("-> web: OK"));
+        var bar = Array.FindIndex(arrows, l => l.Contains("<<stepDelimiter>>") && l.Contains("When the user accepts the trial"));
+        var click0 = Array.FindIndex(arrows, l => l.Contains("user -") && l.Contains("Click \"Accept trial\""));
+        var trial = Array.FindIndex(arrows, l => l.Contains("(mutation AcceptIntelligenceTrial)"));
+        var pass = Array.FindIndex(arrows, l => l.Contains("<<assertionNote>>") && l.Contains(Track.PassColor));
+        var fail = Array.FindIndex(arrows, l => l.Contains("<<assertionNote>>") && l.Contains(Track.FailColor));
+        Assert.True(open0 >= 0 && gql > open0 && di > gql && gqlBack > di && bar > gqlBack && click0 > bar && trial > click0 && pass > trial && fail > pass,
+            "unexpected order:\n" + string.Join("\n", arrows));
+        // A user action has no response arrow.
+        Assert.DoesNotContain(lines, l => l.StartsWith("web -") && l.Contains("-> user"));
+        // The failing assertion carries its message; the delimiter is the sub-step-free top-level step only.
+        Assert.Contains("✗ the customers figure equals 42", diagram);
+        Assert.Contains("Expected 42, received 41", diagram);
+        Assert.DoesNotContain("the button is clicked", diagram);
+
+        // Step list: the top-level step with its nested step and the two assertions as sub-steps.
+        var steps = result.Features[0].Scenarios[0].Steps!;
+        var top = Assert.Single(steps);
+        Assert.Equal("When", top.Keyword);
+        Assert.Equal("the user accepts the trial", top.Text);
+        Assert.Equal(ExecutionResult.Passed, top.Status);
+        Assert.NotNull(top.SubSteps);
+        Assert.Equal(["the button is clicked", "✓ the trial banner is visible", "✗ the customers figure equals 42"], top.SubSteps!.Select(s => s.Text));
+        Assert.Equal(ExecutionResult.Failed, top.SubSteps![2].Status);
+        Assert.Contains("Expected 42, received 41", top.SubSteps![2].Comments!);
+
+        // The report shows the Steps and Assertions toggles, as for in-process step/assertion tracking.
+        var html = File.ReadAllText(result.TestRunReportHtml);
+        Assert.Contains("data-toggle=\"steps\"", html);
+        Assert.Contains("data-toggle=\"assertions\"", html);
+    }
 }

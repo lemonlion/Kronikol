@@ -59,6 +59,7 @@ public static class FeatureSynthesizer
                     acc.Start ??= record.Timestamp;
                     break;
                 case "step":
+                case "assertion":
                     acc.Steps.Add(record);
                     break;
                 case "end":
@@ -106,13 +107,7 @@ public static class FeatureSynthesizer
                     : acc.Start is { } s && acc.End is { } e && e >= s ? e - s
                     : acc.FirstLog is { } f && acc.LastLog is { } l && l >= f ? l - f
                     : null,
-                Steps = acc.Steps.Count == 0 ? null : acc.Steps.Select(st => new ScenarioStep
-                {
-                    Text = st.Text ?? "(step)",
-                    Keyword = st.Keyword,
-                    Status = st.Status is null ? null : MapStatus(st.Status),
-                    Duration = st.DurationMs is { } d ? TimeSpan.FromMilliseconds(d) : null,
-                }).ToArray(),
+                Steps = BuildStepTree(acc.Steps),
             };
 
             var feature = acc.Feature ?? defaultFeatureName;
@@ -143,6 +138,74 @@ public static class FeatureSynthesizer
             (runStart ?? now).UtcDateTime,
             (runEnd ?? runStart ?? now).UtcDateTime,
             names);
+    }
+
+    /// <summary>
+    /// Builds the step list from <c>step</c> and <c>assertion</c> records (in timestamp order): top-level
+    /// steps (<c>level</c> 0/absent) are the rows; nested steps (<c>level</c> &gt; 0) and assertions become
+    /// sub-steps of the most recent top-level step — an assertion before any step is a top-level row.
+    /// Assertions honour <see cref="StepTrackingOptions.IncludeTrackedAssertionsInStepList"/>, like
+    /// Kronikol's own assertion tracking.
+    /// </summary>
+    public static ScenarioStep[]? BuildStepTree(IEnumerable<TestRunRecord> records)
+    {
+        var includeAssertions = StepCollector.Options.IncludeTrackedAssertionsInStepList;
+        var roots = new List<ScenarioStep>();
+        var children = new Dictionary<ScenarioStep, List<ScenarioStep>>();
+        ScenarioStep? currentTop = null;
+
+        foreach (var record in records.OrderBy(r => r.Timestamp ?? DateTimeOffset.MinValue))
+        {
+            var isAssertion = string.Equals(record.Event, "assertion", StringComparison.OrdinalIgnoreCase);
+            if (isAssertion && !includeAssertions)
+                continue;
+
+            ScenarioStep step;
+            if (isAssertion)
+            {
+                var passed = !string.Equals(record.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                             && !string.Equals(record.Status, "fail", StringComparison.OrdinalIgnoreCase);
+                step = new ScenarioStep
+                {
+                    Text = $"{(passed ? Track.PassSymbol : Track.FailSymbol)} {record.Text ?? "assertion"}",
+                    Status = passed ? ExecutionResult.Passed : ExecutionResult.Failed,
+                    Comments = passed || string.IsNullOrWhiteSpace(record.Error) ? null : [record.Error!],
+                    Duration = record.DurationMs is { } ad ? TimeSpan.FromMilliseconds(ad) : null,
+                };
+            }
+            else
+            {
+                step = new ScenarioStep
+                {
+                    Text = record.Text ?? "(step)",
+                    Keyword = record.Keyword,
+                    Status = record.Status is null ? null : MapStatus(record.Status),
+                    Duration = record.DurationMs is { } d ? TimeSpan.FromMilliseconds(d) : null,
+                    Comments = string.IsNullOrWhiteSpace(record.Error) ? null : [record.Error!],
+                };
+            }
+
+            var nested = isAssertion || (record.Level ?? 0) > 0;
+            if (nested && currentTop is not null)
+            {
+                if (!children.TryGetValue(currentTop, out var list))
+                    children[currentTop] = list = [];
+                list.Add(step);
+            }
+            else
+            {
+                roots.Add(step);
+                if (!isAssertion)
+                    currentTop = step;
+            }
+        }
+
+        if (roots.Count == 0)
+            return null;
+
+        foreach (var (parent, list) in children)
+            parent.SubSteps = list.ToArray();
+        return roots.ToArray();
     }
 
     /// <summary>Maps a test-runner status word to <see cref="ExecutionResult"/> (Playwright, Jest, JUnit and xUnit vocabularies).</summary>

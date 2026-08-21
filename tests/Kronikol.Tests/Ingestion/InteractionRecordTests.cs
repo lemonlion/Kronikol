@@ -154,6 +154,48 @@ public class InteractionRecordTests
     }
 
     [Fact]
+    public void User_actions_and_markers_round_trip_and_map_to_the_right_log_entries()
+    {
+        var t0 = new DateTimeOffset(2026, 8, 21, 10, 0, 0, TimeSpan.Zero);
+        var ui = InteractionRecord.UserAction("t1", "Click \"Accept trial\"", "http://localhost:4000/overview", t0, durationMs: 1500,
+            detail: "Click getByRole('button', { name: 'Accept trial' })");
+        var step = InteractionRecord.StepMarker("t1", "the user accepts the trial", t0.AddSeconds(1), keyword: "When");
+        var assertion = InteractionRecord.AssertionMarker("t1", "the banner is visible", passed: false, t0.AddSeconds(2), message: "not visible");
+
+        // JSON round trip keeps the kind-specific fields.
+        var ui2 = InteractionRecord.FromJson(ui.ToJson());
+        Assert.Equal("ui", ui2.Kind);
+        Assert.True(ui2.IsUserAction);
+        Assert.Equal(1500, ui2.DurationMs);
+        Assert.Equal("User", ui2.CallerName);
+        var assertion2 = InteractionRecord.FromJson(assertion.ToJson());
+        Assert.True(assertion2.IsMarker);
+        Assert.False(assertion2.Passed);
+        Assert.Equal("not visible", assertion2.Message);
+
+        // A user action is one request-type log flagged IsUserAction with a User-category caller (→ actor).
+        var uiLog = Assert.Single(ui2.ToLogs());
+        Assert.True(uiLog.IsUserAction);
+        Assert.Equal(RequestResponseType.Request, uiLog.Type);
+        Assert.Equal("Click \"Accept trial\"", uiLog.Method.Value!.ToString());
+        Assert.Equal(Kronikol.Constants.DependencyCategories.User, uiLog.CallerDependencyCategory);
+        Assert.Equal("ui", InteractionRecord.FromLog(uiLog).Kind);
+
+        // Markers become the override pair carrying Kronikol's own delimiter / assertion PlantUML.
+        var stepLogs = step.ToLogs().ToArray();
+        Assert.Equal(2, stepLogs.Length);
+        Assert.True(stepLogs[0].IsOverrideStart);
+        Assert.Contains("hnote across <<stepDelimiter>> #black:<color:white>When the user accepts the trial", stepLogs[0].PlantUml);
+        Assert.True(stepLogs[1].IsOverrideEnd);
+        var assertionLogs = assertion.ToLogs().ToArray();
+        Assert.Contains("hnote across <<assertionNote>> " + Track.FailColor, assertionLogs[0].PlantUml);
+        Assert.Contains(Track.FailSymbol + " the banner is visible", assertionLogs[0].PlantUml);
+        Assert.Contains("not visible", assertionLogs[0].PlantUml);
+        Assert.Contains("end note", assertionLogs[0].PlantUml);
+        Assert.Equal(t0.AddSeconds(2), assertionLogs[0].Timestamp);
+    }
+
+    [Fact]
     public void Reader_reports_the_offending_line_number()
     {
         using var reader = new StringReader("{\"type\":\"Request\",\"uri\":\"/\",\"serviceName\":\"S\",\"callerName\":\"C\",\"testId\":\"t\"}\n\nnot json\n");

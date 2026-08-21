@@ -137,6 +137,20 @@ public static class IngestPipeline
         if (request.TestRecords is not null)
             testRecords.AddRange(request.TestRecords);
 
+        // Diagram markers from the tests file: top-level steps → delimiter bars, assertions → ✓/✗ notes,
+        // placed by timestamp among the interactions (and nested inside whatever call was in flight).
+        foreach (var record in testRecords)
+        {
+            if (!record.IsDiagramMarker || string.IsNullOrWhiteSpace(record.TestId))
+                continue;
+            records.Add(string.Equals(record.Event, "assertion", StringComparison.OrdinalIgnoreCase)
+                ? InteractionRecord.AssertionMarker(record.TestId, record.Text ?? "assertion",
+                    passed: !string.Equals(record.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                            && !string.Equals(record.Status, "fail", StringComparison.OrdinalIgnoreCase),
+                    record.Timestamp!.Value, record.Error)
+                : InteractionRecord.StepMarker(record.TestId, record.Text ?? "step", record.Timestamp!.Value, record.Keyword));
+        }
+
         var reportsDirectory = ReportGenerator.ResolveReportsDirectory(options);
 
         if (request.ClearExistingLogs)
@@ -188,9 +202,11 @@ public static class IngestPipeline
             var name = namesFromTests.TryGetValue(record.TestId, out var fromTests) ? fromTests
                 : namesFromRecords.TryGetValue(record.TestId, out var fromRecords) ? fromRecords
                 : null;
-            var log = record.ToLog(name);
-            RequestResponseLogger.Log(log);
-            logs.Add(log);
+            foreach (var log in record.ToLogs(name))
+            {
+                RequestResponseLogger.Log(log);
+                logs.Add(log);
+            }
         }
 
         var synthesised = FeatureSynthesizer.Build(testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown);
@@ -268,13 +284,15 @@ public static class IngestPipeline
                         continue;
                     // Parent: the latest-started earlier request whose interval contains this one and
                     // whose service is this unit's caller — the innermost call that can have caused it.
+                    // Markers (step bars, assertion notes) nest into whatever was in flight at their
+                    // timestamp regardless of caller/service; markers themselves never parent anything.
                     for (var j = i - 1; j >= 0; j--)
                     {
                         var candidate = group[j];
-                        if (!candidate.IsRequest || candidate.Start is null || candidate.End is null)
+                        if (!candidate.IsRequest || candidate.IsMarker || candidate.Start is null || candidate.End is null)
                             continue;
                         if (candidate.Start <= unit.Start && candidate.End >= unit.End
-                            && string.Equals(candidate.Request.ServiceName, unit.Request.CallerName, StringComparison.Ordinal))
+                            && (unit.IsMarker || string.Equals(candidate.Request.ServiceName, unit.Request.CallerName, StringComparison.Ordinal)))
                         {
                             unit.Parent = candidate;
                             candidate.Children.Add(unit);
@@ -308,8 +326,12 @@ public static class IngestPipeline
         public InteractionRecord Request { get; } = request;
         public bool IsRequest { get; } = isRequest;
         public InteractionRecord? Response { get; set; }
+        public bool IsMarker => Request.IsMarker;
         public DateTimeOffset? Start => Request.Timestamp;
-        public DateTimeOffset? End => Response?.Timestamp ?? Request.Timestamp;
+        // A lone record with a duration (a user action) owns that interval; a paired call ends at its
+        // response; anything else is instantaneous.
+        public DateTimeOffset? End => Response?.Timestamp
+            ?? (Request.DurationMs is { } ms && Request.Timestamp is { } start ? start.AddMilliseconds(ms) : Request.Timestamp);
         public CallUnit? Parent { get; set; }
         public List<CallUnit> Children { get; } = [];
     }

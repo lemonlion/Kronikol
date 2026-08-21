@@ -13,10 +13,10 @@ namespace Kronikol.Tracking;
 /// </summary>
 public static class Track
 {
-    private const string PassColor = "#d4edda";
-    private const string FailColor = "#f8d7da";
-    private const string PassSymbol = "\u2713"; // ✓
-    private const string FailSymbol = "\u2717"; // ✗
+    internal const string PassColor = "#d4edda";
+    internal const string FailColor = "#f8d7da";
+    internal const string PassSymbol = "\u2713"; // ✓
+    internal const string FailSymbol = "\u2717"; // ✗
 
     private static readonly ConcurrentQueue<string> DiagnosticEntries = new();
 

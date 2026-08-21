@@ -217,6 +217,27 @@ public static partial class PlantUmlCreator
 
             switch (trace.Type)
             {
+                case RequestResponseType.Request when trace.IsUserAction:
+                {
+                    // A user action: one arrow from the actor to the service, labelled with the action,
+                    // no response arrow. Its detail (full title / locator) is the note.
+                    var actionLabel = (effectiveMethod.Value?.ToString() ?? "action").Replace("\r", string.Empty).Replace("\n", "\\n");
+                    var actionCategory = trace.CallerDependencyCategory ?? Constants.DependencyCategories.User;
+                    var actionColor = builder.GetArrowColor(trace.CallerName, actionCategory, trace.CallerName, actionCategory);
+                    builder.AppendLine($"{callerShortName} -{actionColor}> {serviceShortName}: {actionLabel}");
+                    builder.AddArrowHeight();
+
+                    if (!string.IsNullOrWhiteSpace(content))
+                    {
+                        var actionNote = EscapeForPlantUmlNote(TruncateNoteContent(content, truncateNotesAfterLines));
+                        builder.AppendLine($"note left");
+                        builder.AppendLine(actionNote);
+                        builder.AppendLine("end note");
+                        builder.AddNoteHeight(actionNote);
+                    }
+
+                    break;
+                }
                 case RequestResponseType.Request:
                 {
                     if (requestPreFormattingProcessor is not null)
