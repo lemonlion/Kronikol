@@ -284,12 +284,16 @@ public static class IngestPipeline
                         continue;
                     // Parent: the latest-started earlier request whose interval contains this one and
                     // whose service is this unit's caller — the innermost call that can have caused it.
-                    // Markers (step bars, assertion notes) nest into whatever was in flight at their
-                    // timestamp regardless of caller/service; markers themselves never parent anything.
+                    // Markers (step bars, assertion notes) are test-level: they nest under the user
+                    // action in flight at their timestamp (never inside a backend call, which would
+                    // bury a "Then …" bar in the middle of a query), else they stay top level, placed by
+                    // time among the roots. Markers themselves never parent anything.
                     for (var j = i - 1; j >= 0; j--)
                     {
                         var candidate = group[j];
                         if (!candidate.IsRequest || candidate.IsMarker || candidate.Start is null || candidate.End is null)
+                            continue;
+                        if (unit.IsMarker && !candidate.Request.IsUserAction)
                             continue;
                         if (candidate.Start <= unit.Start && candidate.End >= unit.End
                             && (unit.IsMarker || string.Equals(candidate.Request.ServiceName, unit.Request.CallerName, StringComparison.Ordinal)))

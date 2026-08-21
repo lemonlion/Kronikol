@@ -258,6 +258,25 @@ public class IngestPipelineTests : IDisposable
     }
 
     [Fact]
+    public void Markers_nest_under_the_user_action_in_flight_never_inside_a_backend_call()
+    {
+        const string t = "markers";
+        // The user clicks [0,10]; the app's call runs [1,9]; an assertion fires at 5 — mid-call.
+        var click = InteractionRecord.UserAction(t, "Click \"Go\"", "http://app/", T0, durationMs: 10_000);
+        var (req, resp) = InteractionRecord.Pair(t, null, "POST", "http://gql/sidekick", "graphql", "web", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(9));
+        var note = InteractionRecord.AssertionMarker(t, "the spinner is visible", passed: true, T0.AddSeconds(5));
+        // And a step bar between two actions, owned by neither.
+        var bar = InteractionRecord.StepMarker(t, "the user moves on", T0.AddSeconds(11));
+        var next = InteractionRecord.UserAction(t, "Click \"Next\"", "http://app/", T0.AddSeconds(12), durationMs: 1000);
+
+        var ordered = IngestPipeline.OrderAsCallTree([click, req, note, resp, bar, next]);
+
+        // The note is the click's child (after the call, which is atomic), not buried between request and response.
+        Assert.Equal([click, req, resp, note, bar, next], ordered);
+    }
+
+    [Fact]
     public void User_actions_steps_and_assertions_render_like_the_in_process_extensions()
     {
         const string testId = "p7";
