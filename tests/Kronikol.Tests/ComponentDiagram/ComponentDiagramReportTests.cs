@@ -55,6 +55,34 @@ public class ComponentDiagramReportTests : IDisposable
     }
 
     [Fact]
+    public void NodeJs_rendering_emits_svg_even_when_the_configured_image_format_is_png()
+    {
+        // The Node renderer is SVG-only and the per-scenario diagrams already honour that; the component
+        // diagram used to ask it for the configured PNG and throw after the rest of the report was written.
+        var dir = Path.Combine(Path.GetTempPath(), "kronikol-cd-node-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
+                [MakeRequest()],
+                new ReportConfigurationOptions
+                {
+                    ReportsFolderPath = dir,
+                    PlantUmlRendering = PlantUmlRendering.NodeJs,
+                    PlantUmlImageFormat = PlantUmlImageFormat.Png,
+                    ComponentDiagramOptions = new ComponentDiagramOptions(),
+                });
+
+            Assert.True(File.Exists(result.HtmlFilePath));
+            Assert.True(File.Exists(Path.Combine(dir, "ComponentDiagram.svg")), "expected an SVG next to the HTML");
+            Assert.Contains("ComponentDiagram.svg", File.ReadAllText(result.HtmlFilePath));
+        }
+        finally
+        {
+            try { Directory.Delete(dir, recursive: true); } catch (IOException) { }
+        }
+    }
+
+    [Fact]
     public void GenerateComponentDiagramReport_EmptyLogs_StillGeneratesFile()
     {
         var options = new ComponentDiagramOptions();

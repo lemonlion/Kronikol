@@ -23,6 +23,16 @@ public static class ComponentDiagramReportGenerator
         options.DependencyColors ??= reportOptions.DependencyColors;
         var plantUmlServerBaseUrl = reportOptions.PlantUmlServerBaseUrl;
         var imageFormat = reportOptions.PlantUmlImageFormat;
+        if (reportOptions.PlantUmlRendering == PlantUmlRendering.NodeJs)
+        {
+            // The Node renderer emits SVG only — the per-scenario diagrams already render as SVG under
+            // NodeJs regardless of PlantUmlImageFormat; the component diagram must do the same instead
+            // of asking the renderer for PNG and throwing.
+            imageFormat = imageFormat is PlantUmlImageFormat.Base64Png or PlantUmlImageFormat.Base64Svg
+                ? PlantUmlImageFormat.Base64Svg
+                : PlantUmlImageFormat.Svg;
+        }
+
         var localDiagramRenderer = reportOptions.PlantUmlRendering switch
         {
             PlantUmlRendering.Local => reportOptions.LocalDiagramRenderer,
@@ -30,11 +40,14 @@ public static class ComponentDiagramReportGenerator
             _ => null
         };
         var useBrowserJs = reportOptions.PlantUmlRendering == PlantUmlRendering.BrowserJs;
+        // Both JS engines (browser and Node) render plantuml.js, which has no C4 stdlib / remote includes:
+        // the C4 flavour hangs the Node renderer until its timeout. Use the plain component syntax there.
+        var useJsEngine = useBrowserJs || reportOptions.PlantUmlRendering == PlantUmlRendering.NodeJs;
 
         var logsArray = logs as RequestResponseLog[] ?? logs.ToArray();
         var relationships = ComponentDiagramGenerator.ExtractRelationships(logsArray, options.ParticipantFilter);
 
-        var plantUml = ComponentDiagramGenerator.GeneratePlantUml(relationships, options, useC4: !useBrowserJs);
+        var plantUml = ComponentDiagramGenerator.GeneratePlantUml(relationships, options, useC4: !useJsEngine);
 
         var directory = Reports.ReportGenerator.ResolveReportsDirectory(reportOptions);
         Directory.CreateDirectory(directory);

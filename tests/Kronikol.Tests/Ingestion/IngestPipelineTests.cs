@@ -236,10 +236,13 @@ public class IngestPipelineTests : IDisposable
         {
             InteractionFiles = [file], TestsFile = tests, Options = options,
             FoldUnknownTestsInto = new UnknownTestFold("Traffic outside any test", "outside"),
+            // Applies to tests that started but never ended — never to the fold scenario, which is not a test.
+            ResultWhenUnknown = ExecutionResult.Failed,
         });
         Assert.Equal(2, folded.ScenarioCount);
         var outside = folded.Features.SelectMany(f => f.Scenarios).Single(s => s.Id == "outside");
         Assert.Equal("Traffic outside any test", outside.DisplayName);
+        Assert.Equal(ExecutionResult.Passed, outside.Result);
         Assert.Equal(4, RequestResponseLogger.RequestAndResponseLogs.Count(l => l.TestId == "outside"));
         Assert.Equal(2, RequestResponseLogger.RequestAndResponseLogs.Count(l => l.TestId == known));
 

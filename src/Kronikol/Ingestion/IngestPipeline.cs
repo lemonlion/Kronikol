@@ -194,6 +194,17 @@ public static class IngestPipeline
         }
 
         var synthesised = FeatureSynthesizer.Build(testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown);
+        if (request.FoldUnknownTestsInto is { } foldedInto)
+        {
+            // The fold scenario is not a test: nothing ran and nothing ended, so ResultWhenUnknown (meant
+            // for tests that started but never reported an end) must not mark it failed.
+            foreach (var scenario in synthesised.Features.SelectMany(f => f.Scenarios))
+            {
+                if (scenario.Id == foldedInto.ScenarioId)
+                    scenario.Result = ExecutionResult.Passed;
+            }
+        }
+
         var scenarioCount = synthesised.Features.Sum(f => f.Scenarios.Length);
 
         if (scenarioCount == 0 && !request.AllowEmpty)
