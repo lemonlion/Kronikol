@@ -54,6 +54,10 @@ public static class NodeJsPlantUmlRenderer
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
+            // Without this the diagram text goes to node in the console's code page (cp1252 on Windows),
+            // and every non-ASCII glyph — the `×`/`·`/`–` in loop labels, accented participant names,
+            // non-Latin test titles — renders as `x`, `�` or `?`.
+            StandardInputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8
         };
