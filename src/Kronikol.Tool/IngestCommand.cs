@@ -172,7 +172,7 @@ internal static class IngestCommand
                 Options = options,
                 DefaultFeatureName = featureName,
                 AllowEmpty = allowEmpty,
-                PairResponsesWithRequests = pairResponses,
+                CallTreeOrdering = pairResponses,
                 FoldUnknownTestsInto = foldUnknown is null ? null : new UnknownTestFold(foldUnknown),
             });
 
@@ -238,7 +238,8 @@ internal static class IngestCommand
         w.WriteLine("  --no-redact              Do not redact credential headers at ingest (default: redact).");
         w.WriteLine("  --redact-header <name>   Additional header to redact (repeatable).");
         w.WriteLine("  --allow-empty            Generate even when nothing was ingested.");
-        w.WriteLine("  --chronological          Strict timestamp order (default: each response follows its request).");
+        w.WriteLine("  --chronological          Strict timestamp order (default: call-tree order — each response follows its");
+        w.WriteLine("                           request, calls made while handling a request nest inside it).");
         w.WriteLine("  --fold-unknown <name>    Collect interactions of test ids absent from --tests into one scenario");
         w.WriteLine("                           with this name (e.g. \"Traffic outside any test\").");
         w.WriteLine("  -h, --help               Show this help.");

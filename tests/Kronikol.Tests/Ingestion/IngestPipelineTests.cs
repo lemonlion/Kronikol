@@ -171,14 +171,46 @@ public class IngestPipelineTests : IDisposable
         Assert.Equal(["Request http://a/one", "Response http://a/one", "Request http://a/two", "Response http://a/two"], paired);
 
         options.ReportsFolderPath = Path.Combine(_dir, "R2");
-        IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], Options = options, PairResponsesWithRequests = false });
+        IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], Options = options, CallTreeOrdering = false });
         var chronological = RequestResponseLogger.RequestAndResponseLogs.Select(l => $"{l.Type} {l.Uri}").ToArray();
         Assert.Equal(["Request http://a/one", "Request http://a/two", "Response http://a/two", "Response http://a/one"], chronological);
 
         // Orphans and id-less records keep their place.
         var orphan = respB with { RequestResponseId = "never-requested", Timestamp = T0.AddSeconds(-1) };
-        var reordered = IngestPipeline.PairResponsesWithRequests([orphan, reqA, reqB, respB, respA]);
+        var reordered = IngestPipeline.OrderAsCallTree([orphan, reqA, reqB, respB, respA]);
         Assert.Equal([orphan, reqA, respA, reqB, respB], reordered);
+    }
+
+    [Fact]
+    public void Calls_a_service_made_while_handling_a_request_nest_inside_it()
+    {
+        const string t = "tree";
+        // web→graphql [0,10] handles the page query; while doing so graphql→data-insights [1,8], which
+        // in turn polls bigquery twice [2,3] and [4,5]; then graphql makes a second, sibling call [8.5,9].
+        // A concurrent web→graphql call from the browser [0.5,6] is a sibling of the first (its caller is
+        // web, not graphql), not a child — even though its interval is contained.
+        var (pReq, pResp) = InteractionRecord.Pair(t, null, "POST", "http://gql/sidekick", "graphql", "web", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddSeconds(10));
+        var (sReq, sResp) = InteractionRecord.Pair(t, null, "POST", "http://gql/sidekick?links", "graphql", "web", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(0.5), responseTimestamp: T0.AddSeconds(6));
+        var (cReq, cResp) = InteractionRecord.Pair(t, null, "POST", "http://di/insights", "data-insights", "graphql", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(8));
+        var (g1Req, g1Resp) = InteractionRecord.Pair(t, null, "GET", "http://bq/poll", "bigquery", "data-insights", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(2), responseTimestamp: T0.AddSeconds(3));
+        var (g2Req, g2Resp) = InteractionRecord.Pair(t, null, "GET", "http://bq/poll", "bigquery", "data-insights", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(4), responseTimestamp: T0.AddSeconds(5));
+        var (c2Req, c2Resp) = InteractionRecord.Pair(t, null, "GET", "http://di/dates", "data-insights", "graphql", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(8.5), responseTimestamp: T0.AddSeconds(9));
+        // Another test's records interleave in time but never nest into this tree.
+        var (oReq, oResp) = InteractionRecord.Pair("other", null, "GET", "http://di/other", "data-insights", "graphql", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(2.5), responseTimestamp: T0.AddSeconds(2.6));
+
+        var chronological = new[] { pReq, sReq, cReq, g1Req, oReq, oResp, g1Resp, g2Req, g2Resp, sResp, cResp, c2Req, c2Resp, pResp };
+        var tree = IngestPipeline.OrderAsCallTree(chronological);
+
+        Assert.Equal(
+            [pReq, cReq, g1Req, g1Resp, g2Req, g2Resp, cResp, c2Req, c2Resp, pResp, sReq, sResp, oReq, oResp],
+            tree);
     }
 
     [Fact]

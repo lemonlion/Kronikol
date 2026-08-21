@@ -34,13 +34,15 @@ public sealed class IngestRequest
     public bool AllowEmpty { get; init; }
 
     /// <summary>
-    /// Emit each response immediately after its request (pairs ordered by request time) instead of
-    /// strictly by timestamp. Default <c>true</c>: externally captured traffic is usually concurrent, and
-    /// a chronologically interleaved diagram makes it impossible to tell which reply answers which call
-    /// (and defeats <c>CollapseConsecutiveIdenticalCalls</c>, which works on adjacent pairs). Set
-    /// <c>false</c> for a strict timeline.
+    /// Order each test's interactions as a call tree instead of strictly by timestamp: every response sits
+    /// directly after its request, calls a service made while handling a request (their interval lies inside
+    /// the parent's and their caller is the parent's service) sit between that request and its response,
+    /// and siblings keep request-time order. Default <c>true</c>: externally captured traffic is usually
+    /// concurrent, and a chronologically interleaved diagram makes it impossible to tell which reply answers
+    /// which call (and defeats <c>CollapseConsecutiveIdenticalCalls</c>, which works on adjacent pairs).
+    /// Set <c>false</c> for a strict timeline.
     /// </summary>
-    public bool PairResponsesWithRequests { get; init; } = true;
+    public bool CallTreeOrdering { get; init; } = true;
 
     /// <summary>
     /// When set, interactions whose <c>testId</c> is not a test in the tests records — or every
@@ -161,8 +163,8 @@ public static class IngestPipeline
                 .ToList();
         }
 
-        if (request.PairResponsesWithRequests)
-            ordered = PairResponsesWithRequests(ordered);
+        if (request.CallTreeOrdering)
+            ordered = OrderAsCallTree(ordered);
 
         // Names from the tests file win over whatever each hop knew.
         var namesFromTests = testRecords
@@ -204,30 +206,100 @@ public static class IngestPipeline
         return new IngestResult(logs.Count, scenarioCount, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: true);
     }
 
+    /// <summary>Above this many units in one test, nesting is skipped (pairs only) to keep ingest linear.</summary>
+    private const int NestingLimit = 5000;
+
     /// <summary>
-    /// Re-orders a timestamp-sorted list so that each response sits directly after its request (matched
-    /// by <c>requestResponseId</c>); units keep the order of their first record, so pairs are ordered by
-    /// request time. Responses with no earlier request, and records without an id, keep their place.
+    /// Orders a timestamp-sorted list as a call tree. A unit is a request with its response (matched by
+    /// <c>requestResponseId</c>) or a lone record. Each response sits directly after its request; a call a
+    /// service made while handling a request — its interval lies inside the parent's and its caller is the
+    /// parent's service — sits between that request and its response; siblings keep request-time order.
+    /// Responses with no earlier request and records without an id keep their place. Records are grouped
+    /// by <c>testId</c> first, so nesting never crosses tests.
     /// </summary>
-    internal static List<InteractionRecord> PairResponsesWithRequests(IReadOnlyList<InteractionRecord> ordered)
+    internal static List<InteractionRecord> OrderAsCallTree(IReadOnlyList<InteractionRecord> ordered)
     {
-        var units = new List<List<InteractionRecord>>(ordered.Count);
-        var open = new Dictionary<string, List<InteractionRecord>>(StringComparer.Ordinal);
+        var open = new Dictionary<string, CallUnit>(StringComparer.Ordinal);
+        var groups = new Dictionary<string, List<CallUnit>>(StringComparer.Ordinal);
+        var groupOrder = new List<string>();
         foreach (var record in ordered)
         {
             var isResponse = string.Equals(record.Type, "Response", StringComparison.OrdinalIgnoreCase);
             if (isResponse && record.RequestResponseId is { Length: > 0 } id && open.Remove(id, out var unit))
             {
-                unit.Add(record);
+                unit.Response = record;
                 continue;
             }
 
-            var fresh = new List<InteractionRecord>(2) { record };
-            units.Add(fresh);
+            var fresh = new CallUnit(record, isRequest: !isResponse);
             if (!isResponse && record.RequestResponseId is { Length: > 0 } requestId)
                 open[requestId] = fresh;
+            if (!groups.TryGetValue(record.TestId, out var group))
+            {
+                group = [];
+                groups[record.TestId] = group;
+                groupOrder.Add(record.TestId);
+            }
+
+            group.Add(fresh);
         }
 
-        return units.SelectMany(u => u).ToList();
+        var result = new List<InteractionRecord>(ordered.Count);
+        foreach (var testId in groupOrder)
+        {
+            var group = groups[testId]; // in start order: the input is timestamp-sorted
+            if (group.Count <= NestingLimit)
+            {
+                for (var i = 0; i < group.Count; i++)
+                {
+                    var unit = group[i];
+                    if (unit.Start is null)
+                        continue;
+                    // Parent: the latest-started earlier request whose interval contains this one and
+                    // whose service is this unit's caller — the innermost call that can have caused it.
+                    for (var j = i - 1; j >= 0; j--)
+                    {
+                        var candidate = group[j];
+                        if (!candidate.IsRequest || candidate.Start is null || candidate.End is null)
+                            continue;
+                        if (candidate.Start <= unit.Start && candidate.End >= unit.End
+                            && string.Equals(candidate.Request.ServiceName, unit.Request.CallerName, StringComparison.Ordinal))
+                        {
+                            unit.Parent = candidate;
+                            candidate.Children.Add(unit);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            foreach (var root in group)
+            {
+                if (root.Parent is null)
+                    Emit(root, result);
+            }
+        }
+
+        return result;
+
+        static void Emit(CallUnit unit, List<InteractionRecord> into)
+        {
+            into.Add(unit.Request);
+            foreach (var child in unit.Children)
+                Emit(child, into);
+            if (unit.Response is not null)
+                into.Add(unit.Response);
+        }
+    }
+
+    private sealed class CallUnit(InteractionRecord request, bool isRequest)
+    {
+        public InteractionRecord Request { get; } = request;
+        public bool IsRequest { get; } = isRequest;
+        public InteractionRecord? Response { get; set; }
+        public DateTimeOffset? Start => Request.Timestamp;
+        public DateTimeOffset? End => Response?.Timestamp ?? Request.Timestamp;
+        public CallUnit? Parent { get; set; }
+        public List<CallUnit> Children { get; } = [];
     }
 }
