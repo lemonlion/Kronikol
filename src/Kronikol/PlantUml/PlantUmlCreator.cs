@@ -648,6 +648,7 @@ public static partial class PlantUmlCreator
         }
 
         parsedContent ??= TryFormatAsJson(content);
+        parsedContent ??= TryFormatTruncatedJson(content);
 
         if (parsedContent is null)
         {
@@ -660,6 +661,12 @@ public static partial class PlantUmlCreator
 
         if (midFormattingProcessor is not null)
             formattedContent = midFormattingProcessor(formattedContent);
+
+        // Whatever the formatter produced, no line may carry a whitespace-free run PlantUML cannot wrap:
+        // `skinparam wrapWidth` breaks at spaces only, so a 65 KB minified payload on one line is a
+        // 400,000 px wide note and plantuml.js refuses the diagram ("Diagram too large for browser
+        // rendering"). Seen live with capture-capped Redis/BigQuery bodies (tap-resilience plan).
+        formattedContent = WrapUnbreakableRuns(formattedContent);
 
         if (focusFields is { Length: > 0 })
         {
@@ -692,6 +699,204 @@ public static partial class PlantUmlCreator
             return Encoding.UTF8.GetString(stream.ToArray());
         }
         catch (JsonException) { return null; }
+    }
+
+    /// <summary>
+    /// A JSON body cut by a capture cap — TcpTap/ProxyTap/<see cref="Tracking.RequestResponseLogger"/>
+    /// append <c>…truncated (N chars total)</c>, the RESP decoder <c>…[bulk string truncated: …]</c> —
+    /// is not parseable, so <see cref="TryFormatAsJson"/> gives up and the note used to get the raw
+    /// one-line payload. This re-indents the valid prefix with a string-aware brace walker (no null
+    /// stripping — there is no document to walk) and keeps the marker on its own line; anything that
+    /// is not a valid JSON <em>prefix</em> (a real non-JSON body that happens to start with a brace)
+    /// is left to the plain-text path.
+    /// </summary>
+    internal static string? TryFormatTruncatedJson(string? content)
+    {
+        if (content is null || content.Length < 2 || (content[0] != '{' && content[0] != '['))
+            return null;
+
+        var (body, marker) = SplitTruncationMarker(content);
+        if (body.Length < 2 || !IsJsonPrefix(body))
+            return null;
+
+        var indented = ReindentJsonPrefix(body);
+        return marker is null ? indented : indented + "\n" + marker;
+    }
+
+    [GeneratedRegex(@"(?:\r?\n\r?\n…truncated \(\d+ chars total\)|\s…\[bulk string truncated: [^\]]*\])\s*$")]
+    private static partial Regex TruncationMarkerRegex();
+
+    private static (string Body, string? Marker) SplitTruncationMarker(string content)
+    {
+        var match = TruncationMarkerRegex().Match(content);
+        return match.Success
+            ? (content[..match.Index], match.Value.Trim())
+            : (content, null);
+    }
+
+    /// <summary>True when <paramref name="text"/> is a valid JSON document or a valid prefix of one (cut anywhere).</summary>
+    internal static bool IsJsonPrefix(string text)
+    {
+        var bytes = Encoding.UTF8.GetBytes(text);
+        var reader = new Utf8JsonReader(bytes, isFinalBlock: false, state: default);
+        try
+        {
+            while (reader.Read()) { }
+            return reader.BytesConsumed > 0;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Pretty-prints a (possibly truncated) JSON text by structure alone: two-space indent, one property per line.</summary>
+    internal static string ReindentJsonPrefix(string json)
+    {
+        var sb = new StringBuilder(json.Length + json.Length / 4);
+        var depth = 0;
+        var inString = false;
+        var escape = false;
+        for (var i = 0; i < json.Length; i++)
+        {
+            var c = json[i];
+            if (inString)
+            {
+                sb.Append(c);
+                if (escape) escape = false;
+                else if (c == '\\') escape = true;
+                else if (c == '"') inString = false;
+                continue;
+            }
+
+            switch (c)
+            {
+                case '"':
+                    inString = true;
+                    sb.Append(c);
+                    break;
+                case '{':
+                case '[':
+                {
+                    var closer = c == '{' ? '}' : ']';
+                    var j = i + 1;
+                    while (j < json.Length && char.IsWhiteSpace(json[j])) j++;
+                    if (j < json.Length && json[j] == closer)
+                    {
+                        sb.Append(c).Append(closer);
+                        i = j;
+                        break;
+                    }
+                    sb.Append(c);
+                    depth++;
+                    sb.Append('\n').Append(' ', depth * 2);
+                    break;
+                }
+                case '}':
+                case ']':
+                    depth = Math.Max(0, depth - 1);
+                    sb.Append('\n').Append(' ', depth * 2).Append(c);
+                    break;
+                case ',':
+                    sb.Append(c).Append('\n').Append(' ', depth * 2);
+                    break;
+                case ':':
+                    sb.Append(": ");
+                    break;
+                case ' ':
+                case '\t':
+                case '\r':
+                case '\n':
+                    break;
+                default:
+                    sb.Append(c);
+                    break;
+            }
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Longest whitespace-free run a note line may carry. PlantUML wraps at spaces only, so this bounds
+    /// the width of a note holding a minified payload, a base64 blob or a long URL to roughly
+    /// <see cref="MaxLineWidth"/>; longer runs are broken, preferring a punctuation boundary and never
+    /// inside a <c>&lt;tag&gt;</c>.
+    /// </summary>
+    internal const int MaxUnbrokenRunChars = 120;
+
+    internal static string WrapUnbreakableRuns(string text)
+    {
+        if (text.Length <= MaxUnbrokenRunChars || !HasUnbreakableRun(text))
+            return text;
+
+        var lines = text.Split('\n');
+        for (var i = 0; i < lines.Length; i++)
+        {
+            if (HasUnbreakableRun(lines[i]))
+                lines[i] = WrapLine(lines[i]);
+        }
+        return string.Join('\n', lines);
+    }
+
+    private static bool HasUnbreakableRun(string text)
+    {
+        var run = 0;
+        foreach (var c in text)
+        {
+            if (char.IsWhiteSpace(c)) run = 0;
+            else if (++run > MaxUnbrokenRunChars) return true;
+        }
+        return false;
+    }
+
+    private static string WrapLine(string line)
+    {
+        var sb = new StringBuilder(line.Length + line.Length / MaxUnbrokenRunChars * 2);
+        var runStart = 0;
+        for (var i = 0; i <= line.Length; i++)
+        {
+            if (i < line.Length && !char.IsWhiteSpace(line[i]))
+                continue;
+            var run = line.AsSpan(runStart, i - runStart);
+            if (run.Length <= MaxUnbrokenRunChars)
+            {
+                sb.Append(run);
+            }
+            else
+            {
+                var pos = 0;
+                while (run.Length - pos > MaxUnbrokenRunChars)
+                {
+                    var cut = ChooseCut(run, pos);
+                    sb.Append(run[pos..cut]).Append('\n');
+                    pos = cut;
+                }
+                sb.Append(run[pos..]);
+            }
+            if (i < line.Length) sb.Append(line[i]);
+            runStart = i + 1;
+        }
+        return sb.ToString();
+    }
+
+    private static int ChooseCut(ReadOnlySpan<char> run, int pos)
+    {
+        var hard = pos + MaxUnbrokenRunChars;
+        var cut = hard;
+        // Prefer a punctuation boundary in the tail of the chunk so JSON/URL pieces stay readable.
+        for (var k = hard; k > hard - 24 && k > pos + 1; k--)
+        {
+            if (",;:}]\"&=)/".Contains(run[k - 1]))
+            {
+                cut = k;
+                break;
+            }
+        }
+        // Never cut inside a <tag>: back up to before an unclosed '<'.
+        var open = run[pos..cut].LastIndexOf('<');
+        if (open > 0 && run[(pos + open)..cut].IndexOf('>') < 0)
+            cut = pos + open;
+        return cut;
     }
 
     private static void WriteElementWithoutNulls(Utf8JsonWriter writer, JsonElement element)

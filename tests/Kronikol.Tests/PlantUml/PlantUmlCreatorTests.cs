@@ -3472,4 +3472,96 @@ public class PlantUmlCreatorTests
 
         Assert.DoesNotContain(PlantUmlCreator.MarkerOnlyParticipant, plantUml);
     }
+    // ─── Truncated JSON bodies and unbreakable lines ────────────
+    // A body cut by a capture cap is not parseable JSON, and a 65 KB minified payload on one note line
+    // is a 400,000 px wide diagram plantuml.js refuses ("Diagram too large for browser rendering").
+
+    [Fact]
+    public void Truncated_json_response_with_resp_marker_is_reindented_and_keeps_the_marker_on_its_own_line()
+    {
+        var truncated = """{"Instance":[{"ReportDate":"2026-08-17T00:00:00","UniqueCustomers":501,"Nested":{"a":1,"b":[1,2""" +
+                        " …[bulk string truncated: 486,330 bytes on the wire, 65,408 kept]";
+        var logs = new[] { MakeRequest(), MakeResponse(content: truncated) };
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains("\"UniqueCustomers\": 501," + Nl, plantUml.Replace("\r\n", "\n").Replace("\n", Nl));
+        Assert.Contains("…[bulk string truncated: 486,330 bytes on the wire, 65,408 kept]", plantUml);
+        var lines = plantUml.Split('\n');
+        Assert.Contains(lines, l => l.Trim() == "…[bulk string truncated: 486,330 bytes on the wire, 65,408 kept]");
+        Assert.All(lines, l => Assert.True(l.Length <= 200, $"line too long: {l.Length}"));
+    }
+
+    [Fact]
+    public void Truncated_json_response_with_http_cap_marker_is_reindented()
+    {
+        var truncated = """{"jobReference":{"jobId":"job_1","projectId":"p"},"rows":[{"f":[{"v":"1"},{"v":"2""" +
+                        "\n\n…truncated (90000 chars total)";
+        var logs = new[] { MakeRequest(), MakeResponse(content: truncated) };
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains("\"jobId\": \"job_1\"", plantUml);
+        Assert.Contains("…truncated (90000 chars total)", plantUml);
+        Assert.DoesNotContain("\"jobReference\":{", plantUml); // the one-line raw form is gone
+    }
+
+    [Fact]
+    public void Non_json_body_starting_with_a_brace_still_takes_the_plain_text_path()
+    {
+        var logs = new[] { MakeRequest(), MakeResponse(content: "{not valid json at all") };
+        Assert.Contains("{not valid json at all", GetPlantUml(logs));
+    }
+
+    [Fact]
+    public void Long_unbreakable_body_line_is_wrapped_below_the_run_limit()
+    {
+        var blob = new string('x', 5000); // no spaces anywhere: PlantUML's wrapWidth could never break it
+        var logs = new[] { MakeRequest(), MakeResponse(content: blob) };
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains(blob[..PlantUmlCreator.MaxUnbrokenRunChars], plantUml);
+        var noteLines = plantUml.Split('\n').Where(l => l.Trim().All(c => c == 'x') && l.Trim().Length > 0).ToList();
+        Assert.True(noteLines.Count >= 5000 / PlantUmlCreator.MaxUnbrokenRunChars);
+        Assert.All(noteLines, l => Assert.True(l.Trim().Length <= PlantUmlCreator.MaxUnbrokenRunChars, $"run of {l.Trim().Length}"));
+        Assert.Equal(5000, noteLines.Sum(l => l.Trim().Length));
+    }
+
+    [Fact]
+    public void ReindentJsonPrefix_indents_by_structure_and_leaves_strings_alone()
+    {
+        var json = """{"a":"x{y}[z],:","b":{},"c":[],"d":[1,{"e":"q\"u"}""";
+        var expected = "{\n  \"a\": \"x{y}[z],:\",\n  \"b\": {},\n  \"c\": [],\n  \"d\": [\n    1,\n    {\n      \"e\": \"q\\\"u\"\n    }";
+        Assert.Equal(expected, PlantUmlCreator.ReindentJsonPrefix(json));
+    }
+
+    [Theory]
+    [InlineData("""{"a":1,"b":[1,2""", true)]
+    [InlineData("""{"a":1}""", true)]
+    [InlineData("""[{"a":"unterminated str""", true)]
+    [InlineData("{not valid json at all", false)]
+    [InlineData("[not valid json at all", false)]
+    public void IsJsonPrefix_accepts_any_cut_of_valid_json_and_rejects_invalid_tokens(string text, bool expected)
+    {
+        Assert.Equal(expected, PlantUmlCreator.IsJsonPrefix(text));
+    }
+
+    [Fact]
+    public void WrapUnbreakableRuns_prefers_punctuation_and_never_cuts_inside_a_tag()
+    {
+        var run = string.Concat(Enumerable.Range(0, 40).Select(i => $"k{i:00}:v{i:00},")); // 360 chars, no spaces, commas every 9
+        var wrapped = PlantUmlCreator.WrapUnbreakableRuns(run);
+        var pieces = wrapped.Split('\n');
+        Assert.True(pieces.Length >= 3);
+        Assert.All(pieces, piece => Assert.True(piece.Length <= PlantUmlCreator.MaxUnbrokenRunChars));
+        Assert.All(pieces[..^1], piece => Assert.EndsWith(",", piece)); // cut at a comma, not mid-token
+        Assert.Equal(run, wrapped.Replace("\n", ""));
+
+        var tagged = new string('a', 110) + "<color:gray>" + new string('b', 110);
+        var wrappedTag = PlantUmlCreator.WrapUnbreakableRuns(tagged);
+        Assert.Contains("<color:gray>", wrappedTag); // the tag survived intact
+        Assert.DoesNotContain("<color:\ngray>", wrappedTag);
+        Assert.Equal(tagged, wrappedTag.Replace("\n", ""));
+
+        var shortText = "fits on one line";
+        Assert.Same(shortText, PlantUmlCreator.WrapUnbreakableRuns(shortText));
+    }
 }

@@ -1303,22 +1303,50 @@
                             renderNextFragment();
                             return;
                         }
+                        // A fragment with nothing to draw (every arrow filtered away) is a message, not an
+                        // engine call — plantuml.js answers an empty body with "Syntax Error?".
+                        if (window._hasDrawableBody && !window._hasDrawableBody(fItem.source.split('\n'))) {
+                            fItem.el.innerHTML = '<div class="no-interactions" data-nothing-to-draw="true">Nothing to draw with the current filters — this diagram is only assertion notes and/or step bars (use Assertions Shown / Steps Shown to see them).</div>';
+                            fItem.el.dataset.rendered = '1';
+                            renderNextFragment();
+                            return;
+                        }
                         window._plantumlRendering = true;
                         var fDone = false;
+                        var fPoll = null;
                         function afterFrag() {
                             if (fDone) return;
                             fDone = true;
-                            _svgCache[fItem.source] = fItem.el.innerHTML;
+                            if (fPoll) clearInterval(fPoll);
+                            // The engine may have written a failure instead of an <svg> ("Diagram too large
+                            // for browser rendering…"): describe it, and never cache a failure as a result.
+                            var failed = window._describeEngineFailure ? window._describeEngineFailure(fItem.el, fItem.source) : false;
+                            if (!failed && fItem.el.querySelector('svg')) _svgCache[fItem.source] = fItem.el.innerHTML;
                             fItem.el.dataset.rendered = '1';
                             window._plantumlRendering = false;
                             renderNextFragment();
                         }
                         var fmo = new MutationObserver(function() {
-                            if (!fItem.el.querySelector('svg')) return;
+                            // Any output — an <svg>, or the engine's text for a failure — completes the fragment.
+                            // Waiting for an <svg> alone wedged the whole queue on a too-large fragment
+                            // (window._plantumlRendering stuck true → every other render waits, then the
+                            // 15 s force-reset let renders overlap in the engine's shared state).
+                            if (!fItem.el.querySelector('svg') && !(fItem.el.textContent || '').trim()) return;
                             fmo.disconnect(); afterFrag();
                         });
                         fmo.observe(fItem.el, { childList: true, subtree: true });
-                        try { window.plantuml.render(fItem.source.split('\n'), fItem.el.id); } catch(e) { fmo.disconnect(); window._plantumlRendering = false; renderNextFragment(); }
+                        var fPollCount = 0;
+                        fPoll = setInterval(function() {
+                            fPollCount++;
+                            if (fDone) { clearInterval(fPoll); return; }
+                            if (fItem.el.querySelector('svg') || (fItem.el.textContent || '').trim()) { clearInterval(fPoll); fmo.disconnect(); afterFrag(); return; }
+                            if (fPollCount > 60) { // 15 s without any output: give this fragment up, keep the queue moving
+                                clearInterval(fPoll); fmo.disconnect();
+                                fItem.el.textContent = 'Render timed out for this fragment.';
+                                afterFrag();
+                            }
+                        }, 250);
+                        try { window.plantuml.render(fItem.source.split('\n'), fItem.el.id); } catch(e) { fmo.disconnect(); if (fPoll) clearInterval(fPoll); fItem.el.textContent = 'Render error: ' + ((e && e.message) ? e.message : String(e)); fItem.el.dataset.rendered = '1'; window._plantumlRendering = false; renderNextFragment(); }
                     }
                     renderNextFragment();
                     return;
@@ -1351,9 +1379,10 @@
             function afterRender() {
                 if (done) return;
                 done = true;
+                var failed = window._describeEngineFailure ? window._describeEngineFailure(renderTarget, newSource) : false;
                 var newSvg = renderTarget.innerHTML;
                 container.innerHTML = newSvg;
-                _svgCache[newSource] = newSvg;
+                if (!failed && renderTarget.querySelector('svg')) _svgCache[newSource] = newSvg;
                 container._noteRendering = false;
                 window._plantumlRendering = false;
                 container.style.minHeight = '';
@@ -1364,7 +1393,8 @@
                 processNext();
             }
             var mo = new MutationObserver(function() {
-                if (!renderTarget.querySelector('svg')) return;
+                // An <svg>, or the engine's failure text (no <svg> for "Diagram too large…"), completes it.
+                if (!renderTarget.querySelector('svg') && !(renderTarget.textContent || '').trim()) return;
                 mo.disconnect();
                 afterRender();
             });

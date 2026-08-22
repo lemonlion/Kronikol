@@ -440,6 +440,40 @@
         // The one participant the generator declares for a markers-only diagram (so `hnote across` has a
         // lifeline to span — see PlantUmlCreator.MarkerOnlyParticipant); on its own it is nothing to draw.
         var _markerOnlyParticipantRx = /^participant "\(no interactions\)" as noInteractions$/;
+        // plantuml.js reports two failures by WRITING into the target instead of throwing:
+        // "java.lang.RuntimeException: Diagram too large for browser rendering: WxH (max N)" as plain
+        // text (a note wider than the engine's canvas — no <svg> is produced), and "Syntax Error?" as
+        // an error image. Neither must wedge a render queue that waits for an <svg>, and both must stay
+        // diagnosable: the too-large case becomes a legible message, and every failure keeps the raw
+        // PlantUML source reachable in a <details>. Returns true when the element holds a failure.
+        var _engineTooLargeRx = /Diagram too large for browser rendering/;
+        var _engineSyntaxErrorRx = /Syntax Error\?/;
+        function describeEngineFailure(el, source) {
+            if (!el) return false;
+            var text = el.textContent || '';
+            var svg = el.querySelector('svg');
+            var rawDetails = '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
+                + String(source || el.getAttribute('data-plantuml') || '').replace(/</g, '&lt;') + '</pre></details>';
+            if (!svg && _engineTooLargeRx.test(text)) {
+                el.innerHTML = '<div class="engine-failure" data-engine-failure="too-large" style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
+                    + '<strong>Diagram too large for client-side rendering.</strong> '
+                    + 'One note is wider than the engine can draw — usually a single very long unbreakable line in a captured body. '
+                    + '<code>' + text.replace(/</g, '&lt;').slice(0, 200) + '</code>'
+                    + rawDetails + '</div>';
+                return true;
+            }
+            if (svg && _engineSyntaxErrorRx.test(text) && !el.querySelector('[data-engine-failure]')) {
+                var note = document.createElement('div');
+                note.className = 'engine-failure';
+                note.setAttribute('data-engine-failure', 'syntax');
+                note.innerHTML = rawDetails;
+                el.appendChild(note);
+                return true;
+            }
+            return false;
+        }
+        window._describeEngineFailure = describeEngineFailure;
+
         function hasDrawableBody(lines) {
             var inStyle = false;
             for (var i = 0; i < lines.length; i++) {
@@ -477,6 +511,7 @@
                 var hookTarget = item.isFragment ? item.el : item.el;
                 var iflowSource = item.parentEl ? item.parentEl._fullSource || item.source : item.source;
                 try {
+                    describeEngineFailure(item.el, item.source);
                     bindIflowLinks(hookTarget, iflowSource);
                     if (window._makeNotesCollapsible) window._makeNotesCollapsible(hookTarget);
                     if (window._addAssertionTooltips) window._addAssertionTooltips(hookTarget);
