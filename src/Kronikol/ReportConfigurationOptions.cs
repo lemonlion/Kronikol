@@ -264,6 +264,17 @@ public record ReportConfigurationOptions
     public bool CapitaliseStepText { get; set; } = true;
 
     /// <summary>
+    /// Upper-case the first letter of every feature, rule and scenario title (including an outline's
+    /// template title), so the headings read as sentences however the producer wrote them — a Gherkin
+    /// <c>Scenario: the overview renders</c> becomes <c>The overview renders</c>. Default: <c>true</c>.
+    /// Same helper and same exceptions as <see cref="CapitaliseStepText"/> (a title starting with a
+    /// quote, bracket, digit or symbol is left alone); <c>kronikol ingest --no-capitalise</c> turns both
+    /// off. Note that a scenario's <c>stableId</c> is computed from the capitalised title, so a title
+    /// this rule changes gets a new one — titles that already start with a capital are unaffected.
+    /// </summary>
+    public bool CapitaliseTitles { get; set; } = true;
+
+    /// <summary>
     /// Optional delegate returning the total number of test scenarios expected in this assembly.
     /// When set, report generation is skipped if the actual scenario count is less than the expected
     /// count — preventing partial test runs (e.g. single-test filtering) from overwriting the

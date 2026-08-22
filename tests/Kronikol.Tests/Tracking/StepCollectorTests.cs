@@ -4,7 +4,7 @@ using Kronikol.TabularAttributes;
 
 namespace Kronikol.Tests.Tracking;
 
-[Collection("StepCollectorOptions")]
+[Collection("DiagramsFetcher")]
 public class StepCollectorTests
 {
     [Fact]

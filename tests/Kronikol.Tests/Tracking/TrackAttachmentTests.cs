@@ -3,7 +3,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
-[Collection("TestIdentityScope")]
+[Collection("DiagramsFetcher")]
 public class TrackAttachmentTests : IDisposable
 {
     private readonly string _testId = $"TrackAttachmentTests.{Guid.NewGuid():N}";

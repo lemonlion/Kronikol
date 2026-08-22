@@ -263,7 +263,7 @@ public class IngestAttributionTests : IDisposable
 
         var scenarios = result.Features.SelectMany(f => f.Scenarios).ToArray();
         var attributed = Assert.Single(scenarios, s => s.Id == "first");
-        Assert.Equal("first", attributed.DisplayName);
+        Assert.Equal("First", attributed.DisplayName); // CapitaliseTitles (default on) re-cases the heading
         // The one inside the test window joined the test; the one at +30s fell into the fold bucket.
         Assert.Contains(scenarios, s => s.DisplayName == "Traffic outside any test");
 
@@ -363,5 +363,116 @@ public class IngestAttributionTests : IDisposable
 
         Assert.Contains(RequestResponseLogger.RequestAndResponseLogs, l => l.ServiceName == "redis");
         Assert.Contains(result.Diagnostics, d => d.Message.Contains("the host's predicate is broken"));
+    }
+    /// <summary>Interactions of one scenario as the written report has them — not the process-global store, which parallel test classes clear.</summary>
+    private static int InteractionsOf(IngestResult result, string scenarioId)
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+        return document.RootElement.GetProperty("features").EnumerateArray()
+            .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
+            .Where(s => s.GetProperty("id").GetString() == scenarioId)
+            .Sum(s => s.GetProperty("httpInteractions").GetArrayLength());
+    }
+
+    [Fact]
+    public void Traffic_before_the_run_began_or_after_it_ended_is_dropped_not_folded()
+    {
+        // Taps append for as long as the stack is up; the tests file is per run. Without a window the
+        // previous run's traffic (ids no longer in the tests file) and the stack's warm-up would all be
+        // folded into "Traffic outside any test" — exactly what a second `sidekick test` on one stack showed.
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "RunWindow");
+        options.GenerateComponentDiagram = false;
+
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            Interactions =
+            [
+                // the previous run (an id the tests file no longer knows), with its response after the window opened
+                Anonymous("graphql", -60, testId: "0123456789abcdef0123456789abcdef", pairId: "old"),
+                Anonymous("graphql", 0.5, testId: "0123456789abcdef0123456789abcdef", pairId: "old", type: "Response"),
+                // the runner's global set-up: inside the run (after the started marker), before the first test
+                Anonymous("graphql", 0.8, testId: "fedcba9876543210fedcba9876543210", pairId: "setup"),
+                Anonymous("graphql", 0.9, testId: "fedcba9876543210fedcba9876543210", pairId: "setup", type: "Response"),
+                // the test's own call
+                Anonymous("graphql", 2, testId: "first", pairId: "mine"),
+                Anonymous("graphql", 3, testId: "first", pairId: "mine", type: "Response"),
+                // after the run ended
+                Anonymous("graphql", 30, testId: "0123456789abcdef0123456789abcdef", pairId: "late"),
+            ],
+            TestRecords =
+            [
+                new TestRunRecord { Event = "testrun", TestId = "__run__", Status = "started", Timestamp = T0 },
+                new TestRunRecord { Event = "start", TestId = "first", TestName = "first", Timestamp = T0.AddSeconds(1) },
+                new TestRunRecord { Event = "end", TestId = "first", Status = "passed", Timestamp = T0.AddSeconds(5) },
+                new TestRunRecord { Event = "testrun", TestId = "__run__", Status = "passed", Timestamp = T0.AddSeconds(6) },
+            ],
+            Options = options,
+            DropOutsideRunWindow = true,
+            FoldUnknownTestsInto = new UnknownTestFold("Traffic outside any test", "session"),
+        });
+
+        var scenarios = result.Features.SelectMany(f => f.Scenarios).ToArray();
+        Assert.Single(scenarios, s => s.Id == "first");
+        Assert.Equal(2, InteractionsOf(result, "first"));
+        Assert.Single(scenarios, s => s.Id == "session");
+        // Only the set-up pair is left for the fold bucket: the old pair (request before the run, even
+        // though its response fell inside) and the late request are gone.
+        Assert.Equal(2, InteractionsOf(result, "session"));
+
+        var dropped = Assert.Single(result.Diagnostics, d => d.Kind == DiagnosticKind.DroppedOutsideRunWindow);
+        Assert.Contains("3 interaction record(s) outside the run window", dropped.Message);
+        Assert.Contains("2 before the run began, 1 after it ended", dropped.Message);
+        Assert.False(TestRunRecord.IsKnownEvent(TestRunRecord.Events.TestRun));
+    }
+
+    [Fact]
+    public void The_run_window_is_derived_from_the_tests_records_or_given_explicitly()
+    {
+        var records = new[]
+        {
+            new TestRunRecord { Event = "start", TestId = "t", Timestamp = T0.AddSeconds(10) },
+            new TestRunRecord { Event = "end", TestId = "t", Status = "passed", Timestamp = T0.AddSeconds(20) },
+        };
+
+        // No marker: the earliest record opens the window and, with no testrun end marker, it stays open.
+        var derived = IngestPipeline.ResolveRunWindow(new IngestRequest { DropOutsideRunWindow = true }, records);
+        Assert.Equal((T0.AddSeconds(10), (DateTimeOffset?)null), derived);
+
+        // A started marker opens it earlier; a verdict marker closes it.
+        var withMarkers = records.Concat(
+        [
+            new TestRunRecord { Event = "testrun", TestId = "__run__", Status = "started", Timestamp = T0 },
+            new TestRunRecord { Event = "testrun", TestId = "__run__", Status = "failed", Timestamp = T0.AddSeconds(25) },
+        ]).ToArray();
+        Assert.Equal((T0, (DateTimeOffset?)T0.AddSeconds(25)), IngestPipeline.ResolveRunWindow(new IngestRequest(), withMarkers));
+
+        // Explicit bounds win.
+        Assert.Equal((T0.AddSeconds(-5), (DateTimeOffset?)T0.AddSeconds(99)),
+            IngestPipeline.ResolveRunWindow(new IngestRequest { RunStartedAt = T0.AddSeconds(-5), RunEndedAt = T0.AddSeconds(99) }, withMarkers));
+
+        // Nothing to derive from: no window.
+        Assert.Null(IngestPipeline.ResolveRunWindow(new IngestRequest { DropOutsideRunWindow = true }, []));
+    }
+
+    [Fact]
+    public void Without_a_derivable_window_nothing_is_dropped_and_the_report_says_why()
+    {
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "NoWindow");
+        options.GenerateComponentDiagram = false;
+
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            Interactions = [Anonymous("graphql", -60, testId: "0123456789abcdef0123456789abcdef", pairId: "p"), Anonymous("graphql", -59, testId: "0123456789abcdef0123456789abcdef", pairId: "p", type: "Response")],
+            Options = options,
+            DropOutsideRunWindow = true,
+            FoldUnknownTestsInto = new UnknownTestFold("Traffic outside any test", "session"),
+        });
+
+        Assert.Single(result.Features.SelectMany(f => f.Scenarios));
+        Assert.Equal(2, InteractionsOf(result, "session"));
+        Assert.DoesNotContain(result.Diagnostics, d => d.Kind == DiagnosticKind.DroppedOutsideRunWindow);
+        Assert.Contains(result.Diagnostics, d => d.Kind == DiagnosticKind.Other && d.Message.Contains("no run window could be derived"));
     }
 }

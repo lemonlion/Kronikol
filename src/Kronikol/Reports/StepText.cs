@@ -1,7 +1,8 @@
 namespace Kronikol.Reports;
 
 /// <summary>
-/// The one place Kronikol decides how a step or assertion label is cased for display.
+/// The one place Kronikol decides how a step or assertion label — and a feature, rule or scenario title
+/// (<see cref="ApplyToTitles"/>) — is cased for display.
 /// <para>
 /// Producers of step text are wildly inconsistent — a Playwright assertion label
 /// (<c>could not arm the mock</c>), a LightBDD sub-step, a hand-written <c>expect(x, "message")</c>
@@ -17,6 +18,8 @@ namespace Kronikol.Reports;
 /// <item>text whose first non-marker character is an opening quote or bracket
 /// (<c>" ' ( [ {</c> or the typographic ones) is left exactly as it is — the quoted literal is
 /// the producer's content, and re-casing it would corrupt a locator, an identifier or a code snippet;</item>
+/// <item>text whose first word is a camelCase identifier (<c>graphqlErrorMessages reads…</c>, <c>iPhone</c>) is
+/// left alone for the same reason — and is not counted as a violation by <see cref="StartsWithCapitalOrQuote"/>;</item>
 /// <item>the change is culture-invariant (<see cref="char.ToUpperInvariant(char)"/>), Unicode-aware
 /// (<c>é</c> to <c>É</c>, <c>ł</c> to <c>Ł</c>) and idempotent.</item>
 /// </list>
@@ -74,7 +77,33 @@ public static class StepText
         if (upper == c)
             return text;
 
+        // `insightsLocationReportDates returns…`, `graphqlErrorMessages reads…`, `iPhone renders…`: a first
+        // word with a capital inside it is an identifier, and re-casing an identifier corrupts it just as
+        // re-casing a quoted literal would. Leave it to the producer (and do not count it as a violation).
+        if (IsCamelCaseWord(text, index))
+            return text;
+
         return string.Concat(text.AsSpan(0, index), upper.ToString(), text.AsSpan(index + 1));
+    }
+
+    /// <summary>
+    /// Whether the word starting at <paramref name="start"/> (a lower-case letter) contains an upper-case
+    /// letter before its end — the shape of a camelCase identifier (<c>graphqlErrorMessages</c>,
+    /// <c>iPhone</c>). Digits, underscores and dots stay inside the word (<c>v2Api</c>, <c>my_iD</c>,
+    /// <c>page.goBack</c>); any other character ends it.
+    /// </summary>
+    private static bool IsCamelCaseWord(string text, int start)
+    {
+        for (var i = start + 1; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (char.IsUpper(c))
+                return true;
+            if (!(char.IsLetterOrDigit(c) || c is '_' or '.'))
+                return false;
+        }
+
+        return false;
     }
 
     /// <summary>Applies <see cref="Capitalise"/> only when <see cref="CapitaliseEnabled"/> is on — the diagram-side gate.</summary>
@@ -95,7 +124,7 @@ public static class StepText
         if (index < 0)
             return true;
 
-        return !char.IsLower(subject[index]);
+        return !char.IsLower(subject[index]) || IsCamelCaseWord(subject, index);
     }
 
     /// <summary>
@@ -117,6 +146,64 @@ public static class StepText
                 ApplyToSteps(scenario.Steps);
             }
         }
+    }
+
+    /// <summary>
+    /// Capitalises every feature, rule and scenario title in the model, in place — the
+    /// <see cref="ReportConfigurationOptions.CapitaliseTitles"/> pass. An outline's template title
+    /// (<see cref="Scenario.OutlineId"/>) is re-cased too, so its members still group together and the
+    /// group header reads like its members. <see cref="Scenario.ExampleDisplayName"/> is left alone: it
+    /// is example data, not prose.
+    /// </summary>
+    public static void ApplyToTitles(IEnumerable<Feature>? features)
+    {
+        if (features is null)
+            return;
+        foreach (var feature in features)
+        {
+            feature.DisplayName = Capitalise(feature.DisplayName) ?? feature.DisplayName;
+            foreach (var scenario in feature.Scenarios ?? [])
+            {
+                scenario.DisplayName = Capitalise(scenario.DisplayName) ?? scenario.DisplayName;
+                scenario.Rule = Capitalise(scenario.Rule);
+                scenario.OutlineId = Capitalise(scenario.OutlineId);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Counts the feature, rule and scenario titles that still start with a lower-case letter after
+    /// <see cref="ApplyToTitles"/> ran (or because it was off) — the sibling of
+    /// <see cref="FindNotStartingWithCapital"/> for headings. Each distinct rule title is counted once.
+    /// </summary>
+    /// <returns>The total count and the first <paramref name="maxExamples"/> offending titles.</returns>
+    public static (int Count, string[] Examples) FindTitlesNotStartingWithCapital(IEnumerable<Feature>? features, int maxExamples = 5)
+    {
+        var count = 0;
+        var examples = new List<string>();
+        var rulesSeen = new HashSet<string>(StringComparer.Ordinal);
+
+        void Check(string? title)
+        {
+            if (string.IsNullOrWhiteSpace(title) || StartsWithCapitalOrQuote(null, title))
+                return;
+            count++;
+            if (examples.Count < maxExamples)
+                examples.Add(title);
+        }
+
+        foreach (var feature in features ?? [])
+        {
+            Check(feature.DisplayName);
+            foreach (var scenario in feature.Scenarios ?? [])
+            {
+                Check(scenario.DisplayName);
+                if (scenario.Rule is { Length: > 0 } rule && rulesSeen.Add(rule))
+                    Check(rule);
+            }
+        }
+
+        return (count, examples.ToArray());
     }
 
     /// <summary>Capitalises a step tree in place (see <see cref="ApplyToFeatures"/>).</summary>

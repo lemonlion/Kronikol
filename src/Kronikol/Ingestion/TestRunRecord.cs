@@ -149,11 +149,25 @@ public sealed record TestRunRecord
 
         /// <summary>Every event kind the synthesiser understands.</summary>
         public static readonly IReadOnlyList<string> All = [Start, Step, Assertion, Attachment, End];
+
+        /// <summary>
+        /// A run-level marker, not a scenario event: <c>{"event":"testrun","testId":"__run__","status":"started"}</c>
+        /// when the run begins (written by the host before the runner starts) and the same event with the
+        /// run's verdict when it ends (a reporter's <c>onEnd</c>). Never synthesised into a scenario; read
+        /// by <see cref="IngestRequest.DropOutsideRunWindow"/> to bound the run.
+        /// </summary>
+        public const string TestRun = "testrun";
     }
 
     /// <summary>Whether <paramref name="eventName"/> is one of <see cref="Events.All"/> (case-insensitive). Unknown events are ignored by the synthesiser.</summary>
     public static bool IsKnownEvent(string? eventName) =>
         eventName is not null && Events.All.Contains(eventName.Trim(), StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Whether this record is a run-level marker (<see cref="Events.TestRun"/>) rather than a scenario event.</summary>
+    public bool IsRunMarker => Is(Events.TestRun);
+
+    /// <summary>The status value a run marker carries when the run has only just begun.</summary>
+    public const string RunStartedStatus = "started";
 
     /// <summary>True when <see cref="Event"/> is <paramref name="name"/> (case-insensitively).</summary>
     public bool Is(string name) => string.Equals(Event, name, StringComparison.OrdinalIgnoreCase);

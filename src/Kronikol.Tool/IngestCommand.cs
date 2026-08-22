@@ -38,6 +38,9 @@ internal static class IngestCommand
         var capitalise = true;
         var attributeByWindow = false;
         string? windowFallbackId = null;
+        var runWindow = false;
+        DateTimeOffset? runStart = null;
+        DateTimeOffset? runEnd = null;
         var phaseFromSteps = false;
         string? attachmentsBase = null;
         var cleanAttachments = false;
@@ -128,6 +131,20 @@ internal static class IngestCommand
                 case "--no-capitalise" or "--no-capitalize":
                     capitalise = false;
                     break;
+                case "--run-window":
+                    runWindow = true;
+                    break;
+                case "--run-start" or "--run-end":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    if (!DateTimeOffset.TryParse(args[i], System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var instant))
+                    {
+                        error.WriteLine($"{arg} expects an ISO-8601 instant, got '{args[i]}'");
+                        return 2;
+                    }
+                    if (arg == "--run-start") runStart = instant; else runEnd = instant;
+                    runWindow = true;
+                    break;
                 case "--attribute-by-window":
                     attributeByWindow = true;
                     // The optional value is the capturer's fallback test id ("session"); a following
@@ -214,6 +231,7 @@ internal static class IngestCommand
         options.MaxArrowsPerDiagram = maxArrows;
         options.GenerateComponentDiagram = componentDiagram;
         options.CapitaliseStepText = capitalise;
+        options.CapitaliseTitles = capitalise;
         if (title is not null)
             options.TestRunReportTitle = title;
 
@@ -245,6 +263,9 @@ internal static class IngestCommand
                 StrictParsing = strictParsing,
                 AttributeByTestWindow = attributeByWindow,
                 WindowAttributionFallbackId = windowFallbackId,
+                DropOutsideRunWindow = runWindow,
+                RunStartedAt = runStart,
+                RunEndedAt = runEnd,
                 PhaseFromSteps = phaseFromSteps,
                 AttachmentsBase = attachmentsBase is null ? null : Path.GetFullPath(attachmentsBase),
                 CleanAttachments = cleanAttachments,
@@ -351,11 +372,18 @@ internal static class IngestCommand
         w.WriteLine("  --fold-unknown <name>    Collect interactions of test ids absent from --tests into one scenario");
         w.WriteLine("                           with this name (e.g. \"Traffic outside any test\").");
         w.WriteLine("  --strict                 Fail on the first malformed capture line (default: skip and report them).");
-        w.WriteLine("  --no-capitalise          Leave step and assertion labels exactly as the producer wrote them");
-        w.WriteLine("                           (default: upper-case the first letter of keyword-less labels).");
+        w.WriteLine("  --no-capitalise          Leave step/assertion labels and feature/rule/scenario titles exactly as");
+        w.WriteLine("                           the producer wrote them (default: upper-case the first letter of");
+        w.WriteLine("                           keyword-less labels and of every title).");
         w.WriteLine("  --attribute-by-window [id]  Attribute interactions that carry no testId to the test that was");
         w.WriteLine("                           running at their timestamp; the optional id is the capturer's");
         w.WriteLine("                           fallback marker (e.g. \"session\") which counts as \"no testId\".");
+        w.WriteLine("  --run-window             Keep only this run's traffic: drop interactions whose request lies before");
+        w.WriteLine("                           the earliest tests record (a testrun/started marker, if the host writes one)");
+        w.WriteLine("                           or after the testrun end marker — the previous run's and the stack's start-up");
+        w.WriteLine("                           traffic otherwise lands in --fold-unknown.");
+        w.WriteLine("  --run-start <iso>        Explicit run window bounds (UTC); each implies --run-window.");
+        w.WriteLine("  --run-end <iso>");
         w.WriteLine("  --phase-from-steps       Give interactions the phase of the Given/When/Then step they happened");
         w.WriteLine("                           during, so setup traffic can be separated or highlighted.");
         w.WriteLine("  --attachments-base <dir> Resolve relative attachment paths in --tests against this directory.");

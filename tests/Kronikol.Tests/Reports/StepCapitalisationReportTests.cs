@@ -40,6 +40,7 @@ public class StepCapitalisationReportTests : IDisposable
         options.ReportsFolderPath = Path.Combine(_dir, subdirectory);
         options.GenerateComponentDiagram = false;
         options.CapitaliseStepText = capitalise;
+        options.CapitaliseTitles = capitalise;
 
         return IngestPipeline.Run(new IngestRequest
         {
@@ -165,5 +166,24 @@ public class StepCapitalisationReportTests : IDisposable
             .Where(s => s.GetProperty("id").GetString() == scenarioId)
             .SelectMany(s => s.GetProperty("diagrams").EnumerateArray())
             .Select(d => d.GetString()));
+    }
+    [Fact]
+    public void Scenario_titles_read_as_sentences_in_every_view_and_the_rule_can_be_turned_off()
+    {
+        // The producer named the test "overview renders" (a Gherkin "Scenario: overview renders"):
+        // the report's headings capitalise it, once, before any format is written.
+        var on = Run("titles-on");
+        var scenario = on.Features[0].Scenarios[0];
+        Assert.Equal("Overview renders", scenario.DisplayName);
+        Assert.Contains("Overview renders", File.ReadAllText(on.TestRunReportHtml));
+        Assert.Contains("\"name\": \"Overview renders\"",
+            File.ReadAllText(Path.Combine(on.ReportsDirectory, "TestRunReport.json")));
+        Assert.DoesNotContain(on.Diagnostics, d => d.Kind == DiagnosticKind.TitlesNotStartingWithCapital);
+
+        var off = Run("titles-off", capitalise: false);
+        Assert.Equal("overview renders", off.Features[0].Scenarios[0].DisplayName);
+        var diagnostic = Assert.Single(off.Diagnostics, d => d.Kind == DiagnosticKind.TitlesNotStartingWithCapital);
+        Assert.Contains("1 feature/rule/scenario title(s) do not start with a capital letter", diagnostic.Message);
+        Assert.Contains("overview renders", diagnostic.Message);
     }
 }

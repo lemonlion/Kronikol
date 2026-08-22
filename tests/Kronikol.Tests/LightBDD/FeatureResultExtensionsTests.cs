@@ -10,7 +10,7 @@ using FileAttachment = LightBDD.Core.Results.FileAttachment;
 
 namespace Kronikol.Tests.LightBDD;
 
-[Collection("StepCollectorOptions")]
+[Collection("DiagramsFetcher")]
 public class FeatureResultExtensionsTests
 {
     [Fact]

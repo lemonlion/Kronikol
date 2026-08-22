@@ -9,6 +9,7 @@ namespace Kronikol.Tests.Ingestion;
 /// rules, tags, outlines, backgrounds, doc-strings, data tables, stack traces — reaching the report
 /// without a Cucumber Messages file.
 /// </summary>
+[Collection("DiagramsFetcher")] // shares the process-global tracking store with every other class that touches it
 public class WidenedTestRunRecordTests
 {
     private static readonly DateTimeOffset T0 = new(2026, 8, 22, 10, 0, 0, TimeSpan.Zero);

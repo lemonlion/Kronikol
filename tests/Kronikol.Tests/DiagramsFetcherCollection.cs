@@ -14,4 +14,4 @@ namespace Kronikol.Tests;
 [CollectionDefinition("DiagramsFetcher")]
 // One collection for every global the tests share — the capture store (PendingLogsFixture) AND the
 // tracking-component registry: two collections ran in parallel and each cleared the other's state.
-public class DiagramsFetcherCollection : ICollectionFixture<PendingLogsFixture>, ICollectionFixture<TrackingComponentRegistryFixture>;
+public class DiagramsFetcherCollection : ICollectionFixture<PendingLogsFixture>, ICollectionFixture<TrackingComponentRegistryFixture>, ICollectionFixture<Kronikol.Tests.Tracking.TestIdentityScopeFixture>;

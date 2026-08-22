@@ -201,7 +201,7 @@ public class CucumberIngestPipelineTests : IDisposable
 
         Assert.Equal(7, result.ScenarioCount);
         var unit = result.Features.Single(f => f.DisplayName == "Unit tests");
-        Assert.Equal("a plain xUnit test", Assert.Single(unit.Scenarios).DisplayName);
+        Assert.Equal("A plain xUnit test", Assert.Single(unit.Scenarios).DisplayName);
         // Gherkin features come first, the leftovers after them.
         Assert.Equal([CucumberFixtures.DemoFeature, CucumberFixtures.RetryFeature, "Unit tests"],
             result.Features.Select(f => f.DisplayName));

@@ -31,6 +31,19 @@ public enum DiagnosticKind
 
     /// <summary>Anything a host wants to surface that has no dedicated kind yet.</summary>
     Other,
+
+    /// <summary>Feature, rule or scenario titles that still start with a lower-case letter after <see cref="StepText.ApplyToTitles"/> ran (or with <see cref="ReportConfigurationOptions.CapitaliseTitles"/> off).</summary>
+    TitlesNotStartingWithCapital,
+
+    /// <summary>Interactions whose request happened before the run began or after it ended and that <see cref="Kronikol.Ingestion.IngestRequest.DropOutsideRunWindow"/> discarded.</summary>
+    DroppedOutsideRunWindow,
+
+    /// <summary>
+    /// A capture component — a tap, a sink — lost or skipped data (an oversize payload streamed past, a decoder reset or
+    /// give-up, dropped segments); forwarding was never affected. Hosts hand these in through
+    /// <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/> so a dead tap is a line in the report, not only in a log.
+    /// </summary>
+    CaptureDegraded,
 }
 
 /// <summary>

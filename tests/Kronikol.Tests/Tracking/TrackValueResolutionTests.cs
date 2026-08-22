@@ -2,7 +2,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
-[Collection("TestIdentityScope")]
+[Collection("DiagramsFetcher")]
 public class TrackValueResolutionTests : IDisposable
 {
     private readonly string _testId = $"TrackValueResolutionTests.{Guid.NewGuid():N}";

@@ -111,7 +111,7 @@ public class TornLineToleranceTests : IDisposable
         Assert.True(result.Generated);
         Assert.True(File.Exists(result.TestRunReportHtml));
         Assert.Equal(2, result.InteractionCount);
-        Assert.Equal("overview renders", result.Features[0].Scenarios[0].DisplayName);
+        Assert.Equal("Overview renders", result.Features[0].Scenarios[0].DisplayName);
 
         var malformed = result.Diagnostics.Where(d => d.Kind == DiagnosticKind.MalformedLine).ToArray();
         Assert.Equal(2, malformed.Length); // one per file

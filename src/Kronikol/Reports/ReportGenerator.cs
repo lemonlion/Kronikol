@@ -114,7 +114,12 @@ public static class ReportGenerator
         if (options.CapitaliseStepText)
             StepText.ApplyToFeatures(features);
 
+        // Same idea for the headings: a Gherkin "Scenario: the overview renders" is a sentence too.
+        if (options.CapitaliseTitles)
+            StepText.ApplyToTitles(features);
+
         ReportLowercaseSteps(features);
+        ReportLowercaseTitles(features);
 
         if (options.ExpectedTestCount != null)
         {
@@ -359,6 +364,24 @@ public static class ReportGenerator
         var suffix = examples.Length == 0 ? "" : $" e.g. {string.Join(" | ", examples)}";
         ReportDiagnosticsScope.Record(DiagnosticKind.StepsNotStartingWithCapital,
             $"{count} step text(s) do not start with a capital letter.{suffix}");
+    }
+
+    /// <summary>
+    /// Records the feature, rule and scenario titles that still start with a lower-case letter after
+    /// <see cref="StepText.ApplyToTitles"/> ran — the sibling of <see cref="ReportLowercaseSteps"/>.
+    /// </summary>
+    private static void ReportLowercaseTitles(Feature[] features)
+    {
+        if (ReportDiagnosticsScope.Current is null)
+            return;
+
+        var (count, examples) = StepText.FindTitlesNotStartingWithCapital(features);
+        if (count == 0)
+            return;
+
+        var suffix = examples.Length == 0 ? "" : $" e.g. {string.Join(" | ", examples)}";
+        ReportDiagnosticsScope.Record(DiagnosticKind.TitlesNotStartingWithCapital,
+            $"{count} feature/rule/scenario title(s) do not start with a capital letter.{suffix}");
     }
 
     public static string GetTestRunReportTitle(ReportConfigurationOptions options)

@@ -135,6 +135,35 @@ public sealed class IngestRequest
     public Func<InteractionRecord, bool>? DropUnattributed { get; init; }
 
     /// <summary>
+    /// Keep only the traffic of <em>this</em> run: every interaction whose request happened before the run
+    /// began, or after it ended, is dropped before attribution (with its paired response), and counted as
+    /// <see cref="DiagnosticKind.DroppedOutsideRunWindow"/>. Default <c>false</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>The use case is a capturer whose files outlive a run — taps that append for as long as the
+    /// stack is up — read against a tests file that is per run: without a window, the previous run's
+    /// traffic (its test ids are no longer in the tests file) and the stack's start-up traffic are all
+    /// folded into "Traffic outside any test", which then dwarfs the run it is supposed to describe.</para>
+    /// <para>The window is <see cref="RunStartedAt"/> → <see cref="RunEndedAt"/> when given; otherwise it
+    /// is derived from the tests records: start = the earliest record of any kind (a host that writes a
+    /// <c>testrun</c>/<c>started</c> marker before the runner starts — see
+    /// <see cref="TestRunRecord.Events.TestRun"/> — therefore keeps the runner's own set-up traffic, such as
+    /// a global login, inside the run), end = the latest <c>testrun</c> marker that is not
+    /// <see cref="TestRunRecord.RunStartedStatus"/>, or open when there is none (a run that died never
+    /// wrote one, and its late traffic must not vanish). With no tests records and no explicit start nothing
+    /// is dropped, and a diagnostic says so.</para>
+    /// <para>Traffic inside the window that belongs to no test — a runner's global set-up, a health probe —
+    /// is untouched: it still reaches <see cref="FoldUnknownTestsInto"/> / <see cref="DropUnattributed"/>.</para>
+    /// </remarks>
+    public bool DropOutsideRunWindow { get; init; }
+
+    /// <summary>Explicit start of the run window (UTC); implies <see cref="DropOutsideRunWindow"/>. Default null — derived from the tests records.</summary>
+    public DateTimeOffset? RunStartedAt { get; init; }
+
+    /// <summary>Explicit end of the run window (UTC); implies <see cref="DropOutsideRunWindow"/>. Default null — derived from a <c>testrun</c> end marker, else open.</summary>
+    public DateTimeOffset? RunEndedAt { get; init; }
+
+    /// <summary>
     /// Give interactions the phase of the top-level step they happened during — <c>Given</c>/<c>Context</c>
     /// becomes <see cref="TestPhase.Setup"/>, <c>When</c>/<c>Then</c> becomes <see cref="TestPhase.Action"/>,
     /// <c>And</c>/<c>But</c> inherit — so <c>SeparateSetup</c> and <c>HighlightSetup</c> partition an
@@ -270,6 +299,7 @@ public static class IngestPipeline
             testRecords.AddRange(cucumber.Markers);
         }
 
+        records = DropOutsideRunWindow(records, testRecords, request, diagnostics);
         records = Attribute(records, testRecords, request, diagnostics);
         AddDiagramMarkers(records, testRecords);
 
@@ -370,6 +400,101 @@ public static class IngestPipeline
     {
         foreach (var line in malformed ?? [])
             diagnostics.Add(DiagnosticKind.MalformedLine, line.ToString());
+    }
+
+    /// <summary>
+    /// The run window (<see cref="IngestRequest.DropOutsideRunWindow"/>): explicit bounds win, else the tests
+    /// records supply them. Returns null when no window can be established.
+    /// </summary>
+    public static (DateTimeOffset Start, DateTimeOffset? End)? ResolveRunWindow(IngestRequest request, IReadOnlyList<TestRunRecord> testRecords)
+    {
+        var start = request.RunStartedAt;
+        if (start is null)
+        {
+            var earliest = testRecords.Where(r => r.Timestamp is not null).Select(r => r.Timestamp!.Value).DefaultIfEmpty().Min();
+            if (earliest == default)
+                return null;
+            start = earliest;
+        }
+
+        var end = request.RunEndedAt;
+        if (end is null)
+        {
+            var endMarkers = testRecords
+                .Where(r => r.IsRunMarker && r.Timestamp is not null
+                            && !string.Equals(r.Status, TestRunRecord.RunStartedStatus, StringComparison.OrdinalIgnoreCase))
+                .Select(r => r.Timestamp!.Value)
+                .ToArray();
+            if (endMarkers.Length > 0)
+                end = endMarkers.Max();
+        }
+
+        return (start.Value, end);
+    }
+
+    /// <summary>
+    /// Drops every interaction pair whose request lies outside the run window — the previous run's
+    /// traffic, the stack's start-up, anything after the run ended — before attribution gets a chance to
+    /// fold it. A pair is judged on its earliest record, so a late response to an in-run request stays.
+    /// </summary>
+    private static List<InteractionRecord> DropOutsideRunWindow(
+        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
+    {
+        if (!request.DropOutsideRunWindow && request.RunStartedAt is null && request.RunEndedAt is null)
+            return records;
+
+        var window = ResolveRunWindow(request, testRecords);
+        if (window is null)
+        {
+            diagnostics.Add(DiagnosticKind.Other, "DropOutsideRunWindow: no run window could be derived (no tests records and no explicit start); nothing was dropped.");
+            return records;
+        }
+
+        var (start, end) = window.Value;
+
+        // Pairs are judged by their earliest timestamp (the request); a record with no pair id stands alone.
+        var pairStart = new Dictionary<string, DateTimeOffset>(StringComparer.Ordinal);
+        foreach (var record in records)
+        {
+            if (record.RequestResponseId is { Length: > 0 } id && record.Timestamp is { } ts
+                && (!pairStart.TryGetValue(id, out var known) || ts < known))
+                pairStart[id] = ts;
+        }
+
+        var kept = new List<InteractionRecord>(records.Count);
+        int before = 0, after = 0;
+        foreach (var record in records)
+        {
+            DateTimeOffset? at = record.RequestResponseId is { Length: > 0 } id && pairStart.TryGetValue(id, out var ps) ? ps : record.Timestamp;
+            if (at is null)
+            {
+                kept.Add(record);
+                continue;
+            }
+
+            if (at < start)
+            {
+                before++;
+                continue;
+            }
+
+            if (end is { } e && at > e)
+            {
+                after++;
+                continue;
+            }
+
+            kept.Add(record);
+        }
+
+        if (before + after > 0)
+        {
+            var endText = end is { } e2 ? e2.ToString("o") : "open";
+            diagnostics.Add(DiagnosticKind.DroppedOutsideRunWindow,
+                $"{before + after} interaction record(s) outside the run window ({start:o} → {endText}) dropped: {before} before the run began, {after} after it ended.");
+        }
+
+        return kept;
     }
 
     /// <summary>

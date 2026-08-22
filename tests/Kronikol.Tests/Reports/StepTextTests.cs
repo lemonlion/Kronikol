@@ -37,8 +37,23 @@ public class StepTextTests
     [InlineData("   ", "   ")]
     [InlineData("✓", "✓")]
     [InlineData("42 customers are listed", "42 customers are listed")]
+    // A camelCase first word is an identifier: producer content, like a quoted literal.
+    [InlineData("graphqlErrorMessages reads both shapes", "graphqlErrorMessages reads both shapes")]
+    [InlineData("✓ insightsLocationReportDates returned dates", "✓ insightsLocationReportDates returned dates")]
+    [InlineData("iPhone renders the page", "iPhone renders the page")]
+    [InlineData("page.goBack is called", "page.goBack is called")]
+    [InlineData("graphql rejects the request", "Graphql rejects the request")]
+    [InlineData("the Overview page renders", "The Overview page renders")]
     public void Capitalise_upper_cases_the_first_letter_after_markers_but_never_a_quoted_literal(string input, string expected) =>
         Assert.Equal(expected, StepText.Capitalise(input));
+
+    [Theory]
+    [InlineData(null, "graphqlErrorMessages reads both shapes", true)]
+    [InlineData(null, "✗ insightsLocationReportDates returned nothing", true)]
+    [InlineData(null, "graphql rejects the request", false)]
+    [InlineData("Given", "graphqlErrorMessages reads both shapes", true)]
+    public void A_camel_case_identifier_is_not_a_capitalisation_violation(string? keyword, string text, bool ok) =>
+        Assert.Equal(ok, StepText.StartsWithCapitalOrQuote(keyword, text));
 
     [Fact]
     public void Capitalise_is_null_safe_and_idempotent()
@@ -208,5 +223,56 @@ public class StepTextTests
 
         Assert.Equal(9, count);
         Assert.Equal(5, examples.Length);
+    }
+    [Fact]
+    public void Apply_to_titles_capitalises_feature_rule_scenario_and_outline_titles_but_not_example_data()
+    {
+        var feature = new Feature
+        {
+            DisplayName = "intelligence overview",
+            Scenarios =
+            [
+                new Scenario { Id = "s", DisplayName = "the selected location is the canonical target", Rule = "the location the app picks must work" },
+                new Scenario { Id = "s", DisplayName = "the /overview route loads", OutlineId = "the <path> route loads", ExampleDisplayName = "path=/overview" },
+                new Scenario { Id = "s", DisplayName = "\"Deep dive\" is listed" },
+                new Scenario { Id = "s", DisplayName = "42 locations render" },
+            ],
+        };
+
+        StepText.ApplyToTitles([feature]);
+
+        Assert.Equal("Intelligence overview", feature.DisplayName);
+        Assert.Equal("The selected location is the canonical target", feature.Scenarios[0].DisplayName);
+        Assert.Equal("The location the app picks must work", feature.Scenarios[0].Rule);
+        Assert.Equal("The /overview route loads", feature.Scenarios[1].DisplayName);
+        Assert.Equal("The <path> route loads", feature.Scenarios[1].OutlineId);
+        Assert.Equal("path=/overview", feature.Scenarios[1].ExampleDisplayName);
+        Assert.Equal("\"Deep dive\" is listed", feature.Scenarios[2].DisplayName);
+        Assert.Equal("42 locations render", feature.Scenarios[3].DisplayName);
+
+        StepText.ApplyToTitles(null); // null-safe
+    }
+
+    [Fact]
+    public void Find_titles_not_starting_with_capital_counts_each_rule_once()
+    {
+        var feature = new Feature
+        {
+            DisplayName = "intelligence overview",
+            Scenarios =
+            [
+                new Scenario { Id = "s", DisplayName = "the first", Rule = "the same rule" },
+                new Scenario { Id = "s", DisplayName = "The second", Rule = "the same rule" },
+                new Scenario { Id = "s", DisplayName = "\"quoted\" is fine" },
+            ],
+        };
+
+        var (count, examples) = StepText.FindTitlesNotStartingWithCapital([feature]);
+
+        Assert.Equal(3, count); // the feature, "the first", the rule (once)
+        Assert.Equal(["intelligence overview", "the first", "the same rule"], examples);
+        var (noneCount, noneExamples) = StepText.FindTitlesNotStartingWithCapital(null);
+        Assert.Equal(0, noneCount);
+        Assert.Empty(noneExamples);
     }
 }
