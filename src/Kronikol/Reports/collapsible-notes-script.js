@@ -815,6 +815,10 @@
                     container.appendChild(fragDiv);
                     fragQueue.push({ el: fragDiv, source: fragments[fi], isFragment: true, parentEl: container });
                 }
+                // Let the render workers take every new fragment in parallel now; the sequential loop
+                // below then mostly serves cache hits (a toggle re-splits the diagram, and most
+                // fragments come out byte-identical to what is already on screen).
+                if (window.plantuml && window.plantuml.prefetch) window.plantuml.prefetch(fragQueue.map(function (f) { return f.source; }));
                 // Process fragment render queue sequentially
                 var fragIdx = 0;
                 function renderNextFrag() {
@@ -850,25 +854,47 @@
                         return;
                     }
                     var fDone = false;
+                    var fPoll = null;
                     function afterFragRender() {
                         if (fDone) return;
                         fDone = true;
-                        _svgCache[item.source] = item.el.innerHTML;
+                        if (fPoll) clearInterval(fPoll);
+                        // The engine may have written a failure instead of an <svg> ("Diagram too large
+                        // for browser rendering…", or the shim's "Render error: …"): describe it, and
+                        // never cache a failure as a result.
+                        var failed = window._describeEngineFailure ? window._describeEngineFailure(item.el, item.source) : false;
+                        if (!failed && item.el.querySelector('svg')) _svgCache[item.source] = item.el.innerHTML;
                         item.el.dataset.rendered = '1';
                         window._plantumlRendering = false;
                         renderNextFrag();
                     }
                     window._plantumlRendering = true;
                     var fmo = new MutationObserver(function() {
-                        if (!item.el.querySelector('svg')) return;
+                        // Any output — an <svg>, or text for a failure — completes the fragment; waiting for
+                        // an <svg> alone left _noteRendering stuck on a too-large fragment.
+                        if (!item.el.querySelector('svg') && !(item.el.textContent || '').trim()) return;
                         fmo.disconnect();
                         afterFragRender();
                     });
                     fmo.observe(item.el, { childList: true, subtree: true });
+                    var fPollCount = 0;
+                    fPoll = setInterval(function() {
+                        fPollCount++;
+                        if (fDone) { clearInterval(fPoll); return; }
+                        if (item.el.querySelector('svg') || (item.el.textContent || '').trim()) { clearInterval(fPoll); fmo.disconnect(); afterFragRender(); return; }
+                        if (fPollCount > 240) { // 60 s without any output: give this fragment up, keep the toggle moving
+                            clearInterval(fPoll); fmo.disconnect();
+                            item.el.textContent = 'Render timed out for this fragment.';
+                            afterFragRender();
+                        }
+                    }, 250);
                     try {
                         window.plantuml.render(item.source.split('\n'), item.el.id);
                     } catch(e) {
                         fmo.disconnect();
+                        if (fPoll) clearInterval(fPoll);
+                        item.el.textContent = 'Render error: ' + ((e && e.message) ? e.message : String(e));
+                        item.el.dataset.rendered = '1';
                         window._plantumlRendering = false;
                         renderNextFrag();
                     }
@@ -1272,6 +1298,8 @@
                         container.appendChild(fragDiv);
                         fragList.push({ el: fragDiv, source: fragments[fi] });
                     }
+                    // Render every new fragment in parallel on the workers; the loop below serves cache hits.
+                    if (window.plantuml && window.plantuml.prefetch) window.plantuml.prefetch(fragList.map(function (f) { return f.source; }));
                     var fragI = 0;
                     function renderNextFragment() {
                         if (fragI >= fragList.length) {

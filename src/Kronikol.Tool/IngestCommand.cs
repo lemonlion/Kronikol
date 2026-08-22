@@ -24,6 +24,7 @@ internal static class IngestCommand
         var collapse = true;
         var collapseThreshold = 2;
         int? maxArrows = null;
+        int? browserRenderWorkers = null;
         var componentDiagram = true;
         var redact = true;
         var redactHeaders = new List<string>();
@@ -95,6 +96,14 @@ internal static class IngestCommand
                         return 2;
                     }
                     maxArrows = cap;
+                    break;
+                case "--browser-render-workers":
+                    if (++i >= args.Count || !int.TryParse(args[i], out var workerCount) || workerCount < 0)
+                    {
+                        error.WriteLine("--browser-render-workers needs an integer >= 0 (0 renders on the main thread)");
+                        return 2;
+                    }
+                    browserRenderWorkers = workerCount;
                     break;
                 case "--no-component-diagram":
                     componentDiagram = false;
@@ -239,6 +248,8 @@ internal static class IngestCommand
         options.CollapseConsecutiveIdenticalCalls = collapse;
         options.CollapseThreshold = collapseThreshold;
         options.MaxArrowsPerDiagram = maxArrows;
+        if (browserRenderWorkers is not null)
+            options.BrowserRenderWorkers = browserRenderWorkers.Value;
         options.GenerateComponentDiagram = componentDiagram;
         options.CapitaliseStepText = capitalise;
         options.CapitaliseTitles = capitalise;
@@ -395,6 +406,8 @@ internal static class IngestCommand
         w.WriteLine("  --collapse | --no-collapse   Collapse consecutive identical calls into a loop fragment (default: on).");
         w.WriteLine("  --collapse-threshold <n> Minimum run length to collapse (default: 2).");
         w.WriteLine("  --max-arrows <n>         Cap request/response pairs per diagram; the rest is summarised.");
+        w.WriteLine("  --browser-render-workers <n>  Web Workers the browserjs report renders diagrams on (default: 4, capped by");
+        w.WriteLine("                           the viewer's CPU count); 0 renders on the main thread as before 3.0.45.");
         w.WriteLine("  --no-component-diagram   Skip ComponentDiagram.html.");
         w.WriteLine("  --no-redact              Do not redact credential headers at ingest (default: redact).");
         w.WriteLine("  --redact-header <name>   Additional header to redact (repeatable).");

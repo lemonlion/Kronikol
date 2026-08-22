@@ -56,7 +56,7 @@ public static class ComponentDiagramReportGenerator
             ? null
             : GetImageSource(plantUml, plantUmlServerBaseUrl, imageFormat, localDiagramRenderer, directory, options.FileName);
 
-        var html = GenerateHtml(plantUml, options.Title, imgSrc, imageFormat, useBrowserJs);
+        var html = GenerateHtml(plantUml, options.Title, imgSrc, imageFormat, useBrowserJs, reportOptions);
         var htmlPath = Path.Combine(directory, $"{options.FileName}.html");
         File.WriteAllText(htmlPath, html);
 
@@ -108,7 +108,8 @@ public static class ComponentDiagramReportGenerator
         string title,
         string? imgSrc,
         PlantUmlImageFormat imageFormat,
-        bool useBrowserJs = false)
+        bool useBrowserJs = false,
+        ReportConfigurationOptions? reportOptions = null)
     {
         // Diagram rendering: browser SVG or server <img>
         string diagramHtml;
@@ -129,7 +130,8 @@ public static class ComponentDiagramReportGenerator
         {
             contextMenuStyles = DiagramContextMenu.GetStyles()
                               + DiagramContextMenu.GetInlineSvgStyles();
-            contextMenuScripts = DiagramContextMenu.GetPlantUmlBrowserRenderScript()
+            var renderOptions = reportOptions ?? new ReportConfigurationOptions();
+            contextMenuScripts = DiagramContextMenu.GetPlantUmlBrowserRenderScript(renderOptions.BrowserRenderWorkers, renderOptions.BrowserRenderCacheMegabytes, renderOptions.BrowserFragmentMaxHeight)
                                + DiagramContextMenu.GetContextMenuScript();
         }
 

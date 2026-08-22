@@ -1,0 +1,49 @@
+{
+ "variant": "worker",
+ "engine": "old-plantuml.js",
+ "loadMs": 59,
+ "readyMs": 76,
+ "phase1": {
+  "diagrams": 1,
+  "ids": [
+   "puml-1"
+  ],
+  "ms": 1631
+ },
+ "firstDiagramMs": 1494,
+ "phase2": {
+  "diagrams": 20,
+  "fragments": 35,
+  "svgs": 42,
+  "errors": [],
+  "ms": 8547
+ },
+ "longTasksPhase1": {
+  "count": 1,
+  "tbtMs": 8,
+  "maxMs": 58,
+  "tasksOver1s": 0
+ },
+ "longTasksPhase2": {
+  "count": 12,
+  "tbtMs": 94,
+  "maxMs": 76,
+  "tasksOver1s": 0
+ },
+ "interaction": {
+  "container": "puml-17",
+  "svgElements": 7551,
+  "ms": 883,
+  "workerRenders": 1,
+  "workerMs": 494,
+  "longTasks": 2,
+  "maxTaskMs": 241,
+  "tbtMs": 283
+ },
+ "workerStats": {
+  "renders": 43,
+  "workerMs": 32209,
+  "injectMs": 230
+ },
+ "jsHeapMB": 22
+}

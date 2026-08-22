@@ -63,7 +63,10 @@ public static class MergeableReportRenderer
             wholeTestVisualization: report.WholeTestVisualization,
             ciMetadata: report.CiMetadata,
             componentDiagramPlantUml: componentDiagramPlantUml,
-            precomputedWholeTestContent: report.WholeTestFlow.Count > 0 ? report.WholeTestFlow : null);
+            precomputedWholeTestContent: report.WholeTestFlow.Count > 0 ? report.WholeTestFlow : null,
+            browserRenderWorkers: options.BrowserRenderWorkers,
+            browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes,
+            browserFragmentMaxHeight: options.BrowserFragmentMaxHeight);
 
         // GenerateHtmlReport always writes under <BaseDir>/Reports/<fileName>; relocate to the
         // caller's requested path when different.

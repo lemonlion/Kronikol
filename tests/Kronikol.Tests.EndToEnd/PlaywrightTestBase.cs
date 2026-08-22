@@ -95,7 +95,10 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
         await Page.EvaluateAsync(
             "() => { if (window._renderDiagramsInContainer) window._renderDiagramsInContainer(document.body); }");
 
-        var svg = Page.Locator("[data-diagram-type='plantuml'] svg");
+        // The first svg in DOM order may live in a hidden container (the embedded component diagram
+        // section is display:none until toggled); wait for the first *visible* one — the worker path
+        // renders hidden diagrams at the same time as visible ones, so a DOM-order `.First` would race.
+        var svg = Page.Locator("[data-diagram-type='plantuml'] svg:visible");
         await svg.First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = timeoutMs });
         return svg.First;
     }

@@ -877,21 +877,134 @@ public class DiagramContextMenuTests
     private readonly string _plantUmlScript = DiagramContextMenu.GetPlantUmlBrowserRenderScript();
 
     [Fact]
-    public void PlantUml_CDN_scripts_use_defer_attribute()
+    public void PlantUml_engine_is_fetched_into_workers_not_loaded_by_script_tags()
     {
-        Assert.Contains("defer src=", _plantUmlScript);
-        Assert.DoesNotMatch("(?<!defer )src=\"[^\"]*viz-global\\.js\"", _plantUmlScript);
+        // The engine (7 MB) used to be two <script defer> tags — the page was not interactive until it had
+        // run. Now the shim fetches it as text and builds Blob workers from it; script tags are only the
+        // fallback the bootstrap injects itself when Workers/fetch are unavailable.
+        Assert.DoesNotContain("<script defer src=", _plantUmlScript);
+        Assert.Contains("fetch(", _plantUmlScript);
+        Assert.Contains("new Worker(", _plantUmlScript);
+        Assert.Contains("URL.createObjectURL(new Blob(", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched/viz-global.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched/plantuml.js", _plantUmlScript);
     }
 
     [Fact]
-    public void PlantumlLoad_called_inside_DOMContentLoaded_not_before()
+    public void Worker_bootstrap_is_registered_before_the_DOMContentLoaded_handler()
     {
-        // plantumlLoad must be called after deferred scripts have executed,
-        // which means inside the DOMContentLoaded handler
+        // The shim (window.plantuml, window.plantumlLoad, window.__kronikolRender) must exist before the
+        // DOMContentLoaded handler that starts rendering runs.
+        var bootstrapIndex = _plantUmlScript.IndexOf("window.__kronikolRender");
         var dclIndex = _plantUmlScript.IndexOf("DOMContentLoaded");
-        var loadIndex = _plantUmlScript.IndexOf("plantumlLoad()");
-        Assert.True(dclIndex >= 0 && loadIndex >= 0);
-        Assert.True(loadIndex > dclIndex, "plantumlLoad() should appear after DOMContentLoaded registration");
+        Assert.True(bootstrapIndex >= 0 && dclIndex >= 0);
+        Assert.True(bootstrapIndex < dclIndex, "worker bootstrap should be registered before the DOMContentLoaded handler");
+        // plantumlLoad() stays a callable no-op for anything that still calls it; the shim owns the engine.
+        Assert.Contains("window.plantumlLoad = function", _plantUmlScript);
+        Assert.Contains("window.plantuml = ", _plantUmlScript);
+        Assert.Contains("prefetch:", _plantUmlScript);
+    }
+
+    [Fact]
+    public void Render_script_bakes_in_worker_cache_and_fragment_settings()
+    {
+        var script = DiagramContextMenu.GetPlantUmlBrowserRenderScript(2, 16, 6000);
+        Assert.Contains("var WORKERS_REQUESTED = 2;", script);
+        Assert.Contains("var CACHE_MEGABYTES = 16;", script);
+        Assert.Contains("var _maxDiagramHeight = 6000;", script);
+        Assert.DoesNotContain("__BROWSER_", script);
+        Assert.DoesNotContain("__PLANTUML_", script);
+    }
+
+    [Fact]
+    public void Render_script_defaults_match_TrackingDefaults()
+    {
+        Assert.Contains("var WORKERS_REQUESTED = 4;", _plantUmlScript);
+        Assert.Contains("var CACHE_MEGABYTES = 64;", _plantUmlScript);
+        Assert.Contains("var _maxDiagramHeight = 12000;", _plantUmlScript);
+    }
+
+    [Fact]
+    public void Zero_workers_and_negative_values_select_the_main_thread_engine()
+    {
+        Assert.Contains("var WORKERS_REQUESTED = 0;", DiagramContextMenu.GetPlantUmlBrowserRenderScript(0, 64, 12000));
+        Assert.Contains("var WORKERS_REQUESTED = 0;", DiagramContextMenu.GetPlantUmlBrowserRenderScript(-3, 64, 12000));
+        // A non-positive fragment height is meaningless — the default stands.
+        Assert.Contains("var _maxDiagramHeight = 12000;", DiagramContextMenu.GetPlantUmlBrowserRenderScript(4, 64, 0));
+    }
+
+    [Fact]
+    public void Worker_host_is_inlined_as_a_JavaScript_string_that_cannot_close_the_script_tag()
+    {
+        // The host source is a JSON string literal inside the render script; `<` is escaped so the
+        // inlined source can never contain a literal `</script>`, and the page has exactly its own tags.
+        Assert.Contains("var WORKER_HOST_SOURCE = \"", _plantUmlScript);
+        Assert.Contains("__kronikolWorkerHost", _plantUmlScript);
+        var opens = System.Text.RegularExpressions.Regex.Matches(_plantUmlScript, "<script").Count;
+        var closes = System.Text.RegularExpressions.Regex.Matches(_plantUmlScript, "</script>").Count;
+        Assert.Equal(opens, closes);
+        Assert.Equal(2, opens);
+    }
+
+    [Fact]
+    public void Render_queue_keeps_several_fragments_in_flight_and_refills_its_slots()
+    {
+        // The queue used to be a boolean lock (one render at a time). With workers it is a counter
+        // bounded by the shim's maxParallel, refilled after every dispatch so all worker slots fill.
+        Assert.Contains("inFlight >= maxParallel()", _plantUmlScript);
+        Assert.Contains("setTimeout(processQueue, 0)", _plantUmlScript);
+        Assert.Contains("window._plantumlRendering = inFlight > 0", _plantUmlScript);
+        Assert.DoesNotContain("var rendering = false;", _plantUmlScript);
+    }
+
+    [Fact]
+    public void Render_failures_from_the_shim_take_the_same_path_as_a_synchronous_engine_throw()
+    {
+        // A worker error arrives asynchronously; processQueue hands the shim an onError so the too-large
+        // re-split retry and the "Raw PlantUML" failure block behave exactly as for a synchronous throw.
+        Assert.Contains("{ onError: handleRenderFailure }", _plantUmlScript);
+        Assert.Contains("function handleRenderFailure(", _plantUmlScript);
+        Assert.Contains("Diagram too large for client-side rendering.", _plantUmlScript);
+        Assert.Contains("<summary>Raw PlantUML</summary>", _plantUmlScript);
+    }
+
+    [Fact]
+    public void Shim_falls_back_to_script_tags_when_workers_or_fetch_are_unavailable()
+    {
+        Assert.Contains("function useMainThreadEngine(", _plantUmlScript);
+        Assert.Contains("typeof Worker", _plantUmlScript);
+        Assert.Contains("typeof OffscreenCanvas", _plantUmlScript);
+        Assert.Contains("telemetry.mode = 'main-thread'", _plantUmlScript);
+        Assert.Contains("'BrowserRenderWorkers = '", _plantUmlScript);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Collapsible notes — re-render paths use the shim's cache/prefetch
+    // ═══════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Note_toggle_paths_prefetch_their_new_fragments_in_parallel()
+    {
+        // setNoteState (fragQueue) and processRenderQueue (fragList) both build the list of new fragments
+        // and then render them one by one; prefetching the list first lets the workers render them in
+        // parallel so the sequential loop is a series of cache hits.
+        Assert.Contains("window.plantuml.prefetch(fragQueue.map(function (f) { return f.source; }))", _notesScript);
+        Assert.Contains("window.plantuml.prefetch(fragList.map(function (f) { return f.source; }))", _notesScript);
+    }
+
+    [Fact]
+    public void SetNoteState_fragment_render_completes_on_engine_text_and_never_caches_a_failure()
+    {
+        // processRenderQueue already treated any engine output (svg OR failure text) as completion and
+        // refused to cache a failure; setNoteState's fragment loop waited for an <svg> only, so a
+        // too-large fragment (text, no svg) or a shim error left _noteRendering stuck forever.
+        var start = _notesScript.IndexOf("function setNoteState(");
+        var end = _notesScript.IndexOf("function processRenderQueue(");
+        var setNoteState = _notesScript.Substring(start, end - start);
+        Assert.Contains("if (!item.el.querySelector('svg') && !(item.el.textContent || '').trim()) return;", setNoteState);
+        Assert.Contains("window._describeEngineFailure(item.el, item.source)", setNoteState);
+        Assert.Contains("if (!failed && item.el.querySelector('svg')) _svgCache[item.source] = item.el.innerHTML;", setNoteState);
+        Assert.Contains("Render timed out for this fragment.", setNoteState);
     }
 
     // ═══════════════════════════════════════════════════════════

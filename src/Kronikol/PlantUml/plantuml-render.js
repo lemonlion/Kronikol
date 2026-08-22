@@ -1,7 +1,16 @@
-// PlantUML Node.js renderer for Kronikol CI summaries
-// Usage: node plantuml-render.js <viz-global.js-path> <plantuml.js-path>
-// stdin: PlantUML source code (one diagram)
-// stdout: SVG output
+// PlantUML Node.js renderer for Kronikol (CI summaries, PlantUmlRendering.NodeJs)
+// Usage:
+//   node plantuml-render.js <viz-global.js-path> <plantuml.js-path>
+//       stdin: PlantUML source code (one diagram) — stdout: SVG
+//   node plantuml-render.js <viz-global.js-path> <plantuml.js-path> --batch
+//       stdin: NDJSON, one {"id":"…","source":"@startuml…"} per line
+//       stdout: NDJSON, one {"id":"…","svg":"<svg…"} or {"id":"…","error":"…"} per line, in input order
+//       One process renders every diagram of a report: node start, engine compile, engine top-level and
+//       the cold JIT (0.8–1.4 s together) are paid once instead of once per diagram. Each render gets its
+//       own target element id — TeaVM keeps global state and leaks between targets that share an id.
+// Both modes compile plantuml.js through vm.Script with V8 cached data kept next to the engine
+// (<plantuml.js>.v8cache, written on first run; ~160 ms → ~1 ms). A cache V8 rejects (node/V8 upgrade)
+// is regenerated. stderr carries "[plantuml-render] code cache: hit|miss|rejected" for diagnostics.
 //
 // Both viz-global.js and plantuml.js are designed for browsers (<script> tags).
 // We load them via vm.runInThisContext to simulate browser <script> tag loading,
@@ -16,6 +25,7 @@ var vm = require('vm');
 var fs = require('fs');
 var path = require('path');
 var urlModule = require('url');
+var readline = require('readline');
 
 // --- Minimal DOM polyfills for plantuml.js (TeaVM-compiled) ---
 
@@ -153,6 +163,9 @@ var mockDocument = {
     createTextNode: function(text) {
         return { nodeType: 3, nodeValue: text, textContent: text, data: text };
     },
+    createProcessingInstruction: function(target, data) {
+        return { nodeType: 7, target: target, data: data, textContent: '' };
+    },
     createDocumentFragment: function() { return new MockElement('fragment'); },
     createEvent: function() { return { initEvent: function() {} }; },
     body: new MockElement('body'),
@@ -170,9 +183,10 @@ var mockDocument = {
 
 var vizPath = process.argv[2];
 var plantumlPath = process.argv[3];
+var batchMode = process.argv.indexOf('--batch', 4) >= 0;
 
 if (!vizPath || !plantumlPath) {
-    process.stderr.write('Usage: node plantuml-render.js <viz-global.js> <plantuml.js>\n');
+    process.stderr.write('Usage: node plantuml-render.js <viz-global.js> <plantuml.js> [--batch]\n');
     process.exit(1);
 }
 
@@ -223,13 +237,30 @@ function loadScript(filePath) {
     vm.runInThisContext(code, { filename: filePath });
 }
 
-// Read stdin in parallel with initialization
-var inputResolve;
-var inputPromise = new Promise(function(resolve) { inputResolve = resolve; });
-var input = '';
-process.stdin.setEncoding('utf8');
-process.stdin.on('data', function(chunk) { input += chunk; });
-process.stdin.on('end', function() { inputResolve(input); });
+// The engine is compiled through vm.Script so V8's code cache can be reused across processes: the
+// cache lives next to the engine file, is produced after the first run (so it covers the functions the
+// run compiled lazily) and is thrown away and rebuilt when V8 rejects it (a node upgrade, a changed file).
+function loadEngineWithCodeCache(filePath) {
+    var code = fs.readFileSync(filePath, 'utf8');
+    var cachePath = filePath + '.v8cache';
+    var cached = null;
+    try { cached = fs.readFileSync(cachePath); } catch (_) { cached = null; }
+    var script;
+    try {
+        script = new vm.Script(code, { filename: filePath, cachedData: cached || undefined });
+    } catch (e) {
+        script = new vm.Script(code, { filename: filePath });
+        cached = null;
+    }
+    var status = !cached ? 'miss' : (script.cachedDataRejected ? 'rejected' : 'hit');
+    script.runInThisContext();
+    if (status !== 'hit') {
+        try { fs.writeFileSync(cachePath, script.createCachedData()); }
+        catch (e) { process.stderr.write('[plantuml-render] code cache not written: ' + (e && e.message || e) + '\n'); }
+    }
+    process.stderr.write('[plantuml-render] code cache: ' + status + '\n');
+    return status;
+}
 
 // --- Phase 1: Load viz-global.js ---
 var vizScript = new MockElement('script');
@@ -263,77 +294,85 @@ var vizReady = globalThis.Viz.instance().then(function(viz) {
     process.exit(1);
 });
 
-// --- Phase 3: Once WASM is ready, load plantuml.js and render ---
-Promise.all([vizReady, inputPromise]).then(function(results) {
-    var plantUml = results[1];
-
+// --- Phase 3: Once WASM is ready, load plantuml.js and get the renderer ---
+var rendererReady = vizReady.then(function() {
     // Suppress console.log during plantuml.js load & render — the PlantUML engine
     // writes verbose debug/trace logs (e.g. "[14 ms] PlantUML version ...",
     // "[PSystemBuilder2] createDiagram start") to console.log, which would pollute
     // the SVG output on stdout.
-    var origLog = console.log;
     console.log = function() {};
 
-    loadScript(plantumlPath);
+    loadEngineWithCodeCache(plantumlPath);
 
     var loadFn = globalThis.plantumlLoad;
     if (!loadFn) {
         process.stderr.write('ERROR: plantumlLoad not found after loading plantuml.js\n');
         process.exit(1);
     }
-
-    // Set up render target
-    var targetId = '_render_target';
-    var target = new MockElement('div');
-    target.id = targetId;
-    target.ownerDocument = mockDocument;
-    global._mockElements[targetId] = target;
-
-    // Track SVG result via innerHTML setter and appendChild
-    var svgResult = '';
-    Object.defineProperty(target, 'innerHTML', {
-        get: function() { return svgResult; },
-        set: function(value) { svgResult = value; },
-        configurable: true
+    return new Promise(function(resolve) {
+        loadFn([], function() {
+            var renderer = globalThis.plantuml;
+            if (!renderer || typeof renderer.render !== 'function') {
+                process.stderr.write('ERROR: plantuml.render not available\n');
+                process.exit(1);
+            }
+            resolve(renderer);
+        });
     });
-    var origAppendChild = target.appendChild.bind(target);
-    target.appendChild = function(child) {
-        origAppendChild(child);
-        // PlantUML builds SVG via DOM APIs; serialize the appended tree
-        var s = serializeElement(child);
-        if (s && s.indexOf('<svg') !== -1) {
-            svgResult = s;
+});
+
+// Render one diagram into a fresh target element; resolves with the SVG string, rejects with the
+// engine's error (a synchronous throw, the text it writes for "Diagram too large…", or a timeout).
+var renderSeq = 0;
+function renderOne(renderer, plantUml) {
+    return new Promise(function(resolve, reject) {
+        var targetId = '_render_target_' + (++renderSeq);
+        var target = new MockElement('div');
+        target.id = targetId;
+        target.ownerDocument = mockDocument;
+        global._mockElements[targetId] = target;
+
+        // Track SVG result via innerHTML setter and appendChild
+        var svgResult = '';
+        var textResult = '';
+        Object.defineProperty(target, 'innerHTML', {
+            get: function() { return svgResult; },
+            set: function(value) { svgResult = value; },
+            configurable: true
+        });
+        Object.defineProperty(target, 'textContent', {
+            get: function() { return textResult; },
+            set: function(value) { textResult = String(value == null ? '' : value); },
+            configurable: true
+        });
+        var origAppendChild = target.appendChild.bind(target);
+        target.appendChild = function(child) {
+            origAppendChild(child);
+            // PlantUML builds SVG via DOM APIs; serialize the appended tree
+            var s = serializeElement(child);
+            if (s && s.indexOf('<svg') !== -1) {
+                svgResult = s;
+            }
+            return child;
+        };
+
+        var settled = false;
+        function done(err, svg) {
+            if (settled) return;
+            settled = true;
+            delete global._mockElements[targetId];
+            if (err) reject(err); else resolve(svg);
         }
-        return child;
-    };
 
-    loadFn([], function() {
-        var renderer = globalThis.plantuml;
-        if (!renderer || typeof renderer.render !== 'function') {
-            process.stderr.write('ERROR: plantuml.render not available\n');
-            process.exit(1);
-        }
-
-        var lines = plantUml.replace(/\r\n/g, '\n').trim().split('\n');
-
+        var lines = String(plantUml).replace(/\r\n/g, '\n').trim().split('\n');
         try {
             renderer.render(lines, targetId);
         } catch (e) {
-            process.stderr.write('ERROR during render: ' + (e.stack || e.message) + '\n');
-            process.exit(1);
+            done(new Error('ERROR during render: ' + (e && (e.stack || e.message) || e)));
+            return;
         }
 
-        // Check synchronous result
-        if (svgResult && svgResult.indexOf('<svg') !== -1) {
-            process.stdout.write(svgResult);
-            process.exit(0);
-        }
-
-        // Poll for async result (plantuml.js renders asynchronously via TeaVM threads)
-        var attempts = 0;
-        var maxAttempts = 400; // 20 seconds max
-        var check = function() {
-            // Also check target's children in case appendChild wasn't intercepted
+        function collect() {
             if (!svgResult || svgResult.indexOf('<svg') === -1) {
                 if (target.childNodes.length > 0) {
                     var built = '';
@@ -345,19 +384,111 @@ Promise.all([vizReady, inputPromise]).then(function(results) {
                     }
                 }
             }
-            if (svgResult && svgResult.indexOf('<svg') !== -1) {
-                process.stdout.write(svgResult);
-                process.exit(0);
+            return svgResult && svgResult.indexOf('<svg') !== -1;
+        }
+
+        // Check synchronous result
+        if (collect()) { done(null, svgResult); return; }
+
+        // Poll for async result (plantuml.js renders asynchronously via TeaVM threads)
+        var attempts = 0;
+        var maxAttempts = 400; // 20 seconds max
+        var check = function() {
+            if (collect()) { done(null, svgResult); return; }
+            // The engine writes some failures as text instead of an <svg> ("java.lang.RuntimeException:
+            // Diagram too large for browser rendering: …"): that is the answer, not a reason to wait.
+            var text = (textResult || '').trim();
+            if (!text) {
+                for (var i = 0; i < target.childNodes.length; i++) {
+                    var c = target.childNodes[i];
+                    if (c && c.nodeType === 3) text += (c.textContent || c.data || '');
+                }
+                text = text.trim();
             }
+            if (text) { done(new Error(text)); return; }
             if (++attempts > maxAttempts) {
-                process.stderr.write('ERROR: Timed out waiting for SVG render (' + maxAttempts * 50 + 'ms)\n');
-                process.exit(1);
+                done(new Error('ERROR: Timed out waiting for SVG render (' + maxAttempts * 50 + 'ms)'));
+                return;
             }
             setTimeout(check, 50);
         };
         setTimeout(check, 50);
     });
-}).catch(function(err) {
-    process.stderr.write('FATAL: ' + (err && err.stack || err) + '\n');
-    process.exit(1);
-});
+}
+
+if (batchMode) {
+    // --- Batch: NDJSON in, NDJSON out, sequential (TeaVM keeps global state), errors isolated per line ---
+    var pendingLines = [];
+    var inputClosed = false;
+    var rendererRef = null;
+    var draining = false;
+    var inputResolveBatch;
+    var inputDone = new Promise(function(resolve) { inputResolveBatch = resolve; });
+    var rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
+    rl.on('line', function(line) { if (line.trim()) { pendingLines.push(line); drain(); } });
+    rl.on('close', function() { inputClosed = true; inputResolveBatch(); drain(); });
+    process.stdin.setEncoding('utf8');
+
+    function writeLine(obj) { process.stdout.write(JSON.stringify(obj) + '\n'); }
+
+    function drain() {
+        if (draining || !rendererRef) return;
+        if (pendingLines.length === 0) {
+            if (inputClosed) finishBatch();
+            return;
+        }
+        draining = true;
+        var line = pendingLines.shift();
+        var item;
+        try { item = JSON.parse(line); } catch (e) {
+            writeLine({ id: null, error: 'Malformed batch line: ' + (e && e.message || e) });
+            draining = false; drain(); return;
+        }
+        var id = item && item.id != null ? String(item.id) : null;
+        if (!item || typeof item.source !== 'string') {
+            writeLine({ id: id, error: 'Batch line has no "source" string' });
+            draining = false; drain(); return;
+        }
+        renderOne(rendererRef, item.source).then(function(svg) {
+            writeLine({ id: id, svg: svg });
+        }, function(err) {
+            writeLine({ id: id, error: String(err && err.message || err) });
+        }).then(function() { draining = false; drain(); });
+    }
+
+    function finishBatch() {
+        // Flush stdout before exiting — a pipe may still hold the last lines.
+        process.stdout.write('', function() { process.exit(0); });
+    }
+
+    rendererReady.then(function(renderer) {
+        rendererRef = renderer;
+        drain();
+    }).catch(function(err) {
+        process.stderr.write('FATAL: ' + (err && err.stack || err) + '\n');
+        process.exit(1);
+    });
+} else {
+    // --- Single diagram: stdin source, stdout svg ---
+    // Read stdin in parallel with initialization
+    var inputResolve;
+    var inputPromise = new Promise(function(resolve) { inputResolve = resolve; });
+    var input = '';
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', function(chunk) { input += chunk; });
+    process.stdin.on('end', function() { inputResolve(input); });
+
+    Promise.all([rendererReady, inputPromise]).then(function(results) {
+        var renderer = results[0];
+        var plantUml = results[1];
+        return renderOne(renderer, plantUml).then(function(svg) {
+            process.stdout.write(svg, function() { process.exit(0); });
+        }, function(err) {
+            process.stderr.write((err && err.message || String(err)) + '\n');
+            process.exit(1);
+        });
+    }).catch(function(err) {
+        process.stderr.write('FATAL: ' + (err && err.stack || err) + '\n');
+        process.exit(1);
+    });
+}

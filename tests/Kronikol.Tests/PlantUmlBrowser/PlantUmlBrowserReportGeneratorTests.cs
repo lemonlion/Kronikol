@@ -185,7 +185,7 @@ public class PlantUmlBrowserReportGeneratorTests
     }
 
     [Fact]
-    public void PlantUmlBrowser_report_contains_plantumlLoad_call()
+    public void PlantUmlBrowser_report_defines_the_worker_shim_and_a_plantumlLoad_noop()
     {
         var html = ReportGenerator.GenerateHtmlReport(
             MakePlantUmlBrowserDiagrams(), MakeFeatures(),
@@ -194,7 +194,27 @@ public class PlantUmlBrowserReportGeneratorTests
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
         var content = File.ReadAllText(html);
-        Assert.Contains("plantumlLoad()", content);
+        // The engine runs in Web Workers; window.plantumlLoad stays a no-op for compatibility and
+        // window.__kronikolRender exposes the render telemetry (mode, workers, renders, cache hits).
+        Assert.Contains("window.plantumlLoad = function", content);
+        Assert.Contains("window.__kronikolRender", content);
+        Assert.Contains("var WORKERS_REQUESTED = 4;", content);
+    }
+
+    [Fact]
+    public void PlantUmlBrowser_report_honours_browser_render_options()
+    {
+        var html = ReportGenerator.GenerateHtmlReport(
+            MakePlantUmlBrowserDiagrams(), MakeFeatures(),
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, "PlantUmlBrowserRenderOptions.html", "Test", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            browserRenderWorkers: 0, browserRenderCacheMegabytes: 8, browserFragmentMaxHeight: 5000);
+
+        var content = File.ReadAllText(html);
+        Assert.Contains("var WORKERS_REQUESTED = 0;", content);
+        Assert.Contains("var CACHE_MEGABYTES = 8;", content);
+        Assert.Contains("var _maxDiagramHeight = 5000;", content);
     }
 
     [Fact]

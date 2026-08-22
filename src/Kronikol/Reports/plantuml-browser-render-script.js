@@ -1,16 +1,406 @@
-<script defer src="__PLANTUML_CDN_BASE__/viz-global.js"></script>
-<script defer src="__PLANTUML_CDN_BASE__/plantuml.js"></script>
+<script>
+    // Kronikol browser rendering — engine bootstrap and render shim.
+    //
+    // The TeaVM plantuml.js engine (7 MB, plus 1.4 MB of Graphviz) used to be two deferred script tags:
+    // the page was not interactive until it had compiled, every diagram rendered on the main thread,
+    // and a note toggle on a big diagram froze the page for seconds. Now the engine runs in Web
+    // Workers: this shim fetches viz-global.js + plantuml.js as text, inlines them with the worker host
+    // (WORKER_HOST_SOURCE, plantuml-worker-host.js) into ONE Blob and creates workers from it — a Blob
+    // worker created by a file:// page cannot load anything over the network, and Chrome refuses
+    // new Worker('file://…'), which is why the page does the fetching. One worker starts immediately;
+    // the rest (up to BrowserRenderWorkers, capped by hardwareConcurrency) start lazily once the first
+    // render has completed, so parallel engine compiles never delay the first diagram.
+    //
+    // Public surface (unchanged for every caller — the render queue below, collapsible-notes-script.js,
+    // internal-flow-popup-script.js):
+    //   window.plantuml.render(lines, targetId[, { onError }])  — renders into #targetId; the result
+    //       lands via `el.innerHTML = svg`, which fires the caller's MutationObserver exactly as the
+    //       engine's own DOM insertion did. A cache hit is served synchronously. A failure either goes
+    //       to onError(message) (return true to take over the element) or is written into the element
+    //       as the same markup the synchronous engine throw produced.
+    //   window.plantuml.prefetch(sources)  — render every uncached source with no target; results go to
+    //       the cache (the note-toggle paths call this with their new fragment list).
+    //   window.plantuml.maxParallel  — how many renders the queue may keep in flight.
+    //   window.plantumlLoad()  — a no-op kept for compatibility; the shim owns the engine lifecycle.
+    //   window.__kronikolRender  — telemetry: { mode: 'worker' | 'main-thread', workers, renders,
+    //       cacheHits, workerMs, injectMs, errors, inFlight, maxInFlight, engineFetchMs, fallbackReason }.
+    //
+    // Fallback: when Workers, fetch, Blob URLs or OffscreenCanvas are unavailable, when
+    // BrowserRenderWorkers is 0, or when the engine cannot be fetched (offline with a cold cache, a CDN
+    // host without CORS), the shim injects the two script tags and renders on the main thread — the
+    // pre-3.0.45 path, one render at a time.
+    (function () {
+        var VIZ_URL = '__PLANTUML_CDN_BASE__/viz-global.js';
+        var ENGINE_URL = '__PLANTUML_CDN_BASE__/plantuml.js';
+        var WORKERS_REQUESTED = __BROWSER_RENDER_WORKERS__;
+        var CACHE_MEGABYTES = __BROWSER_RENDER_CACHE_MB__;
+        var WORKER_HOST_SOURCE = __PLANTUML_WORKER_HOST_SOURCE__;
+        var CACHE_LIMIT = Math.max(0, CACHE_MEGABYTES) * 1024 * 1024;
+        var hardware = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 2;
+        var targetWorkers = WORKERS_REQUESTED > 0 ? Math.max(1, Math.min(WORKERS_REQUESTED, hardware)) : 0;
+
+        var telemetry = window.__kronikolRender = {
+            mode: 'starting', workers: 0, workersRequested: WORKERS_REQUESTED, workersTarget: targetWorkers,
+            renders: 0, cacheHits: 0, cacheEntries: 0, cacheBytes: 0, workerMs: 0, injectMs: 0, errors: 0,
+            inFlight: 0, maxInFlight: 0, engineFetchMs: null, engineReadyAt: null, fallbackReason: null
+        };
+
+        var mode = null;            // null (undecided) | 'worker' | 'main-thread'
+        var workers = [];           // { w, busy, ready }
+        var pending = {};           // seq -> job handed to a worker
+        var queue = [];             // jobs waiting for a free worker / the main-thread engine
+        var inflightByKey = {};     // source -> job (dedupe: a second render of the same source just adds a target)
+        var seq = 0;
+        var firstDone = false;
+        var blobUrl = null;
+        var esmMode = false;
+        var engineRender = null;    // main-thread mode: the real engine's render
+        var engineReady = false;
+        var engineError = null;
+        var mainBusy = false;
+        var cache = new Map();      // source -> svg string, insertion order = LRU order
+        var cacheBytes = 0;
+
+        function noop() {}
+        function now() { return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); }
+        function workerCapable() { return mode !== 'main-thread' && targetWorkers > 0; }
+        function normalizeLines(lines) {
+            if (Array.isArray(lines)) return lines.map(function (l) { return String(l); });
+            return String(lines == null ? '' : lines).split('\n');
+        }
+        function newJob(key, lines, targets) { return { seq: ++seq, key: key, lines: lines, targets: targets, worker: null }; }
+
+        // --- cache (bytes-bounded, least-recently-used first) ---------------------------------
+        function cacheGet(key) {
+            if (!cache.has(key)) return undefined;
+            var v = cache.get(key); cache.delete(key); cache.set(key, v);
+            return v;
+        }
+        function cacheEvict() {
+            while (cacheBytes > CACHE_LIMIT && cache.size > 0) {
+                var oldest = cache.keys().next().value;
+                cacheBytes -= oldest.length + cache.get(oldest).length;
+                cache.delete(oldest);
+            }
+            telemetry.cacheEntries = cache.size; telemetry.cacheBytes = cacheBytes;
+        }
+        function cachePut(key, svg) {
+            // Only real results: a failure the engine wrote as text is described per element, never cached.
+            if (CACHE_LIMIT <= 0 || typeof svg !== 'string' || svg.indexOf('<svg') < 0) return;
+            var size = key.length + svg.length;
+            if (size > CACHE_LIMIT) return;
+            if (cache.has(key)) { cacheBytes -= key.length + cache.get(key).length; cache.delete(key); }
+            cache.set(key, svg); cacheBytes += size;
+            cacheEvict();
+        }
+
+        // --- writing results and failures into the page ---------------------------------------
+        function resolveTarget(t) { return t.el || (t.id ? document.getElementById(t.id) : null); }
+        function inject(targets, svg) {
+            var t0 = now();
+            for (var i = 0; i < targets.length; i++) {
+                var el = resolveTarget(targets[i]);
+                if (el) el.innerHTML = svg;
+            }
+            telemetry.injectMs += now() - t0;
+        }
+        function tooLargeMarkup(source) {
+            return '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
+                + '<strong>Diagram too large for client-side rendering.</strong><br>'
+                + 'Use <code>PlantUmlRendering.Server</code> or <code>PlantUmlRendering.Local</code> for large diagrams.'
+                + '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
+                + String(source || '').replace(/</g, '&lt;') + '</pre></details></div>';
+        }
+        function writeFailure(target, source, message) {
+            message = String(message == null ? '' : message);
+            if (target.opts && typeof target.opts.onError === 'function') {
+                try { if (target.opts.onError(message) === true) return; } catch (e) { console.error('Kronikol render onError failed:', e); }
+            }
+            var el = resolveTarget(target);
+            if (!el) return;
+            if (/too large/i.test(message)) el.innerHTML = tooLargeMarkup(source);
+            else el.textContent = 'Render error: ' + message;
+        }
+
+        // --- worker mode ----------------------------------------------------------------------
+        function busyCount() { var n = 0; for (var i = 0; i < workers.length; i++) if (workers[i].busy) n++; return n; }
+        function readyCount() { var n = 0; for (var i = 0; i < workers.length; i++) if (workers[i].ready) n++; return n; }
+        function idleWorker() { for (var i = 0; i < workers.length; i++) if (workers[i].ready && !workers[i].busy) return workers[i]; return null; }
+
+        function startWorker() {
+            var w;
+            try { w = new Worker(blobUrl); } catch (e) { useMainThreadEngine('worker creation failed: ' + (e && e.message ? e.message : e)); return null; }
+            var rec = { w: w, busy: false, ready: false };
+            w.onmessage = function (ev) { onWorkerMessage(rec, ev.data || {}); };
+            w.onerror = function (ev) {
+                var msg = (ev && ev.message) ? ev.message : 'worker error';
+                if (!rec.ready) workerDied(rec, msg); else console.error('Kronikol render worker: ' + msg);
+            };
+            workers.push(rec);
+            w.postMessage({ type: 'init', esm: esmMode });
+            return rec;
+        }
+        function workerDied(rec, message) {
+            console.error('Kronikol render worker failed: ' + message);
+            var i = workers.indexOf(rec);
+            if (i >= 0) workers.splice(i, 1);
+            try { rec.w.terminate(); } catch (e) { /* best effort */ }
+            // Whatever it was rendering goes back to the front of the queue.
+            var keys = Object.keys(pending);
+            for (var k = 0; k < keys.length; k++) {
+                var job = pending[keys[k]];
+                if (job.worker === rec) { delete pending[keys[k]]; job.worker = null; queue.unshift(job); }
+            }
+            telemetry.workers = readyCount(); telemetry.inFlight = busyCount();
+            if (workers.length === 0) useMainThreadEngine('render worker failed: ' + message);
+            else pumpWorkers();
+        }
+        function onWorkerMessage(rec, m) {
+            if (m.type === 'ready') {
+                rec.ready = true; telemetry.workers = readyCount();
+                if (telemetry.engineReadyAt === null) telemetry.engineReadyAt = now();
+                pumpWorkers();
+                return;
+            }
+            if (m.type === 'fatal') { workerDied(rec, m.message); return; }
+            var job = pending[m.seq];
+            if (!job) return;
+            delete pending[m.seq];
+            rec.busy = false; job.worker = null;
+            if (inflightByKey[job.key] === job) delete inflightByKey[job.key];
+            telemetry.inFlight = busyCount();
+            if (m.type === 'done') {
+                telemetry.renders++; telemetry.workerMs += m.ms || 0;
+                cachePut(job.key, m.svg);
+                inject(job.targets, m.svg);
+                if (!firstDone) firstDone = true;
+            } else if (m.type === 'error') {
+                telemetry.errors++;
+                for (var i = 0; i < job.targets.length; i++) writeFailure(job.targets[i], job.key, m.message);
+            }
+            pumpWorkers();
+        }
+        function pumpWorkers() {
+            if (mode !== 'worker') return;
+            while (queue.length > 0) {
+                var rec = idleWorker();
+                if (!rec) {
+                    // Start further workers only once the first render is done (parallel engine compiles
+                    // would delay the first diagram) and only when there is work waiting for them.
+                    if (firstDone && workers.length < targetWorkers) startWorker();
+                    return;
+                }
+                var job = queue.shift();
+                rec.busy = true; job.worker = rec; pending[job.seq] = job;
+                telemetry.inFlight = busyCount();
+                if (telemetry.inFlight > telemetry.maxInFlight) telemetry.maxInFlight = telemetry.inFlight;
+                rec.w.postMessage({ type: 'render', seq: job.seq, id: 'k' + job.seq, lines: job.lines });
+            }
+        }
+
+        function fetchText(url) {
+            return fetch(url).then(function (r) {
+                if (!r.ok) throw new Error(url + ' -> HTTP ' + r.status);
+                return r.text();
+            });
+        }
+        function acquireEngine() {
+            var tf = now();
+            Promise.all([fetchText(VIZ_URL), fetchText(ENGINE_URL)]).then(function (parts) {
+                telemetry.engineFetchMs = Math.round(now() - tf);
+                if (mode === 'main-thread') return;
+                var viz = parts[0], engine = parts[1];
+                // An ES-module engine build (the npm @plantuml/core line) ends in `export { X as render,
+                // Y as renderToString }`; a classic worker cannot evaluate that, so expose the exports instead.
+                var tail = engine.slice(-300);
+                var em = /export\s*\{\s*([A-Za-z_$][\w$]*)\s+as\s+render\s*,\s*([A-Za-z_$][\w$]*)\s+as\s+renderToString\s*\}\s*;?\s*$/.exec(tail);
+                if (em) {
+                    esmMode = true;
+                    engine = engine.slice(0, engine.length - tail.length + em.index) + 'self.__plantumlExports = { render: ' + em[1] + ', renderToString: ' + em[2] + ' };\n';
+                }
+                // Graphviz is only used for non-sequence diagrams: a failure there must not take the
+                // sequence diagrams down with it.
+                var src = WORKER_HOST_SOURCE
+                    + '\n;try {\n' + viz + '\n} catch (e) { console.error("Kronikol: viz-global failed: " + e); }\n'
+                    + ';(function () {\n' + engine + '\n})();\n';
+                blobUrl = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
+                mode = 'worker'; telemetry.mode = 'worker';
+                startWorker();
+            }).catch(function (e) {
+                useMainThreadEngine('engine fetch failed: ' + (e && e.message ? e.message : e));
+            });
+        }
+
+        // --- main-thread mode (the legacy path) -----------------------------------------------
+        function useMainThreadEngine(reason) {
+            if (mode === 'main-thread') return;
+            mode = 'main-thread'; telemetry.mode = 'main-thread'; telemetry.fallbackReason = reason || null;
+            for (var i = 0; i < workers.length; i++) { try { workers[i].w.terminate(); } catch (e) { /* best effort */ } }
+            workers = []; telemetry.workers = 0; telemetry.inFlight = 0;
+            if (blobUrl) { try { URL.revokeObjectURL(blobUrl); } catch (e) { /* best effort */ } blobUrl = null; }
+            // Everything in flight goes back to the front of the queue. Dedupe and prefetch only make
+            // sense with workers: fan jobs out to one per target and drop the target-less prefetches.
+            var requeue = [];
+            var keys = Object.keys(pending);
+            for (var k = 0; k < keys.length; k++) requeue.push(pending[keys[k]]);
+            pending = {};
+            requeue.sort(function (a, b) { return a.seq - b.seq; });
+            queue = requeue.concat(queue);
+            inflightByKey = {};
+            var expanded = [];
+            for (var q = 0; q < queue.length; q++) {
+                for (var t = 0; t < queue[q].targets.length; t++) expanded.push(newJob(queue[q].key, queue[q].lines, [queue[q].targets[t]]));
+            }
+            queue = expanded;
+            loadEngineScripts();
+        }
+        function addScript(src) {
+            return new Promise(function (resolve, reject) {
+                var s = document.createElement('script');
+                s.src = src; s.async = false;
+                s.onload = function () { resolve(); };
+                s.onerror = function () { reject(new Error('failed to load ' + src)); };
+                (document.head || document.documentElement).appendChild(s);
+            });
+        }
+        function loadEngineScripts() {
+            addScript(VIZ_URL).catch(function (e) { console.error('Kronikol: ' + e.message); });
+            addScript(ENGINE_URL).then(function () {
+                var realLoad = window.plantumlLoad;
+                window.plantumlLoad = noop;
+                if (typeof realLoad !== 'function' || realLoad === noop) throw new Error('plantumlLoad is not defined after loading ' + ENGINE_URL);
+                return new Promise(function (resolve, reject) {
+                    var timer = setTimeout(function () { reject(new Error('engine initialisation timed out')); }, 120000);
+                    realLoad([], function () { clearTimeout(timer); resolve(); });
+                });
+            }).then(function () {
+                // The engine does `window.plantuml = window.plantuml || {}` and sets .render on it — on
+                // our shim object. Keep the real render, put the shim's back.
+                var real = window.plantuml && window.plantuml.render;
+                if (typeof real !== 'function' || real === shimRender) throw new Error('plantuml.render is missing after plantumlLoad');
+                engineRender = real;
+                window.plantuml = shim; shim.render = shimRender;
+                engineReady = true;
+                if (telemetry.engineReadyAt === null) telemetry.engineReadyAt = now();
+                pumpMain();
+            }).catch(function (e) { engineFailed(e); });
+        }
+        function engineFailed(e) {
+            engineError = e;
+            var message = 'PlantUML engine unavailable: ' + (e && e.message ? e.message : e);
+            telemetry.fallbackReason = (telemetry.fallbackReason ? telemetry.fallbackReason + '; ' : '') + message;
+            console.error('Kronikol: ' + message);
+            var failed = queue; queue = [];
+            for (var i = 0; i < failed.length; i++) {
+                for (var t = 0; t < failed[i].targets.length; t++) writeFailure(failed[i].targets[t], failed[i].key, message);
+            }
+        }
+        function pumpMain() {
+            if (mainBusy || !engineReady || queue.length === 0) return;
+            var job = queue.shift();
+            var target = job.targets[0];
+            var el = target ? resolveTarget(target) : null;
+            if (!el) { pumpMain(); return; }
+            mainBusy = true;
+            var done = false;
+            var mo = new MutationObserver(function () { finish(); });
+            var timer = setTimeout(finish, 60000);
+            function finish() {
+                if (done) return;
+                done = true; mainBusy = false;
+                clearTimeout(timer); mo.disconnect();
+                setTimeout(pumpMain, 0);
+            }
+            mo.observe(el, { childList: true, subtree: true });
+            telemetry.renders++;
+            try {
+                engineRender(job.lines, target.id || el.id);
+            } catch (e) {
+                writeFailure(target, job.key, e && e.message ? e.message : e);
+                finish();
+            }
+        }
+
+        // --- the shim -------------------------------------------------------------------------
+        function shimRender(lines, id, opts) {
+            lines = normalizeLines(lines);
+            var key = lines.join('\n');
+            var target = { el: id ? document.getElementById(id) : null, id: id || null, opts: opts || null };
+            if (engineError) { writeFailure(target, key, 'PlantUML engine unavailable: ' + (engineError.message || engineError)); return; }
+            if (workerCapable()) {
+                var hit = cacheGet(key);
+                if (hit !== undefined) { telemetry.cacheHits++; inject([target], hit); return; }
+                var running = inflightByKey[key];
+                if (running) { running.targets.push(target); return; }
+                var job = newJob(key, lines, [target]);
+                inflightByKey[key] = job;
+                queue.push(job);
+                pumpWorkers();
+                return;
+            }
+            queue.push(newJob(key, lines, [target]));
+            pumpMain();
+        }
+        function shimPrefetch(sources) {
+            if (!workerCapable() || !sources || !sources.length) return;
+            for (var i = 0; i < sources.length; i++) {
+                var src = sources[i];
+                if (typeof src !== 'string' || !src) continue;
+                if (cache.has(src) || inflightByKey[src]) continue;
+                var job = newJob(src, src.split('\n'), []);
+                inflightByKey[src] = job;
+                queue.push(job);
+            }
+            pumpWorkers();
+        }
+        var shim = {
+            render: shimRender,
+            prefetch: shimPrefetch,
+            get maxParallel() { return (mode === 'main-thread' || targetWorkers === 0) ? 1 : targetWorkers; },
+            cacheStats: function () { return { entries: cache.size, bytes: cacheBytes, limit: CACHE_LIMIT, hits: telemetry.cacheHits }; },
+            setCacheLimit: function (bytes) { CACHE_LIMIT = Math.max(0, bytes | 0); cacheEvict(); },
+            clearCache: function () { cache.clear(); cacheBytes = 0; telemetry.cacheEntries = 0; telemetry.cacheBytes = 0; }
+        };
+        window.plantuml = shim;
+        window.plantumlLoad = function () { /* no-op: the shim owns the engine lifecycle */ };
+
+        // --- go -------------------------------------------------------------------------------
+        function canUseWorkers() {
+            if (typeof Worker !== 'function') return 'Worker unavailable';
+            if (typeof fetch !== 'function') return 'fetch unavailable';
+            if (typeof Blob !== 'function' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return 'Blob URLs unavailable';
+            if (typeof OffscreenCanvas !== 'function') return 'OffscreenCanvas unavailable';
+            if (typeof Promise !== 'function' || typeof Map !== 'function') return 'ES2015 unavailable';
+            return null;
+        }
+        if (targetWorkers === 0) {
+            useMainThreadEngine('BrowserRenderWorkers = ' + WORKERS_REQUESTED);
+        } else {
+            var unavailable = canUseWorkers();
+            if (unavailable) useMainThreadEngine(unavailable);
+            else acquireEngine();
+        }
+    })();
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.body.classList.add('plantuml-ready');
-        plantumlLoad();
         var renderQueue = [];
-        var rendering = false;
-        // Expose rendering lock globally so processRenderQueue (note state changes)
-        // can avoid calling plantuml.render() concurrently — TeaVM uses global state.
+        // How many renders are in flight. The shim's maxParallel bounds it (the worker count, or 1 on
+        // the main-thread path). window._plantumlRendering stays a boolean ("anything in flight") because
+        // collapsible-notes-script.js reads it to keep its own re-renders out of the initial render.
+        var inFlight = 0;
         window._plantumlRendering = false;
+        function maxParallel() {
+            var p = window.plantuml && window.plantuml.maxParallel;
+            return (typeof p === 'number' && p > 0) ? p : 1;
+        }
+        function setInFlight(delta) {
+            inFlight = Math.max(0, inFlight + delta);
+            window._plantumlRendering = inFlight > 0;
+        }
         var _pumlData = null;
-        var _maxDiagramHeight = 12000;
+        var _maxDiagramHeight = __BROWSER_FRAGMENT_MAX_HEIGHT__;
         var _maxNoteChars = 15000;
         var _estimatedArrowHeight = 45;
         var _estimatedNoteLineHeight = 18;
@@ -490,23 +880,21 @@
         window._hasDrawableBody = hasDrawableBody;
 
         function processQueue() {
-            if (rendering || window._plantumlRendering || renderQueue.length === 0) return;
-            rendering = true;
-            window._plantumlRendering = true;
+            if (inFlight >= maxParallel() || renderQueue.length === 0) return;
             var item = renderQueue.shift();
             var lines = item.source.split('\n');
             var queueDone = false;
             if (!hasDrawableBody(lines)) {
                 item.el.innerHTML = '<div class="no-interactions" data-nothing-to-draw="true">Nothing to draw with the current filters — this diagram is only assertion notes and/or step bars (use Assertions Shown / Steps Shown to see them).</div>';
                 item.el.dataset.rendered = '1';
-                rendering = false;
-                window._plantumlRendering = false;
                 processQueue();
                 return;
             }
+            setInFlight(1);
             function onQueueItemDone() {
                 if (queueDone) return;
                 queueDone = true;
+                clearInterval(qPoll);
                 item.el.dataset.rendered = '1';
                 var hookTarget = item.isFragment ? item.el : item.el;
                 var iflowSource = item.parentEl ? item.parentEl._fullSource || item.source : item.source;
@@ -517,8 +905,7 @@
                     if (window._addAssertionTooltips) window._addAssertionTooltips(hookTarget);
                     requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(hookTarget); });
                 } catch(hookErr) { console.error('Post-render hook error:', hookErr); }
-                rendering = false;
-                window._plantumlRendering = false;
+                setInFlight(-1);
                 processQueue();
             }
             var mo = new MutationObserver(function() {
@@ -526,21 +913,24 @@
                 onQueueItemDone();
             });
             mo.observe(item.el, { childList: true, subtree: true });
-            // Timeout: if TeaVM render doesn't produce output within 15s, force-reset and continue
+            // Timeout: if nothing has been produced within 60s, give this item up and continue
             var qPollCount = 0;
             var qPoll = setInterval(function() {
                 qPollCount++;
                 if (queueDone) { clearInterval(qPoll); return; }
-                if (qPollCount > 60) { clearInterval(qPoll); mo.disconnect(); queueDone = true; rendering = false; window._plantumlRendering = false; processQueue(); }
+                if (qPollCount > 240) { clearInterval(qPoll); mo.disconnect(); queueDone = true; setInFlight(-1); processQueue(); }
             }, 250);
-            try {
-                window.plantuml.render(lines, item.el.id);
-            } catch(e) {
+            // A failure — thrown synchronously by a main-thread engine, or reported asynchronously by a
+            // worker through the shim's onError — takes one path: the too-large re-split retry, or the
+            // failure markup with the raw PlantUML. Returns true: the element has been taken care of.
+            function handleRenderFailure(msg) {
+                if (queueDone) return true;
+                queueDone = true;
+                clearInterval(qPoll);
                 mo.disconnect();
                 item.el.dataset.rendered = '1';
-                rendering = false;
-                window._plantumlRendering = false;
-                var msg = (e && e.message) ? e.message : String(e);
+                setInFlight(-1);
+                msg = String(msg == null ? '' : msg);
                 if (msg.indexOf('too large') >= 0) {
                     // Try re-splitting with a smaller max height
                     if (!item._retried && !item.isFragment) {
@@ -559,7 +949,7 @@
                                 renderQueue.unshift({ el: rDiv, source: smallerFrags[rf], isFragment: true, parentEl: item.el, _retried: true });
                             }
                             processQueue();
-                            return;
+                            return true;
                         }
                     }
                     item.el.innerHTML = '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
@@ -571,6 +961,14 @@
                     item.el.textContent = 'Render error: ' + msg;
                 }
                 processQueue();
+                return true;
+            }
+            try {
+                window.plantuml.render(lines, item.el.id, { onError: handleRenderFailure });
+                // Fill every free slot (the worker count) rather than waiting for this render to finish.
+                setTimeout(processQueue, 0);
+            } catch(e) {
+                handleRenderFailure((e && e.message) ? e.message : String(e));
             }
         }
         window._iflowBindLinks = function(container, source) { bindIflowLinks(container, source); };

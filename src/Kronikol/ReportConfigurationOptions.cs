@@ -88,6 +88,33 @@ public record ReportConfigurationOptions
     /// <summary>When <c>true</c>, SVG diagrams are inlined directly in the HTML instead of using <c>&lt;img&gt;</c> tags.</summary>
     public bool InlineSvgRendering { get; set; }
 
+    /// <summary>
+    /// <c>BrowserJs</c> only. Number of Web Workers the report page renders diagrams on, so the PlantUML
+    /// engine (7 MB of JavaScript) never runs on the main thread: the page is interactive immediately,
+    /// diagrams render in parallel and note/assertion/step toggles never freeze the page. The page caps
+    /// this at the viewer's <c>navigator.hardwareConcurrency</c>. <c>0</c> renders on the main thread — the
+    /// pre-3.0.45 behaviour (also what the page falls back to on its own when Workers, <c>fetch</c> or
+    /// <c>OffscreenCanvas</c> are unavailable, or the engine cannot be fetched — e.g. offline with a
+    /// cold cache). Default: <c>4</c>. See the wiki page <em>PlantUML Browser Rendering</em>.
+    /// </summary>
+    public int BrowserRenderWorkers { get; set; } = Constants.TrackingDefaults.BrowserRenderWorkers;
+
+    /// <summary>
+    /// <c>BrowserJs</c> only. Byte bound (in megabytes) of the page's rendered-SVG cache, keyed by fragment
+    /// source. Every successful render fills it, so a toggle that re-splits a big diagram is a series of
+    /// cache hits rather than re-renders; the toggle paths also pre-render their new fragments in parallel.
+    /// Oldest entries are evicted first. <c>0</c> disables the cache. Default: <c>64</c>.
+    /// </summary>
+    public int BrowserRenderCacheMegabytes { get; set; } = Constants.TrackingDefaults.BrowserRenderCacheMegabytes;
+
+    /// <summary>
+    /// <c>BrowserJs</c> only. Estimated rendered height (px; 45 per arrow, 18 per note line) at which the
+    /// browser splits one diagram into fragments rendered separately. Smaller fragments render and
+    /// re-render faster (4,000–6,000 measured ~20 % faster on note-heavy reports) at the cost of more
+    /// fragment seams. Default: <c>12000</c>.
+    /// </summary>
+    public int BrowserFragmentMaxHeight { get; set; } = Constants.TrackingDefaults.BrowserFragmentMaxHeight;
+
     /// <summary>When <c>true</c>, internal flow tracking data (OpenTelemetry spans) is included in reports. Default: <c>true</c>.</summary>
     public bool InternalFlowTracking { get; set; } = true;
 

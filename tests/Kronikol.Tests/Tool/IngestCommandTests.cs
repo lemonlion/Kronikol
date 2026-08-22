@@ -55,6 +55,39 @@ public class IngestCommandTests : IDisposable
         Assert.DoesNotContain("tests.ndjson", @out.ToString().Split('\n').First(l => l.Contains("Ingesting")));
         // Secure by default: credential header redacted at ingest.
         Assert.DoesNotContain("cli-secret", File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        // Browser rendering defaults to the worker path.
+        Assert.Contains("var WORKERS_REQUESTED = 4;", html);
+    }
+
+    [Fact]
+    public void Browser_render_workers_option_is_validated_and_reaches_the_report()
+    {
+        var err = new StringWriter();
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--browser-render-workers", "many"], new StringWriter(), err));
+        Assert.Contains("--browser-render-workers needs an integer >= 0", err.ToString());
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--browser-render-workers", "-1"], new StringWriter(), new StringWriter()));
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--browser-render-workers"], new StringWriter(), new StringWriter()));
+
+        const string testId = "0a1b2c3d4e5f60718293a4b5c6d7e8f9";
+        var captures = Path.Combine(_dir, "captures-workers");
+        Directory.CreateDirectory(captures);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/health", "web", "web",
+            requestContent: "", responseContent: "{\"ok\":true}", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        File.WriteAllLines(Path.Combine(captures, "tests.ndjson"),
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › workers", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        var output = Path.Combine(_dir, "out-workers");
+
+        var exit = IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", output, "--browser-render-workers", "0"], new StringWriter(), err);
+
+        Assert.Equal(0, exit);
+        var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        Assert.Contains("var WORKERS_REQUESTED = 0;", html);
+        Assert.DoesNotContain("var WORKERS_REQUESTED = 4;", html);
     }
 
     [Fact]

@@ -1,0 +1,49 @@
+{
+ "variant": "worker",
+ "engine": "core-1.2026.6-patched.js",
+ "loadMs": 77,
+ "readyMs": 102,
+ "phase1": {
+  "diagrams": 1,
+  "ids": [
+   "puml-1"
+  ],
+  "ms": 1434
+ },
+ "firstDiagramMs": 1371,
+ "phase2": {
+  "diagrams": 20,
+  "fragments": 113,
+  "svgs": 120,
+  "errors": [],
+  "ms": 10094
+ },
+ "longTasksPhase1": {
+  "count": 1,
+  "tbtMs": 13,
+  "maxMs": 63,
+  "tasksOver1s": 0
+ },
+ "longTasksPhase2": {
+  "count": 14,
+  "tbtMs": 217,
+  "maxMs": 97,
+  "tasksOver1s": 0
+ },
+ "interaction": {
+  "container": "puml-17",
+  "svgElements": 8381,
+  "ms": 536,
+  "workerRenders": 1,
+  "workerMs": 128,
+  "longTasks": 2,
+  "maxTaskMs": 217,
+  "tbtMs": 300
+ },
+ "workerStats": {
+  "renders": 101,
+  "workerMs": 36976,
+  "injectMs": 437
+ },
+ "jsHeapMB": 32
+}

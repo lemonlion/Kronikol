@@ -350,29 +350,69 @@ public static class DefaultDiagramsFetcher
     private static DiagramAsCode[] GetNodeJsRenderedDiagrams(DiagramsFetcherOptions options)
     {
         var perTestId = GetPlantUmlPerTestIdIsolated(options);
+        var inputs = perTestId
+            .SelectMany(test => test.PlantUmls.Select(plantUml => (test.TestId, Source: plantUml.PlainText)))
+            .ToList();
 
-        if (options.InlineSvgRendering)
+        Func<string, string, string, DiagramAsCode> make = options.InlineSvgRendering
+            ? (testId, svg, source) => new DiagramAsCode(testId, StripXmlDeclaration(svg), source)
+            : (testId, svg, source) => new DiagramAsCode(testId, $"data:image/svg+xml;base64,{Convert.ToBase64String(Encoding.UTF8.GetBytes(svg))}", source);
+
+        return RenderNodeBatchIsolated(inputs, make, "Rendering the diagram with node.js");
+    }
+
+    /// <summary>
+    /// The batch counterpart of <see cref="RenderIsolated"/> for the Node renderer: every diagram of the
+    /// report goes through one <c>node</c> process (<see cref="NodeJsPlantUmlRenderer.RenderMany"/>), and
+    /// the per-diagram isolation is kept — a diagram the engine refuses gets the placeholder note, which
+    /// is itself rendered in a second (small) batch so an image-based report still shows it; if even that
+    /// fails, the placeholder stands as code-behind. A process that cannot run at all (no node, no engine)
+    /// costs every diagram its picture, exactly as every per-diagram spawn would have failed before.
+    /// </summary>
+    private static DiagramAsCode[] RenderNodeBatchIsolated(
+        List<(string TestId, string Source)> inputs, Func<string, string, string, DiagramAsCode> make, string what)
+    {
+        var output = new DiagramAsCode?[inputs.Count];
+        if (inputs.Count == 0) return [];
+
+        IReadOnlyList<NodeJsPlantUmlRenderer.NodeRenderResult>? results = null;
+        Exception? processFailure = null;
+        try { results = NodeJsPlantUmlRenderer.RenderMany(inputs.Select(i => i.Source).ToList()); }
+        catch (Exception ex) { processFailure = ex; }
+
+        var retry = new List<(int Index, DiagramAsCode Placeholder)>();
+        for (var i = 0; i < inputs.Count; i++)
         {
-            return perTestId
-                .SelectMany(test => test.PlantUmls.Select(plantUml =>
-                    RenderIsolated(test.TestId, plantUml.PlainText, source =>
-                    {
-                        var imageBytes = NodeJsPlantUmlRenderer.Render(source, PlantUmlImageFormat.Svg);
-                        var svgContent = Encoding.UTF8.GetString(imageBytes);
-                        return new DiagramAsCode(test.TestId, StripXmlDeclaration(svgContent), source);
-                    }, "Rendering the diagram with node.js")))
-                .ToArray();
+            var r = results is not null && i < results.Count ? results[i] : null;
+            if (r is { Svg: not null })
+            {
+                output[i] = make(inputs[i].TestId, r.Svg, inputs[i].Source);
+                continue;
+            }
+            var failure = processFailure ?? new InvalidOperationException(r?.Error ?? "Node.js PlantUML render returned no result.");
+            retry.Add((i, PlaceholderFor(inputs[i].TestId, failure, what)));
         }
 
-        return perTestId
-            .SelectMany(test => test.PlantUmls.Select(plantUml =>
-                RenderIsolated(test.TestId, plantUml.PlainText, source =>
-                {
-                    var imageBytes = NodeJsPlantUmlRenderer.Render(source, PlantUmlImageFormat.Svg);
-                    var base64 = Convert.ToBase64String(imageBytes);
-                    return new DiagramAsCode(test.TestId, $"data:image/svg+xml;base64,{base64}", source);
-                }, "Rendering the diagram with node.js")))
-            .ToArray();
+        if (retry.Count > 0 && processFailure is null)
+        {
+            IReadOnlyList<NodeJsPlantUmlRenderer.NodeRenderResult>? retried = null;
+            try { retried = NodeJsPlantUmlRenderer.RenderMany(retry.Select(p => p.Placeholder.CodeBehind).ToList()); }
+            catch (Exception) { retried = null; }
+            for (var k = 0; k < retry.Count; k++)
+            {
+                var (index, placeholder) = retry[k];
+                var r = retried is not null && k < retried.Count ? retried[k] : null;
+                output[index] = r is { Svg: not null }
+                    ? make(placeholder.TestRuntimeId, r.Svg, placeholder.CodeBehind) with { CodeBehind = placeholder.CodeBehind }
+                    : placeholder;
+            }
+        }
+        else
+        {
+            foreach (var (index, placeholder) in retry) output[index] = placeholder;
+        }
+
+        return output!;
     }
 
     private static DiagramAsCode[] RenderLocallyAsInlineSvg(PlantUmlCreator.PlantUmlForTest[] perTestId, DiagramsFetcherOptions options)
