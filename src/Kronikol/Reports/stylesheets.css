@@ -1139,6 +1139,61 @@
             text-decoration: underline;
         }
 
+        /* Report diagnostics (capture health, skipped lines, render failures) */
+        .report-diagnostics {
+            margin: 1em 0;
+            border: 2px solid rgb(224, 200, 160);
+            border-radius: 0.8em;
+            background: rgb(255, 251, 243);
+            padding: 0;
+        }
+        .report-diagnostics > summary {
+            padding: 0.6em 1em;
+            font-weight: bold;
+            color: rgb(130, 85, 0);
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+        .report-diagnostics-list {
+            list-style: none;
+            margin: 0;
+            padding: 0 1em 0.6em 1em;
+            font-size: 0.9em;
+        }
+        .report-diagnostics-list li {
+            padding: 0.3em 0;
+            border-bottom: 1px solid rgb(240, 232, 215);
+            overflow-wrap: anywhere;
+        }
+        .report-diagnostics-list li:last-child {
+            border-bottom: none;
+        }
+        .report-diagnostic-kind {
+            display: inline-block;
+            background: rgb(224, 224, 224);
+            color: rgb(60, 60, 60);
+            border-radius: 1em;
+            padding: 0.1em 0.6em;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 0.3em;
+            white-space: nowrap;
+        }
+        .report-diagnostic-kind-capturedegraded {
+            background: rgb(255, 221, 150);
+            color: rgb(110, 70, 0);
+        }
+        .report-diagnostic-kind-renderfailure,
+        .report-diagnostic-kind-outputfailure,
+        .report-diagnostic-kind-attachmentfailure {
+            background: rgb(255, 210, 210);
+            color: rgb(140, 0, 0);
+        }
+        .report-diagnostic-scenario {
+            color: rgb(100, 100, 100);
+            font-size: 0.85em;
+        }
+
         /* Scenario Timeline / Gantt */
         .scenario-timeline {
             margin: 1em 0;

@@ -525,4 +525,52 @@ public class ProxyTapTests
         Assert.False(tap.IsListening);
         Assert.Equal(2, sink.Logs.Count);
     }
+
+    [Fact]
+    public async Task Diagnostics_are_empty_while_healthy_and_name_the_requests_that_were_not_captured()
+    {
+        await using var upstream = new StubUpstream(JsonOk);
+        var sink = new ListSink();
+        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, sink));
+        Assert.Empty(tap.Diagnostics());
+        await tap.StartAsync();
+
+        using var client = new HttpClient();
+        using (var attributed = Request(HttpMethod.Get, tap.ListenUri, "/captured", null, (TestTrackingHttpHeaders.CurrentTestIdHeader, Guid.NewGuid().ToString("N"))))
+            (await client.SendAsync(attributed)).Dispose();
+        Assert.Equal(1, tap.RequestsHandled);
+        Assert.Equal(1, tap.RequestsCaptured);
+        Assert.Empty(tap.Diagnostics());
+
+        using (var anonymous = Request(HttpMethod.Get, tap.ListenUri, "/not-captured", null))
+            (await client.SendAsync(anonymous)).Dispose();
+        Assert.Equal(2, tap.RequestsHandled);
+        Assert.Equal(1, tap.RequestsCaptured);
+
+        var entry = Assert.Single(tap.Diagnostics());
+        Assert.Equal(DiagnosticKind.CaptureDegraded, entry.Kind);
+        Assert.StartsWith("web→graphql: 1 of 2 forwarded request(s) carried no test identity and were not captured", entry.Message);
+        Assert.Null(entry.ScenarioId);
+    }
+
+    [Fact]
+    public async Task A_failed_forward_is_counted_and_reported_as_capture_degraded()
+    {
+        var sink = new ListSink();
+        var deadPort = StubUpstream.FreePort();
+        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(new ProxyTapOptions
+        {
+            ListenPort = StubUpstream.FreePort(), ForwardBaseUri = new Uri($"http://localhost:{deadPort}"), CallerName = "web", ServiceName = "api", Sink = sink, Name = "tap-web-api",
+        });
+        await tap.StartAsync();
+        using var client = new HttpClient();
+        using var response = await client.GetAsync(new Uri(tap.ListenUri, "/x"));
+        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+
+        Assert.Equal(1, tap.ForwardFailures);
+        Assert.Equal(0, tap.RequestsHandled);
+        var entry = Assert.Single(tap.Diagnostics());
+        Assert.Equal(DiagnosticKind.CaptureDegraded, entry.Kind);
+        Assert.StartsWith("tap-web-api: 1 request(s) could not be forwarded and were answered 502 Bad Gateway", entry.Message);
+    }
 }

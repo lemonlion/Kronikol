@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Channels;
+using Kronikol.Reports;
 
 namespace Kronikol.Extensions.Otlp;
 
@@ -51,6 +52,8 @@ public sealed class OtlpTap : IAsyncDisposable
     private long _unauthenticated;
     private long _forwardFailures;
     private long _dropped;
+    private long _rejected;
+    private long _failed;
     private long _spansReceived;
     private long _spansMapped;
     private long _spansIgnored;
@@ -93,6 +96,12 @@ public sealed class OtlpTap : IAsyncDisposable
     /// <summary>Export payloads dropped because the mapping queue was full (D3: capture never blocks).</summary>
     public long PayloadsDropped => Interlocked.Read(ref _dropped);
 
+    /// <summary>Export requests refused with <c>413</c> because the body exceeded <see cref="OtlpTapOptions.MaxRequestBytes"/>; their spans were never read.</summary>
+    public long PayloadsRejected => Interlocked.Read(ref _rejected);
+
+    /// <summary>Accepted payloads whose decode, span mapping or sink write threw (a sink that cannot write, an unexpected span shape); their spans are lost.</summary>
+    public long PayloadsFailed => Interlocked.Read(ref _failed);
+
     /// <summary>Spans decoded from accepted payloads.</summary>
     public long SpansReceived => Interlocked.Read(ref _spansReceived);
 
@@ -101,6 +110,48 @@ public sealed class OtlpTap : IAsyncDisposable
 
     /// <summary>Spans decoded but not captured (server/internal spans, excluded kinds, unrecognised shapes).</summary>
     public long SpansIgnored => Interlocked.Read(ref _spansIgnored);
+
+    /// <summary>
+    /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per
+    /// non-zero problem counter — payloads dropped, rejected or failed, exports refused as
+    /// unauthenticated, forwards that failed — worded for a report reader (<c>otlp: 2 export payload(s)
+    /// dropped …</c>). Empty when the tap is healthy. A host hands the list to
+    /// <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/> so lost spans are a line in the
+    /// report, not only in a log. <see cref="SpansIgnored"/> is by design (server spans, excluded kinds)
+    /// and is not reported.
+    /// </summary>
+    public IReadOnlyList<DiagnosticEntry> Diagnostics()
+    {
+        var name = _options.DisplayName;
+        var entries = new List<DiagnosticEntry>();
+
+        var dropped = PayloadsDropped;
+        if (dropped > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {dropped:N0} export payload(s) dropped because the mapping queue was full (QueueCapacity {_options.QueueCapacity}) — their spans are missing from the diagrams; the exporter was never delayed"));
+
+        var rejected = PayloadsRejected;
+        if (rejected > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {rejected:N0} export request(s) refused with 413 Payload Too Large (MaxRequestBytes {_options.MaxRequestBytes:N0}) — their spans were never read"));
+
+        var failed = PayloadsFailed;
+        if (failed > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {failed:N0} export payload(s) failed while being decoded, mapped or written to the sink — their spans are lost (see the tap's log for the exception)"));
+
+        var unauthenticated = UnauthenticatedRequests;
+        if (unauthenticated > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {unauthenticated:N0} export request(s) rejected with 401 — ExpectedHeaders not satisfied; if that was your exporter, its spans never reached the report"));
+
+        var forwardFailures = ForwardFailures;
+        if (forwardFailures > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {forwardFailures:N0} export(s) could not be forwarded to {_options.ForwardBaseUri} and were answered 502 Bad Gateway — the spans were still mapped here, but the real collector never saw them"));
+
+        return entries;
+    }
 
     /// <summary>Starts listening. Throws if the options are invalid or the port cannot be bound.</summary>
     public Task StartAsync(CancellationToken cancellationToken = default)
@@ -258,6 +309,8 @@ public sealed class OtlpTap : IAsyncDisposable
     {
         if (request.TooLarge)
         {
+            Interlocked.Increment(ref _rejected);
+            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap refused an export over MaxRequestBytes ({_options.MaxRequestBytes})");
             await WriteResponseAsync(stream, 413, "Payload Too Large", "application/json", Utf8("{\"error\":\"payload too large\"}"), request.KeepAlive, ct).ConfigureAwait(false);
             return request.KeepAlive;
         }
@@ -418,6 +471,7 @@ public sealed class OtlpTap : IAsyncDisposable
         }
         catch (Exception ex)
         {
+            Interlocked.Increment(ref _failed);
             _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap could not map an export payload: {ex.Message}");
         }
     }

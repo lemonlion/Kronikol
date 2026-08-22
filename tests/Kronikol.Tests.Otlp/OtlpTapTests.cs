@@ -38,6 +38,12 @@ internal sealed class BlockingSink(SemaphoreSlim gate) : IRequestResponseSink
     public void Log(RequestResponseLog log) => gate.Wait(TimeSpan.FromSeconds(30));
 }
 
+/// <summary>A sink that cannot write, so an accepted payload is lost and counted.</summary>
+internal sealed class ThrowingSink : IRequestResponseSink
+{
+    public void Log(RequestResponseLog log) => throw new IOException("disk full");
+}
+
 /// <summary>A stub collector that records exactly what arrived on the wire.</summary>
 internal sealed class StubCollector : IAsyncDisposable
 {
@@ -468,5 +474,84 @@ public class OtlpTapTests
         {
             try { Directory.Delete(directory, recursive: true); } catch (IOException) { }
         }
+    }
+
+    [Fact]
+    public async Task Diagnostics_are_empty_for_a_healthy_tap()
+    {
+        var sink = new ListSink();
+        await using var tap = new OtlpTap(Options(sink));
+        Assert.Empty(tap.Diagnostics());
+        await tap.StartAsync();
+
+        using var response = await PostAsync(tap, OtlpGoldens.Utf8(OtlpGoldens.MongoFindOldSemconv), "application/json");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await WaitForAsync(() => sink.Count == 2, "the pair to be mapped");
+
+        Assert.Empty(tap.Diagnostics());
+    }
+
+    [Fact]
+    public async Task Diagnostics_name_rejected_payloads_and_a_sink_that_throws()
+    {
+        var rejecting = Options(new ListSink());
+        rejecting.Name = "otlp-di";
+        rejecting.MaxRequestBytes = 64;
+        await using var rejectingTap = new OtlpTap(rejecting);
+        await rejectingTap.StartAsync();
+        using (var tooLarge = await PostAsync(rejectingTap, OtlpGoldens.Utf8(OtlpGoldens.MongoFindOldSemconv), "application/json"))
+            Assert.Equal(HttpStatusCode.RequestEntityTooLarge, tooLarge.StatusCode);
+        Assert.Equal(1, rejectingTap.PayloadsRejected);
+        var rejected = Assert.Single(rejectingTap.Diagnostics());
+        Assert.Equal(Kronikol.Reports.DiagnosticKind.CaptureDegraded, rejected.Kind);
+        Assert.StartsWith("otlp-di: 1 export request(s) refused with 413 Payload Too Large (MaxRequestBytes 64)", rejected.Message);
+
+        // An accepted payload whose sink throws is lost — and counted.
+        var failing = Options(new ThrowingSink());
+        failing.Name = "otlp-di";
+        await using var failingTap = new OtlpTap(failing);
+        await failingTap.StartAsync();
+        using (var accepted = await PostAsync(failingTap, OtlpGoldens.Utf8(OtlpGoldens.MongoFindOldSemconv), "application/json"))
+            Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+        await WaitForAsync(() => failingTap.PayloadsFailed == 1, "the failed payload to be counted");
+        var failed = Assert.Single(failingTap.Diagnostics());
+        Assert.Equal(Kronikol.Reports.DiagnosticKind.CaptureDegraded, failed.Kind);
+        Assert.StartsWith("otlp-di: 1 export payload(s) failed while being decoded, mapped or written to the sink", failed.Message);
+    }
+
+    [Fact]
+    public async Task Diagnostics_name_unauthenticated_exports_failed_forwards_and_dropped_payloads()
+    {
+        var sink = new ListSink();
+        var options = Options(sink);
+        options.ExpectedHeaders["x-kronikol-tap"] = "s3cret";
+        options.ForwardBaseUri = new Uri($"http://localhost:{StubCollector.FreePort()}");
+        await using var tap = new OtlpTap(options);
+        await tap.StartAsync();
+
+        using (var missing = await PostAsync(tap, OtlpGoldens.Utf8(OtlpGoldens.MongoFindOldSemconv), "application/json"))
+            Assert.Equal(HttpStatusCode.Unauthorized, missing.StatusCode);
+        using (var forwarded = await PostAsync(tap, OtlpGoldens.Utf8(OtlpGoldens.MongoFindOldSemconv), "application/json",
+                   headers: new Dictionary<string, string> { ["x-kronikol-tap"] = "s3cret" }))
+            Assert.Equal(HttpStatusCode.BadGateway, forwarded.StatusCode);
+
+        var entries = tap.Diagnostics();
+        Assert.Equal(2, entries.Count);
+        Assert.Contains(entries, e => e.Message.StartsWith("otlp: 1 export request(s) rejected with 401", StringComparison.Ordinal));
+        Assert.Contains(entries, e => e.Message.Contains("1 export(s) could not be forwarded to http://localhost:") && e.Message.Contains("502 Bad Gateway"));
+
+        // Dropped payloads (queue full) are the remaining counter; the blocked-sink test exercises the drop itself.
+        var gate = new SemaphoreSlim(0);
+        var blocked = Options(new BlockingSink(gate));
+        blocked.QueueCapacity = 1;
+        await using var droppingTap = new OtlpTap(blocked);
+        await droppingTap.StartAsync();
+        for (var i = 0; i < 8 && droppingTap.PayloadsDropped == 0; i++)
+            using (await PostAsync(droppingTap, OtlpGoldens.Utf8(OtlpGoldens.MongoFindOldSemconv), "application/json")) { }
+        await WaitForAsync(() => droppingTap.PayloadsDropped > 0, "the bounded queue to drop");
+        gate.Release(64);
+        var dropped = Assert.Single(droppingTap.Diagnostics());
+        Assert.StartsWith("otlp: ", dropped.Message);
+        Assert.Contains("export payload(s) dropped because the mapping queue was full (QueueCapacity 1)", dropped.Message);
     }
 }

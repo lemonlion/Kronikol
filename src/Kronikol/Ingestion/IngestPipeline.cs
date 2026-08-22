@@ -95,6 +95,8 @@ public sealed class IngestRequest
 
     /// <summary>Fraction (0–1] of the shorter interval two calls must share to be treated as the same call by <see cref="MergeDuplicateInteractions"/>. Default 0.8.</summary>
     public double MergeOverlapThreshold { get; init; } = InteractionMerger.DefaultOverlapThreshold;
+
+    /// <summary>
     /// Fail the whole ingest with a <see cref="FormatException"/> on the first capture line that cannot
     /// be parsed. Default <c>false</c>: malformed lines are skipped and counted in
     /// <see cref="IngestResult.Diagnostics"/> instead, because a process killed mid-write leaves a
@@ -183,6 +185,18 @@ public sealed class IngestRequest
     /// several runs into one folder relies on that.
     /// </summary>
     public bool CleanAttachments { get; init; }
+
+    /// <summary>
+    /// Diagnostics the host already knows before the ingest starts — typically the capture health of its
+    /// taps (<see cref="DiagnosticKind.CaptureDegraded"/>: a decoder that gave up on a connection, oversize
+    /// payloads skipped, export payloads dropped), but any <see cref="DiagnosticEntry"/> is accepted. They
+    /// are carried verbatim into <see cref="IngestResult.Diagnostics"/> (first, ahead of what the ingest
+    /// itself records) and into the report: the "Report diagnostics" section of <c>TestRunReport.html</c>
+    /// and the top-level <c>diagnostics</c> array of <c>TestRunReport.json</c>. Default empty — nothing
+    /// changes when a host hands in nothing. <c>kronikol ingest --diagnostic "&lt;kind&gt;:&lt;message&gt;"</c>
+    /// is the CLI form.
+    /// </summary>
+    public IReadOnlyList<DiagnosticEntry> HostDiagnostics { get; init; } = [];
 }
 
 /// <summary>The single scenario that collects interactions of unknown tests (<see cref="IngestRequest.FoldUnknownTestsInto"/>).</summary>
@@ -282,6 +296,9 @@ public static class IngestPipeline
     private static IngestResult RunCore(IngestRequest request, ReportConfigurationOptions options)
     {
         var diagnostics = new ReportDiagnosticsCollector();
+        // The host's entries go in first, so they reach the report's diagnostics section (the collector is
+        // the scope the generator renders from) and lead IngestResult.Diagnostics.
+        diagnostics.AddRange(request.HostDiagnostics);
 
         var records = ReadInteractions(request, diagnostics);
         var testRecords = ReadTestRecords(request, diagnostics);

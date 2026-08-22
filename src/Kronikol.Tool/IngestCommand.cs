@@ -44,6 +44,7 @@ internal static class IngestCommand
         var phaseFromSteps = false;
         string? attachmentsBase = null;
         var cleanAttachments = false;
+        var hostDiagnostics = new List<DiagnosticEntry>();
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -162,6 +163,15 @@ internal static class IngestCommand
                 case "--clean-attachments":
                     cleanAttachments = true;
                     break;
+                case "--diagnostic":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    if (!TryParseDiagnostic(args[i], out var diagnostic))
+                    {
+                        error.WriteLine("--diagnostic needs \"<kind>:<message>\" with a non-empty message (kind = a DiagnosticKind name; anything else counts as Other)");
+                        return 2;
+                    }
+                    hostDiagnostics.Add(diagnostic);
+                    break;
                 case "-h" or "--help":
                     PrintUsage(@out);
                     return 0;
@@ -269,6 +279,7 @@ internal static class IngestCommand
                 PhaseFromSteps = phaseFromSteps,
                 AttachmentsBase = attachmentsBase is null ? null : Path.GetFullPath(attachmentsBase),
                 CleanAttachments = cleanAttachments,
+                HostDiagnostics = hostDiagnostics,
             });
 
             if (!result.Generated)
@@ -320,6 +331,33 @@ internal static class IngestCommand
 
         foreach (var entry in diagnostics.Where(d => d.Kind != DiagnosticKind.MalformedLine))
             @out.WriteLine("  " + entry);
+    }
+
+    /// <summary>
+    /// Parses a <c>--diagnostic</c> value: <c>&lt;kind&gt;:&lt;message&gt;</c>, where the kind is a
+    /// <see cref="DiagnosticKind"/> name (case-insensitive; anything else — or no colon at all — is
+    /// <see cref="DiagnosticKind.Other"/>) and the message is free text. False when the message is empty.
+    /// </summary>
+    internal static bool TryParseDiagnostic(string value, out DiagnosticEntry entry)
+    {
+        entry = null!;
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var colon = value.IndexOf(':');
+        var kind = DiagnosticKind.Other;
+        var message = value.Trim();
+        if (colon > 0 && Enum.TryParse<DiagnosticKind>(value[..colon].Trim(), ignoreCase: true, out var parsed))
+        {
+            kind = parsed;
+            message = value[(colon + 1)..].Trim();
+        }
+
+        if (message.Length == 0)
+            return false;
+
+        entry = new DiagnosticEntry(kind, message);
+        return true;
     }
 
     /// <summary>Whether an argument looks like a capture input (a path) rather than an option's value.</summary>
@@ -388,6 +426,10 @@ internal static class IngestCommand
         w.WriteLine("                           during, so setup traffic can be separated or highlighted.");
         w.WriteLine("  --attachments-base <dir> Resolve relative attachment paths in --tests against this directory.");
         w.WriteLine("  --clean-attachments      Empty the report's attachments/ folder first, so it holds this run only.");
+        w.WriteLine("  --diagnostic <kind>:<msg> Carry a host diagnostic into the report (repeatable) — e.g. a tap's capture");
+        w.WriteLine("                           health: \"CaptureDegraded:tap-di-redis: decoding disabled on 1 connection\".");
+        w.WriteLine("                           kind = a DiagnosticKind name (unknown → Other); it lands in IngestResult.Diagnostics,");
+        w.WriteLine("                           the report's \"Report diagnostics\" section and TestRunReport.json's diagnostics array.");
         w.WriteLine("  -h, --help               Show this help.");
         w.WriteLine();
         w.WriteLine("Example:");

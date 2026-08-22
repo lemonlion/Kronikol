@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text;
 using Kronikol.Constants;
+using Kronikol.Reports;
 using Kronikol.Tracking;
 
 namespace Kronikol.Extensions.ProxyTap;
@@ -47,6 +48,7 @@ public sealed class ProxyTap : IAsyncDisposable
     private int _disposed;
     private long _handled;
     private long _captured;
+    private long _forwardFailures;
 
     /// <summary>Creates a tap for the given options (validated on <see cref="StartAsync"/>).</summary>
     public ProxyTap(ProxyTapOptions options)
@@ -66,8 +68,37 @@ public sealed class ProxyTap : IAsyncDisposable
     /// <summary>Exchanges captured (attributed to a test) so far.</summary>
     public long RequestsCaptured => Interlocked.Read(ref _captured);
 
+    /// <summary>Requests the tap could not forward (the upstream was unreachable, timed out or the exchange threw) and answered <c>502 Bad Gateway</c> instead.</summary>
+    public long ForwardFailures => Interlocked.Read(ref _forwardFailures);
+
     /// <summary>Whether the listener is accepting connections.</summary>
     public bool IsListening => _listener.IsListening;
+
+    /// <summary>
+    /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per
+    /// non-zero problem counter, worded for a report reader (<c>web→graphql: 3 request(s) could not be
+    /// forwarded …</c>). Empty when the tap is healthy. A host hands the list to
+    /// <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/> so a tap that dropped arrows is a
+    /// line in the report, not only in a log.
+    /// </summary>
+    public IReadOnlyList<DiagnosticEntry> Diagnostics()
+    {
+        var name = _options.DisplayName;
+        var entries = new List<DiagnosticEntry>();
+
+        var forwardFailures = ForwardFailures;
+        if (forwardFailures > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {forwardFailures:N0} request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams"));
+
+        var handled = RequestsHandled;
+        var uncaptured = handled - RequestsCaptured;
+        if (uncaptured > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {uncaptured:N0} of {handled:N0} forwarded request(s) carried no test identity and were not captured (no test-tracking headers or traceparent reached this hop; CaptureUnattributedRequests is off)"));
+
+        return entries;
+    }
 
     /// <summary>Starts listening. Throws if the options are invalid or the port cannot be bound.</summary>
     public Task StartAsync(CancellationToken cancellationToken = default)
@@ -128,6 +159,7 @@ public sealed class ProxyTap : IAsyncDisposable
         }
         catch (Exception ex)
         {
+            Interlocked.Increment(ref _forwardFailures);
             _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap error: {ex.Message}");
             TryRespondBadGateway(context, ex.Message);
         }

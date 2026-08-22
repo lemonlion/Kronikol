@@ -235,6 +235,12 @@ public static class ReportGenerator
         Directory.CreateDirectory(reportsDir);
         CopyAttachmentsToReportsFolder(features, reportsDir);
 
+        // Everything recorded so far — the host's entries (IngestRequest.HostDiagnostics), malformed lines,
+        // diagram render failures, attachment failures — goes into the report itself. One snapshot, taken
+        // before the outputs run in parallel, so the HTML and the data files agree; an OutputFailure raised
+        // by one of those outputs is therefore only in the collector, not in the files.
+        var reportDiagnostics = ReportDiagnosticsScope.Current?.Entries ?? [];
+
         var actions = new List<(string Name, Action Run)>();
         void Add(string name, Action run) => actions.Add((name, run));
 
@@ -245,7 +251,7 @@ public static class ReportGenerator
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics));
         }
 
         if (options.GenerateSpecificationsData)
@@ -258,12 +264,12 @@ public static class ReportGenerator
             if (options.GenerateMergeableData && options.TestRunReportDataFormat == DataFormat.Json)
             {
                 Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => WriteFile(
-                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, trackedLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options),
+                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, trackedLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics),
                     $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"));
             }
             else
             {
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics));
             }
         }
 
@@ -422,7 +428,8 @@ public static class ReportGenerator
         bool titleizeParameterNames = true,
         string? componentDiagramPlantUml = null,
         Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
-        bool showNoInteractionsMarker = false)
+        bool showNoInteractionsMarker = false,
+        IReadOnlyList<DiagnosticEntry>? diagnostics = null)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -966,6 +973,9 @@ public static class ReportGenerator
             }
             body.Append("</details>");
         }
+
+        if (includeTestRunData && diagnostics is { Count: > 0 })
+            body.Append(RenderReportDiagnostics(diagnostics));
 
         // Scenario timeline / Gantt (hidden by default)
         if (hasDurations)
@@ -2845,21 +2855,60 @@ public static class ReportGenerator
         return $"scenario-{slug}";
     }
 
-    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null)
+    /// <summary>
+    /// The "Report diagnostics" block of <c>TestRunReport.html</c>: a collapsed <c>&lt;details&gt;</c> listing
+    /// every <see cref="DiagnosticEntry"/> the generation (and the host, via
+    /// <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/>) recorded — kind, message, scenario —
+    /// so a dead tap or a skipped capture line is a line in the report, not only in a log. Empty input
+    /// renders nothing.
+    /// </summary>
+    internal static string RenderReportDiagnostics(IReadOnlyList<DiagnosticEntry> diagnostics)
+    {
+        if (diagnostics.Count == 0)
+            return string.Empty;
+
+        var byKind = diagnostics.GroupBy(d => d.Kind)
+            .OrderByDescending(g => g.Key == DiagnosticKind.CaptureDegraded)
+            .ThenByDescending(g => g.Count())
+            .Select(g => g.Count() == 1 ? g.Key.ToString() : $"{g.Key} ×{g.Count()}");
+        var summary = $"Report diagnostics ({diagnostics.Count}: {string.Join(", ", byKind)})";
+
+        var html = new StringBuilder();
+        html.Append("<details class=\"report-diagnostics\">");
+        html.Append($"<summary>{summary}</summary>"); // enum names and counts only — nothing to encode, and the × must stay a glyph
+        html.Append("<ul class=\"report-diagnostics-list\">");
+        foreach (var entry in diagnostics)
+        {
+            var kindClass = $"report-diagnostic-kind report-diagnostic-kind-{entry.Kind.ToString().ToLowerInvariant()}";
+            html.Append($"<li><span class=\"{kindClass}\">{System.Net.WebUtility.HtmlEncode(entry.Kind.ToString())}</span> ");
+            html.Append(System.Net.WebUtility.HtmlEncode(entry.Message));
+            if (!string.IsNullOrEmpty(entry.ScenarioId))
+                html.Append($" <span class=\"report-diagnostic-scenario\">[{System.Net.WebUtility.HtmlEncode(entry.ScenarioId)}]</span>");
+            html.Append("</li>");
+        }
+        html.Append("</ul></details>");
+        return html.ToString();
+    }
+
+    /// <summary>The <c>diagnostics</c> array of the data files: <c>{kind, message, scenarioId}</c> per entry.</summary>
+    private static object[] MapDiagnosticsJson(IReadOnlyList<DiagnosticEntry>? diagnostics) =>
+        (diagnostics ?? []).Select(d => (object)new { Kind = d.Kind.ToString(), d.Message, d.ScenarioId }).ToArray();
+
+    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         var logLookup = trackedLogs?.ToLookup(l => l.TestId);
 
         return format switch
         {
-            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup), fileName),
+            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics), fileName),
             DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup), fileName),
             DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
 
-    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup)
+    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
         var data = new
@@ -2867,7 +2916,8 @@ public static class ReportGenerator
             KronikolVersion = KronikolVersion,
             StartTime = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             EndTime = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup)
+            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup),
+            Diagnostics = MapDiagnosticsJson(diagnostics)
         };
         return JsonSerializer.Serialize(data, options);
     }
@@ -2939,7 +2989,8 @@ public static class ReportGenerator
         Dictionary<string, InternalFlowSegment>? perBoundarySegments,
         Dictionary<string, InternalFlowSegment>? wholeTestSegments,
         CiMetadata? ciMetadata,
-        ReportConfigurationOptions options)
+        ReportConfigurationOptions options,
+        IReadOnlyList<DiagnosticEntry>? diagnostics = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
 
@@ -2984,7 +3035,7 @@ public static class ReportGenerator
         return GenerateMergeableReportJson(
             features, startTime, endTime, diagramLookup,
             relationships, internalFlowSegmentData, wholeTestFlow,
-            options.WholeTestFlowVisualization, ciMetadata);
+            options.WholeTestFlowVisualization, ciMetadata, diagnostics);
     }
 
     /// <summary>
@@ -3001,7 +3052,8 @@ public static class ReportGenerator
         Dictionary<string, object>? internalFlowSegmentData,
         Dictionary<string, Merge.WholeTestFlowFragment>? wholeTestFlow,
         WholeTestFlowVisualization wholeTestVisualization,
-        CiMetadata? ciMetadata)
+        CiMetadata? ciMetadata,
+        IReadOnlyList<DiagnosticEntry>? diagnostics = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
         var data = new Dictionary<string, object?>
@@ -3039,7 +3091,8 @@ public static class ReportGenerator
                 ciMetadata.PipelineUrl,
                 ciMetadata.Repository,
                 ciMetadata.RunId
-            }
+            },
+            ["diagnostics"] = MapDiagnosticsJson(diagnostics)
         };
         return JsonSerializer.Serialize(data, options);
     }
@@ -3822,6 +3875,12 @@ public static class ReportGenerator
                 ["kronikolVersion"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Version of Kronikol that generated this report" },
                 ["startTime"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["description"] = "UTC start time of the test run" },
                 ["endTime"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["description"] = "UTC end time of the test run" },
+                ["diagnostics"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "array",
+                    ["description"] = "Everything worth knowing about how this report was produced: capture health handed in by the host (CaptureDegraded), skipped malformed lines, diagrams that could not be rendered, labels that still do not read as sentences. Empty is the happy path.",
+                    ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/diagnostic" }
+                },
                 ["features"] = new Dictionary<string, object?>
                 {
                     ["type"] = "array",
@@ -3902,6 +3961,17 @@ public static class ReportGenerator
             },
             ["$defs"] = new Dictionary<string, object?>
             {
+                ["diagnostic"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["required"] = new[] { "kind", "message" },
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["kind"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(DiagnosticKind)), ["description"] = "What the entry is about (DiagnosticKind)" },
+                        ["message"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "One-line description, safe to print" },
+                        ["scenarioId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The scenario the entry belongs to, when it is scenario-specific" }
+                    }
+                },
                 ["step"] = new Dictionary<string, object?>
                 {
                     ["type"] = "object",

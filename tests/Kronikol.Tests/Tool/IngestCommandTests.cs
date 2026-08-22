@@ -1,4 +1,5 @@
 using Kronikol.Ingestion;
+using Kronikol.Reports;
 using Kronikol.Tool;
 using Kronikol.Tracking;
 
@@ -140,5 +141,86 @@ public class IngestCommandTests : IDisposable
             IngestCommand.PrintUsage(w);
             return w.ToString();
         }
+    }
+
+    [Fact]
+    public void Ingest_command_carries_host_diagnostics_into_the_report()
+    {
+        const string testId = "cafe651916cd43dd8448eb211c80319d";
+        var captures = Path.Combine(_dir, "captures");
+        Directory.CreateDirectory(captures);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/overview", "graphql", "web",
+            statusCode: "200", requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(30));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        File.WriteAllLines(Path.Combine(captures, "tests.ndjson"),
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › diagnostics", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        var output = Path.Combine(_dir, "out");
+        var @out = new StringWriter();
+        var err = new StringWriter();
+
+        var exit = IngestCommand.Run(
+        [
+            captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", output,
+            "--diagnostic", "CaptureDegraded:tap-di-redis: decoding disabled on 1 connection(s)",
+            "--diagnostic", "free text without a kind",
+            "--diagnostic", "NoSuchKind: still free text",
+        ], @out, err);
+
+        Assert.Equal(0, exit);
+        var printed = @out.ToString();
+        Assert.Contains("CaptureDegraded: tap-di-redis: decoding disabled on 1 connection(s)", printed);
+        Assert.Contains("Other: free text without a kind", printed);
+        Assert.Contains("Other: NoSuchKind: still free text", printed);
+
+        var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        Assert.Contains("Report diagnostics (", html);
+        Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", html);
+        using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        Assert.Contains(json.RootElement.GetProperty("diagnostics").EnumerateArray(),
+            d => d.GetProperty("kind").GetString() == "CaptureDegraded");
+
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("--diagnostic <kind>:<msg>", usage.ToString());
+    }
+
+    [Fact]
+    public void Ingest_command_rejects_a_diagnostic_without_a_message()
+    {
+        var err = new StringWriter();
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--diagnostic", "CaptureDegraded:"], new StringWriter(), err));
+        Assert.Contains("--diagnostic needs", err.ToString());
+
+        err = new StringWriter();
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--diagnostic"], new StringWriter(), err));
+        Assert.Contains("Missing value", err.ToString());
+    }
+
+    [Theory]
+    [InlineData("CaptureDegraded:tap: gave up", DiagnosticKind.CaptureDegraded, "tap: gave up")]
+    [InlineData("capturedegraded: tap: gave up ", DiagnosticKind.CaptureDegraded, "tap: gave up")]
+    [InlineData("MalformedLine:file:12", DiagnosticKind.MalformedLine, "file:12")]
+    [InlineData("just a message", DiagnosticKind.Other, "just a message")]
+    [InlineData("NotAKind: message", DiagnosticKind.Other, "NotAKind: message")]
+    [InlineData(":leading colon", DiagnosticKind.Other, ":leading colon")]
+    public void Diagnostic_values_parse_as_kind_colon_message(string value, DiagnosticKind kind, string message)
+    {
+        Assert.True(IngestCommand.TryParseDiagnostic(value, out var entry));
+        Assert.Equal(kind, entry.Kind);
+        Assert.Equal(message, entry.Message);
+        Assert.Null(entry.ScenarioId);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("Other:")]
+    [InlineData("CaptureDegraded:   ")]
+    public void Diagnostic_values_without_a_message_are_refused(string value)
+    {
+        Assert.False(IngestCommand.TryParseDiagnostic(value, out _));
     }
 }
