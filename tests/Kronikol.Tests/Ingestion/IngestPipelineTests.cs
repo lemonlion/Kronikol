@@ -258,6 +258,35 @@ public class IngestPipelineTests : IDisposable
     }
 
     [Fact]
+    public void A_scenario_with_only_markers_keeps_the_no_interactions_affordance_and_never_sends_an_empty_body_to_the_browser_engine()
+    {
+        // An API-only test: it asserted things but touched no tracked dependency. Its diagram is
+        // nothing but assertion notes — which the browser hides by default, leaving an empty body.
+        const string testId = "markers-only";
+        var tests = WriteTests(
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "api › probes the mock", Timestamp = T0 },
+            new TestRunRecord { Event = "assertion", TestId = testId, Text = "the mock answers 200", Status = "passed", Timestamp = T0.AddSeconds(1) },
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 2000, Timestamp = T0.AddSeconds(2) });
+        var output = Path.Combine(_dir, "R-markers-only");
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = output;
+
+        var result = IngestPipeline.Run(new IngestRequest { TestsFile = tests, Options = options });
+
+        Assert.True(result.Generated);
+        var html = File.ReadAllText(result.TestRunReportHtml);
+        // The note is in the diagram, the marker is on the page, and the browser script refuses to
+        // hand plantuml.js a diagram whose body the filters emptied.
+        Assert.Contains("data-no-interactions=\"true\"", html);
+        Assert.Contains("function hasDrawableBody", html);
+        Assert.Contains("Nothing to draw with the current filters", html);
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        var diagram = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0].GetString()!;
+        Assert.Contains("<<assertionNote>>", diagram);
+        Assert.Contains("✓ the mock answers 200", diagram);
+    }
+
+    [Fact]
     public void Markers_nest_under_the_user_action_in_flight_never_inside_a_backend_call()
     {
         const string t = "markers";

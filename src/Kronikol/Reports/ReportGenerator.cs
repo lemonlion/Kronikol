@@ -1310,6 +1310,16 @@ public static class ReportGenerator
                     }
 
                     body.Append("</details>");
+
+                    // A diagram made only of step bars / assertion notes (a test that never touched a
+                    // tracked dependency) still deserves the explicit "no interactions" affordance —
+                    // especially as those notes are hidden by default in the browser.
+                    if (showNoInteractionsMarker && hasSequenceDiagrams
+                        && !(trackedLogs ?? RequestResponseLogger.RequestAndResponseLogs)
+                            .Any(l => l.TestId == scenario.Id && !l.TrackingIgnore && !l.IsOverrideStart && !l.IsOverrideEnd && !l.IsActionStart))
+                    {
+                        body.Append(NoInteractionsMarkerHtml);
+                    }
                 }
                 else if (showNoInteractionsMarker)
                 {

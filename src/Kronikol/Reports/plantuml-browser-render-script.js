@@ -375,6 +375,26 @@
             processQueue();
         }
 
+        // Header-only lines: what a diagram is made of once every arrow, participant and note has been
+        // filtered away (assertion notes / step bars hidden). plantuml.js cannot draw an empty body —
+        // it answers "Syntax Error? (Assumed diagram type: class)" — so such a fragment is shown as a
+        // note instead of being sent to the engine.
+        var _headerOnlyRx = /^(@startuml|@enduml|!pragma\b|skinparam\b|autonumber\b|hide\b|scale\b|title\b)/;
+        function hasDrawableBody(lines) {
+            var inStyle = false;
+            for (var i = 0; i < lines.length; i++) {
+                var t = lines[i].trim();
+                if (!t) continue;
+                if (t === '<style>') { inStyle = true; continue; }
+                if (t === '</style>') { inStyle = false; continue; }
+                if (inStyle) continue;
+                if (_headerOnlyRx.test(t)) continue;
+                return true;
+            }
+            return false;
+        }
+        window._hasDrawableBody = hasDrawableBody;
+
         function processQueue() {
             if (rendering || window._plantumlRendering || renderQueue.length === 0) return;
             rendering = true;
@@ -382,6 +402,14 @@
             var item = renderQueue.shift();
             var lines = item.source.split('\n');
             var queueDone = false;
+            if (!hasDrawableBody(lines)) {
+                item.el.innerHTML = '<div class="no-interactions" data-nothing-to-draw="true">Nothing to draw with the current filters — this diagram is only assertion notes and/or step bars (use Assertions Shown / Steps Shown to see them).</div>';
+                item.el.dataset.rendered = '1';
+                rendering = false;
+                window._plantumlRendering = false;
+                processQueue();
+                return;
+            }
             function onQueueItemDone() {
                 if (queueDone) return;
                 queueDone = true;
