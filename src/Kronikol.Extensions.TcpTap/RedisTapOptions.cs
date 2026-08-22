@@ -53,6 +53,28 @@ public sealed class RedisTapOptions : TcpTapOptions
     /// </summary>
     public bool CapturePubSub { get; set; } = true;
 
+    /// <summary>
+    /// A bulk payload (a value being <c>SET</c>, a <c>GET</c> reply, any element of an aggregate) longer than this is
+    /// never buffered: the decoder streams it past, keeping the first bytes as a preview and the length on the wire,
+    /// and the interaction is still recorded — a <c>GET</c> of a 10 MB value is still a <c>Get (Hit)</c>, its note the
+    /// preview followed by <c> …[bulk string truncated: N bytes on the wire, K kept]</c>. Null (the default) means
+    /// <see cref="TcpTapOptions.BodyCapBytes"/>, or <see cref="TcpTapOptions.MaxBufferedBytes"/> when that is unlimited —
+    /// nothing beyond the record-time cap is kept anyway, so buffering it buys nothing. Never more than
+    /// <see cref="TcpTapOptions.MaxBufferedBytes"/>.
+    /// </summary>
+    public int? MaxBulkBytes { get; set; }
+
+    /// <summary>The bulk-payload cap in force: <see cref="MaxBulkBytes"/>, else <see cref="TcpTapOptions.BodyCapBytes"/>, else <see cref="TcpTapOptions.MaxBufferedBytes"/>; never above <see cref="TcpTapOptions.MaxBufferedBytes"/>.</summary>
+    public int EffectiveMaxBulkBytes => Math.Min(MaxBulkBytes ?? BodyCapBytes ?? MaxBufferedBytes, MaxBufferedBytes);
+
+    /// <inheritdoc />
+    public override void Validate()
+    {
+        base.Validate();
+        if (MaxBulkBytes is < 0)
+            throw new ArgumentOutOfRangeException(nameof(MaxBulkBytes), "MaxBulkBytes must be zero or positive, or null for the default.");
+    }
+
     /// <inheritdoc />
     public override void CopyTo(TcpTapOptions target)
     {
@@ -65,5 +87,6 @@ public sealed class RedisTapOptions : TcpTapOptions
         redis.ExcludedKeyPrefixes.UnionWith(ExcludedKeyPrefixes);
         redis.DefaultDatabase = DefaultDatabase;
         redis.CapturePubSub = CapturePubSub;
+        redis.MaxBulkBytes = MaxBulkBytes;
     }
 }

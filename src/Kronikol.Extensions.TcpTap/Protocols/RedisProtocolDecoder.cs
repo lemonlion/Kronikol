@@ -12,14 +12,38 @@ namespace Kronikol.Extensions.TcpTap.Protocols;
 /// <para>Labels come from the same <see cref="RedisOperationClassifier"/> source file the in-process
 /// <c>Kronikol.Extensions.Redis</c> extension uses, so a command tapped on the wire renders with a
 /// byte-identical <c>Method</c> and <c>Uri</c>.</para>
+/// <para>Both directions go through a <see cref="RespStreamParser"/>, so a value of any size is decoded without
+/// ever being buffered whole: a bulk payload over <see cref="RedisTapOptions.MaxBulkBytes"/> is streamed past,
+/// keeping a preview and the length on the wire, and the interaction is still recorded — a <c>GET</c> of a 10 MB
+/// value is still a <c>Get (Hit)</c>. Memory per connection is bounded by the caps, not by the data.</para>
 /// <para>Nothing from the handshake is ever recorded: <c>AUTH</c> and <c>HELLO</c> are hard-excluded (they
 /// carry credentials), and the rest of the chatter a client generates on connect
 /// (<c>CLIENT SETNAME</c>, <c>CONFIG GET</c>, <c>INFO</c>, <c>ECHO</c>, <c>PING</c>, <c>COMMAND</c>,
 /// <c>CLUSTER</c>) is excluded by default. Excluded commands are still tracked in the pending queue, because
 /// their replies still occupy a slot in the FIFO.</para>
+/// <para>When the decoder loses its place (the held-bytes cap, a pending-queue overflow, a protocol error on a
+/// connection that had been decoding fine) it throws a recoverable <see cref="TapProtocolException"/>; the tap
+/// calls <see cref="Reset"/> and the decoder <em>resynchronises</em>: client bytes are discarded until a segment
+/// starts with a command (<c>*&lt;n&gt;\r\n$</c> or an inline command letter), server bytes until a command is
+/// pending again, and the first interaction recorded afterwards is stamped <c>[resynchronised — pairing uncertain]</c>.</para>
 /// </remarks>
 public sealed class RedisProtocolDecoder : IProtocolDecoder
 {
+    /// <summary>The note prefix on both arrows of the first interaction recorded after a decoder reset.</summary>
+    public const string ResyncNotePrefix = "[resynchronised — pairing uncertain] ";
+
+    /// <summary>The pseudo-header name stamped on the first interaction recorded after a decoder reset.</summary>
+    public const string CaptureHeader = "x-kronikol-capture";
+
+    /// <summary>The <see cref="CaptureHeader"/> value stamped on the first interaction recorded after a decoder reset.</summary>
+    public const string CaptureResynced = "resynced";
+
+    /// <summary>Resets with no value decoded in between before the decoder gives up resynchronising and lets the tap disable it.</summary>
+    public const int MaxConsecutiveResyncs = 8;
+
+    /// <summary>Characters of a <see cref="RespValue.TruncationMarker"/> the preview leaves room for under <see cref="TcpTapOptions.BodyCapBytes"/>, so the record-time cap never cuts the marker off.</summary>
+    internal const int TruncationMarkerReserve = 128;
+
     private static readonly HashSet<string> AlwaysExcluded = new(StringComparer.OrdinalIgnoreCase)
     {
         "AUTH", "HELLO", "RESET",
@@ -45,20 +69,32 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
 
     private readonly TcpTapConnectionContext _context;
     private readonly RedisTapOptions _options;
-    private readonly WireBuffer _commands;
-    private readonly WireBuffer _replies;
+    private readonly RespStreamParser _commands;
+    private readonly RespStreamParser _replies;
+    private readonly Action<RespValue> _onCommandValue;
+    private readonly Action<RespValue> _onReplyValue;
     private readonly Queue<PendingCommand> _pending = new();
     private readonly RedisTrackingVerbosity _verbosity;
     private readonly string _endpoint;
     private int _database;
+    private DateTimeOffset _timestamp;
+    private bool _resyncingCommands;
+    private bool _resyncingReplies;
+    private bool _stampNext;
+    private int _resyncsWithoutRecord;
+    private bool _closed;
 
     /// <summary>Creates a decoder for one connection.</summary>
     public RedisProtocolDecoder(TcpTapConnectionContext context, RedisTapOptions options)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        _commands = new WireBuffer(options.MaxBufferedBytes);
-        _replies = new WireBuffer(options.MaxBufferedBytes);
+        var maxBulk = options.EffectiveMaxBulkBytes;
+        var preview = PreviewBytes(options.BodyCapBytes, maxBulk);
+        _commands = new RespStreamParser(maxBulk, preview, options.MaxBufferedBytes, acceptInlineCommands: true, OnOversizePayload);
+        _replies = new RespStreamParser(maxBulk, preview, options.MaxBufferedBytes, acceptInlineCommands: false, OnOversizePayload);
+        _onCommandValue = OnCommandValue;
+        _onReplyValue = OnReplyValue;
         _verbosity = TapVerbosityMap.ToRedis(options.Verbosity);
         _endpoint = $"{options.ForwardHost}:{options.ForwardPort}";
         _database = options.DefaultDatabase;
@@ -70,41 +106,179 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
     /// <summary>Commands seen but not yet answered.</summary>
     public int PendingCommands => _pending.Count;
 
+    /// <summary>Bulk payloads streamed past on this connection (both directions).</summary>
+    public int OversizePayloadsSkipped => _commands.OversizePayloadsSkipped + _replies.OversizePayloadsSkipped;
+
+    /// <summary>Bytes of oversize payloads not kept on this connection (both directions).</summary>
+    public long BytesSkipped => _commands.BytesSkipped + _replies.BytesSkipped;
+
+    /// <summary>Whether the decoder is waiting for the next command boundary after a reset.</summary>
+    public bool IsResynchronising => _resyncingCommands || _resyncingReplies;
+
+    /// <summary>
+    /// How many leading bytes of a streamed-past payload are kept: the record-time cap less room for the truncation
+    /// marker (so the cap never cuts the marker off), or the bulk cap itself when content is unlimited.
+    /// </summary>
+    internal static int PreviewBytes(int? bodyCapBytes, int maxBulkBytes)
+    {
+        if (bodyCapBytes is not { } cap)
+            return maxBulkBytes;
+        var preview = cap >= 4 * TruncationMarkerReserve ? cap - TruncationMarkerReserve : cap;
+        return Math.Min(preview, maxBulkBytes);
+    }
+
     /// <inheritdoc />
     public void OnClientToServer(ReadOnlySpan<byte> data, DateTimeOffset timestamp)
     {
-        _commands.Append(data);
-        while (RespParser.TryParseCommand(_commands.Span, out var arguments, out var consumed))
+        if (_resyncingCommands)
         {
-            _commands.Consume(consumed);
-            if (arguments is { Length: > 0 })
-                OnCommand(arguments, timestamp);
+            if (!StartsAtCommandBoundary(data, acceptInline: _commands.InlineCommands > 0))
+                return; // still inside whatever the client was sending when we lost our place
+            _resyncingCommands = false;
+        }
+
+        _timestamp = timestamp;
+        try
+        {
+            _commands.Feed(data, _onCommandValue);
+        }
+        catch (RespProtocolException ex) when (HasDecodedBefore)
+        {
+            throw Desynchronised(ex);
         }
     }
 
     /// <inheritdoc />
     public void OnServerToClient(ReadOnlySpan<byte> data, DateTimeOffset timestamp)
     {
-        _replies.Append(data);
-        while (RespParser.TryParse(_replies.Span, out var value, out var consumed))
+        if (_resyncingReplies)
         {
-            _replies.Consume(consumed);
-            if (value is not null)
-                OnReply(value, timestamp);
+            if (_pending.Count == 0)
+                return; // replies to commands we never saw — out-of-band until the client speaks again
+            _resyncingReplies = false;
+        }
+
+        _timestamp = timestamp;
+        try
+        {
+            _replies.Feed(data, _onReplyValue);
+        }
+        catch (RespProtocolException ex) when (HasDecodedBefore)
+        {
+            throw Desynchronised(ex);
         }
     }
 
     /// <inheritdoc />
     public void OnConnectionClosed()
     {
-        // Commands still unanswered when the socket closed produced no arrow; drop them.
-        _pending.Clear();
-        _commands.Clear();
-        _replies.Clear();
+        if (_closed)
+            return;
+        _closed = true;
+
+        var unanswered = _pending.Count;
+        var partialCommand = !_commands.IsAtValueBoundary;
+        var partialReply = !_replies.IsAtValueBoundary;
+        if (unanswered > 0 || partialCommand || partialReply)
+        {
+            var detail = $"{unanswered} unanswered command(s)";
+            if (partialCommand)
+                detail += $", a partial command ({_commands.HeldBytes} B held{(_commands.IsStreamingPast ? ", streaming past an oversize payload" : "")})";
+            if (partialReply)
+                detail += $", a partial reply ({_replies.HeldBytes} B held{(_replies.IsStreamingPast ? ", streaming past an oversize payload" : "")})";
+            _context.ReportClosedMidMessage(detail);
+        }
+
+        Clear();
     }
 
     /// <inheritdoc />
-    public void Dispose() => OnConnectionClosed();
+    public void Dispose()
+    {
+        _closed = true;
+        Clear();
+    }
+
+    /// <summary>
+    /// Drops both parsers' partial state and the pending queue, then resynchronises: client bytes are discarded
+    /// until a segment starts with a command, server bytes until a command is pending again, and the first
+    /// interaction recorded afterwards is stamped <see cref="ResyncNotePrefix"/> / <c>x-kronikol-capture: resynced</c>.
+    /// Called by the tap after a recoverable protocol error (see <see cref="TcpTapOptions.ResyncAfterOverflow"/>).
+    /// </summary>
+    public void Reset()
+    {
+        _commands.Reset();
+        _replies.Reset();
+        _pending.Clear();
+        _resyncingCommands = true;
+        _resyncingReplies = true;
+        _stampNext = true;
+    }
+
+    bool IProtocolDecoder.TryReset()
+    {
+        if (++_resyncsWithoutRecord > MaxConsecutiveResyncs)
+        {
+            _context.Log($"{MaxConsecutiveResyncs} resets without recording a single interaction in between — giving up on this connection.");
+            return false;
+        }
+
+        Reset();
+        return true;
+    }
+
+    private bool HasDecodedBefore => _commands.ValuesCompleted + _replies.ValuesCompleted > 0;
+
+    private RespProtocolException Desynchronised(RespProtocolException inner) =>
+        new($"{inner.Message} — after {_commands.ValuesCompleted + _replies.ValuesCompleted} values on this connection, so the stream is desynchronised rather than not RESP")
+        {
+            Recoverable = true,
+        };
+
+    /// <summary>
+    /// A segment that starts with <c>*&lt;digits&gt;\r\n$</c> — a RESP command — or, when <paramref name="acceptInline"/>
+    /// (the connection has sent inline commands before), with a letter. Payload fragments left over after a desync are
+    /// JSON, binary or text, which is why a letter alone is not trusted on a connection that speaks RESP arrays.
+    /// </summary>
+    internal static bool StartsAtCommandBoundary(ReadOnlySpan<byte> data, bool acceptInline)
+    {
+        if (data.Length == 0)
+            return false;
+        var first = data[0];
+        if (first is >= (byte)'A' and <= (byte)'Z' or >= (byte)'a' and <= (byte)'z')
+            return acceptInline;
+        if (first != (byte)'*')
+            return false;
+        var i = 1;
+        while (i < data.Length && data[i] is >= (byte)'0' and <= (byte)'9')
+            i++;
+        return i > 1 && i + 2 < data.Length && data[i] == (byte)'\r' && data[i + 1] == (byte)'\n' && data[i + 2] == (byte)'$';
+    }
+
+    private void Clear()
+    {
+        _pending.Clear();
+        _commands.Reset();
+        _replies.Reset();
+    }
+
+    private void OnOversizePayload(long declaredLength, int keptBytes) =>
+        _context.CountOversizePayload(declaredLength, keptBytes);
+
+    private void OnCommandValue(RespValue value)
+    {
+        var arguments = value.Type switch
+        {
+            RespType.Array => (value.Items ?? []).Select(i => i.AsText() ?? string.Empty).ToArray(),
+            RespType.Null => [],
+            RespType.BulkString => [value.AsText() ?? string.Empty],
+            _ => throw new RespProtocolException($"A client command must be an array of bulk strings, got {value.Type}."),
+        };
+        if (arguments.Length > 0)
+            OnCommand(arguments, _timestamp);
+    }
+
+    private void OnReplyValue(RespValue value) => OnReply(value, _timestamp);
 
     private void OnCommand(string[] arguments, DateTimeOffset timestamp)
     {
@@ -133,11 +307,11 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
 
         if (_pending.Count > MaxPendingCommands)
         {
-            // A connection whose replies we never saw (dropped segments, a mid-stream join): forget the
-            // backlog rather than grow without bound. Forwarding is untouched either way.
-            _pending.Clear();
-            _context.CountDecodeError();
-            _context.Log($"more than {MaxPendingCommands} unanswered commands — dropping the pending queue; some arrows will be missing.");
+            // A connection whose replies we never saw (dropped segments, a desynchronised reply stream): the
+            // queue is worthless. Recoverable — the tap resets us and we re-arm at the next command boundary.
+            throw new TapProtocolException(
+                $"More than {MaxPendingCommands} unanswered commands — replies are not being decoded; dropping the pending queue.",
+                recoverable: true);
         }
     }
 
@@ -202,8 +376,22 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
         if (responseContent is not null)
             responseContent = Redact(_options.ValueRedaction, responseContent);
 
+        (string Key, string? Value)[]? headers = null;
+        _resyncsWithoutRecord = 0;
+        if (_stampNext)
+        {
+            // The first interaction after a reset: a reply still in flight may belong to a command we discarded.
+            _stampNext = false;
+            requestContent = requestContent is null ? ResyncNotePrefix.TrimEnd() : ResyncNotePrefix + requestContent;
+            responseContent = responseContent is null ? ResyncNotePrefix.TrimEnd() : ResyncNotePrefix + responseContent;
+            headers = [(CaptureHeader, CaptureResynced)];
+        }
+
         _context.Record(new TapInteraction(
-            responseMethod, requestMethod, uri, requestContent, responseContent, status, pending.Timestamp, timestamp));
+            responseMethod, requestMethod, uri, requestContent, responseContent, status, pending.Timestamp, timestamp)
+        {
+            Headers = headers,
+        });
     }
 
     private Uri BuildUri(string? key, int database)

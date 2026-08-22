@@ -40,6 +40,18 @@ internal sealed class DecoderHarness : IDisposable
         Sink = new RecordingSink();
         options.Sink = Sink;
         options.EmitActivities = false;
+        var userDegraded = options.OnCaptureDegraded;
+        options.OnCaptureDegraded = d =>
+        {
+            lock (Degradations) Degradations.Add(d);
+            userDegraded?.Invoke(d);
+        };
+        var userLog = options.Log;
+        options.Log = line =>
+        {
+            lock (LogLines) LogLines.Add(line);
+            userLog?.Invoke(line);
+        };
         _tap = new TcpTapCore(options);
         Context = new TcpTapConnectionContext(_tap, 1, new IPEndPoint(IPAddress.Loopback, 12345));
         Decoder = options.DecoderFactory!(Context);
@@ -53,7 +65,50 @@ internal sealed class DecoderHarness : IDisposable
 
     public IProtocolDecoder Decoder { get; }
 
+    /// <summary>The tap behind the context — its counters and <c>Diagnostics()</c>.</summary>
+    public TcpTapCore Tap => _tap;
+
+    /// <summary>Every <c>OnCaptureDegraded</c> event, in order.</summary>
+    public List<CaptureDegradation> Degradations { get; } = [];
+
+    /// <summary>Every <c>Log</c> line, in order.</summary>
+    public List<string> LogLines { get; } = [];
+
+    /// <summary>Whether the tap-mediated path (<see cref="Deliver(TapDirection, byte[], DateTimeOffset?)"/>) is still decoding.</summary>
+    public bool Decoding { get; private set; } = true;
+
     public long DecodeErrors => _tap.DecodeErrors;
+
+    /// <summary>
+    /// Feeds a segment the way <c>TcpTap.DecodeLoopAsync</c> does: a decoder exception goes through the tap's
+    /// reset-or-disable policy instead of propagating, and a disabled connection drains silently.
+    /// </summary>
+    public void Deliver(TapDirection direction, byte[] bytes, DateTimeOffset? at = null)
+    {
+        if (!Decoding)
+            return;
+        try
+        {
+            if (direction == TapDirection.ClientToServer)
+                Decoder.OnClientToServer(bytes, at ?? DateTimeOffset.UtcNow);
+            else
+                Decoder.OnServerToClient(bytes, at ?? DateTimeOffset.UtcNow);
+        }
+        catch (Exception ex)
+        {
+            Decoding = _tap.HandleDecodeError(Decoder, Context, ex);
+        }
+    }
+
+    public void Deliver(TapDirection direction, string text, DateTimeOffset? at = null) =>
+        Deliver(direction, Encoding.UTF8.GetBytes(text), at);
+
+    /// <summary>Delivers <paramref name="bytes"/> in chunks of <paramref name="chunkSize"/>, as a socket would.</summary>
+    public void DeliverChunked(TapDirection direction, byte[] bytes, int chunkSize)
+    {
+        for (var offset = 0; offset < bytes.Length; offset += chunkSize)
+            Deliver(direction, bytes[offset..Math.Min(bytes.Length, offset + chunkSize)]);
+    }
 
     public static DecoderHarness Redis(Action<RedisTapOptions>? configure = null)
     {

@@ -20,9 +20,12 @@ public enum TapDirection
 /// <para>One instance per connection, created by <see cref="TcpTapOptions.DecoderFactory"/>. Methods are
 /// called from a single decoder task in wire order, never from the byte pumps — a slow or broken decoder can
 /// therefore never delay or corrupt forwarding (invariant D3).</para>
-/// <para>A decoder should not throw: the tap catches, counts and stops decoding that one connection while
-/// forwarding continues. Preferring to resync (or to give up decoding by throwing once) is the decoder's
-/// choice.</para>
+/// <para>A decoder that throws is caught and counted by the tap, and forwarding continues regardless. A
+/// <see cref="Protocols.TapProtocolException"/> with <see cref="Protocols.TapProtocolException.Recoverable"/>
+/// set — the stream is the right protocol but the decoder lost its place — makes the tap call
+/// <see cref="TryReset"/> (when <see cref="TcpTapOptions.ResyncAfterOverflow"/> allows) and keep decoding;
+/// any other exception stops decoding that one connection. Every such event is counted, logged and reported
+/// through <see cref="TcpTapOptions.OnCaptureDegraded"/> and <see cref="TcpTap.Diagnostics"/>.</para>
 /// </remarks>
 public interface IProtocolDecoder : IDisposable
 {
@@ -34,6 +37,13 @@ public interface IProtocolDecoder : IDisposable
 
     /// <summary>Both directions have closed; flush anything still pending.</summary>
     void OnConnectionClosed();
+
+    /// <summary>
+    /// Clears all per-connection state after a recoverable protocol error so decoding can resume at the next
+    /// message boundary. Returns false when the decoder cannot (the default) or has given up trying, in which
+    /// case the tap disables decoding for the connection.
+    /// </summary>
+    bool TryReset() => false;
 }
 
 /// <summary>
@@ -55,4 +65,11 @@ public sealed record TapInteraction(
     string? ResponseContent,
     OneOf<HttpStatusCode, string>? StatusCode,
     DateTimeOffset RequestTimestamp,
-    DateTimeOffset ResponseTimestamp);
+    DateTimeOffset ResponseTimestamp)
+{
+    /// <summary>
+    /// Optional pseudo-headers stamped on both halves — a decoder's capture-quality annotations, such as
+    /// <c>x-kronikol-capture: resynced</c> on the first interaction after a decoder reset. Null = none.
+    /// </summary>
+    public (string Key, string? Value)[]? Headers { get; init; }
+}

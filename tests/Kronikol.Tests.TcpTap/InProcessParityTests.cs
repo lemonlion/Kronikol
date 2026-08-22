@@ -113,6 +113,26 @@ public class InProcessParityTests
     }
 
     [Fact]
+    public void AnOversizeRedisValueProducesTheSameLabelsAsInProcessAndANoteThatDiffersOnlyByTheMarker()
+    {
+        // In-process, a 1 MiB GET reply is simply a hit; on the wire the payload is streamed past — the labels and
+        // URI must still be identical, and the note is the value's preview plus the truncation marker.
+        var expected = InProcessRedis("GET", "cache:big", 0, hasResult: true, RedisTrackingVerbosity.Detailed, "localhost:6379");
+
+        const int size = 1024 * 1024;
+        using var harness = DecoderHarness.Redis();
+        harness.ClientToServer(Resp.Command("GET", "cache:big"));
+        harness.ServerToClient(System.Text.Encoding.UTF8.GetBytes($"${size}\r\n").Concat(Enumerable.Repeat((byte)'p', size)).Concat("\r\n"u8.ToArray()).ToArray());
+
+        var request = Assert.Single(harness.Sink.Requests);
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal(expected.RequestMethod, Text(request.Method));
+        Assert.Equal(expected.ResponseMethod, Text(response.Method));
+        Assert.Equal(expected.Uri, request.Uri.ToString());
+        Assert.Equal(new string('p', 65408) + " …[bulk string truncated: 1,048,576 bytes on the wire, 65,408 kept]", response.Content);
+    }
+
+    [Fact]
     public void RedisMultiKeyUrisMatchTheInProcessRedisKeyArrayJoin()
     {
         // The in-process extension joins a RedisKey[] with commas; the wire tap must produce the same URI for

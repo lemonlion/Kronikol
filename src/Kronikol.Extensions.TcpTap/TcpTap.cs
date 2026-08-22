@@ -1,8 +1,11 @@
 using System.Buffers;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Channels;
+using Kronikol.Extensions.TcpTap.Protocols;
+using Kronikol.Reports;
 using Kronikol.Tracking;
 
 namespace Kronikol.Extensions.TcpTap;
@@ -17,8 +20,14 @@ namespace Kronikol.Extensions.TcpTap;
 /// <remarks>
 /// <para><b>Forwarding never waits on capture (D3).</b> Each pump writes the bytes downstream before it tries
 /// to enqueue the copy, the queue is bounded, and a full queue drops the copy and increments
-/// <see cref="SegmentsDropped"/>. A decoder that throws is caught, counted in <see cref="DecodeErrors"/> and
-/// switched off for that one connection — the connection keeps forwarding.</para>
+/// <see cref="SegmentsDropped"/>. A decoder that throws is caught and counted; when the error is recoverable
+/// (<see cref="TapProtocolException.Recoverable"/>) and <see cref="TcpTapOptions.ResyncAfterOverflow"/> is on
+/// the decoder is reset and resumes at the next command boundary (<see cref="DecoderResets"/>), otherwise it is
+/// switched off for that one connection (<see cref="DecodingDisabledConnections"/>) — the connection keeps
+/// forwarding either way.</para>
+/// <para><b>Capture loss is never silent.</b> Every skip, reset, give-up and drop is a counter, a
+/// <see cref="TcpTapOptions.Log"/> line, a <see cref="TcpTapOptions.OnCaptureDegraded"/> event and an entry in
+/// <see cref="Diagnostics"/> — the list a host hands to the ingest so it lands in the report.</para>
 /// <para>The tap never learns a connection string or a password: it sees only the bytes on an already-open
 /// socket, and the decoders drop authentication and handshake commands before anything reaches a sink.</para>
 /// <para>Use <see cref="RedisTap"/> or <see cref="MongoTap"/> for the two decoders that ship with the package.</para>
@@ -30,6 +39,8 @@ public class TcpTap : IAsyncDisposable
 
     /// <summary>The source the client spans are started on. Attach an OpenTelemetry listener to export them.</summary>
     public static readonly ActivitySource ActivitySource = new(ActivitySourceName);
+
+    private static readonly TimeSpan DropReportInterval = TimeSpan.FromMinutes(1);
 
     private readonly TcpTapOptions _options;
     private TcpListener? _listener;
@@ -45,6 +56,17 @@ public class TcpTap : IAsyncDisposable
     private long _bytesClientToServer;
     private long _bytesServerToClient;
     private long _nextConnectionId;
+
+    private long _oversizePayloadsSkipped;
+    private long _bytesSkipped;
+    private long _largestOversizePayload;
+    private long _decoderResets;
+    private long _decodingDisabledConnections;
+    private long _connectionsClosedMidMessage;
+    private long _firstDisabledAtTicks;
+    private string? _lastDisabledReason;
+    private long _lastInteractionAtTicks;
+    private long _bytesSinceLastInteraction;
 
     /// <summary>Creates a tap for the given options (validated on <see cref="StartAsync"/>).</summary>
     public TcpTap(TcpTapOptions options) => _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -67,7 +89,10 @@ public class TcpTap : IAsyncDisposable
     /// <summary>Command/reply exchanges recorded so far.</summary>
     public long InteractionsCaptured => Interlocked.Read(ref _interactions);
 
-    /// <summary>Connections whose decoding was abandoned after an error (forwarding was unaffected).</summary>
+    /// <summary>
+    /// Decode problems of any kind — a decoder reset, a give-up, a pending-queue overflow, a key that could not form a
+    /// URI. The specific counters (<see cref="DecoderResets"/>, <see cref="DecodingDisabledConnections"/>, …) say which.
+    /// </summary>
     public long DecodeErrors => Interlocked.Read(ref _decodeErrors);
 
     /// <summary>Byte segments dropped because a connection's decode queue was full. Non-zero means capture (never forwarding) lost data.</summary>
@@ -84,6 +109,37 @@ public class TcpTap : IAsyncDisposable
 
     /// <summary>Bytes forwarded from the server to the service.</summary>
     public long BytesServerToClient => Interlocked.Read(ref _bytesServerToClient);
+
+    /// <summary>Payloads longer than the capture cap that were streamed past instead of buffered. Their interactions were still recorded, as previews.</summary>
+    public long OversizePayloadsSkipped => Interlocked.Read(ref _oversizePayloadsSkipped);
+
+    /// <summary>Bytes of oversize payloads that were not kept (the previews are not counted).</summary>
+    public long BytesSkipped => Interlocked.Read(ref _bytesSkipped);
+
+    /// <summary>The declared length of the largest payload streamed past so far.</summary>
+    public long LargestOversizePayload => Interlocked.Read(ref _largestOversizePayload);
+
+    /// <summary>Times a decoder lost its place and was reset to resume at the next command boundary (see <see cref="TcpTapOptions.ResyncAfterOverflow"/>).</summary>
+    public long DecoderResets => Interlocked.Read(ref _decoderResets);
+
+    /// <summary>Connections whose decoding was abandoned for good — the number that must be zero for the diagrams to be complete.</summary>
+    public long DecodingDisabledConnections => Interlocked.Read(ref _decodingDisabledConnections);
+
+    /// <summary>Connections that closed with a command unanswered or a message only partly received; their last interaction(s) were not recorded.</summary>
+    public long ConnectionsClosedMidMessage => Interlocked.Read(ref _connectionsClosedMidMessage);
+
+    /// <summary>When the last interaction was recorded, or null when none has been.</summary>
+    public DateTimeOffset? LastInteractionAt
+    {
+        get
+        {
+            var ticks = Interlocked.Read(ref _lastInteractionAtTicks);
+            return ticks == 0 ? null : new DateTimeOffset(ticks, TimeSpan.Zero);
+        }
+    }
+
+    /// <summary>Bytes forwarded (both directions) since the last recorded interaction — the stall detector's input.</summary>
+    public long BytesSinceLastInteraction => Interlocked.Read(ref _bytesSinceLastInteraction);
 
     /// <summary>Starts listening. Throws if the options are invalid or the port cannot be bound.</summary>
     public Task StartAsync(CancellationToken cancellationToken = default)
@@ -170,8 +226,9 @@ public class TcpTap : IAsyncDisposable
 
             var clientStream = client.GetStream();
             var upstreamStream = upstream.GetStream();
-            var toServer = PumpAsync(clientStream, upstreamStream, upstream.Client, TapDirection.ClientToServer, channel.Writer, ct);
-            var toClient = PumpAsync(upstreamStream, clientStream, client.Client, TapDirection.ServerToClient, channel.Writer, ct);
+            var pumpState = new ConnectionPumpState(id);
+            var toServer = PumpAsync(clientStream, upstreamStream, upstream.Client, TapDirection.ClientToServer, channel.Writer, pumpState, ct);
+            var toClient = PumpAsync(upstreamStream, clientStream, client.Client, TapDirection.ServerToClient, channel.Writer, pumpState, ct);
 
             await Task.WhenAll(toServer, toClient).ConfigureAwait(false);
             channel.Writer.TryComplete();
@@ -200,7 +257,7 @@ public class TcpTap : IAsyncDisposable
     /// </summary>
     private async Task PumpAsync(
         Stream source, Stream destination, Socket destinationSocket, TapDirection direction,
-        ChannelWriter<TapSegment> writer, CancellationToken ct)
+        ChannelWriter<TapSegment> writer, ConnectionPumpState state, CancellationToken ct)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(_options.ReadBufferBytes);
         try
@@ -233,10 +290,11 @@ public class TcpTap : IAsyncDisposable
                     Interlocked.Add(ref _bytesClientToServer, read);
                 else
                     Interlocked.Add(ref _bytesServerToClient, read);
+                Interlocked.Add(ref _bytesSinceLastInteraction, read);
 
                 var copy = buffer.AsSpan(0, read).ToArray();
                 if (!writer.TryWrite(new TapSegment(direction, copy, DateTimeOffset.UtcNow)))
-                    CountDrop(direction);
+                    CountDrop(direction, state);
             }
         }
         finally
@@ -248,13 +306,22 @@ public class TcpTap : IAsyncDisposable
         }
     }
 
-    private void CountDrop(TapDirection direction)
+    private void CountDrop(TapDirection direction, ConnectionPumpState state)
     {
         var total = direction == TapDirection.ClientToServer
             ? Interlocked.Increment(ref _droppedClientToServer)
             : Interlocked.Increment(ref _droppedServerToClient);
         if (total == 1)
             _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap decode queue full ({direction}) — capture is dropping segments; forwarding is unaffected.");
+
+        // The hot path: tell the host at most once per connection per minute.
+        var now = Environment.TickCount64;
+        var last = Volatile.Read(ref state.LastDropReportTicks);
+        if (last != 0 && now - last < DropReportInterval.TotalMilliseconds)
+            return;
+        if (Interlocked.CompareExchange(ref state.LastDropReportTicks, now, last) == last)
+            Degrade(state.ConnectionId, CaptureDegradationKind.SegmentsDropped,
+                $"decode queue full ({direction}) — segments dropped; interactions on this connection may be missing or mis-paired");
     }
 
     private async Task DecodeLoopAsync(ChannelReader<TapSegment> reader, IProtocolDecoder decoder, TcpTapConnectionContext context)
@@ -276,11 +343,7 @@ public class TcpTap : IAsyncDisposable
                 }
                 catch (Exception ex)
                 {
-                    decoding = false;
-                    Interlocked.Increment(ref _decodeErrors);
-                    _options.Log?.Invoke(
-                        $"[{_options.DisplayName}] tcp-tap decoder gave up on connection {context.ConnectionId} " +
-                        $"({ex.GetType().Name}: {ex.Message}); forwarding continues untouched.");
+                    decoding = HandleDecodeError(decoder, context, ex);
                 }
             }
 
@@ -290,8 +353,150 @@ public class TcpTap : IAsyncDisposable
         catch (Exception ex)
         {
             Interlocked.Increment(ref _decodeErrors);
-            _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap decode loop error: {ex.GetType().Name}: {ex.Message}");
+            DisableDecoding(context.ConnectionId, ex, "decode loop error");
         }
+    }
+
+    /// <summary>
+    /// The policy for a decoder exception: a recoverable protocol error with <see cref="TcpTapOptions.ResyncAfterOverflow"/>
+    /// on resets the decoder and decoding continues (true); anything else disables decoding for the connection (false).
+    /// Every outcome is counted, logged and reported through <see cref="TcpTapOptions.OnCaptureDegraded"/>.
+    /// </summary>
+    internal bool HandleDecodeError(IProtocolDecoder decoder, TcpTapConnectionContext context, Exception ex)
+    {
+        Interlocked.Increment(ref _decodeErrors);
+        if (ex is TapProtocolException { Recoverable: true } && _options.ResyncAfterOverflow && TryReset(decoder, context))
+        {
+            Interlocked.Increment(ref _decoderResets);
+            var detail = $"{ex.GetType().Name}: {ex.Message}";
+            _options.Log?.Invoke(
+                $"[{_options.DisplayName}] tcp-tap decoder reset on connection {context.ConnectionId} ({detail}); " +
+                "resuming at the next command boundary — the first interaction after it is stamped \"pairing uncertain\". Forwarding continues untouched.");
+            Degrade(context.ConnectionId, CaptureDegradationKind.DecoderReset, detail);
+            return true;
+        }
+
+        DisableDecoding(context.ConnectionId, ex, "decoder gave up");
+        return false;
+    }
+
+    private bool TryReset(IProtocolDecoder decoder, TcpTapConnectionContext context)
+    {
+        try
+        {
+            return decoder.TryReset();
+        }
+        catch (Exception ex)
+        {
+            _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap decoder reset threw on connection {context.ConnectionId} ({ex.GetType().Name}: {ex.Message}).");
+            return false;
+        }
+    }
+
+    private void DisableDecoding(long connectionId, Exception ex, string what)
+    {
+        Interlocked.Increment(ref _decodingDisabledConnections);
+        var detail = $"{ex.GetType().Name}: {ex.Message}";
+        var now = DateTimeOffset.UtcNow;
+        Interlocked.CompareExchange(ref _firstDisabledAtTicks, now.UtcTicks, 0);
+        Volatile.Write(ref _lastDisabledReason, detail);
+        _options.Log?.Invoke(
+            $"[{_options.DisplayName}] tcp-tap {what} on connection {connectionId} ({detail}); " +
+            "nothing on this connection is decoded from now on — forwarding continues untouched.");
+        Degrade(connectionId, CaptureDegradationKind.DecodingDisabled, $"{detail} — arrows on this connection after {now:HH:mm:ss}Z are missing");
+    }
+
+    internal void Degrade(long connectionId, CaptureDegradationKind kind, string detail)
+    {
+        var callback = _options.OnCaptureDegraded;
+        if (callback is null)
+            return;
+        try
+        {
+            callback(new CaptureDegradation(_options.DisplayName, connectionId, kind, detail));
+        }
+        catch (Exception ex)
+        {
+            _options.Log?.Invoke($"[{_options.DisplayName}] OnCaptureDegraded threw ({ex.GetType().Name}: {ex.Message}); ignored.");
+        }
+    }
+
+    internal void CountOversizePayload(long connectionId, long declaredLength, int keptBytes)
+    {
+        Interlocked.Increment(ref _oversizePayloadsSkipped);
+        Interlocked.Add(ref _bytesSkipped, declaredLength - keptBytes);
+        long seen;
+        while ((seen = Interlocked.Read(ref _largestOversizePayload)) < declaredLength &&
+               Interlocked.CompareExchange(ref _largestOversizePayload, declaredLength, seen) != seen)
+        {
+        }
+
+        Degrade(connectionId, CaptureDegradationKind.OversizePayloadSkipped,
+            $"payload of {declaredLength.ToString("N0", CultureInfo.InvariantCulture)} B streamed past (over the capture cap); " +
+            $"{keptBytes.ToString("N0", CultureInfo.InvariantCulture)} B kept as a preview");
+    }
+
+    internal void CountClosedMidMessage(long connectionId, string detail)
+    {
+        Interlocked.Increment(ref _connectionsClosedMidMessage);
+        _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap connection {connectionId} closed mid-message ({detail}); its last interaction(s) were not recorded.");
+        Degrade(connectionId, CaptureDegradationKind.ConnectionClosedMidMessage, detail);
+    }
+
+    /// <summary>
+    /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per non-zero
+    /// counter — connections whose decoding was disabled (and since when), oversize payloads streamed past, decoder
+    /// resets, dropped segments, connections closed mid-message — plus a heuristic "decoding may have stalled" entry
+    /// when bytes keep flowing without an interaction being recorded (<see cref="TcpTapOptions.DecodingStallBytes"/>).
+    /// Empty when capture was complete. A host hands the list to <c>IngestRequest.HostDiagnostics</c> so it appears
+    /// in <c>IngestResult.Diagnostics</c> and the report.
+    /// </summary>
+    public IReadOnlyList<DiagnosticEntry> Diagnostics()
+    {
+        var name = _options.DisplayName;
+        var entries = new List<DiagnosticEntry>();
+
+        var disabled = DecodingDisabledConnections;
+        if (disabled > 0)
+        {
+            var firstTicks = Interlocked.Read(ref _firstDisabledAtTicks);
+            var since = firstTicks == 0 ? "" : $" after {new DateTimeOffset(firstTicks, TimeSpan.Zero):HH:mm:ss}Z";
+            var reason = Volatile.Read(ref _lastDisabledReason);
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: decoding disabled on {disabled:N0} connection(s) — {_options.ServiceName} arrows on them{since} are missing" +
+                (reason is null ? "" : $" ({reason})")));
+        }
+
+        var oversize = OversizePayloadsSkipped;
+        if (oversize > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {oversize:N0} oversize payload(s) streamed past (largest {LargestOversizePayload:N0} B, {BytesSkipped:N0} B not kept) — values recorded as previews"));
+
+        var resets = DecoderResets;
+        if (resets > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: decoder reset {resets:N0} time(s) after a desynchronised stream — interactions after a reset may be mis-paired until the connection goes idle; the first is stamped \"resynchronised — pairing uncertain\""));
+
+        var dropped = SegmentsDropped;
+        if (dropped > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {dropped:N0} segment(s) dropped because the decode queue was full ({SegmentsDroppedClientToServer:N0} service→server, {SegmentsDroppedServerToClient:N0} server→service) — interactions may be missing or mis-paired; forwarding was unaffected"));
+
+        var closedMid = ConnectionsClosedMidMessage;
+        if (closedMid > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {closedMid:N0} connection(s) closed mid-message — their last command(s) were not recorded"));
+
+        if (_options.DecodingStallBytes is { } stallBytes && BytesSinceLastInteraction >= stallBytes)
+        {
+            var last = LastInteractionAt;
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {BytesSinceLastInteraction:N0} B have flowed since the last recorded interaction" +
+                (last is null ? " (none recorded yet)" : $" at {last.Value:HH:mm:ss}Z") +
+                " — decoding may have stalled, or the traffic is all excluded chatter"));
+        }
+
+        return entries;
     }
 
     // ------------------------------------------------------------------ capture
@@ -330,11 +535,12 @@ public class TcpTap : IAsyncDisposable
 
         var requestContent = Cap(interaction.RequestContent);
         var responseContent = _options.CaptureReplies ? Cap(interaction.ResponseContent) : null;
+        var headers = interaction.Headers ?? [];
 
         _options.Sink.Log(new RequestResponseLog(
             identity.Name, identity.Id,
             interaction.RequestMethod ?? interaction.Method,
-            requestContent, interaction.Uri, [],
+            requestContent, interaction.Uri, headers,
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Request, traceId, requestResponseId, false,
             DependencyCategory: _options.DependencyCategory,
@@ -349,7 +555,7 @@ public class TcpTap : IAsyncDisposable
         _options.Sink.Log(new RequestResponseLog(
             identity.Name, identity.Id,
             interaction.Method,
-            responseContent, interaction.Uri, [],
+            responseContent, interaction.Uri, headers,
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Response, traceId, requestResponseId, false,
             interaction.StatusCode,
@@ -363,6 +569,8 @@ public class TcpTap : IAsyncDisposable
         });
 
         Interlocked.Increment(ref _interactions);
+        Interlocked.Exchange(ref _lastInteractionAtTicks, DateTimeOffset.UtcNow.UtcTicks);
+        Interlocked.Exchange(ref _bytesSinceLastInteraction, 0);
     }
 
     private static string Describe(OneOf<HttpMethod, string> method) =>
@@ -425,11 +633,19 @@ public class TcpTap : IAsyncDisposable
         _cts?.Dispose();
         _options.Log?.Invoke(
             $"[{_options.DisplayName}] tcp-tap stopped ({ConnectionsAccepted} connections, {InteractionsCaptured} interactions, " +
-            $"{SegmentsDropped} segments dropped, {DecodeErrors} decode errors)");
+            $"{SegmentsDropped} segments dropped, {DecodeErrors} decode errors, {OversizePayloadsSkipped} oversize payloads skipped, " +
+            $"{DecoderResets} decoder resets, {DecodingDisabledConnections} connections with decoding disabled)");
         GC.SuppressFinalize(this);
     }
 
     private readonly record struct TapSegment(TapDirection Direction, byte[] Data, DateTimeOffset Timestamp);
+
+    private sealed class ConnectionPumpState(long connectionId)
+    {
+        public long ConnectionId { get; } = connectionId;
+
+        public long LastDropReportTicks;
+    }
 }
 
 /// <summary>What a decoder is given about the connection it is decoding, and how it reports what it finds.</summary>
@@ -461,4 +677,13 @@ public sealed class TcpTapConnectionContext
 
     /// <summary>Counts a recoverable decode problem the decoder chose to swallow rather than give up on.</summary>
     public void CountDecodeError() => _tap.CountDecodeError();
+
+    /// <summary>Counts a payload the decoder streamed past because it was longer than the capture cap (the interaction is still recorded, as a preview).</summary>
+    public void CountOversizePayload(long declaredLength, int keptBytes) => _tap.CountOversizePayload(ConnectionId, declaredLength, keptBytes);
+
+    /// <summary>Reports that the connection closed with a command unanswered or a message only partly received.</summary>
+    public void ReportClosedMidMessage(string detail) => _tap.CountClosedMidMessage(ConnectionId, detail);
+
+    /// <summary>Reports any other capture-loss event on this connection through <see cref="TcpTapOptions.OnCaptureDegraded"/>.</summary>
+    public void ReportDegraded(CaptureDegradationKind kind, string detail) => _tap.Degrade(ConnectionId, kind, detail);
 }

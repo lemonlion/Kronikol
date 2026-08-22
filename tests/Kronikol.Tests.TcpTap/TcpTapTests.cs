@@ -248,6 +248,128 @@ public class TcpTapTests
         Assert.Empty(sink.Logs);
         lock (diagnostics)
             Assert.Contains(diagnostics, d => d.Contains("gave up") && d.Contains("forwarding continues"));
+        Assert.Equal(1, tap.DecodingDisabledConnections);
+        Assert.Equal(0, tap.DecoderResets);
+        var entry = Assert.Single(tap.Diagnostics());
+        Assert.Contains("decoding disabled on 1 connection(s)", entry.Message);
+        Assert.Contains("InvalidOperationException: decoder is broken", entry.Message);
+    }
+
+    [Fact]
+    public async Task ATwelveMebibyteValueThroughTheTapIsForwardedIntactAndRecordedAsAPreview()
+    {
+        const int size = 12 * 1024 * 1024;
+        var command = Encoding.UTF8.GetBytes($"*3\r\n$3\r\nSET\r\n$3\r\nbig\r\n${size}\r\n")
+            .Concat(Enumerable.Repeat((byte)'b', size))
+            .Concat("\r\n"u8.ToArray())
+            .ToArray();
+
+        var total = 0;
+        await using var server = new StubServer(chunk =>
+        {
+            total += chunk.Length;
+            return total == command.Length ? "+OK\r\n"u8.ToArray() : null;
+        });
+        var sink = new RecordingSink();
+        var degradations = new List<CaptureDegradation>();
+
+        await using var tap = new RedisTap(RedisOptions(server, sink, o => o.OnCaptureDegraded = d => { lock (degradations) degradations.Add(d); }));
+        await tap.StartAsync();
+
+        var (client, stream) = await ConnectAsync(tap);
+        using (client)
+        {
+            await stream.WriteAsync(command);
+            var reply = await ReadAtLeastAsync(stream, 5, 15000);
+            Assert.Equal("+OK\r\n", Encoding.UTF8.GetString(reply));
+        }
+
+        Assert.True(await Wait.UntilAsync(() => server.Received.Length == command.Length, 15000));
+        Assert.Equal(command, server.Received);
+
+        Assert.True(await Wait.UntilAsync(() => sink.Responses.Count == 1));
+        var request = Assert.Single(sink.Requests);
+        Assert.Equal("Set", request.Method.Value?.ToString());
+        Assert.Equal("redis://db0/big", request.Uri.ToString());
+        Assert.StartsWith(new string('b', 65408), request.Content);
+        Assert.EndsWith(" …[bulk string truncated: 12,582,912 bytes on the wire, 65,408 kept]", request.Content);
+
+        Assert.Equal(1, tap.InteractionsCaptured);
+        Assert.Equal(1, tap.OversizePayloadsSkipped);
+        Assert.Equal(size - 65408, tap.BytesSkipped);
+        Assert.Equal(0, tap.DecodingDisabledConnections);
+        Assert.Equal(0, tap.DecoderResets);
+        Assert.Equal(0, tap.DecodeErrors);
+        Assert.Equal(0, tap.SegmentsDropped);
+        var entry = Assert.Single(tap.Diagnostics());
+        Assert.Contains("1 oversize payload(s) streamed past (largest 12,582,912 B", entry.Message);
+        lock (degradations)
+        {
+            var degradation = Assert.Single(degradations);
+            Assert.Equal(CaptureDegradationKind.OversizePayloadSkipped, degradation.Kind);
+            Assert.Equal("svc→redis", degradation.Tap);
+        }
+    }
+
+    [Fact]
+    public async Task BytesFlowingWithoutAnyInteractionShowUpAsAPossibleStall()
+    {
+        await using var server = new StubServer(_ => null);
+        var options = RedisOptions(server, new RecordingSink(), o => o.DecodingStallBytes = 4096);
+        options.DecoderFactory = _ => new NullDecoder();
+
+        await using var tap = new TcpTapCore(options);
+        await tap.StartAsync();
+
+        Assert.Empty(tap.Diagnostics());
+
+        var (client, stream) = await ConnectAsync(tap);
+        using (client)
+        {
+            await stream.WriteAsync(new byte[8192]);
+            Assert.True(await Wait.UntilAsync(() => server.Received.Length == 8192));
+        }
+
+        Assert.True(tap.BytesSinceLastInteraction >= 8192);
+        Assert.Null(tap.LastInteractionAt);
+        var entry = Assert.Single(tap.Diagnostics());
+        Assert.Contains("decoding may have stalled", entry.Message);
+        Assert.Contains("none recorded yet", entry.Message);
+    }
+
+    [Fact]
+    public async Task DroppedSegmentsAreReportedOncePerConnectionPerMinute()
+    {
+        var release = new ManualResetEventSlim(false);
+        await using var server = new StubServer(_ => null);
+        var degradations = new List<CaptureDegradation>();
+        var options = RedisOptions(server, new RecordingSink(), o =>
+        {
+            o.ChannelCapacity = 2;
+            o.ReadBufferBytes = 1024;
+            o.OnCaptureDegraded = d => { lock (degradations) degradations.Add(d); };
+        });
+        options.DecoderFactory = _ => new BlockingDecoder(release);
+
+        await using var tap = new TcpTapCore(options);
+        await tap.StartAsync();
+
+        var (client, stream) = await ConnectAsync(tap);
+        try
+        {
+            for (var i = 0; i < 50; i++)
+                await stream.WriteAsync(new byte[1024]);
+            Assert.True(await Wait.UntilAsync(() => tap.SegmentsDropped > 1, 5000));
+        }
+        finally
+        {
+            release.Set();
+            client.Dispose();
+        }
+
+        lock (degradations)
+            Assert.Single(degradations.Where(d => d.Kind == CaptureDegradationKind.SegmentsDropped));
+        Assert.Contains(tap.Diagnostics(), e => e.Message.Contains("segment(s) dropped"));
     }
 
     [Fact]

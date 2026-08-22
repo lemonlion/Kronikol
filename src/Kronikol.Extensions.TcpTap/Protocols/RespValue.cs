@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 namespace Kronikol.Extensions.TcpTap.Protocols;
@@ -51,13 +52,16 @@ public enum RespType
 /// <summary>One parsed RESP value. Bulk payloads keep their bytes; everything else keeps its text.</summary>
 public sealed class RespValue
 {
+    /// <summary>The text every truncated bulk payload's rendering ends with (followed by the byte counts and a closing bracket).</summary>
+    public const string TruncationMarkerPrefix = " …[bulk string truncated: ";
+
     /// <summary>The wire type.</summary>
     public RespType Type { get; init; }
 
     /// <summary>Line text for the textual types (simple string, error, double, boolean, big number, verbatim body).</summary>
     public string? Text { get; init; }
 
-    /// <summary>Payload bytes for bulk strings, verbatim strings and blob errors.</summary>
+    /// <summary>Payload bytes for bulk strings, verbatim strings and blob errors. For a <see cref="Truncated"/> value, the preview only.</summary>
     public byte[]? Bytes { get; init; }
 
     /// <summary>Value of an integer reply.</summary>
@@ -66,21 +70,43 @@ public sealed class RespValue
     /// <summary>Elements of an array/set/push, or the flattened key,value,… of a map.</summary>
     public IReadOnlyList<RespValue>? Items { get; init; }
 
+    /// <summary>
+    /// Whether this bulk payload was longer than the capture cap and was streamed past rather than buffered:
+    /// <see cref="Bytes"/> holds only the first bytes as a preview, <see cref="DeclaredLength"/> the length on the wire.
+    /// The value still counts as a result for <see cref="HasResult"/> — a cache hit whose payload was too big to keep is still a hit.
+    /// </summary>
+    public bool Truncated { get; init; }
+
+    /// <summary>The payload length the wire declared. Equal to <c>Bytes.Length</c> unless <see cref="Truncated"/>.</summary>
+    public long DeclaredLength { get; init; }
+
     /// <summary>Whether this is a null bulk string, null array or RESP3 null.</summary>
     public bool IsNull => Type == RespType.Null;
 
     /// <summary>Whether this is an error reply (<c>-ERR …</c> or a RESP3 blob error).</summary>
     public bool IsError => Type is RespType.Error or RespType.BlobError;
 
-    /// <summary>The value as text: bulk payloads decoded as UTF-8, integers formatted, aggregates left to <see cref="Render"/>.</summary>
+    /// <summary>
+    /// The value as text: bulk payloads decoded as UTF-8, integers formatted, aggregates left to <see cref="Render"/>.
+    /// A <see cref="Truncated"/> payload renders as its preview followed by
+    /// <c> …[bulk string truncated: N bytes on the wire, K kept]</c>.
+    /// </summary>
     public string? AsText() => Type switch
     {
         RespType.Null => null,
-        RespType.Integer => Integer?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        RespType.Integer => Integer?.ToString(CultureInfo.InvariantCulture),
         RespType.BulkString or RespType.VerbatimString or RespType.BlobError =>
-            Bytes is null ? Text : Encoding.UTF8.GetString(Bytes),
+            Bytes is null ? Text : Truncated ? TruncatedText() : Encoding.UTF8.GetString(Bytes),
         _ => Text,
     };
+
+    private string TruncatedText() =>
+        Encoding.UTF8.GetString(Bytes!) + TruncationMarker(DeclaredLength, Bytes!.Length);
+
+    /// <summary>The marker appended to a truncated payload's text: <c> …[bulk string truncated: N bytes on the wire, K kept]</c>.</summary>
+    public static string TruncationMarker(long declaredLength, long keptBytes) =>
+        $"{TruncationMarkerPrefix}{declaredLength.ToString("N0", CultureInfo.InvariantCulture)} bytes on the wire, " +
+        $"{keptBytes.ToString("N0", CultureInfo.InvariantCulture)} kept]";
 
     /// <summary>A compact, human-readable rendering suitable for a diagram note.</summary>
     public string? Render()

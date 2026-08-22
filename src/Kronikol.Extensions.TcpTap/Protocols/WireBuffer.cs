@@ -26,7 +26,8 @@ internal sealed class WireBuffer(int maxBytes)
 
         if (_end - _start + data.Length > maxBytes)
             throw new TapProtocolException(
-                $"Buffered {_end - _start + data.Length} undecoded bytes, over the {maxBytes}-byte cap (TcpTapOptions.MaxBufferedBytes).");
+                $"Buffered {_end - _start + data.Length} undecoded bytes, over the {maxBytes}-byte cap (TcpTapOptions.MaxBufferedBytes).",
+                recoverable: true);
 
         if (_buffer.Length - _end < data.Length)
         {
