@@ -385,8 +385,7 @@
             for (var i = 0; i < lines.length; i++) {
                 var t = lines[i].trim();
                 if (!t) continue;
-                if (t === '<style>') { inStyle = true; continue; }
-                if (t === '</style>') { inStyle = false; continue; }
+                if (/^<\/?style>$/i.test(t)) { inStyle = t.charAt(1) !== '/'; continue; }
                 if (inStyle) continue;
                 if (_headerOnlyRx.test(t)) continue;
                 return true;
