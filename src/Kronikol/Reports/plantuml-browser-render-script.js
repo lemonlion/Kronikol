@@ -87,6 +87,7 @@
             var lines = bodyText.split('\n');
             var units = [];
             var currentUnit = [];
+            var currentUnitHasArrow = false;
             var inNote = false;
 
             for (var i = 0; i < lines.length; i++) {
@@ -103,15 +104,28 @@
                 } else if (isArrowLine(trimmed)) {
                     // Arrow line — this starts a new trace unit if we have response from previous
                     // Heuristic: arrows with -> (request) or --> (return) alternate
-                    // Start new unit on request arrows (not return arrows)
+                    // Start new unit on request arrows (not return arrows). A unit that so far holds
+                    // only a block opener (`loop …`, `alt …`, `partition …`) is kept: the opener belongs
+                    // with the pair it wraps, never with the previous unit.
                     var isReturn = isReturnArrow(trimmed);
-                    if (!isReturn && currentUnit.length > 0) {
+                    if (!isReturn && currentUnitHasArrow) {
                         units.push(currentUnit);
                         currentUnit = [];
+                        currentUnitHasArrow = false;
                     }
                     currentUnit.push(lines[i]);
-                } else if (trimmed.startsWith('partition ') || trimmed === 'end') {
-                    // Partition open/close — attach to current unit
+                    currentUnitHasArrow = true;
+                } else if (isBlockOpener(trimmed)) {
+                    // Block opener (loop/alt/opt/group/par/partition) — starts a fresh unit so a split
+                    // boundary never separates it from the first pair inside it
+                    if (currentUnitHasArrow) {
+                        units.push(currentUnit);
+                        currentUnit = [];
+                        currentUnitHasArrow = false;
+                    }
+                    currentUnit.push(lines[i]);
+                } else if (trimmed === 'end') {
+                    // Block close — attach to current unit (the last pair inside the block)
                     currentUnit.push(lines[i]);
                 } else {
                     currentUnit.push(lines[i]);
@@ -120,6 +134,13 @@
             if (currentUnit.length > 0) units.push(currentUnit);
             return units;
         }
+
+        // `partition X`, `loop ×3 · 12–40 ms`, `alt …`, `opt …`, `group …`, `par …`, `critical …` — the
+        // block statements that are closed by a bare `end` and must be closed/re-opened when a diagram
+        // is split into height-bounded fragments (the server-side builder does the same).
+        var _blockOpenerRx = /^(partition\s|loop\b|alt\b|opt\b|group\b|par\b|critical\b|break\b)/;
+        function isBlockOpener(trimmed) { return _blockOpenerRx.test(trimmed); }
+        window._isBlockOpener = isBlockOpener;
 
         // Estimate height of a trace unit
         function estimateUnitHeight(unitLines) {
@@ -154,7 +175,11 @@
             var currentLines = [];
             var currentHeight = 0;
             var stepCount = 0;
-            var openPartition = null;
+            // Blocks (partition / loop / alt / …) open at the current position. A fragment boundary
+            // inside a block closes it (`end`) and the next fragment re-opens it with the same line,
+            // so every fragment is a complete diagram — a stranded `end` or a never-closed `loop` is
+            // a PlantUML syntax error.
+            var openBlocks = [];
 
             // Extract the autonumber start from prefix
             var autoMatch = structure.prefix.match(/autonumber\s+(\d+)/);
@@ -165,24 +190,25 @@
 
                 // If adding this unit exceeds max and we have content, split here
                 if (currentHeight > 0 && currentHeight + unitHeight > maxHeight) {
-                    // Close open partition if any
-                    if (openPartition) currentLines.push('end');
+                    for (var ob = openBlocks.length - 1; ob >= 0; ob--) currentLines.push('end');
                     fragments.push({ lines: currentLines, startStep: baseStep + stepCount - countArrows(currentLines) });
                     currentLines = [];
                     currentHeight = 0;
-                    // Re-open partition in new fragment
-                    if (openPartition) currentLines.push(openPartition);
+                    for (var rb = 0; rb < openBlocks.length; rb++) currentLines.push(openBlocks[rb]);
                 }
 
-                // Track partition state
+                // Track block state through this unit
+                var inNoteTrack = false;
                 for (var li = 0; li < units[u].length; li++) {
                     var t = units[u][li].trim();
-                    if (t.startsWith('partition ')) openPartition = units[u][li];
-                    else if (t === 'end' && openPartition) openPartition = null;
+                    if (!inNoteTrack && t.startsWith('note') && (t.indexOf(' left') >= 0 || t.indexOf(' right') >= 0 || t.indexOf(' over') >= 0) && t.indexOf(':') < 0) { inNoteTrack = true; continue; }
+                    if (inNoteTrack) { if (t === 'end note') inNoteTrack = false; continue; }
+                    if (isBlockOpener(t)) openBlocks.push(units[u][li]);
+                    else if (t === 'end' && openBlocks.length > 0) openBlocks.pop();
                 }
 
-                for (var li = 0; li < units[u].length; li++) {
-                    currentLines.push(units[u][li]);
+                for (var li2 = 0; li2 < units[u].length; li2++) {
+                    currentLines.push(units[u][li2]);
                 }
                 currentHeight += unitHeight;
                 stepCount += countArrowsInUnit(units[u]);
@@ -190,7 +216,7 @@
 
             // Final fragment
             if (currentLines.length > 0) {
-                if (openPartition) currentLines.push('end');
+                for (var fb = openBlocks.length - 1; fb >= 0; fb--) currentLines.push('end');
                 fragments.push({ lines: currentLines, startStep: baseStep + stepCount - countArrowsInLines(currentLines) });
             }
 
@@ -311,6 +337,20 @@
         }
 
         // Enhanced split that handles forced split boundaries from chunkLargeNotes
+        // Walk lines (skipping note bodies) and push block openers / pop on bare `end`, so a caller
+        // knows which blocks are still open at the end of a chunk of diagram text.
+        function scanOpenBlocks(lines, stack) {
+            var inNote = false;
+            for (var i = 0; i < lines.length; i++) {
+                var t = lines[i].trim();
+                if (!inNote && /^h?note\b/.test(t) && t.indexOf(':') < 0) { inNote = true; continue; }
+                if (inNote) { if (t === 'end note' || t === 'endhnote' || t === 'endrnote') inNote = false; continue; }
+                if (isBlockOpener(t)) stack.push(lines[i]);
+                else if (t === 'end' && stack.length > 0) stack.pop();
+            }
+            return stack;
+        }
+
         function splitWithChunkedNotes(source, maxHeight) {
             // First chunk any oversized notes
             var chunked = chunkLargeNotes(source, _maxNoteChars);
@@ -318,9 +358,26 @@
             if (chunked.indexOf('__SPLIT_BOUNDARY__') >= 0) {
                 var parts = chunked.split(/\n== __SPLIT_BOUNDARY__ ==\n/);
                 var allFragments = [];
+                // Blocks (loop/alt/partition) open when a forced boundary cut the text: the part
+                // after the boundary re-opens them, the part before closes them, so each part is a
+                // complete diagram before it is split further by height.
+                var carried = [];
                 for (var p = 0; p < parts.length; p++) {
                     // Each part gets wrapped as complete PlantUML and further split by height
                     var partSource = parts[p].trim();
+                    if (carried.length > 0) {
+                        var reopen = carried.join('\n');
+                        if (partSource.indexOf('@startuml') < 0) partSource = reopen + '\n' + partSource;
+                    }
+                    var openAfter = scanOpenBlocks(partSource.split('\n'), []);
+                    if (openAfter.length > 0) {
+                        var closers = '';
+                        for (var oc = 0; oc < openAfter.length; oc++) closers += '\nend';
+                        partSource = partSource.indexOf('@enduml') >= 0
+                            ? partSource.replace(/\n@enduml\s*$/, closers + '\n@enduml')
+                            : partSource + closers;
+                    }
+                    carried = openAfter;
                     // Ensure it has @startuml/@enduml
                     if (partSource.indexOf('@startuml') < 0) {
                         var structure = parseDiagramStructure(source);
