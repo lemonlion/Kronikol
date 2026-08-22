@@ -4,7 +4,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
-[Collection("PendingLogs")]
+[Collection("DiagramsFetcher")]
 public class TrackingProxyTests
 {
     private readonly string _testId = Guid.NewGuid().ToString();

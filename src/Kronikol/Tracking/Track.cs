@@ -436,9 +436,12 @@ public static class Track
         var color = passed ? PassColor : FailColor;
         var symbol = passed ? PassSymbol : FailSymbol;
 
+        // The note is the reader's sentence: capitalise it the way the step list is capitalised.
+        var label = Reports.StepText.CapitaliseIfEnabled(formatted) ?? formatted;
+
         var noteContent = passed
-            ? $"{symbol} {formatted}"
-            : $"{symbol} {formatted}\n{failureMessage}";
+            ? $"{symbol} {label}"
+            : $"{symbol} {label}\n{failureMessage}";
 
         var plantUml = $"hnote across <<assertionNote>> {color}\n{noteContent}\nend note";
 

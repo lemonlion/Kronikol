@@ -8,6 +8,13 @@ public record Scenario
 {
     public required string Id { get; set; }
     public required string DisplayName { get; set; }
+
+    /// <summary>
+    /// The scenario's own free-text description — the prose a Gherkin author writes under
+    /// <c>Scenario:</c>, before the first step. Rendered above the step list in the living documentation.
+    /// </summary>
+    public string? Description { get; set; }
+
     public bool IsHappyPath { get; set; }
     public ExecutionResult Result { get; set; }
     public string? ErrorMessage { get; set; }

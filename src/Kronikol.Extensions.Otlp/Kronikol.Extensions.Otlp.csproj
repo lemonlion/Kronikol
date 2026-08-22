@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework />
+    <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
+    <Title>Kronikol OTLP-Tap Extension</Title>
+    <Description>Out-of-process OpenTelemetry capture for Kronikol: an OTLP/HTTP trace receiver-tee that accepts `POST /v1/traces` (protobuf and JSON, gzip), optionally forwards the export byte-for-byte to a real collector, and maps database, HTTP, messaging and RPC client spans to Kronikol interactions attributed by W3C trace id. Gives sequence diagrams exact attribution for hops that cannot be proxied, in any language that already exports OTLP.</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageTags>$(PackageTags);opentelemetry;otlp;tracing;tee;e2e;polyglot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Hosting/DI abstractions arrive transitively through Kronikol (Microsoft.AspNetCore.Mvc.Testing). -->
+    <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.Otlp" />
+  </ItemGroup>
+
+</Project>

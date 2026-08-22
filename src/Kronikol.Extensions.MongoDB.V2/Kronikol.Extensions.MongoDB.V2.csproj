@@ -24,6 +24,7 @@
     <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbOperationInfo.cs" Link="MongoDbOperationInfo.cs" />
     <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbTrackingOptions.cs" Link="MongoDbTrackingOptions.cs" />
     <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbTrackingVerbosity.cs" Link="MongoDbTrackingVerbosity.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbResponseSummary.cs" Link="MongoDbResponseSummary.cs" />
     <Compile Include="..\Kronikol.Extensions.MongoDB\ChangeStreamCorrelation.cs" Link="ChangeStreamCorrelation.cs" />
   </ItemGroup>
 </Project>

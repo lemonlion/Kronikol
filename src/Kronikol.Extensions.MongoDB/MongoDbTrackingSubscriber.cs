@@ -2,7 +2,6 @@ using Kronikol.Constants;
 using System.Collections.Concurrent;
 using System.Net;
 using global::MongoDB.Bson;
-using global::MongoDB.Bson.IO;
 using global::MongoDB.Driver.Core.Events;
 using Microsoft.AspNetCore.Http;
 using Kronikol.Tracking;
@@ -199,64 +198,8 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
                 v == MongoDbTrackingVerbosity.Summarised && pending.OpInfo.Operation == MongoDbOperation.Other)));
     }
 
-    private static string? ExtractResponseMetadata(BsonDocument? reply)
-    {
-        if (reply is null) return null;
-
-        var parts = new List<string>();
-
-        if (reply.TryGetValue("n", out var n) && n.IsInt32)
-            parts.Add($"n={n.AsInt32}");
-        if (reply.TryGetValue("nModified", out var nModified) && nModified.IsInt32)
-            parts.Add($"nModified={nModified.AsInt32}");
-        if (reply.TryGetValue("nUpserted", out var nUpserted) && nUpserted.IsInt32 && nUpserted.AsInt32 > 0)
-            parts.Add($"nUpserted={nUpserted.AsInt32}");
-
-        return parts.Count > 0 ? string.Join(", ", parts) : null;
-    }
-
-    private string? ExtractDetailedResponse(BsonDocument? reply)
-    {
-        var metadata = ExtractResponseMetadata(reply);
-
-        if (!_options.LogResponseContent || reply is null)
-            return metadata;
-
-        // Extract documents from cursor.firstBatch (find, aggregate, listCollections, etc.)
-        if (reply.TryGetValue("cursor", out var cursor) && cursor.IsBsonDocument)
-        {
-            var cursorDoc = cursor.AsBsonDocument;
-            if (cursorDoc.TryGetValue("firstBatch", out var firstBatch) && firstBatch.IsBsonArray)
-            {
-                var docs = firstBatch.AsBsonArray;
-                if (docs.Count > 0)
-                {
-                    var jsonSettings = new JsonWriterSettings { Indent = true, IndentChars = "  ", NewLineChars = "\n" };
-                    var formattedDocs = docs.Take(_options.MaxResponseDocuments)
-                        .Select(d =>
-                        {
-                            var json = d.ToJson(jsonSettings);
-                            return "  " + json.Replace("\n", "\n  ");
-                        })
-                        .ToList();
-                    var formattedJson = "[\n" + string.Join(",\n", formattedDocs) + "\n]";
-
-                    var docText = formattedJson;
-                    if (docs.Count > _options.MaxResponseDocuments)
-                        docText += $"\n... ({docs.Count - _options.MaxResponseDocuments} more documents not shown)";
-
-                    return metadata is not null ? $"{metadata}\n{docText}" : docText;
-                }
-                else
-                {
-                    var emptyText = "0 documents";
-                    return metadata is not null ? $"{metadata}\n{emptyText}" : emptyText;
-                }
-            }
-        }
-
-        return metadata;
-    }
+    private string? ExtractDetailedResponse(BsonDocument? reply) =>
+        MongoDbResponseSummary.ExtractDetailed(reply, _options.LogResponseContent, _options.MaxResponseDocuments);
 
     private Uri BuildUri(MongoDbOperationInfo opInfo, MongoDbTrackingVerbosity verbosity)
     {

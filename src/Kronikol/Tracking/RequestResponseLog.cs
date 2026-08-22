@@ -64,6 +64,13 @@ public record RequestResponseLog(
     /// response arrow. <see cref="Method"/> carries the label; <see cref="Content"/> the detail note.
     /// </summary>
     public bool IsUserAction { get; set; }
+
+    /// <summary>
+    /// Which capture path produced this entry — <c>wire</c> (a proxy/TCP tap that decoded the protocol) or
+    /// <c>span</c> (an OpenTelemetry receiver). Optional; used by
+    /// <c>Kronikol.Ingestion.InteractionMerger</c> to fold the two views of one call into a single arrow.
+    /// </summary>
+    public string? CapturedBy { get; set; }
 };
 
 /// <summary>

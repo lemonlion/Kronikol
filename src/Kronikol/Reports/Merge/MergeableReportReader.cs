@@ -73,6 +73,7 @@ public static class MergeableReportReader
     {
         Id = GetString(se, "id") ?? "",
         DisplayName = GetString(se, "name") ?? "",
+        Description = GetString(se, "description"),
         Result = ReadEnum(GetString(se, "result"), ExecutionResult.Passed),
         Duration = se.TryGetProperty("durationSeconds", out var d) && d.ValueKind == JsonValueKind.Number
             ? TimeSpan.FromSeconds(d.GetDouble())
@@ -85,6 +86,7 @@ public static class MergeableReportReader
         Rule = GetString(se, "rule"),
         OutlineId = GetString(se, "outlineId"),
         ExampleValues = ReadStringDictionary(se, "exampleValues"),
+        ExampleFlatValues = ReadStringDictionary(se, "exampleFlatValues") ?? ReadStringDictionary(se, "exampleValues"),
         ExampleDisplayName = GetString(se, "exampleDisplayName"),
         Attachments = ReadAttachments(se, "attachments"),
         BackgroundSteps = ReadSteps(se, "backgroundSteps"),
@@ -214,7 +216,7 @@ public static class MergeableReportReader
         if (!parent.TryGetProperty(name, out var arr) || arr.ValueKind != JsonValueKind.Array)
             return null;
         var list = arr.EnumerateArray()
-            .Select(a => new FileAttachment(GetString(a, "name") ?? "", GetString(a, "relativePath") ?? ""))
+            .Select(a => new FileAttachment(GetString(a, "name") ?? "", GetString(a, "relativePath") ?? "", GetString(a, "mediaType")))
             .ToArray();
         return list.Length > 0 ? list : null;
     }

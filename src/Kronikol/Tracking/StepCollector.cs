@@ -71,9 +71,11 @@ public static class StepCollector
         // Emit step delimiter hnote for top-level steps
         if (isTopLevel && Options.ShowStepDelimiters)
         {
+            // No keyword is prepended, so the bar's first character is the step text's: capitalise it
+            // (Reports.StepText) so the diagram reads the way the step list does.
             var label = Options.PrependKeyword && step.EffectiveKeyword is not null
                 ? $"{step.EffectiveKeyword} {text}"
-                : text;
+                : Reports.StepText.CapitaliseIfEnabled(text) ?? text;
             DefaultTrackingDiagramOverride.InsertPlantUml(testId,
                 $"hnote across <<stepDelimiter>> #black:<color:white>{label}");
         }

@@ -1,3 +1,4 @@
+using Kronikol.Ingestion.Cucumber;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
@@ -15,6 +16,19 @@ public sealed class IngestRequest
     /// <summary>Optional tests NDJSON file (<see cref="TestRunRecord"/> lines) supplying outcomes, durations and steps.</summary>
     public string? TestsFile { get; init; }
 
+    /// <summary>
+    /// Cucumber Messages NDJSON files (playwright-bdd's <c>cucumberReporter('message')</c>, cucumber-js
+    /// <c>--format message</c>, Cucumber-JVM <c>--plugin message:…</c>). When given, the Gherkin structure
+    /// they carry — feature description, rules, background, keywords, tables, doc strings, example values —
+    /// <em>wins</em> for every scenario they own; <see cref="TestsFile"/> still contributes assertions, UI
+    /// actions, attachments and the identity captured interactions join on. See
+    /// <see cref="Cucumber.CucumberFeatureMerger"/>.
+    /// </summary>
+    public IReadOnlyList<string> CucumberMessagesFiles { get; init; } = [];
+
+    /// <summary>Keep Cucumber hook steps (<c>BeforeEach hook</c>, …) in the step list. Default <c>false</c>.</summary>
+    public bool IncludeHooks { get; init; }
+
     /// <summary>In-memory test-run records (in addition to <see cref="TestsFile"/>).</summary>
     public IEnumerable<TestRunRecord>? TestRecords { get; init; }
 
@@ -27,7 +41,25 @@ public sealed class IngestRequest
     /// <summary>Feature name for scenarios that carry none.</summary>
     public string DefaultFeatureName { get; init; } = "Ingested";
 
-    /// <summary>Verdict for tests that have interactions but no <c>end</c> record in the tests file.</summary>
+    /// <summary>
+    /// Verdict for tests that started but never reported an <c>end</c> record — a worker that crashed, a
+    /// run that was killed, a capturer that only ever writes <c>start</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The default is <see cref="ExecutionResult.Passed"/>, and that is a compatibility decision, not a
+    /// judgement.</b> Ingest predates the tests file: a capture that is nothing but interactions has no
+    /// verdicts at all, and marking every such scenario red would make the common case — replaying a
+    /// proxy-tap capture to see the diagrams — look like a catastrophic failure. So an absent verdict
+    /// reads as "nothing said otherwise".
+    /// </para>
+    /// <para>
+    /// The consequence is worth stating plainly: <b>a test whose process died mid-run renders as
+    /// passed</b>. If your producer always writes an <c>end</c> record (Kronikol's Playwright reporter
+    /// does, on failure and on timeout), set this to <see cref="ExecutionResult.Failed"/> and a missing
+    /// verdict becomes the alarm it should be. CI pipelines that gate on the report should.
+    /// </para>
+    /// </remarks>
     public ExecutionResult ResultWhenUnknown { get; init; } = ExecutionResult.Passed;
 
     /// <summary>When true, the report is generated even if no scenario could be synthesised (it will be empty). Default <c>false</c>.</summary>
@@ -51,6 +83,77 @@ public sealed class IngestRequest
     /// null to render each unknown test id as its own scenario.
     /// </summary>
     public UnknownTestFold? FoldUnknownTestsInto { get; init; }
+
+    /// <summary>
+    /// Fold the wire and span views of the same call into one arrow before rendering (see
+    /// <see cref="InteractionMerger"/>): the span-sourced record's test/trace ids win, the wire-sourced
+    /// record's body, status and label win, and the merged request carries an
+    /// <c>x-kronikol-captured-by: wire + span</c> pseudo-header. Only useful when a stack is captured from
+    /// both sides. Default <c>false</c>.
+    /// </summary>
+    public bool MergeDuplicateInteractions { get; init; }
+
+    /// <summary>Fraction (0–1] of the shorter interval two calls must share to be treated as the same call by <see cref="MergeDuplicateInteractions"/>. Default 0.8.</summary>
+    public double MergeOverlapThreshold { get; init; } = InteractionMerger.DefaultOverlapThreshold;
+    /// Fail the whole ingest with a <see cref="FormatException"/> on the first capture line that cannot
+    /// be parsed. Default <c>false</c>: malformed lines are skipped and counted in
+    /// <see cref="IngestResult.Diagnostics"/> instead, because a process killed mid-write leaves a
+    /// truncated last line and losing an entire run's report to it helps nobody. Set it for CI, where a
+    /// producer emitting garbage should be loud.
+    /// </summary>
+    public bool StrictParsing { get; init; }
+
+    /// <summary>
+    /// Attribute interactions that carry no test identity to the test that was running when they
+    /// happened — see <see cref="IngestAttribution.AttributeByWindow"/> for the exact rule. Default
+    /// <c>false</c>; turn it on for capturers that cannot see a test header (a database tee, a shared
+    /// sidecar, an OTLP exporter).
+    /// </summary>
+    public bool AttributeByTestWindow { get; init; }
+
+    /// <summary>
+    /// The placeholder test id a capturer stamps on traffic it could not attribute (a tap's
+    /// <c>FallbackTestId</c>, e.g. <c>"session"</c>). Records carrying it are treated as unattributed by
+    /// <see cref="AttributeByTestWindow"/> and by <see cref="DropUnattributed"/>.
+    /// </summary>
+    public string? WindowAttributionFallbackId { get; init; }
+
+    /// <summary>
+    /// Decides, per record, whether an interaction that is <em>still</em> unattributed — after
+    /// <see cref="AttributeByTestWindow"/> has run, and by the same definition it uses (no test id, or the
+    /// <see cref="WindowAttributionFallbackId"/> marker; also an id that matches no test when
+    /// <see cref="FoldUnknownTestsInto"/> is set) — should be dropped rather than folded and rendered.
+    /// Returning <c>true</c> discards the record <em>and</em> its paired response.
+    /// </summary>
+    /// <remarks>
+    /// The use case is a capturer that runs for the whole session and cannot be switched off per test —
+    /// a database tee that also sees the seeder's traffic, a sidecar that sees health probes. Dropping
+    /// them at ingest keeps "Traffic outside any test" about the traffic a reader actually cares about.
+    /// Drops are counted in <see cref="IngestResult.Diagnostics"/> as
+    /// <see cref="DiagnosticKind.DroppedUnattributed"/>. Default null — nothing is dropped.
+    /// </remarks>
+    public Func<InteractionRecord, bool>? DropUnattributed { get; init; }
+
+    /// <summary>
+    /// Give interactions the phase of the top-level step they happened during — <c>Given</c>/<c>Context</c>
+    /// becomes <see cref="TestPhase.Setup"/>, <c>When</c>/<c>Then</c> becomes <see cref="TestPhase.Action"/>,
+    /// <c>And</c>/<c>But</c> inherit — so <c>SeparateSetup</c> and <c>HighlightSetup</c> partition an
+    /// ingested diagram the way they partition an in-process one. Default <c>false</c>.
+    /// </summary>
+    public bool PhaseFromSteps { get; init; }
+
+    /// <summary>
+    /// Directory that relative <c>attachment</c> paths in the tests file are resolved against. Default:
+    /// the current directory.
+    /// </summary>
+    public string? AttachmentsBase { get; init; }
+
+    /// <summary>
+    /// Empty the report's <c>attachments/</c> folder before generating, so it holds exactly this run's
+    /// artefacts. Default <c>false</c> — nothing has ever removed stale copies, and a host that renders
+    /// several runs into one folder relies on that.
+    /// </summary>
+    public bool CleanAttachments { get; init; }
 }
 
 /// <summary>The single scenario that collects interactions of unknown tests (<see cref="IngestRequest.FoldUnknownTestsInto"/>).</summary>
@@ -77,6 +180,18 @@ public sealed record IngestResult(
 {
     /// <summary>Path of the main HTML report (may not exist when <see cref="Generated"/> is false).</summary>
     public string TestRunReportHtml => Path.Combine(ReportsDirectory, "TestRunReport.html");
+
+    /// <summary>
+    /// Everything that went wrong, or is worth knowing, about this ingest and the report generation it
+    /// drove: skipped malformed lines, diagrams that could not be produced, outputs that failed, step
+    /// labels that still do not read as sentences. Empty is the happy path.
+    /// </summary>
+    /// <remarks>
+    /// This is the contract a host renders: <c>kronikol ingest</c> prints it, and a dashboard can show
+    /// per-scenario counts instead of leaving an empty diagram unexplained. Report generation is
+    /// diagnostics, never a reason for a run to fail, so nothing here throws.
+    /// </remarks>
+    public IReadOnlyList<DiagnosticEntry> Diagnostics { get; init; } = [];
 }
 
 /// <summary>
@@ -86,12 +201,12 @@ public sealed record IngestResult(
 /// outside the test process, or when a host wants to regenerate a report from files after the fact.
 /// </summary>
 /// <remarks>
-/// Order of operations: read everything → (optionally) clear the store → replay records in timestamp
-/// order (the sequence diagram follows enqueue order, not timestamps) → normalise each log's
-/// <c>TestName</c> from the tests file → reset the diagram cache → synthesise <see cref="Feature"/>s →
-/// <see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>. Capture-time redaction
-/// (<see cref="RequestResponseLogger.Redaction"/>) applies during replay, so secrets present in a raw
-/// capture file can still be kept out of the report data files.
+/// Order of operations: read everything → attribute and phase-tag records that need it → (optionally)
+/// clear the store → replay records in timestamp order (the sequence diagram follows enqueue order, not
+/// timestamps) → normalise each log's <c>TestName</c> from the tests file → reset the diagram cache →
+/// synthesise <see cref="Feature"/>s → <see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>.
+/// Capture-time redaction (<see cref="RequestResponseLogger.Redaction"/>) applies during replay, so
+/// secrets present in a raw capture file can still be kept out of the report data files.
 /// </remarks>
 public static class IngestPipeline
 {
@@ -109,53 +224,289 @@ public static class IngestPipeline
         ShowNoInteractionsMarker = true,
     };
 
-    /// <summary>Runs the pipeline. Throws <see cref="FormatException"/> for malformed input lines and <see cref="FileNotFoundException"/> for missing files.</summary>
+    /// <summary>
+    /// Runs the pipeline. Throws <see cref="FileNotFoundException"/> for missing files, and
+    /// <see cref="FormatException"/> for malformed input lines only when
+    /// <see cref="IngestRequest.StrictParsing"/> is set (otherwise they are skipped and reported in
+    /// <see cref="IngestResult.Diagnostics"/>).
+    /// </summary>
     public static IngestResult Run(IngestRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var options = request.Options ?? DefaultOptions();
 
-        var records = new List<InteractionRecord>();
-        foreach (var file in request.InteractionFiles)
+        // Step delimiter bars and ✓/✗ assertion notes are baked into PlantUML as the records are replayed,
+        // by static emitters that know nothing about report options — so the diagram-side switch has to
+        // agree with this run's options for as long as the replay lasts, and be handed back afterwards.
+        var previousCapitalisation = StepText.CapitaliseEnabled;
+        StepText.CapitaliseEnabled = options.CapitaliseStepText;
+        try
         {
-            if (!File.Exists(file))
-                throw new FileNotFoundException("Interaction file not found.", file);
-            records.AddRange(NdjsonInteractionReader.ReadFile(file));
+            return RunCore(request, options);
+        }
+        finally
+        {
+            StepText.CapitaliseEnabled = previousCapitalisation;
+        }
+    }
+
+    private static IngestResult RunCore(IngestRequest request, ReportConfigurationOptions options)
+    {
+        var diagnostics = new ReportDiagnosticsCollector();
+
+        var records = ReadInteractions(request, diagnostics);
+        var testRecords = ReadTestRecords(request, diagnostics);
+
+        // Cucumber Messages (playwright-bdd's cucumberReporter('message') and friends): synthesised into the
+        // same start/step/end records the tests file uses, so the Gherkin steps travel the existing marker,
+        // attribution and naming paths untouched; the reporter's own step events for the scenarios the
+        // messages own are dropped so a diagram never grows two sets of delimiter bars.
+        var cucumber = request.CucumberMessagesFiles.Count == 0 ? null
+            : CucumberFeatureSynthesizer.BuildFromFiles(request.CucumberMessagesFiles,
+                new CucumberSynthesisOptions { IncludeHooks = request.IncludeHooks, DefaultFeatureName = request.DefaultFeatureName });
+        if (cucumber is not null)
+        {
+            testRecords.RemoveAll(r => CucumberFeatureMerger.IsReplacedStep(r, cucumber));
+            testRecords.AddRange(cucumber.Markers);
         }
 
-        if (request.Interactions is not null)
-            records.AddRange(request.Interactions);
-
-        var testRecords = new List<TestRunRecord>();
-        if (!string.IsNullOrWhiteSpace(request.TestsFile))
-        {
-            if (!File.Exists(request.TestsFile))
-                throw new FileNotFoundException("Tests file not found.", request.TestsFile);
-            testRecords.AddRange(NdjsonTestRunReader.ReadFile(request.TestsFile));
-        }
-
-        if (request.TestRecords is not null)
-            testRecords.AddRange(request.TestRecords);
-
-        // Diagram markers from the tests file: top-level steps → delimiter bars, assertions → ✓/✗ notes,
-        // placed by timestamp among the interactions (and nested inside whatever call was in flight).
-        foreach (var record in testRecords)
-        {
-            if (!record.IsDiagramMarker || string.IsNullOrWhiteSpace(record.TestId))
-                continue;
-            records.Add(string.Equals(record.Event, "assertion", StringComparison.OrdinalIgnoreCase)
-                ? InteractionRecord.AssertionMarker(record.TestId, record.Text ?? "assertion",
-                    passed: !string.Equals(record.Status, "failed", StringComparison.OrdinalIgnoreCase)
-                            && !string.Equals(record.Status, "fail", StringComparison.OrdinalIgnoreCase),
-                    record.Timestamp!.Value, record.Error)
-                : InteractionRecord.StepMarker(record.TestId, record.Text ?? "step", record.Timestamp!.Value, record.Keyword));
-        }
+        records = Attribute(records, testRecords, request, diagnostics);
+        AddDiagramMarkers(records, testRecords);
 
         var reportsDirectory = ReportGenerator.ResolveReportsDirectory(options);
 
         if (request.ClearExistingLogs)
             RequestResponseLogger.Clear();
 
+        var ordered = Order(records, testRecords, request);
+        var logs = Replay(ordered, testRecords);
+
+        var synthesised = FeatureSynthesizer.Build(
+            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, request.AttachmentsBase);
+        if (cucumber is not null)
+        {
+            // Messages win for structure (feature/rule/background/outline/tags/tables/doc strings);
+            // the tests file still contributes assertions, attachments and the identity join.
+            synthesised = CucumberFeatureMerger.Merge(cucumber, synthesised, testRecords);
+        }
+
+        if (request.FoldUnknownTestsInto is { } foldedInto)
+        {
+            // The fold scenario is not a test: nothing ran and nothing ended, so ResultWhenUnknown (meant
+            // for tests that started but never reported an end) must not mark it failed.
+            foreach (var scenario in synthesised.Features.SelectMany(f => f.Scenarios))
+            {
+                if (scenario.Id == foldedInto.ScenarioId)
+                    scenario.Result = ExecutionResult.Passed;
+            }
+        }
+
+        var scenarioCount = synthesised.Features.Sum(f => f.Scenarios.Length);
+
+        if (scenarioCount == 0 && !request.AllowEmpty)
+            return new IngestResult(logs.Count, 0, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: false)
+            {
+                Diagnostics = diagnostics.Entries,
+            };
+
+        if (request.CleanAttachments)
+            CleanAttachmentsFolder(reportsDirectory, diagnostics);
+
+        DefaultDiagramsFetcher.Reset();
+        using (ReportDiagnosticsScope.Begin(diagnostics))
+        {
+            ReportGenerator.CreateStandardReportsWithDiagrams(synthesised.Features, synthesised.Start, synthesised.End, options);
+        }
+
+        DefaultDiagramsFetcher.Reset();
+
+        return new IngestResult(logs.Count, scenarioCount, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: true)
+        {
+            Diagnostics = diagnostics.Entries,
+        };
+    }
+
+    /// <summary>Reads the interaction captures, tolerating (and counting) torn lines unless strict parsing was asked for.</summary>
+    private static List<InteractionRecord> ReadInteractions(IngestRequest request, ReportDiagnosticsCollector diagnostics)
+    {
+        var malformed = request.StrictParsing ? null : new List<MalformedLine>();
+        var records = new List<InteractionRecord>();
+
+        foreach (var file in request.InteractionFiles)
+        {
+            if (!File.Exists(file))
+                throw new FileNotFoundException("Interaction file not found.", file);
+            records.AddRange(NdjsonInteractionReader.ReadFile(file, malformed));
+        }
+
+        if (request.Interactions is not null)
+            records.AddRange(request.Interactions);
+
+        ReportMalformed(malformed, diagnostics);
+        return records;
+    }
+
+    /// <summary>Reads the tests file, tolerating (and counting) torn lines unless strict parsing was asked for.</summary>
+    private static List<TestRunRecord> ReadTestRecords(IngestRequest request, ReportDiagnosticsCollector diagnostics)
+    {
+        var malformed = request.StrictParsing ? null : new List<MalformedLine>();
+        var testRecords = new List<TestRunRecord>();
+
+        if (!string.IsNullOrWhiteSpace(request.TestsFile))
+        {
+            if (!File.Exists(request.TestsFile))
+                throw new FileNotFoundException("Tests file not found.", request.TestsFile);
+            testRecords.AddRange(NdjsonTestRunReader.ReadFile(request.TestsFile, malformed));
+        }
+
+        if (request.TestRecords is not null)
+            testRecords.AddRange(request.TestRecords);
+
+        ReportMalformed(malformed, diagnostics);
+        return testRecords;
+    }
+
+    private static void ReportMalformed(List<MalformedLine>? malformed, ReportDiagnosticsCollector diagnostics)
+    {
+        foreach (var line in malformed ?? [])
+            diagnostics.Add(DiagnosticKind.MalformedLine, line.ToString());
+    }
+
+    /// <summary>
+    /// Applies the two ingest-time attribution passes — window attribution and phase-from-steps — and
+    /// then the <see cref="IngestRequest.DropUnattributed"/> filter, in that order: a record only reaches
+    /// the filter once every chance to identify it has been taken.
+    /// </summary>
+    private static List<InteractionRecord> Attribute(
+        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
+    {
+        if (request.AttributeByTestWindow)
+        {
+            var windows = IngestAttribution.BuildWindows(testRecords);
+            var (attributedRecords, attributed) = IngestAttribution.AttributeByWindow(records, windows, request.WindowAttributionFallbackId);
+            records = attributedRecords;
+            if (attributed > 0)
+                diagnostics.Add(DiagnosticKind.UnattributedInteractions, $"{attributed} interaction record(s) attributed to a test by time window.");
+        }
+
+        if (request.PhaseFromSteps)
+        {
+            var stepWindows = IngestAttribution.BuildStepWindows(testRecords);
+            var (phasedRecords, tagged) = IngestAttribution.ApplyPhaseFromSteps(records, stepWindows);
+            records = phasedRecords;
+            if (tagged > 0)
+                diagnostics.Add(DiagnosticKind.Other, $"{tagged} interaction record(s) took their phase from the step they happened during.");
+        }
+
+        records = DropUnattributed(records, testRecords, request, diagnostics);
+
+        var stillUnattributed = records.Count(r => IngestAttribution.NeedsAttribution(r, request.WindowAttributionFallbackId));
+        if (stillUnattributed > 0)
+            diagnostics.Add(DiagnosticKind.UnattributedInteractions, $"{stillUnattributed} interaction record(s) could not be attributed to a test.");
+
+        return records;
+    }
+
+    /// <summary>
+    /// Drops the records the host does not want in the report at all — evaluated only on records that are
+    /// still unattributed, and dropping a request takes its paired response with it.
+    /// </summary>
+    private static List<InteractionRecord> DropUnattributed(
+        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
+    {
+        if (request.DropUnattributed is not { } predicate)
+            return records;
+
+        var knownTestIds = request.FoldUnknownTestsInto is null
+            ? null
+            : new HashSet<string>(
+                testRecords.Where(t => !string.IsNullOrWhiteSpace(t.TestId)).Select(t => t.TestId),
+                StringComparer.Ordinal);
+
+        bool IsUnattributed(InteractionRecord record) =>
+            IngestAttribution.NeedsAttribution(record, request.WindowAttributionFallbackId)
+            || (knownTestIds is not null && !knownTestIds.Contains(record.TestId)
+                && record.TestId != request.FoldUnknownTestsInto!.ScenarioId);
+
+        // First pass decides on the records that carry the identity; the second removes their partners,
+        // so a dropped request never leaves an orphaned response arrow behind.
+        var droppedPairs = new HashSet<string>(StringComparer.Ordinal);
+        var kept = new List<InteractionRecord>(records.Count);
+        var dropped = 0;
+
+        foreach (var record in records)
+        {
+            if (IsUnattributed(record) && Evaluate(predicate, record, diagnostics))
+            {
+                dropped++;
+                if (record.RequestResponseId is { Length: > 0 } id)
+                    droppedPairs.Add(id);
+                continue;
+            }
+
+            kept.Add(record);
+        }
+
+        if (droppedPairs.Count > 0)
+        {
+            var survivors = new List<InteractionRecord>(kept.Count);
+            foreach (var record in kept)
+            {
+                if (record.RequestResponseId is { Length: > 0 } id && droppedPairs.Contains(id))
+                {
+                    dropped++;
+                    continue;
+                }
+
+                survivors.Add(record);
+            }
+
+            kept = survivors;
+        }
+
+        if (dropped > 0)
+            diagnostics.Add(DiagnosticKind.DroppedUnattributed, $"{dropped} unattributed interaction record(s) dropped by DropUnattributed.");
+
+        return kept;
+    }
+
+    /// <summary>A host predicate must never break an ingest: a throwing predicate keeps the record and is reported.</summary>
+    private static bool Evaluate(Func<InteractionRecord, bool> predicate, InteractionRecord record, ReportDiagnosticsCollector diagnostics)
+    {
+        try
+        {
+            return predicate(record);
+        }
+        catch (Exception ex)
+        {
+            diagnostics.Add(DiagnosticKind.Other, $"DropUnattributed threw for {record.ServiceName} {record.Uri}: {ex.GetType().Name}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Turns the tests file's step and assertion events into diagram markers — top-level step delimiter
+    /// bars and ✓/✗ assertion notes — placed by timestamp among the interactions (and nested inside
+    /// whatever call was in flight). Background steps draw nothing: they belong to the step list only.
+    /// </summary>
+    private static void AddDiagramMarkers(List<InteractionRecord> records, List<TestRunRecord> testRecords)
+    {
+        foreach (var record in testRecords)
+        {
+            if (!record.IsDiagramMarker || string.IsNullOrWhiteSpace(record.TestId))
+                continue;
+            records.Add(record.Is(TestRunRecord.Events.Assertion)
+                ? InteractionRecord.AssertionMarker(record.TestId, record.Text ?? "assertion",
+                    passed: !string.Equals(record.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                            && !string.Equals(record.Status, "fail", StringComparison.OrdinalIgnoreCase),
+                    record.Timestamp!.Value, record.Error)
+                : InteractionRecord.StepMarker(record.TestId, record.Text ?? "step", record.Timestamp!.Value, record.Keyword));
+        }
+    }
+
+    /// <summary>Sorts by timestamp, folds unknown tests, then (optionally) rewrites the order as a call tree.</summary>
+    private static List<InteractionRecord> Order(List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request)
+    {
         // Stable sort by timestamp: entries without a timestamp keep their file order relative to
         // each other and sort first.
         var ordered = records
@@ -164,6 +515,9 @@ public static class IngestPipeline
             .ThenBy(x => x.index)
             .Select(x => x.record)
             .ToList();
+
+        if (request.MergeDuplicateInteractions)
+            ordered = InteractionMerger.Merge(ordered, request.MergeOverlapThreshold);
 
         if (request.FoldUnknownTestsInto is { } fold)
         {
@@ -177,9 +531,12 @@ public static class IngestPipeline
                 .ToList();
         }
 
-        if (request.CallTreeOrdering)
-            ordered = OrderAsCallTree(ordered);
+        return request.CallTreeOrdering ? OrderAsCallTree(ordered) : ordered;
+    }
 
+    /// <summary>Replays the ordered records into the store, applying the tests file's names to every hop of one test.</summary>
+    private static List<RequestResponseLog> Replay(List<InteractionRecord> ordered, List<TestRunRecord> testRecords)
+    {
         // Names from the tests file win over whatever each hop knew.
         var namesFromTests = testRecords
             .Where(t => !string.IsNullOrWhiteSpace(t.TestId) && !string.IsNullOrWhiteSpace(t.TestName))
@@ -209,28 +566,30 @@ public static class IngestPipeline
             }
         }
 
-        var synthesised = FeatureSynthesizer.Build(testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown);
-        if (request.FoldUnknownTestsInto is { } foldedInto)
+        return logs;
+    }
+
+    /// <summary>
+    /// Empties the report's <c>attachments/</c> folder so it holds exactly this run's artefacts.
+    /// A file another process still holds open is skipped and reported, never thrown.
+    /// </summary>
+    private static void CleanAttachmentsFolder(string reportsDirectory, ReportDiagnosticsCollector diagnostics)
+    {
+        var attachmentsDir = Path.Combine(reportsDirectory, "attachments");
+        if (!Directory.Exists(attachmentsDir))
+            return;
+
+        foreach (var file in Directory.EnumerateFiles(attachmentsDir))
         {
-            // The fold scenario is not a test: nothing ran and nothing ended, so ResultWhenUnknown (meant
-            // for tests that started but never reported an end) must not mark it failed.
-            foreach (var scenario in synthesised.Features.SelectMany(f => f.Scenarios))
+            try
             {
-                if (scenario.Id == foldedInto.ScenarioId)
-                    scenario.Result = ExecutionResult.Passed;
+                File.Delete(file);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                diagnostics.Add(DiagnosticKind.AttachmentFailure, $"Could not delete stale attachment {file}: {ex.Message}");
             }
         }
-
-        var scenarioCount = synthesised.Features.Sum(f => f.Scenarios.Length);
-
-        if (scenarioCount == 0 && !request.AllowEmpty)
-            return new IngestResult(logs.Count, 0, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: false);
-
-        DefaultDiagramsFetcher.Reset();
-        ReportGenerator.CreateStandardReportsWithDiagrams(synthesised.Features, synthesised.Start, synthesised.End, options);
-        DefaultDiagramsFetcher.Reset();
-
-        return new IngestResult(logs.Count, scenarioCount, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: true);
     }
 
     /// <summary>Above this many units in one test, nesting is skipped (pairs only) to keep ingest linear.</summary>

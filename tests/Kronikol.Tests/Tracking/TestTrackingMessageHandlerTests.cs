@@ -6,7 +6,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
-[Collection("TrackingComponentRegistry")]
+[Collection("DiagramsFetcher")]
 public class TestTrackingMessageHandlerTests : IDisposable
 {
     // ─── Test infrastructure ────────────────────────────────────

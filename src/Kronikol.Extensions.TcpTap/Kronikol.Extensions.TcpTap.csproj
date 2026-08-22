@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework />
+    <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
+    <Title>Kronikol TCP-Tap Extension</Title>
+    <Description>Out-of-process database capture for Kronikol: a byte-for-byte TCP tee that sits between a service and Redis or MongoDB, forwards every byte unmodified and first, decodes a copy of the wire protocol (RESP2/RESP3, MongoDB OP_MSG/OP_QUERY) off the hot path, and records each command/reply as a Kronikol request/response pair. Renders out-of-process Redis and Mongo calls in sequence diagrams exactly like the in-process Kronikol.Extensions.Redis / Kronikol.Extensions.MongoDB extensions, with no change inside the service.</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageTags>$(PackageTags);tcp;tee;tap;redis;mongodb;resp;e2e;polyglot</PackageTags>
+    <!-- Marks the linked classifier sources so they compile into this package's own namespace
+         (Kronikol.Extensions.TcpTap.Protocols) instead of the extension namespaces they own, so a
+         host may reference this package and Kronikol.Extensions.Redis / .MongoDB at the same time. -->
+    <DefineConstants>$(DefineConstants);KRONIKOL_TCPTAP_SHARED</DefineConstants>
+    <!-- NU1902: SharpCompress (transitive via MongoDB.Bson) has no patched version; the vulnerability is in
+         WriteToDirectory (zip slip), which this package never calls. -->
+    <NoWarn>$(NoWarn);NU1902</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- BSON document parsing only: no MongoDB.Driver, no StackExchange.Redis. The tap speaks the wire
+         protocols itself, so it never takes a client-library dependency (and never sees a connection string).
+         Pinned to the 2.x line: it is the lowest common denominator, so the tap composes with a host on
+         either MongoDB.Driver 2.x or 3.x (NuGet unifies upward). -->
+    <PackageReference Include="MongoDB.Bson" Version="2.*" />
+    <!-- Hosting/DI abstractions arrive transitively through Kronikol (Microsoft.AspNetCore.Mvc.Testing). -->
+    <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared classification: the same source files the in-process extensions use, so a command tapped on
+         the wire produces byte-identical Method/Uri labels. Linked (not project-referenced) because those
+         projects carry StackExchange.Redis / MongoDB.Driver, which this package must not take. -->
+    <Compile Include="..\Kronikol.Extensions.Redis\RedisOperation.cs" Link="Protocols\Shared\RedisOperation.cs" />
+    <Compile Include="..\Kronikol.Extensions.Redis\RedisCacheResult.cs" Link="Protocols\Shared\RedisCacheResult.cs" />
+    <Compile Include="..\Kronikol.Extensions.Redis\RedisOperationInfo.cs" Link="Protocols\Shared\RedisOperationInfo.cs" />
+    <Compile Include="..\Kronikol.Extensions.Redis\RedisOperationClassifier.cs" Link="Protocols\Shared\RedisOperationClassifier.cs" />
+    <Compile Include="..\Kronikol.Extensions.Redis\RedisTrackingVerbosity.cs" Link="Protocols\Shared\RedisTrackingVerbosity.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbOperation.cs" Link="Protocols\Shared\MongoDbOperation.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbOperationInfo.cs" Link="Protocols\Shared\MongoDbOperationInfo.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbOperationClassifier.cs" Link="Protocols\Shared\MongoDbOperationClassifier.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbTrackingVerbosity.cs" Link="Protocols\Shared\MongoDbTrackingVerbosity.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbResponseSummary.cs" Link="Protocols\Shared\MongoDbResponseSummary.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.TcpTap" />
+  </ItemGroup>
+
+</Project>

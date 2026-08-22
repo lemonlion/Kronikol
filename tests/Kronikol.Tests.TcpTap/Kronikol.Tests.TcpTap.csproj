@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);xUnit1051;NU1902;NU1903;NU1904</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="10.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The real clients the taps are proven against, pinned to the versions a tapped .NET service of this
+         generation actually uses: StackExchange.Redis 2.6.x (RESP2 by default) and MongoDB.Driver 2.30.x. -->
+    <PackageReference Include="StackExchange.Redis" Version="2.6.48" />
+    <PackageReference Include="MongoDB.Driver" Version="2.30.0" />
+    <PackageReference Include="Testcontainers.Redis" Version="4.8.1" />
+    <PackageReference Include="Testcontainers.MongoDb" Version="4.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Kronikol\Kronikol.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.TcpTap\Kronikol.Extensions.TcpTap.csproj" />
+    <!-- The in-process extensions the golden label tests compare against. The MongoDB extension is referenced
+         through its driver-2.x build so the whole test assembly stays on one MongoDB.Bson version. -->
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.Redis\Kronikol.Extensions.Redis.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.MongoDB.V2\Kronikol.Extensions.MongoDB.V2.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

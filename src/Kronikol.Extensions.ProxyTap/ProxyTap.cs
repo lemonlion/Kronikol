@@ -159,6 +159,14 @@ public sealed class ProxyTap : IAsyncDisposable
         var capture = identity is not null || _options.CaptureUnattributedRequests;
         identity ??= capture ? (_options.FallbackTestName, _options.FallbackTestId ?? Guid.NewGuid().ToString("N")) : null;
 
+        // Publish "this service is busy with that test" for the length of the forward, so a capturer that
+        // cannot read headers (a database tee on the same service) can attribute what it sees. Opt-in via
+        // ProxyTapOptions.InFlightRegistry; the using scope covers every exit from this method, so a
+        // failed forward can never leave a stale identity behind.
+        using var inFlight = _options.InFlightRegistry is { } registry && identity is { } inFlightIdentity
+            ? registry.Register(_options.ServiceName, inFlightIdentity.Name, inFlightIdentity.Id)
+            : null;
+
         var traceIdHeader = FirstValue(requestHeaders, TestTrackingHttpHeaders.TraceIdHeader);
         var kronikolTraceId = traceIdHeader is not null && Guid.TryParse(traceIdHeader, out var parsedTrace) ? parsedTrace : Guid.NewGuid();
         var requestResponseId = Guid.NewGuid();

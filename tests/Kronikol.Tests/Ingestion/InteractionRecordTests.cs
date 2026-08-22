@@ -5,6 +5,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Ingestion;
 
+[Collection("DiagramsFetcher")]
 public class InteractionRecordTests
 {
     [Fact]
@@ -189,7 +190,8 @@ public class InteractionRecordTests
         Assert.True(stepLogs[1].IsOverrideEnd);
         var assertionLogs = assertion.ToLogs().ToArray();
         Assert.Contains("hnote across <<assertionNote>> " + Track.FailColor, assertionLogs[0].PlantUml);
-        Assert.Contains(Track.FailSymbol + " the banner is visible", assertionLogs[0].PlantUml);
+        // Keyword-less label: the note is capitalised (Reports.StepText) so the diagram reads as a sentence.
+        Assert.Contains(Track.FailSymbol + " The banner is visible", assertionLogs[0].PlantUml);
         Assert.Contains("not visible", assertionLogs[0].PlantUml);
         Assert.Contains("end note", assertionLogs[0].PlantUml);
         Assert.Equal(t0.AddSeconds(2), assertionLogs[0].Timestamp);

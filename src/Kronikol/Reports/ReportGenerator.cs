@@ -109,6 +109,13 @@ public static class ReportGenerator
             return;
         }
 
+        // One pass over the finished model, before anything reads it, so the HTML, JSON, XML and YAML
+        // views of a step all show the same sentence (Reports.StepText explains the rule).
+        if (options.CapitaliseStepText)
+            StepText.ApplyToFeatures(features);
+
+        ReportLowercaseSteps(features);
+
         if (options.ExpectedTestCount != null)
         {
             var scenarioCount = features.SelectMany(f => f.Scenarios).Count();
@@ -223,52 +230,53 @@ public static class ReportGenerator
         Directory.CreateDirectory(reportsDir);
         CopyAttachmentsToReportsFolder(features, reportsDir);
 
-        var actions = new List<Action>();
+        var actions = new List<(string Name, Action Run)>();
+        void Add(string name, Action run) => actions.Add((name, run));
 
         if (options.GenerateSpecificationsReport)
         {
-            actions.Add(() => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker));
+            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker));
         }
 
         if (options.GenerateTestRunReport)
         {
-            actions.Add(() => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker));
         }
 
         if (options.GenerateSpecificationsData)
         {
-            actions.Add(() => GenerateSpecificationsData(features, $"{options.YamlSpecificationsFileName}.{specsDataExtension}", options.SpecificationsTitle, options.SpecificationsDataFormat, true));
+            Add($"{options.YamlSpecificationsFileName}.{specsDataExtension}", () => GenerateSpecificationsData(features, $"{options.YamlSpecificationsFileName}.{specsDataExtension}", options.SpecificationsTitle, options.SpecificationsDataFormat, true));
         }
 
         if (options.GenerateTestRunReportData)
         {
             if (options.GenerateMergeableData && options.TestRunReportDataFormat == DataFormat.Json)
             {
-                actions.Add(() => WriteFile(
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => WriteFile(
                     BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, trackedLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options),
                     $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"));
             }
             else
             {
-                actions.Add(() => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs));
             }
         }
 
         if (options.GenerateTestRunReportSchema)
         {
-            actions.Add(() => GenerateTestRunReportSchema($"{options.HtmlTestRunReportFileName}.schema.{GetSchemaExtension(options.TestRunReportDataFormat)}", options.TestRunReportDataFormat));
+            Add("TestRunReport schema", () => GenerateTestRunReportSchema($"{options.HtmlTestRunReportFileName}.schema.{GetSchemaExtension(options.TestRunReportDataFormat)}", options.TestRunReportDataFormat));
         }
 
         if (options.GenerateComponentDiagram)
         {
-            actions.Add(() => ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
+            Add("ComponentDiagram.html", () => ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
                 RequestResponseLogger.RequestAndResponseLogs.Where(x => !(x?.TrackingIgnore ?? true)),
                 options,
                 perBoundarySegments: perBoundarySegments,
                 wholeTestSegments: wholeTestSegments));
         }
 
-        Parallel.Invoke(actions.ToArray());
+        RunOutputs(actions);
 
         var diagnostics = ReportDiagnostics.Analyse(
             RequestResponseLogger.RequestAndResponseLogs, features,
@@ -305,6 +313,52 @@ public static class ReportGenerator
                 CiArtifactPublisher.Publish(reportFiles, ciEnv, options.CiArtifactName, options.CiArtifactRetentionDays);
             }
         }
+    }
+
+    /// <summary>
+    /// Runs the report outputs in parallel, isolating each one: an output that throws is recorded as an
+    /// <see cref="DiagnosticKind.OutputFailure"/> diagnostic and every other output is still written.
+    /// </summary>
+    /// <remarks>
+    /// Before this, <c>Parallel.Invoke</c> propagated the first failure as an
+    /// <see cref="AggregateException"/> and the whole report was lost — one unwritable file, one
+    /// serialisation bug in one scenario's data, and the HTML nobody could otherwise reproduce went with
+    /// it. A report is diagnostics: a partial one beats none.
+    /// </remarks>
+    private static void RunOutputs(List<(string Name, Action Run)> outputs)
+    {
+        Parallel.Invoke(outputs.Select(output => (Action)(() =>
+        {
+            try
+            {
+                output.Run();
+            }
+            catch (Exception ex)
+            {
+                ReportDiagnosticsScope.Record(DiagnosticKind.OutputFailure, $"Could not write {output.Name}", ex);
+                Console.WriteLine($"⚠ WARNING: could not write {output.Name}: {ex.GetType().Name}: {ex.Message}");
+            }
+        })).ToArray());
+    }
+
+    /// <summary>
+    /// Records how many step and assertion labels still do not read as sentences after
+    /// <see cref="StepText"/> ran — the quoted literals the rule deliberately leaves alone, and anything a
+    /// producer slipped past it — with the first few as examples, so the gap is visible in
+    /// <c>kronikol ingest</c>'s output and on a dashboard instead of only in the rendered HTML.
+    /// </summary>
+    private static void ReportLowercaseSteps(Feature[] features)
+    {
+        if (ReportDiagnosticsScope.Current is null)
+            return;
+
+        var (count, examples) = StepText.FindNotStartingWithCapital(features);
+        if (count == 0)
+            return;
+
+        var suffix = examples.Length == 0 ? "" : $" e.g. {string.Join(" | ", examples)}";
+        ReportDiagnosticsScope.Record(DiagnosticKind.StepsNotStartingWithCapital,
+            $"{count} step text(s) do not start with a capital letter.{suffix}");
     }
 
     public static string GetTestRunReportTitle(ReportConfigurationOptions options)
@@ -1114,6 +1168,9 @@ public static class ReportGenerator
                               """);
                 }
 
+                if (!string.IsNullOrWhiteSpace(scenario.Description))
+                    body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(scenario.Description)}</div>""");
+
                 if (scenario.BackgroundSteps is { Length: > 0 })
                 {
                     body.Append("""<details class="scenario-background">""");
@@ -1155,8 +1212,7 @@ public static class ReportGenerator
                     body.Append("""<div class="scenario-attachments">""");
                     foreach (var attachment in scenario.Attachments)
                     {
-                        var ext = Path.GetExtension(attachment.Name).ToLowerInvariant();
-                        if (ext is ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp")
+                        if (attachment.IsInlineImage)
                         {
                             body.Append($"<a class=\"attachment-image-link\" href=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                         }
@@ -1892,6 +1948,9 @@ public static class ReportGenerator
                 var display = ri == 0 ? "" : " style=\"display:none\"";
                 body.Append($"<div class=\"param-detail-panel\" id=\"{prefix}-detail-{ri}\"{display}>");
 
+                if (!string.IsNullOrWhiteSpace(s.Description))
+                    body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(s.Description)}</div>""");
+
                 if (s.BackgroundSteps is { Length: > 0 })
                 {
                     body.Append("""<details class="scenario-background">""");
@@ -1932,8 +1991,7 @@ public static class ReportGenerator
                     body.Append("""<div class="scenario-attachments">""");
                     foreach (var attachment in s.Attachments)
                     {
-                        var ext = Path.GetExtension(attachment.Name).ToLowerInvariant();
-                        if (ext is ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp")
+                        if (attachment.IsInlineImage)
                         {
                             body.Append($"<a class=\"attachment-image-link\" href=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                         }
@@ -2369,8 +2427,7 @@ public static class ReportGenerator
         {
             foreach (var attachment in step.Attachments)
             {
-                var ext = Path.GetExtension(attachment.Name).ToLowerInvariant();
-                if (ext is ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp")
+                if (attachment.IsInlineImage)
                 {
                     body.Append($"<a class=\"attachment-image-link\" href=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                     body.Append($"<span class=\"attachment-image-name\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</span>");
@@ -2813,6 +2870,7 @@ public static class ReportGenerator
                     ["id"] = s.Id,
                     ["stableId"] = ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId),
                     ["name"] = s.DisplayName,
+                    ["description"] = s.Description,
                     ["result"] = s.Result.ToString(),
                     ["durationSeconds"] = s.Duration?.TotalSeconds ?? 0.0,
                     ["isHappyPath"] = s.IsHappyPath,
@@ -2823,8 +2881,11 @@ public static class ReportGenerator
                     ["rule"] = s.Rule,
                     ["outlineId"] = s.OutlineId,
                     ["exampleValues"] = s.ExampleValues,
+                    // The flattened view drives the pivot table's columns; without it a merged report
+                    // loses the parameterised grouping the original had.
+                    ["exampleFlatValues"] = s.ExampleFlatValues,
                     ["exampleDisplayName"] = s.ExampleDisplayName,
-                    ["attachments"] = (s.Attachments ?? []).Select(a => new { a.Name, a.RelativePath }).ToArray(),
+                    ["attachments"] = (s.Attachments ?? []).Select(MapAttachmentJson).ToArray(),
                     ["backgroundSteps"] = (s.BackgroundSteps ?? []).Select(stepMapper).ToArray(),
                     ["steps"] = (s.Steps ?? []).Select(stepMapper).ToArray()
                 };
@@ -2975,6 +3036,24 @@ public static class ReportGenerator
         Timestamp = log.Timestamp?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
     };
 
+    /// <summary>
+    /// An attachment in the data files: the display name, where it is, and the media type the producer
+    /// declared (null when it declared none — the renderer then sniffs the extension).
+    /// </summary>
+    private static object MapAttachmentJson(FileAttachment attachment) => new Dictionary<string, object?>
+    {
+        ["name"] = attachment.Name,
+        ["relativePath"] = attachment.RelativePath,
+        ["mediaType"] = attachment.MediaType,
+    };
+
+    /// <inheritdoc cref="MapAttachmentJson"/>
+    private static XElement MapAttachmentXml(FileAttachment attachment) =>
+        new("Attachment",
+            new XElement("Name", attachment.Name),
+            new XElement("RelativePath", attachment.RelativePath),
+            attachment.MediaType != null ? new XElement("MediaType", attachment.MediaType) : null);
+
     private static object MapStepJson(ScenarioStep step) => new
     {
         step.Keyword,
@@ -2982,7 +3061,7 @@ public static class ReportGenerator
         Status = step.Status?.ToString(),
         DurationSeconds = step.Duration?.TotalSeconds,
         SubSteps = (step.SubSteps ?? []).Select(MapStepJson).ToArray(),
-        Attachments = (step.Attachments ?? []).Select(a => new { a.Name, a.RelativePath }).ToArray()
+        Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray()
     };
 
     /// <summary>
@@ -3002,7 +3081,7 @@ public static class ReportGenerator
         step.DocStringMediaType,
         Comments = step.Comments ?? [],
         SubSteps = (step.SubSteps ?? []).Select(MapStepJsonFull).ToArray(),
-        Attachments = (step.Attachments ?? []).Select(a => new { a.Name, a.RelativePath }).ToArray(),
+        Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray(),
         Parameters = (step.Parameters ?? []).Select(MapStepParameterJson).ToArray(),
         TextSegments = step.TextSegments?.Select(MapTextSegmentJson).ToArray()
     };
@@ -3080,6 +3159,7 @@ public static class ReportGenerator
                                         new XElement("Id", s.Id),
                                         new XElement("StableId", ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId)),
                                         new XElement("Name", s.DisplayName),
+                                        s.Description != null ? new XElement("Description", s.Description) : null,
                                         new XElement("Result", s.Result.ToString()),
                                         new XElement("DurationSeconds", (s.Duration?.TotalSeconds ?? 0.0).ToString("F3")),
                                         new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLower()),
@@ -3090,7 +3170,7 @@ public static class ReportGenerator
                                         s.Rule != null ? new XElement("Rule", s.Rule) : null,
                                         (s.BackgroundSteps is { Length: > 0 }) ? new XElement("BackgroundSteps", s.BackgroundSteps.Select(MapStepXml)) : null,
                                         (s.Steps is { Length: > 0 }) ? new XElement("Steps", s.Steps.Select(MapStepXml)) : null,
-                                        (s.Attachments is { Length: > 0 }) ? new XElement("Attachments", s.Attachments.Select(a => new XElement("Attachment", new XElement("Name", a.Name), new XElement("RelativePath", a.RelativePath)))) : null
+                                        (s.Attachments is { Length: > 0 }) ? new XElement("Attachments", s.Attachments.Select(MapAttachmentXml)) : null
                                     };
 
                                     if (diagramLookup != null)
@@ -3140,7 +3220,7 @@ public static class ReportGenerator
             step.Status != null ? new XElement("Status", step.Status.ToString()) : null,
             step.Duration != null ? new XElement("DurationSeconds", step.Duration.Value.TotalSeconds.ToString("F3")) : null,
             (step.SubSteps is { Length: > 0 }) ? new XElement("SubSteps", step.SubSteps.Select(MapStepXml)) : null,
-            (step.Attachments is { Length: > 0 }) ? new XElement("Attachments", step.Attachments.Select(a => new XElement("Attachment", new XElement("Name", a.Name), new XElement("RelativePath", a.RelativePath)))) : null
+            (step.Attachments is { Length: > 0 }) ? new XElement("Attachments", step.Attachments.Select(MapAttachmentXml)) : null
         );
 
     private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup)
@@ -3173,6 +3253,8 @@ public static class ReportGenerator
             {
                 yml.Append("      - Name: " + scenario.DisplayName.SanitiseForYml() + "\n");
                 yml.Append("        StableId: " + ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId) + "\n");
+                if (scenario.Description is not null)
+                    yml.Append("        Description: " + scenario.Description.SanitiseForYml() + "\n");
                 yml.Append("        Result: " + scenario.Result + "\n");
                 yml.Append("        DurationSeconds: " + (scenario.Duration?.TotalSeconds ?? 0.0).ToString("F3") + "\n");
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
@@ -3221,6 +3303,8 @@ public static class ReportGenerator
                     {
                         yml.Append("          - Name: " + att.Name.SanitiseForYml() + "\n");
                         yml.Append("            RelativePath: " + att.RelativePath.SanitiseForYml() + "\n");
+                        if (att.MediaType is not null)
+                            yml.Append("            MediaType: " + att.MediaType.SanitiseForYml() + "\n");
                     }
                 }
 
@@ -3273,6 +3357,8 @@ public static class ReportGenerator
             {
                 yml.Append(indent + "    - Name: " + att.Name.SanitiseForYml() + "\n");
                 yml.Append(indent + "      RelativePath: " + att.RelativePath.SanitiseForYml() + "\n");
+                if (att.MediaType is not null)
+                    yml.Append(indent + "      MediaType: " + att.MediaType.SanitiseForYml() + "\n");
             }
         }
     }
@@ -3498,6 +3584,15 @@ public static class ReportGenerator
             var att = attachments[i];
             var sourcePath = att.RelativePath;
 
+            // A link to something that lives elsewhere (a Playwright report, a Grafana trace) is not a
+            // file: it must survive untouched, and must never be handed to the path APIs — a URL's
+            // "http://host:port/…" is not a legal Windows path and GetFullPath throws on it.
+            if (att.IsUrl)
+            {
+                result[i] = att;
+                continue;
+            }
+
             // Skip paths already pointing to attachments/ subfolder
             if (sourcePath.StartsWith("attachments/", StringComparison.OrdinalIgnoreCase) ||
                 sourcePath.StartsWith("attachments\\", StringComparison.OrdinalIgnoreCase))
@@ -3507,9 +3602,19 @@ public static class ReportGenerator
             }
 
             // Resolve to absolute if relative
-            var fullPath = Path.IsPathRooted(sourcePath)
-                ? sourcePath
-                : Path.GetFullPath(sourcePath, AppDomain.CurrentDomain.BaseDirectory);
+            string fullPath;
+            try
+            {
+                fullPath = Path.IsPathRooted(sourcePath)
+                    ? sourcePath
+                    : Path.GetFullPath(sourcePath, AppDomain.CurrentDomain.BaseDirectory);
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                ReportDiagnosticsScope.Record(DiagnosticKind.AttachmentFailure, $"Attachment path '{sourcePath}' is not usable", ex);
+                result[i] = att;
+                continue;
+            }
 
             if (!File.Exists(fullPath))
             {
@@ -3532,7 +3637,18 @@ public static class ReportGenerator
 
             Directory.CreateDirectory(attachmentsDir);
             var destPath = Path.Combine(attachmentsDir, destName);
-            File.Copy(fullPath, destPath, overwrite: true);
+            try
+            {
+                File.Copy(fullPath, destPath, overwrite: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // A capturer may still hold the file, or the disk may be full: link to where it is
+                // rather than losing the whole report over one screenshot.
+                ReportDiagnosticsScope.Record(DiagnosticKind.AttachmentFailure, $"Could not copy attachment {fullPath}", ex);
+                result[i] = att;
+                continue;
+            }
 
             var relativePath = $"attachments/{destName}";
             copiedFiles[normalizedSource] = relativePath;
@@ -3708,6 +3824,7 @@ public static class ReportGenerator
                                         ["id"] = new Dictionary<string, object?> { ["type"] = "string" },
                                         ["stableId"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Deterministic cross-run identifier derived from feature name + scenario display name (+ outline ID for parameterized scenarios). Use this for matching the same test across runs." },
                                         ["name"] = new Dictionary<string, object?> { ["type"] = "string" },
+                                        ["description"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The scenario's own free-text description (the prose under Scenario:)" },
                                         ["result"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = resultEnumValues },
                                         ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = "number" },
                                         ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean" },
@@ -3738,7 +3855,8 @@ public static class ReportGenerator
                                                 ["properties"] = new Dictionary<string, object?>
                                                 {
                                                     ["name"] = new Dictionary<string, object?> { ["type"] = "string" },
-                                                    ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string" }
+                                                    ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string" },
+                                                    ["mediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "IANA media type; image/* renders inline, anything else as a link" }
                                                 }
                                             }
                                         },
@@ -3784,7 +3902,8 @@ public static class ReportGenerator
                                 ["properties"] = new Dictionary<string, object?>
                                 {
                                     ["name"] = new Dictionary<string, object?> { ["type"] = "string" },
-                                    ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string" }
+                                    ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string" },
+                                    ["mediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "IANA media type; image/* renders inline, anything else as a link" }
                                 }
                             }
                         }
@@ -3867,7 +3986,8 @@ public static class ReportGenerator
                                 new XElement(xs + "complexType",
                                     new XElement(xs + "sequence",
                                         new XElement(xs + "element", new XAttribute("name", "Name"), new XAttribute("type", "xs:string")),
-                                        new XElement(xs + "element", new XAttribute("name", "RelativePath"), new XAttribute("type", "xs:string"))
+                                        new XElement(xs + "element", new XAttribute("name", "RelativePath"), new XAttribute("type", "xs:string")),
+                                        new XElement(xs + "element", new XAttribute("name", "MediaType"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
                                     )
                                 )
                             )
@@ -3904,6 +4024,7 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "Id"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "StableId"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "Name"), new XAttribute("type", "xs:string")),
+                new XElement(xs + "element", new XAttribute("name", "Description"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Result"), new XAttribute("type", "ExecutionResult")),
                 new XElement(xs + "element", new XAttribute("name", "DurationSeconds"), new XAttribute("type", "xs:decimal")),
                 new XElement(xs + "element", new XAttribute("name", "IsHappyPath"), new XAttribute("type", "xs:boolean")),
@@ -3945,7 +4066,8 @@ public static class ReportGenerator
                                 new XElement(xs + "complexType",
                                     new XElement(xs + "sequence",
                                         new XElement(xs + "element", new XAttribute("name", "Name"), new XAttribute("type", "xs:string")),
-                                        new XElement(xs + "element", new XAttribute("name", "RelativePath"), new XAttribute("type", "xs:string"))
+                                        new XElement(xs + "element", new XAttribute("name", "RelativePath"), new XAttribute("type", "xs:string")),
+                                        new XElement(xs + "element", new XAttribute("name", "MediaType"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
                                     )
                                 )
                             )

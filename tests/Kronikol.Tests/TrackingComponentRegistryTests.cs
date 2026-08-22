@@ -2,16 +2,13 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests;
 
-[CollectionDefinition("TrackingComponentRegistry")]
-public class TrackingComponentRegistryCollection : ICollectionFixture<TrackingComponentRegistryFixture>;
-
 public class TrackingComponentRegistryFixture : IDisposable
 {
     public TrackingComponentRegistryFixture() => TrackingComponentRegistry.Clear();
     public void Dispose() => TrackingComponentRegistry.Clear();
 }
 
-[Collection("TrackingComponentRegistry")]
+[Collection("DiagramsFetcher")]
 public class TrackingComponentRegistryTests : IDisposable
 {
     public TrackingComponentRegistryTests()

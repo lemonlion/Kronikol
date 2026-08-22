@@ -89,4 +89,26 @@ public class FeatureSynthesizerTests
         Assert.Equal(record, back);
         Assert.Contains("\"event\":\"end\"", record.ToJson());
     }
+    [Fact]
+    public void Unknown_events_never_create_a_phantom_scenario()
+    {
+        // A reporter's run-level event (`testrun`, testId `__run__`) used to become a scenario that
+        // never ended — Failed by ResultWhenUnknown, and enough to blank Specifications.html.
+        var t0 = DateTimeOffset.Parse("2026-08-22T10:00:00Z");
+        var records = new[]
+        {
+            new TestRunRecord { Event = "start", TestId = "t1", TestName = "real", Timestamp = t0 },
+            new TestRunRecord { Event = "end", TestId = "t1", Status = "passed", Timestamp = t0.AddSeconds(1) },
+            new TestRunRecord { Event = "testrun", TestId = "__run__", Status = "passed", Timestamp = t0.AddSeconds(2) },
+            new TestRunRecord { Event = "somethingelse", TestId = "ghost", Timestamp = t0.AddSeconds(3) },
+        };
+
+        var result = FeatureSynthesizer.Build(records, null, resultWhenUnknown: ExecutionResult.Failed);
+
+        var scenario = Assert.Single(result.Features.SelectMany(f => f.Scenarios));
+        Assert.Equal("t1", scenario.Id);
+        Assert.Equal(ExecutionResult.Passed, scenario.Result);
+        Assert.False(TestRunRecord.IsKnownEvent("testrun"));
+        Assert.True(TestRunRecord.IsKnownEvent("Attachment"));
+    }
 }

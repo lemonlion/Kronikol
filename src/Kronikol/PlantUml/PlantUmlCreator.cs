@@ -415,6 +415,13 @@ public static partial class PlantUmlCreator
 
     private const string AssertionNoteClass = "assertionNote";
 
+    /// <summary>
+    /// The single participant declared for a diagram that consists only of injected markers (step bars /
+    /// assertion notes) so that <c>hnote across</c> has a lifeline to span. The browser render script
+    /// recognises this exact line and does not count it as a drawable body.
+    /// </summary>
+    internal const string MarkerOnlyParticipant = "participant \"(no interactions)\" as noInteractions";
+
     private static string AddAssertionStyling(List<RequestResponseLog> tracesForTest) =>
         tracesForTest.Any(x => x.PlantUml is not null && x.PlantUml.Contains($"<<{AssertionNoteClass}>>"))
             ? $$"""
@@ -455,6 +462,18 @@ public static partial class PlantUmlCreator
         var relevantTraces = tracesForTest
             .Where(x => x is { IsOverrideStart: false, IsOverrideEnd: false, IsActionStart: false })
             .ToList();
+
+        // A diagram made only of injected markers (step bars / assertion notes — a test that asserted
+        // but never touched a tracked dependency) has no participant at all, and `hnote across` with
+        // nothing to span is a PlantUML syntax error in every real engine (server, IKVM, plantuml.js).
+        // Give the notes one lifeline to hang on; the browser guard treats this line as non-drawable so
+        // the "Nothing to draw with the current filters…" affordance still applies while they are hidden.
+        if (relevantTraces.Count == 0)
+        {
+            if (tracesForTest.Any(t => (t.IsOverrideStart || t.IsOverrideEnd) && !string.IsNullOrWhiteSpace(t.PlantUml)))
+                sb.AppendLine(MarkerOnlyParticipant);
+            return sb.ToString();
+        }
 
         // Find the pure caller (appears as CallerName but never as ServiceName) and declare it first
         var allServiceNames = new HashSet<string>(relevantTraces.Select(t => t.ServiceName));

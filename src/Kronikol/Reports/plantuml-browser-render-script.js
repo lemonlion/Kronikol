@@ -437,6 +437,9 @@
         // it answers "Syntax Error? (Assumed diagram type: class)" — so such a fragment is shown as a
         // note instead of being sent to the engine.
         var _headerOnlyRx = /^(@startuml|@enduml|!pragma\b|skinparam\b|autonumber\b|hide\b|scale\b|title\b)/;
+        // The one participant the generator declares for a markers-only diagram (so `hnote across` has a
+        // lifeline to span — see PlantUmlCreator.MarkerOnlyParticipant); on its own it is nothing to draw.
+        var _markerOnlyParticipantRx = /^participant "\(no interactions\)" as noInteractions$/;
         function hasDrawableBody(lines) {
             var inStyle = false;
             for (var i = 0; i < lines.length; i++) {
@@ -445,6 +448,7 @@
                 if (/^<\/?style>$/i.test(t)) { inStyle = t.charAt(1) !== '/'; continue; }
                 if (inStyle) continue;
                 if (_headerOnlyRx.test(t)) continue;
+                if (_markerOnlyParticipantRx.test(t)) continue;
                 return true;
             }
             return false;

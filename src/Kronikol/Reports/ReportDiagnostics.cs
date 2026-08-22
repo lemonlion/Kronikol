@@ -81,7 +81,11 @@ public static class ReportDiagnostics
 
     private static int CountUnpairedRequests(RequestResponseLog[] logs)
     {
-        var requests = logs.Where(l => l.Type == RequestResponseType.Request).ToArray();
+        // Override logs (step bars, assertion notes) and user actions are single records by
+        // design — counting them as unpaired turned every healthy ingested run into a warning.
+        var requests = logs
+            .Where(l => l.Type == RequestResponseType.Request && !l.IsOverrideStart && !l.IsOverrideEnd && !l.IsUserAction)
+            .ToArray();
         var responseIds = logs
             .Where(l => l.Type == RequestResponseType.Response)
             .Select(l => l.RequestResponseId)

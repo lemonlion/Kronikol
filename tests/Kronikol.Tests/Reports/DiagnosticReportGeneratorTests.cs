@@ -4,7 +4,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Reports;
 
-[Collection("TrackingComponentRegistry")]
+[Collection("DiagramsFetcher")]
 public class DiagnosticReportGeneratorTests : IDisposable
 {
     public DiagnosticReportGeneratorTests()

@@ -81,10 +81,16 @@ public class IngestCommandTests : IDisposable
         Assert.Equal(1, IngestCommand.Run([Path.Combine(_dir, "missing-dir")], new StringWriter(), err));
         Assert.Contains("No matching capture files", err.ToString());
 
+        // A file of nothing but garbage: the torn lines are skipped, so there is simply nothing to report.
         var bad = Path.Combine(_dir, "bad.ndjson");
         File.WriteAllText(bad, "{not json\n");
         err = new StringWriter();
         Assert.Equal(1, IngestCommand.Run([bad, "-o", Path.Combine(_dir, "o")], new StringWriter(), err));
+        Assert.Contains("Nothing to report", err.ToString());
+
+        // --strict brings back the hard failure, for a pipeline that wants a garbage producer to be loud.
+        err = new StringWriter();
+        Assert.Equal(1, IngestCommand.Run([bad, "--strict", "-o", Path.Combine(_dir, "o")], new StringWriter(), err));
         Assert.Contains("Failed to read", err.ToString());
     }
 

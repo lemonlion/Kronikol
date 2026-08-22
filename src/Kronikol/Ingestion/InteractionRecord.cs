@@ -138,6 +138,14 @@ public sealed record InteractionRecord
     /// <summary>When true the entry is stored but excluded from diagrams (mirrors the <c>test-tracking-ignore</c> header).</summary>
     [JsonPropertyName("trackingIgnore")] public bool? TrackingIgnore { get; init; }
 
+    /// <summary>
+    /// Which capture path produced this record — <c>wire</c> (a proxy/TCP tap that decoded the protocol),
+    /// <c>span</c> (an OpenTelemetry receiver), or <c>wire + span</c> once
+    /// <see cref="InteractionMerger"/> has folded both views of the same call together. Optional: the merge
+    /// falls back to inferring the source from the presence of a span id and a body.
+    /// </summary>
+    [JsonPropertyName("capturedBy")] public string? CapturedBy { get; init; }
+
     /// <summary>Serialises this record as one NDJSON line (no trailing newline).</summary>
     public string ToJson() => JsonSerializer.Serialize(this, JsonOptions);
 
@@ -174,6 +182,7 @@ public sealed record InteractionRecord
         ActivityTraceId = log.ActivityTraceId,
         ActivitySpanId = log.ActivitySpanId,
         TrackingIgnore = log.TrackingIgnore ? true : null,
+        CapturedBy = log.CapturedBy,
         Kind = log.IsUserAction ? Kinds.Ui : null,
     };
 
@@ -230,6 +239,7 @@ public sealed record InteractionRecord
             ActivityTraceId = ActivityTraceId,
             ActivitySpanId = ActivitySpanId,
             IsUserAction = IsUserAction,
+            CapturedBy = CapturedBy,
         };
     }
 
@@ -259,7 +269,11 @@ public sealed record InteractionRecord
     /// <summary>The step delimiter bar Kronikol's step tracking draws: <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;</c>.</summary>
     public static string StepDelimiterPlantUml(string? keyword, string? text)
     {
-        var label = string.IsNullOrWhiteSpace(keyword) ? text ?? "step" : $"{keyword} {text}";
+        // With a keyword the bar already starts with a capital ("Given the mock is armed") and the
+        // author's casing after it is meaningful; without one the text is all the reader sees.
+        var label = string.IsNullOrWhiteSpace(keyword)
+            ? Reports.StepText.CapitaliseIfEnabled(text) ?? "step"
+            : $"{keyword} {text}";
         return $"hnote across <<stepDelimiter>> #black:<color:white>{EscapeNoteLine(label)}";
     }
 
@@ -268,7 +282,7 @@ public sealed record InteractionRecord
     {
         var color = passed ? Track.PassColor : Track.FailColor;
         var symbol = passed ? Track.PassSymbol : Track.FailSymbol;
-        var body = $"{symbol} {EscapeNoteLine(text ?? "assertion")}";
+        var body = $"{symbol} {EscapeNoteLine(Reports.StepText.CapitaliseIfEnabled(text) ?? "assertion")}";
         if (!passed && !string.IsNullOrWhiteSpace(message))
             body += "\n" + EscapeNoteLine(message!);
         return $"hnote across <<assertionNote>> {color}\n{body}\nend note";

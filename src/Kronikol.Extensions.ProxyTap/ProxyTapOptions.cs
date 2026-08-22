@@ -114,6 +114,16 @@ public sealed class ProxyTapOptions
     /// </summary>
     public string? FallbackTestId { get; set; }
 
+    /// <summary>
+    /// When set, this tap publishes the identity of every request it is currently forwarding to
+    /// <see cref="ServiceName"/>, so a capturer that cannot read headers — a database tee on the same
+    /// service's connections — can ask <see cref="InFlightIdentityRegistry.MostRecentFor"/> who that
+    /// traffic belongs to. Default null: nothing is published and the tap behaves exactly as before.
+    /// See <see cref="InFlightIdentityRegistry"/> for when this is a good idea and when ingest-time
+    /// window attribution is the better one.
+    /// </summary>
+    public InFlightIdentityRegistry? InFlightRegistry { get; set; }
+
     /// <summary>Where captured entries go. Default: the in-process <see cref="RequestResponseLogger"/> store. Use <c>CompositeRequestResponseSink</c> to add an NDJSON file.</summary>
     public IRequestResponseSink Sink { get; set; } = RequestResponseLoggerSink.Instance;
 

@@ -283,7 +283,11 @@ public class IngestPipelineTests : IDisposable
         using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
         var diagram = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0].GetString()!;
         Assert.Contains("<<assertionNote>>", diagram);
-        Assert.Contains("✓ the mock answers 200", diagram);
+        Assert.Contains("✓ The mock answers 200", diagram);
+        // …and when the notes ARE shown (or the report is rendered server-side / with node), the
+        // notes have a lifeline to span — a bare `hnote across` is a PlantUML syntax error.
+        Assert.Contains(global::Kronikol.PlantUml.PlantUmlCreator.MarkerOnlyParticipant, diagram);
+        Assert.Contains("_markerOnlyParticipantRx", html);
     }
 
     [Fact]
@@ -362,7 +366,7 @@ public class IngestPipelineTests : IDisposable
         // A user action has no response arrow.
         Assert.DoesNotContain(lines, l => l.StartsWith("web -") && l.Contains("-> user"));
         // The failing assertion carries its message; the delimiter is the sub-step-free top-level step only.
-        Assert.Contains("✗ the customers figure equals 42", diagram);
+        Assert.Contains("✗ The customers figure equals 42", diagram);
         Assert.Contains("Expected 42, received 41", diagram);
         Assert.DoesNotContain("the button is clicked", diagram);
 
@@ -373,7 +377,7 @@ public class IngestPipelineTests : IDisposable
         Assert.Equal("the user accepts the trial", top.Text);
         Assert.Equal(ExecutionResult.Passed, top.Status);
         Assert.NotNull(top.SubSteps);
-        Assert.Equal(["the button is clicked", "✓ the trial banner is visible", "✗ the customers figure equals 42"], top.SubSteps!.Select(s => s.Text));
+        Assert.Equal(["The button is clicked", "✓ The trial banner is visible", "✗ The customers figure equals 42"], top.SubSteps!.Select(s => s.Text));
         Assert.Equal(ExecutionResult.Failed, top.SubSteps![2].Status);
         Assert.Contains("Expected 42, received 41", top.SubSteps![2].Comments!);
 

@@ -3423,4 +3423,53 @@ public class PlantUmlCreatorTests
         Assert.True(diagrams.Count >= 2, $"Expected chunking to produce multiple diagrams but got {diagrams.Count}");
         Assert.Contains("Continued On Next Diagram", diagrams[0].PlainText);
     }
+
+    // ─── Markers-only diagrams ───────────────────────────────────
+
+    [Fact]
+    public void Markers_only_diagram_declares_a_placeholder_participant_so_notes_have_a_lifeline_to_span()
+    {
+        // A test that asserted but never touched a tracked dependency: nothing but injected notes.
+        // `hnote across` with no participant is a PlantUML syntax error in every real engine.
+        var logs = new[]
+        {
+            MakeOverrideStart(plantUml: "hnote across <<assertionNote>> #d4edda\n✓ the mock answers 200\nend note"),
+            MakeOverrideEnd(),
+        };
+
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains(PlantUmlCreator.MarkerOnlyParticipant, plantUml);
+        Assert.Contains("✓ the mock answers 200", plantUml);
+        // The participant comes before the note it anchors.
+        Assert.True(plantUml.IndexOf(PlantUmlCreator.MarkerOnlyParticipant, StringComparison.Ordinal)
+                    < plantUml.IndexOf("hnote across", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Placeholder_participant_is_not_declared_when_the_diagram_has_real_interactions()
+    {
+        var logs = new[]
+        {
+            MakeOverrideStart(plantUml: "hnote across <<assertionNote>> #d4edda\n✓ ok\nend note"),
+            MakeOverrideEnd(),
+            MakeRequest(),
+            MakeResponse(),
+        };
+
+        var plantUml = GetPlantUml(logs);
+
+        Assert.DoesNotContain(PlantUmlCreator.MarkerOnlyParticipant, plantUml);
+        Assert.Contains("actor \"WebApp\"", plantUml);
+    }
+
+    [Fact]
+    public void Placeholder_participant_is_not_declared_when_there_are_no_markers_either()
+    {
+        var logs = new[] { MakeOverrideStart(plantUml: null), MakeOverrideEnd(plantUml: null) };
+
+        var plantUml = GetPlantUml(logs);
+
+        Assert.DoesNotContain(PlantUmlCreator.MarkerOnlyParticipant, plantUml);
+    }
 }

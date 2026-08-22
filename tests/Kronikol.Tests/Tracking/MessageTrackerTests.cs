@@ -5,7 +5,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
-[Collection("TrackingComponentRegistry")]
+[Collection("DiagramsFetcher")]
 public class MessageTrackerTests
 {
     private static RequestResponseLog[] GetLogsById(Guid requestResponseId)

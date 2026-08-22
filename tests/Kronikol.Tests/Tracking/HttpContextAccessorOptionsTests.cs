@@ -5,6 +5,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
+[Collection("DiagramsFetcher")]
 public class HttpContextAccessorOptionsTests
 {
     [Fact]

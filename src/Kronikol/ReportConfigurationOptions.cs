@@ -255,6 +255,15 @@ public record ReportConfigurationOptions
     public bool TitleizeParameterNames { get; set; } = true;
 
     /// <summary>
+    /// Upper-case the first letter of every step and assertion label that carries no Gherkin keyword, so
+    /// the step list reads as sentences however inconsistent the producers were. Default: <c>true</c>.
+    /// See <see cref="Reports.StepText"/> for the exact rule — Gherkin steps, quoted literals and
+    /// markers (<c>✓ ✗ ⚠</c>) are all handled deliberately. <c>kronikol ingest --no-capitalise</c> turns
+    /// it off.
+    /// </summary>
+    public bool CapitaliseStepText { get; set; } = true;
+
+    /// <summary>
     /// Optional delegate returning the total number of test scenarios expected in this assembly.
     /// When set, report generation is skipped if the actual scenario count is less than the expected
     /// count — preventing partial test runs (e.g. single-test filtering) from overwriting the

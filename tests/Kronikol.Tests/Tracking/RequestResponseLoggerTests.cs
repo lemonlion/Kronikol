@@ -4,6 +4,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
+[Collection("DiagramsFetcher")]
 public class RequestResponseLoggerTests
 {
     private readonly string _testId = Guid.NewGuid().ToString();

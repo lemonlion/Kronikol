@@ -4,7 +4,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Reports;
 
-[Collection("TrackingComponentRegistry")]
+[Collection("DiagramsFetcher")]
 public class ReportDiagnosticsTests : IDisposable
 {
     public ReportDiagnosticsTests()
@@ -221,4 +221,26 @@ public class ReportDiagnosticsTests : IDisposable
                 new Scenario { Id = testId, DisplayName = "Scenario" }
             ]
         };
+    [Fact]
+    public void Markers_and_user_actions_are_not_unpaired_requests()
+    {
+        static RequestResponseLog Log(RequestResponseType type, Guid id) =>
+            new("t", "id", HttpMethod.Get, null, new Uri("http://svc/x"), [], "svc", "caller", type, Guid.NewGuid(), id, false);
+
+        var paired = Guid.NewGuid();
+        var logs = new[]
+        {
+            Log(RequestResponseType.Request, paired),
+            Log(RequestResponseType.Response, paired),
+            Log(RequestResponseType.Request, Guid.NewGuid()), // genuinely unpaired
+            new RequestResponseLog("t", "id", "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false) { IsOverrideStart = true },
+            new RequestResponseLog("t", "id", "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false) { IsOverrideEnd = true },
+            new RequestResponseLog("t", "id", "Click", null, new Uri("http://web/"), [], "web", "User", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false) { IsUserAction = true },
+        };
+
+        var warnings = ReportDiagnostics.Analyse(logs, []);
+
+        var unpaired = Assert.Single(warnings, w => w.Contains("unpaired request", StringComparison.Ordinal));
+        Assert.Contains("1 unpaired", unpaired, StringComparison.Ordinal);
+    }
 }
