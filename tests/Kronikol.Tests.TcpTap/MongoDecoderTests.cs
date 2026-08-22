@@ -383,4 +383,98 @@ public class MongoDecoderTests
         using var harness = DecoderHarness.Mongo();
         Assert.Throws<MongoWireProtocolException>(() => harness.ClientToServer(new byte[] { 0xff, 0xff, 0xff, 0x7f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
     }
+
+    // ---- messages larger than the capture cap -----------------------------------------------------
+
+    private static BsonDocument BigDocument(int size) => new() { { "_id", 1 }, { "blob", new string('m', size) } };
+
+    [Fact]
+    public void AnOversizeReplyIsSkippedButStillClosesTheArrow()
+    {
+        using var harness = DecoderHarness.Mongo(o => o.MaxBufferedBytes = 4096);
+        var reply = MongoWire.Msg(2, 1, CursorReply(BigDocument(20_000)));
+        Assert.True(reply.Length > 4096);
+
+        harness.Deliver(TapDirection.ClientToServer, MongoWire.Msg(1, 0, Find("Trial")));
+        harness.DeliverChunked(TapDirection.ServerToClient, reply, 1024);
+
+        Assert.True(harness.Decoding);
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal("Find ← Trial", Method(response));
+        Assert.Equal("mongodb:///app/Trial", response.Uri.ToString());
+        Assert.Equal($"[reply of {reply.Length:N0} bytes skipped — larger than the capture cap]", response.Content);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode!.Value);
+        Assert.Equal(1, harness.Tap.OversizePayloadsSkipped);
+        Assert.Equal(reply.Length, harness.Tap.LargestOversizePayload);
+        Assert.Equal(0, harness.Tap.DecodingDisabledConnections);
+        Assert.Equal(0, ((MongoProtocolDecoder)harness.Decoder).SkippingReplyBytes);
+        Assert.Single(harness.Degradations, d => d.Kind == CaptureDegradationKind.OversizePayloadSkipped);
+
+        // The skip ends exactly at the message boundary: the next exchange decodes normally.
+        harness.Deliver(TapDirection.ClientToServer, MongoWire.Msg(3, 0, Find("Trial")));
+        harness.Deliver(TapDirection.ServerToClient, MongoWire.Msg(4, 3, CursorReply()));
+        Assert.Equal(2, harness.Sink.Responses.Count);
+        Assert.Equal("0 documents", harness.Sink.Responses[1].Content);
+    }
+
+    [Fact]
+    public void AnOversizeCommandIsSkippedCountedAndNotRecorded()
+    {
+        using var harness = DecoderHarness.Mongo(o => o.MaxBufferedBytes = 4096);
+        var insert = MongoWire.Msg(1, 0, new BsonDocument { { "insert", "Trial" }, { "documents", new BsonArray { BigDocument(20_000) } }, { "$db", "app" } });
+        var tail = MongoWire.Msg(2, 0, Find("Trial"));
+
+        // The oversize message and the start of the next one arrive in the same segment stream.
+        harness.DeliverChunked(TapDirection.ClientToServer, [.. insert, .. tail], 1000);
+        harness.Deliver(TapDirection.ServerToClient, MongoWire.Msg(3, 2, CursorReply()));
+
+        Assert.True(harness.Decoding);
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal("Find ← Trial", Method(response));
+        Assert.Equal(1, harness.Tap.OversizePayloadsSkipped);
+        Assert.Contains(harness.LogLines, l => l.Contains("OP_MSG command of") && l.Contains("skipped"));
+        Assert.Contains("1 oversize payload(s) streamed past", Assert.Single(harness.Tap.Diagnostics()).Message);
+    }
+
+    [Fact]
+    public void AMongoConnectionClosedMidOversizeMessageIsReported()
+    {
+        using var harness = DecoderHarness.Mongo(o => o.MaxBufferedBytes = 4096);
+        var reply = MongoWire.Msg(2, 1, CursorReply(BigDocument(20_000)));
+        harness.Deliver(TapDirection.ClientToServer, MongoWire.Msg(1, 0, Find("Trial")));
+        harness.Deliver(TapDirection.ServerToClient, reply[..2000]);
+        harness.Decoder.OnConnectionClosed();
+
+        Assert.Single(harness.Sink.Responses); // the arrow was closed with the placeholder when the skip began
+        Assert.Equal(1, harness.Tap.ConnectionsClosedMidMessage);
+        Assert.Contains("still to skip", Assert.Single(harness.Degradations, d => d.Kind == CaptureDegradationKind.ConnectionClosedMidMessage).Detail);
+    }
+
+    [Fact]
+    public void APendingMapOverflowResetsTheDecoderAndItResyncsOnTheNextHeader()
+    {
+        using var harness = DecoderHarness.Mongo();
+        for (var i = 1; i <= 4097; i++)
+            harness.Deliver(TapDirection.ClientToServer, MongoWire.Msg(i, 0, Find("Trial")));
+
+        Assert.True(harness.Decoding);
+        Assert.Equal(1, harness.Tap.DecoderResets);
+        Assert.True(((MongoProtocolDecoder)harness.Decoder).IsResynchronising);
+
+        harness.Deliver(TapDirection.ClientToServer, MongoWire.Msg(5000, 0, Find("Trial")));
+        harness.Deliver(TapDirection.ServerToClient, MongoWire.Msg(5001, 5000, CursorReply()));
+        Assert.Single(harness.Sink.Responses);
+        Assert.False(((MongoProtocolDecoder)harness.Decoder).IsResynchronising);
+    }
+
+    [Fact]
+    public void GarbageFramingThroughTheTapDisablesDecodingAndIsCounted()
+    {
+        using var harness = DecoderHarness.Mongo();
+        harness.Deliver(TapDirection.ClientToServer, new byte[] { 0xff, 0xff, 0xff, 0x7f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+
+        Assert.False(harness.Decoding);
+        Assert.Equal(1, harness.Tap.DecodingDisabledConnections);
+        Assert.Equal(CaptureDegradationKind.DecodingDisabled, Assert.Single(harness.Degradations).Kind);
+    }
 }

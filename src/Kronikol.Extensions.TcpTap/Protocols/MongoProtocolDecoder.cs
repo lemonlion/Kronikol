@@ -17,11 +17,19 @@ namespace Kronikol.Extensions.TcpTap.Protocols;
 /// stepped over, recorded never) and OP_COMPRESSED (passed straight through, reported once). Replies with
 /// <c>moreToCome</c> that answer no pending request — the streaming <c>hello</c> on a monitoring connection —
 /// are skipped.</para>
+/// <para>A message longer than <see cref="TcpTapOptions.MaxBufferedBytes"/> (a big <c>find</c> batch, a bulk
+/// insert) is never buffered: the decoder reads its header and <em>skips</em> exactly that many bytes. A skipped
+/// reply still answers its pending command — with the note <c>[reply of N bytes skipped — larger than the
+/// capture cap]</c> — so the arrow is not lost; a skipped command records nothing (its <c>$db</c> and collection
+/// are inside the skipped BSON) but is counted and reported like every other capture loss.</para>
 /// <para>The tap never sees the connection string: it knows only <c>$db</c> and the collection, so the URI it
 /// records (<c>mongodb:///db/coll</c>) can never contain a password.</para>
 /// </remarks>
 public sealed class MongoProtocolDecoder : IProtocolDecoder
 {
+    /// <summary>Resets with no interaction recorded in between before the decoder gives up resynchronising and lets the tap disable it.</summary>
+    public const int MaxConsecutiveResyncs = 8;
+
     private static readonly HashSet<string> AlwaysExcluded = new(StringComparer.OrdinalIgnoreCase)
     {
         "saslStart", "saslContinue", "saslSupportedMechs", "authenticate", "getnonce",
@@ -38,6 +46,12 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
 
     private bool _compressionReported;
     private bool _legacyHandshakeReported;
+    private long _skipCommandBytes;
+    private long _skipReplyBytes;
+    private bool _resyncingCommands;
+    private bool _resyncingReplies;
+    private int _resyncsWithoutRecord;
+    private bool _closed;
 
     /// <summary>Creates a decoder for one connection.</summary>
     public MongoProtocolDecoder(TcpTapConnectionContext context, MongoTapOptions options)
@@ -58,14 +72,43 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
     /// <summary>Whether this connection opened with the legacy OP_QUERY handshake.</summary>
     public bool LegacyHandshakeSeen => _legacyHandshakeReported;
 
+    /// <summary>Bytes of oversize messages still to be skipped on the command side (0 when not skipping).</summary>
+    public long SkippingCommandBytes => _skipCommandBytes;
+
+    /// <summary>Bytes of oversize messages still to be skipped on the reply side (0 when not skipping).</summary>
+    public long SkippingReplyBytes => _skipReplyBytes;
+
+    /// <summary>Whether the decoder is waiting for the next message boundary after a reset.</summary>
+    public bool IsResynchronising => _resyncingCommands || _resyncingReplies;
+
     /// <inheritdoc />
     public void OnClientToServer(ReadOnlySpan<byte> data, DateTimeOffset timestamp)
     {
+        if (!Skip(ref _skipCommandBytes, ref data))
+            return;
+        if (_resyncingCommands)
+        {
+            if (!MongoWireParser.LooksLikeHeader(data))
+                return;
+            _resyncingCommands = false;
+        }
+
         _commands.Append(data);
         while (true)
         {
             var span = _commands.Span;
-            if (!MongoWireParser.TryReadHeader(span, out var header))
+            if (!MongoWireParser.TryPeekHeader(span, out var header))
+                return;
+            if (header.MessageLength > _options.MaxBufferedBytes)
+            {
+                // Too big to buffer: skip exactly this message. Its $db and collection are inside the skipped
+                // BSON, so nothing can be recorded — but the loss is counted and reported.
+                BeginSkip(ref _skipCommandBytes, _commands, header.MessageLength);
+                _context.Log($"OP_MSG command of {header.MessageLength:N0} bytes skipped — larger than MaxBufferedBytes ({_options.MaxBufferedBytes:N0}); not recorded.");
+                return;
+            }
+
+            if (span.Length < header.MessageLength)
                 return;
             var message = span[..header.MessageLength];
             OnCommandMessage(header, message, timestamp);
@@ -76,11 +119,31 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
     /// <inheritdoc />
     public void OnServerToClient(ReadOnlySpan<byte> data, DateTimeOffset timestamp)
     {
+        if (!Skip(ref _skipReplyBytes, ref data))
+            return;
+        if (_resyncingReplies)
+        {
+            if (_pending.Count == 0 || !MongoWireParser.LooksLikeHeader(data))
+                return;
+            _resyncingReplies = false;
+        }
+
         _replies.Append(data);
         while (true)
         {
             var span = _replies.Span;
-            if (!MongoWireParser.TryReadHeader(span, out var header))
+            if (!MongoWireParser.TryPeekHeader(span, out var header))
+                return;
+            if (header.MessageLength > _options.MaxBufferedBytes)
+            {
+                // Too big to buffer: skip exactly this message, but still close the arrow it answers.
+                BeginSkip(ref _skipReplyBytes, _replies, header.MessageLength);
+                if (_pending.Remove(header.ResponseTo, out var pending))
+                    RecordPair(pending, null, timestamp, $"[reply of {header.MessageLength:N0} bytes skipped — larger than the capture cap]");
+                return;
+            }
+
+            if (span.Length < header.MessageLength)
                 return;
             var message = span[..header.MessageLength];
             OnReplyMessage(header, message, timestamp);
@@ -88,16 +151,87 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         }
     }
 
+    /// <summary>Consumes the part of <paramref name="data"/> that belongs to a message being skipped; false when all of it did.</summary>
+    private static bool Skip(ref long remaining, ref ReadOnlySpan<byte> data)
+    {
+        if (remaining <= 0)
+            return true;
+        var take = (int)Math.Min(remaining, data.Length);
+        remaining -= take;
+        data = data[take..];
+        return data.Length > 0 && remaining == 0;
+    }
+
+    private void BeginSkip(ref long remaining, WireBuffer buffer, int messageLength)
+    {
+        var held = buffer.Length;
+        buffer.Clear();
+        remaining = messageLength - held; // held ≤ MaxBufferedBytes < messageLength, so always positive
+        _context.CountOversizePayload(messageLength, 0);
+    }
+
     /// <inheritdoc />
     public void OnConnectionClosed()
+    {
+        if (_closed)
+            return;
+        _closed = true;
+
+        var unanswered = _pending.Count;
+        var partialCommand = _commands.Length > 0 || _skipCommandBytes > 0;
+        var partialReply = _replies.Length > 0 || _skipReplyBytes > 0;
+        if (unanswered > 0 || partialCommand || partialReply)
+        {
+            var detail = $"{unanswered} unanswered command(s)";
+            if (partialCommand)
+                detail += $", a partial command ({_commands.Length} B held{(_skipCommandBytes > 0 ? $", {_skipCommandBytes} B of an oversize message still to skip" : "")})";
+            if (partialReply)
+                detail += $", a partial reply ({_replies.Length} B held{(_skipReplyBytes > 0 ? $", {_skipReplyBytes} B of an oversize message still to skip" : "")})";
+            _context.ReportClosedMidMessage(detail);
+        }
+
+        Clear();
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _closed = true;
+        Clear();
+    }
+
+    /// <summary>
+    /// Drops both buffers, any skip in progress and the pending map, then resynchronises: segments are discarded
+    /// until one starts with something that looks like a message header (a plausible length and a known op code);
+    /// replies additionally wait until a command is pending again.
+    /// </summary>
+    public void Reset()
+    {
+        Clear();
+        _resyncingCommands = true;
+        _resyncingReplies = true;
+    }
+
+    bool IProtocolDecoder.TryReset()
+    {
+        if (++_resyncsWithoutRecord > MaxConsecutiveResyncs)
+        {
+            _context.Log($"{MaxConsecutiveResyncs} resets without recording a single interaction in between — giving up on this connection.");
+            return false;
+        }
+
+        Reset();
+        return true;
+    }
+
+    private void Clear()
     {
         _pending.Clear();
         _commands.Clear();
         _replies.Clear();
+        _skipCommandBytes = 0;
+        _skipReplyBytes = 0;
     }
-
-    /// <inheritdoc />
-    public void Dispose() => OnConnectionClosed();
 
     private void OnCommandMessage(MongoMessageHeader header, ReadOnlySpan<byte> message, DateTimeOffset timestamp)
     {
@@ -146,11 +280,11 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         _pending[header.RequestId] = pending;
         if (_pending.Count > MaxPendingCommands)
         {
-            // A connection whose replies we never saw (dropped segments, a mid-stream join): forget the
-            // backlog rather than grow without bound. Forwarding is untouched either way.
-            _pending.Clear();
-            _context.CountDecodeError();
-            _context.Log($"more than {MaxPendingCommands} unanswered commands — dropping the pending map; some arrows will be missing.");
+            // A connection whose replies we never saw (dropped segments, a desynchronised reply stream): the
+            // map is worthless. Recoverable — the tap resets us and we re-arm at the next message header.
+            throw new TapProtocolException(
+                $"More than {MaxPendingCommands} unanswered commands — replies are not being decoded; dropping the pending map.",
+                recoverable: true);
         }
     }
 
@@ -180,7 +314,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         RecordPair(pending, parsed.Document, timestamp);
     }
 
-    private void RecordPair(PendingCommand pending, BsonDocument? reply, DateTimeOffset timestamp)
+    private void RecordPair(PendingCommand pending, BsonDocument? reply, DateTimeOffset timestamp, string? replacementNote = null)
     {
         var label = MongoDbOperationClassifier.GetDiagramLabel(pending.Info, _verbosity);
 
@@ -196,10 +330,11 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         }
         else
         {
-            responseContent = ResponseContent(reply);
+            responseContent = replacementNote ?? ResponseContent(reply);
             status = HttpStatusCode.OK;
         }
 
+        _resyncsWithoutRecord = 0;
         _context.Record(new TapInteraction(
             label, label, pending.Uri,
             Redact(pending.RequestContent), Redact(responseContent),

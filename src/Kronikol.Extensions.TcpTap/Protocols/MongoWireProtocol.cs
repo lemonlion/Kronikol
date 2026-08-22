@@ -63,7 +63,13 @@ public static class MongoWireParser
     /// <summary>Reads the header if a whole message is present.</summary>
     /// <returns>False when more bytes are needed.</returns>
     /// <exception cref="MongoWireProtocolException">The framing is impossible (bad length).</exception>
-    public static bool TryReadHeader(ReadOnlySpan<byte> buffer, out MongoMessageHeader header)
+    public static bool TryReadHeader(ReadOnlySpan<byte> buffer, out MongoMessageHeader header) =>
+        TryPeekHeader(buffer, out header) && buffer.Length >= header.MessageLength;
+
+    /// <summary>Reads the header as soon as its 16 bytes are present, whether or not the rest of the message is.</summary>
+    /// <returns>False when fewer than 16 bytes are available.</returns>
+    /// <exception cref="MongoWireProtocolException">The framing is impossible (bad length).</exception>
+    public static bool TryPeekHeader(ReadOnlySpan<byte> buffer, out MongoMessageHeader header)
     {
         header = default;
         if (buffer.Length < 16)
@@ -78,8 +84,19 @@ public static class MongoWireParser
             BinaryPrimitives.ReadInt32LittleEndian(buffer[4..]),
             BinaryPrimitives.ReadInt32LittleEndian(buffer[8..]),
             BinaryPrimitives.ReadInt32LittleEndian(buffer[12..]));
+        return true;
+    }
 
-        return buffer.Length >= length;
+    /// <summary>Whether <paramref name="buffer"/> starts with something that looks like a message header: a plausible length and a known op code. Used to find a message boundary after a desync.</summary>
+    public static bool LooksLikeHeader(ReadOnlySpan<byte> buffer)
+    {
+        if (buffer.Length < 16)
+            return false;
+        var length = BinaryPrimitives.ReadInt32LittleEndian(buffer);
+        if (length is < 16 or > MaxMessageLength)
+            return false;
+        var opCode = BinaryPrimitives.ReadInt32LittleEndian(buffer[12..]);
+        return opCode is MongoOpCodes.OpMsg or MongoOpCodes.OpQuery or MongoOpCodes.OpReply or MongoOpCodes.OpCompressed;
     }
 
     /// <summary>

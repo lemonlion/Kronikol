@@ -114,8 +114,41 @@ public class TcpTapOptions
     /// </summary>
     public int ChannelCapacity { get; set; } = 1024;
 
-    /// <summary>Bytes a decoder may hold while waiting for the rest of a message, per direction. Exceeding it stops decoding that connection (forwarding continues). Default 8 MiB.</summary>
+    /// <summary>
+    /// Bytes a decoder may hold while waiting for the rest of a message, per direction. Default 8 MiB. A Redis
+    /// bulk payload never counts against it (payloads over <see cref="RedisTapOptions.MaxBulkBytes"/> are streamed
+    /// past, not buffered), so crossing it means the stream is desynchronised: the decoder is reset and re-arms at
+    /// the next command boundary when <see cref="ResyncAfterOverflow"/> is on, otherwise decoding stops for that
+    /// connection. Forwarding continues either way.
+    /// </summary>
     public int MaxBufferedBytes { get; set; } = 8 * 1024 * 1024;
+
+    /// <summary>
+    /// When a decoder loses its place (the <see cref="MaxBufferedBytes"/> cap, a pending-queue overflow, a protocol
+    /// error on a connection that was decoding fine), reset it and resume at the next command boundary instead of
+    /// disabling decoding for the rest of the connection. The first interaction recorded after a reset is stamped
+    /// <c>[resynchronised — pairing uncertain]</c> (and <c>x-kronikol-capture: resynced</c>) because a reply still in
+    /// flight may pair with the wrong command until the connection goes idle. Off = disable decoding, counted and
+    /// reported. Default true.
+    /// </summary>
+    public bool ResyncAfterOverflow { get; set; } = true;
+
+    /// <summary>
+    /// Called as capture-loss events happen — an oversize payload streamed past, a decoder reset or give-up, dropped
+    /// segments, a connection closed mid-message — so a host can flag the tap before the report is generated. The
+    /// same facts are available afterwards as counters and through <see cref="TcpTap.Diagnostics"/>. Invoked on the
+    /// decoder task (never on a byte pump, except for dropped segments, which are reported at most once per connection
+    /// per minute); an exception it throws is caught and logged. Default null.
+    /// </summary>
+    public Action<CaptureDegradation>? OnCaptureDegraded { get; set; }
+
+    /// <summary>
+    /// Heuristic stall detector for <see cref="TcpTap.Diagnostics"/>: when at least this many bytes have been forwarded
+    /// since the last recorded interaction, the diagnostics include a "decoding may have stalled" entry — bytes are
+    /// flowing but nothing is being recorded (which may also mean the traffic is all excluded chatter). Null = off.
+    /// Default 1 MiB.
+    /// </summary>
+    public long? DecodingStallBytes { get; set; } = 1024 * 1024;
 
     /// <summary>Size of each socket read. Default 32 KiB.</summary>
     public int ReadBufferBytes { get; set; } = 32 * 1024;
@@ -153,6 +186,8 @@ public class TcpTapOptions
             throw new ArgumentOutOfRangeException(nameof(ReadBufferBytes), "ReadBufferBytes must be positive.");
         if (MaxBufferedBytes <= 0)
             throw new ArgumentOutOfRangeException(nameof(MaxBufferedBytes), "MaxBufferedBytes must be positive.");
+        if (DecodingStallBytes is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(DecodingStallBytes), "DecodingStallBytes must be positive, or null to disable the detector.");
         if (DecoderFactory is null)
             throw new ArgumentException("DecoderFactory is required (use RedisTap/MongoTap, or set it to tee another protocol).", nameof(DecoderFactory));
     }
@@ -185,6 +220,9 @@ public class TcpTapOptions
         target.DrainTimeout = DrainTimeout;
         target.ChannelCapacity = ChannelCapacity;
         target.MaxBufferedBytes = MaxBufferedBytes;
+        target.ResyncAfterOverflow = ResyncAfterOverflow;
+        target.OnCaptureDegraded = OnCaptureDegraded;
+        target.DecodingStallBytes = DecodingStallBytes;
         target.ReadBufferBytes = ReadBufferBytes;
         target.KeyRedaction = KeyRedaction;
         target.ValueRedaction = ValueRedaction;
