@@ -77,7 +77,7 @@ public static class StepCollector
                 ? $"{step.EffectiveKeyword} {text}"
                 : Reports.StepText.CapitaliseIfEnabled(text) ?? text;
             DefaultTrackingDiagramOverride.InsertPlantUml(testId,
-                $"hnote across <<stepDelimiter>> #black:<color:white>{label}");
+                $"hnote across <<stepDelimiter>> #black:<color:white>{label}", DiagramMarkerKind.Step);
         }
 
         // Phase transitions: set ambient test phase based on keyword
@@ -181,7 +181,8 @@ public static class StepCollector
     /// <summary>
     /// Adds an assertion as a sub-step of the currently active step.
     /// </summary>
-    public static void AddAssertionSubStep(string? testId, string expression, bool passed)
+    public static void AddAssertionSubStep(string? testId, string expression, bool passed,
+        string? failureMessage = null, string? sourceFile = null, int sourceLine = 0)
     {
         if (testId is null)
             return;
@@ -204,7 +205,10 @@ public static class StepCollector
                 Text = expression,
                 StartTime = Stopwatch.GetTimestamp(),
                 EndTime = Stopwatch.GetTimestamp(),
-                Passed = passed
+                Passed = passed,
+                ErrorMessage = passed ? null : failureMessage,
+                SourceFile = sourceFile,
+                SourceLine = sourceLine > 0 ? sourceLine : null
             };
 
             state.StepStack.Peek().SubSteps.Add(subStep);
@@ -415,6 +419,9 @@ public static class StepCollector
             Text = step.Text,
             Status = status,
             BypassReason = step.BypassReason,
+            FailureMessage = step.ErrorMessage,
+            SourceFile = step.SourceFile,
+            SourceLine = step.SourceLine,
             Duration = duration,
             Parameters = step.Parameters,
             SubSteps = step.SubSteps.Count > 0
@@ -482,6 +489,8 @@ public static class StepCollector
         public bool Bypassed { get; set; }
         public string? BypassReason { get; set; }
         public string? ErrorMessage { get; set; }
+        public string? SourceFile { get; set; }
+        public int? SourceLine { get; set; }
         public StepParameter[]? Parameters { get; set; }
         public List<CollectedStep> SubSteps { get; } = new();
         public List<FileAttachment>? Attachments { get; set; }

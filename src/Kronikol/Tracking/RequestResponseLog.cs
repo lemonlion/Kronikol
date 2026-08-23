@@ -37,6 +37,15 @@ public record RequestResponseLog(
     /// as real traffic, so every consumer that reports interactions has to skip them.
     /// </summary>
     public bool IsDiagramMarker => IsOverrideStart || IsOverrideEnd || IsActionStart;
+
+    /// <summary>
+    /// What a marker record stands for. Set by whoever emits the marker — the step collector, the
+    /// assertion tracker, the tabular-input enumerator — because classifying at the source is exact,
+    /// whereas recovering the same answer at the sink means pattern-matching PlantUML. Meaningless on a
+    /// record that is not a marker.
+    /// </summary>
+    public DiagramMarkerKind MarkerKind { get; set; }
+
     public string? PlantUml { get; set; }
     public string[]? FocusFields { get; set; }
     public DateTimeOffset? Timestamp { get; set; }
@@ -79,6 +88,14 @@ public record RequestResponseLog(
     /// <c>Kronikol.Ingestion.InteractionMerger</c> to fold the two views of one call into a single arrow.
     /// </summary>
     public string? CapturedBy { get; set; }
+
+    /// <summary>
+    /// How long the call took, when the capturer measured it rather than leaving it to be inferred. Report
+    /// generation normally derives duration from the request and response timestamps; a capturer that sends
+    /// one record for a whole call — the NDJSON ingest contract allows it — has no second timestamp to
+    /// derive from, and this is where its measurement lands. Set, it wins over the derived value.
+    /// </summary>
+    public double? DurationMs { get; set; }
 };
 
 /// <summary>
@@ -103,6 +120,31 @@ public enum RequestResponseType
 
     /// <summary>A response to a request.</summary>
     Response
+}
+
+/// <summary>
+/// What a diagram marker record stands for. The order matters only for readability — values are appended,
+/// never renumbered, because they are exported by name in the data files.
+/// </summary>
+public enum DiagramMarkerKind
+{
+    /// <summary>
+    /// A fragment injected by the caller through <c>DefaultTrackingDiagramOverride</c> with no more
+    /// specific classification. The default, so an unclassified marker is never mistaken for a known one.
+    /// </summary>
+    Custom,
+
+    /// <summary>The bar that opens a Gherkin step. Already structured in the report's <c>steps</c>.</summary>
+    Step,
+
+    /// <summary>A tracked assertion's note. Already structured as an assertion sub-step.</summary>
+    Assertion,
+
+    /// <summary>The band marking which row of a tabular input the following calls belong to.</summary>
+    Row,
+
+    /// <summary>The Setup/Action boundary.</summary>
+    Phase,
 }
 
 /// <summary>

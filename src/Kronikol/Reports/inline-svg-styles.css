@@ -13,19 +13,27 @@
     margin-bottom: 0.5em;
 }
 @keyframes pulse-loading { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
-.plantuml-browser:not([data-rendered]) {
+/* The grey pulsing placeholder: on a diagram container until it is drawn, and on EACH fragment of a
+   split diagram until that fragment is drawn — the container is marked rendered the moment its
+   fragment divs are created (so its own placeholder does not sit above them), which used to leave
+   a blank box for the seconds until the first fragment's SVG arrived. */
+.plantuml-browser:not([data-rendered]),
+.puml-fragment:not([data-rendered]) {
     min-height: 48px;
     display: flex;
     align-items: center;
     color: #999;
 }
-.plantuml-browser:not([data-rendered])::before {
+.plantuml-browser:not([data-rendered])::before,
+.puml-fragment:not([data-rendered])::before {
     animation: pulse-loading 2s ease-in-out infinite;
 }
-.plantuml-browser:not([data-rendered])::before {
+.plantuml-browser:not([data-rendered])::before,
+.puml-fragment:not([data-rendered])::before {
     content: 'Waiting for page load to complete\2026';
 }
-body.plantuml-ready .plantuml-browser:not([data-rendered])::before {
+body.plantuml-ready .plantuml-browser:not([data-rendered])::before,
+body.plantuml-ready .puml-fragment:not([data-rendered])::before {
     content: 'Rendering diagram\2026';
 }
 .diagram-selected {

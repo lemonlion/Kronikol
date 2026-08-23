@@ -240,6 +240,7 @@ public sealed record InteractionRecord
             ActivitySpanId = ActivitySpanId,
             IsUserAction = IsUserAction,
             CapturedBy = CapturedBy,
+            DurationMs = DurationMs,
         };
     }
 

@@ -325,6 +325,96 @@ public static partial class PlantUmlCreator
     internal static string EscapeForPlantUmlNote(string text) =>
         text.Replace("\\", "\\\\");
 
+    /// <summary>
+    /// Neutralises PlantUML creole markup a captured payload happens to contain, so a note shows the bytes
+    /// that went over the wire rather than PlantUML's reading of them. Creole consumes its own markers:
+    /// a line carrying two <c>--</c> (SQL comments in a one-line BigQuery job body), two <c>//</c> (two URLs),
+    /// two <c>**</c>, <c>__</c> or <c>""</c> loses both markers and gets the span between them restyled, and a
+    /// tag PlantUML knows — <c>&lt;b&gt;</c>, <c>&lt;color:red&gt;</c> — is swallowed wherever it appears.
+    /// A <c>~</c> in front of a marker character makes PlantUML print it instead.
+    /// <para>
+    /// Only what PlantUML would actually consume is escaped: a marker needs a partner on the same line to
+    /// style anything, so a lone <c>https://</c> is left exactly as captured. Kronikol's own markup — the
+    /// gray header tags, the binary placeholder, focus emphasis — is added after this runs and is never escaped.
+    /// </para>
+    /// </summary>
+    internal static string EscapeCreoleMarkup(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+
+        var sb = new StringBuilder(text.Length + text.Length / 16);
+        var lineStart = 0;
+        while (lineStart <= text.Length)
+        {
+            var newline = text.IndexOf('\n', lineStart);
+            var lineEnd = newline < 0 ? text.Length : newline;
+            EscapeCreoleLine(text.AsSpan(lineStart, lineEnd - lineStart), sb);
+            if (newline < 0) break;
+            sb.Append('\n');
+            lineStart = newline + 1;
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>Doubled characters creole reads as a span delimiter, plus <c>[[</c> for a link.</summary>
+    private const string CreolePairChars = "/*_-\"[";
+
+    private static void EscapeCreoleLine(ReadOnlySpan<char> line, StringBuilder sb)
+    {
+        // A marker only styles anything when the line gives it a partner, so decide per line which of them
+        // are live. Escaping the rest would only add invisible `~` noise to the .puml a reader may open.
+        Span<bool> live = stackalloc bool[CreolePairChars.Length];
+        for (var k = 0; k < CreolePairChars.Length; k++)
+        {
+            // `[[…]]` needs its closing half; every other marker pairs with a second copy of itself.
+            live[k] = CreolePairChars[k] == '['
+                ? Occurrences(line, '[') >= 1 && line.IndexOf("]]".AsSpan()) >= 0
+                : Occurrences(line, CreolePairChars[k]) >= 2;
+        }
+
+        var contentStarted = false;
+        for (var i = 0; i < line.Length; i++)
+        {
+            var c = line[i];
+            var pairIndex = CreolePairChars.IndexOf(c);
+            var isPair = pairIndex >= 0 && live[pairIndex] && i + 1 < line.Length && line[i + 1] == c;
+
+            if (!contentStarted && c != ' ' && c != '\t')
+            {
+                contentStarted = true;
+                // A line opening with one of these is a bullet, a numbered item or a heading: creole eats
+                // the marker and restyles the line. `--`/`__` separators are already covered as pairs.
+                if (!isPair && c is '*' or '#' or '=') sb.Append('~');
+            }
+
+            if (isPair)
+            {
+                sb.Append('~').Append(c).Append('~').Append(c);
+                i++;
+                continue;
+            }
+
+            if (c == '<' && i + 1 < line.Length && IsCreoleTagStart(line[i + 1]))
+                sb.Append('~');
+
+            sb.Append(c);
+        }
+    }
+
+    private static int Occurrences(ReadOnlySpan<char> line, char c)
+    {
+        var count = 0;
+        for (var i = 0; i + 1 < line.Length; i++)
+        {
+            if (line[i] != c || line[i + 1] != c) continue;
+            count++;
+            i++;
+        }
+        return count;
+    }
+
+    private static bool IsCreoleTagStart(char c) => c == '/' || c == '#' || char.IsAsciiLetter(c);
+
     private static string TruncateNoteContent(string noteContent, int maxLines)
     {
         if (maxLines <= 0) return noteContent;
@@ -632,8 +722,10 @@ public static partial class PlantUmlCreator
         FocusDeEmphasis focusDeEmphasis = FocusDeEmphasis.LightGray,
         GraphQlBodyFormat graphQlBodyFormat = GraphQlBodyFormat.FormattedWithMetadata)
     {
-        // Detect binary/compressed content and replace with placeholder
-        if (IsBinaryContent(content))
+        // Detect binary/compressed content and replace with placeholder. The placeholder is Kronikol's own
+        // markup rather than captured bytes, so it is the one body that must not be creole-escaped.
+        var escapePayload = !IsBinaryContent(content);
+        if (!escapePayload)
             content = "<i>[binary content]</i>";
 
         // For requests, try GraphQL formatting first (unless FocusFields are in use, which need JSON)
@@ -650,14 +742,25 @@ public static partial class PlantUmlCreator
         parsedContent ??= TryFormatAsJson(content);
         parsedContent ??= TryFormatTruncatedJson(content);
 
+        var payloadIsPreEscaped = false;
         if (parsedContent is null)
         {
-            parsedContent = type is RequestResponseType.Response
-                ? content ?? string.Empty
-                : FormatFormUrlEncodedContent(content);
+            if (type is RequestResponseType.Response)
+                parsedContent = content ?? string.Empty;
+            else
+            {
+                // Escapes each piece itself: the `&` divider it weaves in is Kronikol markup.
+                parsedContent = FormatFormUrlEncodedContent(content, escapePayload);
+                payloadIsPreEscaped = true;
+            }
         }
 
         var formattedContent = parsedContent!;
+
+        // Before the processors: a payload rewrite sees the bytes as captured, and markup a processor
+        // deliberately injects still reaches PlantUML.
+        if (escapePayload && !payloadIsPreEscaped)
+            formattedContent = EscapeCreoleMarkup(formattedContent);
 
         if (midFormattingProcessor is not null)
             formattedContent = midFormattingProcessor(formattedContent);
@@ -896,6 +999,8 @@ public static partial class PlantUmlCreator
         var open = run[pos..cut].LastIndexOf('<');
         if (open > 0 && run[(pos + open)..cut].IndexOf('>') < 0)
             cut = pos + open;
+        // Never strand a creole escape from the character it protects.
+        while (cut > pos + 1 && run[cut - 1] == '~') cut--;
         return cut;
     }
 
@@ -926,14 +1031,16 @@ public static partial class PlantUmlCreator
         }
     }
 
-    private static string FormatFormUrlEncodedContent(string? content)
+    private static string FormatFormUrlEncodedContent(string? content, bool escape = true)
     {
         const string divider = "<font color=\"lightgray\">&";
         return content?
             .Split("&")
             .SelectMany(x =>
             {
-                var chunks = x.ChunksUpTo(MaxNoteChunkChars).ToArray();
+                // Escape per chunk, after the split: a `~` and the character it protects must not land
+                // either side of a chunk boundary.
+                var chunks = x.ChunksUpTo(MaxNoteChunkChars).Select(c => escape ? EscapeCreoleMarkup(c) : c).ToArray();
                 if (chunks.Length == 0)
                     return chunks;
                 chunks[^1] += divider;
@@ -945,7 +1052,9 @@ public static partial class PlantUmlCreator
 
     private static IEnumerable<string> BatchGray(string value)
     {
-        return value.ChunksUpTo(MaxNoteChunkChars).Select(x => "<color:gray>" + x);
+        // Escape after chunking so a `~` never ends up split from the character it protects, and prefix the
+        // gray tag after escaping so Kronikol's own markup stays live.
+        return value.ChunksUpTo(MaxNoteChunkChars).Select(x => "<color:gray>" + EscapeCreoleMarkup(x));
     }
 
     private sealed class DiagramBuilder(

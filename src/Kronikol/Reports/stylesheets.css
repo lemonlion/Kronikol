@@ -1713,3 +1713,22 @@
             font-size: 0.9em;
             margin: 4px 0 10px;
         }
+        /* Scenario diagram toolbar on the title line (diagram-toggle-layout-script.js decides per
+           toolbar whether it fits beside the "Sequence Diagrams" / "Diagrams" title and sets
+           data-layout="inline" plus the negative margin-top that centres it on the title; without the
+           attribute the toolbar stacks under the title, full width, as before). */
+        .diagram-toggle[data-layout="inline"] {
+            float: right;
+            width: auto;
+            margin-right: 1em;
+            margin-bottom: 0;
+            position: relative;
+            z-index: 1;
+        }
+        .diagram-toggle[data-layout="inline"] .diagram-toggle-spacer {
+            display: none;
+        }
+        .diagram-toggle[data-layout="inline"] + * {
+            clear: right;
+        }
+

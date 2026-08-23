@@ -102,8 +102,9 @@ public class TrackThatIntegrationTests : IDisposable
             trackedLogs: trackedLogs);
 
         var content = File.ReadAllText(html);
-        // The button markup should not be present (though the JS/CSS definitions always are)
-        Assert.DoesNotContain("data-toggle=\"assertions\"", content);
+        // The button markup should not be present. The JS and CSS that drive it always are, and the
+        // scripts select on this very attribute, so the search has to skip them.
+        Assert.Empty(Reports.ReportMarkup.Elements(content, "button", "data-toggle=\"assertions\""));
     }
 
     [Fact]

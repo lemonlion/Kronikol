@@ -426,7 +426,8 @@ public static class Track
         {
             var assertionText = AssertionExpressionFormatter.Format(expression, resolvedValues)
                                 ?? expression ?? "assertion";
-            StepCollector.AddAssertionSubStep(testId, assertionText, passed);
+            StepCollector.AddAssertionSubStep(testId, assertionText, passed,
+                failureMessage, SourceFileName(callerFilePath), callerLineNumber);
         }
 
         var formatted = AssertionExpressionFormatter.Format(expression, resolvedValues);
@@ -446,16 +447,25 @@ public static class Track
         var plantUml = $"hnote across <<assertionNote>> {color}\n{noteContent}\nend note";
 
         // Append source location as a PlantUML comment (invisible in rendered output)
-        if (!string.IsNullOrEmpty(callerFilePath))
-        {
-            // Use LastIndexOfAny to handle both / and \ separators cross-platform
-            // (Path.GetFileName doesn't recognize \ on Linux)
-            var separatorIndex = callerFilePath.LastIndexOfAny(['/', '\\']);
-            var fileName = separatorIndex >= 0 ? callerFilePath[(separatorIndex + 1)..] : callerFilePath;
+        if (SourceFileName(callerFilePath) is { } fileName)
             plantUml += $"\n'__^*__:{fileName}:L{callerLineNumber}";
-        }
 
-        DefaultTrackingDiagramOverride.InsertPlantUml(testId, plantUml);
+        DefaultTrackingDiagramOverride.InsertPlantUml(testId, plantUml, DiagramMarkerKind.Assertion);
+    }
+
+    /// <summary>
+    /// The bare file name from a <c>CallerFilePath</c>, or null when the caller supplied none. Uses
+    /// <see cref="string.LastIndexOfAny(char[])"/> rather than <c>Path.GetFileName</c> because the path was
+    /// baked in at compile time on whichever machine built the test — a Windows path can arrive on Linux,
+    /// where <c>Path</c> does not treat a backslash as a separator.
+    /// </summary>
+    private static string? SourceFileName(string? callerFilePath)
+    {
+        if (string.IsNullOrEmpty(callerFilePath))
+            return null;
+
+        var separatorIndex = callerFilePath.LastIndexOfAny(['/', '\\']);
+        return separatorIndex >= 0 ? callerFilePath[(separatorIndex + 1)..] : callerFilePath;
     }
 
     private static string? ResolveTestId()

@@ -7,7 +7,7 @@ namespace Kronikol;
 /// </summary>
 public static class DefaultTrackingDiagramOverride
 {
-    public static void StartOverride(string testId, string? plantUml = null)
+    public static void StartOverride(string testId, string? plantUml = null, DiagramMarkerKind kind = DiagramMarkerKind.Custom)
     {
         var log = new RequestResponseLog(
             testId,
@@ -24,12 +24,13 @@ public static class DefaultTrackingDiagramOverride
             false)
         {
             IsOverrideStart = true,
+            MarkerKind = kind,
             PlantUml = ToBufferedPlantUml(plantUml)
         };
         RequestResponseLogger.Log(log);
     }
 
-    public static void EndOverride(string testId, string? plantUml = null)
+    public static void EndOverride(string testId, string? plantUml = null, DiagramMarkerKind kind = DiagramMarkerKind.Custom)
     {
         var log = new RequestResponseLog(
             testId,
@@ -46,6 +47,7 @@ public static class DefaultTrackingDiagramOverride
             false)
         {
             IsOverrideEnd = true,
+            MarkerKind = kind,
             PlantUml = ToBufferedPlantUml(plantUml)
         };
         RequestResponseLogger.Log(log);
@@ -60,10 +62,15 @@ public static class DefaultTrackingDiagramOverride
 
            """;
 
-    public static void InsertPlantUml(string testId, string plantUml)
+    /// <summary>
+    /// Splices a PlantUML fragment into the test's diagram. <paramref name="kind"/> says what the fragment
+    /// is, so consumers of the log stream can tell a step bar from an example-row band from something the
+    /// caller wrote — the data files export the last two as scenario annotations.
+    /// </summary>
+    public static void InsertPlantUml(string testId, string plantUml, DiagramMarkerKind kind = DiagramMarkerKind.Custom)
     {
-        StartOverride(testId, plantUml);
-        EndOverride(testId);
+        StartOverride(testId, plantUml, kind);
+        EndOverride(testId, kind: kind);
     }
 
     public static void InsertTestDelimiter(string testRuntimeId, string testIdentifier)
@@ -89,7 +96,8 @@ public static class DefaultTrackingDiagramOverride
             Guid.NewGuid(),
             false)
         {
-            IsActionStart = true
+            IsActionStart = true,
+            MarkerKind = DiagramMarkerKind.Phase
         };
         RequestResponseLogger.Log(log);
     }
@@ -102,7 +110,7 @@ public static class DefaultTrackingDiagramOverride
     // Delegate-based overloads for framework adapters
     public static void StartOverride(Func<string> getTestId, string? plantUml = null) => StartOverride(getTestId(), plantUml);
     public static void EndOverride(Func<string> getTestId, string? plantUml = null) => EndOverride(getTestId(), plantUml);
-    public static void InsertPlantUml(Func<string> getTestId, string plantUml) => InsertPlantUml(getTestId(), plantUml);
+    public static void InsertPlantUml(Func<string> getTestId, string plantUml, DiagramMarkerKind kind = DiagramMarkerKind.Custom) => InsertPlantUml(getTestId(), plantUml, kind);
     public static void InsertTestDelimiter(Func<string> getTestId, string testIdentifier) => InsertTestDelimiter(getTestId(), testIdentifier);
     public static void StartAction(Func<string> getTestId) => StartAction(getTestId());
     public static void StartSetup(Func<string> getTestId) => StartSetup(getTestId());

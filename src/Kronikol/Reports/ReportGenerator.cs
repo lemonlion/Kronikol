@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -269,7 +270,7 @@ public static class ReportGenerator
             }
             else
             {
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail));
             }
         }
 
@@ -571,6 +572,7 @@ public static class ReportGenerator
         var internalFlowPopupScript = internalFlowTracking ? DiagramContextMenu.GetInternalFlowPopupScript() : "";
         var flameChartRenderScript = internalFlowTracking ? DiagramContextMenu.GetFlameChartRenderScript() : "";
         var toggleScript = internalFlowTracking ? DiagramContextMenu.GetToggleScript() : "";
+        var diagramToggleLayoutScript = DiagramContextMenu.GetDiagramToggleLayoutScript();
 
         var customCssBlock = customCss is not null ? $"<style>{customCss}</style>" : "";
         var faviconLink = $"<link rel=\"icon\" href=\"{customFaviconBase64 ?? Constants.DefaultFavicon.DataUri}\">";
@@ -631,6 +633,7 @@ public static class ReportGenerator
                             {{internalFlowDataScript}}
                             {{internalFlowPopupScript}}
                             {{toggleScript}}
+                            {{diagramToggleLayoutScript}}
                         </head>
                         <body>
                     """;
@@ -2897,23 +2900,188 @@ public static class ReportGenerator
     private static object[] MapDiagnosticsJson(IReadOnlyList<DiagnosticEntry>? diagnostics) =>
         (diagnostics ?? []).Select(d => (object)new { Kind = d.Kind.ToString(), d.Message, d.ScenarioId }).ToArray();
 
-    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null)
+    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         // Diagram markers belong to the diagram, not the interaction list: exported as-is they read as
         // content-free calls to http://override.com/ — one pair per Gherkin step and assertion.
         var logLookup = trackedLogs?.Where(l => !l.IsDiagramMarker).ToLookup(l => l.TestId);
+        var durations = ComputeInteractionDurations(trackedLogs);
+        var (stepPaths, annotations) = AttributeInteractionsToSteps(trackedLogs, features);
 
         return format switch
         {
-            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics), fileName),
-            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup), fileName),
-            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup), fileName),
+            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations), fileName),
+            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths), fileName),
+            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
 
-    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null)
+    /// <summary>
+    /// One scenario-level annotation: a diagram marker that carries information found nowhere else in the
+    /// data file. Step and assertion markers are deliberately excluded — those are already structured in
+    /// <c>steps</c>, and repeating them would be duplication rather than disclosure.
+    /// </summary>
+    private sealed record ScenarioAnnotation(int Index, DiagramMarkerKind Kind, string Text);
+
+    /// <summary>
+    /// Walks one test's ordered log stream and works out, for every real interaction, which step it happened
+    /// under, plus the annotations worth exporting.
+    ///
+    /// <para>Attribution is positional: the <em>n</em>th step marker opens the <em>n</em>th step in
+    /// document order (background steps first). That is sound because <c>RequestResponseLogger</c> is a
+    /// FIFO queue, so one test's records keep their relative order however many tests run in parallel. It
+    /// is not sound for a test that does work on a background thread, where a record can enqueue after the
+    /// marker for the following step — so the marker's text is checked against the step's, and a
+    /// disagreement produces a null <c>stepPath</c> and a diagnostic rather than a confident wrong
+    /// answer.</para>
+    /// </summary>
+    private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)
+        AttributeInteractionsToSteps(RequestResponseLog[]? trackedLogs, Feature[] features)
+    {
+        var stepPaths = new Dictionary<string, List<string?>>();
+        var annotations = new Dictionary<string, List<ScenarioAnnotation>>();
+        if (trackedLogs is null || trackedLogs.Length == 0)
+            return (stepPaths, annotations);
+
+        var stepsByTestId = features
+            .SelectMany(f => f.Scenarios)
+            .GroupBy(s => s.Id)
+            .ToDictionary(g => g.Key, g => OrderedStepPaths(g.First()));
+
+        foreach (var perTest in trackedLogs.GroupBy(l => l.TestId))
+        {
+            var ordered = stepsByTestId.TryGetValue(perTest.Key, out var s) ? s : [];
+            var paths = new List<string?>();
+            var found = new List<ScenarioAnnotation>();
+            string? current = null;
+            var stepMarkerCount = 0;
+            var interactionIndex = 0;
+
+            foreach (var log in perTest)
+            {
+                if (!log.IsDiagramMarker)
+                {
+                    paths.Add(current);
+                    interactionIndex++;
+                    continue;
+                }
+
+                // The pair straddles the fragment; only the opening half carries it.
+                if (!log.IsOverrideStart || log.PlantUml is null)
+                    continue;
+
+                switch (log.MarkerKind)
+                {
+                    case DiagramMarkerKind.Step:
+                        current = stepMarkerCount < ordered.Count && StepMarkerMatches(log.PlantUml, ordered[stepMarkerCount].Text)
+                            ? ordered[stepMarkerCount].Path
+                            : null;
+
+                        if (current is null && stepMarkerCount < ordered.Count)
+                            ReportDiagnosticsScope.Record(DiagnosticKind.StepAttributionMismatch,
+                                $"Step marker {stepMarkerCount + 1} does not match step '{ordered[stepMarkerCount].Text}'; interactions after it carry no stepPath.",
+                                perTest.Key);
+
+                        stepMarkerCount++;
+                        break;
+
+                    case DiagramMarkerKind.Row or DiagramMarkerKind.Custom:
+                        found.Add(new ScenarioAnnotation(interactionIndex, log.MarkerKind, AnnotationText(log.PlantUml)));
+                        break;
+                }
+            }
+
+            stepPaths[perTest.Key] = paths;
+            annotations[perTest.Key] = found;
+        }
+
+        return (stepPaths, annotations);
+    }
+
+    /// <summary>
+    /// Every step of a scenario in the order its marker will arrive, paired with the address it gets in the
+    /// data file: <c>b0</c>, <c>b1</c> for background steps, then <c>0</c>, <c>1</c> for the scenario's own.
+    /// Only top-level steps appear — a step delimiter is emitted for those alone.
+    /// </summary>
+    private static List<(string Path, string Text)> OrderedStepPaths(Scenario scenario)
+    {
+        var ordered = new List<(string, string)>();
+        for (var i = 0; i < (scenario.BackgroundSteps?.Length ?? 0); i++)
+            ordered.Add(($"b{i}", scenario.BackgroundSteps![i].Text));
+        for (var i = 0; i < (scenario.Steps?.Length ?? 0); i++)
+            ordered.Add(($"{i}", scenario.Steps![i].Text));
+        return ordered;
+    }
+
+    /// <summary>
+    /// Whether a step delimiter's PlantUML belongs to a given step. The bar's label is the step text, but
+    /// possibly with the keyword prepended and the first letter capitalised, so this compares loosely: the
+    /// answer is only used to decide whether to trust positional attribution at all.
+    /// </summary>
+    private static bool StepMarkerMatches(string plantUml, string stepText)
+    {
+        if (string.IsNullOrWhiteSpace(stepText))
+            return true;
+
+        var marker = plantUml.Replace('\n', ' ').Trim();
+        return marker.Contains(stepText, StringComparison.OrdinalIgnoreCase)
+               || marker.Contains(StepText.CapitaliseIfEnabled(stepText) ?? stepText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// The readable half of an annotation marker: everything after the PlantUML note preamble. Falls back to
+    /// the fragment as written when it is not a one-line note, because a partially-parsed annotation is
+    /// worse than a verbatim one.
+    /// </summary>
+    private static string AnnotationText(string plantUml)
+    {
+        var text = plantUml.Trim();
+        var colon = text.IndexOf(" : ", StringComparison.Ordinal);
+        if (colon >= 0)
+            return text[(colon + 3)..].Trim();
+
+        var firstLine = text.Split('\n')[0];
+        return firstLine.Length == text.Length ? text : text[firstLine.Length..].Trim();
+    }
+
+    /// <summary>
+    /// Wall-clock duration per request/response pair, keyed on <see cref="RequestResponseLog.RequestResponseId"/>.
+    /// The record itself has no duration field — the diagram derives it the same way, from the timestamps of
+    /// the two halves — so the data files derive it too rather than making every reader do the join.
+    /// Both halves of a pair get the same value; an unanswered request gets none.
+    /// </summary>
+    private static Dictionary<Guid, double> ComputeInteractionDurations(RequestResponseLog[]? trackedLogs)
+    {
+        var durations = new Dictionary<Guid, double>();
+        if (trackedLogs is null)
+            return durations;
+
+        foreach (var pair in trackedLogs.Where(l => !l.IsDiagramMarker).GroupBy(l => l.RequestResponseId))
+        {
+            // A capturer that measured the call itself is believed over anything inferred here — it is the
+            // only source for a call sent as a single record, which the NDJSON ingest contract permits.
+            if (pair.Select(l => l.DurationMs).FirstOrDefault(d => d is not null) is { } measured)
+            {
+                durations[pair.Key] = measured;
+                continue;
+            }
+
+            var request = pair.FirstOrDefault(l => l.Type == RequestResponseType.Request);
+            var response = pair.FirstOrDefault(l => l.Type == RequestResponseType.Response);
+            if (request?.Timestamp is not { } start || response?.Timestamp is not { } end)
+                continue;
+
+            var elapsed = (end - start).TotalMilliseconds;
+            if (elapsed >= 0)
+                durations[pair.Key] = elapsed;
+        }
+
+        return durations;
+    }
+
+    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
         var data = new
@@ -2921,7 +3089,7 @@ public static class ReportGenerator
             KronikolVersion = KronikolVersion,
             StartTime = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             EndTime = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup),
+            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations),
             Diagnostics = MapDiagnosticsJson(diagnostics)
         };
         return JsonSerializer.Serialize(data, options);
@@ -2932,7 +3100,7 @@ public static class ReportGenerator
     /// and the enriched "mergeable" JSON. Keeping a single source of truth ensures the mergeable
     /// format remains a strict superset that the merge reader can parse.
     /// </summary>
-    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false)
+    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null)
     {
         Func<ScenarioStep, object> stepMapper = fullStepDetail ? MapStepJsonFull : MapStepJson;
         return features.OrderBy(f => f.DisplayName).Select(f => (object)new Dictionary<string, object?>
@@ -2946,7 +3114,7 @@ public static class ReportGenerator
                 var scenario = new Dictionary<string, object?>
                 {
                     ["id"] = s.Id,
-                    ["stableId"] = ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId),
+                    ["stableId"] = ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues),
                     ["name"] = s.DisplayName,
                     ["description"] = s.Description,
                     ["result"] = s.Result.ToString(),
@@ -2972,7 +3140,15 @@ public static class ReportGenerator
                     scenario["diagrams"] = diagramLookup[s.Id].ToArray();
 
                 if (logLookup != null)
-                    scenario["httpInteractions"] = logLookup[s.Id].Select(MapLogJson).ToArray();
+                {
+                    var paths = stepPaths is not null && stepPaths.TryGetValue(s.Id, out var p) ? p : null;
+                    scenario["httpInteractions"] = logLookup[s.Id]
+                        .Select((l, i) => MapLogJson(l, durations, paths is not null && i < paths.Count ? paths[i] : null))
+                        .ToArray();
+                    scenario["annotations"] = (annotations is not null && annotations.TryGetValue(s.Id, out var a) ? a : [])
+                        .Select(x => (object)new { x.Index, Kind = x.Kind.ToString(), x.Text })
+                        .ToArray();
+                }
 
                 return scenario;
             }).ToArray()
@@ -3102,7 +3278,13 @@ public static class ReportGenerator
         return JsonSerializer.Serialize(data, options);
     }
 
-    private static object MapLogJson(RequestResponseLog log) => new
+    /// <summary>
+    /// An interaction in the data files. Everything the diagram renderer reads off the record travels with
+    /// it — the categorisation that decides participant shape, the phase, the W3C trace ids that bridge to
+    /// OpenTelemetry and application logs, which capture path produced it, and the derived duration —
+    /// so a reader of the JSON is never told less than a reader of the diagram.
+    /// </summary>
+    private static object MapLogJson(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null) => new
     {
         Type = log.Type.ToString(),
         Method = log.Method.Value?.ToString()?.ToUpperInvariant(),
@@ -3114,7 +3296,17 @@ public static class ReportGenerator
         StatusCode = log.StatusCode?.Value?.ToString(),
         TraceId = log.TraceId.ToString(),
         RequestResponseId = log.RequestResponseId.ToString(),
-        Timestamp = log.Timestamp?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+        Timestamp = log.Timestamp?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+        MetaType = log.MetaType.ToString(),
+        log.DependencyCategory,
+        log.CallerDependencyCategory,
+        Phase = log.Phase.ToString(),
+        log.IsUserAction,
+        log.ActivityTraceId,
+        log.ActivitySpanId,
+        log.CapturedBy,
+        DurationMs = durations is not null && durations.TryGetValue(log.RequestResponseId, out var ms) ? ms : (double?)null,
+        StepPath = stepPath
     };
 
     /// <summary>
@@ -3141,6 +3333,11 @@ public static class ReportGenerator
         step.Text,
         Status = step.Status?.ToString(),
         DurationSeconds = step.Duration?.TotalSeconds,
+        // Failure detail rides on the lean mapper too: the small file is for saving payload bytes, not for
+        // withholding why the test failed.
+        step.FailureMessage,
+        step.SourceFile,
+        step.SourceLine,
         SubSteps = (step.SubSteps ?? []).Select(MapStepJson).ToArray(),
         Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray()
     };
@@ -3160,6 +3357,9 @@ public static class ReportGenerator
         step.BypassReason,
         step.DocString,
         step.DocStringMediaType,
+        step.FailureMessage,
+        step.SourceFile,
+        step.SourceLine,
         Comments = step.Comments ?? [],
         SubSteps = (step.SubSteps ?? []).Select(MapStepJsonFull).ToArray(),
         Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray(),
@@ -3218,7 +3418,7 @@ public static class ReportGenerator
         s.TableReferenceFormattedValue
     };
 
-    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup)
+    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null)
     {
         var doc = new XDocument(
             new XElement("TestRunReport",
@@ -3238,7 +3438,7 @@ public static class ReportGenerator
                                     var scenarioElements = new List<object?>
                                     {
                                         new XElement("Id", s.Id),
-                                        new XElement("StableId", ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId)),
+                                        new XElement("StableId", ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues)),
                                         new XElement("Name", s.DisplayName),
                                         s.Description != null ? new XElement("Description", s.Description) : null,
                                         new XElement("Result", s.Result.ToString()),
@@ -3265,7 +3465,7 @@ public static class ReportGenerator
                                     {
                                         var logs = logLookup[s.Id].ToArray();
                                         if (logs.Length > 0)
-                                            scenarioElements.Add(new XElement("HttpInteractions", logs.Select(MapLogXml)));
+                                            scenarioElements.Add(new XElement("HttpInteractions", logs.Select((l, i) => MapLogXml(l, durations, StepPathAt(stepPaths, s.Id, i)))));
                                     }
 
                                     return new XElement("Scenario", scenarioElements.ToArray());
@@ -3279,7 +3479,8 @@ public static class ReportGenerator
         return doc.ToString();
     }
 
-    private static XElement MapLogXml(RequestResponseLog log) =>
+    /// <inheritdoc cref="MapLogJson"/>
+    private static XElement MapLogXml(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null) =>
         new("HttpInteraction",
             new XElement("Type", log.Type.ToString()),
             new XElement("Method", log.Method.Value?.ToString()?.ToUpperInvariant()),
@@ -3291,8 +3492,27 @@ public static class ReportGenerator
             log.StatusCode != null ? new XElement("StatusCode", log.StatusCode.Value?.ToString()) : null,
             new XElement("TraceId", log.TraceId.ToString()),
             new XElement("RequestResponseId", log.RequestResponseId.ToString()),
-            log.Timestamp != null ? new XElement("Timestamp", log.Timestamp.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) : null
+            log.Timestamp != null ? new XElement("Timestamp", log.Timestamp.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) : null,
+            // XML omits what carries nothing rather than writing empty elements, as the rest of this writer does.
+            log.MetaType != RequestResponseMetaType.Default ? new XElement("MetaType", log.MetaType.ToString()) : null,
+            log.DependencyCategory != null ? new XElement("DependencyCategory", log.DependencyCategory) : null,
+            log.CallerDependencyCategory != null ? new XElement("CallerDependencyCategory", log.CallerDependencyCategory) : null,
+            log.Phase != TestPhase.Unknown ? new XElement("Phase", log.Phase.ToString()) : null,
+            log.IsUserAction ? new XElement("IsUserAction", "true") : null,
+            log.ActivityTraceId != null ? new XElement("ActivityTraceId", log.ActivityTraceId) : null,
+            log.ActivitySpanId != null ? new XElement("ActivitySpanId", log.ActivitySpanId) : null,
+            log.CapturedBy != null ? new XElement("CapturedBy", log.CapturedBy) : null,
+            durations is not null && durations.TryGetValue(log.RequestResponseId, out var ms)
+                ? new XElement("DurationMs", ms.ToString("F3", CultureInfo.InvariantCulture))
+                : null,
+            stepPath != null ? new XElement("StepPath", stepPath) : null
         );
+
+    /// <summary>The step address for the <paramref name="index"/>th interaction of a scenario, if one was worked out.</summary>
+    private static string? StepPathAt(IReadOnlyDictionary<string, List<string?>>? stepPaths, string scenarioId, int index) =>
+        stepPaths is not null && stepPaths.TryGetValue(scenarioId, out var paths) && index < paths.Count
+            ? paths[index]
+            : null;
 
     private static XElement MapStepXml(ScenarioStep step) =>
         new("Step",
@@ -3300,11 +3520,14 @@ public static class ReportGenerator
             new XElement("Text", step.Text),
             step.Status != null ? new XElement("Status", step.Status.ToString()) : null,
             step.Duration != null ? new XElement("DurationSeconds", step.Duration.Value.TotalSeconds.ToString("F3")) : null,
+            step.FailureMessage != null ? new XElement("FailureMessage", step.FailureMessage) : null,
+            step.SourceFile != null ? new XElement("SourceFile", step.SourceFile) : null,
+            step.SourceLine != null ? new XElement("SourceLine", step.SourceLine.Value.ToString(CultureInfo.InvariantCulture)) : null,
             (step.SubSteps is { Length: > 0 }) ? new XElement("SubSteps", step.SubSteps.Select(MapStepXml)) : null,
             (step.Attachments is { Length: > 0 }) ? new XElement("Attachments", step.Attachments.Select(MapAttachmentXml)) : null
         );
 
-    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup)
+    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null)
     {
         var yml = new StringBuilder();
         yml.Append("KronikolVersion: " + KronikolVersion + "\n");
@@ -3333,7 +3556,7 @@ public static class ReportGenerator
             foreach (var scenario in feature.Scenarios)
             {
                 yml.Append("      - Name: " + scenario.DisplayName.SanitiseForYml() + "\n");
-                yml.Append("        StableId: " + ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId) + "\n");
+                yml.Append("        StableId: " + ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues) + "\n");
                 if (scenario.Description is not null)
                     yml.Append("        Description: " + scenario.Description.SanitiseForYml() + "\n");
                 yml.Append("        Result: " + scenario.Result + "\n");
@@ -3406,8 +3629,8 @@ public static class ReportGenerator
                     if (logs.Length > 0)
                     {
                         yml.Append("        HttpInteractions:\n");
-                        foreach (var log in logs)
-                            AppendTestRunYamlLog(yml, log, "          ");
+                        for (var i = 0; i < logs.Length; i++)
+                            AppendTestRunYamlLog(yml, logs[i], "          ", durations, StepPathAt(stepPaths, scenario.Id, i));
                     }
                 }
             }
@@ -3423,6 +3646,12 @@ public static class ReportGenerator
         yml.Append(indent + "  Status: " + (step.Status?.ToString() ?? "") + "\n");
         if (step.Duration != null)
             yml.Append(indent + "  DurationSeconds: " + step.Duration.Value.TotalSeconds.ToString("F3") + "\n");
+        if (step.FailureMessage != null)
+            yml.Append(indent + "  FailureMessage: " + step.FailureMessage.SanitiseForYml() + "\n");
+        if (step.SourceFile != null)
+            yml.Append(indent + "  SourceFile: " + step.SourceFile.SanitiseForYml() + "\n");
+        if (step.SourceLine != null)
+            yml.Append(indent + "  SourceLine: " + step.SourceLine.Value.ToString(CultureInfo.InvariantCulture) + "\n");
 
         if (step.SubSteps is { Length: > 0 })
         {
@@ -3444,7 +3673,8 @@ public static class ReportGenerator
         }
     }
 
-    private static void AppendTestRunYamlLog(StringBuilder yml, RequestResponseLog log, string indent)
+    /// <inheritdoc cref="MapLogJson"/>
+    private static void AppendTestRunYamlLog(StringBuilder yml, RequestResponseLog log, string indent, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null)
     {
         yml.Append(indent + "- Type: " + log.Type + "\n");
         yml.Append(indent + "  Method: " + (log.Method.Value?.ToString()?.ToUpperInvariant() ?? "") + "\n");
@@ -3459,6 +3689,26 @@ public static class ReportGenerator
         yml.Append(indent + "  RequestResponseId: " + log.RequestResponseId + "\n");
         if (log.Timestamp is not null)
             yml.Append(indent + "  Timestamp: " + log.Timestamp.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") + "\n");
+        if (log.MetaType != RequestResponseMetaType.Default)
+            yml.Append(indent + "  MetaType: " + log.MetaType + "\n");
+        if (log.DependencyCategory is not null)
+            yml.Append(indent + "  DependencyCategory: " + log.DependencyCategory.SanitiseForYml() + "\n");
+        if (log.CallerDependencyCategory is not null)
+            yml.Append(indent + "  CallerDependencyCategory: " + log.CallerDependencyCategory.SanitiseForYml() + "\n");
+        if (log.Phase != TestPhase.Unknown)
+            yml.Append(indent + "  Phase: " + log.Phase + "\n");
+        if (log.IsUserAction)
+            yml.Append(indent + "  IsUserAction: true\n");
+        if (log.ActivityTraceId is not null)
+            yml.Append(indent + "  ActivityTraceId: " + log.ActivityTraceId.SanitiseForYml() + "\n");
+        if (log.ActivitySpanId is not null)
+            yml.Append(indent + "  ActivitySpanId: " + log.ActivitySpanId.SanitiseForYml() + "\n");
+        if (log.CapturedBy is not null)
+            yml.Append(indent + "  CapturedBy: " + log.CapturedBy.SanitiseForYml() + "\n");
+        if (durations is not null && durations.TryGetValue(log.RequestResponseId, out var ms))
+            yml.Append(indent + "  DurationMs: " + ms.ToString("F3", CultureInfo.InvariantCulture) + "\n");
+        if (stepPath is not null)
+            yml.Append(indent + "  StepPath: " + stepPath + "\n");
         if (log.Headers.Length > 0)
         {
             yml.Append(indent + "  Headers:\n");
@@ -3956,6 +4206,21 @@ public static class ReportGenerator
                                         {
                                             ["type"] = "array",
                                             ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/httpInteraction" }
+                                        },
+                                        ["annotations"] = new Dictionary<string, object?>
+                                        {
+                                            ["type"] = "array",
+                                            ["description"] = "Diagram markers that carry information found nowhere else: which row of a tabular input was in flight, and fragments the test author injected. Step and assertion markers are excluded — those are already structured in steps.",
+                                            ["items"] = new Dictionary<string, object?>
+                                            {
+                                                ["type"] = "object",
+                                                ["properties"] = new Dictionary<string, object?>
+                                                {
+                                                    ["index"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Position in httpInteractions the marker sat before" },
+                                                    ["kind"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = new[] { "Row", "Custom" } },
+                                                    ["text"] = new Dictionary<string, object?> { ["type"] = "string" }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -4004,7 +4269,16 @@ public static class ReportGenerator
                                     ["mediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "IANA media type; image/* renders inline, anything else as a link" }
                                 }
                             }
-                        }
+                        },
+                        ["bypassReason"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Why the step was skipped, when its status is Bypassed" },
+                        ["docString"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The step's Gherkin doc-string body" },
+                        ["docStringMediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Media type declared on the doc string, when the source gave one" },
+                        ["comments"] = new Dictionary<string, object?> { ["type"] = "array", ["items"] = new Dictionary<string, object?> { ["type"] = "string" }, ["description"] = "Comment lines attached to the step in the source" },
+                        ["parameters"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "The step's inputs: inline values, data tables (columns and rows) and tree values. Present unless TestRunReportFullStepDetail is turned off.", ["items"] = new Dictionary<string, object?> { ["type"] = "object" } },
+                        ["textSegments"] = new Dictionary<string, object?> { ["type"] = "array", ["nullable"] = true, ["description"] = "The step text split into literal prose and inline parameter values, for highlighted rendering", ["items"] = new Dictionary<string, object?> { ["type"] = "object" } },
+                        ["failureMessage"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Why this step or assertion failed — the assertion message, or the exception that ended the step" },
+                        ["sourceFile"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "File the assertion was written in (name only), when the caller supplied it" },
+                        ["sourceLine"] = new Dictionary<string, object?> { ["type"] = "integer", ["nullable"] = true, ["description"] = "Line in sourceFile" }
                     }
                 },
                 ["httpInteraction"] = new Dictionary<string, object?>
@@ -4034,7 +4308,17 @@ public static class ReportGenerator
                         ["statusCode"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true },
                         ["traceId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid" },
                         ["requestResponseId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid" },
-                        ["timestamp"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["nullable"] = true }
+                        ["timestamp"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["nullable"] = true },
+                        ["metaType"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(RequestResponseMetaType)), ["description"] = "Default for a request/response exchange, Event for a fire-and-forget publish" },
+                        ["dependencyCategory"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "What kind of thing the callee is (database, cache, queue, ...) — drives participant shape and arrow colour in the diagram" },
+                        ["callerDependencyCategory"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The same, for the caller" },
+                        ["phase"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(TestPhase)), ["description"] = "Whether the call happened during Setup or the Action under test; Unknown when phase detection is off" },
+                        ["isUserAction"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "A UI interaction (click, navigate) rather than a dependency call" },
+                        ["activityTraceId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "W3C trace id — the bridge to OpenTelemetry traces and application logs. Unlike traceId, which is Kronikol's own identifier for the request/response pair." },
+                        ["activitySpanId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "W3C span id" },
+                        ["capturedBy"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Which capture path produced this entry: wire (proxy/TCP tap) or span (OpenTelemetry receiver)" },
+                        ["durationMs"] = new Dictionary<string, object?> { ["type"] = "number", ["nullable"] = true, ["description"] = "Wall-clock milliseconds between the request and its response, derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered or timestamps are absent." },
+                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic." }
                     }
                 }
             }
@@ -4070,6 +4354,9 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "Text"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "Status"), new XAttribute("type", "ExecutionResult"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "DurationSeconds"), new XAttribute("type", "xs:decimal"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "FailureMessage"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "SourceFile"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "SourceLine"), new XAttribute("type", "xs:int"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "SubSteps"), new XAttribute("minOccurs", "0"),
                     new XElement(xs + "complexType",
                         new XElement(xs + "sequence",
@@ -4113,7 +4400,17 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "StatusCode"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "TraceId"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "RequestResponseId"), new XAttribute("type", "xs:string")),
-                new XElement(xs + "element", new XAttribute("name", "Timestamp"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
+                new XElement(xs + "element", new XAttribute("name", "Timestamp"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "MetaType"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "DependencyCategory"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "CallerDependencyCategory"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "Phase"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "IsUserAction"), new XAttribute("type", "xs:boolean"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "ActivityTraceId"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "ActivitySpanId"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "CapturedBy"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "DurationMs"), new XAttribute("type", "xs:decimal"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "StepPath"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
             ));
 
         var scenarioType = new XElement(xs + "complexType",

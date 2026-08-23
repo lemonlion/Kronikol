@@ -1507,6 +1507,37 @@
         return queue;
     }
 
+    // ── Pending state on the toolbar controls while their re-render is in flight ─────────────────
+    // The buttons a click just switched (the clicked one and every peer the sync functions set to the
+    // same state) carry `details-pending` / aria-busy until processRenderQueue has drawn the last
+    // diagram of that action. The CSS delays the throb and spinner by 0.2 s, so a fast re-render
+    // (cache hit, one small diagram) shows nothing and a slow one is unmistakable. A per-control
+    // counter keeps overlapping actions honest: a control stays pending until its last action is done.
+    function setPending(elements, pending) {
+        for (var i = 0; i < elements.length; i++) {
+            var el = elements[i];
+            var n = (parseInt(el.getAttribute('data-pending') || '0', 10) || 0) + (pending ? 1 : -1);
+            if (n > 0) {
+                el.setAttribute('data-pending', String(n));
+                el.classList.add('details-pending');
+                el.setAttribute('aria-busy', 'true');
+            } else {
+                el.removeAttribute('data-pending');
+                el.classList.remove('details-pending');
+                el.removeAttribute('aria-busy');
+            }
+        }
+    }
+    function renderWithPending(queue, elements, onAllDone) {
+        var els = Array.prototype.slice.call(elements || []);
+        setPending(els, true);
+        processRenderQueue(queue, function() {
+            setPending(els, false);
+            if (onAllDone) onAllDone();
+        });
+    }
+    window._renderWithPending = renderWithPending;
+
     function syncRadioButtons(parent, targetState) {
         parent.querySelectorAll('.details-radio-btn[data-state]').forEach(function(b) {
             if (b.getAttribute('data-state') === targetState) b.classList.add('details-active');
@@ -1533,7 +1564,7 @@
         }
         syncRadioButtons(scenario, targetState);
         var containers = scenario.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildDetailsQueue(containers, targetState));
+        renderWithPending(buildDetailsQueue(containers, targetState), scenario.querySelectorAll('.details-radio-btn[data-state="' + targetState + '"]'));
     };
 
     // Report-level: expand/truncate/collapse details for all scenarios
@@ -1555,7 +1586,7 @@
             });
         }
         var containers = document.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildDetailsQueue(containers, targetState));
+        renderWithPending(buildDetailsQueue(containers, targetState), document.querySelectorAll('.details-radio-btn[data-state="' + targetState + '"]'));
     };
 
     // Change truncation line count (report-level)
@@ -1571,7 +1602,7 @@
         // Only re-render containers that have been decompressed (have data-plantuml)
         var containers = document.querySelectorAll('[data-plantuml]');
         // Force re-render all containers as truncated (even if already truncated — line count changed)
-        processRenderQueue(buildDetailsQueue(containers, 'truncated', true));
+        renderWithPending(buildDetailsQueue(containers, 'truncated', true), document.querySelectorAll('.truncate-lines-select, .details-radio-btn[data-state="truncated"]'));
         // Update report + scenario radio buttons to truncated state
         syncRadioButtons(document.querySelector('.toolbar-right'), 'truncated');
         document.querySelectorAll('details.scenario').forEach(function(sc) {
@@ -1589,7 +1620,7 @@
         allDiagrams.forEach(function(c) { c._truncateLines = scenarioLines; });
         // Only re-render containers that have been decompressed (have data-plantuml)
         var containers = scenario.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildDetailsQueue(containers, 'truncated', true));
+        renderWithPending(buildDetailsQueue(containers, 'truncated', true), scenario.querySelectorAll('.truncate-lines-select, .details-radio-btn[data-state="truncated"]'));
         syncRadioButtons(scenario, 'truncated');
     };
 
@@ -1612,7 +1643,7 @@
             syncToggleBtn(sc, 'headers', shown);
         });
         var containers = document.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildHeadersQueue(containers, !shown));
+        renderWithPending(buildHeadersQueue(containers, !shown), document.querySelectorAll('.toggle-btn[data-toggle="headers"]'));
     };
 
     // Scenario-level: toggle headers for one scenario
@@ -1622,7 +1653,7 @@
         if (!scenario) return;
         syncToggleBtn(scenario, 'headers', shown);
         var containers = scenario.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildHeadersQueue(containers, !shown));
+        renderWithPending(buildHeadersQueue(containers, !shown), scenario.querySelectorAll('.toggle-btn[data-toggle="headers"]'));
     };
 
     function buildAssertionsQueue(containers, showing) {
@@ -1654,7 +1685,7 @@
             syncToggleBtn(sc, 'assertions', shown);
         });
         var containers = document.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildAssertionsQueue(containers, shown));
+        renderWithPending(buildAssertionsQueue(containers, shown), document.querySelectorAll('.toggle-btn[data-toggle="assertions"]'));
     };
 
     // Scenario-level: toggle assertions for one scenario
@@ -1664,7 +1695,7 @@
         if (!scenario) return;
         syncToggleBtn(scenario, 'assertions', shown);
         var containers = scenario.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildAssertionsQueue(containers, shown));
+        renderWithPending(buildAssertionsQueue(containers, shown), scenario.querySelectorAll('.toggle-btn[data-toggle="assertions"]'));
     };
 
     function buildStepsQueue(containers, showing) {
@@ -1696,7 +1727,7 @@
             syncToggleBtn(sc, 'steps', shown);
         });
         var containers = document.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildStepsQueue(containers, shown));
+        renderWithPending(buildStepsQueue(containers, shown), document.querySelectorAll('.toggle-btn[data-toggle="steps"]'));
     };
 
     // Scenario-level: toggle step delimiters for one scenario
@@ -1706,7 +1737,7 @@
         if (!scenario) return;
         syncToggleBtn(scenario, 'steps', shown);
         var containers = scenario.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildStepsQueue(containers, shown));
+        renderWithPending(buildStepsQueue(containers, shown), scenario.querySelectorAll('.toggle-btn[data-toggle="steps"]'));
     };
 
     function buildDatabasesQueue(containers, showing) {
@@ -1738,7 +1769,7 @@
             syncToggleBtn(sc, 'databases', shown);
         });
         var containers = document.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildDatabasesQueue(containers, shown));
+        renderWithPending(buildDatabasesQueue(containers, shown), document.querySelectorAll('.toggle-btn[data-toggle="databases"]'));
     };
 
     // Scenario-level: toggle database participants for one scenario
@@ -1748,7 +1779,7 @@
         if (!scenario) return;
         syncToggleBtn(scenario, 'databases', shown);
         var containers = scenario.querySelectorAll('[data-plantuml]');
-        processRenderQueue(buildDatabasesQueue(containers, shown));
+        renderWithPending(buildDatabasesQueue(containers, shown), scenario.querySelectorAll('.toggle-btn[data-toggle="databases"]'));
     };
 })();
 </script>

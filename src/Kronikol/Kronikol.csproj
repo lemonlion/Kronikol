@@ -25,6 +25,7 @@
 		<EmbeddedResource Include="Reports\context-menu-script.js" />
 		<EmbeddedResource Include="Reports\internal-flow-popup-script.js" />
 		<EmbeddedResource Include="Reports\toggle-script.js" />
+		<EmbeddedResource Include="Reports\diagram-toggle-layout-script.js" />
 		<EmbeddedResource Include="Reports\flame-chart-render-script.js" />
 		<EmbeddedResource Include="Reports\collapsible-notes-script.js" />
 		<EmbeddedResource Include="Reports\plantuml-browser-render-script.js" />

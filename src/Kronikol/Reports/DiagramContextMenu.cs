@@ -80,4 +80,11 @@ public static class DiagramContextMenu
     public static string GetFlameChartRenderScript() => LoadResource("flame-chart-render-script.js");
 
     public static string GetCollapsibleNotesScript() => LoadResource("collapsible-notes-script.js");
+
+    /// <summary>
+    /// Floats a scenario's diagram toolbar (Details / Headers / … and the diagram-type tabs) onto the
+    /// "Sequence Diagrams" / "Diagrams" title line when it fits beside the title, and stacks it under
+    /// the title when it does not — measured per toolbar, re-evaluated on resize and on every toggle.
+    /// </summary>
+    public static string GetDiagramToggleLayoutScript() => LoadResource("diagram-toggle-layout-script.js");
 }

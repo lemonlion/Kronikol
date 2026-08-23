@@ -77,8 +77,9 @@ public class DatabaseToggleReportTests
     public void Databases_toggle_button_not_rendered_when_no_database_participant()
     {
         var content = GenerateReport("DbToggle_Absent.html", PlantUmlSourceWithoutDatabase);
-        Assert.DoesNotContain("data-toggle=\"databases\"", content);
-        Assert.DoesNotContain("Databases Shown", content);
+
+        Assert.Empty(ReportMarkup.Elements(content, "button", "data-toggle=\"databases\""));
+        Assert.DoesNotContain("Databases Shown", ReportMarkup.Only(content));
     }
 
     [Fact]
@@ -94,15 +95,15 @@ public class DatabaseToggleReportTests
     public void Databases_toggle_defaults_to_shown()
     {
         var content = GenerateReport("DbToggle_Default.html", PlantUmlSourceWithDatabase);
-        // The button should have details-active class and data-shown="true"
-        var btnIdx = content.IndexOf("data-toggle=\"databases\"");
-        Assert.True(btnIdx > 0);
-        // Find the opening <button tag and closing >
-        var btnStart = content.LastIndexOf("<button", btnIdx);
-        var btnEnd = content.IndexOf(">", btnIdx);
-        var btnTag = content[btnStart..(btnEnd + 1)];
-        Assert.Contains("details-active", btnTag);
-        Assert.Contains("data-shown=\"true\"", btnTag);
+
+        var buttons = ReportMarkup.Elements(content, "button", "data-toggle=\"databases\"");
+
+        Assert.NotEmpty(buttons);
+        Assert.All(buttons, button =>
+        {
+            Assert.Contains("details-active", button);
+            Assert.Contains("data-shown=\"true\"", button);
+        });
     }
 
     [Fact]
@@ -140,7 +141,8 @@ public class DatabaseToggleReportTests
     public void Databases_toggle_button_not_rendered_when_no_database_or_collections()
     {
         var content = GenerateReport("DbToggle_NeitherPresent.html", PlantUmlSourceWithoutDatabase);
-        Assert.DoesNotContain("data-toggle=\"databases\"", content);
+
+        Assert.Empty(ReportMarkup.Elements(content, "button", "data-toggle=\"databases\""));
     }
 
     [Fact]

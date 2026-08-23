@@ -82,7 +82,7 @@ public class TabularInputs<T> : IReadOnlyList<T>, ITabularParameterData
             if (testId != null)
             {
                 DefaultTrackingDiagramOverride.InsertPlantUml(
-                    testId, $"hnote across #lightyellow : Row {_index + 1}");
+                    testId, $"hnote across #lightyellow : Row {_index + 1}", DiagramMarkerKind.Row);
             }
             return true;
         }

@@ -185,6 +185,15 @@ public record ReportConfigurationOptions
     /// </summary>
     public bool GenerateMergeableData { get; set; }
 
+    /// <summary>
+    /// When <c>true</c>, every step in the test run report data file carries its full detail: parameters
+    /// (inline values, data tables, tree values), text segments, doc string, comments and bypass reason.
+    /// This is what makes a parameterised failure legible from the data file alone — without it the inputs
+    /// that produced the failure are only in the HTML. Step detail is measured in kilobytes against
+    /// megabytes of payload, so turn this off only if the file size genuinely matters. Default: <c>true</c>.
+    /// </summary>
+    public bool TestRunReportFullStepDetail { get; set; } = true;
+
     /// <summary>When <c>true</c>, writes a test summary to the CI job summary (e.g. GitHub Actions).</summary>
     public bool WriteCiSummary { get; set; }
 

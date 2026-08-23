@@ -315,11 +315,13 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserNoDiagrams.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
-        Assert.DoesNotContain("data-plantuml-z=", content);
-        Assert.DoesNotContain("data-plantuml=", content);
-        Assert.DoesNotContain("id=\"puml-", content);
-        Assert.DoesNotContain("Sequence Diagrams", content);
+        // Against the markup only: the report always ships the scripts and stylesheets that would
+        // drive a diagrams section, and one of those stylesheets names the heading in a comment.
+        var markup = Reports.ReportMarkup.Only(File.ReadAllText(html));
+        Assert.DoesNotContain("data-plantuml-z=", markup);
+        Assert.DoesNotContain("data-plantuml=", markup);
+        Assert.DoesNotContain("id=\"puml-", markup);
+        Assert.DoesNotContain("Sequence Diagrams", markup);
     }
 
     [Fact]

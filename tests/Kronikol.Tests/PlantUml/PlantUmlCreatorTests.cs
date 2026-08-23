@@ -1573,8 +1573,9 @@ public class PlantUmlCreatorTests
         var plantUml = GetPlantUml(logs);
 
         // It's not JSON, so it goes through the form-url-encoded path which splits on &
-        // Since there's no &, the whole thing appears as-is
-        Assert.Contains("<root><item>value</item></root>", plantUml);
+        // Since there's no &, the whole thing appears as one piece — creole-escaped, so PlantUML prints the
+        // tags instead of reading them as markup (which is what it does to <b>, <i>, <font …> in an HTML body).
+        Assert.Contains("~<root>~<item>value~</item>~</root>", plantUml);
     }
 
     // ─── actorDefined flag behavior ─────────────────────────────
@@ -3563,5 +3564,95 @@ public class PlantUmlCreatorTests
 
         var shortText = "fits on one line";
         Assert.Same(shortText, PlantUmlCreator.WrapUnbreakableRuns(shortText));
+    }
+
+    // ─── Creole markup escaping in notes ────────────────────────
+
+    [Theory]
+    // A marker that appears once on a line is inert: PlantUML needs a pair to style anything.
+    [InlineData("see https://example.com/x", "see https://example.com/x")]
+    [InlineData("a - b - c", "a - b - c")]
+    // Two on one line are a creole span: both markers and the styling are applied, so they must be escaped.
+    [InlineData("SELECT a, -- first, m.x, -- second", "SELECT a, ~-~- first, m.x, ~-~- second")]
+    [InlineData("https://a.example and https://b.example", "https:~/~/a.example and https:~/~/b.example")]
+    [InlineData("a **b** c", "a ~*~*b~*~* c")]
+    [InlineData("a __b__ c", "a ~_~_b~_~_ c")]
+    [InlineData("{\"a\": \"\", \"b\": \"\"}", "{\"a\": ~\"~\", \"b\": ~\"~\"}")]
+    // A tag PlantUML knows is consumed on sight, pair or not.
+    [InlineData("<b>x</b>", "~<b>x~</b>")]
+    [InlineData("<color:red>x", "~<color:red>x")]
+    // Line-leading list/heading markup restyles the line and eats the marker.
+    [InlineData("* bullet", "~* bullet")]
+    [InlineData("  # numbered", "  ~# numbered")]
+    [InlineData("= heading", "~= heading")]
+    // A link needs both halves; without a closing pair the brackets are literal already.
+    [InlineData("[[1,2],[3,4]]", "~[~[1,2],[3,4]]")]
+    [InlineData("[[1,2],[3,4]", "[[1,2],[3,4]")]
+    public void EscapeCreoleMarkup_escapes_only_what_plantuml_would_consume(string input, string expected)
+    {
+        Assert.Equal(expected, PlantUmlCreator.EscapeCreoleMarkup(input));
+    }
+
+    [Fact]
+    public void Sql_comment_markers_in_a_body_survive_into_the_note()
+    {
+        // A BigQuery job body: the whole query is one PlantUML line, and its `--` comments pair up into
+        // creole strikethrough — the markers are deleted and the span between them is struck through.
+        var json = """{"query":"SELECT a,\n  -- domestic values\n  m.x AS d,\n  -- change values\n  m.y"}""";
+        var logs = new[] { MakeRequest(), MakeResponse(content: json) };
+
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains("~-~- domestic values", plantUml);
+        Assert.Contains("~-~- change values", plantUml);
+    }
+
+    [Fact]
+    public void Two_urls_on_one_body_line_keep_their_slashes()
+    {
+        var json = """{"links":"https://a.example/x and https://b.example/y"}""";
+        var logs = new[] { MakeRequest(), MakeResponse(content: json) };
+
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains("https:~/~/a.example/x and https:~/~/b.example/y", plantUml);
+    }
+
+    [Fact]
+    public void Markup_in_a_payload_cannot_style_the_note()
+    {
+        var json = """{"note":"<b>injected</b>"}""";
+        var logs = new[] { MakeRequest(), MakeResponse(content: json) };
+
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains("~<b>injected~</b>", plantUml);
+    }
+
+    [Fact]
+    public void Header_values_are_escaped_but_the_gray_tag_kronikol_adds_is_not()
+    {
+        var logs = new[]
+        {
+            MakeRequest(headers: [("Referer", "https://a.example/x?next=https://b.example/y")]),
+            MakeResponse(),
+        };
+
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains("<color:gray>[Referer=https:~/~/a.example", plantUml);
+        Assert.DoesNotContain("~<color:gray>", plantUml);
+    }
+
+    [Fact]
+    public void Kronikol_own_markup_is_never_escaped()
+    {
+        var binary = new string((char)1, 200);
+        var logs = new[] { MakeRequest(content: binary), MakeResponse() };
+
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains("<i>[binary content]</i>", plantUml);
+        Assert.DoesNotContain("~<i>", plantUml);
     }
 }

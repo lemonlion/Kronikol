@@ -160,6 +160,21 @@ kronikol ingest ./captures --tests ./captures/tests.ndjson -o ./Reports
 
 `Kronikol.Playwright` stamps the identity on every browser request (`browser.NewTrackedContextAsync(identity)`). See [ProxyTap](https://github.com/lemonlion/Kronikol/wiki/Integration-ProxyTap-Extension), [Ingesting External Captures](https://github.com/lemonlion/Kronikol/wiki/Ingesting-External-Captures) and [Playwright](https://github.com/lemonlion/Kronikol/wiki/Integration-Playwright).
 
+### Debugging a run — including with an AI agent
+
+`TestRunReport.json` holds everything about a run, which on a real suite means 10 MB, with single embedded diagrams past 600 KB. That is roughly 2.7 million tokens: an agent asked to debug a failing test spends its entire context reading the file and never gets to the question. `kronikol query` answers questions about the report without loading it:
+
+```bash
+kronikol query summary  ./Reports          # the run, its failures, the slowest scenarios
+kronikol query failures ./Reports          # why each one failed, with assertion messages and file:line
+kronikol query services ./Reports          # per service: calls, errors, timings — and what was never called
+kronikol query flow     ./Reports s3       # the sequence, in 2 KB instead of 663
+kronikol query grep     ./Reports "4173" --values   # where a wrong number entered the system
+kronikol query http     ./Reports s3/i47 --keys     # a payload's shape, then --path $.x for one value
+```
+
+Every command prints addresses rather than payloads, announces any truncation with the flags that resume it, and fetches a body only when you name one. There is a Claude Code skill in [`templates/skills/kronikol-test-debugging/`](templates/skills/kronikol-test-debugging) that teaches an agent the whole workflow — copy it into your project's `.claude/skills/`. See [Querying Reports](https://github.com/lemonlion/Kronikol/wiki/Querying-Reports).
+
 ---
 
 ## <a name="deterministic-vs-ai"></a>Deterministic vs AI-Generated Diagrams [↑](#top)
@@ -253,7 +268,7 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 | **PlantUML IKVM** | `Kronikol.PlantUml.Ikvm` | Local PlantUML rendering via IKVM — no remote server or Java installation required | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.PlantUml.Ikvm)](https://www.nuget.org/packages/Kronikol.PlantUml.Ikvm) |
 | **Proxy Tap** | `Kronikol.Extensions.ProxyTap` | Out-of-process HTTP tee that captures any hop of an uninstrumentable (polyglot / third-party / legacy) backend, attributes by `test-tracking-*` headers or the W3C trace id, re-injects correlation, redacts secrets at capture | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.ProxyTap)](https://www.nuget.org/packages/Kronikol.Extensions.ProxyTap) |
 | **Playwright** | `Kronikol.Playwright` | Browser-driven E2E client: per-test identity stamped on every `BrowserContext`/`Page` request (+ `traceparent`), in-process scope bridge | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Playwright)](https://www.nuget.org/packages/Kronikol.Playwright) |
-| **CLI** | `Kronikol.Tool` | `kronikol merge` (combine parallel runners' reports) and `kronikol ingest` (replay language-neutral NDJSON captures into a full report) | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Tool)](https://www.nuget.org/packages/Kronikol.Tool) |
+| **CLI** | `Kronikol.Tool` | `kronikol merge` (combine parallel runners' reports), `kronikol ingest` (replay language-neutral NDJSON captures into a full report) and `kronikol query` (debug a run without reading the report) | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Tool)](https://www.nuget.org/packages/Kronikol.Tool) |
 | **Step Tracking** | `Kronikol.StepTracking` | IL weaver that instruments `[GivenStep]`, `[WhenStep]`, `[ThenStep]` methods with BDD step tracking and timing | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.StepTracking)](https://www.nuget.org/packages/Kronikol.StepTracking) |
 
 All packages from 1.23.X onwards target **.NET 8.0**, **.NET 9.0**, and **.NET 10.0** (multi-target).

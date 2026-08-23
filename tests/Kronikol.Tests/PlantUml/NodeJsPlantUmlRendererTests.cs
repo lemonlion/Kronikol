@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Net;
 using Kronikol.PlantUml;
+using Kronikol.Tracking;
 
 namespace Kronikol.Tests.PlantUml;
 
@@ -192,4 +194,49 @@ public class NodeJsPlantUmlRendererTests
         Assert.Contains("Foo", svg);
         Assert.Contains("Bar", svg);
     }
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void Creole_markup_in_a_captured_body_reaches_the_svg_as_text()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // A BigQuery job body: the query is one PlantUML line, so its `--` comments used to pair up into
+        // creole strikethrough — markers deleted, the span between them struck through. Same for two URLs
+        // on a line (`//` → italic) and for a tag PlantUML knows (`<b>` → bold).
+        var body = """
+            {"query":"SELECT a,\n  -- domestic values\n  m.x,\n  -- change values\n  m.y",
+             "links":"https://a.example/x and https://b.example/y","label":"<b>raw</b>"}
+            """;
+        var logs = new[]
+        {
+            MakeLog(RequestResponseType.Request, null),
+            MakeLog(RequestResponseType.Response, body),
+        };
+        var plantUml = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+
+        var svg = System.Text.Encoding.UTF8.GetString(NodeJsPlantUmlRenderer.Render(plantUml, PlantUmlImageFormat.Svg));
+        // PlantUML breaks a note line into one <text> per whitespace-separated piece, so compare on the
+        // text it drew with runs of whitespace collapsed.
+        var drawn = string.Join(" ", System.Text.RegularExpressions.Regex
+            .Matches(svg, @"<text\b[^>]*>([\s\S]*?)</text>")
+            .Select(m => m.Groups[1].Value));
+        var rendered = System.Text.RegularExpressions.Regex.Replace(drawn, @"\s+", " ");
+
+        Assert.Contains("-- domestic values", rendered);
+        Assert.Contains("-- change values", rendered);
+        Assert.Contains("https://a.example/x and https://b.example/y", rendered);
+        Assert.Contains("<b>raw</b>", rendered);
+        Assert.DoesNotContain("line-through", svg);
+    }
+
+    private static readonly Guid CreoleRequestResponseId = Guid.NewGuid();
+
+    private static RequestResponseLog MakeLog(RequestResponseType type, string? content) =>
+        new(
+            TestName: "Creole", TestId: "creole-1",
+            Method: HttpMethod.Get, Content: content,
+            Uri: new Uri("http://example.com/api/jobs"),
+            Headers: [], ServiceName: "BigQuery", CallerName: "Api",
+            Type: type, TraceId: Guid.NewGuid(), RequestResponseId: CreoleRequestResponseId,
+            TrackingIgnore: false, StatusCode: HttpStatusCode.OK);
 }

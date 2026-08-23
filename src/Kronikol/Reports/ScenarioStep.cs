@@ -18,6 +18,19 @@ public record ScenarioStep
     public string? DocStringMediaType { get; set; }
 
     /// <summary>
+    /// Why this step or assertion failed — the assertion's message, or the exception message that ended
+    /// the step. The single most-wanted piece of information about a failing test, and until it lived here
+    /// it reached the sequence diagram and nothing else.
+    /// </summary>
+    public string? FailureMessage { get; set; }
+
+    /// <summary>The file the assertion was written in, when the caller supplied it. File name only, not a full path.</summary>
+    public string? SourceFile { get; set; }
+
+    /// <summary>The line <see cref="SourceFile"/> holds the assertion on; zero when unknown.</summary>
+    public int? SourceLine { get; set; }
+
+    /// <summary>
     /// Structured representation of the step text with inline parameter values embedded.
     /// When set, the renderer uses this instead of <see cref="Text"/> to produce highlighted
     /// parameter values within the prose (matching LightBDD's native report rendering).

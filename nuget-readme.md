@@ -47,7 +47,7 @@ See the [Quick Start guide](https://github.com/lemonlion/Kronikol/wiki/Quick-Sta
 | Local PlantUML (IKVM) | `Kronikol.PlantUml.Ikvm` |
 | Proxy tap (out-of-process capture for uninstrumentable backends) | `Kronikol.Extensions.ProxyTap` |
 | Playwright (browser-driven E2E identity) | `Kronikol.Playwright` |
-| CLI (`kronikol merge`, `kronikol ingest`) | `Kronikol.Tool` |
+| CLI (`kronikol merge`, `kronikol ingest`, `kronikol query`) | `Kronikol.Tool` |
 
 ## Use Cases
 

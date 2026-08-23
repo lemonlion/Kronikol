@@ -659,8 +659,10 @@ public class DiagramContextMenuTests
     public void SetScenarioTruncateLines_does_not_sync_all_dropdowns()
     {
         var funcBody = GetFunction("_setScenarioTruncateLines");
-        // Scenario-level should NOT sync all dropdowns — only report-level does
-        Assert.DoesNotContain(".truncate-lines-select", funcBody);
+        // Scenario-level should NOT sync all dropdowns — only report-level does. It may still reach
+        // for its own scenario's dropdown (to mark it pending while the re-render runs), so what
+        // matters is that it never queries the document for them.
+        Assert.DoesNotContain("document.querySelectorAll('.truncate-lines-select", funcBody);
     }
 
     [Fact]

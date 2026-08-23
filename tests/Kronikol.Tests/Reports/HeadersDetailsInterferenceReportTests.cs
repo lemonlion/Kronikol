@@ -146,16 +146,14 @@ public class HeadersDetailsInterferenceReportTests
         // to prevent syncRadioButtons from interfering with it.
         var content = GenerateReport("HD_DataAttributes.html");
 
-        // Report-level headers toggle button
-        Assert.Contains("data-toggle=\"headers\"", content);
-        Assert.Contains("data-shown=\"true\"", content);
+        var buttons = ReportMarkup.Elements(content, "button", "data-toggle=\"headers\"");
 
-        // Headers toggle should NOT have data-state attribute
-        var toggleIdx = content.IndexOf("data-toggle=\"headers\"");
-        var precedingHtml = content[(toggleIdx - 200)..toggleIdx];
-        var btnOpen = precedingHtml.LastIndexOf("<button");
-        var btnTag = precedingHtml[btnOpen..] + "data-toggle";
-        Assert.DoesNotContain("data-state", btnTag);
+        Assert.NotEmpty(buttons);
+        Assert.All(buttons, button =>
+        {
+            Assert.Contains("data-shown=\"true\"", button);
+            Assert.DoesNotContain("data-state", button);
+        });
     }
 
     [Fact]

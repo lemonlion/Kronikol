@@ -44,6 +44,13 @@ public enum DiagnosticKind
     /// <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/> so a dead tap is a line in the report, not only in a log.
     /// </summary>
     CaptureDegraded,
+
+    /// <summary>
+    /// A step delimiter in the log stream did not line up with the step it should have opened, so the
+    /// interactions after it carry no <c>stepPath</c>. Expected when a test does work on a background
+    /// thread, where a record can enqueue after the following step's marker.
+    /// </summary>
+    StepAttributionMismatch,
 }
 
 /// <summary>
