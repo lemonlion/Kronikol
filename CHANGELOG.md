@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [3.0.46] - 2026-08-23
+
+### Fixed
+- **`Kronikol` did not compile at 3.0.45.** `ReportGenerator.GenerateTestRunReportData` filtered its tracked logs on `l.IsDiagramMarker`, but the property was never added to `RequestResponseLog` — the marker/interaction split shipped its call sites and its changelog prose without its one definition, so the tag builds from a clean checkout only as far as `src/Kronikol`. `RequestResponseLog.IsDiagramMarker` is now defined as `IsOverrideStart || IsOverrideEnd || IsActionStart`. It is a distinct property from the same-named `TestRunRecord.IsDiagramMarker` on the ingestion side, which keys off event names and timestamps; the 3.0.45 entries describing the export and diagnostics fixes are accurate as of this release.
+- **`Kronikol.Extensions.ServiceBus` failed to restore (NU1605).** `Azure.Messaging.ServiceBus` floats on `7.*`, and 7.20.2 pulls `Azure.Core` 1.60.0 → `Microsoft.Extensions.Hosting.Abstractions` 10.0.9 → `Microsoft.Extensions.DependencyInjection.Abstractions` >= 10.0.9, while the net8.0/net9.0 pins sat at 10.0.7. NU1605 is in the SDK's default `WarningsAsErrors` list, so the downgrade failed the build outright with no `TreatWarningsAsErrors` anywhere in the repo. The pins are now 10.0.9 (net10.0 was unaffected — `10.*` floats above the floor). No commit caused this: the floating reference drifted into it on an upstream release.
+
+### Changed
+- **CI builds every packable project.** A new `Release Build (packable projects)` job mirrors `release.yml` (`dotnet restore release.slnf` → `dotnet build release.slnf --configuration Release`). The test matrix only builds what a test project references, so a packable project with no CI test coverage — `Kronikol.Extensions.ServiceBus` among them — could break and stay green until tag time. With 29 floating `X.*` package references across `src/`, any upstream release can reproduce that failure mode without a local change; this job turns it into a red PR instead of a failed release.
+
 ## [3.0.45] - 2026-08-22
 
 ### Added

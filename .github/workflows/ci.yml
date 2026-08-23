@@ -13,6 +13,35 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  release-build:
+    name: Release Build (packable projects)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/swift || true
+          df -h /
+
+      - uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      # Mirrors release.yml. The test matrix below only builds what a test project references,
+      # so a packable project with no CI test coverage — or one broken purely by dependency
+      # drift, e.g. a floating X.* reference whose transitive floor rose — stays green here and
+      # fails at tag time instead. Kronikol.Extensions.ServiceBus did exactly that.
+      - name: Restore
+        run: dotnet restore release.slnf
+
+      - name: Build
+        run: dotnet build release.slnf --configuration Release --no-restore
+
   test:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
