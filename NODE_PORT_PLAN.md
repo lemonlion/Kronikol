@@ -4,14 +4,15 @@
 
 **Guiding principle:** Idiomatic TypeScript throughout. We treat the C# code as an executable *specification of behavior*, not a blueprint to translate line-by-line. Where C# and Node diverge (async context, interception, the test-run lifecycle, cross-process aggregation), we build the idiomatic Node mechanism that produces the same observable result.
 
-**Sibling effort:** A Java port (**Kronikol4J**, `C:\Code\Kronikol4J`) is already substantially built out (core, diagram, report, runtime, junit5, http, jdbc, proxy, servlet, cli, redis, mongodb, messaging, testng, assertj, opentelemetry, spring modules exist with tests). Its plan lives at `JAVA_PORT_PLAN.md`. **Use it as a proven decomposition and as the consolidated .NET source map (its Appendix A).** This document does not repeat that source map in full — it references it and focuses on the Node-specific design.
+**Sibling effort:** A Java port (**Kronikol4J**, the `java/` subtree of this repo — `C:\Code\Kronikol4J` until the migration lands) is already substantially built out (core, diagram, report, runtime, junit5, http, jdbc, proxy, servlet, cli, redis, mongodb, messaging, testng, assertj, opentelemetry, spring modules exist with tests). Its plan lives at `docs/JAVA_PORT_PLAN.md`. **Use it as a proven decomposition and as the consolidated .NET source map (its Appendix A).** This document does not repeat that source map in full — it references it and focuses on the Node-specific design.
 
 ### Locked decisions
 | Decision | Choice |
 |---|---|
-| **Name / scope** | **Kronikol.js** (prose/display name), repo **`KronikolJS`** (mirrors the Java repo `Kronikol4J`; sibling at `C:\Code\KronikolJS`). npm scope **`@kronikol/*`** (`@kronikol/core`, `@kronikol/express`, …). |
-| **Language** | **TypeScript**, `strict` mode. Source under `packages/*/src`. |
-| **Monorepo + build** | **pnpm workspaces** + **Turborepo** (task orchestration/caching) + **changesets** (synchronized versioning + changelog). **tsup** (esbuild) for builds. |
+| **Name / scope** | **Kronikol.js** (prose/display name), npm scope **`@kronikol/*`** (`@kronikol/core`, `@kronikol/express`, …). **No separate `KronikolJS` repo** — superseded, see the row below. |
+| **Language** | **TypeScript**, `strict` mode. Source under `js/packages/*/src`. |
+| **Repository placement** | The **`js/` subtree of the Kronikol polyglot monorepo**, alongside `dotnet/` and `java/` — see `MONOREPO_MIGRATION_PLAN.md`. *This supersedes the original decision to build in a separate `KronikolJS` repo at `C:\Code\KronikolJS`.* Consequences: goldens come from the shared top-level **`parity/`** rather than a private per-language harness; CI is **`js-ci.yml`**, path-filtered on `js/**` + `parity/**`; release tags are **`js-v{version}`** (the repo's `v*` namespace is split per stack). |
+| **Workspace + build** | Inside `js/`: **pnpm workspaces** + **Turborepo** (task orchestration/caching) + **changesets** (versioning + changelog). **tsup** (esbuild) for builds. The pnpm workspace root is `js/`, *not* the repository root — the repo holds three independent build systems side by side. |
 | **Module format** | **Dual ESM + CJS** via `package.json` `exports` conditions + `.d.ts`. Express/Fastify apps span both worlds. |
 | **Node baseline** | **Node 20 LTS floor** (stable `AsyncLocalStorage`, `node:test`, `require(ESM)`, global `fetch`). Test on 20 / 22 / current. |
 | **Test frameworks (first-class)** | **Vitest, Jest, node:test, Mocha, Cucumber-js, Playwright** — adapters + parity tests. |
@@ -300,7 +301,7 @@ export function state(): KronikolState {
 - **Consequence for Vitest's *default* `threads` pool:** each test file runs in a `worker_thread` with its own `globalThis` → its own sink. So the `threads` pool needs the **same per-file fragment emission** as the `forks` pool (the merge just collects more fragments). This must be explicit in the run-lifecycle spike (§5.4), not assumed.
 
 **Verification — the hazard is silent, so test it deliberately (post-build, not unit):**
-- A `parity-harness` integration test that, **against the built artifacts** (the real `exports` map — the hazard cannot reproduce from `src`), loads `@kronikol/core` via **both** `import` and `require` in one process, logs through one handle, reads through the other, and asserts they observe the same `logs`/`als` state. This is the canonical regression guard.
+- A `js/internal/dual-package` integration test that, **against the built artifacts** (the real `exports` map — the hazard cannot reproduce from `src`), loads `@kronikol/core` via **both** `import` and `require` in one process, logs through one handle, reads through the other, and asserts they observe the same `logs`/`als` state. This is the canonical regression guard.
 - A `__diagnostics()` export returning `state().copies` (and which majors are registered) — turns "my report is empty" support tickets into a one-line check, and is **surfaced as the dual-package-split detector in the §3.18 Diagnostics report**.
 - **CI gates on `exports`-map correctness:** run **`@arethetypeswrong/cli` (attw)** + **`publint`** on every package — a malformed/мis-ordered `exports` map (wrong condition order, missing `types`) is itself a cause of a tool picking CJS for one import and ESM for another *within a single build*, manufacturing the hazard. Condition order is fixed: `types` → `import` → `require` → `default`, plus `main`/`module` for legacy bundlers.
 
@@ -605,10 +606,10 @@ A real pattern (`Multi-Host-Test-Architectures`): the SUT spans **two+ hosts** �
 **Net.** A **usage pattern, not a new subsystem**: **in-process is free in Node** (the §3.10 process-global registry shares the sink/correlation/ALS — no DI bridging, unlike .NET), and **cross-process reuses §5 fragments + §7 header propagation**. Document the pattern; no net-new engineering. *(This completes the feature-coverage audit against the wiki — see also the two enrichments folded into §3.13 (hash-based token shortening) and §3.21 (MessageTracker verbs).)*
 
 ### 3.24 Reconciliation against Kronikol4J (the working sibling port) — confirmations, gaps, gotchas
-The Java port `C:\Code\Kronikol4J` is **far more built-out than referenced** (28 modules, 63 test files, through Phase-5 breadth) and — critically — **it already built and *proved* the verification backbone this plan designs.** Reading its code + CHANGELOG validates the plan against a working implementation of the identical spec and surfaces real gotchas.
+The Java port (`java/`) is **far more built-out than referenced** (28 modules, 63 test files, through Phase-5 breadth) and — critically — **it already built and *proved* the verification backbone this plan designs.** Reading its code + CHANGELOG validates the plan against a working implementation of the identical spec and surfaces real gotchas.
 
 **Confirmation — the §6 backbone is *demonstrated*, not just designed.** Kronikol4J has:
-- **The §6.6 capture tool, built:** `parity-harness/dotnet-capture/` is a .NET console app (`kronikol-capture.exe`, references `Kronikol.dll` + `Mvc.Testing`) that runs the real .NET Kronikol to emit goldens — exactly the `KronikolParityCapture` the plan specified.
+- **The §6.6 capture tool, built:** `parity/dotnet-capture/` is a .NET console app (`kronikol-capture.exe`, references `Kronikol.dll` + `Mvc.Testing`) that runs the real .NET Kronikol to emit goldens — exactly the `KronikolParityCapture` the plan specified.
 - **A feature-keyed golden corpus, committed:** `…/test/resources/parity/report-{background,blankname,dupnames,filterstoggles,failureclusters,combinedtable,complexparams,customassets,customstylesheet,attachments,cimetadata,blankonfail}.html` + `report-data.{json,xml}` + `ci-summary-*.md` + `diagnostic-report.html` + `iflow-{activity,calltree,flame,segmentdata}` + `html-escape-samples.txt`. This *is* the §6.3 corpus, realized.
 - **Byte-for-byte parity tests** (`GoldenHtmlParityTest`, `ReportDataParityTest`, `HtmlEscaperParityTest`, `PlantUmlParityTest`) **and Playwright rendering the .NET-parity HTML in a real *offline* browser** — proving browser-only rendering (§3.5) end-to-end. **Verdict:** the plan's whole verification approach (capture → golden → byte-parity → offline Playwright) is **proven to work in a sibling port** — risk #3 drops from "designed" to "demonstrated."
 
@@ -846,9 +847,9 @@ No byte-comparison of compressed output, ever (zlib level/strategy differences a
 
 **(d) HTML comparison — two tiers.** (i) **Normalized exact-text diff** (after the canonicalizer) as the primary golden gate — catches whitespace/attribute drift; viable because a faithful body-builder port emits the same `Append` order. (ii) **Structural/DOM** assertions (parse5) for behavior that *shouldn't* depend on formatting (the analog of .NET's AngleSharp tests). If attribute-order ever diverges, a DOM-normalize pass in the canonicalizer is the fallback — but aim for exact-text.
 
-**(e) The parity-diff runs in two directions (CI).** Goldens live in a private **`parity-harness`** package (fixtures + the canonicalizer + the comparison tests):
+**(e) The parity-diff runs in two directions (CI).** Goldens live in the repo's shared top-level **`parity/`** (fixtures + the canonicalizer + the comparison tests), the same fixtures `java/` consumes — one corpus, three consumers:
 - **Node regression:** Node output vs committed goldens — every PR. Fails on a Node port regression.
-- **.NET drift:** re-run capture + canonicalize, diff vs committed goldens — periodic (the locked parity-diff). A diff means *.NET changed*; review and re-bless. The capture script needs the .NET repo (`c:\Code\Kronikol`) or a published fixture artifact; goldens are committed to `parity-harness`.
+- **.NET drift:** re-run capture + canonicalize, diff vs committed goldens — periodic (the locked parity-diff). A diff means *.NET changed*; review and re-bless. **In the monorepo this stops being periodic and becomes per-PR:** `parity/dotnet-capture` references `../../dotnet/src/Kronikol/Kronikol.csproj` directly, so the shared `parity.yml` job re-captures from live .NET on any change to `dotnet/**`, `js/**` or `parity/**` and fails the PR that introduced the drift. No cross-repo path, no published fixture artifact, no manual re-bless cycle — this is the specific problem the polyglot layout exists to solve.
 
 **Net.** The harness is buildable and is the Phase-0 gate. The deep dive's concrete additions beyond the hazard catalogue: a **.NET capture tool with a pre-encode tap**; **one symmetric canonicalizer** (not two); the **monotonic-Clock-as-ordering-key** refinement (§6.1); **reusing the real `plantuml-render.js` decoder natively** for encode parity; a **two-tier HTML** gate; a **two-direction** parity-diff; and a **new hazard** the plan was missing — **trig floats aren't bit-reproducible** (§6.4), fixed by rounding pie-chart geometry.
 
@@ -933,7 +934,7 @@ A Node test hitting a .NET service (or vice-versa) interoperates **only** if the
 pnpm workspace under `packages/`. npm scope `@kronikol/*`. TypeScript strict; tsup dual ESM+CJS.
 
 ```
-KronikolJS/
+js/                            # the js/ subtree of the Kronikol monorepo
 ├── pnpm-workspace.yaml · turbo.json · tsconfig.base.json · .changeset/
 ├── packages/
 │   ├── core/                  @kronikol/core — THE SEAM. Zero runtime deps.
@@ -956,7 +957,8 @@ KronikolJS/
 │   ├── opentelemetry/         @kronikol/opentelemetry — span/trace bridge + flame/activity (§3.8)
 │   ├── redis/ · mongodb/ · kafka/ · ... messaging/cloud adapters (Phase 5+)
 │   └── cli/                   @kronikol/cli — `merge` command (§5.5), bin entry
-└── parity-harness/            golden fixtures + cross-runtime parity tests (private)
+└── internal/dual-package/     Node-internal dual ESM+CJS regression suite (§3.10) — not the cross-runtime corpus
+                               (cross-runtime goldens live in the repo-level ../parity/, shared with java/)
 ```
 
 `@kronikol/core` and `@kronikol/diagram` must have **no dependency** on any tracked technology, OTel, or web framework — that purity is what makes them a stable foundation. Every adapter declares the tracked library (`pg`, `ioredis`, `kafkajs`, `express`, …) as a **`peerDependency` (+ `peerDependenciesMeta.optional`)**, never a hard dep — Node teams reject heavy/version-opinionated trees.
@@ -968,11 +970,11 @@ KronikolJS/
 Each phase follows the repo's TDD rule (red → green → refactor). Phases 0–4 deliver a working, end-to-end, *narrow* product. Phase 5+ is parallelizable breadth.
 
 ### Phase 0 — Foundations, parity harness & blockers
-- **Build skeleton:** pnpm workspace, Turborepo pipeline, tsup dual-build convention, `tsconfig.base`, Node-20 baseline, GitHub Actions CI, changesets + npm publish scaffold, synchronized versioning.
-- **Shared .NET-side prep (§6.2)** *(blocker)* — determinism seam, asset externalization, parity-hardening + client-side splitting. **Reuse from Kronikol4J if already done.**
+- **Build skeleton:** pnpm workspace rooted at `js/`, Turborepo pipeline, tsup dual-build convention, `tsconfig.base`, Node-20 baseline, **`js-ci.yml`** (path-filtered on `js/**` + `parity/**`), changesets + npm publish scaffold, versioning synchronized across the `@kronikol/*` packages.
+- **Shared .NET-side prep (§6.2)** *(blocker)* — determinism seam, asset externalization, parity-hardening + client-side splitting. **Reuse from `java/` if already done.** In the monorepo this lands as an ordinary commit touching `dotnet/` and `parity/` in the same PR as its Node consumer — no cross-repo coordination, and `parity.yml` proves both stacks still agree.
 - **TS determinism seam (§6.1):** injectable `IdGenerator`/`Clock` + normalization pass.
 - **Parity corpus (§6.3):** port BreakfastProvider + the feature-coverage checklist.
-- **Golden-file harness (§6.6):** a `.NET KronikolParityCapture` tool (deterministic mode, pinned TFM + InvariantGlobalization, **pre-encode PlantUML tap**) emits fixtures → the **single TS canonicalizer** (applied to goldens at capture *and* Node output at assert) → comparison in the `parity-harness` package. Encoder verified by **round-trip + cross-decode using the real `plantuml-render.js` decoder run natively** (not byte-pinned). Wire the **two-direction** parity-diff (Node-regression every PR; .NET-drift periodic).
+- **Golden-file harness (§6.6):** a `.NET KronikolParityCapture` tool (deterministic mode, pinned TFM + InvariantGlobalization, **pre-encode PlantUML tap**) emits fixtures → the **single TS canonicalizer** (applied to goldens at capture *and* Node output at assert) → comparison against the repo-shared `parity/fixtures/`. Encoder verified by **round-trip + cross-decode using the real `plantuml-render.js` decoder run natively** (not byte-pinned). Wire the **two-direction** parity-diff — both directions per-PR via `parity.yml`, since the capture tool references `dotnet/` in-tree (§6.6e).
 - **JSON note formatter (§6.4):** reproduce .NET's per-path behavior (key order, null-stripping, 2-space, both escaping modes).
 - **Run-lifecycle / worker-aggregation spike (§5)** *(blocker — the one real remaining unknown):* satisfy the **six acceptance criteria in §5.9** — Vitest `forks` **and** `threads` + Jest workers each emit a complete fragment (atomic), merged deterministically (order-independent); **no cross-file bleed** in a reused worker (§5.5); **concurrent-in-file** attribution via ALS (§5.6); zero-config **self-finalize** (mode 1); **killed-worker** graceful degradation; and the **out-of-process E2E** topology (mode 3) where the app server is the sink and identity flows via headers. (The deep dive established the design — **fragment-per-file**, three finalize modes; the spike is now validation, not discovery.)
 - *(No standalone async-context blocker spike — `AsyncLocalStorage` is native, §3.2. The one validation that matters — **bind-at-call-site** under pooled/parallel DB access — is folded into the §5.9 criteria, not a separate spike.)*
@@ -1041,7 +1043,7 @@ Each is a thin package against the now-stable seam:
 - **Reusable test assets (§4.3):** the **search-engine suite (~143 cases)** runs against the identical `advanced-search.js` natively; the C# AngleSharp structural assertions port as structural checks. No golden HTML exists today — the harness is new Phase-0 infra.
 - **Playwright E2E reuse** (`@playwright/test`) for the interactive UI + browser rendering, against Node-generated HTML.
 - **Worker-aggregation tests:** run the suite under Vitest `pool:'forks'` **and `pool:'threads'`** and Jest multi-worker to prove cross-process *and* cross-thread merge — each realm has its own `globalThis` sink (§3.10), so both pools must emit one fragment per file (§5.4).
-- **Dual-package singleton regression (§3.10):** a post-build `parity-harness` test that loads the **built** `@kronikol/core` via both `import` and `require` in one process and asserts a single shared sink/ALS. Plus **attw + publint** as CI gates on every package's `exports` map. The hazard is silent, so this guard is non-negotiable.
+- **Dual-package singleton regression (§3.10):** a post-build `js/internal/dual-package` test that loads the **built** `@kronikol/core` via both `import` and `require` in one process and asserts a single shared sink/ALS. Plus **attw + publint** as CI gates on every package's `exports` map. The hazard is silent, so this guard is non-negotiable.
 - **Cross-runtime parity CI job:** periodically regenerate fixtures from C# and diff (locked sync strategy).
 - **Runner test:** unit-test under each adapter (Vitest/Jest/node:test/Mocha/Cucumber/Playwright) — the lifecycle seam is the riskiest cross-runner surface.
 
@@ -1051,7 +1053,7 @@ Each is a thin package against the now-stable seam:
 NuGet auto-packaging → **npm** (simpler than Maven Central):
 - **Coordinates:** scope `@kronikol/*`, public access (`npm publish --access public`).
 - **Per package:** dual ESM+CJS build (tsup), `.d.ts`, correct `exports`/`main`/`module`/`types`, `files` whitelist, `sideEffects:false` where safe, `peerDependencies` for tracked libs, `repository`/`license`/`homepage` metadata, LICENSE + README + icon.
-- **Versioning:** **changesets** — synchronized version across all packages (CLAUDE.md "all packages same version"), generated changelog, `changeset version` + `changeset publish` in CI on tag. **Provenance** (`npm publish --provenance`) via GitHub Actions OIDC.
+- **Versioning:** **changesets** — synchronized version across all `@kronikol/*` packages, generated changelog, `changeset version` + `changeset publish` in CI on tag. Note the monorepo scopes CLAUDE.md's "all packages same version" rule to *within a language stack*: `js/` versions independently of `dotnet/` (3.x) and `java/` (0.1.x), and only the `@kronikol/*` set moves in lockstep. **Provenance** (`npm publish --provenance`) via GitHub Actions OIDC.
 - License + branding continuity: carry the existing LICENSE and icon.
 
 ---
@@ -1060,7 +1062,7 @@ NuGet auto-packaging → **npm** (simpler than Maven Central):
 CLAUDE.md mandates wiki + changelog upkeep and synchronized versioning.
 
 ### 12.1 The Kronikol.js wiki (parity with Kronikol.wiki)
-The existing `Kronikol.wiki` is mature (89 pages, ~25,600 lines). Kronikol.js ships an **equivalent wiki** at **`../KronikolJS.wiki`** (the GitHub wiki repo tracks the `KronikolJS` repo name), same information architecture, Node content:
+The existing `Kronikol.wiki` is mature (89 pages, ~25,600 lines). GitHub allows **one wiki per repository**, so with `js/` inside the monorepo there is no `KronikolJS.wiki` to ship: Kronikol.js documentation goes into **`../Kronikol.wiki` under a `Kronikol.js` section**, page names prefixed to avoid collisions with the .NET and Java sets. Same information architecture, Node content:
 - **Home / Demo**, **Getting Started** (Quick Start: Vitest + pnpm, plus a Jest variant; AI-integration prompt; Framework Integration matrix).
 - **Framework Integration guides** — Vitest, Jest, node:test, Mocha, Cucumber-js, Playwright (replacing the xUnit/NUnit/MSTest/TUnit/BDDfy/LightBDD/ReqNRoll set).
 - **Extension guides** — one page per package (HTTP/fetch/axios, Express, Fastify, SQL/pg/mysql2/sqlite, Redis, Kafka, RabbitMQ, MongoDB, AWS/Azure/GCP SDKs, gRPC, OpenTelemetry, proxy…), same template each.
@@ -1078,7 +1080,7 @@ The existing `Kronikol.wiki` is mature (89 pages, ~25,600 lines). Kronikol.js sh
 ### 12.3 Other docs & release automation
 - **`CLAUDE.md`** capturing Node conventions (TDD, Playwright rules carried over, determinism/golden-file workflow, the worker-aggregation gotcha, wiki-per-package rule).
 - **README + Changelog** maintained per release (changesets-generated).
-- **Release automation:** changesets single-source-of-truth version applied to all packages; a release workflow that versions, updates changelog, tags `v{version}`, publishes to npm with provenance, reminds to update the wiki.
+- **Release automation:** changesets single-source-of-truth version applied to all packages; a release workflow triggered on **`js-v{version}`** tags (the repo's tag namespace is split per stack — `dotnet-v*`, `java-v*`, `js-v*`) that versions, updates changelog, publishes to npm with provenance, and reminds to update the wiki.
 
 ---
 
@@ -1110,7 +1112,7 @@ Phases 0–4 are the critical path to a usable product. **Overall this port is *
 9. **Async context (§3.2)** — **re-rated from Java's top risk to near-zero**, and the deep dive confirmed it: `AsyncLocalStorage` is native, auto-flowing, auto-unwinding. The one real rule it surfaced is **bind-at-call-site** (read identity when the dependency method is invoked, tag the in-flight op, never re-resolve in a completion callback) — violating it silently mis-attributes under connection pooling + parallel tests. Consumers/pub-sub/change-streams are headers+correlation *by design*, not a regression. Residual: don't cross worker/child boundaries with ALS, prefer `run` over `enterWith`.
 10. **Secret leakage / redaction (§3.13)** — the deep dive found .NET's redaction is **presentational only** (render-time), so secrets reach the JSON/YAML/XML **and the on-disk worker fragment**, with **nothing redacted by default**. Mitigation is a clear design (capture-time redactor at Seam A + opt-in secure preset + DB connection-string/param redaction), but it must be **built into core from Phase 1** — retrofitting redaction after adapters exist re-introduces the leak. Security-sensitive; the achievable guarantee ("no secret in any artifact") holds only in redact-at-capture mode.
 
-**Locked decisions:** Kronikol.js / `@kronikol/*` / pnpm+Turborepo+changesets / dual ESM+CJS / Node 20 floor / Vitest+Jest+node:test+Mocha+Cucumber+Playwright / Express+Fastify / **browser-only rendering** / functional parity / periodic parity-diff.
+**Locked decisions:** Kronikol.js / `@kronikol/*` / **`js/` subtree of the Kronikol monorepo** / pnpm+Turborepo+changesets / dual ESM+CJS / Node 20 floor / Vitest+Jest+node:test+Mocha+Cucumber+Playwright / Express+Fastify / **browser-only rendering** / functional parity / periodic parity-diff.
 
 ---
 
@@ -1119,19 +1121,19 @@ Phases 0–4 are the critical path to a usable product. **Overall this port is *
 - **Node & module compatibility.** Build/test on Node **20 / 22 / current**. Ship **dual ESM+CJS** with a correctly-ordered `exports` map (`types` → `import` → `require` → `default`, plus `main`/`module`). **The dual-package hazard is a first-class design constraint (§3.10), not a caveat:** all `@kronikol/core` ambient state lives in a `globalThis` major-versioned symbol registry so ESM and CJS copies share one sink/ALS; **never** rely on `instanceof` across package boundaries (use structural typing); inline embedded assets as build-time strings (no runtime `__dirname`/`import.meta.url` divergence); no top-level `await` in core. CI gates every package with **`@arethetypeswrong/cli` + `publint`**, and a post-build dual-load test guards the registry.
 - **Same-process parallelism is first-class.** Vitest/Jest can run tests concurrently on the same worker; `AsyncLocalStorage` per-test scoping (§3.2) keeps identity correct under in-process concurrency — its own test suite + wiki page.
 - **TypeScript types are the public contract.** Ship `.d.ts` for every package; treat type-level breaking changes as semver-major.
-- **Versioning relationship to .NET.** Independent SemVer, starting pre-1.0, reaching 1.0 when core + first adapters (Phases 0–4) are stable; does **not** lockstep .NET 3.x. The wiki documents the feature-parity mapping per release. (Same stance as Kronikol4J.)
-- **CI (GitHub Actions).** Matrix across Node versions; Playwright E2E against Node-generated HTML; the cross-runtime parity-diff job (§6, §10); npm publish with provenance on tag; wiki link-check. Minimal in Phase 0, grown per phase.
+- **Versioning relationship to .NET.** Independent SemVer, starting pre-1.0, reaching 1.0 when core + first adapters (Phases 0–4) are stable; does **not** lockstep .NET 3.x — sharing a repository does not mean sharing a version, and the split tag namespace (`dotnet-v*` / `java-v*` / `js-v*`) is what keeps the three release trains from firing each other's publish jobs. The wiki documents the feature-parity mapping per release. (Same stance as Kronikol4J.)
+- **CI (GitHub Actions).** `js-ci.yml`, path-filtered on `js/**` + `parity/**`: matrix across Node versions; Playwright E2E against Node-generated HTML; npm publish with provenance on `js-v*`; wiki link-check. The cross-runtime parity-diff (§6, §10) is **not** a Node-local job — it lives in the repo-shared `parity.yml`, which runs both toolchains on one runner and is unfiltered so it gates every stack. Minimal in Phase 0, grown per phase.
 - **Security / redaction parity (deep dive §3.13).** The deep dive corrected this: .NET's exclusion/processors are **presentational** (diagram-render time), so excluded headers still leak into JSON/YAML/XML **and the worker fragment**, and nothing is redacted by default. The Node port **replicates the presentational layer for diagram parity** *and* adds **capture-time redaction at Seam A** (the only complete-coverage point) + an opt-in secure preset + DB connection-string/param redaction. Security tests assert "no secret in any artifact (incl. the fragment)" **in redact-at-capture mode** — the achievable claim; parity mode matches .NET (secret persists in data, asserted separately).
 
 ---
 
 ## Appendix A — Node-specific source-map deltas
 
-The **full .NET source map is the Java plan's Appendix A** (`JAVA_PORT_PLAN.md`) — use it verbatim; line numbers are at v3.0.40–43 and may drift. Node-specific notes on top of it:
+The **full .NET source map is the Java plan's Appendix A** (`docs/JAVA_PORT_PLAN.md`) — use it verbatim; line numbers are at v3.0.40–43 and may drift. Node-specific notes on top of it:
 - **Browser-only excludes:** `src/Kronikol/PlantUml/NodeJsPlantUmlRenderer.cs` (server-side SVG via bundled Node JS — **not ported**), `Kronikol.PlantUml.Ikvm`, the IKVM/server-render paths, `PlantUmlRendering.cs`/`DefaultDiagramsFetcher.cs` rendering strategy.
 - **Frontend runs natively (no engine):** `src/Kronikol/Reports/advanced-search.js` (286) + `src/Kronikol/PlantUml/plantuml-render.js` (363) — embed and run as-is; the **search-engine suite** (`tests/Kronikol.Tests.SearchEngine/`, ~143 cases) runs directly.
 - **The mergeable model to port:** `src/Kronikol/Reports/Merge/MergeableReportMerger.cs` + `MergeableReportReader.cs` + `MergeableReportRenderer` — and Kronikol4J's already-ported `MergeableReportMerger.java` / `MergeableReportRenderer.java` / `kronikol4j-cli` as a second reference implementation.
-- **Kronikol4J as a second reference:** `C:\Code\Kronikol4J` — its `kronikol4j-core` (context/correlation already realized), `kronikol4j-diagram` (`PlantUmlTextEncoder.java`, `NoteFormatter.java`, `Json.java`), `kronikol4j-report` (`HtmlEscaper.java` — mirror for the WebUtility shim), `kronikol4j-runtime`, and the adapter packages show the decomposition already working in a second language.
+- **Kronikol4J as a second reference:** `java/` — its `kronikol4j-core` (context/correlation already realized), `kronikol4j-diagram` (`PlantUmlTextEncoder.java`, `NoteFormatter.java`, `Json.java`), `kronikol4j-report` (`HtmlEscaper.java` — mirror for the WebUtility shim), `kronikol4j-runtime`, and the adapter packages show the decomposition already working in a second language.
 
 ## Appendix B — Open questions & deferred decisions
 - **DB tracking strategy** — **decided (§3.12):** driver-level public-API wrap as the universal primary (covers all real-driver ORMs), Prisma `$extends` as the sole exception, ORM hooks as replace-not-stack opt-ins, OTel DB spans as the shallow long-tail catch-all. Open sub-question: how deep to capture result rows by default (rowcount-only vs bounded sample) given size/security trade-offs — settle with the corpus (§6.3).
@@ -1141,7 +1143,7 @@ The **full .NET source map is the Java plan's Appendix A** (`JAVA_PORT_PLAN.md`)
 - **Bundler coverage for Tier 2** — which transforms to support (Vite, SWC, Babel, esbuild, ts-patch) — Phase 5.
 - **Cucumber phase mapping** — exact Given→Setup / When·Then→Action wiring (Phase 5).
 - **Monorepo aggregate report** — per-project report is default; whether to offer a cross-project aggregate by default or opt-in.
-- **`.NET prep` upstreaming** — shared with Kronikol4J; whether the §6.2 changes merge into main Kronikol or a parity branch (affects the periodic parity-diff workflow).
+- ~~**`.NET prep` upstreaming** — shared with Kronikol4J; whether the §6.2 changes merge into main Kronikol or a parity branch.~~ **Resolved by the monorepo:** `dotnet/`, `java/`, `js/` and `parity/` are one repo, so the §6.2 prep is a normal commit in the same PR as its consumer and the parity-diff is per-PR rather than periodic. No branch strategy needed.
 
 ---
 
@@ -1167,7 +1169,7 @@ These are **factual confirmations, not design decisions** — the web tools erro
 | 8 | Prisma **`driverAdapters`** GA | ⏳ `@prisma/client` **7.8.0** (driver adapters GA since Prisma 6) — confirm `$extends` surface | §3.12 |
 | 15 | Fastify `enterWith`/`fastify-plugin` + `supertest` socket | ⏳ fastify **5.8.5** / fastify-plugin **6.0.0** / supertest **7.2.2** installed; `supertest` opens a real ephemeral socket (→ headers path) — confirm at impl | §7 |
 
-**Confirm by reading `c:\Code\Kronikol` (.NET source) / `C:\Code\Kronikol4J`:**
+**Confirm by reading `dotnet/src/Kronikol` (.NET source) / `java/`:**
 | # | Fact to confirm | Where it matters |
 |---|---|---|
 | 11 | Whether the **§6.2 .NET prep** (determinism seam, asset externalization, parity-hardening) is **already done in Kronikol4J's branch/upstream** — if so, reuse rather than redo | §0, §6.2 |

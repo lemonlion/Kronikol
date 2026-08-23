@@ -33,7 +33,7 @@ Kronikol/
 │   ├── playwright/  templates/  jbang-catalog.json
 │   └── CHANGELOG.md             # Java release history
 │
-├── js/                          # KronikolJS lands here later, same shape
+├── js/                          # Kronikol.js lands here later, same shape (docs/NODE_PORT_PLAN.md)
 │
 ├── parity/                      # shared: belongs to no single language
 │   ├── dotnet-capture/          # was java/parity-harness/dotnet-capture
@@ -251,9 +251,10 @@ independently reversible (un-archiving is a click).
 
 ## 9. Open decisions
 
-1. **`js/` now or later?** [NODE_PORT_PLAN.md](docs/NODE_PORT_PLAN.md) currently locks KronikolJS to a
-   separate sibling repo at `C:\Code\KronikolJS`. If the monorepo is the destination, amend that decision
-   *before* work starts — merging a third repo later costs the same as this migration again.
+1. ~~**`js/` now or later?**~~ **Resolved.** [NODE_PORT_PLAN.md](NODE_PORT_PLAN.md) has been amended: its
+   locked decisions now place Kronikol.js in the `js/` subtree of this monorepo rather than a separate
+   `KronikolJS` repo, with goldens from the shared `parity/`, `js-v*` release tags, a path-filtered
+   `js-ci.yml`, and its wiki as a section of `Kronikol.wiki`. No third repo will need merging later.
 2. **Root `CLAUDE.md` structure** — one delegating file plus per-language files, versus one large file with
    language sections. Recommend delegation; the TDD/versioning rules genuinely differ per stack.
 3. **`.editorconfig`** — currently .NET-flavoured at the root. Keep shared at the root, or split per subtree.
