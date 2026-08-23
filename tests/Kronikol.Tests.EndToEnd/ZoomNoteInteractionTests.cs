@@ -48,22 +48,83 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
         """, null, new() { Timeout = 60000, PollingInterval = 200 });
     }
 
+    /// <summary>
+    /// True once the diagram has re-rendered <em>and</em> the zoom state has been put back on it.
+    /// <para>
+    /// The second half matters. <c>setNoteState</c> clears its render flags on the line straight after
+    /// <c>container.innerHTML = newSvg</c> — which has just destroyed the zoom controls and the inline
+    /// <c>maxWidth</c>/<c>overflow</c> styles — and re-applies the zoom only from a
+    /// <c>requestAnimationFrame</c> callback scheduled two lines later. Waiting on the flags alone
+    /// therefore returns <em>inside</em> that one-frame window, where the container has no zoom class,
+    /// the SVG's <c>maxWidth</c> is still <c>""</c>, and the slider is the one the previous layout built.
+    /// Every assertion in this file reads exactly that state, which is why two of them failed in CI
+    /// while passing locally.
+    /// </para>
+    /// <para>
+    /// <c>restoreZoomState</c> runs in the same synchronous block that prepends the rebuilt controls, so
+    /// their presence is a precise marker that the zoom is back.
+    /// </para>
+    /// </summary>
+    private const string RenderSettled = """
+        () => {
+            var c = document.querySelector('[data-diagram-type="plantuml"]');
+            if (!c) return false;
+            if (!c.querySelector('svg')) return false;
+            if (c._noteRendering || window._plantumlRendering) return false;
+            return !!c.querySelector('.diagram-zoom-controls');
+        }
+        """;
+
     private async Task WaitForReRender(int timeoutMs = 30000)
     {
-        await Page.WaitForFunctionAsync("""
-            () => {
-                var c = document.querySelector('[data-diagram-type="plantuml"]');
-                if (!c) return false;
-                var svg = c.querySelector('svg');
-                if (!svg) return false;
-                return !(c._noteRendering || window._plantumlRendering);
-            }
-        """, null, new() { Timeout = timeoutMs, PollingInterval = 200 });
+        var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+        while (true)
+        {
+            var remaining = (float)Math.Max(1000, (deadline - DateTime.UtcNow).TotalMilliseconds);
+            await Page.WaitForFunctionAsync(RenderSettled, null, new() { Timeout = remaining, PollingInterval = 200 });
+
+            // Let any already-queued requestAnimationFrame callback run — then confirm it did not kick
+            // off (or land in the middle of) another render. Without the re-check this could still
+            // return against the *previous* render when the click's own work has not started yet.
+            await Page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))");
+            if (await Page.EvaluateAsync<bool>($"({RenderSettled})()"))
+                return;
+
+            if (DateTime.UtcNow >= deadline)
+                throw new TimeoutException($"Diagram did not settle within {timeoutMs} ms.");
+        }
     }
 
     private async Task ClickRadioButton(string state)
     {
         await Page.Locator($".diagram-toggle .details-radio-btn[data-state='{state}']").First.ClickAsync();
+    }
+
+    /// <summary>
+    /// Drags the zoom slider to its minimum and waits for the zoom to come off.
+    /// <para>
+    /// The slider is destroyed and rebuilt by every re-render, so dispatching at it without first
+    /// confirming it is there reads as a null dereference rather than as a failed expectation — and the
+    /// zoom class is cleared by the handler, which is worth waiting for rather than sampling.
+    /// </para>
+    /// </summary>
+    private async Task ZoomOutViaSlider()
+    {
+        await Page.WaitForFunctionAsync(
+            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider') !== null",
+            null, new() { Timeout = 10000, PollingInterval = 200 });
+
+        await Page.EvaluateAsync("""
+            () => {
+                var slider = document.querySelector('[data-diagram-type="plantuml"] .diagram-zoom-slider');
+                slider.value = slider.min;
+                slider.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        """);
+
+        await Page.WaitForFunctionAsync(
+            "() => !document.querySelector('[data-diagram-type=\"plantuml\"]').classList.contains('diagram-natural-size')",
+            null, new() { Timeout = 10000, PollingInterval = 200 });
     }
 
     private async Task<bool> IsZoomedIn() =>
@@ -159,13 +220,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
         await WaitForReRender();
 
         // Toggle zoom OFF via slider
-        await Page.EvaluateAsync("""
-            () => {
-                var slider = document.querySelector('[data-diagram-type="plantuml"] .diagram-zoom-slider');
-                slider.value = slider.min;
-                slider.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        """);
+        await ZoomOutViaSlider();
         Assert.False(await IsZoomedIn(), "Should have zoomed out");
         Assert.Equal("100%", await GetSvgMaxWidth());
         Assert.Equal("", await GetContainerOverflow());
@@ -184,13 +239,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
         await WaitForReRender();
 
         // Zoom out via slider
-        await Page.EvaluateAsync("""
-            () => {
-                var slider = document.querySelector('[data-diagram-type="plantuml"] .diagram-zoom-slider');
-                slider.value = slider.min;
-                slider.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        """);
+        await ZoomOutViaSlider();
         Assert.False(await IsZoomedIn());
 
         // Zoom in again via slider
