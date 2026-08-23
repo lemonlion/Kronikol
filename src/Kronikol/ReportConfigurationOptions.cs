@@ -240,7 +240,26 @@ public record ReportConfigurationOptions
     public bool DiagnosticMode { get; set; }
 
     /// <summary>When <c>true</c>, background steps are rendered inline with the scenario steps instead of in a separate collapsible section.</summary>
+    [Obsolete("Background steps are inlined by default. Set SeparateBackgroundSteps = true for the old separate section.")]
     public bool InlineBackgroundSteps { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, a scenario's background steps are rendered in their own collapsible
+    /// <c>Background Steps</c> section above the scenario's own <c>Steps</c>. Default: <c>false</c> —
+    /// background steps are listed inline, first, in the one <c>Steps</c> list, matching the order the
+    /// data files and step paths already use (<c>b0</c>, <c>b1</c>, then <c>0</c>, <c>1</c>).
+    /// Applies to both HTML reports; the data outputs keep the two collections separate either way.
+    /// </summary>
+    public bool SeparateBackgroundSteps { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, a step repeating the primary keyword already in force is displayed as
+    /// <c>And</c> — so a background <c>Given</c> followed by a scenario <c>Given</c> reads
+    /// <c>Given / And</c> rather than <c>Given / Given</c>. Default: <c>true</c>. Purely a rendering
+    /// choice: the keyword the producer recorded is what every data output emits. Localised Gherkin
+    /// keywords are not recognised and pass through unchanged.
+    /// </summary>
+    public bool CollapseRepeatedStepKeywords { get; set; } = true;
 
     /// <summary>When <c>true</c>, parameterized tests are grouped into a single collapsible table. Default: <c>true</c>.</summary>
     public bool GroupParameterizedTests { get; set; } = true;

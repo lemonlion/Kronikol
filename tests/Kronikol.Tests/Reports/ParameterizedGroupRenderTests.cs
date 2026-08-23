@@ -1241,4 +1241,130 @@ public class ParameterizedGroupRenderTests
         Assert.Contains("querySelectorAll('details')", content);
         Assert.Contains(".open", content); // reads open property
     }
+    // ── Background steps inside a parameterized group's detail panels ────────────────────────────
+
+    private static Scenario WithBackground(string id, string x, ScenarioStep[] background, ScenarioStep[]? steps = null)
+    {
+        var scenario = MakeScenario(id, $"Test(x: {x})", outlineId: "Test",
+            exampleValues: new() { ["x"] = x }, steps: steps);
+        scenario.BackgroundSteps = background;
+        return scenario;
+    }
+
+    private string GenerateGroupReport(Feature[] features, bool separateBackgroundSteps = false,
+        bool collapseRepeatedStepKeywords = true, bool showStepNumbers = false)
+    {
+        var diagrams = features.SelectMany(f => f.Scenarios).Select(s => new DefaultDiagramsFetcher.DiagramAsCode(s.Id, "", "")).ToArray();
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, $"ParamGroupBg_{Guid.NewGuid():N}.html", "Test", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            showStepNumbers: showStepNumbers,
+            separateBackgroundSteps: separateBackgroundSteps,
+            collapseRepeatedStepKeywords: collapseRepeatedStepKeywords);
+        return File.ReadAllText(path);
+    }
+
+    [Fact]
+    public void Group_detail_panels_combine_background_steps_with_regular_steps_by_default()
+    {
+        var background = new ScenarioStep[] { new() { Keyword = "Given", Text = "the system is running" } };
+        var scenarios = new[]
+        {
+            WithBackground("s1", "1", background, [new ScenarioStep { Keyword = "When", Text = "one happens" }]),
+            WithBackground("s2", "2", background, [new ScenarioStep { Keyword = "When", Text = "two happens" }])
+        };
+        var content = GenerateGroupReport(MakeFeature(scenarios));
+
+        Assert.DoesNotContain("<details class=\"scenario-background\">", content);
+        Assert.Equal(2, ReportMarkup.ElementsWithClass(content, "step-background").Count);
+        Assert.Contains("the system is running", content);
+    }
+
+    [Fact]
+    public void Group_detail_panels_separate_background_steps_when_option_enabled()
+    {
+        var background = new ScenarioStep[] { new() { Keyword = "Given", Text = "the system is running" } };
+        var scenarios = new[]
+        {
+            WithBackground("s1", "1", background, [new ScenarioStep { Keyword = "When", Text = "one happens" }]),
+            WithBackground("s2", "2", background, [new ScenarioStep { Keyword = "When", Text = "two happens" }])
+        };
+        var content = GenerateGroupReport(MakeFeature(scenarios), separateBackgroundSteps: true);
+
+        Assert.Equal(2, Regex.Matches(content, "<details class=\"scenario-background\">").Count);
+        Assert.Contains("<summary class=\"h4\">Background Steps</summary>", content);
+    }
+
+    [Fact]
+    public void Group_detail_panels_collapse_a_repeated_given_across_the_seam()
+    {
+        var background = new ScenarioStep[] { new() { Keyword = "Given", Text = "the system is running" } };
+        var scenarios = new[]
+        {
+            WithBackground("s1", "1", background, [new ScenarioStep { Keyword = "Given", Text = "a request for 1" }]),
+            WithBackground("s2", "2", background, [new ScenarioStep { Keyword = "Given", Text = "a request for 2" }])
+        };
+        var content = GenerateGroupReport(MakeFeature(scenarios));
+
+        var keywords = ReportMarkup.InnerTextsOfClass(content, "step-keyword");
+        Assert.Equal(["Given", "And", "Given", "And"], keywords);
+    }
+
+    [Fact]
+    public void Group_detail_panels_number_combined_steps_continuously()
+    {
+        var background = new ScenarioStep[]
+        {
+            new() { Keyword = "Given", Text = "bg one" },
+            new() { Keyword = "And", Text = "bg two" }
+        };
+        var scenarios = new[]
+        {
+            WithBackground("s1", "1", background, [new ScenarioStep { Keyword = "When", Text = "one happens" }]),
+            WithBackground("s2", "2", background, [new ScenarioStep { Keyword = "When", Text = "two happens" }])
+        };
+        var content = GenerateGroupReport(MakeFeature(scenarios), showStepNumbers: true);
+
+        var numbers = ReportMarkup.InnerTextsOfClass(content, "step-number");
+        Assert.Equal(["1.", "2.", "3.", "1.", "2.", "3."], numbers);
+    }
+
+    [Fact]
+    public void Group_renders_detail_panels_for_scenarios_whose_steps_are_all_background()
+    {
+        // BackgroundStepsDetector deliberately allows the whole step list to become background — a
+        // scenario outline whose rows share identical step prose hits exactly this. The detail panel
+        // used to be skipped entirely, so the steps vanished from the report.
+        var background = new ScenarioStep[]
+        {
+            new() { Keyword = "Given", Text = "the system is running", Status = ExecutionResult.Passed },
+            new() { Keyword = "And", Text = "the database is available", Status = ExecutionResult.Passed }
+        };
+        var scenarios = new[]
+        {
+            WithBackground("s1", "1", background, []),
+            WithBackground("s2", "2", background, [])
+        };
+        var content = GenerateGroupReport(MakeFeature(scenarios));
+
+        Assert.Contains("param-detail-panel", content);
+        Assert.Contains("the database is available", content);
+    }
+
+    [Fact]
+    public void Group_row_search_index_covers_text_that_only_appears_in_a_background_step()
+    {
+        var background = new ScenarioStep[] { new() { Keyword = "Given", Text = "the zephyr service is armed" } };
+        var scenarios = new[]
+        {
+            WithBackground("s1", "1", background, [new ScenarioStep { Keyword = "When", Text = "one happens" }]),
+            WithBackground("s2", "2", background, [new ScenarioStep { Keyword = "When", Text = "two happens" }])
+        };
+        var content = GenerateGroupReport(MakeFeature(scenarios));
+
+        var rowSearch = ReportMarkup.AttributeValue(content, "tr", "data-row-search");
+        Assert.Contains("zephyr", rowSearch);
+    }
 }

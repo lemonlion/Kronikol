@@ -275,7 +275,15 @@ public sealed record InteractionRecord
         var label = string.IsNullOrWhiteSpace(keyword)
             ? Reports.StepText.CapitaliseIfEnabled(text) ?? "step"
             : $"{keyword} {text}";
-        return $"hnote across <<stepDelimiter>> #black:<color:white>{EscapeNoteLine(label)}";
+
+        // A step's doc string arrives here as one physical line (EscapeNoteLine folds its newlines into
+        // `\n` escapes), and a coloured `hnote across` past ~1458 characters does not draw a syntax error
+        // — it overflows the engine's own JS stack and the scenario loses every diagram it had. Losing the
+        // tail of one step label is the cheaper outcome.
+        const string prefix = "hnote across <<stepDelimiter>> #black:<color:white>";
+        var escaped = PlantUml.PlantUmlStatementLimits.TruncateLabel(
+            EscapeNoteLine(label), PlantUml.PlantUmlStatementLimits.MaxColouredNoteBarChars - prefix.Length);
+        return prefix + escaped;
     }
 
     /// <summary>The assertion note Kronikol's assertion tracking draws: green ✓ / red ✗ <c>hnote across &lt;&lt;assertionNote&gt;&gt;</c>.</summary>

@@ -197,6 +197,16 @@ public static partial class ComponentDiagramGenerator
                 label = $"{methodsPart} - {rel.CallCount} calls across {rel.TestCount} tests";
             }
 
+            // An edge label grows with the method list and with whatever a RelationshipLabelFormatter
+            // returns. Component diagrams use a different parser from sequence diagrams and its limits are
+            // unmeasured, so this is a defensive ceiling at the sequence-diagram message limit rather than
+            // a measured one: real labels are two orders of magnitude below it, and an over-long statement
+            // costs the whole diagram, not the one edge. The allowance covers both emitted forms —
+            // `caller -[#colour]-> service : "…"` and C4's `Rel(caller, service, "…", $tags="#colour")`.
+            var edgeOverhead = callerAlias.Length + serviceAlias.Length + 40;
+            label = PlantUml.PlantUmlStatementLimits.TruncateLabel(
+                label, PlantUml.PlantUmlStatementLimits.MaxMessageStatementChars - edgeOverhead);
+
             // Determine arrow style
             var color = "";
             if (options.ArrowColorMode == ArrowColorMode.DependencyType)

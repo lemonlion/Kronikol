@@ -239,4 +239,141 @@ public class NodeJsPlantUmlRendererTests
             Headers: [], ServiceName: "BigQuery", CallerName: "Api",
             Type: type, TraceId: Guid.NewGuid(), RequestResponseId: CreoleRequestResponseId,
             TrackingIgnore: false, StatusCode: HttpStatusCode.OK);
+
+    // ── Statement-length boundaries, measured against the real engine ────────────────────────────
+    //
+    // These pin the constants in PlantUmlStatementLimits. Neither failure mode announces itself as a
+    // length problem: an over-long message or block opener matches no rule, so the parser abandons the
+    // diagram and the engine draws "Syntax Error?" over the whole fragment (and where the fallback
+    // *class* parse happens to succeed, it silently draws the wrong diagram with no banner at all); an
+    // over-long coloured note bar overflows the engine's own JS stack and yields no SVG. Without these
+    // pins an engine bump that moved a limit would surface as a mystery report, not a red test.
+
+    private static string RenderBody(string body)
+    {
+        var result = NodeJsPlantUmlRenderer.RenderMany([$"@startuml\n{body}\n@enduml"])[0];
+        return result.Svg ?? "";
+    }
+
+    /// <summary>The engine drew a real sequence message — the silent class-diagram fallback does not.</summary>
+    private static bool DrewMessage(string body)
+    {
+        var svg = RenderBody(body);
+        return svg.Length > 0
+               && !svg.Contains("Syntax Error", StringComparison.Ordinal)
+               && svg.Contains("class=\"message\"", StringComparison.Ordinal);
+    }
+
+    private static bool Renders(string body)
+    {
+        var svg = RenderBody(body);
+        return svg.Length > 0 && !svg.Contains("Syntax Error", StringComparison.Ordinal);
+    }
+
+    /// <summary>A statement of exactly <paramref name="total"/> characters, padding the label.</summary>
+    private static string StatementOf(string prefix, int total) => prefix + new string('x', total - prefix.Length);
+
+    [Theory]
+    [Trait("Category", "Integration")]
+    [InlineData("a -> b: ")]
+    [InlineData("a --> b: ")]
+    [InlineData("a -[#F39C12]> b: ")]
+    [InlineData("a -[#F39C12]-> b: ")]
+    [InlineData("aaaaaaaaaaaaaaaaaaaa -> b: ")]
+    public void The_message_limit_is_two_thousand_characters_of_whole_statement(string prefix)
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // The cap is on the statement, not the label: a 27-character prefix leaves a 1973-character
+        // label, not a longer statement. That is why the emitter subtracts its own prefix.
+        var max = PlantUmlStatementLimits.MaxMessageStatementChars;
+        Assert.True(DrewMessage(StatementOf(prefix, max)), $"{max} characters should parse");
+        Assert.False(DrewMessage(StatementOf(prefix, max + 1)), $"{max + 1} characters should not");
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void Leading_and_trailing_whitespace_does_not_count_toward_the_message_limit()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        var statement = StatementOf("a -> b: ", PlantUmlStatementLimits.MaxMessageStatementChars);
+        Assert.True(DrewMessage("    " + statement + new string(' ', 500)));
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_block_opener_caps_lower_than_a_message_statement()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // Measured around 1476 (loop) to 1484 (opt). The constant sits under that range rather than on
+        // it, so the pins are the two facts that matter and survive a small engine drift: the constant
+        // parses, and a block label at the *message* limit does not — the block limit really is lower.
+        var safe = StatementOf("loop ", PlantUmlStatementLimits.MaxBlockLabelChars);
+        var atMessageLimit = StatementOf("loop ", PlantUmlStatementLimits.MaxMessageStatementChars);
+
+        Assert.True(Renders($"a -> b: x\n{safe}\na -> b: y\nend"), $"{PlantUmlStatementLimits.MaxBlockLabelChars} should parse");
+        Assert.False(Renders($"a -> b: x\n{atMessageLimit}\na -> b: y\nend"),
+            $"{PlantUmlStatementLimits.MaxMessageStatementChars} should not — a block opener caps lower than a message");
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_coloured_note_bar_crashes_the_engine_rather_than_reporting_a_syntax_error()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // The step-delimiter bar's own form. Measured cap 1458 — past it the engine throws
+        // `RangeError: Maximum call stack size exceeded` and returns no SVG at all, so the scenario loses
+        // every diagram it had rather than one statement.
+        var safe = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml("Given", new string('s', 1200));
+        Assert.True(safe.Length <= PlantUmlStatementLimits.MaxColouredNoteBarChars);
+
+        Assert.True(Renders($"a -> b: x\n{safe}"), "the capped bar renders");
+        Assert.Equal("", RenderBody("a -> b: x\nhnote across <<stepDelimiter>> #black:<color:white>" + new string('s', 3000)));
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void An_uncoloured_note_bar_and_a_note_body_run_far_past_the_message_limit()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // Measured ~16 400 and ~16 371 — which is why the backstop leaves them alone below its own
+        // 16 000 ceiling. A Gherkin step with a doc string is legitimately long.
+        var long6000 = new string('n', 6000);
+        Assert.True(Renders($"a -> b: x\nhnote across #black:{long6000}"), "an uncoloured bar has no low cap");
+        Assert.True(Renders($"a -> b: x\nnote left\n{long6000}\nend note"), "note bodies have no low cap");
+        Assert.True(Renders($"a -> b: x\nnote over a : {long6000}"), "a one-line note has no low cap");
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_five_thousand_character_url_trace_renders_without_a_syntax_error()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // The regression: a Redis DELETE of 41 cache keys, ~5,300 characters of path, produced one
+        // 5,410-character arrow statement and took its whole diagram fragment down with it.
+        var log = new RequestResponseLog(
+            TestName: "Long URL", TestId: "long-url-1",
+            Method: HttpMethod.Delete, Content: null,
+            Uri: new Uri("http://example.com/data-insights-api/" + new string('k', 5000)),
+            Headers: [], ServiceName: "redis", CallerName: "dataInsights",
+            Type: RequestResponseType.Request, TraceId: Guid.NewGuid(), RequestResponseId: Guid.NewGuid(),
+            TrackingIgnore: false);
+
+        var plantUml = PlantUmlCreator.GetPlantUmlImageTagsPerTestId([log]).Single().PlantUmls.First().PlainText;
+        var svg = System.Text.Encoding.UTF8.GetString(NodeJsPlantUmlRenderer.Render(plantUml, PlantUmlImageFormat.Svg));
+
+        // `!pragma teoz true` — which every Kronikol diagram carries — renders without CSS classes, so the
+        // signal here is the absence of the error banner plus a drawn diagram of a plausible size.
+        Assert.DoesNotContain("Syntax Error", svg);
+        Assert.Contains("<svg", svg);
+        Assert.True(svg.Length > 10_000, $"the diagram drew only {svg.Length} bytes — it probably failed");
+        // The full path is still in the report — the note beside the arrow carries it, chunked into
+        // 80-character pieces so wrapWidth can break it, each piece drawn as its own <text>.
+        Assert.Contains(new string('k', 80), svg);
+    }
 }

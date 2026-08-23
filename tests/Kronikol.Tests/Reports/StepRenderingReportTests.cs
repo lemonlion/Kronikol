@@ -23,13 +23,36 @@ public class StepRenderingReportTests
         return File.ReadAllText(path);
     }
 
-    private static string GenerateReportWithInlineBackground(Feature[] features, string fileName)
+    private static string GenerateReportSeparateBackground(Feature[] features, string fileName)
     {
         var path = ReportGenerator.GenerateHtmlReport(
             [], features,
             DateTime.UtcNow, DateTime.UtcNow,
             null, fileName, "Test", true,
-            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            separateBackgroundSteps: true);
+        return File.ReadAllText(path);
+    }
+
+    private static string GenerateReportNumbered(Feature[] features, string fileName, bool separateBackgroundSteps = false)
+    {
+        var path = ReportGenerator.GenerateHtmlReport(
+            [], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, fileName, "Test", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            showStepNumbers: true, separateBackgroundSteps: separateBackgroundSteps);
+        return File.ReadAllText(path);
+    }
+
+    private static string GenerateReportWithoutKeywordCollapsing(Feature[] features, string fileName)
+    {
+        var path = ReportGenerator.GenerateHtmlReport(
+            [], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, fileName, "Test", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            collapseRepeatedStepKeywords: false);
         return File.ReadAllText(path);
     }
 
@@ -819,51 +842,105 @@ public class StepRenderingReportTests
         Assert.Contains("output.txt", content);
     }
 
-    [Fact]
-    public void Report_renders_background_steps_in_separate_section_by_default()
-    {
-        var scenario = new Scenario
-        {
-            Id = "s1", DisplayName = "Test",
-            BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the system is running" }],
-            Steps = [new ScenarioStep { Keyword = "When", Text = "something happens" }]
-        };
-        var content = GenerateReport(MakeFeatures(scenario), "BgSeparate.html");
-        Assert.Contains("<details class=\"scenario-background\">", content);
-        Assert.Contains("<summary class=\"h4\">Background Steps</summary>", content);
-    }
 
     [Fact]
-    public void Report_inlines_background_steps_when_option_enabled()
+    public void Report_combines_background_steps_with_regular_steps_by_default()
     {
-        // inlineBackgroundSteps option not yet implemented — test documents intended behavior
         var scenario = new Scenario
         {
             Id = "s1", DisplayName = "Test",
             BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the system is running" }],
             Steps = [new ScenarioStep { Keyword = "When", Text = "something happens" }]
         };
-        var content = GenerateReportWithInlineBackground(MakeFeatures(scenario), "BgInline.html");
+        var content = GenerateReport(MakeFeatures(scenario), "BgCombined.html");
+        Assert.DoesNotContain("<details class=\"scenario-background\">", content);
+        Assert.DoesNotContain("Background Steps</summary>", content);
+        var steps = ReportMarkup.ElementsWithClass(content, "step");
+        Assert.Equal(2, steps.Count);
+        Assert.Contains("step-background", steps[0]);
+        Assert.DoesNotContain("step-background", steps[1]);
         Assert.Contains("the system is running", content);
         Assert.Contains("something happens", content);
     }
 
     [Fact]
-    public void Report_inline_background_steps_are_rendered_before_regular_steps()
+    public void Report_separates_background_steps_when_option_enabled()
     {
         var scenario = new Scenario
         {
             Id = "s1", DisplayName = "Test",
-            BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "bg step" }],
-            Steps = [new ScenarioStep { Keyword = "When", Text = "regular step" }]
+            BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the system is running" }],
+            Steps = [new ScenarioStep { Keyword = "When", Text = "something happens" }]
         };
-        var content = GenerateReportWithInlineBackground(MakeFeatures(scenario), "BgInlineOrder.html");
-        Assert.Contains("bg step", content);
-        Assert.Contains("regular step", content);
+        var content = GenerateReportSeparateBackground(MakeFeatures(scenario), "BgSeparate.html");
+        Assert.Contains("<details class=\"scenario-background\">", content);
+        Assert.Contains("<summary class=\"h4\">Background Steps</summary>", content);
     }
 
     [Fact]
-    public void Report_inline_background_steps_renders_steps_section_with_only_background()
+    public void Report_renders_and_keyword_for_background_given_followed_by_scenario_given()
+    {
+        var scenario = new Scenario
+        {
+            Id = "s1", DisplayName = "Test",
+            BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the system is running" }],
+            Steps =
+            [
+                new ScenarioStep { Keyword = "Given", Text = "a valid request" },
+                new ScenarioStep { Keyword = "When", Text = "it is sent" }
+            ]
+        };
+        var content = GenerateReport(MakeFeatures(scenario), "BgCollapse.html");
+        var keywords = ReportMarkup.InnerTextsOfClass(content, "step-keyword");
+        Assert.Equal(["Given", "And", "When"], keywords);
+    }
+
+    [Fact]
+    public void Report_leaves_repeated_keywords_alone_when_collapsing_is_disabled()
+    {
+        var scenario = new Scenario
+        {
+            Id = "s1", DisplayName = "Test",
+            BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the system is running" }],
+            Steps = [new ScenarioStep { Keyword = "Given", Text = "a valid request" }]
+        };
+        var content = GenerateReportWithoutKeywordCollapsing(MakeFeatures(scenario), "BgNoCollapse.html");
+        var keywords = ReportMarkup.InnerTextsOfClass(content, "step-keyword");
+        Assert.Equal(["Given", "Given"], keywords);
+    }
+
+    [Fact]
+    public void Report_separated_mode_does_not_collapse_across_sections()
+    {
+        var scenario = new Scenario
+        {
+            Id = "s1", DisplayName = "Test",
+            BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the system is running" }],
+            Steps = [new ScenarioStep { Keyword = "Given", Text = "a valid request" }]
+        };
+        var content = GenerateReportSeparateBackground(MakeFeatures(scenario), "BgSeparateNoCollapse.html");
+        var keywords = ReportMarkup.InnerTextsOfClass(content, "step-keyword");
+        Assert.Equal(["Given", "Given"], keywords);
+    }
+
+    [Fact]
+    public void Report_numbers_combined_steps_continuously()
+    {
+        var content = GenerateReportNumbered(MakeFeatures(TwoAndTwo()), "BgNumbersCombined.html");
+        var numbers = ReportMarkup.InnerTextsOfClass(content, "step-number");
+        Assert.Equal(["1.", "2.", "3.", "4."], numbers);
+    }
+
+    [Fact]
+    public void Report_numbers_separated_steps_continuously()
+    {
+        var content = GenerateReportNumbered(MakeFeatures(TwoAndTwo()), "BgNumbersSeparated.html", separateBackgroundSteps: true);
+        var numbers = ReportMarkup.InnerTextsOfClass(content, "step-number");
+        Assert.Equal(["1.", "2.", "3.", "4."], numbers);
+    }
+
+    [Fact]
+    public void Report_renders_combined_list_when_only_background_steps_exist()
     {
         var scenario = new Scenario
         {
@@ -871,7 +948,160 @@ public class StepRenderingReportTests
             BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "bg only" }],
             Steps = null
         };
-        var content = GenerateReportWithInlineBackground(MakeFeatures(scenario), "BgInlineOnly.html");
+        var content = GenerateReport(MakeFeatures(scenario), "BgOnly.html");
+        Assert.Contains("<details class=\"scenario-steps\" open>", content);
         Assert.Contains("bg only", content);
+        Assert.Single(ReportMarkup.ElementsWithClass(content, "step"));
     }
+
+    [Fact]
+    public void Report_renders_no_steps_section_when_both_lists_are_empty()
+    {
+        var scenario = new Scenario { Id = "s1", DisplayName = "Test", Steps = [], BackgroundSteps = [] };
+        var content = GenerateReport(MakeFeatures(scenario), "BgNeither.html");
+        Assert.DoesNotContain("<details class=\"scenario-steps\" open>", content);
+        Assert.DoesNotContain("<details class=\"scenario-background\">", content);
+    }
+
+    [Fact]
+    public void Report_combined_tabular_parameters_span_background_and_regular_steps()
+    {
+        // The combined table is decided over the whole rendered list, so a setup table carried by a
+        // background step has to reach it.
+        var scenario = new Scenario
+        {
+            Id = "s1", DisplayName = "Test",
+            BackgroundSteps =
+            [
+                new ScenarioStep
+                {
+                    Keyword = "Given", Text = "these people exist",
+                    Parameters =
+                    [
+                        new StepParameter
+                        {
+                            Name = "people",
+                            Kind = StepParameterKind.Tabular,
+                            TabularValue = new TabularParameterValue(
+                                [new TabularColumn("Name", false)],
+                                [new TabularRow(TableRowType.Matching, [new TabularCell("Ann", null, VerificationStatus.NotApplicable)])])
+                        }
+                    ]
+                }
+            ],
+            Steps =
+            [
+                new ScenarioStep
+                {
+                    Keyword = "Then", Text = "the report lists them",
+                    Parameters =
+                    [
+                        new StepParameter
+                        {
+                            Name = "listed",
+                            Kind = StepParameterKind.Tabular,
+                            TabularValue = new TabularParameterValue(
+                                [new TabularColumn("Name", false)],
+                                [new TabularRow(TableRowType.Matching, [new TabularCell("Ann", null, VerificationStatus.Success)])],
+                                IsLinkedOutput: true)
+                        }
+                    ]
+                }
+            ]
+        };
+        var content = GenerateReport(MakeFeatures(scenario), "BgTabular.html");
+        Assert.Contains("step-param-combined-table", content);
+    }
+
+    [Fact]
+    public void Report_search_index_covers_text_that_only_appears_in_a_background_step()
+    {
+        var content = GenerateReport(MakeFeatures(WithZephyrBackground()), "BgSearch.html");
+        var searchAttr = ReportMarkup.AttributeValue(content, "details", "data-search");
+        Assert.Contains("zephyr", searchAttr);
+    }
+
+    [Fact]
+    public void Report_search_index_covers_background_steps_in_separated_mode_too()
+    {
+        var content = GenerateReportSeparateBackground(MakeFeatures(WithZephyrBackground()), "BgSearchSeparated.html");
+        var searchAttr = ReportMarkup.AttributeValue(content, "details", "data-search");
+        Assert.Contains("zephyr", searchAttr);
+    }
+
+    [Fact]
+    public void Report_features_summary_step_count_includes_background_steps()
+    {
+        var content = GenerateReport(MakeFeatures(TwoAndTwo(ExecutionResult.Passed)), "BgSummaryCount.html");
+        var row = ReportMarkup.FeatureSummaryRow(content, "Test Feature");
+        // Feature | Scenarios | Passed | Failed | Skipped | Steps | Passed | Failed | Skipped
+        Assert.Equal("4", row[5]);
+        Assert.Equal("4", row[6]);
+    }
+
+    [Fact]
+    public void Report_features_summary_shows_step_columns_when_only_background_steps_exist()
+    {
+        var scenario = new Scenario
+        {
+            Id = "s1", DisplayName = "Test", Result = ExecutionResult.Passed,
+            BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "bg only", Status = ExecutionResult.Passed }],
+            Steps = []
+        };
+        var content = GenerateReport(MakeFeatures(scenario), "BgSummaryOnlyBackground.html");
+        var row = ReportMarkup.FeatureSummaryRow(content, "Test Feature");
+        Assert.Equal(9, row.Count);
+        Assert.Equal("1", row[5]);
+    }
+
+    [Fact]
+    public void Rendering_the_html_does_not_leak_a_collapsed_keyword_into_the_model()
+    {
+        // Background steps are one shared array across every scenario of a Rule group, and the HTML and the
+        // data writers run concurrently — so the And has to be a projection, never a mutation.
+        var background = new ScenarioStep[] { new() { Keyword = "Given", Text = "the system is running" } };
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Test Feature",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "One",
+                        BackgroundSteps = background,
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "a valid request" }]
+                    }
+                ]
+            }
+        };
+        var html = GenerateReport(features, "BgNoMutation.html");
+        Assert.Contains(">And</span>", html);
+
+        Assert.Equal("Given", background[0].Keyword);
+        Assert.Equal("Given", features[0].Scenarios[0].Steps![0].Keyword);
+    }
+
+    private static Scenario TwoAndTwo(ExecutionResult? status = null) => new()
+    {
+        Id = "s1", DisplayName = "Test", Result = status ?? ExecutionResult.Passed,
+        BackgroundSteps =
+        [
+            new ScenarioStep { Keyword = "Given", Text = "bg one", Status = status },
+            new ScenarioStep { Keyword = "And", Text = "bg two", Status = status }
+        ],
+        Steps =
+        [
+            new ScenarioStep { Keyword = "When", Text = "step one", Status = status },
+            new ScenarioStep { Keyword = "Then", Text = "step two", Status = status }
+        ]
+    };
+
+    private static Scenario WithZephyrBackground() => new()
+    {
+        Id = "s1", DisplayName = "Test",
+        BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the zephyr service is armed" }],
+        Steps = [new ScenarioStep { Keyword = "When", Text = "something happens" }]
+    };
 }

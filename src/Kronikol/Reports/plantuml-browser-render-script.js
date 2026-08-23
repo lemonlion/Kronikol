@@ -838,6 +838,43 @@
         // PlantUML source reachable in a <details>. Returns true when the element holds a failure.
         var _engineTooLargeRx = /Diagram too large for browser rendering/;
         var _engineSyntaxErrorRx = /Syntax Error\?/;
+
+        // The engine's measured statement-length limits (PlantUmlStatementLimits, C# side). A statement
+        // past its limit matches no parse rule, so the parser gives up on the entire diagram and draws
+        // "Syntax Error?" with no hint at what was wrong. Naming the offending line here turns a
+        // recurrence into a one-glance diagnosis.
+        var _arrowRx = /<{1,2}[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}|[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}>{1,2}/;
+        var _blockOpenerRx = /^(loop|alt|else|opt|group|par|critical|break|partition|also)\b/i;
+        var _noteStartRx = /^[hrn]?note\b/i;
+        var _noteEndRx = /^end\s*[hrn]?note$/i;
+        function findOverLongStatement(source) {
+            var lines = String(source).split('\n');
+            var noteDepth = 0;
+            for (var i = 0; i < lines.length; i++) {
+                var t = lines[i].replace(/\r$/, '').trim();
+                if (noteDepth > 0) {
+                    if (_noteEndRx.test(t)) noteDepth--;
+                    continue;
+                }
+                if (!t || t[0] === "'" || t[0] === '!' || t[0] === '@') continue;
+                if (_noteStartRx.test(t)) {
+                    var stripped = t.replace(/<<[^>]*>>/g, '');
+                    var colon = stripped.indexOf(':'), angle = stripped.indexOf('<');
+                    var singleLine = colon >= 0 && (angle < 0 || colon < angle);
+                    if (!singleLine) noteDepth++;
+                    continue;
+                }
+                if (_blockOpenerRx.test(t)) {
+                    if (t.length > 1471) return { line: i + 1, kind: 'block label', length: t.length, limit: 1471 };
+                    continue;
+                }
+                var m = _arrowRx.exec(t);
+                if (m && t.indexOf(':', m.index + m[0].length) >= 0 && t.length > 2000)
+                    return { line: i + 1, kind: 'message statement', length: t.length, limit: 2000 };
+            }
+            return null;
+        }
+        window._findOverLongStatement = findOverLongStatement;
         function describeEngineFailure(el, source) {
             if (!el) return false;
             var text = el.textContent || '';
@@ -856,7 +893,12 @@
                 var note = document.createElement('div');
                 note.className = 'engine-failure';
                 note.setAttribute('data-engine-failure', 'syntax');
-                note.innerHTML = rawDetails;
+                var overLong = findOverLongStatement(source || el.getAttribute('data-plantuml') || '');
+                note.innerHTML = (overLong
+                    ? '<div style="color:#c00;margin-bottom:0.5em"><strong>A statement is longer than the engine parses.</strong> '
+                      + 'Line ' + overLong.line + ' is a ' + overLong.kind + ' of ' + overLong.length + ' characters (limit ' + overLong.limit + '). '
+                      + 'The parser reports nothing for this — it abandons the whole diagram, which is why every other statement in this fragment is gone too.</div>'
+                    : '') + rawDetails;
                 el.appendChild(note);
                 return true;
             }

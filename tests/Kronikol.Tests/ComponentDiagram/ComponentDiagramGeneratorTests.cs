@@ -1,5 +1,6 @@
 using System.Net;
 using Kronikol.ComponentDiagram;
+using Kronikol.PlantUml;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.ComponentDiagram;
@@ -464,6 +465,29 @@ public class ComponentDiagramGeneratorTests
         var result = ComponentDiagramGenerator.GeneratePlantUml(relationships, options);
 
         Assert.Contains("Custom: HTTP (5 calls)", result);
+    }
+
+    [Fact]
+    public void GeneratePlantUml_EdgeLabel_IsCappedAtTheStatementLimit()
+    {
+        // Component diagrams use a different parser from sequence diagrams and its limits are unmeasured,
+        // so the cap here is defensive: real labels are two orders of magnitude below it, and an over-long
+        // statement costs the whole diagram rather than the one edge.
+        var relationships = new[]
+        {
+            new ComponentRelationship("Caller", "OrderService", "HTTP", ["GET"], 5, 3)
+        };
+
+        var options = new ComponentDiagramOptions
+        {
+            RelationshipLabelFormatter = _ => new string('x', 6000)
+        };
+
+        var result = ComponentDiagramGenerator.GeneratePlantUml(relationships, options);
+
+        var edge = result.Split('\n').Single(l => l.Contains("xxxx", StringComparison.Ordinal));
+        Assert.True(edge.Trim().Length <= PlantUmlStatementLimits.MaxMessageStatementChars, $"{edge.Trim().Length} chars");
+        Assert.Contains(PlantUmlStatementLimits.TruncationMarker, edge);
     }
 
     [Fact]

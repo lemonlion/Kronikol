@@ -76,8 +76,12 @@ public static class StepCollector
             var label = Options.PrependKeyword && step.EffectiveKeyword is not null
                 ? $"{step.EffectiveKeyword} {text}"
                 : Reports.StepText.CapitaliseIfEnabled(text) ?? text;
-            DefaultTrackingDiagramOverride.InsertPlantUml(testId,
-                $"hnote across <<stepDelimiter>> #black:<color:white>{label}", DiagramMarkerKind.Step);
+            // Past ~1458 characters a coloured `hnote across` overflows the engine's JS stack and the
+            // scenario loses every diagram it had — see PlantUmlStatementLimits.
+            const string prefix = "hnote across <<stepDelimiter>> #black:<color:white>";
+            label = PlantUml.PlantUmlStatementLimits.TruncateLabel(
+                label, PlantUml.PlantUmlStatementLimits.MaxColouredNoteBarChars - prefix.Length);
+            DefaultTrackingDiagramOverride.InsertPlantUml(testId, prefix + label, DiagramMarkerKind.Step);
         }
 
         // Phase transitions: set ambient test phase based on keyword

@@ -1548,7 +1548,7 @@ public static class ReportTestHelper
         return new Uri(path).AbsoluteUri;
     }
 
-    public static string GenerateReportWithBackground(string tempDir, string outputDir, string fileName)
+    public static string GenerateReportWithBackground(string tempDir, string outputDir, string fileName, bool separateBackgroundSteps = false)
     {
         var features = new[]
         {
@@ -1597,6 +1597,24 @@ public static class ReportTestHelper
                             new ScenarioStep { Keyword = "When", Text = "I view my profile", Status = ExecutionResult.Passed },
                             new ScenarioStep { Keyword = "Then", Text = "my details are shown", Status = ExecutionResult.Passed }
                         ]
+                    },
+                    // The Given/Given seam: a background ending on Given followed by a scenario opening on
+                    // Given is what keyword collapsing exists for, and the three above never exercise it.
+                    new Scenario
+                    {
+                        Id = "bg4", DisplayName = "Withdraw a pending registration", IsHappyPath = false,
+                        Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2),
+                        BackgroundSteps =
+                        [
+                            new ScenarioStep { Keyword = "Given", Text = "the registration service is running", Status = ExecutionResult.Passed },
+                            new ScenarioStep { Keyword = "And", Text = "the database is available", Status = ExecutionResult.Passed }
+                        ],
+                        Steps =
+                        [
+                            new ScenarioStep { Keyword = "Given", Text = "a pending registration exists", Status = ExecutionResult.Passed },
+                            new ScenarioStep { Keyword = "When", Text = "I withdraw it", Status = ExecutionResult.Passed },
+                            new ScenarioStep { Keyword = "Then", Text = "the registration is gone", Status = ExecutionResult.Passed }
+                        ]
                     }
                 ]
             }
@@ -1609,11 +1627,16 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            separateBackgroundSteps: separateBackgroundSteps);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }
+
+    /// <summary>The same fixture with the opt-in <c>Background Steps</c> disclosure instead of one combined list.</summary>
+    public static string GenerateReportWithSeparatedBackground(string tempDir, string outputDir, string fileName) =>
+        GenerateReportWithBackground(tempDir, outputDir, fileName, separateBackgroundSteps: true);
 
     public static string GenerateReportWithAttachments(string tempDir, string outputDir, string fileName)
     {

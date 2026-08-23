@@ -638,6 +638,19 @@
             width: 0.3em;
         }
 
+        /* A step that came from the feature's Background, sitting inline in the one Steps list.
+           The muted left accent matches the border the separate Background Steps section uses. */
+        .step-background {
+            border-left: 3px solid rgb(224, 224, 224);
+            padding-left: 0.5em;
+            margin-left: -0.5em;
+        }
+
+        .scenario-steps > .step-background,
+        .scenario-steps > .step-collapsible.step-background {
+            margin-left: 0.5em;
+        }
+
         .step-number {
             font-family: monospace;
             color: #888;

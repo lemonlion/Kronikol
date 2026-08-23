@@ -224,7 +224,12 @@ public static partial class PlantUmlCreator
                     var actionLabel = (effectiveMethod.Value?.ToString() ?? "action").Replace("\r", string.Empty).Replace("\n", "\\n");
                     var actionCategory = trace.CallerDependencyCategory ?? Constants.DependencyCategories.User;
                     var actionColor = builder.GetArrowColor(trace.CallerName, actionCategory, trace.CallerName, actionCategory);
-                    builder.AppendLine($"{callerShortName} -{actionColor}> {serviceShortName}: {actionLabel}");
+                    var actionPrefix = $"{callerShortName} -{actionColor}> {serviceShortName}: ";
+                    // A long Playwright locator or action description is one message statement, and the
+                    // engine abandons the whole diagram past 2000 characters.
+                    actionLabel = PlantUmlStatementLimits.TruncateLabel(
+                        actionLabel, PlantUmlStatementLimits.MaxMessageStatementChars - actionPrefix.Length);
+                    builder.AppendLine($"{actionPrefix}{actionLabel}");
                     builder.AddArrowHeight();
 
                     if (!string.IsNullOrWhiteSpace(content))
@@ -248,7 +253,8 @@ public static partial class PlantUmlCreator
                     if (requestPostFormattingProcessor is not null)
                         noteContent = requestPostFormattingProcessor(noteContent);
 
-                    var pathAndQuery = effectiveUri.PathAndQuery;
+                    var fullPathAndQuery = effectiveUri.PathAndQuery;
+                    var pathAndQuery = fullPathAndQuery;
                     if (pathAndQuery.Length > maxUrlLength)
                         pathAndQuery = string.Join("\\n        ", pathAndQuery.ChunksUpTo(maxUrlLength));
 
@@ -258,6 +264,20 @@ public static partial class PlantUmlCreator
                     if (graphQlLabel is not null)
                         requestLabel = $"{requestLabel}\\n({graphQlLabel})";
 
+                    var arrowColor = builder.GetArrowColor(trace.ServiceName, trace.DependencyCategory, trace.CallerName, trace.CallerDependencyCategory);
+                    var requestPrefix = $"{callerShortName} -{arrowColor}> {serviceShortName}: ";
+
+                    // `maxUrlLength` decides where the label *wraps for display*, not how long it may get:
+                    // a 5,300-character Redis DELETE path became 53 display chunks joined by a literal
+                    // `\n        ` and one 5,410-character statement, which the engine refuses outright.
+                    // Cap against the real statement, counting the prefix and the internal-flow link that
+                    // wraps the label — cutting inside `[[…]]` would leave the link unclosed.
+                    var linkWrapperLength = internalFlowTracking ? $"[[#iflow-{trace.RequestResponseId} ]]".Length : 0;
+                    var labelBudget = PlantUmlStatementLimits.MaxMessageStatementChars - requestPrefix.Length - linkWrapperLength;
+                    var cappedLabel = PlantUmlStatementLimits.TruncateLabel(requestLabel, labelBudget);
+                    var labelWasTruncated = cappedLabel.Length != requestLabel.Length;
+                    requestLabel = cappedLabel;
+
                     if (internalFlowTracking)
                         requestLabel = $"[[#iflow-{trace.RequestResponseId} {requestLabel}]]";
 
@@ -266,12 +286,18 @@ public static partial class PlantUmlCreator
                         var loopLabel = trace.CollapsedSummary is { Length: > 0 } summary
                             ? $"loop ×{trace.CollapsedCount} · {summary}"
                             : $"loop ×{trace.CollapsedCount}";
-                        builder.OpenLoop(loopLabel, trace.RequestResponseId);
+                        builder.OpenLoop(PlantUmlStatementLimits.TruncateStatement(loopLabel, PlantUmlStatementLimits.MaxBlockLabelChars),
+                            trace.RequestResponseId);
                     }
 
-                    var arrowColor = builder.GetArrowColor(trace.ServiceName, trace.DependencyCategory, trace.CallerName, trace.CallerDependencyCategory);
-                    builder.AppendLine($"{callerShortName} -{arrowColor}> {serviceShortName}: {requestLabel}");
+                    builder.AppendLine($"{requestPrefix}{requestLabel}");
                     builder.AddArrowHeight();
+
+                    // For a DELETE with no body the path *is* the payload, so a truncated label must not be
+                    // the only record of what was called. Note bodies are uncapped and already chunked for
+                    // wrapWidth, so the whole path stays visible, searchable and copyable there.
+                    if (labelWasTruncated)
+                        noteContent = AppendFullPathToNote(noteContent, fullPathAndQuery);
 
                     if (!string.IsNullOrEmpty(noteContent))
                     {
@@ -317,6 +343,20 @@ public static partial class PlantUmlCreator
 
         builder.FinishAndStartNewDiagram();
         return builder.GetResults();
+    }
+
+    /// <summary>
+    /// Adds the untruncated request path to the note beside the arrow, chunked the way every other note
+    /// value is so <c>skinparam wrapWidth</c> can break it. Kronikol's own <c>&lt;color:gray&gt;</c> label
+    /// is added after escaping, like the header tags, so it stays live markup rather than printed text.
+    /// </summary>
+    private static string AppendFullPathToNote(string noteContent, string pathAndQuery)
+    {
+        var chunks = pathAndQuery.ChunksUpTo(MaxNoteChunkChars).Select(EscapeCreoleMarkup);
+        var block = "<color:gray>[Full path]" + Environment.NewLine + string.Join(Environment.NewLine, chunks);
+        return string.IsNullOrEmpty(noteContent)
+            ? block
+            : noteContent + Environment.NewLine + Environment.NewLine + block;
     }
 
     private static string GetNoteClass(RequestResponseMetaType metaType) =>
@@ -464,7 +504,10 @@ public static partial class PlantUmlCreator
             var responseLabel = status ?? "";
 
             var arrowColor = builder.GetArrowColor(trace!.ServiceName, trace.DependencyCategory, trace.CallerName, trace.CallerDependencyCategory);
-            builder.AppendLine($"{serviceShortName} -{arrowColor}-> {callerShortName}: {responseLabel}");
+            var responsePrefix = $"{serviceShortName} -{arrowColor}-> {callerShortName}: ";
+            responseLabel = PlantUmlStatementLimits.TruncateLabel(
+                responseLabel, PlantUmlStatementLimits.MaxMessageStatementChars - responsePrefix.Length);
+            builder.AppendLine($"{responsePrefix}{responseLabel}");
             builder.AddArrowHeight();
 
             if (!string.IsNullOrEmpty(noteContent))
@@ -1139,8 +1182,10 @@ public static partial class PlantUmlCreator
             return $"[{color}]";
         }
 
-        public void Append(string text) => _currentDiagram.Append(text);
-        public void AppendLine(string text) => _currentDiagram.AppendLine(text);
+        private readonly PlantUmlStatementGuard _statementGuard = new();
+
+        public void Append(string text) => _currentDiagram.Append(_statementGuard.Apply(text, terminated: false));
+        public void AppendLine(string text) => _currentDiagram.AppendLine(_statementGuard.Apply(text, terminated: true));
         public void IncrementStep() => _stepNumber++;
         public bool HasOpenPartition => _openPartitionLine != null;
 
@@ -1230,6 +1275,7 @@ public static partial class PlantUmlCreator
             _cachedEncoded = null;
             _lengthAtLastEncode = 0;
             _estimatedHeight = 0;
+            _statementGuard.Reset();
             _results.Add(new PlantUmlResult(plainText, encodedPlantUml));
             _currentDiagram = new StringBuilder(CreatePlantUmlPrefix(tracesForTest, _stepNumber, plantUmlTheme,
                 sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides));
