@@ -93,6 +93,10 @@ jobs:
             projects: tests/Kronikol.Tests.EndToEnd
             filter: DiagramZoomTests|ContextMenuExtendedTests|HeadersDetailsInterferenceTests|NoteButtonsAfterHeaderHideTests|ZoomNoteInteractionTests
             needs-playwright: true
+          - name: E2E (Steps & Statement Limits)
+            projects: tests/Kronikol.Tests.EndToEnd
+            filter: BackgroundRenderingTests|SeparatedBackgroundRenderingTests|LongStatementRenderingTests
+            needs-playwright: true
           - name: Assertion Tracking Tests
             projects: tests/Kronikol.Tests.AssertionTracking
           - name: Example.Api xUnit Tests

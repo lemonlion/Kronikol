@@ -62,6 +62,21 @@ internal enum PlantUmlStatementKind
 /// Leading and trailing whitespace is not counted — a valid short arrow padded to 2500 characters with
 /// trailing spaces parses — so every cap applies to the trimmed statement.
 /// </para>
+/// <para>
+/// <b>Which limits are PlantUML's and which are the JS build's.</b> Measured against real Java PlantUML
+/// through IKVM (see <c>IkvmStatementLimitTests</c>): the <b>2,000-character message limit is PlantUML's
+/// own</b> — Java refuses 2,001 exactly as the JS build does — while the block-opener limit and the
+/// coloured-note-bar crash are artifacts of the TeaVM build, which Java draws far past. Every cap is
+/// applied where the source is written rather than where a renderer is chosen, because the same source
+/// may be rendered either way.
+/// </para>
+/// <para>
+/// Measuring this is easy to get wrong: when a message statement is too long the parser falls back to
+/// reading the source as a <em>class</em> diagram, and that fallback often succeeds — echoing the label
+/// text and emitting no <c>Syntax Error</c> banner. "Is the label in the SVG?" therefore passes for both
+/// outcomes. The signal that separates them is that a sequence diagram draws each participant twice, as
+/// a head box and a foot box.
+/// </para>
 /// </summary>
 internal static class PlantUmlStatementLimits
 {
