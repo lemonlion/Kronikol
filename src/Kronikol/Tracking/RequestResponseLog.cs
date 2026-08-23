@@ -29,6 +29,14 @@ public record RequestResponseLog(
     public bool IsOverrideStart { get; set; }
     public bool IsOverrideEnd { get; set; }
     public bool IsActionStart { get; set; }
+
+    /// <summary>
+    /// True for the control records that carry no interaction of their own: the override start/end pair
+    /// that splices <see cref="PlantUml"/> into a sequence diagram (Gherkin step delimiters, assertion
+    /// notes, custom fragments) and the Setup/Action boundary marker. They travel in the same log stream
+    /// as real traffic, so every consumer that reports interactions has to skip them.
+    /// </summary>
+    public bool IsDiagramMarker => IsOverrideStart || IsOverrideEnd || IsActionStart;
     public string? PlantUml { get; set; }
     public string[]? FocusFields { get; set; }
     public DateTimeOffset? Timestamp { get; set; }

@@ -243,4 +243,19 @@ public class ReportDiagnosticsTests : IDisposable
         var unpaired = Assert.Single(warnings, w => w.Contains("unpaired request", StringComparison.Ordinal));
         Assert.Contains("1 unpaired", unpaired, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Setup_action_boundary_marker_is_not_an_unpaired_request()
+    {
+        // StartAction() logs one marker per test with a fresh RequestResponseId and no response;
+        // counting it warned about "unpaired requests" on every phase-separated run.
+        var logs = new[]
+        {
+            new RequestResponseLog("t", "id", "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false) { IsActionStart = true }
+        };
+
+        var warnings = ReportDiagnostics.Analyse(logs, []);
+
+        Assert.DoesNotContain(warnings, w => w.Contains("unpaired request", StringComparison.Ordinal));
+    }
 }

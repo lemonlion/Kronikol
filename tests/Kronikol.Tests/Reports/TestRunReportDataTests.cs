@@ -1395,4 +1395,152 @@ public class TestRunReportDataTests
         Assert.Equal("Pay with card", scenario.GetProperty("outlineId").GetString());
         Assert.Equal("visa", scenario.GetProperty("exampleValues").GetProperty("card").GetString());
     }
+
+    /// <summary>
+    /// The diagram-marker logs (<c>IsOverrideStart</c>/<c>IsOverrideEnd</c>/<c>IsActionStart</c>) share the
+    /// tracked-log stream with real traffic but carry no interaction: their whole payload is the PlantUml
+    /// fragment the sequence diagram splices in. Every other consumer filters them; the data exports must
+    /// too, or a Gherkin step or assertion shows up as a content-free call to <c>http://override.com/</c>.
+    /// </summary>
+    private static RequestResponseLog MarkerLog(string testId, bool overrideStart = false, bool overrideEnd = false, bool actionStart = false) =>
+        new(
+            TestName: testId,
+            TestId: testId,
+            Method: "",
+            Content: "",
+            Uri: new Uri("http://override.com"),
+            Headers: [],
+            ServiceName: "",
+            CallerName: "",
+            Type: RequestResponseType.Request,
+            TraceId: Guid.NewGuid(),
+            RequestResponseId: Guid.NewGuid(),
+            TrackingIgnore: false)
+        {
+            IsOverrideStart = overrideStart,
+            IsOverrideEnd = overrideEnd,
+            IsActionStart = actionStart,
+            PlantUml = overrideStart ? "hnote across #black:Given I am signed in" : null,
+            Timestamp = DateTimeOffset.UtcNow
+        };
+
+    private static RequestResponseLog RealLog(string testId, RequestResponseType type, Guid pairId) =>
+        new(
+            TestName: testId,
+            TestId: testId,
+            Method: HttpMethod.Get,
+            Content: type == RequestResponseType.Request ? "" : "{\"ok\":true}",
+            Uri: new Uri("https://api.example.com/orders"),
+            Headers: [],
+            ServiceName: "OrderService",
+            CallerName: "TestClient",
+            Type: type,
+            TraceId: pairId,
+            RequestResponseId: pairId,
+            TrackingIgnore: false,
+            StatusCode: type == RequestResponseType.Response ? HttpStatusCode.OK : null)
+        { Timestamp = DateTimeOffset.UtcNow };
+
+    private static Feature[] SingleScenario(string id = "test-1") =>
+    [
+        new Feature
+        {
+            DisplayName = "Orders",
+            Scenarios = [new Scenario { Id = id, DisplayName = "Place order", Result = ExecutionResult.Passed }]
+        }
+    ];
+
+    [Fact]
+    public void GenerateTestRunReportData_json_excludes_diagram_marker_logs_from_interactions()
+    {
+        var pairId = Guid.NewGuid();
+        var logs = new[]
+        {
+            MarkerLog("test-1", actionStart: true),
+            MarkerLog("test-1", overrideStart: true),
+            MarkerLog("test-1", overrideEnd: true),
+            RealLog("test-1", RequestResponseType.Request, pairId),
+            RealLog("test-1", RequestResponseType.Response, pairId)
+        };
+
+        var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers.json", DataFormat.Json, trackedLogs: logs);
+        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var interactions = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions");
+
+        Assert.Equal(2, interactions.GetArrayLength());
+        Assert.DoesNotContain("override.com", File.ReadAllText(path));
+    }
+
+    [Fact]
+    public void GenerateTestRunReportData_json_emits_empty_interactions_when_only_markers_were_logged()
+    {
+        var logs = new[] { MarkerLog("test-1", overrideStart: true), MarkerLog("test-1", overrideEnd: true) };
+
+        var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers_only.json", DataFormat.Json, trackedLogs: logs);
+        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var scenario = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
+
+        Assert.Equal(0, scenario.GetProperty("httpInteractions").GetArrayLength());
+    }
+
+    [Fact]
+    public void GenerateTestRunReportData_xml_excludes_diagram_marker_logs_from_interactions()
+    {
+        var pairId = Guid.NewGuid();
+        var logs = new[]
+        {
+            MarkerLog("test-1", overrideStart: true),
+            MarkerLog("test-1", overrideEnd: true),
+            RealLog("test-1", RequestResponseType.Request, pairId),
+            RealLog("test-1", RequestResponseType.Response, pairId)
+        };
+
+        var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers.xml", DataFormat.Xml, trackedLogs: logs);
+        var doc = XDocument.Parse(File.ReadAllText(path));
+        var interactions = doc.Descendants("HttpInteractions").Single();
+
+        Assert.Equal(2, interactions.Elements().Count());
+        Assert.DoesNotContain("override.com", File.ReadAllText(path));
+    }
+
+    [Fact]
+    public void GenerateTestRunReportData_xml_omits_interactions_element_when_only_markers_were_logged()
+    {
+        var logs = new[] { MarkerLog("test-1", overrideStart: true), MarkerLog("test-1", overrideEnd: true) };
+
+        var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers_only.xml", DataFormat.Xml, trackedLogs: logs);
+        var doc = XDocument.Parse(File.ReadAllText(path));
+
+        Assert.Empty(doc.Descendants("HttpInteractions"));
+    }
+
+    [Fact]
+    public void GenerateTestRunReportData_yaml_excludes_diagram_marker_logs_from_interactions()
+    {
+        var pairId = Guid.NewGuid();
+        var logs = new[]
+        {
+            MarkerLog("test-1", overrideStart: true),
+            MarkerLog("test-1", overrideEnd: true),
+            RealLog("test-1", RequestResponseType.Request, pairId),
+            RealLog("test-1", RequestResponseType.Response, pairId)
+        };
+
+        var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers.yml", DataFormat.Yaml, trackedLogs: logs);
+        var content = File.ReadAllText(path);
+
+        Assert.DoesNotContain("override.com", content);
+        Assert.Contains("HttpInteractions:", content);
+    }
+
+    [Fact]
+    public void GenerateTestRunReportData_yaml_omits_interactions_block_when_only_markers_were_logged()
+    {
+        var logs = new[] { MarkerLog("test-1", overrideStart: true), MarkerLog("test-1", overrideEnd: true) };
+
+        var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers_only.yml", DataFormat.Yaml, trackedLogs: logs);
+        var content = File.ReadAllText(path);
+
+        Assert.DoesNotContain("HttpInteractions:", content);
+    }
 }
