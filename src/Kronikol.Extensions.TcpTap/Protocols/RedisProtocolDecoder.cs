@@ -74,6 +74,7 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
     private readonly Action<RespValue> _onCommandValue;
     private readonly Action<RespValue> _onReplyValue;
     private readonly Queue<PendingCommand> _pending = new();
+    private long _oldestUnansweredTicks;
     private readonly RedisTrackingVerbosity _verbosity;
     private readonly string _endpoint;
     private int _database;
@@ -105,6 +106,20 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
 
     /// <summary>Commands seen but not yet answered.</summary>
     public int PendingCommands => _pending.Count;
+
+    /// <inheritdoc />
+    public DateTimeOffset? OldestUnansweredSince
+    {
+        get
+        {
+            var ticks = Interlocked.Read(ref _oldestUnansweredTicks);
+            return ticks == 0 ? null : new DateTimeOffset(ticks, TimeSpan.Zero);
+        }
+    }
+
+    /// <summary>Publishes the head of the FIFO for the reaper (only the decode task mutates the queue).</summary>
+    private void PublishOldestUnanswered() =>
+        Interlocked.Exchange(ref _oldestUnansweredTicks, _pending.Count == 0 ? 0 : _pending.Peek().Timestamp.UtcTicks);
 
     /// <summary>Bulk payloads streamed past on this connection (both directions).</summary>
     public int OversizePayloadsSkipped => _commands.OversizePayloadsSkipped + _replies.OversizePayloadsSkipped;
@@ -210,6 +225,7 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
         _commands.Reset();
         _replies.Reset();
         _pending.Clear();
+        PublishOldestUnanswered();
         _resyncingCommands = true;
         _resyncingReplies = true;
         _stampNext = true;
@@ -258,6 +274,7 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
     private void Clear()
     {
         _pending.Clear();
+        PublishOldestUnanswered();
         _commands.Reset();
         _replies.Reset();
     }
@@ -304,6 +321,7 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
         _pending.Enqueue(record
             ? new PendingCommand(verb, key, ExtractRequestContent(verb, arguments), _database, timestamp, true, selectTarget)
             : new PendingCommand(verb, null, null, _database, timestamp, false, selectTarget));
+        PublishOldestUnanswered();
 
         if (_pending.Count > MaxPendingCommands)
         {
@@ -328,6 +346,7 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
             return; // out-of-band traffic on a connection we joined mid-stream
 
         var pending = _pending.Dequeue();
+        PublishOldestUnanswered();
 
         if (pending.SelectTarget is { } database && !reply.IsError)
             _database = database;

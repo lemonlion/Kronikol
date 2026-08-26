@@ -3,6 +3,28 @@ using Kronikol.Tracking;
 namespace Kronikol.Ingestion;
 
 /// <summary>
+/// How <see cref="IngestAttribution.AttributeByWindow(IReadOnlyList{InteractionRecord}, IReadOnlyList{IngestAttribution.TestWindow}, WindowAttributionMode, string?)"/>
+/// resolves a record whose timestamp falls inside more than one test window.
+/// </summary>
+public enum WindowAttributionMode
+{
+    /// <summary>
+    /// The historical rule: the window that <em>started latest</em> wins — the innermost test in
+    /// flight. Right for suites that nest or wrap tests; wrong for suites that run tests
+    /// <em>concurrently</em>, where "latest started" is merely "whichever worker began most recently".
+    /// </summary>
+    InnermostWins,
+
+    /// <summary>
+    /// A record is attributed only when <em>exactly one</em> window contains its timestamp. Inside
+    /// two or more (parallel workers), it is left unattributed — honestly ambiguous, for the
+    /// session fold or <see cref="IngestRequest.DropUnattributed"/> — and counted. With one worker
+    /// windows never overlap, so this is behaviour-preserving there.
+    /// </summary>
+    ExclusiveOnly,
+}
+
+/// <summary>
 /// Attribution and phase assignment for captures that arrive without a test identity of their own —
 /// a database tee, an OTLP span exporter, a shared sidecar. Both passes work purely from the tests
 /// NDJSON's timeline, so any capturer benefits without having to propagate headers.
@@ -88,12 +110,28 @@ public static class IngestAttribution
         IReadOnlyList<TestWindow> windows,
         string? fallbackTestId = null)
     {
+        var (result, attributed, _) = AttributeByWindow(records, windows, WindowAttributionMode.InnermostWins, fallbackTestId);
+        return (result, attributed);
+    }
+
+    /// <summary>
+    /// As <see cref="AttributeByWindow(IReadOnlyList{InteractionRecord}, IReadOnlyList{TestWindow}, string?)"/>,
+    /// with the overlap rule chosen by <paramref name="mode"/>. <c>Ambiguous</c> counts the records
+    /// (in <see cref="WindowAttributionMode.ExclusiveOnly"/> only) that were left unattributed
+    /// because two or more windows contained their timestamp.
+    /// </summary>
+    public static (List<InteractionRecord> Records, int Attributed, int Ambiguous) AttributeByWindow(
+        IReadOnlyList<InteractionRecord> records,
+        IReadOnlyList<TestWindow> windows,
+        WindowAttributionMode mode,
+        string? fallbackTestId = null)
+    {
         ArgumentNullException.ThrowIfNull(records);
         ArgumentNullException.ThrowIfNull(windows);
 
         var result = new List<InteractionRecord>(records.Count);
         if (windows.Count == 0)
-            return (records.ToList(), 0);
+            return (records.ToList(), 0, 0);
 
         // Requests decide; their responses inherit. Both passes run over the same list, so the map is
         // filled by the time a response is reached only when the response follows its request in the
@@ -101,6 +139,7 @@ public static class IngestAttribution
         // is attributed on its own timestamp.
         var byRequestResponseId = new Dictionary<string, string>(StringComparer.Ordinal);
         var attributed = 0;
+        var ambiguous = 0;
 
         foreach (var record in records)
         {
@@ -116,7 +155,19 @@ public static class IngestAttribution
             if (IsResponse(record) && record.RequestResponseId is { Length: > 0 } id)
                 byRequestResponseId.TryGetValue(id, out testId);
 
-            testId ??= FindInnermost(windows, record.Timestamp);
+            if (testId is null)
+            {
+                if (mode == WindowAttributionMode.ExclusiveOnly)
+                {
+                    testId = FindExclusive(windows, record.Timestamp, out var overlapped);
+                    if (overlapped)
+                        ambiguous++;
+                }
+                else
+                {
+                    testId = FindInnermost(windows, record.Timestamp);
+                }
+            }
 
             if (testId is null)
             {
@@ -131,7 +182,142 @@ public static class IngestAttribution
             result.Add(record with { TestId = testId });
         }
 
-        return (result, attributed);
+        return (result, attributed, ambiguous);
+    }
+
+    /// <summary>
+    /// One test's window joined with the data it declared it would touch (the <c>claims</c> of its
+    /// <c>start</c> and <c>claims</c> records): customer ids, cache-key fragments, anything a captured
+    /// record's URI or body would literally contain.
+    /// </summary>
+    public sealed record ClaimWindow(string TestId, DateTimeOffset Start, DateTimeOffset End, IReadOnlyList<string> Claims);
+
+    /// <summary>
+    /// The claim windows of every test that declared claims: its <see cref="BuildWindows">window</see>
+    /// plus the union of the <see cref="TestRunRecord.Claims"/> on its <c>start</c> and <c>claims</c>
+    /// records. Tests without claims get no claim window — the plain window pass is their only chance.
+    /// </summary>
+    public static List<ClaimWindow> BuildClaimWindows(IEnumerable<TestRunRecord>? testRecords)
+    {
+        var records = (testRecords ?? []).ToList();
+        var claims = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        foreach (var record in records)
+        {
+            if (string.IsNullOrWhiteSpace(record.TestId) || record.Claims is not { Length: > 0 } declared)
+                continue;
+            if (!claims.TryGetValue(record.TestId, out var list))
+                claims[record.TestId] = list = [];
+            foreach (var claim in declared)
+            {
+                if (!string.IsNullOrWhiteSpace(claim) && !list.Contains(claim, StringComparer.Ordinal))
+                    list.Add(claim);
+            }
+        }
+
+        return
+        [
+            .. BuildWindows(records)
+                .Where(w => claims.ContainsKey(w.TestId))
+                .Select(w => new ClaimWindow(w.TestId, w.Start, w.End, claims[w.TestId])),
+        ];
+    }
+
+    /// <summary>
+    /// Attributes records by <em>content</em>: a record goes to the test whose window contains its
+    /// timestamp <em>and</em> whose claims literally appear in the record's URI or body — when exactly
+    /// one such test exists. Two or more claimants is ambiguous (counted, left alone); none leaves the
+    /// record for the window pass. Responses inherit their request's attribution, exactly as in
+    /// <see cref="AttributeByWindow(IReadOnlyList{InteractionRecord}, IReadOnlyList{TestWindow}, string?)"/>.
+    /// </summary>
+    /// <remarks>
+    /// This is what makes parallel workers exact for capturers that see no test identity on the wire
+    /// (a Redis tee): when concurrent tests touch <em>disjoint</em> data — each worker its own seeded
+    /// customer — a cache key names its owner, and the owner's window plus the key is a unique match.
+    /// A test that roams over shared data should claim everything it touches, which turns its shared
+    /// records ambiguous (honest) instead of exclusively someone else's (wrong).
+    /// </remarks>
+    public static (List<InteractionRecord> Records, int Attributed, int Ambiguous) AttributeByClaims(
+        IReadOnlyList<InteractionRecord> records,
+        IReadOnlyList<ClaimWindow> claimWindows,
+        string? fallbackTestId = null)
+    {
+        ArgumentNullException.ThrowIfNull(records);
+        ArgumentNullException.ThrowIfNull(claimWindows);
+
+        if (claimWindows.Count == 0)
+            return (records.ToList(), 0, 0);
+
+        var result = new List<InteractionRecord>(records.Count);
+        var byRequestResponseId = new Dictionary<string, string>(StringComparer.Ordinal);
+        var attributed = 0;
+        var ambiguous = 0;
+
+        foreach (var record in records)
+        {
+            if (!NeedsAttribution(record, fallbackTestId))
+            {
+                if (record.RequestResponseId is { Length: > 0 } known && !IsResponse(record))
+                    byRequestResponseId[known] = record.TestId;
+                result.Add(record);
+                continue;
+            }
+
+            string? testId = null;
+            if (IsResponse(record) && record.RequestResponseId is { Length: > 0 } id)
+                byRequestResponseId.TryGetValue(id, out testId);
+
+            if (testId is null && record.Timestamp is { } when)
+            {
+                string? match = null;
+                var claimants = 0;
+                foreach (var window in claimWindows)
+                {
+                    if (when < window.Start || when > window.End || !ClaimMatches(window.Claims, record))
+                        continue;
+                    if (match != window.TestId)
+                    {
+                        claimants++;
+                        match = window.TestId;
+                    }
+                }
+
+                if (claimants == 1)
+                {
+                    testId = match;
+                }
+                else if (claimants > 1)
+                {
+                    ambiguous++;
+                }
+            }
+
+            if (testId is null)
+            {
+                result.Add(record);
+                continue;
+            }
+
+            if (record.RequestResponseId is { Length: > 0 } pairId && !IsResponse(record))
+                byRequestResponseId[pairId] = testId;
+
+            attributed++;
+            result.Add(record with { TestId = testId });
+        }
+
+        return (result, attributed, ambiguous);
+    }
+
+    /// <summary>Whether any claim literally appears in the record's URI or captured body. Case-sensitive: claims are ids and key fragments, not prose.</summary>
+    private static bool ClaimMatches(IReadOnlyList<string> claims, InteractionRecord record)
+    {
+        foreach (var claim in claims)
+        {
+            if (record.Uri.Contains(claim, StringComparison.Ordinal)
+                || (record.Content?.Contains(claim, StringComparison.Ordinal) ?? false))
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>Whether a record still has to be attributed: no test id at all, or the capturer's fallback marker.</summary>
@@ -158,6 +344,34 @@ public static class IngestAttribution
         }
 
         return best?.TestId;
+    }
+
+    /// <summary>
+    /// The test whose window is the <em>only</em> one containing <paramref name="timestamp"/> —
+    /// null when none does, and null with <paramref name="overlapped"/> set when two or more do
+    /// (<see cref="WindowAttributionMode.ExclusiveOnly"/>).
+    /// </summary>
+    private static string? FindExclusive(IReadOnlyList<TestWindow> windows, DateTimeOffset? timestamp, out bool overlapped)
+    {
+        overlapped = false;
+        if (timestamp is not { } when)
+            return null;
+
+        TestWindow? only = null;
+        foreach (var window in windows)
+        {
+            if (when < window.Start || when > window.End)
+                continue;
+            if (only is not null)
+            {
+                overlapped = true;
+                return null;
+            }
+
+            only = window;
+        }
+
+        return only?.TestId;
     }
 
     /// <summary>

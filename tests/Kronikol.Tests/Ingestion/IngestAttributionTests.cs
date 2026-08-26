@@ -475,4 +475,214 @@ public class IngestAttributionTests : IDisposable
         Assert.DoesNotContain(result.Diagnostics, d => d.Kind == DiagnosticKind.DroppedOutsideRunWindow);
         Assert.Contains(result.Diagnostics, d => d.Kind == DiagnosticKind.Other && d.Message.Contains("no run window could be derived"));
     }
+
+    // ------------------------------------------------------------------------------------------
+    // ExclusiveOnly window attribution (parallel workers): a record inside exactly one window is
+    // attributed; inside two or more it stays unattributed — honestly ambiguous — and is counted.
+    // ------------------------------------------------------------------------------------------
+
+    private static readonly TestRunRecord[] TwoOverlappingTests =
+    [
+        new() { Event = "start", TestId = "worker-a", Timestamp = T0 },
+        new() { Event = "end", TestId = "worker-a", Status = "passed", Timestamp = T0.AddSeconds(20) },
+        new() { Event = "start", TestId = "worker-b", Timestamp = T0.AddSeconds(5) },
+        new() { Event = "end", TestId = "worker-b", Status = "passed", Timestamp = T0.AddSeconds(30) },
+    ];
+
+    [Fact]
+    public void Exclusive_only_attributes_a_record_only_one_window_contains_and_counts_the_ambiguous_rest()
+    {
+        var windows = IngestAttribution.BuildWindows(TwoOverlappingTests);
+
+        var (records, attributed, ambiguous) = IngestAttribution.AttributeByWindow(
+        [
+            Anonymous("redis", 2),   // only worker-a is in flight
+            Anonymous("redis", 10),  // both are — under InnermostWins this would go to worker-b
+            Anonymous("redis", 25),  // only worker-b is left
+            Anonymous("redis", 40),  // nobody is
+        ], windows, WindowAttributionMode.ExclusiveOnly);
+
+        Assert.Equal(2, attributed);
+        Assert.Equal(1, ambiguous);
+        Assert.Equal("worker-a", records[0].TestId);
+        Assert.Equal("", records[1].TestId);
+        Assert.Equal("worker-b", records[2].TestId);
+        Assert.Equal("", records[3].TestId);
+    }
+
+    [Fact]
+    public void Exclusive_only_is_behaviour_preserving_when_windows_never_overlap()
+    {
+        // One worker: the two modes must agree byte-for-byte, which is what lets a host switch
+        // unconditionally instead of keeping a parallel/serial fork of its ingest options.
+        var windows = IngestAttribution.BuildWindows(TwoTests);
+        var inputs = new[] { Anonymous("redis", 2), Anonymous("redis", 8), Anonymous("redis", 12) };
+
+        var (innermost, attributedOld) = IngestAttribution.AttributeByWindow(inputs, windows);
+        var (exclusive, attributedNew, ambiguous) = IngestAttribution.AttributeByWindow(
+            inputs, windows, WindowAttributionMode.ExclusiveOnly);
+
+        Assert.Equal(attributedOld, attributedNew);
+        Assert.Equal(0, ambiguous);
+        Assert.Equal(innermost.Select(r => r.TestId), exclusive.Select(r => r.TestId));
+    }
+
+    [Fact]
+    public void Exclusive_only_still_lets_a_response_follow_its_request_into_the_overlap()
+    {
+        var windows = IngestAttribution.BuildWindows(TwoOverlappingTests);
+
+        var (records, _, ambiguous) = IngestAttribution.AttributeByWindow(
+        [
+            Anonymous("mongo", 2, pairId: "pair-1"),                       // exclusively worker-a's
+            Anonymous("mongo", 10, pairId: "pair-1", type: "Response"),    // answered inside the overlap
+        ], windows, WindowAttributionMode.ExclusiveOnly);
+
+        Assert.Equal("worker-a", records[0].TestId);
+        Assert.Equal("worker-a", records[1].TestId);
+        Assert.Equal(0, ambiguous);
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Claims attribution: the data names its owner. A record goes to the test whose window
+    // contains its timestamp AND whose declared claims appear literally in the record's URI or
+    // body — when exactly one such test exists.
+    // ------------------------------------------------------------------------------------------
+
+    private static InteractionRecord RedisKey(string key, double atSecond, string? content = null, string? pairId = null, string type = "Request") => new()
+    {
+        Type = type,
+        Method = "GET",
+        Uri = $"/insights:{key}",
+        ServiceName = "redis",
+        CallerName = "data-insights",
+        TestId = "",
+        Content = content,
+        RequestResponseId = pairId,
+        Timestamp = T0.AddSeconds(atSecond),
+    };
+
+    private static readonly TestRunRecord[] TwoClaimedTests =
+    [
+        new() { Event = "start", TestId = "worker-a", Timestamp = T0, Claims = ["cust-111", "loc-1111"] },
+        new() { Event = "end", TestId = "worker-a", Status = "passed", Timestamp = T0.AddSeconds(20) },
+        new() { Event = "start", TestId = "worker-b", Timestamp = T0.AddSeconds(5), Claims = ["cust-222", "loc-2222"] },
+        new() { Event = "end", TestId = "worker-b", Status = "passed", Timestamp = T0.AddSeconds(30) },
+    ];
+
+    [Fact]
+    public void A_record_is_attributed_by_the_claim_its_content_matches_even_inside_fully_overlapping_windows()
+    {
+        var claimWindows = IngestAttribution.BuildClaimWindows(TwoClaimedTests);
+
+        var (records, attributed, ambiguous) = IngestAttribution.AttributeByClaims(
+        [
+            RedisKey("cust-111:loc-1111:overview", 10),          // the overlap — but the key names worker-a's customer
+            RedisKey("cust-222:loc-2222:overview", 10),          // and this one worker-b's
+            RedisKey("cust-999:loc-9999:overview", 10),          // nobody claimed this data
+        ], claimWindows);
+
+        Assert.Equal(2, attributed);
+        Assert.Equal(0, ambiguous);
+        Assert.Equal("worker-a", records[0].TestId);
+        Assert.Equal("worker-b", records[1].TestId);
+        Assert.Equal("", records[2].TestId);
+    }
+
+    [Fact]
+    public void A_record_two_in_flight_tests_both_claim_is_left_for_the_window_pass_and_counted()
+    {
+        // A roaming test claims shared data on purpose: its shared records become honestly
+        // ambiguous instead of exclusively someone else's.
+        var claimWindows = IngestAttribution.BuildClaimWindows(
+        [
+            .. TwoClaimedTests,
+            new TestRunRecord { Event = "claims", TestId = "worker-b", Claims = ["cust-111"], Timestamp = T0.AddSeconds(6) },
+        ]);
+
+        var (records, attributed, ambiguous) = IngestAttribution.AttributeByClaims(
+            [RedisKey("cust-111:loc-1111:overview", 10)], claimWindows);
+
+        Assert.Equal(0, attributed);
+        Assert.Equal(1, ambiguous);
+        Assert.Equal("", records[0].TestId);
+    }
+
+    [Fact]
+    public void A_claim_only_binds_while_its_test_is_in_flight()
+    {
+        var claimWindows = IngestAttribution.BuildClaimWindows(TwoClaimedTests);
+
+        var (records, attributed, _) = IngestAttribution.AttributeByClaims(
+            [RedisKey("cust-111:loc-1111:overview", 25)], claimWindows); // worker-a ended at +20
+
+        Assert.Equal(0, attributed);
+        Assert.Equal("", records[0].TestId);
+    }
+
+    [Fact]
+    public void Claims_match_the_body_too_and_a_response_inherits_its_request()
+    {
+        var claimWindows = IngestAttribution.BuildClaimWindows(TwoClaimedTests);
+
+        var (records, attributed, _) = IngestAttribution.AttributeByClaims(
+        [
+            RedisKey("opaque", 10, content: "{\"customerId\":\"cust-222\"}", pairId: "pair-1"),
+            RedisKey("opaque", 11, pairId: "pair-1", type: "Response"), // carries no claim of its own
+        ], claimWindows);
+
+        Assert.Equal(2, attributed);
+        Assert.Equal("worker-b", records[0].TestId);
+        Assert.Equal("worker-b", records[1].TestId);
+    }
+
+    [Fact]
+    public void Mid_run_claims_records_union_with_the_start_record_s()
+    {
+        var claimWindows = IngestAttribution.BuildClaimWindows(
+        [
+            new TestRunRecord { Event = "start", TestId = "roamer", Timestamp = T0, Claims = ["cust-111"] },
+            new TestRunRecord { Event = "claims", TestId = "roamer", Claims = ["cust-333"], Timestamp = T0.AddSeconds(3) },
+            new TestRunRecord { Event = "end", TestId = "roamer", Status = "passed", Timestamp = T0.AddSeconds(20) },
+        ]);
+
+        var window = Assert.Single(claimWindows);
+        Assert.Equal(["cust-111", "cust-333"], window.Claims);
+
+        var (records, attributed, _) = IngestAttribution.AttributeByClaims(
+            [RedisKey("cust-333:loc:overview", 10)], claimWindows);
+
+        Assert.Equal(1, attributed);
+        Assert.Equal("roamer", records[0].TestId);
+    }
+
+    [Fact]
+    public void A_test_without_claims_gets_no_claim_window()
+    {
+        Assert.Empty(IngestAttribution.BuildClaimWindows(TwoTests));
+    }
+
+    [Fact]
+    public void The_pipeline_reports_the_exclusive_mode_even_when_nothing_was_ambiguous()
+    {
+        // The line's presence is the proof the mode ran: a parallel suite whose taps died would
+        // otherwise be indistinguishable from one whose attribution is exact.
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "ExclusiveDiagnostic");
+        options.GenerateComponentDiagram = false;
+
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            Interactions = [Anonymous("redis", 2)],
+            TestRecords = TwoTests,
+            Options = options,
+            AttributeByTestWindow = true,
+            WindowAttribution = WindowAttributionMode.ExclusiveOnly,
+            AttributeByClaims = true,
+        });
+
+        Assert.Contains(result.Diagnostics, d =>
+            d.Kind == DiagnosticKind.Other
+            && d.Message.Contains("WindowAttribution ExclusiveOnly: 0 interaction record(s)"));
+    }
 }

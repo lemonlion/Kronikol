@@ -107,11 +107,31 @@ public sealed class IngestRequest
 
     /// <summary>
     /// Attribute interactions that carry no test identity to the test that was running when they
-    /// happened — see <see cref="IngestAttribution.AttributeByWindow"/> for the exact rule. Default
+    /// happened — see <see cref="IngestAttribution.AttributeByWindow(IReadOnlyList{InteractionRecord}, IReadOnlyList{IngestAttribution.TestWindow}, string?)"/> for the exact rule. Default
     /// <c>false</c>; turn it on for capturers that cannot see a test header (a database tee, a shared
     /// sidecar, an OTLP exporter).
     /// </summary>
     public bool AttributeByTestWindow { get; init; }
+
+    /// <summary>
+    /// How <see cref="AttributeByTestWindow"/> resolves a record whose timestamp lies inside more
+    /// than one test window. <see cref="WindowAttributionMode.InnermostWins"/> (the default, and the
+    /// historical behaviour) suits nested tests; <see cref="WindowAttributionMode.ExclusiveOnly"/>
+    /// suits parallel workers — an ambiguous record stays unattributed (and counted in
+    /// <see cref="IngestResult.Diagnostics"/>) instead of being filed under whichever test started
+    /// last. With one worker the two modes are identical, because windows never overlap.
+    /// </summary>
+    public WindowAttributionMode WindowAttribution { get; init; } = WindowAttributionMode.InnermostWins;
+
+    /// <summary>
+    /// Before window attribution, attribute records by <em>content</em>: a record goes to the test
+    /// whose window contains its timestamp and whose declared <see cref="TestRunRecord.Claims"/>
+    /// appear literally in the record's URI or body — when exactly one such test exists (see
+    /// <see cref="IngestAttribution.AttributeByClaims"/>). Exact even under fully overlapping
+    /// windows, provided concurrent tests touch disjoint data. Records no claim matches fall
+    /// through to <see cref="AttributeByTestWindow"/> untouched. Default <c>false</c>.
+    /// </summary>
+    public bool AttributeByClaims { get; init; }
 
     /// <summary>
     /// The placeholder test id a capturer stamps on traffic it could not attribute (a tap's
@@ -522,13 +542,32 @@ public static class IngestPipeline
     private static List<InteractionRecord> Attribute(
         List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
     {
+        if (request.AttributeByClaims)
+        {
+            var claimWindows = IngestAttribution.BuildClaimWindows(testRecords);
+            var (claimedRecords, claimed, contested) = IngestAttribution.AttributeByClaims(records, claimWindows, request.WindowAttributionFallbackId);
+            records = claimedRecords;
+            if (claimed > 0)
+                diagnostics.Add(DiagnosticKind.UnattributedInteractions, $"{claimed} interaction record(s) attributed to a test by content claims.");
+            if (contested > 0)
+                diagnostics.Add(DiagnosticKind.Other, $"{contested} interaction record(s) matched the claims of more than one in-flight test and were left for window attribution.");
+        }
+
         if (request.AttributeByTestWindow)
         {
             var windows = IngestAttribution.BuildWindows(testRecords);
-            var (attributedRecords, attributed) = IngestAttribution.AttributeByWindow(records, windows, request.WindowAttributionFallbackId);
+            var (attributedRecords, attributed, ambiguous) = IngestAttribution.AttributeByWindow(
+                records, windows, request.WindowAttribution, request.WindowAttributionFallbackId);
             records = attributedRecords;
             if (attributed > 0)
                 diagnostics.Add(DiagnosticKind.UnattributedInteractions, $"{attributed} interaction record(s) attributed to a test by time window.");
+            if (request.WindowAttribution == WindowAttributionMode.ExclusiveOnly)
+            {
+                // Always, even at zero: the line is what proves the mode ran (a parallel suite whose
+                // taps died would otherwise be indistinguishable from one whose attribution is exact).
+                diagnostics.Add(DiagnosticKind.Other,
+                    $"WindowAttribution ExclusiveOnly: {ambiguous} interaction record(s) fell inside more than one test window and stayed unattributed.");
+            }
         }
 
         if (request.PhaseFromSteps)

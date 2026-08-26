@@ -111,6 +111,17 @@ public sealed record TestRunRecord
     /// </summary>
     [JsonPropertyName("tags")] public string[]? Tags { get; init; }
 
+    /// <summary>
+    /// <c>start</c> (and <c>claims</c>) records: literal fragments — customer ids, cache-key parts,
+    /// SQL identifiers — of the data this test touches. Read by
+    /// <see cref="IngestAttribution.BuildClaimWindows"/> for <see cref="IngestRequest.AttributeByClaims"/>:
+    /// a captured record with no identity of its own is attributed to the test whose window contains
+    /// its timestamp <em>and</em> whose claim appears in its URI or body. A test may add claims
+    /// mid-run by writing a <c>{"event":"claims","testId":…,"claims":[…]}</c> line; the event is
+    /// unknown to the scenario synthesiser and therefore never renders as anything.
+    /// </summary>
+    [JsonPropertyName("claims")] public string[]? Claims { get; init; }
+
     /// <summary><c>start</c> only: the name of the scenario outline this row came from — rows sharing it render as one parameterised group.</summary>
     [JsonPropertyName("outlineId")] public string? OutlineId { get; init; }
 

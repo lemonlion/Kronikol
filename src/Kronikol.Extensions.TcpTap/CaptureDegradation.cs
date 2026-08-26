@@ -17,6 +17,16 @@ public enum CaptureDegradationKind
 
     /// <summary>A connection closed while a command was unanswered or a message was only partly received; its last interaction(s) were not recorded.</summary>
     ConnectionClosedMidMessage,
+
+    /// <summary>
+    /// The tap closed a connection on which a decoded command had sat unanswered for
+    /// <see cref="TcpTapOptions.ReapStuckConnectionsAfter"/> — the one intervention that ever touches
+    /// forwarding. It exists because a database client whose internal pipeline has wedged (commands
+    /// queued forever, never timing out) recovers from a closed socket where it never recovers on its
+    /// own; no healthy connection ever trips the threshold, because the servers answer in milliseconds
+    /// and an idle connection has nothing unanswered.
+    /// </summary>
+    StuckConnectionReaped,
 }
 
 /// <summary>

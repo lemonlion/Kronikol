@@ -43,6 +43,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
     private readonly Dictionary<int, PendingCommand> _pending = [];
     private readonly MongoDbTrackingVerbosity _verbosity;
     private const int MaxPendingCommands = 4096;
+    private long _oldestUnansweredTicks;
 
     private bool _compressionReported;
     private bool _legacyHandshakeReported;
@@ -65,6 +66,21 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
 
     /// <summary>Commands seen but not yet answered.</summary>
     public int PendingCommands => _pending.Count;
+
+    /// <inheritdoc />
+    public DateTimeOffset? OldestUnansweredSince
+    {
+        get
+        {
+            var ticks = Interlocked.Read(ref _oldestUnansweredTicks);
+            return ticks == 0 ? null : new DateTimeOffset(ticks, TimeSpan.Zero);
+        }
+    }
+
+    /// <summary>Publishes the oldest pending request for the reaper (only the decode task mutates the map).</summary>
+    private void PublishOldestUnanswered() =>
+        Interlocked.Exchange(ref _oldestUnansweredTicks,
+            _pending.Count == 0 ? 0 : _pending.Values.Min(pending => pending.Timestamp).UtcTicks);
 
     /// <summary>Whether this connection negotiated compression, so its commands cannot be decoded.</summary>
     public bool CompressionSeen => _compressionReported;
@@ -139,7 +155,11 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
                 // Too big to buffer: skip exactly this message, but still close the arrow it answers.
                 BeginSkip(ref _skipReplyBytes, _replies, header.MessageLength);
                 if (_pending.Remove(header.ResponseTo, out var pending))
+                {
+                    PublishOldestUnanswered();
                     RecordPair(pending, null, timestamp, $"[reply of {header.MessageLength:N0} bytes skipped — larger than the capture cap]");
+                }
+
                 return;
             }
 
@@ -227,6 +247,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
     private void Clear()
     {
         _pending.Clear();
+        PublishOldestUnanswered();
         _commands.Clear();
         _replies.Clear();
         _skipCommandBytes = 0;
@@ -278,6 +299,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         }
 
         _pending[header.RequestId] = pending;
+        PublishOldestUnanswered();
         if (_pending.Count > MaxPendingCommands)
         {
             // A connection whose replies we never saw (dropped segments, a desynchronised reply stream): the
@@ -309,6 +331,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
 
         if (!_pending.Remove(header.ResponseTo, out var pending))
             return; // an excluded command's reply, or a streaming `hello` with moreToCome on a monitor connection
+        PublishOldestUnanswered();
 
         var parsed = MongoWireParser.ParseOpMsg(message);
         RecordPair(pending, parsed.Document, timestamp);

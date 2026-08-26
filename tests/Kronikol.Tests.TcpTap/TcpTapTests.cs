@@ -52,6 +52,82 @@ public class TcpTapTests
         return buffer[..read];
     }
 
+    // ---- the stuck-connection reaper --------------------------------------------------------------
+
+    [Fact]
+    public async Task AConnectionWithACommandUnansweredPastTheThresholdIsReaped()
+    {
+        // The observed failure mode this exists for: a database client whose internal pipeline wedges
+        // (StackExchange.Redis 2.6.x, live 2026-08-24) holds its socket open with sent commands that
+        // are never answered - and never recovers until the socket CLOSES. The server never answering
+        // a decoded command past a multi-second threshold is that wedge's signature: real servers
+        // answer in milliseconds.
+        await using var server = new StubServer(_ => null); // a server that never replies
+        var degradations = new System.Collections.Concurrent.ConcurrentQueue<CaptureDegradation>();
+        var options = RedisOptions(server, new RecordingSink(), o =>
+        {
+            o.ReapStuckConnectionsAfter = TimeSpan.FromMilliseconds(1500);
+            o.OnCaptureDegraded = degradations.Enqueue;
+        });
+
+        await using var tap = new RedisTap(options);
+        await tap.StartAsync();
+
+        var (client, stream) = await ConnectAsync(tap);
+        using (client)
+        {
+            await stream.WriteAsync(Encoding.ASCII.GetBytes(Resp.Command("GET", "wedged-key")));
+
+            // No reply will ever come. The tap must close the connection from its side: the read
+            // observes EOF or a reset, never an indefinite hang.
+            try
+            {
+                var afterReap = await ReadAtLeastAsync(stream, 1, timeoutMs: 15_000);
+                Assert.Empty(afterReap);
+            }
+            catch (IOException)
+            {
+                // A reset instead of a clean FIN is an equally acceptable way to be told.
+            }
+        }
+
+        Assert.True(await Wait.UntilAsync(() => tap.StuckConnectionsReaped == 1));
+        Assert.Contains(degradations, d => d.Kind == CaptureDegradationKind.StuckConnectionReaped);
+    }
+
+    [Fact]
+    public async Task AnIdleConnectionWithNothingUnansweredIsNeverReaped()
+    {
+        // The counter-case that killed the first version of this feature: a pool member idling
+        // between checkouts is SILENT but healthy, and reaping it disrupts the client's pool.
+        await using var server = new StubServer(_ => PONG_BYTES);
+        var options = RedisOptions(server, new RecordingSink(),
+            o => o.ReapStuckConnectionsAfter = TimeSpan.FromMilliseconds(1200));
+
+        await using var tap = new RedisTap(options);
+        await tap.StartAsync();
+
+        var (client, stream) = await ConnectAsync(tap);
+        using (client)
+        {
+            // One answered exchange, then idle well past several thresholds: nothing is unanswered,
+            // so nothing may be reaped.
+            await stream.WriteAsync(Encoding.ASCII.GetBytes(Resp.Command("PING")));
+            _ = await ReadAtLeastAsync(stream, 1);
+            await Task.Delay(4_000);
+
+            Assert.Equal(0, tap.StuckConnectionsReaped);
+            Assert.True(client.Connected);
+
+            // And the connection still works after the quiet spell.
+            await stream.WriteAsync(Encoding.ASCII.GetBytes(Resp.Command("PING")));
+            var alive = await ReadAtLeastAsync(stream, 1);
+            Assert.NotEmpty(alive);
+        }
+    }
+
+    private static readonly byte[] PONG_BYTES = Encoding.ASCII.GetBytes("+PONG\r\n");
+
     // ---- the tee ----------------------------------------------------------------------------------
 
     [Fact]

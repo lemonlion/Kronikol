@@ -63,6 +63,7 @@ public class TcpTap : IAsyncDisposable
     private long _decoderResets;
     private long _decodingDisabledConnections;
     private long _connectionsClosedMidMessage;
+    private long _stuckConnectionsReaped;
     private long _firstDisabledAtTicks;
     private string? _lastDisabledReason;
     private long _lastInteractionAtTicks;
@@ -127,6 +128,9 @@ public class TcpTap : IAsyncDisposable
 
     /// <summary>Connections that closed with a command unanswered or a message only partly received; their last interaction(s) were not recorded.</summary>
     public long ConnectionsClosedMidMessage => Interlocked.Read(ref _connectionsClosedMidMessage);
+
+    /// <summary>Connections the tap closed because a decoded command sat unanswered for <see cref="TcpTapOptions.ReapStuckConnectionsAfter"/> — see that option for why.</summary>
+    public long StuckConnectionsReaped => Interlocked.Read(ref _stuckConnectionsReaped);
 
     /// <summary>When the last interaction was recorded, or null when none has been.</summary>
     public DateTimeOffset? LastInteractionAt
@@ -222,17 +226,23 @@ public class TcpTap : IAsyncDisposable
                 AllowSynchronousContinuations = false,
             });
 
-            var decodeTask = Task.Run(() => DecodeLoopAsync(channel.Reader, decoder, context), CancellationToken.None);
+            var pumpState = new ConnectionPumpState(id);
+            var decodeTask = Task.Run(() => DecodeLoopAsync(channel.Reader, decoder, context, pumpState), CancellationToken.None);
 
             var clientStream = client.GetStream();
             var upstreamStream = upstream.GetStream();
-            var pumpState = new ConnectionPumpState(id);
             var toServer = PumpAsync(clientStream, upstreamStream, upstream.Client, TapDirection.ClientToServer, channel.Writer, pumpState, ct);
             var toClient = PumpAsync(upstreamStream, clientStream, client.Client, TapDirection.ServerToClient, channel.Writer, pumpState, ct);
 
+            var reaper = _options.ReapStuckConnectionsAfter is { } threshold
+                ? Task.Run(() => ReapWhenStuckAsync(client, upstream, decoder, pumpState, threshold), CancellationToken.None)
+                : Task.CompletedTask;
+
             await Task.WhenAll(toServer, toClient).ConfigureAwait(false);
+            Volatile.Write(ref pumpState.Closed, 1);
             channel.Writer.TryComplete();
             await decodeTask.ConfigureAwait(false);
+            await reaper.ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException)
         {
@@ -291,6 +301,7 @@ public class TcpTap : IAsyncDisposable
                 else
                     Interlocked.Add(ref _bytesServerToClient, read);
                 Interlocked.Add(ref _bytesSinceLastInteraction, read);
+                Volatile.Write(ref state.LastActivityTicks, Environment.TickCount64);
 
                 var copy = buffer.AsSpan(0, read).ToArray();
                 if (!writer.TryWrite(new TapSegment(direction, copy, DateTimeOffset.UtcNow)))
@@ -303,6 +314,50 @@ public class TcpTap : IAsyncDisposable
             // Half-close: tell the far side this direction is done, but keep the other one pumping.
             try { destinationSocket.Shutdown(SocketShutdown.Send); }
             catch (Exception ex) when (ex is SocketException or ObjectDisposedException) { /* already gone */ }
+        }
+    }
+
+    /// <summary>
+    /// The stuck-connection reaper (<see cref="TcpTapOptions.ReapStuckConnectionsAfter"/>): closes both
+    /// sockets of a connection on which a DECODED COMMAND has sat unanswered for the configured span —
+    /// the signature of a client whose pipeline has wedged, never of a healthy one (Redis and Mongo
+    /// answer in milliseconds; even a streamed oversize payload completes orders of magnitude sooner).
+    /// A genuinely idle connection — a pool member between checkouts — has nothing unanswered and is
+    /// never touched; a first version that reaped on SILENCE killed exactly those and made things
+    /// worse. When decoding has been disabled for the connection the tap is blind and never guesses.
+    /// Observed live 2026-08-24: a machine-wide stall wedged StackExchange.Redis 2.6.x inside
+    /// data-insights — 18 sent commands unanswered forever, no timeout, no reconnect, every request in
+    /// the service hung — and a closed socket is the one signal such a client reliably recovers from.
+    /// </summary>
+    private async Task ReapWhenStuckAsync(
+        TcpClient client, TcpClient upstream, IProtocolDecoder decoder, ConnectionPumpState state, TimeSpan threshold)
+    {
+        while (Volatile.Read(ref state.Closed) == 0)
+        {
+            await Task.Delay(1_000).ConfigureAwait(false);
+            if (Volatile.Read(ref state.Closed) != 0 || Volatile.Read(ref state.DecodingBroken) != 0)
+                return;
+
+            DateTimeOffset? since;
+            try
+            {
+                since = decoder.OldestUnansweredSince;
+            }
+            catch (Exception)
+            {
+                return; // a decoder that throws here is a decoder the reaper must not act on
+            }
+
+            if (since is not { } oldest || DateTimeOffset.UtcNow - oldest < threshold)
+                continue;
+
+            Interlocked.Increment(ref _stuckConnectionsReaped);
+            var detail = $"a command sent at {oldest:HH:mm:ss}Z is still unanswered after {threshold} — closed so a wedged client can reconnect";
+            _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap connection {state.ConnectionId} reaped: {detail}");
+            Degrade(state.ConnectionId, CaptureDegradationKind.StuckConnectionReaped, detail);
+            try { client.Dispose(); } catch { /* already closing */ }
+            try { upstream.Dispose(); } catch { /* already closing */ }
+            return;
         }
     }
 
@@ -324,7 +379,7 @@ public class TcpTap : IAsyncDisposable
                 $"decode queue full ({direction}) — segments dropped; interactions on this connection may be missing or mis-paired");
     }
 
-    private async Task DecodeLoopAsync(ChannelReader<TapSegment> reader, IProtocolDecoder decoder, TcpTapConnectionContext context)
+    private async Task DecodeLoopAsync(ChannelReader<TapSegment> reader, IProtocolDecoder decoder, TcpTapConnectionContext context, ConnectionPumpState state)
     {
         var decoding = true;
         try
@@ -344,6 +399,12 @@ public class TcpTap : IAsyncDisposable
                 catch (Exception ex)
                 {
                     decoding = HandleDecodeError(decoder, context, ex);
+                    if (!decoding)
+                    {
+                        // The reaper reads the decoder's pending state; with decoding gone that
+                        // state is frozen mid-flight and must never read as a wedged client.
+                        Volatile.Write(ref state.DecodingBroken, 1);
+                    }
                 }
             }
 
@@ -352,6 +413,7 @@ public class TcpTap : IAsyncDisposable
         }
         catch (Exception ex)
         {
+            Volatile.Write(ref state.DecodingBroken, 1);
             Interlocked.Increment(ref _decodeErrors);
             DisableDecoding(context.ConnectionId, ex, "decode loop error");
         }
@@ -486,6 +548,11 @@ public class TcpTap : IAsyncDisposable
         if (closedMid > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
                 $"{name}: {closedMid:N0} connection(s) closed mid-message — their last command(s) were not recorded"));
+
+        var reaped = StuckConnectionsReaped;
+        if (reaped > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: {reaped:N0} stuck connection(s) reaped (a command unanswered for {_options.ReapStuckConnectionsAfter}) so a wedged client could reconnect"));
 
         if (_options.DecodingStallBytes is { } stallBytes && BytesSinceLastInteraction >= stallBytes)
         {
@@ -645,6 +712,15 @@ public class TcpTap : IAsyncDisposable
         public long ConnectionId { get; } = connectionId;
 
         public long LastDropReportTicks;
+
+        /// <summary>When either pump last moved bytes (<see cref="Environment.TickCount64"/>).</summary>
+        public long LastActivityTicks = Environment.TickCount64;
+
+        /// <summary>1 once both pumps have ended — stops the stuck-connection reaper.</summary>
+        public int Closed;
+
+        /// <summary>1 once decoding has been disabled for the connection — the reaper is blind then and never guesses.</summary>
+        public int DecodingBroken;
     }
 }
 

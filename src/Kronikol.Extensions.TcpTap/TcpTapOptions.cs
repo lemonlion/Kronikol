@@ -153,6 +153,25 @@ public class TcpTapOptions
     /// <summary>Size of each socket read. Default 32 KiB.</summary>
     public int ReadBufferBytes { get; set; } = 32 * 1024;
 
+    /// <summary>
+    /// Close a connection on which a decoded command has sat <em>unanswered</em> for this long — the one
+    /// intervention that ever touches forwarding, and it exists for one observed failure mode: a database
+    /// client whose internal pipeline wedges (StackExchange.Redis 2.6.x seen live 2026-08-24: a
+    /// machine-wide stall jammed its pipe writer, and from then on every command sat queued forever — no
+    /// completion, no timeout, no reconnect — taking every request in the service down with it). Such a
+    /// client recovers from a <em>closed socket</em> — it reconnects and fails its backlog fast — where it
+    /// never recovers on its own. An unanswered command is the wedge's signature and only its signature:
+    /// Redis and Mongo answer in milliseconds, so no healthy connection ever trips a multi-second
+    /// threshold — and a genuinely idle connection (a pool member between checkouts) has nothing
+    /// unanswered and is never touched. (A first version reaped on <em>silence</em> instead, and killed
+    /// exactly those healthy idle pool connections.) Requires a decoder that reports
+    /// <see cref="IProtocolDecoder.OldestUnansweredSince"/> (the Redis and Mongo decoders do); when
+    /// decoding has been disabled for a connection the tap is blind there and never guesses. Reaps are
+    /// counted (<see cref="TcpTap.StuckConnectionsReaped"/>), logged, and reported through
+    /// <see cref="OnCaptureDegraded"/>. Null = off (the default).
+    /// </summary>
+    public TimeSpan? ReapStuckConnectionsAfter { get; set; }
+
     /// <summary>Optional hook applied to every key / identifier before it is recorded (Redis keys, channel names).</summary>
     public Func<string, string>? KeyRedaction { get; set; }
 
@@ -188,6 +207,8 @@ public class TcpTapOptions
             throw new ArgumentOutOfRangeException(nameof(MaxBufferedBytes), "MaxBufferedBytes must be positive.");
         if (DecodingStallBytes is <= 0)
             throw new ArgumentOutOfRangeException(nameof(DecodingStallBytes), "DecodingStallBytes must be positive, or null to disable the detector.");
+        if (ReapStuckConnectionsAfter is { } reap && reap <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(ReapStuckConnectionsAfter), "ReapStuckConnectionsAfter must be positive, or null to disable the reaper.");
         if (DecoderFactory is null)
             throw new ArgumentException("DecoderFactory is required (use RedisTap/MongoTap, or set it to tee another protocol).", nameof(DecoderFactory));
     }
@@ -224,6 +245,7 @@ public class TcpTapOptions
         target.OnCaptureDegraded = OnCaptureDegraded;
         target.DecodingStallBytes = DecodingStallBytes;
         target.ReadBufferBytes = ReadBufferBytes;
+        target.ReapStuckConnectionsAfter = ReapStuckConnectionsAfter;
         target.KeyRedaction = KeyRedaction;
         target.ValueRedaction = ValueRedaction;
         target.DecoderFactory = DecoderFactory;

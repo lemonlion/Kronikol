@@ -44,6 +44,15 @@ public interface IProtocolDecoder : IDisposable
     /// case the tap disables decoding for the connection.
     /// </summary>
     bool TryReset() => false;
+
+    /// <summary>
+    /// When the OLDEST decoded command still awaiting its reply was sent, or null when nothing is
+    /// unanswered (or the decoder does not track it — the default). Read by the tap's stuck-connection
+    /// reaper (<see cref="TcpTapOptions.ReapStuckConnectionsAfter"/>) from OUTSIDE the decode task, so an
+    /// implementation must publish it with a volatile/interlocked field rather than reading its live
+    /// pending structure.
+    /// </summary>
+    DateTimeOffset? OldestUnansweredSince => null;
 }
 
 /// <summary>
