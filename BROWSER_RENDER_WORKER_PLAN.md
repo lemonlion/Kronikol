@@ -1,7 +1,10 @@
 # Browser rendering off the main thread — implementation plan
 
-Status: **implemented in 3.0.45 (2026-08-22) — Phases 0–6**; Phase 7 (engine upgrade) remains an optional
-follow-up. Production code: `src/Kronikol/Reports/plantuml-worker-host.js`, the shim in
+Status: **implemented in 3.0.45 (2026-08-22) — Phases 0–6**; Phase 7 (engine upgrade) **completed in
+3.0.50 (2026-08-25)**: the jsDelivr fork was re-based on npm `@plantuml/core` 1.2026.6 (tag
+`v1.2026.6-patched` — the two `4096.0 → 98304.0` compares plus the `(max 4096)` message), the ES-module
+tail is rewritten by the shim/worker host/`plantuml-render.js`, the main-thread fallback `import()`s the
+engine, and the Node renderer's engine cache is now versioned by CDN tag. Production code: `src/Kronikol/Reports/plantuml-worker-host.js`, the shim in
 `src/Kronikol/Reports/plantuml-browser-render-script.js`, prefetch hooks in `collapsible-notes-script.js`,
 `ReportConfigurationOptions.BrowserRenderWorkers/BrowserRenderCacheMegabytes/BrowserFragmentMaxHeight`,
 `kronikol ingest --browser-render-workers`, the Node renderer's batch mode + V8 code cache. Tests:

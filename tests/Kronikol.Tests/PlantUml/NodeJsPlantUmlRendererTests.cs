@@ -376,4 +376,60 @@ public class NodeJsPlantUmlRendererTests
         // 80-character pieces so wrapWidth can break it, each piece drawn as its own <text>.
         Assert.Contains(new string('k', 80), svg);
     }
+
+    // ── ES-module engine builds (npm @plantuml/core line) ────────────────────────────────────────
+
+    private static string RenderScriptSource()
+    {
+        var assembly = typeof(NodeJsPlantUmlRenderer).Assembly;
+        var name = assembly.GetManifestResourceNames()
+            .First(n => n.EndsWith("plantuml-render.js", StringComparison.OrdinalIgnoreCase));
+        using var reader = new StreamReader(assembly.GetManifestResourceStream(name)!);
+        return reader.ReadToEnd();
+    }
+
+    [Fact]
+    public void An_esm_engine_build_is_rewritten_and_drives_the_renderer()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // The npm @plantuml/core line ships as an ES module ending in `export{C as render,D as
+        // renderToString};` — vm.Script cannot evaluate an export statement, so plantuml-render.js must
+        // rewrite the tail into an assignment and drive the exports directly (that build has no
+        // plantumlLoad). Probed with stubs so the test needs node but neither network nor the real engine.
+        var dir = Directory.CreateTempSubdirectory("kronikol-esm-stub-").FullName;
+        try
+        {
+            var viz = Path.Combine(dir, "viz-global.js");
+            var engine = Path.Combine(dir, "plantuml.js");
+            File.WriteAllText(viz,
+                "globalThis.Viz = { instance: function () { return Promise.resolve({ renderString: function () { return '<svg xmlns=\"http://www.w3.org/2000/svg\"/>'; } }); } };");
+            File.WriteAllText(engine,
+                """
+                "use strict";
+                let C=(lines,id,options)=>{var t=document.getElementById(id);t.innerHTML='<svg xmlns="http://www.w3.org/2000/svg"><text>'+lines.join(' ')+'</text></svg>';},D=(lines,options)=>'unused';
+                export{C as render,D as renderToString};
+                """);
+
+            var stdout = NodeProbe.RunWithStdin(RenderScriptSource(), "@startuml\na -> b: esm probe\n@enduml", viz, engine);
+
+            Assert.Contains("<svg", stdout);
+            Assert.Contains("esm probe", stdout);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void The_engine_cache_is_versioned_by_the_cdn_tag()
+    {
+        // DownloadJsFiles skips files that already exist: with an unversioned cache directory a change
+        // of TrackingDefaults.PlantUmlJsCdnBase would silently keep every existing machine on the old
+        // engine forever. The cache directory must therefore carry the CDN tag.
+        var tag = Kronikol.Constants.TrackingDefaults.PlantUmlJsCdnBase.Split('/')[^1].Split('@')[^1];
+        Assert.Contains($"{Path.DirectorySeparatorChar}{tag}{Path.DirectorySeparatorChar}",
+            NodeJsPlantUmlRenderer.CodeCachePath);
+    }
 }

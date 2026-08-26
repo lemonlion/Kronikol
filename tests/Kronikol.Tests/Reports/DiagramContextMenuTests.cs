@@ -888,8 +888,8 @@ public class DiagramContextMenuTests
         Assert.Contains("fetch(", _plantUmlScript);
         Assert.Contains("new Worker(", _plantUmlScript);
         Assert.Contains("URL.createObjectURL(new Blob(", _plantUmlScript);
-        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched/viz-global.js", _plantUmlScript);
-        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched/plantuml.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.6-patched/viz-global.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.6-patched/plantuml.js", _plantUmlScript);
     }
 
     [Fact]
@@ -901,8 +901,10 @@ public class DiagramContextMenuTests
         var dclIndex = _plantUmlScript.IndexOf("DOMContentLoaded");
         Assert.True(bootstrapIndex >= 0 && dclIndex >= 0);
         Assert.True(bootstrapIndex < dclIndex, "worker bootstrap should be registered before the DOMContentLoaded handler");
-        // plantumlLoad() stays a callable no-op for anything that still calls it; the shim owns the engine.
-        Assert.Contains("window.plantumlLoad = function", _plantUmlScript);
+        // plantumlLoad() stays a callable no-op for anything that still calls it; the shim owns the
+        // engine. It must be the shim's shared `noop` — the fallback detects an ES-module engine build
+        // (which defines no plantumlLoad of its own) by that identity.
+        Assert.Contains("window.plantumlLoad = noop", _plantUmlScript);
         Assert.Contains("window.plantuml = ", _plantUmlScript);
         Assert.Contains("prefetch:", _plantUmlScript);
     }

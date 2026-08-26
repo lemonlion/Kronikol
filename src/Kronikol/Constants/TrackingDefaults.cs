@@ -12,9 +12,15 @@ public static class TrackingDefaults
     public const string CallerName = "Caller";
 
     /// <summary>
-    /// CDN base URL for the PlantUML JavaScript renderer used in HTML reports.
+    /// CDN base URL for the PlantUML JavaScript renderer used in HTML reports. The build is the
+    /// npm <c>@plantuml/core</c> ES-module engine with the 4096px size limit patched to 98304px;
+    /// every consumer (the browser shim, the worker host, <c>plantuml-render.js</c>) rewrites its
+    /// trailing <c>export</c> statement into an assignment, since Workers and <c>vm</c> contexts
+    /// cannot evaluate ES modules. If this is ever pointed at a host that does not send CORS headers,
+    /// the browser falls back to script-tag loading on the main thread (see
+    /// <see cref="ReportConfigurationOptions.BrowserRenderWorkers"/>).
     /// </summary>
-    public const string PlantUmlJsCdnBase = "https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched";
+    public const string PlantUmlJsCdnBase = "https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.6-patched";
 
     /// <summary>
     /// Default number of Web Workers a <c>BrowserJs</c> report renders diagrams on (capped by the

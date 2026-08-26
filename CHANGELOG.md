@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.50] - 2026-08-25
+
+### Changed
+- **PlantUML JS engine re-based on npm [`@plantuml/core`](https://www.npmjs.com/package/@plantuml/core) 1.2026.6 (MIT)** — `TrackingDefaults.PlantUmlJsCdnBase` now points at `…@v1.2026.6-patched`, the new build published with the same two `4096.0 → 98304.0` size-limit patches as before, plus a correction the old build lacked: the *"Diagram too large for browser rendering"* message now says `(max 98304)` instead of the unpatched `(max 4096)` it printed while actually enforcing 98304. The new engine renders faster and emits ~35 % smaller SVG — on the E2E large-report fixture (6 diagrams, 70 fragment renders): first worker ready 0.78 s (was 1.0–2.3 s), full render 3.7 s (was 4.0–11.2 s), note toggle 0.47 s (was 0.54–1.5 s), total worker render time 8.9 s (was 9.9–32 s); geometry and element counts are pinned identical between worker and main-thread output. The build is an ES module (`export { render, renderToString }`, no `plantumlLoad`): the browser shim and worker host already handled that form; `plantuml-render.js` (NodeJs rendering) now rewrites the trailing `export` into an assignment before `vm.Script` compilation, and the browser's main-thread fallback detects the missing `plantumlLoad` after script-tag loading and `import()`s the engine instead. The statement-length limits in `PlantUmlStatementLimits` were re-measured against the new build and are unchanged.
+
+### Fixed
+- **A note/assertion/step toggle on a fully cached diagram blocked the main thread for the sum of all its fragment swaps** (~½ s on a large diagram under load): after a prefetch, every fragment is a synchronous cache hit and the two toggle loops chained them in a single task. They now yield between fragments, so the worst main-thread task during a toggle is one fragment's `innerHTML` swap.
+- **A CDN engine change never reached machines with a warm cache.** `NodeJsPlantUmlRenderer` cached `plantuml.js` / `viz-global.js` under `%LOCALAPPDATA%/Kronikol/plantuml-js/` keyed by filename alone and skipped the download when the file existed — so after any `PlantUmlJsCdnBase` change, every machine that had ever rendered kept the old engine forever. The cache directory now carries the CDN tag (`…/plantuml-js/v1.2026.6-patched/`), and the V8 code cache moves with it.
+
 ## [3.0.49] - 2026-08-24
 
 ### Added

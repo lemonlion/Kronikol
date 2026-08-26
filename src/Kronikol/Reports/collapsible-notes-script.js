@@ -846,11 +846,13 @@
                         return;
                     }
                     var item = fragQueue[fragIdx++];
-                    // Check SVG cache first
+                    // Check SVG cache first. Yield between fragments: after a prefetch most fragments are
+                    // synchronous cache hits, and swapping them all in one go is a single main-thread task
+                    // as long as the sum of the innerHTML swaps (~½ s on a big diagram under load).
                     if (_svgCache[item.source]) {
                         item.el.innerHTML = _svgCache[item.source];
                         item.el.dataset.rendered = '1';
-                        renderNextFrag();
+                        setTimeout(renderNextFrag, 0);
                         return;
                     }
                     var fDone = false;
@@ -866,7 +868,9 @@
                         if (!failed && item.el.querySelector('svg')) _svgCache[item.source] = item.el.innerHTML;
                         item.el.dataset.rendered = '1';
                         window._plantumlRendering = false;
-                        renderNextFrag();
+                        // A shim cache hit completes synchronously (the observer fires as a microtask, still
+                        // inside this task) — yield so consecutive hits become separate tasks.
+                        setTimeout(renderNextFrag, 0);
                     }
                     window._plantumlRendering = true;
                     var fmo = new MutationObserver(function() {
@@ -1325,10 +1329,12 @@
                             return;
                         }
                         var fItem = fragList[fragI++];
+                        // Yield between cached fragments — see renderNextFrag: consecutive synchronous
+                        // swaps in one task block the main thread for their sum.
                         if (_svgCache[fItem.source]) {
                             fItem.el.innerHTML = _svgCache[fItem.source];
                             fItem.el.dataset.rendered = '1';
-                            renderNextFragment();
+                            setTimeout(renderNextFragment, 0);
                             return;
                         }
                         // A fragment with nothing to draw (every arrow filtered away) is a message, not an
@@ -1352,7 +1358,8 @@
                             if (!failed && fItem.el.querySelector('svg')) _svgCache[fItem.source] = fItem.el.innerHTML;
                             fItem.el.dataset.rendered = '1';
                             window._plantumlRendering = false;
-                            renderNextFragment();
+                            // A shim cache hit completes synchronously — yield between fragments.
+                            setTimeout(renderNextFragment, 0);
                         }
                         var fmo = new MutationObserver(function() {
                             // Any output — an <svg>, or the engine's text for a failure — completes the fragment.

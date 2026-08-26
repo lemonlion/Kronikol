@@ -310,25 +310,42 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             (args) => new Promise(function (resolve, reject) {
                 var cdn = args[0], sources = args[1];
                 var shim = window.plantuml; window.plantuml = undefined;
+                // A promise that never settles hangs the whole test run (EvaluateAsync has no timeout).
+                setTimeout(function () { reject(new Error('main-thread engine did not render within 180 s')); }, 180000);
                 function add(src) { return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = src; s.async = false; s.onload = res; s.onerror = function () { rej(new Error('load ' + src)); }; document.head.appendChild(s); }); }
+                var preLoad = window.plantumlLoad;
                 add(cdn + '/viz-global.js').catch(function () {});
                 add(cdn + '/plantuml.js').then(function () {
-                    window.plantumlLoad([], function () {
-                        var engine = window.plantuml; window.plantuml = shim;
-                        var left = sources.length, out = [];
-                        function renderNext(i) {
-                            if (i >= sources.length) return;
-                            var el = document.createElement('div'); el.id = 'fid-mt-' + i; document.body.appendChild(el);
-                            new MutationObserver(function (m, mo) {
-                                var svg = el.querySelector('svg'); if (!svg) return; mo.disconnect();
-                                out[i] = { width: svg.getAttribute('width'), height: svg.getAttribute('height'), viewBox: svg.getAttribute('viewBox'),
-                                           texts: svg.querySelectorAll('text').length, elements: svg.querySelectorAll('*').length };
-                                if (--left === 0) resolve(out); else renderNext(i + 1);
-                            }).observe(el, { childList: true, subtree: true });
-                            engine.render(sources[i].split('\n'), el.id);
-                        }
-                        renderNext(0);
+                    // A classic build replaces window.plantumlLoad; the ES-module build (parsed to
+                    // nothing as a classic script) leaves the shim's no-op — import() it instead,
+                    // exactly as the shim's own main-thread fallback does.
+                    if (typeof window.plantumlLoad === 'function' && window.plantumlLoad !== preLoad) {
+                        return new Promise(function (res) {
+                            window.plantumlLoad([], function () {
+                                var engine = window.plantuml; window.plantuml = shim;
+                                res(function (lines, id) { engine.render(lines, id); });
+                            });
+                        });
+                    }
+                    return new Function('u', 'return import(u)')(cdn + '/plantuml.js').then(function (mod) {
+                        if (!mod || typeof mod.render !== 'function') throw new Error('the engine module has no render export');
+                        window.plantuml = shim;
+                        return function (lines, id) { mod.render(lines, id, {}); };
                     });
+                }).then(function (render) {
+                    var left = sources.length, out = [];
+                    function renderNext(i) {
+                        if (i >= sources.length) return;
+                        var el = document.createElement('div'); el.id = 'fid-mt-' + i; document.body.appendChild(el);
+                        new MutationObserver(function (m, mo) {
+                            var svg = el.querySelector('svg'); if (!svg) return; mo.disconnect();
+                            out[i] = { width: svg.getAttribute('width'), height: svg.getAttribute('height'), viewBox: svg.getAttribute('viewBox'),
+                                       texts: svg.querySelectorAll('text').length, elements: svg.querySelectorAll('*').length };
+                            if (--left === 0) resolve(out); else renderNext(i + 1);
+                        }).observe(el, { childList: true, subtree: true });
+                        render(sources[i].split('\n'), el.id);
+                    }
+                    renderNext(0);
                 }).catch(reject);
             })
             """, new object[] { Constants.TrackingDefaults.PlantUmlJsCdnBase, sources });

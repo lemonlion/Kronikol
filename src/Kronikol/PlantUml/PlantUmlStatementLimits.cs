@@ -40,7 +40,8 @@ internal enum PlantUmlStatementKind
 
 /// <summary>
 /// The statement-length limits PlantUML's parser enforces, measured against the engine Kronikol ships
-/// (<c>lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched</c>). They are per statement
+/// (<c>lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched</c>, re-verified against
+/// the <c>@v1.2026.6-patched</c> build that replaced it). They are per statement
 /// kind, not one global line limit, and they fail in two different ways — neither of which says
 /// "too long":
 /// <list type="bullet">

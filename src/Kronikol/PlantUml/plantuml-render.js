@@ -242,6 +242,15 @@ function loadScript(filePath) {
 // run compiled lazily) and is thrown away and rebuilt when V8 rejects it (a node upgrade, a changed file).
 function loadEngineWithCodeCache(filePath) {
     var code = fs.readFileSync(filePath, 'utf8');
+    // An ES-module engine build (the npm @plantuml/core line) ends in `export { X as render,
+    // Y as renderToString }` — vm.Script cannot evaluate an export statement, so rewrite the tail into
+    // an assignment. The rewrite is deterministic, so the V8 code cache stays valid across runs.
+    var tail = code.slice(-300);
+    var em = /export\s*\{\s*([A-Za-z_$][\w$]*)\s+as\s+render\s*,\s*([A-Za-z_$][\w$]*)\s+as\s+renderToString\s*\}\s*;?\s*$/.exec(tail);
+    if (em) {
+        code = code.slice(0, code.length - tail.length + em.index)
+            + 'globalThis.__plantumlExports = { render: ' + em[1] + ', renderToString: ' + em[2] + ' };\n';
+    }
     var cachePath = filePath + '.v8cache';
     var cached = null;
     try { cached = fs.readFileSync(cachePath); } catch (_) { cached = null; }
@@ -303,6 +312,12 @@ var rendererReady = vizReady.then(function() {
     console.log = function() {};
 
     loadEngineWithCodeCache(plantumlPath);
+
+    // ES-module build: the exports drive rendering directly — there is no plantumlLoad in that build.
+    var esmExports = globalThis.__plantumlExports;
+    if (esmExports && typeof esmExports.render === 'function') {
+        return { render: function(lines, id) { return esmExports.render(lines, id, {}); } };
+    }
 
     var loadFn = globalThis.plantumlLoad;
     if (!loadFn) {

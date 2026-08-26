@@ -20,9 +20,22 @@ public static class NodeJsPlantUmlRenderer
     /// <summary>The V8 code cache <c>plantuml-render.js</c> keeps next to the downloaded engine (see <see cref="CodeCachePath"/>).</summary>
     public const string CodeCacheFileName = PlantUmlFileName + ".v8cache";
 
+    // The cache directory carries the CDN tag: DownloadJsFiles skips files that already exist, so an
+    // unversioned directory would silently keep every existing machine on the old engine when
+    // TrackingDefaults.PlantUmlJsCdnBase moves to a new build.
     private static readonly string CacheDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Kronikol", "plantuml-js");
+        "Kronikol", "plantuml-js", CdnVersionSegment());
+
+    private static string CdnVersionSegment()
+    {
+        var last = CdnBase.TrimEnd('/').Split('/')[^1];
+        var at = last.IndexOf('@');
+        var segment = at >= 0 && at < last.Length - 1 ? last[(at + 1)..] : last;
+        foreach (var c in Path.GetInvalidFileNameChars())
+            segment = segment.Replace(c, '_');
+        return segment;
+    }
 
     /// <summary>Where the engine's V8 code cache lives; delete it to force a cold compile (it is rebuilt on the next render).</summary>
     public static string CodeCachePath => Path.Combine(CacheDir, CodeCacheFileName);

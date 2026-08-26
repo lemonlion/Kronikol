@@ -268,18 +268,28 @@
             addScript(ENGINE_URL).then(function () {
                 var realLoad = window.plantumlLoad;
                 window.plantumlLoad = noop;
-                if (typeof realLoad !== 'function' || realLoad === noop) throw new Error('plantumlLoad is not defined after loading ' + ENGINE_URL);
+                if (typeof realLoad !== 'function' || realLoad === noop) {
+                    // The ES-module engine build (the npm @plantuml/core line) parses to nothing as a
+                    // classic script — import() it and drive its exports directly (that build has no
+                    // plantumlLoad). import() is reached through Function so browsers too old to parse
+                    // the syntax fail here, with a message, instead of rejecting the whole shim.
+                    return new Function('u', 'return import(u)')(ENGINE_URL).then(function (mod) {
+                        if (!mod || typeof mod.render !== 'function') throw new Error('the engine module has no render export: ' + ENGINE_URL);
+                        engineRender = function (lines, id) { return mod.render(lines, id, {}); };
+                    });
+                }
                 return new Promise(function (resolve, reject) {
                     var timer = setTimeout(function () { reject(new Error('engine initialisation timed out')); }, 120000);
                     realLoad([], function () { clearTimeout(timer); resolve(); });
+                }).then(function () {
+                    // The engine does `window.plantuml = window.plantuml || {}` and sets .render on it —
+                    // on our shim object. Keep the real render, put the shim's back.
+                    var real = window.plantuml && window.plantuml.render;
+                    if (typeof real !== 'function' || real === shimRender) throw new Error('plantuml.render is missing after plantumlLoad');
+                    engineRender = real;
+                    window.plantuml = shim; shim.render = shimRender;
                 });
             }).then(function () {
-                // The engine does `window.plantuml = window.plantuml || {}` and sets .render on it — on
-                // our shim object. Keep the real render, put the shim's back.
-                var real = window.plantuml && window.plantuml.render;
-                if (typeof real !== 'function' || real === shimRender) throw new Error('plantuml.render is missing after plantumlLoad');
-                engineRender = real;
-                window.plantuml = shim; shim.render = shimRender;
                 engineReady = true;
                 if (telemetry.engineReadyAt === null) telemetry.engineReadyAt = now();
                 pumpMain();
@@ -362,7 +372,10 @@
             clearCache: function () { cache.clear(); cacheBytes = 0; telemetry.cacheEntries = 0; telemetry.cacheBytes = 0; }
         };
         window.plantuml = shim;
-        window.plantumlLoad = function () { /* no-op: the shim owns the engine lifecycle */ };
+        // Must be the same `noop` the fallback compares against: loadEngineScripts detects "the engine
+        // script defined no plantumlLoad" (the ES-module build) by `realLoad === noop` — a distinct
+        // function here would read as a real loader whose callback never comes.
+        window.plantumlLoad = noop;
 
         // --- go -------------------------------------------------------------------------------
         function canUseWorkers() {
