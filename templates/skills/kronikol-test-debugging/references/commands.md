@@ -223,8 +223,17 @@ The raw PlantUML. **Refuses to print to stdout** — a real one is 663 KB — an
 
 ## Search and comparison
 
-### `grep <report> "4173" [--in ...] [--values] [--count]`
+### `grep <report> "4173" [--in ...] [--values] [--number [--tolerance 0.5|1%]] [--count]`
 Returns **addresses**, not content.
+
+`--number` matches *numerically*, across formatting: the needle `4,173.00` finds the raw `4173`, and a
+body's `"4.173,00"` (European decimal comma) finds the needle `4173` — every token is read under both
+separator conventions. Currency symbols and `_` separators are stripped. On JSON bodies a numeric match
+is always a value match, so `--number` always emits paths (`s3/i47  body  $.data.total = 4173`), and
+when the matched text differed from the needle it says so (`$.display = "4,173.00" (≈ 4173)`).
+`--tolerance 0.5` (absolute) or `--tolerance 1%` (relative) widens the match; the default is exact with
+a 1e-9 relative epsilon so `4173.0` matches `4173`. A non-numeric needle with `--number` exits 2 —
+drop the flag for text search.
 
 `--in` defaults to `bodies,uris,steps,assertions`; add `headers` and `notes`. Notes are searched last
 because they are the expensive target.

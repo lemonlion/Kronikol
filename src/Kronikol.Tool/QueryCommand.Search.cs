@@ -18,6 +18,9 @@ internal static partial class QueryCommand
             return 2;
         }
 
+        if (options.Number)
+            return NumberGrep(index, options, writer, error);
+
         var needle = options.Positional[0];
         var targets = (options.In ?? "bodies,uris,steps,assertions").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var wantsBodies = targets.Contains("bodies");

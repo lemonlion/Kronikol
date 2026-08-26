@@ -610,6 +610,59 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("--in", output);
     }
 
+    // ─── grep --number (M6) ────────────────────────────────────
+
+    [Fact]
+    public void NumberGrep_matches_across_formatting()
+    {
+        // The user quotes the formatted number; the payload holds the raw one.
+        var output = Run("grep", Report(), "4,173.00", "--number");
+
+        Assert.Contains("$.total = 4173", output);
+    }
+
+    [Fact]
+    public void NumberGrep_emits_the_json_path_of_each_hit()
+    {
+        var output = Run("grep", Report(), "4173", "--number");
+
+        Assert.Contains("$.total", output);
+        Assert.Contains("$.display", output);
+    }
+
+    [Fact]
+    public void NumberGrep_shows_the_raw_text_when_it_differed()
+    {
+        var output = Run("grep", Report(), "4173", "--number");
+
+        Assert.Contains("≈", output);
+    }
+
+    [Fact]
+    public void NumberGrep_tolerance_absolute_and_percent()
+    {
+        Assert.Contains("$.total", Run("grep", Report(), "4170", "--number", "--tolerance", "5"));
+        Assert.Contains("$.total", Run("grep", Report(), "4170", "--number", "--tolerance", "1%"));
+    }
+
+    [Fact]
+    public void NumberGrep_matches_a_european_decimal_comma()
+    {
+        // "4.173,00" is European for 4173.00; naive comma-stripping reads it as 4.173.
+        var output = Run("grep", Report(), "4173", "--number");
+
+        Assert.Contains("$.euDisplay", output);
+    }
+
+    [Fact]
+    public void NumberGrep_rejects_a_non_numeric_needle()
+    {
+        var (_, error, exit) = RunFull("grep", Report(), "abc", "--number");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("numeric needle", error);
+    }
+
     [Fact]
     public void Compare_puts_two_scenarios_side_by_side()
     {
@@ -1153,7 +1206,7 @@ public class QueryCommandTests : IDisposable
 
     /// <summary>The response body every path-grammar test aims at: arrays, a formatted number, a null, a dotted key.</summary>
     private const string RichBody =
-        """{"items":[{"sku":"a","price":12.5},{"sku":"b","price":1250},{"sku":"c","price":-3}],"total":4173,"display":"4,173.00","region":null,"status":"APPROVED","flags":{"feature.x":true}}""";
+        """{"items":[{"sku":"a","price":12.5},{"sku":"b","price":1250},{"sku":"c","price":-3}],"total":4173,"display":"4,173.00","euDisplay":"4.173,00","region":null,"status":"APPROVED","flags":{"feature.x":true}}""";
 
     /// <summary>A W3C trace id that stays inside one scenario (t3) — the healthy case.</summary>
     private const string ChainTrace = "4bf92f3577b34da6a3ce929d0e0e4736";

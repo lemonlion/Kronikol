@@ -64,7 +64,7 @@ without printing a single payload — reach `http` only when one specific body m
 | The user says | Do this |
 |---|---|
 | "why did these tests fail?" | `failures` — usually sufficient on its own |
-| "the number on screen is wrong" | `grep "<value>" --values` → `http <addr> --path $...` → `compare s<failing> s<passing>` |
+| "the number on screen is wrong" | `grep "<value>" --number` (matches `4,173.00` and `4173` alike, emits paths) → `http <addr> --path $...` → `compare s<failing> s<passing>` |
 | "did it even call X?" | `services` — absence is the answer; no payload needed |
 | "what did X return?" | `interactions s3 --service X` → `http s3/iN --keys` → `--path` |
 | "what values did X ever return?" | `values --path '$.field' --service X` — distinct values, counted, with addresses |

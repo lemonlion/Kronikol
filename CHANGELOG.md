@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.56] - 2026-08-26
+
+### Added
+- **`kronikol query grep --number` — numeric-aware search** (`QUERY_V2_PLAN.md` Milestone 6). The number the user quotes is the *formatted* one while the payload holds the raw one, and `grep "4,173.00"` missing `4173` was a real failure of the tool's flagship use case. With `--number` the needle and every candidate token are compared numerically: `,`/`_`/spaces and leading currency symbols are stripped, and each token is read under **both** separator conventions — comma-as-thousands and comma-as-decimal — so `4.173,00` (European) matches `4173` rather than being misread as `4.173`. JSON bodies are walked by value (numbers compared numerically, strings scanned for embedded numeric tokens), so `--number` always emits the JSON path of each hit and notes when the raw text differed (`$.display = "4,173.00" (≈ 4173)`); non-JSON targets (uris, headers, steps, assertions, notes, non-JSON bodies) are token-scanned the same way. `--tolerance 0.5` (absolute) or `--tolerance 1%` (relative) widens the match; the default is exact with a 1e-9 relative epsilon so `4173.0` matches `4173`. A non-numeric needle exits 2 telling you to drop the flag. Everything else about `grep` — targets, dedup per distinct body, address output, paging — is unchanged.
+
 ## [3.0.55] - 2026-08-26
 
 ### Added
