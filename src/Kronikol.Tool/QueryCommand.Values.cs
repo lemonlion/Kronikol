@@ -54,7 +54,7 @@ internal static partial class QueryCommand
         var numbers = new List<(double Value, string Address)>();
         var evaluated = 0;
         var distinctBodies = new HashSet<string>(StringComparer.Ordinal);
-        int absent = 0, nonNumeric = 0, bodiless = 0, unpaired = 0, nonJson = 0, unevaluable = 0;
+        int absent = 0, nonNumeric = 0, bodiless = 0, unpaired = 0, nonJson = 0, unevaluable = 0, truncated = 0;
 
         foreach (var (scenario, request, response) in AllInteractions(index, only))
         {
@@ -133,6 +133,8 @@ internal static partial class QueryCommand
                 bodiless++;
                 return;
             }
+            if (cache.Raw(hash) is { } raw && raw.Contains("…truncated (", StringComparison.Ordinal))
+                truncated++;
             var document = cache.Json(hash);
             if (document is null)
             {
@@ -185,6 +187,8 @@ internal static partial class QueryCommand
                 writer.Line($"{nonJson} {(nonJson == 1 ? "body was" : "bodies were")} not JSON — counted, not evaluated");
             if (unevaluable > 0)
                 writer.Line($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+            if (truncated > 0)
+                writer.Line($"! {truncated} {(truncated == 1 ? "body was" : "bodies were")} capped at capture time — the rest was never recorded");
         }
 
         static string N(double value) => value.ToString("0.####", CultureInfo.InvariantCulture);

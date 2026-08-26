@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.54] - 2026-08-26
+
+### Added
+- **`kronikol query diff` learned body addresses — structural body diff** (`QUERY_V2_PLAN.md` Milestone 4). The most common debugging move — "this call succeeded in the passing scenario, what was different in mine?" — used to require printing two bodies whole; now `diff <report> s3/i47 s7/i47` (or two `b:` hashes) prints only the differing paths: changed scalars as `$.total: 4173 → 3902`, type changes as `number 3 → string "3"`, an added or removed subtree as one row with a shape summary (`{sku, price, qty}` / `[3 elements]`) and never a dump, array length changes as their own row followed by per-index diffs. Byte-identical bodies answer from the index without reading anything. An array where a single insert shifted every later index collapses to one honest row (`$.items: elements shifted/reordered — 9 vs 10, 8 identical`) instead of a page of misleading per-index rows (LCS alignment deliberately deferred). Non-JSON bodies fall back to a line diff; two scenario addresses are refused with a pointer at `compare`; capture-time truncation markers are surfaced (in `values` too). Cross-run: `diff <old.json> <new.json> --body s3/i47` resolves the address in the old report and matches the scenario into the new run **by `stableId`** — ordinals shift between runs — then diffs that one call's bodies across the files.
+- **`kronikol query compare` names the first differing body.** After the existing `bodies: 9 vs 9, 4 byte-identical` line it prints `first differing body: diff s3/i12 s7/i12` — the footer's claim that "the first differing call is usually the answer" is now an address instead of advice.
+
 ## [3.0.53] - 2026-08-26
 
 ### Added

@@ -71,6 +71,7 @@ without printing a single payload — reach `http` only when one specific body m
 | "which calls returned a bad value?" | `interactions --where '$.success = false'` — run-wide; `req:$.x` targets the request |
 | "which example row broke?" | `steps s3` (its parameters) + `annotations s3` |
 | "what broke since yesterday?" | `diff old.json new.json` — matched on `stableId` |
+| "these two runs/scenarios differ — how?" | `compare s3 s7` (it names the first differing body) → `diff s3/i47 s7/i47` — only the differing paths, never two payloads |
 | "why is this slow?" | `summary` → `services --sort duration` → `flow s3` |
 | "is this flaky?" | `diff` across runs; `stableId` survives re-runs, ordinals do not |
 | "the report shows X but I can't find it" | `note s3/d0` — see **Notes are a rendering** below |

@@ -169,6 +169,25 @@ internal static partial class QueryCommand
         writer.Line();
         writer.Line($"bodies: {leftBodies.Count} vs {rightBodies.Count}, {shared} byte-identical");
 
+        // The footer's claim — the first differing call is usually the answer — as an address, not advice.
+        var leftPairs = AllInteractions(index, left).ToList();
+        var rightPairs = AllInteractions(index, right).ToList();
+        for (var i = 0; i < Math.Min(leftPairs.Count, rightPairs.Count); i++)
+        {
+            var (_, leftRequest, leftResponse) = leftPairs[i];
+            var (_, rightRequest, rightResponse) = rightPairs[i];
+            if (leftRequest.BodyHash is not null && rightRequest.BodyHash is not null && leftRequest.BodyHash != rightRequest.BodyHash)
+            {
+                writer.Line($"first differing body: diff {leftRequest.Address(left)} {rightRequest.Address(right)}");
+                break;
+            }
+            if (leftResponse?.BodyHash is not null && rightResponse?.BodyHash is not null && leftResponse.BodyHash != rightResponse.BodyHash)
+            {
+                writer.Line($"first differing body: diff {leftResponse.Address(left)} {rightResponse.Address(right)}");
+                break;
+            }
+        }
+
         writer.Footer("a passing neighbour is the best oracle for a failing scenario — the first differing call is usually the answer");
         return 0;
     }
@@ -197,9 +216,15 @@ internal static partial class QueryCommand
     {
         if (options.Positional.Count == 0)
         {
-            error.WriteLine("Diff needs two reports: kronikol query diff <old.json> <new.json>");
+            error.WriteLine("Diff takes two reports (kronikol query diff <old.json> <new.json> [--body s3/i47])");
+            error.WriteLine("or two bodies in one report (kronikol query diff <report> s3/i47 s7/i47).");
             return 2;
         }
+
+        // A first positional that parses as an address is a body diff inside the single report;
+        // otherwise it is the second report of the two-file run diff.
+        if (Address.TryParse(options.Positional[0], out _))
+            return BodyDiff(left, options, writer, error);
 
         ReportIndex right;
         try
@@ -211,6 +236,9 @@ internal static partial class QueryCommand
             error.WriteLine($"Could not read {options.Positional[0]}: {exception.Message}");
             return 1;
         }
+
+        if (options.BodyAddress is { } bodyAddress)
+            return CrossRunBodyDiff(left, right, bodyAddress, options, writer, error);
 
         writer.Line($"- {Path.GetFileName(left.Path)}  {left.StartTime}  {left.Scenarios.Count} scenarios, {left.Scenarios.Count(s => s.Failed)} failed");
         writer.Line($"+ {Path.GetFileName(right.Path)}  {right.StartTime}  {right.Scenarios.Count} scenarios, {right.Scenarios.Count(s => s.Failed)} failed");

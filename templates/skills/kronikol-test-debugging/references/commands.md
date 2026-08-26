@@ -216,11 +216,45 @@ Bodies are searched once per distinct content, not once per occurrence.
 
 ### `compare <report> s3 s7`
 Two scenarios side by side: example values, the first differing steps, the first differing calls, and how
-many bodies are byte-identical. A passing neighbour is the best available oracle for a failing scenario.
+many bodies are byte-identical — plus the address of the first differing body, ready to paste into
+`diff` (`first differing body: diff s3/i12 s7/i12`). A passing neighbour is the best available oracle
+for a failing scenario.
 
-### `diff <old.json> <new.json>`
-Two runs matched on `stableId`: what broke, what was fixed, what got materially slower, what disappeared.
-Because example values are part of `stableId`, one row of a scenario outline is distinguished from another.
+### `diff` — bodies and runs
+
+```
+kronikol query diff <report> s3/i47 s7/i47       # two interactions' bodies, one report
+kronikol query diff <report> b:4bdea521 b:9f31c02a
+kronikol query diff <old.json> <new.json>        # two runs, matched on stableId
+kronikol query diff <old.json> <new.json> --body s3/i47   # the same call across two runs
+```
+
+**Body diff** prints only the paths that differ — never a payload:
+
+```
+- s3/i47  b:4bdea521  2.1 KB
++ s7/i47  b:9f31c02a  2.2 KB
+
+$.customer.region: "EU" → null
+$.items: 9 → 10 elements
+$.items[4].price: 12.50 → 1250
+$.items[9]: (absent) → {sku, price, qty}
+$.total: 4173 → 3902
+
+5 paths differ
+```
+
+- Identical hashes answer `byte-identical` from the index without reading anything.
+- An added/removed subtree is one row with a shape summary (`{sku, price, qty}`, `[3 elements]`), never a dump.
+- An array where one insert shifted everything collapses to one honest row
+  (`$.items: elements shifted/reordered — 9 vs 10, 8 identical`) instead of a page of misleading per-index rows.
+- Non-JSON bodies fall back to a line diff (`line 12:  - … / + …`).
+- Two scenario addresses are refused with a pointer at `compare`.
+
+**Run diff** (two files) reports what broke, was fixed, got slower, disappeared — matched on `stableId`,
+so one row of a scenario outline is distinguished from another. `--body s3/i47` resolves the address in
+the *old* report, matches the scenario into the new run by `stableId` (ordinals shift between runs), and
+diffs that one call's bodies across the two files.
 
 ## Exit codes
 

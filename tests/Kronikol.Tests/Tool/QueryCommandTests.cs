@@ -583,6 +583,112 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("stableId", output);
     }
 
+    // ─── Body diff (M4) ────────────────────────────────────────
+
+    [Fact]
+    public void Diff_bodies_prints_only_differing_paths()
+    {
+        var output = Run("diff", Report(), "s5/i1", "s6/i1");
+
+        Assert.Contains("$.customer.region", output);
+        Assert.Contains("→ null", output);
+        Assert.Contains("$.total: 4173 → 3902", output);
+        Assert.DoesNotContain("\"sku\"", output);
+    }
+
+    [Fact]
+    public void Diff_identical_bodies_answers_from_the_index()
+    {
+        var output = Run("diff", Report(), "s3/i0", "s3/i2");
+
+        Assert.Contains("byte-identical", output);
+    }
+
+    [Fact]
+    public void Diff_array_length_change_is_one_row_then_the_tail()
+    {
+        var output = Run("diff", Report(), "s5/i1", "s6/i1");
+
+        Assert.Contains("$.items: 2 → 3 elements", output);
+        Assert.Contains("$.items[0].price: 12.5 → 1250", output);
+    }
+
+    [Fact]
+    public void Diff_shifted_array_collapses_to_a_summary()
+    {
+        var output = Run("diff", Report(), "s5/i5", "s6/i5");
+
+        Assert.Contains("shifted", output);
+        Assert.DoesNotContain("$.tags[3]", output);
+    }
+
+    [Fact]
+    public void Diff_added_subtree_is_a_shape_not_a_dump()
+    {
+        var output = Run("diff", Report(), "s5/i1", "s6/i1");
+
+        Assert.Contains("(absent) → {sku, price}", output);
+    }
+
+    [Fact]
+    public void Diff_non_json_falls_back_to_lines()
+    {
+        var output = Run("diff", Report(), "s5/i3", "s6/i3");
+
+        Assert.Contains("line 2", output);
+        Assert.Contains("4173", output);
+        Assert.Contains("3902", output);
+    }
+
+    [Fact]
+    public void Diff_across_runs_matches_the_scenario_by_stableId()
+    {
+        var output = Run("diff", Report(), ShiftedReport(), "--body", "s5/i1");
+
+        Assert.Contains("4174", output);
+    }
+
+    [Fact]
+    public void Diff_of_two_scenario_addresses_points_at_compare()
+    {
+        var (_, error, exit) = RunFull("diff", Report(), "s3", "s5");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("compare", error);
+    }
+
+    [Fact]
+    public void Compare_points_at_the_first_differing_body()
+    {
+        var output = Run("compare", Report(), "s5", "s6");
+
+        Assert.Contains("first differing body: diff s5/i1 s6/i1", output);
+    }
+
+    [Fact]
+    public void Diff_notes_a_capture_truncated_body()
+    {
+        var output = Run("diff", Report(), "s0/i18", "s2/i1");
+
+        Assert.Contains("capped at capture time", output);
+    }
+
+    [Fact]
+    public void Values_notes_capture_truncated_bodies()
+    {
+        var output = Run("values", Report(), "s0", "--path", "$.anything", "--request", "--service", "api");
+
+        Assert.Contains("capped at capture time", output);
+    }
+
+    [Fact]
+    public void Diff_of_two_large_bodies_stays_small()
+    {
+        var output = Run("diff", BigDiagramReport(), "s0/i0", "s0/i1");
+
+        Assert.True(Encoding.UTF8.GetByteCount(output) <= 6400, $"diff produced {Encoding.UTF8.GetByteCount(output)} bytes");
+    }
+
     // ─── The invariants ────────────────────────────────────────
 
     [Theory]
@@ -848,6 +954,37 @@ public class QueryCommandTests : IDisposable
         return _unenriched = path;
     }
 
+    private string? _shifted;
+
+    /// <summary>
+    /// The same run written a second time with an extra feature that sorts first — every scenario's
+    /// ordinal shifts by one while its stableId stays put — and t5's payments total drifted to 4174.
+    /// The cross-run <c>diff --body</c> fixture: ordinal matching would land on the wrong scenario.
+    /// </summary>
+    private string ShiftedReport()
+    {
+        if (_shifted is not null)
+            return _shifted;
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Aardvark",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "t9", DisplayName = "A shim scenario", Result = ExecutionResult.Passed,
+                        Steps = [new ScenarioStep { Keyword = "When", Text = "shimming", Status = ExecutionResult.Passed }]
+                    }
+                ]
+            }
+        }.Concat(BuildFeatures(allPassing: false)).ToArray();
+
+        return _shifted = Write("Shifted.json", features, BuildLogs(totalDrift: true), BuildDiagrams());
+    }
+
     private string BigDiagramReport()
     {
         var diagram = "@startuml\n" + string.Join("\n", Enumerable.Range(0, 12000).Select(i => $"note over api : filler line {i} padding padding padding")) + "\n@enduml";
@@ -977,7 +1114,7 @@ public class QueryCommandTests : IDisposable
     /// <summary>A W3C trace id shared across t4 and t5 — the fixture-leakage smell `trace` warns about.</summary>
     private const string LeakedTrace = "feedfacefeedfacefeedfacefeedface";
 
-    private static RequestResponseLog[] BuildLogs()
+    private static RequestResponseLog[] BuildLogs(bool totalDrift = false)
     {
         var logs = new List<RequestResponseLog>();
         var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
@@ -1046,15 +1183,19 @@ public class QueryCommandTests : IDisposable
         //        plus a non-JSON pair for the line-diff fallback.
         var t5 = start.AddSeconds(30);
         logs.AddRange(Pair("t5", "payments", "POST", "http://payments/charge", "{\"basket\":1}",
-            HttpStatusCode.OK, t5, "{\"customer\":{\"region\":\"EU\"},\"items\":[{\"sku\":\"a\",\"price\":12.5},{\"sku\":\"b\",\"price\":3}],\"total\":4173}",
+            HttpStatusCode.OK, t5, "{\"customer\":{\"region\":\"EU\"},\"items\":[{\"sku\":\"a\",\"price\":12.5},{\"sku\":\"b\",\"price\":3}],\"total\":" + (totalDrift ? "4174" : "4173") + "}",
             w3cTraceId: LeakedTrace, spanId: "5555666677778888"));
         logs.AddRange(Pair("t5", "printer", "POST", "http://printer/receipt", "print receipt please",
             HttpStatusCode.OK, t5.AddSeconds(1), "receipt\ntotal: 4173"));
+        logs.AddRange(Pair("t5", "catalog", "GET", "http://catalog/tags", "{}",
+            HttpStatusCode.OK, t5.AddSeconds(2), "{\"tags\":[\"a\",\"b\",\"c\",\"d\",\"e\"]}"));
         var t6 = start.AddSeconds(40);
         logs.AddRange(Pair("t6", "payments", "POST", "http://payments/charge", "{\"basket\":1}",
             HttpStatusCode.OK, t6, "{\"customer\":{\"region\":null},\"items\":[{\"sku\":\"a\",\"price\":1250},{\"sku\":\"b\",\"price\":3},{\"sku\":\"c\",\"price\":9}],\"total\":3902}"));
         logs.AddRange(Pair("t6", "printer", "POST", "http://printer/receipt", "print receipt please",
             HttpStatusCode.OK, t6.AddSeconds(1), "receipt\ntotal: 3902"));
+        logs.AddRange(Pair("t6", "catalog", "GET", "http://catalog/tags", "{}",
+            HttpStatusCode.OK, t6.AddSeconds(2), "{\"tags\":[\"z\",\"a\",\"b\",\"c\",\"d\",\"e\"]}"));
 
         return logs.ToArray();
     }

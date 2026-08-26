@@ -314,7 +314,7 @@ internal static class PathEngine
     /// Renders one more property on a concrete path, bracket-quoting keys the dotted form cannot express —
     /// so an emitted path always parses back to the same place.
     /// </summary>
-    private static string Append(string path, string name) =>
+    public static string Append(string path, string name) =>
         name.Contains('.') || name.Contains('[') || name.Contains(']') || name.Contains('\'')
             ? $"{path}['{name}']"
             : $"{path}.{name}";
