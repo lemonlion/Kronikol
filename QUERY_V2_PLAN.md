@@ -5,7 +5,7 @@ classifier, shared flags) shipped in 3.0.51; Milestone 2 (`values` + `--stats`) 
 Milestone 3 (`--where`, run-scoped `interactions`) in 3.0.53; Milestone 4 (body `diff`,
 cross-run `--body`, `compare` pointer) in 3.0.54; Milestone 5 (`--group-by`) in 3.0.55;
 Milestone 6 (`grep --number` + `--tolerance`) in 3.0.56; Milestone 7 (`trace`) in 3.0.57.
-Milestone 8 (`select`) is go/no-go gated — not built.
+Milestone 8 (`select`): **no-go** — decided 2026-08-26, see §3.7. The plan is complete.
 
 **Builds on:** `REPORT_QUERY_PLAN.md`, implemented in full in 3.0.47. That work made the report *navigable*
 under a byte budget. This work makes the payloads *queryable*: today `--path` in
@@ -429,6 +429,14 @@ Applies an RFC 9535 JSONPath — descent (`..`), filters (`?()`), functions — 
   `--group-by` answer the real traffic — which is the bet this plan makes — `select` is dropped and this
   section becomes the record of why. The trigger to build it: bespoke verbs sprouting flags to
   approximate descent or filters.
+- **Decision (2026-08-26): no-go.** Milestones 2–7 shipped without any verb sprouting flags that
+  approximate descent (`..`) or filters (`?()`) — `values` + `--where` + `--group-by` covered every
+  question the milestones' own development asked of the tool, and the `--where` grammar held its line
+  (no OR, no functions) without pressure. `select` is dropped; this section stays as the design should
+  the trigger ever fire. If a future session finds itself wanting `--where-any`, nested-filter flags, or
+  a recursive-descent `--path`, build `select` per this section instead — library `JsonPath.Net`
+  (json-everything, MIT; confirm the license first), routed through the library alone while the
+  hand-rolled `PathEngine` keeps `--path`/`values`/`--where` (its near-miss messages are the point).
 
 ## 3.8 Deliberately out of scope — decisions, not omissions
 

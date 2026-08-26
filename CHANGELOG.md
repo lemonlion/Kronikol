@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.58] - 2026-08-26
+
+### Changed
+- **`QUERY_V2_PLAN.md` closed out.** Milestone 8 (`select`, the full-JSONPath escape hatch) is a recorded **no-go**: milestones 2–7 shipped without any verb sprouting flags that approximate descent or filters — `values` + `--where` + `--group-by` answered the traffic, which was the plan's bet. The section stays as the design record with the reopening trigger. A synthesized wide run (300 interactions, 200 distinct bodies) now pins that `values` and `grep --number` complete at real-report scale, closing the plan's remaining perf risk; the final docs sweep verified every command and flag in `--help` is documented in the skill reference and the wiki, and smoke-ran every verb against a generated report. Kronikol4J: none of the query-v2 work applies — the tool is .NET-only and the report format is untouched throughout 3.0.51–3.0.58.
+
 ## [3.0.57] - 2026-08-26
 
 ### Added

@@ -1141,6 +1141,53 @@ public class QueryCommandTests : IDisposable
         return _shifted = Write("Shifted.json", features, BuildLogs(totalDrift: true), BuildDiagrams());
     }
 
+    private string? _wide;
+
+    /// <summary>
+    /// A synthesized run at real-report scale — several hundred interactions, a few hundred distinct
+    /// bodies — because the repo holds no real large report to validate against. The perf guard for
+    /// `values` and `grep --number`: both must finish inside the ordinary test timeout.
+    /// </summary>
+    private string WideReport()
+    {
+        if (_wide is not null)
+            return _wide;
+
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        for (var i = 0; i < 300; i++)
+            logs.AddRange(Pair("t8", "payments", "POST", "http://payments/charge", $"{{\"attempt\":{i}}}",
+                HttpStatusCode.OK, start.AddMilliseconds(i * 3),
+                $"{{\"n\":{i % 200},\"status\":\"{(i % 7 == 0 ? "DECLINED" : "APPROVED")}\",\"display\":\"{i % 200:N2}\"}}"));
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Wide",
+                Scenarios = [new Scenario { Id = "t8", DisplayName = "A wide scenario", Result = ExecutionResult.Passed }]
+            }
+        };
+
+        return _wide = Write("Wide.json", features, logs.ToArray(), null);
+    }
+
+    [Fact]
+    public void Values_completes_on_a_synthesized_wide_run()
+    {
+        var output = Run("values", WideReport(), "--path", "$.n", "--stats");
+
+        Assert.Contains("count 300", output);
+    }
+
+    [Fact]
+    public void NumberGrep_completes_on_a_synthesized_wide_run()
+    {
+        var output = Run("grep", WideReport(), "42", "--number", "--count");
+
+        Assert.True(int.Parse(output.Trim()) > 0);
+    }
+
     private string BigDiagramReport()
     {
         var diagram = "@startuml\n" + string.Join("\n", Enumerable.Range(0, 12000).Select(i => $"note over api : filler line {i} padding padding padding")) + "\n@enduml";
