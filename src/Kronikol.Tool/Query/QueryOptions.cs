@@ -30,6 +30,14 @@ internal sealed class QueryOptions
     public double? SlowerThan { get; private set; }
     public (int From, int To)? LineRange { get; private set; }
 
+    /// <summary>Repeatable body-content predicates; they compose as AND.</summary>
+    public List<string> Where { get; } = [];
+    public string? GroupBy { get; private set; }
+    public string? Tolerance { get; private set; }
+
+    /// <summary>The body address a cross-run <c>diff --body s3/i47</c> names (distinct from the bare <c>--body</c> bool).</summary>
+    public string? BodyAddress { get; private set; }
+
     public bool Failed { get; private set; }
     public bool ErrorsOnly { get; private set; }
     public bool Headers { get; private set; }
@@ -38,6 +46,10 @@ internal sealed class QueryOptions
     public bool Values { get; private set; }
     public bool Group { get; private set; }
     public bool Raw { get; private set; }
+    public bool Stats { get; private set; }
+    public bool Request { get; private set; }
+    public bool Both { get; private set; }
+    public bool Number { get; private set; }
 
     /// <summary>Null when a flag was malformed; the message has already been written to <paramref name="error"/>.</summary>
     public static QueryOptions? Parse(IReadOnlyList<string> args, TextWriter error)
@@ -120,16 +132,32 @@ internal sealed class QueryOptions
                 case "--sort": if (Next(arg) is not { } sort) return null; options.Sort = sort; break;
                 case "--path": if (Next(arg) is not { } path) return null; options.Path = path; break;
                 case "--in": if (Next(arg) is not { } inTargets) return null; options.In = inTargets; break;
+                case "--where": if (Next(arg) is not { } where) return null; options.Where.Add(where); break;
+                case "--group-by": if (Next(arg) is not { } groupBy) return null; options.GroupBy = groupBy; break;
+                case "--tolerance": if (Next(arg) is not { } tolerance) return null; options.Tolerance = tolerance; break;
 
                 case "--count": options.Count = true; break;
                 case "--failed": options.Failed = true; break;
                 case "--errors-only": options.ErrorsOnly = true; break;
                 case "--headers": options.Headers = true; break;
-                case "--body": options.Body = true; break;
+                case "--body":
+                    // Bare `--body` prints the payload; `--body s3/i47` (cross-run diff) names one.
+                    // Disambiguated by lookahead so one flag never silently swallows a positional.
+                    if (i + 1 < args.Count && !args[i + 1].StartsWith("--", StringComparison.Ordinal)
+                        && Address.TryParse(args[i + 1], out var bodyAddress)
+                        && bodyAddress.Kind is AddressKind.Interaction or AddressKind.Body)
+                        options.BodyAddress = args[++i];
+                    else
+                        options.Body = true;
+                    break;
                 case "--keys": options.Keys = true; break;
                 case "--values": options.Values = true; break;
                 case "--group": options.Group = true; break;
                 case "--raw": options.Raw = true; break;
+                case "--stats": options.Stats = true; break;
+                case "--request": options.Request = true; break;
+                case "--both": options.Both = true; break;
+                case "--number": options.Number = true; break;
 
                 default:
                     if (arg.StartsWith("--", StringComparison.Ordinal))
@@ -162,6 +190,12 @@ internal sealed class QueryOptions
         if (Label is not null) parts.Add($"--label {Label}");
         if (Failed) parts.Add("--failed");
         if (Group) parts.Add("--group");
+        foreach (var where in Where) parts.Add($"--where \"{where}\"");
+        if (GroupBy is not null) parts.Add($"--group-by {GroupBy}");
+        if (Request) parts.Add("--request");
+        if (Both) parts.Add("--both");
+        if (Number) parts.Add("--number");
+        if (Tolerance is not null) parts.Add($"--tolerance {Tolerance}");
         return parts.Count == 0 ? "" : string.Join(" ", parts) + " ";
     }
 }

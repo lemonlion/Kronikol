@@ -418,6 +418,8 @@ internal static class ReportScanner
                 case "callerName": interaction.CallerName = reader.GetString() ?? ""; break;
                 case "statusCode": interaction.StatusCode = reader.GetString(); break;
                 case "timestamp": interaction.Timestamp = reader.GetString(); break;
+                case "requestResponseId": interaction.RequestResponseId = NonEmptyId(reader.GetString()); break;
+                case "traceId": interaction.TraceId = NonEmptyId(reader.GetString()); break;
                 case "stepPath":
                     // Presence of the key, not of a value: a current report writes stepPath on every
                     // interaction and null is a legitimate answer (before the first step, or attribution
@@ -520,6 +522,13 @@ internal static class ReportScanner
 
         private static string? Meaningful(string? value, string neutral) =>
             value is null || value == neutral ? null : value;
+
+        /// <summary>
+        /// An id worth matching on. Markers and user actions travel with the empty Guid
+        /// (<c>InteractionMerger</c> shows both), which would pair everything with everything.
+        /// </summary>
+        private static string? NonEmptyId(string? id) =>
+            string.IsNullOrEmpty(id) || id == "00000000-0000-0000-0000-000000000000" ? null : id;
 
         /// <summary>
         /// Where the token just read sits in the file. <c>BytesConsumed</c> lands immediately past a token,

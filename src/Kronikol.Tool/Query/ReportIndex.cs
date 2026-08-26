@@ -137,6 +137,13 @@ internal sealed class InteractionEntry
     public string CallerName { get; set; } = "";
     public string? StatusCode { get; set; }
     public string? Timestamp { get; set; }
+
+    /// <summary>
+    /// The exact pairing key: both halves of one call carry the same id. Null when the entry has none
+    /// (markers, user actions, genuinely unpaired captures) — the empty Guid is normalized away at scan.
+    /// </summary>
+    public string? RequestResponseId { get; set; }
+    public string? TraceId { get; set; }
     public double? DurationMs { get; set; }
     public string? StepPath { get; set; }
     public string? Phase { get; set; }

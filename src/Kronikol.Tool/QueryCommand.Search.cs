@@ -67,10 +67,17 @@ internal static partial class QueryCommand
                     : $"{body.Occurrences[0]} ×{body.Occurrences.Count}";
 
                 if (options.Values)
-                    foreach (var path in PathsContaining(content, needle).Take(4))
+                {
+                    var paths = PathEngine.PathsContaining(content, needle).Take(4).ToList();
+                    if (paths.Count == 0)
+                        hits.Add($"{where,-16} body       {Excerpt(content, needle)}");
+                    foreach (var path in paths)
                         hits.Add($"{where,-16} body       {path}");
+                }
                 else
+                {
                     hits.Add($"{where,-16} body       {body.Hash} {QueryWriter.Size(body.Length)}  {Excerpt(content, needle)}");
+                }
             }
         }
 
@@ -104,44 +111,6 @@ internal static partial class QueryCommand
         writer.Page(hits, options.Offset, Math.Min(options.Limit, 200), "hits", hit => writer.Line(hit),
             $"grep \"{needle}\" ");
         return 0;
-    }
-
-    /// <summary>The JSON paths whose value contains the needle — what <c>--values</c> is for.</summary>
-    private static IEnumerable<string> PathsContaining(string body, string needle)
-    {
-        List<string> found = [];
-        try
-        {
-            using var document = System.Text.Json.JsonDocument.Parse(body);
-            Walk(document.RootElement, "$");
-        }
-        catch (System.Text.Json.JsonException)
-        {
-            return [Excerpt(body, needle)];
-        }
-
-        return found;
-
-        void Walk(System.Text.Json.JsonElement element, string path)
-        {
-            switch (element.ValueKind)
-            {
-                case System.Text.Json.JsonValueKind.Object:
-                    foreach (var property in element.EnumerateObject())
-                        Walk(property.Value, path == "$" ? "$." + property.Name : $"{path}.{property.Name}");
-                    break;
-                case System.Text.Json.JsonValueKind.Array:
-                    var i = 0;
-                    foreach (var item in element.EnumerateArray())
-                        Walk(item, $"{path}[{i++}]");
-                    break;
-                default:
-                    var text = element.ToString();
-                    if (text.Contains(needle, StringComparison.OrdinalIgnoreCase))
-                        found.Add($"{path} = {QueryWriter.OneLine(text, 60)}");
-                    break;
-            }
-        }
     }
 
     private static string Excerpt(string text, string needle)

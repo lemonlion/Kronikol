@@ -97,120 +97,24 @@ internal static class PayloadReader
     }
 
     /// <summary>
-    /// The keys of a JSON body, one line per path, with each leaf's type and a short sample. The cheapest
-    /// useful view of a payload: it answers "what is in here" for a fraction of the bytes the payload costs.
-    /// </summary>
-    public static List<string> Keys(string body, int maxDepth = 3)
-    {
-        var lines = new List<string>();
-        try
-        {
-            using var document = JsonDocument.Parse(body);
-            Walk(document.RootElement, "$", 0);
-        }
-        catch (JsonException)
-        {
-            lines.Add("(not JSON — " + QueryWriter.Size(Encoding.UTF8.GetByteCount(body)) + " of text)");
-        }
-
-        return lines;
-
-        void Walk(JsonElement element, string path, int depth)
-        {
-            switch (element.ValueKind)
-            {
-                case JsonValueKind.Object:
-                    if (depth >= maxDepth)
-                    {
-                        lines.Add($"{path}  object ({element.EnumerateObject().Count()} keys)");
-                        return;
-                    }
-                    foreach (var property in element.EnumerateObject())
-                        Walk(property.Value, path == "$" ? "$." + property.Name : $"{path}.{property.Name}", depth + 1);
-                    break;
-
-                case JsonValueKind.Array:
-                    var length = element.GetArrayLength();
-                    lines.Add($"{path}[]  array ({length})");
-                    if (length > 0 && depth < maxDepth)
-                        Walk(element[0], path + "[0]", depth + 1);
-                    break;
-
-                default:
-                    lines.Add($"{path}  {element.ValueKind.ToString().ToLowerInvariant()} = {QueryWriter.OneLine(element.ToString(), 60)}");
-                    break;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Resolves a dotted path (<c>$.data.customers[2].total</c>) against a JSON body. Returns null when the
-    /// path does not exist, which is itself an answer worth printing.
+    /// Resolves a path (<c>$.data.customers[2].total</c>) against a JSON body: the first match, or null
+    /// when the path selects nothing — which is itself an answer worth printing. The thin wrapper over
+    /// <see cref="PathEngine"/> for call sites that want one value, not a fan-out.
     /// </summary>
     public static string? Path(string body, string path)
     {
         try
         {
             using var document = JsonDocument.Parse(body);
-            var current = document.RootElement;
-
-            foreach (var segment in ParsePath(path))
-            {
-                if (segment.Index is { } index)
-                {
-                    if (current.ValueKind != JsonValueKind.Array || index >= current.GetArrayLength())
-                        return null;
-                    current = current[index];
-                }
-                else
-                {
-                    if (current.ValueKind != JsonValueKind.Object || !current.TryGetProperty(segment.Name!, out var next))
-                        return null;
-                    current = next;
-                }
-            }
-
-            return current.ValueKind is JsonValueKind.Object or JsonValueKind.Array
-                ? JsonSerializer.Serialize(current, new JsonSerializerOptions { WriteIndented = true })
-                : current.ToString();
+            if (!PathEngine.TryParse(path, out var segments, out _))
+                return null;
+            foreach (var (_, value) in PathEngine.SelectAll(document.RootElement, segments))
+                return value.Text();
+            return null;
         }
         catch (JsonException)
         {
             return null;
-        }
-    }
-
-    private static IEnumerable<(string? Name, int? Index)> ParsePath(string path)
-    {
-        var trimmed = path.StartsWith("$.", StringComparison.Ordinal) ? path[2..]
-            : path.StartsWith('$') ? path[1..]
-            : path;
-
-        foreach (var part in trimmed.Split('.', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var name = part;
-            while (true)
-            {
-                var open = name.IndexOf('[', StringComparison.Ordinal);
-                if (open < 0)
-                {
-                    if (name.Length > 0)
-                        yield return (name, null);
-                    break;
-                }
-
-                if (open > 0)
-                    yield return (name[..open], null);
-
-                var close = name.IndexOf(']', open);
-                if (close < 0)
-                    break;
-
-                if (int.TryParse(name.AsSpan(open + 1, close - open - 1), out var index))
-                    yield return (null, index);
-
-                name = name[(close + 1)..];
-            }
         }
     }
 

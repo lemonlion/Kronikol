@@ -218,17 +218,5 @@ internal static partial class QueryCommand
 
         public string StatusSummary() =>
             _statuses.Count == 0 ? "" : string.Join(" ", _statuses.OrderByDescending(s => s.Value).Take(4).Select(s => $"{s.Key}×{s.Value}"));
-
-        /// <summary>
-        /// Treats anything that is not a 1xx/2xx/3xx as an error, including the non-numeric statuses the
-        /// non-HTTP taps use (a database driver reports <c>ERROR</c>, not 500).
-        /// </summary>
-        private static bool IsError(string status) =>
-            int.TryParse(status, out var numeric)
-                ? numeric >= 400
-                : !status.StartsWith("OK", StringComparison.OrdinalIgnoreCase)
-                  && !status.Equals("Created", StringComparison.OrdinalIgnoreCase)
-                  && !status.Equals("Accepted", StringComparison.OrdinalIgnoreCase)
-                  && !status.Equals("NoContent", StringComparison.OrdinalIgnoreCase);
     }
 }

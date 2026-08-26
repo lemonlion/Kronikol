@@ -1,6 +1,6 @@
 # Making Kronikol reports debuggable by an LLM
 
-**Status:** plan. Nothing here is implemented yet.
+**Status:** implemented in full in 3.0.47. Kept as the design record; `QUERY_V2_PLAN.md` builds on it.
 
 **The problem.** An agent asked to debug a test run reads `TestRunReport.json` and burns its whole
 context. A real report measured on 2026-08-22 (`sidekick-intelligence-e2e/.logs/kronikol/`) was 10.7 MB

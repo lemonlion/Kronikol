@@ -229,7 +229,7 @@ internal static partial class QueryCommand
 
             var response = FindResponse(scenario, interaction);
             var status = response?.StatusCode ?? "";
-            if (options.ErrorsOnly && !LooksLikeError(status))
+            if (options.ErrorsOnly && !IsError(status))
                 continue;
 
             var payload = interaction.BodyHash is { } hash ? $"  {hash} {QueryWriter.Size(interaction.BodyLength)}" : "";
@@ -248,8 +248,18 @@ internal static partial class QueryCommand
 
     private static InteractionEntry? FindResponse(ScenarioEntry scenario, InteractionEntry request)
     {
-        // The response half sits after its request and is the next entry that is a response of the same
-        // service; the report writes pairs adjacently, so this rarely scans more than one entry.
+        // The report carries the exact pairing key — requestResponseId, the same identity the diagram
+        // pipeline groups on. Under interleaved parallel calls to one service the old proximity scan
+        // attached the wrong response; the scan survives only for entries that carry no id.
+        if (request.RequestResponseId is { } id)
+        {
+            foreach (var candidate in scenario.Interactions)
+                if (candidate.Type.Equals("Response", StringComparison.OrdinalIgnoreCase)
+                    && candidate.RequestResponseId == id)
+                    return candidate;
+            return null;
+        }
+
         for (var i = request.Ordinal + 1; i < scenario.Interactions.Count && i <= request.Ordinal + 4; i++)
         {
             var candidate = scenario.Interactions[i];
@@ -259,9 +269,6 @@ internal static partial class QueryCommand
         }
         return null;
     }
-
-    private static bool LooksLikeError(string status) =>
-        status.Length > 0 && (!int.TryParse(status, out var numeric) ? !status.StartsWith("OK", StringComparison.OrdinalIgnoreCase) : numeric >= 400);
 
     private static bool TryScenario(ReportIndex index, QueryOptions options, TextWriter error, out ScenarioEntry scenario)
     {

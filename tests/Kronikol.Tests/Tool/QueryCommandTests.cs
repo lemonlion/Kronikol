@@ -28,7 +28,7 @@ public class QueryCommandTests : IDisposable
     {
         var output = Run("summary", Report());
 
-        Assert.Contains("3 scenarios", output);
+        Assert.Contains("7 scenarios", output);
         Assert.Contains("1 failed", output);
         Assert.Contains("s2", output);
         Assert.Contains("next: failures", output);
@@ -71,7 +71,7 @@ public class QueryCommandTests : IDisposable
     {
         var output = Run("services", Report());
 
-        Assert.Matches(@"payments\s+\d+\s+1", output);
+        Assert.Matches(@"payments\s+\d+\s+2", output);
     }
 
     // ─── Narrative ─────────────────────────────────────────────
@@ -237,6 +237,99 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("not the captured content", Run("note", Report(), "s0/d0/n0"));
     }
 
+    // ─── The path engine (M1) ──────────────────────────────────
+
+    [Fact]
+    public void Path_wildcard_lists_every_match_with_its_concrete_path()
+    {
+        var output = Run("http", Report(), "s3/i11", "--path", "$.items[*].price");
+
+        Assert.Contains("$.items[0].price = 12.5", output);
+        Assert.Contains("$.items[2].price = -3", output);
+    }
+
+    [Fact]
+    public void Path_length_function_counts_an_array()
+    {
+        var lines = Run("http", Report(), "s3/i11", "--path", "$.items.length()").Trim().ReplaceLineEndings("\n").Split('\n');
+
+        Assert.Equal("3", lines[^1].Trim());
+    }
+
+    [Fact]
+    public void Path_length_on_a_scalar_says_what_kind_it_was()
+    {
+        var output = Run("http", Report(), "s3/i11", "--path", "$.total.length()");
+
+        Assert.Contains("number", output);
+    }
+
+    [Fact]
+    public void Path_miss_suggests_the_nearest_key()
+    {
+        var output = Run("http", Report(), "s3/i11", "--path", "$.totl");
+
+        Assert.Contains("nearest: $.total", output);
+    }
+
+    [Fact]
+    public void Path_bracket_quoted_key_containing_a_dot()
+    {
+        var lines = Run("http", Report(), "s3/i11", "--path", "$.flags['feature.x']").Trim().ReplaceLineEndings("\n").Split('\n');
+
+        Assert.Equal("true", lines[^1].Trim());
+    }
+
+    [Fact]
+    public void Big_path_result_describes_itself_instead_of_printing()
+    {
+        var output = Run("http", BigDiagramReport(), "s0/i1", "--path", "$.items");
+
+        Assert.Contains("500 elements", output);
+        Assert.Contains("--path", output);
+        Assert.DoesNotContain("\"sku\"", output);
+    }
+
+    // ─── Exact pairing and the one error classifier (M1) ───────
+
+    [Fact]
+    public void Interleaved_calls_to_one_service_pair_by_requestResponseId()
+    {
+        var output = Run("interactions", Report(), "s4");
+
+        Assert.Matches(@"(?m)^s4/i0\s+payments\s+POST /charge\s+OK\b", output);
+        Assert.Matches(@"(?m)^s4/i1\s+payments\s+POST /charge\s+InternalServerError", output);
+    }
+
+    [Fact]
+    public void Pairing_falls_back_to_proximity_when_the_id_is_absent()
+    {
+        var output = Run("interactions", Report(), "s4");
+
+        Assert.Matches(@"(?m)^s4/i4\s+legacy\s+GET /ping\s+OK\b", output);
+    }
+
+    [Fact]
+    public void Created_and_NoContent_are_not_errors_anywhere()
+    {
+        var flow = Run("flow", Report(), "s3", "--errors-only");
+        Assert.DoesNotContain("preauth", flow);
+        Assert.DoesNotContain("hold", flow);
+
+        var services = Run("services", Report(), "s3");
+        Assert.Matches(@"(?m)^payments\s+\d+\s+0", services);
+    }
+
+    [Fact]
+    public void Text_ERROR_status_is_an_error_everywhere()
+    {
+        var flow = Run("flow", Report(), "s3", "--errors-only");
+        Assert.Contains("orders-db", flow);
+
+        var services = Run("services", Report(), "s3");
+        Assert.Matches(@"(?m)^orders-db\s+\d+\s+1", services);
+    }
+
     // ─── Search and comparison ─────────────────────────────────
 
     [Fact]
@@ -376,7 +469,7 @@ public class QueryCommandTests : IDisposable
         var (_, error, exit) = RunFull("steps", Report(), "s99");
 
         Assert.Equal(2, exit);
-        Assert.Contains("the report has 3", error);
+        Assert.Contains("the report has 7", error);
     }
 
     [Fact]
@@ -560,10 +653,13 @@ public class QueryCommandTests : IDisposable
             new Feature { DisplayName = "Big", Scenarios = [new Scenario { Id = "big-1", DisplayName = "One big scenario", Result = ExecutionResult.Passed }] }
         };
 
+        var bigArray = "{\"items\":[" + string.Join(",", Enumerable.Range(0, 500).Select(i => $"{{\"sku\":\"s{i}\",\"price\":{i}}}")) + "]}";
         var logs = new[]
         {
             new RequestResponseLog("Big", "big-1", HttpMethod.Post, body, new Uri("http://api/big"), [], "api", "test",
-                RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false) { Timestamp = DateTimeOffset.UtcNow }
+                RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false) { Timestamp = DateTimeOffset.UtcNow },
+            new RequestResponseLog("Big", "big-1", HttpMethod.Post, bigArray, new Uri("http://api/bulk"), [], "api", "test",
+                RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false) { Timestamp = DateTimeOffset.UtcNow.AddSeconds(1) }
         };
 
         return Write("Big.json", features, logs, [new DefaultDiagramsFetcher.DiagramAsCode("big-1", "Big", diagram)]);
@@ -636,8 +732,45 @@ public class QueryCommandTests : IDisposable
                     ]
                 }
             ]
+        },
+        new Feature
+        {
+            DisplayName = "Payments",
+            Scenarios =
+            [
+                new Scenario
+                {
+                    Id = "t3", DisplayName = "Charges succeed", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(0.9),
+                    Steps = [new ScenarioStep { Keyword = "When", Text = "charging", Status = ExecutionResult.Passed }]
+                },
+                new Scenario
+                {
+                    Id = "t4", DisplayName = "Parallel charges", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(0.2),
+                    Steps = [new ScenarioStep { Keyword = "When", Text = "charging twice", Status = ExecutionResult.Passed }]
+                },
+                new Scenario
+                {
+                    Id = "t5", DisplayName = "Receipt checkout passes", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(0.3),
+                    Steps = [new ScenarioStep { Keyword = "When", Text = "checking out", Status = ExecutionResult.Passed }]
+                },
+                new Scenario
+                {
+                    Id = "t6", DisplayName = "Receipt checkout variant", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(0.3),
+                    Steps = [new ScenarioStep { Keyword = "When", Text = "checking out", Status = ExecutionResult.Passed }]
+                }
+            ]
         }
     ];
+
+    /// <summary>The response body every path-grammar test aims at: arrays, a formatted number, a null, a dotted key.</summary>
+    private const string RichBody =
+        """{"items":[{"sku":"a","price":12.5},{"sku":"b","price":1250},{"sku":"c","price":-3}],"total":4173,"display":"4,173.00","region":null,"status":"APPROVED","flags":{"feature.x":true}}""";
+
+    /// <summary>A W3C trace id that stays inside one scenario (t3) — the healthy case.</summary>
+    private const string ChainTrace = "4bf92f3577b34da6a3ce929d0e0e4736";
+
+    /// <summary>A W3C trace id shared across t4 and t5 — the fixture-leakage smell `trace` warns about.</summary>
+    private const string LeakedTrace = "feedfacefeedfacefeedfacefeedface";
 
     private static RequestResponseLog[] BuildLogs()
     {
@@ -662,6 +795,61 @@ public class QueryCommandTests : IDisposable
             HttpStatusCode.InternalServerError, start.AddSeconds(4), "{\"total\":3902,\"currency\":\"GBP\"}"));
         logs.Add(Marker("t2", DiagramMarkerKind.Step, "hnote across <<stepDelimiter>> #black:<color:white>the total is right"));
         logs.AddRange(Pair("t2", "api", "GET", "http://api/order/9", "{\"customerReference\":\"abc\"}", HttpStatusCode.OK, start.AddSeconds(5)));
+
+        // ── t3: the aggregation scenario — repeated values, an absent field, a rich body, events,
+        //        non-JSON, and every flavour of status the error classifier has to agree on.
+        var t3 = start.AddSeconds(10);
+        for (var i = 0; i < 3; i++)
+            logs.AddRange(Pair("t3", "payments", "POST", "http://payments/charge", "{\"amount\":100}",
+                HttpStatusCode.OK, t3.AddMilliseconds(i * 50), "{\"status\":\"APPROVED\",\"total\":100}"));
+        logs.AddRange(Pair("t3", "payments", "POST", "http://payments/charge", "{\"amount\":50}",
+            HttpStatusCode.OK, t3.AddMilliseconds(500), "{\"status\":\"DECLINED\",\"total\":50}",
+            w3cTraceId: ChainTrace, spanId: "00f067aa00f067aa"));
+        logs.AddRange(Pair("t3", "payments", "POST", "http://payments/charge", "{\"amount\":12.5}",
+            HttpStatusCode.OK, t3.AddMilliseconds(600), "{\"total\":12.5}"));
+        logs.AddRange(Pair("t3", "payments", "POST", "http://payments/summary", "{\"basket\":9}",
+            HttpStatusCode.OK, t3.AddMilliseconds(800), RichBody,
+            w3cTraceId: ChainTrace, spanId: "a1b2c3d4e5f60718"));
+        logs.Add(RequestOnly("t3", "bus", "http://bus/publish", "{\"event\":\"charge.requested\"}",
+            t3.AddSeconds(2), RequestResponseMetaType.Event));
+        logs.AddRange(Pair("t3", "bus", "POST", "http://bus/settle", "{\"event\":\"charge.settled\"}",
+            HttpStatusCode.OK, t3.AddSeconds(3), "{\"ack\":true}", metaType: RequestResponseMetaType.Event));
+        logs.AddRange(Pair("t3", "printer", "POST", "http://printer/receipt", "print receipt please",
+            HttpStatusCode.OK, t3.AddSeconds(4), "receipt\ntotal 4,173.00\nthanks"));
+        logs.AddRange(Pair("t3", "payments", "POST", "http://payments/preauth", "{\"amount\":9}",
+            HttpStatusCode.Created, t3.AddSeconds(5), "{\"id\":9}"));
+        logs.AddRange(Pair("t3", "payments", "DELETE", "http://payments/hold/1", "{\"hold\":1}",
+            HttpStatusCode.NoContent, t3.AddSeconds(6), responseBody: null));
+        logs.AddRange(Pair("t3", "orders-db", "QUERY", "http://orders-db/orders", "{\"sql\":\"select 1\"}",
+            "ERROR", t3.AddSeconds(7), "{\"error\":\"deadlock\"}"));
+
+        // ── t4: two interleaved calls to the same service with different statuses — the exact-pairing
+        //        fixture. File order is reqA, reqB, respB, respA, so proximity attaches the wrong one.
+        var t4 = start.AddSeconds(20);
+        var interleavedA = Pair("t4", "payments", "POST", "http://payments/charge", "{\"attempt\":1}",
+            HttpStatusCode.OK, t4, "{\"status\":\"APPROVED\"}", w3cTraceId: LeakedTrace, spanId: "1111222233334444");
+        var interleavedB = Pair("t4", "payments", "POST", "http://payments/charge", "{\"attempt\":2}",
+            HttpStatusCode.InternalServerError, t4.AddMilliseconds(5), "{\"status\":\"DECLINED\"}");
+        logs.Add(interleavedA[0]);
+        logs.Add(interleavedB[0]);
+        logs.Add(interleavedB[1]);
+        logs.Add(interleavedA[1]);
+        logs.AddRange(Pair("t4", "legacy", "GET", "http://legacy/ping", "{}",
+            HttpStatusCode.OK, t4.AddSeconds(1), "{\"pong\":true}", pairId: Guid.Empty));
+
+        // ── t5/t6: near-identical paired bodies differing in a few paths — the body-diff fixture —
+        //        plus a non-JSON pair for the line-diff fallback.
+        var t5 = start.AddSeconds(30);
+        logs.AddRange(Pair("t5", "payments", "POST", "http://payments/charge", "{\"basket\":1}",
+            HttpStatusCode.OK, t5, "{\"customer\":{\"region\":\"EU\"},\"items\":[{\"sku\":\"a\",\"price\":12.5},{\"sku\":\"b\",\"price\":3}],\"total\":4173}",
+            w3cTraceId: LeakedTrace, spanId: "5555666677778888"));
+        logs.AddRange(Pair("t5", "printer", "POST", "http://printer/receipt", "print receipt please",
+            HttpStatusCode.OK, t5.AddSeconds(1), "receipt\ntotal: 4173"));
+        var t6 = start.AddSeconds(40);
+        logs.AddRange(Pair("t6", "payments", "POST", "http://payments/charge", "{\"basket\":1}",
+            HttpStatusCode.OK, t6, "{\"customer\":{\"region\":null},\"items\":[{\"sku\":\"a\",\"price\":1250},{\"sku\":\"b\",\"price\":3},{\"sku\":\"c\",\"price\":9}],\"total\":3902}"));
+        logs.AddRange(Pair("t6", "printer", "POST", "http://printer/receipt", "print receipt please",
+            HttpStatusCode.OK, t6.AddSeconds(1), "receipt\ntotal: 3902"));
 
         return logs.ToArray();
     }
@@ -692,19 +880,27 @@ public class QueryCommandTests : IDisposable
             RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
         { IsOverrideStart = true, PlantUml = plantUml, MarkerKind = kind };
 
-    private static RequestResponseLog[] Pair(string testId, string service, string method, string uri, string requestBody,
-        HttpStatusCode status, DateTimeOffset at, string? responseBody = null)
+    private static RequestResponseLog[] Pair(string testId, string service, OneOf<HttpMethod, string> method, string uri, string requestBody,
+        OneOf<HttpStatusCode, string> status, DateTimeOffset at, string? responseBody = "{\"ok\":true}",
+        Guid? pairId = null, string? w3cTraceId = null, string? spanId = null, RequestResponseMetaType metaType = default)
     {
-        var pairId = Guid.NewGuid();
+        var id = pairId ?? Guid.NewGuid();
         var traceId = Guid.NewGuid();
         return
         [
             new RequestResponseLog(testId, testId, method, requestBody, new Uri(uri), [("accept", "application/json")],
-                service, "test", RequestResponseType.Request, traceId, pairId, false)
-            { Timestamp = at, DependencyCategory = service == "redis" ? "cache" : null },
-            new RequestResponseLog(testId, testId, method, responseBody ?? "{\"ok\":true}", new Uri(uri), [],
-                service, "test", RequestResponseType.Response, traceId, pairId, false, status)
+                service, "test", RequestResponseType.Request, traceId, id, false, MetaType: metaType)
+            { Timestamp = at, DependencyCategory = service == "redis" ? "cache" : null, ActivityTraceId = w3cTraceId, ActivitySpanId = spanId },
+            new RequestResponseLog(testId, testId, method, responseBody, new Uri(uri), [],
+                service, "test", RequestResponseType.Response, traceId, id, false, status, MetaType: metaType)
             { Timestamp = at.AddMilliseconds(35) }
         ];
     }
+
+    /// <summary>A fire-and-forget half: a request (or event) that never gets a response entry.</summary>
+    private static RequestResponseLog RequestOnly(string testId, string service, string uri, string body, DateTimeOffset at,
+        RequestResponseMetaType metaType = default) =>
+        new(testId, testId, "POST", body, new Uri(uri), [], service, "test",
+            RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false, MetaType: metaType)
+        { Timestamp = at };
 }

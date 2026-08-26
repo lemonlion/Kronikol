@@ -98,6 +98,9 @@ One row per request: address, service, method and path, status, duration, and bo
 | `--grep T` | substring match on the URI |
 | `--group` | fold runs of identical calls into one row with `×N` |
 
+Statuses, durations and response body pointers come from exact request/response pairing
+(`requestResponseId`), so interleaved parallel calls to one service each show their own status.
+
 ### `http <report> s3/i47 [flags]`
 The interaction: direction, participants, method, URI, status, duration, owning step, W3C trace and span
 ids, phase, dependency category, capture path.
@@ -109,10 +112,27 @@ lists the cheap ways to look at it.
 |---|---|
 | `--headers` | the header block |
 | `--keys` | the body's shape: one line per path, with type and a sample |
-| `--path $.a.b[2].c` | one value |
+| `--path '$.a.b[2].c'` | one value — see the path grammar below |
 | `--lines 20-60` | a window of the pretty-printed body |
 | `--body` | all of it, subject to the budget |
 | `--out FILE` | write it out and print one line |
+
+#### Path grammar
+
+| Segment | Meaning |
+|---|---|
+| `.name` | object property |
+| `[2]` | array index |
+| `[*]` | every element — prints one row per match, each with its concrete path (`$.items[2].price = 4173`), paged |
+| `['a.b']` | bracket-quoted property, for keys containing dots |
+| `.length()` | terminal only: array → element count, object → property count, string → char count |
+
+**Always single-quote a path** (`--path '$.items[*].price'`): `[*]` is shell-active in bash and
+PowerShell, and an unquoted one surfaces as a baffling miss rather than a shell error.
+
+A miss suggests the nearest key that does exist (`$.data.custmers is not in this body — nearest:
+$.data.customers`). A result too big for the budget *describes itself* — kind, element count, size, and
+the flags that window it — instead of refusing.
 
 ### `body <report> b:4bdea521 [same payload flags]`
 The same views, addressed by content instead of by location, plus every address the body occurs at. Two

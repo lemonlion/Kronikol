@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.51] - 2026-08-26
+
+### Added
+- **`kronikol query` path engine — the `--path` grammar grew wildcards, quoted keys and `length()`** (`QUERY_V2_PLAN.md` Milestone 1). `--path '$.items[*].price'` fans out and prints one row per match, each with its *concrete* path (`$.items[2].price = 4173`) so every emitted row is itself a valid `--path` input; `['a.b']` bracket-quotes a property whose key contains dots; `$.items.length()` answers "how many" directly (array → element count, object → property count, string → char count — any other kind explains what the kind was instead of missing silently). A missed property now suggests the nearest key actually present (`$.data.custmers is not in this body — nearest: $.data.customers`), and a path resolving to an array or object bigger than the byte budget *describes itself* — kind, element count, size, and the flags that window it — instead of refusing. All of it lives in one place (`Query/PathEngine.cs`): the resolver, the `--keys` walker and grep's `--values` walker were three copies of the same recursive walk and are now one, so a path printed by any command parses back to the same value everywhere. New shared flags (`--where`, `--group-by`, `--stats`, `--request`/`--both`, `--number`, `--tolerance`, `diff --body ADDR`) are parsed and reserved for the v2 query commands landing next.
+
+### Fixed
+- **`kronikol query` paired a request with the wrong response under interleaved parallel calls.** The pairing key has always been in the file — `requestResponseId`, the same identity the diagram pipeline groups on — but the tool's scanner dropped it and paired by proximity ("next response from the same service within four entries"), so two in-flight calls to one service could swap statuses, durations and response body pointers in `interactions`, `flow` and the `--status` filter. The scanner now keeps `requestResponseId` (and `traceId`), pairing is exact wherever the id exists, and the proximity heuristic survives only for entries that genuinely carry none (markers, user actions, unpaired captures).
+- **`flow --errors-only` and `services` disagreed about what an error is.** `flow` flagged any non-`OK` text status — including `Created`, `Accepted` and `NoContent`, which `services` correctly counted as successes. One shared classifier now serves both (and everything built later on it): numeric ≥ 400 is an error, text statuses are errors unless they are a known success name, so a `Created` response is never an "error" in one command and fine in another.
+
 ## [3.0.50] - 2026-08-25
 
 ### Changed

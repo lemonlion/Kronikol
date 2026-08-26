@@ -239,26 +239,14 @@ internal static partial class QueryCommand
 
         if (options.Keys)
         {
-            foreach (var line in PayloadReader.Keys(body))
+            foreach (var line in PathEngine.Keys(body))
                 writer.Line(line);
             writer.Footer($"--path $.<one of these> for a value · --body for all {QueryWriter.Size(Encoding.UTF8.GetByteCount(body))}");
             return 0;
         }
 
         if (options.Path is { } jsonPath)
-        {
-            var value = PayloadReader.Path(body, jsonPath);
-            if (value is null)
-            {
-                writer.Line($"{jsonPath} is not in this body");
-                writer.Footer("--keys to see what is");
-                return 0;
-            }
-
-            writer.Line(value);
-            writer.Footer("");
-            return 0;
-        }
+            return EmitPath(options, writer, error, body, jsonPath);
 
         var pretty = PayloadReader.Pretty(body);
 
@@ -285,6 +273,72 @@ internal static partial class QueryCommand
         writer.Line(pretty);
         writer.Footer("");
         return 0;
+    }
+
+    /// <summary>
+    /// The <c>--path</c> answer, in all its shapes: one value, a fan-out of rows, a description of a
+    /// result too big to print, or a miss that names the nearest key that does exist.
+    /// </summary>
+    private static int EmitPath(QueryOptions options, QueryWriter writer, TextWriter error, string body, string jsonPath)
+    {
+        if (!PathEngine.TryParse(jsonPath, out var segments, out var parseError))
+        {
+            error.WriteLine($"Bad path: {parseError}");
+            error.WriteLine("Grammar: $.name · [2] · [*] · ['key.with.dots'] · .length() (last segment only). Quote the whole path — [*] is shell-active.");
+            return 2;
+        }
+
+        System.Text.Json.JsonDocument document;
+        try
+        {
+            document = System.Text.Json.JsonDocument.Parse(body);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            writer.Line($"{jsonPath} is not in this body — the body is not JSON ({QueryWriter.Size(Encoding.UTF8.GetByteCount(body))} of text)");
+            writer.Footer("--lines to window the text · --out F to save it");
+            return 0;
+        }
+
+        using (document)
+        {
+            var matches = PathEngine.SelectAll(document.RootElement, segments).ToList();
+            var fansOut = segments.Any(s => s.Wildcard);
+
+            if (matches.Count == 0)
+            {
+                writer.Line(PathEngine.MissMessage(document.RootElement, segments) ?? $"{jsonPath} is not in this body");
+                writer.Footer("--keys to see what is");
+                return 0;
+            }
+
+            if (!fansOut && matches.Count == 1)
+            {
+                var (concrete, value) = matches[0];
+                var text = value.Text();
+                var size = Encoding.UTF8.GetByteCount(text);
+                if (value.IsContainer && options.MaxBytes > 0 && size > options.MaxBytes)
+                {
+                    // Describing beats refusing: the shape and the next commands cost a line.
+                    writer.Line(value.Element.ValueKind == System.Text.Json.JsonValueKind.Array
+                        ? $"{concrete} — array, {value.Element.GetArrayLength()} elements, {QueryWriter.Size(size)}"
+                        : $"{concrete} — object, {value.Element.EnumerateObject().Count()} keys, {QueryWriter.Size(size)}");
+                    writer.Footer(value.Element.ValueKind == System.Text.Json.JsonValueKind.Array
+                        ? $"--path '{concrete}[0]' for one element · --lines to window it · --max-bytes 0 prints it anyway"
+                        : $"--keys for its shape · --lines to window it · --max-bytes 0 prints it anyway");
+                    return 0;
+                }
+
+                writer.Line(text);
+                writer.Footer("");
+                return 0;
+            }
+
+            writer.Page(matches, options.Offset, Math.Min(options.Limit, 200), "values",
+                match => writer.Line($"{match.Path} = {match.Value.Row()}"),
+                $"--path \"{jsonPath}\" ");
+            return 0;
+        }
     }
 
     private static int Note(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
