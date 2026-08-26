@@ -73,7 +73,8 @@ without printing a single payload — reach `http` only when one specific body m
 | "what broke since yesterday?" | `diff old.json new.json` — matched on `stableId` |
 | "these two runs/scenarios differ — how?" | `compare s3 s7` (it names the first differing body) → `diff s3/i47 s7/i47` — only the differing paths, never two payloads |
 | "why is this slow?" | `summary` → `services --sort duration` → `flow s3` |
-| "is this flaky?" | `diff` across runs; `stableId` survives re-runs, ordinals do not |
+| "is this flaky?" | `diff` across runs; `stableId` survives re-runs, ordinals do not — and `trace <id>` flags a trace id leaking across scenarios, the classic flaky smell |
+| "is this one request or a chain?" | `trace s3/i47` — every call sharing that W3C trace id, chronologically |
 | "the report shows X but I can't find it" | `note s3/d0` — see **Notes are a rendering** below |
 | "show me the flow" | `flow s3` — never the diagram |
 | "what happened in step 2?" | `interactions s3 --step 2`, or `flow s3 --step 2` |

@@ -4,7 +4,8 @@
 classifier, shared flags) shipped in 3.0.51; Milestone 2 (`values` + `--stats`) in 3.0.52;
 Milestone 3 (`--where`, run-scoped `interactions`) in 3.0.53; Milestone 4 (body `diff`,
 cross-run `--body`, `compare` pointer) in 3.0.54; Milestone 5 (`--group-by`) in 3.0.55;
-Milestone 6 (`grep --number` + `--tolerance`) in 3.0.56. Milestones 7–8 not yet.
+Milestone 6 (`grep --number` + `--tolerance`) in 3.0.56; Milestone 7 (`trace`) in 3.0.57.
+Milestone 8 (`select`) is go/no-go gated — not built.
 
 **Builds on:** `REPORT_QUERY_PLAN.md`, implemented in full in 3.0.47. That work made the report *navigable*
 under a byte budget. This work makes the payloads *queryable*: today `--path` in

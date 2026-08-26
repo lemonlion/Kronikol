@@ -84,6 +84,7 @@ internal static partial class QueryCommand
             "note" => Note(index, options, writer, error),
             "diagram" => Diagram(index, options, writer, error),
             "grep" => Grep(index, options, writer, error),
+            "trace" => Trace(index, options, writer, error),
             "compare" => Compare(index, options, writer, error),
             "diff" => Diff(index, options, writer, error),
             _ => Unknown(command, error)
@@ -195,6 +196,7 @@ internal static partial class QueryCommand
         writer.WriteLine("Search and comparison");
         writer.WriteLine("  grep         <report> \"4173\" [--in bodies,headers,uris,steps,assertions,notes] [--values]");
         writer.WriteLine("               [--number [--tolerance 0.5|1%]]   numeric match across formatting — 4,173.00 ≈ 4173 ≈ 4.173,00");
+        writer.WriteLine("  trace        <report> <id | prefix≥8hex | s3/i47>   follow a W3C trace id across the run, chronologically");
         writer.WriteLine("  compare      <report> s3 s7                  two scenarios in one run");
         writer.WriteLine("  diff         <report> s3/i47 s7/i47          two bodies in one report — only the differing paths (also b:hashes)");
         writer.WriteLine("  diff         <old.json> <new.json> [--body s3/i47]   two runs matched on stableId; --body diffs one call across them");

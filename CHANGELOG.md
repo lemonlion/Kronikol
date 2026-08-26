@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.57] - 2026-08-26
+
+### Added
+- **`kronikol query trace` — follow a W3C trace id across the run** (`QUERY_V2_PLAN.md` Milestone 7). 3.0.47 put `activityTraceId`/`activitySpanId` on every interaction; nothing consumed them until now. `trace <report> <id>` (full id, an unambiguous prefix of ≥ 8 hex chars, or an interaction address for that call's trace) lists every call sharing the id, chronologically with offsets from the first — scenario-qualified address, service, summary, status (exactly paired), short span id. When any row's timestamp is absent or unparseable the whole trace falls back to file order with a `!` line, never a silent mix of two orderings. The command's second job is the warning nothing else in the tool can see: `! spans 2 scenarios (s3, s7) — shared state or fixture leakage`, the classic flaky-test smell. The footer states the known limitation honestly — parent span ids are not captured, so this is the chronology of the trace, not its tree. Ambiguous prefixes exit 2 listing candidates; an unknown id says how many distinct trace ids the report holds; untraced calls and unenriched reports are told to re-run on a current Kronikol.
+
 ## [3.0.56] - 2026-08-26
 
 ### Added

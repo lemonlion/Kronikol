@@ -243,6 +243,26 @@ command for "the number on screen is wrong" — it finds where the number entere
 
 Bodies are searched once per distinct content, not once per occurrence.
 
+### `trace <report> <id | prefix | s3/i47>`
+
+Follows a W3C trace id across the whole run — the ids `http` prints (`activityTraceId`), matched to
+your OTel traces and app logs. Takes the full id, an unambiguous prefix of at least 8 hex chars, or an
+interaction address (that call's trace).
+
+```
+trace 4bf92f35… — 7 calls across 2 scenarios
+  +0 ms     s3/i12   api        POST /orders            202      span 00f067aa
+  +12 ms    s3/i14   payments   POST /charge            200      span a1b2c3d4
+  +80 ms    s7/i2    payments   POST /charge            500      span e5f60718
+! spans 2 scenarios (s3, s7) — shared state or fixture leakage
+```
+
+Rows are chronological with offsets from the first (file order, flagged, when a timestamp is missing).
+**The cross-scenario warning is the command's second job**: a trace id that leaks across scenarios is
+the classic flaky-test smell, and nothing else in the tool can see it. Parent span ids are not captured,
+so this is the chronology of the trace, not its tree. An ambiguous prefix exits 2 listing the
+candidates; an unenriched report or an untraced call is told to re-run on a current Kronikol.
+
 ### `compare <report> s3 s7`
 Two scenarios side by side: example values, the first differing steps, the first differing calls, and how
 many bodies are byte-identical — plus the address of the first differing body, ready to paste into

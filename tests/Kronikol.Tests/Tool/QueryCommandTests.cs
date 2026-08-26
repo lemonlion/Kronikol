@@ -582,6 +582,62 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("spans scenarios", output);
     }
 
+    // ─── trace (M7) ────────────────────────────────────────────
+
+    [Fact]
+    public void Trace_lists_the_chain_chronologically_with_offsets()
+    {
+        var output = Run("trace", Report(), ChainTrace);
+
+        Assert.Contains("+0 ms", output);
+        Assert.Contains("+300 ms", output);
+        Assert.Contains("s3/i6", output);
+        Assert.Contains("s3/i10", output);
+    }
+
+    [Fact]
+    public void Trace_flags_cross_scenario_spans()
+    {
+        var output = Run("trace", Report(), LeakedTrace);
+
+        Assert.Contains("spans 2 scenarios", output);
+    }
+
+    [Fact]
+    public void Trace_by_interaction_address()
+    {
+        var output = Run("trace", Report(), "s3/i6");
+
+        Assert.Contains("s3/i10", output);
+    }
+
+    [Fact]
+    public void Trace_prefix_must_be_unambiguous()
+    {
+        var (_, error, exit) = RunFull("trace", Report(), "4bf92f35");
+
+        Assert.Equal(2, exit);
+        Assert.Contains(ChainTrace, error);
+        Assert.Contains(LeakedTrace, error);
+    }
+
+    [Fact]
+    public void Trace_on_an_unenriched_report_says_why()
+    {
+        var (_, error, exit) = RunFull("trace", UnenrichedReport(), "s0/i0");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("current Kronikol", error);
+    }
+
+    [Fact]
+    public void Trace_footer_admits_no_parent_links()
+    {
+        var output = Run("trace", Report(), ChainTrace);
+
+        Assert.Contains("not its tree", output);
+    }
+
     // ─── Search and comparison ─────────────────────────────────
 
     [Fact]
@@ -1211,8 +1267,11 @@ public class QueryCommandTests : IDisposable
     /// <summary>A W3C trace id that stays inside one scenario (t3) — the healthy case.</summary>
     private const string ChainTrace = "4bf92f3577b34da6a3ce929d0e0e4736";
 
-    /// <summary>A W3C trace id shared across t4 and t5 — the fixture-leakage smell `trace` warns about.</summary>
-    private const string LeakedTrace = "feedfacefeedfacefeedfacefeedface";
+    /// <summary>
+    /// A W3C trace id shared across t4 and t5 — the fixture-leakage smell `trace` warns about. Shares its
+    /// first 8 hex with <see cref="ChainTrace"/> so a short prefix is genuinely ambiguous.
+    /// </summary>
+    private const string LeakedTrace = "4bf92f35feedfacefeedfacefeedface";
 
     private static RequestResponseLog[] BuildLogs(bool totalDrift = false)
     {
