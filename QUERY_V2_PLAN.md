@@ -1,7 +1,8 @@
 # `kronikol query` v2 — payload-side aggregation, comparison and search
 
 **Status:** in progress. Milestone 1 (path engine, `--path` upgrade, exact pairing, one error
-classifier, shared flags) shipped in 3.0.51. Milestones 2–8 not yet.
+classifier, shared flags) shipped in 3.0.51; Milestone 2 (`values` + `--stats`) in 3.0.52.
+Milestones 3–8 not yet.
 
 **Builds on:** `REPORT_QUERY_PLAN.md`, implemented in full in 3.0.47. That work made the report *navigable*
 under a byte budget. This work makes the payloads *queryable*: today `--path` in

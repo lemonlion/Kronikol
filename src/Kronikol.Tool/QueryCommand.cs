@@ -77,6 +77,7 @@ internal static partial class QueryCommand
             "services" => Services(index, options, writer, error),
             "flow" => Flow(index, options, writer, error),
             "interactions" => Interactions(index, options, writer, error),
+            "values" => Values(index, options, writer, error),
             "annotations" => Annotations(index, options, writer, error),
             "http" => Http(index, options, writer, error),
             "body" => Body(index, options, writer, error),
@@ -175,6 +176,10 @@ internal static partial class QueryCommand
         writer.WriteLine("  assertions   <report> [s3] [--failed]        flat assertion list with results and source locations");
         writer.WriteLine("  flow         <report> s3 [--step 2] [--service X] [--errors-only]");
         writer.WriteLine("  annotations  <report> s3                     example-row markers and injected diagram fragments");
+        writer.WriteLine();
+        writer.WriteLine("Aggregation (reads bodies freely, prints values one-lined, never whole payloads)");
+        writer.WriteLine("  values       <report> [s3] --path '$.status' [--service X] [--status 5xx] [--method M] [--step 2]");
+        writer.WriteLine("               [--grep URI] [--stats] [--request|--both]   distinct values × counts, with addresses");
         writer.WriteLine();
         writer.WriteLine("Payloads (never printed unless asked for)");
         writer.WriteLine("  interactions <report> s3 [--service X] [--status 5xx] [--method GET] [--grep T] [--group]");

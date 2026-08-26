@@ -19,6 +19,10 @@ Usage:
     python query.py services  <report> [s3]
     python query.py grep      <report> "4173" [--values]
     python query.py http      <report> s3/i47 [--keys] [--path $.a.b] [--out FILE]
+
+Only in the real tool (not missing from the report — missing from this fallback):
+    values (aggregation), interactions, flow, assertions, annotations, body, note,
+    diagram, compare, diff, and the extended --path grammar ([*], ['a.b'], .length()).
 """
 
 import hashlib

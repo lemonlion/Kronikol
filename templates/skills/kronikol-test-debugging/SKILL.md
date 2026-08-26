@@ -51,11 +51,13 @@ them into context on the way past.
 ## The ladder
 
 ```
-summary  →  failures | scenarios  →  steps s3  →  services s3  →  interactions s3  →  http s3/i47 --keys  →  http s3/i47 --path $.x
+summary  →  failures | scenarios  →  steps s3  →  services s3  →  interactions s3  →  values --path '$.x'  →  http s3/i47 --keys  →  http s3/i47 --path '$.x'
 ```
 
 **Stop at the first rung that answers the question.** Most questions end at rung three. `failures` alone
-usually answers "why did these tests fail".
+usually answers "why did these tests fail". **Aggregate before you fetch**: when the question is about a
+field across many calls ("what did `$.status` ever hold?"), `values --path` answers it in one command
+without printing a single payload — reach `http` only when one specific body matters.
 
 ## Recipes
 
@@ -65,6 +67,7 @@ usually answers "why did these tests fail".
 | "the number on screen is wrong" | `grep "<value>" --values` → `http <addr> --path $...` → `compare s<failing> s<passing>` |
 | "did it even call X?" | `services` — absence is the answer; no payload needed |
 | "what did X return?" | `interactions s3 --service X` → `http s3/iN --keys` → `--path` |
+| "what values did X ever return?" | `values --path '$.field' --service X` — distinct values, counted, with addresses |
 | "which example row broke?" | `steps s3` (its parameters) + `annotations s3` |
 | "what broke since yesterday?" | `diff old.json new.json` — matched on `stableId` |
 | "why is this slow?" | `summary` → `services --sort duration` → `flow s3` |
@@ -102,6 +105,9 @@ usually answers "why did these tests fail".
   individually. They are never inlined.
 - **`traceId` is not the W3C trace id.** `traceId` is Kronikol's own identifier for the request/response
   pair; `activityTraceId` (printed by `http`) is the W3C one that matches your OTel traces and app logs.
+- **Aggregate counts are per occurrence, not per distinct body.** `values` counts a body every time it
+  arrived, because the question is "what did the system see" — the `(N distinct bodies)` in its header is
+  where the dedup shows.
 - **If a command prints `! report predates step attribution`,** that file was written by an older
   Kronikol: assertion messages, source locations and `stepPath` are absent from it. The answers are still
   correct, just thinner. Re-running the suite on a current Kronikol fills them in.

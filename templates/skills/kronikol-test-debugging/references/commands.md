@@ -81,6 +81,36 @@ The example-row markers (`Row 3`) and any fragment the test author injected with
 `DefaultTrackingDiagramOverride.InsertPlantUml`, each with the interaction index it sat before. Step and
 assertion markers are excluded — those are already in `steps`.
 
+## Aggregation
+
+### `values <report> [s3] --path '$.status' [flags]`
+
+`SELECT value, COUNT(*) … GROUP BY value` where the column is a JSON path evaluated across every matched
+body. Aggregate **before** you fetch: one `values` answers "what did this field ever hold" without
+printing a single payload.
+
+```
+$.status across 44 response bodies (7 distinct bodies)
+  "APPROVED"   ×41   e.g. s3/i12
+  "DECLINED"   ×2    s3/i40, s7/i2
+  (absent)     ×1    s3/i50
+12 calls carried no body
+```
+
+| Flag | Effect |
+|---|---|
+| `--path '$.x'` | required; the full path grammar applies (`[*]` fans out over every element) |
+| `--service X` / `--status 5xx` / `--method M` / `--step 2` / `--grep URI` | the same filters `interactions` takes |
+| `--stats` | numeric summary: count/absent/non-numeric/distinct, min/median/max/sum/mean — min and max carry the address of the extreme |
+| `--request` / `--both` | target request bodies, or both (rows tagged `req`/`resp`); default is the response body |
+
+- Scope is the whole run, or one scenario with `s3`.
+- **Counting is per occurrence, not per distinct body** — the same body arriving 41 times counts 41
+  times (each distinct body is still parsed only once).
+- A body the path misses is counted as `(absent)` — silence would hide exactly the bug this finds.
+- Bodiless calls, unpaired calls (no response to evaluate) and non-JSON bodies are footnoted, never
+  silently dropped.
+
 ## Payloads
 
 Nothing here prints a payload that was not named.

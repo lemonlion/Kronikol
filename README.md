@@ -170,6 +170,7 @@ kronikol query failures ./Reports          # why each one failed, with assertion
 kronikol query services ./Reports          # per service: calls, errors, timings — and what was never called
 kronikol query flow     ./Reports s3       # the sequence, in 2 KB instead of 663
 kronikol query grep     ./Reports "4173" --values   # where a wrong number entered the system
+kronikol query values   ./Reports --path '$.status' # every value a field held, counted, with addresses
 kronikol query http     ./Reports s3/i47 --keys     # a payload's shape, then --path $.x for one value
 ```
 

@@ -330,6 +330,121 @@ public class QueryCommandTests : IDisposable
         Assert.Matches(@"(?m)^orders-db\s+\d+\s+1", services);
     }
 
+    // ─── values (M2) ───────────────────────────────────────────
+
+    [Fact]
+    public void Values_groups_distinct_values_with_counts_and_an_example_address()
+    {
+        var output = Run("values", Report(), "--path", "$.status", "--service", "payments");
+
+        Assert.Matches(@"""APPROVED""\s+×5", output);
+        Assert.Contains("(absent)", output);
+        Assert.Contains("s3/i", output);
+    }
+
+    [Fact]
+    public void Values_counts_occurrences_not_distinct_bodies()
+    {
+        // Three calls carried the byte-identical APPROVED body; the rich body adds a fourth occurrence.
+        var output = Run("values", Report(), "s3", "--path", "$.status", "--service", "payments");
+
+        Assert.Matches(@"""APPROVED""\s+×4", output);
+        Assert.Contains("distinct", output);
+    }
+
+    [Fact]
+    public void Values_reports_absent_as_a_value()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.status", "--service", "payments");
+
+        Assert.Contains("(absent)", output);
+    }
+
+    [Fact]
+    public void Values_stats_summarises_a_numeric_path_with_extreme_addresses()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.total", "--service", "payments", "--stats");
+
+        Assert.Contains("min 12.5 (s3/i", output);
+        Assert.Contains("max 4173 (s3/i", output);
+        Assert.Contains("absent 1", output);
+    }
+
+    [Fact]
+    public void Values_wildcard_counts_every_element()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.items[*].price");
+
+        Assert.Contains("1250", output);
+        Assert.Contains("-3", output);
+    }
+
+    [Fact]
+    public void Values_footnotes_bodiless_calls()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.status", "--service", "payments");
+
+        Assert.Contains("carried no body", output);
+    }
+
+    [Fact]
+    public void Values_request_flag_targets_request_bodies()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.amount", "--request", "--service", "payments");
+
+        Assert.Matches(@"100\s+×3", output);
+    }
+
+    [Fact]
+    public void Values_scoped_to_one_scenario()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.status");
+
+        Assert.DoesNotContain("s4/", output);
+    }
+
+    [Fact]
+    public void Values_without_a_path_exits_2_with_usage()
+    {
+        var (_, error, exit) = RunFull("values", Report());
+
+        Assert.Equal(2, exit);
+        Assert.Contains("--path", error);
+    }
+
+    [Fact]
+    public void Values_footnotes_unpaired_calls_under_response_targeting()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.ack", "--service", "bus");
+
+        Assert.Contains("no response", output);
+    }
+
+    [Fact]
+    public void Values_evaluates_a_paired_event_response_normally()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.ack", "--service", "bus");
+
+        Assert.Contains("true", output);
+    }
+
+    [Fact]
+    public void Values_both_tags_each_row_with_direction()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.event", "--both", "--service", "bus");
+
+        Assert.Contains("req", output);
+        Assert.Contains("resp", output);
+    }
+
+    [Fact]
+    public void Values_stays_small_on_a_wide_run()
+    {
+        var output = Run("values", BigDiagramReport(), "--path", "$.items[*].price", "--request");
+
+        Assert.True(Encoding.UTF8.GetByteCount(output) <= 6400, $"values produced {Encoding.UTF8.GetByteCount(output)} bytes");
+    }
+
     // ─── Search and comparison ─────────────────────────────────
 
     [Fact]

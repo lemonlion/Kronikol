@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.52] - 2026-08-26
+
+### Added
+- **`kronikol query values` — cross-body projection with aggregation** (`QUERY_V2_PLAN.md` Milestone 2). The SQL analog is `SELECT value, COUNT(*) … GROUP BY value` where the column is a JSON path evaluated across every matched body: `kronikol query values <report> --path '$.status'` prints each distinct value with its occurrence count and example addresses; `--stats` summarises a numeric path (count/absent/non-numeric/distinct, min/median/max/sum/mean — min and max carry the address of the extreme, because the outlier is usually the next thing to fetch). Scope is the whole run or one scenario (`s3`), the `interactions` filters (`--service`, `--status`, `--method`, `--step`, `--grep`) all apply, `--request`/`--both` shift the target from the default response body (rows tagged `req`/`resp` under `--both`), and wildcards fan out (`--path '$.items[*].price'` counts every element of every body). Counting is per occurrence — the question is "what did the system see" — while each distinct body is parsed exactly once through the new `BodyCache`. A body the path misses counts as `(absent)`; bodiless calls, calls with no response to evaluate (fire-and-forget events included — though an event with a tracked response participates normally) and non-JSON bodies are footnoted, never silently dropped. Kronikol4J: explicitly none — the tool is .NET-only and the report format is untouched.
+
 ## [3.0.51] - 2026-08-26
 
 ### Added
