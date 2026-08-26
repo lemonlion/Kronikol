@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.55] - 2026-08-26
+
+### Added
+- **`kronikol query interactions --group-by` — generic bucketing** (`QUERY_V2_PLAN.md` Milestone 5). `--group-by service,status` (dimensions, any order: `service`, `method`, `status`, `path` — URI path with the query stripped — `step`, `phase`, `category`, `kind`/metaType, `capturedBy`) prints one row per bucket with calls, errors, median and max duration, and the number of *distinct response bodies* — a bucket with 120 calls and 1 body is one fact. Status and duration come from the exactly-paired response and errors from the shared classifier, so a `Created` is a success here exactly as in `services`. Index-only unless combined with `--where`; composes with every filter; `--sort errors|duration`; `--count` is the bucket count. Unknown dimensions exit 2 listing the valid ones; `--group` (adjacent-identical folding) and `--group-by` refuse to compose; at run scope a `step` dimension warns that step paths collide across scenarios. `services` stays as the curated view and the only answerer of negative questions — `--group-by` is the general form.
+
 ## [3.0.54] - 2026-08-26
 
 ### Added

@@ -535,6 +535,53 @@ public class QueryCommandTests : IDisposable
         Assert.DoesNotContain("12.5", output);
     }
 
+    // ─── --group-by (M5) ───────────────────────────────────────
+
+    [Fact]
+    public void GroupBy_counts_errors_and_distinct_bodies_per_bucket()
+    {
+        var output = Run("interactions", Report(), "--group-by", "service,status");
+
+        // payments × InternalServerError: the s2 charge and the s4 interleaved failure — 2 calls,
+        // 2 errors, 2 distinct response bodies.
+        Assert.Matches(@"payments\s+InternalServerError\s+2\s+2\b", output);
+    }
+
+    [Fact]
+    public void GroupBy_composes_with_where()
+    {
+        var output = Run("interactions", Report(), "--group-by", "service", "--where", "$.status = APPROVED");
+
+        Assert.Matches(@"payments\s+5\b", output);
+    }
+
+    [Fact]
+    public void GroupBy_unknown_dimension_lists_the_valid_ones()
+    {
+        var (_, error, exit) = RunFull("interactions", Report(), "--group-by", "nope");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("service", error);
+        Assert.Contains("capturedBy", error);
+    }
+
+    [Fact]
+    public void GroupBy_and_group_refuse_to_compose()
+    {
+        var (_, error, exit) = RunFull("interactions", Report(), "s3", "--group", "--group-by", "service");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("compose", error);
+    }
+
+    [Fact]
+    public void GroupBy_at_run_scope()
+    {
+        var output = Run("interactions", Report(), "--group-by", "step");
+
+        Assert.Contains("spans scenarios", output);
+    }
+
     // ─── Search and comparison ─────────────────────────────────
 
     [Fact]

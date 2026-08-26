@@ -184,6 +184,8 @@ internal static partial class QueryCommand
         writer.WriteLine("Payloads (never printed unless asked for)");
         writer.WriteLine("  interactions <report> [s3] [--service X] [--status 5xx] [--method GET] [--grep T] [--group]");
         writer.WriteLine("               [--where \"$.success = false\"]   repeatable; AND; req: prefix targets the request body");
+        writer.WriteLine("               [--group-by service,status]      buckets with calls/errors/median/max/bodies; dims:");
+        writer.WriteLine("                                                service method status path step phase category kind capturedBy");
         writer.WriteLine("  http         <report> s3/i47 [--headers] [--body] [--keys] [--path $.a.b] [--lines 20-60] [--out F]");
         writer.WriteLine("  body         <report> b:4bdea521 [--keys] [--path $.a.b] [--lines 20-60] [--out F]");
         writer.WriteLine("               --path grammar: $.a.b[2] · [*] every element · ['a.b'] dotted key · .length() count — quote the path");

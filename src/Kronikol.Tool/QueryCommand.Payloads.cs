@@ -13,6 +13,12 @@ internal static partial class QueryCommand
 {
     private static int Interactions(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
+        if (options.Group && options.GroupBy is not null)
+        {
+            error.WriteLine("--group folds adjacent identical calls; --group-by buckets by dimensions — they don't compose. Pick one.");
+            return 2;
+        }
+
         // An address scopes to one scenario; without one the whole run is in scope — rows already print
         // full `s3/i47` addresses, and the page cap keeps the output honest.
         ScenarioEntry? only = null;
@@ -49,6 +55,9 @@ internal static partial class QueryCommand
             }
             matches.Add((scenario, request, response));
         }
+
+        if (options.GroupBy is not null)
+            return GroupedInteractions(matches, options, writer, error, only);
 
         if (options.Count)
         {

@@ -153,6 +153,26 @@ numeric comparison; otherwise case-insensitive string comparison; `~` is substri
   were excluded that way.
 - Works on `interactions` and `values`. Single-quote the expression — `>`, `?` and `[*]` are shell-active.
 
+#### `--group-by` — generic bucketing
+
+```
+kronikol query interactions <report> [s3] --group-by service,status [--sort errors] [--where …]
+```
+
+```
+service      status               calls  errors   median      max  bodies
+payments     OK                      38       0    12 ms    80 ms       4
+payments     InternalServerError      2       2   230 ms   410 ms       1
+```
+
+Dimensions (comma list, any order): `service`, `method`, `status`, `path` (URI path, query stripped),
+`step`, `phase`, `category`, `kind` (metaType), `capturedBy`. `bodies` is the number of distinct
+response bodies in the bucket — a bucket with 120 calls and 1 body is one fact. Index-only unless
+combined with `--where`; composes with every filter. Default sort is calls descending;
+`--sort errors|duration`. Distinct from `--group` (which folds *adjacent identical* calls in sequence
+order) — the two don't compose. At run scope, `step` buckets collide across scenarios and the header
+says so.
+
 ### `http <report> s3/i47 [flags]`
 The interaction: direction, participants, method, URI, status, duration, owning step, W3C trace and span
 ids, phase, dependency category, capture path.
