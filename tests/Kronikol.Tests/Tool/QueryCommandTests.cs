@@ -445,6 +445,96 @@ public class QueryCommandTests : IDisposable
         Assert.True(Encoding.UTF8.GetByteCount(output) <= 6400, $"values produced {Encoding.UTF8.GetByteCount(output)} bytes");
     }
 
+    // ─── --where (M3) ──────────────────────────────────────────
+
+    [Fact]
+    public void Where_filters_on_a_response_value()
+    {
+        var output = Run("interactions", Report(), "s3", "--where", "$.status = DECLINED", "--service", "payments");
+
+        Assert.Contains("s3/i6", output);
+        Assert.DoesNotContain("s3/i0 ", output);
+    }
+
+    [Fact]
+    public void Where_comparison_is_numeric_not_lexical()
+    {
+        // Lexically "100" < "99"; numerically 100 > 99. Totals in s3: 100×3, 50, 12.5, 4173.
+        var output = Run("interactions", Report(), "s3", "--where", "$.total > 99", "--service", "payments", "--count");
+
+        Assert.Equal("4", output.Trim());
+    }
+
+    [Fact]
+    public void Where_wildcard_passes_when_any_element_satisfies()
+    {
+        var output = Run("interactions", Report(), "s3", "--where", "$.items[*].price < 0");
+
+        Assert.Contains("s3/i10", output);
+        Assert.Equal("1", Run("interactions", Report(), "s3", "--where", "$.items[*].price < 0", "--count").Trim());
+    }
+
+    [Fact]
+    public void Where_req_prefix_targets_the_request()
+    {
+        var output = Run("interactions", Report(), "s3", "--where", "req:$.amount = 50", "--service", "payments");
+
+        Assert.Contains("s3/i6", output);
+        Assert.Equal("1", Run("interactions", Report(), "s3", "--where", "req:$.amount = 50", "--service", "payments", "--count").Trim());
+    }
+
+    [Fact]
+    public void Wheres_compose_as_and()
+    {
+        var output = Run("interactions", Report(), "s3",
+            "--where", "$.status = APPROVED", "--where", "$.total < 200", "--service", "payments", "--count");
+
+        Assert.Equal("3", output.Trim());
+    }
+
+    [Fact]
+    public void Where_reports_how_many_calls_had_no_evaluable_body()
+    {
+        var output = Run("interactions", Report(), "s3", "--where", "$.x = 1", "--service", "printer");
+
+        Assert.Contains("no evaluable body", output);
+    }
+
+    [Fact]
+    public void Where_bad_grammar_exits_2_with_the_grammar()
+    {
+        var (_, error, exit) = RunFull("interactions", Report(), "s3", "--where", "$.x ??? 1");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("exists", error);
+    }
+
+    [Fact]
+    public void Interactions_without_an_address_cover_the_run()
+    {
+        var output = Run("interactions", Report(), "--service", "legacy");
+
+        Assert.Contains("s4/i4", output);
+    }
+
+    [Fact]
+    public void Where_survives_paging_in_the_rerun_footer()
+    {
+        var output = Run("interactions", Report(), "--where", "$.status = APPROVED", "--limit", "2");
+
+        Assert.Contains("--where \"$.status = APPROVED\"", output);
+        Assert.Contains("--offset 2", output);
+    }
+
+    [Fact]
+    public void Values_where_filters_the_aggregation()
+    {
+        var output = Run("values", Report(), "s3", "--path", "$.total", "--where", "$.status = APPROVED", "--service", "payments");
+
+        Assert.Matches(@"100\s+×3", output);
+        Assert.DoesNotContain("12.5", output);
+    }
+
     // ─── Search and comparison ─────────────────────────────────
 
     [Fact]

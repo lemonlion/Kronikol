@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.53] - 2026-08-26
+
+### Added
+- **`kronikol query --where` — body-content predicates on `interactions` and `values`** (`QUERY_V2_PLAN.md` Milestone 3). `--where "$.success = false"` filters calls by what their bodies actually say: grammar `[req:]PATH OP LITERAL`, ops `= != < > <= >= ~ !~ exists !exists`, numeric comparison when both sides are numeric and case-insensitive string comparison otherwise, `~` as substring. Wildcard paths use any-semantics (`$.items[*].price < 0` passes when any element satisfies), repeated `--where` composes as AND (OR is deliberately absent — run the command twice), the default target is the response body with a per-expression `req:` prefix for the request, and a call whose targeted body is missing or not JSON fails the predicate and is counted in a footer rather than silently dropped. A malformed expression exits 2 with the grammar in one line. `--where` joins the paging re-run footer, so an `--offset` continuation means the same thing.
+- **`kronikol query interactions` is now run-scopable** — without a scenario address it lists matching calls across the whole run (rows already print full `s3/i47` addresses), which is half the value of `--where`: "which calls anywhere returned `success: false`" is one command now.
+
 ## [3.0.52] - 2026-08-26
 
 ### Added

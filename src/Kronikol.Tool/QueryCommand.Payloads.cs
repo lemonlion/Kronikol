@@ -13,13 +13,42 @@ internal static partial class QueryCommand
 {
     private static int Interactions(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        if (!TryScenario(index, options, error, out var scenario))
+        // An address scopes to one scenario; without one the whole run is in scope — rows already print
+        // full `s3/i47` addresses, and the page cap keeps the output honest.
+        ScenarioEntry? only = null;
+        if (options.Positional.Count > 0)
+        {
+            if (!TryScenario(index, options, error, out var one))
+                return 2;
+            only = one;
+        }
+
+        var clauses = ParseWheres(options, error);
+        if (clauses is null)
             return 2;
 
-        var matches = scenario.Interactions
-            .Where(i => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase))
-            .Where(i => Matches(scenario, i, options))
-            .ToList();
+        using var cache = new BodyCache(index);
+        var matches = new List<(ScenarioEntry Scenario, InteractionEntry Request, InteractionEntry? Response)>();
+        var unevaluable = 0;
+        var inScope = 0;
+
+        foreach (var (scenario, request, response) in AllInteractions(index, only))
+        {
+            inScope++;
+            if (!Matches(scenario, request, options))
+                continue;
+            if (clauses.Count > 0)
+            {
+                var excluded = false;
+                if (!SatisfiesWheres(clauses, request, response, options, cache, ref excluded))
+                {
+                    if (excluded)
+                        unevaluable++;
+                    continue;
+                }
+            }
+            matches.Add((scenario, request, response));
+        }
 
         if (options.Count)
         {
@@ -30,21 +59,23 @@ internal static partial class QueryCommand
         if (matches.Count == 0)
         {
             writer.Line("nothing matched");
-            writer.Footer($"{scenario.Interactions.Count(i => i.Type == "Request")} calls in {scenario.Address} · drop a filter, or try services");
+            if (unevaluable > 0)
+                writer.Line($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+            writer.Footer($"{inScope} calls in {(only is null ? "the run" : only.Address)} · drop a filter, or try services");
             return 0;
         }
 
         if (options.Group)
         {
-            var groups = Collapse(scenario, matches);
+            var groups = Collapse(matches);
             writer.Page(groups, options.Offset, Math.Min(options.Limit, 200), "groups",
                 group => writer.Line(group), options.RerunPrefix());
             return 0;
         }
 
-        writer.Page(matches, options.Offset, Math.Min(options.Limit, 120), "calls", interaction =>
+        writer.Page(matches, options.Offset, Math.Min(options.Limit, 120), "calls", row =>
         {
-            var response = FindResponse(scenario, interaction);
+            var (scenario, interaction, response) = row;
             var payload = interaction.BodyHash is { } hash
                 ? $"  body {QueryWriter.Size(interaction.BodyLength)} {hash}"
                 : "";
@@ -54,6 +85,9 @@ internal static partial class QueryCommand
             writer.Line($"{interaction.Address(scenario),-9} {interaction.ServiceName,-16} {QueryWriter.OneLine(interaction.Summary(), 62),-62} "
                         + $"{response?.StatusCode ?? "",-6} {QueryWriter.Duration(interaction.DurationMs ?? response?.DurationMs),8}{payload}{responsePayload}");
         }, options.RerunPrefix());
+
+        if (unevaluable > 0)
+            writer.Line($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
 
         return 0;
     }
@@ -90,21 +124,21 @@ internal static partial class QueryCommand
     /// Folds runs of identical calls into one row. A hundred and twenty calls to the same cache key are one
     /// fact, and printing them separately is the difference between an answer that fits and one that does not.
     /// </summary>
-    private static List<string> Collapse(ScenarioEntry scenario, List<InteractionEntry> matches)
+    private static List<string> Collapse(List<(ScenarioEntry Scenario, InteractionEntry Request, InteractionEntry? Response)> matches)
     {
         var rows = new List<string>();
         var i = 0;
         while (i < matches.Count)
         {
-            var first = matches[i];
-            var key = $"{first.ServiceName}|{first.Method}|{first.Uri}|{first.BodyHash}";
+            var (scenario, first, _) = matches[i];
+            var key = $"{scenario.Ordinal}|{first.ServiceName}|{first.Method}|{first.Uri}|{first.BodyHash}";
             var last = i;
             while (last + 1 < matches.Count
-                   && $"{matches[last + 1].ServiceName}|{matches[last + 1].Method}|{matches[last + 1].Uri}|{matches[last + 1].BodyHash}" == key)
+                   && $"{matches[last + 1].Scenario.Ordinal}|{matches[last + 1].Request.ServiceName}|{matches[last + 1].Request.Method}|{matches[last + 1].Request.Uri}|{matches[last + 1].Request.BodyHash}" == key)
                 last++;
 
             var count = last - i + 1;
-            var address = count == 1 ? first.Address(scenario) : $"{scenario.Address}/i{first.Ordinal}-i{matches[last].Ordinal}";
+            var address = count == 1 ? first.Address(scenario) : $"{scenario.Address}/i{first.Ordinal}-i{matches[last].Request.Ordinal}";
             var body = first.BodyHash is { } hash ? $"  {hash} {QueryWriter.Size(first.BodyLength)}" : "";
             rows.Add($"{address,-14} {first.ServiceName,-16} {QueryWriter.OneLine(first.Summary(), 62),-62}"
                      + (count > 1 ? $"  ×{count}" : "") + body);

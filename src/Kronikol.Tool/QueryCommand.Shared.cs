@@ -45,6 +45,47 @@ internal static partial class QueryCommand
     }
 
     /// <summary>
+    /// Parses every <c>--where</c> expression, or explains the grammar and returns null (exit 2).
+    /// </summary>
+    private static List<WhereClause>? ParseWheres(QueryOptions options, TextWriter error)
+    {
+        var clauses = new List<WhereClause>();
+        foreach (var expression in options.Where)
+        {
+            if (!WhereClause.TryParse(expression, out var clause, out var parseError))
+            {
+                error.WriteLine($"Bad --where: {parseError}");
+                error.WriteLine(WhereClause.Grammar);
+                return null;
+            }
+            clauses.Add(clause!);
+        }
+        return clauses;
+    }
+
+    /// <summary>
+    /// Whether the call passes every clause. A clause whose targeted body is missing or not JSON cannot
+    /// be satisfied — the call fails and <paramref name="unevaluable"/> says why, so the caller can
+    /// footnote the exclusion rather than hide it.
+    /// </summary>
+    private static bool SatisfiesWheres(IReadOnlyList<WhereClause> clauses, InteractionEntry request,
+        InteractionEntry? response, QueryOptions options, BodyCache cache, ref bool unevaluable)
+    {
+        foreach (var clause in clauses)
+        {
+            var target = clause.TargetsRequest || options.Request ? request : response;
+            if (target?.BodyHash is not { } hash || cache.Json(hash) is not { } document)
+            {
+                unevaluable = true;
+                return false;
+            }
+            if (!clause.Evaluate(document.RootElement))
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>
     /// Treats anything that is not a success as an error, including the non-numeric statuses the non-HTTP
     /// taps use (a database driver reports <c>ERROR</c>, not 500) — while knowing the non-200 successes
     /// (<c>Created</c>, <c>Accepted</c>, <c>NoContent</c>) by name. The single classifier behind

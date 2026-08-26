@@ -42,6 +42,10 @@ internal static partial class QueryCommand
             only = scenario;
         }
 
+        var clauses = ParseWheres(options, error);
+        if (clauses is null)
+            return 2;
+
         var targetRequests = options.Request || options.Both;
         var targetResponses = !options.Request || options.Both;
 
@@ -50,12 +54,23 @@ internal static partial class QueryCommand
         var numbers = new List<(double Value, string Address)>();
         var evaluated = 0;
         var distinctBodies = new HashSet<string>(StringComparer.Ordinal);
-        int absent = 0, nonNumeric = 0, bodiless = 0, unpaired = 0, nonJson = 0;
+        int absent = 0, nonNumeric = 0, bodiless = 0, unpaired = 0, nonJson = 0, unevaluable = 0;
 
         foreach (var (scenario, request, response) in AllInteractions(index, only))
         {
             if (!Matches(scenario, request, options))
                 continue;
+
+            if (clauses.Count > 0)
+            {
+                var excluded = false;
+                if (!SatisfiesWheres(clauses, request, response, options, cache, ref excluded))
+                {
+                    if (excluded)
+                        unevaluable++;
+                    continue;
+                }
+            }
 
             if (targetRequests)
                 Evaluate(scenario, request, "req");
@@ -168,6 +183,8 @@ internal static partial class QueryCommand
                 writer.Line($"{unpaired} call{(unpaired == 1 ? "" : "s")} had no response to evaluate");
             if (nonJson > 0)
                 writer.Line($"{nonJson} {(nonJson == 1 ? "body was" : "bodies were")} not JSON — counted, not evaluated");
+            if (unevaluable > 0)
+                writer.Line($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
         }
 
         static string N(double value) => value.ToString("0.####", CultureInfo.InvariantCulture);

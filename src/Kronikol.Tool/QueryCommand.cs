@@ -179,10 +179,11 @@ internal static partial class QueryCommand
         writer.WriteLine();
         writer.WriteLine("Aggregation (reads bodies freely, prints values one-lined, never whole payloads)");
         writer.WriteLine("  values       <report> [s3] --path '$.status' [--service X] [--status 5xx] [--method M] [--step 2]");
-        writer.WriteLine("               [--grep URI] [--stats] [--request|--both]   distinct values × counts, with addresses");
+        writer.WriteLine("               [--grep URI] [--where E] [--stats] [--request|--both]   distinct values × counts, with addresses");
         writer.WriteLine();
         writer.WriteLine("Payloads (never printed unless asked for)");
-        writer.WriteLine("  interactions <report> s3 [--service X] [--status 5xx] [--method GET] [--grep T] [--group]");
+        writer.WriteLine("  interactions <report> [s3] [--service X] [--status 5xx] [--method GET] [--grep T] [--group]");
+        writer.WriteLine("               [--where \"$.success = false\"]   repeatable; AND; req: prefix targets the request body");
         writer.WriteLine("  http         <report> s3/i47 [--headers] [--body] [--keys] [--path $.a.b] [--lines 20-60] [--out F]");
         writer.WriteLine("  body         <report> b:4bdea521 [--keys] [--path $.a.b] [--lines 20-60] [--out F]");
         writer.WriteLine("               --path grammar: $.a.b[2] · [*] every element · ['a.b'] dotted key · .length() count — quote the path");

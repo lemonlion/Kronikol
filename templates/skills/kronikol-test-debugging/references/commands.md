@@ -101,6 +101,7 @@ $.status across 44 response bodies (7 distinct bodies)
 |---|---|
 | `--path '$.x'` | required; the full path grammar applies (`[*]` fans out over every element) |
 | `--service X` / `--status 5xx` / `--method M` / `--step 2` / `--grep URI` | the same filters `interactions` takes |
+| `--where '$.status = APPROVED'` | body-content predicate, same grammar as `interactions --where` |
 | `--stats` | numeric summary: count/absent/non-numeric/distinct, min/median/max/sum/mean — min and max carry the address of the extreme |
 | `--request` / `--both` | target request bodies, or both (rows tagged `req`/`resp`); default is the response body |
 
@@ -115,9 +116,10 @@ $.status across 44 response bodies (7 distinct bodies)
 
 Nothing here prints a payload that was not named.
 
-### `interactions <report> s3 [flags]`
+### `interactions <report> [s3] [flags]`
 One row per request: address, service, method and path, status, duration, and body pointers
-(`b:hash` + size) for the request and the response.
+(`b:hash` + size) for the request and the response. Without an address it covers the whole run — rows
+print full `s3/i47` addresses either way.
 
 | Flag | Effect |
 |---|---|
@@ -127,9 +129,29 @@ One row per request: address, service, method and path, status, duration, and bo
 | `--step 2` | only calls inside that step |
 | `--grep T` | substring match on the URI |
 | `--group` | fold runs of identical calls into one row with `×N` |
+| `--where '$.success = false'` | body-content predicate — see below |
 
 Statuses, durations and response body pointers come from exact request/response pairing
 (`requestResponseId`), so interleaved parallel calls to one service each show their own status.
+
+#### `--where` — the WHERE clause
+
+```
+kronikol query interactions <report> s3 --where '$.success = false'
+kronikol query interactions <report> --where '$.items[*].price < 0' --where 'req:$.currency = GBP'
+```
+
+Grammar: `[req:]PATH OP LITERAL` · ops `= != < > <= >= ~ !~ exists !exists` (`exists` takes no
+literal) · literals: `null`/`true`/`false`, numbers, quoted or bare strings. Both sides numeric →
+numeric comparison; otherwise case-insensitive string comparison; `~` is substring.
+
+- Wildcards use **any**-semantics: `$.items[*].price < 0` passes when any element satisfies.
+- Repeated `--where` is AND. OR is deliberately absent — run the command twice.
+- Default target is the **response** body; a `req:` prefix targets the request per-expression;
+  `--request` shifts the default.
+- A call whose targeted body is missing or not JSON fails the predicate; the footer reports how many
+  were excluded that way.
+- Works on `interactions` and `values`. Single-quote the expression — `>`, `?` and `[*]` are shell-active.
 
 ### `http <report> s3/i47 [flags]`
 The interaction: direction, participants, method, URI, status, duration, owning step, W3C trace and span

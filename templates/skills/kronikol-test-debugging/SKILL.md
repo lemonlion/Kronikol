@@ -68,6 +68,7 @@ without printing a single payload — reach `http` only when one specific body m
 | "did it even call X?" | `services` — absence is the answer; no payload needed |
 | "what did X return?" | `interactions s3 --service X` → `http s3/iN --keys` → `--path` |
 | "what values did X ever return?" | `values --path '$.field' --service X` — distinct values, counted, with addresses |
+| "which calls returned a bad value?" | `interactions --where '$.success = false'` — run-wide; `req:$.x` targets the request |
 | "which example row broke?" | `steps s3` (its parameters) + `annotations s3` |
 | "what broke since yesterday?" | `diff old.json new.json` — matched on `stableId` |
 | "why is this slow?" | `summary` → `services --sort duration` → `flow s3` |
