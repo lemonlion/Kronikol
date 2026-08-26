@@ -20,6 +20,8 @@
 }
 .truncate-lines-label { font-size: 0.85em; color: rgb(100, 100, 100); margin-left: 0; margin-right: 0.3em; }
 .note-toggle-icon { user-select: none; -webkit-user-select: none; }
+/* JSON ⇄ YAML note format toggle button (collapsible-notes-script.js) */
+.note-format-btn text { font-weight: bold; }
 @media (max-width: 768px) {
     .details-radio { flex-wrap: wrap; }
     .toggle-btn { margin-left: 0; }

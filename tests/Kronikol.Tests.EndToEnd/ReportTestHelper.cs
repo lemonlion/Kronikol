@@ -2653,4 +2653,95 @@ public static class ReportTestHelper
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }
+
+    /// <summary>
+    /// A diagram whose first note carries a JSON payload exactly as the .NET
+    /// generation pipeline emits it (gray header line, doubled backslashes for
+    /// the \n escapes, an int64 beyond 2^53) and whose second note is plain
+    /// text — the gold vector for the JSON ⇄ YAML note format toggle. Includes
+    /// a step delimiter so the steps filter can be toggled against it.
+    /// </summary>
+    private const string JsonYamlNotePlantUmlSource = """
+        @startuml
+        actor "Caller" as caller
+        participant "OrderService" as svc
+
+        hnote across <<stepDelimiter>> #black:<color:white>Given an order request
+        caller -> svc : POST /api/orders
+        note left
+        <color:gray>[content-type=application/json]</color>
+
+        {
+          "id": 9007199254740993,
+          "query": "SELECT o.id,\\n       o.total\\nFROM orders o"
+        }
+        end note
+        svc --> caller : 200 OK
+        note left
+        plain text response body
+        not json at all
+        end note
+        @enduml
+        """;
+
+    public static string GenerateReportWithJsonYamlNotes(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", JsonYamlNotePlantUmlSource)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// A JSON note that is short in JSON view (one string value holding a
+    /// 45-line SQL query as \n escapes) but unfolds past the 40-line truncation
+    /// limit in YAML view — exercises "truncation and isLongNote operate on the
+    /// active format's line count".
+    /// </summary>
+    public static string GenerateReportWithLongSqlJsonNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+
+        var sqlColumns = string.Join(@"\\n", Enumerable.Range(1, 45).Select(i => $"  col_{i},"));
+        var source = $$"""
+            @startuml
+            actor "Caller" as caller
+            participant "Db" as db
+
+            caller -> db : query
+            note left
+            {
+              "query": "SELECT\\n{{sqlColumns}}\\n  1\\nFROM t"
+            }
+            end note
+            db --> caller : OK
+            @enduml
+            """;
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", source)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
 }

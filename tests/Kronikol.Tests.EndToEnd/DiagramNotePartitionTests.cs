@@ -216,8 +216,14 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
         await WaitForDiagramSvg();
         await WaitForNoteElements();
 
+        // One hover rect per matched note, and exactly one of each button kind
+        // per note: the − contract button plus the (hidden until eligible)
+        // JSON ⇄ YAML format button. A mismatch means groups and blocks
+        // misaligned and a note got extra or missing buttons.
         var hoverCount = await Page.Locator(".note-hover-rect").CountAsync();
-        var iconCount = await Page.Locator(".note-toggle-icon").CountAsync();
-        Assert.Equal(hoverCount, iconCount);
+        var minusCount = await Page.Locator("[data-note-btn='minus']").CountAsync();
+        var formatCount = await Page.Locator("[data-note-btn='format']").CountAsync();
+        Assert.Equal(hoverCount, minusCount);
+        Assert.Equal(hoverCount, formatCount);
     }
 }

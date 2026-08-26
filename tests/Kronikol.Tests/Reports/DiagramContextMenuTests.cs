@@ -600,14 +600,16 @@ public class DiagramContextMenuTests
     [Fact]
     public void SetNoteState_uses_svg_cache()
     {
-        var funcBody = GetFunction("setNoteState");
+        // setNoteState (and setNoteFormat) render through the shared
+        // rerenderWithNoteStates helper, which owns the cache check
+        var funcBody = GetFunction("rerenderWithNoteStates");
         Assert.Contains("_svgCache[newSource]", funcBody);
     }
 
     [Fact]
     public void SetNoteState_caches_rendered_svg()
     {
-        var funcBody = GetFunction("setNoteState");
+        var funcBody = GetFunction("rerenderWithNoteStates");
         Assert.Contains("_svgCache[newSource] = newSvg", funcBody);
     }
 

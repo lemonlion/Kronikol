@@ -222,7 +222,7 @@
         return 'truncated';
     }
 
-    function createNoteButtons(svg, bbox, noteStep, onExpand, onContract, onTruncate, onCycle, contentLines, grp, container, forceIsLong) {
+    function createNoteButtons(svg, bbox, noteStep, onExpand, onContract, onTruncate, onCycle, contentLines, grp, container, forceIsLong, formatInfo) {
         var size = 12;
         var topSize = 14;
         var pad = 3;
@@ -230,6 +230,7 @@
         var hdrHidden = container._headersHidden !== undefined ? container._headersHidden : (container.parentElement && container.parentElement._headersHidden) || window._headersHidden;
         var longNote = forceIsLong || isLongNote(contentLines, container._truncateLines, hdrHidden);
         var buttons = [];
+        var formatBtn = null;
 
         // Top-right area: contract buttons — shown when expanded or truncated
         if (state === 'expanded' || state === 'truncated') {
@@ -282,6 +283,44 @@
             bgC.addEventListener('click', function(ev) { ev.stopPropagation(); onContract(); });
             bgC.addEventListener('dblclick', function(ev) { ev.stopPropagation(); ev.preventDefault(); });
             buttons.push(gc);
+
+            // JSON ⇄ YAML format toggle — joins the top-right cluster to the
+            // left of − (and ▲). Created hidden: eligibility is computed
+            // lazily on the note's first hover (_noteShowButtons), so it only
+            // ever shows for notes whose text reconstructs into valid JSON.
+            if (formatInfo) {
+                var slot = (state === 'expanded' && longNote) ? 3 : 2;
+                var fx = bbox.x + bbox.width - topSize * slot - pad * slot;
+                var fy = bbox.y + pad;
+                var gf = document.createElementNS(SVGNS, 'g');
+                gf.setAttribute('class', 'note-toggle-icon note-format-btn');
+                gf.setAttribute('data-note-btn', 'format');
+                gf.style.cursor = 'pointer';
+                gf.style.opacity = '0';
+                gf.style.display = 'none';
+                var bgF = document.createElementNS(SVGNS, 'rect');
+                bgF.setAttribute('x', fx); bgF.setAttribute('y', fy);
+                bgF.setAttribute('width', topSize); bgF.setAttribute('height', topSize);
+                bgF.setAttribute('rx', '2'); bgF.setAttribute('fill', '#ffffff');
+                bgF.setAttribute('stroke', '#999'); bgF.setAttribute('stroke-width', '0.5');
+                var titleF = document.createElementNS(SVGNS, 'title');
+                titleF.textContent = formatInfo.format === 'yaml' ? 'Show payload as JSON' : 'Show payload as YAML';
+                bgF.appendChild(titleF);
+                gf.appendChild(bgF);
+                var symF = document.createElementNS(SVGNS, 'text');
+                symF.setAttribute('x', fx + topSize / 2); symF.setAttribute('y', fy + topSize - 3);
+                symF.setAttribute('text-anchor', 'middle'); symF.setAttribute('font-size', '10');
+                symF.setAttribute('font-family', 'sans-serif'); symF.setAttribute('fill', '#666');
+                symF.setAttribute('font-weight', 'bold');
+                symF.style.pointerEvents = 'none';
+                // The glyph names the format a click switches TO
+                symF.textContent = formatInfo.format === 'yaml' ? 'J' : 'Y';
+                gf.appendChild(symF);
+                bgF.addEventListener('click', function(ev) { ev.stopPropagation(); formatInfo.onToggle(); });
+                bgF.addEventListener('dblclick', function(ev) { ev.stopPropagation(); ev.preventDefault(); });
+                formatBtn = gf;
+                buttons.push(gf);
+            }
         }
 
         // + (plus) button — top-right, shown when collapsed
@@ -379,6 +418,13 @@
         var _noteHideTimeout;
         function _noteShowButtons() {
             clearTimeout(_noteHideTimeout);
+            // Lazy JSON-eligibility check on the note's first hover — never a
+            // per-render sweep. The verdict is cached per original note index
+            // on the owner container (inside formatInfo.checkEligible).
+            if (formatBtn) {
+                if (formatBtn._eligible === undefined) formatBtn._eligible = formatInfo.checkEligible();
+                formatBtn.style.display = formatBtn._eligible ? '' : 'none';
+            }
             // For tall notes, reposition top-right buttons to the visible
             // portion of the note so they're not scrolled off-screen
             if (bbox.height > 500 && svg.getScreenCTM) {
@@ -392,7 +438,7 @@
                         var btnY = Math.max(bbox.y + pad, Math.min(visSvgY + pad, bbox.y + bbox.height - topSize * 2 - pad));
                         buttons.forEach(function(b) {
                             var btn = b.getAttribute('data-note-btn');
-                            if (btn === 'minus' || btn === 'plus') {
+                            if (btn === 'minus' || btn === 'plus' || btn === 'format') {
                                 var rects = b.querySelectorAll('rect');
                                 var lines = b.querySelectorAll('line');
                                 var txts = b.querySelectorAll('text');
@@ -411,7 +457,7 @@
                     }
                 } catch(e) {}
             }
-            buttons.forEach(function(b) { b.style.opacity = '1'; });
+            buttons.forEach(function(b) { if (b.style.display !== 'none') b.style.opacity = '1'; });
         }
         function _noteScheduleHide() {
             _noteHideTimeout = setTimeout(function() {
@@ -675,9 +721,46 @@
                 var grp = noteGroups[svgIdx];
                 var bbox = getNoteBBox(grp);
                 var step = owner._noteSteps[globalIdx] || 0;
-                var origContentLines = ownerNoteBlocks[globalIdx]
+                var rawContentLines = ownerNoteBlocks[globalIdx]
                     ? ownerNoteBlocks[globalIdx].contentLines
                     : (noteBlocks[localIdx] ? noteBlocks[localIdx].contentLines : []);
+                // Content lines in the note's ACTIVE format (original JSON, or
+                // swapped YAML) — so isLongNote counts what is displayed.
+                var origContentLines = activeNoteContentLines(owner, globalIdx, rawContentLines);
+                // JSON ⇄ YAML format toggle wiring: eligibility (reconstruct +
+                // JSON.parse) is computed lazily on the note's first hover and
+                // cached per original note index; the emitted YAML lines are
+                // cached on first toggle.
+                var formatInfo = {
+                    format: (owner._noteFormats && owner._noteFormats[globalIdx]) || 'json',
+                    checkEligible: function() {
+                        if (!owner._noteFormatEligible) owner._noteFormatEligible = {};
+                        var known = owner._noteFormatEligible[globalIdx];
+                        if (known === undefined) {
+                            var jsonText = reconstructNoteJson(rawContentLines);
+                            known = jsonText !== null;
+                            owner._noteFormatEligible[globalIdx] = known;
+                            if (known) {
+                                if (!owner._noteJsonText) owner._noteJsonText = {};
+                                owner._noteJsonText[globalIdx] = jsonText;
+                            }
+                        }
+                        return known;
+                    },
+                    onToggle: function() {
+                        var cur = (owner._noteFormats && owner._noteFormats[globalIdx]) || 'json';
+                        var next = cur === 'yaml' ? 'json' : 'yaml';
+                        if (next === 'yaml') {
+                            if (!owner._noteYamlLines) owner._noteYamlLines = {};
+                            if (!owner._noteYamlLines[globalIdx]) {
+                                var jt = owner._noteJsonText && owner._noteJsonText[globalIdx];
+                                if (!jt) return;
+                                owner._noteYamlLines[globalIdx] = escapeYamlLinesForNote(jsonTextToYamlLines(jt));
+                            }
+                        }
+                        setNoteFormat(owner, globalIdx, next);
+                    }
+                };
                 // Continuation notes are always "long" — they're chunks of a
                 // larger note, and expand should reveal the full original content.
                 var forceIsLong = !!(fragContinuationMap && svgIdx === 0);
@@ -700,9 +783,392 @@
                         else nextStep = long ? 1 : 2;
                         setNoteState(owner, globalIdx, nextStep);
                     },
-                    origContentLines, grp, container, forceIsLong);
+                    origContentLines, grp, container, forceIsLong, formatInfo);
             })(ni, sourceIndexMap ? sourceIndexMap[ni] : ni);
         }
+    }
+
+    // ── Note payload JSON ⇄ YAML format toggle (NOTE_YAML_TOGGLE_PLAN.md) ────
+    // The JSON is recovered from the note text in the browser by reversing the
+    // generation-time transforms, gated by JSON.parse; YAML is emitted from the
+    // reconstructed TEXT's tokens (never from the parsed value) so int64s
+    // beyond 2^53, duplicate keys and integer-like key order survive verbatim.
+
+    function endsInsideJsonString(line) {
+        var inStr = false;
+        for (var i = 0; i < line.length; i++) {
+            var c = line.charAt(i);
+            if (inStr) {
+                if (c === '\\') i++;
+                else if (c === '"') inStr = false;
+            } else if (c === '"') inStr = true;
+        }
+        return inStr;
+    }
+
+    // Recovers the original JSON of a note payload by reversing the generation
+    // pipeline's transforms in reverse application order: gray headers dropped,
+    // backslash doubling halved, focus markup stripped, creole escapes removed,
+    // wrap breaks re-joined. Gated by JSON.parse — a note whose text can't be
+    // reconstructed into valid JSON simply never becomes YAML-eligible (this
+    // excludes capture-truncated prefixes, GraphQL/form/plain-text/binary
+    // bodies and server-side continuation chunks for free).
+    function reconstructNoteJson(contentLines) {
+        if (!contentLines || contentLines.length === 0) return null;
+        var payload = [];
+        var afterGray = false;
+        for (var i = 0; i < contentLines.length; i++) {
+            var trimmed = contentLines[i].trim();
+            if (/^<color:gray>/.test(trimmed)) { afterGray = true; continue; }
+            if (afterGray && trimmed === '') continue;
+            afterGray = false;
+            payload.push(contentLines[i]);
+        }
+        if (payload.length === 0) return null;
+        var text = payload.join('\n');
+        // Reverse EscapeForPlantUmlNote: halve the doubled backslashes.
+        text = text.replace(/\\\\/g, '\\');
+        // Strip focus emphasis markup. A literal '<' in the payload was
+        // ~-escaped by the creole escaper, so any unescaped tag here is
+        // provably Kronikol's own — protect ~< sequences, drop the rest.
+        text = text.split('~<').map(function(seg) {
+            return seg.replace(/<\/?(?:b|i|u|color(?::[^>]*)?|back(?::[^>]*)?)>/g, '');
+        }).join('~<');
+        // Reverse EscapeCreoleMarkup: drop the ~ before each protected char.
+        // Known narrow ambiguity (accepted): a payload LITERAL '~' directly
+        // before one of these characters is indistinguishable from an escape
+        // and reconstructs one character off; if the result still parses the
+        // YAML view can show subtly wrong bytes. The JSON view is always exact.
+        text = text.replace(/~([\/*_\-"\[<#=])/g, '$1');
+        // Reverse WrapUnbreakableRuns: JSON forbids raw newlines inside string
+        // literals, so a line ending while a string is open is provably a wrap
+        // break — join it with the next line (the wrap inserted only the newline).
+        var lines = text.split('\n');
+        var joined = [];
+        for (var li = 0; li < lines.length; li++) {
+            var cur = lines[li];
+            while (endsInsideJsonString(cur) && li + 1 < lines.length) {
+                li++;
+                cur += lines[li];
+            }
+            joined.push(cur);
+        }
+        var candidate = joined.join('\n');
+        try { JSON.parse(candidate); } catch (e) { return null; }
+        return candidate;
+    }
+
+    function tokenizeJson(text) {
+        var tokens = [];
+        var i = 0;
+        var n = text.length;
+        while (i < n) {
+            var c = text.charAt(i);
+            if (c === ' ' || c === '\t' || c === '\n' || c === '\r') { i++; continue; }
+            if (c === '{' || c === '}' || c === '[' || c === ']' || c === ':' || c === ',') {
+                tokens.push({ kind: c });
+                i++;
+                continue;
+            }
+            if (c === '"') {
+                var start = i;
+                i++;
+                while (i < n) {
+                    if (text.charAt(i) === '\\') i += 2;
+                    else if (text.charAt(i) === '"') { i++; break; }
+                    else i++;
+                }
+                var raw = text.slice(start, i);
+                tokens.push({ kind: 'string', raw: raw, value: JSON.parse(raw) });
+                continue;
+            }
+            // number / true / false / null — keep the raw run verbatim
+            var litStart = i;
+            while (i < n && !/[\s,\]\}:]/.test(text.charAt(i))) i++;
+            tokens.push({ kind: 'literal', raw: text.slice(litStart, i) });
+        }
+        return tokens;
+    }
+
+    function yamlPad(count) {
+        var s = '';
+        for (var i = 0; i < count; i++) s += ' ';
+        return s;
+    }
+
+    // Conservative: anything that could be misread by a YAML parser (or read
+    // as a different type than the JSON string it came from) gets quoted.
+    function isPlainYamlScalar(s) {
+        if (s === '') return false;
+        if (/^\s|\s$/.test(s)) return false;
+        if (/[\x00-\x1f\x7f]/.test(s)) return false;
+        if (/[:#]/.test(s)) return false;
+        if (/^[-?,\[\]{}&*!|>'"%@`]/.test(s)) return false;
+        if (/^(?:true|false|null|yes|no|on|off|~)$/i.test(s)) return false;
+        if (/^[-+]?(?:\d|\.\d)/.test(s)) return false;
+        return true;
+    }
+
+    // Double-quoted YAML scalar. JSON \uXXXX escapes were already decoded to
+    // their characters by the tokenizer (deliberate readability choice, same
+    // spirit as UnsafeRelaxedJsonEscaping on the generation side); only what
+    // YAML requires is re-escaped.
+    function yamlQuote(value) {
+        var out = '"';
+        for (var i = 0; i < value.length; i++) {
+            var c = value.charAt(i);
+            var code = value.charCodeAt(i);
+            if (c === '\\') out += '\\\\';
+            else if (c === '"') out += '\\"';
+            else if (c === '\n') out += '\\n';
+            else if (c === '\r') out += '\\r';
+            else if (c === '\t') out += '\\t';
+            else if (code < 0x20 || code === 0x7f) out += '\\x' + (code < 16 ? '0' : '') + code.toString(16);
+            else out += c;
+        }
+        return out + '"';
+    }
+
+    function hasOverlongRunAfterEscape(line) {
+        var esc = escapeNoteLine(line);
+        var run = 0;
+        for (var i = 0; i < esc.length; i++) {
+            var c = esc.charAt(i);
+            if (c === ' ' || c === '\t') run = 0;
+            else if (++run > 120) return true;
+        }
+        return false;
+    }
+
+    // String value → its YAML form: {text} for a single-line scalar, or
+    // {header, content} for a literal block scalar. Strings a block scalar
+    // can't faithfully represent (control chars, trailing-whitespace lines,
+    // overlong unbreakable runs — which could never be wrapped without
+    // changing the string's meaning) take the double-quoted fallback, which
+    // is never worse than today's JSON view.
+    function formatYamlString(value, inSeq) {
+        if (value.indexOf('\n') < 0)
+            return { text: isPlainYamlScalar(value) ? value : yamlQuote(value) };
+        var endsWithNewline = value.charAt(value.length - 1) === '\n';
+        var blockLines = value.split('\n');
+        if (endsWithNewline) blockLines.pop();
+        var eligible = !/[\x00-\x09\x0b-\x1f\x7f]/.test(value)
+            && value.charAt(0) !== '\n'
+            && !(endsWithNewline && /\n$/.test(value.slice(0, -1)));
+        if (eligible) {
+            for (var i = 0; i < blockLines.length; i++) {
+                if (/[ \t]$/.test(blockLines[i])) { eligible = false; break; }
+                if (hasOverlongRunAfterEscape(blockLines[i])) { eligible = false; break; }
+            }
+        }
+        var needsIndicator = eligible && blockLines[0].charAt(0) === ' ';
+        // The explicit indentation indicator counts from the parent node's
+        // indent — fragile arithmetic inside sequence items, so fall back.
+        if (needsIndicator && inSeq) eligible = false;
+        if (!eligible) return { text: yamlQuote(value) };
+        return {
+            header: (needsIndicator ? '|2' : '|') + (endsWithNewline ? '' : '-'),
+            content: blockLines
+        };
+    }
+
+    function formatYamlKey(tok) {
+        var v = tok.kind === 'string' ? tok.value : String(tok.raw);
+        return isPlainYamlScalar(v) ? v : yamlQuote(v);
+    }
+
+    // Emits one JSON value as YAML lines at the given indent. `label` is the
+    // text preceding the value ('' at top level, 'key:' for mapping entries,
+    // '-' for sequence items — whose first nested line is merged onto the dash).
+    function emitYamlValue(tokens, pos, indent, label, lines) {
+        var tok = tokens[pos.i];
+        var pre = yamlPad(indent) + (label ? label + ' ' : '');
+        if (tok.kind === '{' || tok.kind === '[') {
+            var close = tok.kind === '{' ? '}' : ']';
+            pos.i++;
+            if (tokens[pos.i] && tokens[pos.i].kind === close) {
+                pos.i++;
+                lines.push({ t: pre + (close === '}' ? '{}' : '[]') });
+                return;
+            }
+            var childIndent = label ? indent + 2 : indent;
+            if (label && label !== '-') lines.push({ t: yamlPad(indent) + label });
+            var mergeAt = label === '-' ? lines.length : -1;
+            while (true) {
+                if (close === '}') {
+                    var keyTok = tokens[pos.i];
+                    pos.i += 2; // key and ':'
+                    emitYamlValue(tokens, pos, childIndent, formatYamlKey(keyTok) + ':', lines);
+                } else {
+                    emitYamlValue(tokens, pos, childIndent, '-', lines);
+                }
+                if (tokens[pos.i] && tokens[pos.i].kind === ',') { pos.i++; continue; }
+                pos.i++; // closing brace/bracket
+                break;
+            }
+            if (mergeAt >= 0)
+                lines[mergeAt].t = yamlPad(indent) + '- ' + lines[mergeAt].t.slice(indent + 2);
+            return;
+        }
+        if (tok.kind === 'string') {
+            pos.i++;
+            var fmt = formatYamlString(tok.value, label === '-');
+            if (fmt.header) {
+                lines.push({ t: pre + fmt.header });
+                for (var ci = 0; ci < fmt.content.length; ci++)
+                    lines.push({
+                        t: fmt.content[ci] === '' ? '' : yamlPad(indent + 2) + fmt.content[ci],
+                        block: true
+                    });
+            } else {
+                lines.push({ t: pre + fmt.text });
+            }
+            return;
+        }
+        // number / true / false / null — the raw JSON text, verbatim
+        pos.i++;
+        lines.push({ t: pre + tok.raw });
+    }
+
+    // Reconstructed JSON text → [{t: yamlLine, block: isBlockScalarContent}].
+    function jsonTextToYamlLines(jsonText) {
+        var tokens = tokenizeJson(jsonText);
+        var pos = { i: 0 };
+        var lines = [];
+        emitYamlValue(tokens, pos, 0, '', lines);
+        return lines;
+    }
+
+    // Conservative creole escape for client-built YAML lines: unconditionally
+    // neutralise every doubled pair marker, leading bullet/heading and tag
+    // start, and double every backslash. Deliberately dumber than the C#
+    // escaper — this source is transient render input, never read by humans.
+    function escapeNoteLine(line) {
+        var out = '';
+        var contentStarted = false;
+        for (var i = 0; i < line.length; i++) {
+            var c = line.charAt(i);
+            var isPair = '/*_-"['.indexOf(c) >= 0 && line.charAt(i + 1) === c;
+            if (!contentStarted && c !== ' ' && c !== '\t') {
+                contentStarted = true;
+                if (!isPair && (c === '*' || c === '#' || c === '=')) out += '~';
+            }
+            if (isPair) { out += '~' + c + '~' + c; i++; continue; }
+            if (c === '\\') { out += '\\\\'; continue; }
+            if (c === '<' && /[A-Za-z\/#]/.test(line.charAt(i + 1) || '')) out += '~';
+            out += c;
+        }
+        return out;
+    }
+
+    // Breaks whitespace-free runs over 120 chars with plain newlines (the
+    // same contract as the C# WrapUnbreakableRuns), never stranding a ~ from
+    // the character it protects and never splitting a doubled backslash.
+    function wrapNoteLongRuns(line) {
+        if (!/\S{121}/.test(line)) return line;
+        var out = '';
+        var run = '';
+        function flushRun() {
+            while (run.length > 120) {
+                var cut = 120;
+                while (cut > 1 && (run.charAt(cut - 1) === '~' || run.charAt(cut - 1) === '\\')) cut--;
+                out += run.slice(0, cut) + '\n';
+                run = run.slice(cut);
+            }
+            out += run;
+            run = '';
+        }
+        for (var i = 0; i < line.length; i++) {
+            var c = line.charAt(i);
+            if (c === ' ' || c === '\t') { flushRun(); out += c; }
+            else run += c;
+        }
+        flushRun();
+        return out;
+    }
+
+    // Escapes emitted YAML lines for splicing into the render source.
+    // Never wraps block-scalar content — an inserted newline there changes
+    // the string's MEANING in YAML (unlike the JSON view, where wrap breaks
+    // are only visual); the emitter already routes strings with overlong
+    // runs to the quoted fallback, where a wrap is harmless again.
+    function escapeYamlLinesForNote(yamlLines) {
+        var out = [];
+        for (var i = 0; i < yamlLines.length; i++) {
+            var esc = escapeNoteLine(yamlLines[i].t);
+            if (!yamlLines[i].block) esc = wrapNoteLongRuns(esc);
+            var parts = esc.split('\n');
+            for (var j = 0; j < parts.length; j++) out.push(parts[j]);
+        }
+        return out;
+    }
+
+    // Swaps each YAML-mode note's payload lines (gray header lines untouched)
+    // for its cached escaped YAML lines in the original source — BEFORE
+    // buildSourceWithNoteStates runs, so collapse/truncation and isLongNote
+    // operate on the active format's line count.
+    function applyNoteFormats(origSource, noteFormats, noteYamlLines) {
+        if (!noteFormats || !noteYamlLines) return origSource;
+        var any = false;
+        for (var k in noteFormats) {
+            if (noteFormats[k] === 'yaml' && noteYamlLines[k]) { any = true; break; }
+        }
+        if (!any) return origSource;
+        var lines = origSource.split('\n');
+        var out = [];
+        var inNote = false;
+        var nIdx = -1;
+        var swapping = false;
+        var headerDone = false;
+        var afterGray = false;
+        for (var i = 0; i < lines.length; i++) {
+            var trimmed = lines[i].trim();
+            if (!inNote && /^note(?:<<\w+>>)?\s+(left|right)/.test(trimmed)) {
+                inNote = true;
+                nIdx++;
+                swapping = noteFormats[nIdx] === 'yaml' && !!noteYamlLines[nIdx];
+                headerDone = false;
+                afterGray = false;
+                out.push(lines[i]);
+                continue;
+            }
+            if (inNote && trimmed === 'end note') {
+                if (swapping) {
+                    var yl = noteYamlLines[nIdx];
+                    for (var j = 0; j < yl.length; j++) out.push(yl[j]);
+                }
+                inNote = false;
+                swapping = false;
+                out.push(lines[i]);
+                continue;
+            }
+            if (inNote && swapping) {
+                if (!headerDone && /^<color:gray>/.test(trimmed)) { afterGray = true; out.push(lines[i]); continue; }
+                if (!headerDone && afterGray && trimmed === '') { out.push(lines[i]); continue; }
+                headerDone = true;
+                continue; // payload line dropped — YAML lines are emitted before 'end note'
+            }
+            out.push(lines[i]);
+        }
+        return out.join('\n');
+    }
+
+    // The note's content lines in its ACTIVE display format — the line count
+    // truncation and isLongNote must see (a SQL query unfolding to 30 YAML
+    // lines is a long note in YAML view).
+    function activeNoteContentLines(owner, noteIdx, rawContentLines) {
+        if (!owner._noteFormats || owner._noteFormats[noteIdx] !== 'yaml') return rawContentLines;
+        var yamlLines = owner._noteYamlLines && owner._noteYamlLines[noteIdx];
+        if (!yamlLines) return rawContentLines;
+        var header = [];
+        var afterGray = false;
+        for (var i = 0; i < rawContentLines.length; i++) {
+            var trimmed = rawContentLines[i].trim();
+            if (/^<color:gray>/.test(trimmed)) { afterGray = true; header.push(rawContentLines[i]); continue; }
+            if (afterGray && trimmed === '') { header.push(rawContentLines[i]); continue; }
+            break;
+        }
+        return header.concat(yamlLines);
     }
 
     function buildSourceWithNoteStates(origSource, noteSteps, noteBlocks, hideHeaders, truncateLines) {
@@ -783,11 +1249,28 @@
         if (container._noteSteps[noteIdx] === targetStep) return;
         var oldStep = container._noteSteps[noteIdx];
         container._noteSteps[noteIdx] = targetStep;
+        rerenderWithNoteStates(container, function() { container._noteSteps[noteIdx] = oldStep; });
+    }
 
+    // Flips a note between its JSON and YAML display format. Structurally the
+    // same operation as an expand/truncate: flip per-note state → rebuild
+    // source → re-render through the shared helper.
+    function setNoteFormat(container, noteIdx, format) {
+        if (container._noteRendering || window._plantumlRendering) return;
+        if (!container._noteFormats) container._noteFormats = {};
+        if ((container._noteFormats[noteIdx] || 'json') === format) return;
+        var oldFormat = container._noteFormats[noteIdx];
+        container._noteFormats[noteIdx] = format;
+        rerenderWithNoteStates(container, function() { container._noteFormats[noteIdx] = oldFormat; });
+    }
+
+    // Shared rebuild + re-render path for per-note state changes (step or
+    // format). restoreState reverts the state mutation if the render fails.
+    function rerenderWithNoteStates(container, restoreState) {
         var origSource = container._noteOriginalSource;
-        if (!origSource) { container._noteSteps[noteIdx] = oldStep; return; }
+        if (!origSource) { restoreState(); return; }
         var noteBlocks = parseNoteBlocks(origSource);
-        var newSource = applyDatabasesFilter(applyStepsFilter(applyAssertionFilter(buildSourceWithNoteStates(origSource, container._noteSteps, noteBlocks, !!container._headersHidden, container._truncateLines), !!container._assertionsVisible), !!container._stepsVisible), !!container._databasesVisible);
+        var newSource = applyDatabasesFilter(applyStepsFilter(applyAssertionFilter(buildSourceWithNoteStates(applyNoteFormats(origSource, container._noteFormats, container._noteYamlLines), container._noteSteps, noteBlocks, !!container._headersHidden, container._truncateLines), !!container._assertionsVisible), !!container._stepsVisible), !!container._databasesVisible);
 
         container.setAttribute('data-plantuml', newSource);
 
@@ -964,8 +1447,8 @@
             container._noteRendering = false;
             window._plantumlRendering = false;
             container.style.minHeight = '';
-            // Render failed — restore previous step and sync buttons
-            container._noteSteps[noteIdx] = oldStep;
+            // Render failed — restore previous state and sync buttons
+            restoreState();
             makeNotesCollapsible(container);
             addAssertionTooltips(container);
         }
@@ -987,8 +1470,8 @@
                 container._noteRendering = false;
                 window._plantumlRendering = false;
                 container.style.minHeight = '';
-                // Render timed out — restore previous step and sync buttons
-                container._noteSteps[noteIdx] = oldStep;
+                // Render timed out — restore previous state and sync buttons
+                restoreState();
                 makeNotesCollapsible(container);
                 addAssertionTooltips(container);
             }
@@ -999,6 +1482,13 @@
     window._findNoteGroups = findNoteGroups;
     window._getNoteBBox = getNoteBBox;
     window._parseNoteBlocks = parseNoteBlocks;
+    // Pure JSON ⇄ YAML functions, exposed for the Playwright unit-style fixture
+    window._noteFormatInternals = {
+        reconstructNoteJson: reconstructNoteJson,
+        jsonTextToYamlLines: jsonTextToYamlLines,
+        escapeYamlLinesForNote: escapeYamlLinesForNote,
+        applyNoteFormats: applyNoteFormats
+    };
 
     // Global defaults
     window._headersHidden = false;
@@ -1278,7 +1768,7 @@
             var item = queue.shift();
             var container = item.container;
             var origNoteBlocks = parseNoteBlocks(container._noteOriginalSource);
-            var newSource = applyDatabasesFilter(applyStepsFilter(applyAssertionFilter(buildSourceWithNoteStates(container._noteOriginalSource, container._noteSteps, origNoteBlocks, !!container._headersHidden, container._truncateLines), !!container._assertionsVisible), !!container._stepsVisible), !!container._databasesVisible);
+            var newSource = applyDatabasesFilter(applyStepsFilter(applyAssertionFilter(buildSourceWithNoteStates(applyNoteFormats(container._noteOriginalSource, container._noteFormats, container._noteYamlLines), container._noteSteps, origNoteBlocks, !!container._headersHidden, container._truncateLines), !!container._assertionsVisible), !!container._stepsVisible), !!container._databasesVisible);
             container.setAttribute('data-plantuml', newSource);
 
             // Re-split into fragments if needed

@@ -183,7 +183,11 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         Assert.True(m.AllMs < 60000, $"full render of the fixture took {m.AllMs:F0} ms");
         // Phase 4: the toggle re-renders only what changed (prefetch + cache), and never freezes the page.
         Assert.True(m.ToggleMs < 5000, $"note toggle on the largest diagram took {m.ToggleMs:F0} ms");
-        Assert.True(m.ToggleWorstTaskMs < 500, $"note toggle blocked the main thread for a {m.ToggleWorstTaskMs:F0} ms task");
+        // Isolated runs measure ~200 ms; under full-suite parallel load the same swap has measured
+        // 414-633 ms from CPU contention alone (render-bench-results.txt, including a 501 before the
+        // format-toggle work existed), so the budget allows for contention while still catching the
+        // multi-second freezes this guards against.
+        Assert.True(m.ToggleWorstTaskMs < 800, $"note toggle blocked the main thread for a {m.ToggleWorstTaskMs:F0} ms task");
         Assert.True(m.ToggleRenders <= m.Fragments + 2, $"toggle re-rendered {m.ToggleRenders} fragments of {m.Fragments}");
     }
 
