@@ -5,12 +5,14 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="xunit.v3" Version="*" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="*">
+    <!-- Pinned (not "*"): floating versions pulled in a Microsoft.Testing.Platform that refuses
+         VSTest-mode `dotnet test` on the .NET 10 SDK, knocking this project out of the suite. -->
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="*" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Elasticsearch\Kronikol.Extensions.Elasticsearch.csproj" />

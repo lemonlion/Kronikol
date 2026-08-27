@@ -46,8 +46,9 @@ See the [Quick Start guide](https://github.com/lemonlion/Kronikol/wiki/Quick-Sta
 | Redis | `Kronikol.Extensions.Redis` |
 | Local PlantUML (IKVM) | `Kronikol.PlantUml.Ikvm` |
 | Proxy tap (out-of-process capture for uninstrumentable backends) | `Kronikol.Extensions.ProxyTap` |
+| OTLP tap + export (OTel spans in, Kronikol captures out as spans) | `Kronikol.Extensions.Otlp` |
 | Playwright (browser-driven E2E identity) | `Kronikol.Playwright` |
-| CLI (`kronikol merge`, `kronikol ingest`, `kronikol query`) | `Kronikol.Tool` |
+| CLI (`kronikol merge`, `kronikol ingest`, `kronikol query`, `kronikol export`) | `Kronikol.Tool` |
 
 ## Use Cases
 
