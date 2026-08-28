@@ -234,7 +234,7 @@ public static partial class PlantUmlCreator
 
                     if (!string.IsNullOrWhiteSpace(content))
                     {
-                        var actionNote = EscapeForPlantUmlNote(TruncateNoteContent(content, truncateNotesAfterLines));
+                        var actionNote = TruncateNoteContent(content, truncateNotesAfterLines);
                         builder.AppendLine($"note left");
                         builder.AppendLine(actionNote);
                         builder.AppendLine("end note");
@@ -301,7 +301,7 @@ public static partial class PlantUmlCreator
 
                     if (!string.IsNullOrEmpty(noteContent))
                     {
-                        var truncatedContent = EscapeForPlantUmlNote(TruncateNoteContent(noteContent, truncateNotesAfterLines));
+                        var truncatedContent = TruncateNoteContent(noteContent, truncateNotesAfterLines);
                         var noteSide = trace.NoteOnRight ? "right" : "left";
                         builder.AppendLine($"note{GetNoteClass(trace.MetaType)} {noteSide}");
                         builder.AppendLine(truncatedContent);
@@ -362,8 +362,13 @@ public static partial class PlantUmlCreator
     private static string GetNoteClass(RequestResponseMetaType metaType) =>
         metaType == RequestResponseMetaType.Event ? $"<<{EventNoteClass}>>" : "";
 
-    internal static string EscapeForPlantUmlNote(string text) =>
-        text.Replace("\\", "\\\\");
+    // Note bodies carry the payload's backslash bytes verbatim. PlantUML block
+    // notes render backslash sequences literally (probed against plantuml.js
+    // 1.2026.6 and the IKVM jar, with and without teoz): the ONLY consumed
+    // sequence is \t, rendered as a real tab — and no escaping can prevent
+    // that, since the final \t pair of any backslash run is consumed. The
+    // pre-3.0.62 blanket backslash doubling therefore displayed \\n for a
+    // wire \n while still losing tabs, and was removed.
 
     /// <summary>
     /// Neutralises PlantUML creole markup a captured payload happens to contain, so a note shows the bytes
@@ -512,7 +517,7 @@ public static partial class PlantUmlCreator
 
             if (!string.IsNullOrEmpty(noteContent))
             {
-                var truncatedContent = EscapeForPlantUmlNote(TruncateNoteContent(noteContent, truncateNotesAfterLines));
+                var truncatedContent = TruncateNoteContent(noteContent, truncateNotesAfterLines);
                 builder.AppendLine($"note{GetNoteClass(trace!.MetaType)} right");
                 builder.AppendLine(truncatedContent);
                 builder.AppendLine("end note");

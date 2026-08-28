@@ -94,6 +94,24 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     }
 
     // ═══════════════════════════════════════════════════════════
+    // Display fidelity
+    // ═══════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task Json_view_displays_wire_escape_bytes_verbatim()
+    {
+        // Before 3.0.62 the generation pipeline doubled note backslashes, so
+        // the rendered JSON view showed \\n where the wire had \n. Block
+        // notes render backslashes literally — the display must now be
+        // byte-exact.
+        await NavigateAndSetup("YamlToggle_DisplayBytes.html");
+
+        var text = await GetNormalizedSvgText();
+        Assert.Contains("SELECT o.id,\\n", text);
+        Assert.DoesNotContain("SELECT o.id,\\\\n", text);
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // Toggling
     // ═══════════════════════════════════════════════════════════
 

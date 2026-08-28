@@ -2656,10 +2656,11 @@ public static class ReportTestHelper
 
     /// <summary>
     /// A diagram whose first note carries a JSON payload exactly as the .NET
-    /// generation pipeline emits it (gray header line, doubled backslashes for
-    /// the \n escapes, an int64 beyond 2^53) and whose second note is plain
-    /// text — the gold vector for the JSON ⇄ YAML note format toggle. Includes
-    /// a step delimiter so the steps filter can be toggled against it.
+    /// generation pipeline emits it (gray header line, wire-verbatim \n
+    /// escapes — 3.0.62 removed the backslash doubling — and an int64 beyond
+    /// 2^53) and whose second note is plain text — the gold vector for the
+    /// JSON ⇄ YAML note format toggle. Includes a step delimiter so the steps
+    /// filter can be toggled against it.
     /// </summary>
     private const string JsonYamlNotePlantUmlSource = """
         @startuml
@@ -2673,7 +2674,7 @@ public static class ReportTestHelper
 
         {
           "id": 9007199254740993,
-          "query": "SELECT o.id,\\n       o.total\\nFROM orders o"
+          "query": "SELECT o.id,\n       o.total\nFROM orders o"
         }
         end note
         svc --> caller : 200 OK
@@ -2704,10 +2705,9 @@ public static class ReportTestHelper
     }
 
     /// <summary>
-    /// A JSON note whose string value uses CRLF (\r\n) line breaks, doubled to
-    /// \\r\\n by the generation pipeline's note escaping — the shape every
-    /// Windows-captured payload has. The YAML view must still unfold it into a
-    /// block scalar.
+    /// A JSON note whose string value uses CRLF (\r\n) line breaks, carried
+    /// verbatim in the note source — the shape every Windows-captured payload
+    /// has. The YAML view must still unfold it into a block scalar.
     /// </summary>
     public static string GenerateReportWithCrlfJsonNote(string tempDir, string outputDir, string fileName)
     {
@@ -2723,7 +2723,7 @@ public static class ReportTestHelper
             <color:gray>[content-type=application/json]</color>
 
             {
-              "query": "SELECT o.id,\\r\\n       o.total\\r\\nFROM orders o",
+              "query": "SELECT o.id,\r\n       o.total\r\nFROM orders o",
               "id": 42
             }
             end note
@@ -2757,7 +2757,7 @@ public static class ReportTestHelper
     {
         var (features, _) = CreateTestData();
 
-        var sqlColumns = string.Join(@"\\n", Enumerable.Range(1, 45).Select(i => $"  col_{i},"));
+        var sqlColumns = string.Join(@"\n", Enumerable.Range(1, 45).Select(i => $"  col_{i},"));
         var source = $$"""
             @startuml
             actor "Caller" as caller
@@ -2766,7 +2766,7 @@ public static class ReportTestHelper
             caller -> db : query
             note left
             {
-              "query": "SELECT\\n{{sqlColumns}}\\n  1\\nFROM t"
+              "query": "SELECT\n{{sqlColumns}}\n  1\nFROM t"
             }
             end note
             db --> caller : OK

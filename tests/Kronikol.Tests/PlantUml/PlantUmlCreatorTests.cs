@@ -2651,22 +2651,43 @@ public class PlantUmlCreatorTests
         Assert.Contains("<i>[binary content]</i>", noteBody);
     }
 
-    // ─── Backslash escaping in notes ────────────────────────────
+    // ─── Note payload backslash bytes are verbatim ──────────────
+    // PlantUML block notes render backslash sequences literally — probed
+    // against both plantuml.js 1.2026.6 and the bundled IKVM jar, with and
+    // without the teoz pragma: \n \r \b \f \" \/ \\ \uXXXX and a trailing \
+    // all display exactly as written. The ONLY consumed sequence is \t
+    // (rendered as a real tab), and no escaping can prevent that: in any
+    // backslash run before a 't' the final \t pair is consumed, so the old
+    // blanket doubling displayed \\n for a wire \n while still losing tabs.
+    // Notes therefore carry the wire bytes untouched.
 
-    [Theory]
-    [InlineData("hello", "hello")]
-    [InlineData("no escapes", "no escapes")]
-    [InlineData("{\"key\":\"\\u0022value\\u0022\"}", "{\"key\":\"\\\\u0022value\\\\u0022\"}")]
-    [InlineData("line1\\nline2", "line1\\\\nline2")]
-    [InlineData("already\\\\escaped", "already\\\\\\\\escaped")]
-    public void EscapeForPlantUmlNote_escapes_backslashes(string input, string expected)
+    [Fact]
+    public void Request_note_shows_json_escape_sequences_verbatim()
     {
-        Assert.Equal(expected, PlantUmlCreator.EscapeForPlantUmlNote(input));
+        var json = "{\"query\":\"SELECT a,\\n  b\\nFROM t\",\"path\":\"C:\\\\dir\\\\file\"}";
+        var logs = new[]
+        {
+            MakeRequest(content: json),
+            MakeResponse(),
+        };
+
+        var results = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).ToList();
+        var plantUml = results.Single().PlantUmls.First().PlainText;
+
+        // The \n escape appears with its single wire backslash, never doubled
+        Assert.Contains("SELECT a,\\n  b\\nFROM t", plantUml);
+        Assert.DoesNotContain("\\\\n", plantUml);
+        // A payload literal backslash keeps its two-byte \\ escape exactly
+        Assert.Contains("C:\\\\dir\\\\file", plantUml);
+        Assert.DoesNotContain("\\\\\\\\", plantUml);
     }
 
     [Fact]
-    public void Request_note_with_backslash_content_is_escaped_in_plantuml()
+    public void Request_note_shows_unicode_escape_bytes_verbatim()
     {
+        // Payload value contains a literal backslash followed by u0022 —
+        // the note must show those exact wire bytes (\\u0022), not four
+        // backslashes as the pre-3.0.62 doubling produced.
         var json = """{"data":"\\u0022value\\u0022"}""";
         var logs = new[]
         {
@@ -2677,8 +2698,8 @@ public class PlantUmlCreatorTests
         var results = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).ToList();
         var plantUml = results.Single().PlantUmls.First().PlainText;
 
-        Assert.Contains("\\\\u0022", plantUml);
-        Assert.DoesNotContain("\\u0022", plantUml.Replace("\\\\u0022", ""));
+        Assert.Contains("\\\\u0022value\\\\u0022", plantUml);
+        Assert.DoesNotContain("\\\\\\\\u0022", plantUml);
     }
 
     [Fact]

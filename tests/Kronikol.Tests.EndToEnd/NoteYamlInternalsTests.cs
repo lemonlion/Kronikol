@@ -43,19 +43,38 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
     public async Task Gold_vector_reconstructs_with_newline_escapes_and_int64_verbatim()
     {
         await NavigateToReport();
+        // Note lines carry the wire bytes verbatim (3.0.62 removed the
+        // generation-side backslash doubling) — \n arrives single-backslash.
         var result = await Reconstruct(new[]
         {
             "<color:gray>[content-type=application/json]</color>",
             "",
             "{",
             "  \"id\": 9007199254740993,",
-            "  \"query\": \"SELECT o.id,\\\\n       o.total\\\\nFROM orders o\"",
+            "  \"query\": \"SELECT o.id,\\n       o.total\\nFROM orders o\"",
             "}"
         });
         Assert.NotNull(result);
         Assert.Contains("9007199254740993", result);
         Assert.Contains("\"SELECT o.id,\\n       o.total\\nFROM orders o\"", result);
         Assert.DoesNotContain("<color:gray>", result);
+    }
+
+    [Fact]
+    public async Task Payload_literal_backslashes_reconstruct_byte_exactly()
+    {
+        await NavigateToReport();
+        // Value C:\dir\file — wire bytes C:\\dir\\file, shown verbatim in the
+        // note. Reconstruction must keep both backslashes of each escape (the
+        // old halving reversal would have corrupted this shape).
+        var result = await Reconstruct(new[]
+        {
+            "{",
+            "  \"path\": \"C:\\\\dir\\\\file\"",
+            "}"
+        });
+        Assert.NotNull(result);
+        Assert.Contains("\"C:\\\\dir\\\\file\"", result);
     }
 
     [Fact]
@@ -387,14 +406,17 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
-    public async Task Escape_doubles_backslashes()
+    public async Task Escape_leaves_backslashes_verbatim()
     {
         await NavigateToReport();
+        // PlantUML block notes render backslashes literally, so the YAML
+        // splice escape must not double them (mirrors the 3.0.62 removal of
+        // generation-side doubling) — the quoted scalar's \n stays two bytes.
         var escaped = await EscapeLines(new object[]
         {
             new { t = "a: \"x\\ny\"", block = false }
         });
-        Assert.Equal(new[] { "a: \"x\\\\ny\"" }, escaped);
+        Assert.Equal(new[] { "a: \"x\\ny\"" }, escaped);
     }
 
     [Fact]

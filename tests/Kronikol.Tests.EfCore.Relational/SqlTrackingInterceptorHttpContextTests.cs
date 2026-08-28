@@ -40,6 +40,21 @@ public class SqlTrackingInterceptorHttpContextTests : IDisposable
     private static StubDbCommand MakeCommand() =>
         new("SELECT [u].[Id] FROM [dbo].[Users] AS [u]", "MyDb", "localhost");
 
+    // ─── Registry auto-registration ────────────────────────────
+    // Lives in this class (not SqlTrackingInterceptorTests) because
+    // TrackingComponentRegistry is a global static: every test touching it
+    // must share this "TrackingComponentRegistry" collection, or a parallel
+    // class's Clear() races the registration away.
+
+    [Fact]
+    public void Constructor_AutoRegistersWithTrackingComponentRegistry()
+    {
+        var interceptor = new SqlTrackingInterceptor(MakeOptions());
+
+        var components = TrackingComponentRegistry.GetRegisteredComponents();
+        Assert.Contains(components, c => ReferenceEquals(c, interceptor));
+    }
+
     // ─── Exception safety ──────────────────────────────────────
 
     [Fact]

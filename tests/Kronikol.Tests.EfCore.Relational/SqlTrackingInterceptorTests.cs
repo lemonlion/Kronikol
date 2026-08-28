@@ -455,15 +455,11 @@ public class SqlTrackingInterceptorTests : IDisposable
         Assert.Equal("SqlTrackingInterceptor (IdentityDB)", interceptor.ComponentName);
     }
 
-    [Fact]
-    public void Constructor_AutoRegistersWithTrackingComponentRegistry()
-    {
-        TrackingComponentRegistry.Clear();
-        var interceptor = new SqlTrackingInterceptor(MakeOptions());
-
-        var components = TrackingComponentRegistry.GetRegisteredComponents();
-        Assert.Contains(components, c => ReferenceEquals(c, interceptor));
-    }
+    // Constructor_AutoRegistersWithTrackingComponentRegistry lives in
+    // SqlTrackingInterceptorHttpContextTests: TrackingComponentRegistry is a
+    // global static and every test touching it must share the
+    // "TrackingComponentRegistry" xunit collection — from this (parallel)
+    // class, another class's Clear() raced the registration away.
 
     // ─── DataSource with comma-separated port (SQL Server Docker) ──
 

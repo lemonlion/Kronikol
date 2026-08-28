@@ -808,11 +808,13 @@
 
     // Recovers the original JSON of a note payload by reversing the generation
     // pipeline's transforms in reverse application order: gray headers dropped,
-    // backslash doubling halved, focus markup stripped, creole escapes removed,
-    // wrap breaks re-joined. Gated by JSON.parse — a note whose text can't be
-    // reconstructed into valid JSON simply never becomes YAML-eligible (this
-    // excludes capture-truncated prefixes, GraphQL/form/plain-text/binary
-    // bodies and server-side continuation chunks for free).
+    // focus markup stripped, creole escapes removed, wrap breaks re-joined.
+    // (Backslash bytes are verbatim since 3.0.62 — block notes render them
+    // literally, so the generator no longer doubles them and nothing is halved
+    // here.) Gated by JSON.parse — a note whose text can't be reconstructed
+    // into valid JSON simply never becomes YAML-eligible (this excludes
+    // capture-truncated prefixes, GraphQL/form/plain-text/binary bodies and
+    // server-side continuation chunks for free).
     function reconstructNoteJson(contentLines) {
         if (!contentLines || contentLines.length === 0) return null;
         var payload = [];
@@ -826,8 +828,6 @@
         }
         if (payload.length === 0) return null;
         var text = payload.join('\n');
-        // Reverse EscapeForPlantUmlNote: halve the doubled backslashes.
-        text = text.replace(/\\\\/g, '\\');
         // Strip focus emphasis markup. A literal '<' in the payload was
         // ~-escaped by the creole escaper, so any unescaped tag here is
         // provably Kronikol's own — protect ~< sequences, drop the rest.
@@ -1051,8 +1051,10 @@
 
     // Conservative creole escape for client-built YAML lines: unconditionally
     // neutralise every doubled pair marker, leading bullet/heading and tag
-    // start, and double every backslash. Deliberately dumber than the C#
-    // escaper — this source is transient render input, never read by humans.
+    // start. Backslashes pass through verbatim — block notes render them
+    // literally (same contract as the 3.0.62 generation side). Deliberately
+    // dumber than the C# escaper — this source is transient render input,
+    // never read by humans.
     function escapeNoteLine(line) {
         var out = '';
         var contentStarted = false;
@@ -1064,7 +1066,6 @@
                 if (!isPair && (c === '*' || c === '#' || c === '=')) out += '~';
             }
             if (isPair) { out += '~' + c + '~' + c; i++; continue; }
-            if (c === '\\') { out += '\\\\'; continue; }
             if (c === '<' && /[A-Za-z\/#]/.test(line.charAt(i + 1) || '')) out += '~';
             out += c;
         }
@@ -1073,7 +1074,8 @@
 
     // Breaks whitespace-free runs over 120 chars with plain newlines (the
     // same contract as the C# WrapUnbreakableRuns), never stranding a ~ from
-    // the character it protects and never splitting a doubled backslash.
+    // the character it protects and never cutting right after a backslash
+    // (which would visually split an escape like \n across lines).
     function wrapNoteLongRuns(line) {
         if (!/\S{121}/.test(line)) return line;
         var out = '';

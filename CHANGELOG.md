@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.62] - 2026-08-28
+
+### Fixed
+- **Diagram notes now display payload backslash bytes exactly — the blanket backslash doubling is gone.** Since v2.0.83, `EscapeForPlantUmlNote` doubled every backslash in note bodies, so a wire `\n` escape rendered as `\\n` (and a payload literal `\\` as `\\\\`) in every JSON note. Probing both shipped renderers (plantuml.js 1.2026.6 and the IKVM PlantUML jar, with and without the teoz pragma) showed the doubling was never needed: PlantUML block notes render backslash sequences literally — `\n`, `\r`, `\b`, `\f`, `\"`, `\/`, `\\`, `\uXXXX` and trailing `\` all display as written. The single exception is `\t`, which PlantUML always renders as a real tab, and escaping cannot prevent it (the final `\t` pair of any backslash run is consumed — the old doubling displayed a stray `\` before the tab). Notes now carry the wire bytes untouched: the JSON view is byte-exact on screen, and a wire `\t` shows as a clean tab. The YAML toggle's reconstruction drops its backslash-halving step (becoming *more* exact — the halving could not distinguish a payload's own `\\` from the escaper's) and the client-side YAML splice escape stops doubling to match. Pinned by new generation tests (verbatim `\n`/`\\`/`"` bytes in the note source), reconstructor byte-exactness tests, and a new display-fidelity E2E asserting the rendered SVG shows `SELECT o.id,\n` with a single backslash. Kronikol4J still doubles until it re-syncs — recorded in its parity ledger with the rule that the generator and `collapsible-notes-script.js` must move together. Wiki and `NOTE_YAML_TOGGLE_PLAN.md` updated.
+
+- **Flaky EF Core registry test stabilised.** `Constructor_AutoRegistersWithTrackingComponentRegistry` sat in the parallel-running `SqlTrackingInterceptorTests` class while `TrackingComponentRegistry` is a global static guarded by the `"TrackingComponentRegistry"` xunit collection — a parallel class's `Clear()` could race its registration away. Moved into the collection-guarded class.
+- **Flaky ProxyTap diagnostics test stabilised.** The tap deliberately answers the caller *before* bumping `RequestsHandled`/`RequestsCaptured` and recording ("respond first, record second" — bookkeeping never delays the forwarded exchange), so `Diagnostics_are_empty_while_healthy_and_name_the_requests_that_were_not_captured` asserting the counters immediately after `SendAsync` returned raced the increments (reproduced 3 failures in 4 runs). The test now waits out that gap with a bounded poll before asserting; the tap's respond-first design is unchanged.
+
 ## [3.0.61] - 2026-08-28
 
 ### Fixed

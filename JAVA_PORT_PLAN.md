@@ -323,7 +323,7 @@ A full read of `PlantUmlCreator.cs` (~844 lines) + the encoder, formatters, pale
 | MED | Exact `.Trim()/.TrimEnd(NewLine chars)` semantics | `PlantUmlCreator.cs:601`; `JsonFocusFormatter.cs` | Replicate each; `TrimEnd(NewLine.ToCharArray())` strips `\r` *and* `\n`. |
 | LOW | Alias regex `[^a-zA-Z0-9_]` | `PlantUmlCreator.cs:529` | ASCII-only — identical, no `\w` Unicode issue. ✅ |
 | LOW | Color/shape palette | `DependencyPalette.cs` | Static `FrozenDictionary`/switch, **no hashing** — ports cleanly. ✅ |
-| LOW | `EscapeForPlantUmlNote` | `PlantUmlCreator.cs:271` | `replace("\\","\\\\")` — identical. ✅ |
+| LOW | `EscapeForPlantUmlNote` | `PlantUmlCreator.cs:271` | `replace("\\","\\\\")` — identical. ✅ (⚠ .NET 3.0.62 REMOVED this escaping — notes now carry backslash bytes verbatim; Java still doubles until it re-syncs, see Kronikol4J REMAINING_PARITY.md) |
 | LOW | `.AsParallel().AsOrdered()`; no Guid/random/timestamp in text path | `PlantUmlCreator.cs:66` | `.AsOrdered()` keeps output deterministic — process tests in any order, key by TestId. ✅ |
 
 **Batch the source-side fixes.** The HIGH/MED items above are **upstreamable .NET parity-hardening fixes** (normalize newlines, pin invariant culture, ordinal sorts, deterministic component-diagram ordering). They join the determinism seam (§6.2) and asset-externalization (§4.2) as a **single Phase-0 ".NET prep" workstream** — each removes a divergence *at the source*, making both the golden capture and the Java match cleaner.

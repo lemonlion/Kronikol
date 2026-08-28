@@ -526,6 +526,20 @@ public class ProxyTapTests
         Assert.Equal(2, sink.Logs.Count);
     }
 
+    /// <summary>
+    /// The tap answers the caller BEFORE bumping its counters and recording
+    /// ("respond first, record second" — bookkeeping never delays the forwarded
+    /// exchange), so a counter read immediately after SendAsync races the
+    /// increment. Waits out that gap; the expected value must then hold.
+    /// </summary>
+    private static async Task<long> EventuallyAsync(Func<long> read, long expected)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (read() != expected && DateTime.UtcNow < deadline)
+            await Task.Delay(10);
+        return read();
+    }
+
     [Fact]
     public async Task Diagnostics_are_empty_while_healthy_and_name_the_requests_that_were_not_captured()
     {
@@ -538,13 +552,14 @@ public class ProxyTapTests
         using var client = new HttpClient();
         using (var attributed = Request(HttpMethod.Get, tap.ListenUri, "/captured", null, (TestTrackingHttpHeaders.CurrentTestIdHeader, Guid.NewGuid().ToString("N"))))
             (await client.SendAsync(attributed)).Dispose();
+        // _captured increments after _handled, so waiting for it settles both.
+        Assert.Equal(1, await EventuallyAsync(() => tap.RequestsCaptured, 1));
         Assert.Equal(1, tap.RequestsHandled);
-        Assert.Equal(1, tap.RequestsCaptured);
         Assert.Empty(tap.Diagnostics());
 
         using (var anonymous = Request(HttpMethod.Get, tap.ListenUri, "/not-captured", null))
             (await client.SendAsync(anonymous)).Dispose();
-        Assert.Equal(2, tap.RequestsHandled);
+        Assert.Equal(2, await EventuallyAsync(() => tap.RequestsHandled, 2));
         Assert.Equal(1, tap.RequestsCaptured);
 
         var entry = Assert.Single(tap.Diagnostics());

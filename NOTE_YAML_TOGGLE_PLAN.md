@@ -169,6 +169,14 @@ them, ~lines 568–569 of `src/Kronikol/Reports/ReportGenerator.cs`).
      view) for strings a block scalar can't faithfully represent: containing `\r` or
      other control chars, lines with trailing whitespace (parsers may strip it), or
      any >120-char whitespace-free run (see item 3).
+   - **Backslash doubling removed (3.0.62 addendum):** probing plantuml.js 1.2026.6
+     and the IKVM jar (with and without teoz) showed block notes render backslash
+     sequences literally — the only consumed sequence is `\t` (always rendered as a
+     real tab; the final `\t` pair of any backslash run is consumed, so doubling
+     never protected it and merely displayed `\\n` for a wire `\n`). The generator
+     now emits note payload bytes verbatim, the reconstructor no longer halves,
+     and `escapeNoteLine` no longer doubles. Reconstruction became *more* exact:
+     the halving's `\\`-ambiguity is gone.
    - **CRLF exception** (added after the fact — Windows-captured payloads all carry
      `\r\n`, so the `\r` rule above sent every real multiline string to the quoted
      fallback): when *every* line break in the string is exactly `\r\n` (no lone `\r`,
