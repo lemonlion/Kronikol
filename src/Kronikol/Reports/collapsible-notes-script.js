@@ -962,8 +962,15 @@
         var endsWithNewline = display.charAt(display.length - 1) === '\n';
         var blockLines = display.split('\n');
         if (endsWithNewline) blockLines.pop();
+        // A leading \n (SQL from raw strings / heredocs routinely starts with
+        // one) is representable as empty line(s) opening the block scalar;
+        // YAML anchors block indentation on the first NON-empty line, so that
+        // line drives the indicator below — and a string with no non-empty
+        // line at all has nothing to anchor on and stays quoted.
+        var firstContent = 0;
+        while (firstContent < blockLines.length && blockLines[firstContent] === '') firstContent++;
         var eligible = !/[\x00-\x09\x0b-\x1f\x7f]/.test(display)
-            && display.charAt(0) !== '\n'
+            && firstContent < blockLines.length
             && !(endsWithNewline && /\n$/.test(display.slice(0, -1)));
         if (eligible) {
             for (var i = 0; i < blockLines.length; i++) {
@@ -971,7 +978,7 @@
                 if (hasOverlongRunAfterEscape(blockLines[i])) { eligible = false; break; }
             }
         }
-        var needsIndicator = eligible && blockLines[0].charAt(0) === ' ';
+        var needsIndicator = eligible && blockLines[firstContent].charAt(0) === ' ';
         // The explicit indentation indicator counts from the parent node's
         // indent — fragile arithmetic inside sequence items, so fall back.
         if (needsIndicator && inSeq) eligible = false;

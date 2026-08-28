@@ -169,6 +169,14 @@ them, ~lines 568–569 of `src/Kronikol/Reports/ReportGenerator.cs`).
      view) for strings a block scalar can't faithfully represent: containing `\r` or
      other control chars, lines with trailing whitespace (parsers may strip it), or
      any >120-char whitespace-free run (see item 3).
+   - **Leading-newline strings unfold too (3.0.63 addendum):** the original eligibility
+     rule rejected any string starting with `\n`, which silently kept every SQL body
+     from a C# raw string / indented heredoc (they begin with a newline) in the quoted
+     fallback. A block scalar represents a leading `\n` as empty line(s) opening the
+     block; YAML anchors block indentation on the first NON-empty line, so that line —
+     not `blockLines[0]` — now drives the `|2` indicator. Strings with no non-empty
+     line at all (`"\n"`) stay quoted, and the indicator-in-sequence fallback is
+     unchanged. Round-trip-verified through js-yaml.
    - **Backslash doubling removed (3.0.62 addendum):** probing plantuml.js 1.2026.6
      and the IKVM jar (with and without teoz) showed block notes render backslash
      sequences literally — the only consumed sequence is `\t` (always rendered as a

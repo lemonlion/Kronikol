@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.63] - 2026-08-28
+
+### Fixed
+- **Note YAML view: strings starting with `\n` now unfold into block scalars.** The emitter's eligibility rule rejected any string whose first character is a newline, so every SQL body written as a C# raw string or indented heredoc (they begin with `\n` — e.g. real BigQuery job bodies) stayed a one-line quoted scalar with visible `\n` escapes in YAML view. A literal block scalar represents the leading newline as empty line(s) opening the block, and YAML anchors block-scalar indentation on the first *non-empty* line — so that line now drives the `|2` explicit-indentation indicator instead of `blockLines[0]`. Strings consisting only of newlines (nothing to anchor indentation on) keep the quoted fallback, as does the indicator-inside-sequence case. Emitted YAML round-trip-verified byte-exact through js-yaml, including the leading-empty-line and `|2-` shapes; pinned by five new Playwright internals tests including the exact reported BigQuery job-body shape.
+- **Render-worker perf-guard `ReadyMs` contention budget raised 2500 → 4500 ms.** The absolute budget exists only to catch egregious regressions; the load-independent guarantee is the relative assert (page-ready never waits for the engine), which held while back-to-back full-suite runs measured 3864 ms from CPU contention alone (prior history: 2002 ms noted when the 2500 budget was set).
+
 ## [3.0.62] - 2026-08-28
 
 ### Fixed

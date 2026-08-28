@@ -247,6 +247,70 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
+    public async Task String_with_leading_newline_emits_block_scalar_with_leading_empty_line()
+    {
+        await NavigateToReport();
+        // SQL from C# raw strings / indented heredocs routinely starts with
+        // \n — a block scalar represents it as a leading empty line.
+        var yaml = await EmitYaml("{\"q\":\"\\nfoo\\nbar\"}");
+        Assert.Equal(new[] { "q: |-", "", "  foo", "  bar" }, yaml);
+    }
+
+    [Fact]
+    public async Task Leading_newline_with_space_led_content_uses_indicator_from_first_nonempty_line()
+    {
+        await NavigateToReport();
+        // The indentation indicator must be driven by the first NON-empty
+        // line (YAML auto-detects block indentation from it), not the empty
+        // leading line.
+        var yaml = await EmitYaml("{\"q\":\"\\n  SELECT x\\n  FROM t\"}");
+        Assert.Equal(new[] { "q: |2-", "", "    SELECT x", "    FROM t" }, yaml);
+    }
+
+    [Fact]
+    public async Task Real_bigquery_job_body_query_unfolds_into_a_block_scalar()
+    {
+        await NavigateToReport();
+        // The exact user-reported shape: pretty-printed job body whose query
+        // starts with \n and indents every line.
+        var yaml = await EmitYaml(
+            "{\"parameterMode\":\"named\"," +
+            "\"query\":\"\\n            SELECT\\n                loc.latitude AS latitude\\n            FROM t\\n            LIMIT 1\"," +
+            "\"useLegacySql\":false}");
+        Assert.Equal(new[]
+        {
+            "parameterMode: named",
+            "query: |2-",
+            "",
+            "              SELECT",
+            "                  loc.latitude AS latitude",
+            "              FROM t",
+            "              LIMIT 1",
+            "useLegacySql: false"
+        }, yaml);
+    }
+
+    [Fact]
+    public async Task String_of_only_newlines_stays_quoted()
+    {
+        await NavigateToReport();
+        // No non-empty content line — nothing for a block scalar to anchor
+        // its indentation on.
+        var yaml = await EmitYaml("{\"e\":\"\\n\"}");
+        Assert.Equal(new[] { "e: \"\\n\"" }, yaml);
+    }
+
+    [Fact]
+    public async Task Leading_newline_with_space_led_content_in_sequence_takes_the_quoted_fallback()
+    {
+        await NavigateToReport();
+        // Same rule as ' lead' in a sequence: the explicit indicator's
+        // parent-indent arithmetic is fragile inside sequence items.
+        var yaml = await EmitYaml("{\"a\":[\"\\n x\"]}");
+        Assert.Equal(new[] { "a:", "  - \"\\n x\"" }, yaml);
+    }
+
+    [Fact]
     public async Task Single_line_strings_are_quoted_only_when_yaml_requires_it()
     {
         await NavigateToReport();
