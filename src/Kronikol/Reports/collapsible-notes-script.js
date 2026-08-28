@@ -946,15 +946,25 @@
     // overlong unbreakable runs — which could never be wrapped without
     // changing the string's meaning) take the double-quoted fallback, which
     // is never worse than today's JSON view.
+    //
+    // CRLF strings (every Windows-captured payload) would all hit that
+    // fallback via the control-char check, so when EVERY break is exactly
+    // \r\n the string is displayed with the \r dropped: the YAML view trades
+    // those bytes for a readable block scalar — the JSON view stays exact.
+    // Mixed or lone \r keeps the exact quoted form (a block scalar could not
+    // show which break was which).
     function formatYamlString(value, inSeq) {
-        if (value.indexOf('\n') < 0)
+        var display = value;
+        if (value.indexOf('\r') >= 0 && !/\r(?!\n)/.test(value) && !/(^|[^\r])\n/.test(value))
+            display = value.replace(/\r\n/g, '\n');
+        if (display.indexOf('\n') < 0)
             return { text: isPlainYamlScalar(value) ? value : yamlQuote(value) };
-        var endsWithNewline = value.charAt(value.length - 1) === '\n';
-        var blockLines = value.split('\n');
+        var endsWithNewline = display.charAt(display.length - 1) === '\n';
+        var blockLines = display.split('\n');
         if (endsWithNewline) blockLines.pop();
-        var eligible = !/[\x00-\x09\x0b-\x1f\x7f]/.test(value)
-            && value.charAt(0) !== '\n'
-            && !(endsWithNewline && /\n$/.test(value.slice(0, -1)));
+        var eligible = !/[\x00-\x09\x0b-\x1f\x7f]/.test(display)
+            && display.charAt(0) !== '\n'
+            && !(endsWithNewline && /\n$/.test(display.slice(0, -1)));
         if (eligible) {
             for (var i = 0; i < blockLines.length; i++) {
                 if (/[ \t]$/.test(blockLines[i])) { eligible = false; break; }

@@ -2704,6 +2704,50 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// A JSON note whose string value uses CRLF (\r\n) line breaks, doubled to
+    /// \\r\\n by the generation pipeline's note escaping — the shape every
+    /// Windows-captured payload has. The YAML view must still unfold it into a
+    /// block scalar.
+    /// </summary>
+    public static string GenerateReportWithCrlfJsonNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+
+        const string source = """
+            @startuml
+            actor "Caller" as caller
+            participant "OrderService" as svc
+
+            caller -> svc : POST /api/orders
+            note left
+            <color:gray>[content-type=application/json]</color>
+
+            {
+              "query": "SELECT o.id,\\r\\n       o.total\\r\\nFROM orders o",
+              "id": 42
+            }
+            end note
+            svc --> caller : 200 OK
+            @enduml
+            """;
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", source)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// A JSON note that is short in JSON view (one string value holding a
     /// 45-line SQL query as \n escapes) but unfolds past the 40-line truncation
     /// limit in YAML view — exercises "truncation and isLongNote operate on the

@@ -113,6 +113,27 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
+    public async Task Click_renders_crlf_note_as_multiline_yaml()
+    {
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithCrlfJsonNote(
+            TempDir, OutputDir, "YamlToggle_CrlfToYaml.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+
+        await ClickFormatButton();
+
+        var text = await GetNormalizedSvgText();
+        Assert.Contains("query: |-", text);
+        Assert.Contains("SELECT o.id,", text);
+        Assert.Contains("FROM orders o", text);
+        Assert.Contains("id: 42", text);
+        // The literal \r\n escapes of the JSON view are gone
+        Assert.DoesNotContain("\\r\\n", text);
+    }
+
+    [Fact]
     public async Task Yaml_block_scalar_lines_render_as_separate_text_lines()
     {
         await NavigateAndSetup("YamlToggle_SeparateLines.html");

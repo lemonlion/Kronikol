@@ -51,6 +51,13 @@ public class WholeTestFlowTests : PlaywrightTestBase
         var mainView = Page.Locator(".whole-test-flow .iflow-view-main");
         var flameView = Page.Locator(".whole-test-flow .iflow-view-flame");
 
+        // The main view holds only an empty plantuml-browser div until the
+        // engine renders the SVG into it — zero-size counts as "hidden", so
+        // visibility must wait for the render (which can exceed the 5s
+        // Expect default under parallel-suite CPU load).
+        await Page.WaitForFunctionAsync(
+            "() => !!document.querySelector('.whole-test-flow .iflow-view-main svg')",
+            null, new() { Timeout = 60000, PollingInterval = 200 });
         await Expect(mainView).ToBeVisibleAsync();
         await Expect(flameView).Not.ToBeVisibleAsync();
 

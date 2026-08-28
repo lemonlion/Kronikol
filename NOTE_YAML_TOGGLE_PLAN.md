@@ -169,6 +169,12 @@ them, ~lines 568–569 of `src/Kronikol/Reports/ReportGenerator.cs`).
      view) for strings a block scalar can't faithfully represent: containing `\r` or
      other control chars, lines with trailing whitespace (parsers may strip it), or
      any >120-char whitespace-free run (see item 3).
+   - **CRLF exception** (added after the fact — Windows-captured payloads all carry
+     `\r\n`, so the `\r` rule above sent every real multiline string to the quoted
+     fallback): when *every* line break in the string is exactly `\r\n` (no lone `\r`,
+     no bare `\n`), display it as a block scalar with the `\r` dropped. The YAML view
+     trades those bytes for readability; the JSON view stays exact. Mixed or lone `\r`
+     still falls back to the exact quoted form.
    - Single-line strings quoted only when YAML requires it (leading/trailing space,
      special chars, empty, looks-like number/bool/null/date). Keys quoted/escaped when
      needed (empty, special chars, embedded newlines).

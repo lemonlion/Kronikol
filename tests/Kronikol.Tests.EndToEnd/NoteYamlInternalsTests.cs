@@ -308,13 +308,66 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
         await NavigateToReport();
         var longRun = new string('a', 130);
         var yaml = await EmitYaml(
-            "{\"cr\":\"a\\r\\nb\",\"ctl\":\"a\\u0001b\",\"trailws\":\"a \\nb\",\"run\":\"" + longRun + "\\nx\"}");
+            "{\"cr\":\"a\\rb\",\"ctl\":\"a\\u0001b\",\"trailws\":\"a \\nb\",\"run\":\"" + longRun + "\\nx\"}");
         Assert.Equal(new[]
         {
-            "cr: \"a\\r\\nb\"",
+            "cr: \"a\\rb\"",
             "ctl: \"a\\x01b\"",
             "trailws: \"a \\nb\"",
             "run: \"" + longRun + "\\nx\""
+        }, yaml);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // CRLF line breaks — Windows-captured payloads
+    // ═══════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task Uniform_crlf_string_emits_block_scalar()
+    {
+        await NavigateToReport();
+        var yaml = await EmitYaml(
+            "{\"query\":\"SELECT o.id,\\r\\n       o.total\\r\\nFROM orders o\"}");
+        Assert.Equal(new[]
+        {
+            "query: |-",
+            "  SELECT o.id,",
+            "         o.total",
+            "  FROM orders o"
+        }, yaml);
+    }
+
+    [Fact]
+    public async Task Uniform_crlf_string_ending_with_crlf_uses_keep_clip_header()
+    {
+        await NavigateToReport();
+        var yaml = await EmitYaml("{\"s\":\"line1\\r\\nline2\\r\\n\"}");
+        Assert.Equal(new[] { "s: |", "  line1", "  line2" }, yaml);
+    }
+
+    [Fact]
+    public async Task Crlf_string_that_takes_the_quoted_fallback_keeps_its_cr_bytes()
+    {
+        await NavigateToReport();
+        // Trailing whitespace before the break still forces the fallback —
+        // and the quoted form must show the original \r\n bytes, not the
+        // display-normalised ones.
+        var yaml = await EmitYaml("{\"t\":\"a \\r\\nb\"}");
+        Assert.Equal(new[] { "t: \"a \\r\\nb\"" }, yaml);
+    }
+
+    [Fact]
+    public async Task Mixed_cr_lf_line_breaks_take_the_quoted_fallback()
+    {
+        await NavigateToReport();
+        // A lone \r or a bare \n alongside \r\n means the breaks are not
+        // uniform CRLF — a block scalar cannot show which was which, so the
+        // exact quoted form is kept.
+        var yaml = await EmitYaml("{\"m\":\"a\\r\\nb\\nc\",\"r\":\"a\\rb\\r\\nc\"}");
+        Assert.Equal(new[]
+        {
+            "m: \"a\\r\\nb\\nc\"",
+            "r: \"a\\rb\\r\\nc\""
         }, yaml);
     }
 

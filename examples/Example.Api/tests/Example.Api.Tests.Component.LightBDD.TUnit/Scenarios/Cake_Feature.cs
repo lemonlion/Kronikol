@@ -1,4 +1,5 @@
 using Example.Api.Tests.Component.LightBDD.TUnit.Models;
+using Kronikol.LightBDD;
 using Kronikol.LightBDD.TUnit;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios;
