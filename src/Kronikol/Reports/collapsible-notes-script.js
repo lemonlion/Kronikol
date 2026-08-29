@@ -734,29 +734,14 @@
                 var formatInfo = {
                     format: (owner._noteFormats && owner._noteFormats[globalIdx]) || 'json',
                     checkEligible: function() {
-                        if (!owner._noteFormatEligible) owner._noteFormatEligible = {};
-                        var known = owner._noteFormatEligible[globalIdx];
-                        if (known === undefined) {
-                            var jsonText = reconstructNoteJson(rawContentLines);
-                            known = jsonText !== null;
-                            owner._noteFormatEligible[globalIdx] = known;
-                            if (known) {
-                                if (!owner._noteJsonText) owner._noteJsonText = {};
-                                owner._noteJsonText[globalIdx] = jsonText;
-                            }
-                        }
-                        return known;
+                        return ensureNoteFormatEligible(owner, globalIdx, rawContentLines);
                     },
                     onToggle: function() {
                         var cur = (owner._noteFormats && owner._noteFormats[globalIdx]) || 'json';
                         var next = cur === 'yaml' ? 'json' : 'yaml';
                         if (next === 'yaml') {
-                            if (!owner._noteYamlLines) owner._noteYamlLines = {};
-                            if (!owner._noteYamlLines[globalIdx]) {
-                                var jt = owner._noteJsonText && owner._noteJsonText[globalIdx];
-                                if (!jt) return;
-                                owner._noteYamlLines[globalIdx] = escapeYamlLinesForNote(jsonTextToYamlLines(jt));
-                            }
+                            if (!ensureNoteFormatEligible(owner, globalIdx, rawContentLines)) return;
+                            if (!ensureNoteYamlLines(owner, globalIdx)) return;
                         }
                         setNoteFormat(owner, globalIdx, next);
                     }
@@ -1079,6 +1064,46 @@
         return out;
     }
 
+    // Exact inverse of escapeNoteLine, for the copy-text path: recovers the
+    // DISPLAYED text of a client-built YAML line from its escaped splice form
+    // (the note's data-plantuml holds the escaped lines; the reader sees them
+    // with the ~ escapes consumed by PlantUML). Known narrow ambiguity
+    // (accepted, same class as the reconstructor's): a YAML line whose text
+    // LITERALLY contains ~X~X / ~< is indistinguishable from an escape — but
+    // such a line can only arise from a payload that already contained those
+    // sequences, where the JSON view is still exact.
+    function unescapeNoteDisplayLine(line) {
+        var out = '';
+        var contentStarted = false;
+        for (var i = 0; i < line.length; i++) {
+            var c = line.charAt(i);
+            if (c === '~') {
+                var n = line.charAt(i + 1) || '';
+                if ('/*_-"['.indexOf(n) >= 0 && line.charAt(i + 2) === '~' && line.charAt(i + 3) === n) {
+                    out += n + n;
+                    i += 3;
+                    contentStarted = true;
+                    continue;
+                }
+                if (n === '<' && /[A-Za-z\/#]/.test(line.charAt(i + 2) || '')) {
+                    out += '<';
+                    i += 1;
+                    contentStarted = true;
+                    continue;
+                }
+                if (!contentStarted && (n === '*' || n === '#' || n === '=')) {
+                    out += n;
+                    i += 1;
+                    contentStarted = true;
+                    continue;
+                }
+            }
+            if (c !== ' ' && c !== '\t') contentStarted = true;
+            out += c;
+        }
+        return out;
+    }
+
     // Breaks whitespace-free runs over 120 chars with plain newlines (the
     // same contract as the C# WrapUnbreakableRuns), never stranding a ~ from
     // the character it protects and never cutting right after a backslash
@@ -1188,6 +1213,60 @@
             break;
         }
         return header.concat(yamlLines);
+    }
+
+    // ── Shared eager-eligibility helpers ─────────────────────────────────────
+    // The hover closure computes eligibility lazily on first hover; the toolbar
+    // dropdown and _preProcessSource need the same verdicts eagerly for every
+    // note of a container. All three share these container-level caches
+    // (_noteFormatEligible / _noteJsonText / _noteYamlLines, keyed by original
+    // note index) so no note is ever reconstructed or emitted twice.
+
+    function ensureNoteFormatEligible(owner, noteIdx, contentLines) {
+        if (!owner._noteFormatEligible) owner._noteFormatEligible = {};
+        var known = owner._noteFormatEligible[noteIdx];
+        if (known === undefined) {
+            var jsonText = reconstructNoteJson(contentLines);
+            known = jsonText !== null;
+            owner._noteFormatEligible[noteIdx] = known;
+            if (known) {
+                if (!owner._noteJsonText) owner._noteJsonText = {};
+                owner._noteJsonText[noteIdx] = jsonText;
+            }
+        }
+        return known;
+    }
+
+    function ensureNoteYamlLines(owner, noteIdx) {
+        if (!owner._noteYamlLines) owner._noteYamlLines = {};
+        if (!owner._noteYamlLines[noteIdx]) {
+            var jt = owner._noteJsonText && owner._noteJsonText[noteIdx];
+            if (!jt) return false;
+            owner._noteYamlLines[noteIdx] = escapeYamlLinesForNote(jsonTextToYamlLines(jt));
+        }
+        return true;
+    }
+
+    // Flips every ELIGIBLE note of one container to the given format ('json'
+    // or 'yaml'); ineligible notes are untouched. Returns whether any note's
+    // format actually changed (so bulk callers can skip a no-op re-render).
+    function setAllNoteFormats(container, format) {
+        if (container.classList && container.classList.contains('puml-fragment')) return false;
+        if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
+        var source = container._noteOriginalSource;
+        if (!source) return false;
+        var noteBlocks = parseNoteBlocks(source);
+        if (!container._noteFormats) container._noteFormats = {};
+        var changed = false;
+        for (var i = 0; i < noteBlocks.length; i++) {
+            if (!ensureNoteFormatEligible(container, i, noteBlocks[i].contentLines)) continue;
+            if (format === 'yaml' && !ensureNoteYamlLines(container, i)) continue;
+            if ((container._noteFormats[i] || 'json') !== format) {
+                container._noteFormats[i] = format;
+                changed = true;
+            }
+        }
+        return changed;
     }
 
     function buildSourceWithNoteStates(origSource, noteSteps, noteBlocks, hideHeaders, truncateLines) {
@@ -1506,8 +1585,13 @@
         reconstructNoteJson: reconstructNoteJson,
         jsonTextToYamlLines: jsonTextToYamlLines,
         escapeYamlLinesForNote: escapeYamlLinesForNote,
-        applyNoteFormats: applyNoteFormats
+        applyNoteFormats: applyNoteFormats,
+        escapeNoteLine: escapeNoteLine,
+        unescapeNoteDisplayLine: unescapeNoteDisplayLine
     };
+    // The copy-text path in context-menu-script.js recovers displayed YAML
+    // lines from their escaped splice form through this.
+    window._noteUnescapeDisplayLine = unescapeNoteDisplayLine;
 
     // Global defaults
     window._headersHidden = false;
@@ -1516,6 +1600,7 @@
     window._assertionsVisible = false;
     window._stepsVisible = true;
     window._databasesVisible = true;
+    window._noteFormatDefault = '__NOTE_FORMAT_DEFAULT__';
 
     function stripAssertionNotes(source) {
         return source.replace(/\n?hnote across <<assertionNote>>[^\n]*\n[\s\S]*?end note\n?/g, '');
@@ -1747,6 +1832,20 @@
         el._noteOriginalSource = source;
         if (origNoteBlocks.length === 0) return renderSource;
         var state = window._detailsDefault;
+        // Apply the note-format preference BEFORE the step loop, so isLongNote
+        // counts the ACTIVE format's lines and the built source carries the
+        // swapped YAML payloads — a container decompressed after a bulk YAML
+        // command (el._noteFormatPreference, stamped by _setNoteFormat /
+        // _setScenarioNoteFormat) or under a yaml report default renders
+        // straight into YAML.
+        var fmt = el._noteFormatPreference || window._noteFormatDefault;
+        if (fmt === 'yaml') setAllNoteFormats(el, 'yaml');
+        var anyYaml = false;
+        if (el._noteFormats) {
+            for (var fk in el._noteFormats) {
+                if (el._noteFormats[fk] === 'yaml') { anyYaml = true; break; }
+            }
+        }
         // Always initialize _noteSteps so that subsequent headers toggle
         // or details changes see the correct state (step 2 = expanded)
         if (!el._noteSteps) el._noteSteps = {};
@@ -1754,14 +1853,15 @@
         if (el._truncateLines === undefined) el._truncateLines = window._truncateLines;
         for (var i = 0; i < origNoteBlocks.length; i++) {
             var targetStep;
+            var activeLines = activeNoteContentLines(el, i, origNoteBlocks[i].contentLines);
             if (state === 'expanded') { targetStep = 2; }
-            else if (state === 'truncated') { targetStep = isLongNote(origNoteBlocks[i].contentLines, el._truncateLines, window._headersHidden) ? 1 : 2; }
+            else if (state === 'truncated') { targetStep = isLongNote(activeLines, el._truncateLines, window._headersHidden) ? 1 : 2; }
             else { targetStep = 0; }
             el._noteSteps[i] = targetStep;
         }
         el._headersHidden = window._headersHidden;
-        if (state !== 'expanded' || window._headersHidden) {
-            var built = buildSourceWithNoteStates(source, el._noteSteps, origNoteBlocks, window._headersHidden, el._truncateLines);
+        if (state !== 'expanded' || window._headersHidden || anyYaml) {
+            var built = buildSourceWithNoteStates(applyNoteFormats(source, el._noteFormats, el._noteYamlLines), el._noteSteps, origNoteBlocks, window._headersHidden, el._truncateLines);
             return applyDatabasesFilter(applyStepsFilter(applyAssertionFilter(built, el._assertionsVisible), el._stepsVisible), el._databasesVisible);
         }
         return renderSource;
@@ -2296,6 +2396,57 @@
         syncToggleBtn(scenario, 'databases', shown);
         var containers = scenario.querySelectorAll('[data-plantuml]');
         renderWithPending(buildDatabasesQueue(containers, shown), scenario.querySelectorAll('.toggle-btn[data-toggle="databases"]'));
+    };
+
+    // ── JSON ⇄ YAML note payload format dropdowns ─────────────────────────────
+    // A compact <select> beside the filter toggles, at report and scenario
+    // level. The dropdown shows the last bulk command (initially the report's
+    // configured default); per-note Y/J clicks deliberately do NOT sync it —
+    // same contract as per-note +/− not moving the Details radio.
+
+    function buildNoteFormatQueue(containers, format) {
+        var queue = [];
+        containers.forEach(function(container) {
+            if (container.classList.contains('puml-fragment')) return;
+            if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
+            var noteBlocks = parseNoteBlocks(container._noteOriginalSource);
+            if (noteBlocks.length === 0) return;
+            if (container._truncateLines === undefined) container._truncateLines = window._truncateLines;
+            if (!container._noteSteps) container._noteSteps = {};
+            if (setAllNoteFormats(container, format))
+                queue.push({ container: container, noteBlocks: noteBlocks });
+        });
+        return queue;
+    }
+
+    // Report-level: set the note payload format for all scenarios
+    window._setNoteFormat = function(sel) {
+        var format = sel.value === 'yaml' ? 'yaml' : 'json';
+        // New lazy decompressions follow the last report-level command
+        window._noteFormatDefault = format;
+        // Sync all dropdowns (report + scenario level)
+        document.querySelectorAll('.note-format-select').forEach(function(s) {
+            s.value = format;
+        });
+        // Stamp per-container preference — include not-yet-decompressed
+        // elements so a scenario opened later renders straight into the format
+        document.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) {
+            c._noteFormatPreference = format;
+        });
+        var containers = document.querySelectorAll('[data-plantuml]');
+        renderWithPending(buildNoteFormatQueue(containers, format), document.querySelectorAll('.note-format-select'));
+    };
+
+    // Scenario-level: set the note payload format for one scenario
+    window._setScenarioNoteFormat = function(sel) {
+        var scenario = sel.closest('details.scenario');
+        if (!scenario) return;
+        var format = sel.value === 'yaml' ? 'yaml' : 'json';
+        scenario.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) {
+            c._noteFormatPreference = format;
+        });
+        var containers = scenario.querySelectorAll('[data-plantuml]');
+        renderWithPending(buildNoteFormatQueue(containers, format), scenario.querySelectorAll('.note-format-select'));
     };
 })();
 </script>

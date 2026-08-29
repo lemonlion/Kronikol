@@ -25,6 +25,7 @@ internal static class IngestCommand
         var collapseThreshold = 2;
         int? maxArrows = null;
         int? browserRenderWorkers = null;
+        var notePayloadFormat = Kronikol.Reports.NotePayloadFormat.Json;
         var componentDiagram = true;
         var redact = true;
         var redactHeaders = new List<string>();
@@ -104,6 +105,17 @@ internal static class IngestCommand
                         return 2;
                     }
                     browserRenderWorkers = workerCount;
+                    break;
+                case "--note-format":
+                    if (++i >= args.Count ||
+                        (args[i] != "json" && args[i] != "yaml"))
+                    {
+                        error.WriteLine("--note-format needs json or yaml");
+                        return 2;
+                    }
+                    notePayloadFormat = args[i] == "yaml"
+                        ? Kronikol.Reports.NotePayloadFormat.Yaml
+                        : Kronikol.Reports.NotePayloadFormat.Json;
                     break;
                 case "--no-component-diagram":
                     componentDiagram = false;
@@ -250,6 +262,7 @@ internal static class IngestCommand
         options.MaxArrowsPerDiagram = maxArrows;
         if (browserRenderWorkers is not null)
             options.BrowserRenderWorkers = browserRenderWorkers.Value;
+        options.NotePayloadFormat = notePayloadFormat;
         options.GenerateComponentDiagram = componentDiagram;
         options.CapitaliseStepText = capitalise;
         options.CapitaliseTitles = capitalise;
@@ -408,6 +421,8 @@ internal static class IngestCommand
         w.WriteLine("  --max-arrows <n>         Cap request/response pairs per diagram; the rest is summarised.");
         w.WriteLine("  --browser-render-workers <n>  Web Workers the browserjs report renders diagrams on (default: 4, capped by");
         w.WriteLine("                           the viewer's CPU count); 0 renders on the main thread as before 3.0.45.");
+        w.WriteLine("  --note-format <json|yaml>  Initial display format for JSON note payloads in the browserjs report");
+        w.WriteLine("                           (default: json); readers can still switch either way in the report.");
         w.WriteLine("  --no-component-diagram   Skip ComponentDiagram.html.");
         w.WriteLine("  --no-redact              Do not redact credential headers at ingest (default: redact).");
         w.WriteLine("  --redact-header <name>   Additional header to redact (repeatable).");

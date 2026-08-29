@@ -247,12 +247,12 @@ public static class ReportGenerator
 
         if (options.GenerateSpecificationsReport)
         {
-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords));
+            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat));
         }
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat));
         }
 
         if (options.GenerateSpecificationsData)
@@ -435,7 +435,8 @@ public static class ReportGenerator
         int browserRenderCacheMegabytes = Constants.TrackingDefaults.BrowserRenderCacheMegabytes,
         int browserFragmentMaxHeight = Constants.TrackingDefaults.BrowserFragmentMaxHeight,
         bool separateBackgroundSteps = false,
-        bool collapseRepeatedStepKeywords = true)
+        bool collapseRepeatedStepKeywords = true,
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -564,8 +565,27 @@ public static class ReportGenerator
         var hasDatabaseParticipants = isPlantUmlBrowser && (
             (trackedLogs is not null && trackedLogs.Any(l => l.PlantUml is not null && (l.PlantUml.Contains("\ndatabase \"") || l.PlantUml.Contains("\ncollections \"")))) ||
             diagrams.Any(d => d.CodeBehind.Contains("\ndatabase \"") || d.CodeBehind.Contains("\ncollections \"")));
+        // Pretty-printed JSON note payloads open with a bare { or [ on its own
+        // line. A false positive is harmless — the dropdown's queue builder
+        // finds nothing eligible and the no-op clears its pending state.
+        var hasJsonNotePayloads = isPlantUmlBrowser && (
+            (trackedLogs is not null && trackedLogs.Any(l => l.PlantUml is not null && (l.PlantUml.Contains("\n{") || l.PlantUml.Contains("\n[")))) ||
+            diagrams.Any(d => d.CodeBehind.Contains("\n{") || d.CodeBehind.Contains("\n[")));
+        // The JSON/YAML note payload format dropdown, emitted beside the filter
+        // toggles at report and scenario level. Built once — the five scenario
+        // toolbar variants all use the same string, so they cannot drift. The
+        // control is label-free (kept compact deliberately); aria-label/title
+        // carry its meaning instead.
+        var yamlDefaultSelected = notePayloadFormat == NotePayloadFormat.Yaml;
+        var noteFormatOptions = $"<option value=\"json\"{(yamlDefaultSelected ? "" : " selected")}>JSON</option><option value=\"yaml\"{(yamlDefaultSelected ? " selected" : "")}>YAML</option>";
+        var reportNoteFormatSelect = hasJsonNotePayloads
+            ? $"<select class=\"note-format-select\" aria-label=\"Note payload format\" title=\"Note payload format\" onchange=\"window._setNoteFormat(this)\">{noteFormatOptions}</select>"
+            : "";
+        var scenarioNoteFormatSelect = hasJsonNotePayloads
+            ? $"<select class=\"note-format-select\" aria-label=\"Note payload format\" title=\"Note payload format\" onchange=\"window._setScenarioNoteFormat(this)\">{noteFormatOptions}</select>"
+            : "";
         var plantUmlBrowserScript = isPlantUmlBrowser ? DiagramContextMenu.GetPlantUmlBrowserRenderScript(browserRenderWorkers, browserRenderCacheMegabytes, browserFragmentMaxHeight) : "";
-        var collapsibleNotesScript = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesScript() : "";
+        var collapsibleNotesScript = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesScript(notePayloadFormat) : "";
         var collapsibleNotesStyles = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesStyles() : "";
         var contextMenuScript = hasInteractiveDiagrams || internalFlowTracking ? DiagramContextMenu.GetContextMenuScript() : "";
         var contextMenuStyles = hasInteractiveDiagrams || internalFlowTracking ? DiagramContextMenu.GetStyles() : "";
@@ -904,6 +924,7 @@ public static class ReportGenerator
                 body.Append("""<button class="details-radio-btn toggle-btn details-active" data-toggle="steps" data-shown="true" onclick="window._toggleSteps(this)">Steps Shown</button>""");
             if (hasDatabaseParticipants)
                 body.Append("""<button class="details-radio-btn toggle-btn details-active" data-toggle="databases" data-shown="true" onclick="window._toggleDatabases(this)">Databases Shown</button>""");
+            body.Append(reportNoteFormatSelect);
         }
         body.Append("</div>");
         body.Append("</div>");
@@ -1122,7 +1143,8 @@ public static class ReportGenerator
                         featureLabels: feature.Labels,
                         precomputedWholeTestContent: precomputedWholeTestContent,
                         separateBackgroundSteps: separateBackgroundSteps,
-                        collapseRepeatedStepKeywords: collapseRepeatedStepKeywords);
+                        collapseRepeatedStepKeywords: collapseRepeatedStepKeywords,
+                        scenarioNoteFormatSelect: scenarioNoteFormatSelect);
                     continue;
                 }
 
@@ -1272,6 +1294,7 @@ public static class ReportGenerator
                             body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" onclick=\"window._toggleScenarioSteps(this)\">Steps Shown</button>");
                         if (hasDatabaseParticipants)
                             body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"databases\" data-shown=\"true\" onclick=\"window._toggleScenarioDatabases(this)\">Databases Shown</button>");
+                        body.Append(scenarioNoteFormatSelect);
                         body.Append("</div>");
                     }
                     else if (hasSequenceDiagrams)
@@ -1287,6 +1310,7 @@ public static class ReportGenerator
                                 body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" onclick=\"window._toggleScenarioSteps(this)\">Steps Shown</button>");
                             if (hasDatabaseParticipants)
                                 body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"databases\" data-shown=\"true\" onclick=\"window._toggleScenarioDatabases(this)\">Databases Shown</button>");
+                            body.Append(scenarioNoteFormatSelect);
                             body.Append("</div>");
                         }
                     }
@@ -1303,7 +1327,10 @@ public static class ReportGenerator
                             body.Append("<button class=\"diagram-toggle-btn\" data-dtype=\"flame\">Flame Chart</button>");
                             body.Append(spanWarning);
                             if (isPlantUmlBrowser)
+                            {
                                 body.Append("<span class=\"diagram-toggle-spacer\"></span><span class=\"details-radio\"><span class=\"details-radio-label\">Details:</span><button class=\"details-radio-btn\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\">Expand</button><button class=\"details-radio-btn\" data-state=\"collapsed\" onclick=\"window._setAllNotes(this,'collapsed')\">Collapse</button><button class=\"details-radio-btn details-active\" data-state=\"truncated\" onclick=\"window._setAllNotes(this,'truncated')\">Truncate</button><select class=\"truncate-lines-select\" onchange=\"window._setScenarioTruncateLines(this)\"><option value=\"3\">3</option><option value=\"4\">4</option><option value=\"5\">5</option><option value=\"10\">10</option><option value=\"15\">15</option><option value=\"20\">20</option><option value=\"25\">25</option><option value=\"30\">30</option><option value=\"35\">35</option><option value=\"40\" selected>40</option><option value=\"50\">50</option><option value=\"60\">60</option><option value=\"80\">80</option><option value=\"100\">100</option></select><span class=\"truncate-lines-label\">lines</span></span><button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"headers\" data-shown=\"true\" onclick=\"window._toggleScenarioHeaders(this)\">Headers Shown</button>");
+                                body.Append(scenarioNoteFormatSelect);
+                            }
                             body.Append("</div>");
                         }
                         else if (hasActivity)
@@ -1739,7 +1766,8 @@ public static class ReportGenerator
         Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
         bool showNoInteractionsMarker = false,
         bool separateBackgroundSteps = false,
-        bool collapseRepeatedStepKeywords = true)
+        bool collapseRepeatedStepKeywords = true,
+        string scenarioNoteFormatSelect = "")
     {
         var scenarios = group.Scenarios;
 
@@ -2152,6 +2180,7 @@ public static class ReportGenerator
                     body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" onclick=\"window._toggleScenarioSteps(this)\">Steps Shown</button>");
                 if (hasDatabaseParticipants)
                     body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"databases\" data-shown=\"true\" onclick=\"window._toggleScenarioDatabases(this)\">Databases Shown</button>");
+                body.Append(scenarioNoteFormatSelect);
                 body.Append("</div>");
             }
             else if (showSeqToggle)
@@ -2167,6 +2196,7 @@ public static class ReportGenerator
                         body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" onclick=\"window._toggleScenarioSteps(this)\">Steps Shown</button>");
                     if (hasDatabaseParticipants)
                         body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"databases\" data-shown=\"true\" onclick=\"window._toggleScenarioDatabases(this)\">Databases Shown</button>");
+                    body.Append(scenarioNoteFormatSelect);
                     body.Append("</div>");
                 }
             }

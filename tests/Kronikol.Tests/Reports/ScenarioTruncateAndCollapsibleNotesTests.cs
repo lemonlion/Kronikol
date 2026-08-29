@@ -181,7 +181,11 @@ public class ScenarioTruncateAndCollapsibleNotesTests
     public void ProcessRenderQueue_passes_headersHidden_to_isLongNote()
     {
         var fnBody = ExtractFunctionBody(_script, "_preProcessSource");
-        Assert.Matches(@"isLongNote\(origNoteBlocks\[i\]\.contentLines,\s*el\._truncateLines,\s*window\._headersHidden\)", fnBody);
+        // Since 3.0.66 the counted lines are the note's ACTIVE-format lines
+        // (YAML when a format preference/default applies); the pin here is
+        // that headersHidden still reaches isLongNote at pre-process time.
+        Assert.Matches(@"isLongNote\(activeLines,\s*el\._truncateLines,\s*window\._headersHidden\)", fnBody);
+        Assert.Contains("activeNoteContentLines(el, i, origNoteBlocks[i].contentLines)", fnBody);
     }
 
     // ═══════════════════════════════════════════════════════════

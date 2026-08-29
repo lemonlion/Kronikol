@@ -369,9 +369,43 @@
                     }
                 }
 
+                // Copy targets are the DISPLAYED lines. Source-derived lines
+                // carry the generation-side creole escapes (~/~/ for //, etc.)
+                // which PlantUML consumes before display — reverse them, same
+                // contract (and same accepted literal-~ ambiguity) as the
+                // reconstructor in collapsible-notes-script.js.
+                function unescapeSourceNoteLine(l) {
+                    return l.replace(/~([\/*_\-"\[<#=])/g, '$1');
+                }
+                // When the note is displayed as YAML, the payload lines are the
+                // cached YAML lines (keyed on the owner container by global
+                // note index) with the client splice escapes removed — not the
+                // original JSON payload the source holds.
+                var noteFormat = (container._noteFormats && container._noteFormats[globalNoteIdx]) || 'json';
+                var yamlLines = noteFormat === 'yaml' && window._noteUnescapeDisplayLine
+                    ? container._noteYamlLines && container._noteYamlLines[globalNoteIdx]
+                    : null;
+
                 var noteText;
                 if (resolvedBlockIdx >= 0 && noteBlocks[resolvedBlockIdx]) {
-                    noteText = noteBlocks[resolvedBlockIdx].contentLines.map(function(l) {
+                    var blockLines = noteBlocks[resolvedBlockIdx].contentLines;
+                    if (yamlLines) {
+                        // Full text = the note's gray header lines + the full
+                        // YAML view (un-truncated CURRENT view, by design).
+                        var headerLines = [];
+                        var afterGray = false;
+                        for (var hli = 0; hli < blockLines.length; hli++) {
+                            var hlt = blockLines[hli].trim();
+                            if (/^<color:gray>/.test(hlt)) { afterGray = true; headerLines.push(blockLines[hli]); continue; }
+                            if (afterGray && hlt === '') { headerLines.push(blockLines[hli]); continue; }
+                            break;
+                        }
+                        blockLines = headerLines.map(unescapeSourceNoteLine)
+                            .concat(yamlLines.map(window._noteUnescapeDisplayLine));
+                    } else {
+                        blockLines = blockLines.map(unescapeSourceNoteLine);
+                    }
+                    noteText = blockLines.map(function(l) {
                         return l.replace(/^\s*<color:gray>/, '');
                     }).join('\n').trim();
                 } else {
@@ -390,7 +424,15 @@
                     var curBlockIdx = resolvedBlockIdx >= 0 ? resolvedBlockIdx : clickedNoteIdx;
                     var currentText;
                     if (currentNoteBlocks[curBlockIdx]) {
-                        currentText = currentNoteBlocks[curBlockIdx].contentLines.map(function(l) {
+                        // Recover the displayed text: YAML payload lines carry
+                        // the client splice escapes, everything else carries
+                        // the generation-side ones — creole ~ escapes must
+                        // never reach the clipboard either way.
+                        var curLines = currentNoteBlocks[curBlockIdx].contentLines.map(function(l) {
+                            if (yamlLines && !/^\s*<color:gray>/.test(l)) return window._noteUnescapeDisplayLine(l);
+                            return unescapeSourceNoteLine(l);
+                        });
+                        currentText = curLines.map(function(l) {
                             return l.replace(/^\s*<color:gray>/, '');
                         }).join('\n').trim();
                     } else {

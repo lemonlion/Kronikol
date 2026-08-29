@@ -24,6 +24,13 @@ public class ReportConfigurationOptionsDefaultsTests
     }
 
     [Fact]
+    public void NotePayloadFormat_defaults_to_Json()
+    {
+        var options = new ReportConfigurationOptions();
+        Assert.Equal(Kronikol.Reports.NotePayloadFormat.Json, options.NotePayloadFormat);
+    }
+
+    [Fact]
     public void Browser_render_options_default_to_four_workers_64MB_cache_and_12000px_fragments()
     {
         var options = new ReportConfigurationOptions();

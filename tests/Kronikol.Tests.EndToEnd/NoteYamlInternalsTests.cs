@@ -496,6 +496,35 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
+    public async Task Unescape_is_the_inverse_of_escape_across_marker_classes()
+    {
+        await NavigateToReport();
+        var cases = new[]
+        {
+            "url: \"https://example.com/orders\"",
+            "md: **bold** text",
+            "sql: -- comment -- more",
+            "link: [[page]] end",
+            "under__score: x",
+            "* item",
+            "# heading",
+            "= title",
+            "a: <div>",
+            "q: \"a\\nb\"",
+            "  indented: plain",
+            "- seq item",
+            "plain: nothing special"
+        };
+        foreach (var line in cases)
+        {
+            var roundTripped = await Page.EvaluateAsync<string>(
+                "l => window._noteFormatInternals.unescapeNoteDisplayLine(window._noteFormatInternals.escapeNoteLine(l))",
+                line);
+            Assert.Equal(line, roundTripped);
+        }
+    }
+
+    [Fact]
     public async Task Escape_wraps_long_runs_on_normal_lines_but_never_in_block_scalar_content()
     {
         await NavigateToReport();

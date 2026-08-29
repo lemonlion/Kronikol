@@ -2685,12 +2685,132 @@ public static class ReportTestHelper
         @enduml
         """;
 
-    public static string GenerateReportWithJsonYamlNotes(string tempDir, string outputDir, string fileName)
+    public static string GenerateReportWithJsonYamlNotes(string tempDir, string outputDir, string fileName,
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json)
     {
         var (features, _) = CreateTestData();
         var diagrams = new[]
         {
             new DiagramAsCode("t1", "", JsonYamlNotePlantUmlSource)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            notePayloadFormat: notePayloadFormat);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// Two adjacent scenarios, each with one diagram holding a distinguishable
+    /// YAML-eligible JSON note (alphaField / betaField) — for the bulk-format
+    /// dropdown tests that need scenario isolation and report-wide sync.
+    /// </summary>
+    public static string GenerateReportWithJsonNotesInTwoScenarios(string tempDir, string outputDir, string fileName)
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Format Feature",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "f1", DisplayName = "Alpha scenario", IsHappyPath = true,
+                        Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                        Steps =
+                        [
+                            new ScenarioStep { Keyword = "Given", Text = "alpha precondition", Status = ExecutionResult.Passed },
+                            new ScenarioStep { Keyword = "Then", Text = "alpha result", Status = ExecutionResult.Passed }
+                        ]
+                    },
+                    new Scenario
+                    {
+                        Id = "f2", DisplayName = "Beta scenario", IsHappyPath = true,
+                        Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                        Steps =
+                        [
+                            new ScenarioStep { Keyword = "Given", Text = "beta precondition", Status = ExecutionResult.Passed },
+                            new ScenarioStep { Keyword = "Then", Text = "beta result", Status = ExecutionResult.Passed }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("f1", "", JsonNotePlantUmlSource("alphaField")),
+            new DiagramAsCode("f2", "", JsonNotePlantUmlSource("betaField"))
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    private static string JsonNotePlantUmlSource(string fieldName) => $$"""
+        @startuml
+        actor "Caller" as caller
+        participant "OrderService" as svc
+
+        caller -> svc : POST /api/orders
+        note left
+        <color:gray>[content-type=application/json]</color>
+
+        {
+          "{{fieldName}}": "SELECT o.id,\nFROM orders o"
+        }
+        end note
+        svc --> caller : 200 OK
+        @enduml
+        """;
+
+    /// <summary>
+    /// A YAML-eligible JSON note whose YAML view produces creole escapes in
+    /// the render splice (the URL's <c>//</c> becomes <c>~/~/</c>) AND unfolds
+    /// past the 40-line truncation limit (45-column SQL) — the bug-exposing
+    /// fixture for the copy-text paths on YAML notes. The shipped gold vector
+    /// produces zero escapes, which is why the leak went unnoticed.
+    /// </summary>
+    public static string GenerateReportWithEscapingYamlNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+
+        var sqlColumns = string.Join(@"\n", Enumerable.Range(1, 45).Select(i => $"  col_{i},"));
+        var source = $$"""
+            @startuml
+            actor "Caller" as caller
+            participant "OrderService" as svc
+
+            caller -> svc : POST /api/orders
+            note left
+            <color:gray>[content-type=application/json]
+
+            {
+              "url": "https:~/~/example.com/orders",
+              "query": "SELECT\n{{sqlColumns}}\n  o.total\nFROM orders o"
+            }
+            end note
+            svc --> caller : 200 OK
+            @enduml
+            """;
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", source)
         };
 
         var path = ReportGenerator.GenerateHtmlReport(

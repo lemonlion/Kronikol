@@ -21,7 +21,7 @@ actual code, tests, changelog, git history, and the wiki (`../Kronikol.wiki`,
 | `QUERY_V2_PLAN.md` | ✅ Fully done (1 cosmetic gap) | 3.0.51–3.0.58 |
 | `BROWSER_RENDER_WORKER_PLAN.md` | ✅ Fully done | 3.0.45 / 3.0.50 |
 | `LONG_LINE_SYNTAX_ERROR_PLAN.md` | 🟡 Partially done (~95%) | 3.0.48 |
-| `NOTE_YAML_TOGGLE_PLAN.md` | 🟡 Partially done | 3.0.59 + 3.0.61–63 |
+| `NOTE_YAML_TOGGLE_PLAN.md` | ✅ Fully done (follow-ups shipped) | 3.0.59 + 3.0.61–63 + 3.0.66 |
 | `REPORT_QUERY_PLAN.md` | 🟡 Partially done (~95%) | 3.0.47 |
 | `JAVA_PORT_PLAN.md` | 🟡 Partially done | Kronikol4J v0.1.24 |
 | `EXAMPLES_BLOCKS_PLAN.md` | ❌ Not done | — |
@@ -172,7 +172,28 @@ entries and tags for all four versions. Three addenda also done: uniform-CRLF bl
 scalars (3.0.61), backslash-doubling removal end-to-end (3.0.62), leading-newline
 unfolding (3.0.63).
 
-**Missing:**
+**UPDATE (2026-08-29, 3.0.66): items 1, 2 and 4 below are closed.** Item 1 was resolved
+as JSON/YAML toolbar `<select>` dropdowns at report + scenario level instead of a
+context-menu entry (user decision: the per-note button + dropdowns cover its use cases);
+item 2 shipped as `ReportConfigurationOptions.NotePayloadFormat` + `kronikol ingest
+--note-format`, honoured by lazy containers via `_noteFormatPreference` /
+`window._noteFormatDefault` in `_preProcessSource`; item 4's assertion/database filter
+survival tests were added (green — the shared pipeline already preserved the state) and
+the copy-text path exercised on YAML notes exposed **two real bugs, both fixed in
+3.0.66**: "Copy box text" returned the original JSON (user-reported), and creole `~`
+escapes leaked from the truncated splice — plus the same `~` leak in the plain JSON view
+(`YamlNoteCopyTextTests`, `unescapeNoteDisplayLine`). Item 3 (Kronikol4J sync) remains
+deferred by design; `collapsible-notes-script.js` and `context-menu-script.js` are now
+further ahead of the port's pinned assets.
+
+**Known-uncovered (deliberately deferred, so nothing implies full coverage):** YAML-state
+survival is not separately tested against the search filter (`FillSearchBar`), the
+report-level Details radio (expand/collapse/truncate), or the report-level filter
+toggles — all route through the same `applyNoteFormats` pipeline the covered paths pin,
+and the dropdown tests partially cover report-level paths; there is also no multi-note ×
+multi-scenario format-independence matrix.
+
+**Missing (original audit, kept as record):**
 
 1. **Bulk per-diagram "Show payloads as YAML" context-menu entry** — the plan's own
    status header says it remains open; nothing YAML-related exists in

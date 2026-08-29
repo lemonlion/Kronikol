@@ -160,6 +160,45 @@ public abstract class DiagramNotePlaywrightBase : PlaywrightTestBase
         await WaitForSvgReRender(htmlBefore);
     }
 
+    protected async Task WaitForNoteFormatButtonVisible()
+    {
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var btns = document.querySelectorAll('[data-note-btn="format"]');
+                return Array.from(btns).some(b => b.style.display !== 'none' && b.style.opacity === '1');
+            }
+        """, null, new() { Timeout = 10000, PollingInterval = 200 });
+    }
+
+    protected async Task ClickNoteFormatButton()
+    {
+        var htmlBefore = await GetSvgHtml();
+        await HoverNoteRect(0);
+        await WaitForNoteFormatButtonVisible();
+        await Page.EvaluateAsync("""
+            () => {
+                var btn = Array.from(document.querySelectorAll('[data-note-btn="format"]'))
+                    .find(b => b.style.display !== 'none' && b.style.opacity === '1');
+                btn.querySelector('rect').dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));
+            }
+        """);
+        await WaitForSvgReRender(htmlBefore);
+    }
+
+    protected async Task<string> GetNormalizedSvgText()
+    {
+        var text = await Page.Locator("[data-diagram-type='plantuml'] svg").First
+            .EvaluateAsync<string>("el => el.textContent");
+        return System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ");
+    }
+
+    protected async Task WaitForRenderCountIncrease(int previousCount, int timeoutMs = 60000)
+    {
+        await Page.WaitForFunctionAsync(
+            "(prev) => !window._plantumlRendering && (window._renderCompleteCount || 0) > prev",
+            previousCount, new() { Timeout = timeoutMs, PollingInterval = 200 });
+    }
+
     protected async Task RenderAllDiagramsAndWait(int minCount = 2, int timeoutMs = 60000)
     {
         await Page.EvaluateAsync("""

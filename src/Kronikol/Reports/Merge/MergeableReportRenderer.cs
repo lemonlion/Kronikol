@@ -66,7 +66,8 @@ public static class MergeableReportRenderer
             precomputedWholeTestContent: report.WholeTestFlow.Count > 0 ? report.WholeTestFlow : null,
             browserRenderWorkers: options.BrowserRenderWorkers,
             browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes,
-            browserFragmentMaxHeight: options.BrowserFragmentMaxHeight);
+            browserFragmentMaxHeight: options.BrowserFragmentMaxHeight,
+            notePayloadFormat: options.NotePayloadFormat);
 
         // GenerateHtmlReport always writes under <BaseDir>/Reports/<fileName>; relocate to the
         // caller's requested path when different.

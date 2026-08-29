@@ -79,7 +79,17 @@ public static class DiagramContextMenu
     /// </summary>
     public static string GetFlameChartRenderScript() => LoadResource("flame-chart-render-script.js");
 
-    public static string GetCollapsibleNotesScript() => LoadResource("collapsible-notes-script.js");
+    /// <summary>Collapsible-notes script with the default (JSON) note payload format.</summary>
+    public static string GetCollapsibleNotesScript() => GetCollapsibleNotesScript(NotePayloadFormat.Json);
+
+    /// <summary>
+    /// Collapsible-notes script with the given initial note payload format baked in (the way the
+    /// browser render settings are): it seeds <c>window._noteFormatDefault</c>, which every diagram
+    /// applies to its eligible JSON notes on first render.
+    /// </summary>
+    public static string GetCollapsibleNotesScript(NotePayloadFormat notePayloadFormat) =>
+        LoadResource("collapsible-notes-script.js")
+            .Replace("__NOTE_FORMAT_DEFAULT__", notePayloadFormat == NotePayloadFormat.Yaml ? "yaml" : "json");
 
     /// <summary>
     /// Floats a scenario's diagram toolbar (Details / Headers / … and the diagram-type tabs) onto the

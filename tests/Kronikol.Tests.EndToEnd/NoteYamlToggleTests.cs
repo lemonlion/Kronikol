@@ -21,38 +21,6 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         await WaitForNoteElements();
     }
 
-    private async Task WaitForFormatButtonVisible()
-    {
-        await Page.WaitForFunctionAsync("""
-            () => {
-                var btns = document.querySelectorAll('[data-note-btn="format"]');
-                return Array.from(btns).some(b => b.style.display !== 'none' && b.style.opacity === '1');
-            }
-        """, null, new() { Timeout = 10000, PollingInterval = 200 });
-    }
-
-    private async Task ClickFormatButton()
-    {
-        var htmlBefore = await GetSvgHtml();
-        await HoverNoteRect(0);
-        await WaitForFormatButtonVisible();
-        await Page.EvaluateAsync("""
-            () => {
-                var btn = Array.from(document.querySelectorAll('[data-note-btn="format"]'))
-                    .find(b => b.style.display !== 'none' && b.style.opacity === '1');
-                btn.querySelector('rect').dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));
-            }
-        """);
-        await WaitForSvgReRender(htmlBefore);
-    }
-
-    private async Task<string> GetNormalizedSvgText()
-    {
-        var text = await Page.Locator("[data-diagram-type='plantuml'] svg").First
-            .EvaluateAsync<string>("el => el.textContent");
-        return System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ");
-    }
-
     // ═══════════════════════════════════════════════════════════
     // Button eligibility
     // ═══════════════════════════════════════════════════════════
@@ -62,7 +30,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     {
         await NavigateAndSetup("YamlToggle_ButtonAppears.html");
         await HoverNoteRect(0);
-        await WaitForFormatButtonVisible();
+        await WaitForNoteFormatButtonVisible();
 
         var glyph = await Page.EvaluateAsync<string>("""
             () => Array.from(document.querySelectorAll('[data-note-btn="format"]'))
@@ -119,7 +87,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     public async Task Click_renders_note_as_yaml_with_multiline_sql_visible()
     {
         await NavigateAndSetup("YamlToggle_ToYaml.html");
-        await ClickFormatButton();
+        await ClickNoteFormatButton();
 
         var text = await GetNormalizedSvgText();
         Assert.Contains("query: |-", text);
@@ -140,7 +108,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         await WaitForDiagramSvg();
         await WaitForNoteElements();
 
-        await ClickFormatButton();
+        await ClickNoteFormatButton();
 
         var text = await GetNormalizedSvgText();
         Assert.Contains("query: |-", text);
@@ -155,7 +123,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     public async Task Yaml_block_scalar_lines_render_as_separate_text_lines()
     {
         await NavigateAndSetup("YamlToggle_SeparateLines.html");
-        await ClickFormatButton();
+        await ClickNoteFormatButton();
 
         // "FROM orders o" must be its own rendered line (the SVG copy-text
         // feature hands readers exactly these lines)
@@ -172,12 +140,12 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         await NavigateAndSetup("YamlToggle_BackToJson.html");
         var textBefore = await GetNormalizedSvgText();
 
-        await ClickFormatButton();
+        await ClickNoteFormatButton();
         Assert.NotEqual(textBefore, await GetNormalizedSvgText());
 
         // Button now shows 'J'
         await HoverNoteRect(0);
-        await WaitForFormatButtonVisible();
+        await WaitForNoteFormatButtonVisible();
         var glyph = await Page.EvaluateAsync<string>("""
             () => Array.from(document.querySelectorAll('[data-note-btn="format"]'))
                 .find(b => b.style.display !== 'none' && b.style.opacity === '1')
@@ -185,7 +153,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         """);
         Assert.Equal("J", glyph);
 
-        await ClickFormatButton();
+        await ClickNoteFormatButton();
 
         // The original note lines are restored from _noteOriginalSource —
         // the rendered text is byte-identical to the pre-toggle view.
@@ -202,7 +170,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     public async Task Yaml_state_survives_collapse_and_expand()
     {
         await NavigateAndSetup("YamlToggle_SurvivesCollapse.html");
-        await ClickFormatButton();
+        await ClickNoteFormatButton();
 
         await ClickNoteButton("[data-note-btn='minus']");   // collapse
         await ClickNoteButton("[data-note-btn='plus']");    // expand again
@@ -215,7 +183,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     public async Task Yaml_state_survives_header_hide_toggle()
     {
         await NavigateAndSetup("YamlToggle_SurvivesHeaderHide.html");
-        await ClickFormatButton();
+        await ClickNoteFormatButton();
 
         var scenario = Page.Locator("details.scenario");
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
@@ -233,7 +201,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     public async Task Yaml_state_survives_steps_filter_toggle()
     {
         await NavigateAndSetup("YamlToggle_SurvivesStepsFilter.html");
-        await ClickFormatButton();
+        await ClickNoteFormatButton();
 
         var scenario = Page.Locator("details.scenario");
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
@@ -245,6 +213,54 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         var text = await GetNormalizedSvgText();
         Assert.Contains("query: |-", text);
         Assert.DoesNotContain("Given an order request", text);
+    }
+
+    [Fact]
+    public async Task Yaml_state_survives_assertions_filter_toggle()
+    {
+        // The wide-database fixture has an eligible JSON note plus assertion
+        // notes, step delimiters and a database participant in one diagram.
+        await Page.GotoAsync(GenerateWideDatabaseParticipantReport("YamlToggle_SurvivesAssertionsFilter.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+        await ClickNoteFormatButton();
+        Assert.Contains("customerId: d37d5aba2a244807b7fe008d01f6ba0f", await GetNormalizedSvgText());
+
+        var scenario = Page.Locator("details.scenario");
+        var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await scenario.Locator(".toggle-btn[data-toggle='assertions'][data-shown='false']").ClickAsync();
+        await Page.WaitForFunctionAsync(
+            "(prev) => !window._plantumlRendering && (window._renderCompleteCount || 0) > prev",
+            renderCount, new() { Timeout = 60000, PollingInterval = 200 });
+
+        var text = await GetNormalizedSvgText();
+        Assert.Contains("customerId: d37d5aba2a244807b7fe008d01f6ba0f", text);
+        Assert.Contains("✓ Put steps response message status code should be OK", text);
+    }
+
+    [Fact]
+    public async Task Yaml_state_survives_databases_filter_toggle()
+    {
+        await Page.GotoAsync(GenerateWideDatabaseParticipantReport("YamlToggle_SurvivesDatabasesFilter.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+        await ClickNoteFormatButton();
+        Assert.Contains("customerId: d37d5aba2a244807b7fe008d01f6ba0f", await GetNormalizedSvgText());
+
+        var scenario = Page.Locator("details.scenario");
+        var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await scenario.Locator(".toggle-btn[data-toggle='databases'][data-shown='true']").ClickAsync();
+        await Page.WaitForFunctionAsync(
+            "(prev) => !window._plantumlRendering && (window._renderCompleteCount || 0) > prev",
+            renderCount, new() { Timeout = 60000, PollingInterval = 200 });
+
+        var text = await GetNormalizedSvgText();
+        Assert.Contains("customerId: d37d5aba2a244807b7fe008d01f6ba0f", text);
+        Assert.DoesNotContain("UPSERT CustomerPreferences", text);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -269,7 +285,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         """);
         Assert.False(hasUpArrowJson, "JSON view of a short note should have no ▲ button");
 
-        await ClickFormatButton();
+        await ClickNoteFormatButton();
 
         // YAML view unfolds to 45+ lines — the note is now "long": ▲ appears
         await HoverNoteRect(0);
@@ -297,7 +313,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         var htmlBefore = await Page.Locator("[data-diagram-type='plantuml'] svg").First
             .EvaluateAsync<string>("el => el.outerHTML");
         await HoverNoteRect(0);
-        await WaitForFormatButtonVisible();
+        await WaitForNoteFormatButtonVisible();
         await Page.EvaluateAsync("""
             () => {
                 var btn = Array.from(document.querySelectorAll('[data-note-btn="format"]'))

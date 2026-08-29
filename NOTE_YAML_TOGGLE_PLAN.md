@@ -4,9 +4,20 @@
 > reconstructor + token-level YAML emitter + conservative re-escape + `_noteFormats` state +
 > hover button, in `collapsible-notes-script.js`; internals driven via
 > `window._noteFormatInternals` from `NoteYamlInternalsTests`, interaction matrix in
-> `NoteYamlToggleTests`. The open questions (bulk toggle, default-format option) remain open
-> as possible follow-ups; Kronikol4J adoption is recorded in that repo's README divergence
+> `NoteYamlToggleTests`. Kronikol4J adoption is recorded in that repo's README divergence
 > note (its goldens pin 3.0.43 assets, so the byte-copy waits on a golden re-capture there).
+>
+> **Follow-ups shipped in 3.0.66** (2026-08-29): the open questions are all resolved.
+> *Bulk toggle* — resolved as compact JSON/YAML `<select>` dropdowns beside the filter
+> toggles at report and scenario level (`_setNoteFormat`/`_setScenarioNoteFormat`), not a
+> context-menu entry (its use cases are covered by the per-note button + the dropdowns; a
+> menu entry would also have been the first state-mutating one). *Default format option* —
+> `ReportConfigurationOptions.NotePayloadFormat` / `kronikol ingest --note-format`, injected
+> as `window._noteFormatDefault`; lazy containers honour it (and bulk commands) via
+> `_noteFormatPreference` in `_preProcessSource`. *Collapsed preview* — stays original-JSON
+> by design, documented in the wiki. 3.0.66 also fixed the copy-text paths on YAML notes
+> (Copy box text returned the original JSON; creole `~` escapes leaked from truncated
+> notes) — see `unescapeNoteDisplayLine` + `YamlNoteCopyTextTests`.
 
 This document is self-contained: it carries everything needed to implement the feature
 without prior session context. Read "How the system works today" before touching code.
@@ -228,17 +239,16 @@ Notes with `FocusFields` emphasis: tags are strippable for reconstruction, but t
 YAML view loses the emphasis — strip it in YAML view (simplest) or defer those notes
 to a follow-up with a YAML-aware focus formatter.
 
-### Open questions (decide during v1)
+### Open questions (all resolved in 3.0.66 — see status header)
 
-- **Bulk toggle**: a per-diagram "Show payloads as YAML" context-menu entry
-  (`context-menu-script.js` / `DiagramContextMenu.cs`) would be consistent with the
-  existing assertion/step/database toggles and nearly free once per-note machinery
-  exists (set all eligible `_noteFormats`, one re-render).
-- **Default format option**: a report-level "start notes in YAML" preference. Not
-  needed for the core ask; a script-side default stays client-only, a
-  generation-time default would touch .NET and Kronikol4J.
-- **Collapsed preview** while in YAML mode: confirm original-JSON preview reads
-  acceptably (button is hidden when collapsed).
+- **Bulk toggle**: ~~a per-diagram "Show payloads as YAML" context-menu entry~~ —
+  resolved instead as JSON/YAML toolbar dropdowns at report and scenario level; the
+  context-menu entry was dropped (covered by the per-note button + dropdowns, and it
+  would have been the menu's first state-mutating entry).
+- **Default format option**: shipped as `ReportConfigurationOptions.NotePayloadFormat`
+  (+ `kronikol ingest --note-format`), token-injected as `window._noteFormatDefault`.
+- **Collapsed preview** while in YAML mode: kept as original-JSON preview (the preview
+  is a content hint and the button is hidden when collapsed); documented in the wiki.
 
 ## Client-side performance
 

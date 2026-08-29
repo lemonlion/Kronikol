@@ -303,6 +303,14 @@ public record ReportConfigurationOptions
     /// <summary>Controls how GraphQL request bodies are displayed in sequence diagram notes. Default: <see cref="GraphQlBodyFormat.FormattedWithMetadata"/>.</summary>
     public GraphQlBodyFormat GraphQlBodyFormat { get; set; } = GraphQlBodyFormat.FormattedWithMetadata;
 
+    /// <summary>
+    /// <c>BrowserJs</c> only. The initial display format for JSON note payloads in sequence diagrams.
+    /// <see cref="Reports.NotePayloadFormat.Yaml"/> starts every eligible JSON payload in the derived
+    /// YAML view; readers can still switch any note — or all of them via the JSON/YAML toolbar
+    /// dropdowns — either way in the report itself. Default: <see cref="Reports.NotePayloadFormat.Json"/>.
+    /// </summary>
+    public NotePayloadFormat NotePayloadFormat { get; set; } = NotePayloadFormat.Json;
+
     /// <summary>Maximum number of parameter columns shown per parameterized test group. Default: <c>10</c>.</summary>
     public int MaxParameterColumns { get; set; } = 10;
 
