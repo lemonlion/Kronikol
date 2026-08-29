@@ -1,6 +1,6 @@
 # Kronikol
 
-Effortlessly autogenerate **PlantUML sequence diagrams** from your component and acceptance tests. Tracks interactions between your test caller, your Service Under Test (SUT), and its dependencies — including HTTP calls, Azure Cosmos DB operations, SQL queries (via EF Core), Redis commands, events/messages, and arbitrary method calls — then converts them into diagrams embedded in searchable HTML reports and structured data files.
+Effortlessly autogenerate **PlantUML sequence diagrams** from your component and acceptance tests. Tracks interactions between your test caller, your Service Under Test (SUT), and its dependencies — including HTTP calls, Azure Cosmos DB operations, SQL queries (via EF Core), Redis commands, events/messages, and arbitrary method calls — then converts them into diagrams embedded in searchable HTML reports and structured data files. Diagrams render client-side in the browser (on Web Workers), and payload notes flip between JSON and YAML on hover.
 
 ## Example Output
 
@@ -52,12 +52,22 @@ See the [Quick Start guide](https://github.com/lemonlion/Kronikol/wiki/Quick-Sta
 
 ## Use Cases
 
-- **Debugging failed tests** — see the exact interaction that returned an unexpected result
+- **Debugging failed tests** — see the exact interaction that returned an unexpected result, and interrogate the run with `kronikol query` instead of reading the raw report files
 - **Living documentation** — HTML reports and data files that stay in sync with your tests
 - **AI-assisted analysis** — feed deterministic PlantUML to AI tools for accurate reasoning
 - **PR reviews** — sequence diagrams make interaction changes immediately visible
 - **Onboarding** — new team members can browse reports to understand service interactions
 - **CI integration** — surface results in GitHub Actions / Azure DevOps job summaries
+
+## Query the report from the terminal
+
+On a real suite `TestRunReport.json` runs to megabytes; the `Kronikol.Tool` CLI answers questions about it without loading it:
+
+```bash
+kronikol query summary  ./Reports              # the run, its failures, the slowest scenarios
+kronikol query failures ./Reports              # why each one failed, with assertion messages
+kronikol query grep     ./Reports "4173" --values   # where a wrong value entered the system
+```
 
 ## Documentation
 
@@ -70,5 +80,6 @@ Key pages:
 - [HTTP Tracking Setup](https://github.com/lemonlion/Kronikol/wiki/HTTP-Tracking-Setup)
 - [Diagram Customisation](https://github.com/lemonlion/Kronikol/wiki/Diagram-Customisation)
 - [Report Configuration](https://github.com/lemonlion/Kronikol/wiki/Report-Configuration)
+- [Querying Reports](https://github.com/lemonlion/Kronikol/wiki/Querying-Reports)
 - [API Reference](https://github.com/lemonlion/Kronikol/wiki/API-Reference)
 - [Example Project](https://github.com/lemonlion/Kronikol/wiki/Example-Project)

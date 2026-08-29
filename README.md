@@ -11,7 +11,7 @@ Automatically generates [rich interactive HTML reports](https://lemonlion.github
 
 Tracks interactions between your test caller, your Service Under Test (SUT), and its dependencies — including HTTP calls, Azure Cosmos DB operations, SQL queries (via EF Core), Redis commands, events/messages, and arbitrary method calls — then converts them into sequence diagrams embedded in searchable HTML reports and YAML specification files.  Method flow within the SUT itself is turned into activity diagrams.  And the combination is turned into flame diagrams.  All the flows combined are turned into a C4 Component Diagram for your service.  A Scenario Timeline diagram allows you to visually compare the execution time of your services.
 
-Input data sets (eg InlineData/MemberData/ClassData for xUnit, and equivalents in NUnit, TUnit & ReqNRoll & LightBDD) are automatically turned into dynamic clickable tables showing you the correct diagrams for each set of inputs.  Data is all collapsible, truncatable and toggleable at view time (including flipping JSON payloads into YAML so multi-line strings like SQL queries read with their real line breaks), allowing you to see from higher level to lower level at the click of a button.  Also contains features for tracking your assertions from FluentAssertions/AwesomeAssertions/TUnit assertions and displaying them in the reports in plain english.  
+Input data sets (eg InlineData/MemberData/ClassData for xUnit, and equivalents in NUnit, TUnit & ReqNRoll & LightBDD) are automatically turned into dynamic clickable tables showing you the correct diagrams for each set of inputs.  Data is all collapsible, truncatable and toggleable at view time (including a hover toggle on diagram notes that flips JSON payloads into YAML so multi-line strings like SQL queries read with their real line breaks), allowing you to see from higher level to lower level at the click of a button.  Background steps render inline with each scenario's own steps, in one combined step list.  Also contains features for tracking your assertions from FluentAssertions/AwesomeAssertions/TUnit assertions and displaying them in the reports in plain english.  
 
 ---
 
@@ -99,7 +99,7 @@ Each test that uses tracked dependencies automatically produces a sequence diagr
 
 2. **Collect** — All logged `RequestResponseLog` entries are held in the static `RequestResponseLogger`. Each entry captures the operation details, service names, and a trace ID to correlate requests across services.
 
-3. **Generate** — At the end of the test run, `PlantUmlCreator` groups logs by test ID and converts them into sequence diagram code. PlantUML diagrams are encoded and rendered via a PlantUML server (or locally via IKVM), or rendered client-side in the browser.
+3. **Generate** — At the end of the test run, `PlantUmlCreator` groups logs by test ID and converts them into sequence diagram code. By default, diagrams render client-side in the browser, on Web Workers so rendering stays off the main thread (since 3.0.45); a PlantUML server or local rendering via IKVM are available as alternatives.
 
 4. **Report** — `ReportGenerator` combines the diagrams with test metadata (features, scenarios, results, BDD steps) to produce three output files: a YAML specification, an HTML specification with diagrams, and an HTML test run report.
 
@@ -158,20 +158,34 @@ Not every system under test is .NET, or yours to change. `Kronikol.Extensions.Pr
 kronikol ingest ./captures --tests ./captures/tests.ndjson -o ./Reports
 ```
 
-`Kronikol.Playwright` stamps the identity on every browser request (`browser.NewTrackedContextAsync(identity)`). See [ProxyTap](https://github.com/lemonlion/Kronikol/wiki/Integration-ProxyTap-Extension), [Ingesting External Captures](https://github.com/lemonlion/Kronikol/wiki/Ingesting-External-Captures) and [Playwright](https://github.com/lemonlion/Kronikol/wiki/Integration-Playwright).
+`Kronikol.Playwright` stamps the identity on every browser request (`browser.NewTrackedContextAsync(identity)`), and the same NDJSON files can be pushed to an OTLP collector with `kronikol export` (below). See [ProxyTap](https://github.com/lemonlion/Kronikol/wiki/Integration-ProxyTap-Extension), [Ingesting External Captures](https://github.com/lemonlion/Kronikol/wiki/Ingesting-External-Captures) and [Playwright](https://github.com/lemonlion/Kronikol/wiki/Integration-Playwright).
+
+### Exporting captures to OpenTelemetry
+
+`kronikol export` pushes the same NDJSON captures to any OTLP/HTTP collector (Tempo, Jaeger, an OTel Collector) as OpenTelemetry spans, so the traffic only Kronikol saw appears next to the app's real traces:
+
+```bash
+kronikol export ./captures --otlp http://localhost:4318/v1/traces
+```
+
+Captured W3C trace ids are preserved, and pairs without one group into one trace per test. See [Exporting to OpenTelemetry](https://github.com/lemonlion/Kronikol/wiki/Exporting-to-OpenTelemetry).
 
 ### Debugging a run — including with an AI agent
 
-`TestRunReport.json` holds everything about a run, which on a real suite means 10 MB, with single embedded diagrams past 600 KB. That is roughly 2.7 million tokens: an agent asked to debug a failing test spends its entire context reading the file and never gets to the question. `kronikol query` answers questions about the report without loading it:
+`TestRunReport.json` holds everything about a run, which on a real suite means 10 MB, with single embedded diagrams past 600 KB. That is roughly 2.7 million tokens: an agent asked to debug a failing test spends its entire context reading the file and never gets to the question. `kronikol query` answers questions about the report without loading it, from run summaries through aggregation, structural diffs and trace following:
 
 ```bash
 kronikol query summary  ./Reports          # the run, its failures, the slowest scenarios
 kronikol query failures ./Reports          # why each one failed, with assertion messages and file:line
 kronikol query services ./Reports          # per service: calls, errors, timings — and what was never called
 kronikol query flow     ./Reports s3       # the sequence, in 2 KB instead of 663
-kronikol query grep     ./Reports "4173" --values   # where a wrong number entered the system
-kronikol query values   ./Reports --path '$.status' # every value a field held, counted, with addresses
-kronikol query http     ./Reports s3/i47 --keys     # a payload's shape, then --path $.x for one value
+kronikol query trace    ./Reports 4bf92f3577b34da6   # follow one W3C trace across scenarios, in order
+kronikol query grep     ./Reports "4173" --values    # where a wrong number entered the system
+kronikol query grep     ./Reports 19.99 --number     # numeric match however the payload formats it
+kronikol query values   ./Reports --path '$.status'  # every value a field held, counted, with addresses
+kronikol query interactions ./Reports s3 --group-by status   # calls, errors and timings per bucket
+kronikol query diff     ./Reports s3/i47 s5/i47      # two bodies, only the paths that differ
+kronikol query http     ./Reports s3/i47 --keys      # a payload's shape, then --path $.x for one value
 ```
 
 Every command prints addresses rather than payloads, announces any truncation with the flags that resume it, and fetches a body only when you name one. There is a Claude Code skill in [`templates/skills/kronikol-test-debugging/`](templates/skills/kronikol-test-debugging) that teaches an agent the whole workflow — copy it into your project's `.claude/skills/`. See [Querying Reports](https://github.com/lemonlion/Kronikol/wiki/Querying-Reports).
@@ -293,6 +307,7 @@ Key pages:
 - [OpenTelemetry Extension](https://github.com/lemonlion/Kronikol/wiki/Integration-OpenTelemetry-Extension)
 - [OTLP Tap Extension](https://github.com/lemonlion/Kronikol/wiki/Integration-Otlp-Extension)
 - [Exporting to OpenTelemetry](https://github.com/lemonlion/Kronikol/wiki/Exporting-to-OpenTelemetry)
+- [PlantUML Browser Rendering](https://github.com/lemonlion/Kronikol/wiki/PlantUML-Browser-Rendering)
 - [PlantUML IKVM (Local Rendering)](https://github.com/lemonlion/Kronikol/wiki/Integration-PlantUML-IKVM)
 - [HTTP Tracking Setup](https://github.com/lemonlion/Kronikol/wiki/HTTP-Tracking-Setup)
 - [Diagram Customisation](https://github.com/lemonlion/Kronikol/wiki/Diagram-Customisation)

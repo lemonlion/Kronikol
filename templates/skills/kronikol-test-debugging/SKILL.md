@@ -51,21 +51,25 @@ them into context on the way past.
 ## The ladder
 
 ```
-summary  →  failures | scenarios  →  steps s3  →  services s3  →  interactions s3  →  values --path '$.x'  →  http s3/i47 --keys  →  http s3/i47 --path '$.x'
+summary  →  failures | scenarios  →  steps s3 | assertions s3 --failed  →  services s3  →  interactions s3  →  values --path '$.x'  →  http s3/i47 --keys  →  http s3/i47 --path '$.x'
 ```
 
 **Stop at the first rung that answers the question.** Most questions end at rung three. `failures` alone
 usually answers "why did these tests fail". **Aggregate before you fetch**: when the question is about a
 field across many calls ("what did `$.status` ever hold?"), `values --path` answers it in one command
-without printing a single payload — reach `http` only when one specific body matters.
+without printing a single payload (add `--stats` for a numeric field: count/absent/distinct,
+min/median/max/sum/mean, with the address of each extreme) — reach `http` only when one specific body
+matters.
 
 ## Recipes
 
 | The user says | Do this |
 |---|---|
 | "why did these tests fail?" | `failures` — usually sufficient on its own |
-| "the number on screen is wrong" | `grep "<value>" --number` (matches `4,173.00` and `4173` alike, emits paths) → `http <addr> --path $...` → `compare s<failing> s<passing>` |
+| "the number on screen is wrong" | `grep "<value>" --number` (matches `4,173.00` and `4173` alike, emits paths; `--tolerance 0.5` or `--tolerance 1%` widens the match) → `http <addr> --path $...` → `compare s<failing> s<passing>` |
 | "did it even call X?" | `services` — absence is the answer; no payload needed |
+| "which service/step had the most errors?" | `interactions --group-by service,status --sort errors` (dimensions incl. `step`, `path`, `capturedBy`): one bucket table, aggregation instead of paging |
+| "which assertions failed?" | `assertions --failed` (add `s3` to scope): flat list with resolved values, messages and `file:line` |
 | "what did X return?" | `interactions s3 --service X` → `http s3/iN --keys` → `--path` |
 | "what values did X ever return?" | `values --path '$.field' --service X` — distinct values, counted, with addresses |
 | "which calls returned a bad value?" | `interactions --where '$.success = false'` — run-wide; `req:$.x` targets the request |
@@ -84,8 +88,12 @@ without printing a single payload — reach `http` only when one specific body m
 - Read the `… 24 of 127 · next: --offset 24` footer. It is always there; if you did not see one, you saw
   everything.
 - **Filter harder before paging.** `--service`, `--status 5xx`, `--step`, `--grep` and `--group` all beat
-  `--offset`.
-- `--count` for yes/no questions. One token instead of a listing.
+  `--offset`. On `grep`, `--in` narrows the targets (default `bodies,uris,steps,assertions`; `--in bodies`
+  alone is cheaper, `notes` is the expensive add-on).
+- **Aggregate instead of paging.** `interactions --group-by service,status --sort errors` turns hundreds
+  of rows into one bucket table; `values --path` does the same for a body field.
+- `--count` for yes/no questions. One token instead of a listing. `--limit N` caps rows (each verb also
+  has its own ceiling).
 - `--group` folds runs of identical calls into one row. A hundred and twenty calls to one cache key are
   one fact.
 - Above ~10 KB, `--out FILE` and then `Grep` the file. `wrote 64 KB → ./body.json` costs six tokens;

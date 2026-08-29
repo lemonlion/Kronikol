@@ -190,7 +190,7 @@ internal static partial class QueryCommand
         writer.WriteLine("  http         <report> s3/i47 [--headers] [--body] [--keys] [--path $.a.b] [--lines 20-60] [--out F]");
         writer.WriteLine("  body         <report> b:4bdea521 [--keys] [--path $.a.b] [--lines 20-60] [--out F]");
         writer.WriteLine("               --path grammar: $.a.b[2] · [*] every element · ['a.b'] dotted key · .length() count — quote the path");
-        writer.WriteLine("  note         <report> s3/d0 [n12] [--out F]  what the HTML rendered, when it differs from the capture");
+        writer.WriteLine("  note         <report> s3/d0 [/n12] [--out F]  what the HTML rendered, when it differs from the capture");
         writer.WriteLine("  diagram      <report> s3/d0 --out F          the raw PlantUML; never printed to stdout");
         writer.WriteLine();
         writer.WriteLine("Search and comparison");

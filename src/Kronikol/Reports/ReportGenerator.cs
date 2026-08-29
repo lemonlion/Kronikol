@@ -4231,7 +4231,7 @@ public static class ReportGenerator
                                     ["properties"] = new Dictionary<string, object?>
                                     {
                                         ["id"] = new Dictionary<string, object?> { ["type"] = "string" },
-                                        ["stableId"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Deterministic cross-run identifier derived from feature name + scenario display name (+ outline ID for parameterized scenarios). Use this for matching the same test across runs." },
+                                        ["stableId"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Deterministic cross-run identifier derived from feature name + scenario display name (+ outline ID and ordered example values for parameterized scenarios). Use this for matching the same test across runs." },
                                         ["name"] = new Dictionary<string, object?> { ["type"] = "string" },
                                         ["description"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The scenario's own free-text description (the prose under Scenario:)" },
                                         ["result"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = resultEnumValues },
