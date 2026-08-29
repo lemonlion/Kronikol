@@ -138,6 +138,59 @@ public static class ReportParser
     public static async Task<string> ReadYamlAsync(string yamlFilePath) =>
         await File.ReadAllTextAsync(yamlFilePath);
 
+    public record ParsedYamlScenario(string Name, string[] BackgroundSteps, string[] Steps);
+
+    /// <summary>
+    /// Extracts each scenario's ordered top-level step texts (keyword + text, e.g.
+    /// "Given a valid post request for the Cake endpoint") from the specifications YAML
+    /// data report. Sub-steps (assertion tracking) are nested two spaces deeper and are
+    /// deliberately excluded — only the scenario's own steps are returned.
+    /// </summary>
+    public static async Task<ParsedYamlScenario[]> ExtractScenarioStepsFromYamlAsync(string yamlFilePath)
+    {
+        // The generated YAML has a fixed layout (see ReportGenerator's specifications
+        // writer): scenarios at 6-space indent, their keys at 8, step items at 10.
+        const string scenarioPrefix = "      - Scenario: ";
+        const string backgroundHeader = "        BackgroundSteps:";
+        const string stepsHeader = "        Steps:";
+        const string stepItemPrefix = "          - ";
+
+        var results = new List<ParsedYamlScenario>();
+        string? currentName = null;
+        List<string>? backgroundSteps = null;
+        List<string>? steps = null;
+        List<string>? currentSection = null;
+
+        void Flush()
+        {
+            if (currentName is not null)
+                results.Add(new ParsedYamlScenario(currentName, backgroundSteps?.ToArray() ?? [], steps?.ToArray() ?? []));
+        }
+
+        foreach (var line in await File.ReadAllLinesAsync(yamlFilePath))
+        {
+            if (line.StartsWith(scenarioPrefix))
+            {
+                Flush();
+                currentName = line[scenarioPrefix.Length..].Trim();
+                backgroundSteps = [];
+                steps = [];
+                currentSection = null;
+            }
+            else if (line == backgroundHeader)
+                currentSection = backgroundSteps;
+            else if (line == stepsHeader)
+                currentSection = steps;
+            else if (line.StartsWith(stepItemPrefix)) // sub-steps sit deeper (12+ spaces) and never match this prefix
+                currentSection?.Add(line[stepItemPrefix.Length..].Trim());
+            else if (line.StartsWith("        ") && !line.StartsWith("         "))
+                currentSection = null; // some other 8-space scenario key (Labels:, Categories:, …)
+        }
+
+        Flush();
+        return results.ToArray();
+    }
+
     public record DiagramImgInfo(string Src, bool HasLazyLoading);
 
     public static async Task<DiagramImgInfo[]> ExtractDiagramImgsAsync(string htmlFilePath)

@@ -28,17 +28,29 @@ public class ReqNRollTrackingHooks
         _featureContext = featureContext;
     }
 
+    /// <summary>
+    /// True on the hook instance that initialized this scenario. When both the base and a
+    /// derived [Binding] class are discovered (both assemblies listed in reqnroll.json's
+    /// bindingAssemblies), ReqNRoll runs every hook on one instance of each class; only the
+    /// owner records anything, so steps and scenarios are never captured twice.
+    /// </summary>
+    private bool IsOwner =>
+        _scenarioContext.TryGetValue(ReqNRollConstants.OwnerHooksKey, out object? owner)
+        && ReferenceEquals(owner, this);
+
     [BeforeScenario(Order = int.MinValue)]
     public void BeforeScenario()
     {
         // Idempotency guard: if hooks have already run for this scenario (e.g. both base
-        // and derived [Binding] classes discovered), skip duplicate execution.
+        // and derived [Binding] classes discovered), skip duplicate execution. The instance
+        // that passes becomes the scenario's owner; every other hook no-ops on non-owners.
         if (_scenarioContext.ContainsKey(ReqNRollConstants.ScenarioRuntimeIdKey))
             return;
 
         _stopwatch = Stopwatch.StartNew();
         var scenarioId = Guid.NewGuid().ToString();
         _scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey] = scenarioId;
+        _scenarioContext[ReqNRollConstants.OwnerHooksKey] = this;
         _scenarioContext[ReqNRollConstants.StepsCollectionKey] = new List<ReqNRollStepInfo>();
         ReqNRollTestContext.CurrentTestInfo = (_scenarioContext.ScenarioInfo.Title, scenarioId);
 
@@ -71,6 +83,9 @@ public class ReqNRollTrackingHooks
     [BeforeStep(Order = int.MinValue)]
     public void BeforeStep()
     {
+        if (!IsOwner)
+            return;
+
         var stepType = _scenarioContext.StepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString();
         ReqNRollTestContext.CurrentStepType = stepType;
         TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
@@ -84,6 +99,9 @@ public class ReqNRollTrackingHooks
     [AfterStep(Order = int.MaxValue)]
     public void AfterStep()
     {
+        if (!IsOwner)
+            return;
+
         var stepStopwatch = (Stopwatch)_scenarioContext[ReqNRollConstants.StepStopwatchKey];
         stepStopwatch.Stop();
         var stepContext = _scenarioContext.StepContext;
@@ -137,6 +155,9 @@ public class ReqNRollTrackingHooks
     [AfterScenario(Order = int.MaxValue)]
     public void AfterScenario()
     {
+        if (!IsOwner)
+            return;
+
         _stopwatch?.Stop();
         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
         var steps = (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey];
@@ -161,6 +182,10 @@ public class ReqNRollTrackingHooks
                 exampleFlatValues = flatValues;
         }
 
+        var examplesBlock = exampleValues is not null
+            ? ExamplesBlockResolver.Resolve(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo)
+            : ExamplesBlock.None;
+
         ReqNRollScenarioCollector.Collect(new ReqNRollScenarioInfo
         {
             ScenarioId = scenarioId,
@@ -177,7 +202,10 @@ public class ReqNRollTrackingHooks
             OutlineId = exampleValues is not null ? _scenarioContext.ScenarioInfo.Title : null,
             ExampleValues = exampleValues,
             ExampleRawValues = exampleRawValues,
-            ExampleFlatValues = exampleFlatValues
+            ExampleFlatValues = exampleFlatValues,
+            ExamplesBlockName = examplesBlock.Name,
+            ExamplesBlockDescription = examplesBlock.Description,
+            ExamplesBlockIndex = examplesBlock.Index
         });
 
         ReqNRollTestContext.CurrentTestInfo = null;

@@ -218,9 +218,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Extensions.Otlp", "src\Kronikol.Extensions.Otlp\Kronikol.Extensions.Otlp.csproj", "{7C4E1B4A-3D5F-4A72-9E10-0B1C2D3E4F51}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Tests.Otlp", "tests\Kronikol.Tests.Otlp\Kronikol.Tests.Otlp.csproj", "{7C4E1B4A-3D5F-4A72-9E10-0B1C2D3E4F52}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Extensions.TcpTap", "src\Kronikol.Extensions.TcpTap\Kronikol.Extensions.TcpTap.csproj", "{0DFBC6D5-A418-4EDA-A8A5-DB74F380C2AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Tests.TcpTap", "tests\Kronikol.Tests.TcpTap\Kronikol.Tests.TcpTap.csproj", "{090E11AA-83C3-456E-AFE8-083DA29B4552}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Tests.AssertionRewriter", "tests\Kronikol.Tests.AssertionRewriter\Kronikol.Tests.AssertionRewriter.csproj", "{773C5DB6-C14C-45EC-8805-CDDCAD915F77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.AssertionRewriter", "src\Kronikol.AssertionRewriter\Kronikol.AssertionRewriter.csproj", "{E52EB828-9109-44AE-951B-B363E7FEBDB2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1516,6 +1521,30 @@ Global
 		{090E11AA-83C3-456E-AFE8-083DA29B4552}.Release|x64.Build.0 = Release|Any CPU
 		{090E11AA-83C3-456E-AFE8-083DA29B4552}.Release|x86.ActiveCfg = Release|Any CPU
 		{090E11AA-83C3-456E-AFE8-083DA29B4552}.Release|x86.Build.0 = Release|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Debug|x64.Build.0 = Debug|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Debug|x86.Build.0 = Debug|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Release|x64.ActiveCfg = Release|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Release|x64.Build.0 = Release|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Release|x86.ActiveCfg = Release|Any CPU
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77}.Release|x86.Build.0 = Release|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Debug|x64.Build.0 = Debug|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Debug|x86.Build.0 = Debug|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Release|x64.ActiveCfg = Release|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Release|x64.Build.0 = Release|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Release|x86.ActiveCfg = Release|Any CPU
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1590,6 +1619,8 @@ Global
 		{F9EBBF87-BF38-4A08-BEA1-4358C4A273D2} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{0DFBC6D5-A418-4EDA-A8A5-DB74F380C2AF} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{090E11AA-83C3-456E-AFE8-083DA29B4552} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{773C5DB6-C14C-45EC-8805-CDDCAD915F77} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{E52EB828-9109-44AE-951B-B363E7FEBDB2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {800A06E3-2498-445E-A515-7CF26A36503F}

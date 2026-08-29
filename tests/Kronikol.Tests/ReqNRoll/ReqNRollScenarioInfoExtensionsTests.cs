@@ -439,4 +439,67 @@ public class ReqNRollScenarioInfoExtensionsTests
             StepCollector.ClearSteps(scenarioId);
         }
     }
+
+    private static ReqNRollScenarioInfo MakeOutlineRow(
+        string id, string period, int? blockIndex,
+        string? blockName = null, string? blockDescription = null)
+    {
+        return new ReqNRollScenarioInfo
+        {
+            ScenarioId = id,
+            ScenarioTitle = "Movement",
+            FeatureTitle = "Market share",
+            ScenarioTags = [],
+            CombinedTags = [],
+            Steps = [],
+            ExecutionStatus = ScenarioExecutionStatus.OK,
+            OutlineId = "Movement",
+            ExampleValues = new Dictionary<string, string> { ["Period"] = period },
+            ExamplesBlockName = blockName,
+            ExamplesBlockDescription = blockDescription,
+            ExamplesBlockIndex = blockIndex
+        };
+    }
+
+    [Fact]
+    public void ToFeatures_copies_examples_block_fields_onto_scenarios()
+    {
+        var features = new[] { MakeOutlineRow("s1", "OneWeek", 0, "gained share", "a description") }.ToFeatures();
+        var scenario = features[0].Scenarios[0];
+
+        Assert.Equal("gained share", scenario.ExamplesBlockName);
+        Assert.Equal("a description", scenario.ExamplesBlockDescription);
+        Assert.Equal(0, scenario.ExamplesBlockIndex);
+    }
+
+    [Fact]
+    public void ToFeatures_orders_outline_rows_by_block_index_so_blocks_do_not_interleave()
+    {
+        // Alphabetical-by-values ordering would interleave: AFourWeeks < BOneWeek < COneYear,
+        // but FourWeeks belongs to block 1.
+        var infos = new[]
+        {
+            MakeOutlineRow("s1", "AFourWeeks", 1, "lost share"),
+            MakeOutlineRow("s2", "COneYear", 0, "gained share"),
+            MakeOutlineRow("s3", "BOneWeek", 0, "gained share")
+        };
+
+        var scenarios = infos.ToFeatures()[0].Scenarios;
+
+        Assert.Equal(["s3", "s2", "s1"], scenarios.Select(s => s.Id).ToArray());
+    }
+
+    [Fact]
+    public void ToFeatures_keeps_alphabetical_value_ordering_for_blockless_rows()
+    {
+        var infos = new[]
+        {
+            MakeOutlineRow("s1", "b", null),
+            MakeOutlineRow("s2", "a", null)
+        };
+
+        var scenarios = infos.ToFeatures()[0].Scenarios;
+
+        Assert.Equal(["s2", "s1"], scenarios.Select(s => s.Id).ToArray());
+    }
 }

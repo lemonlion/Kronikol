@@ -81,4 +81,25 @@ public class CakeStepDefinitions
     {
         _cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Then("the cake should contain the requested milk")]
+    public async Task ThenTheCakeShouldContainTheRequestedMilk()
+    {
+        var cake = await ReadCakeResponse();
+        cake.Ingredients.Should().Contain(_milkResponse.Milk);
+    }
+
+    [Then("the cake should contain the requested flour")]
+    public async Task ThenTheCakeShouldContainTheRequestedFlour()
+    {
+        var cake = await ReadCakeResponse();
+        cake.Ingredients.Should().Contain(_flourResponse.Flour);
+    }
+
+    private async Task<CakeResponse> ReadCakeResponse()
+    {
+        _cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK);
+        _cakeResponseString = await _cakeResponseMessage.Content.ReadAsStringAsync();
+        return Json.Deserialize<CakeResponse>(_cakeResponseString)!;
+    }
 }

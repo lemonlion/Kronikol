@@ -57,6 +57,14 @@ jobs:
               tests/Kronikol.Tests.xUnit2
               tests/Kronikol.Tests.xUnit3
               tests/Kronikol.Tests.LightBDD.xUnit3
+              tests/Kronikol.Tests.TUnit
+              tests/Kronikol.Tests.LightBDD.TUnit
+          # Every tests/* project without a dedicated entry above/below runs here, so a
+          # NEW test project is CI-covered by default instead of silently skipped (the
+          # LightBDD.TUnit zero-tests breakage hid exactly this way). Keep the skip-list
+          # in the step below in sync with the dedicated entries.
+          - name: Remaining Unit Tests (auto-discovered)
+            discover-remaining: true
           - name: Extension Tests
             projects: >-
               tests/Kronikol.Tests.CosmosDB
@@ -97,6 +105,19 @@ jobs:
             projects: tests/Kronikol.Tests.EndToEnd
             filter: BackgroundRenderingTests|SeparatedBackgroundRenderingTests|LongStatementRenderingTests
             needs-playwright: true
+          - name: E2E (Note JSON-YAML Toggle)
+            projects: tests/Kronikol.Tests.EndToEnd
+            filter: NoteYamlToggleTests|NoteYamlInternalsTests
+            needs-playwright: true
+          # Everything in Kronikol.Tests.EndToEnd NOT named by a group above runs here,
+          # so a NEW E2E test class is CI-covered by default. The filter-exclude list is
+          # the union of every class named in the E2E groups above, plus the three
+          # doc-asset generators (WikiGifTests/WikiScreenshotTests need ImageMagick,
+          # ShowcaseReportTests generates showcase assets) which are run manually.
+          - name: E2E (Remainder)
+            projects: tests/Kronikol.Tests.EndToEnd
+            filter-exclude: IflowPopupTests|ComponentFlowPopupTests|WholeTestFlowTests|UrlHashFilterHighlightTests|FilterPerformanceTests|AdvancedSearchTests|DependencyColoringTests|ReportToolbarTests|MobileResponsiveTests|LoadingMessageTests|JumpToFailureTests|ScenarioInteractionTests|ParameterizedGroupTests|FailureClusterLinkTests|DiagramNoteBasicTests|DiagramNoteLongNoteTests|DiagramNoteSplitTests|DiagramNotePartitionTests|NoteButtonIndexTests|DiagramZoomTests|ContextMenuExtendedTests|HeadersDetailsInterferenceTests|NoteButtonsAfterHeaderHideTests|ZoomNoteInteractionTests|BackgroundRenderingTests|SeparatedBackgroundRenderingTests|LongStatementRenderingTests|NoteYamlToggleTests|NoteYamlInternalsTests|WikiGifTests|WikiScreenshotTests|ShowcaseReportTests
+            needs-playwright: true
           - name: Assertion Tracking Tests
             projects: tests/Kronikol.Tests.AssertionTracking
           - name: Example.Api xUnit Tests
@@ -114,6 +135,19 @@ jobs:
               examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3
           - name: Example.Api NUnit4 Tests
             projects: examples/Example.Api/tests/Example.Api.Tests.Component.NUnit4
+          # TUnit projects use Microsoft.Testing.Platform: on .NET 10 SDK they refuse
+          # VSTest-mode `dotnet test` and must run via `dotnet run --project`.
+          - name: Example.Api TUnit Tests (MTP)
+            projects: >-
+              examples/Example.Api/tests/Example.Api.Tests.Component.TUnit
+              examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.TUnit
+              examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit
+            mtp-run: true
+          # Template scaffolds pin PUBLISHED package versions — building each one
+          # catches stale/unpublishable pins (they sat at 2.29.17-beta for months),
+          # and the pack validates the template-package structure.
+          - name: Template Scaffolds Build & Pack
+            templates-build: true
           - name: Integration (xUnit)
             projects: examples/Example.Api/tests/Example.Api.Tests.Integration
             restore-first: examples/Example.Api/Example.Api.sln
@@ -166,20 +200,72 @@ jobs:
           pwsh ${{ matrix.projects }}/bin/Release/net10.0/playwright.ps1 install chromium --with-deps
 
       - name: Build & Test
+        if: ${{ !matrix.mtp-run && !matrix.discover-remaining && !matrix.templates-build }}
         run: |
           FILTER_ARG=""
           if [ -n "${{ matrix.filter }}" ]; then
-            # Build filter: split by | and create FullyQualifiedName~ OR chain
+            # Build filter: split by | and create an OR chain. Each part matches BOTH
+            # FullyQualifiedName and DisplayName: xunit.v3 puts theory arguments (e.g. the
+            # Integration jobs' projectName: "…Component.ReqNRoll.xUnit2") only in
+            # DisplayName — FullyQualifiedName-only clauses silently matched ZERO tests
+            # for every Integration matrix entry.
             IFS='|' read -ra PARTS <<< "${{ matrix.filter }}"
             CLAUSES=()
             for part in "${PARTS[@]}"; do
-              CLAUSES+=("FullyQualifiedName~$part")
+              CLAUSES+=("FullyQualifiedName~$part|DisplayName~$part")
             done
             JOINED=$(IFS='|'; echo "${CLAUSES[*]}")
+            FILTER_ARG="--filter \"$JOINED\""
+          elif [ -n "${{ matrix.filter-exclude }}" ]; then
+            # Negative filter: split by | and create FullyQualifiedName!~ AND chain,
+            # so everything NOT named runs — new test classes are covered by default.
+            IFS='|' read -ra PARTS <<< "${{ matrix.filter-exclude }}"
+            CLAUSES=()
+            for part in "${PARTS[@]}"; do
+              CLAUSES+=("FullyQualifiedName!~$part")
+            done
+            JOINED=$(IFS='&'; echo "${CLAUSES[*]}")
             FILTER_ARG="--filter \"$JOINED\""
           fi
           for project in ${{ matrix.projects }}; do
             echo "::group::Testing $project"
-            dotnet test "$project" --configuration Release --verbosity normal $FILTER_ARG
+            # TreatNoTestsAsError: a filter that matches nothing (or an empty project)
+            # must fail the job, never silently pass with zero tests run.
+            dotnet test "$project" --configuration Release --verbosity normal $FILTER_ARG -- RunConfiguration.TreatNoTestsAsError=true
             echo "::endgroup::"
           done
+
+      - name: Build & Test (auto-discovered remainder)
+        if: matrix.discover-remaining
+        run: |
+          # Runs every tests/* project (with a csproj — legacy TestTrackingDiagrams.*
+          # residue folders have none) that has no dedicated matrix entry. Keep SKIP in
+          # sync with the entries above.
+          SKIP="Kronikol.Tests Kronikol.Tests.MSTest Kronikol.Tests.xUnit2 Kronikol.Tests.xUnit3 Kronikol.Tests.LightBDD.xUnit3 Kronikol.Tests.TUnit Kronikol.Tests.LightBDD.TUnit Kronikol.Tests.CosmosDB Kronikol.Tests.EfCore.Relational Kronikol.Tests.Redis Kronikol.Tests.ProxyTap Kronikol.Tests.Playwright Kronikol.Tests.PlantUml.Ikvm Kronikol.Tests.EndToEnd Kronikol.Tests.AssertionTracking"
+          for dir in tests/*/; do
+            name=$(basename "$dir")
+            case " $SKIP " in *" $name "*) continue;; esac
+            ls "$dir"*.csproj >/dev/null 2>&1 || continue
+            echo "::group::Testing $name"
+            dotnet test "$dir" --configuration Release --verbosity normal -- RunConfiguration.TreatNoTestsAsError=true
+            echo "::endgroup::"
+          done
+
+      - name: Build & Test (Microsoft.Testing.Platform)
+        if: matrix.mtp-run
+        run: |
+          for project in ${{ matrix.projects }}; do
+            echo "::group::Running $project"
+            dotnet run --project "$project" --configuration Release
+            echo "::endgroup::"
+          done
+
+      - name: Build template scaffolds & pack template package
+        if: matrix.templates-build
+        run: |
+          for dir in templates/kronikol-*/; do
+            echo "::group::Building $dir"
+            dotnet build "$dir" --configuration Release
+            echo "::endgroup::"
+          done
+          dotnet pack templates/Kronikol.Templates.csproj --configuration Release

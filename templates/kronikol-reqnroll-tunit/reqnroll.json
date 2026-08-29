@@ -1,7 +1,6 @@
 {
   "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
   "bindingAssemblies": [
-    { "assembly": "Kronikol.ReqNRoll.TUnit" },
-    { "assembly": "Kronikol.ReqNRoll.Core" }
+    { "assembly": "Kronikol.ReqNRoll.TUnit" }
   ]
 }

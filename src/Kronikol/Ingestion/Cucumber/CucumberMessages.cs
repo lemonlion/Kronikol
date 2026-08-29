@@ -161,6 +161,9 @@ public sealed record CucumberExamples
     /// <summary>Optional name of the examples block.</summary>
     [JsonPropertyName("name")] public string? Name { get; init; }
 
+    /// <summary>Free text under the <c>Examples:</c> line, when the author wrote one.</summary>
+    [JsonPropertyName("description")] public string? Description { get; init; }
+
     /// <summary>The header row — the placeholder names.</summary>
     [JsonPropertyName("tableHeader")] public CucumberTableRow? TableHeader { get; init; }
 

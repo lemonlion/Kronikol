@@ -502,6 +502,9 @@ public static class CucumberFeatureSynthesizer
             OutlineId = exampleRow is null ? null : node?.Node.Name,
             ExampleValues = exampleValues,
             ExampleRawValues = exampleRaw,
+            ExamplesBlockName = exampleRow?.BlockName,
+            ExamplesBlockDescription = exampleRow is null ? null : NullIfBlank(Dedent(exampleRow.BlockDescription)),
+            ExamplesBlockIndex = exampleRow?.BlockIndex,
         };
 
         markers.Add(new TestRunRecord

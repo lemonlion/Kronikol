@@ -87,6 +87,12 @@ public static class ParameterGrouper
         int maxColumns,
         Func<Scenario[], bool>? diagramComparer)
     {
+        // Rows from the same Examples: block must sit together. OrderBy is a stable sort, so
+        // source order within a block survives, and blockless members (index null) stay in
+        // their existing order after the indexed ones — output unchanged when no block info exists.
+        if (members.Any(m => m.ExamplesBlockIndex is not null))
+            members = members.OrderBy(m => m.ExamplesBlockIndex ?? int.MaxValue).ToArray();
+
         // Determine parameter names and rule
         var (paramNames, rule) = DetermineParamsAndRule(members, maxColumns);
         var identical = diagramComparer?.Invoke(members) ?? false;

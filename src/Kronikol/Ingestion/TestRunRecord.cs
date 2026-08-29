@@ -128,6 +128,15 @@ public sealed record TestRunRecord
     /// <summary><c>start</c> only: this row's example values (the outline's <c>Examples</c> columns), used for the pivot table and the row's display name.</summary>
     [JsonPropertyName("exampleValues")] public Dictionary<string, string>? ExampleValues { get; init; }
 
+    /// <summary><c>start</c> only: name of the <c>Examples:</c> block this row came from — rows of a named block render under a separator band carrying it.</summary>
+    [JsonPropertyName("examplesBlockName")] public string? ExamplesBlockName { get; init; }
+
+    /// <summary><c>start</c> only: free-text description under the <c>Examples:</c> header, rendered in the block's separator band.</summary>
+    [JsonPropertyName("examplesBlockDescription")] public string? ExamplesBlockDescription { get; init; }
+
+    /// <summary><c>start</c> only: 0-based position of the <c>Examples:</c> block within the outline — orders and separates blocks (needed when blocks are unnamed).</summary>
+    [JsonPropertyName("examplesBlockIndex")] public int? ExamplesBlockIndex { get; init; }
+
     /// <summary><c>attachment</c> only: the display name (<c>screenshot-start.png</c>, <c>Grafana trace</c>).</summary>
     [JsonPropertyName("name")] public string? Name { get; init; }
 

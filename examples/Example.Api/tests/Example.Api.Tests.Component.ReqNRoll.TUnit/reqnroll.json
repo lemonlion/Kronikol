@@ -3,6 +3,9 @@
   "bindingAssemblies": [
     {
       "assembly": "Kronikol.ReqNRoll.TUnit"
+    },
+    {
+      "assembly": "Kronikol.ReqNRoll.Core"
     }
   ],
   "formatters": {

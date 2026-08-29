@@ -71,6 +71,9 @@ public static class FeatureSynthesizer
                     acc.FeatureDescription ??= record.FeatureDescription;
                     acc.Rule ??= record.Rule;
                     acc.OutlineId ??= record.OutlineId;
+                    acc.ExamplesBlockName ??= record.ExamplesBlockName;
+                    acc.ExamplesBlockDescription ??= record.ExamplesBlockDescription;
+                    acc.ExamplesBlockIndex ??= record.ExamplesBlockIndex;
                     if (record.Tags is { Length: > 0 })
                         acc.Tags.AddRange(record.Tags);
                     if (record.ExampleValues is { Count: > 0 })
@@ -147,6 +150,9 @@ public static class FeatureSynthesizer
                 BackgroundSteps = backgroundSteps,
                 Rule = acc.Rule,
                 OutlineId = acc.OutlineId,
+                ExamplesBlockName = acc.ExamplesBlockName,
+                ExamplesBlockDescription = acc.ExamplesBlockDescription,
+                ExamplesBlockIndex = acc.ExamplesBlockIndex,
                 ExampleValues = acc.ExampleValues,
                 ExampleFlatValues = acc.ExampleValues is null ? null : new Dictionary<string, string>(acc.ExampleValues, StringComparer.Ordinal),
                 ExampleRawValues = acc.ExampleValues?.ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value, StringComparer.Ordinal),
@@ -451,6 +457,9 @@ public static class FeatureSynthesizer
         public string? Description { get; set; }
         public string? Rule { get; set; }
         public string? OutlineId { get; set; }
+        public string? ExamplesBlockName { get; set; }
+        public string? ExamplesBlockDescription { get; set; }
+        public int? ExamplesBlockIndex { get; set; }
         public List<string> Tags { get; } = [];
         public Dictionary<string, string>? ExampleValues { get; set; }
         public DateTimeOffset? Start { get; set; }

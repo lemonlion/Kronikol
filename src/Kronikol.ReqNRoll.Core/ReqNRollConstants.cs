@@ -11,4 +11,5 @@ public static class ReqNRollConstants
     public const string EndpointTagPrefix = "endpoint:";
     public const string CategoryTagPrefix = "category:";
     public const string StepStopwatchKey = "Kronikol.StepStopwatch";
+    public const string OwnerHooksKey = "Kronikol.OwnerHooks";
 }

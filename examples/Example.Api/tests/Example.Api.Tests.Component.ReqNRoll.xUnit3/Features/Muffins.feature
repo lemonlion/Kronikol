@@ -25,8 +25,12 @@ Feature: Parameterized Diagnostic Feature
         And the muffin response should include <ExpectedToppingCount> toppings
         And the muffin response should have baking info <ExpectedHasBakingInfo>
 
-        Examples:
+        Examples: a classic bake
+            The everyday plain-flour recipe.
             | RecipeName       | Flour        | AppleVariety | CinnamonType | Temperature | Duration | PanType   | Topping1          | Amount1 | Topping2           | Amount2 | ExpectedIngredientCount | ExpectedToppingCount | ExpectedHasBakingInfo |
             | Classic          | Plain Flour  | Granny Smith | Ceylon       | 180         | 25       | Standard  | Streusel          | Light   | Icing Glaze        | Drizzle | 5                       | 2                    | True                  |
+
+        Examples: speciality flours
+            | RecipeName       | Flour        | AppleVariety | CinnamonType | Temperature | Duration | PanType   | Topping1          | Amount1 | Topping2           | Amount2 | ExpectedIngredientCount | ExpectedToppingCount | ExpectedHasBakingInfo |
             | Rustic Wholesome | Whole Wheat  | Honeycrisp   | Cassia       | 175         | 30       | Cast Iron | Brown Sugar Crumb | Heavy   | Maple Drizzle      | Light   | 5                       | 2                    | True                  |
             | Spiced Deluxe    | Almond Flour | Pink Lady    | Saigon       | 190         | 20       | Silicone  | Cinnamon Sugar    | Heavy   | Cream Cheese Swirl | Thick   | 5                       | 2                    | True                  |

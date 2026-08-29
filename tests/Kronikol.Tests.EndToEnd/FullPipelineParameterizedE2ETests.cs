@@ -522,6 +522,30 @@ public class FullPipelineParameterizedE2ETests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task ReqNRoll_pipeline_renders_examples_block_bands()
+    {
+        await NavigateToReport(_pipeline.ReqNRollReportPath);
+        await ExpandAll();
+        await OpenParameterizedGroup("Different muffin recipes");
+
+        // Muffins.feature splits its outline into two named Examples: blocks.
+        var bands = GetParameterizedGroup().First
+            .Locator("table.param-test-table:not(.param-table-grouped) tr.examples-block-row");
+        Assert.Equal(2, await bands.CountAsync());
+
+        await Expect(bands.Nth(0)).ToBeVisibleAsync();
+        var firstBand = await bands.Nth(0).TextContentAsync() ?? "";
+        Assert.Contains("Examples: a classic bake", firstBand);
+        Assert.Contains("The everyday plain-flour recipe.", firstBand);
+        Assert.Contains("1/1 passed", firstBand);
+
+        await Expect(bands.Nth(1)).ToBeVisibleAsync();
+        var secondBand = await bands.Nth(1).TextContentAsync() ?? "";
+        Assert.Contains("Examples: speciality flours", secondBand);
+        Assert.Contains("2/2 passed", secondBand);
+    }
+
+    [Fact]
     public async Task ReqNRoll_pipeline_row_click_shows_steps()
     {
         await NavigateToReport(_pipeline.ReqNRollReportPath);

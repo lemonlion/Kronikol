@@ -31,4 +31,13 @@ public record Scenario
     public Dictionary<string, object?>? ExampleRawValues { get; set; }
     public Dictionary<string, string>? ExampleFlatValues { get; set; }
     public string? ExampleDisplayName { get; set; }
+
+    /// <summary>Name of the <c>Examples:</c> block this outline row came from (e.g. "the merchant gained share").</summary>
+    public string? ExamplesBlockName { get; set; }
+
+    /// <summary>Free-text description under the <c>Examples:</c> header, when the author wrote one.</summary>
+    public string? ExamplesBlockDescription { get; set; }
+
+    /// <summary>0-based position of the <c>Examples:</c> block within the outline; orders and separates blocks (needed when blocks are unnamed).</summary>
+    public int? ExamplesBlockIndex { get; set; }
 }

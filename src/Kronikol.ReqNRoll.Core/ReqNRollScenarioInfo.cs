@@ -22,4 +22,7 @@ public record ReqNRollScenarioInfo
     public Dictionary<string, string>? ExampleValues { get; init; }
     public Dictionary<string, object?>? ExampleRawValues { get; init; }
     public Dictionary<string, string>? ExampleFlatValues { get; init; }
+    public string? ExamplesBlockName { get; init; }
+    public string? ExamplesBlockDescription { get; init; }
+    public int? ExamplesBlockIndex { get; init; }
 }

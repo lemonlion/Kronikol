@@ -85,6 +85,11 @@ public static class MergeableReportReader
         Categories = ReadStringArray(se, "categories"),
         Rule = GetString(se, "rule"),
         OutlineId = GetString(se, "outlineId"),
+        ExamplesBlockName = GetString(se, "examplesBlockName"),
+        ExamplesBlockDescription = GetString(se, "examplesBlockDescription"),
+        ExamplesBlockIndex = se.TryGetProperty("examplesBlockIndex", out var ebi) && ebi.ValueKind == JsonValueKind.Number
+            ? ebi.GetInt32()
+            : null,
         ExampleValues = ReadStringDictionary(se, "exampleValues"),
         ExampleFlatValues = ReadStringDictionary(se, "exampleFlatValues") ?? ReadStringDictionary(se, "exampleValues"),
         ExampleDisplayName = GetString(se, "exampleDisplayName"),

@@ -489,6 +489,63 @@ public class ParameterGrouperTests
         Assert.Equal("Plain", groups[0].Scenarios[0].ExampleFlatValues!["Flour"]);
     }
 
+    [Fact]
+    public void Members_are_stable_sorted_by_examples_block_index()
+    {
+        // Interleaved input: block 1 row, block 0 row, block 1 row.
+        var s1 = MakeScenario("s1", "T (B1a)", outlineId: "T", exampleValues: new() { ["v"] = "B1a" });
+        var s2 = MakeScenario("s2", "T (B0a)", outlineId: "T", exampleValues: new() { ["v"] = "B0a" });
+        var s3 = MakeScenario("s3", "T (B1b)", outlineId: "T", exampleValues: new() { ["v"] = "B1b" });
+        s1.ExamplesBlockIndex = 1;
+        s2.ExamplesBlockIndex = 0;
+        s3.ExamplesBlockIndex = 1;
+
+        var (groups, _) = ParameterGrouper.Analyze([s1, s2, s3]);
+        Assert.Single(groups);
+        Assert.Equal(["s2", "s1", "s3"], groups[0].Scenarios.Select(s => s.Id).ToArray());
+    }
+
+    [Fact]
+    public void Members_without_block_index_keep_order_and_land_after_indexed_ones()
+    {
+        var s1 = MakeScenario("s1", "T (n1)", outlineId: "T", exampleValues: new() { ["v"] = "n1" });
+        var s2 = MakeScenario("s2", "T (b0)", outlineId: "T", exampleValues: new() { ["v"] = "b0" });
+        var s3 = MakeScenario("s3", "T (n2)", outlineId: "T", exampleValues: new() { ["v"] = "n2" });
+        s2.ExamplesBlockIndex = 0;
+
+        var (groups, _) = ParameterGrouper.Analyze([s1, s2, s3]);
+        Assert.Single(groups);
+        Assert.Equal(["s2", "s1", "s3"], groups[0].Scenarios.Select(s => s.Id).ToArray());
+    }
+
+    [Fact]
+    public void Blockless_group_member_order_is_unchanged()
+    {
+        var s1 = MakeScenario("s1", "T (b)", outlineId: "T", exampleValues: new() { ["v"] = "b" });
+        var s2 = MakeScenario("s2", "T (a)", outlineId: "T", exampleValues: new() { ["v"] = "a" });
+
+        var (groups, _) = ParameterGrouper.Analyze([s1, s2]);
+        Assert.Single(groups);
+        Assert.Equal(["s1", "s2"], groups[0].Scenarios.Select(s => s.Id).ToArray());
+    }
+
+    [Fact]
+    public void Block_fields_survive_the_analyze_deep_clone()
+    {
+        var s1 = MakeScenario("s1", "T (a)", outlineId: "T", exampleValues: new() { ["v"] = "a" });
+        var s2 = MakeScenario("s2", "T (b)", outlineId: "T", exampleValues: new() { ["v"] = "b" });
+        s1.ExamplesBlockName = "named block";
+        s1.ExamplesBlockDescription = "a description";
+        s1.ExamplesBlockIndex = 0;
+        s2.ExamplesBlockIndex = 1;
+
+        var (groups, _) = ParameterGrouper.Analyze([s1, s2]);
+        var first = groups[0].Scenarios.Single(s => s.Id == "s1");
+        Assert.Equal("named block", first.ExamplesBlockName);
+        Assert.Equal("a description", first.ExamplesBlockDescription);
+        Assert.Equal(0, first.ExamplesBlockIndex);
+    }
+
     private static Scenario MakeScenario(
         string id, string displayName,
         string? outlineId = null,

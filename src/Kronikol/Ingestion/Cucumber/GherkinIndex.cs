@@ -29,7 +29,15 @@ internal sealed record GherkinScenario(
 /// <summary>One row of an <c>Examples:</c> table — the values a scenario outline was instantiated with.</summary>
 /// <param name="Values">Header → cell for the row, in column order.</param>
 /// <param name="ExamplesTags">Tags declared on the <c>Examples:</c> block.</param>
-internal sealed record ExampleRow(Dictionary<string, string> Values, string[] ExamplesTags);
+/// <param name="BlockName">Name of the <c>Examples:</c> block the row belongs to, when the author named it.</param>
+/// <param name="BlockDescription">Free text under the <c>Examples:</c> line, when the author wrote one.</param>
+/// <param name="BlockIndex">0-based position of the block within the outline.</param>
+internal sealed record ExampleRow(
+    Dictionary<string, string> Values,
+    string[] ExamplesTags,
+    string? BlockName,
+    string? BlockDescription,
+    int BlockIndex);
 
 /// <summary>
 /// Flattens every <c>gherkinDocument</c> envelope into the lookups the synthesiser needs: scenario nodes
@@ -91,8 +99,10 @@ internal sealed class GherkinIndex
 
     private void AddExamples(CucumberScenarioNode scenario)
     {
-        foreach (var examples in scenario.Examples ?? [])
+        var blocks = scenario.Examples ?? [];
+        for (var blockIndex = 0; blockIndex < blocks.Length; blockIndex++)
         {
+            var examples = blocks[blockIndex];
             var headers = (examples.TableHeader?.Cells ?? []).Select(c => c.Value ?? "").ToArray();
             if (headers.Length == 0)
                 continue;
@@ -101,6 +111,8 @@ internal sealed class GherkinIndex
                 .Where(t => t is not null)
                 .Select(t => t!)
                 .ToArray();
+            var blockName = CucumberFeatureSynthesizer.NullIfBlank(examples.Name);
+            var blockDescription = CucumberFeatureSynthesizer.NullIfBlank(examples.Description);
 
             foreach (var row in examples.TableBody ?? [])
             {
@@ -110,7 +122,7 @@ internal sealed class GherkinIndex
                 var values = new Dictionary<string, string>(StringComparer.Ordinal);
                 for (var i = 0; i < headers.Length; i++)
                     values[headers[i]] = i < cells.Length ? cells[i] : "";
-                _exampleRows[rowId] = new ExampleRow(values, tags);
+                _exampleRows[rowId] = new ExampleRow(values, tags, blockName, blockDescription, blockIndex);
             }
         }
     }

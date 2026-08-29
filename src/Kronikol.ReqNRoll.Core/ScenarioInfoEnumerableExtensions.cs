@@ -30,6 +30,10 @@ internal static class ScenarioInfoEnumerableExtensions
                         .DistinctBy(x => x.ScenarioId)
                         .OrderByDescending(x => HappyPathDetection.AnyHappyPathTag(x.ScenarioTags))
                         .ThenBy(x => x.ScenarioTitle)
+                        // Rows must group by their Examples: block before the value ordering, or
+                        // rows from different blocks interleave. Blockless rows sort last (never
+                        // mixed with indexed ones) and keep today's ordering among themselves.
+                        .ThenBy(x => x.ExamplesBlockIndex ?? int.MaxValue)
                         .ThenBy(x => x.ExampleValues is { Count: > 0 }
                             ? string.Join("|", x.ExampleValues.Values)
                             : "")
@@ -65,6 +69,9 @@ internal static class ScenarioInfoEnumerableExtensions
                                 ExampleValues = x.ExampleValues,
                                 ExampleRawValues = x.ExampleRawValues,
                                 ExampleFlatValues = x.ExampleFlatValues,
+                                ExamplesBlockName = x.ExamplesBlockName,
+                                ExamplesBlockDescription = x.ExamplesBlockDescription,
+                                ExamplesBlockIndex = x.ExamplesBlockIndex,
                                 Attachments = StepCollector.GetScenarioAttachments(x.ScenarioId),
                             };
                         }).ToArray();

@@ -63,6 +63,58 @@ public class FeatureSynthesizerTests
     }
 
     [Fact]
+    public void Start_records_carry_examples_block_fields_onto_scenarios()
+    {
+        var records = new List<TestRunRecord>
+        {
+            new()
+            {
+                Event = "start", TestId = "t1", TestName = "Movement (OneWeek)", Feature = "Market share", Timestamp = T0,
+                OutlineId = "Movement", ExampleValues = new Dictionary<string, string> { ["Period"] = "OneWeek" },
+                ExamplesBlockName = "the merchant gained share", ExamplesBlockDescription = "movement is positive", ExamplesBlockIndex = 0
+            },
+            new() { Event = "end", TestId = "t1", Status = "passed", Timestamp = T0.AddSeconds(1) },
+            new()
+            {
+                Event = "start", TestId = "t2", TestName = "Movement (FourWeeks)", Feature = "Market share", Timestamp = T0.AddSeconds(2),
+                OutlineId = "Movement", ExampleValues = new Dictionary<string, string> { ["Period"] = "FourWeeks" },
+                ExamplesBlockIndex = 1
+            },
+            new() { Event = "end", TestId = "t2", Status = "passed", Timestamp = T0.AddSeconds(3) },
+            new() { Event = "start", TestId = "t3", TestName = "Plain", Feature = "Market share", Timestamp = T0.AddSeconds(4) },
+            new() { Event = "end", TestId = "t3", Status = "passed", Timestamp = T0.AddSeconds(5) },
+        };
+
+        var result = FeatureSynthesizer.Build(records, logs: null);
+        var scenarios = result.Features.Single().Scenarios;
+
+        var first = scenarios.Single(s => s.Id == "t1");
+        Assert.Equal("the merchant gained share", first.ExamplesBlockName);
+        Assert.Equal("movement is positive", first.ExamplesBlockDescription);
+        Assert.Equal(0, first.ExamplesBlockIndex);
+
+        var second = scenarios.Single(s => s.Id == "t2");
+        Assert.Null(second.ExamplesBlockName);
+        Assert.Equal(1, second.ExamplesBlockIndex);
+
+        var plain = scenarios.Single(s => s.Id == "t3");
+        Assert.Null(plain.ExamplesBlockName);
+        Assert.Null(plain.ExamplesBlockDescription);
+        Assert.Null(plain.ExamplesBlockIndex);
+    }
+
+    [Fact]
+    public void Examples_block_fields_parse_from_ndjson()
+    {
+        var record = TestRunRecord.FromJson(
+            """{"event":"start","testId":"t1","outlineId":"O","exampleValues":{"Period":"OneWeek"},"examplesBlockName":"gained","examplesBlockDescription":"desc","examplesBlockIndex":2}""");
+
+        Assert.Equal("gained", record.ExamplesBlockName);
+        Assert.Equal("desc", record.ExamplesBlockDescription);
+        Assert.Equal(2, record.ExamplesBlockIndex);
+    }
+
+    [Fact]
     public void Status_vocabulary_maps_playwright_and_junit_words()
     {
         Assert.Equal(ExecutionResult.Passed, FeatureSynthesizer.MapStatus("passed"));

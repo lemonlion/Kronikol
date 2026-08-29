@@ -1658,6 +1658,59 @@ public static class ReportGenerator
             wholeTestSegments, scenarioId, boundaryLogs, wholeTestVisualization, diagramDataMap);
     }
 
+    /// <summary>
+    /// Computes the Examples: block separator bands for a parameterized group whose members carry
+    /// block structure. Keyed by the index of the first member row of each block (members are
+    /// already sorted by block by <see cref="ParameterGrouper"/>); values are pre-encoded HTML parts.
+    /// </summary>
+    private static Dictionary<int, (string NameHtml, string? DescHtml, string CountsText)> BuildExamplesBlockBands(Scenario[] scenarios)
+    {
+        var bands = new Dictionary<int, (string, string?, string)>();
+        for (var ri = 0; ri < scenarios.Length;)
+        {
+            var start = ri;
+            var blockIndex = scenarios[start].ExamplesBlockIndex;
+            var blockName = scenarios[start].ExamplesBlockName;
+            do { ri++; }
+            while (ri < scenarios.Length
+                   && scenarios[ri].ExamplesBlockIndex == blockIndex
+                   && scenarios[ri].ExamplesBlockName == blockName);
+
+            var blockMembers = scenarios[start..ri];
+            var passCount = blockMembers.Count(s => s.Result == ExecutionResult.Passed);
+            var failCount = blockMembers.Count(s => s.Result == ExecutionResult.Failed);
+            var skipCount = blockMembers.Count(s => s.Result is ExecutionResult.Skipped or ExecutionResult.Bypassed or ExecutionResult.SkippedAfterFailure);
+            var countParts = new List<string>();
+            if (failCount > 0) countParts.Add($"{failCount} failed");
+            if (skipCount > 0) countParts.Add($"{skipCount} skipped");
+            countParts.Add($"{passCount}/{blockMembers.Length} passed");
+
+            var nameHtml = string.IsNullOrEmpty(blockName)
+                ? "Examples"
+                : $"Examples: {System.Net.WebUtility.HtmlEncode(blockName)}";
+            var desc = scenarios[start].ExamplesBlockDescription;
+            var descHtml = string.IsNullOrWhiteSpace(desc) ? null : System.Net.WebUtility.HtmlEncode(desc);
+
+            bands[start] = (nameHtml, descHtml, string.Join(", ", countParts));
+        }
+        return bands;
+    }
+
+    /// <summary>
+    /// Emits one Examples: block separator band. The band deliberately carries no
+    /// <c>data-row-idx</c>, <c>onclick</c>, <c>data-row-search</c> or <c>id</c> so every existing
+    /// row-selection, flatten-toggle and search behavior treats it as inert.
+    /// </summary>
+    private static void AppendExamplesBlockBand(StringBuilder body, (string NameHtml, string? DescHtml, string CountsText) band, int colspan)
+    {
+        body.Append($"<tr class=\"examples-block-row\"><td colspan=\"{colspan}\">");
+        body.Append($"<span class=\"examples-block-name\">{band.NameHtml}</span>");
+        body.Append($"<span class=\"examples-block-counts\">{band.CountsText}</span>");
+        if (band.DescHtml is not null)
+            body.Append($"<span class=\"examples-block-desc\">{band.DescHtml}</span>");
+        body.Append("</td></tr>");
+    }
+
     private static void RenderParameterizedGroup(
         StringBuilder body,
         ParameterizedGroup group,
@@ -1690,6 +1743,13 @@ public static class ReportGenerator
     {
         var scenarios = group.Scenarios;
 
+        // Named Examples: blocks render as separator bands only when the group actually has
+        // block structure; a single unnamed block (or no block data at all) must produce
+        // byte-identical output to a report generated without the block fields.
+        var hasBlockStructure = scenarios.Select(s => s.ExamplesBlockIndex).Distinct().Count() > 1
+            || scenarios.Any(s => !string.IsNullOrEmpty(s.ExamplesBlockName));
+        var blockBands = hasBlockStructure ? BuildExamplesBlockBands(scenarios) : null;
+
         // Aggregate status
         var hasFailure = scenarios.Any(s => s.Result == ExecutionResult.Failed);
         var hasSkipped = scenarios.Any(s => s.Result == ExecutionResult.Skipped);
@@ -1714,6 +1774,11 @@ public static class ReportGenerator
             CollectStepText(s.Steps, searchParts);
             if (scenarioDiagramSearchTerms.TryGetValue(s.Id, out var diagramTerms) && diagramTerms.Count > 0)
                 searchParts.AddRange(diagramTerms);
+            if (hasBlockStructure)
+            {
+                if (!string.IsNullOrEmpty(s.ExamplesBlockName)) searchParts.Add(s.ExamplesBlockName);
+                if (!string.IsNullOrEmpty(s.ExamplesBlockDescription)) searchParts.Add(s.ExamplesBlockDescription);
+            }
         }
         var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(string.Join(" ", searchParts).ToLowerInvariant())}\"";
 
@@ -1813,7 +1878,15 @@ public static class ReportGenerator
                 CollectStepText(s.Steps, rowSearchParts);
                 if (scenarioDiagramSearchTerms.TryGetValue(s.Id, out var rowDiagramTermsFlat) && rowDiagramTermsFlat.Count > 0)
                     rowSearchParts.AddRange(rowDiagramTermsFlat);
+                if (hasBlockStructure)
+                {
+                    if (!string.IsNullOrEmpty(s.ExamplesBlockName)) rowSearchParts.Add(s.ExamplesBlockName);
+                    if (!string.IsNullOrEmpty(s.ExamplesBlockDescription)) rowSearchParts.Add(s.ExamplesBlockDescription);
+                }
                 var rowSearchAttr = $" data-row-search=\"{System.Net.WebUtility.HtmlEncode(string.Join(" ", rowSearchParts).ToLowerInvariant())}\"";
+
+                if (blockBands is not null && blockBands.TryGetValue(ri, out var flatBand))
+                    AppendExamplesBlockBand(body, flatBand, 1 + flatNames.Length + 2);
 
                 body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
                 body.Append($"<td>{ri + 1}</td>");
@@ -1900,7 +1973,20 @@ public static class ReportGenerator
             CollectStepText(s.Steps, rowSearchParts);
             if (scenarioDiagramSearchTerms.TryGetValue(s.Id, out var rowDiagramTerms) && rowDiagramTerms.Count > 0)
                 rowSearchParts.AddRange(rowDiagramTerms);
+            if (hasBlockStructure)
+            {
+                if (!string.IsNullOrEmpty(s.ExamplesBlockName)) rowSearchParts.Add(s.ExamplesBlockName);
+                if (!string.IsNullOrEmpty(s.ExamplesBlockDescription)) rowSearchParts.Add(s.ExamplesBlockDescription);
+            }
             var rowSearchAttr = $" data-row-search=\"{System.Net.WebUtility.HtmlEncode(string.Join(" ", rowSearchParts).ToLowerInvariant())}\"";
+
+            if (blockBands is not null && blockBands.TryGetValue(ri, out var groupedBand))
+            {
+                var groupedCols = group.Rule is ParameterDisplayRule.ScalarColumns or ParameterDisplayRule.FlattenedObject && group.ParameterNames.Length > 0
+                    ? 1 + group.ParameterNames.Length + 2
+                    : 4;
+                AppendExamplesBlockBand(body, groupedBand, groupedCols);
+            }
 
             var rowAnchorId = scenarioAnchorIds?.GetValueOrDefault(s.Id) ?? GenerateScenarioAnchorId(s.DisplayName);
             body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\" id=\"{rowAnchorId}\" data-scenario-id=\"{rowAnchorId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
@@ -3187,6 +3273,9 @@ public static class ReportGenerator
                     ["categories"] = s.Categories ?? [],
                     ["rule"] = s.Rule,
                     ["outlineId"] = s.OutlineId,
+                    ["examplesBlockName"] = s.ExamplesBlockName,
+                    ["examplesBlockDescription"] = s.ExamplesBlockDescription,
+                    ["examplesBlockIndex"] = s.ExamplesBlockIndex,
                     ["exampleValues"] = s.ExampleValues,
                     // The flattened view drives the pivot table's columns; without it a merged report
                     // loses the parameterised grouping the original had.
@@ -4243,6 +4332,9 @@ public static class ReportGenerator
                                         ["categories"] = new Dictionary<string, object?> { ["type"] = "array", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
                                         ["rule"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Gherkin Rule grouping this scenario belongs to" },
                                         ["outlineId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Original scenario outline name for parameterized scenarios" },
+                                        ["examplesBlockName"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Name of the Examples: block this outline row came from" },
+                                        ["examplesBlockDescription"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Free-text description under the Examples: header" },
+                                        ["examplesBlockIndex"] = new Dictionary<string, object?> { ["type"] = "integer", ["nullable"] = true, ["description"] = "0-based position of the Examples: block within the outline" },
                                         ["exampleValues"] = new Dictionary<string, object?> { ["type"] = "object", ["nullable"] = true, ["description"] = "Example parameter values for parameterized scenarios", ["additionalProperties"] = new Dictionary<string, object?> { ["type"] = "string" } },
                                         ["backgroundSteps"] = new Dictionary<string, object?>
                                         {
