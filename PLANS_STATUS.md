@@ -2,6 +2,14 @@
 
 **Date:** 2026-08-29 · **Repo version at audit:** 3.0.63 (bumped to 3.0.64 during the session)
 
+> **UPDATE (2026-08-29, later the same day):** two "Not done" verdicts below are now
+> stale. Parallel sessions implemented `EXAMPLES_BLOCKS_PLAN.md` and
+> `REQNROLL_DUPLICATE_STEPS_PLAN.md` (issue #71) after this audit ran; both shipped in
+> the 3.0.64 release commit alongside the CI-coverage overhaul, with the full suite
+> reported green. The audit text below describes the state at audit time and is kept
+> as the record; the examples-blocks Java divergence is logged in Kronikol4J's parity
+> backlog.
+
 Item-by-item verification of all 13 `*_PLAN.md` files in the repo root against the
 actual code, tests, changelog, git history, and the wiki (`../Kronikol.wiki`,
 `../Kronikol4J` where relevant).
