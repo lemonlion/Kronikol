@@ -7,21 +7,21 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>Kronikol.ReqNRoll.xUnit3</RootNamespace>
+    <RootNamespace>KronikolComponentTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.componenttests.json">
+    <Content Update="appsettings.componenttests.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="8.9.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
-    <PackageReference Include="Reqnroll" Version="3.3.4" />
-    <PackageReference Include="Reqnroll.xunit.v3" Version="3.3.4" />
-    <PackageReference Include="Kronikol.ReqNRoll.xUnit3" Version="3.0.63" />
+    <PackageReference Include="LightBDD.XUnit3" Version="3.12.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="Kronikol.LightBDD.xUnit3" Version="3.0.64" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

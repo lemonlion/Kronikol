@@ -2,7 +2,7 @@ using Kronikol;
 using Kronikol.TUnit;
 using TUnit.Core;
 
-namespace Kronikol.TUnit.Infrastructure;
+namespace KronikolComponentTests.Infrastructure;
 
 public class TestRun : DiagrammedTestRun
 {

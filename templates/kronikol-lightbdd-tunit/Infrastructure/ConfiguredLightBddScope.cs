@@ -3,11 +3,13 @@ using LightBDD.Framework.Configuration;
 using LightBDD.TUnit;
 using Kronikol;
 using Kronikol.LightBDD.TUnit;
-using Kronikol.LightBDD.TUnit.Infrastructure;
+using KronikolComponentTests.Infrastructure;
 
-namespace Kronikol.LightBDD.TUnit.Infrastructure;
+[assembly: ConfiguredLightBddScope]
 
-public class ConfiguredLightBddScope : LightBddScope
+namespace KronikolComponentTests.Infrastructure;
+
+internal class ConfiguredLightBddScopeAttribute : LightBddScopeAttribute
 {
     protected override void OnConfigure(LightBddConfiguration configuration)
     {

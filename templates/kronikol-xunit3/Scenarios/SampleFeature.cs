@@ -1,9 +1,9 @@
 using System.Net;
 using FluentAssertions;
 using Kronikol.xUnit3;
-using Kronikol.xUnit3.Infrastructure;
+using KronikolComponentTests.Infrastructure;
 
-namespace Kronikol.xUnit3.Scenarios;
+namespace KronikolComponentTests.Scenarios;
 
 [Endpoint("/")]
 public class SampleFeature : BaseFixture

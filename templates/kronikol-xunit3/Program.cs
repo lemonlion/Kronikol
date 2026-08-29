@@ -1,6 +1,6 @@
 // TODO: Remove this file once you add a <ProjectReference> to your real API project.
 // This placeholder allows the template to compile and run immediately.
-namespace Kronikol.xUnit3;
+namespace KronikolComponentTests;
 
 public class Program
 {

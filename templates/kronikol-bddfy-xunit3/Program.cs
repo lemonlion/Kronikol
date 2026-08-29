@@ -1,4 +1,4 @@
-namespace Kronikol.BDDfy.xUnit3;
+namespace KronikolComponentTests;
 
 public class Program
 {

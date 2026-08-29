@@ -2,9 +2,9 @@ using System.Net;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Kronikol.MSTest;
-using Kronikol.MSTest.Infrastructure;
+using KronikolComponentTests.Infrastructure;
 
-namespace Kronikol.MSTest.Scenarios;
+namespace KronikolComponentTests.Scenarios;
 
 [TestClass]
 [Endpoint("/")]

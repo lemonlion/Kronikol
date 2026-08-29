@@ -6,9 +6,9 @@ using Kronikol.BDDfy.xUnit3;
 using Kronikol.Tracking;
 using Xunit;
 
-[assembly: AssemblyFixture(typeof(Kronikol.BDDfy.xUnit3.Infrastructure.BDDfyTestSetup))]
+[assembly: AssemblyFixture(typeof(KronikolComponentTests.Infrastructure.BDDfyTestSetup))]
 
-namespace Kronikol.BDDfy.xUnit3.Infrastructure;
+namespace KronikolComponentTests.Infrastructure;
 
 public class BDDfyTestSetup : IAsyncLifetime
 {

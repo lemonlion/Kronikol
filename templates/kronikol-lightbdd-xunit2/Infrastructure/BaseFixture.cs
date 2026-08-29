@@ -6,7 +6,7 @@ using Kronikol.LightBDD;
 using Kronikol.LightBDD.xUnit2;
 using Kronikol.Tracking;
 
-namespace Kronikol.LightBDD.xUnit2.Infrastructure;
+namespace KronikolComponentTests.Infrastructure;
 
 public abstract class BaseFixture : FeatureFixture, IDisposable
 {

@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Kronikol.Tracking;
 using Kronikol.MSTest;
 
-namespace Kronikol.MSTest.Infrastructure;
+namespace KronikolComponentTests.Infrastructure;
 
 public abstract class BaseFixture : DiagrammedComponentTest
 {

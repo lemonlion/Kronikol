@@ -1,4 +1,4 @@
-namespace Kronikol.LightBDD.xUnit3;
+namespace KronikolComponentTests;
 
 public class Program
 {

@@ -1,4 +1,4 @@
-namespace Kronikol.NUnit4;
+namespace KronikolComponentTests;
 
 public class Program
 {

@@ -1,4 +1,4 @@
-namespace Kronikol.ReqNRoll.xUnit2;
+namespace KronikolComponentTests;
 
 public class Program
 {

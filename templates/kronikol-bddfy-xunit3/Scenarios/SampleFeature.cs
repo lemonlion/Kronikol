@@ -2,10 +2,10 @@ using System.Net;
 using FluentAssertions;
 using TestStack.BDDfy;
 using Kronikol.BDDfy.xUnit3;
-using Kronikol.BDDfy.xUnit3.Infrastructure;
+using KronikolComponentTests.Infrastructure;
 using Xunit;
 
-namespace Kronikol.BDDfy.xUnit3.Scenarios;
+namespace KronikolComponentTests.Scenarios;
 
 [Story(
     AsA = "SERVICE_NAME consumer",

@@ -3,12 +3,12 @@ using LightBDD.Framework.Configuration;
 using LightBDD.XUnit3;
 using Kronikol;
 using Kronikol.LightBDD.xUnit3;
-using Kronikol.LightBDD.xUnit3.Infrastructure;
+using KronikolComponentTests.Infrastructure;
 using Xunit.v3;
 
 [assembly: TestPipelineStartup(typeof(ConfiguredLightBddScope))]
 
-namespace Kronikol.LightBDD.xUnit3.Infrastructure;
+namespace KronikolComponentTests.Infrastructure;
 
 public class ConfiguredLightBddScope : LightBddScope
 {

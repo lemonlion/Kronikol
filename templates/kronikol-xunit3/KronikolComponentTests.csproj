@@ -1,27 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>Kronikol.LightBDD.xUnit3</RootNamespace>
+    <RootNamespace>KronikolComponentTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.componenttests.json">
+    <Content Update="appsettings.componenttests.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="8.0.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="FluentAssertions" Version="8.9.0" />
-    <PackageReference Include="LightBDD.XUnit3" Version="3.12.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
-    <PackageReference Include="Kronikol.LightBDD.xUnit3" Version="3.0.63" />
+    <PackageReference Include="Kronikol.xUnit3" Version="3.0.64" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -31,5 +33,9 @@
 
   <!-- TODO: Add a ProjectReference to your API project here -->
   <!-- <ProjectReference Include="..\YourApi\YourApi.csproj" /> -->
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
 
 </Project>

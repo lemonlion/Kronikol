@@ -3,12 +3,11 @@
   "author": "Aryeh Citron",
   "classifications": ["Test", "xUnit", "Kronikol", "Component Test"],
   "identity": "Kronikol.xUnit2.CSharp",
-  "groupIdentity": "Kronikol.Test",
   "name": "TTD Component Tests (xUnit v2)",
   "shortName": "kronikol-xunit2",
   "description": "A component test project using xUnit v2 with Kronikol for automatic sequence diagram and report generation.",
   "tags": { "language": "C#", "type": "project" },
-  "sourceName": "Kronikol.xUnit2",
+  "sourceName": "KronikolComponentTests",
   "preferNameDirectory": true,
   "symbols": {
     "serviceName": { "type": "parameter", "datatype": "string", "defaultValue": "MyApi", "replaces": "SERVICE_NAME", "description": "Name of the service under test" },

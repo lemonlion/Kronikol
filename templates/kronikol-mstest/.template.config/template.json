@@ -3,12 +3,11 @@
   "author": "Aryeh Citron",
   "classifications": ["Test", "MSTest", "Kronikol", "Component Test"],
   "identity": "Kronikol.MSTest.CSharp",
-  "groupIdentity": "Kronikol.Test",
   "name": "TTD Component Tests (MSTest)",
   "shortName": "kronikol-mstest",
   "description": "A component test project using MSTest with Kronikol for automatic sequence diagram and report generation.",
   "tags": { "language": "C#", "type": "project" },
-  "sourceName": "Kronikol.MSTest",
+  "sourceName": "KronikolComponentTests",
   "preferNameDirectory": true,
   "symbols": {
     "serviceName": { "type": "parameter", "datatype": "string", "defaultValue": "MyApi", "replaces": "SERVICE_NAME", "description": "Name of the service under test" },

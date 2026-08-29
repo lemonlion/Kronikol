@@ -1,7 +1,7 @@
 using Kronikol;
 using Kronikol.xUnit3;
 
-namespace Kronikol.xUnit3.Infrastructure;
+namespace KronikolComponentTests.Infrastructure;
 
 public class TestRun : DiagrammedTestRun, IDisposable
 {

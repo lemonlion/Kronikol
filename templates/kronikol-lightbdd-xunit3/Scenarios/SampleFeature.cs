@@ -1,9 +1,10 @@
+using LightBDD.Framework;
 using LightBDD.Framework.Scenarios;
 using LightBDD.XUnit3;
 using Kronikol.LightBDD;
-using Kronikol.LightBDD.xUnit3.Infrastructure;
+using KronikolComponentTests.Infrastructure;
 
-namespace Kronikol.LightBDD.xUnit3.Scenarios;
+namespace KronikolComponentTests.Scenarios;
 
 [FeatureDescription("/")]
 public partial class SampleFeature : BaseFixture

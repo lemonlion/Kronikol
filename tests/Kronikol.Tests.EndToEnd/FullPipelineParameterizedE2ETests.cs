@@ -38,7 +38,9 @@ public sealed class FullPipelineFixture : IAsyncLifetime
 
     private static void RunDotnetTest(string projectDir, string? filter = null)
     {
-        var args = $"test \"{projectDir}\" --no-restore -v q";
+        // No --no-restore: a clean CI runner has never restored the example projects, and
+        // dotnet test would fail with NETSDK1004 (missing assets file) before running anything.
+        var args = $"test \"{projectDir}\" -v q";
         if (filter != null)
             args += $" --filter \"{filter}\"";
 
@@ -54,7 +56,13 @@ public sealed class FullPipelineFixture : IAsyncLifetime
         using var process = Process.Start(psi)!;
         var stdout = process.StandardOutput.ReadToEnd();
         var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit(120_000);
+        // Cold restore + build + run can far exceed the old 120s on a CI runner; a timeout
+        // must throw rather than fall through to ExitCode (which throws obscurely on a live process).
+        if (!process.WaitForExit(600_000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { }
+            throw new InvalidOperationException($"dotnet test timed out after 10 minutes:\n{stdout}\n{stderr}");
+        }
 
         if (process.ExitCode != 0)
         {

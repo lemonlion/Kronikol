@@ -3,12 +3,11 @@
   "author": "Aryeh Citron",
   "classifications": ["Test", "ReqNRoll", "xUnit", "Kronikol", "Component Test", "BDD", "Gherkin"],
   "identity": "Kronikol.ReqNRoll.xUnit2.CSharp",
-  "groupIdentity": "Kronikol.Test",
   "name": "TTD Component Tests (ReqNRoll + xUnit v2)",
   "shortName": "kronikol-reqnroll-xunit2",
   "description": "A component test project using ReqNRoll (Gherkin) with xUnit v2 and Kronikol for automatic sequence diagram and report generation.",
   "tags": { "language": "C#", "type": "project" },
-  "sourceName": "Kronikol.ReqNRoll.xUnit2",
+  "sourceName": "KronikolComponentTests",
   "preferNameDirectory": true,
   "symbols": {
     "serviceName": { "type": "parameter", "datatype": "string", "defaultValue": "MyApi", "replaces": "SERVICE_NAME", "description": "Name of the service under test" },

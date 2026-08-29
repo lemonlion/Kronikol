@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Kronikol;
 using Kronikol.MSTest;
 
-namespace Kronikol.MSTest.Infrastructure;
+namespace KronikolComponentTests.Infrastructure;
 
 [TestClass]
 public class TestRun : DiagrammedTestRun

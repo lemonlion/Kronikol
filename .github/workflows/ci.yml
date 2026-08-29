@@ -263,9 +263,19 @@ jobs:
       - name: Build template scaffolds & pack template package
         if: matrix.templates-build
         run: |
+          # Verify the templates the way a user consumes them: pack the template package,
+          # install it, instantiate every template under a neutral name, and build the result.
+          # Building templates/kronikol-*/ in place cannot catch template.json faults (a shared
+          # groupIdentity made every short name unresolvable; a sourceName colliding with the
+          # PackageReference text mangled the package pin into the user's project name), and it
+          # produces false failures when a scaffold identity overlaps a referenced package.
+          dotnet pack templates/Kronikol.Templates.csproj --configuration Release
+          PKG=$(ls templates/bin/Release/Kronikol.Templates.*.nupkg | head -n 1)
+          dotnet new install "$PKG"
           for dir in templates/kronikol-*/; do
-            echo "::group::Building $dir"
-            dotnet build "$dir" --configuration Release
+            short=$(basename "$dir")
+            echo "::group::Instantiating & building $short"
+            dotnet new "$short" -n ScaffoldSmoke -o "$RUNNER_TEMP/tpl-smoke/$short"
+            dotnet build "$RUNNER_TEMP/tpl-smoke/$short" --configuration Release
             echo "::endgroup::"
           done
-          dotnet pack templates/Kronikol.Templates.csproj --configuration Release

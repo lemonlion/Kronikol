@@ -1,4 +1,4 @@
-namespace Kronikol.BDDfy.xUnit3.Infrastructure;
+namespace KronikolComponentTests.Infrastructure;
 
 public abstract class BaseFixture : IDisposable
 {

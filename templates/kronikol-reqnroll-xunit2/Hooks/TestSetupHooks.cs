@@ -7,7 +7,7 @@ using Kronikol;
 using Kronikol.ReqNRoll;
 using Kronikol.Tracking;
 
-namespace Kronikol.ReqNRoll.xUnit2.Hooks;
+namespace KronikolComponentTests.Hooks;
 
 [Binding]
 public class TestSetupHooks

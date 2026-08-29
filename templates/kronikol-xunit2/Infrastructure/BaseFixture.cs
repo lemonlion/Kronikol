@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Kronikol.Tracking;
 using Kronikol.xUnit2;
 
-namespace Kronikol.xUnit2.Infrastructure;
+namespace KronikolComponentTests.Infrastructure;
 
 public abstract class BaseFixture : DiagrammedComponentTest
 {
@@ -19,7 +19,7 @@ public abstract class BaseFixture : DiagrammedComponentTest
         {
             builder.ConfigureTestServices(services =>
             {
-                services.TrackDependenciesForDiagrams(new XUnitTestTrackingMessageHandlerOptions
+                services.TrackDependenciesForDiagrams(new XUnit2TestTrackingMessageHandlerOptions
                 {
                     CallerName = ServiceUnderTestName,
                     PortsToServiceNames = { { 15050, "DOWNSTREAM_SERVICE" } }
@@ -31,7 +31,7 @@ public abstract class BaseFixture : DiagrammedComponentTest
 
     protected BaseFixture()
     {
-        Client = SFactory.CreateTestTrackingClient(new XUnitTestTrackingMessageHandlerOptions
+        Client = SFactory.CreateTestTrackingClient(new XUnit2TestTrackingMessageHandlerOptions
         {
             FixedNameForReceivingService = ServiceUnderTestName
         });

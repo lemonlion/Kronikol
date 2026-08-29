@@ -1,7 +1,7 @@
 using System.Net;
 using FluentAssertions;
 
-namespace Kronikol.LightBDD.TUnit.Scenarios;
+namespace KronikolComponentTests.Scenarios;
 
 public partial class SampleFeature
 {

@@ -1,9 +1,9 @@
 using System.Net;
 using FluentAssertions;
 using Kronikol.NUnit4;
-using Kronikol.NUnit4.Infrastructure;
+using KronikolComponentTests.Infrastructure;
 
-namespace Kronikol.NUnit4.Scenarios;
+namespace KronikolComponentTests.Scenarios;
 
 [TestFixture]
 [Endpoint("/")]

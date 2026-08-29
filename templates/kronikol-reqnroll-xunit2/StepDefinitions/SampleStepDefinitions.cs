@@ -2,7 +2,7 @@ using System.Net;
 using FluentAssertions;
 using Reqnroll;
 
-namespace Kronikol.ReqNRoll.xUnit2.StepDefinitions;
+namespace KronikolComponentTests.StepDefinitions;
 
 [Binding]
 public class SampleStepDefinitions

@@ -7,7 +7,7 @@ using Kronikol;
 using Kronikol.ReqNRoll;
 using Kronikol.Tracking;
 
-namespace Kronikol.ReqNRoll.TUnit.Hooks;
+namespace KronikolComponentTests.Hooks;
 
 [Binding]
 public class TestSetupHooks
@@ -18,7 +18,7 @@ public class TestSetupHooks
     [BeforeTestRun]
     public static void BeforeTestRun()
     {
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _factory = new PlaceholderApiFactory().WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
@@ -57,5 +57,17 @@ public class TestSetupHooks
         });
 
         _factory?.Dispose();
+    }
+
+    /// <summary>
+    /// Hosts the placeholder API without a Main method (TUnit owns the process entry point).
+    /// TODO: Once you reference your real API project, delete this class and use
+    /// <c>new WebApplicationFactory&lt;YourApi.Program&gt;()</c> directly.
+    /// </summary>
+    private sealed class PlaceholderApiFactory : WebApplicationFactory<Program>
+    {
+        protected override IWebHostBuilder CreateWebHostBuilder() =>
+            new WebHostBuilder().Configure(app =>
+                app.Run(async context => await context.Response.WriteAsync("Hello from SERVICE_NAME")));
     }
 }

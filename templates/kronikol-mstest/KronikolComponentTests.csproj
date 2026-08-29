@@ -1,29 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>Kronikol.LightBDD.TUnit</RootNamespace>
+    <RootNamespace>KronikolComponentTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.componenttests.json">
+    <Content Update="appsettings.componenttests.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="8.9.0" />
-    <!-- LightBDD.TUnit 3.12.1 is the first build against the modern TUnit line;
-         3.12.0 + TUnit 1.43+ crashes at module initialization (MissingFieldException). -->
-    <PackageReference Include="LightBDD.TUnit" Version="3.12.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
-    <PackageReference Include="Kronikol.LightBDD.TUnit" Version="3.0.63" />
-    <PackageReference Include="TUnit" Version="1.53.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.2.2" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.2.2" />
+    <PackageReference Include="Kronikol.MSTest" Version="3.0.64" />
   </ItemGroup>
 
   <!-- TODO: Add a ProjectReference to your API project here -->
