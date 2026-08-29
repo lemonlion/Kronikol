@@ -70,14 +70,22 @@ public class ReportGenerationTests
         var plantUmlSources = await ReportParser.ExtractPlantUmlSourcesAsync(reports.TestRunReportHtml);
         Assert.NotEmpty(plantUmlSources);
 
-        // All diagrams should contain the expected service participants
-        foreach (var puml in plantUmlSources)
+        // All diagrams with real traffic should contain the expected service participants.
+        // Diagnostic scenarios that deliberately make no HTTP calls (the ReqNRoll.xUnit3
+        // Muffins feature) render the "(no interactions)" placeholder instead.
+        var diagramsWithTraffic = plantUmlSources
+            .Where(p => !p.Contains("(no interactions)"))
+            .ToArray();
+        Assert.NotEmpty(diagramsWithTraffic);
+        foreach (var puml in diagramsWithTraffic)
         {
             PlantUmlAssertions.AssertContainsParticipants(puml, "Dessert Provider");
         }
 
-        // The happy path diagram involves the Cow Service (milk call)
-        var happyPathDiagram = plantUmlSources.First(p => p.Contains("Cow Service", StringComparison.OrdinalIgnoreCase));
+        // The happy path diagram involves the Cow Service (milk call). Search only the
+        // traffic-bearing diagrams — a "(no interactions)" placeholder can still mention
+        // the cow service in a step delimiter bar.
+        var happyPathDiagram = diagramsWithTraffic.First(p => p.Contains("Cow Service", StringComparison.OrdinalIgnoreCase));
         PlantUmlAssertions.AssertContainsParticipants(happyPathDiagram, "Dessert Provider", "Cow Service");
         PlantUmlAssertions.AssertContainsSequenceArrow(happyPathDiagram, "dessertProvider", "cowService");
     }

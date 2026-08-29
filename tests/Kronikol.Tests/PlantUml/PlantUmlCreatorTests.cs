@@ -74,7 +74,8 @@ public class PlantUmlCreatorTests
 
     private static RequestResponseLog MakeOverrideStart(
         string testId = "test-1",
-        string? plantUml = null)
+        string? plantUml = null,
+        DiagramMarkerKind kind = DiagramMarkerKind.Custom)
     {
         return new RequestResponseLog(
             TestName: testId,
@@ -91,13 +92,15 @@ public class PlantUmlCreatorTests
             TrackingIgnore: false)
         {
             IsOverrideStart = true,
-            PlantUml = plantUml
+            PlantUml = plantUml,
+            MarkerKind = kind
         };
     }
 
     private static RequestResponseLog MakeOverrideEnd(
         string testId = "test-1",
-        string? plantUml = null)
+        string? plantUml = null,
+        DiagramMarkerKind kind = DiagramMarkerKind.Custom)
     {
         return new RequestResponseLog(
             TestName: testId,
@@ -114,7 +117,8 @@ public class PlantUmlCreatorTests
             TrackingIgnore: false)
         {
             IsOverrideEnd = true,
-            PlantUml = plantUml
+            PlantUml = plantUml,
+            MarkerKind = kind
         };
     }
 
@@ -1918,6 +1922,123 @@ public class PlantUmlCreatorTests
         var hnote2 = plantUml.IndexOf("Marker");
         Assert.True(partitionEnd < hnote1, "Partition should close before first override");
         Assert.True(partitionEnd < hnote2, "Partition should close before second override");
+    }
+
+    // ─── Partition + narration markers (step bars, assertion notes, row bands) ────
+    //
+    // BDD adapters emit every step's delimiter bar through the override-marker channel
+    // (StepCollector.StartStep → InsertPlantUml with DiagramMarkerKind.Step). A GIVEN bar
+    // therefore precedes the first real setup trace, and it must not suppress the setup
+    // partition the way a boundary-marking Custom override does.
+
+    private const string GivenBar = "\nhnote across <<stepDelimiter>> #black:<color:white>GIVEN a thing\n";
+    private const string WhenBar = "\nhnote across <<stepDelimiter>> #black:<color:white>WHEN acting\n";
+
+    [Fact]
+    public void Setup_partition_survives_step_delimiter_bars()
+    {
+        var logs = new[]
+        {
+            MakeOverrideStart(plantUml: GivenBar, kind: DiagramMarkerKind.Step),
+            MakeOverrideEnd(kind: DiagramMarkerKind.Step),
+            MakeRequest(callerName: "User", serviceName: "Api", uri: "http://example.com/api/setup"),
+            MakeResponse(callerName: "User", serviceName: "Api"),
+            MakeOverrideStart(plantUml: WhenBar, kind: DiagramMarkerKind.Step),
+            MakeOverrideEnd(kind: DiagramMarkerKind.Step),
+            MakeActionStart(),
+            MakeRequest(callerName: "User", serviceName: "Api", uri: "http://example.com/api/action"),
+            MakeResponse(callerName: "User", serviceName: "Api"),
+        };
+        var plantUml = GetPlantUml(logs, separateSetup: true);
+
+        Assert.Contains("partition #F6F6F6 Setup", plantUml);
+        var endMarker = Environment.NewLine + "end" + Environment.NewLine;
+        var partitionOpen = plantUml.IndexOf("partition #F6F6F6 Setup");
+        var givenBar = plantUml.IndexOf("GIVEN a thing");
+        var setupCall = plantUml.IndexOf("/api/setup");
+        var partitionEnd = plantUml.IndexOf(endMarker, partitionOpen);
+        var whenBar = plantUml.IndexOf("WHEN acting");
+        var actionCall = plantUml.IndexOf("/api/action");
+        Assert.True(partitionOpen < givenBar, "GIVEN bar should render inside the partition");
+        Assert.True(givenBar < setupCall, "GIVEN bar should precede the setup call");
+        Assert.True(setupCall < partitionEnd, "Setup call should be inside the partition");
+        // The WHEN bar has nothing but markers between it and StartAction: it belongs to the
+        // action and closes the partition first, exactly like the boundary override.
+        Assert.True(partitionEnd < whenBar, "WHEN bar should render after the partition closes");
+        Assert.True(whenBar < actionCall, "WHEN bar should precede the action call");
+        AssertBalancedPartitions(plantUml);
+    }
+
+    [Fact]
+    public void Assertion_note_during_setup_stays_inside_partition()
+    {
+        var logs = new[]
+        {
+            MakeRequest(callerName: "User", serviceName: "Api", uri: "http://example.com/api/setup"),
+            MakeResponse(callerName: "User", serviceName: "Api"),
+            MakeOverrideStart(plantUml: "\nhnote across <<assertionNote>> #ddffdd\nseeded ok\nend note\n", kind: DiagramMarkerKind.Assertion),
+            MakeOverrideEnd(kind: DiagramMarkerKind.Assertion),
+            MakeRequest(callerName: "User", serviceName: "Api", uri: "http://example.com/api/setup2"),
+            MakeResponse(callerName: "User", serviceName: "Api"),
+            MakeActionStart(),
+            MakeRequest(callerName: "User", serviceName: "Api", uri: "http://example.com/api/action"),
+            MakeResponse(callerName: "User", serviceName: "Api"),
+        };
+        var plantUml = GetPlantUml(logs, separateSetup: true);
+
+        Assert.Contains("partition #F6F6F6 Setup", plantUml);
+        var endMarker = Environment.NewLine + "end" + Environment.NewLine;
+        var partitionOpen = plantUml.IndexOf("partition #F6F6F6 Setup");
+        var note = plantUml.IndexOf("seeded ok");
+        var setup2 = plantUml.IndexOf("/api/setup2");
+        var partitionEnd = plantUml.IndexOf(endMarker, partitionOpen);
+        Assert.True(partitionOpen < note && note < partitionEnd, "Assertion note should stay inside the partition");
+        Assert.True(setup2 < partitionEnd, "Second setup call should stay inside the partition");
+        AssertBalancedPartitions(plantUml);
+    }
+
+    [Fact]
+    public void Custom_override_before_any_setup_trace_still_suppresses_partition()
+    {
+        // Legacy semantics pinned: a Custom override marks the setup/action boundary, so one
+        // arriving before any real setup trace means there is no setup phase to draw.
+        var logs = new[]
+        {
+            MakeOverrideStart(plantUml: "\nhnote across #black:<color:white>Test 1\n"),
+            MakeOverrideEnd(),
+            MakeRequest(callerName: "User", serviceName: "Api", uri: "http://example.com/api/setup"),
+            MakeResponse(callerName: "User", serviceName: "Api"),
+            MakeActionStart(),
+            MakeRequest(callerName: "User", serviceName: "Api", uri: "http://example.com/api/action"),
+            MakeResponse(callerName: "User", serviceName: "Api"),
+        };
+        var plantUml = GetPlantUml(logs, separateSetup: true);
+
+        Assert.DoesNotContain("partition", plantUml);
+        AssertBalancedPartitions(plantUml);
+    }
+
+    [Fact]
+    public void PlantUml_has_balanced_partitions_with_step_bars_throughout()
+    {
+        var logs = new[]
+        {
+            MakeOverrideStart(plantUml: GivenBar, kind: DiagramMarkerKind.Step),
+            MakeOverrideEnd(kind: DiagramMarkerKind.Step),
+            MakeRequest(callerName: "User", serviceName: "Api", uri: "http://example.com/api/setup"),
+            MakeResponse(callerName: "User", serviceName: "Api"),
+            MakeOverrideStart(plantUml: WhenBar, kind: DiagramMarkerKind.Step),
+            MakeOverrideEnd(kind: DiagramMarkerKind.Step),
+            MakeActionStart(),
+            MakeRequest(callerName: "User", serviceName: "Api", uri: "http://example.com/api/action"),
+            MakeResponse(callerName: "User", serviceName: "Api"),
+            MakeOverrideStart(plantUml: "\nhnote across <<stepDelimiter>> #black:<color:white>THEN checking\n", kind: DiagramMarkerKind.Step),
+            MakeOverrideEnd(kind: DiagramMarkerKind.Step),
+        };
+        var plantUml = GetPlantUml(logs, separateSetup: true);
+
+        Assert.Contains("partition #F6F6F6 Setup", plantUml);
+        AssertBalancedPartitions(plantUml);
     }
 
     // ─── PlantUML structural validity ────────────────────────────

@@ -58,7 +58,7 @@ public class TUnitParameterizedRenderingTests
 
         var groups = await ReportParser.ExtractParameterizedGroupsAsync(reports.SpecificationsHtml);
 
-        var r1 = groups.FirstOrDefault(g => g.ScenarioName.Contains("Process_order_in_region"));
+        var r1 = groups.FirstOrDefault(g => g.ScenarioName.Contains("Process order in region"));
         Assert.NotNull(r1);
         Assert.Contains("Region", r1.ColumnHeaders);
         Assert.Contains("Amount", r1.ColumnHeaders);
@@ -79,7 +79,7 @@ public class TUnitParameterizedRenderingTests
 
         var groups = await ReportParser.ExtractParameterizedGroupsAsync(reports.SpecificationsHtml);
 
-        var r2 = groups.FirstOrDefault(g => g.ScenarioName.Contains("Validate_order_scenario"));
+        var r2 = groups.FirstOrDefault(g => g.ScenarioName.Contains("Validate order scenario"));
         Assert.NotNull(r2);
         // R2 flattens the single OrderScenario record into individual columns
         Assert.Contains("Region", r2.ColumnHeaders);
@@ -101,7 +101,7 @@ public class TUnitParameterizedRenderingTests
 
         var groups = await ReportParser.ExtractParameterizedGroupsAsync(reports.SpecificationsHtml);
 
-        var r3 = groups.FirstOrDefault(g => g.ScenarioName.Contains("Ship_to_address"));
+        var r3 = groups.FirstOrDefault(g => g.ScenarioName.Contains("Ship to address"));
         Assert.NotNull(r3);
         Assert.Contains("Order Id", r3.ColumnHeaders);
         Assert.Contains("Address", r3.ColumnHeaders);
@@ -120,7 +120,7 @@ public class TUnitParameterizedRenderingTests
 
         var groups = await ReportParser.ExtractParameterizedGroupsAsync(reports.SpecificationsHtml);
 
-        var r4 = groups.FirstOrDefault(g => g.ScenarioName.Contains("Enroll_customer"));
+        var r4 = groups.FirstOrDefault(g => g.ScenarioName.Contains("Enroll customer"));
         Assert.NotNull(r4);
         Assert.Contains("Tier", r4.ColumnHeaders);
         Assert.Contains("Customer", r4.ColumnHeaders);

@@ -160,8 +160,25 @@ public static partial class PlantUmlCreator
         var partitionLine = highlightSetup ? $"partition {effectiveColor} Setup" : "partition Setup";
         var isInActionPhase = actionStartIndex < 0; // no IsActionStart marker → everything is action
 
+        // The last real (non-marker) trace before the StartAction marker. A narration marker
+        // (step bar, assertion note, row band) past this point belongs to the action that is
+        // about to begin and closes the setup partition; one at or before it is setup content
+        // and renders inside the partition.
+        var lastSetupTraceIndex = -1;
+        for (var i = actionStartIndex - 1; i >= 0; i--)
+        {
+            var t = tracesForTest[i];
+            if (!t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart)
+            {
+                lastSetupTraceIndex = i;
+                break;
+            }
+        }
+
+        var traceIndex = -1;
         foreach (var trace in tracesForTest)
         {
+            traceIndex++;
             if (trace.IsActionStart)
             {
                 builder.ClosePartition();
@@ -187,8 +204,23 @@ public static partial class PlantUmlCreator
             {
                 if (hasActionStart && !setupPartitionClosed)
                 {
-                    builder.ClosePartition();
-                    setupPartitionClosed = true;
+                    // A Custom override marks the setup/action boundary and always closes the
+                    // partition. A narration marker is scenario content: with real setup traces
+                    // still to come it renders inside the partition (opening it if needed —
+                    // BDD adapters emit the GIVEN step bar before the first setup call); past
+                    // the last real setup trace it belongs to the imminent action and closes
+                    // the partition like the boundary override does.
+                    var isNarrationMarker = trace.MarkerKind
+                        is DiagramMarkerKind.Step or DiagramMarkerKind.Assertion or DiagramMarkerKind.Row;
+                    if (!isNarrationMarker || traceIndex > lastSetupTraceIndex)
+                    {
+                        builder.ClosePartition();
+                        setupPartitionClosed = true;
+                    }
+                    else if (hasSetupTraces && !builder.HasOpenPartition)
+                    {
+                        builder.OpenPartition(partitionLine);
+                    }
                 }
                 currentlyOverriding = true;
                 builder.Append(trace.PlantUml ?? "");

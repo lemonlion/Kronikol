@@ -16,8 +16,9 @@ public static class PlantUmlAssertions
         // Normalize alias names (spaces removed, used as identifiers)
         var fromAlias = from.Replace(" ", "");
         var toAlias = to.Replace(" ", "");
-        // Match arrows like: FromAlias -> ToAlias or FromAlias --> ToAlias
-        var pattern = $@"{Regex.Escape(fromAlias)}\s*-+>+\s*{Regex.Escape(toAlias)}";
+        // Match arrows like: FromAlias -> ToAlias, FromAlias --> ToAlias, or the colored form
+        // FromAlias -[#438DD5]-> ToAlias that SequenceDiagramArrowColors (default on) emits.
+        var pattern = $@"{Regex.Escape(fromAlias)}\s*-+(?:\[[^\]]+\])?-*>+\s*{Regex.Escape(toAlias)}";
         Assert.Matches(pattern, plantUml);
     }
 
