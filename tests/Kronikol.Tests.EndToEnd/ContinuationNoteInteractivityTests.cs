@@ -257,8 +257,9 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
     /// <summary>
     /// Regression: the continuation note in a chunked fragment must show an
     /// expand (▼) button when it's a long note. The fragContinuationMap maps
-    /// to ownerNoteBlocks[0] which may have truncated lines from the initial
-    /// render — must use the fragment's actual block content for isLongNote.
+    /// the chunk back to the note it continues, whose owner-source lines may
+    /// be truncated from the initial render — continuation chunks are forced
+    /// long instead of trusting isLongNote on those lines.
     /// </summary>
     [Fact]
     public async Task Chunked_continuation_note_has_expand_button()
@@ -329,16 +330,9 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
         Assert.Contains("hasExpand=true", result);
     }
 
-    /// <summary>
-    /// Regression: clicking expand on the continuation note's down-arrow button
-    /// must expand THAT note, not the response note. The issue was that
-    /// makeNotesCollapsible used a simple noteIndexOffset that didn't account
-    /// for chunked continuation blocks sharing an original note index.
-    /// </summary>
-    [Fact]
-    public async Task Chunked_continuation_note_expand_button_expands_correct_note()
+    private async Task SetupChunkedFragments(string fileName)
     {
-        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedExpandCorrect.html"));
+        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -364,10 +358,173 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
                 return true;
             }
         """, null, new() { Timeout = 120000, PollingInterval = 200 });
+    }
 
-        // Find the continuation fragment, get first note's height,
-        // click its MINUS button, verify THAT note shrinks (not the response note)
-        var result = await Page.EvaluateAsync<string>("""
+    private async Task WaitForFragmentsIdle()
+    {
+        await Page.WaitForTimeoutAsync(2000);
+        await Page.WaitForFunctionAsync("() => !window._plantumlRendering", null, new() { Timeout = 30000, PollingInterval = 200 });
+        await Page.WaitForFunctionAsync("() => { var c = document.querySelectorAll('[data-diagram-type=\"plantuml\"]'); for(var i=0;i<c.length;i++) if(c[i]._noteRendering) return false; return true; }", null, new() { Timeout = 30000, PollingInterval = 200 });
+    }
+
+    /// <summary>
+    /// Shared in-page helper: finds the note group at <c>groupIdx</c> in the
+    /// requested fragment (continuation fragment when <c>wantContinuation</c>),
+    /// hovers it and clicks the minus button inside its bbox.
+    /// </summary>
+    private const string ClickMinusOnFragmentNoteJs = """
+        (args) => {
+            var wantContinuation = args[0], groupIdx = args[1];
+            var frags = document.querySelectorAll('.puml-fragment');
+            for (var fi = 0; fi < frags.length; fi++) {
+                var src = frags[fi].getAttribute('data-plantuml') || '';
+                var isCont = src.indexOf('Continued From Previous Diagram') >= 0;
+                if (isCont !== wantContinuation) continue;
+                var svg = frags[fi].querySelector('svg');
+                if (!svg) continue;
+                var groups = window._findNoteGroups(svg);
+                if (groups.length <= groupIdx) continue;
+                var bbox = window._getNoteBBox(groups[groupIdx]);
+                groups[groupIdx].paths[0].dispatchEvent(new MouseEvent('mouseenter', {bubbles:true}));
+                var icons = frags[fi].querySelectorAll('.note-toggle-icon');
+                for (var i = 0; i < icons.length; i++) {
+                    if (icons[i].style.opacity === '0') continue;
+                    if (icons[i].getAttribute('data-note-btn') !== 'minus') continue;
+                    var rect = icons[i].querySelector('rect');
+                    if (!rect) continue;
+                    var ix = parseFloat(rect.getAttribute('x'));
+                    var iy = parseFloat(rect.getAttribute('y'));
+                    if (ix >= bbox.x-5 && ix <= bbox.x+bbox.width+5
+                        && iy >= bbox.y-5 && iy <= bbox.y+bbox.height+5) {
+                        rect.dispatchEvent(new MouseEvent('click', {bubbles:true}));
+                        return 'CLICKED frag=' + fi;
+                    }
+                }
+                return 'NO_MINUS_BTN frag=' + fi;
+            }
+            return 'NO_MATCHING_FRAG';
+        }
+        """;
+
+    private const string ReadNoteStepsJs = """
+        () => {
+            var container = document.querySelector('[data-diagram-type="plantuml"]');
+            if (!container) return 'NO_CONTAINER';
+            var steps = container._noteSteps || {};
+            return 'step0=' + (steps[0] === undefined ? 'u' : steps[0])
+                + ' step1=' + (steps[1] === undefined ? 'u' : steps[1])
+                + ' step2=' + (steps[2] === undefined ? 'u' : steps[2])
+                + ' step3=' + (steps[3] === undefined ? 'u' : steps[3]);
+        }
+        """;
+
+    /// <summary>
+    /// Regression: clicking minus on a continuation chunk must collapse the note
+    /// it is a chunk OF — the split note, original index 1 in this fixture (note
+    /// 0 is the POST request body) — not original note 0. fragContinuationMap
+    /// hard-coded the continuation chunk to index 0, so buttons on chunks in
+    /// later fragments drove the wrong note; and once note 0 was already
+    /// collapsed, the click was silently swallowed by setNoteState's same-step
+    /// early return. Phase 1 collapses note 0 first so the buggy path has
+    /// nowhere to hide: only the correct mapping can change step1.
+    /// </summary>
+    [Fact]
+    public async Task Chunked_continuation_note_minus_collapses_the_split_note()
+    {
+        await SetupChunkedFragments("ChunkedExpandCorrect.html");
+
+        // Phase 1: collapse note 0 via its own minus button (first note group
+        // of the non-continuation fragment).
+        var phase1 = await Page.EvaluateAsync<string>(ClickMinusOnFragmentNoteJs, new object[] { false, 0 });
+        Assert.StartsWith("CLICKED", phase1);
+        await WaitForFragmentsIdle();
+        Assert.Contains("step0=0", await Page.EvaluateAsync<string>(ReadNoteStepsJs));
+
+        // Phase 2: click minus on the continuation chunk (first note group of
+        // the continuation fragment). This must collapse the SPLIT note (1).
+        var phase2 = await Page.EvaluateAsync<string>(ClickMinusOnFragmentNoteJs, new object[] { true, 0 });
+        Assert.StartsWith("CLICKED", phase2);
+        await WaitForFragmentsIdle();
+
+        var steps = await Page.EvaluateAsync<string>(ReadNoteStepsJs);
+        // The continuation chunk belongs to note 1: step1 must now be 0. With
+        // the old map ([0]) the click targeted note 0 (already 0) and was
+        // swallowed, leaving step1 at 2.
+        Assert.Contains("step1=0", steps);
+        Assert.Contains("step0=0", steps);
+        // The notes after the split one must be untouched.
+        Assert.Contains("step2=2", steps);
+        Assert.Contains("step3=2", steps);
+    }
+
+    /// <summary>
+    /// Regression: the context menu computed its global note index by summing
+    /// RAW note-block counts of preceding fragments (no continuation-chunk
+    /// remap), so for continuation fragments it read a different _noteSteps
+    /// entry than the hover buttons write. Right-clicking the expanded
+    /// continuation chunk must offer the single "Copy box text" item, not the
+    /// truncated-note submenu keyed off an unrelated note's state.
+    /// </summary>
+    [Fact]
+    public async Task Chunked_continuation_context_menu_agrees_with_note_buttons()
+    {
+        await SetupChunkedFragments("ChunkedCtxMenuIndex.html");
+
+        var menuResult = await Page.EvaluateAsync<string>("""
+            (() => {
+                var container = document.querySelector('[data-diagram-type="plantuml"]');
+                if (!container) return 'NO_CONTAINER';
+                // Poison the index the buggy raw sum lands on (note 2, the
+                // response note): with the continuation chunk expanded, the
+                // menu must NOT consult this entry.
+                container._noteSteps[2] = 0;
+                var frags = container.querySelectorAll('.puml-fragment');
+                for (var fi = 0; fi < frags.length; fi++) {
+                    var src = frags[fi].getAttribute('data-plantuml') || '';
+                    if (src.indexOf('Continued From Previous Diagram') < 0) continue;
+                    var hr = frags[fi].querySelector('.note-hover-rect');
+                    if (!hr) return 'NO_HOVER_RECT';
+                    var rect = hr.getBoundingClientRect();
+                    var evt = new MouseEvent('contextmenu', {
+                        bubbles: true, cancelable: true,
+                        clientX: rect.left + rect.width / 2,
+                        clientY: rect.top + rect.height / 2,
+                        pageX: rect.left + rect.width / 2 + window.scrollX,
+                        pageY: rect.top + rect.height / 2 + window.scrollY
+                    });
+                    hr.dispatchEvent(evt);
+                    var menu = document.querySelector('.diagram-ctx-menu');
+                    if (!menu) return 'NO_MENU';
+                    var items = Array.from(menu.querySelectorAll('*'))
+                        .map(function(i) { return i.textContent.trim(); })
+                        .filter(function(i) { return i; });
+                    return 'ITEMS:' + items.join('|');
+                }
+                return 'NO_CONTINUATION_FRAG';
+            })()
+        """);
+
+        Assert.StartsWith("ITEMS:", menuResult);
+        Assert.Contains("Copy box text", menuResult);
+        // The buggy raw-sum index (2) is collapsed, which would render the
+        // "Copy full box text" submenu; the continuation chunk's real note (1)
+        // is expanded, so only the flat item may appear.
+        Assert.DoesNotContain("Copy full box text", menuResult);
+    }
+
+    /// <summary>
+    /// Regression: the J/Y format toggle on a continuation chunk cached
+    /// eligibility and wrote _noteFormats under the wrong index (0), flipping
+    /// an unrelated note to YAML. Whatever the eligibility verdict for the
+    /// split note itself, note 0 must never gain a format entry from a click
+    /// on the continuation chunk.
+    /// </summary>
+    [Fact]
+    public async Task Chunked_continuation_format_button_never_targets_another_note()
+    {
+        await SetupChunkedFragments("ChunkedFormatIndex.html");
+
+        var clickResult = await Page.EvaluateAsync<string>("""
             (() => {
                 var frags = document.querySelectorAll('.puml-fragment');
                 for (var fi = 0; fi < frags.length; fi++) {
@@ -378,78 +535,43 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
                     var groups = window._findNoteGroups(svg);
                     if (groups.length === 0) continue;
                     var bbox = window._getNoteBBox(groups[0]);
-                    var heightBefore = bbox.height;
-                    // Also record second note's height (if it wrongly collapses)
-                    var secondHeight = groups.length > 1 ? window._getNoteBBox(groups[1]).height : -1;
-                    // Hover to show buttons
                     groups[0].paths[0].dispatchEvent(new MouseEvent('mouseenter', {bubbles:true}));
-                    // Find minus button on this note
                     var icons = frags[fi].querySelectorAll('.note-toggle-icon');
-                    var minusBtn = null;
                     for (var i = 0; i < icons.length; i++) {
-                        if (icons[i].style.opacity === '0') continue;
-                        if (icons[i].getAttribute('data-note-btn') !== 'minus') continue;
+                        if (icons[i].getAttribute('data-note-btn') !== 'format') continue;
+                        if (icons[i].style.display === 'none') continue;
                         var rect = icons[i].querySelector('rect');
                         if (!rect) continue;
                         var ix = parseFloat(rect.getAttribute('x'));
                         var iy = parseFloat(rect.getAttribute('y'));
                         if (ix >= bbox.x-5 && ix <= bbox.x+bbox.width+5
                             && iy >= bbox.y-5 && iy <= bbox.y+bbox.height+5) {
-                            minusBtn = icons[i]; break;
+                            rect.dispatchEvent(new MouseEvent('click', {bubbles:true}));
+                            return 'CLICKED';
                         }
                     }
-                    if (!minusBtn) return 'NO_MINUS_BTN';
-                    minusBtn.querySelector('rect').dispatchEvent(new MouseEvent('click', {bubbles:true}));
-                    return 'CLICKED h1=' + heightBefore.toFixed(0) + ' h2=' + secondHeight.toFixed(0);
+                    return 'NO_VISIBLE_FORMAT_BTN';
                 }
                 return 'NO_CONTINUATION_FRAG';
             })()
         """);
 
-        Assert.Contains("CLICKED", result);
+        // Both outcomes are legitimate: the split note may or may not be
+        // YAML-eligible. What must never happen is the button showing (or
+        // acting) based on note 0's payload.
+        Assert.True(clickResult is "CLICKED" or "NO_VISIBLE_FORMAT_BTN",
+            $"Unexpected result: {clickResult}");
+        await WaitForFragmentsIdle();
 
-        await Page.WaitForTimeoutAsync(2000);
-        await Page.WaitForFunctionAsync("() => !window._plantumlRendering", null, new() { Timeout = 30000, PollingInterval = 200 });
-        await Page.WaitForFunctionAsync("() => { var c = document.querySelectorAll('[data-diagram-type=\"plantuml\"]'); for(var i=0;i<c.length;i++) if(c[i]._noteRendering) return false; return true; }", null, new() { Timeout = 30000, PollingInterval = 200 });
-
-        // After collapsing the continuation note, it should be shorter.
-        // The second note (response) should NOT have changed height.
-        var afterResult = await Page.EvaluateAsync<string>("""
-            (() => {
-                var frags = document.querySelectorAll('.puml-fragment');
-                for (var fi = 0; fi < frags.length; fi++) {
-                    var src = frags[fi].getAttribute('data-plantuml') || '';
-                    if (src.indexOf('Continued From Previous Diagram') < 0 && src.indexOf('Continued') < 0) continue;
-                    var svg = frags[fi].querySelector('svg');
-                    if (!svg) continue;
-                    var groups = window._findNoteGroups(svg);
-                    if (groups.length === 0) return 'NO_GROUPS_AFTER';
-                    var h1 = window._getNoteBBox(groups[0]).height;
-                    var h2 = groups.length > 1 ? window._getNoteBBox(groups[1]).height : -1;
-                    return 'h1After=' + h1.toFixed(0) + ' h2After=' + h2.toFixed(0);
-                }
-                return 'NO_CONTINUATION_AFTER';
-            })()
-        """);
-
-        // The critical check: _noteSteps[0] should have changed (the continuation
-        // note IS original note 0). If the bug is present, _noteSteps[noteIndexOffset]
-        // changes instead (wrong note).
-        var stepsResult = await Page.EvaluateAsync<string>("""
-            (() => {
+        var formats = await Page.EvaluateAsync<string>("""
+            () => {
                 var container = document.querySelector('[data-diagram-type="plantuml"]');
                 if (!container) return 'NO_CONTAINER';
-                var steps = container._noteSteps || [];
-                return 'step0=' + (steps[0] || 0) + ' step1=' + (steps[1] || 0) + ' step2=' + (steps[2] || 0);
-            })()
+                var f = container._noteFormats || {};
+                return 'f0=' + (f[0] || 'unset') + ' f1=' + (f[1] || 'unset');
+            }
         """);
-
-        // The continuation note is original note 0. After clicking minus, step[0] should be 0 (collapsed).
-        // If the wrong note collapsed, step[0] would still be 2 (expanded).
-        Assert.Contains("step0=0", stepsResult);
-        // Before the fix, step[2] would be 0 (wrong note collapsed) instead of step[0]
-        Assert.True(!stepsResult.Contains("step0=2"),
-            $"Wrong note collapsed (step[0] should be 0 after minus). Steps: {stepsResult}");
+        Assert.Contains("f0=unset", formats);
     }
 
     /// <summary>

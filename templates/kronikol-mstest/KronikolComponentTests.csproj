@@ -21,7 +21,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="MSTest.TestFramework" Version="4.2.2" />
     <PackageReference Include="MSTest.TestAdapter" Version="4.2.2" />
-    <PackageReference Include="Kronikol.MSTest" Version="3.0.65" />
+    <PackageReference Include="Kronikol.MSTest" Version="3.0.66" />
   </ItemGroup>
 
   <!-- TODO: Add a ProjectReference to your API project here -->

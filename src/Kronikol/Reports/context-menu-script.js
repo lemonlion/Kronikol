@@ -358,15 +358,13 @@
                     }
                 }
 
-                // Compute global note index for _noteSteps lookup
+                // Compute global note index for _noteSteps lookup via the
+                // shared fragment indexing (continuation chunks map back to
+                // the note they continue — the buttons and this menu must
+                // agree on the index they read).
                 var globalNoteIdx = resolvedBlockIdx >= 0 ? resolvedBlockIdx : clickedNoteIdx;
-                if (fragEl && fragEl !== container) {
-                    var fragIdx = parseInt(fragEl.dataset.fragment || '0', 10);
-                    var siblingFrags = container.querySelectorAll('.puml-fragment');
-                    for (var ofi = 0; ofi < fragIdx && ofi < siblingFrags.length; ofi++) {
-                        var sibSrc = siblingFrags[ofi].getAttribute('data-plantuml');
-                        if (sibSrc) globalNoteIdx += window._parseNoteBlocks(sibSrc).length;
-                    }
+                if (fragEl && fragEl !== container && window._computeGlobalNoteIndex) {
+                    globalNoteIdx = window._computeGlobalNoteIndex(container, fragEl, globalNoteIdx);
                 }
 
                 // Copy targets are the DISPLAYED lines. Source-derived lines

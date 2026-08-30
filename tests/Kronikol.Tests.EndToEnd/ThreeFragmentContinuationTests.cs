@@ -134,4 +134,80 @@ public class ThreeFragmentContinuationTests : DiagramNotePlaywrightBase
         Assert.DoesNotContain("NO_CONTAINER", result);
         Assert.Contains("outOfBounds=[]", result);
     }
+
+    /// <summary>
+    /// Regression: in a 3-fragment split of note 1 (of 4), the middle fragment
+    /// holds nothing but a continuation chunk of that note. Its minus button
+    /// must collapse note 1 — with the old hard-coded fragContinuationMap of
+    /// [0] it collapsed note 0 (the request body in fragment 0) instead.
+    /// </summary>
+    [Fact]
+    public async Task Middle_fragment_continuation_minus_collapses_the_split_note()
+    {
+        await Page.GotoAsync(GenerateThreeFragmentContinuationReport("ThreeFragMiddleMinus.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+
+        await ExpandToThreeFragments();
+
+        // Click minus on the note in a MIDDLE fragment: one whose source is
+        // both continued-from and continued-on (only the split note's interior
+        // chunk matches).
+        var clickResult = await Page.EvaluateAsync<string>("""
+            (() => {
+                var frags = document.querySelectorAll('.puml-fragment');
+                for (var fi = 0; fi < frags.length; fi++) {
+                    var src = frags[fi].getAttribute('data-plantuml') || '';
+                    if (src.indexOf('Continued From Previous Diagram') < 0) continue;
+                    if (src.indexOf('Continued On Next Diagram') < 0) continue;
+                    var svg = frags[fi].querySelector('svg');
+                    if (!svg) continue;
+                    var groups = window._findNoteGroups(svg);
+                    if (groups.length === 0) continue;
+                    var bbox = window._getNoteBBox(groups[0]);
+                    groups[0].paths[0].dispatchEvent(new MouseEvent('mouseenter', {bubbles:true}));
+                    var icons = frags[fi].querySelectorAll('.note-toggle-icon');
+                    for (var i = 0; i < icons.length; i++) {
+                        if (icons[i].style.opacity === '0') continue;
+                        if (icons[i].getAttribute('data-note-btn') !== 'minus') continue;
+                        var rect = icons[i].querySelector('rect');
+                        if (!rect) continue;
+                        var ix = parseFloat(rect.getAttribute('x'));
+                        var iy = parseFloat(rect.getAttribute('y'));
+                        if (ix >= bbox.x-5 && ix <= bbox.x+bbox.width+5
+                            && iy >= bbox.y-5 && iy <= bbox.y+bbox.height+5) {
+                            rect.dispatchEvent(new MouseEvent('click', {bubbles:true}));
+                            return 'CLICKED frag=' + fi;
+                        }
+                    }
+                    return 'NO_MINUS_BTN frag=' + fi;
+                }
+                return 'NO_MIDDLE_FRAG';
+            })()
+        """);
+        Assert.StartsWith("CLICKED", clickResult);
+
+        await Page.WaitForTimeoutAsync(2000);
+        await Page.WaitForFunctionAsync("() => !window._plantumlRendering", null, new() { Timeout = 30000, PollingInterval = 200 });
+        await Page.WaitForFunctionAsync("() => { var c = document.querySelectorAll('[data-diagram-type=\"plantuml\"]'); for(var i=0;i<c.length;i++) if(c[i]._noteRendering) return false; return true; }", null, new() { Timeout = 30000, PollingInterval = 200 });
+
+        var steps = await Page.EvaluateAsync<string>("""
+            () => {
+                var container = document.querySelector('[data-diagram-type="plantuml"]');
+                if (!container) return 'NO_CONTAINER';
+                var steps = container._noteSteps || {};
+                return 'step0=' + (steps[0] === undefined ? 'u' : steps[0])
+                    + ' step1=' + (steps[1] === undefined ? 'u' : steps[1])
+                    + ' step2=' + (steps[2] === undefined ? 'u' : steps[2])
+                    + ' step3=' + (steps[3] === undefined ? 'u' : steps[3]);
+            }
+        """);
+
+        // The middle chunk continues note 1: only step1 may change.
+        Assert.Contains("step1=0", steps);
+        Assert.Contains("step0=2", steps);
+        Assert.Contains("step2=2", steps);
+        Assert.Contains("step3=2", steps);
+    }
 }

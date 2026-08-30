@@ -530,6 +530,56 @@
         buttons.forEach(function(b) { svg.appendChild(b); });
     }
 
+    // ── Fragment note indexing ──────────────────────────────────────────
+    // Note state lives on the owner container keyed by ORIGINAL-source note
+    // index, so every fragment must translate its local block indices. When
+    // chunkLargeNotes splits one oversized note across fragments, the
+    // continuation block that OPENS a later fragment is the TAIL of the last
+    // note counted in the preceding fragments (original index offset - 1),
+    // not a new note. The hover buttons and the context menu must agree on
+    // this arithmetic, so it lives here and is exposed as
+    // window._computeGlobalNoteIndex.
+    function isContinuationBlock(block) {
+        return !!(block && block.contentLines && block.contentLines[0] &&
+            block.contentLines[0].indexOf('Continued From Previous Diagram') >= 0);
+    }
+
+    // Returns { offset, map } for a .puml-fragment. offset = original notes
+    // fully accounted for by preceding sibling fragments (a sibling's leading
+    // continuation chunk re-counts a note, so it is subtracted). map is set
+    // only when this fragment opens with a continuation chunk: original note
+    // index per fragment-local block index.
+    function computeFragmentNoteIndexing(owner, fragEl) {
+        var offset = 0;
+        var fragIdx = parseInt(fragEl.dataset.fragment || '0', 10);
+        var siblings = owner.querySelectorAll('.puml-fragment');
+        for (var fi = 0; fi < fragIdx && fi < siblings.length; fi++) {
+            var sibSource = siblings[fi].getAttribute('data-plantuml');
+            if (!sibSource) continue;
+            var sibNotes = parseNoteBlocks(sibSource);
+            var sibCount = sibNotes.length;
+            if (sibCount > 0 && isContinuationBlock(sibNotes[0])) sibCount--;
+            offset += sibCount;
+        }
+        var map = null;
+        var fragSource = fragEl.getAttribute('data-plantuml');
+        var fragNotes = fragSource ? parseNoteBlocks(fragSource) : [];
+        if (fragNotes.length > 0 && isContinuationBlock(fragNotes[0])) {
+            map = [Math.max(0, offset - 1)];
+            for (var fci = 1; fci < fragNotes.length; fci++) map.push(offset + fci - 1);
+        }
+        return { offset: offset, map: map };
+    }
+
+    function computeGlobalNoteIndex(owner, fragEl, localIdx) {
+        if (!fragEl || fragEl === owner || !fragEl.classList ||
+            !fragEl.classList.contains('puml-fragment')) return localIdx;
+        var indexing = computeFragmentNoteIndexing(owner, fragEl);
+        return indexing.map && localIdx < indexing.map.length
+            ? indexing.map[localIdx]
+            : localIdx + indexing.offset;
+    }
+
     function makeNotesCollapsible(container) {
         var svg = container.querySelector('svg');
         if (!svg) return;
@@ -556,32 +606,14 @@
 
         // For fragments, compute the global note index offset and mapping.
         // When chunkLargeNotes splits a note across fragments, the continuation
-        // block in later fragments maps to the SAME original note (index 0),
-        // not to the next sequential index.
+        // block that opens a later fragment maps back to the note it continues
+        // (original index offset - 1), not to a new sequential index.
         var noteIndexOffset = 0;
         var fragContinuationMap = null;
         if (container.classList.contains('puml-fragment')) {
-            var fragIdx = parseInt(container.dataset.fragment || '0', 10);
-            var siblingFrags = owner.querySelectorAll('.puml-fragment');
-            for (var fi = 0; fi < fragIdx && fi < siblingFrags.length; fi++) {
-                var sibSource = siblingFrags[fi].getAttribute('data-plantuml');
-                if (sibSource) {
-                    var sibNotes = parseNoteBlocks(sibSource);
-                    var sibCount = sibNotes.length;
-                    if (sibCount > 0 && sibNotes[0].contentLines[0] &&
-                        sibNotes[0].contentLines[0].indexOf('Continued From Previous Diagram') >= 0) {
-                        sibCount--;
-                    }
-                    noteIndexOffset += sibCount;
-                }
-            }
-            if (fragNoteBlocks.length > 0 && fragNoteBlocks[0].contentLines[0] &&
-                fragNoteBlocks[0].contentLines[0].indexOf('Continued From Previous Diagram') >= 0) {
-                fragContinuationMap = [0];
-                for (var fci = 1; fci < fragNoteBlocks.length; fci++) {
-                    fragContinuationMap.push(noteIndexOffset + fci - 1);
-                }
-            }
+            var fragIndexing = computeFragmentNoteIndexing(owner, container);
+            noteIndexOffset = fragIndexing.offset;
+            fragContinuationMap = fragIndexing.map;
         }
 
         // Use fragment's note blocks for SVG matching, owner for state
@@ -748,7 +780,7 @@
                 };
                 // Continuation notes are always "long" — they're chunks of a
                 // larger note, and expand should reveal the full original content.
-                var forceIsLong = !!(fragContinuationMap && svgIdx === 0);
+                var forceIsLong = !!(fragContinuationMap && localIdx === 0);
                 // Short notes only have steps 0 (collapsed) and 2 (expanded)
                 if (!forceIsLong && !isLongNote(origContentLines, container._truncateLines, owner._headersHidden) && step === 1) step = 2;
                 createNoteButtons(svg, bbox, step,
@@ -1580,6 +1612,7 @@
     window._findNoteGroups = findNoteGroups;
     window._getNoteBBox = getNoteBBox;
     window._parseNoteBlocks = parseNoteBlocks;
+    window._computeGlobalNoteIndex = computeGlobalNoteIndex;
     // Pure JSON ⇄ YAML functions, exposed for the Playwright unit-style fixture
     window._noteFormatInternals = {
         reconstructNoteJson: reconstructNoteJson,

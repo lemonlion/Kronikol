@@ -189,6 +189,37 @@ public class ScenarioTruncateAndCollapsibleNotesTests
     }
 
     // ═══════════════════════════════════════════════════════════
+    // Fix: continuation-chunk note indexing (split notes across
+    //       fragments) is shared and maps chunks to the note they
+    //       continue, not to index 0
+    // ═══════════════════════════════════════════════════════════
+
+    [Fact]
+    public void ComputeFragmentNoteIndexing_maps_continuation_chunk_to_previous_note()
+    {
+        var fnBody = ExtractFunctionBody(_script, "computeFragmentNoteIndexing");
+        // The chunk that opens a continuation fragment is the tail of the last
+        // note counted in the preceding fragments — offset - 1, never a
+        // hard-coded 0.
+        Assert.Contains("offset - 1", fnBody);
+        Assert.DoesNotContain("map = [0]", fnBody);
+        // The helper is the single indexing authority, exposed for the context
+        // menu (and tests) to share.
+        Assert.Contains("window._computeGlobalNoteIndex", _script);
+    }
+
+    [Fact]
+    public void MakeNotesCollapsible_continuation_force_long_uses_fragment_local_index()
+    {
+        var fnBody = ExtractFunctionBody(_script, "makeNotesCollapsible");
+        // forceIsLong marks the continuation chunk itself (fragment-local block
+        // 0); the SVG group ordinal diverges from it when sourceIndexMap is
+        // active, so it must not be used here.
+        Assert.Matches(@"fragContinuationMap\s*&&\s*localIdx\s*===\s*0", fnBody);
+        Assert.DoesNotContain("svgIdx === 0", fnBody);
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // Helper
     // ═══════════════════════════════════════════════════════════
 
