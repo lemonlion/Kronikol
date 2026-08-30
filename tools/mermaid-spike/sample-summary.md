@@ -287,4 +287,32 @@ sequenceDiagram
     G-->>C: 200 OK step-59
 ```
 
+## PROBE 7 — typed participants (mermaid `@{ "type": ... }` syntax) + box grouping
+
+Kronikol's PlantUML shapes map 1:1 onto mermaid's typed participants (entity/database/collections/queue/control + actor). This probe tells us whether GitHub's pinned mermaid version supports the syntax. **If this shows a syntax-error box, GitHub's mermaid is too old and the emitter falls back to plain participants.**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant A@{ "type": "entity", "alias": "Orders API" }
+    box rgb(240, 245, 248) Data stores
+    participant D@{ "type": "database", "alias": "OrdersDb" }
+    participant C@{ "type": "collections", "alias": "Redis Cache" }
+    end
+    participant Q@{ "type": "queue", "alias": "Email Queue" }
+    participant B@{ "type": "control", "alias": "AI Service" }
+    U->>A: GET /orders
+    A->>D: SELECT * FROM orders
+    D-->>A: 3 rows
+    A->>C: GET orders:cus_9f2e11
+    C-->>A: cache miss
+    A->>Q: enqueue receipt-email
+    A->>B: POST /summarize
+    B-->>A: 200 OK
+    A-->>U: 200 OK
+```
+
+Expected: stickman for User, distinct symbols for entity/database/collections/queue/control, and a tinted box around the two data stores.
+
 *End of spike. Compare each probe against V4_PLAN.md Phase 1 assumptions.*
