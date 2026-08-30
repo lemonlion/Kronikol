@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.69] - 2026-08-30
+
+### Changed
+- **`kronikol query` is 14–42% faster on large reports** (QUERY_PERF_PLAN.md, executed in full). ~25% of users have reports over 50 MB; on a 142.9 MB worst-case benchmark (24,000 interaction entries, every body distinct so dedup wins nothing — harness committed at `tools/query-bench/` with the measurement protocol and full before/after record) the same-session medians moved: `summary` 1.39 → 1.19 s, `values --path '$.status'` 2.89 → 1.95 s, `grep --number --count` 4.53 → 2.64 s. **No output byte, command surface or report format changed** — the entire existing CLI suite is the byte-identical pin, and perf properties are asserted on deterministic observables, never wall-clock. Kronikol4J: none (the tool is .NET-only). Four independently revertible fixes:
+  - **Optimized JIT for loop methods** (`TieredCompilationQuickJitForLoops=false`, `Kronikol.Tool` only): a 1–5 s CLI process never reaches tier-1, so its loop-heavy scan and evaluate methods ran their whole life unoptimized — measured at 25–30% of every command. `merge`/`ingest` inherit the property for free; a runtimeconfig test guards it against silent loss.
+  - **One file handle per bulk command instead of one per body**: `BodyCache` now opens the report once and reads every body over that handle (`PayloadReader` gained a stream overload; single-shot call sites like `http`/`body` keep the path-opening one). A new `ReportIndex.PayloadOpens` counter is the observable: red tests pinned opens at the distinct-body count (24,000+ on the benchmark), now pinned to exactly 1.
+  - **`grep`/`grep --number` route through `BodyCache`** — the very pattern the cache was built to own; their in-loop diagram reads go through a new `ReadSlice` passthrough on the same handle.
+  - **Scanner allocation diet** (§3.4): property names interned against the walker's closed name set via a span dictionary lookup (no string per property — 533k of them on the benchmark), fixed-arity `At` overloads (no `params` array per call), array positions as null path segments (no `Index.ToString()` per element). Scan allocations 359 → 324 MB; the scan now measures at the same time as a minimal BCL-only re-tokenization of the file, i.e. the walker's bookkeeping overhead is gone.
+- **The browser-render perf guard no longer false-fails on saturated CI runners.** The 3.0.67-era absolute budgets were breached by pure CPU contention twice after being deflaked with retries (last: `WorstTaskMs` 510–667 ms vs 500 on all 3 attempts of a fully saturated E2E Remainder run). Each attempt now measures its own contention — the bench init script runs a probe worker spinning a fixed calibrated CPU loop throughout the measurement — and the absolute budgets scale by exactly how stretched CPU time actually was (floor 1 so budgets never tighten, cap 5 so a wedged runner cannot scale a real multi-second regression into passing). A genuine regression stretches with the load too, so it still breaches the scaled budget on quiet and saturated machines alike. Structural/relative assertions (worker mode, parallel in-flight, ready-never-waits-for-engine, toggle re-renders only its fragments) still hold unscaled on every attempt; the scaling arithmetic is unit-pinned (`ContentionScaleTests`) and the probe's liveness has its own E2E test.
+
+### Fixed
+- `nuget-readme.md`'s query sampler now shows `kronikol query trace` — the one command line that had reached the README but not the NuGet readme.
+
 ## [3.0.68] - 2026-08-30
 
 ### Fixed

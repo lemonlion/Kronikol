@@ -1,6 +1,6 @@
 # Plan File Status
 
-**Date:** 2026-08-30 · **Repo version:** 3.0.68 (HEAD `2975e8b`)
+**Date:** 2026-08-30 (updated for 3.0.69) · **Repo version:** 3.0.69
 
 Living status of every `*_PLAN.md` in the repo root, verified item-by-item against
 code, tests, changelog, git history, the wiki (`../Kronikol.wiki`), and the Java port
@@ -21,7 +21,7 @@ re-verified fresh on 2026-08-30.
 | `REQNROLL_DUPLICATE_STEPS_PLAN.md` | ✅ Done (#71), **deleted 2026-08-30** | 3.0.64 |
 | `TEOZ_PERF_PLAN.md` *(new, untracked)* | 🟡 In-house work done; upstream-gated | 6 PRs + 1 issue open upstream |
 | `PERF_CI_PLAN.md` *(new, untracked)* | 🟡 ~95%; R5 blocked on upstream merge | PR plantuml#2840 open |
-| `QUERY_PERF_PLAN.md` *(untracked)* | 🟡 In progress (harness only; 0% production code) | — |
+| `QUERY_PERF_PLAN.md` | ✅ Done (§3.1–§3.4 all landed) | 3.0.69 |
 | `JAVA_PORT_PLAN.md` | 🟡 Partially done | Kronikol4J v0.1.24 |
 | `NODE_PORT_PLAN.md` | ❌ Not started (design record) | — |
 | `MONOREPO_MIGRATION_PLAN.md` | ❌ Not started (design record) | — |
@@ -51,14 +51,26 @@ matrix, wiki + changelog. Verified complete 08-29; no movement needed since.
 All eight milestones (PathEngine, `values --stats`, `--where`, `diff`, `--group-by`,
 `grep --number`, `trace`, `select` no-go) plus both ride-along fixes. The former
 cosmetic gap is closed: `README.md:182/184/186/187` now show `trace`, `grep --number`,
-`--group-by`, and `diff` (docs sweep `50d53a1`). One straggler: the matching `trace`
-line in `nuget-readme.md` exists only as an uncommitted working-tree edit.
+`--group-by`, and `diff` (docs sweep `50d53a1`), and the matching `trace` line landed
+in `nuget-readme.md` with 3.0.69.
+**Part 7 addendum (per QUERY_PERF_PLAN §5, recorded here since the plan file is
+deleted):** the Part 7 perf row was calibrated on a corpus 250× smaller than real
+large reports (562 interactions / 0.53 MB of bodies vs the ~25% of users above 50 MB);
+QUERY_PERF_PLAN re-measured on a ~140 MB corpus and fixed what it found (3.0.69). The
+SQL query surface was considered and declined 2026-08-26 alongside the M8 `select`
+no-go (bodies are stringified JSON in `content`; no budget/elision contract in SQL
+results; worse errors; `grep --number` inexpressible). Sidecar cache (persisted
+index) stays gated on evidence of routine 250 MB+ reports.
 
 ### BROWSER_RENDER_WORKER_PLAN.md (3.0.45 / 3.0.50)
 Phases 0–7 complete; remaining items are all plan-labelled optional (`_svgCache`
 retirement, stable fragment boundaries, `requestIdleCallback` chunking). The perf
-guard was deflaked post-release (`087be03`: 3-attempt retry, budgets unchanged) — note
-that commit has no changelog entry.
+guard was deflaked post-release twice: `087be03` (3-attempt retry, budgets unchanged;
+no changelog entry) was itself outrun by a saturated Remainder runner (510–667 ms
+WorstTaskMs on all 3 attempts, run 33305698464), so 3.0.69 made the absolute budgets
+contention-scaled: a probe worker measures how stretched CPU time actually is during
+each attempt and the budgets scale by that factor (`ContentionScale`, floor 1, cap 5;
+arithmetic unit-pinned, probe liveness E2E-pinned).
 
 ### NOTE_YAML_TOGGLE_PLAN.md (3.0.59 + 3.0.61–63 + 3.0.66; fixes in 3.0.67/3.0.68)
 **All five open items from the 08-29 audit are now closed and test-pinned:**
@@ -155,23 +167,23 @@ cannot drift unnoticed. **R1–R4 done, R5 blocked:**
 - By design nothing lands in this repo; commit `087be03` (Kronikol's own perf-guard
   retry) is independent of this plan.
 
-### QUERY_PERF_PLAN.md
-**Actively in flight (another session, as of 08-30 late morning), but 0% of the
-production code has landed.** Status line still reads "planned. Not started."
-- Built so far (all untracked under `tools/query-bench/`): the §4.3 report generator
-  (200 scenarios × 60 pairs, ~130 MB corpus — the generated
-  `TestRunReport.query-bench.json` weighs ~105–150 MB and was regenerated during this
-  audit), the BCL re-tokenization benchmark, an internals harness (references the
-  not-yet-existing `ReportIndex.PayloadOpens`, so it cannot compile yet), and an
-  unplanned `bench.ps1` wall-clock harness. No README/protocol doc yet.
-- One of five red tests written (uncommitted, currently red as intended):
-  `Tool_runtimeconfig_pins_optimized_jit_for_loops` in `QueryCommandTests.cs`.
-- Still missing: the JIT tiering property, `BodyCache` single-stream ownership,
-  `PayloadReader` stream overload, `PayloadOpens` counter, grep/number-grep routing
-  through `BodyCache`, the other four red tests, changelog/version.
-- ⚠️ Hazard: the ~105 MB generated corpus is NOT gitignored (`[Bb]in/` covers only the
-  build dirs) — a naive `git add tools/query-bench` would commit it. It is a
-  regenerate-in-one-command artifact per `bench.ps1`'s own error message.
+### QUERY_PERF_PLAN.md (3.0.69) — ✅ Done
+Executed in full 2026-08-30 (the §3.4 gate resolved by explicit request for the whole
+plan). All four fixes landed TDD-first with the plan's deterministic observables:
+- §3.1 `TieredCompilationQuickJitForLoops=false` in `Kronikol.Tool.csproj`, guarded by
+  `Tool_runtimeconfig_pins_optimized_jit_for_loops`.
+- §3.2 `BodyCache` owns one `FileStream` (opened via `PayloadReader.Open`, closed on
+  dispose); `PayloadReader.Read` stream overload; `ReportIndex.PayloadOpens` counter.
+- §3.3 `Grep`/`NumberGrep` route bodies through `cache.Raw`/`cache.Json` and diagrams
+  through `cache.ReadSlice` — opens-per-command pinned to 1 by three red tests.
+- §3.4 walker diet: interned property names (span AlternateLookup against the closed
+  name set), fixed-arity `At`, null path segments for array indices; entire suite as
+  the byte-identical pin.
+- Measured same-session on the 142.9 MB corpus (record in `tools/query-bench/README.md`):
+  `summary` 1.39→1.19 s, `values` 2.89→1.95 s, `grep --number` 4.53→2.64 s; scan at
+  its re-tokenization floor after §3.4.
+- The audit's corpus hazard is closed: `tools/query-bench/TestRunReport*.json` is
+  gitignored; harness + README/protocol committed.
 
 ### LONG_LINE_SYNTAX_ERROR_PLAN.md (~95%, shipped 3.0.48)
 Unchanged since the audit. Both fix layers, all tests, docs, and the IKVM verification

@@ -8,10 +8,10 @@ namespace Kronikol.Tests.EndToEnd;
 /// Workers, the page stays interactive, fragments render in parallel and identical fragments come from
 /// a cache. These tests measure the large-report fixture (see <see cref="LargeReportFixture"/>) and
 /// pin the behaviour the design guarantees. Structural/relative assertions must hold on every run;
-/// the absolute time budgets are capability checks that CPU contention (a saturated CI runner, a
-/// parallel full-suite run) can breach on any single attempt, so the perf test retries the whole
-/// measurement and passes on one clean attempt — see the comment inside it. All numbers are written
-/// to the test output for the record.
+/// the absolute time budgets are capability checks whose enforcement scales with the machine's
+/// measured contention (a probe worker spins a fixed reference loop throughout the run — see
+/// <see cref="ContentionScale"/>), with retries on top for contention spikes. All numbers are
+/// written to the test output for the record.
 /// </summary>
 [Collection(PlaywrightCollections.Diagrams)]
 public class BrowserRenderWorkerTests : PlaywrightTestBase
@@ -43,8 +43,19 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
                     list.getEntries().forEach(function (e) { window.__bench.longTasks.push({ start: e.startTime, duration: e.duration }); });
                 }).observe({ type: 'longtask', buffered: true });
             } catch (e) { }
+            // Contention probe: a worker spins a fixed CPU loop every 250 ms for the whole run; its
+            // durations tell the test how stretched CPU time actually was (see ContentionScale).
+            window.__bench.probe = [];
+            try {
+                var probe = new Worker(URL.createObjectURL(new Blob([__PROBE__], { type: 'text/javascript' })));
+                probe.onmessage = function (e) { window.__bench.probe.push(e.data); };
+            } catch (e) { }
         })();
         """;
+
+    /// <summary>The init script with the probe worker's source spliced in.</summary>
+    internal static readonly string BenchInitWithProbe =
+        BenchInitScript.Replace("__PROBE__", System.Text.Json.JsonSerializer.Serialize(ContentionScale.ProbeWorkerJs));
 
     /// <summary>Every diagram container and every fragment has finished (an svg, or the engine's failure text).</summary>
     internal const string AllRenderedJs = """
@@ -68,7 +79,8 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
 
     private sealed record Metrics(double ReadyMs, double EngineReadyMs, double AllMs, double BlockedMs, double WorstTaskMs, int LongTasks,
         double ToggleMs, double ToggleBlockedMs, double ToggleWorstTaskMs, int ToggleRenders, int Fragments,
-        string Mode, int Workers, int ExpectedWorkers, int MaxInFlight, int Renders, int CacheHits, double WorkerMs, double InjectMs);
+        string Mode, int Workers, int ExpectedWorkers, int MaxInFlight, int Renders, int CacheHits, double WorkerMs, double InjectMs,
+        double[] ProbeMs, double Stretch);
 
     private bool _benchInitInstalled;
 
@@ -78,7 +90,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // would run twice on each navigation and double-count long tasks.
         if (!_benchInitInstalled)
         {
-            await Page.AddInitScriptAsync(BenchInitScript);
+            await Page.AddInitScriptAsync(BenchInitWithProbe);
             _benchInitInstalled = true;
         }
         await Page.GotoAsync(LargeReportFixture.Generate(TempDir, OutputDir, fileName, browserRenderWorkers: workers));
@@ -146,11 +158,13 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             }
             """);
 
+        var probeMs = await Page.EvaluateAsync<double[]>("() => window.__bench.probe || []");
         var m = new Metrics(readyAt, t.GetProperty("engineReadyAt").GetDouble(), t1 - t0, blocked, worst, count, tt1 - tt0, tBlocked, tWorst,
             t.GetProperty("renders").GetInt32() - rendersBefore, toggle.GetProperty("fragments").GetInt32(),
             t.GetProperty("mode").GetString()!, t.GetProperty("workers").GetInt32(), t.GetProperty("expectedWorkers").GetInt32(),
             t.GetProperty("maxInFlight").GetInt32(), t.GetProperty("renders").GetInt32(), t.GetProperty("cacheHits").GetInt32(),
-            t.GetProperty("workerMs").GetDouble(), t.GetProperty("injectMs").GetDouble());
+            t.GetProperty("workerMs").GetDouble(), t.GetProperty("injectMs").GetDouble(),
+            probeMs, ContentionScale.Stretch(probeMs));
         _output.WriteLine("render-bench " + fileName + ": " + JsonSerializer.Serialize(m));
         File.AppendAllText(Path.Combine(OutputDir, "render-bench-results.txt"),
             $"{DateTime.UtcNow:O} {fileName} {JsonSerializer.Serialize(m)}{Environment.NewLine}");
@@ -182,13 +196,15 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // Two kinds of guarantee, treated differently. The STRUCTURAL/RELATIVE ones (worker mode,
         // worker count, ready-never-waits-for-the-engine, parallel in-flight renders, toggle
         // re-renders only its own fragments) are load-independent and must hold on every attempt.
-        // The ABSOLUTE budgets are capability checks that pure CPU contention can push over on any
-        // single attempt: raising them chased the load instead of removing it (2500→4500 ReadyMs
-        // then 7208 measured under a 51-project local suite; 500 WorstTaskMs then 582 and 800
-        // ToggleWorstTaskMs then 1254 measured on a saturated 2-core CI runner, blocked 23.9 s of
-        // 33.1 s). So the budgets keep their calibrated values and the measurement retries: one
-        // clean attempt out of three proves the page CAN run unblocked, while a real regression
-        // (rendering back on the main thread is a multi-second task every time) fails all three.
+        // The ABSOLUTE budgets are capability checks that CPU contention inflates: raising them
+        // chased the load and lost (2500→4500 ReadyMs then 7208 measured under a 51-project local
+        // suite; 500 WorstTaskMs then 582 on a saturated 2-core CI runner), and retrying lost too
+        // (510-667 WorstTaskMs on all 3 attempts of a fully saturated Remainder run, blocked 10-24 s
+        // per attempt). So each attempt now measures its own contention - the init script's probe
+        // worker spins a fixed reference loop throughout the run - and the budgets scale by exactly
+        // how stretched CPU time actually was (ContentionScale: floor 1, cap 5). A real regression
+        // stretches with the load too, so it breaches the scaled budget on a quiet and a saturated
+        // machine alike; retries remain for contention spikes the median probe misses.
         const int attempts = 3;
         string budgetFailure = "";
         for (var attempt = 1; attempt <= attempts; attempt++)
@@ -206,17 +222,35 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
 
             // Absolute budgets — isolated runs measure well under half of each of these. What stays
             // on the main thread is innerHTML injection of multi-MB SVGs and the post-render hooks.
+            // Each budget is scaled by this attempt's measured contention stretch (1 when quiet).
+            var stretch = m.Stretch;
             budgetFailure =
-                m.ReadyMs >= 4500 ? $"page should be interactive long before the engine is loaded; plantuml-ready at {m.ReadyMs:F0} ms" :
-                m.WorstTaskMs >= 500 ? $"worst main-thread long task during the full render was {m.WorstTaskMs:F0} ms (blocked {m.BlockedMs:F0} ms of {m.AllMs:F0} ms)" :
-                m.AllMs >= 60000 ? $"full render of the fixture took {m.AllMs:F0} ms" :
-                m.ToggleMs >= 5000 ? $"note toggle on the largest diagram took {m.ToggleMs:F0} ms" :
-                m.ToggleWorstTaskMs >= 800 ? $"note toggle blocked the main thread for a {m.ToggleWorstTaskMs:F0} ms task" :
+                m.ReadyMs >= 4500 * stretch ? $"page should be interactive long before the engine is loaded; plantuml-ready at {m.ReadyMs:F0} ms (budget 4500 x {stretch:F2})" :
+                m.WorstTaskMs >= 500 * stretch ? $"worst main-thread long task during the full render was {m.WorstTaskMs:F0} ms (blocked {m.BlockedMs:F0} ms of {m.AllMs:F0} ms; budget 500 x {stretch:F2})" :
+                m.AllMs >= 60000 * stretch ? $"full render of the fixture took {m.AllMs:F0} ms (budget 60000 x {stretch:F2})" :
+                m.ToggleMs >= 5000 * stretch ? $"note toggle on the largest diagram took {m.ToggleMs:F0} ms (budget 5000 x {stretch:F2})" :
+                m.ToggleWorstTaskMs >= 800 * stretch ? $"note toggle blocked the main thread for a {m.ToggleWorstTaskMs:F0} ms task (budget 800 x {stretch:F2})" :
                 "";
             if (budgetFailure.Length == 0) return;
-            _output.WriteLine($"attempt {attempt}/{attempts} breached an absolute budget (contention?): {budgetFailure}");
+            _output.WriteLine($"attempt {attempt}/{attempts} breached a contention-scaled budget: {budgetFailure}");
         }
-        Assert.Fail($"absolute budgets breached on all {attempts} attempts — this is sustained, not contention; last: {budgetFailure}");
+        Assert.Fail($"contention-scaled budgets breached on all {attempts} attempts — sustained even after scaling for measured load; last: {budgetFailure}");
+    }
+
+    [Fact]
+    public async Task Bench_contention_probe_records_spin_durations()
+    {
+        // The scaled budgets are only as good as the probe: if it silently dies (worker or blob URL
+        // refused), the budgets silently fall back to false-failing under load. Pin that the probe
+        // produces positive samples on a real report page.
+        await Page.AddInitScriptAsync(BenchInitWithProbe);
+        await Page.GotoAsync(LargeReportFixture.Generate(TempDir, OutputDir, "ProbeCheck.html", diagrams: 2, stepsPerDiagram: 2));
+        await Page.WaitForFunctionAsync("() => window.__bench && window.__bench.probe.length >= 3", null,
+            new() { Timeout = 60000, PollingInterval = 200 });
+
+        var samples = await Page.EvaluateAsync<double[]>("() => window.__bench.probe");
+        Assert.All(samples, d => Assert.True(d > 0, $"probe sample {d} ms"));
+        _output.WriteLine($"probe samples: [{string.Join(", ", samples.Select(d => d.ToString("F1")))}] -> stretch {ContentionScale.Stretch(samples):F2}");
     }
 
     [Fact]
