@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using Kronikol.Reports;
 using Kronikol.Tool;
+using Kronikol.Tool.Query;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tool;
@@ -1010,6 +1011,101 @@ public class QueryCommandTests : IDisposable
         var target = Path.Combine(_directory, "big.json");
         Run("http", path, "s0/i0", "--body", "--out", target);
         Assert.Contains("filler", File.ReadAllText(target));
+    }
+
+    // ─── Perf observables (QUERY_PERF_PLAN.md) ─────────────────
+    // Perf properties are asserted on deterministic observables, never on wall-clock — wall-clock lives
+    // in the manual harness at tools/query-bench.
+
+    [Fact]
+    public void Tool_runtimeconfig_pins_optimized_jit_for_loops()
+    {
+        // Guards the <TieredCompilationQuickJitForLoops> line in Kronikol.Tool.csproj: a fresh CLI process
+        // lives and dies in tier-0 JIT without it (~25-30% of every command on a large report), and the
+        // property would be silently lost by a csproj rewrite.
+        var path = Path.Combine(AppContext.BaseDirectory, "Kronikol.Tool.runtimeconfig.json");
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        var properties = document.RootElement.GetProperty("runtimeOptions").GetProperty("configProperties");
+
+        Assert.True(properties.TryGetProperty("System.Runtime.TieredCompilation.QuickJitForLoops", out var value)
+                    && value.ValueKind == System.Text.Json.JsonValueKind.False,
+            "Kronikol.Tool.runtimeconfig.json must pin System.Runtime.TieredCompilation.QuickJitForLoops: false");
+    }
+
+    [Fact]
+    public void BodyCache_opens_the_file_once_for_many_distinct_bodies()
+    {
+        var index = ReportScanner.Scan(WideReport());
+        Assert.True(index.Bodies.Count > 100, $"fixture too small to prove anything: {index.Bodies.Count} distinct bodies");
+
+        using var cache = new BodyCache(index);
+        foreach (var hash in index.Bodies.Keys)
+        {
+            Assert.NotNull(cache.Raw(hash));
+            cache.Json(hash);
+        }
+
+        Assert.Equal(1, index.PayloadOpens);
+    }
+
+    [Fact]
+    public void Grep_opens_the_file_once_across_bodies_and_diagrams()
+    {
+        var index = ReportScanner.Scan(Report());
+        var output = RunAgainst(index, "grep", "4173", "--in", "bodies,notes");
+
+        Assert.Contains("body", output);
+        Assert.Equal(1, index.PayloadOpens);
+    }
+
+    [Fact]
+    public void NumberGrep_opens_the_file_once()
+    {
+        var index = ReportScanner.Scan(Report());
+        var output = RunAgainst(index, "grep", "4173", "--number", "--in", "bodies,notes");
+
+        Assert.Contains("body", output);
+        Assert.Equal(1, index.PayloadOpens);
+    }
+
+    [Fact]
+    public void BodyCache_survives_a_missing_or_malformed_slice()
+    {
+        // The null/fallback contracts of PayloadReader.Read must hold on the shared-handle path too:
+        // a never-recorded slice is null, a slice over a non-string token comes back as raw text.
+        var raw = "{\"content\":\"{\\\"a\\\":1}\",\"num\":123}";
+        var path = Path.Combine(_directory, "tiny.json");
+        File.WriteAllText(path, raw);
+
+        var index = new ReportIndex { Path = path, FileLength = raw.Length };
+        index.Bodies["b:missing"] = new BodyEntry { Hash = "b:missing", First = default };
+        index.Bodies["b:notastring"] = new BodyEntry { Hash = "b:notastring", First = new Slice(raw.IndexOf("123", StringComparison.Ordinal), 3) };
+
+        using var cache = new BodyCache(index);
+        Assert.Null(cache.Raw("b:missing"));
+        Assert.Null(cache.Raw("b:absent"));
+        Assert.Null(cache.Json("b:missing"));
+        Assert.Equal("123", cache.Raw("b:notastring"));
+    }
+
+    /// <summary>Drives one command against an already-scanned index, so tests can observe the index afterwards.</summary>
+    private static string RunAgainst(ReportIndex index, string command, params string[] args)
+    {
+        var error = new StringWriter();
+        var options = QueryOptions.Parse([index.Path, .. args], error);
+        Assert.NotNull(options);
+        var output = new StringWriter();
+        var writer = new QueryWriter(output, options.MaxBytes);
+
+        var exit = command switch
+        {
+            "grep" => QueryCommand.Grep(index, options, writer, error),
+            _ => throw new ArgumentOutOfRangeException(nameof(command))
+        };
+
+        Assert.True(exit == 0, $"exit {exit}: {error}");
+        writer.Flush();
+        return output.ToString();
     }
 
     // ─── Harness ───────────────────────────────────────────────

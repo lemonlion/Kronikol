@@ -7,6 +7,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackAsTool>true</PackAsTool>
+    <!-- A 1-5 s CLI process never reaches tier-1 JIT, so its loop-heavy methods (the report scan, the
+         evaluate loops) would run their whole life unoptimized: measured at 25-30% of every command on a
+         large report (QUERY_PERF_PLAN.md §1.1). Compile loop methods optimized on first call instead.
+         Tool-only deliberately - the libraries live in long-lived test processes where default tiering
+         is right. Guarded by Tool_runtimeconfig_pins_optimized_jit_for_loops. -->
+    <TieredCompilationQuickJitForLoops>false</TieredCompilationQuickJitForLoops>
     <ToolCommandName>kronikol</ToolCommandName>
     <PackageId>Kronikol.Tool</PackageId>
     <Title>Kronikol CLI</Title>

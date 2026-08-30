@@ -10,7 +10,7 @@ namespace Kronikol.Tool;
 /// </summary>
 internal static partial class QueryCommand
 {
-    private static int Grep(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
+    internal static int Grep(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
         if (options.Positional.Count == 0)
         {
@@ -25,6 +25,10 @@ internal static partial class QueryCommand
         var targets = (options.In ?? "bodies,uris,steps,assertions").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var wantsBodies = targets.Contains("bodies");
         var hits = new List<string>();
+
+        // Bodies and diagrams alike read through the cache's single open handle - grep touches every
+        // distinct body, so it gains the most from not re-opening the file per read (QUERY_PERF_PLAN 3.3).
+        using var cache = new BodyCache(index);
 
         foreach (var scenario in index.Scenarios)
         {
@@ -61,7 +65,7 @@ internal static partial class QueryCommand
         {
             foreach (var body in index.Bodies.Values)
             {
-                var content = PayloadReader.Read(index, body.First);
+                var content = cache.Raw(body.Hash);
                 if (content is null || !content.Contains(needle, StringComparison.OrdinalIgnoreCase))
                     continue;
 
@@ -89,7 +93,7 @@ internal static partial class QueryCommand
             foreach (var scenario in index.Scenarios)
                 for (var d = 0; d < scenario.Diagrams.Count; d++)
                 {
-                    var diagram = PayloadReader.Read(index, scenario.Diagrams[d]);
+                    var diagram = cache.ReadSlice(scenario.Diagrams[d]);
                     if (diagram is null)
                         continue;
                     foreach (var (i, text) in PayloadReader.Notes(diagram))

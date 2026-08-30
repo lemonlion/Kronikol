@@ -15,7 +15,20 @@ internal static class PayloadReader
         if (!slice.Exists)
             return null;
 
-        using var stream = File.OpenRead(index.Path);
+        using var stream = Open(index);
+        return Read(stream, slice);
+    }
+
+    /// <summary>
+    /// The same read over an already-open handle — the bulk path. <see cref="BodyCache"/> holds one
+    /// handle for a whole command; opening per body was measured at up to ~0.75 s per bulk command on a
+    /// 130 MB report (QUERY_PERF_PLAN.md §1.2). Single-shot call sites keep the path-opening overload.
+    /// </summary>
+    public static string? Read(FileStream stream, Slice slice)
+    {
+        if (!slice.Exists)
+            return null;
+
         stream.Seek(slice.Offset, SeekOrigin.Begin);
         var raw = new byte[slice.Length];
         stream.ReadExactly(raw);
@@ -30,6 +43,13 @@ internal static class PayloadReader
         }
     }
 
+    /// <summary>Every payload open comes through here so <see cref="ReportIndex.PayloadOpens"/> counts them all.</summary>
+    public static FileStream Open(ReportIndex index)
+    {
+        index.PayloadOpens++;
+        return File.OpenRead(index.Path);
+    }
+
     /// <summary>The header block of one interaction, as key/value pairs.</summary>
     public static List<(string Key, string? Value)> Headers(ReportIndex index, InteractionEntry interaction)
     {
@@ -38,7 +58,7 @@ internal static class PayloadReader
             return found;
 
         // The recorded slice is the first key inside the array; step back to the array itself and read it.
-        using var stream = File.OpenRead(index.Path);
+        using var stream = Open(index);
         var start = FindArrayStart(stream, interaction.Headers.Offset);
         if (start < 0)
             return found;

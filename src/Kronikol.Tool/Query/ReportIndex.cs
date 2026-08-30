@@ -36,6 +36,16 @@ internal sealed class ReportIndex
     /// <summary>True when the file is the mergeable superset rather than the standard report.</summary>
     public bool Mergeable { get; set; }
 
+    /// <summary>
+    /// How many payload <see cref="FileStream"/>s have been opened over this report so far — every
+    /// payload open goes through <see cref="PayloadReader.Open"/>, which counts here. The deterministic
+    /// observable the perf tests assert on instead of wall-clock (QUERY_PERF_PLAN.md §4.2): a bulk
+    /// command reads its thousands of bodies over one shared handle, and a regression to
+    /// open-per-body fails those tests rather than just showing up as a slow report. Instance state,
+    /// not static, so parallel test runs cannot race it.
+    /// </summary>
+    public int PayloadOpens { get; set; }
+
     /// <summary>The mergeable format version, when the file declares one. An unknown value is fatal, not ignored.</summary>
     public int? MergeableFormatVersion { get; set; }
 

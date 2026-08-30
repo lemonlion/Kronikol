@@ -373,3 +373,6 @@ AGENTS.md
 
 # Orphaned pre-restructure directory (active copy is under examples/)
 /Example.Api/
+
+# query-bench corpus: ~140 MB, regenerated in one command (tools/query-bench/README.md)
+tools/query-bench/TestRunReport*.json

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <!-- Rides the InternalsVisibleTo("Kronikol.Tests") grant that Kronikol.Tool already carries,
+         so this harness can call ReportScanner/BodyCache/PathEngine directly. -->
+    <AssemblyName>Kronikol.Tests</AssemblyName>
+    <RootNamespace>QueryBench.Internals</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Kronikol.Tool\Kronikol.Tool.csproj" />
+  </ItemGroup>
+
+</Project>

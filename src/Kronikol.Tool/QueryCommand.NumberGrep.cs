@@ -60,6 +60,10 @@ internal static partial class QueryCommand
         var targets = (options.In ?? "bodies,uris,steps,assertions").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var hits = new List<string>();
 
+        // One open handle for every body and diagram read in this command (QUERY_PERF_PLAN 3.3). The
+        // cache also owns the parsed documents' lifetime, so the walk below must not dispose them.
+        using var cache = new BodyCache(index);
+
         foreach (var scenario in index.Scenarios)
         {
             if (targets.Contains("steps") || targets.Contains("assertions"))
@@ -94,7 +98,7 @@ internal static partial class QueryCommand
         {
             foreach (var body in index.Bodies.Values)
             {
-                var content = PayloadReader.Read(index, body.First);
+                var content = cache.Raw(body.Hash);
                 if (content is null)
                     continue;
 
@@ -102,12 +106,7 @@ internal static partial class QueryCommand
                     ? body.Occurrences[0]
                     : $"{body.Occurrences[0]} ×{body.Occurrences.Count}";
 
-                JsonDocument? document = null;
-                try
-                {
-                    document = JsonDocument.Parse(content);
-                }
-                catch (JsonException)
+                if (cache.Json(body.Hash) is not { } document)
                 {
                     // Non-JSON body: token-scan the text.
                     if (TokenIn(content) is { } textToken)
@@ -115,42 +114,39 @@ internal static partial class QueryCommand
                     continue;
                 }
 
-                using (document)
-                {
-                    // A numeric match is always a value match, so --number always emits paths.
-                    var found = 0;
-                    Walk(document.RootElement, "$");
+                // A numeric match is always a value match, so --number always emits paths.
+                var found = 0;
+                Walk(document.RootElement, "$");
 
-                    void Walk(JsonElement element, string path)
+                void Walk(JsonElement element, string path)
+                {
+                    if (found >= 4)
+                        return;
+                    switch (element.ValueKind)
                     {
-                        if (found >= 4)
-                            return;
-                        switch (element.ValueKind)
-                        {
-                            case JsonValueKind.Object:
-                                foreach (var property in element.EnumerateObject())
-                                    Walk(property.Value, PathEngine.Append(path, property.Name));
-                                break;
-                            case JsonValueKind.Array:
-                                var i = 0;
-                                foreach (var item in element.EnumerateArray())
-                                    Walk(item, $"{path}[{i++}]");
-                                break;
-                            case JsonValueKind.Number:
-                                if (element.TryGetDouble(out var value) && Matches(value))
-                                {
-                                    hits.Add($"{where,-16} body       {path} = {element.GetRawText()}{Approx(element.GetRawText())}");
-                                    found++;
-                                }
-                                break;
-                            case JsonValueKind.String:
-                                if (TokenIn(element.GetString() ?? "") is { } token)
-                                {
-                                    hits.Add($"{where,-16} body       {path} = \"{QueryWriter.OneLine(element.GetString(), 40)}\"{Approx(token)}");
-                                    found++;
-                                }
-                                break;
-                        }
+                        case JsonValueKind.Object:
+                            foreach (var property in element.EnumerateObject())
+                                Walk(property.Value, PathEngine.Append(path, property.Name));
+                            break;
+                        case JsonValueKind.Array:
+                            var i = 0;
+                            foreach (var item in element.EnumerateArray())
+                                Walk(item, $"{path}[{i++}]");
+                            break;
+                        case JsonValueKind.Number:
+                            if (element.TryGetDouble(out var value) && Matches(value))
+                            {
+                                hits.Add($"{where,-16} body       {path} = {element.GetRawText()}{Approx(element.GetRawText())}");
+                                found++;
+                            }
+                            break;
+                        case JsonValueKind.String:
+                            if (TokenIn(element.GetString() ?? "") is { } token)
+                            {
+                                hits.Add($"{where,-16} body       {path} = \"{QueryWriter.OneLine(element.GetString(), 40)}\"{Approx(token)}");
+                                found++;
+                            }
+                            break;
                     }
                 }
             }
@@ -161,7 +157,7 @@ internal static partial class QueryCommand
             foreach (var scenario in index.Scenarios)
                 for (var d = 0; d < scenario.Diagrams.Count; d++)
                 {
-                    var diagram = PayloadReader.Read(index, scenario.Diagrams[d]);
+                    var diagram = cache.ReadSlice(scenario.Diagrams[d]);
                     if (diagram is null)
                         continue;
                     foreach (var (i, text) in PayloadReader.Notes(diagram))
