@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.68] - 2026-08-30
+
+### Fixed
+- **A scenario's JSON/YAML dropdown could come back from a page refresh reading YAML over JSON notes** (user-reported, and initially unreproducible because it needs a prior selection plus a reload). Firefox restores `<select>`/`<input>` state across a plain reload — Chromium does not — so a reader who had once picked **YAML** on a scenario's note-format dropdown got that value written back into the control by the browser, while the freshly-loaded report script (whose `_noteFormatDefault` and per-container preferences start from the report's configured default) rendered the notes as JSON. The control then lied about the report's state and no click could reconcile it: re-picking YAML on an already-YAML `<select>` fires no `change` event. Every report form control — both note-format dropdowns, all truncate-lines dropdowns, the search box and the duration threshold — now carries `autocomplete="off"`, which is what tells the browser not to second-guess state the report owns; filter state that *should* survive a reload continues to travel in the URL hash. Pinned by markup tests over the generated report and by end-to-end tests that drive the real Firefox through the select-reload-assert cycle (they skip where Firefox is not installed, as on CI, which installs chromium only).
+
 ## [3.0.67] - 2026-08-30
 
 ### Fixed
