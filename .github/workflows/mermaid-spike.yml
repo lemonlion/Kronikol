@@ -6,6 +6,8 @@ name: Mermaid Summary Spike
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ v4-mermaid-spike ]
 
 permissions:
   contents: read
