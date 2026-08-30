@@ -85,7 +85,7 @@ internal static class ReportScanner
     private sealed class Walker(ReportIndex index)
     {
         private readonly List<Container> _containers = [];
-        private readonly List<string> _path = [];
+        private readonly List<string?> _path = [];
         private readonly List<StepEntry> _stepStack = [];
 
         private ScenarioEntry? _scenario;
@@ -113,12 +113,12 @@ internal static class ReportScanner
                 switch (reader.TokenType)
                 {
                     case JsonTokenType.PropertyName:
-                        SetProperty(reader.GetString() ?? "");
+                        SetProperty(ref reader);
                         break;
 
                     case JsonTokenType.StartObject:
                     case JsonTokenType.StartArray:
-                        _path.Add(CurrentKey());
+                        _path.Add(CurrentSegment());
                         _containers.Add(new Container { IsArray = reader.TokenType == JsonTokenType.StartArray });
                         Enter();
                         break;
@@ -149,21 +149,69 @@ internal static class ReportScanner
 
         // ─── Position tracking ─────────────────────────────────
 
-        private void SetProperty(string name)
+        // The scanner's hottest bookkeeping (QUERY_PERF_PLAN.md §3.4): it runs per token over a 100 MB+
+        // file, so property names are interned against the closed set the walker dispatches on (no
+        // per-name string), array positions travel as a null segment (no Index.ToString() per element),
+        // and At is fixed-arity (no params array per call).
+
+        private static readonly Dictionary<string, string> KnownNames = BuildKnownNames();
+
+        private static readonly Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> KnownNamesBySpan =
+            KnownNames.GetAlternateLookup<ReadOnlySpan<char>>();
+
+        private static Dictionary<string, string> BuildKnownNames()
+        {
+            // Every name Enter/Leave/Value dispatch on, plus the report's other high-frequency keys.
+            string[] names =
+            [
+                "kronikolVersion", "startTime", "endTime", "mergeableFormatVersion", "kind", "message",
+                "scenarioId", "name", "relativePath", "mediaType", "index", "text", "key", "value", "type",
+                "method", "uri", "serviceName", "callerName", "statusCode", "timestamp", "requestResponseId",
+                "traceId", "stepPath", "phase", "metaType", "dependencyCategory", "activityTraceId",
+                "activitySpanId", "capturedBy", "isUserAction", "durationMs", "content", "keyword", "status",
+                "durationSeconds", "failureMessage", "sourceFile", "sourceLine", "bypassReason", "docString",
+                "id", "stableId", "result", "isHappyPath", "errorMessage", "errorStackTrace", "rule",
+                "features", "scenarios", "httpInteractions", "annotations", "attachments", "diagnostics",
+                "steps", "backgroundSteps", "subSteps", "headers", "labels", "categories", "exampleValues",
+                "diagrams", "comments", "parameters",
+            ];
+            var known = new Dictionary<string, string>(names.Length, StringComparer.Ordinal);
+            foreach (var name in names)
+                known[name] = name;
+            return known;
+        }
+
+        private void SetProperty(ref Utf8JsonReader reader)
         {
             if (_containers.Count == 0)
                 return;
             var top = _containers[^1];
-            top.Property = name;
+            top.Property = PropertyName(ref reader);
             _containers[^1] = top;
         }
 
-        private string CurrentKey()
+        private static string PropertyName(ref Utf8JsonReader reader)
+        {
+            // Unescaped chars never outnumber raw UTF-8 bytes, so a short raw value fits the buffer.
+            var rawLength = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
+            if (rawLength <= 32)
+            {
+                Span<char> buffer = stackalloc char[32];
+                var written = reader.CopyString(buffer);
+                if (KnownNamesBySpan.TryGetValue(buffer[..written], out var known))
+                    return known;
+                return new string(buffer[..written]);
+            }
+            return reader.GetString() ?? "";
+        }
+
+        /// <summary>The path segment the current position contributes: a name, or null for an array index.</summary>
+        private string? CurrentSegment()
         {
             if (_containers.Count == 0)
                 return "$";
             var top = _containers[^1];
-            return top.IsArray ? top.Index.ToString() : top.Property ?? "";
+            return top.IsArray ? null : top.Property ?? "";
         }
 
         private void Advance()
@@ -178,29 +226,30 @@ internal static class ReportScanner
             }
         }
 
-        /// <summary>The path of the value currently being read, key included.</summary>
-        private string Key => CurrentKey();
-
-        private bool At(params string[] tail)
+        /// <summary>The key of the value currently being read — its property name, or "" under an array.</summary>
+        private string Key
         {
-            // Compares the last segments of the path, treating "#" as "any array index".
-            if (_path.Count < tail.Length)
-                return false;
-            for (var i = 0; i < tail.Length; i++)
+            get
             {
-                var segment = _path[_path.Count - tail.Length + i];
-                if (tail[i] == "#")
-                {
-                    if (!int.TryParse(segment, out _))
-                        return false;
-                }
-                else if (segment != tail[i])
-                {
-                    return false;
-                }
+                if (_containers.Count == 0)
+                    return "";
+                var top = _containers[^1];
+                return top.IsArray ? "" : top.Property ?? "";
             }
-            return true;
         }
+
+        // Compares the last segments of the path; "#" means "any array index" (a null segment).
+        private static bool Matches(string? segment, string tail) =>
+            tail == "#" ? segment is null : segment == tail;
+
+        private bool At(string a) =>
+            _path.Count >= 1 && Matches(_path[^1], a);
+
+        private bool At(string a, string b) =>
+            _path.Count >= 2 && Matches(_path[^2], a) && Matches(_path[^1], b);
+
+        private bool At(string a, string b, string c) =>
+            _path.Count >= 3 && Matches(_path[^3], a) && Matches(_path[^2], b) && Matches(_path[^1], c);
 
         // ─── Entity lifecycle ──────────────────────────────────
 
