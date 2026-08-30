@@ -1,0 +1,20 @@
+name: Mermaid Summary Spike
+
+# V4 Phase 0a spike (V4_PLAN.md): renders tools/mermaid-spike/sample-summary.md
+# into the job summary so the planned v4 CI-summary format can be eyeballed on
+# GitHub's real renderer. Manual-trigger only; delete after v4 ships.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  spike:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Emit sample summary
+        run: cat tools/mermaid-spike/sample-summary.md >> "$GITHUB_STEP_SUMMARY"
