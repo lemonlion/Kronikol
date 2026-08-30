@@ -10,15 +10,15 @@ re-verified fresh on 2026-08-30.
 
 | Plan | Status | Shipped in |
 |---|---|---|
-| `BACKGROUND_STEPS_INLINE_PLAN.md` | ✅ Fully done | 3.0.48 |
+| `BACKGROUND_STEPS_INLINE_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.48 |
 | `LONG_LINE_SYNTAX_ERROR_PLAN.md` | 🟡 ~95% (Java mirror open) | 3.0.48 |
 | `REPORT_QUERY_PLAN.md` | 🟡 ~95% | 3.0.47 |
-| `QUERY_V2_PLAN.md` | ✅ Fully done | 3.0.51–3.0.58 |
-| `BROWSER_RENDER_WORKER_PLAN.md` | ✅ Fully done | 3.0.45 / 3.0.50 |
-| `NOTE_YAML_TOGGLE_PLAN.md` | ✅ Fully done incl. follow-ups | 3.0.59, 3.0.61–63, 3.0.66 (+fixes 3.0.67/68) |
-| `OTLP_EXPORT_PLAN.md` | ✅ Fully done | 3.0.60 |
-| `EXAMPLES_BLOCKS_PLAN.md` | ✅ Fully done (1 ledger nit) | 3.0.64 |
-| `REQNROLL_DUPLICATE_STEPS_PLAN.md` | ✅ Fully done (#71) | 3.0.64 |
+| `QUERY_V2_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.51–3.0.58 |
+| `BROWSER_RENDER_WORKER_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.45 / 3.0.50 |
+| `NOTE_YAML_TOGGLE_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.59, 3.0.61–63, 3.0.66 (+fixes 3.0.67/68) |
+| `OTLP_EXPORT_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.60 |
+| `EXAMPLES_BLOCKS_PLAN.md` | ✅ Done (1 ledger nit), **deleted 2026-08-30** | 3.0.64 |
+| `REQNROLL_DUPLICATE_STEPS_PLAN.md` | ✅ Done (#71), **deleted 2026-08-30** | 3.0.64 |
 | `TEOZ_PERF_PLAN.md` *(new, untracked)* | 🟡 In-house work done; upstream-gated | 6 PRs + 1 issue open upstream |
 | `PERF_CI_PLAN.md` *(new, untracked)* | 🟡 ~95%; R5 blocked on upstream merge | PR plantuml#2840 open |
 | `QUERY_PERF_PLAN.md` *(untracked)* | 🟡 In progress (harness only; 0% production code) | — |
@@ -28,7 +28,15 @@ re-verified fresh on 2026-08-30.
 
 ---
 
-## Fully done — ready for deletion (or keep as design records)
+## Fully done — DELETED 2026-08-30
+
+The seven plans below were removed from the repo root once verified complete; the full
+plan texts live in git history (last present at commit `159aef5`,
+`git show 159aef5:<name>` retrieves any of them). Their verification records are kept
+here. Note that a few living documents still reference the deleted files by name
+(QUERY_PERF_PLAN "builds on" QUERY_V2_PLAN; MONOREPO_MIGRATION_PLAN's `git mv` list;
+Kronikol4J's parity ledger and CHANGELOG entries) — those references now resolve via
+git history.
 
 ### BACKGROUND_STEPS_INLINE_PLAN.md (3.0.48, `af4cfde`)
 Inline background steps, `SeparateBackgroundSteps` / `CollapseRepeatedStepKeywords`,
