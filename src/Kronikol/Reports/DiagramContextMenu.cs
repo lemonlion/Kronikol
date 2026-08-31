@@ -57,7 +57,7 @@ public static class DiagramContextMenu
         // JSON-escaping gives a JavaScript string literal; the default encoder also escapes `<`, so the
         // inlined worker source can never contain a literal `</script>`.
         var hostLiteral = System.Text.Json.JsonSerializer.Serialize(hostSource);
-        return LoadResource("plantuml-browser-render-script.js")
+        return WithDecompressHelper(LoadResource("plantuml-browser-render-script.js"))
             .Replace("__BROWSER_RENDER_WORKERS__", Math.Max(0, browserRenderWorkers).ToString(System.Globalization.CultureInfo.InvariantCulture))
             .Replace("__BROWSER_RENDER_CACHE_MB__", Math.Max(0, browserRenderCacheMegabytes).ToString(System.Globalization.CultureInfo.InvariantCulture))
             .Replace("__BROWSER_FRAGMENT_MAX_HEIGHT__", (browserFragmentMaxHeight > 0 ? browserFragmentMaxHeight : TrackingDefaults.BrowserFragmentMaxHeight).ToString(System.Globalization.CultureInfo.InvariantCulture))
@@ -65,16 +65,21 @@ public static class DiagramContextMenu
             .Replace("__PLANTUML_WORKER_HOST_SOURCE__", hostLiteral);
     }
 
-    public static string GetContextMenuScript() => LoadResource("context-menu-script.js");
+    public static string GetContextMenuScript() => WithDecompressHelper(LoadResource("context-menu-script.js"));
 
     /// <summary>
     /// The shared gzip+base64 decompressor (defines <c>window.decompressGzipBase64</c>). Raw JS,
-    /// no <c>&lt;script&gt;</c> wrapper. Every page that emits a script calling the global must
-    /// include this exactly once — the main report does so unconditionally.
+    /// no <c>&lt;script&gt;</c> wrapper. The main report includes it unconditionally, and every
+    /// script accessor here whose script calls the global prepends it too (redefining the
+    /// identical function is a no-op), so standalone compositions of these public accessors —
+    /// the component-diagram page, test harness pages, external consumers — stay self-sufficient.
     /// </summary>
     public static string GetDecompressHelperScript() => LoadResource("report-decompress-helper.js");
 
-    public static string GetInternalFlowPopupScript() => LoadResource("internal-flow-popup-script.js");
+    private static string WithDecompressHelper(string scriptBlock) =>
+        $"<script>{GetDecompressHelperScript()}</script>{scriptBlock}";
+
+    public static string GetInternalFlowPopupScript() => WithDecompressHelper(LoadResource("internal-flow-popup-script.js"));
 
     public static string GetToggleScript() => LoadResource("toggle-script.js");
 
@@ -84,7 +89,7 @@ public static class DiagramContextMenu
     /// with <c>flameData</c> are rendered on demand instead of being pre-rendered
     /// as HTML on the server, dramatically reducing report file size.
     /// </summary>
-    public static string GetFlameChartRenderScript() => LoadResource("flame-chart-render-script.js");
+    public static string GetFlameChartRenderScript() => WithDecompressHelper(LoadResource("flame-chart-render-script.js"));
 
     /// <summary>Collapsible-notes script with the default (JSON) note payload format.</summary>
     public static string GetCollapsibleNotesScript() => GetCollapsibleNotesScript(NotePayloadFormat.Json);

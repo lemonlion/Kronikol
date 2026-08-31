@@ -89,6 +89,28 @@ public class DecompressorAvailabilityTests
         Assert.True(Defines(content), "standalone component diagram page calls decompressGzipBase64 but never defines it");
     }
 
+    [Theory]
+    // These are PUBLIC composition points (TestPageGenerator-style standalone pages, the
+    // component-diagram page, external consumers): each script that calls the decompressor
+    // must be self-sufficient. The helper redefines an identical global, so double inclusion
+    // in the full report is a no-op.
+    [InlineData("flame")]
+    [InlineData("render")]
+    [InlineData("popup")]
+    [InlineData("contextmenu")]
+    public void Every_standalone_script_that_references_the_decompressor_also_defines_it(string script)
+    {
+        var content = script switch
+        {
+            "flame" => DiagramContextMenu.GetFlameChartRenderScript(),
+            "render" => DiagramContextMenu.GetPlantUmlBrowserRenderScript(),
+            "popup" => DiagramContextMenu.GetInternalFlowPopupScript(),
+            _ => DiagramContextMenu.GetContextMenuScript()
+        };
+        Assert.True(References(content), $"expected {script} script to call decompressGzipBase64");
+        Assert.True(Defines(content), $"{script} script calls decompressGzipBase64 but does not carry the shared helper");
+    }
+
     [Fact]
     public void BrowserJs_report_still_defines_the_decompressor()
     {
