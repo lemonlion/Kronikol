@@ -83,7 +83,7 @@ jobs:
             needs-playwright: true
           - name: E2E (Search & Filters)
             projects: tests/Kronikol.Tests.EndToEnd
-            filter: UrlHashFilterHighlightTests|FilterPerformanceTests|AdvancedSearchTests|DependencyColoringTests
+            filter: UrlHashFilterHighlightTests|FilterPerformanceTests|AdvancedSearchTests|DeepSearchTests|DependencyColoringTests
             needs-playwright: true
           - name: E2E (Toolbar & Reports)
             projects: tests/Kronikol.Tests.EndToEnd
@@ -116,7 +116,7 @@ jobs:
           # ShowcaseReportTests generates showcase assets) which are run manually.
           - name: E2E (Remainder)
             projects: tests/Kronikol.Tests.EndToEnd
-            filter-exclude: IflowPopupTests|ComponentFlowPopupTests|WholeTestFlowTests|UrlHashFilterHighlightTests|FilterPerformanceTests|AdvancedSearchTests|DependencyColoringTests|ReportToolbarTests|MobileResponsiveTests|LoadingMessageTests|JumpToFailureTests|ScenarioInteractionTests|ParameterizedGroupTests|FailureClusterLinkTests|DiagramNoteBasicTests|DiagramNoteLongNoteTests|DiagramNoteSplitTests|DiagramNotePartitionTests|NoteButtonIndexTests|DiagramZoomTests|ContextMenuExtendedTests|HeadersDetailsInterferenceTests|NoteButtonsAfterHeaderHideTests|ZoomNoteInteractionTests|BackgroundRenderingTests|SeparatedBackgroundRenderingTests|LongStatementRenderingTests|NoteYamlToggleTests|NoteYamlInternalsTests|WikiGifTests|WikiScreenshotTests|ShowcaseReportTests
+            filter-exclude: IflowPopupTests|ComponentFlowPopupTests|WholeTestFlowTests|UrlHashFilterHighlightTests|FilterPerformanceTests|AdvancedSearchTests|DeepSearchTests|DependencyColoringTests|ReportToolbarTests|MobileResponsiveTests|LoadingMessageTests|JumpToFailureTests|ScenarioInteractionTests|ParameterizedGroupTests|FailureClusterLinkTests|DiagramNoteBasicTests|DiagramNoteLongNoteTests|DiagramNoteSplitTests|DiagramNotePartitionTests|NoteButtonIndexTests|DiagramZoomTests|ContextMenuExtendedTests|HeadersDetailsInterferenceTests|NoteButtonsAfterHeaderHideTests|ZoomNoteInteractionTests|BackgroundRenderingTests|SeparatedBackgroundRenderingTests|LongStatementRenderingTests|NoteYamlToggleTests|NoteYamlInternalsTests|WikiGifTests|WikiScreenshotTests|ShowcaseReportTests
             needs-playwright: true
           - name: Assertion Tracking Tests
             projects: tests/Kronikol.Tests.AssertionTracking

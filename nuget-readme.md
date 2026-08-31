@@ -1,6 +1,6 @@
 # Kronikol
 
-Effortlessly autogenerate **PlantUML sequence diagrams** from your component and acceptance tests. Tracks interactions between your test caller, your Service Under Test (SUT), and its dependencies — including HTTP calls, Azure Cosmos DB operations, SQL queries (via EF Core), Redis commands, events/messages, and arbitrary method calls — then converts them into diagrams embedded in searchable HTML reports and structured data files. Diagrams render client-side in the browser (on Web Workers), and payload notes flip between JSON and YAML on hover.
+Effortlessly autogenerate **PlantUML sequence diagrams** from your component and acceptance tests. Tracks interactions between your test caller, your Service Under Test (SUT), and its dependencies — including HTTP calls, Azure Cosmos DB operations, SQL queries (via EF Core), Redis commands, events/messages, and arbitrary method calls — then converts them into diagrams embedded in searchable HTML reports and structured data files. Diagrams render client-side in the browser (on Web Workers), payload notes flip between JSON and YAML on hover, and the report search box searches *everything* the report contains — payloads, headers, SQL and diagram text — via a compact embedded full-text index.
 
 ## Example Output
 

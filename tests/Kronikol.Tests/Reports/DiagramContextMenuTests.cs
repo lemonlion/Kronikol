@@ -949,7 +949,9 @@ public class DiagramContextMenuTests
         var opens = System.Text.RegularExpressions.Regex.Matches(_plantUmlScript, "<script").Count;
         var closes = System.Text.RegularExpressions.Regex.Matches(_plantUmlScript, "</script>").Count;
         Assert.Equal(opens, closes);
-        Assert.Equal(2, opens);
+        // 3 balanced blocks: the shared decompress helper (prepended so standalone compositions
+        // stay self-sufficient), the engine loader, and the render script itself.
+        Assert.Equal(3, opens);
     }
 
     [Fact]
