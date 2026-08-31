@@ -54,11 +54,13 @@ public class SearchIndexVectorTests
         }
     }
 
-    [Fact]
-    public void Serialization_matches_vector_bytes()
+    [Theory]
+    [InlineData("serialization")]        // 3 docs: bitsetBytes = 1, every non-empty row bitset-encoded
+    [InlineData("serializationSparse")]  // 20 docs: bitsetBytes = 3, holds BOTH bitset and list rows
+    public void Serialization_matches_vector_bytes(string caseName)
     {
         using var vectors = LoadVectors();
-        var s = vectors.RootElement.GetProperty("serialization");
+        var s = vectors.RootElement.GetProperty(caseName);
         var buckets = s.GetProperty("buckets").GetInt32();
         var docAnchors = s.GetProperty("docAnchors").EnumerateArray().Select(e => e.GetString()!).ToArray();
         var bucketsPerDoc = s.GetProperty("bucketsPerDoc").EnumerateArray()

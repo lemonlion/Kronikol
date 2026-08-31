@@ -322,6 +322,76 @@ public class SearchIndexReportTests
     }
 
     [Fact]
+    public void Sql_capture_text_maps_to_the_right_doc_through_the_real_formatter()
+    {
+        // §9.2(e), genuinely: the SQL text travels the real SqlDiagnosticTracker capture shape
+        // (string method, database dependency category, SQL as content) through the REAL
+        // PlantUmlCreator — no hand-written PlantUML, so the formatter's note transforms fire.
+        var t1 = Guid.NewGuid();
+        var logs = new Kronikol.Tracking.RequestResponseLog[]
+        {
+            new("Create order", "s1", "INSERT", "insert into qzx_ledger (id) values (7)",
+                new Uri("sql://orders-db/qzxsqlpath"), [],
+                "OrdersDb", "Test", Kronikol.Tracking.RequestResponseType.Request, t1, Guid.NewGuid(),
+                TrackingIgnore: false, DependencyCategory: Kronikol.Constants.DependencyCategories.SQL)
+        };
+        var diagrams = Kronikol.PlantUml.PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs, clientSideSplitting: true)
+            .SelectMany(t => t.PlantUmls.Select(p => new DefaultDiagramsFetcher.DiagramAsCode(t.TestId, "", p.PlainText)))
+            .ToArray();
+
+        var html = Generate("SearchIndexSql.html", diagrams, TwoScenarioFeature());
+        var decoded = DecodeBlob(ExtractBlobBase64(html)!);
+
+        foreach (var needle in new[] { "qzx_ledger", "qzxsqlpath" }) // SQL body + arrow-label path
+        {
+            var candidates = decoded.Candidates(needle);
+            Assert.Contains(0, candidates);
+            Assert.DoesNotContain(1, candidates);
+        }
+    }
+
+    [Fact]
+    public void Example_values_map_to_docs_through_the_decoded_blob()
+    {
+        // §9.2(f) through the INDEX, not just the data-search attributes: if example values
+        // fell out of the corpus but stayed in data-search, only this test would notice.
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F1",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Row one", Result = ExecutionResult.Passed,
+                        OutlineId = "grp",
+                        ExampleValues = new Dictionary<string, string> { ["Code"] = "xkcd-9931-unique" },
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "a value", Status = ExecutionResult.Passed }]
+                    },
+                    new Scenario
+                    {
+                        Id = "s2", DisplayName = "Row two", Result = ExecutionResult.Passed,
+                        OutlineId = "grp",
+                        ExampleValues = new Dictionary<string, string> { ["Code"] = "other" },
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "a value", Status = ExecutionResult.Passed }]
+                    }
+                ]
+            }
+        };
+
+        var html = Generate("SearchIndexExampleBlob.html", [], features);
+        var decoded = DecodeBlob(ExtractBlobBase64(html)!);
+
+        // the group data-search aggregates every member's example values and is part of every
+        // member doc's corpus, so the needle maps to BOTH member docs (group-reveal semantics)
+        var candidates = decoded.Candidates("xkcd-9931-unique");
+        Assert.Contains(0, candidates);
+        Assert.Contains(1, candidates);
+        Assert.Empty(decoded.Candidates("zqz-absent-value"));
+    }
+
+    [Fact]
     public void Merge_path_flame_text_is_indexed_from_precomputed_html()
     {
         // Q-E: merged reports receive whole-test-flow only as precomputed HTML strings; the

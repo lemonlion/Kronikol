@@ -122,3 +122,21 @@ prewarm task):
 
 Remaining known lever if ever needed: single-scan fused normalization (rejected for now — the
 passes interact; see the SearchNormalizer comment).
+
+## Post-release audit (3.0.71, 2026-08-31)
+
+An adversarial audit of the 3.0.70 execution changed the reference normalization and vectors:
+
+- **Rule 5b opener widened**: `/^[hr]?note(?:<<[^>]*>>)? (left|right|over|across)\b/` with a
+  no-`:` guard — the formatter also emits `note<<eventNote>> right` (event captures) and
+  `hnote across <<assertionNote>>` (assertion notes), whose chunked/wrapped bodies were never
+  rejoined; single-line forms (step delimiters `#black:<color:white>…`, row markers `: Row N`)
+  carry a colon and must not enter note mode.
+- **Whitespace is JS `/\s/` exactly** on all three sides — .NET `char.IsWhiteSpace` disagrees on
+  U+0085 (NEL, .NET-only) and U+FEFF (JS-only), which made the C# index and the browser verify
+  corpus diverge on note-body continuation lines starting with those characters.
+- **`serializationSparse` vector added** (20 docs, 61 bitset + 78 list rows): the varint-list row
+  encoding is only chosen at ≥17 docs and no prior fixture reached it.
+
+Regenerate with `node gen-vectors.js` after any normalize.js change, then port to
+`SearchNormalizer.cs` + `report-search-index.js` (the vector tests on both sides enforce this).

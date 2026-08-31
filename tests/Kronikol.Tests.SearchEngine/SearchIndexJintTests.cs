@@ -68,10 +68,10 @@ public class SearchIndexJintTests : IDisposable
         }
     }
 
-    private void LoadSerializationVectorIndex()
+    private void LoadSerializationVectorIndex(string caseName = "serialization")
     {
         using var vectors = LoadVectors();
-        var raw = Convert.FromBase64String(vectors.RootElement.GetProperty("serialization").GetProperty("rawBase64").GetString()!);
+        var raw = Convert.FromBase64String(vectors.RootElement.GetProperty(caseName).GetProperty("rawBase64").GetString()!);
         _engine.SetValue("_rawBytes", raw.Select(b => (int)b).ToArray());
         _engine.Execute("var _ix = kronDecodeSearchIndex(Uint8Array.from(_rawBytes));");
     }
@@ -116,6 +116,38 @@ public class SearchIndexJintTests : IDisposable
             var count = (int)_engine.Evaluate("kronCandidateDocsForQuery(_ix, _q).length").AsNumber();
             Assert.Equal(3, count);
         }
+    }
+
+    [Fact]
+    public void Shipped_decoder_reads_the_sparse_serialization_vector()
+    {
+        // 20 docs (bitsetBytes = 3): this vector holds BOTH row encodings, so the decoder's
+        // varint-list arm — never reachable below 17 docs — is exercised here.
+        using var vectors = LoadVectors();
+        var expectedAnchors = vectors.RootElement.GetProperty("serializationSparse").GetProperty("docAnchors")
+            .EnumerateArray().Select(e => e.GetString()).ToArray();
+
+        LoadSerializationVectorIndex("serializationSparse");
+        Assert.Equal(20, expectedAnchors.Length);
+        Assert.Equal(20, (int)_engine.Evaluate("_ix.docCount").AsNumber());
+        for (var d = 0; d < expectedAnchors.Length; d++)
+            Assert.Equal(expectedAnchors[d], _engine.Evaluate($"_ix.anchors[{d}]").AsString());
+    }
+
+    [Theory]
+    // sparse-vector docs: "doc <d> unique-token-<d>-xyz shared warehouse phrase" for d = 0..19
+    [InlineData("unique-token-7-xyz", new[] { 7 })]
+    [InlineData("unique-token-13-xyz", new[] { 13 })]
+    [InlineData("warehouse", new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 })]
+    [InlineData("zzz-not-there", new int[0])]
+    public void Shipped_candidates_match_ground_truth_on_the_sparse_vector_corpus(string query, int[] expectedDocs)
+    {
+        LoadSerializationVectorIndex("serializationSparse");
+        _engine.SetValue("_q", query);
+        var arr = _engine.Evaluate("kronCandidateDocsForQuery(_ix, _q)").AsArray();
+        var actual = new List<int>();
+        for (uint i = 0; i < arr.Length; i++) actual.Add((int)arr[i].AsNumber());
+        Assert.Equal(expectedDocs, actual);
     }
 
     [Fact]
@@ -194,6 +226,25 @@ public class SearchIndexJintTests : IDisposable
     {
         _engine.SetValue("_input", input);
         Assert.Equal(expected, _engine.Evaluate("kronIsDeepEligible(_input)").AsBoolean());
+    }
+
+    [Theory]
+    // Deep results may REMOVE a shallow match only for queries that can genuinely turn negative
+    // with more text — advanced queries containing !!. Everything else is add-only, so a raw
+    // shallow match always survives normalization asymmetries.
+    [InlineData("payload", false)]                     // legacy
+    [InlineData("payload widget", false)]              // legacy multi-token
+    [InlineData("payload @smoke", false)]              // legacy + tag
+    [InlineData("alpha && beta", false)]               // advanced, no negation
+    [InlineData("\"a phrase\" || other", false)]
+    [InlineData("!! frobnicate", true)]
+    [InlineData("order && !! frobnicate", true)]
+    [InlineData("a || (b && !! c)", true)]             // nested negation
+    [InlineData("", false)]
+    public void Query_can_remove_only_under_advanced_negation(string input, bool expected)
+    {
+        _engine.SetValue("_input", input);
+        Assert.Equal(expected, _engine.Evaluate("kronQueryCanRemove(_input)").AsBoolean());
     }
 
     [Fact]

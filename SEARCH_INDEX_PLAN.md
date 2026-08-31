@@ -12,6 +12,19 @@ serialization) landing at ~5-10% on a 147MB corpus, within run noise; rule 3 gai
 line-leading `#`/`=` creole escapes the probe fixture had missed; and Phase 2 (§10) remains
 unbuilt as planned.
 
+**Post-release audit (3.0.71, 2026-08-31):** an adversarial full-plan audit found and fixed five
+defects in the execution — rule 5b missed `note<<eventNote>>`/`hnote across` openers (recall hole
+for event/assertion note bodies); C# `char.IsWhiteSpace` vs JS `/\s/` diverged on U+0085/U+FEFF in
+5b (cross-language deep false negative); the deep-authoritative final could hide a raw shallow
+match for positive queries (now removal happens only under `!!` — the only removal §4.4 ever
+promised); a corrupt index blob wedged the chip (worker init had no rejection handler); and the
+KSI1 sparse row encoding was untested everywhere (list rows appear only at ≥17 docs; a 20-doc
+vector now pins both encodings). §2.5's "row highlighting reuses the data-row-search mechanism
+during verify" is unreachable by construction (any needle in `data-row-search` shallow-matches the
+group, since group `data-search` aggregates all row text) — per-row pinpointing of payload-only
+matches is hit-location UX, i.e. Phase 2. Coverage gaps from §9.2(e)/(f) and §9.3(b)/(c)/(l)/(n)
+closed; the wrap-crossing E2E needle now provably crosses the cut.
+
 This plan is self-contained: all file/line references verified against the working tree at v3.0.69
 (supporting measurement tooling lives in `tools/search-bench/`).
 

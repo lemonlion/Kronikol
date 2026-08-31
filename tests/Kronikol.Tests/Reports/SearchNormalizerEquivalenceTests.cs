@@ -27,6 +27,26 @@ public partial class SearchNormalizerEquivalenceTests
     [GeneratedRegex("[ \t]+")]
     private static partial Regex WhitespaceRun();
 
+    // The reference's note-opener regex, with JS \b transliterated to an explicit ASCII
+    // word-boundary group (.NET \b is Unicode-aware, JS \b is ASCII-\w-based).
+    [GeneratedRegex("^[hr]?note(?:<<[^>]*>>)? (left|right|over|across)([^a-zA-Z0-9_]|$)")]
+    private static partial Regex NoteOpener();
+
+    // JS /\s/ and String.trim() semantics, NOT char.IsWhiteSpace/string.Trim — they disagree on
+    // U+0085 (NEL) and U+FEFF, and the shipped normalizer must match the client JS exactly.
+    private static bool RefIsJsWhitespace(char c) =>
+        c is ' ' or '\t' or '\n' or '\v' or '\f' or '\r' or '\u00a0' or '\u1680'
+          or (>= '\u2000' and <= '\u200a') or '\u2028' or '\u2029' or '\u202f' or '\u205f' or '\u3000' or '\ufeff';
+
+    private static string RefJsTrim(string line)
+    {
+        var start = 0;
+        var end = line.Length;
+        while (start < end && RefIsJsWhitespace(line[start])) start++;
+        while (end > start && RefIsJsWhitespace(line[end - 1])) end--;
+        return line[start..end];
+    }
+
     private static string ReferenceNormalize(string text)
     {
         var s = text.Replace("\r\n", "\n");
@@ -42,8 +62,8 @@ public partial class SearchNormalizerEquivalenceTests
         var first = true;
         foreach (var line in s.Split('\n'))
         {
-            var trimmed = line.Trim();
-            if (trimmed.StartsWith("note left") || trimmed.StartsWith("note right") || trimmed.StartsWith("note over"))
+            var trimmed = RefJsTrim(line);
+            if (NoteOpener().IsMatch(trimmed) && !trimmed.Contains(':'))
             {
                 inNote = true;
                 if (!first) sb.Append('\n');
@@ -55,7 +75,7 @@ public partial class SearchNormalizerEquivalenceTests
                 if (!first) sb.Append('\n');
                 sb.Append(line);
             }
-            else if (inNote && !first && line.Length > 0 && !char.IsWhiteSpace(line[0]))
+            else if (inNote && !first && line.Length > 0 && !RefIsJsWhitespace(line[0]))
             {
                 sb.Append(line);
             }
@@ -85,6 +105,13 @@ public partial class SearchNormalizerEquivalenceTests
         "note left\n<color:gray>[X=aaaa\n<color:gray>bbbb]\n\n{\n  \"k\": \"AAAA\nBBBB\"\n}\nend note\nafter -> b: x",
         "note right\nflush\nleft\nend note",
         "note over A,B\npayload\nend note",
+        "note<<eventNote>> right\nchunkA\nchunkB\nend note",
+        "hnote across <<assertionNote>> #90EE90\nexpected X\nactual Y\nend note",
+        "hnote across <<stepDelimiter>> #black:<color:white>Step 1\nflush\nnext",
+        "hnote across #lightyellow : Row 2\nflush",
+        "note left\nAAAA\nnote leftovers glue\nend note",
+        "note left\nAAAA\n\u0085NEL-continuation\nend note",
+        "note left\nAAAA\n\ufeffFEFF-continuation\nend note",
         "notnote left\nx\ny",
         "  a\tb  c   \n\t\n d",
         "~x ~~ ~ tilde survivors",
@@ -111,7 +138,9 @@ public partial class SearchNormalizerEquivalenceTests
         string[] fragments =
         [
             "note left\n", "end note\n", "~*", "~/", "\\n   ", "<color:gray>", "</font>", "<i>", "\r\n",
-            "  ", "\t", "{ \"k\": \"v\" }\n", "POST: /api/x\n", "~[", "~\"", "AAAA\n", "bbbb\n", "<", ">", "~", "\\"
+            "  ", "\t", "{ \"k\": \"v\" }\n", "POST: /api/x\n", "~[", "~\"", "AAAA\n", "bbbb\n", "<", ">", "~", "\\",
+            "note<<eventNote>> right\n", "hnote across <<assertionNote>> #x\n", "hnote across #y : Row\n",
+            "across ", "\u0085", "\ufeff"
         ];
         for (var doc = 0; doc < 50; doc++)
         {

@@ -59,6 +59,18 @@ public class MergeCommandTests
             Assert.Contains("runner1.json", outWriter.ToString());
             Assert.Contains("runner2.json", outWriter.ToString());
             Assert.DoesNotContain("schema.json", outWriter.ToString());
+
+            // The REAL merge command's output carries a rebuilt deep-search index over the
+            // merged corpus (not just the GenerateHtmlReport-parameter proxy the §9.2 unit
+            // tests exercise): each runner's diagram text maps to its own doc.
+            var blob = SearchIndexReportTests.ExtractBlobBase64(html);
+            Assert.NotNull(blob);
+            var decoded = SearchIndexReportTests.DecodeBlob(blob!);
+            Assert.Equal(2, decoded.DocAnchors.Length);
+            var placeOrderDoc = Array.IndexOf(decoded.DocAnchors, "scenario-place-order");
+            Assert.True(placeOrderDoc >= 0, "doc table: " + string.Join(", ", decoded.DocAnchors));
+            Assert.Contains(placeOrderDoc, decoded.Candidates("r1s1"));
+            Assert.DoesNotContain(1 - placeOrderDoc, decoded.Candidates("r1s1"));
         }
         finally
         {

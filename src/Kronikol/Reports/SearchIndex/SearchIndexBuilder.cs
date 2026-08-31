@@ -254,22 +254,4 @@ internal static class SearchIndexBuilder
         }
         return Convert.ToBase64String(output.ToArray());
     }
-
-    private static void WriteU32Le(Stream s, uint v)
-    {
-        s.WriteByte((byte)(v & 255));
-        s.WriteByte((byte)((v >> 8) & 255));
-        s.WriteByte((byte)((v >> 16) & 255));
-        s.WriteByte((byte)((v >> 24) & 255));
-    }
-
-    private static void WriteVarint(Stream s, uint v)
-    {
-        while (v >= 128)
-        {
-            s.WriteByte((byte)((v & 127) | 128));
-            v >>= 7;
-        }
-        s.WriteByte((byte)v);
-    }
 }

@@ -20,19 +20,26 @@ public class DeepSearchTests : PlaywrightTestBase
     private const string PayloadNeedle = "zqxpayload-widget-7734";
     private const string HeaderNeedle = "zqxheaderval-55";
     private const string SqlNeedle = "insert into zorbtable_qx";
+    private const string MessageNeedle = "zqxmsgpath-42";
     private const string WrapNeedle = "zqxwrapneedle99";
     private const string ParamPayloadNeedle = "zqxparamtag-31";
     private const string ExampleValueNeedle = "zqxexample-11";
 
     private static RequestResponseLog[] BuildCaptureLogs()
     {
-        var wrapToken = "eyJhbGciOi" + new string('A', 80) + WrapNeedle + new string('B', 80);
-        var s1Body = "{\"widget\":\"" + PayloadNeedle + "\",\"blob\":\"" + wrapToken + "\",\"sql\":\"" + SqlNeedle + " (item, qty) values ('w', 2)\"}";
+        // The wrap needle must STRADDLE the formatter's hard cut: WrapUnbreakableRuns cuts at
+        // 120 run chars (no punctuation in the needle or the A-run, so the back-scan cannot
+        // dodge it). Run = `"` + 10-char prefix + 102 A's -> the 15-char needle occupies run
+        // positions 113-127, bisected at 120. Wrapped_unbreakable_run_… asserts this geometry.
+        var wrapToken = "eyJhbGciOi" + new string('A', 102) + WrapNeedle + new string('B', 80);
+        var s1Body = "{\"widget\":\"" + PayloadNeedle + "\",\"blob\":\"" + wrapToken + "\"}";
         var s3Body = "{\"tag\":\"" + ParamPayloadNeedle + "\"}";
         var t1 = Guid.NewGuid();
         var p1 = Guid.NewGuid();
         var t2 = Guid.NewGuid();
         var p2 = Guid.NewGuid();
+        var t3 = Guid.NewGuid();
+        var p3 = Guid.NewGuid();
         return
         [
             new("Create order successfully", "s1", HttpMethod.Post, s1Body,
@@ -43,6 +50,15 @@ public class DeepSearchTests : PlaywrightTestBase
                 new Uri("https://api.example.test/api/orders"),
                 [("Content-Type", "application/json")],
                 "OrderService", "Test", RequestResponseType.Response, t1, p1, TrackingIgnore: false, StatusCode: HttpStatusCode.Created),
+            // Genuine SQL-capture shape (SqlDiagnosticTracker): string method, SQL text as the
+            // content, database dependency category. The arrow label "INSERT: /zqxmsgpath-42"
+            // is NOT extracted into shallow data-search (UrlRegex only matches HTTP verbs), so
+            // both the SQL text and the path are deep-only surfaces.
+            new("Create order successfully", "s1", "INSERT", SqlNeedle + " (item, qty) values ('w', 2)",
+                new Uri("sql://orders-db/" + MessageNeedle),
+                [],
+                "OrdersDb", "OrderService", RequestResponseType.Request, t3, p3, TrackingIgnore: false,
+                DependencyCategory: Kronikol.Constants.DependencyCategories.SQL),
             new("Row one", "s3", HttpMethod.Post, s3Body,
                 new Uri("https://api.example.test/api/rows"),
                 [("Content-Type", "application/json")],
@@ -159,6 +175,8 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Sql_statement_text_is_found()
     {
+        // The needle travels the genuine SQL-capture shape (string method, database category,
+        // SQL as content) — not a JSON payload wearing SQL clothing.
         await Page.GotoAsync(GenerateDeepReport("DeepSearchSql.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
@@ -166,10 +184,28 @@ public class DeepSearchTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task Message_only_arrow_text_is_found()
+    {
+        // The SQL arrow label "INSERT: /zqxmsgpath-42" is message text the shallow search never
+        // sees (ExtractDiagramSearchTerms only extracts HTTP-verb targets).
+        await Page.GotoAsync(GenerateDeepReport("DeepSearchMessage.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        await SearchAndWaitForVisible(MessageNeedle, 1);
+        await WaitForChipText("more found");
+    }
+
+    [Fact]
     public async Task Wrapped_unbreakable_run_is_found_across_the_formatter_line_break()
     {
         // The capture pipeline wraps >120-char runs with real newlines; the shared
         // normalization must rejoin them or this mid-token needle is unfindable.
+        // First prove the geometry: the formatter really did bisect the needle — without this,
+        // the fact would pass even with the 5b rejoin deleted.
+        var codeBehinds = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(BuildCaptureLogs(), clientSideSplitting: true)
+            .SelectMany(t => t.PlantUmls.Select(p => p.PlainText)).ToArray();
+        Assert.DoesNotContain(codeBehinds, c => c.Contains(WrapNeedle));
+
         await Page.GotoAsync(GenerateDeepReport("DeepSearchWrapped.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
@@ -177,8 +213,13 @@ public class DeepSearchTests : PlaywrightTestBase
     }
 
     [Fact]
-    public async Task Parameterized_row_payload_is_found_and_row_is_highlighted()
+    public async Task Parameterized_row_payload_match_reveals_the_group()
     {
+        // Deep matches reveal the GROUP; pinpointing the matching row for payload-only needles
+        // is hit-location UX — SEARCH_INDEX_PLAN Phase 2 (§10), deliberately unbuilt. (A needle
+        // present in data-row-search always shallow-matches the group too, since the group
+        // data-search aggregates all row text — so the shallow row highlight already covers
+        // every reachable row-highlight case.)
         await Page.GotoAsync(GenerateDeepReport("DeepSearchParamRow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
@@ -240,6 +281,83 @@ public class DeepSearchTests : PlaywrightTestBase
             }
         """, null, new() { Timeout = 15000, PollingInterval = 200 });
         await WaitForChipText("results refined (+0/−1)");
+    }
+
+    [Fact]
+    public async Task InlineSvg_mode_negation_removes_a_shallow_match()
+    {
+        // Mode-specific verify-corpus assembly under negation: InlineSvg reads #puml-data too.
+        await Page.GotoAsync(GenerateDeepReport("DeepSearchInlineSvgNegation.html", PlantUmlRendering.Local, inlineSvg: true));
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        await FillSearchBar($"running && !!{PayloadNeedle}");
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var vis = Array.from(document.querySelectorAll('.scenario'))
+                    .filter(s => getComputedStyle(s).display !== 'none');
+                return vis.length === 1 && vis[0].id === 'scenario-list-orders-quietly';
+            }
+        """, null, new() { Timeout = 15000, PollingInterval = 200 });
+    }
+
+    // ── a broken index must fail loudly, not wedge ──
+
+    [Fact]
+    public async Task Corrupt_index_blob_surfaces_error_and_never_wedges_the_chip()
+    {
+        var url = GenerateDeepReport("DeepSearchCorruptBlob.html");
+        var path = new Uri(url).LocalPath;
+        var html = File.ReadAllText(path);
+        // valid base64, not gzip — the worker's DecompressionStream throws during init
+        var corrupted = System.Text.RegularExpressions.Regex.Replace(html,
+            "(<script id=\"kron-search-index\" type=\"application/json\">\")[^\"]*",
+            "$1" + Convert.ToBase64String("not-gzip-data"u8.ToArray()));
+        Assert.NotEqual(html, corrupted);
+        File.WriteAllText(path, corrupted);
+
+        await Page.GotoAsync(url);
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        // deep-eligible query triggers init; the failure must surface as indexState 'error'
+        // with the chip hidden (an unhandled worker rejection would leave it pulsing forever)
+        await FillSearchBar(PayloadNeedle);
+        await Page.WaitForFunctionAsync(
+            "() => window.__kronikolSearch.indexState === 'error'",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
+        await Page.WaitForFunctionAsync(
+            "() => { var c = document.querySelector('.kron-deep-chip'); return !c || c.style.display === 'none'; }",
+            null, new() { Timeout = 5000, PollingInterval = 200 });
+
+        // shallow search is unaffected
+        await SearchAndWaitForVisible("successfully", 1);
+    }
+
+    // ── the JSON⇄YAML note toggle must not change deep results ──
+
+    [Fact]
+    public async Task Yaml_toggle_does_not_change_deep_results()
+    {
+        // The bulk toggle rewrites data-plantuml attributes and re-renders every note; verify
+        // reads #puml-data, so deep results must be identical before and after.
+        await Page.GotoAsync(GenerateDeepReport("DeepSearchYamlToggle.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        await SearchAndWaitForVisible(PayloadNeedle, 1);
+
+        await FillSearchBar("");
+        await Page.WaitForFunctionAsync(
+            "() => Array.from(document.querySelectorAll('.scenario')).filter(s => getComputedStyle(s).display !== 'none').length === 3",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
+
+        await Page.EvaluateAsync("() => { var v = document.querySelectorAll('details'); v.forEach(d => d.setAttribute('open','')); }");
+        await WaitForDiagramSvg();
+        var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await Page.Locator(".toolbar-right .note-format-select").SelectOptionAsync("yaml");
+        await Page.WaitForFunctionAsync(
+            $"() => (window._renderCompleteCount || 0) > {renderCount}",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
+
+        await SearchAndWaitForVisible(PayloadNeedle, 1);
     }
 
     // ── chip states ──

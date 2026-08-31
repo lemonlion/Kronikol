@@ -13,7 +13,9 @@
 // The index is an accelerator, never the truth: candidates are confirmed by running the same
 // matcher the shallow search uses over the reassembled normalized corpus, so hash collisions
 // only cost time and the advanced syntax composes unchanged. Deep results are authoritative
-// (negated queries can remove shallow matches — the deep corpus is a superset).
+// only for negated (!!) queries, which can remove shallow matches — the deep corpus is a
+// superset, so seeing more text can turn `!! term` false. Positive queries are strictly
+// add-only (kronQueryCanRemove).
 
 // ===== PURE SECTION (Jint-tested; keep free of DOM/worker references) =====
 
@@ -25,14 +27,17 @@ function kronNormalizeForSearch(s) {
     s = s.replace(/~(?=[/*_\-"\[<#=])/g, '');                      // 3. creole escapes
     s = s.replace(/<\/?(?:color|font|i|b|size|back)[^>]*>/g, '');  // 4. markup tags
     s = s.replace(/\\n[ \t]*/g, '');                               // 5a. arrow-label literal \n escape
-    // 5b. note-body rejoin (linear, parts joined once)
+    // 5b. note-body rejoin (linear, parts joined once). Openers cover every multi-line note
+    // form the formatter emits: `note left`, `note<<class>> right` (event notes),
+    // `hnote across <<class>>` (assertion/render-error notes). A `:` on the directive line
+    // marks PlantUML's single-line form (step delimiters, row markers) — no body follows.
     var lines = s.split('\n');
     var parts = [];
     var inNote = false;
     for (var i = 0; i < lines.length; i++) {
         var l = lines[i];
         var trimmed = l.trim();
-        if (/^note (left|right|over)/.test(trimmed)) { inNote = true; if (parts.length) parts.push('\n'); parts.push(l); continue; }
+        if (/^[hr]?note(?:<<[^>]*>>)? (left|right|over|across)\b/.test(trimmed) && trimmed.indexOf(':') === -1) { inNote = true; if (parts.length) parts.push('\n'); parts.push(l); continue; }
         if (trimmed === 'end note') { inNote = false; if (parts.length) parts.push('\n'); parts.push(l); continue; }
         if (inNote && parts.length && l.length > 0 && !/\s/.test(l[0])) {
             parts.push(l);
@@ -203,6 +208,20 @@ function kronIsDeepEligible(input) {
     return false;
 }
 
+// True only for advanced queries containing !! — the one query class where seeing MORE text can
+// turn a match into a non-match. Deep results may REMOVE a shallow match only for these; every
+// other query is add-only, so a raw shallow match always survives (the shallow pass matches the
+// raw data-search text while deep matches it normalized — for positive queries that asymmetry
+// must never hide a result the user can already see).
+function kronQueryCanRemove(input) {
+    if (!input || !isAdvancedSearch(input)) return false;
+    var tokens = advancedSearchTokenise(input);
+    if (!tokens || tokens.length === 0 || advancedSearchParse(tokens) === null) return false;
+    for (var i = 0; i < tokens.length; i++)
+        if (tokens[i].type === 'not') return true;
+    return false;
+}
+
 // Deep match for one item: the EXISTING matcher semantics, run over the full normalized corpus.
 // Corpus pieces are '\n'-joined — tokens and phrases never contain '\n', so matches can never
 // span piece boundaries. Falls back to the legacy path exactly like run_search_scenarios does.
@@ -332,6 +351,10 @@ function kronSearchWorkerMain(self) {
             gunzipToBytes(msg.indexB64).then(function(bytes) {
                 ix = kronDecodeSearchIndex(bytes);
                 self.postMessage({ type: 'anchors', anchors: ix.anchors, buckets: ix.buckets, docCount: ix.docCount });
+            }).catch(function(err) {
+                // A corrupt/undecodable blob must surface as an error, not a forever-pending
+                // init: an unhandled rejection in a worker does NOT fire worker.onerror.
+                self.postMessage({ type: 'fatal', message: '' + err });
             });
         } else if (msg.type === 'docmap') {
             docToItem = msg.docToItem;
@@ -356,6 +379,7 @@ function kronSearchWorkerMain(self) {
         initStarted: false,
         ready: false,
         shallowHidden: null,   // sr snapshot after the shallow pass, for the +N/-M chip counts
+        canRemove: false,      // negated query — final deep results may hide shallow matches
         chipTimer: null,
         chip: null
     };
@@ -496,6 +520,9 @@ function kronSearchWorkerMain(self) {
                 window.__kronikolSearch.indexState = 'ready';
             } else if (msg.type === 'result') {
                 onDeepResult(msg);
+            } else if (msg.type === 'fatal') {
+                window.__kronikolSearch.indexState = 'error';
+                hideChip();
             }
         };
         state.worker.onerror = function() {
@@ -526,7 +553,9 @@ function kronSearchWorkerMain(self) {
         }
         var added = 0, removed = 0;
         for (var j = 0; j < c.items.length; j++) {
-            var newSr = !matched.has(j);
+            // Authoritative (may hide a shallow match) only for negated queries; positive
+            // queries are add-only — see kronQueryCanRemove.
+            var newSr = state.canRemove ? !matched.has(j) : (c.items[j].sr && !matched.has(j));
             if (c.items[j].sr !== newSr) { c.items[j].sr = newSr; changed = true; }
             if (state.shallowHidden) {
                 if (state.shallowHidden[j] && !newSr) added++;
@@ -558,6 +587,7 @@ function kronSearchWorkerMain(self) {
         var shallowHidden = new Array(c.items.length);
         for (var i = 0; i < c.items.length; i++) shallowHidden[i] = c.items[i].sr;
         state.shallowHidden = shallowHidden;
+        state.canRemove = kronQueryCanRemove(input);
         showChipWorkingSoon();
         state.worker.postMessage({ type: 'query', gen: state.gen, input: input });
     };

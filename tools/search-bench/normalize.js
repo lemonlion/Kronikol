@@ -11,13 +11,19 @@ function normalizeForSearch(s) {
   s = s.replace(/\\n[ \t]*/g, '');                               // 5a. arrow-label literal \n escape + indent
   // 5b. note-body rejoin: newline followed by non-whitespace, scoped to note bodies.
   // Linear: parts are joined once at the end ('' join = rejoin, '\n' join = kept newline).
+  // Openers cover every multi-line note form the formatter emits: `note left`, `note<<class>>
+  // right` (event notes), `hnote across <<class>>` (assertion/render-error notes). A `:` on the
+  // directive line marks PlantUML's single-line form (step delimiters, row markers) — no body
+  // follows, so it must NOT enter note mode. The trailing \b keeps payload lines like
+  // "note leftovers…" from opening a note.
+  const noteOpener = /^[hr]?note(?:<<[^>]*>>)? (left|right|over|across)\b/;
   const lines = s.split('\n');
   const parts = [];
   let inNote = false;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
     const trimmed = l.trim();
-    if (/^note (left|right|over)/.test(trimmed)) { inNote = true; if (parts.length) parts.push('\n'); parts.push(l); continue; }
+    if (noteOpener.test(trimmed) && trimmed.indexOf(':') === -1) { inNote = true; if (parts.length) parts.push('\n'); parts.push(l); continue; }
     if (trimmed === 'end note') { inNote = false; if (parts.length) parts.push('\n'); parts.push(l); continue; }
     if (inNote && parts.length && l.length > 0 && !/\s/.test(l[0])) {
       parts.push(l);                                             // rejoin flush-left continuation
