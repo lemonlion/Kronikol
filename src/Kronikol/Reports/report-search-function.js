@@ -28,6 +28,7 @@ function run_search_scenarios() {
             }
             applyVisibility(c);
             update_url_hash();
+            if (window._kronDeepReset) window._kronDeepReset();
             return;
         }
 
@@ -91,37 +92,16 @@ function run_search_scenarios() {
             } else {
                 document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });
             }
+            if (window._kronDeepQuery) window._kronDeepQuery(input);
             return;
         }
         // If advancedFailed, fall through to legacy path
     }
 
     // Legacy search path
-    // Extract @tag expressions
-    let tagExpr = null;
-    let textInput = input;
-    if (input.indexOf('@') !== -1) {
-        let tagParts = [];
-        let textParts = [];
-        let tokens = input.split(/\s+/);
-        let inTag = false;
-        for (let t = 0; t < tokens.length; t++) {
-            let tok = tokens[t];
-            if (tok.startsWith('@') || tok === 'and' || tok === 'or' || tok === 'not' || tok === '(' || tok === ')') {
-                tagParts.push(tok);
-                inTag = true;
-            } else if (inTag && (tok === 'and' || tok === 'or' || tok === 'not')) {
-                tagParts.push(tok);
-            } else {
-                textParts.push(tok);
-                inTag = false;
-            }
-        }
-        if (tagParts.length > 0) {
-            tagExpr = tagParts.join(' ');
-            textInput = textParts.join(' ');
-        }
-    }
+    let split = splitLegacyTagExpression(input);
+    let tagExpr = split.tagExpr;
+    let textInput = split.textInput;
 
     let searchTokens = parseSearchTokensIncludingQuotes(textInput);
 
@@ -132,6 +112,7 @@ function run_search_scenarios() {
         }
         applyVisibility(c);
         update_url_hash();
+        if (window._kronDeepReset) window._kronDeepReset();
         return;
     }
 
@@ -199,6 +180,38 @@ function run_search_scenarios() {
     } else {
         document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });
     }
+
+    if (window._kronDeepQuery) window._kronDeepQuery(input);
+}
+
+// Splits a legacy query into its @tag expression and its plain-text remainder. Shared with the
+// deep-search worker (included in its Blob by name), so the two paths cannot drift.
+function splitLegacyTagExpression(input) {
+    var tagExpr = null;
+    var textInput = input;
+    if (input.indexOf('@') !== -1) {
+        var tagParts = [];
+        var textParts = [];
+        var tokens = input.split(/\s+/);
+        var inTag = false;
+        for (var t = 0; t < tokens.length; t++) {
+            var tok = tokens[t];
+            if (tok.startsWith('@') || tok === 'and' || tok === 'or' || tok === 'not' || tok === '(' || tok === ')') {
+                tagParts.push(tok);
+                inTag = true;
+            } else if (inTag && (tok === 'and' || tok === 'or' || tok === 'not')) {
+                tagParts.push(tok);
+            } else {
+                textParts.push(tok);
+                inTag = false;
+            }
+        }
+        if (tagParts.length > 0) {
+            tagExpr = tagParts.join(' ');
+            textInput = textParts.join(' ');
+        }
+    }
+    return { tagExpr: tagExpr, textInput: textInput };
 }
 
 function parseSearchTokensIncludingQuotes(str) {

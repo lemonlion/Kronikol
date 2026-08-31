@@ -32,6 +32,8 @@ function clear_all_filters() {
     var catModeBtn = document.querySelector('.cat-mode-toggle');
     if (catModeBtn) catModeBtn.textContent = 'OR';
     for (var i = 0; i < c.items.length; i++) c.items[i].cat = false;
+    // Clear deep-search state (chip + in-flight queries)
+    if (window._kronDeepReset) window._kronDeepReset();
     // Apply and clear URL
     applyVisibility(c);
     history.replaceState(null, '', window.location.pathname + window.location.search);

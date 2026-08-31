@@ -186,6 +186,31 @@
             cursor: not-allowed;
         }
 
+        /* Deep-search status chip ("+N more found in payloads & diagrams") */
+        .kron-deep-chip {
+            position: absolute;
+            right: 3em;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75em;
+            padding: 0.15em 0.6em;
+            border-radius: 1em;
+            background: rgb(238, 240, 245);
+            color: rgb(90, 95, 110);
+            border: 1px solid rgb(210, 214, 224);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .kron-deep-chip-working {
+            animation: kron-deep-pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes kron-deep-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.45; }
+        }
+
         .search-help-toggle {
             flex-shrink: 0;
             width: 1.6em;

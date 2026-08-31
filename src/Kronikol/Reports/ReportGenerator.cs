@@ -457,6 +457,10 @@ public static class ReportGenerator
         var toggleHappyPathsFunction = LoadResource("report-toggle-happy-paths-function.js");
         var searchFunction = LoadResource("report-search-function.js");
 
+        // Deep search ("search everything") client — always included; it no-ops when the
+        // kron-search-index blob is absent (FullSearchIndex=false / older reports).
+        var searchIndexClientScript = LoadResource("report-search-index.js");
+
         var dependencyFilterFunction = LoadResource("report-dependency-filter-function.js");
 
         var categoryFilterFunction = LoadResource("report-category-filter-function.js");
@@ -637,6 +641,7 @@ public static class ReportGenerator
                                 {{scenarioFeatureMapHelper}}
                                 {{toggleHappyPathsFunction}}
                                 {{searchFunction}}
+                                {{searchIndexClientScript}}
                                 {{dependencyFilterFunction}}
                                 {{categoryFilterFunction}}
                                 {{statusFilterFunction}}
