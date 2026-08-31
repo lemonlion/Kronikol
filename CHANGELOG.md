@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.72] - 2026-08-31
+
+### Added
+- **Scenario descriptions, feature endpoints and failure stack traces are now searchable** — the three remaining visible-but-unfindable text surfaces the 3.0.71 audit flagged. Descriptions and endpoints join the instant search (`data-search`, parameterized rows included) and flow into the deep index automatically. Stack traces are **deep-only by design**: frame tokens (`System.…`, namespaces, file paths) are too high-frequency for keystroke search — putting them in `data-search` would light up every failed scenario for almost any class name — so they are indexed as index-only corpus pieces and the verify pass reads them back from the rendered failure `<pre>`. Searching a method or class name from a stack trace reveals the failed scenario via the chip. Unit + E2E pinned in both directions (found via deep, absent from every `data-search`).
+
+### Fixed
+- **Failure results HTML-encode the error message and stack trace.** `Expected <null> to be 7` — the shape most assertion libraries emit — interpolated `<null>` into the failure `<pre>` unencoded, where it parsed as an unknown HTML tag and *vanished from the rendered text* (same §8 bug class as 3.0.70's raw-plantuml fix; it also broke the `textContent` round-trip the stack-trace deep verify depends on). Both emission sites (scenario and parameterized-row) now encode; the feature `Endpoint` header div is encoded too. E2E asserts the angle-bracket text is visible.
+- Kronikol4J: parity break extends (data-search content and failure-result markup changed).
+
 ## [3.0.71] - 2026-08-31
 
 ### Fixed

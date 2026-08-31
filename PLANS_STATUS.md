@@ -22,7 +22,7 @@ re-verified fresh on 2026-08-30.
 | `TEOZ_PERF_PLAN.md` *(new, untracked)* | 🟡 In-house work done; upstream-gated | 6 PRs + 1 issue open upstream |
 | `PERF_CI_PLAN.md` *(new, untracked)* | 🟡 ~95%; R5 blocked on upstream merge | PR plantuml#2840 open |
 | `QUERY_PERF_PLAN.md` | ✅ Done (§3.1–§3.4 all landed) | 3.0.69 |
-| `SEARCH_INDEX_PLAN.md` | ✅ Done (executed in full, §15 order; Phase 2 §10 deferred by design; post-release audit fixes in 3.0.71) | 3.0.70–3.0.71 |
+| `SEARCH_INDEX_PLAN.md` | ✅ Done (executed in full, §15 order; Phase 2 §10 deferred by design; post-release audit fixes in 3.0.71; user-requested scope extension in 3.0.72: descriptions/endpoints instant, stack traces deep-only) | 3.0.70–3.0.72 |
 | `JAVA_PORT_PLAN.md` | 🟡 Partially done | Kronikol4J v0.1.24 |
 | `NODE_PORT_PLAN.md` | ❌ Not started (design record) | — |
 | `MONOREPO_MIGRATION_PLAN.md` | ❌ Not started (design record) | — |

@@ -71,6 +71,7 @@ public class DeepSearchTests : PlaywrightTestBase
         new Feature
         {
             DisplayName = "Order Feature",
+            Endpoint = "zqx-endpoint-svc",
             Scenarios =
             [
                 new Scenario
@@ -81,6 +82,7 @@ public class DeepSearchTests : PlaywrightTestBase
                 new Scenario
                 {
                     Id = "s2", DisplayName = "List orders quietly", Result = ExecutionResult.Passed,
+                    Description = "zqxdesc-listing covers the quiet path",
                     Steps = [new ScenarioStep { Keyword = "Given", Text = "the system is running", Status = ExecutionResult.Passed }]
                 },
                 new Scenario
@@ -298,6 +300,87 @@ public class DeepSearchTests : PlaywrightTestBase
                 return vis.length === 1 && vis[0].id === 'scenario-list-orders-quietly';
             }
         """, null, new() { Timeout = 15000, PollingInterval = 200 });
+    }
+
+    // ── descriptions, endpoints and stack traces (3.0.72 scope extension) ──
+
+    [Fact]
+    public async Task Scenario_description_and_endpoint_are_found_instantly()
+    {
+        await Page.GotoAsync(GenerateDeepReport("DeepSearchDescEndpoint.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        // both are in data-search now — shallow finds them, no deep round-trip needed
+        await SearchAndWaitForVisible("zqxdesc-listing", 1);
+        var visible = await Page.EvaluateAsync<string>("""
+            () => Array.from(document.querySelectorAll('.scenario'))
+                .filter(s => getComputedStyle(s).display !== 'none')[0].id
+        """);
+        Assert.Equal("scenario-list-orders-quietly", visible);
+
+        await SearchAndWaitForVisible("zqx-endpoint-svc", 3); // feature-wide: every scenario
+    }
+
+    private string GenerateFailedReport(string fileName)
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Failing Feature",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "f1", DisplayName = "Breaks badly", Result = ExecutionResult.Failed,
+                        ErrorMessage = "Expected <null> to be 7",
+                        ErrorStackTrace = "at Zqx.Frames.zqxstacktrace77() in OrderService.cs:line 42",
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "a doomed setup", Status = ExecutionResult.Failed }]
+                    },
+                    new Scenario
+                    {
+                        Id = "f2", DisplayName = "Works fine", Result = ExecutionResult.Passed,
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "a fine setup", Status = ExecutionResult.Passed }]
+                    }
+                ]
+            }
+        };
+        var path = ReportGenerator.GenerateHtmlReport(
+            [], features, DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(TempDir, fileName), "Deep Search Failed Report", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+        File.Copy(path, Path.Combine(OutputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    [Fact]
+    public async Task Stack_trace_text_is_found_via_deep_search_only()
+    {
+        await Page.GotoAsync(GenerateFailedReport("DeepSearchStackTrace.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        // deep-only by design: not in any data-search attribute…
+        var inShallow = await Page.EvaluateAsync<bool>("""
+            () => Array.from(document.querySelectorAll('[data-search]'))
+                .some(el => el.getAttribute('data-search').includes('zqxstacktrace77'))
+        """);
+        Assert.False(inShallow);
+
+        // …but the search box still finds it, via the index + the rendered failure <pre>
+        await SearchAndWaitForVisible("zqxstacktrace77", 1);
+        await WaitForChipText("+1 more found");
+    }
+
+    [Fact]
+    public async Task Failure_message_with_angle_brackets_renders_visibly()
+    {
+        // "<null>" used to parse as an unknown tag and vanish from the rendered failure text
+        await Page.GotoAsync(GenerateFailedReport("DeepSearchFailureEncoding.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        var preText = await Page.Locator(".failure-result pre").First.EvaluateAsync<string>("el => el.textContent");
+        Assert.Contains("Expected <null> to be 7", preText);
+        Assert.Contains("zqxstacktrace77", preText);
     }
 
     // ── a broken index must fail loudly, not wedge ──

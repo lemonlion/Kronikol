@@ -1088,7 +1088,7 @@ public static class ReportGenerator
             var featureAllSkipped = !featureHasFailures && feature.Scenarios.All(s => s.Result == ExecutionResult.Skipped);
             body.Append($"""
                      <details class="feature">
-                        <summary class="h2{(featureHasFailures ? " failed" : featureAllSkipped ? " skipped" : "")}">{feature.DisplayName}{(feature.Endpoint is null ? "" : $" <div class=\"endpoint\">{feature.Endpoint}</div>")}{(feature.Labels is { Length: > 0 } fl ? string.Concat(fl.Select(l => $" <span class=\"label\">{System.Net.WebUtility.HtmlEncode(l)}</span>")) : "")}</summary>
+                        <summary class="h2{(featureHasFailures ? " failed" : featureAllSkipped ? " skipped" : "")}">{feature.DisplayName}{(feature.Endpoint is null ? "" : $" <div class=\"endpoint\">{System.Net.WebUtility.HtmlEncode(feature.Endpoint)}</div>")}{(feature.Labels is { Length: > 0 } fl ? string.Concat(fl.Select(l => $" <span class=\"label\">{System.Net.WebUtility.HtmlEncode(l)}</span>")) : "")}</summary>
                      """);
 
             if (feature.Description is not null)
@@ -1171,6 +1171,7 @@ public static class ReportGenerator
                         scenarioAnchorIds: scenarioAnchorIds,
                         featureDisplayName: feature.DisplayName,
                         featureDescription: feature.Description,
+                        featureEndpoint: feature.Endpoint,
                         featureLabels: feature.Labels,
                         precomputedWholeTestContent: precomputedWholeTestContent,
                         separateBackgroundSteps: separateBackgroundSteps,
@@ -1204,6 +1205,8 @@ public static class ReportGenerator
                 // Pre-build searchable text: feature context + scenario name + error info + step text + diagram sources + tags
                 var searchParts = new List<string> { feature.DisplayName, scenario.DisplayName };
                 if (feature.Description is not null) searchParts.Add(feature.Description);
+                if (feature.Endpoint is not null) searchParts.Add(feature.Endpoint);
+                if (!string.IsNullOrWhiteSpace(scenario.Description)) searchParts.Add(scenario.Description);
                 if (scenario.Rule is not null) searchParts.Add(scenario.Rule);
                 if (feature.Labels is { Length: > 0 }) searchParts.AddRange(feature.Labels);
                 if (scenario.Categories is { Length: > 0 }) searchParts.AddRange(scenario.Categories);
@@ -1255,17 +1258,25 @@ public static class ReportGenerator
                     if (diffResult is not null)
                         diffHtml = ErrorDiffParser.GenerateDiffHtml(diffResult.Expected, diffResult.Actual);
 
+                    // Message and trace are HTML-encoded: "<null>" in an assertion message would
+                    // otherwise parse as an unknown tag and vanish from the rendered text (and
+                    // break the textContent round-trip the deep-search verify reads through).
                     body.Append($"""
                               <details class="failure-result" open>
                                  <summary class="h4">Failure Result</summary>
                                  <pre>
-                              Failure Cause: {scenario.ErrorMessage}
-                              
-                              {scenario.ErrorStackTrace}
+                              Failure Cause: {System.Net.WebUtility.HtmlEncode(scenario.ErrorMessage)}
+
+                              {System.Net.WebUtility.HtmlEncode(scenario.ErrorStackTrace)}
                                  </pre>
                                  {diffHtml}
                               </details>
                               """);
+                    // Stack traces are index-only (never data-search): frame tokens are too
+                    // high-frequency for the instant search, but deep search still finds them —
+                    // the client verify reads the .failure-result pre textContent back.
+                    if (scenario.ErrorStackTrace is not null)
+                        searchIndexPieces?[scenario.Id].Add(scenario.ErrorStackTrace);
                 }
 
                 if (!string.IsNullOrWhiteSpace(scenario.Description))
@@ -1898,6 +1909,7 @@ public static class ReportGenerator
         Dictionary<string, string>? scenarioAnchorIds = null,
         string? featureDisplayName = null,
         string? featureDescription = null,
+        string? featureEndpoint = null,
         string[]? featureLabels = null,
         Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
         bool showNoInteractionsMarker = false,
@@ -1927,10 +1939,12 @@ public static class ReportGenerator
         var searchParts = new List<string> { group.GroupDisplayName };
         if (featureDisplayName is not null) searchParts.Add(featureDisplayName);
         if (featureDescription is not null) searchParts.Add(featureDescription);
+        if (featureEndpoint is not null) searchParts.Add(featureEndpoint);
         if (featureLabels is { Length: > 0 }) searchParts.AddRange(featureLabels);
         foreach (var s in scenarios)
         {
             searchParts.Add(s.DisplayName);
+            if (!string.IsNullOrWhiteSpace(s.Description)) searchParts.Add(s.Description);
             if (s.Rule is not null) searchParts.Add(s.Rule);
             if (s.Categories is { Length: > 0 }) searchParts.AddRange(s.Categories);
             if (s.Labels is { Length: > 0 }) searchParts.AddRange(s.Labels);
@@ -2042,6 +2056,8 @@ public static class ReportGenerator
                 var rowSearchParts = new List<string> { s.DisplayName };
                 if (featureDisplayName is not null) rowSearchParts.Add(featureDisplayName);
                 if (featureDescription is not null) rowSearchParts.Add(featureDescription);
+                if (featureEndpoint is not null) rowSearchParts.Add(featureEndpoint);
+                if (!string.IsNullOrWhiteSpace(s.Description)) rowSearchParts.Add(s.Description);
                 if (featureLabels is { Length: > 0 }) rowSearchParts.AddRange(featureLabels);
                 if (s.Categories is { Length: > 0 }) rowSearchParts.AddRange(s.Categories);
                 if (s.Labels is { Length: > 0 }) rowSearchParts.AddRange(s.Labels);
@@ -2138,6 +2154,8 @@ public static class ReportGenerator
             var rowSearchParts = new List<string> { s.DisplayName };
             if (featureDisplayName is not null) rowSearchParts.Add(featureDisplayName);
             if (featureDescription is not null) rowSearchParts.Add(featureDescription);
+            if (featureEndpoint is not null) rowSearchParts.Add(featureEndpoint);
+            if (!string.IsNullOrWhiteSpace(s.Description)) rowSearchParts.Add(s.Description);
             if (featureLabels is { Length: > 0 }) rowSearchParts.AddRange(featureLabels);
             if (s.Categories is { Length: > 0 }) rowSearchParts.AddRange(s.Categories);
             if (s.Labels is { Length: > 0 }) rowSearchParts.AddRange(s.Labels);
@@ -2261,9 +2279,13 @@ public static class ReportGenerator
                         diffHtml = ErrorDiffParser.GenerateDiffHtml(diffResult.Expected, diffResult.Actual);
                     body.Append("<details class=\"failure-result\" open><summary class=\"h4\">Failure Result</summary><pre>");
                     if (s.ErrorMessage is not null)
-                        body.Append($"Failure Cause: {s.ErrorMessage}\n\n");
+                        body.Append($"Failure Cause: {System.Net.WebUtility.HtmlEncode(s.ErrorMessage)}\n\n");
                     if (s.ErrorStackTrace is not null)
-                        body.Append(s.ErrorStackTrace);
+                    {
+                        body.Append(System.Net.WebUtility.HtmlEncode(s.ErrorStackTrace));
+                        // index-only, like the non-parameterized path: deep-findable, never data-search
+                        searchIndexPieces?[s.Id].Add(s.ErrorStackTrace);
+                    }
                     body.Append($"</pre>{diffHtml}</details>");
                 }
 

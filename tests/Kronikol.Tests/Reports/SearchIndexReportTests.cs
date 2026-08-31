@@ -322,6 +322,137 @@ public class SearchIndexReportTests
     }
 
     [Fact]
+    public void Scenario_description_and_feature_endpoint_are_searchable()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F1",
+                Endpoint = "zqx-endpoint-9",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Create order", Result = ExecutionResult.Passed,
+                        Description = "zqxdesc-77 covers the happy path",
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "a valid request", Status = ExecutionResult.Passed }]
+                    },
+                    new Scenario
+                    {
+                        Id = "s2", DisplayName = "Cancel order", Result = ExecutionResult.Passed,
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "an existing order", Status = ExecutionResult.Passed }]
+                    }
+                ]
+            }
+        };
+        var html = Generate("SearchIndexDescEndpoint.html", [], features);
+
+        var s1Search = Regex.Matches(html, @"data-search=""([^""]*)""").Select(m => m.Groups[1].Value)
+            .FirstOrDefault(v => v.Contains("create order"));
+        Assert.NotNull(s1Search);
+        Assert.Contains("zqxdesc-77", s1Search);
+        Assert.Contains("zqx-endpoint-9", s1Search);
+
+        // and through the index: the description is scenario-specific, the endpoint feature-wide
+        var decoded = DecodeBlob(ExtractBlobBase64(html)!);
+        Assert.Contains(0, decoded.Candidates("zqxdesc-77"));
+        Assert.DoesNotContain(1, decoded.Candidates("zqxdesc-77"));
+        Assert.Equal([0, 1], decoded.Candidates("zqx-endpoint-9"));
+    }
+
+    [Fact]
+    public void Error_stack_trace_is_deep_only_and_the_failure_pre_is_html_encoded()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F1",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Create order", Result = ExecutionResult.Failed,
+                        ErrorMessage = "Expected <null> to be 7",
+                        ErrorStackTrace = "at Zqx.Frames.zqxstacktrace77() in OrderService.cs:line 42",
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "a valid request", Status = ExecutionResult.Failed }]
+                    },
+                    new Scenario
+                    {
+                        Id = "s2", DisplayName = "Cancel order", Result = ExecutionResult.Passed,
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "an existing order", Status = ExecutionResult.Passed }]
+                    }
+                ]
+            }
+        };
+        var html = Generate("SearchIndexStackTrace.html", [], features);
+
+        // stack traces are DEEP-only: full of high-frequency frame tokens, they must not make
+        // every failed scenario light up in the instant search
+        foreach (var v in Regex.Matches(html, @"data-search=""([^""]*)""").Select(m => m.Groups[1].Value))
+            Assert.DoesNotContain("zqxstacktrace77", v);
+        var decoded = DecodeBlob(ExtractBlobBase64(html)!);
+        Assert.Contains(0, decoded.Candidates("zqxstacktrace77"));
+        Assert.DoesNotContain(1, decoded.Candidates("zqxstacktrace77"));
+
+        // the failure <pre> must HTML-encode: "<null>" parsed as an unknown tag disappears from
+        // the rendered text (and breaks the textContent round-trip the deep verify reads)
+        Assert.Contains("Expected &lt;null&gt; to be 7", html);
+        Assert.DoesNotContain("Expected <null> to be 7", html);
+    }
+
+    [Fact]
+    public void Parameterized_members_carry_description_endpoint_and_deep_only_stack_trace()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F1",
+                Endpoint = "zqx-endpoint-9",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "s1", DisplayName = "Row one", Result = ExecutionResult.Failed,
+                        OutlineId = "grp",
+                        Description = "zqxdesc-row-1",
+                        ErrorMessage = "boom",
+                        ErrorStackTrace = "at Zqx.Rows.zqxrowtrace31()",
+                        ExampleValues = new Dictionary<string, string> { ["Code"] = "a" },
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "a value", Status = ExecutionResult.Failed }]
+                    },
+                    new Scenario
+                    {
+                        Id = "s2", DisplayName = "Row two", Result = ExecutionResult.Passed,
+                        OutlineId = "grp",
+                        ExampleValues = new Dictionary<string, string> { ["Code"] = "b" },
+                        Steps = [new ScenarioStep { Keyword = "Given", Text = "a value", Status = ExecutionResult.Passed }]
+                    }
+                ]
+            }
+        };
+        var html = Generate("SearchIndexParamDescTrace.html", [], features);
+
+        var groupSearch = Regex.Matches(html, @"data-search=""([^""]*)""").Select(m => m.Groups[1].Value)
+            .FirstOrDefault(v => v.Contains("row one"));
+        Assert.NotNull(groupSearch);
+        Assert.Contains("zqxdesc-row-1", groupSearch);
+        Assert.Contains("zqx-endpoint-9", groupSearch);
+        Assert.DoesNotContain("zqxrowtrace31", groupSearch);
+
+        var rowSearches = Regex.Matches(html, @"data-row-search=""([^""]*)""").Select(m => m.Groups[1].Value).ToArray();
+        Assert.Contains(rowSearches, v => v.Contains("zqxdesc-row-1"));
+        Assert.Contains(rowSearches, v => v.Contains("zqx-endpoint-9"));
+        Assert.All(rowSearches, v => Assert.DoesNotContain("zqxrowtrace31", v));
+
+        var decoded = DecodeBlob(ExtractBlobBase64(html)!);
+        Assert.Contains(0, decoded.Candidates("zqxrowtrace31"));
+        Assert.DoesNotContain(1, decoded.Candidates("zqxrowtrace31"));
+    }
+
+    [Fact]
     public void Sql_capture_text_maps_to_the_right_doc_through_the_real_formatter()
     {
         // §9.2(e), genuinely: the SQL text travels the real SqlDiagnosticTracker capture shape

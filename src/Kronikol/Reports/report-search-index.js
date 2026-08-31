@@ -446,6 +446,9 @@ function kronSearchWorkerMain(self) {
             el.querySelectorAll('[data-plantuml-z]').forEach(function(d) { plantumlZ.push(d.getAttribute('data-plantuml-z')); });
             var rawTexts = [];
             el.querySelectorAll('.raw-plantuml pre').forEach(function(p) { rawTexts.push(p.textContent); });
+            // failure stack traces are index-only (never data-search); the verify corpus reads
+            // them back from the rendered failure <pre> (HTML-encoded at generation)
+            el.querySelectorAll('.failure-result pre').forEach(function(p) { rawTexts.push(p.textContent); });
             var flameZ = [];
             el.querySelectorAll('.iflow-flame[data-flame-z]').forEach(function(f) { flameZ.push(f.getAttribute('data-flame-z')); });
             items.push({
