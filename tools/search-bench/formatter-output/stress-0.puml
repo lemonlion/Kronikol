@@ -1,0 +1,42 @@
+@startuml
+!pragma teoz true
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Test" as test
+entity "OrderService" as orderService
+
+test -[#438DD5]> orderService: POST: /orders/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\n        ppppppppppppppppppppppppppppppppppppppNEEDLE-URLPATH-3
+note left
+<color:gray>[Content-Type=application/json]
+<color:gray>[X-Long-Header=chunkstart-hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+<color:gray>hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhNEEDLE-HDRCHUNK-42kkkkkkkkkkkkkkkk
+<color:gray>kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+<color:gray>kkkk-chunkend]
+
+{
+  "orderId": "ord-991",
+  "creole": "~*~*important~*~* and ~/~/slanted~/~/ plus ~_~_deep~_~_",
+  "turkish": "İstanbul",
+  "blob": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANEEDLE-RUNWRAP-7f3a9c2
+eBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.sig-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCC",
+  "link": "https://example.test/api/v2/orders?filter=qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+qqqqqqqqqqqqqNEEDLE-URLRUN-9&page=2",
+  "note": "a perfectly ordinary sentence with spaces so it wraps normally"
+}
+end note
+orderService -[#438DD5]-> test: Created
+note right
+<color:gray>[Content-Type=application/json]
+
+{
+  "status": "created",
+  "echoBlob": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANEEDLE-RUNWRAP-7f3a9c2
+eBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.sig-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCC"
+}
+end note
+@enduml
