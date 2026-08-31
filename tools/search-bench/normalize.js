@@ -6,7 +6,7 @@
 function normalizeForSearch(s) {
   s = s.replace(/\r\n/g, '\n');                                  // 1. canonicalize CRLF
   s = s.replace(/[A-Z]/g, c => c.toLowerCase());                 // 2. ASCII-only fold
-  s = s.replace(/~(?=[/*_\-"\[<])/g, '');                        // 3. creole escapes
+  s = s.replace(/~(?=[/*_\-"\[<#=])/g, '');                      // 3. creole escapes (same set the context-menu copy-text inverse strips)
   s = s.replace(/<\/?(?:color|font|i|b|size|back)[^>]*>/g, '');  // 4. markup tags
   s = s.replace(/\\n[ \t]*/g, '');                               // 5a. arrow-label literal \n escape + indent
   // 5b. note-body rejoin: newline followed by non-whitespace, scoped to note bodies.

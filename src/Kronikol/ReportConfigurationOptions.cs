@@ -61,6 +61,15 @@ public record ReportConfigurationOptions
     /// <summary>When <c>true</c>, diagram images use lazy loading for better page performance. Default: <c>true</c>.</summary>
     public bool LazyLoadDiagramImages { get; set; } = true;
 
+    /// <summary>
+    /// When <c>true</c>, HTML reports embed a compact full-text search index over everything the
+    /// report contains — note payloads, diagram message text, SQL, flame-chart span names and
+    /// parameterized example values — so the report search box can find text the plain
+    /// per-scenario search data does not cover. Adds roughly 0.25-1&#160;MB to large reports
+    /// (measured ~1&#160;MB at a 147&#160;MB corpus). Default: <c>true</c>.
+    /// </summary>
+    public bool FullSearchIndex { get; set; } = true;
+
     /// <summary>Visual emphasis style applied to the focused participant in a sequence diagram. Default: <see cref="FocusEmphasis.Bold"/>.</summary>
     public FocusEmphasis FocusEmphasis { get; set; } = FocusEmphasis.Bold;
 

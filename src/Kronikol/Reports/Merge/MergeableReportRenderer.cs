@@ -67,7 +67,8 @@ public static class MergeableReportRenderer
             browserRenderWorkers: options.BrowserRenderWorkers,
             browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes,
             browserFragmentMaxHeight: options.BrowserFragmentMaxHeight,
-            notePayloadFormat: options.NotePayloadFormat);
+            notePayloadFormat: options.NotePayloadFormat,
+            fullSearchIndex: options.FullSearchIndex);
 
         // GenerateHtmlReport always writes under <BaseDir>/Reports/<fileName>; relocate to the
         // caller's requested path when different.

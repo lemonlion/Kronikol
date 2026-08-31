@@ -332,4 +332,12 @@ public static class InternalFlowHtmlGenerator
         }
         return Convert.ToBase64String(output.ToArray());
     }
+
+    internal static string DecompressFromBase64(string base64)
+    {
+        using var input = new MemoryStream(Convert.FromBase64String(base64));
+        using var gzip = new GZipStream(input, CompressionMode.Decompress);
+        using var reader = new StreamReader(gzip, Encoding.UTF8);
+        return reader.ReadToEnd();
+    }
 }

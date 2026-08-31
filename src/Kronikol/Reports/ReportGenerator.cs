@@ -245,14 +245,18 @@ public static class ReportGenerator
         var actions = new List<(string Name, Action Run)>();
         void Add(string name, Action run) => actions.Add((name, run));
 
+        // One deep-search build cache shared by both HTML reports (§5.1): they render the same
+        // features/diagrams, so the expensive normalize+hash work happens once.
+        var searchIndexCache = new SearchIndex.SearchIndexBuildCache();
+
         if (options.GenerateSpecificationsReport)
         {
-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat));
+            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache));
         }
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache));
         }
 
         if (options.GenerateSpecificationsData)
@@ -436,7 +440,9 @@ public static class ReportGenerator
         int browserFragmentMaxHeight = Constants.TrackingDefaults.BrowserFragmentMaxHeight,
         bool separateBackgroundSteps = false,
         bool collapseRepeatedStepKeywords = true,
-        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json)
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json,
+        bool fullSearchIndex = true,
+        SearchIndex.SearchIndexBuildCache? searchIndexCache = null)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -982,6 +988,20 @@ public static class ReportGenerator
             }
         }
 
+        // Deep-search index (SEARCH_INDEX_PLAN): corpus pieces are collected at the exact emission
+        // sites of the client-readable surfaces (data-search, puml-data / raw-plantuml source,
+        // whole-test-flow attributes) so the index and the client verify pass can never drift.
+        // The heavy trigram hashing of diagram sources is prewarmed on the thread pool so it
+        // overlaps HTML body building, and is shared across both HTML reports via the cache.
+        var buildSearchIndex = fullSearchIndex && allScenarios.Length > 0;
+        var searchIndexPieces = buildSearchIndex ? new Dictionary<string, List<string>>() : null;
+        if (buildSearchIndex)
+        {
+            searchIndexCache ??= new SearchIndex.SearchIndexBuildCache();
+            searchIndexCache.StartPrewarm(diagrams.Select(d => d.CodeBehind));
+            foreach (var s in allScenarios) searchIndexPieces![s.Id] = [];
+        }
+
         var clusters = FailureClusterer.Cluster(allScenarios);
         if (clusters.Length > 0)
         {
@@ -1150,7 +1170,8 @@ public static class ReportGenerator
                         precomputedWholeTestContent: precomputedWholeTestContent,
                         separateBackgroundSteps: separateBackgroundSteps,
                         collapseRepeatedStepKeywords: collapseRepeatedStepKeywords,
-                        scenarioNoteFormatSelect: scenarioNoteFormatSelect);
+                        scenarioNoteFormatSelect: scenarioNoteFormatSelect,
+                        searchIndexPieces: searchIndexPieces);
                     continue;
                 }
 
@@ -1187,7 +1208,10 @@ public static class ReportGenerator
                 CollectStepText(scenario.Steps, searchParts);
                 if (scenarioDiagramSearchTerms.TryGetValue(scenario.Id, out var diagramTerms) && diagramTerms.Count > 0)
                     searchParts.AddRange(diagramTerms);
-                var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(string.Join(" ", searchParts).ToLowerInvariant())}\"";
+                AddExampleValueSearchParts(scenario, searchParts);
+                var searchText = string.Join(" ", searchParts).ToLowerInvariant();
+                var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(searchText)}\"";
+                searchIndexPieces?[scenario.Id].Add(searchText);
 
                 var categoriesAttr = scenario.Categories is { Length: > 0 }
                     ? $" data-categories=\"{System.Net.WebUtility.HtmlEncode(string.Join(",", scenario.Categories))}\""
@@ -1358,6 +1382,9 @@ public static class ReportGenerator
                         var rawLabel = "Raw Plant UML";
                         foreach (var diagram in diagramsForTest)
                         {
+                            // Every branch below emits a client-readable copy of the source
+                            // (puml-data blob or the raw-plantuml <pre>) — index it.
+                            searchIndexPieces?[scenario.Id].Add(diagram.CodeBehind);
                             if (isPlantUmlBrowser)
                             {
                                 var diagramId = $"puml-{plantUmlBrowserCounter++}";
@@ -1405,6 +1432,8 @@ public static class ReportGenerator
                             body.Append($"<div class=\"diagram-view diagram-view-activity\"{(hideActivity ? " style=\"display:none\"" : "")}>{wtf.ActivityHtml}</div>");
                         if (!string.IsNullOrEmpty(wtf.FlameHtml))
                             body.Append($"<div class=\"diagram-view diagram-view-flame\"{(hideFlame ? " style=\"display:none\"" : "")}>{wtf.FlameHtml}</div>");
+                        if (searchIndexPieces is not null)
+                            AddWholeTestFlowSearchPieces(wtf.ActivityHtml, wtf.FlameHtml, diagramDataMap, searchIndexPieces[scenario.Id]);
                     }
 
                     body.Append("</details>");
@@ -1450,6 +1479,10 @@ public static class ReportGenerator
             html += System.Text.Json.JsonSerializer.Serialize(diagramDataMap);
             html += "</script>";
         }
+        if (buildSearchIndex)
+        {
+            html += BuildSearchIndexScript(allScenarios, scenarioAnchorIds, searchIndexPieces!, searchIndexCache!);
+        }
         html += """
                     </body>
                 </html>
@@ -1457,6 +1490,97 @@ public static class ReportGenerator
         ;
 
         return WriteFile(html, fileName);
+    }
+
+    /// <summary>
+    /// Assembles and serializes the deep-search index blob: per scenario doc (in
+    /// <c>allScenarios</c> enumeration order — the same order the anchor-id map is built in),
+    /// the union of the trigram bucket sets of its collected corpus pieces, serialized to the
+    /// §4.2 v1 layout, gzipped and embedded as
+    /// <c>&lt;script id="kron-search-index" type="application/json"&gt;</c>.
+    /// </summary>
+    private static string BuildSearchIndexScript(
+        Scenario[] allScenarios,
+        Dictionary<string, string> scenarioAnchorIds,
+        Dictionary<string, List<string>> searchIndexPieces,
+        SearchIndex.SearchIndexBuildCache cache)
+    {
+        cache.WaitForPrewarm();
+        var docAnchors = new string[allScenarios.Length];
+        var bucketsPerDoc = new IReadOnlyCollection<int>[allScenarios.Length];
+        Parallel.For(0, allScenarios.Length, i =>
+        {
+            var set = new HashSet<int>();
+            foreach (var piece in searchIndexPieces[allScenarios[i].Id])
+                set.UnionWith(cache.GetOrAddBuckets(piece));
+            bucketsPerDoc[i] = set;
+        });
+        for (var i = 0; i < allScenarios.Length; i++)
+            docAnchors[i] = scenarioAnchorIds[allScenarios[i].Id];
+
+        var raw = SearchIndex.SearchIndexBuilder.Serialize(docAnchors, bucketsPerDoc);
+        return $"<script id=\"kron-search-index\" type=\"application/json\">\"{SearchIndex.SearchIndexBuilder.CompressToBase64(raw)}\"</script>";
+    }
+
+    /// <summary>
+    /// Extracts the searchable text of a scenario's whole-test-flow content from the HTML that
+    /// was actually emitted — activity diagram PlantUML (inline <c>data-plantuml-z</c> on the
+    /// merge path, or registered in <c>puml-data</c> via its element id on the live path) and
+    /// flame chart text (<c>data-flame-z</c> → the <c>s</c>/<c>f[i][1]</c>/<c>m[i][1]</c> fields,
+    /// newline-joined in JSON order — the client verify pass assembles the same string).
+    /// Extracting from the emitted HTML rather than re-deriving from segments guarantees the
+    /// corpus matches what the DOM holds, on the live and merge paths alike.
+    /// </summary>
+    private static void AddWholeTestFlowSearchPieces(
+        string activityHtml, string flameHtml, Dictionary<string, string> diagramDataMap, List<string> pieces)
+    {
+        if (!string.IsNullOrEmpty(activityHtml))
+        {
+            foreach (Match m in Regex.Matches(activityHtml, "data-plantuml-z=\"([^\"]+)\""))
+                pieces.Add(InternalFlowHtmlGenerator.DecompressFromBase64(m.Groups[1].Value));
+            foreach (Match m in Regex.Matches(activityHtml, "class=\"plantuml-browser[^\"]*\" id=\"([^\"]+)\""))
+                if (diagramDataMap.TryGetValue(m.Groups[1].Value, out var compressed))
+                    pieces.Add(InternalFlowHtmlGenerator.DecompressFromBase64(compressed));
+        }
+
+        if (!string.IsNullOrEmpty(flameHtml))
+        {
+            foreach (Match m in Regex.Matches(flameHtml, "data-flame-z=\"([^\"]+)\""))
+            {
+                var json = InternalFlowHtmlGenerator.DecompressFromBase64(m.Groups[1].Value);
+                var text = ExtractFlameSearchText(json);
+                if (text.Length > 0) pieces.Add(text);
+            }
+        }
+    }
+
+    /// <summary>The flame text the client verify pass reads: sources, span names, marker labels, newline-joined in JSON order.</summary>
+    internal static string ExtractFlameSearchText(string flameJson)
+    {
+        using var doc = System.Text.Json.JsonDocument.Parse(flameJson);
+        var parts = new List<string>();
+        if (doc.RootElement.TryGetProperty("s", out var sources))
+            foreach (var s in sources.EnumerateArray())
+                parts.Add(s.GetString() ?? "");
+        if (doc.RootElement.TryGetProperty("f", out var spans))
+            foreach (var span in spans.EnumerateArray())
+                parts.Add(span[1].GetString() ?? "");
+        if (doc.RootElement.TryGetProperty("m", out var markers))
+            foreach (var marker in markers.EnumerateArray())
+                parts.Add(marker[1].GetString() ?? "");
+        return string.Join("\n", parts);
+    }
+
+    /// <summary>
+    /// SEARCH_INDEX_PLAN §1.2 coverage fix: parameterized example values are rendered as table
+    /// cells but historically appeared in neither <c>data-search</c> nor <c>data-row-search</c>.
+    /// </summary>
+    private static void AddExampleValueSearchParts(Scenario scenario, List<string> searchParts)
+    {
+        if (scenario.ExampleFlatValues is { Count: > 0 })
+            searchParts.AddRange(scenario.ExampleFlatValues.Values.Where(v => !string.IsNullOrEmpty(v)));
+        else if (scenario.ExampleValues is { Count: > 0 })
+            searchParts.AddRange(scenario.ExampleValues.Values.Where(v => !string.IsNullOrEmpty(v)));
     }
 
     public static string GenerateYamlSpecs(DefaultDiagramsFetcher.DiagramAsCode[] diagrams,
@@ -1773,7 +1897,8 @@ public static class ReportGenerator
         bool showNoInteractionsMarker = false,
         bool separateBackgroundSteps = false,
         bool collapseRepeatedStepKeywords = true,
-        string scenarioNoteFormatSelect = "")
+        string scenarioNoteFormatSelect = "",
+        Dictionary<string, List<string>>? searchIndexPieces = null)
     {
         var scenarios = group.Scenarios;
 
@@ -1813,8 +1938,15 @@ public static class ReportGenerator
                 if (!string.IsNullOrEmpty(s.ExamplesBlockName)) searchParts.Add(s.ExamplesBlockName);
                 if (!string.IsNullOrEmpty(s.ExamplesBlockDescription)) searchParts.Add(s.ExamplesBlockDescription);
             }
+            AddExampleValueSearchParts(s, searchParts);
         }
-        var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(string.Join(" ", searchParts).ToLowerInvariant())}\"";
+        var groupSearchText = string.Join(" ", searchParts).ToLowerInvariant();
+        var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(groupSearchText)}\"";
+        // Each member scenario is a deep-search doc; the group <details> is the element whose
+        // data-search the client verify pass reads, so the group text is part of every member's corpus.
+        if (searchIndexPieces is not null)
+            foreach (var s in scenarios)
+                searchIndexPieces[s.Id].Add(groupSearchText);
 
         // Aggregate categories, labels, dependencies
         var categories = scenarios.Where(s => s.Categories is { Length: > 0 }).SelectMany(s => s.Categories!).Distinct().ToArray();
@@ -1917,6 +2049,7 @@ public static class ReportGenerator
                     if (!string.IsNullOrEmpty(s.ExamplesBlockName)) rowSearchParts.Add(s.ExamplesBlockName);
                     if (!string.IsNullOrEmpty(s.ExamplesBlockDescription)) rowSearchParts.Add(s.ExamplesBlockDescription);
                 }
+                AddExampleValueSearchParts(s, rowSearchParts);
                 var rowSearchAttr = $" data-row-search=\"{System.Net.WebUtility.HtmlEncode(string.Join(" ", rowSearchParts).ToLowerInvariant())}\"";
 
                 if (blockBands is not null && blockBands.TryGetValue(ri, out var flatBand))
@@ -2012,6 +2145,7 @@ public static class ReportGenerator
                 if (!string.IsNullOrEmpty(s.ExamplesBlockName)) rowSearchParts.Add(s.ExamplesBlockName);
                 if (!string.IsNullOrEmpty(s.ExamplesBlockDescription)) rowSearchParts.Add(s.ExamplesBlockDescription);
             }
+            AddExampleValueSearchParts(s, rowSearchParts);
             var rowSearchAttr = $" data-row-search=\"{System.Net.WebUtility.HtmlEncode(string.Join(" ", rowSearchParts).ToLowerInvariant())}\"";
 
             if (blockBands is not null && blockBands.TryGetValue(ri, out var groupedBand))
@@ -2236,6 +2370,12 @@ public static class ReportGenerator
                     {
                         body.Append("<span class=\"param-diagram-identical-badge\">All diagrams identical across test cases</span>");
                         RenderDiagramsForScenario(body, firstDiagrams, isPlantUmlBrowser, isInlineSvg, lazyLoadImages, ref plantUmlBrowserCounter, diagramDataMap);
+                        // The single emitted copy is a descendant of the group <details>, so it is
+                        // part of every member doc's verify corpus.
+                        if (searchIndexPieces is not null)
+                            foreach (var s in scenarios)
+                                foreach (var diagram in firstDiagrams)
+                                    searchIndexPieces[s.Id].Add(diagram.CodeBehind);
                     }
                 }
                 else
@@ -2249,7 +2389,12 @@ public static class ReportGenerator
                         if (diagrams.Length == 0 && showNoInteractionsMarker)
                             body.Append(NoInteractionsMarkerHtml);
                         if (diagrams.Length > 0)
+                        {
                             RenderDiagramsForScenario(body, diagrams, isPlantUmlBrowser, isInlineSvg, lazyLoadImages, ref plantUmlBrowserCounter, diagramDataMap);
+                            if (searchIndexPieces is not null)
+                                foreach (var diagram in diagrams)
+                                    searchIndexPieces[s.Id].Add(diagram.CodeBehind);
+                        }
                         body.Append("</div>");
                     }
                 }
@@ -2268,6 +2413,9 @@ public static class ReportGenerator
                 {
                     body.Append("<span class=\"param-diagram-identical-badge\">All diagrams identical across test cases</span>");
                     body.Append(wholeTestContents[0]!.Value.ActivityHtml);
+                    if (searchIndexPieces is not null)
+                        foreach (var s in scenarios)
+                            AddWholeTestFlowSearchPieces(wholeTestContents[0]!.Value.ActivityHtml, "", diagramDataMap, searchIndexPieces[s.Id]);
                 }
                 else
                 {
@@ -2276,7 +2424,11 @@ public static class ReportGenerator
                         var display = ri == 0 ? "" : " style=\"display:none\"";
                         body.Append($"<div id=\"{prefix}-activity-{ri}\"{display}>");
                         if (wholeTestContents[ri] is not null && !string.IsNullOrEmpty(wholeTestContents[ri]!.Value.ActivityHtml))
+                        {
                             body.Append(wholeTestContents[ri]!.Value.ActivityHtml);
+                            if (searchIndexPieces is not null)
+                                AddWholeTestFlowSearchPieces(wholeTestContents[ri]!.Value.ActivityHtml, "", diagramDataMap, searchIndexPieces[scenarios[ri].Id]);
+                        }
                         body.Append("</div>");
                     }
                 }
@@ -2295,6 +2447,9 @@ public static class ReportGenerator
                 {
                     body.Append("<span class=\"param-diagram-identical-badge\">All diagrams identical across test cases</span>");
                     body.Append(wholeTestContents[0]!.Value.FlameHtml);
+                    if (searchIndexPieces is not null)
+                        foreach (var s in scenarios)
+                            AddWholeTestFlowSearchPieces("", wholeTestContents[0]!.Value.FlameHtml, diagramDataMap, searchIndexPieces[s.Id]);
                 }
                 else
                 {
@@ -2303,7 +2458,11 @@ public static class ReportGenerator
                         var display = ri == 0 ? "" : " style=\"display:none\"";
                         body.Append($"<div id=\"{prefix}-flame-{ri}\"{display}>");
                         if (wholeTestContents[ri] is not null && !string.IsNullOrEmpty(wholeTestContents[ri]!.Value.FlameHtml))
+                        {
                             body.Append(wholeTestContents[ri]!.Value.FlameHtml);
+                            if (searchIndexPieces is not null)
+                                AddWholeTestFlowSearchPieces("", wholeTestContents[ri]!.Value.FlameHtml, diagramDataMap, searchIndexPieces[scenarios[ri].Id]);
+                        }
                         body.Append("</div>");
                     }
                 }
