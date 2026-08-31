@@ -1144,14 +1144,8 @@
                 enqueueElement(el);
             });
         }, { rootMargin: '200px' });
-        function decompressGzipBase64(base64) {
-            var raw = atob(base64);
-            var bytes = new Uint8Array(raw.length);
-            for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-            var stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-            return new Response(stream).text();
-        }
-        window.decompressGzipBase64 = decompressGzipBase64;
+        // decompressGzipBase64 comes from the always-included shared helper
+        // (report-decompress-helper.js).
         window._renderDiagramsInContainer = function(container) {
             if (!container) return;
             container.querySelectorAll('.plantuml-browser').forEach(function(el) {

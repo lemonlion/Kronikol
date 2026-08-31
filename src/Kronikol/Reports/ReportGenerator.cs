@@ -443,6 +443,11 @@ public static class ReportGenerator
 
         var scenarioFeatureMapHelper = LoadResource("report-scenario-feature-map-helper.js");
 
+        // Shared gzip+base64 decompressor — always included; several conditionally-emitted
+        // scripts (context menu, internal-flow popup, deep search) call it in rendering modes
+        // where the BrowserJs render script is absent.
+        var decompressHelper = LoadResource("report-decompress-helper.js");
+
         var toggleHappyPathsFunction = LoadResource("report-toggle-happy-paths-function.js");
         var searchFunction = LoadResource("report-search-function.js");
 
@@ -621,6 +626,7 @@ public static class ReportGenerator
                             {{customCssBlock}}
                             {{faviconLink}}
                             <script>
+                                {{decompressHelper}}
                                 {{advancedSearchScript}}
                                 {{scenarioFeatureMapHelper}}
                                 {{toggleHappyPathsFunction}}

@@ -131,7 +131,8 @@ public static class ComponentDiagramReportGenerator
             contextMenuStyles = DiagramContextMenu.GetStyles()
                               + DiagramContextMenu.GetInlineSvgStyles();
             var renderOptions = reportOptions ?? new ReportConfigurationOptions();
-            contextMenuScripts = DiagramContextMenu.GetPlantUmlBrowserRenderScript(renderOptions.BrowserRenderWorkers, renderOptions.BrowserRenderCacheMegabytes, renderOptions.BrowserFragmentMaxHeight)
+            contextMenuScripts = $"<script>{DiagramContextMenu.GetDecompressHelperScript()}</script>"
+                               + DiagramContextMenu.GetPlantUmlBrowserRenderScript(renderOptions.BrowserRenderWorkers, renderOptions.BrowserRenderCacheMegabytes, renderOptions.BrowserFragmentMaxHeight)
                                + DiagramContextMenu.GetContextMenuScript();
         }
 

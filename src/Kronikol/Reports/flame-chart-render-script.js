@@ -103,13 +103,9 @@
         return h;
     }
 
-    // Decompress gzip+base64 data (used for whole-test-flow compressed attributes)
+    // Decompression uses the always-included shared helper (report-decompress-helper.js).
     function decompressBase64(base64) {
-        var raw = atob(base64);
-        var bytes = new Uint8Array(raw.length);
-        for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-        var stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-        return new Response(stream).text();
+        return window.decompressGzipBase64(base64);
     }
 
     // Click-to-zoom: click a bar to zoom into its time range, double-click to reset

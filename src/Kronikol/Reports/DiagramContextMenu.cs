@@ -67,6 +67,13 @@ public static class DiagramContextMenu
 
     public static string GetContextMenuScript() => LoadResource("context-menu-script.js");
 
+    /// <summary>
+    /// The shared gzip+base64 decompressor (defines <c>window.decompressGzipBase64</c>). Raw JS,
+    /// no <c>&lt;script&gt;</c> wrapper. Every page that emits a script calling the global must
+    /// include this exactly once — the main report does so unconditionally.
+    /// </summary>
+    public static string GetDecompressHelperScript() => LoadResource("report-decompress-helper.js");
+
     public static string GetInternalFlowPopupScript() => LoadResource("internal-flow-popup-script.js");
 
     public static string GetToggleScript() => LoadResource("toggle-script.js");
