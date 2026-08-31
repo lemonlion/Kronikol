@@ -80,6 +80,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     private sealed record Metrics(double ReadyMs, double EngineReadyMs, double AllMs, double BlockedMs, double WorstTaskMs, int LongTasks,
         double ToggleMs, double ToggleBlockedMs, double ToggleWorstTaskMs, int ToggleRenders, int Fragments,
         string Mode, int Workers, int ExpectedWorkers, int MaxInFlight, int Renders, int CacheHits, double WorkerMs, double InjectMs,
+        double DeepQueryMs, int DeepVerified,
         double[] ProbeMs, double Stretch);
 
     private bool _benchInitInstalled;
@@ -158,12 +159,23 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             }
             """);
 
+        // Deep search: COLD worst-case broad query (SEARCH_INDEX_PLAN §9.4 / measurement M2).
+        // "order" hits every JSON body in the fixture, so this is index load + worker spawn +
+        // decompress-all + normalize + verify over the whole corpus, first use.
+        await Page.EvaluateAsync("() => { document.getElementById('searchbar').value = 'order'; run_search_scenarios(); }");
+        await Page.WaitForFunctionAsync(
+            "() => window.__kronikolSearch && window.__kronikolSearch.lastQuery !== null",
+            null, new() { Timeout = 120000, PollingInterval = 200 });
+        var deep = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolSearch.lastQuery");
+        await Page.EvaluateAsync("() => { document.getElementById('searchbar').value = ''; run_search_scenarios(); }");
+
         var probeMs = await Page.EvaluateAsync<double[]>("() => window.__bench.probe || []");
         var m = new Metrics(readyAt, t.GetProperty("engineReadyAt").GetDouble(), t1 - t0, blocked, worst, count, tt1 - tt0, tBlocked, tWorst,
             t.GetProperty("renders").GetInt32() - rendersBefore, toggle.GetProperty("fragments").GetInt32(),
             t.GetProperty("mode").GetString()!, t.GetProperty("workers").GetInt32(), t.GetProperty("expectedWorkers").GetInt32(),
             t.GetProperty("maxInFlight").GetInt32(), t.GetProperty("renders").GetInt32(), t.GetProperty("cacheHits").GetInt32(),
             t.GetProperty("workerMs").GetDouble(), t.GetProperty("injectMs").GetDouble(),
+            deep.GetProperty("ms").GetDouble(), deep.GetProperty("verified").GetInt32(),
             probeMs, ContentionScale.Stretch(probeMs));
         _output.WriteLine("render-bench " + fileName + ": " + JsonSerializer.Serialize(m));
         File.AppendAllText(Path.Combine(OutputDir, "render-bench-results.txt"),
@@ -219,6 +231,8 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             Assert.True(m.MaxInFlight >= Math.Min(2, m.ExpectedWorkers), $"expected parallel renders, max in flight was {m.MaxInFlight}");
             // Phase 4: the toggle re-renders only what changed (prefetch + cache).
             Assert.True(m.ToggleRenders <= m.Fragments + 2, $"toggle re-rendered {m.ToggleRenders} fragments of {m.Fragments}");
+            // Deep search verified matches on the heavy corpus (structural — the timing is budgeted below).
+            Assert.True(m.DeepVerified >= 1, $"deep search verified {m.DeepVerified} matches on the large fixture");
 
             // Absolute budgets — isolated runs measure well under half of each of these. What stays
             // on the main thread is innerHTML injection of multi-MB SVGs and the post-render hooks.
@@ -230,6 +244,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
                 m.AllMs >= 60000 * stretch ? $"full render of the fixture took {m.AllMs:F0} ms (budget 60000 x {stretch:F2})" :
                 m.ToggleMs >= 5000 * stretch ? $"note toggle on the largest diagram took {m.ToggleMs:F0} ms (budget 5000 x {stretch:F2})" :
                 m.ToggleWorstTaskMs >= 800 * stretch ? $"note toggle blocked the main thread for a {m.ToggleWorstTaskMs:F0} ms task (budget 800 x {stretch:F2})" :
+                m.DeepQueryMs >= 2000 * stretch ? $"cold worst-case deep search took {m.DeepQueryMs:F0} ms (verified {m.DeepVerified}; budget 2000 x {stretch:F2})" :
                 "";
             if (budgetFailure.Length == 0) return;
             _output.WriteLine($"attempt {attempt}/{attempts} breached a contention-scaled budget: {budgetFailure}");

@@ -258,6 +258,10 @@ function kronSearchWorkerMain(self) {
         var stream = new Blob([b64ToBytes(b64)]).stream().pipeThrough(new DecompressionStream('gzip'));
         return new Response(stream).text();
     }
+    function gunzipToBytes(b64) {
+        var stream = new Blob([b64ToBytes(b64)]).stream().pipeThrough(new DecompressionStream('gzip'));
+        return new Response(stream).arrayBuffer().then(function(buf) { return new Uint8Array(buf); });
+    }
     function cachePut(i, corpus) {
         corpusCache.set(i, corpus);
         corpusCacheBytes += corpus.length * 2;
@@ -323,10 +327,12 @@ function kronSearchWorkerMain(self) {
     self.onmessage = function(e) {
         var msg = e.data;
         if (msg.type === 'init') {
-            ix = kronDecodeSearchIndex(b64ToBytes(msg.indexB64));
             items = msg.items;
             pumlMap = msg.pumlDataJson ? JSON.parse(msg.pumlDataJson) : null;
-            self.postMessage({ type: 'anchors', anchors: ix.anchors, buckets: ix.buckets, docCount: ix.docCount });
+            gunzipToBytes(msg.indexB64).then(function(bytes) {
+                ix = kronDecodeSearchIndex(bytes);
+                self.postMessage({ type: 'anchors', anchors: ix.anchors, buckets: ix.buckets, docCount: ix.docCount });
+            });
         } else if (msg.type === 'docmap') {
             docToItem = msg.docToItem;
             ready = true;

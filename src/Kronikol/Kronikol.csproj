@@ -12,6 +12,8 @@
 		<InternalsVisibleTo Include="Kronikol.Tests" />
 		<InternalsVisibleTo Include="Kronikol.Tests.EndToEnd" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.Grpc" />
+		<!-- search-index bench harness (tools/search-bench/formatter-probe), query-bench precedent -->
+		<InternalsVisibleTo Include="formatter-probe" />
 	</ItemGroup>
 
 	<ItemGroup>

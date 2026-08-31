@@ -1515,10 +1515,11 @@ public static class ReportGenerator
         var bucketsPerDoc = new IReadOnlyCollection<int>[allScenarios.Length];
         Parallel.For(0, allScenarios.Length, i =>
         {
-            var set = new HashSet<int>();
-            foreach (var piece in searchIndexPieces[allScenarios[i].Id])
-                set.UnionWith(cache.GetOrAddBuckets(piece));
-            bucketsPerDoc[i] = set;
+            var pieces = searchIndexPieces[allScenarios[i].Id];
+            var pieceBuckets = new int[pieces.Count][];
+            for (var p = 0; p < pieces.Count; p++)
+                pieceBuckets[p] = cache.GetOrAddBuckets(pieces[p]);
+            bucketsPerDoc[i] = pieces.Count == 0 ? [] : SearchIndex.SearchIndexBuilder.UnionBuckets(pieceBuckets);
         });
         for (var i = 0; i < allScenarios.Length; i++)
             docAnchors[i] = scenarioAnchorIds[allScenarios[i].Id];

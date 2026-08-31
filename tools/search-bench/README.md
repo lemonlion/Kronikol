@@ -90,3 +90,35 @@ beyond the 100MB-class target.
   LRU-cached and the §7 batched progressive reveal is the UX answer; M2 (real Chrome, in the
   E2E perf guard) pins the actual number. Single-pass char-loop normalization is the known
   optimization lever if M2 demands it.
+
+## M2 2026-08-31 (real Chrome — E2E perf guard) — DONE
+
+The large-report render bench (`BrowserRenderWorkerTests.MeasureLargeReport`) now runs a COLD
+worst-case broad deep query ("order", hits every JSON body) after the render/toggle phases:
+index load + worker spawn + item-metadata collection + decompress-all + normalize + verify,
+first use. Measured on the LargeRenderBench fixture (6 diagrams × 40 steps, multi-MB corpus):
+**DeepQueryMs = 70ms cold** (recorded per run in `render-bench-results.txt`), budgeted at
+2000ms × ContentionScale in the guard. Per-item cost ≈ 1.1ms/blob end-to-end, extrapolating to
+**~2-3.5s cold on a 2000-doc monster** — consistent with the M1 revision; the worker keeps the
+page responsive, batches reveal progressively, and the normalized-text LRU makes it one-time.
+
+## M3 2026-08-31 (`formatter-probe --m3`) — DONE (§5.1 wall-clock requirement)
+
+`dotnet run --project formatter-probe -c Release -- --m3` times `GenerateHtmlReport` over the
+147MB --corpus output with the index off/on, interleaved, plus an isolated phase breakdown.
+After three optimization rounds (bitmap trigram collection instead of HashSet inserts — the
+dominant cost at ~1 set-insert per corpus char; hand-rolled multi-pass normalizer replacing the
+regex passes, equivalence pinned by `SearchNormalizerEquivalenceTests` + shared vectors; flat
+counted arrays + parallel chunked row emission in the serializer; `Distinct()` moved onto the
+prewarm task):
+
+- Single monster report in isolation: **+~0.15-0.35s on a ~3.1s baseline (~5-10%, within
+  run-to-run noise)**; emitted file 59.59 → 60.67 MB (the 1.07MB blob).
+- Isolated phases: normalize+hash 259ms (parallel, fully overlapped with body building in real
+  runs), serialize 102ms, gzip+b64 Optimal 56ms.
+- In a real run both HTML reports share the build cache (`DistinctTextCount` observable pinned
+  in `SearchIndexReportTests`), so the second report re-pays only assembly+serialize.
+- Typical (few-MB) reports: unmeasurable.
+
+Remaining known lever if ever needed: single-scan fused normalization (rejected for now — the
+passes interact; see the SearchNormalizer comment).

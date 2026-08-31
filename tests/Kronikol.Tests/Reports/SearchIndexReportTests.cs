@@ -178,7 +178,7 @@ public class SearchIndexReportTests
     {
         var html = Generate("SearchIndexOptOut.html", NeedleDiagrams(), TwoScenarioFeature(), fullSearchIndex: false);
         Assert.Null(ExtractBlobBase64(html));
-        Assert.DoesNotContain("kron-search-index", html);
+        Assert.DoesNotContain("<script id=\"kron-search-index\"", html);
     }
 
     [Fact]
@@ -229,6 +229,38 @@ public class SearchIndexReportTests
         var decoded = DecodeBlob(ExtractBlobBase64(html)!);
 
         Assert.Contains(0, decoded.Candidates(PayloadNeedle));
+    }
+
+    [Fact]
+    public void Shared_cache_hashes_each_distinct_text_once_across_both_reports()
+    {
+        // §5.1 perf pin via a deterministic observable (never wall-clock): both HTML reports
+        // share one build cache, so the second report adds no new distinct-text hash work, and
+        // repeated identical diagram content hashes once.
+        var features = TwoScenarioFeature();
+        var sameSource = "@startuml\nA -> B : POST: /api/orders\n@enduml";
+        var diagrams = new DefaultDiagramsFetcher.DiagramAsCode[]
+        {
+            new("s1", "", sameSource),
+            new("s2", "", sameSource) // identical content -> one hash
+        };
+        var cache = new SearchIndexBuildCache();
+
+        ReportGenerator.GenerateHtmlReport(
+            diagrams, features, DateTime.UtcNow, DateTime.UtcNow,
+            null, "SearchIndexCacheA.html", "Test", includeTestRunData: true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            searchIndexCache: cache);
+        var afterFirst = cache.DistinctTextCount;
+        // distinct texts: 1 shared diagram source + 2 per-scenario search texts
+        Assert.Equal(3, afterFirst);
+
+        ReportGenerator.GenerateHtmlReport(
+            diagrams, features, DateTime.UtcNow, DateTime.UtcNow,
+            null, "SearchIndexCacheB.html", "Test", includeTestRunData: true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            searchIndexCache: cache);
+        Assert.Equal(afterFirst, cache.DistinctTextCount);
     }
 
     [Fact]

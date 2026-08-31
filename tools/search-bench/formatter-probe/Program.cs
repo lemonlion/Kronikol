@@ -12,6 +12,79 @@ using System.Text;
 using Kronikol.PlantUml;
 using Kronikol.Tracking;
 
+if (args.Length >= 1 && args[0] == "--m3")
+{
+    // M3 (SEARCH_INDEX_PLAN §11): index build cost inside report generation at monster scale.
+    // Loads the --corpus output (one doc per scenario) and times GenerateHtmlReport with the
+    // index off (baseline) and on, interleaved; also reports emitted file sizes.
+    var m3CorpusDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../formatter-output/corpus"));
+    var docFiles = Directory.GetFiles(m3CorpusDir, "doc-*.puml")
+        .OrderBy(f => int.Parse(Path.GetFileNameWithoutExtension(f).Split('-')[1]))
+        .ToArray();
+    Console.WriteLine($"loading {docFiles.Length} corpus docs...");
+    var m3Diagrams = new Kronikol.DefaultDiagramsFetcher.DiagramAsCode[docFiles.Length];
+    var m3Scenarios = new Kronikol.Reports.Scenario[docFiles.Length];
+    long corpusChars = 0;
+    for (var d = 0; d < docFiles.Length; d++)
+    {
+        var text = File.ReadAllText(docFiles[d]);
+        corpusChars += text.Length;
+        m3Diagrams[d] = new Kronikol.DefaultDiagramsFetcher.DiagramAsCode($"m3-{d}", "", text);
+        m3Scenarios[d] = new Kronikol.Reports.Scenario
+        {
+            Id = $"m3-{d}",
+            DisplayName = $"Corpus scenario {d}",
+            Result = Kronikol.Reports.ExecutionResult.Passed,
+            Steps = [new Kronikol.Reports.ScenarioStep { Keyword = "Given", Text = $"step for scenario {d}", Status = Kronikol.Reports.ExecutionResult.Passed }]
+        };
+    }
+    var m3Features = new[] { new Kronikol.Reports.Feature { DisplayName = "M3 Corpus", Scenarios = m3Scenarios } };
+    Console.WriteLine($"corpus: {corpusChars / 1024.0 / 1024.0:F1} MB CodeBehind across {docFiles.Length} scenarios");
+
+    var sw = new System.Diagnostics.Stopwatch();
+    string Run(string name, bool index)
+    {
+        sw.Restart();
+        var p = Kronikol.Reports.ReportGenerator.GenerateHtmlReport(
+            m3Diagrams, m3Features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, name, "M3", true,
+            diagramFormat: Kronikol.DiagramFormat.PlantUml,
+            plantUmlRendering: Kronikol.PlantUmlRendering.BrowserJs,
+            fullSearchIndex: index);
+        sw.Stop();
+        Console.WriteLine($"{name} (index={index}): {sw.ElapsedMilliseconds} ms, {new FileInfo(p).Length / 1024.0 / 1024.0:F2} MB");
+        return p;
+    }
+    // interleaved warm/measure runs so JIT + file cache treat both variants alike
+    Run("m3-warm-off.html", false);
+    Run("m3-warm-on.html", true);
+    for (var r = 0; r < 3; r++)
+    {
+        Run($"m3-off-{r}.html", false);
+        Run($"m3-on-{r}.html", true);
+    }
+
+    // phase breakdown (isolated, not overlapped): normalize+hash | serialize | gzip
+    var phase = new System.Diagnostics.Stopwatch();
+    phase.Restart();
+    var bucketSets = new int[m3Diagrams.Length][];
+    Parallel.For(0, m3Diagrams.Length, i =>
+    {
+        bucketSets[i] = Kronikol.Reports.SearchIndex.SearchIndexBuilder.CollectTrigramBuckets(
+            Kronikol.Reports.SearchIndex.SearchNormalizer.Normalize(m3Diagrams[i].CodeBehind));
+    });
+    Console.WriteLine($"phase normalize+hash (parallel): {phase.ElapsedMilliseconds} ms");
+    phase.Restart();
+    var rawIndex = Kronikol.Reports.SearchIndex.SearchIndexBuilder.Serialize(
+        Enumerable.Range(0, m3Diagrams.Length).Select(i => $"scenario-{i}").ToArray(), bucketSets);
+    Console.WriteLine($"phase serialize: {phase.ElapsedMilliseconds} ms ({rawIndex.Length / 1024.0 / 1024.0:F2} MB raw)");
+    phase.Restart();
+    var blob = Kronikol.Reports.SearchIndex.SearchIndexBuilder.CompressToBase64(rawIndex);
+    Console.WriteLine($"phase gzip+b64 Optimal: {phase.ElapsedMilliseconds} ms ({blob.Length / 1024.0 / 1024.0:F2} MB b64)");
+    return;
+}
+
 if (args.Length >= 2 && args[0] == "--corpus")
 {
     var docCount = int.Parse(args[1]);

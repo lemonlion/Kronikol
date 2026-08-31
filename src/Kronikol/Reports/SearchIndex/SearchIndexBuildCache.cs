@@ -27,8 +27,10 @@ public sealed class SearchIndexBuildCache
         lock (_prewarmLock)
         {
             if (_prewarm is not null) return;
-            var distinct = texts.Distinct().ToArray();
-            _prewarm = Task.Run(() => Parallel.ForEach(distinct, t => GetOrAddBuckets(t)));
+            var snapshot = texts.ToArray();
+            // Distinct() hashes+compares the full (multi-MB) strings — that belongs on the pool
+            // too, not on the generating thread.
+            _prewarm = Task.Run(() => Parallel.ForEach(snapshot.Distinct(), t => GetOrAddBuckets(t)));
         }
     }
 
@@ -38,13 +40,7 @@ public sealed class SearchIndexBuildCache
     /// <summary>Trigram bucket set for one raw corpus piece, normalized then hashed once per distinct string.</summary>
     internal int[] GetOrAddBuckets(string rawPiece) =>
         _bucketsByText.GetOrAdd(rawPiece, static piece =>
-        {
-            var buckets = new HashSet<int>();
-            SearchIndexBuilder.AddTrigramBuckets(SearchNormalizer.Normalize(piece), buckets);
-            var arr = buckets.ToArray();
-            Array.Sort(arr);
-            return arr;
-        });
+            SearchIndexBuilder.CollectTrigramBuckets(SearchNormalizer.Normalize(piece)));
 
     /// <summary>Number of distinct text pieces hashed — the deterministic perf observable (§5.1: pin cost with observables, never wall-clock).</summary>
     internal int DistinctTextCount => _bucketsByText.Count;
