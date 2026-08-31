@@ -1379,7 +1379,7 @@ public static class ReportGenerator
                                             </summary>
                                             <div class="raw-plantuml">
                                                 <h4>{rawLabel}</h4>
-                                                <pre>{diagram.CodeBehind}</pre>
+                                                <pre>{System.Net.WebUtility.HtmlEncode(diagram.CodeBehind)}</pre>
                                              </div>
                                          </details>
                                          """);
@@ -2346,7 +2346,7 @@ public static class ReportGenerator
                             </summary>
                             <div class="raw-plantuml">
                                 <h4>Raw Plant UML</h4>
-                                <pre>{diagram.CodeBehind}</pre>
+                                <pre>{System.Net.WebUtility.HtmlEncode(diagram.CodeBehind)}</pre>
                              </div>
                          </details>
                          """);
