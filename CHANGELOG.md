@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.73] - 2026-09-02
+
+### Fixed
+- **YAML note view: a query starting with a bare `\n` followed by CRLF line breaks now unfolds into a block scalar.** The `"\n" + query` shape common in BigQuery job bodies (bare `\n` opener from the request builder, `\r\n` breaks from the Windows-authored query text) fell between two earlier fixes: the CRLF display normalisation (3.0.61) required *every* break to be exactly `\r\n`, so the leading bare `\n` read as "mixed line breaks" and sent the whole query to the single-line quoted fallback — even though leading-newline strings themselves unfold since 3.0.63. Leading bare `\n`s no longer count as mixing (they render as empty block-scalar lines either way); a bare `\n` *after* any content alongside `\r\n` still takes the exact quoted form, as does a lone `\r`. Kronikol4J: extends the standing client-asset divergence (`collapsible-notes-script.js`).
+
 ## [3.0.72] - 2026-08-31
 
 ### Added

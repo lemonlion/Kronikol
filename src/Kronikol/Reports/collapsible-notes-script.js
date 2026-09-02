@@ -969,10 +969,13 @@
     // \r\n the string is displayed with the \r dropped: the YAML view trades
     // those bytes for a readable block scalar — the JSON view stays exact.
     // Mixed or lone \r keeps the exact quoted form (a block scalar could not
-    // show which break was which).
+    // show which break was which) — except LEADING bare \n's ("\n" + query
+    // BigQuery-style bodies): those render as empty lines either way, so
+    // only breaks after the first non-newline character must be uniform.
     function formatYamlString(value, inSeq) {
         var display = value;
-        if (value.indexOf('\r') >= 0 && !/\r(?!\n)/.test(value) && !/(^|[^\r])\n/.test(value))
+        if (value.indexOf('\r') >= 0 && !/\r(?!\n)/.test(value)
+            && !/(^|[^\r])\n/.test(value.replace(/^\n+/, '')))
             display = value.replace(/\r\n/g, '\n');
         if (display.indexOf('\n') < 0)
             return { text: isPlainYamlScalar(value) ? value : yamlQuote(value) };

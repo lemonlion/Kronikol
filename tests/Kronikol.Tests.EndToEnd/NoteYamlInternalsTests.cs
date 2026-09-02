@@ -454,6 +454,58 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
         }, yaml);
     }
 
+    [Fact]
+    public async Task Leading_bare_newline_with_uniform_crlf_body_emits_block_scalar()
+    {
+        await NavigateToReport();
+        // BigQuery job bodies built as "\n" + query capture a bare \n opener
+        // followed by CRLF breaks from the Windows-authored query text. The
+        // leading break renders as an empty line either way, so it must not
+        // disqualify the CRLF display normalisation.
+        var yaml = await EmitYaml("{\"query\":\"\\nSELECT o.id\\r\\nFROM orders o\"}");
+        Assert.Equal(new[]
+        {
+            "query: |-",
+            "",
+            "  SELECT o.id",
+            "  FROM orders o"
+        }, yaml);
+    }
+
+    [Fact]
+    public async Task Multiple_leading_bare_newlines_with_crlf_body_keep_all_empty_lines()
+    {
+        await NavigateToReport();
+        var yaml = await EmitYaml("{\"q\":\"\\n\\nSELECT x\\r\\nFROM t\"}");
+        Assert.Equal(new[]
+        {
+            "q: |-",
+            "",
+            "",
+            "  SELECT x",
+            "  FROM t"
+        }, yaml);
+    }
+
+    [Fact]
+    public async Task Leading_bare_newline_with_crlf_body_ending_in_crlf_uses_keep_clip_header()
+    {
+        await NavigateToReport();
+        var yaml = await EmitYaml("{\"s\":\"\\nline1\\r\\nline2\\r\\n\"}");
+        Assert.Equal(new[] { "s: |", "", "  line1", "  line2" }, yaml);
+    }
+
+    [Fact]
+    public async Task Bare_newline_after_content_alongside_crlf_still_takes_the_quoted_fallback()
+    {
+        await NavigateToReport();
+        // Only LEADING bare \n's are exempt: a bare \n after any content
+        // mixed with \r\n is ambiguous in a block scalar, exactly like the
+        // mixed cases above.
+        var yaml = await EmitYaml("{\"m\":\"\\na\\nb\\r\\nc\"}");
+        Assert.Equal(new[] { "m: \"\\na\\nb\\r\\nc\"" }, yaml);
+    }
+
     // ═══════════════════════════════════════════════════════════
     // Conservative re-escape for splicing into the render source
     // ═══════════════════════════════════════════════════════════
