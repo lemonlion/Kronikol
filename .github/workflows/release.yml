@@ -43,7 +43,7 @@ jobs:
         run: dotnet pack release.slnf --configuration Release --no-build --output ./nupkgs -p:Version=${{ steps.version.outputs.VERSION }}
 
       - name: Push to NuGet
-        run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate --timeout 1200
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
