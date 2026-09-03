@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.75] - 2026-09-03
+
+### Added
+- **`Kronikol.Extensions.ClickHouse.Driver` — pairing package for ClickHouse.Driver, the official ClickHouse .NET client** (1.0.0 stable since March 2026; ClickHouse's adoption of the ClickHouse.Client lineage, HTTP transport). Same shape as the 3.0.74 `.Client` pairing: `ClickHouseDriverAdapter` reads real INSERT rows-affected counts from the driver's `QueryStats` (its `ExecuteNonQuery` return value is parsed from the empty HTTP response body, so it reports 0 — the same quirk as ClickHouse.Client, confirmed against the 1.4.0 source), plus typed `WithClickHouseDriverTestTracking` / `AddClickHouseDriverTestTracking` helpers. Verified live against ClickHouse 25.8: the tracked INSERT logs `1 rows affected` while the driver returns 0, FullRows SELECT payloads render, `{name:Type}` parameters bind, the driver-agnostic type-name detection matches its `ClickHouseConnection`, `DataSource` behaves identically to ClickHouse.Client (empty → same `localhost` URI fallback), and the driver emits `ClickHouse.Driver` Activity spans (`PostSqlQueryAsync`) so flame charts keep their driver swimlane. Motivated by BreakfastProvider's planned migration to the official client. Kronikol4J: options-surface divergence extends; no report-output impact.
+
 ## [3.0.74] - 2026-09-03
 
 ### Added

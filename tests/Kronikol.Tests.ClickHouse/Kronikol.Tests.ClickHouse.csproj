@@ -12,13 +12,15 @@
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
-    <!-- Both supported ClickHouse ADO.NET clients, to verify both are tracked -->
+    <!-- All three supported ClickHouse ADO.NET clients, to verify each is tracked -->
     <PackageReference Include="ClickHouse.Client" Version="7.*" />
+    <PackageReference Include="ClickHouse.Driver" Version="1.*" />
     <PackageReference Include="Octonica.ClickHouseClient" Version="3.*" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse\Kronikol.Extensions.ClickHouse.csproj" />
     <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse.Client\Kronikol.Extensions.ClickHouse.Client.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse.Driver\Kronikol.Extensions.ClickHouse.Driver.csproj" />
     <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse.Octonica\Kronikol.Extensions.ClickHouse.Octonica.csproj" />
   </ItemGroup>
 </Project>

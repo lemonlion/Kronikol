@@ -231,6 +231,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Extensions.ClickHo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Extensions.ClickHouse.Octonica", "src\Kronikol.Extensions.ClickHouse.Octonica\Kronikol.Extensions.ClickHouse.Octonica.csproj", "{7A68582F-F1C4-4785-9960-9CBF2DDBD250}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Extensions.ClickHouse.Driver", "src\Kronikol.Extensions.ClickHouse.Driver\Kronikol.Extensions.ClickHouse.Driver.csproj", "{942C9D58-C8F4-4861-922D-CC972EBB3BF5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1573,6 +1575,18 @@ Global
 		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Release|x64.Build.0 = Release|Any CPU
 		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Release|x86.ActiveCfg = Release|Any CPU
 		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Release|x86.Build.0 = Release|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Debug|x64.Build.0 = Debug|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Debug|x86.Build.0 = Debug|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Release|x64.ActiveCfg = Release|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Release|x64.Build.0 = Release|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Release|x86.ActiveCfg = Release|Any CPU
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1651,6 +1665,7 @@ Global
 		{E52EB828-9109-44AE-951B-B363E7FEBDB2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{7AA6FBED-4F8A-470C-8965-C0639DC61A49} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{7A68582F-F1C4-4785-9960-9CBF2DDBD250} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{942C9D58-C8F4-4861-922D-CC972EBB3BF5} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {800A06E3-2498-445E-A515-7CF26A36503F}
