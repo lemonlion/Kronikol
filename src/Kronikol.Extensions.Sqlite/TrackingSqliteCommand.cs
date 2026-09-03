@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using Kronikol.Sql;
 
 namespace Kronikol.Extensions.Sqlite;
 
@@ -72,7 +73,12 @@ public class TrackingSqliteCommand : DbCommand
     {
         var ids = LogRequest();
         var result = _inner.ExecuteReader(behavior);
-        if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+        if (ids is not null)
+        {
+            if (_connection.Options.LogResponseContent)
+                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
+            LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+        }
         return result;
     }
 
@@ -81,7 +87,12 @@ public class TrackingSqliteCommand : DbCommand
     {
         var ids = LogRequest();
         var result = await _inner.ExecuteReaderAsync(behavior, cancellationToken);
-        if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+        if (ids is not null)
+        {
+            if (_connection.Options.LogResponseContent)
+                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
+            LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+        }
         return result;
     }
 
@@ -105,7 +116,7 @@ public class TrackingSqliteCommand : DbCommand
     {
         var ids = LogRequest();
         var result = _inner.ExecuteScalar();
-        if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+        if (ids is not null) LogResponseWithContent(ids.Value.TraceId, ids.Value.RequestResponseId, FormatScalar(result));
         return result;
     }
 
@@ -113,7 +124,7 @@ public class TrackingSqliteCommand : DbCommand
     {
         var ids = LogRequest();
         var result = await _inner.ExecuteScalarAsync(cancellationToken);
-        if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+        if (ids is not null) LogResponseWithContent(ids.Value.TraceId, ids.Value.RequestResponseId, FormatScalar(result));
         return result;
     }
 
@@ -133,6 +144,28 @@ public class TrackingSqliteCommand : DbCommand
     private void LogResponse(Guid traceId, Guid requestResponseId, int? rowsAffected = null)
     {
         _connection.Tracker.DoLogResponse(traceId, requestResponseId, rowsAffected);
+    }
+
+    private void LogResponseWithContent(Guid traceId, Guid requestResponseId, string? content)
+    {
+        _connection.Tracker.DoLogResponse(traceId, requestResponseId, content);
+    }
+
+    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId)
+    {
+        var opts = _connection.Options;
+        return new TrackingDbDataReader(
+            inner, SqlResponseDetailResolver.Resolve(opts), opts.MaxResponseRows, opts.MaxValueDisplayLength,
+            content => LogResponseWithContent(traceId, requestResponseId, content));
+    }
+
+    private string? FormatScalar(object? result)
+    {
+        if (!_connection.Options.LogResponseContent) return null;
+        if (result is null or DBNull) return "null";
+        var str = result.ToString() ?? "";
+        var maxLen = _connection.Options.MaxValueDisplayLength;
+        return str.Length > maxLen ? $"{str[..maxLen]}... ({str.Length} chars)" : str;
     }
 
     private string? BuildParameterString()

@@ -106,4 +106,7 @@ internal sealed class SqlDiagnosticTrackerForWrapping : SqlDiagnosticTracker
 
     public void DoLogResponse(Guid traceId, Guid requestResponseId, int? rowsAffected = null, Exception? exception = null)
         => LogResponse(traceId, requestResponseId, rowsAffected, exception);
+
+    public void DoLogResponse(Guid traceId, Guid requestResponseId, string? content, Exception? exception = null)
+        => LogResponse(traceId, requestResponseId, content, exception);
 }

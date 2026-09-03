@@ -15,4 +15,13 @@ public record ClickHouseTrackingOptions : SqlTrackingOptionsBase
         DependencyCategory = DependencyCategories.ClickHouse;
         UriScheme = "clickhouse";
     }
+
+    /// <summary>
+    /// Driver-specific hooks, normally supplied by a pairing package
+    /// (<c>Kronikol.Extensions.ClickHouse.Client</c> or <c>Kronikol.Extensions.ClickHouse.Octonica</c>).
+    /// Without one, rows-affected logging uses the driver's <c>ExecuteNonQuery</c> return value as-is —
+    /// which for ClickHouse.Client is always 0 on INSERT (the real count only surfaces via its
+    /// <c>QueryStats</c>), so pair the matching package for accurate counts.
+    /// </summary>
+    public IClickHouseDriverAdapter? DriverAdapter { get; set; }
 }

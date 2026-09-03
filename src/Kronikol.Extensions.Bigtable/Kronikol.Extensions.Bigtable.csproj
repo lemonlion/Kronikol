@@ -6,8 +6,11 @@
     <Title>Test Tracking Diagrams Google Cloud Bigtable Extension</Title>
     <Description>Google Cloud Bigtable tracking for test diagrams. Wraps BigtableClient to intercept and classify Bigtable operations (ReadRows, MutateRow, MutateRows, CheckAndMutateRow, ReadModifyWriteRow, SampleRowKeys) with configurable verbosity.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <InternalsVisibleTo>Kronikol.Tests.Bigtable</InternalsVisibleTo>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.Bigtable" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Google.Cloud.Bigtable.V2" Version="3.*" />

@@ -43,7 +43,19 @@ public record SpannerTrackingOptions
 
     /// <summary>
     /// Level of detail for response content in diagram arrows.
-    /// Default: RowCountAndColumns.
+    /// Default: <c>null</c> — the detail follows the effective verbosity: actual row data
+    /// (FullRows) at Raw/Detailed, a count+columns summary at Summarised.
+    /// Set explicitly to pin a level regardless of verbosity.
     /// </summary>
-    public SpannerResponseDetail ResponseDetail { get; set; } = SpannerResponseDetail.RowCountAndColumns;
+    public SpannerResponseDetail? ResponseDetail { get; set; }
+
+    /// <summary>The effective response detail, applying any phase verbosity overrides in effect.</summary>
+    internal SpannerResponseDetail ResolveResponseDetail()
+    {
+        var effectiveVerbosity = Tracking.PhaseConfiguration.GetEffectiveVerbosity(
+            Verbosity, SetupVerbosity, ActionVerbosity);
+        return ResponseDetail ?? (effectiveVerbosity == SpannerTrackingVerbosity.Summarised
+            ? SpannerResponseDetail.RowCountAndColumns
+            : SpannerResponseDetail.FullRows);
+    }
 }

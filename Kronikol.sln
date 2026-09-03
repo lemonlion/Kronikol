@@ -227,6 +227,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Tests.AssertionRew
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.AssertionRewriter", "src\Kronikol.AssertionRewriter\Kronikol.AssertionRewriter.csproj", "{E52EB828-9109-44AE-951B-B363E7FEBDB2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Extensions.ClickHouse.Client", "src\Kronikol.Extensions.ClickHouse.Client\Kronikol.Extensions.ClickHouse.Client.csproj", "{7AA6FBED-4F8A-470C-8965-C0639DC61A49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.Extensions.ClickHouse.Octonica", "src\Kronikol.Extensions.ClickHouse.Octonica\Kronikol.Extensions.ClickHouse.Octonica.csproj", "{7A68582F-F1C4-4785-9960-9CBF2DDBD250}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1545,6 +1549,30 @@ Global
 		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Release|x64.Build.0 = Release|Any CPU
 		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Release|x86.ActiveCfg = Release|Any CPU
 		{E52EB828-9109-44AE-951B-B363E7FEBDB2}.Release|x86.Build.0 = Release|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Debug|x64.Build.0 = Debug|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Debug|x86.Build.0 = Debug|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Release|x64.ActiveCfg = Release|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Release|x64.Build.0 = Release|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Release|x86.ActiveCfg = Release|Any CPU
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49}.Release|x86.Build.0 = Release|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Debug|x64.Build.0 = Debug|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Debug|x86.Build.0 = Debug|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Release|x64.ActiveCfg = Release|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Release|x64.Build.0 = Release|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Release|x86.ActiveCfg = Release|Any CPU
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1621,6 +1649,8 @@ Global
 		{090E11AA-83C3-456E-AFE8-083DA29B4552} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{773C5DB6-C14C-45EC-8805-CDDCAD915F77} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{E52EB828-9109-44AE-951B-B363E7FEBDB2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{7AA6FBED-4F8A-470C-8965-C0639DC61A49} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{7A68582F-F1C4-4785-9960-9CBF2DDBD250} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {800A06E3-2498-445E-A515-7CF26A36503F}

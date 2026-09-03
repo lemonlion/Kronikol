@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework />
+    <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
+    <Title>Test Tracking Diagrams ClickHouse.Client Pairing Extension</Title>
+    <Description>Pairs Kronikol.Extensions.ClickHouse with the ClickHouse.Client (HTTP) driver. Adds compile-time driver integration: accurate rows-affected counts for INSERTs (read from the driver's QueryStats, which ClickHouse.Client populates from the X-ClickHouse-Summary response header — its ExecuteNonQuery return value is always 0 for INSERTs) plus typed wrap/DI registration helpers.</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.ClickHouse" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ClickHouse.Client" Version="7.14.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Kronikol.Extensions.ClickHouse\Kronikol.Extensions.ClickHouse.csproj" />
+  </ItemGroup>
+</Project>

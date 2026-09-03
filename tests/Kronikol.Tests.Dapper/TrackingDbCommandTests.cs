@@ -42,6 +42,46 @@ public class TrackingDbCommandTests : IDisposable
         return cmd;
     }
 
+    // ─── Response detail follows verbosity ──────────────────────
+    // Unset ResponseDetail follows the effective verbosity: actual row data at Raw/Detailed,
+    // a count+columns summary at Summarised. An explicit setting always wins.
+
+    private string? RunSelectAndGetResponseContent()
+    {
+        var fakeCmd = new FakeDbCommand { ReaderResult = new FakeRowDbDataReader() };
+        using var cmd = new TrackingDbCommand(fakeCmd, _trackingConnection, _options);
+        cmd.CommandText = "SELECT id, name FROM breakfasts";
+        using (var reader = cmd.ExecuteReader())
+        {
+            while (reader.Read()) { }
+        }
+        return GetLogsForTest().Last(l => l.Type == RequestResponseType.Response).Content;
+    }
+
+    [Fact]
+    public void Select_at_default_detailed_verbosity_logs_actual_rows()
+    {
+        var content = RunSelectAndGetResponseContent();
+
+        Assert.NotNull(content);
+        Assert.Contains("\"name\":\"Pancakes\"", content);
+        Assert.Contains("\"name\":\"Waffles\"", content);
+    }
+
+    [Fact]
+    public void Select_at_summarised_verbosity_logs_count_and_columns()
+    {
+        _options.Verbosity = DapperTrackingVerbosity.Summarised;
+        Assert.Equal("2 rows [id, name]", RunSelectAndGetResponseContent());
+    }
+
+    [Fact]
+    public void Explicit_ResponseDetail_wins_over_verbosity()
+    {
+        _options.ResponseDetail = Kronikol.Sql.SqlResponseDetail.RowCountAndColumns;
+        Assert.Equal("2 rows [id, name]", RunSelectAndGetResponseContent());
+    }
+
     // ─── Logging ────────────────────────────────────────────────
 
     [Fact]

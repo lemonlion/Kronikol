@@ -5,11 +5,14 @@
     <Title>Test Tracking Diagrams MongoDB Extension</Title>
     <Description>MongoDB tracking for test diagrams. Intercepts and classifies MongoDB operations (Find, Insert, Update, Delete, Aggregate, BulkWrite, and more) with configurable verbosity using the MongoDB driver's command event system.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <InternalsVisibleTo>Kronikol.Tests.MongoDB</InternalsVisibleTo>
     <!-- NU1902: SharpCompress has no patched version; vulnerability is in WriteToDirectory (zip slip),
          which doesn't apply to MongoDB's internal compression usage -->
     <NoWarn>$(NoWarn);NU1902</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.MongoDB" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MongoDB.Driver" Version="3.*" />
   </ItemGroup>

@@ -25,17 +25,18 @@ public class FakeDbCommand : DbCommand
     public bool WasDisposed { get; private set; }
     public int NonQueryResult { get; set; } = 1;
     public object? ScalarResult { get; set; } = 42;
+    public DbDataReader? ReaderResult { get; set; }
 
     protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
     {
         ExecuteReaderCallCount++;
-        return new FakeDbDataReader();
+        return ReaderResult ?? new FakeDbDataReader();
     }
 
     protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
     {
         ExecuteReaderCallCount++;
-        return Task.FromResult<DbDataReader>(new FakeDbDataReader());
+        return Task.FromResult(ReaderResult ?? (DbDataReader)new FakeDbDataReader());
     }
 
     public override int ExecuteNonQuery()

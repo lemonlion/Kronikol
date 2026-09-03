@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework />
+    <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
+    <Title>Test Tracking Diagrams Octonica ClickHouse Pairing Extension</Title>
+    <Description>Pairs Kronikol.Extensions.ClickHouse with the Octonica.ClickHouseClient (native TCP) driver: typed wrap/DI registration helpers and a compile-time driver adapter (Octonica's ExecuteNonQuery already returns real written-row counts, so the adapter passes them through).</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Octonica.ClickHouseClient" Version="3.1.10" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Kronikol.Extensions.ClickHouse\Kronikol.Extensions.ClickHouse.csproj" />
+  </ItemGroup>
+</Project>

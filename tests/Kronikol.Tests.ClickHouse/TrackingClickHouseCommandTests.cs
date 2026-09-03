@@ -136,6 +136,118 @@ public class TrackingClickHouseCommandTests : IDisposable
         Assert.Equal("5 rows affected", GetLogsForTest()[1].Content);
     }
 
+    // ─── Driver adapter (rows-affected pairing) ─────────────────
+    // ClickHouse.Client's ExecuteNonQuery parses the HTTP response BODY for an int; an INSERT's
+    // body is empty so it always returns 0. The pairing packages supply an IClickHouseDriverAdapter
+    // that knows where the driver keeps the real count.
+
+    [Fact]
+    public void NonQuery_logs_the_adapter_resolved_count()
+    {
+        _options.DriverAdapter = new FakeDriverAdapter(resolvedRows: 42);
+        var fakeCmd = new FakeDbCommand { NonQueryResult = 0 };
+        using var cmd = new TrackingClickHouseCommand(fakeCmd, _trackingConnection);
+        cmd.CommandText = "INSERT INTO events (name) VALUES ('x')";
+        cmd.ExecuteNonQuery();
+
+        Assert.Equal("42 rows affected", GetLogsForTest()[1].Content);
+    }
+
+    [Fact]
+    public async Task NonQueryAsync_logs_the_adapter_resolved_count()
+    {
+        _options.DriverAdapter = new FakeDriverAdapter(resolvedRows: 7);
+        var fakeCmd = new FakeDbCommand { NonQueryResult = 0 };
+        using var cmd = new TrackingClickHouseCommand(fakeCmd, _trackingConnection);
+        cmd.CommandText = "INSERT INTO events (name) VALUES ('x')";
+        await cmd.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal("7 rows affected", GetLogsForTest()[1].Content);
+    }
+
+    [Fact]
+    public void Adapter_receives_the_inner_command_and_driver_result()
+    {
+        var adapter = new FakeDriverAdapter(resolvedRows: 1);
+        _options.DriverAdapter = adapter;
+        var fakeCmd = new FakeDbCommand { NonQueryResult = 5 };
+        using var cmd = new TrackingClickHouseCommand(fakeCmd, _trackingConnection);
+        cmd.CommandText = "INSERT INTO events (name) VALUES ('x')";
+        cmd.ExecuteNonQuery();
+
+        Assert.Same(fakeCmd, adapter.LastInnerCommand);
+        Assert.Equal(5, adapter.LastDriverResult);
+    }
+
+    [Fact]
+    public void No_adapter_logs_the_driver_result_unchanged()
+    {
+        var fakeCmd = new FakeDbCommand { NonQueryResult = 5 };
+        using var cmd = new TrackingClickHouseCommand(fakeCmd, _trackingConnection);
+        cmd.CommandText = "ALTER TABLE events DELETE WHERE active = 0";
+        cmd.ExecuteNonQuery();
+
+        Assert.Equal("5 rows affected", GetLogsForTest()[1].Content);
+    }
+
+    [Fact]
+    public void Throwing_adapter_still_logs_driver_result_and_does_not_break_execution()
+    {
+        _options.DriverAdapter = new ThrowingDriverAdapter();
+        var fakeCmd = new FakeDbCommand { NonQueryResult = 2 };
+        using var cmd = new TrackingClickHouseCommand(fakeCmd, _trackingConnection);
+        cmd.CommandText = "INSERT INTO events (name) VALUES ('x')";
+        var result = cmd.ExecuteNonQuery();
+
+        Assert.Equal(2, result);
+        Assert.Equal("2 rows affected", GetLogsForTest()[1].Content);
+    }
+
+    // ─── Response detail follows verbosity ──────────────────────
+    // Unset ResponseDetail follows the effective verbosity: actual row data at Raw/Detailed
+    // (like the HTTP-level integrations, which show real response payloads), a count+columns
+    // summary at Summarised. An explicit setting always wins.
+
+    private TrackingClickHouseCommand CreateRowReaderCommand()
+    {
+        var fakeCmd = new FakeDbCommand { ReaderResult = new FakeRowDbDataReader() };
+        var cmd = new TrackingClickHouseCommand(fakeCmd, _trackingConnection);
+        cmd.CommandText = "SELECT id, name FROM events";
+        return cmd;
+    }
+
+    [Fact]
+    public void Select_at_default_detailed_verbosity_logs_actual_rows()
+    {
+        using var cmd = CreateRowReaderCommand();
+        using (var reader = cmd.ExecuteReader()) { while (reader.Read()) { } }
+
+        var content = GetLogsForTest()[1].Content;
+        Assert.Contains("\"id\":1", content);
+        Assert.Contains("\"name\":\"Pancakes\"", content);
+        Assert.Contains("\"name\":\"Waffles\"", content);
+    }
+
+    [Fact]
+    public void Select_at_summarised_verbosity_logs_count_and_columns()
+    {
+        _options.Verbosity = SqlTrackingVerbosityLevel.Summarised;
+        using var cmd = CreateRowReaderCommand();
+        using (var reader = cmd.ExecuteReader()) { while (reader.Read()) { } }
+
+        Assert.Equal("2 rows [id, name]", GetLogsForTest()[1].Content);
+    }
+
+    [Fact]
+    public void Explicit_ResponseDetail_wins_over_verbosity()
+    {
+        _options.ResponseDetail = SqlResponseDetail.RowCountAndColumns;
+        using var cmd = CreateRowReaderCommand();
+        using (var reader = cmd.ExecuteReader()) { while (reader.Read()) { } }
+
+        Assert.Equal("2 rows [id, name]", GetLogsForTest()[1].Content);
+    }
+
     // ─── No test info → no logging ──────────────────────────────
 
     [Fact]

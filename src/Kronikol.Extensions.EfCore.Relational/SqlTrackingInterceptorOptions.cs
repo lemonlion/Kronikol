@@ -41,7 +41,9 @@ public record SqlTrackingInterceptorOptions
 
     /// <summary>
     /// Level of detail for response content in diagram arrows.
-    /// Default: RowCountAndColumns.
+    /// Default: <c>null</c> — the detail follows the effective verbosity: actual row data
+    /// (FullRows) at Raw/Detailed, a count+columns summary at Summarised.
+    /// Set explicitly to pin a level regardless of verbosity.
     /// </summary>
-    public Sql.SqlResponseDetail ResponseDetail { get; set; } = Sql.SqlResponseDetail.RowCountAndColumns;
+    public Sql.SqlResponseDetail? ResponseDetail { get; set; }
 }

@@ -271,10 +271,10 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         var content = response switch
         {
             ResultSet rs => SpannerResponseFormatter.FormatResultSet(
-                rs, _options.ResponseDetail, _options.MaxResponseRows),
+                rs, _options.ResolveResponseDetail(), _options.MaxResponseRows),
             CommitResponse cr => SpannerResponseFormatter.FormatCommitResponse(cr),
             ExecuteBatchDmlResponse batch => SpannerResponseFormatter.FormatBatchDmlResponse(
-                batch, _options.ResponseDetail),
+                batch, _options.ResolveResponseDetail()),
             Transaction tx => $"Transaction: {tx.Id.ToBase64()}",
             _ => null
         };

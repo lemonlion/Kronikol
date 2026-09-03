@@ -6,8 +6,12 @@
     <Title>Test Tracking Diagrams Google Cloud Spanner Extension</Title>
     <Description>Google Cloud Spanner tracking for test diagrams. Supports both ADO.NET (SpannerConnection) and low-level gRPC (SpannerClient) interception with configurable verbosity.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <InternalsVisibleTo>Kronikol.Tests.Spanner</InternalsVisibleTo>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The property form of InternalsVisibleTo is a silent no-op; only this item form emits the attribute. -->
+    <InternalsVisibleTo Include="Kronikol.Tests.Spanner" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Google.Cloud.Spanner.Data" Version="5.*" />

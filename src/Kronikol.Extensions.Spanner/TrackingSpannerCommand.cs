@@ -170,7 +170,7 @@ public class TrackingSpannerCommand : DbCommand
 
     private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId)
     {
-        var detail = (SqlResponseDetail)(int)_options.ResponseDetail;
+        var detail = (SqlResponseDetail)(int)_options.ResolveResponseDetail();
         return new TrackingDbDataReader(
             inner, detail, _options.MaxResponseRows, 500,
             content => LogResponseWithContent(traceId, requestResponseId, content));

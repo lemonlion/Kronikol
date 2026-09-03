@@ -155,7 +155,7 @@ public class TrackingMySqlCommand : DbCommand
     {
         var opts = _connection.Options;
         return new TrackingDbDataReader(
-            inner, opts.ResponseDetail, opts.MaxResponseRows, opts.MaxValueDisplayLength,
+            inner, SqlResponseDetailResolver.Resolve(opts), opts.MaxResponseRows, opts.MaxValueDisplayLength,
             content => LogResponseWithContent(traceId, requestResponseId, content));
     }
 

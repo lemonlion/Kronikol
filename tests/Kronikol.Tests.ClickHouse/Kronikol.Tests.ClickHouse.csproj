@@ -18,5 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse\Kronikol.Extensions.ClickHouse.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse.Client\Kronikol.Extensions.ClickHouse.Client.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse.Octonica\Kronikol.Extensions.ClickHouse.Octonica.csproj" />
   </ItemGroup>
 </Project>

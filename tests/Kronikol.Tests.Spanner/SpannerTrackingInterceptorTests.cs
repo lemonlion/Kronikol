@@ -459,7 +459,9 @@ public class SpannerTrackingInterceptorTests
         var responseLog = logs.Last();
         Assert.Equal(RequestResponseType.Response, responseLog.Type);
         Assert.NotNull(responseLog.Content);
-        Assert.Contains("2 rows", responseLog.Content!);
+        // Unset ResponseDetail at Detailed verbosity captures the actual rows.
+        Assert.Contains("Alice", responseLog.Content!);
+        Assert.Contains("Bob", responseLog.Content!);
     }
 
     [Fact]

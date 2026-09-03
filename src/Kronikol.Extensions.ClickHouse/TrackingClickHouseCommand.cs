@@ -100,7 +100,7 @@ public class TrackingClickHouseCommand : DbCommand
     {
         var ids = LogRequest();
         var result = _inner.ExecuteNonQuery();
-        if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, result);
+        if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, ResolveRowsAffected(result));
         return result;
     }
 
@@ -108,8 +108,24 @@ public class TrackingClickHouseCommand : DbCommand
     {
         var ids = LogRequest();
         var result = await _inner.ExecuteNonQueryAsync(cancellationToken);
-        if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, result);
+        if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, ResolveRowsAffected(result));
         return result;
+    }
+
+    // The command has already executed by the time this runs, so a throwing adapter must degrade
+    // the logged count, never surface as a failure of the user's query.
+    internal int ResolveRowsAffected(int driverResult)
+    {
+        var adapter = _connection.Options.DriverAdapter;
+        if (adapter is null) return driverResult;
+        try
+        {
+            return adapter.ResolveRowsAffected(_inner, driverResult);
+        }
+        catch
+        {
+            return driverResult;
+        }
     }
 
     public override object? ExecuteScalar()
@@ -155,7 +171,7 @@ public class TrackingClickHouseCommand : DbCommand
     {
         var opts = _connection.Options;
         return new TrackingDbDataReader(
-            inner, opts.ResponseDetail, opts.MaxResponseRows, opts.MaxValueDisplayLength,
+            inner, SqlResponseDetailResolver.Resolve(opts), opts.MaxResponseRows, opts.MaxValueDisplayLength,
             content => LogResponseWithContent(traceId, requestResponseId, content));
     }
 

@@ -11,6 +11,8 @@
       "src/Kronikol.Extensions.BlobStorage/Kronikol.Extensions.BlobStorage.csproj",
       "src/Kronikol.Extensions.CloudStorage/Kronikol.Extensions.CloudStorage.csproj",
       "src/Kronikol.Extensions.ClickHouse/Kronikol.Extensions.ClickHouse.csproj",
+      "src/Kronikol.Extensions.ClickHouse.Client/Kronikol.Extensions.ClickHouse.Client.csproj",
+      "src/Kronikol.Extensions.ClickHouse.Octonica/Kronikol.Extensions.ClickHouse.Octonica.csproj",
       "src/Kronikol.Extensions.CosmosDB/Kronikol.Extensions.CosmosDB.csproj",
       "src/Kronikol.Extensions.Dapper/Kronikol.Extensions.Dapper.csproj",
       "src/Kronikol.Extensions.DispatchProxy/Kronikol.Extensions.DispatchProxy.csproj",

@@ -378,8 +378,10 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         // Capture IDs in the closure — LogCommandExecutedWithContent would fail to
         // find them in _pendingIds since we already removed them above.
         var capturedIds = ids;
+        var detail = SqlResponseDetailResolver.Resolve(
+            _options.ResponseDetail, effectiveVerbosity == SqlTrackingVerbosity.Summarised);
         return new TrackingDbDataReader(
-            result, _options.ResponseDetail, _options.MaxResponseRows, _options.MaxValueDisplayLength,
+            result, detail, _options.MaxResponseRows, _options.MaxValueDisplayLength,
             content => LogCommandExecutedWithContentDirect(command, capturedIds.TraceId, capturedIds.RequestResponseId, content));
     }
 
@@ -411,7 +413,11 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
             : label!;
 
         var requestUri = BuildUri(command, sqlOp, effectiveVerbosity);
-        var responseContent = effectiveVerbosity == SqlTrackingVerbosity.Summarised ? null : content;
+        // Same rule as BuildResponseVariantWithContent and the shared SqlDiagnosticTracker:
+        // Summarised suppresses content only when LogResponseContent is off.
+        var responseContent = effectiveVerbosity == SqlTrackingVerbosity.Summarised && !_options.LogResponseContent
+            ? null
+            : content;
 
         var log = new RequestResponseLog(
             testInfo.Value.Name,

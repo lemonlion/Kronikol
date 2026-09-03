@@ -291,8 +291,12 @@ public class TrackingDbCommand : DbCommand
 
     private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId)
     {
+        var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
+            _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var detail = SqlResponseDetailResolver.Resolve(
+            _options.ResponseDetail, effectiveVerbosity == DapperTrackingVerbosity.Summarised);
         return new TrackingDbDataReader(
-            inner, _options.ResponseDetail, _options.MaxResponseRows, _options.MaxValueDisplayLength,
+            inner, detail, _options.MaxResponseRows, _options.MaxValueDisplayLength,
             content => LogResponseWithContent(traceId, requestResponseId, content));
     }
 
