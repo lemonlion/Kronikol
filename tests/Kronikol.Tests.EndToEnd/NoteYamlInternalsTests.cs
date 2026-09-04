@@ -391,12 +391,11 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
         await NavigateToReport();
         var longRun = new string('a', 130);
         var yaml = await EmitYaml(
-            "{\"cr\":\"a\\rb\",\"ctl\":\"a\\u0001b\",\"trailws\":\"a \\nb\",\"run\":\"" + longRun + "\\nx\"}");
+            "{\"cr\":\"a\\rb\",\"ctl\":\"a\\u0001b\",\"run\":\"" + longRun + "\\nx\"}");
         Assert.Equal(new[]
         {
             "cr: \"a\\rb\"",
             "ctl: \"a\\x01b\"",
-            "trailws: \"a \\nb\"",
             "run: \"" + longRun + "\\nx\""
         }, yaml);
     }
@@ -429,14 +428,14 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
-    public async Task Crlf_string_that_takes_the_quoted_fallback_keeps_its_cr_bytes()
+    public async Task Uniform_crlf_with_trailing_space_now_emits_block_scalar()
     {
         await NavigateToReport();
-        // Trailing whitespace before the break still forces the fallback —
-        // and the quoted form must show the original \r\n bytes, not the
-        // display-normalised ones.
+        // Since the trailing-whitespace strip (3.0.79), uniform CRLF plus a
+        // trailing space is fully display-normalisable: CRLF → \n, then the
+        // invisible trailing space is dropped, so the block scalar wins.
         var yaml = await EmitYaml("{\"t\":\"a \\r\\nb\"}");
-        Assert.Equal(new[] { "t: \"a \\r\\nb\"" }, yaml);
+        Assert.Equal(new[] { "t: |-", "  a", "  b" }, yaml);
     }
 
     [Fact]
@@ -504,6 +503,119 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
         // mixed cases above.
         var yaml = await EmitYaml("{\"m\":\"\\na\\nb\\r\\nc\"}");
         Assert.Equal(new[] { "m: \"\\na\\nb\\r\\nc\"" }, yaml);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Trailing whitespace — stripped from the display (3.0.79)
+    // ═══════════════════════════════════════════════════════════
+    // SQL authored in raw/verbatim strings routinely carries trailing spaces
+    // and an all-space closing-indentation tail; both are invisible in the
+    // rendered note, so the YAML view strips them (same trade as the CRLF
+    // normalisation — JSON view exact, quoted fallbacks keep original bytes).
+
+    [Fact]
+    public async Task Trailing_space_line_emits_block_scalar()
+    {
+        await NavigateToReport();
+        var yaml = await EmitYaml("{\"s\":\"x \\ny\"}");
+        Assert.Equal(new[] { "s: |-", "  x", "  y" }, yaml);
+    }
+
+    [Fact]
+    public async Task Trailing_tab_line_emits_block_scalar()
+    {
+        await NavigateToReport();
+        var yaml = await EmitYaml("{\"s\":\"x\\t\\ny\"}");
+        Assert.Equal(new[] { "s: |-", "  x", "  y" }, yaml);
+    }
+
+    [Fact]
+    public async Task All_space_tail_after_final_break_emits_keep_clip_block()
+    {
+        await NavigateToReport();
+        // The stripped tail leaves exactly one trailing \n → keep-clip header.
+        var yaml = await EmitYaml("{\"s\":\"x\\n   \"}");
+        Assert.Equal(new[] { "s: |", "  x" }, yaml);
+    }
+
+    [Fact]
+    public async Task Interior_whitespace_only_line_becomes_empty_block_line()
+    {
+        await NavigateToReport();
+        var yaml = await EmitYaml("{\"s\":\"a\\n \\nb\"}");
+        Assert.Equal(new[] { "s: |-", "  a", "", "  b" }, yaml);
+        var blockFlags = await EmitYamlBlockFlags("{\"s\":\"a\\n \\nb\"}");
+        Assert.Equal(new[] { false, true, true, true }, blockFlags);
+    }
+
+    [Fact]
+    public async Task Bigquery_raw_string_sql_with_trailing_spaces_unfolds()
+    {
+        await NavigateToReport();
+        // The reported shape: "\n" + query built from a C# raw string —
+        // leading bare \n, a "SELECT " line with a trailing space, and the
+        // raw string's closing indentation as an all-space tail.
+        var yaml = await EmitYaml(
+            "{\"q\":\"\\n                -- c1\\n                SELECT \\n                    x\\n            \"}");
+        Assert.Equal(new[]
+        {
+            "q: |2",
+            "",
+            "                  -- c1",
+            "                  SELECT",
+            "                      x"
+        }, yaml);
+    }
+
+    [Fact]
+    public async Task Mixed_breaks_with_trailing_space_keep_quoted_original_bytes()
+    {
+        await NavigateToReport();
+        // Mixed CRLF/bare-LF breaks defeat the CRLF normalisation, so the \r
+        // survives into the display and the control-char check quotes the
+        // ORIGINAL value — trailing space and \r bytes included. This is the
+        // regression trap the old Crlf_..._keeps_its_cr_bytes pin protected.
+        var yaml = await EmitYaml("{\"t\":\"a \\r\\nb\\nc\"}");
+        Assert.Equal(new[] { "t: \"a \\r\\nb\\nc\"" }, yaml);
+    }
+
+    [Fact]
+    public async Task Single_line_trailing_space_stays_quoted_verbatim()
+    {
+        await NavigateToReport();
+        // Non-goal: single-line strings are never normalised — there is no
+        // readability payoff, so no reason to trade bytes.
+        var yaml = await EmitYaml("{\"s\":\"abc \"}");
+        Assert.Equal(new[] { "s: \"abc \"" }, yaml);
+    }
+
+    [Fact]
+    public async Task Multiple_trailing_newlines_after_strip_stay_quoted()
+    {
+        await NavigateToReport();
+        // Tail-strip yields "a\n\n" — multiple trailing newlines are still
+        // unrepresentable, and the quoted form shows the original bytes.
+        var yaml = await EmitYaml("{\"s\":\"a\\n\\n  \"}");
+        Assert.Equal(new[] { "s: \"a\\n\\n  \"" }, yaml);
+    }
+
+    [Fact]
+    public async Task Whitespace_only_string_stays_quoted()
+    {
+        await NavigateToReport();
+        // Strips to "\n\n" — no non-empty line to anchor the block scalar on.
+        var yaml = await EmitYaml("{\"s\":\" \\n \\n\"}");
+        Assert.Equal(new[] { "s: \" \\n \\n\"" }, yaml);
+    }
+
+    [Fact]
+    public async Task Nbsp_is_not_stripped()
+    {
+        await NavigateToReport();
+        // Only ASCII space/tab are stripped — pin so the strip regex is never
+        // "improved" into Unicode whitespace.
+        var yaml = await EmitYaml("{\"s\":\"a\\u00a0\\nb\"}");
+        Assert.Equal(new[] { "s: |-", "  a\u00a0", "  b" }, yaml);
     }
 
     // ═══════════════════════════════════════════════════════════

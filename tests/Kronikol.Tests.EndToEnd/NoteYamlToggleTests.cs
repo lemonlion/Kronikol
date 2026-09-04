@@ -120,6 +120,37 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
+    public async Task Click_renders_bigquery_trailing_whitespace_note_as_multiline_yaml()
+    {
+        // User-reported (3.0.79): SQL authored as "\n" + C# raw string carries
+        // a trailing-space SELECT line and an all-space closing-indentation
+        // tail — the YAML view must strip both and unfold the block scalar
+        // instead of falling back to the one-line quoted form.
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithBigQueryTrailingWhitespaceNote(
+            TempDir, OutputDir, "YamlToggle_BigQueryTrailingWs.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+
+        await ClickNoteFormatButton();
+
+        var text = await GetNormalizedSvgText();
+        Assert.Contains("query: |2", text);
+        Assert.Contains("GROUP BY daily.location_id", text);
+        // Not the \n-bearing quoted one-liner
+        Assert.DoesNotContain("SELECT \\n", text);
+        Assert.DoesNotContain("\\n ", text);
+
+        // The SQL lines are separate rendered lines, not a folded scalar
+        var isOwnLine = await Page.EvaluateAsync<bool>("""
+            () => Array.from(document.querySelectorAll('[data-diagram-type="plantuml"] svg text'))
+                .some(t => t.textContent.trim() === 'GROUP BY daily.location_id')
+        """);
+        Assert.True(isOwnLine, "'GROUP BY daily.location_id' should render as its own line in YAML view");
+    }
+
+    [Fact]
     public async Task Yaml_block_scalar_lines_render_as_separate_text_lines()
     {
         await NavigateAndSetup("YamlToggle_SeparateLines.html");

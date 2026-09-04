@@ -2921,6 +2921,52 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// The user-reported BigQuery job shape (3.0.79): a JSON note whose query
+    /// string was authored as "\n" + a C# raw string — a bare-LF body with a
+    /// trailing space on the SELECT line and the raw string's closing
+    /// indentation as an all-space tail. Either offender alone used to force
+    /// the one-line quoted fallback in YAML view; both must now be stripped
+    /// from the display so the block scalar unfolds.
+    /// </summary>
+    public static string GenerateReportWithBigQueryTrailingWhitespaceNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+
+        const string source = """
+            @startuml
+            actor "Caller" as caller
+            participant "BigQuery" as bq
+
+            caller -> bq : POST /jobs/query
+            note left
+            <color:gray>[content-type=application/json]</color>
+
+            {
+              "query": "\n            -- daily revenue per location\n            SELECT \n                daily.location_id,\n                SUM(daily.total) AS revenue\n            FROM daily\n            GROUP BY daily.location_id\n            ",
+              "useLegacySql": false
+            }
+            end note
+            bq --> caller : 200 OK
+            @enduml
+            """;
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", source)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// A JSON note that is short in JSON view (one string value holding a
     /// 45-line SQL query as \n escapes) but unfolds past the 40-line truncation
     /// limit in YAML view — exercises "truncation and isLongNote operate on the

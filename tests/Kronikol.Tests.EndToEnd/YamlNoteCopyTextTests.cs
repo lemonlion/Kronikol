@@ -168,6 +168,44 @@ public class YamlNoteCopyTextTests : DiagramNotePlaywrightBase
     }
 
     // ═══════════════════════════════════════════════════════════
+    // Trailing-whitespace strip (3.0.79) — copy yields displayed lines
+    // ═══════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task Copy_box_text_on_trailing_whitespace_yaml_note_yields_stripped_lines()
+    {
+        // The copy contract is "exactly as displayed": the newly-eligible
+        // BigQuery shape copies as the stripped block scalar — no trailing
+        // spaces, no \r, no \n escapes.
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithBigQueryTrailingWhitespaceNote(
+            TempDir, OutputDir, "YamlCopy_TrailingWs.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+        await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
+
+        await ClickNoteFormatButton();
+
+        await OpenNoteContextMenu();
+        var menuItem = Page.Locator(".diagram-ctx-menu").GetByText("Copy box text");
+        await menuItem.WaitForAsync(new() { Timeout = 5000 });
+        await menuItem.ClickAsync();
+        var clipboard = await Page.EvaluateAsync<string>("() => navigator.clipboard.readText()");
+
+        Assert.Contains("query: |2", clipboard);
+        Assert.Contains("SELECT", clipboard);
+        Assert.Contains("GROUP BY daily.location_id", clipboard);
+        Assert.DoesNotContain("\\n", clipboard);
+        // The clipboard joins lines with \r\n — the check is per content line:
+        // nothing may end in the stripped trailing space/tab (a surviving
+        // "SELECT " would sit right before the break).
+        var lines = clipboard.Split('\n').Select(l => l.TrimEnd('\r'));
+        Assert.All(lines, l => Assert.False(l.EndsWith(' ') || l.EndsWith('\t'),
+            $"copied line must carry no trailing whitespace: '{l}'"));
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // JSON view — source creole escapes must not leak either
     // ═══════════════════════════════════════════════════════════
 

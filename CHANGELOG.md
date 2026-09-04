@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.79] - 2026-09-04
+
+### Fixed
+- **Note YAML view: trailing-whitespace lines no longer defeat the block scalar** (user-reported, BigQuery repro) — a JSON note whose multiline string carried a trailing space before a line break (`SELECT \n`, typical of SQL authored in a C# raw/verbatim string) or an all-whitespace tail after the final break (the raw string's closing indentation) stayed a one-line double-quoted scalar when toggled to YAML, with no multiline splitting — exactly the payload class the block-scalar view was built for. The 3.0.61 display-normalisation trade now extends to trailing whitespace: for multiline strings the YAML *view* strips ASCII space/tab runs immediately before every line break and any space/tab tail after the final break — these bytes are as invisible in the rendered SVG as the `\r`s the CRLF rule already drops — while the JSON view stays byte-exact and every quoted fallback keeps quoting the original bytes. The tail-strip is judged before the trailing-newline rules, so `"x\n   "` now unfolds as a keep-clip `|` block; single-line strings are never normalised (`"abc "` still shows quoted verbatim), only ASCII space/tab is stripped (NBSP and other Unicode whitespace preserved), and multiple-trailing-newline strings still take the quoted fallback. Uniform-CRLF strings with trailing spaces (previously pinned to the quoted fallback) now unfold too; mixed-break strings keep the exact quoted form with all original bytes. The copy-text contract "exactly as displayed" holds for the newly-eligible strings — copied YAML carries the stripped lines. Kronikol4J: extends the standing `collapsible-notes-script.js` divergence (client-side script only; no report-output impact).
+
 ## [3.0.78] - 2026-09-04
 
 ### Added

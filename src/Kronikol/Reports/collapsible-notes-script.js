@@ -959,19 +959,26 @@
 
     // String value → its YAML form: {text} for a single-line scalar, or
     // {header, content} for a literal block scalar. Strings a block scalar
-    // can't faithfully represent (control chars, trailing-whitespace lines,
-    // overlong unbreakable runs — which could never be wrapped without
-    // changing the string's meaning) take the double-quoted fallback, which
-    // is never worse than today's JSON view.
+    // can't faithfully represent (control chars, overlong unbreakable runs —
+    // which could never be wrapped without changing the string's meaning)
+    // take the double-quoted fallback, which is never worse than today's
+    // JSON view.
     //
-    // CRLF strings (every Windows-captured payload) would all hit that
-    // fallback via the control-char check, so when EVERY break is exactly
-    // \r\n the string is displayed with the \r dropped: the YAML view trades
-    // those bytes for a readable block scalar — the JSON view stays exact.
-    // Mixed or lone \r keeps the exact quoted form (a block scalar could not
-    // show which break was which) — except LEADING bare \n's ("\n" + query
-    // BigQuery-style bodies): those render as empty lines either way, so
-    // only breaks after the first non-newline character must be uniform.
+    // Two classes of invisible bytes are knowingly traded away from the
+    // DISPLAY of multiline strings so the block scalar wins (the JSON view
+    // stays exact, and quoted fallbacks always show the original bytes):
+    //
+    // - CRLF breaks (every Windows-captured payload): when EVERY break is
+    //   exactly \r\n the \r's are dropped. Mixed or lone \r keeps the exact
+    //   quoted form (a block scalar could not show which break was which) —
+    //   except LEADING bare \n's ("\n" + query BigQuery-style bodies): those
+    //   render as empty lines either way, so only breaks after the first
+    //   non-newline character must be uniform.
+    // - ASCII space/tab runs before a break, and an all-whitespace tail
+    //   after the final break (SQL from raw/verbatim strings routinely has
+    //   both): the SVG renders them as nothing, so they are stripped rather
+    //   than forcing the quoted fallback. Single-line strings are never
+    //   normalised, and only ASCII space/tab is stripped (not NBSP etc.).
     function formatYamlString(value, inSeq) {
         var display = value;
         if (value.indexOf('\r') >= 0 && !/\r(?!\n)/.test(value)
@@ -979,6 +986,7 @@
             display = value.replace(/\r\n/g, '\n');
         if (display.indexOf('\n') < 0)
             return { text: isPlainYamlScalar(value) ? value : yamlQuote(value) };
+        display = display.replace(/[ \t]+(?=\n)/g, '').replace(/[ \t]+$/, '');
         var endsWithNewline = display.charAt(display.length - 1) === '\n';
         var blockLines = display.split('\n');
         if (endsWithNewline) blockLines.pop();
@@ -994,7 +1002,6 @@
             && !(endsWithNewline && /\n$/.test(display.slice(0, -1)));
         if (eligible) {
             for (var i = 0; i < blockLines.length; i++) {
-                if (/[ \t]$/.test(blockLines[i])) { eligible = false; break; }
                 if (hasOverlongRunAfterEscape(blockLines[i])) { eligible = false; break; }
             }
         }

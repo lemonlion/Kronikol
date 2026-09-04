@@ -25,7 +25,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Kronikol.NUnit4" Version="3.0.77" />
+    <PackageReference Include="Kronikol.NUnit4" Version="3.0.78" />
   </ItemGroup>
 
   <!-- TODO: Add a ProjectReference to your API project here -->

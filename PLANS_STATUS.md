@@ -23,6 +23,7 @@ re-verified fresh on 2026-08-30.
 | `PERF_CI_PLAN.md` *(new, untracked)* | 🟡 ~95%; R5 blocked on upstream merge | PR plantuml#2840 open |
 | `QUERY_PERF_PLAN.md` | ✅ Done (§3.1–§3.4 all landed) | 3.0.69 |
 | `SEARCH_INDEX_PLAN.md` | ✅ Done (executed in full, §15 order; Phase 2 §10 deferred by design; post-release audit fixes in 3.0.71; user-requested scope extension in 3.0.72: descriptions/endpoints instant, stack traces deep-only) | 3.0.70–3.0.72 |
+| `NOTE_YAML_TRAILING_WS_PLAN.md` | ✅ Done (executed in full; committed with the release as a design record) | 3.0.79 |
 | `JAVA_PORT_PLAN.md` | 🟡 Partially done | Kronikol4J v0.1.24 |
 | `NODE_PORT_PLAN.md` | ❌ Not started (design record) | — |
 | `MONOREPO_MIGRATION_PLAN.md` | ❌ Not started (design record) | — |
