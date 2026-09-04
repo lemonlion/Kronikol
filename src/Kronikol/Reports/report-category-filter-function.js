@@ -1,4 +1,7 @@
-var _catMode = 'OR';
+// Seeded from the report's resolved toggle defaults at generation time; every consumer
+// (URL hash, Clear All) resets against the seeded default, never a literal.
+var _catModeDefault = '__CAT_MODE_DEFAULT__';
+var _catMode = _catModeDefault;
 function toggle_cat_mode(btn) {
     _catMode = _catMode === 'OR' ? 'AND' : 'OR';
     btn.textContent = _catMode;

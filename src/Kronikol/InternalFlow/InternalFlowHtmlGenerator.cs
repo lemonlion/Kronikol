@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using Kronikol.ComponentDiagram;
+using Kronikol.Reports;
 
 namespace Kronikol.InternalFlow;
 
@@ -22,9 +23,10 @@ public static class InternalFlowHtmlGenerator
         InternalFlowFlameChartPosition flameChartPosition = InternalFlowFlameChartPosition.BehindWithToggle,
         InternalFlowNoDataBehavior noDataBehavior = InternalFlowNoDataBehavior.HideLink,
         InternalFlowSpanGranularity granularity = InternalFlowSpanGranularity.AutoInstrumentation,
-        string[]? configuredActivitySources = null)
+        string[]? configuredActivitySources = null,
+        InternalFlowTab startTab = InternalFlowTab.Activity)
     {
-        var data = BuildSegmentData(segments, diagramStyle, showFlameChart, flameChartPosition, noDataBehavior, granularity, configuredActivitySources);
+        var data = BuildSegmentData(segments, diagramStyle, showFlameChart, flameChartPosition, noDataBehavior, granularity, configuredActivitySources, startTab);
         return WrapSegmentData(data);
     }
 
@@ -51,7 +53,8 @@ public static class InternalFlowHtmlGenerator
         InternalFlowFlameChartPosition flameChartPosition = InternalFlowFlameChartPosition.BehindWithToggle,
         InternalFlowNoDataBehavior noDataBehavior = InternalFlowNoDataBehavior.HideLink,
         InternalFlowSpanGranularity granularity = InternalFlowSpanGranularity.AutoInstrumentation,
-        string[]? configuredActivitySources = null)
+        string[]? configuredActivitySources = null,
+        InternalFlowTab startTab = InternalFlowTab.Activity)
     {
         var data = new Dictionary<string, object>();
 
@@ -72,17 +75,18 @@ public static class InternalFlowHtmlGenerator
                 {
                     flameData = InternalFlowRenderer.GetFlameChartData(segment);
                     var flamePlaceholder = "<div class=\"iflow-flame\" data-diagram-type=\"flamechart\"></div>";
+                    var flameFirst = startTab == InternalFlowTab.FlameChart;
                     content = flameChartPosition switch
                     {
                         InternalFlowFlameChartPosition.Underneath =>
                             mainContent + "<hr style=\"margin:12px 0\">" + flamePlaceholder,
-                        _ => // BehindWithToggle
+                        _ => // BehindWithToggle — the configured tab starts active
                             "<div class=\"iflow-toggle\">"
-                            + "<button class=\"iflow-toggle-btn iflow-toggle-active\" data-view=\"main\">Activity</button>"
-                            + "<button class=\"iflow-toggle-btn\" data-view=\"flame\">Flame Chart</button>"
+                            + $"<button class=\"iflow-toggle-btn{(flameFirst ? "" : " iflow-toggle-active")}\" data-view=\"main\">Activity</button>"
+                            + $"<button class=\"iflow-toggle-btn{(flameFirst ? " iflow-toggle-active" : "")}\" data-view=\"flame\">Flame Chart</button>"
                             + "</div>"
-                            + "<div class=\"iflow-view iflow-view-main\">" + mainContent + "</div>"
-                            + "<div class=\"iflow-view iflow-view-flame\" style=\"display:none\">" + flamePlaceholder + "</div>"
+                            + $"<div class=\"iflow-view iflow-view-main\"{(flameFirst ? " style=\"display:none\"" : "")}>" + mainContent + "</div>"
+                            + $"<div class=\"iflow-view iflow-view-flame\"{(flameFirst ? "" : " style=\"display:none\"")}>" + flamePlaceholder + "</div>"
                     };
                 }
 
@@ -206,7 +210,8 @@ public static class InternalFlowHtmlGenerator
         Dictionary<string, InternalFlowSegment> wholeTestSegments,
         string testId,
         (string Label, DateTimeOffset Timestamp)[] boundaryLogs,
-        WholeTestFlowVisualization visualization)
+        WholeTestFlowVisualization visualization,
+        InternalFlowTab startTab = InternalFlowTab.Activity)
     {
         if (visualization == WholeTestFlowVisualization.None)
             return string.Empty;
@@ -249,12 +254,13 @@ public static class InternalFlowHtmlGenerator
                         : new { s = flameData.Sources, f = flameData.Spans },
                     new JsonSerializerOptions { WriteIndented = false });
                 var compressedFlame = CompressToBase64(flameJson);
+                var wtfFlameFirst = startTab == InternalFlowTab.FlameChart;
                 sb.Append("<div class=\"iflow-toggle\">");
-                sb.Append("<button class=\"iflow-toggle-btn iflow-toggle-active\" data-view=\"main\">Activity</button>");
-                sb.Append("<button class=\"iflow-toggle-btn\" data-view=\"flame\">Flame Chart</button>");
+                sb.Append($"<button class=\"iflow-toggle-btn{(wtfFlameFirst ? "" : " iflow-toggle-active")}\" data-view=\"main\">Activity</button>");
+                sb.Append($"<button class=\"iflow-toggle-btn{(wtfFlameFirst ? " iflow-toggle-active" : "")}\" data-view=\"flame\">Flame Chart</button>");
                 sb.Append("</div>");
-                sb.Append($"<div class=\"iflow-view iflow-view-main\">{activityHtml}</div>");
-                sb.Append($"<div class=\"iflow-view iflow-view-flame\" style=\"display:none\"><div class=\"iflow-flame\" data-diagram-type=\"flamechart\" data-flame-z=\"{compressedFlame}\"></div></div>");
+                sb.Append($"<div class=\"iflow-view iflow-view-main\"{(wtfFlameFirst ? " style=\"display:none\"" : "")}>{activityHtml}</div>");
+                sb.Append($"<div class=\"iflow-view iflow-view-flame\"{(wtfFlameFirst ? "" : " style=\"display:none\"")}><div class=\"iflow-flame\" data-diagram-type=\"flamechart\" data-flame-z=\"{compressedFlame}\"></div></div>");
                 break;
             }
         }

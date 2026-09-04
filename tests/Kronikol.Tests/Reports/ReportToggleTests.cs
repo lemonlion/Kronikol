@@ -388,4 +388,29 @@ public class ReportToggleTests : IDisposable
         Assert.NotEqual("<html>previous</html>", content);
         Assert.Contains("Toggle scenario", content);
     }
+
+    [Fact]
+    public void Toggle_defaults_flow_through_the_standard_pipeline_with_specifications_override()
+    {
+        // One options record → both HTML files via the full pipeline: the Specifications
+        // override diverges only Specifications.html; the TestRunReport group applies to both.
+        var options = MakeOptions(o =>
+        {
+            o.TestRunReportToggleDefaults.HeadersShown = false;
+            o.SpecificationsToggleDefaults.Details = ReportDetailsState.Expanded;
+        });
+
+        ReportGenerator.CreateStandardReportsWithDiagrams(
+            SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
+
+        var testRun = File.ReadAllText(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.html"));
+        Assert.Contains("window._detailsDefault = 'truncated'", testRun);
+        Assert.Contains("window._headersHidden = true", testRun);
+        Assert.Contains(">Headers Hidden</button>", testRun);
+
+        var specs = File.ReadAllText(Path.Combine(_reportsDir, $"Specifications_{_suffix}.html"));
+        Assert.Contains("window._detailsDefault = 'expanded'", specs);
+        Assert.Contains("window._headersHidden = true", specs);   // inherited
+        Assert.Contains(">Headers Hidden</button>", specs);
+    }
 }

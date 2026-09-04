@@ -1,6 +1,8 @@
 using Kronikol.ComponentDiagram;
+using Kronikol.InternalFlow;
 using Kronikol.Reports;
 using Kronikol.Reports.Merge;
+using Kronikol.Tracking;
 using static Kronikol.DefaultDiagramsFetcher;
 
 namespace Kronikol.Tests.EndToEnd;
@@ -2011,6 +2013,194 @@ public static class ReportTestHelper
         
         @enduml
         """;
+
+    /// <summary>
+    /// The wide-database fixture (JSON note + gray header, step bars, assertion notes, database
+    /// participant — every toolbar gate ON) generated with configured toggle defaults resolved
+    /// through the real options record. The workhorse fixture for ToggleDefaultsTests.
+    /// </summary>
+    public static string GenerateToggleDefaultsReport(string tempDir, string outputDir, string fileName,
+        Action<ReportConfigurationOptions> configure, string? plantUmlSource = null)
+    {
+        var (features, _) = CreateTestData();
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", plantUmlSource ?? WideDatabaseParticipantPlantUmlSource)
+        };
+
+        var options = new ReportConfigurationOptions();
+        configure(options);
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>The 45-line long-note fixture with configured toggle defaults — for the
+    /// Details radio and truncate-lines zero-click facts.</summary>
+    public static string GenerateLongNoteToggleDefaultsReport(string tempDir, string outputDir, string fileName,
+        Action<ReportConfigurationOptions> configure) =>
+        GenerateToggleDefaultsReport(tempDir, outputDir, fileName, configure, LongNotePlantUmlSource);
+
+    /// <summary>
+    /// A sequence diagram plus whole-test-flow activity and flame views for the same scenario
+    /// (three diagram-type tabs), with configured toggle defaults — for the DiagramTab facts.
+    /// </summary>
+    public static string GenerateWholeTestFlowToggleDefaultsReport(string tempDir, string outputDir, string fileName,
+        Action<ReportConfigurationOptions> configure)
+    {
+        var (features, _) = CreateTestData();
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", WideDatabaseParticipantPlantUmlSource)
+        };
+
+        using var activitySource = new System.Diagnostics.ActivitySource("Kronikol.Tests.ToggleDefaults.E2E");
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = _ => true,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+        System.Diagnostics.Activity.Current = null;
+        var baseTime = DateTime.UtcNow;
+
+        var root = activitySource.StartActivity("HTTP PUT /customer-preferences", System.Diagnostics.ActivityKind.Server)!;
+        root.SetStartTime(baseTime);
+        root.SetEndTime(baseTime.AddMilliseconds(500));
+        var rootCtx = new System.Diagnostics.ActivityContext(root.TraceId, root.SpanId, System.Diagnostics.ActivityTraceFlags.Recorded);
+        var child = activitySource.StartActivity("Spanner: InsertOrUpdate", System.Diagnostics.ActivityKind.Internal, rootCtx)!;
+        child.SetStartTime(baseTime.AddMilliseconds(20));
+        child.SetEndTime(baseTime.AddMilliseconds(400));
+
+        var segments = new Dictionary<string, InternalFlowSegment>
+        {
+            ["iflow-test-t1"] = new(
+                Guid.Empty, RequestResponseType.Request, "t1",
+                baseTime, baseTime.AddMilliseconds(500), [root, child])
+        };
+
+        var options = new ReportConfigurationOptions();
+        configure(options);
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            internalFlowTracking: true,
+            wholeTestSegments: segments,
+            wholeTestVisualization: WholeTestFlowVisualization.Both,
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
+
+        child.Dispose();
+        root.Dispose();
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    private const string ToggleDefaultsComponentDiagramSource = """
+        @startuml
+        rectangle "Caller" as caller
+        rectangle "OrderService" as svc
+        caller --> svc
+        @enduml
+        """;
+
+    /// <summary>
+    /// A report with both toolbar panels available — scenario durations (timeline) and an embedded
+    /// component diagram — with configured toggle defaults, for the panel-visibility facts.
+    /// </summary>
+    public static string GenerateComponentTimelineToggleDefaultsReport(string tempDir, string outputDir, string fileName,
+        Action<ReportConfigurationOptions> configure)
+    {
+        var (features, _) = CreateTestData();
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", WideDatabaseParticipantPlantUmlSource)
+        };
+
+        var options = new ReportConfigurationOptions();
+        configure(options);
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            componentDiagramPlantUml: ToggleDefaultsComponentDiagramSource,
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// Both report shapes (Specifications + TestRunReport) generated from ONE options record,
+    /// mirroring the two real GenerateReports call sites — for the inheritance facts. Uses
+    /// all-passing features so the Specifications shape (generateBlankOnFailedTests) has content.
+    /// </summary>
+    public static (string SpecificationsUri, string TestRunUri) GenerateBothReportsWithToggleDefaults(
+        string tempDir, string outputDir, string baseName, Action<ReportConfigurationOptions> configure)
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Inheritance Feature",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "t1", DisplayName = "Inherited scenario", IsHappyPath = true,
+                        Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                        Steps =
+                        [
+                            new ScenarioStep { Keyword = "Given", Text = "a valid customer preference request", Status = ExecutionResult.Passed },
+                            new ScenarioStep { Keyword = "Then", Text = "the preferences are saved", Status = ExecutionResult.Passed }
+                        ]
+                    }
+                ]
+            }
+        };
+        var diagrams = new[] { new DiagramAsCode("t1", "", WideDatabaseParticipantPlantUmlSource) };
+
+        var options = new ReportConfigurationOptions();
+        configure(options);
+
+        var specPath = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            Kronikol.Stylesheets.VioletThemeStyleSheet, Path.Combine(tempDir, $"{baseName}_Specifications.html"),
+            "Service Specifications", false,
+            generateBlankOnFailedTests: true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true));
+
+        var testRunPath = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, $"{baseName}_TestRunReport.html"), "Test Run Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
+
+        File.Copy(specPath, Path.Combine(outputDir, $"{baseName}_Specifications.html"), true);
+        File.Copy(testRunPath, Path.Combine(outputDir, $"{baseName}_TestRunReport.html"), true);
+        return (new Uri(specPath).AbsoluteUri, new Uri(testRunPath).AbsoluteUri);
+    }
 
     public static string GenerateReportWithWideDatabaseParticipant(string tempDir, string outputDir, string fileName)
     {

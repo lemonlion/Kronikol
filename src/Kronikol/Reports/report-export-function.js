@@ -18,19 +18,20 @@ function clear_all_filters() {
     var cw = document.getElementById('custom-duration-wrap');
     if (cw) cw.style.display = 'none';
     for (var i = 0; i < c.items.length; i++) c.items[i].dur = false;
-    // Clear dependencies
+    // Clear dependencies — the mode resets to the report's SEEDED default, not a literal
+    // (a hard-coded 'AND' would silently un-configure a report generated with an OR default)
     document.querySelectorAll('.dependency-toggle.dependency-active').forEach(function(b) { b.classList.remove('dependency-active'); });
-    _depMode = 'AND';
+    _depMode = _depModeDefault;
     var depModeBtn = document.querySelector('.dep-mode-toggle');
-    if (depModeBtn) depModeBtn.textContent = 'AND';
+    if (depModeBtn) depModeBtn.textContent = _depMode;
     for (var i = 0; i < c.items.length; i++) c.items[i].dep = false;
     // Clear categories
     document.querySelectorAll('.category-toggle.category-active').forEach(function(b) { b.classList.remove('category-active'); });
     var allCatBtn = document.querySelector('.category-toggle[data-category=""]');
     if (allCatBtn) allCatBtn.classList.add('category-active');
-    if (typeof _catMode !== 'undefined') _catMode = 'OR';
+    if (typeof _catMode !== 'undefined') _catMode = _catModeDefault;
     var catModeBtn = document.querySelector('.cat-mode-toggle');
-    if (catModeBtn) catModeBtn.textContent = 'OR';
+    if (catModeBtn) catModeBtn.textContent = _catMode;
     for (var i = 0; i < c.items.length; i++) c.items[i].cat = false;
     // Clear deep-search state (chip + in-flight queries)
     if (window._kronDeepReset) window._kronDeepReset();

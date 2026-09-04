@@ -348,7 +348,9 @@ public class DiagramContextMenuTests
     [Fact]
     public void Globals_truncateLines_defaults_to_40()
     {
-        Assert.Contains("window._truncateLines = 40", _notesScript);
+        // Since the toggle defaults (3.0.80) the literal seeds a default the global reads.
+        Assert.Contains("window._truncateLinesDefault = 40", _notesScript);
+        Assert.Contains("window._truncateLines = window._truncateLinesDefault", _notesScript);
     }
 
     [Fact]

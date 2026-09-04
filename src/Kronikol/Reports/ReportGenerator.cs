@@ -175,6 +175,7 @@ public static class ReportGenerator
         var diagrams = DefaultDiagramsFetcher.GetDiagramsFetcher(fetcherOptions)();
 
         var internalFlowDataScript = "";
+        var internalFlowDataScriptSpecifications = "";
         Dictionary<string, InternalFlowSegment>? wholeTestSegments = null;
         Dictionary<string, InternalFlowSegment>? perBoundarySegments = null;
         RequestResponseLog[]? trackedLogs = null;
@@ -190,15 +191,26 @@ public static class ReportGenerator
 
             perBoundarySegments = InternalFlowSegmentBuilder.BuildSegments(trackedLogs, spans);
 
-            internalFlowDataScript = DiagramContextMenu.GetInternalFlowConfigScript(options.InternalFlowHasDataBehavior)
+            string BuildFlowScript(InternalFlowTab startTab) =>
+                DiagramContextMenu.GetInternalFlowConfigScript(options.InternalFlowHasDataBehavior)
                 + InternalFlowHtmlGenerator.GenerateSegmentDataScript(
-                perBoundarySegments,
-                options.InternalFlowDiagramStyle,
-                options.InternalFlowShowFlameChart,
-                options.InternalFlowFlameChartPosition,
-                options.InternalFlowNoDataBehavior,
-                options.InternalFlowSpanGranularity,
-                options.InternalFlowActivitySources);
+                    perBoundarySegments,
+                    options.InternalFlowDiagramStyle,
+                    options.InternalFlowShowFlameChart,
+                    options.InternalFlowFlameChartPosition,
+                    options.InternalFlowNoDataBehavior,
+                    options.InternalFlowSpanGranularity,
+                    options.InternalFlowActivitySources,
+                    startTab);
+
+            // The popup data script is shared by both HTML reports; only a Specifications
+            // override that actually changes the internal-flow tab pays for a second build.
+            var testRunTab = ReportToggleDefaultsResolver.Resolve(options, specifications: false).InternalFlowTab;
+            var specificationsTab = ReportToggleDefaultsResolver.Resolve(options, specifications: true).InternalFlowTab;
+            internalFlowDataScript = BuildFlowScript(testRunTab);
+            internalFlowDataScriptSpecifications = specificationsTab == testRunTab
+                ? internalFlowDataScript
+                : BuildFlowScript(specificationsTab);
 
             if (options.WholeTestFlowVisualization != WholeTestFlowVisualization.None)
             {
@@ -251,12 +263,12 @@ public static class ReportGenerator
 
         if (options.GenerateSpecificationsReport)
         {
-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache));
+            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true)));
         }
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false)));
         }
 
         if (options.GenerateSpecificationsData)
@@ -405,6 +417,87 @@ public static class ReportGenerator
         return string.IsNullOrEmpty(prefix) ? "Test Run Report" : $"{prefix} - Test Run Report";
     }
 
+    /// <summary>The JS state string for a details radio state ('truncated' / 'expanded' / 'collapsed').</summary>
+    private static string DetailsStateJs(ReportDetailsState state) => state switch
+    {
+        ReportDetailsState.Expanded => "expanded",
+        ReportDetailsState.Collapsed => "collapsed",
+        _ => "truncated"
+    };
+
+    /// <summary>
+    /// The Details radio group + truncate-lines dropdown, with the configured start state computed
+    /// into the markup: which button carries <c>details-active</c>, which <c>&lt;option&gt;</c> is
+    /// <c>selected</c> (the list is built from <see cref="TruncateLineCount"/>, the single source of
+    /// truth for the presets), and <c>disabled</c> on the select whenever the state is not
+    /// truncated — <c>syncRadioButtons</c> disables it on every state change, so the markup must
+    /// agree before the first click. Report and scenario level differ only in their handlers.
+    /// </summary>
+    private static string BuildDetailsRadio(ResolvedToggleDefaults toggles, bool scenarioLevel)
+    {
+        string Active(ReportDetailsState state) => toggles.Details == state ? " details-active" : "";
+        string Click(string state) => scenarioLevel
+            ? $"window._setAllNotes(this,'{state}')"
+            : $"window._setReportDetails('{state}')";
+        var change = scenarioLevel ? "window._setScenarioTruncateLines(this)" : "window._setTruncateLines(this)";
+        var disabled = toggles.Details == ReportDetailsState.Truncated ? "" : " disabled";
+        var options = string.Concat(Enum.GetValues<TruncateLineCount>().Select(v =>
+            $"<option value=\"{(int)v}\"{(v == toggles.TruncateLines ? " selected" : "")}>{(int)v}</option>"));
+        return "<span class=\"details-radio\"><span class=\"details-radio-label\">Details:</span>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Expanded)}\" data-state=\"expanded\" onclick=\"{Click("expanded")}\">Expand</button>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Collapsed)}\" data-state=\"collapsed\" onclick=\"{Click("collapsed")}\">Collapse</button>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Truncated)}\" data-state=\"truncated\" onclick=\"{Click("truncated")}\">Truncate</button>"
+            + $"<select class=\"truncate-lines-select\" autocomplete=\"off\"{disabled} onchange=\"{change}\">{options}</select>"
+            + "<span class=\"truncate-lines-label\">lines</span></span>";
+    }
+
+    /// <summary>
+    /// One Shown/Hidden filter toggle button (headers / assertions / steps / databases) with the
+    /// configured start state computed into class, <c>data-shown</c> and label — the label must
+    /// match what <c>syncToggleBtn</c> derives from the toggle name on every later click.
+    /// </summary>
+    private static string BuildFilterToggleButton(string toggleName, bool shown, bool scenarioLevel)
+    {
+        var label = char.ToUpperInvariant(toggleName[0]) + toggleName[1..];
+        var handler = scenarioLevel ? $"window._toggleScenario{label}(this)" : $"window._toggle{label}(this)";
+        return $"<button class=\"details-radio-btn toggle-btn{(shown ? " details-active" : "")}\" data-toggle=\"{toggleName}\" data-shown=\"{(shown ? "true" : "false")}\" onclick=\"{handler}\">{label} {(shown ? "Shown" : "Hidden")}</button>";
+    }
+
+    /// <summary>
+    /// Which diagram-type tab a scenario's diagram section starts on: the requested tab where that
+    /// view exists for this scenario, else the built-in fallback order (sequence, then activity,
+    /// then flame) — so a configured tab can never select an absent view.
+    /// </summary>
+    private static DiagramTabKind ResolveDiagramTab(DiagramTabKind requested, bool hasSeq, bool hasActivity, bool hasFlame)
+    {
+        if (requested == DiagramTabKind.Sequence && hasSeq) return DiagramTabKind.Sequence;
+        if (requested == DiagramTabKind.Activity && hasActivity) return DiagramTabKind.Activity;
+        if (requested == DiagramTabKind.FlameChart && hasFlame) return DiagramTabKind.FlameChart;
+        return hasSeq ? DiagramTabKind.Sequence : hasActivity ? DiagramTabKind.Activity : DiagramTabKind.FlameChart;
+    }
+
+    /// <summary>
+    /// The scenario-level diagram toolbar controls (spacer, Details radio, filter toggles, note
+    /// format dropdown). Built once per report — the five scenario toolbar emission sites all use
+    /// this builder, so they cannot drift (the same contract as the note-format select).
+    /// </summary>
+    private static string BuildScenarioDiagramToolbar(ResolvedToggleDefaults toggles,
+        bool includeAssertions, bool includeSteps, bool includeDatabases, string scenarioNoteFormatSelect)
+    {
+        var sb = new StringBuilder();
+        sb.Append("<span class=\"diagram-toggle-spacer\"></span>");
+        sb.Append(BuildDetailsRadio(toggles, scenarioLevel: true));
+        sb.Append(BuildFilterToggleButton("headers", toggles.HeadersShown, scenarioLevel: true));
+        if (includeAssertions)
+            sb.Append(BuildFilterToggleButton("assertions", toggles.AssertionsShown, scenarioLevel: true));
+        if (includeSteps)
+            sb.Append(BuildFilterToggleButton("steps", toggles.StepsShown, scenarioLevel: true));
+        if (includeDatabases)
+            sb.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: true));
+        sb.Append(scenarioNoteFormatSelect);
+        return sb.ToString();
+    }
+
     public static string GenerateHtmlReport(DefaultDiagramsFetcher.DiagramAsCode[] diagrams,
         Feature[] features,
         DateTime startRunTime,
@@ -442,10 +535,16 @@ public static class ReportGenerator
         bool collapseRepeatedStepKeywords = true,
         NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json,
         bool fullSearchIndex = true,
-        SearchIndex.SearchIndexBuildCache? searchIndexCache = null)
+        SearchIndex.SearchIndexBuildCache? searchIndexCache = null,
+        ResolvedToggleDefaults? toggleDefaults = null)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
+
+        // The resolved toggle-defaults record wins when provided; the legacy notePayloadFormat
+        // parameter (kept for compatibility — tests and helpers call it directly) folds into the
+        // built-ins otherwise.
+        var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn with { NotePayloadFormat = notePayloadFormat };
 
         var scenarioFeatureMapHelper = LoadResource("report-scenario-feature-map-helper.js");
 
@@ -461,9 +560,15 @@ public static class ReportGenerator
         // kron-search-index blob is absent (FullSearchIndex=false / older reports).
         var searchIndexClientScript = LoadResource("report-search-index.js");
 
-        var dependencyFilterFunction = LoadResource("report-dependency-filter-function.js");
+        // The filter-mode scripts seed their AND/OR start mode from the resolved toggle defaults;
+        // the substitution happens on the returned copy, never in the resource cache.
+        var depModeText = toggles.DependencyFilterMode == FilterCombinationMode.Or ? "OR" : "AND";
+        var catModeText = toggles.CategoryFilterMode == FilterCombinationMode.And ? "AND" : "OR";
+        var dependencyFilterFunction = LoadResource("report-dependency-filter-function.js")
+            .Replace("__DEP_MODE_DEFAULT__", depModeText);
 
-        var categoryFilterFunction = LoadResource("report-category-filter-function.js");
+        var categoryFilterFunction = LoadResource("report-category-filter-function.js")
+            .Replace("__CAT_MODE_DEFAULT__", catModeText);
 
         var statusFilterFunction = LoadResource("report-status-filter-function.js");
 
@@ -591,7 +696,7 @@ public static class ReportGenerator
         // toolbar variants all use the same string, so they cannot drift. The
         // control is label-free (kept compact deliberately); aria-label/title
         // carry its meaning instead.
-        var yamlDefaultSelected = notePayloadFormat == NotePayloadFormat.Yaml;
+        var yamlDefaultSelected = toggles.NotePayloadFormat == NotePayloadFormat.Yaml;
         var noteFormatOptions = $"<option value=\"json\"{(yamlDefaultSelected ? "" : " selected")}>JSON</option><option value=\"yaml\"{(yamlDefaultSelected ? " selected" : "")}>YAML</option>";
         var reportNoteFormatSelect = hasJsonNotePayloads
             ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Note payload format\" title=\"Note payload format\" onchange=\"window._setNoteFormat(this)\">{noteFormatOptions}</select>"
@@ -599,8 +704,14 @@ public static class ReportGenerator
         var scenarioNoteFormatSelect = hasJsonNotePayloads
             ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Note payload format\" title=\"Note payload format\" onchange=\"window._setScenarioNoteFormat(this)\">{noteFormatOptions}</select>"
             : "";
+        // The full scenario-level control run, built once (see BuildScenarioDiagramToolbar). The
+        // no-filters variant serves the flow-only branch, which has no sequence content to filter.
+        var scenarioToolbarControls = BuildScenarioDiagramToolbar(toggles,
+            hasAssertionNotes, hasStepDelimiters, hasDatabaseParticipants, scenarioNoteFormatSelect);
+        var scenarioToolbarControlsNoFilters = BuildScenarioDiagramToolbar(toggles,
+            includeAssertions: false, includeSteps: false, includeDatabases: false, scenarioNoteFormatSelect);
         var plantUmlBrowserScript = isPlantUmlBrowser ? DiagramContextMenu.GetPlantUmlBrowserRenderScript(browserRenderWorkers, browserRenderCacheMegabytes, browserFragmentMaxHeight) : "";
-        var collapsibleNotesScript = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesScript(notePayloadFormat) : "";
+        var collapsibleNotesScript = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesScript(toggles) : "";
         var collapsibleNotesStyles = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesStyles() : "";
         var contextMenuScript = hasInteractiveDiagrams || internalFlowTracking ? DiagramContextMenu.GetContextMenuScript() : "";
         var contextMenuStyles = hasInteractiveDiagrams || internalFlowTracking ? DiagramContextMenu.GetStyles() : "";
@@ -695,7 +806,7 @@ public static class ReportGenerator
             var hasAnySteps = features.Any(f => f.Scenarios.Any(s => s.Steps is { Length: > 0 } || s.BackgroundSteps is { Length: > 0 }));
             var hasAnyDurations = features.Any(f => f.Scenarios.Any(s => s.Duration.HasValue));
             var nextCol = 5;
-            body.Append("<details class=\"features-summary-details\"><summary class=\"h2\">Features Summary</summary>");
+            body.Append($"<details class=\"features-summary-details\"{(toggles.FeaturesSummaryOpen ? " open" : "")}><summary class=\"h2\">Features Summary</summary>");
             body.Append("<div class=\"features-summary-table-wrapper\">");
             body.Append("<table class=\"feature-summary-table\"><thead><tr>");
             body.Append("<th onclick=\"sort_table(0)\">Feature</th>");
@@ -890,7 +1001,7 @@ public static class ReportGenerator
 
         if (allDependencies.Count > 0)
         {
-            body.Append("""<div class="dependency-filters"><span class="dependency-filters-label">Dependencies:</span><button class="dep-mode-toggle" title="AND: show scenarios matching ALL selected dependencies. OR: show scenarios matching ANY selected dependency. Click to toggle." onclick="toggle_dep_mode(this)">AND</button>""");
+            body.Append($"""<div class="dependency-filters"><span class="dependency-filters-label">Dependencies:</span><button class="dep-mode-toggle" title="AND: show scenarios matching ALL selected dependencies. OR: show scenarios matching ANY selected dependency. Click to toggle." onclick="toggle_dep_mode(this)">{depModeText}</button>""");
             foreach (var dep in allDependencies.OrderBy(d => d))
             {
                 body.Append($"""<button class="dependency-toggle" data-dependency="{System.Net.WebUtility.HtmlEncode(dep)}" onclick="toggle_dependency(this)">{System.Net.WebUtility.HtmlEncode(dep)}</button>""");
@@ -907,7 +1018,7 @@ public static class ReportGenerator
             .ToArray();
         if (allCategories.Length > 0)
         {
-            body.Append("""<div class="category-filters"><span class="category-filters-label">Categories:</span><button class="cat-mode-toggle" title="OR: show scenarios matching ANY selected category. AND: show scenarios matching ALL selected categories. Click to toggle." onclick="toggle_cat_mode(this)">OR</button>""");
+            body.Append($"""<div class="category-filters"><span class="category-filters-label">Categories:</span><button class="cat-mode-toggle" title="OR: show scenarios matching ANY selected category. AND: show scenarios matching ALL selected categories. Click to toggle." onclick="toggle_cat_mode(this)">{catModeText}</button>""");
             body.Append("""<button class="category-toggle category-active" data-category="" onclick="toggle_category(this)">All</button>""");
             foreach (var cat in allCategories)
             {
@@ -924,23 +1035,33 @@ public static class ReportGenerator
 
         // Toolbar row: expand buttons left, Details/Headers right
         body.Append("""<div class="toolbar-row">""");
-        body.Append("""<div class="toolbar-left"><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.feature', 'Expand All Features', 'Collapse All Features')">Expand All Features</button><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.scenario', 'Expand All Scenarios', 'Collapse All Scenarios')">Expand All Scenarios</button>""");
+        // The expand-all buttons flip by label, so a seeded-expanded start must seed the
+        // matching flip label ("Collapse All …") or the first click would be a no-op.
+        var featuresBtnLabel = toggles.FeaturesExpanded ? "Collapse All Features" : "Expand All Features";
+        var scenariosBtnLabel = toggles.ScenariosExpanded ? "Collapse All Scenarios" : "Expand All Scenarios";
+        body.Append($"""<div class="toolbar-left"><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.feature', 'Expand All Features', 'Collapse All Features')">{featuresBtnLabel}</button><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.scenario', 'Expand All Scenarios', 'Collapse All Scenarios')">{scenariosBtnLabel}</button>""");
+        // Seeded panel visibility: the two panels are mutually exclusive; when both are
+        // configured visible the timeline wins (it exists in both reports), with the
+        // component diagram one click away. A panel that is not emitted leaves its setting
+        // inert — so a timeline-less report can still seed the component diagram visible.
+        var showTimelinePanel = toggles.ScenarioTimelineVisible && hasDurations;
+        var showComponentPanel = toggles.ComponentDiagramVisible && !string.IsNullOrEmpty(componentDiagramPlantUml) && !showTimelinePanel;
         if (hasDurations)
-            body.Append("""<button class="timeline-toggle" onclick="toggle_timeline(this)">Scenario Timeline</button>""");
+            body.Append($"""<button class="timeline-toggle{(showTimelinePanel ? " timeline-toggle-active" : "")}" onclick="toggle_timeline(this)">Scenario Timeline</button>""");
         if (!string.IsNullOrEmpty(componentDiagramPlantUml))
-            body.Append("""<button class="timeline-toggle" onclick="toggle_component_diagram(this)">Component Diagram</button>""");
+            body.Append($"""<button class="timeline-toggle{(showComponentPanel ? " timeline-toggle-active" : "")}" onclick="toggle_component_diagram(this)">Component Diagram</button>""");
         body.Append("</div>");
         body.Append("""<div class="toolbar-right">""");
         if (isPlantUmlBrowser)
         {
-            body.Append("""<span class="details-radio"><span class="details-radio-label">Details:</span><button class="details-radio-btn" data-state="expanded" onclick="window._setReportDetails('expanded')">Expand</button><button class="details-radio-btn" data-state="collapsed" onclick="window._setReportDetails('collapsed')">Collapse</button><button class="details-radio-btn details-active" data-state="truncated" onclick="window._setReportDetails('truncated')">Truncate</button><select class="truncate-lines-select" autocomplete="off" onchange="window._setTruncateLines(this)"><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40" selected>40</option><option value="50">50</option><option value="60">60</option><option value="80">80</option><option value="100">100</option></select><span class="truncate-lines-label">lines</span></span>""");
-            body.Append("""<button class="details-radio-btn toggle-btn details-active" data-toggle="headers" data-shown="true" onclick="window._toggleHeaders(this)">Headers Shown</button>""");
+            body.Append(BuildDetailsRadio(toggles, scenarioLevel: false));
+            body.Append(BuildFilterToggleButton("headers", toggles.HeadersShown, scenarioLevel: false));
             if (hasAssertionNotes)
-                body.Append("""<button class="details-radio-btn toggle-btn" data-toggle="assertions" data-shown="false" onclick="window._toggleAssertions(this)">Assertions Hidden</button>""");
+                body.Append(BuildFilterToggleButton("assertions", toggles.AssertionsShown, scenarioLevel: false));
             if (hasStepDelimiters)
-                body.Append("""<button class="details-radio-btn toggle-btn details-active" data-toggle="steps" data-shown="true" onclick="window._toggleSteps(this)">Steps Shown</button>""");
+                body.Append(BuildFilterToggleButton("steps", toggles.StepsShown, scenarioLevel: false));
             if (hasDatabaseParticipants)
-                body.Append("""<button class="details-radio-btn toggle-btn details-active" data-toggle="databases" data-shown="true" onclick="window._toggleDatabases(this)">Databases Shown</button>""");
+                body.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: false));
             body.Append(reportNoteFormatSelect);
         }
         body.Append("</div>");
@@ -1016,7 +1137,7 @@ public static class ReportGenerator
             foreach (var scenario in feature.Scenarios)
                 scenarioFeatureLookup[scenario.Id] = feature.DisplayName;
 
-            body.Append("<details class=\"failure-clusters\" open>");
+            body.Append($"<details class=\"failure-clusters\"{(toggles.FailureClustersOpen ? " open" : "")}>");
             body.Append($"<summary>Failure Clusters ({clusters.Length} root cause{(clusters.Length == 1 ? "" : "s")})</summary>");
             foreach (var cluster in clusters)
             {
@@ -1034,7 +1155,7 @@ public static class ReportGenerator
         }
 
         if (includeTestRunData && diagnostics is { Count: > 0 })
-            body.Append(RenderReportDiagnostics(diagnostics));
+            body.Append(RenderReportDiagnostics(diagnostics, toggles.DiagnosticsOpen));
 
         // Scenario timeline / Gantt (hidden by default)
         if (hasDurations)
@@ -1048,7 +1169,7 @@ public static class ReportGenerator
             if (timelineScenarios.Length > 0)
             {
                 var maxDuration = timelineScenarios.Max(x => x.Scenario.Duration!.Value.TotalMilliseconds);
-                body.Append("<div id=\"scenario-timeline\" class=\"scenario-timeline\" style=\"display:none\">");
+                body.Append($"<div id=\"scenario-timeline\" class=\"scenario-timeline\"{(showTimelinePanel ? "" : " style=\"display:none\"")}>");
                 body.Append("<div class=\"timeline-header\">Scenario Timeline <span class=\"timeline-info\" title=\"The Scenario Timeline shows every test scenario ordered by duration (longest first). Each bar is proportional to the scenario's elapsed time, colour-coded by result: green = passed, red = failed, yellow = skipped. Use it to quickly spot slow tests, compare relative durations, and identify performance outliers across the entire test run.\">&#x1F6C8;</span></div>");
                 foreach (var (featureName, scenario) in timelineScenarios)
                 {
@@ -1077,7 +1198,7 @@ public static class ReportGenerator
             var compDiagramId = $"puml-{plantUmlBrowserCounter++}";
             var compDiagramCompressed = InternalFlowHtmlGenerator.CompressToBase64(componentDiagramPlantUml);
             diagramDataMap[compDiagramId] = compDiagramCompressed;
-            body.Append($"""<div id="component-diagram" class="component-diagram-section" style="display:none"><div class="plantuml-browser" id="{compDiagramId}" data-diagram-type="plantuml"></div></div>""");
+            body.Append($"""<div id="component-diagram" class="component-diagram-section"{(showComponentPanel ? "" : " style=\"display:none\"")}><div class="plantuml-browser" id="{compDiagramId}" data-diagram-type="plantuml"></div></div>""");
         }
 
         body.Append("<div id=\"report-content\">");
@@ -1087,7 +1208,7 @@ public static class ReportGenerator
             var featureHasFailures = feature.Scenarios.Any(s => s.Result == ExecutionResult.Failed);
             var featureAllSkipped = !featureHasFailures && feature.Scenarios.All(s => s.Result == ExecutionResult.Skipped);
             body.Append($"""
-                     <details class="feature">
+                     <details class="feature"{(toggles.FeaturesExpanded ? " open" : "")}>
                         <summary class="h2{(featureHasFailures ? " failed" : featureAllSkipped ? " skipped" : "")}">{feature.DisplayName}{(feature.Endpoint is null ? "" : $" <div class=\"endpoint\">{System.Net.WebUtility.HtmlEncode(feature.Endpoint)}</div>")}{(feature.Labels is { Length: > 0 } fl ? string.Concat(fl.Select(l => $" <span class=\"label\">{System.Net.WebUtility.HtmlEncode(l)}</span>")) : "")}</summary>
                      """);
 
@@ -1145,7 +1266,7 @@ public static class ReportGenerator
                     currentRule = scenario.Rule;
                     if (currentRule is not null)
                     {
-                        body.Append($"<details class=\"rule\" open><summary class=\"h2-5\">{System.Net.WebUtility.HtmlEncode(currentRule)}</summary>");
+                        body.Append($"<details class=\"rule\"{(toggles.RulesOpen ? " open" : "")}><summary class=\"h2-5\">{System.Net.WebUtility.HtmlEncode(currentRule)}</summary>");
                         ruleOpen = true;
                     }
                     else
@@ -1177,7 +1298,9 @@ public static class ReportGenerator
                         separateBackgroundSteps: separateBackgroundSteps,
                         collapseRepeatedStepKeywords: collapseRepeatedStepKeywords,
                         scenarioNoteFormatSelect: scenarioNoteFormatSelect,
-                        searchIndexPieces: searchIndexPieces);
+                        searchIndexPieces: searchIndexPieces,
+                        scenarioToolbarControls: scenarioToolbarControls,
+                        toggleDefaults: toggles);
                     continue;
                 }
 
@@ -1247,7 +1370,7 @@ public static class ReportGenerator
                 };
 
                 body.Append($"""
-                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{depsAttr}{statusAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr} id="{anchorId}" tabindex="0">
+                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr} id="{anchorId}" tabindex="0">
                             <summary class="h3{(failed ? " failed" : skipped ? " skipped" : "")}" title="{scenarioTooltip}">{scenario.DisplayName}{(scenario.IsHappyPath ? " <span class=\"label\">Happy Path</span>" : "")}{scenarioLabelsHtml}{durationBadge}<button class="copy-scenario-name" title="Copy scenario name" data-scenario-name="{encodedName}" onclick="copy_scenario_name(this, event)">&#128203;</button><a class="scenario-link" href="#{anchorId}" title="Link to this scenario" onclick="event.stopPropagation()">&#128279;</a></summary>
                          """);
 
@@ -1282,7 +1405,8 @@ public static class ReportGenerator
                 if (!string.IsNullOrWhiteSpace(scenario.Description))
                     body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(scenario.Description)}</div>""");
 
-                RenderScenarioStepSections(body, scenario, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords);
+                RenderScenarioStepSections(body, scenario, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords,
+                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen);
 
                 if (scenario.Attachments is { Length: > 0 })
                 {
@@ -1320,27 +1444,24 @@ public static class ReportGenerator
 
                 if (hasSequenceDiagrams || hasWholeTestFlow)
                 {
-                    body.Append("<details class=\"example-diagrams\" open>");
+                    var hasActivityView = hasWholeTestFlow && !string.IsNullOrEmpty(wholeTestContent!.Value.ActivityHtml);
+                    var hasFlameView = hasWholeTestFlow && !string.IsNullOrEmpty(wholeTestContent!.Value.FlameHtml);
+                    var activeTab = ResolveDiagramTab(toggles.DiagramTab, hasSequenceDiagrams, hasActivityView, hasFlameView);
+
+                    body.Append($"<details class=\"example-diagrams\"{(toggles.DiagramsSectionOpen ? " open" : "")}>");
 
                     if (hasWholeTestFlow && hasSequenceDiagrams)
                     {
                         body.Append("<summary class=\"h4\">Diagrams</summary>");
                         body.Append("<div class=\"diagram-toggle\">");
-                        body.Append("<button class=\"diagram-toggle-btn diagram-toggle-active\" data-dtype=\"seq\">Sequence Diagrams</button>");
-                        if (!string.IsNullOrEmpty(wholeTestContent!.Value.ActivityHtml))
-                            body.Append("<button class=\"diagram-toggle-btn\" data-dtype=\"activity\">Activity Diagrams</button>");
-                        if (!string.IsNullOrEmpty(wholeTestContent!.Value.FlameHtml))
-                            body.Append("<button class=\"diagram-toggle-btn\" data-dtype=\"flame\">Flame Chart</button>");
+                        body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Sequence ? " diagram-toggle-active" : "")}\" data-dtype=\"seq\">Sequence Diagrams</button>");
+                        if (hasActivityView)
+                            body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Activity ? " diagram-toggle-active" : "")}\" data-dtype=\"activity\">Activity Diagrams</button>");
+                        if (hasFlameView)
+                            body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.FlameChart ? " diagram-toggle-active" : "")}\" data-dtype=\"flame\">Flame Chart</button>");
                         body.Append(spanWarning);
                         if (isPlantUmlBrowser)
-                            body.Append("<span class=\"diagram-toggle-spacer\"></span><span class=\"details-radio\"><span class=\"details-radio-label\">Details:</span><button class=\"details-radio-btn\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\">Expand</button><button class=\"details-radio-btn\" data-state=\"collapsed\" onclick=\"window._setAllNotes(this,'collapsed')\">Collapse</button><button class=\"details-radio-btn details-active\" data-state=\"truncated\" onclick=\"window._setAllNotes(this,'truncated')\">Truncate</button><select class=\"truncate-lines-select\" autocomplete=\"off\" onchange=\"window._setScenarioTruncateLines(this)\"><option value=\"3\">3</option><option value=\"4\">4</option><option value=\"5\">5</option><option value=\"10\">10</option><option value=\"15\">15</option><option value=\"20\">20</option><option value=\"25\">25</option><option value=\"30\">30</option><option value=\"35\">35</option><option value=\"40\" selected>40</option><option value=\"50\">50</option><option value=\"60\">60</option><option value=\"80\">80</option><option value=\"100\">100</option></select><span class=\"truncate-lines-label\">lines</span></span><button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"headers\" data-shown=\"true\" onclick=\"window._toggleScenarioHeaders(this)\">Headers Shown</button>");
-                        if (hasAssertionNotes)
-                            body.Append("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"assertions\" data-shown=\"false\" onclick=\"window._toggleScenarioAssertions(this)\">Assertions Hidden</button>");
-                        if (hasStepDelimiters)
-                            body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" onclick=\"window._toggleScenarioSteps(this)\">Steps Shown</button>");
-                        if (hasDatabaseParticipants)
-                            body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"databases\" data-shown=\"true\" onclick=\"window._toggleScenarioDatabases(this)\">Databases Shown</button>");
-                        body.Append(scenarioNoteFormatSelect);
+                            body.Append(scenarioToolbarControls);
                         body.Append("</div>");
                     }
                     else if (hasSequenceDiagrams)
@@ -1349,33 +1470,25 @@ public static class ReportGenerator
                         if (isPlantUmlBrowser)
                         {
                             body.Append("<div class=\"diagram-toggle\">");
-                            body.Append("<span class=\"diagram-toggle-spacer\"></span><span class=\"details-radio\"><span class=\"details-radio-label\">Details:</span><button class=\"details-radio-btn\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\">Expand</button><button class=\"details-radio-btn\" data-state=\"collapsed\" onclick=\"window._setAllNotes(this,'collapsed')\">Collapse</button><button class=\"details-radio-btn details-active\" data-state=\"truncated\" onclick=\"window._setAllNotes(this,'truncated')\">Truncate</button><select class=\"truncate-lines-select\" autocomplete=\"off\" onchange=\"window._setScenarioTruncateLines(this)\"><option value=\"3\">3</option><option value=\"4\">4</option><option value=\"5\">5</option><option value=\"10\">10</option><option value=\"15\">15</option><option value=\"20\">20</option><option value=\"25\">25</option><option value=\"30\">30</option><option value=\"35\">35</option><option value=\"40\" selected>40</option><option value=\"50\">50</option><option value=\"60\">60</option><option value=\"80\">80</option><option value=\"100\">100</option></select><span class=\"truncate-lines-label\">lines</span></span><button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"headers\" data-shown=\"true\" onclick=\"window._toggleScenarioHeaders(this)\">Headers Shown</button>");
-                            if (hasAssertionNotes)
-                                body.Append("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"assertions\" data-shown=\"false\" onclick=\"window._toggleScenarioAssertions(this)\">Assertions Hidden</button>");
-                            if (hasStepDelimiters)
-                                body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" onclick=\"window._toggleScenarioSteps(this)\">Steps Shown</button>");
-                            if (hasDatabaseParticipants)
-                                body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"databases\" data-shown=\"true\" onclick=\"window._toggleScenarioDatabases(this)\">Databases Shown</button>");
-                            body.Append(scenarioNoteFormatSelect);
+                            body.Append(scenarioToolbarControls);
                             body.Append("</div>");
                         }
                     }
                     else
                     {
                         // Only whole-test-flow, no sequence diagrams
-                        var hasActivity = !string.IsNullOrEmpty(wholeTestContent!.Value.ActivityHtml);
-                        var hasFlame = !string.IsNullOrEmpty(wholeTestContent!.Value.FlameHtml);
+                        var hasActivity = hasActivityView;
+                        var hasFlame = hasFlameView;
                         if (hasActivity && hasFlame)
                         {
                             body.Append("<summary class=\"h4\">Diagrams</summary>");
                             body.Append("<div class=\"diagram-toggle\">");
-                            body.Append("<button class=\"diagram-toggle-btn diagram-toggle-active\" data-dtype=\"activity\">Activity Diagrams</button>");
-                            body.Append("<button class=\"diagram-toggle-btn\" data-dtype=\"flame\">Flame Chart</button>");
+                            body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Activity ? " diagram-toggle-active" : "")}\" data-dtype=\"activity\">Activity Diagrams</button>");
+                            body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.FlameChart ? " diagram-toggle-active" : "")}\" data-dtype=\"flame\">Flame Chart</button>");
                             body.Append(spanWarning);
                             if (isPlantUmlBrowser)
                             {
-                                body.Append("<span class=\"diagram-toggle-spacer\"></span><span class=\"details-radio\"><span class=\"details-radio-label\">Details:</span><button class=\"details-radio-btn\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\">Expand</button><button class=\"details-radio-btn\" data-state=\"collapsed\" onclick=\"window._setAllNotes(this,'collapsed')\">Collapse</button><button class=\"details-radio-btn details-active\" data-state=\"truncated\" onclick=\"window._setAllNotes(this,'truncated')\">Truncate</button><select class=\"truncate-lines-select\" autocomplete=\"off\" onchange=\"window._setScenarioTruncateLines(this)\"><option value=\"3\">3</option><option value=\"4\">4</option><option value=\"5\">5</option><option value=\"10\">10</option><option value=\"15\">15</option><option value=\"20\">20</option><option value=\"25\">25</option><option value=\"30\">30</option><option value=\"35\">35</option><option value=\"40\" selected>40</option><option value=\"50\">50</option><option value=\"60\">60</option><option value=\"80\">80</option><option value=\"100\">100</option></select><span class=\"truncate-lines-label\">lines</span></span><button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"headers\" data-shown=\"true\" onclick=\"window._toggleScenarioHeaders(this)\">Headers Shown</button>");
-                                body.Append(scenarioNoteFormatSelect);
+                                body.Append(scenarioToolbarControlsNoFilters);
                             }
                             body.Append("</div>");
                         }
@@ -1392,7 +1505,7 @@ public static class ReportGenerator
                     if (hasSequenceDiagrams)
                     {
                         var seqWrap = hasWholeTestFlow;
-                        if (seqWrap) body.Append("<div class=\"diagram-view diagram-view-seq\">");
+                        if (seqWrap) body.Append($"<div class=\"diagram-view diagram-view-seq\"{(activeTab != DiagramTabKind.Sequence ? " style=\"display:none\"" : "")}>");
 
                         var lazyLoadAttr = lazyLoadImages ? " loading=\"lazy\"" : "";
                         var rawLabel = "Raw Plant UML";
@@ -1422,7 +1535,7 @@ public static class ReportGenerator
                             else
                             {
                                 body.Append($"""
-                                         <details class="example">
+                                         <details class="example"{(toggles.RawPlantUmlOpen ? " open" : "")}>
                                             <summary class="example-image">
                                                 <img{lazyLoadAttr} src="{diagram.ImgSrc}">
                                             </summary>
@@ -1441,8 +1554,8 @@ public static class ReportGenerator
                     if (hasWholeTestFlow)
                     {
                         var wtf = wholeTestContent!.Value;
-                        var hideActivity = hasSequenceDiagrams; // hidden when seq is default
-                        var hideFlame = hasSequenceDiagrams || (!string.IsNullOrEmpty(wtf.ActivityHtml) && !hasSequenceDiagrams);
+                        var hideActivity = activeTab != DiagramTabKind.Activity;
+                        var hideFlame = activeTab != DiagramTabKind.FlameChart;
 
                         if (!string.IsNullOrEmpty(wtf.ActivityHtml))
                             body.Append($"<div class=\"diagram-view diagram-view-activity\"{(hideActivity ? " style=\"display:none\"" : "")}>{wtf.ActivityHtml}</div>");
@@ -1916,8 +2029,11 @@ public static class ReportGenerator
         bool separateBackgroundSteps = false,
         bool collapseRepeatedStepKeywords = true,
         string scenarioNoteFormatSelect = "",
-        Dictionary<string, List<string>>? searchIndexPieces = null)
+        Dictionary<string, List<string>>? searchIndexPieces = null,
+        string scenarioToolbarControls = "",
+        ResolvedToggleDefaults? toggleDefaults = null)
     {
+        var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn;
         var scenarios = group.Scenarios;
 
         // Named Examples: blocks render as separator bands only when the group actually has
@@ -1999,18 +2115,20 @@ public static class ReportGenerator
         var happyPathClass = isGroupHappyPath ? " happy-path" : "";
         var happyPathBadge = isGroupHappyPath ? " <span class=\"label\">Happy Path</span>" : "";
 
-        body.Append($"<details class=\"scenario scenario-parameterized{happyPathClass}\" data-status=\"{overallStatus}\"{depsAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr} id=\"{anchorId}\" tabindex=\"0\">");
+        body.Append($"<details class=\"scenario scenario-parameterized{happyPathClass}\"{(toggles.ScenariosExpanded ? " open" : "")} data-status=\"{overallStatus}\"{depsAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr} id=\"{anchorId}\" tabindex=\"0\">");
         body.Append($"<summary class=\"h3{(hasFailure ? " failed" : hasSkipped ? " skipped" : "")}\">{encodedGroupName}{happyPathBadge}{summaryText}{durationBadge}<button class=\"copy-scenario-name\" title=\"Copy scenario name\" data-scenario-name=\"{encodedGroupName}\" onclick=\"copy_scenario_name(this, event)\">&#128203;</button><a class=\"scenario-link\" href=\"#{anchorId}\" title=\"Link to this scenario\" onclick=\"event.stopPropagation()\">&#128279;</a></summary>");
 
-        // Parameter table
+        // Parameter table — where both views exist, the configured default picks which one
+        // starts visible (toggleFlattenParams reads live visibility, so it needs no seeding).
         var hasFlatView = group.FlatParameterNames is { Length: > 0 };
+        var startGrouped = hasFlatView && toggles.ParameterTableView == ParameterTableView.Grouped;
         if (hasFlatView) body.Append("<div class=\"param-table-wrapper\">");
 
         // Flat parameter table (visible by default) — shows original Gherkin Example columns as scalar values
         if (hasFlatView)
         {
             var flatNames = group.FlatParameterNames!;
-            body.Append($"<table class=\"param-test-table param-table-flat\" data-prefix=\"{prefix}\"><thead>");
+            body.Append($"<table class=\"param-test-table param-table-flat\"{(startGrouped ? " style=\"display:none\"" : "")} data-prefix=\"{prefix}\"><thead>");
             body.Append($"<tr><th rowspan=\"2\" style=\"width:2.5em\">#</th>");
             body.Append($"<th colspan=\"{flatNames.Length}\" class=\"master-header\"><button class=\"flatten-toggle\" onclick=\"toggleFlattenParams(this,'{prefix}')\" title=\"Show grouped columns\">\u2212</button>Input Parameters</th>");
             body.Append("<th rowspan=\"2\" style=\"width:5em\">Status</th>");
@@ -2094,9 +2212,9 @@ public static class ReportGenerator
             body.Append("</tbody></table>");
         }
 
-        // Grouped parameter table (hidden when flat view exists)
+        // Grouped parameter table (hidden when the flat view exists and starts visible)
         var groupedTableClass = hasFlatView ? " param-table-grouped" : "";
-        var groupedStyle = hasFlatView ? " style=\"display:none\"" : "";
+        var groupedStyle = hasFlatView && !startGrouped ? " style=\"display:none\"" : "";
         body.Append($"<table class=\"param-test-table{groupedTableClass}\"{groupedStyle} data-prefix=\"{prefix}\"><thead>");
         if (group.Rule is ParameterDisplayRule.ScalarColumns or ParameterDisplayRule.FlattenedObject && group.ParameterNames.Length > 0)
         {
@@ -2252,7 +2370,8 @@ public static class ReportGenerator
                 if (!string.IsNullOrWhiteSpace(s.Description))
                     body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(s.Description)}</div>""");
 
-                RenderScenarioStepSections(body, s, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords);
+                RenderScenarioStepSections(body, s, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords,
+                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen);
 
                 if (s.Attachments is { Length: > 0 })
                 {
@@ -2322,33 +2441,42 @@ public static class ReportGenerator
 
         if (hasDiagramContent)
         {
-            body.Append("<details class=\"example-diagrams\" open>");
+            body.Append($"<details class=\"example-diagrams\"{(toggles.DiagramsSectionOpen ? " open" : "")}>");
 
             // Determine toggle buttons needed
             var showSeqToggle = hasAnySeqDiagrams;
             var showActivityToggle = hasAnyWholeTestFlow && wholeTestContents.Any(w => !string.IsNullOrEmpty(w?.ActivityHtml));
             var showFlameToggle = hasAnyWholeTestFlow && wholeTestContents.Any(w => !string.IsNullOrEmpty(w?.FlameHtml));
             var multipleTypes = (showSeqToggle ? 1 : 0) + (showActivityToggle ? 1 : 0) + (showFlameToggle ? 1 : 0) > 1;
+            var activeTab = ResolveDiagramTab(toggles.DiagramTab, showSeqToggle, showActivityToggle, showFlameToggle);
 
             if (multipleTypes)
             {
                 body.Append("<summary class=\"h4\">Diagrams</summary>");
                 body.Append("<div class=\"diagram-toggle\">");
                 if (showSeqToggle)
-                    body.Append("<button class=\"diagram-toggle-btn diagram-toggle-active\" data-dtype=\"seq\">Sequence Diagrams</button>");
+                    body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Sequence ? " diagram-toggle-active" : "")}\" data-dtype=\"seq\">Sequence Diagrams</button>");
                 if (showActivityToggle)
-                    body.Append($"<button class=\"diagram-toggle-btn{(!showSeqToggle ? " diagram-toggle-active" : "")}\" data-dtype=\"activity\">Activity Diagrams</button>");
+                    body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Activity ? " diagram-toggle-active" : "")}\" data-dtype=\"activity\">Activity Diagrams</button>");
                 if (showFlameToggle)
-                    body.Append("<button class=\"diagram-toggle-btn\" data-dtype=\"flame\">Flame Chart</button>");
+                    body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.FlameChart ? " diagram-toggle-active" : "")}\" data-dtype=\"flame\">Flame Chart</button>");
                 if (isPlantUmlBrowser && showSeqToggle)
-                    body.Append("<span class=\"diagram-toggle-spacer\"></span><span class=\"details-radio\"><span class=\"details-radio-label\">Details:</span><button class=\"details-radio-btn\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\">Expand</button><button class=\"details-radio-btn\" data-state=\"collapsed\" onclick=\"window._setAllNotes(this,'collapsed')\">Collapse</button><button class=\"details-radio-btn details-active\" data-state=\"truncated\" onclick=\"window._setAllNotes(this,'truncated')\">Truncate</button><select class=\"truncate-lines-select\" autocomplete=\"off\" onchange=\"window._setScenarioTruncateLines(this)\"><option value=\"3\">3</option><option value=\"4\">4</option><option value=\"5\">5</option><option value=\"10\">10</option><option value=\"15\">15</option><option value=\"20\">20</option><option value=\"25\">25</option><option value=\"30\">30</option><option value=\"35\">35</option><option value=\"40\" selected>40</option><option value=\"50\">50</option><option value=\"60\">60</option><option value=\"80\">80</option><option value=\"100\">100</option></select><span class=\"truncate-lines-label\">lines</span></span><button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"headers\" data-shown=\"true\" onclick=\"window._toggleScenarioHeaders(this)\">Headers Shown</button>");
-                if (hasAssertionNotes)
-                    body.Append("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"assertions\" data-shown=\"false\" onclick=\"window._toggleScenarioAssertions(this)\">Assertions Hidden</button>");
-                if (hasStepDelimiters)
-                    body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" onclick=\"window._toggleScenarioSteps(this)\">Steps Shown</button>");
-                if (hasDatabaseParticipants)
-                    body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"databases\" data-shown=\"true\" onclick=\"window._toggleScenarioDatabases(this)\">Databases Shown</button>");
-                body.Append(scenarioNoteFormatSelect);
+                {
+                    body.Append(scenarioToolbarControls);
+                }
+                else
+                {
+                    // No sequence toggle: the Details radio and headers toggle stay out, but the
+                    // report-wide filter buttons and the note-format select are still offered
+                    // (their gates are report-wide, matching the pre-builder emission).
+                    if (hasAssertionNotes)
+                        body.Append(BuildFilterToggleButton("assertions", toggles.AssertionsShown, scenarioLevel: true));
+                    if (hasStepDelimiters)
+                        body.Append(BuildFilterToggleButton("steps", toggles.StepsShown, scenarioLevel: true));
+                    if (hasDatabaseParticipants)
+                        body.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: true));
+                    body.Append(scenarioNoteFormatSelect);
+                }
                 body.Append("</div>");
             }
             else if (showSeqToggle)
@@ -2357,14 +2485,7 @@ public static class ReportGenerator
                 if (isPlantUmlBrowser)
                 {
                     body.Append("<div class=\"diagram-toggle\">");
-                    body.Append("<span class=\"diagram-toggle-spacer\"></span><span class=\"details-radio\"><span class=\"details-radio-label\">Details:</span><button class=\"details-radio-btn\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\">Expand</button><button class=\"details-radio-btn\" data-state=\"collapsed\" onclick=\"window._setAllNotes(this,'collapsed')\">Collapse</button><button class=\"details-radio-btn details-active\" data-state=\"truncated\" onclick=\"window._setAllNotes(this,'truncated')\">Truncate</button><select class=\"truncate-lines-select\" autocomplete=\"off\" onchange=\"window._setScenarioTruncateLines(this)\"><option value=\"3\">3</option><option value=\"4\">4</option><option value=\"5\">5</option><option value=\"10\">10</option><option value=\"15\">15</option><option value=\"20\">20</option><option value=\"25\">25</option><option value=\"30\">30</option><option value=\"35\">35</option><option value=\"40\" selected>40</option><option value=\"50\">50</option><option value=\"60\">60</option><option value=\"80\">80</option><option value=\"100\">100</option></select><span class=\"truncate-lines-label\">lines</span></span><button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"headers\" data-shown=\"true\" onclick=\"window._toggleScenarioHeaders(this)\">Headers Shown</button>");
-                    if (hasAssertionNotes)
-                        body.Append("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"assertions\" data-shown=\"false\" onclick=\"window._toggleScenarioAssertions(this)\">Assertions Hidden</button>");
-                    if (hasStepDelimiters)
-                        body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" onclick=\"window._toggleScenarioSteps(this)\">Steps Shown</button>");
-                    if (hasDatabaseParticipants)
-                        body.Append("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"databases\" data-shown=\"true\" onclick=\"window._toggleScenarioDatabases(this)\">Databases Shown</button>");
-                    body.Append(scenarioNoteFormatSelect);
+                    body.Append(scenarioToolbarControls);
                     body.Append("</div>");
                 }
             }
@@ -2372,8 +2493,8 @@ public static class ReportGenerator
             {
                 body.Append("<summary class=\"h4\">Diagrams</summary>");
                 body.Append("<div class=\"diagram-toggle\">");
-                body.Append("<button class=\"diagram-toggle-btn diagram-toggle-active\" data-dtype=\"activity\">Activity Diagrams</button>");
-                body.Append("<button class=\"diagram-toggle-btn\" data-dtype=\"flame\">Flame Chart</button>");
+                body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Activity ? " diagram-toggle-active" : "")}\" data-dtype=\"activity\">Activity Diagrams</button>");
+                body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.FlameChart ? " diagram-toggle-active" : "")}\" data-dtype=\"flame\">Flame Chart</button>");
                 body.Append("</div>");
             }
             else if (showActivityToggle)
@@ -2389,7 +2510,7 @@ public static class ReportGenerator
             if (hasAnySeqDiagrams)
             {
                 var seqWrap = hasAnyWholeTestFlow && multipleTypes;
-                if (seqWrap) body.Append("<div class=\"diagram-view diagram-view-seq\">");
+                if (seqWrap) body.Append($"<div class=\"diagram-view diagram-view-seq\"{(activeTab != DiagramTabKind.Sequence ? " style=\"display:none\"" : "")}>");
 
                 if (group.AllDiagramsIdentical)
                 {
@@ -2397,7 +2518,7 @@ public static class ReportGenerator
                     if (firstDiagrams.Length > 0)
                     {
                         body.Append("<span class=\"param-diagram-identical-badge\">All diagrams identical across test cases</span>");
-                        RenderDiagramsForScenario(body, firstDiagrams, isPlantUmlBrowser, isInlineSvg, lazyLoadImages, ref plantUmlBrowserCounter, diagramDataMap);
+                        RenderDiagramsForScenario(body, firstDiagrams, isPlantUmlBrowser, isInlineSvg, lazyLoadImages, ref plantUmlBrowserCounter, diagramDataMap, toggles.RawPlantUmlOpen);
                         // The single emitted copy is a descendant of the group <details>, so it is
                         // part of every member doc's verify corpus.
                         if (searchIndexPieces is not null)
@@ -2418,7 +2539,7 @@ public static class ReportGenerator
                             body.Append(NoInteractionsMarkerHtml);
                         if (diagrams.Length > 0)
                         {
-                            RenderDiagramsForScenario(body, diagrams, isPlantUmlBrowser, isInlineSvg, lazyLoadImages, ref plantUmlBrowserCounter, diagramDataMap);
+                            RenderDiagramsForScenario(body, diagrams, isPlantUmlBrowser, isInlineSvg, lazyLoadImages, ref plantUmlBrowserCounter, diagramDataMap, toggles.RawPlantUmlOpen);
                             if (searchIndexPieces is not null)
                                 foreach (var diagram in diagrams)
                                     searchIndexPieces[s.Id].Add(diagram.CodeBehind);
@@ -2433,7 +2554,7 @@ public static class ReportGenerator
             // Activity diagrams
             if (showActivityToggle)
             {
-                var hideActivity = showSeqToggle; // hidden when seq is default
+                var hideActivity = activeTab != DiagramTabKind.Activity;
                 if (hideActivity) body.Append("<div class=\"diagram-view diagram-view-activity\" style=\"display:none\">");
                 else body.Append("<div class=\"diagram-view diagram-view-activity\">");
 
@@ -2467,7 +2588,7 @@ public static class ReportGenerator
             // Flame charts
             if (showFlameToggle)
             {
-                var hideFlame = showSeqToggle || (showActivityToggle && !showSeqToggle);
+                var hideFlame = activeTab != DiagramTabKind.FlameChart;
                 if (hideFlame) body.Append("<div class=\"diagram-view diagram-view-flame\" style=\"display:none\">");
                 else body.Append("<div class=\"diagram-view diagram-view-flame\">");
 
@@ -2511,7 +2632,8 @@ public static class ReportGenerator
         bool isInlineSvg,
         bool lazyLoadImages,
         ref int plantUmlBrowserCounter,
-        Dictionary<string, string> diagramDataMap)
+        Dictionary<string, string> diagramDataMap,
+        bool rawPlantUmlOpen = false)
     {
         var lazyLoadAttr = lazyLoadImages ? " loading=\"lazy\"" : "";
         foreach (var diagram in diagrams)
@@ -2533,7 +2655,7 @@ public static class ReportGenerator
             else
             {
                 body.Append($"""
-                         <details class="example">
+                         <details class="example"{(rawPlantUmlOpen ? " open" : "")}>
                             <summary class="example-image">
                                 <img{lazyLoadAttr} src="{diagram.ImgSrc}">
                             </summary>
@@ -2563,7 +2685,9 @@ public static class ReportGenerator
         Scenario scenario,
         bool showStepNumbers,
         bool separateBackgroundSteps,
-        bool collapseRepeatedStepKeywords)
+        bool collapseRepeatedStepKeywords,
+        bool stepsSectionOpen = true,
+        bool backgroundStepsOpen = false)
     {
         var background = scenario.BackgroundSteps ?? [];
         var steps = scenario.Steps ?? [];
@@ -2574,7 +2698,7 @@ public static class ReportGenerator
             {
                 // Each section collapses independently, so the Steps list still opens with its own primary.
                 var backgroundKeywords = collapseRepeatedStepKeywords ? StepKeywordCollapser.DisplayKeywords(background) : null;
-                body.Append("""<details class="scenario-background">""");
+                body.Append($"""<details class="scenario-background"{(backgroundStepsOpen ? " open" : "")}>""");
                 body.Append("""<summary class="h4">Background Steps</summary>""");
                 for (var bi = 0; bi < background.Length; bi++)
                 {
@@ -2586,7 +2710,7 @@ public static class ReportGenerator
             }
 
             if (steps.Length > 0)
-                RenderStepsList(body, steps, showStepNumbers, background.Length, backgroundCount: 0, collapseRepeatedStepKeywords);
+                RenderStepsList(body, steps, showStepNumbers, background.Length, backgroundCount: 0, collapseRepeatedStepKeywords, stepsSectionOpen);
 
             return;
         }
@@ -2598,7 +2722,7 @@ public static class ReportGenerator
         if (combined.Length == 0)
             return;
 
-        RenderStepsList(body, combined, showStepNumbers, numberOffset: 0, backgroundCount: background.Length, collapseRepeatedStepKeywords);
+        RenderStepsList(body, combined, showStepNumbers, numberOffset: 0, backgroundCount: background.Length, collapseRepeatedStepKeywords, stepsSectionOpen);
     }
 
     /// <summary>
@@ -2611,11 +2735,12 @@ public static class ReportGenerator
         bool showStepNumbers,
         int numberOffset,
         int backgroundCount,
-        bool collapseRepeatedStepKeywords)
+        bool collapseRepeatedStepKeywords,
+        bool open = true)
     {
         var displayKeywords = collapseRepeatedStepKeywords ? StepKeywordCollapser.DisplayKeywords(steps) : null;
 
-        body.Append("""<details class="scenario-steps" open>""");
+        body.Append($"""<details class="scenario-steps"{(open ? " open" : "")}>""");
         body.Append("""<summary class="h4">Steps</summary>""");
 
         var renderCombined = ShouldRenderCombinedTable(steps);
@@ -3238,7 +3363,7 @@ public static class ReportGenerator
     /// so a dead tap or a skipped capture line is a line in the report, not only in a log. Empty input
     /// renders nothing.
     /// </summary>
-    internal static string RenderReportDiagnostics(IReadOnlyList<DiagnosticEntry> diagnostics)
+    internal static string RenderReportDiagnostics(IReadOnlyList<DiagnosticEntry> diagnostics, bool open = false)
     {
         if (diagnostics.Count == 0)
             return string.Empty;
@@ -3250,7 +3375,7 @@ public static class ReportGenerator
         var summary = $"Report diagnostics ({diagnostics.Count}: {string.Join(", ", byKind)})";
 
         var html = new StringBuilder();
-        html.Append("<details class=\"report-diagnostics\">");
+        html.Append($"<details class=\"report-diagnostics\"{(open ? " open" : "")}>");
         html.Append($"<summary>{summary}</summary>"); // enum names and counts only — nothing to encode, and the × must stay a glyph
         html.Append("<ul class=\"report-diagnostics-list\">");
         foreach (var entry in diagnostics)
@@ -3562,7 +3687,8 @@ public static class ReportGenerator
                 options.InternalFlowFlameChartPosition,
                 options.InternalFlowNoDataBehavior,
                 options.InternalFlowSpanGranularity,
-                options.InternalFlowActivitySources);
+                options.InternalFlowActivitySources,
+                ReportToggleDefaultsResolver.Resolve(options, specifications: false).InternalFlowTab);
         }
 
         Dictionary<string, Merge.WholeTestFlowFragment>? wholeTestFlow = null;

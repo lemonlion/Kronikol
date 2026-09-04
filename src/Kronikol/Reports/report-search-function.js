@@ -5,6 +5,21 @@ function toggle_search_help() {
     if (panel) panel.style.display = panel.style.display === 'none' ? '' : 'none';
 }
 
+// A single search match is revealed fully: the scenario opens along with every section
+// that can hold matched content and might start closed under a configured toggle default
+// (steps, background steps, diagrams), plus an enclosing rule section — a match inside a
+// closed rule would otherwise stay invisible. Raw Plant UML disclosures deliberately stay
+// closed (they always were; a deep hit on diagram source is one click away, documented).
+function revealSingleMatch(el) {
+    var rule = el.closest('details.rule');
+    if (rule) rule.setAttribute('open', '');
+    el.setAttribute('open', '');
+    ['details.example-diagrams', 'details.scenario-steps', 'details.scenario-background'].forEach(function(sel) {
+        var section = el.querySelector(sel);
+        if (section) section.setAttribute('open', '');
+    });
+}
+
 function search_scenarios() {
     if (searchTimeoutId)
         clearTimeout(searchTimeoutId);
@@ -61,9 +76,7 @@ function run_search_scenarios() {
             update_url_hash();
 
             if (matchCount === 1 && singleMatch) {
-                singleMatch.setAttribute('open', '');
-                let diagrams = singleMatch.querySelector('details.example-diagrams');
-                if (diagrams) diagrams.setAttribute('open', '');
+                revealSingleMatch(singleMatch);
             }
 
             // Parameterized group row highlighting for advanced search
@@ -151,9 +164,7 @@ function run_search_scenarios() {
 
     // Single match: expand scenario with diagrams
     if (matchCount === 1 && singleMatch) {
-        singleMatch.setAttribute('open', '');
-        let diagrams = singleMatch.querySelector('details.example-diagrams');
-        if (diagrams) diagrams.setAttribute('open', '');
+        revealSingleMatch(singleMatch);
     }
 
     // For parameterized groups: highlight matching row(s) based on per-row search data

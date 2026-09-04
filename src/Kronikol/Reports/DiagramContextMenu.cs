@@ -91,17 +91,36 @@ public static class DiagramContextMenu
     /// </summary>
     public static string GetFlameChartRenderScript() => WithDecompressHelper(LoadResource("flame-chart-render-script.js"));
 
-    /// <summary>Collapsible-notes script with the default (JSON) note payload format.</summary>
-    public static string GetCollapsibleNotesScript() => GetCollapsibleNotesScript(NotePayloadFormat.Json);
+    /// <summary>Collapsible-notes script with the built-in defaults.</summary>
+    public static string GetCollapsibleNotesScript() => GetCollapsibleNotesScript(ResolvedToggleDefaults.BuiltIn);
 
     /// <summary>
-    /// Collapsible-notes script with the given initial note payload format baked in (the way the
-    /// browser render settings are): it seeds <c>window._noteFormatDefault</c>, which every diagram
-    /// applies to its eligible JSON notes on first render.
+    /// Collapsible-notes script with the given initial note payload format and the built-in state
+    /// for every other toggle — the pre-toggle-defaults surface, kept for compatibility.
     /// </summary>
     public static string GetCollapsibleNotesScript(NotePayloadFormat notePayloadFormat) =>
+        GetCollapsibleNotesScript(ResolvedToggleDefaults.BuiltIn with { NotePayloadFormat = notePayloadFormat });
+
+    /// <summary>
+    /// Collapsible-notes script with the report's resolved toggle defaults baked in (the way the
+    /// browser render settings are): the whole globals block — details state, truncate lines,
+    /// headers/assertions/steps/databases visibility and <c>window._noteFormatDefault</c> — seeds
+    /// from the configuration, so every diagram's zero-click render honours it.
+    /// </summary>
+    public static string GetCollapsibleNotesScript(ResolvedToggleDefaults toggleDefaults) =>
         LoadResource("collapsible-notes-script.js")
-            .Replace("__NOTE_FORMAT_DEFAULT__", notePayloadFormat == NotePayloadFormat.Yaml ? "yaml" : "json");
+            .Replace("__NOTE_FORMAT_DEFAULT__", toggleDefaults.NotePayloadFormat == NotePayloadFormat.Yaml ? "yaml" : "json")
+            .Replace("__HEADERS_HIDDEN_DEFAULT__", toggleDefaults.HeadersShown ? "false" : "true")
+            .Replace("__TRUNCATE_LINES_DEFAULT__", ((int)toggleDefaults.TruncateLines).ToString(System.Globalization.CultureInfo.InvariantCulture))
+            .Replace("__DETAILS_DEFAULT__", toggleDefaults.Details switch
+            {
+                ReportDetailsState.Expanded => "expanded",
+                ReportDetailsState.Collapsed => "collapsed",
+                _ => "truncated"
+            })
+            .Replace("__ASSERTIONS_VISIBLE_DEFAULT__", toggleDefaults.AssertionsShown ? "true" : "false")
+            .Replace("__STEPS_VISIBLE_DEFAULT__", toggleDefaults.StepsShown ? "true" : "false")
+            .Replace("__DATABASES_VISIBLE_DEFAULT__", toggleDefaults.DatabasesShown ? "true" : "false");
 
     /// <summary>
     /// Floats a scenario's diagram toolbar (Details / Headers / … and the diagram-type tabs) onto the

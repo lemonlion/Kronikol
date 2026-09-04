@@ -320,6 +320,22 @@ public record ReportConfigurationOptions
     /// </summary>
     public NotePayloadFormat NotePayloadFormat { get; set; } = NotePayloadFormat.Json;
 
+    /// <summary>
+    /// Default start states for the interactive report controls (Details radio, truncate lines,
+    /// headers/assertions/steps/databases toggles, note format, expand states, diagram tab, panels,
+    /// filter modes, disclosure sections). Applies to the HTML test run report AND, unless a
+    /// property is specifically overridden via <see cref="SpecificationsToggleDefaults"/>, to
+    /// Specifications.html. Default: all unset (built-in defaults).
+    /// </summary>
+    public ReportToggleDefaults TestRunReportToggleDefaults { get; set; } = new();
+
+    /// <summary>
+    /// Specifications.html overrides for <see cref="TestRunReportToggleDefaults"/>. Any property
+    /// left <c>null</c> inherits the effective TestRunReport value. Default: all unset (full
+    /// inheritance).
+    /// </summary>
+    public ReportToggleDefaults SpecificationsToggleDefaults { get; set; } = new();
+
     /// <summary>Maximum number of parameter columns shown per parameterized test group. Default: <c>10</c>.</summary>
     public int MaxParameterColumns { get; set; } = 10;
 

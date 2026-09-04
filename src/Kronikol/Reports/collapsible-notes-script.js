@@ -1636,13 +1636,16 @@
     // lines from their escaped splice form through this.
     window._noteUnescapeDisplayLine = unescapeNoteDisplayLine;
 
-    // Global defaults
-    window._headersHidden = false;
-    window._truncateLines = 40;
-    window._detailsDefault = 'truncated';
-    window._assertionsVisible = false;
-    window._stepsVisible = true;
-    window._databasesVisible = true;
+    // Global defaults — the __…__ tokens are substituted at generation time from the report's
+    // resolved toggle defaults (GetCollapsibleNotesScript), so each HTML file seeds its own
+    // configured start states; the values below drive the zero-click render pipeline.
+    window._headersHidden = __HEADERS_HIDDEN_DEFAULT__;
+    window._truncateLinesDefault = __TRUNCATE_LINES_DEFAULT__;
+    window._truncateLines = window._truncateLinesDefault;
+    window._detailsDefault = '__DETAILS_DEFAULT__';
+    window._assertionsVisible = __ASSERTIONS_VISIBLE_DEFAULT__;
+    window._stepsVisible = __STEPS_VISIBLE_DEFAULT__;
+    window._databasesVisible = __DATABASES_VISIBLE_DEFAULT__;
     window._noteFormatDefault = '__NOTE_FORMAT_DEFAULT__';
 
     function stripAssertionNotes(source) {
@@ -2250,7 +2253,7 @@
 
     // Change truncation line count (report-level)
     window._setTruncateLines = function(sel) {
-        window._truncateLines = parseInt(sel.value, 10) || 20;
+        window._truncateLines = parseInt(sel.value, 10) || window._truncateLinesDefault;
         // Sync all dropdowns (report + scenario level)
         document.querySelectorAll('.truncate-lines-select').forEach(function(s) {
             s.value = String(window._truncateLines);
@@ -2273,7 +2276,7 @@
     window._setScenarioTruncateLines = function(sel) {
         var scenario = sel.closest('details.scenario');
         if (!scenario) return;
-        var scenarioLines = parseInt(sel.value, 10) || 20;
+        var scenarioLines = parseInt(sel.value, 10) || window._truncateLinesDefault;
         // Store per-container — include not-yet-decompressed elements
         var allDiagrams = scenario.querySelectorAll('[data-diagram-type="plantuml"]');
         allDiagrams.forEach(function(c) { c._truncateLines = scenarioLines; });

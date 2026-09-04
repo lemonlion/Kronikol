@@ -1,4 +1,7 @@
-var _depMode = 'AND';
+// Seeded from the report's resolved toggle defaults at generation time; every consumer
+// (URL hash, Clear All) resets against the seeded default, never a literal.
+var _depModeDefault = '__DEP_MODE_DEFAULT__';
+var _depMode = _depModeDefault;
 function toggle_dep_mode(btn) {
     _depMode = _depMode === 'AND' ? 'OR' : 'AND';
     btn.textContent = _depMode;

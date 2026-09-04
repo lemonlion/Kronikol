@@ -70,7 +70,9 @@ public class CategoryMultiSelectReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("var _catMode = 'OR'", content);
+        // Since the toggle defaults (3.0.80) the literal seeds a default the mode var reads.
+        Assert.Contains("var _catModeDefault = 'OR'", content);
+        Assert.Contains("var _catMode = _catModeDefault", content);
     }
 
     [Fact]

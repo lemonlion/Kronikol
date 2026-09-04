@@ -8,8 +8,8 @@ function update_url_hash() {
     var deps = [];
     document.querySelectorAll('.dependency-toggle.dependency-active').forEach(function(b) { deps.push(b.getAttribute('data-dependency')); });
     if (deps.length > 0) parts.push('deps=' + encodeURIComponent(deps.join(',')));
-    if (_depMode !== 'AND') parts.push('depmode=' + _depMode);
-    if (typeof _catMode !== 'undefined' && _catMode !== 'OR') parts.push('catmode=' + _catMode);
+    if (_depMode !== _depModeDefault) parts.push('depmode=' + _depMode);
+    if (typeof _catMode !== 'undefined' && _catMode !== _catModeDefault) parts.push('catmode=' + _catMode);
     if (document.querySelector('.happy-path-toggle.happy-path-active')) parts.push('hp=1');
     var cats = [];
     if (!document.querySelector('.category-toggle.category-active[data-category=""]')) {
@@ -66,15 +66,18 @@ function parse_url_hash() {
         });
         filter_statuses();
     }
-    if (params.depmode === 'OR') {
-        _depMode = 'OR';
+    // Both values are accepted symmetrically: a deep link from an AND-default report must
+    // force AND on an OR-default report and vice versa (configured defaults mean either
+    // value can differ from this report's own start mode).
+    if (params.depmode === 'OR' || params.depmode === 'AND') {
+        _depMode = params.depmode;
         var modeBtn = document.querySelector('.dep-mode-toggle');
-        if (modeBtn) modeBtn.textContent = 'OR';
+        if (modeBtn) modeBtn.textContent = _depMode;
     }
-    if (params.catmode === 'AND') {
-        _catMode = 'AND';
+    if (params.catmode === 'AND' || params.catmode === 'OR') {
+        _catMode = params.catmode;
         var catModeBtn = document.querySelector('.cat-mode-toggle');
-        if (catModeBtn) catModeBtn.textContent = 'AND';
+        if (catModeBtn) catModeBtn.textContent = _catMode;
     }
     if (params.deps) {
         params.deps.split(',').forEach(function(d) {

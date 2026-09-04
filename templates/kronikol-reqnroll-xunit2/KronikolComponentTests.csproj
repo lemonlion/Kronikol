@@ -21,7 +21,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="Reqnroll" Version="3.3.4" />
     <PackageReference Include="Reqnroll.xUnit" Version="3.3.4" />
-    <PackageReference Include="Kronikol.ReqNRoll.xUnit2" Version="3.0.78" />
+    <PackageReference Include="Kronikol.ReqNRoll.xUnit2" Version="3.0.79" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
