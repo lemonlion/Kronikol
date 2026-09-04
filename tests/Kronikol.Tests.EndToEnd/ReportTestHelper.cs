@@ -313,6 +313,119 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// A report carrying scenario descriptions at BOTH emission sites — a plain scenario and the
+    /// per-row detail panels of a grouped parameterized scenario — for the description spacing facts.
+    /// </summary>
+    public static string GenerateReportWithScenarioDescriptions(string tempDir, string outputDir, string fileName)
+    {
+        var scenarios = new[]
+        {
+            new Scenario
+            {
+                Id = "d1", DisplayName = "Stale muffins never reach a caller", IsHappyPath = true,
+                Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                Description = "Every diagnostic batch is baked to order from the complete ingredient list.",
+                Steps =
+                [
+                    new ScenarioStep { Keyword = "Given", Text = "a fresh batch", Status = ExecutionResult.Passed },
+                    new ScenarioStep { Keyword = "Then", Text = "the muffins are fresh", Status = ExecutionResult.Passed }
+                ]
+            },
+            new Scenario
+            {
+                Id = "p1", DisplayName = "Process(region: US, amount: 100)", IsHappyPath = true,
+                Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                OutlineId = "Process",
+                ExampleValues = new Dictionary<string, string> { ["region"] = "US", ["amount"] = "100" },
+                Description = "Each region settles against its own ledger before the batch closes.",
+                Steps =
+                [
+                    new ScenarioStep { Keyword = "Given", Text = "a valid region US", Status = ExecutionResult.Passed },
+                    new ScenarioStep { Keyword = "Then", Text = "the result is success", Status = ExecutionResult.Passed }
+                ]
+            },
+            new Scenario
+            {
+                Id = "p2", DisplayName = "Process(region: DE, amount: 200)", IsHappyPath = true,
+                Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                OutlineId = "Process",
+                ExampleValues = new Dictionary<string, string> { ["region"] = "DE", ["amount"] = "200" },
+                Description = "Each region settles against its own ledger before the batch closes.",
+                Steps =
+                [
+                    new ScenarioStep { Keyword = "Given", Text = "a valid region DE", Status = ExecutionResult.Passed },
+                    new ScenarioStep { Keyword = "Then", Text = "the result is success", Status = ExecutionResult.Passed }
+                ]
+            }
+        };
+
+        var features = new[] { new Feature { DisplayName = "Breakfast Feature", Scenarios = scenarios } };
+        var diagrams = scenarios.Select(s => new DiagramAsCode(s.Id, "", "")).ToArray();
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            groupParameterizedTests: true);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// A report whose scenario diagram carries a database participant, step delimiters and
+    /// assertion notes AND whose embedded component diagram declares database/collections
+    /// nodes — for the facts pinning that the scenario filter toggles never rewrite the
+    /// component diagram (its database/collections declarations would otherwise match
+    /// stripDatabaseCalls and silently drop dependency nodes and edges from the overview).
+    /// </summary>
+    public static string GenerateReportWithComponentDiagramAndDatabases(
+        string tempDir, string outputDir, string fileName,
+        Action<ReportConfigurationOptions>? configure = null)
+    {
+        var (features, _) = CreateTestData();
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", WideDatabaseParticipantPlantUmlSource)
+        };
+
+        const string componentPlantUml = """
+            @startuml
+            left to right direction
+            skinparam defaultTextAlignment center
+
+            title Component Diagram
+
+            rectangle "**Caller**\n<size:10>[Person]</size>" as caller <<person>>
+            rectangle "**Breakfast Provider**\n<size:10>[Software System]</size>" as breakfastProvider <<system>>
+            database "Spanner" as spanner
+            collections "Redis" as redis
+
+            caller -[#438DD5]-> breakfastProvider : "HTTP: PUT - 10 calls across 5 tests"
+            breakfastProvider -[#E74C3C]-> spanner : "Spanner: InsertOrUpdate - 8 calls across 4 tests"
+            breakfastProvider -[#F39C12]-> redis : "Redis: Get, Set - 6 calls across 3 tests"
+            @enduml
+            """;
+
+        var options = new ReportConfigurationOptions();
+        configure?.Invoke(options);
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            componentDiagramPlantUml: componentPlantUml,
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// Generates a combined report by simulating two parallel CI runners: each emits a mergeable
     /// TestRunReport.json (disjoint features, diagrams and component relationships), then the two are
     /// merged and rendered into a single HTML report. Exercises the full merge pipeline end-to-end.

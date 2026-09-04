@@ -1664,6 +1664,16 @@
         return showing ? source : stripStepDelimiters(source);
     }
 
+    // The embedded component diagram (the architecture overview panel above the scenario
+    // list) declares its dependency nodes with the same `database`/`collections` keywords
+    // the databases filter strips from scenario sequence diagrams — but it is NOT a
+    // scenario execution diagram: none of the filter toggles (details/headers/assertions/
+    // steps/databases/note format) may rewrite or re-render it. An unguarded databases
+    // filter silently drops dependency nodes and edges from the overview.
+    function isComponentDiagramContainer(el) {
+        return !!(el.closest && el.closest('.component-diagram-section'));
+    }
+
     function stripDatabaseCalls(source) {
         // Find all database participant aliases
         var dbAliases = [];
@@ -1863,6 +1873,8 @@
 
     // Pre-process source before initial render — applies current report-level defaults
     window._preProcessSource = function(el, source) {
+        // The component diagram renders its source untouched — filters never apply to it
+        if (isComponentDiagramContainer(el)) return source;
         // Strip assertion notes before note-block parsing when hidden
         el._assertionsVisible = window._assertionsVisible;
         el._stepsVisible = window._stepsVisible;
@@ -2106,6 +2118,7 @@
         var queue = [];
         containers.forEach(function(container) {
             if (container.classList.contains('puml-fragment')) return;
+            if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
             var noteBlocks = parseNoteBlocks(container._noteOriginalSource);
             if (noteBlocks.length === 0) return;
@@ -2138,6 +2151,7 @@
         var queue = [];
         containers.forEach(function(container) {
             if (container.classList.contains('puml-fragment')) return;
+            if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
             var noteBlocks = parseNoteBlocks(container._noteOriginalSource);
             if (noteBlocks.length === 0) return;
@@ -2322,6 +2336,7 @@
         var queue = [];
         containers.forEach(function(container) {
             if (container.classList.contains('puml-fragment')) return;
+            if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
             var wasVisible = !!container._assertionsVisible;
             if (wasVisible === showing) return;
@@ -2364,6 +2379,7 @@
         var queue = [];
         containers.forEach(function(container) {
             if (container.classList.contains('puml-fragment')) return;
+            if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
             var wasVisible = !!container._stepsVisible;
             if (wasVisible === showing) return;
@@ -2406,6 +2422,7 @@
         var queue = [];
         containers.forEach(function(container) {
             if (container.classList.contains('puml-fragment')) return;
+            if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
             var wasVisible = container._databasesVisible !== false;
             if (wasVisible === showing) return;
@@ -2454,6 +2471,7 @@
         var queue = [];
         containers.forEach(function(container) {
             if (container.classList.contains('puml-fragment')) return;
+            if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
             var noteBlocks = parseNoteBlocks(container._noteOriginalSource);
             if (noteBlocks.length === 0) return;

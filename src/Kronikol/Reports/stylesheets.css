@@ -836,6 +836,14 @@
             white-space: pre-line;
         }
 
+        /* Breathing room around a scenario description, which otherwise sits flush against the
+           scenario summary above it and the Steps section below it. Deliberately no
+           white-space: pre-line (unlike .feature-description): scenario descriptions are prose
+           hard-wrapped at the feature file's source width, so they read better reflowed. */
+        .scenario-description {
+            margin: 1em 0;
+        }
+
         .rule {
             margin-left: 1em;
             border-left: 3px solid #2e7bff;

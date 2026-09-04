@@ -153,4 +153,49 @@ public class DatabaseToggleReportTests
         // The regex should match both database and collections declarations
         Assert.Contains("collections", content);
     }
+
+    [Fact]
+    public void Filter_pipeline_carries_the_component_diagram_guard()
+    {
+        // The embedded component diagram declares dependency nodes with the same
+        // database/collections keywords the filters strip — the script must carry the guard
+        // that exempts it from the filter pipeline (behaviour pinned by the Playwright facts
+        // in ComponentDiagramDatabaseToggleTests).
+        var content = GenerateReport("DbToggle_ComponentGuard.html", PlantUmlSourceWithDatabase);
+        Assert.Contains("function isComponentDiagramContainer", content);
+        Assert.Contains("component-diagram-section", content);
+    }
+
+    [Fact]
+    public void Every_filter_queue_builder_guards_the_component_diagram()
+    {
+        // The invariant is "no filter control rewrites or re-renders the component diagram".
+        // The note-driven builders (details/headers/note format) are inert for it today only
+        // because a component diagram carries no notes — incidental, not structural. Each
+        // builder must carry the guard so a component diagram that ever grows a note (a legend,
+        // say) cannot start being rewritten.
+        var content = GenerateReport("DbToggle_AllQueueGuards.html", PlantUmlSourceWithDatabase);
+
+        string[] builders =
+        [
+            "function buildDetailsQueue",
+            "function buildHeadersQueue",
+            "function buildAssertionsQueue",
+            "function buildStepsQueue",
+            "function buildDatabasesQueue",
+            "function buildNoteFormatQueue"
+        ];
+
+        foreach (var builder in builders)
+        {
+            var start = content.IndexOf(builder, StringComparison.Ordinal);
+            Assert.True(start >= 0, $"{builder} not found in the report script");
+            // The guard must appear inside the builder's forEach, before any work — check the
+            // window from the builder's start to the end of its container loop body.
+            var body = content.Substring(start, Math.Min(1200, content.Length - start));
+            Assert.True(
+                body.Contains("isComponentDiagramContainer(container)", StringComparison.Ordinal),
+                $"{builder} is missing the isComponentDiagramContainer guard");
+        }
+    }
 }

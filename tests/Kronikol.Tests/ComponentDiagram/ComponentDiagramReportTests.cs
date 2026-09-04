@@ -392,7 +392,10 @@ public class ComponentDiagramReportTests : IDisposable
             componentDiagramPlantUml: plantUml);
 
         var content = File.ReadAllText(html);
-        Assert.Contains("component-diagram-section", content);
+        // Anchor on the section's MARKUP: the shared report script also carries the string
+        // as a CSS selector (the filter-pipeline guard), so a bare substring search would
+        // pass even for a report that emitted no component diagram at all.
+        Assert.Contains("class=\"component-diagram-section\"", content);
         Assert.Contains("Component Diagram", content);
         Assert.Contains("id=\"puml-data\"", content);
         Assert.Contains("plantuml-browser", content);
@@ -413,8 +416,13 @@ public class ComponentDiagramReportTests : IDisposable
         var content = File.ReadAllText(html);
         Assert.Contains("""id="component-diagram""", content);
         Assert.Contains("""style="display:none""", content);
-        Assert.DoesNotContain("<details", content.Substring(content.IndexOf("component-diagram-section"),
-            content.IndexOf("report-content") - content.IndexOf("component-diagram-section")));
+        // Slice from the section's MARKUP (not the CSS selector the shared script carries,
+        // which sits far earlier in the file and would span the whole scenario list).
+        var sectionIdx = content.IndexOf("class=\"component-diagram-section\"", StringComparison.Ordinal);
+        Assert.True(sectionIdx > 0, "component diagram section markup should be present");
+        var reportContentIdx = content.IndexOf("id=\"report-content\"", sectionIdx, StringComparison.Ordinal);
+        Assert.True(reportContentIdx > sectionIdx, "report-content div should follow the component diagram section");
+        Assert.DoesNotContain("<details", content[sectionIdx..reportContentIdx]);
     }
 
     [Fact]
@@ -476,7 +484,11 @@ public class ComponentDiagramReportTests : IDisposable
             componentDiagramPlantUml: null);
 
         var content = File.ReadAllText(html);
-        Assert.DoesNotContain("component-diagram-section", content);
+        // No component diagram MARKUP. The shared report script always carries the class as a
+        // CSS selector (the filter-pipeline guard), so assert on the emitted attributes rather
+        // than on any occurrence of the name anywhere in the file.
+        Assert.DoesNotContain("class=\"component-diagram-section\"", content);
+        Assert.DoesNotContain("id=\"component-diagram\"", content);
     }
 
     [Fact]
@@ -492,8 +504,10 @@ public class ComponentDiagramReportTests : IDisposable
             componentDiagramPlantUml: plantUml);
 
         var content = File.ReadAllText(html);
-        var componentIdx = content.IndexOf("component-diagram-section");
-        var reportContentIdx = content.IndexOf("id=\"report-content\"");
+        // The section's MARKUP, not the script's CSS selector for it — the selector sits in the
+        // <head> script and would make this ordering check pass without any section emitted.
+        var componentIdx = content.IndexOf("class=\"component-diagram-section\"", StringComparison.Ordinal);
+        var reportContentIdx = content.IndexOf("id=\"report-content\"", StringComparison.Ordinal);
         Assert.True(componentIdx > 0 && componentIdx < reportContentIdx,
             "Component diagram section must appear before report-content div");
     }
