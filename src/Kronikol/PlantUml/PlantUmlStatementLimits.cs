@@ -40,24 +40,31 @@ internal enum PlantUmlStatementKind
 
 /// <summary>
 /// The statement-length limits PlantUML's parser enforces, measured against the engine Kronikol ships
-/// (<c>lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched</c>, re-verified against
-/// the <c>@v1.2026.6-patched</c> build that replaced it). They are per statement
+/// (originally <c>lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched</c>,
+/// re-verified against the <c>@v1.2026.6-patched</c> build and again against the stock
+/// <c>@v1.2026.8beta1-0e4f452</c> build that replaced it). They are per statement
 /// kind, not one global line limit, and they fail in two different ways — neither of which says
 /// "too long":
 /// <list type="bullet">
-/// <item><description>an over-long <b>message</b> or <b>block opener</b> matches no rule, so the parser
-/// abandons the diagram and the engine draws <c>Syntax Error?</c> over the whole fragment;</description></item>
-/// <item><description>an over-long <b>coloured note bar</b> takes the engine's own renderer down with
+/// <item><description>an over-long <b>message</b> matches no rule, so the parser abandons the diagram
+/// and the engine draws <c>Syntax Error?</c> over the whole fragment (or silently draws the wrong
+/// diagram when the class-parse fallback succeeds);</description></item>
+/// <item><description>an over-long <b>coloured note bar</b> or — since the 1.2026.8beta1 build — an
+/// over-long <b>block opener</b> takes the engine's own renderer down with
 /// <c>RangeError: Maximum call stack size exceeded</c> and produces no SVG at all.</description></item>
 /// </list>
 /// <para>Measured caps on the trimmed statement (the value below each is the constant, kept under the
-/// measurement so a small engine drift does not reopen the bug):</para>
+/// measurement so a small engine drift does not reopen the bug; the 1.2026.8beta1 re-measurement moved
+/// only the TeaVM-build artifacts — upward, so every constant stays safely under its cap):</para>
 /// <list type="table">
-/// <item><term><c>a -&gt; b: …</c>, <c>a --&gt; b: …</c>, <c>a -[#F39C12]&gt; b: …</c></term><description>2000 — exactly, and on the
+/// <item><term><c>a -&gt; b: …</c>, <c>a --&gt; b: …</c>, <c>a -[#F39C12]&gt; b: …</c></term><description>2000 — exactly, on every build measured, and on the
 /// whole statement: a 27-character prefix leaves a 1973-character label, not a longer statement.</description></item>
-/// <item><term><c>loop</c> 1476, <c>alt</c> 1477, <c>group</c> 1482, <c>opt</c> 1484</term><description>constant 1471</description></item>
-/// <item><term><c>hnote across … #black:&lt;color:white&gt;…</c> 1458–1534</term><description>constant 1400</description></item>
-/// <item><term>note bodies 16371, <c>note over a : …</c> 16392, plain <c>hnote across</c> 16398</term><description>constant 16000</description></item>
+/// <item><term><c>loop</c> 1476, <c>alt</c> 1477, <c>group</c> 1482, <c>opt</c> 1484 (1.2026.6 parse limits;
+/// on 1.2026.8beta1 the parse accepts more but the engine stack-overflows around <c>loop</c> 3660 / <c>group</c> 4975 / <c>alt</c>,<c>opt</c> 5641)</term><description>constant 1471</description></item>
+/// <item><term><c>hnote across … #black:&lt;color:white&gt;…</c> 1458–1534 (≈4124 on 1.2026.8beta1; a stack-overflow
+/// edge, so it wobbles between processes)</term><description>constant 1400</description></item>
+/// <item><term>note bodies 16371, <c>note over a : …</c> 16392, plain <c>hnote across</c> 16398
+/// (16370/16377/16376 on 1.2026.8beta1 — unchanged)</term><description>constant 16000</description></item>
 /// </list>
 /// <para>
 /// Leading and trailing whitespace is not counted — a valid short arrow padded to 2500 characters with

@@ -350,6 +350,32 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         Assert.Equal(0, r.GetProperty("cacheEntries").GetInt32());
     }
 
+    [Fact]
+    public async Task A_diagram_past_the_stock_engine_default_size_still_renders()
+    {
+        // The CDN engine is a stock build whose default size limit (8192px) sits far below real
+        // Kronikol reports — a tall report fragment or a wide note overruns it easily. The render
+        // call sites must raise it to 98304px via the maxSvgSize render option; if that wiring is
+        // lost, this in-between diagram (wider than the stock default, well under 98304px) comes
+        // back as "Diagram too large" instead of an <svg>.
+        var source = "@startuml\nAlice -> Bob: Hello\nnote right\n" + new string('x', 6000) + "\nend note\n@enduml";
+        var encoded = System.Net.WebUtility.HtmlEncode(source);
+        var html = $$"""
+            <!DOCTYPE html><html><head><title>past stock default</title>
+            <style>{{DiagramContextMenu.GetInlineSvgStyles()}}</style>
+            {{DiagramContextMenu.GetPlantUmlBrowserRenderScript()}}
+            </head><body><div class="scenario">
+            <div class="plantuml-browser" id="puml-1" data-plantuml="{{encoded}}" data-diagram-type="plantuml"></div>
+            </div></body></html>
+            """;
+        await Page.GotoAsync(ServePage(html));
+        await Page.Locator("#puml-1 svg").WaitForAsync(new() { Timeout = 120000 });
+        var width = await Page.EvaluateAsync<double>(
+            "() => Number(document.querySelector('#puml-1 svg').getAttribute('width'))");
+        Assert.True(width > 8192, $"the probe diagram must overrun the stock 8192px default to prove the option is honoured (got {width}px)");
+        Assert.Equal("1", await Page.Locator("#puml-1").GetAttributeAsync("data-rendered"));
+    }
+
     // ═══════════════════════════════════════════════════════════
     // Phase 1: fidelity — worker output equals main-thread output
     // ═══════════════════════════════════════════════════════════
@@ -411,7 +437,9 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
                     return new Function('u', 'return import(u)')(cdn + '/plantuml.js').then(function (mod) {
                         if (!mod || typeof mod.render !== 'function') throw new Error('the engine module has no render export');
                         window.plantuml = shim;
-                        return function (lines, id) { mod.render(lines, id, {}); };
+                        // Same maxSvgSize the shim passes — the stock build's 8192px default refuses
+                        // the large fixture diagram outright.
+                        return function (lines, id) { mod.render(lines, id, { maxSvgSize: 98304 }); };
                     });
                 }).then(function (render) {
                     var left = sources.length, out = [];

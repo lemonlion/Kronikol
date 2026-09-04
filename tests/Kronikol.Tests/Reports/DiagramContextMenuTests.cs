@@ -890,8 +890,19 @@ public class DiagramContextMenuTests
         Assert.Contains("fetch(", _plantUmlScript);
         Assert.Contains("new Worker(", _plantUmlScript);
         Assert.Contains("URL.createObjectURL(new Blob(", _plantUmlScript);
-        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.6-patched/viz-global.js", _plantUmlScript);
-        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.6-patched/plantuml.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452/viz-global.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452/plantuml.js", _plantUmlScript);
+    }
+
+    [Fact]
+    public void Esm_render_call_sites_pass_the_max_svg_size_option()
+    {
+        // The engine is a stock build — no patched size limit. Its default refuses diagrams past
+        // 8192px, far below what Kronikol reports produce, so every ES-module render call site must
+        // pass the 98304px limit as the maxSvgSize render option instead. Dropping one of these
+        // silently reintroduces "Diagram too large" on big-but-legitimate diagrams.
+        Assert.Contains("maxSvgSize: 98304", DiagramContextMenu.GetPlantUmlWorkerHostScript());
+        Assert.Contains("maxSvgSize: 98304", _plantUmlScript);
     }
 
     [Fact]

@@ -196,7 +196,8 @@
             // ES-module build: the page rewrote its trailing `export {…}` into self.__plantumlExports.
             var ex = self.__plantumlExports;
             if (!ex || typeof ex.render !== 'function') return Promise.reject(new Error('ESM engine exports missing'));
-            self.plantuml = { render: function (lines, id) { return ex.render(lines, id, {}); } };
+            // Stock engine builds refuse diagrams past 8192px by default; Kronikol's limit is 98304px.
+            self.plantuml = { render: function (lines, id) { return ex.render(lines, id, { maxSvgSize: 98304 }); } };
             return Promise.resolve();
         }
         if (typeof self.plantumlLoad !== 'function') return Promise.reject(new Error('plantumlLoad is not defined after loading the engine'));

@@ -275,7 +275,8 @@
                     // the syntax fail here, with a message, instead of rejecting the whole shim.
                     return new Function('u', 'return import(u)')(ENGINE_URL).then(function (mod) {
                         if (!mod || typeof mod.render !== 'function') throw new Error('the engine module has no render export: ' + ENGINE_URL);
-                        engineRender = function (lines, id) { return mod.render(lines, id, {}); };
+                        // Stock engine builds refuse diagrams past 8192px by default; Kronikol's limit is 98304px.
+                        engineRender = function (lines, id) { return mod.render(lines, id, { maxSvgSize: 98304 }); };
                     });
                 }
                 return new Promise(function (resolve, reject) {

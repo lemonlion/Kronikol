@@ -255,13 +255,18 @@ public class NodeJsPlantUmlRendererTests
         return result.Svg ?? "";
     }
 
-    /// <summary>The engine drew a real sequence message — the silent class-diagram fallback does not.</summary>
+    /// <summary>
+    /// The engine drew a real sequence message — the silent class-diagram fallback does not. Teoz
+    /// (the default sequence engine since 1.2026.7) emits no CSS classes, so the durable signal is
+    /// that a sequence diagram draws participant <c>b</c> twice — head box and foot box — while the
+    /// class fallback draws its <c>b</c> box once.
+    /// </summary>
     private static bool DrewMessage(string body)
     {
         var svg = RenderBody(body);
         return svg.Length > 0
                && !svg.Contains("Syntax Error", StringComparison.Ordinal)
-               && svg.Contains("class=\"message\"", StringComparison.Ordinal);
+               && System.Text.RegularExpressions.Regex.Matches(svg, ">b</text>").Count >= 2;
     }
 
     private static bool Renders(string body)
@@ -307,15 +312,18 @@ public class NodeJsPlantUmlRendererTests
     {
         Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
 
-        // Measured around 1476 (loop) to 1484 (opt). The constant sits under that range rather than on
-        // it, so the pins are the two facts that matter and survive a small engine drift: the constant
-        // parses, and a block label at the *message* limit does not — the block limit really is lower.
+        // On the 1.2026.6 build this was a parse limit around 1476 (loop) to 1484 (opt); on the
+        // 1.2026.8beta1 build the parse accepts far more but the engine crashes on its own JS stack
+        // instead (RangeError), measured around 3660 (loop) to 5641 (opt) — stack-dependent, so the
+        // exact edge wobbles between processes. The constant sits well under the lowest measurement
+        // rather than on it, so the pins are the two facts that matter and survive a small engine
+        // drift: the constant parses, and a runaway block label still kills the whole diagram.
         var safe = StatementOf("loop ", PlantUmlStatementLimits.MaxBlockLabelChars);
-        var atMessageLimit = StatementOf("loop ", PlantUmlStatementLimits.MaxMessageStatementChars);
+        var runaway = StatementOf("loop ", 8000);
 
         Assert.True(Renders($"a -> b: x\n{safe}\na -> b: y\nend"), $"{PlantUmlStatementLimits.MaxBlockLabelChars} should parse");
-        Assert.False(Renders($"a -> b: x\n{atMessageLimit}\na -> b: y\nend"),
-            $"{PlantUmlStatementLimits.MaxMessageStatementChars} should not — a block opener caps lower than a message");
+        Assert.False(Renders($"a -> b: x\n{runaway}\na -> b: y\nend"),
+            "8000 should not — an over-long block opener still takes the diagram down");
     }
 
     [Fact]
@@ -324,14 +332,16 @@ public class NodeJsPlantUmlRendererTests
     {
         Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
 
-        // The step-delimiter bar's own form. Measured cap 1458 — past it the engine throws
-        // `RangeError: Maximum call stack size exceeded` and returns no SVG at all, so the scenario loses
-        // every diagram it had rather than one statement.
+        // The step-delimiter bar's own form. Past the cap the engine throws `RangeError: Maximum call
+        // stack size exceeded` and returns no SVG at all, so the scenario loses every diagram it had
+        // rather than one statement. Measured 1458 on the 1.2026.6 build and around 4124 on
+        // 1.2026.8beta1 — a stack-overflow edge, so it wobbles between processes; the crash probe sits
+        // far past it and the constant far under it.
         var safe = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml("Given", new string('s', 1200));
         Assert.True(safe.Length <= PlantUmlStatementLimits.MaxColouredNoteBarChars);
 
         Assert.True(Renders($"a -> b: x\n{safe}"), "the capped bar renders");
-        Assert.Equal("", RenderBody("a -> b: x\nhnote across <<stepDelimiter>> #black:<color:white>" + new string('s', 3000)));
+        Assert.Equal("", RenderBody("a -> b: x\nhnote across <<stepDelimiter>> #black:<color:white>" + new string('s', 6000)));
     }
 
     [Fact]
@@ -407,7 +417,7 @@ public class NodeJsPlantUmlRendererTests
             File.WriteAllText(engine,
                 """
                 "use strict";
-                let C=(lines,id,options)=>{var t=document.getElementById(id);t.innerHTML='<svg xmlns="http://www.w3.org/2000/svg"><text>'+lines.join(' ')+'</text></svg>';},D=(lines,options)=>'unused';
+                let C=(lines,id,options)=>{var t=document.getElementById(id);t.innerHTML='<svg xmlns="http://www.w3.org/2000/svg"><text>'+lines.join(' ')+' '+JSON.stringify(options||{})+'</text></svg>';},D=(lines,options)=>'unused';
                 export{C as render,D as renderToString};
                 """);
 
@@ -415,6 +425,9 @@ public class NodeJsPlantUmlRendererTests
 
             Assert.Contains("<svg", stdout);
             Assert.Contains("esm probe", stdout);
+            // A stock engine build defaults to an 8192px size limit; the driver must raise it to
+            // Kronikol's 98304px through the maxSvgSize render option (the stub echoes its options).
+            Assert.Contains("\"maxSvgSize\":98304", stdout);
         }
         finally
         {

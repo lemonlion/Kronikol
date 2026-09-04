@@ -147,10 +147,17 @@ on the maintainer.**
   `OptimizationLevel.AGGRESSIVE` trial (negative result recorded).
 - Open items in-plan: W0.4 Real-solver convergence probe (no evidence produced);
   speedscope export (optional).
-- Blocked externally: retest checklist (all six PRs open, zero comments as of
-  08-30); Kronikol-side follow-ups (npm upgrade to 1.2026.8, drop the fork, pass
-  `maxSvgSize`) blocked because npm latest is still 1.2026.7. **Nothing shipped in
-  Kronikol** — `TrackingDefaults.PlantUmlJsCdnBase` is still `@v1.2026.6-patched`.
+- Upstream outcome: **all five patch PRs #2835–#2839 MERGED 2026-08-30/31** (silently,
+  as usual — no comments).
+- Kronikol-side follow-ups **SHIPPED 2026-09-04 (3.0.76)** without waiting for npm
+  (latest there is still slow 1.2026.7): `TrackingDefaults.PlantUmlJsCdnBase` now pins
+  fork tag `@v1.2026.8beta1-0e4f452` — a **stock** `npmPackage` build of master
+  `0e4f452e` (all merged perf work incl. #2858–#2860, themes, background, Smetana
+  fallback) — and every ES-module render call site passes `{ maxSvgSize: 98304 }`, so
+  the 98304 patch is retired. Measured on Kronikol shapes with the teoz pragma: 4–8×
+  faster warm (puml-19 789→181 ms, gen-500 5.8→0.8 s). viz-global.js kept (user
+  decision); statement-limit constants re-measured, all unchanged. A move to npm
+  `@plantuml/core` can follow when 1.2026.8 final publishes.
 - Working artifacts are the untracked `tools/render-bench/core-head-*.js`,
   `core-bisect*.js`, `alloc-real.js`, `patches/`, `results/` files.
 

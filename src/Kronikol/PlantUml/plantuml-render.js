@@ -316,7 +316,8 @@ var rendererReady = vizReady.then(function() {
     // ES-module build: the exports drive rendering directly — there is no plantumlLoad in that build.
     var esmExports = globalThis.__plantumlExports;
     if (esmExports && typeof esmExports.render === 'function') {
-        return { render: function(lines, id) { return esmExports.render(lines, id, {}); } };
+        // Stock engine builds refuse diagrams past 8192px by default; Kronikol's limit is 98304px.
+        return { render: function(lines, id) { return esmExports.render(lines, id, { maxSvgSize: 98304 }); } };
     }
 
     var loadFn = globalThis.plantumlLoad;
