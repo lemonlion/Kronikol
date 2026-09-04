@@ -86,6 +86,28 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
         return new Uri(path).AbsoluteUri;
     }
 
+    /// <summary>
+    /// The diagram's PAINTED display lines, rebuilt from the baselines its words share.
+    /// PlantUML emits one <c>&lt;text&gt;</c> per word (spaces are their own elements), so
+    /// <c>textContent</c> alone cannot tell "one line" from "two lines that happen to
+    /// concatenate" — any assertion about a note's line structure has to go through this.
+    /// </summary>
+    protected Task<string[]> GetPaintedSvgLines(string svgSelector = "[data-diagram-type='plantuml'] svg")
+        => Page.EvaluateAsync<string[]>(
+            """
+            sel => {
+                const rows = {};
+                document.querySelectorAll(sel + ' text').forEach(t => {
+                    const y = Math.round(parseFloat(t.getAttribute('y') || '0'));
+                    const x = parseFloat(t.getAttribute('x') || '0');
+                    (rows[y] = rows[y] || []).push([x, t.textContent]);
+                });
+                return Object.keys(rows).sort((a, b) => a - b)
+                    .map(y => rows[y].sort((a, b) => a[0] - b[0]).map(p => p[1]).join('').trim())
+                    .filter(s => s.length);
+            }
+            """, svgSelector);
+
     protected async Task ExpandFirstScenarioWithDiagram()
     {
         await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();

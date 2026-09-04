@@ -909,13 +909,21 @@ public static partial class PlantUmlCreator
     }
 
     /// <summary>
-    /// A JSON body cut by a capture cap — TcpTap/ProxyTap/<see cref="Tracking.RequestResponseLogger"/>
-    /// append <c>…truncated (N chars total)</c>, the RESP decoder <c>…[bulk string truncated: …]</c> —
-    /// is not parseable, so <see cref="TryFormatAsJson"/> gives up and the note used to get the raw
-    /// one-line payload. This re-indents the valid prefix with a string-aware brace walker (no null
-    /// stripping — there is no document to walk) and keeps the marker on its own line; anything that
-    /// is not a valid JSON <em>prefix</em> (a real non-JSON body that happens to start with a brace)
-    /// is left to the plain-text path.
+    /// A JSON body carrying a capture-cap footnote is not parseable as a whole, so
+    /// <see cref="TryFormatAsJson"/> gives up and the note used to get the raw one-line payload.
+    /// Two classes of footnote reach here:
+    /// <list type="bullet">
+    /// <item>a <em>cut</em> body — TcpTap/ProxyTap/<see cref="Tracking.RequestResponseLogger"/> append
+    /// <c>…truncated (N chars total)</c>, the RESP decoder <c>…[bulk string truncated: …]</c>. What is
+    /// left is only a prefix, so it is re-indented with a string-aware brace walker (no null stripping
+    /// — there is no document to walk).</item>
+    /// <item>a <em>row/document cap</em> — the SQL, Spanner and MongoDB readers append
+    /// <c>... (N more rows not shown)</c> and friends after a COMPLETE document. That document is
+    /// re-serialized through <see cref="TryFormatAsJson"/>, so a capped payload indents and drops
+    /// nulls exactly like the uncapped one above it.</item>
+    /// </list>
+    /// Either way the marker keeps its own line; anything that is not a valid JSON <em>prefix</em>
+    /// (a real non-JSON body that happens to start with a brace) is left to the plain-text path.
     /// </summary>
     internal static string? TryFormatTruncatedJson(string? content)
     {
@@ -926,11 +934,11 @@ public static partial class PlantUmlCreator
         if (body.Length < 2 || !IsJsonPrefix(body))
             return null;
 
-        var indented = ReindentJsonPrefix(body);
+        var indented = TryFormatAsJson(body) ?? ReindentJsonPrefix(body);
         return marker is null ? indented : indented + "\n" + marker;
     }
 
-    [GeneratedRegex(@"(?:\r?\n\r?\n…truncated \(\d+ chars total\)|\s…\[bulk string truncated: [^\]]*\])\s*$")]
+    [GeneratedRegex(@"(?:\r?\n\r?\n…truncated \(\d+ chars total\)|\s…\[bulk string truncated: [^\]]*\]|\r?\n\.\.\. \(\d+ more(?: (?:rows|documents) not shown)?\))\s*$")]
     private static partial Regex TruncationMarkerRegex();
 
     private static (string Body, string? Marker) SplitTruncationMarker(string content)

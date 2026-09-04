@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Kronikol.Sql;
@@ -89,6 +90,79 @@ public static partial class UnifiedSqlClassifier
     [GeneratedRegex(@"^\s*TRUNCATE\s+TABLE\s+" + @"(?:[\[\]""`]?[\w=+/]+[\[\]""`]?\.)*[\[\]""`]?(?<table>[\w=+/]+)[\[\]""`]?", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex TruncateTableRegex();
 
+    /// <summary>The only characters that can begin a comment or a string literal.</summary>
+    private static readonly char[] StripTriggers = ['-', '/', '\''];
+
+    /// <summary>
+    /// Replaces every <c>--</c> comment, <c>/* */</c> comment and <c>'…'</c> string literal in
+    /// <paramref name="sql"/> with a single space, so that the classifier's regular expressions only ever
+    /// see code. Returns the statement unchanged when it contains none of them, which is the common case.
+    /// <para>
+    /// One pass, because the three forms nest into each other: a <c>--</c> inside a literal is not a
+    /// comment, and a quote inside a comment does not open one. Doubled quotes (<c>''</c>) are the ANSI
+    /// escape and do not end a literal. Bracketed, double-quoted and backticked text is left alone — those
+    /// delimit <em>identifiers</em>, and the table extractors read through them.
+    /// </para>
+    /// <para>
+    /// Malformed input is closed at the end of the statement rather than rejected: an unterminated comment
+    /// or literal swallows the rest, which still leaves the leading keyword and any earlier clause
+    /// readable.
+    /// </para>
+    /// <para>
+    /// This is a classification aid only. What a report displays is <c>CommandText</c>, which stays
+    /// exactly as it was captured.
+    /// </para>
+    /// </summary>
+    private static string StripCommentsAndLiterals(string sql)
+    {
+        if (sql.IndexOfAny(StripTriggers) < 0)
+            return sql;
+
+        var sb = new StringBuilder(sql.Length);
+        var i = 0;
+
+        while (i < sql.Length)
+        {
+            var c = sql[i];
+
+            if (c == '-' && i + 1 < sql.Length && sql[i + 1] == '-')
+            {
+                i += 2;
+                while (i < sql.Length && sql[i] != '\n') i++;
+                sb.Append(' '); // the newline itself is left in place
+                continue;
+            }
+
+            if (c == '/' && i + 1 < sql.Length && sql[i + 1] == '*')
+            {
+                i += 2;
+                while (i + 1 < sql.Length && !(sql[i] == '*' && sql[i + 1] == '/')) i++;
+                i = Math.Min(sql.Length, i + 2);
+                sb.Append(' ');
+                continue;
+            }
+
+            if (c == '\'')
+            {
+                i++;
+                while (i < sql.Length)
+                {
+                    if (sql[i] != '\'') { i++; continue; }
+                    if (i + 1 < sql.Length && sql[i + 1] == '\'') { i += 2; continue; }
+                    i++;
+                    break;
+                }
+                sb.Append(' ');
+                continue;
+            }
+
+            sb.Append(c);
+            i++;
+        }
+
+        return sb.ToString();
+    }
+
     public static UnifiedSqlOperationInfo Classify(string? commandText, CommandType commandType = CommandType.Text)
     {
         if (commandType == CommandType.StoredProcedure)
@@ -100,8 +174,14 @@ public static partial class UnifiedSqlClassifier
         if (string.IsNullOrWhiteSpace(commandText))
             return new UnifiedSqlOperationInfo(UnifiedSqlOperation.Other, null, commandText);
 
+        // Comments and string literals first, because everything after this reads the statement with
+        // regular expressions and has no way to tell code from prose. Two of the table extractors are
+        // unanchored, so `-- rolled up from the weekly aggregate` in front of the real clause used to be
+        // reported as the table `the`; and the keyword matcher and all three prefix strippers below are
+        // `^`-anchored, so a statement that opened with a comment classified as `Other` with no table.
+        var sql = StripCommentsAndLiterals(commandText);
+
         // Strip prefixes: Spanner hints, SET statements, CTEs
-        var sql = commandText;
         sql = SpannerHintRegex().Replace(sql, "");
         sql = SetPrefixRegex().Replace(sql, "");
         sql = CtePrefixRegex().Replace(sql, "");

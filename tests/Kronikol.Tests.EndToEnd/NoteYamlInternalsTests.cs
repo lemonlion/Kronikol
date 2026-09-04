@@ -31,6 +31,14 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
         Page.EvaluateAsync<bool[]>(
             "src => window._noteFormatInternals.jsonTextToYamlLines(src).map(l => !!l.block)", jsonText);
 
+    private Task<string?> CapFootnote(string[] noteLines) =>
+        Page.EvaluateAsync<string?>(
+            "lines => window._noteFormatInternals.splitNoteCapFootnote(lines).footnote", noteLines);
+
+    private Task<string[]> WithoutCapFootnote(string[] noteLines) =>
+        Page.EvaluateAsync<string[]>(
+            "lines => window._noteFormatInternals.splitNoteCapFootnote(lines).lines", noteLines);
+
     private Task<string[]> EscapeLines(object[] lines) =>
         Page.EvaluateAsync<string[]>(
             "lines => window._noteFormatInternals.escapeYamlLinesForNote(lines)", lines);
@@ -168,6 +176,55 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
         Assert.Null(await Reconstruct(new[] { "..Continued From Previous Diagram..", "\"partial\": true}" }));
         Assert.Null(await Reconstruct(new[] { "{", "\"a\": 1,", "..Continued On Next Diagram.." }));
         Assert.Null(await Reconstruct(new[] { "<color:gray>[k=v]</color>" }));
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Row-cap footnote (3.0.83)
+    // ═══════════════════════════════════════════════════════════
+    // A database response capped at MaxResponseRows is a COMPLETE JSON document
+    // with a `... (N more rows not shown)` footnote after it. The footnote is
+    // not JSON, so it comes off before the gate and goes back on under the
+    // emitted YAML — never silently dropped, or the reader is shown a row list
+    // that claims to be the whole result.
+
+    [Theory]
+    [InlineData("... (90 more rows not shown)")]       // SQL/ClickHouse + Spanner row cap
+    [InlineData("... (3 more documents not shown)")]   // MongoDB document cap
+    [InlineData("... (7 more)")]                       // Spanner streaming-chunk cap
+    public async Task Cap_footnote_is_split_off_the_payload(string footnote)
+    {
+        await NavigateToReport();
+        var lines = new[] { "[", "  {", "    \"id\": 1", "  }", "]", footnote };
+
+        Assert.Equal(footnote, await CapFootnote(lines));
+        Assert.Equal(new[] { "[", "  {", "    \"id\": 1", "  }", "]" }, await WithoutCapFootnote(lines));
+    }
+
+    [Fact]
+    public async Task Only_the_generator_s_own_footnote_wording_is_split_off()
+    {
+        await NavigateToReport();
+        // No footnote at all, a near-miss wording, and a line that merely
+        // mentions rows all stay part of the payload.
+        Assert.Null(await CapFootnote(new[] { "{", "  \"a\": 1", "}" }));
+        Assert.Null(await CapFootnote(new[] { "[", "]", "... (some more rows not shown)" }));
+        Assert.Null(await CapFootnote(new[] { "[", "]", "90 more rows not shown" }));
+        // …and a footnote that is not the LAST line is not one either.
+        Assert.Null(await CapFootnote(new[] { "[", "... (2 more rows not shown)", "]" }));
+    }
+
+    [Fact]
+    public async Task A_capped_payload_is_eligible_once_its_footnote_is_split_off()
+    {
+        await NavigateToReport();
+        var lines = new[] { "[", "  {", "    \"id\": 1", "  }", "]", "... (90 more rows not shown)" };
+
+        // The footnote defeats the raw gate — that is the whole reason for the split.
+        Assert.Null(await Reconstruct(lines));
+
+        var json = await Reconstruct(await WithoutCapFootnote(lines));
+        Assert.NotNull(json);
+        Assert.Contains("\"id\": 1", json);
     }
 
     // ═══════════════════════════════════════════════════════════

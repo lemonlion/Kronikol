@@ -1,4 +1,4 @@
-namespace Kronikol.Tests.EndToEnd;
+﻿namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
 /// E2E tests for <c>ReportConfigurationOptions.NotePayloadFormat</c>: a report
@@ -34,6 +34,27 @@ public class NoteFormatDefaultTests : DiagramNotePlaywrightBase
         Assert.Contains("plain text response body", text);
         // The literal \n escapes of the JSON view are gone
         Assert.DoesNotContain("SELECT o.id,\\n", text);
+    }
+
+    [Fact]
+    public async Task Yaml_default_renders_a_row_capped_response_as_yaml_footnote_and_all()
+    {
+        // The zero-click path goes through setAllNoteFormats/_preProcessSource rather
+        // than the hover toggle, so it needs its own pin: a capped response must reach
+        // first paint as YAML with its `... (N more rows not shown)` footnote intact.
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithCappedRowsNote(
+            TempDir, OutputDir, "FormatDefault_CappedRows.html",
+            notePayloadFormat: Kronikol.Reports.NotePayloadFormat.Yaml));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+
+        var lines = await GetPaintedSvgLines();
+        Assert.Contains("- location_id: \"216149122232148\"", lines);
+        Assert.Contains("unique_customers: 53", lines);
+        Assert.Contains("... (90 more rows not shown)", lines);
+        Assert.DoesNotContain(lines, l => l.Contains("\"unique_customers\":"));
     }
 
     [Fact]

@@ -1,4 +1,4 @@
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 
 namespace Kronikol.Tests.EndToEnd;
 
@@ -11,6 +11,12 @@ namespace Kronikol.Tests.EndToEnd;
 public class NoteYamlToggleTests : DiagramNotePlaywrightBase
 {
     public NoteYamlToggleTests(PlaywrightFixture fixture) : base(fixture) { }
+
+    /// <summary>
+    /// Note index of the response payload in the capped-rows fixture — note 0 is
+    /// the request's SQL text, which is plain text and has no format button.
+    /// </summary>
+    private const int ResponseNote = 1;
 
     private async Task NavigateAndSetup(string fileName)
     {
@@ -96,6 +102,60 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         Assert.Contains("id: 9007199254740993", text);
         // The literal \n escapes of the JSON view are gone
         Assert.DoesNotContain("SELECT o.id,\\n", text);
+    }
+
+    [Fact]
+    public async Task Click_renders_a_row_capped_response_as_yaml_and_keeps_the_cap_footnote()
+    {
+        // A response capped at MaxResponseRows is a complete JSON document with a
+        // `... (N more rows not shown)` footnote after it. The footnote is not JSON,
+        // so before 3.0.83 the whole note failed the eligibility gate and had no
+        // toggle at all — and it must never be dropped to buy one, or the YAML view
+        // shows two rows as if they were the whole result.
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithCappedRowsNote(
+            TempDir, OutputDir, "YamlToggle_CappedRows.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+
+        var json = await GetNormalizedSvgText();
+        Assert.Contains("\"unique_customers\": 53", json);
+        Assert.Contains("... (90 more rows not shown)", json);
+
+        await ClickNoteFormatButton(ResponseNote);
+
+        var yaml = await GetNormalizedSvgText();
+        Assert.Contains("- location_id: \"216149122232148\"", yaml);
+        Assert.Contains("unique_customers: 53", yaml);
+        Assert.DoesNotContain("\"unique_customers\":", yaml);   // the JSON view is gone
+        Assert.Contains("... (90 more rows not shown)", yaml);  // …the footnote is not
+
+        // And it sits on a line of its own under the rows, not spliced into a value.
+        var lines = await GetPaintedSvgLines();
+        Assert.Contains("... (90 more rows not shown)", lines);
+        Assert.Contains("- location_id: \"216149122232149\"", lines);
+    }
+
+    [Fact]
+    public async Task Toggling_a_row_capped_note_back_to_json_restores_the_original_payload()
+    {
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithCappedRowsNote(
+            TempDir, OutputDir, "YamlToggle_CappedRowsRoundTrip.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+
+        await ClickNoteFormatButton(ResponseNote);
+        await ClickNoteFormatButton(ResponseNote);
+
+        var after = await GetNormalizedSvgText();
+        Assert.Contains("\"unique_customers\": 53", after);
+        Assert.DoesNotContain("unique_customers: 53", after);
+        // The footnote came back exactly once — the round trip must not duplicate it.
+        var lines = await GetPaintedSvgLines();
+        Assert.Single(lines, l => l == "... (90 more rows not shown)");
     }
 
     [Fact]

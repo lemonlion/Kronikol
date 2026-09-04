@@ -3647,6 +3647,44 @@ public class PlantUmlCreatorTests
         Assert.DoesNotContain("\"jobReference\":{", plantUml); // the one-line raw form is gone
     }
 
+    // A row/document cap is not a cut body: the payload is a COMPLETE JSON document with a
+    // one-line footnote after it. It still failed JsonDocument.Parse, so the note used to get the
+    // raw one-line array — the shape a real ClickHouse report showed on 87 of its notes.
+
+    [Theory]
+    [InlineData("\n... (90 more rows not shown)")]       // SQL/ClickHouse + Spanner row cap
+    [InlineData("\n... (3 more documents not shown)")]   // MongoDB document cap
+    [InlineData("\n... (7 more)")]                       // Spanner streaming-chunk cap
+    public void Row_capped_json_response_is_indented_and_keeps_the_cap_note_on_its_own_line(string marker)
+    {
+        var capped = """[{"location_id":"216149122232148","unique_customers":53},{"location_id":"216149122232149","unique_customers":41}]""" + marker;
+        var logs = new[] { MakeRequest(), MakeResponse(content: capped) };
+        var plantUml = GetPlantUml(logs).Replace("\r\n", "\n");
+
+        Assert.Contains("\"unique_customers\": 53", plantUml);
+        Assert.DoesNotContain("""[{"location_id":""", plantUml); // the one-line raw form is gone
+        Assert.Contains(plantUml.Split('\n'), l => l.Trim() == marker.Trim());
+    }
+
+    [Fact]
+    public void Row_capped_json_response_strips_nulls_exactly_like_an_uncapped_one()
+    {
+        var rows = """[{"a":1,"b":null}]""";
+        var capped = GetPlantUml([MakeRequest(), MakeResponse(content: rows + "\n... (5 more rows not shown)")]);
+        var uncapped = GetPlantUml([MakeRequest(), MakeResponse(content: rows)]);
+
+        Assert.DoesNotContain("\"b\"", capped);
+        Assert.Contains("\"a\": 1", capped);
+        Assert.Contains("\"a\": 1", uncapped);
+    }
+
+    [Fact]
+    public void A_cap_note_after_a_non_json_body_is_left_to_the_plain_text_path()
+    {
+        var logs = new[] { MakeRequest(), MakeResponse(content: "{not valid json at all\n... (5 more rows not shown)") };
+        Assert.Contains("{not valid json at all", GetPlantUml(logs));
+    }
+
     [Fact]
     public void Non_json_body_starting_with_a_brace_still_takes_the_plain_text_path()
     {

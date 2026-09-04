@@ -1,4 +1,4 @@
-using Kronikol.ComponentDiagram;
+﻿using Kronikol.ComponentDiagram;
 using Kronikol.InternalFlow;
 using Kronikol.Reports;
 using Kronikol.Reports.Merge;
@@ -3052,6 +3052,50 @@ public static class ReportTestHelper
 
         var path = ReportGenerator.GenerateHtmlReport(
             diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            notePayloadFormat: notePayloadFormat);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// One diagram whose response note is a database result capped at
+    /// <c>MaxResponseRows</c> — a complete JSON array with a
+    /// <c>... (N more rows not shown)</c> footnote after it. Built through the
+    /// REAL formatter (<see cref="Kronikol.PlantUml.PlantUmlCreator"/>) rather
+    /// than hand-written PlantUML, so the fixture carries the exact bytes a
+    /// capped ClickHouse/SQL response produces.
+    /// </summary>
+    public static string GenerateReportWithCappedRowsNote(string tempDir, string outputDir, string fileName,
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json)
+    {
+        var (features, _) = CreateTestData();
+        var traceId = Guid.NewGuid();
+        var pairId = Guid.NewGuid();
+        RequestResponseLog[] logs =
+        [
+            new("Capped rows", "capped", "SELECT", "SELECT location_id, unique_customers FROM insights",
+                new Uri("clickhouse://insights/customer_insights"), [],
+                "ClickHouse", "DataInsights", RequestResponseType.Request, traceId, pairId,
+                TrackingIgnore: false, DependencyCategory: Kronikol.Constants.DependencyCategories.SQL),
+            new("Capped rows", "capped", "SELECT",
+                """[{"location_id":"216149122232148","unique_customers":53},"""
+                + """{"location_id":"216149122232149","unique_customers":41}]"""
+                + "\n... (90 more rows not shown)",
+                new Uri("clickhouse://insights/customer_insights"), [],
+                "ClickHouse", "DataInsights", RequestResponseType.Response, traceId, pairId,
+                TrackingIgnore: false, DependencyCategory: Kronikol.Constants.DependencyCategories.SQL),
+        ];
+
+        var source = Kronikol.PlantUml.PlantUmlCreator
+            .GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DiagramAsCode("t1", "", source)], features,
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,

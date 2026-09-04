@@ -823,6 +823,23 @@
         return inStr;
     }
 
+    // A database response capped at MaxResponseRows is not a cut payload: it is
+    // a COMPLETE JSON document with a one-line footnote after it, which the
+    // generator keeps on its own line (3.0.83). The footnote is not JSON, so it
+    // has to come off before reconstructNoteJson's gate and go back on under the
+    // emitted YAML — dropping it would show a two-row list as if it were the
+    // whole result. Deliberately narrow: only the generator's own wordings, only
+    // as the LAST payload line, so a real payload line is never eaten.
+    var capFootnoteRegex = /^\.\.\. \(\d+ more(?: (?:rows|documents) not shown)?\)$/;
+
+    function splitNoteCapFootnote(contentLines) {
+        if (!contentLines || contentLines.length < 2) return { lines: contentLines, footnote: null };
+        var last = contentLines.length - 1;
+        while (last > 0 && contentLines[last].trim() === '') last--;
+        if (!capFootnoteRegex.test(contentLines[last].trim())) return { lines: contentLines, footnote: null };
+        return { lines: contentLines.slice(0, last), footnote: contentLines[last] };
+    }
+
     // Recovers the original JSON of a note payload by reversing the generation
     // pipeline's transforms in reverse application order: gray headers dropped,
     // focus markup stripped, creole escapes removed, wrap breaks re-joined.
@@ -1268,12 +1285,17 @@
         if (!owner._noteFormatEligible) owner._noteFormatEligible = {};
         var known = owner._noteFormatEligible[noteIdx];
         if (known === undefined) {
-            var jsonText = reconstructNoteJson(contentLines);
+            var split = splitNoteCapFootnote(contentLines);
+            var jsonText = reconstructNoteJson(split.lines);
             known = jsonText !== null;
             owner._noteFormatEligible[noteIdx] = known;
             if (known) {
                 if (!owner._noteJsonText) owner._noteJsonText = {};
                 owner._noteJsonText[noteIdx] = jsonText;
+                if (split.footnote !== null) {
+                    if (!owner._noteCapFootnote) owner._noteCapFootnote = {};
+                    owner._noteCapFootnote[noteIdx] = split.footnote;
+                }
             }
         }
         return known;
@@ -1284,7 +1306,13 @@
         if (!owner._noteYamlLines[noteIdx]) {
             var jt = owner._noteJsonText && owner._noteJsonText[noteIdx];
             if (!jt) return false;
-            owner._noteYamlLines[noteIdx] = escapeYamlLinesForNote(jsonTextToYamlLines(jt));
+            var lines = escapeYamlLinesForNote(jsonTextToYamlLines(jt));
+            // The row-cap footnote rides under the emitted YAML. It comes from
+            // the note SOURCE, so it is already in the escaped form the source
+            // wants and must not go through escapeYamlLinesForNote again.
+            var footnote = owner._noteCapFootnote && owner._noteCapFootnote[noteIdx];
+            if (footnote) lines = lines.concat([footnote]);
+            owner._noteYamlLines[noteIdx] = lines;
         }
         return true;
     }
@@ -1626,6 +1654,7 @@
     // Pure JSON ⇄ YAML functions, exposed for the Playwright unit-style fixture
     window._noteFormatInternals = {
         reconstructNoteJson: reconstructNoteJson,
+        splitNoteCapFootnote: splitNoteCapFootnote,
         jsonTextToYamlLines: jsonTextToYamlLines,
         escapeYamlLinesForNote: escapeYamlLinesForNote,
         applyNoteFormats: applyNoteFormats,

@@ -32,6 +32,28 @@ public class TrackingDbDataReaderTests
     }
 
     [Fact]
+    public void Capped_content_is_a_complete_json_document_plus_a_footnote_on_its_own_line()
+    {
+        // The note formatter (PlantUmlCreator.TryFormatTruncatedJson) splits this exact shape off
+        // to indent the rows; a change to the marker's wording or placement silently un-prettifies
+        // every capped database note in the report.
+        string? captured = null;
+        var inner = new FakeDbDataReader(["Name"], [["Alice"], ["Bob"], ["Carol"]]);
+
+        var reader = new TrackingDbDataReader(
+            inner, SqlResponseDetail.FullRows, maxRows: 2, maxValueLen: 500,
+            content => captured = content);
+
+        while (reader.Read()) { }
+        reader.Close();
+
+        var lines = captured!.Split('\n');
+        Assert.Equal(2, lines.Length);
+        Assert.Equal("... (1 more rows not shown)", lines[1]);
+        Assert.Equal(2, JsonDocument.Parse(lines[0]).RootElement.GetArrayLength());
+    }
+
+    [Fact]
     public void Read_EmptyResultSet_LogsZeroRows()
     {
         string? captured = null;

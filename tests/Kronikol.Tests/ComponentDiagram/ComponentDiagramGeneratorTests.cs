@@ -1155,4 +1155,143 @@ public class ComponentDiagramGeneratorTests
         Assert.DoesNotContain("FROM", plantUml);
         Assert.DoesNotContain("WHERE", plantUml);
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // Edge label wrapping — keeping the drawn diagram inside PlantUML's size limit
+    // ═══════════════════════════════════════════════════════════
+
+    /// <summary>A relationship whose method list is long enough to need wrapping.</summary>
+    private static ComponentRelationship[] ManyOperations(int count = 30) =>
+    [
+        new("Data Insights API", "ClickHouse", "ClickHouse",
+            [.. Enumerable.Range(0, count).Select(i => $"SELECT FROM location_performance_{i:D2}")],
+            609, 199, "ClickHouse")
+    ];
+
+    /// <summary>The label of the one edge in <paramref name="plantUml"/>, without its quotes.</summary>
+    private static string EdgeLabel(string plantUml)
+    {
+        var edge = plantUml.Split('\n')
+            .Select(l => l.TrimEnd('\r'))
+            .Single(l => l.Contains("-> ", StringComparison.Ordinal) && l.Contains(" : \"", StringComparison.Ordinal));
+        var open = edge.IndexOf(" : \"", StringComparison.Ordinal) + 4;
+        return edge[open..^1];
+    }
+
+    /// <summary>The display lines a label draws as — it is one physical statement broken by <c>\n</c> escapes.</summary>
+    private static string[] DisplayLines(string label) => label.Split("\\n");
+
+    [Fact]
+    public void GeneratePlantUml_LongEdgeLabel_IsBrokenIntoDisplayLines()
+    {
+        // Java PlantUML does not apply `skinparam wrapWidth` to arrow labels, so a label listing every
+        // SQL operation drew one 6697-pixel-wide line and plantuml.com cropped the diagram at 4096,
+        // losing every dependency node (user-reported). The generator has to break the line itself.
+        var result = ComponentDiagramGenerator.GeneratePlantUml(ManyOperations(), useC4: false);
+
+        var lines = DisplayLines(EdgeLabel(result));
+
+        Assert.True(lines.Length > 1, "a thirty-operation label should not be drawn as one line");
+        Assert.All(lines, line => Assert.True(
+            line.Length <= ComponentDiagramGenerator.MaxLabelLineChars,
+            $"display line of {line.Length} chars: {line}"));
+    }
+
+    [Fact]
+    public void GeneratePlantUml_OrdinaryEdgeLabel_IsLeftExactlyAsItWas()
+    {
+        // Wrapping is for labels that would otherwise overflow the canvas. Everything shorter than the
+        // budget keeps its bytes, so the overwhelming majority of diagrams are unchanged by this.
+        var relationships = new[]
+        {
+            new ComponentRelationship("Caller", "OrderService", "HTTP", ["GET", "POST"], 252, 241)
+        };
+
+        var result = ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false);
+
+        Assert.Equal("HTTP: GET, POST - 252 calls across 241 tests", EdgeLabel(result));
+    }
+
+    [Fact]
+    public void GeneratePlantUml_Wrapping_BreaksAtWhitespaceAndKeepsEveryOperationWhole()
+    {
+        var result = ComponentDiagramGenerator.GeneratePlantUml(ManyOperations(), useC4: false);
+
+        var label = EdgeLabel(result);
+
+        // Every operation must survive intact — a break inside a table name would be a silent
+        // corruption of the architecture overview rather than a layout choice.
+        for (var i = 0; i < 30; i++)
+            Assert.Contains($"SELECT FROM location_performance_{i:D2}", label, StringComparison.Ordinal);
+        // And the breaks replaced spaces, so no display line starts or ends with one.
+        Assert.All(DisplayLines(label), line => Assert.Equal(line.Trim(), line));
+    }
+
+    [Fact]
+    public void GeneratePlantUml_Wrapping_StillHonoursTheStatementLimit()
+    {
+        // The `\n` escapes are two characters each and count toward the statement the parser measures,
+        // so the cap has to be applied to the wrapped label, not to the label it was built from.
+        var options = new ComponentDiagramOptions { RelationshipLabelFormatter = _ => string.Join(" ", Enumerable.Repeat("operation", 900)) };
+
+        var result = ComponentDiagramGenerator.GeneratePlantUml(ManyOperations(), options, useC4: false);
+
+        var edge = result.Split('\n').Single(l => l.Contains("operation", StringComparison.Ordinal));
+        Assert.True(edge.Trim().Length <= PlantUmlStatementLimits.MaxMessageStatementChars, $"{edge.Trim().Length} chars");
+    }
+
+    [Fact]
+    public void GeneratePlantUml_Wrapping_HardBreaksAWordNoLineCouldHold()
+    {
+        // A single unbreakable run has no whitespace to break at, so wrapping alone would leave it as
+        // wide as it is long — a formatter returning one 6000-character token drew 11687 pixels wide.
+        var options = new ComponentDiagramOptions { RelationshipLabelFormatter = _ => new string('x', 6000) };
+
+        var result = ComponentDiagramGenerator.GeneratePlantUml(ManyOperations(), options, useC4: false);
+
+        Assert.All(DisplayLines(EdgeLabel(result)), line => Assert.True(
+            line.Length <= ComponentDiagramGenerator.MaxLabelLineChars,
+            $"display line of {line.Length} chars"));
+    }
+
+    [Fact]
+    public void GeneratePlantUml_Wrapping_NeverSplitsAWordCarryingMarkup()
+    {
+        // Hard-breaking is a last resort and it is blind: splitting `[[#anchor` or `<size:10>` in half
+        // would turn a link or a tag into literal text. Such a token is left long instead.
+        var marked = "[[#iflow-rel-" + new string('a', 200) + "]]";
+        var options = new ComponentDiagramOptions { RelationshipLabelFormatter = _ => marked };
+
+        var result = ComponentDiagramGenerator.GeneratePlantUml(ManyOperations(), options, useC4: false);
+
+        Assert.Contains(marked, EdgeLabel(result), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GeneratePlantUml_Wrapping_PreservesTheStatsLabelsOwnLineStructure()
+    {
+        // The stats label is already three display lines, the first of which is a creole link whose
+        // text is the method list. Wrapping works within each of those, never across them.
+        var relationships = new[]
+        {
+            new ComponentRelationship("Caller", "OrderService", "HTTP",
+                [.. Enumerable.Range(0, 30).Select(i => $"GET /api/orders/very/long/route/segment/{i:D2}")], 10, 5)
+        };
+        var stats = new Dictionary<string, RelationshipStats>
+        {
+            ["iflow-rel-Caller-OrderService"] = new(10, 5, 50.0, 45.0, 120.0, 250.0, 5.0, 300.0,
+                0.0, new Dictionary<HttpStatusCode, int>(), [], null, null, false, 0, new Dictionary<string, int>(), null, 0)
+        };
+
+        var label = EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(relationships, stats: stats, useC4: false));
+        var lines = DisplayLines(label);
+
+        Assert.StartsWith("[[#iflow-rel-Caller-OrderService", label, StringComparison.Ordinal);
+        Assert.Contains("]]", label, StringComparison.Ordinal);
+        Assert.Contains(lines, l => l.Contains("P50: 45ms", StringComparison.Ordinal));
+        Assert.Contains(lines, l => l.EndsWith("10 calls across 5 tests", StringComparison.Ordinal));
+        Assert.All(lines, line => Assert.True(
+            line.Length <= ComponentDiagramGenerator.MaxLabelLineChars,
+            $"display line of {line.Length} chars: {line}"));
+    }
 }

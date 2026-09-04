@@ -170,10 +170,12 @@ public abstract class DiagramNotePlaywrightBase : PlaywrightTestBase
         """, null, new() { Timeout = 10000, PollingInterval = 200 });
     }
 
-    protected async Task ClickNoteFormatButton()
+    protected Task ClickNoteFormatButton() => ClickNoteFormatButton(0);
+
+    protected async Task ClickNoteFormatButton(int noteIndex)
     {
         var htmlBefore = await GetSvgHtml();
-        await HoverNoteRect(0);
+        await HoverNoteRect(noteIndex);
         await WaitForNoteFormatButtonVisible();
         await Page.EvaluateAsync("""
             () => {
