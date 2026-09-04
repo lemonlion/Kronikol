@@ -386,4 +386,44 @@ public class IngestPipelineTests : IDisposable
         Assert.Contains("data-toggle=\"steps\"", html);
         Assert.Contains("data-toggle=\"assertions\"", html);
     }
+
+    [Fact]
+    public void A_step_records_table_and_doc_string_are_drawn_inside_its_delimiter_bar()
+    {
+        const string testId = "p8";
+        var (req, resp) = InteractionRecord.Pair(testId, null, "POST", "http://api/muffins", "api", "web", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(2));
+        var file = WriteCapture("t.ndjson", req, resp);
+        var tests = WriteTests(
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "muffins are stocked", Timestamp = T0 },
+            new TestRunRecord
+            {
+                Event = "step", TestId = testId, Text = "the following muffins exist", Keyword = "Given",
+                Timestamp = T0.AddSeconds(0.5), Status = "passed",
+                Table = [["name", "price"], ["Blueberry", "3.50"], ["Double Chocolate", "4.00"]],
+            },
+            new TestRunRecord
+            {
+                Event = "step", TestId = testId, Text = "the request body is", Keyword = "When",
+                Timestamp = T0.AddSeconds(3), Status = "passed",
+                DocString = "{ \"muffin\": \"Blueberry\" }",
+            },
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 5000, Timestamp = T0.AddSeconds(5) });
+        var output = Path.Combine(_dir, "R-p8");
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = output;
+
+        var result = IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], TestsFile = tests, Options = options });
+
+        Assert.True(result.Generated);
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        var diagram = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0].GetString()!;
+
+        // The table-carrying bar takes the styled body form; the doc-string bar likewise; and the
+        // diagram carries the .stepBody style that colours them.
+        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: Given the following muffins exist\n|= name |= price |\n| Blueberry | 3.50 |\n| Double Chocolate | 4.00 |", diagram);
+        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: When the request body is\n{ ""muffin"": ""Blueberry"" }", diagram);
+        Assert.Contains(".stepBody {", diagram);
+        Assert.Contains("FontColor white", diagram);
+    }
 }

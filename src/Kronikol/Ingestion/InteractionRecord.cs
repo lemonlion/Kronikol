@@ -106,6 +106,12 @@ public sealed record InteractionRecord
     /// <summary>Step markers: optional Given/When/Then keyword shown before the text.</summary>
     [JsonPropertyName("keyword")] public string? Keyword { get; init; }
 
+    /// <summary>Step markers: a Gherkin data table — the first row is the header. Drawn inside the step's delimiter bar.</summary>
+    [JsonPropertyName("table")] public string[][]? Table { get; init; }
+
+    /// <summary>Step markers: a Gherkin doc-string argument, drawn under the step text inside the delimiter bar.</summary>
+    [JsonPropertyName("docString")] public string? DocString { get; init; }
+
     /// <summary>Assertion markers: whether it passed (default <c>true</c>).</summary>
     [JsonPropertyName("passed")] public bool? Passed { get; init; }
 
@@ -259,7 +265,7 @@ public sealed record InteractionRecord
         }
 
         var plantUml = string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase)
-            ? StepDelimiterPlantUml(Keyword, Text)
+            ? StepDelimiterPlantUml(Keyword, Text, Table, DocString)
             : AssertionNotePlantUml(Text, Passed ?? true, Message);
         var name = testNameOverride ?? TestName ?? TestIdentityScope.UnknownTestName;
 
@@ -267,8 +273,13 @@ public sealed record InteractionRecord
         yield return OverrideLog(name, TestId, isStart: false, null);
     }
 
-    /// <summary>The step delimiter bar Kronikol's step tracking draws: <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;</c>.</summary>
-    public static string StepDelimiterPlantUml(string? keyword, string? text)
+    /// <summary>
+    /// The step delimiter bar Kronikol's step tracking draws: <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;</c>.
+    /// A step carrying a data <paramref name="table"/> (first row = header), a
+    /// <paramref name="docString"/>, or multi-line text takes the styled body form —
+    /// see <see cref="PlantUml.StepBarPlantUml"/> for both shapes and their caps.
+    /// </summary>
+    public static string StepDelimiterPlantUml(string? keyword, string? text, string[][]? table = null, string? docString = null)
     {
         // With a keyword the bar already starts with a capital ("Given the mock is armed") and the
         // author's casing after it is meaningful; without one the text is all the reader sees.
@@ -276,14 +287,9 @@ public sealed record InteractionRecord
             ? Reports.StepText.CapitaliseIfEnabled(text) ?? "step"
             : $"{keyword} {text}";
 
-        // A step's doc string arrives here as one physical line (EscapeNoteLine folds its newlines into
-        // `\n` escapes), and a coloured `hnote across` past ~1458 characters does not draw a syntax error
-        // — it overflows the engine's own JS stack and the scenario loses every diagram it had. Losing the
-        // tail of one step label is the cheaper outcome.
-        const string prefix = "hnote across <<stepDelimiter>> #black:<color:white>";
-        var escaped = PlantUml.PlantUmlStatementLimits.TruncateLabel(
-            EscapeNoteLine(label), PlantUml.PlantUmlStatementLimits.MaxColouredNoteBarChars - prefix.Length);
-        return prefix + escaped;
+        return PlantUml.StepBarPlantUml.Build(label,
+            table is { Length: > 0 } ? [new PlantUml.StepBarTable(null, table)] : null,
+            docString);
     }
 
     /// <summary>The assertion note Kronikol's assertion tracking draws: green ✓ / red ✗ <c>hnote across &lt;&lt;assertionNote&gt;&gt;</c>.</summary>
@@ -331,7 +337,8 @@ public sealed record InteractionRecord
     };
 
     /// <summary>A step delimiter marker (<c>kind: step</c>).</summary>
-    public static InteractionRecord StepMarker(string testId, string text, DateTimeOffset timestamp, string? keyword = null, string? testName = null) => new()
+    public static InteractionRecord StepMarker(string testId, string text, DateTimeOffset timestamp, string? keyword = null, string? testName = null,
+        string[][]? table = null, string? docString = null) => new()
     {
         Kind = Kinds.Step,
         Type = "Request",
@@ -340,6 +347,8 @@ public sealed record InteractionRecord
         CallerName = "",
         Text = text,
         Keyword = keyword,
+        Table = table,
+        DocString = docString,
         Timestamp = timestamp,
         TestId = testId,
         TestName = testName,

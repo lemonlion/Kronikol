@@ -452,6 +452,37 @@ public class FullPipelineParameterizedE2ETests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task ReqNRoll_pipeline_draws_substituted_step_tables_in_the_diagram_source()
+    {
+        await NavigateToReport(_pipeline.ReqNRollReportPath);
+
+        // The step bars of a live Reqnroll run carry the step's Gherkin table — with the outline's
+        // <placeholders> already substituted — in the styled <<stepBody>> form, plus the .stepBody
+        // style that colours them. Diagram sources live gzip+base64 in #puml-data, so decode them
+        // through the report's own helpers.
+        var all = await Page.EvaluateAsync<string>("""
+            async () => {
+                var s = document.getElementById('puml-data');
+                var out = [];
+                if (s) {
+                    var map = JSON.parse(s.textContent);
+                    for (var k of Object.keys(map)) out.push(await window.decompressGzipBase64(map[k]));
+                }
+                document.querySelectorAll('[data-plantuml]').forEach(el => out.push(el.getAttribute('data-plantuml')));
+                return out.join('\n====\n');
+            }
+        """);
+
+        Assert.Contains("<<stepDelimiter>><<stepBody>>: Given a muffin recipe", all);
+        Assert.Contains("|= Flour |= Apples |= Cinnamon |", all);
+        Assert.Contains("| Plain Flour | Granny Smith | Ceylon |", all);
+        Assert.Contains("| Streusel | Light |", all);
+        Assert.DoesNotContain("<Flour>", all);
+        Assert.Contains(".stepBody {", all);
+        Assert.Contains("FontColor white", all);
+    }
+
+    [Fact]
     public async Task ReqNRoll_pipeline_renders_three_data_rows()
     {
         await NavigateToReport(_pipeline.ReqNRollReportPath);

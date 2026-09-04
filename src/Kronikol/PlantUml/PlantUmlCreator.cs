@@ -574,7 +574,7 @@ public static partial class PlantUmlCreator
                 @startuml
                 {themeDirective}!pragma teoz true
                 {AddEventStyling(tracesForTest)}
-                {AddAssertionStyling(tracesForTest)}
+                {AddMarkerNoteStyling(tracesForTest)}
                 skinparam wrapWidth {MaxLineWidth}
                 autonumber {stepNumber}
 
@@ -592,9 +592,19 @@ public static partial class PlantUmlCreator
     /// </summary>
     internal const string MarkerOnlyParticipant = "participant \"(no interactions)\" as noInteractions";
 
-    private static string AddAssertionStyling(List<RequestResponseLog> tracesForTest) =>
-        tracesForTest.Any(x => x.PlantUml is not null && x.PlantUml.Contains($"<<{AssertionNoteClass}>>"))
-            ? $$"""
+    /// <summary>
+    /// The styles for the injected marker notes, emitted only when a diagram carries one: the
+    /// assertion note's shape, and the styled step-bar body (<c>&lt;&lt;stepBody&gt;&gt;</c>) whose
+    /// black-bar/white-text colours live here rather than in inline tags — <c>&lt;color:white&gt;</c>
+    /// styles only the first display line of a note, and inline colour tags put the statement under
+    /// the coloured-bar crash cap (<see cref="PlantUmlStatementLimits.MaxColouredNoteBarChars"/>).
+    /// </summary>
+    private static string AddMarkerNoteStyling(List<RequestResponseLog> tracesForTest)
+    {
+        var parts = new List<string>(2);
+
+        if (tracesForTest.Any(x => x.PlantUml is not null && x.PlantUml.Contains($"<<{AssertionNoteClass}>>")))
+            parts.Add($$"""
 
                 <style>
                  .{{AssertionNoteClass}} {
@@ -602,8 +612,22 @@ public static partial class PlantUmlCreator
                      RoundCorner 5
                  }
                 </style>
-                """.TrimStart()
-            : "";
+                """.TrimStart());
+
+        if (tracesForTest.Any(x => x.PlantUml is not null && x.PlantUml.Contains($"<<{StepBarPlantUml.BodyNoteClass}>>")))
+            parts.Add($$"""
+
+                <style>
+                 .{{StepBarPlantUml.BodyNoteClass}} {
+                     BackgroundColor black
+                     FontColor white
+                     LineColor white
+                 }
+                </style>
+                """.TrimStart());
+
+        return string.Join("\n", parts);
+    }
 
     private static string AddEventStyling(List<RequestResponseLog> tracesForTest) =>
         tracesForTest.Any(x => x.MetaType == RequestResponseMetaType.Event)

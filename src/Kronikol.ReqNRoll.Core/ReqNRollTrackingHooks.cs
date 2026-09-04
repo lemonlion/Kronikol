@@ -91,9 +91,13 @@ public class ReqNRollTrackingHooks
         TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
         _scenarioContext[ReqNRollConstants.StepStopwatchKey] = Stopwatch.StartNew();
 
-        // Push a step onto StepCollector so assertion tracking sub-steps attach here
+        // Push a step onto StepCollector so assertion tracking sub-steps attach here. The step's
+        // Gherkin arguments ride along so the delimiter bar can draw them — the table Reqnroll hands
+        // an outline step already has its <placeholders> substituted.
         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
-        StepCollector.StartStep(scenarioId, stepType, _scenarioContext.StepContext.StepInfo.Text, null, null);
+        var stepInfo = _scenarioContext.StepContext.StepInfo;
+        StepCollector.StartStep(scenarioId, stepType, stepInfo.Text, null, null,
+            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText);
     }
 
     [AfterStep(Order = int.MaxValue)]

@@ -282,6 +282,23 @@ public sealed record CucumberPickleStep
 
     /// <summary>The Gherkin step (and, for an outline row, the example row) this step came from.</summary>
     [JsonPropertyName("astNodeIds")] public string[]? AstNodeIds { get; init; }
+
+    /// <summary>
+    /// The step's argument with an outline row's placeholders already substituted — what the step
+    /// actually received. Preferred over the authored <see cref="CucumberGherkinStep.DataTable"/> /
+    /// <see cref="CucumberGherkinStep.DocString"/>, which keep the raw <c>&lt;placeholders&gt;</c>.
+    /// </summary>
+    [JsonPropertyName("argument")] public CucumberPickleStepArgument? Argument { get; init; }
+}
+
+/// <summary>A pickle step's argument — exactly one of <see cref="DataTable"/> or <see cref="DocString"/>.</summary>
+public sealed record CucumberPickleStepArgument
+{
+    /// <summary>The substituted data table (same shape as the Gherkin one, minus locations).</summary>
+    [JsonPropertyName("dataTable")] public CucumberDataTable? DataTable { get; init; }
+
+    /// <summary>The substituted doc string.</summary>
+    [JsonPropertyName("docString")] public CucumberDocString? DocString { get; init; }
 }
 
 /// <summary>The <c>hook</c> envelope: a declared before/after hook.</summary>

@@ -1408,6 +1408,59 @@ public static class ReportTestHelper
         @enduml
         """;
 
+    /// <summary>
+    /// A diagram whose step bars carry a Gherkin data table and a doc string, built with the real
+    /// emitter (<see cref="Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml"/>) so the
+    /// fixture cannot drift from what step tracking draws, plus the <c>.stepBody</c> style
+    /// <c>PlantUmlCreator</c> injects for it, a legacy bar, and a payload note for the notes machinery.
+    /// </summary>
+    public static string GenerateReportWithStepTableBars(string tempDir, string outputDir, string fileName)
+    {
+        var tableBar = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml(
+            "Given", "the following muffins exist",
+            table: [["name", "price"], ["Blueberry", "3.50"], ["Double Chocolate", "4.00"]]);
+        var docStringBar = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml(
+            "When", "the order payload is submitted",
+            docString: "{ \"muffin\": \"Blueberry\",\n  \"qty\": 2 }");
+
+        var source = $$"""
+            @startuml
+            <style>
+             .stepBody {
+                 BackgroundColor black
+                 FontColor white
+                 LineColor white
+             }
+            </style>
+            actor "Caller" as caller
+            participant "OrderService" as svc
+
+            {{tableBar}}
+            caller -> svc : POST /api/orders
+            note left
+            Content-Type: application/json
+            {"item":"Blueberry","qty":2}
+            end note
+            {{docStringBar}}
+            hnote across <<stepDelimiter>> #black:<color:white>Then the order is confirmed
+            svc --> caller : 201 Created
+            @enduml
+            """;
+
+        var (features, _) = CreateTestData();
+        var diagrams = new[] { new DiagramAsCode("t1", "", source) };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
     public static string GenerateReportWithStepDelimitersAndNotes(string tempDir, string outputDir, string fileName)
     {
         var (features, _) = CreateTestData();

@@ -138,6 +138,55 @@ public class CucumberFeatureSynthesizerTests
     }
 
     [Fact]
+    public void Step_markers_carry_the_table_and_doc_string_for_the_delimiter_bar()
+    {
+        var tableMarker = Result.Markers.Single(m =>
+            m.Event == "step" && m.Text == "the following order lines:");
+        Assert.Equal([["sku", "quantity", "price"], ["APPLE-1", "2", "1.50"], ["PEAR-7", "1", "2.25"]],
+            tableMarker.Table);
+        Assert.Null(tableMarker.DocString);
+
+        var docStringMarker = Result.Markers.Single(m =>
+            m.Event == "step" && m.Text == "the payload is submitted:");
+        Assert.Null(docStringMarker.Table);
+        Assert.Equal("""{ "channel": "web", "currency": "GBP" }""", docStringMarker.DocString);
+    }
+
+    [Fact]
+    public void The_pickle_argument_wins_over_the_authored_gherkin_argument()
+    {
+        // An outline's authored table keeps its <placeholders>; the pickle's argument carries the
+        // substituted values the step actually received. Both the step list and the delimiter-bar
+        // marker must show the substituted values.
+        var messages = CucumberMessagesReader.Read(new StringReader(SubstitutedArgumentStream()));
+        var result = CucumberFeatureSynthesizer.Build(messages);
+
+        var scenario = result.Features.Single().Scenarios.Single();
+        var step = Assert.Single(scenario.Steps!);
+        var parameter = Assert.Single(step.Parameters!);
+        Assert.Equal(["sku", "qty"], parameter.TabularValue!.Columns.Select(c => c.Name));
+        Assert.Equal(["SUB-1", "2"], parameter.TabularValue.Rows.Single().Values.Select(v => v.Value));
+
+        var marker = result.Markers.Single(m => m.Event == "step");
+        Assert.Equal([["sku", "qty"], ["SUB-1", "2"]], marker.Table);
+    }
+
+    /// <summary>
+    /// A minimal messages stream: one scenario whose authored table cell is the placeholder
+    /// <c>&lt;sku&gt;</c> while the pickle step's argument carries the substituted <c>SUB-1</c>.
+    /// </summary>
+    private static string SubstitutedArgumentStream() =>
+        """
+        {"gherkinDocument":{"uri":"features/sub.feature","feature":{"name":"Substitution","children":[{"scenario":{"id":"sc-1","keyword":"Scenario","name":"a substituted row","steps":[{"id":"st-1","keyword":"Given ","keywordType":"Context","text":"the order lines:","dataTable":{"rows":[{"id":"r0","cells":[{"value":"sku"},{"value":"qty"}]},{"id":"r1","cells":[{"value":"<sku>"},{"value":"2"}]}]}}]}}]}}}
+        {"pickle":{"id":"pk-1","uri":"features/sub.feature","astNodeIds":["sc-1"],"name":"a substituted row","language":"en","steps":[{"id":"ps-1","text":"the order lines:","type":"Context","astNodeIds":["st-1"],"argument":{"dataTable":{"rows":[{"cells":[{"value":"sku"},{"value":"qty"}]},{"cells":[{"value":"SUB-1"},{"value":"2"}]}]}}}]}}
+        {"testCase":{"id":"tc-1","pickleId":"pk-1","testSteps":[{"id":"ts-1","pickleStepId":"ps-1"}]}}
+        {"testCaseStarted":{"id":"att-1","attempt":0,"testCaseId":"tc-1","timestamp":{"seconds":1787393374,"nanos":0}}}
+        {"testStepStarted":{"testCaseStartedId":"att-1","testStepId":"ts-1","timestamp":{"seconds":1787393374,"nanos":100000000}}}
+        {"testStepFinished":{"testCaseStartedId":"att-1","testStepId":"ts-1","testStepResult":{"duration":{"seconds":0,"nanos":50000000},"status":"PASSED"},"timestamp":{"seconds":1787393374,"nanos":200000000}}}
+        {"testCaseFinished":{"testCaseStartedId":"att-1","timestamp":{"seconds":1787393375,"nanos":0}}}
+        """;
+
+    [Fact]
     public void Step_status_and_duration_come_from_the_step_results()
     {
         var steps = Scenario(CucumberFixtures.DemoFeature, CucumberFixtures.FailingScenario).Steps!;

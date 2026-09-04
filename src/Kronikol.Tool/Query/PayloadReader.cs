@@ -186,14 +186,19 @@ internal static class PayloadReader
         {
             var trimmed = line.TrimStart();
 
-            if (!inNote && (trimmed.StartsWith("note ", StringComparison.Ordinal) || trimmed.StartsWith("hnote ", StringComparison.Ordinal)
-                                                                                 || trimmed.StartsWith("rnote ", StringComparison.Ordinal)))
+            if (!inNote && IsNoteOpener(trimmed))
             {
-                // A one-line note carries its text after a colon; a block note runs to `end note`.
-                var colon = trimmed.IndexOf(" : ", StringComparison.Ordinal);
-                if (colon >= 0)
+                // A colon anywhere on the directive line marks PlantUML's one-line form (the rule the
+                // browser render script and the search normalizer use): its text follows a spaced
+                // " : ", while a step-delimiter bar's unspaced colon (#black:<color:white>…, or the
+                // styled body form's ">>: ") is a bar, not a payload note — it must neither be
+                // extracted nor flip the reader into note mode and swallow the notes after it.
+                // A directive line without any colon is a block note running to `end note`.
+                if (trimmed.Contains(':'))
                 {
-                    notes.Add((notes.Count, trimmed[(colon + 3)..].Trim()));
+                    var colon = trimmed.IndexOf(" : ", StringComparison.Ordinal);
+                    if (colon >= 0)
+                        notes.Add((notes.Count, trimmed[(colon + 3)..].Trim()));
                     continue;
                 }
 
@@ -215,5 +220,21 @@ internal static class PayloadReader
         }
 
         return notes;
+    }
+
+    /// <summary>
+    /// A note directive line: <c>note</c>/<c>hnote</c>/<c>rnote</c> followed by a space or an inline
+    /// stereotype — the event notes Kronikol emits open with <c>note&lt;&lt;eventNote&gt;&gt; right</c>,
+    /// no space after <c>note</c>, which a bare <c>StartsWith("note ")</c> misses.
+    /// </summary>
+    private static bool IsNoteOpener(string trimmed)
+    {
+        var i = 0;
+        if (i < trimmed.Length && (trimmed[i] == 'h' || trimmed[i] == 'r'))
+            i++;
+        if (!trimmed.AsSpan(i).StartsWith("note", StringComparison.Ordinal))
+            return false;
+        i += 4;
+        return i < trimmed.Length && (trimmed[i] == ' ' || trimmed[i] == '<');
     }
 }

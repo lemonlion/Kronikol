@@ -405,9 +405,12 @@ public static class CucumberFeatureSynthesizer
                 Duration = duration,
                 Attachments = stepAttachments,
                 Comments = message is null ? null : [message],
-                DocString = gherkinStep?.DocString?.Content,
-                DocStringMediaType = NullIfBlank(gherkinStep?.DocString?.MediaType),
-                Parameters = BuildTableParameter(gherkinStep?.DataTable),
+                // The pickle argument carries an outline row's placeholders already substituted — what
+                // the step actually received; the authored Gherkin argument is the fallback for older
+                // message streams that omit it.
+                DocString = pickleStep.Argument?.DocString?.Content ?? gherkinStep?.DocString?.Content,
+                DocStringMediaType = NullIfBlank(pickleStep.Argument?.DocString?.MediaType ?? gherkinStep?.DocString?.MediaType),
+                Parameters = BuildTableParameter(pickleStep.Argument?.DataTable ?? gherkinStep?.DataTable),
                 TextSegments = BuildTextSegments(gherkinStep?.Text, pickleStep.Text, exampleRow),
             };
 
@@ -535,7 +538,27 @@ public static class CucumberFeatureSynthesizer
             Status = status.ToString().ToLowerInvariant(),
             Error = error,
             Level = 0,
+            Table = MarkerTable(step),
+            DocString = step.DocString,
         };
+
+    /// <summary>
+    /// The step's data table as the delimiter bar draws it — header row first — recovered from the
+    /// tabular parameter <see cref="BuildTableParameter"/> built (so the bar shows exactly what the
+    /// step list shows, substituted values included).
+    /// </summary>
+    private static string[][]? MarkerTable(ScenarioStep step)
+    {
+        var tabular = step.Parameters?.FirstOrDefault(p => p.Kind == StepParameterKind.Tabular)?.TabularValue;
+        if (tabular is null)
+            return null;
+
+        return
+        [
+            tabular.Columns.Select(c => c.Name).ToArray(),
+            .. tabular.Rows.Select(r => r.Values.Select(v => v.Value).ToArray()),
+        ];
+    }
 
     /// <summary>
     /// The scenario id interactions join on: the <c>kronikol-test-id</c> attachment when the fixture wrote

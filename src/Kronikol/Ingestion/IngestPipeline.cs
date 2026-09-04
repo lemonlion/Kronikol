@@ -681,7 +681,8 @@ public static class IngestPipeline
                     passed: !string.Equals(record.Status, "failed", StringComparison.OrdinalIgnoreCase)
                             && !string.Equals(record.Status, "fail", StringComparison.OrdinalIgnoreCase),
                     record.Timestamp!.Value, record.Error)
-                : InteractionRecord.StepMarker(record.TestId, record.Text ?? "step", record.Timestamp!.Value, record.Keyword));
+                : InteractionRecord.StepMarker(record.TestId, record.Text ?? "step", record.Timestamp!.Value, record.Keyword,
+                    table: record.Table, docString: record.DocString));
         }
     }
 

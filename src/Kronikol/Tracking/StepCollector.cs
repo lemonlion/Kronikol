@@ -44,6 +44,15 @@ public static class StepCollector
     /// the new step becomes a sub-step of the current one.
     /// </summary>
     public static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues)
+        => StartStep(testId, keyword, text, paramNames, paramValues, table: null, docString: null);
+
+    /// <summary>
+    /// Starts a new step carrying a Gherkin step argument: a data <paramref name="table"/> (first row =
+    /// header) and/or a <paramref name="docString"/>, both drawn inside the step's delimiter bar (the
+    /// Reqnroll hooks pass them — the step text alone rarely makes sense without its table).
+    /// </summary>
+    public static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
+        string[][]? table, string? docString)
     {
         if (testId is null)
             return;
@@ -76,12 +85,19 @@ public static class StepCollector
             var label = Options.PrependKeyword && step.EffectiveKeyword is not null
                 ? $"{step.EffectiveKeyword} {text}"
                 : Reports.StepText.CapitaliseIfEnabled(text) ?? text;
-            // Past ~1458 characters a coloured `hnote across` overflows the engine's JS stack and the
-            // scenario loses every diagram it had — see PlantUmlStatementLimits.
-            const string prefix = "hnote across <<stepDelimiter>> #black:<color:white>";
-            label = PlantUml.PlantUmlStatementLimits.TruncateLabel(
-                label, PlantUml.PlantUmlStatementLimits.MaxColouredNoteBarChars - prefix.Length);
-            DefaultTrackingDiagramOverride.InsertPlantUml(testId, prefix + label, DiagramMarkerKind.Step);
+
+            // The explicit table (Reqnroll's Gherkin argument) rides first; tabular parameters the IL
+            // weaver captured (TabularInputs/TabularOutputs) follow, labelled by parameter name when
+            // there is more than one table to tell apart.
+            var tables = new List<PlantUml.StepBarTable>();
+            if (table is { Length: > 0 })
+                tables.Add(new PlantUml.StepBarTable(null, table));
+            foreach (var parameter in step.Parameters ?? [])
+                if (parameter is { Kind: StepParameterKind.Tabular, TabularValue: { } tabular })
+                    tables.Add(new PlantUml.StepBarTable(parameter.Name, ToBarRows(tabular)));
+
+            var bar = PlantUml.StepBarPlantUml.Build(label, tables.Count > 0 ? tables : null, docString);
+            DefaultTrackingDiagramOverride.InsertPlantUml(testId, bar, DiagramMarkerKind.Step);
         }
 
         // Phase transitions: set ambient test phase based on keyword
@@ -360,6 +376,13 @@ public static class StepCollector
         state.LastKeywordCategory = categoryKeyword;
         return displayKeyword;
     }
+
+    /// <summary>A tabular parameter as the delimiter bar draws it: header row first, then the data rows.</summary>
+    private static string[][] ToBarRows(TabularParameterValue tabular) =>
+    [
+        tabular.Columns.Select(c => c.Name).ToArray(),
+        .. tabular.Rows.Select(r => r.Values.Select(v => v.Value).ToArray()),
+    ];
 
     private static StepParameter[]? BuildParameters(string[]? paramNames, object?[]? paramValues)
     {
