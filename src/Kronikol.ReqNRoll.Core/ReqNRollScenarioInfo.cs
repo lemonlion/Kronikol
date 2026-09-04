@@ -9,6 +9,7 @@ public record ReqNRollScenarioInfo
 {
     public required string ScenarioId { get; init; }
     public required string ScenarioTitle { get; init; }
+    public string? ScenarioDescription { get; init; }
     public required string FeatureTitle { get; init; }
     public string? FeatureDescription { get; init; }
     public required string[] ScenarioTags { get; init; }

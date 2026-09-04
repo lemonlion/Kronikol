@@ -165,8 +165,8 @@ internal static class ExamplesBlockResolver
         {
             var examples = blocks[blockIndex];
             var block = new ExamplesBlock(
-                NullIfBlank(examples.Name),
-                NullIfBlank(Dedent(examples.Description)),
+                GherkinText.NullIfBlank(examples.Name),
+                GherkinText.NullIfBlank(GherkinText.Dedent(examples.Description)),
                 blockIndex);
 
             foreach (var row in examples.TableBody ?? [])
@@ -191,19 +191,4 @@ internal static class ExamplesBlockResolver
         }
     }
 
-    private static string? NullIfBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
-
-    /// <summary>Removes the common leading indentation Gherkin keeps on description blocks (mirrors the Cucumber ingest path).</summary>
-    private static string? Dedent(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return text;
-        var lines = text.Replace("\r\n", "\n").Split('\n');
-        var indent = lines
-            .Where(l => !string.IsNullOrWhiteSpace(l))
-            .Select(l => l.Length - l.TrimStart().Length)
-            .DefaultIfEmpty(0)
-            .Min();
-        return string.Join('\n', lines.Select(l => l.Length >= indent ? l[indent..] : l.TrimStart())).Trim('\n');
-    }
 }

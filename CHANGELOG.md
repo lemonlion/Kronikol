@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.77] - 2026-09-04
+
+### Fixed
+- **Reqnroll scenario descriptions now reach the report** (user-reported) — the free-text description under a `Scenario:` or `Scenario Outline:` line was captured by Reqnroll (`ScenarioInfo.Description`) but never read by the tracking hooks, so it was silently dropped while the rest of the pipeline was already wired for it (the HTML report renders `Scenario.Description` for plain scenarios and parameterized-group rows, the YAML spec has a `Description:` line, and descriptions joined the search corpus in 3.0.72 — the Cucumber-Messages ingestion path populated all of this; the live Reqnroll path none of it). `ReqNRollScenarioInfo` gains `ScenarioDescription`, the hooks capture it, and the feature mapper populates `Scenario.Description` — dedented via the same normalization the Cucumber ingest path and the Examples-block resolver use (shared `GherkinText` helper extracted from `ExamplesBlockResolver`), so a live Reqnroll run and an ingested message stream of the same feature file now produce identical description content.
+- **Reqnroll feature descriptions are now dedented too** — Reqnroll's generated code passes descriptions with the feature-file indentation intact (`"    As a dessert provider\r\n    I want …"`), and the live path forwarded them raw while the Cucumber ingest path dedents; the same normalization now applies, so YAML/search output no longer carries the leading indentation (whitespace-only descriptions map to `null` instead of rendering an empty description block).
+- Kronikol4J: capture-side parity break extends — Reqnroll-generated reports gain scenario-description content (HTML `scenario-description` divs, YAML `Description:` lines, search corpus), and feature descriptions change bytes (dedented).
+
 ## [3.0.76] - 2026-09-04
 
 ### Changed

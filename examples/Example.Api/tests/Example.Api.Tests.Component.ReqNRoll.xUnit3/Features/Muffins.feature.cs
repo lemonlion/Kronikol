@@ -146,7 +146,8 @@ namespace Example.Api.Tests.Component.ReqNRoll.xUnit3.Features
                     "happy-path"};
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             string pickleIndex = "0";
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("A valid apple cinnamon muffin request should return a fresh batch", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("A valid apple cinnamon muffin request should return a fresh batch", "        Every diagnostic batch is baked to order from the complete ingredient lis" +
+                    "t.\r\n        Stale muffins must never reach a caller.", tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
             string[] tagsOfRule = ((string[])(null));
             global::Reqnroll.RuleInfo ruleInfo = null;
 #line 6
@@ -159,16 +160,16 @@ namespace Example.Api.Tests.Component.ReqNRoll.xUnit3.Features
             else
             {
                 await this.ScenarioStartAsync();
-#line 7
+#line 10
         await testRunner.GivenAsync("a valid apple cinnamon muffin recipe with all ingredients", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
 #line hidden
-#line 8
+#line 11
         await testRunner.WhenAsync("the muffins are prepared", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
 #line hidden
-#line 9
+#line 12
         await testRunner.ThenAsync("the muffin response should contain a valid batch with all ingredients", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
 #line hidden
-#line 10
+#line 13
         await testRunner.AndAsync("the cow service should have received a milk request for the muffins", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }
@@ -216,10 +217,10 @@ namespace Example.Api.Tests.Component.ReqNRoll.xUnit3.Features
             argumentsOfScenario.Add("ExpectedToppingCount", expectedToppingCount);
             argumentsOfScenario.Add("ExpectedHasBakingInfo", expectedHasBakingInfo);
             string pickleIndex = @__pickleIndex;
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Different muffin recipes should produce the expected batch", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Different muffin recipes should produce the expected batch", "        Covers speciality flour, baking profile and topping permutations.", tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
             string[] tagsOfRule = ((string[])(null));
             global::Reqnroll.RuleInfo ruleInfo = null;
-#line 12
+#line 15
     this.ScenarioInitialize(scenarioInfo, ruleInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -237,7 +238,7 @@ namespace Example.Api.Tests.Component.ReqNRoll.xUnit3.Features
                             string.Format("{0}", flour),
                             string.Format("{0}", appleVariety),
                             string.Format("{0}", cinnamonType)});
-#line 13
+#line 18
         await testRunner.GivenAsync(string.Format("a muffin recipe \"{0}\" with the following ingredients:", recipeName), ((string)(null)), table1, "Given ");
 #line hidden
                 global::Reqnroll.Table table2 = new global::Reqnroll.Table(new string[] {
@@ -248,7 +249,7 @@ namespace Example.Api.Tests.Component.ReqNRoll.xUnit3.Features
                             string.Format("{0}", temperature),
                             string.Format("{0}", duration),
                             string.Format("{0}", panType)});
-#line 16
+#line 21
         await testRunner.AndAsync("the following baking:", ((string)(null)), table2, "And ");
 #line hidden
                 global::Reqnroll.Table table3 = new global::Reqnroll.Table(new string[] {
@@ -260,19 +261,19 @@ namespace Example.Api.Tests.Component.ReqNRoll.xUnit3.Features
                 table3.AddRow(new string[] {
                             string.Format("{0}", topping2),
                             string.Format("{0}", amount2)});
-#line 19
+#line 24
         await testRunner.AndAsync("the following muffin toppings:", ((string)(null)), table3, "And ");
 #line hidden
-#line 23
+#line 28
         await testRunner.WhenAsync("the muffins are prepared", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
 #line hidden
-#line 24
+#line 29
         await testRunner.ThenAsync(string.Format("the muffin batch should have {0} ingredients", expectedIngredientCount), ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
 #line hidden
-#line 25
+#line 30
         await testRunner.AndAsync(string.Format("the muffin response should include {0} toppings", expectedToppingCount), ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
-#line 26
+#line 31
         await testRunner.AndAsync(string.Format("the muffin response should have baking info {0}", expectedHasBakingInfo), ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }

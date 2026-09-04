@@ -54,6 +54,7 @@ internal static class ScenarioInfoEnumerableExtensions
                             {
                                 Id = x.ScenarioId,
                                 DisplayName = x.ScenarioTitle,
+                                Description = GherkinText.NullIfBlank(GherkinText.Dedent(x.ScenarioDescription)),
                                 IsHappyPath = HappyPathDetection.AnyHappyPathTag(x.ScenarioTags),
                                 Result = x.ExecutionStatus.ToExecutionResult(),
                                 ErrorMessage = x.TestError?.Message,
@@ -82,7 +83,7 @@ internal static class ScenarioInfoEnumerableExtensions
                 {
                     DisplayName = featureGroup.Key.Titleize(),
                     Endpoint = endpoint,
-                    Description = firstScenario.FeatureDescription,
+                    Description = GherkinText.NullIfBlank(GherkinText.Dedent(firstScenario.FeatureDescription)),
                     Labels = featureLabels.Length > 0 ? featureLabels : null,
                     Scenarios = scenarios
                 };

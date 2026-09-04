@@ -190,6 +190,7 @@ public class ReqNRollTrackingHooks
         {
             ScenarioId = scenarioId,
             ScenarioTitle = _scenarioContext.ScenarioInfo.Title,
+            ScenarioDescription = _scenarioContext.ScenarioInfo.Description,
             FeatureTitle = _featureContext.FeatureInfo.Title,
             FeatureDescription = _featureContext.FeatureInfo.Description,
             ScenarioTags = _scenarioContext.ScenarioInfo.Tags,

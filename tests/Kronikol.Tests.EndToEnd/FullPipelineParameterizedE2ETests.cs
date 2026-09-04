@@ -425,6 +425,33 @@ public class FullPipelineParameterizedE2ETests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task ReqNRoll_pipeline_renders_scenario_description()
+    {
+        await NavigateToReport(_pipeline.ReqNRollReportPath);
+        await ExpandAll();
+
+        var description = Page.Locator(".scenario-description",
+            new() { HasTextString = "Stale muffins must never reach a caller" }).First;
+        await Expect(description).ToBeVisibleAsync();
+
+        // The feature file indents description lines; the report must show them dedented
+        var text = await description.TextContentAsync();
+        Assert.NotNull(text);
+        Assert.StartsWith("Every diagnostic batch is baked to order from the complete ingredient list.", text);
+    }
+
+    [Fact]
+    public async Task ReqNRoll_pipeline_renders_outline_description_inside_parameterized_group()
+    {
+        await NavigateToReport(_pipeline.ReqNRollReportPath);
+        await ExpandAll();
+        await OpenParameterizedGroup("Different muffin recipes");
+
+        var groupHtml = await GetParameterizedGroup().First.InnerHTMLAsync();
+        Assert.Contains("Covers speciality flour, baking profile and topping permutations.", groupHtml);
+    }
+
+    [Fact]
     public async Task ReqNRoll_pipeline_renders_three_data_rows()
     {
         await NavigateToReport(_pipeline.ReqNRollReportPath);

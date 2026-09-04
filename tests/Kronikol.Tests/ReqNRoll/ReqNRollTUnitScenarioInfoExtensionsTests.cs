@@ -9,6 +9,7 @@ public class ReqNRollTUnitScenarioInfoExtensionsTests
     private static ReqNRollScenarioInfo MakeScenario(
         string scenarioId = "s1",
         string scenarioTitle = "Scenario",
+        string? scenarioDescription = null,
         string featureTitle = "Feature",
         string? featureDescription = null,
         string[]? scenarioTags = null,
@@ -21,6 +22,7 @@ public class ReqNRollTUnitScenarioInfoExtensionsTests
         {
             ScenarioId = scenarioId,
             ScenarioTitle = scenarioTitle,
+            ScenarioDescription = scenarioDescription,
             FeatureTitle = featureTitle,
             FeatureDescription = featureDescription,
             ScenarioTags = tags,
@@ -63,6 +65,22 @@ public class ReqNRollTUnitScenarioInfoExtensionsTests
         var info = MakeScenario(featureDescription: "As a user I want to register");
         var features = new[] { info }.ToFeatures();
         Assert.Equal("As a user I want to register", features[0].Description);
+    }
+
+    [Fact]
+    public void ToFeatures_maps_scenario_description()
+    {
+        var info = MakeScenario(scenarioDescription: "The batch must come out fresh");
+        var features = new[] { info }.ToFeatures();
+        Assert.Equal("The batch must come out fresh", features[0].Scenarios[0].Description);
+    }
+
+    [Fact]
+    public void ToFeatures_dedents_scenario_description_indentation()
+    {
+        var info = MakeScenario(scenarioDescription: "        Bakers rely on this guarantee\r\n        every single morning");
+        var features = new[] { info }.ToFeatures();
+        Assert.Equal("Bakers rely on this guarantee\nevery single morning", features[0].Scenarios[0].Description);
     }
 
     [Fact]

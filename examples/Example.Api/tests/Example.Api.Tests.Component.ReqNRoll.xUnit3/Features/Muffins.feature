@@ -4,12 +4,17 @@ Feature: Parameterized Diagnostic Feature
 
     @happy-path
     Scenario: A valid apple cinnamon muffin request should return a fresh batch
+        Every diagnostic batch is baked to order from the complete ingredient list.
+        Stale muffins must never reach a caller.
+
         Given a valid apple cinnamon muffin recipe with all ingredients
         When the muffins are prepared
         Then the muffin response should contain a valid batch with all ingredients
         And the cow service should have received a milk request for the muffins
 
     Scenario Outline: Different muffin recipes should produce the expected batch
+        Covers speciality flour, baking profile and topping permutations.
+
         Given a muffin recipe "<RecipeName>" with the following ingredients:
             | Flour   | Apples         | Cinnamon       |
             | <Flour> | <AppleVariety> | <CinnamonType> |
