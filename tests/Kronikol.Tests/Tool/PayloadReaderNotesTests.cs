@@ -42,7 +42,7 @@ public class PayloadReaderNotesTests
     {
         var diagram = """
             @startuml
-            hnote across <<stepDelimiter>><<stepBody>>: Given muffins\n|= name |\n| Blueberry |
+            hnote across <<stepDelimiter>><<stepBody>>: Given muffins\n\n|= name |\n| Blueberry |\n
             note right
             {"ok": true}
             end note

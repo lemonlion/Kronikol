@@ -13,7 +13,8 @@ namespace Kronikol.Tests.PlantUml;
 /// <item>a bar with no body content keeps the legacy one-line coloured form byte for byte —
 /// <c>hnote across &lt;&lt;stepDelimiter&gt;&gt; #black:&lt;color:white&gt;…</c>;</item>
 /// <item>a bar carrying a Gherkin data table, a doc string, or multi-line marker text switches to the
-/// styled form — <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;&lt;&lt;stepBody&gt;&gt;: label\n|= … |</c> —
+/// styled form — <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;&lt;&lt;stepBody&gt;&gt;: label\n\n|= … |\n</c>
+/// (each table/doc-string block padded with a blank display line above and below) —
 /// whose colours come from the injected <c>.stepBody</c> style instead of inline tags, because the
 /// <c>&lt;color:white&gt;</c> prefix styles only the first display line (everything after a <c>\n</c>
 /// painted black-on-black) and inline colour tags put the statement under the ~1400-character
@@ -48,22 +49,25 @@ public class StepBarPlantUmlTests
     }
 
     [Fact]
-    public void A_table_switches_to_the_styled_body_form()
+    public void A_table_switches_to_the_styled_body_form_with_breathing_room()
     {
+        // One blank display line above the table and one below — butted directly against the step
+        // text and the note border the table reads cramped. Measured on the pinned engine: the \n\n
+        // renders a blank line, and a bare trailing \n renders an empty bottom line (each +15px).
         var bar = StepBarPlantUml.Build("Given muffins", [new StepBarTable(null, Menu())]);
 
         Assert.Equal(
-            RichPrefix + @"Given muffins\n|= name |= price |\n| Blueberry | 3.50 |",
+            RichPrefix + @"Given muffins\n\n|= name |= price |\n| Blueberry | 3.50 |\n",
             bar);
     }
 
     [Fact]
-    public void A_doc_string_switches_to_the_styled_body_form()
+    public void A_doc_string_switches_to_the_styled_body_form_with_breathing_room()
     {
         var bar = StepBarPlantUml.Build("Given the request body", docString: "{ \"a\": 1,\r\n  \"b\": 2 }");
 
         Assert.Equal(
-            RichPrefix + "Given the request body\\n{ \"a\": 1,\\n  \"b\": 2 }",
+            RichPrefix + "Given the request body\\n\\n{ \"a\": 1,\\n  \"b\": 2 }\\n",
             bar);
     }
 
@@ -73,8 +77,9 @@ public class StepBarPlantUmlTests
         // The legacy coloured bar paints every line after the first black-on-black — the ingest format
         // allows multi-line step text, and it was silently invisible. Multi-line text now rides the
         // styled form, where the .stepBody style colours every line.
+        // Continuation lines are step text, not a data block — no padding blank lines around them.
         var real = StepBarPlantUml.Build("Given a payload\nwith a second line");
-        Assert.StartsWith(RichPrefix + "Given a payload\\nwith a second line", real);
+        Assert.Equal(RichPrefix + "Given a payload\\nwith a second line", real);
 
         // A literal backslash-n already in the text displays as a line break too, so it needs the
         // styled form just the same.
@@ -95,7 +100,16 @@ public class StepBarPlantUmlTests
     {
         var bar = StepBarPlantUml.Build("Given columns", [new StepBarTable(null, [["a", "b"]])]);
 
-        Assert.Equal(RichPrefix + @"Given columns\n|= a |= b |", bar);
+        Assert.Equal(RichPrefix + @"Given columns\n\n|= a |= b |\n", bar);
+    }
+
+    [Fact]
+    public void Continuation_text_before_a_table_is_padded_from_the_table_not_from_the_label()
+    {
+        var bar = StepBarPlantUml.Build("Given a payload\nwith detail",
+            [new StepBarTable(null, [["a"], ["1"]])]);
+
+        Assert.Equal(RichPrefix + @"Given a payload\nwith detail\n\n|= a |\n| 1 |\n", bar);
     }
 
     // ── Escaping: measured against the real engine ──────────────
@@ -211,8 +225,10 @@ public class StepBarPlantUmlTests
             new StepBarTable("inputs", [["a"], ["1"]]),
             new StepBarTable("outputs", [["b"], ["2"]]),
         ]);
-        Assert.Contains(@"\ninputs:\n|= a |", two);
-        Assert.Contains(@"\noutputs:\n|= b |", two);
+        Assert.Contains(@"\n\ninputs:\n|= a |", two);
+        // Adjacent blocks share a single blank line — the "after" of one is the "before" of the next.
+        Assert.Contains(@"| 1 |\n\noutputs:\n|= b |", two);
+        Assert.EndsWith(@"| 2 |\n", two);
     }
 
     // ── Caps ────────────────────────────────────────────────────
@@ -240,7 +256,7 @@ public class StepBarPlantUmlTests
         var bar = InteractionRecord.StepDelimiterPlantUml("Given", "the muffins exist",
             table: Menu(), docString: null);
 
-        Assert.Equal(RichPrefix + @"Given the muffins exist\n|= name |= price |\n| Blueberry | 3.50 |", bar);
+        Assert.Equal(RichPrefix + @"Given the muffins exist\n\n|= name |= price |\n| Blueberry | 3.50 |\n", bar);
 
         var unchanged = InteractionRecord.StepDelimiterPlantUml("Given", "the mock is armed");
         Assert.Equal(LegacyPrefix + "Given the mock is armed", unchanged);

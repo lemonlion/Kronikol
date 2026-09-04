@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.81] - 2026-09-04
+
+### Changed
+- **Step-bar tables and doc strings get breathing room** (user-requested) — a `<<stepBody>>` bar's data block sat cramped directly against the step text above it and the bar's border below it. Each table and doc-string block is now padded with one blank display line above and one below — `hnote across <<stepDelimiter>><<stepBody>>: text\n\n|= … |\n`, still one physical line so the hide-steps strip regex and every line-oriented consumer work unchanged; adjacent blocks (two named weaver tables, a table followed by a doc string) share the single blank line between them, and multi-line step text alone gets no padding because it *is* the step text. Measured on the pinned engine (v1.2026.8beta1-0e4f452): an empty display line renders as a blank note line, including as a bare trailing `\n` at the end of the statement (+15px per line), verified by a Playwright fact measuring the painted gaps off the rendered SVG. Bars without a table/doc string are emitted byte-for-byte as before. Kronikol4J: the standing 3.0.78 `<<stepBody>>` report-output divergence extends (padded bar bytes).
+
 ## [3.0.80] - 2026-09-04
 
 ### Added

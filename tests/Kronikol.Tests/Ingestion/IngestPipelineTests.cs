@@ -421,8 +421,8 @@ public class IngestPipelineTests : IDisposable
 
         // The table-carrying bar takes the styled body form; the doc-string bar likewise; and the
         // diagram carries the .stepBody style that colours them.
-        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: Given the following muffins exist\n|= name |= price |\n| Blueberry | 3.50 |\n| Double Chocolate | 4.00 |", diagram);
-        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: When the request body is\n{ ""muffin"": ""Blueberry"" }", diagram);
+        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: Given the following muffins exist\n\n|= name |= price |\n| Blueberry | 3.50 |\n| Double Chocolate | 4.00 |\n", diagram);
+        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: When the request body is\n\n{ ""muffin"": ""Blueberry"" }\n", diagram);
         Assert.Contains(".stepBody {", diagram);
         Assert.Contains("FontColor white", diagram);
     }
