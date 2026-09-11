@@ -26,10 +26,21 @@ All four items of *Shape of a fix* landed, the first as `PlantUml/DiagramWidth.c
    renderer keeps the axis.
 
 **One axis this work did NOT close, recorded honestly:** internal-flow activity diagrams have no
-**height** guard at all (~57px per node, so about seventy nodes crop vertically whatever their labels
-say), and wrapping a long label trades width for height. `RenderActivityDiagramBatched` caps at three
-batches, so making the batcher height-aware would start hiding content rather than showing it — a
-separate decision, not a silent one.
+**height** guard — nothing corresponding to `MaxEstimatedDiagramHeight` on the sequence path.
+`RenderActivityDiagram` emits every span at ~57px a node, `RenderActivityDiagramBatched` splits on
+span *count* rather than height, and wrapping a long label trades width for height.
+
+The raster-only finding below applies to this in full, so it is a smaller axis than it first reads.
+These diagrams are emitted as `plantuml-browser` divs whatever the report's rendering mode, so the
+4096 crop never touches them *in the report*: a tall activity diagram is simply tall and the page
+scrolls. It is the same two places the width axis is exposed — a PNG render, and a source copied out
+and rasterised — where about seventy nodes crosses the limit.
+
+What a reader does lose today is the **three-batch cap** in `RenderActivityDiagramBatched`: past
+about 300 spans it renders three batches and labels them `Part 1 of 30 (showing first 3)`. That is
+span-count-based and predates this work, and it is why making the batcher height-aware is not the
+obvious improvement it sounds like — smaller batches hit the cap sooner and hide *more*. A separate
+decision, not a silent one.
 
 ## The defect class
 

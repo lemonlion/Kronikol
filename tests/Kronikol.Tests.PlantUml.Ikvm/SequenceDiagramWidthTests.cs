@@ -307,10 +307,13 @@ public class SequenceDiagramWidthTests : IDisposable
     public void A_batched_activity_diagram_keeps_the_same_width_bound()
     {
         // An EF-shaped DisplayName, at the ~197 characters one really runs to, across enough spans to
-        // batch. Height is the axis this fixture deliberately stays clear of: an activity diagram has
-        // no height guard at all (~57px per node before wrapping), so about seventy nodes crop
-        // vertically whatever their labels say — a separate, pre-existing axis, recorded in
-        // DIAGRAM_WIDTH_PLAN.md rather than fixed here.
+        // batch. Height is the axis this fixture deliberately stays clear of: an activity diagram
+        // has no height guard at all (~57px per node), and the batcher splits on span count, not
+        // height. AssertFits still measures height, because the SVG viewBox is the crop proxy for
+        // every axis — but 4096 is raster-only and these diagrams always render client-side, so past
+        // about seventy nodes it is a PNG render or a copied-out source that suffers, never the
+        // report. A separate, pre-existing axis, recorded in DIAGRAM_WIDTH_PLAN.md rather than
+        // fixed here.
         var sql = "SELECT " + string.Join(", ", Enumerable.Range(0, 7)
             .Select(i => $"o.CustomerReferenceNumber{i:D2}")) + " FROM Orders AS o WHERE o.Status = @p0";
         var names = Enumerable.Range(0, 40).Select(_ => sql).ToArray();

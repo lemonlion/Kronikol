@@ -15,9 +15,26 @@
 
 ## Versioning & Release
 
-- After every session of bug fixes or feature updates is complete and the full test suite has passed, increment the patch version in **all** packages (not just the main one).
-- All packages must use the same version number.
-- The Change Log must be updated with a clear description of the changes made in the new version, including any new features, bug fixes, or breaking changes.
+Kronikol follows **semantic versioning**. All packages must use the same version number.
+
+- **MAJOR** — a breaking change to the public API or to configuration: removing or renaming a public type, member or option, or changing a default so that existing code behaves differently without being touched. Reserved for the planned v4; never bump it without asking first.
+- **MINOR** — anything new. A new option, public type or member; a new report control, diagram feature or integration; a new package. **A release that adds a feature is a minor bump even when it also fixes bugs** — the highest-ranking change in the release decides the bump.
+- **PATCH** — bug fixes, performance work and internal refactoring. Nothing new for a consumer to call.
+
+A commit that touches only repo documentation, plan files or test comments needs no version bump at all.
+
+Everything through **3.0.85** used a patch bump regardless of content, so the 3.0.x history under-reports its features. That history is not renumbered — the rule applies from the next release onward.
+
+Judgement calls that come up in this repo specifically:
+
+- A change to generated **report output** (HTML, PlantUML source, embedded scripts) is not on its own a major bump, even though it breaks golden pins and Kronikol4J byte parity. Record it in the Kronikol4J divergence ledger and pick the bump from the nature of the change itself.
+- A **new configuration option** is a minor bump even when its default preserves today's behaviour exactly — it is new public surface.
+- A bug fix that necessarily changes observable behaviour is still a **patch**; call the behaviour change out in the changelog rather than inflating the bump.
+
+After every session of work is complete and the full test suite has passed:
+
+- Increment the version in **all** packages (not just the main one), per the rule above.
+- Update the Change Log with a clear description of the changes: new features, bug fixes, breaking changes. **State which part of the version moved and why**, so the number can be checked against the release.
 - Commit, create a git tag (`v{version}`), and push both the commit and the tag to origin.
 
 ## Documentation
