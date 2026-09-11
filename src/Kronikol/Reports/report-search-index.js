@@ -21,32 +21,41 @@
 
 // §4.1 shared normalization — must stay byte-identical to SearchNormalizer.cs and
 // tools/search-bench/normalize.js (pinned by tests/shared-vectors/search-index-vectors.json).
+// 1b. Undo exactly the note-body breaks the generator marked (NOTE_COPY_FIDELITY_PLAN). Replaced a
+// flush-left heuristic that welded together any note line starting at column 0 — right for indented
+// JSON, wrong for plain text and SQL. Runs before the fold and the creole-escape strip because
+// pass 3 removes the `~` that tells Kronikol's marker from a payload's own "<U+200B>".
+// The markers are literals INSIDE these functions, not shared module-scope vars: buildWorker
+// serialises each listed function with toString() and nothing else travels with it.
+function kronEndsWithOwnMarker(line, marker) {
+    if (line.length < marker.length || line.slice(-marker.length) !== marker) return false;
+    return !(line.length > marker.length && line.charAt(line.length - marker.length - 1) === '~');
+}
+
+function kronRejoinMarkedBreaks(s) {
+    var mark = '<U+200B>';
+    var markSpace = mark + mark;
+    if (s.indexOf(mark) === -1) return s;
+    var lines = s.split('\n');
+    var out = '';
+    for (var i = 0; i < lines.length; i++) {
+        var l = lines[i];
+        var last = i === lines.length - 1;
+        if (!last && kronEndsWithOwnMarker(l, markSpace)) out += l.slice(0, l.length - markSpace.length) + ' ';
+        else if (!last && kronEndsWithOwnMarker(l, mark)) out += l.slice(0, l.length - mark.length);
+        else out += l + (last ? '' : '\n');
+    }
+    return out;
+}
+
 function kronNormalizeForSearch(s) {
     s = s.replace(/\r\n/g, '\n');                                  // 1. canonicalize CRLF
+    s = kronRejoinMarkedBreaks(s);                                 // 1b. undo the generator's own note-body breaks
     s = s.replace(/[A-Z]/g, function(c) { return c.toLowerCase(); }); // 2. ASCII-only fold
     s = s.replace(/~(?=[/*_\-"\[<#=])/g, '');                      // 3. creole escapes
     s = s.replace(/<\/?(?:color|font|i|b|size|back)[^>]*>/g, '');  // 4. markup tags
     s = s.replace(/\\n[ \t]*/g, '');                               // 5a. arrow-label literal \n escape
-    // 5b. note-body rejoin (linear, parts joined once). Openers cover every multi-line note
-    // form the formatter emits: `note left`, `note<<class>> right` (event notes),
-    // `hnote across <<class>>` (assertion/render-error notes). A `:` on the directive line
-    // marks PlantUML's single-line form (step delimiters, row markers) — no body follows.
-    var lines = s.split('\n');
-    var parts = [];
-    var inNote = false;
-    for (var i = 0; i < lines.length; i++) {
-        var l = lines[i];
-        var trimmed = l.trim();
-        if (/^[hr]?note(?:<<[^>]*>>)? (left|right|over|across)\b/.test(trimmed) && trimmed.indexOf(':') === -1) { inNote = true; if (parts.length) parts.push('\n'); parts.push(l); continue; }
-        if (trimmed === 'end note') { inNote = false; if (parts.length) parts.push('\n'); parts.push(l); continue; }
-        if (inNote && parts.length && l.length > 0 && !/\s/.test(l[0])) {
-            parts.push(l);
-        } else {
-            if (parts.length) parts.push('\n');
-            parts.push(l);
-        }
-    }
-    return (parts.join('') + '\n').replace(/[ \t]+/g, ' ');        // 6. collapse spaces
+    return (s + '\n').replace(/[ \t]+/g, ' ');                     // 6. collapse spaces
 }
 
 // Query text goes through the same normalization as the corpus (so creole/markup/whitespace
@@ -466,6 +475,7 @@ function kronSearchWorkerMain(self) {
 
     function buildWorker() {
         var fns = [
+            kronEndsWithOwnMarker, kronRejoinMarkedBreaks,
             kronNormalizeForSearch, kronNormalizeQueryText, kronTrigramBuckets,
             kronDecodeSearchIndex, kronRowIntoBitset, kronCandidateBitsetForTerm,
             kronCandidateDocsForQuery, kronIsDeepEligible, kronDeepMatchesItem,

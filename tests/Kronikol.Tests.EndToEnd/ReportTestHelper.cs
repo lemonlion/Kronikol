@@ -1,5 +1,6 @@
 ﻿using Kronikol.ComponentDiagram;
 using Kronikol.InternalFlow;
+using Kronikol.PlantUml;
 using Kronikol.Reports;
 using Kronikol.Reports.Merge;
 using Kronikol.Tracking;
@@ -3243,6 +3244,46 @@ public static class ReportTestHelper
     /// fixture for the copy-text paths on YAML notes. The shipped gold vector
     /// produces zero escapes, which is why the leak went unnoticed.
     /// </summary>
+    /// <summary>
+    /// The token a reader most wants out of a report and least wants broken: a JWT long enough that
+    /// <see cref="PlantUmlCreator.WrapUnbreakableRuns"/> cuts it. The note body is built by the REAL
+    /// wrapper, so the join markers in the fixture are the ones the generator writes.
+    /// </summary>
+    public const string CopyFidelityJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+        + "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFkYSBMb3ZlbGFjZSIsImlhdCI6MTUxNjIzOTAyMiwicm9sZXMiOlsiYWRtaW4iXX0"
+        + ".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+
+    public static string GenerateReportWithWrappedTokenNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+
+        var body = PlantUmlCreator.WrapUnbreakableRuns(
+            "{\n  \"access_token\": \"" + CopyFidelityJwt + "\",\n  \"expires_in\": 3600\n}");
+
+        var source = "@startuml\n"
+            + "actor \"Caller\" as caller\n"
+            + "participant \"AuthService\" as svc\n\n"
+            + "caller -> svc : POST /api/token\n"
+            + "note left\n"
+            + "<color:gray>[content-type=application/json]\n\n"
+            + body + "\n"
+            + "end note\n"
+            + "svc --> caller : 200 OK\n"
+            + "@enduml";
+
+        var diagrams = new[] { new DiagramAsCode("t1", "", source) };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return "file://" + path.Replace("\\", "/");
+    }
+
     public static string GenerateReportWithEscapingYamlNote(string tempDir, string outputDir, string fileName)
     {
         var (features, _) = CreateTestData();

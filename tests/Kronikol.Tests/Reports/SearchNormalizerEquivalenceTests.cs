@@ -27,29 +27,38 @@ public partial class SearchNormalizerEquivalenceTests
     [GeneratedRegex("[ \t]+")]
     private static partial Regex WhitespaceRun();
 
-    // The reference's note-opener regex, with JS \b transliterated to an explicit ASCII
-    // word-boundary group (.NET \b is Unicode-aware, JS \b is ASCII-\w-based).
-    [GeneratedRegex("^[hr]?note(?:<<[^>]*>>)? (left|right|over|across)([^a-zA-Z0-9_]|$)")]
-    private static partial Regex NoteOpener();
+    // Rule 1b, transliterated from normalize.js. Deliberately NOT a call to
+    // DiagramWidth.RejoinMarkedLines: this suite exists to check the shipped normalizer against an
+    // independent restatement of the reference, and sharing the implementation would check nothing.
+    private const string RefJoin = "<U+200B>";
+    private const string RefJoinSpace = RefJoin + RefJoin;
 
-    // JS /\s/ and String.trim() semantics, NOT char.IsWhiteSpace/string.Trim — they disagree on
-    // U+0085 (NEL) and U+FEFF, and the shipped normalizer must match the client JS exactly.
-    private static bool RefIsJsWhitespace(char c) =>
-        c is ' ' or '\t' or '\n' or '\v' or '\f' or '\r' or '\u00a0' or '\u1680'
-          or (>= '\u2000' and <= '\u200a') or '\u2028' or '\u2029' or '\u202f' or '\u205f' or '\u3000' or '\ufeff';
+    private static bool RefEndsWithOwnMarker(string line, string marker) =>
+        line.EndsWith(marker, StringComparison.Ordinal)
+        && !(line.Length > marker.Length && line[line.Length - marker.Length - 1] == '~');
 
-    private static string RefJsTrim(string line)
+    private static string RefRejoinMarkedBreaks(string s)
     {
-        var start = 0;
-        var end = line.Length;
-        while (start < end && RefIsJsWhitespace(line[start])) start++;
-        while (end > start && RefIsJsWhitespace(line[end - 1])) end--;
-        return line[start..end];
+        if (!s.Contains(RefJoin, StringComparison.Ordinal)) return s;
+        var lines = s.Split('\n');
+        var sb = new StringBuilder(s.Length);
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            var last = i == lines.Length - 1;
+            if (!last && RefEndsWithOwnMarker(line, RefJoinSpace))
+                sb.Append(line, 0, line.Length - RefJoinSpace.Length).Append(' ');
+            else if (!last && RefEndsWithOwnMarker(line, RefJoin))
+                sb.Append(line, 0, line.Length - RefJoin.Length);
+            else
+                sb.Append(line).Append(last ? "" : "\n");
+        }
+        return sb.ToString();
     }
 
     private static string ReferenceNormalize(string text)
     {
-        var s = text.Replace("\r\n", "\n");
+        var s = RefRejoinMarkedBreaks(text.Replace("\r\n", "\n"));
         var chars = s.ToCharArray();
         for (var i = 0; i < chars.Length; i++)
             if (chars[i] is >= 'A' and <= 'Z') chars[i] = (char)(chars[i] + 32);
@@ -57,37 +66,7 @@ public partial class SearchNormalizerEquivalenceTests
         s = CreoleEscape().Replace(s, "");
         s = MarkupTag().Replace(s, "");
         s = ArrowLabelBreak().Replace(s, "");
-        var sb = new StringBuilder();
-        var inNote = false;
-        var first = true;
-        foreach (var line in s.Split('\n'))
-        {
-            var trimmed = RefJsTrim(line);
-            if (NoteOpener().IsMatch(trimmed) && !trimmed.Contains(':'))
-            {
-                inNote = true;
-                if (!first) sb.Append('\n');
-                sb.Append(line);
-            }
-            else if (trimmed == "end note")
-            {
-                inNote = false;
-                if (!first) sb.Append('\n');
-                sb.Append(line);
-            }
-            else if (inNote && !first && line.Length > 0 && !RefIsJsWhitespace(line[0]))
-            {
-                sb.Append(line);
-            }
-            else
-            {
-                if (!first) sb.Append('\n');
-                sb.Append(line);
-            }
-            first = false;
-        }
-        sb.Append('\n');
-        return WhitespaceRun().Replace(sb.ToString(), " ");
+        return WhitespaceRun().Replace(s + "\n", " ");
     }
 
     // ---- pins ----
@@ -102,16 +81,18 @@ public partial class SearchNormalizerEquivalenceTests
         "<int> <industrial> <band> <notatag> <Color:Gray>UP</Color>",
         "<color:never-closed and text goes on",
         "label\\n        continued\\N\tmore",
-        "note left\n<color:gray>[X=aaaa\n<color:gray>bbbb]\n\n{\n  \"k\": \"AAAA\nBBBB\"\n}\nend note\nafter -> b: x",
+        "note left\n<color:gray>[X=aaaa<U+200B>\n<color:gray>bbbb]\n\n{\n  \"k\": \"AAAA<U+200B>\nBBBB\"\n}\nend note\nafter -> b: x",
         "note right\nflush\nleft\nend note",
         "note over A,B\npayload\nend note",
-        "note<<eventNote>> right\nchunkA\nchunkB\nend note",
-        "hnote across <<assertionNote>> #90EE90\nexpected X\nactual Y\nend note",
+        "note<<eventNote>> right\nchunkA<U+200B>\nchunkB\nend note",
+        "hnote across <<assertionNote>> #90EE90\nexpected X<U+200B><U+200B>\nactual Y\nend note",
         "hnote across <<stepDelimiter>> #black:<color:white>Step 1\nflush\nnext",
         "hnote across #lightyellow : Row 2\nflush",
         "note left\nAAAA\nnote leftovers glue\nend note",
-        "note left\nAAAA\n\u0085NEL-continuation\nend note",
-        "note left\nAAAA\n\ufeffFEFF-continuation\nend note",
+        "alpha~<U+200B>\nbeta",
+        "<U+200B>\nleading marker line",
+        "a<U+200B>b<U+200B>\nc",
+        "trailing marker on last line<U+200B>",
         "notnote left\nx\ny",
         "  a\tb  c   \n\t\n d",
         "~x ~~ ~ tilde survivors",
@@ -140,7 +121,7 @@ public partial class SearchNormalizerEquivalenceTests
             "note left\n", "end note\n", "~*", "~/", "\\n   ", "<color:gray>", "</font>", "<i>", "\r\n",
             "  ", "\t", "{ \"k\": \"v\" }\n", "POST: /api/x\n", "~[", "~\"", "AAAA\n", "bbbb\n", "<", ">", "~", "\\",
             "note<<eventNote>> right\n", "hnote across <<assertionNote>> #x\n", "hnote across #y : Row\n",
-            "across ", "\u0085", "\ufeff"
+            "across ", "\u0085", "\ufeff", "<U+200B>\n", "<U+200B><U+200B>\n", "~<U+200B>\n"
         ];
         for (var doc = 0; doc < 50; doc++)
         {

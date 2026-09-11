@@ -107,6 +107,81 @@ internal static class DiagramWidth
     internal const string EscapedBreak = @"\n";
 
     /// <summary>
+    /// Ends a note-body line that Kronikol broke and whose next line continues it with <b>nothing</b>
+    /// between — a token cut mid-way.
+    /// <para>
+    /// A break written into a note body is a display decision, but every path that hands note text
+    /// back to a reader (Copy box text, Open box text in new tab, Copy all caller request payloads)
+    /// reads those source lines. Without a marker they cannot be told from a newline the payload
+    /// really had, so a copied token comes back in two pieces and does not parse.
+    /// </para>
+    /// <para>
+    /// The <b>escape</b> form is deliberate, not a literal <c>U+200B</c>. <c>EscapeCreoleMarkup</c>
+    /// escapes <c>&lt;</c>, so a payload that literally contains the text <c>&lt;U+200B&gt;</c>
+    /// reaches the source as <c>~&lt;U+200B&gt;</c> — an <b>unescaped</b> marker is therefore provably
+    /// Kronikol's own, the same argument the YAML view's reconstructor makes about focus-emphasis
+    /// tags. A literal character would be indistinguishable from one in the captured bytes. Measured
+    /// on real PlantUML, both forms resolve to the same zero-width space and a marked note draws at
+    /// exactly the size of an unmarked one (668x145 either way), so the marker is free.
+    /// </para>
+    /// </summary>
+    internal const string JoinMarker = "<U+200B>";
+
+    /// <summary>
+    /// Ends a note-body line whose next line continues it with <b>one space</b> between — a break
+    /// taken at a word boundary, where the wrapper consumed the space that was there.
+    /// <see cref="WrapOneLine"/> is the only wrapper that takes breaks of both kinds, and a rejoin
+    /// that cannot tell them apart reassembles one of them wrong.
+    /// </summary>
+    internal const string JoinSpaceMarker = JoinMarker + JoinMarker;
+
+    /// <summary>
+    /// Undoes exactly the breaks Kronikol marked, leaving every newline the payload really had.
+    /// <para>
+    /// The reference implementation. <c>collapsible-notes-script.js</c> mirrors it for the browser
+    /// and the two must agree, so keep the rules here and there in step: longest marker first, an
+    /// escaped marker (<c>~</c> in front) is the payload's own text and is never a break, and CRLF is
+    /// normalised so a line split on <c>\n</c> is not left with a <c>\r</c> between its text and the
+    /// marker.
+    /// </para>
+    /// <para>
+    /// Run this <b>before</b> reversing the creole escaping, never after: unescaping turns a payload's
+    /// <c>~&lt;U+200B&gt;</c> into a bare marker and the distinction this whole mechanism rests on is
+    /// gone.
+    /// </para>
+    /// </summary>
+    internal static string RejoinMarkedLines(string text)
+    {
+        if (text.IndexOf(JoinMarker, StringComparison.Ordinal) < 0) return text;
+
+        var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        var sb = new StringBuilder(text.Length);
+
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            var last = i == lines.Length - 1;
+
+            if (!last && EndsWithOwnMarker(line, JoinSpaceMarker))
+                sb.Append(line, 0, line.Length - JoinSpaceMarker.Length).Append(' ');
+            else if (!last && EndsWithOwnMarker(line, JoinMarker))
+                sb.Append(line, 0, line.Length - JoinMarker.Length);
+            else
+                sb.Append(line).Append(last ? "" : "\n");
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Whether <paramref name="line"/> ends with a marker Kronikol wrote, as opposed to one the
+    /// payload happens to contain — which the escaper would have left a <c>~</c> in front of.
+    /// </summary>
+    private static bool EndsWithOwnMarker(string line, string marker) =>
+        line.EndsWith(marker, StringComparison.Ordinal)
+        && !(line.Length > marker.Length && line[line.Length - marker.Length - 1] == '~');
+
+    /// <summary>
     /// Breaks <paramref name="text"/> onto display lines of at most <paramref name="budget"/>
     /// characters, and returns it <b>unchanged</b> when every line already fits — which is nearly
     /// always, and is what keeps ordinary diagrams byte-identical.
@@ -157,8 +232,13 @@ internal static class DiagramWidth
         var wrapped = new List<string>(lines.Length);
 
         foreach (var line in lines)
-        foreach (var piece in WrapLines(line, MaxNoteTextLineChars))
-            wrapped.Add(piece.Trim() is "end note" or "endnote" ? "​" + piece : piece);
+        {
+            // markJoins: an assertion note IS copied back out, unlike a label or a step bar, so its
+            // breaks have to be reversible. The pieces come back already carrying their markers.
+            var pieces = WrapLines(line, MaxNoteTextLineChars, markJoins: true);
+            foreach (var piece in pieces)
+                wrapped.Add(piece.Trim() is "end note" or "endnote" ? "​" + piece : piece);
+        }
 
         return string.Join("\n", wrapped);
     }
@@ -169,10 +249,10 @@ internal static class DiagramWidth
     /// to be escaped separately afterwards — the step bar's escaping puts a zero-width space after
     /// every backslash, which would neutralise a <c>\n</c> the wrapper had already woven in.
     /// </summary>
-    internal static List<string> WrapLines(string line, int budget)
+    internal static List<string> WrapLines(string line, int budget, bool markJoins = false)
     {
         var into = new List<string>(1);
-        WrapOneLine(line, budget, into);
+        WrapOneLine(line, budget, into, markJoins);
         return into;
     }
 
@@ -200,7 +280,7 @@ internal static class DiagramWidth
         cell.Length <= budget ? cell : cell[..(budget - 1)] + "…";
 
     /// <summary>Appends <paramref name="line"/> to <paramref name="into"/>, broken between its atoms.</summary>
-    private static void WrapOneLine(string line, int budget, List<string> into)
+    private static void WrapOneLine(string line, int budget, List<string> into, bool markJoins = false)
     {
         if (line.Length <= budget)
         {
@@ -208,43 +288,56 @@ internal static class DiagramWidth
             return;
         }
 
+        var spaceJoin = markJoins ? JoinSpaceMarker : "";
+        var hardJoin = markJoins ? JoinMarker : "";
         var current = new StringBuilder();
+        // Whether an atom has been written to the line being built. NOT `current.Length > 0`: an atom
+        // may be the empty string (a run of spaces yields one per extra space), and an empty first
+        // atom means the line began with a space that has to be kept.
+        var started = false;
 
         foreach (var atom in Atoms(line, budget))
         {
-            if (current.Length > 0 && current.Length + 1 + atom.Length > budget)
+            // A break between atoms consumes the space that separated them, so it is the space-marked
+            // kind; a cut inside a word is not. A rejoin that cannot tell them apart puts a space
+            // inside a token or loses one between words.
+            if (started && current.Length + 1 + atom.Length > budget)
             {
-                into.Add(current.ToString());
+                into.Add(current + spaceJoin);
                 current.Clear();
+                started = false;
             }
 
             if (atom.Length <= budget || !CanSplit(atom))
             {
-                if (current.Length > 0) current.Append(' ');
+                if (started) current.Append(' ');
                 current.Append(atom);
+                started = true;
                 continue;
             }
 
             // A word no line could hold and no space in it to break at. Cutting it is the only way to
             // bound the width, and it is safe precisely because CanSplit ruled out markup. The pieces
             // are whole lines rather than words, so no space is introduced into the middle of a word.
-            if (current.Length > 0)
+            if (started)
             {
-                into.Add(current.ToString());
+                into.Add(current + spaceJoin);
                 current.Clear();
+                started = false;
             }
 
             for (var at = 0; at < atom.Length; at += budget)
             {
                 var piece = atom.Substring(at, Math.Min(budget, atom.Length - at));
                 if (at + budget < atom.Length)
-                    into.Add(piece);
+                    into.Add(piece + hardJoin);
                 else
                     current.Append(piece); // the tail carries on, so the next atom can join it
             }
+            started = true;
         }
 
-        if (current.Length > 0)
+        if (started)
             into.Add(current.ToString());
     }
 
@@ -263,7 +356,11 @@ internal static class DiagramWidth
                 continue;
             }
 
-            foreach (var word in item.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            // NOT RemoveEmptyEntries: a run of several spaces is the padding that makes a table or
+            // an aligned column readable, and collapsing it here would lose it BEFORE any break was
+            // inserted — a loss no rejoin can undo, and one that silently defeated the monospace note
+            // control. An empty atom rejoins as the extra space it stands for.
+            foreach (var word in item.Split(' '))
                 yield return word;
         }
     }

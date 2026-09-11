@@ -2,6 +2,48 @@
 (function() {
     var SVGNS = 'http://www.w3.org/2000/svg';
 
+    // ── Copy fidelity: undoing the breaks Kronikol wrote ────────────────────
+    // A break in a note body is a DISPLAY decision — the width budget's, not the payload's — so every
+    // path that hands note text back to a reader has to take them out again, or a token cut mid-way
+    // is copied in two pieces and does not parse. The generator marks the breaks it inserts; these
+    // two functions are the browser half of DiagramWidth.RejoinMarkedLines and must agree with it:
+    // longest marker first, a marker with `~` in front is the PAYLOAD's own text and never a break,
+    // and CRLF is normalised so splitting on \n does not leave a \r between the text and its marker.
+    //
+    // Run this BEFORE reversing the creole escaping, never after: unescaping turns a payload's
+    // `~<U+200B>` into a bare marker and the distinction the whole mechanism rests on is gone.
+    var NOTE_JOIN_MARKER = '<U+' + '200B>';
+    var NOTE_JOIN_SPACE_MARKER = NOTE_JOIN_MARKER + NOTE_JOIN_MARKER;
+
+    function endsWithOwnMarker(line, marker) {
+        if (line.length < marker.length || line.slice(-marker.length) !== marker) return false;
+        return !(line.length > marker.length && line.charAt(line.length - marker.length - 1) === '~');
+    }
+
+    function rejoinWrappedNoteLines(text) {
+        if (!text || text.indexOf(NOTE_JOIN_MARKER) < 0) return text;
+        var lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+        var out = '';
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var last = i === lines.length - 1;
+            if (!last && endsWithOwnMarker(line, NOTE_JOIN_SPACE_MARKER)) {
+                out += line.slice(0, line.length - NOTE_JOIN_SPACE_MARKER.length) + ' ';
+            } else if (!last && endsWithOwnMarker(line, NOTE_JOIN_MARKER)) {
+                out += line.slice(0, line.length - NOTE_JOIN_MARKER.length);
+            } else {
+                out += line + (last ? '' : '\n');
+            }
+        }
+        return out;
+    }
+
+    // The engine resolves the marker to a real zero-width space, so it reaches the PAINTED svg text.
+    // Anything reading note text out of the DOM rather than out of the source has to drop it.
+    function stripZeroWidth(text) {
+        return text ? text.replace(/\u200b/g, '') : text;
+    }
+
     function parseNoteBlocks(source) {
         if (!source) return [];
         var lines = source.split('\n');
@@ -978,6 +1020,10 @@
         }
         if (payload.length === 0) return null;
         var text = payload.join('\n');
+        // Undo the width budget's breaks FIRST, while the creole escaping is still intact: the
+        // unescape below would turn a payload's own `~<U+200B>` into a bare marker and this pass
+        // would then eat a real newline.
+        text = rejoinWrappedNoteLines(text);
         // Strip focus emphasis markup. A literal '<' in the payload was
         // ~-escaped by the creole escaper, so any unescaped tag here is
         // provably Kronikol's own — protect ~< sequences, drop the rest.
@@ -990,9 +1036,11 @@
         // and reconstructs one character off; if the result still parses the
         // YAML view can show subtly wrong bytes. The JSON view is always exact.
         text = text.replace(/~([\/*_\-"\[<#=])/g, '$1');
-        // Reverse WrapUnbreakableRuns: JSON forbids raw newlines inside string
-        // literals, so a line ending while a string is open is provably a wrap
-        // break — join it with the next line (the wrap inserted only the newline).
+        // FALLBACK for reports generated before the breaks were marked: JSON forbids raw newlines
+        // inside string literals, so a line ending while a string is open is provably a wrap break —
+        // join it with the next line (the wrap inserted only the newline). Marked reports have
+        // nothing left for this pass to find, and it only ever reached breaks that landed inside a
+        // string, which is why the marker replaced it rather than joining it.
         var lines = text.split('\n');
         var joined = [];
         for (var li = 0; li < lines.length; li++) {
@@ -2002,6 +2050,8 @@
     window._paintedNoteRowCount = paintedRowCount;
     window._applyNoteAppearance = applyNoteAppearance;
     window._parseNoteBlocks = parseNoteBlocks;
+    window._rejoinWrappedNoteLines = rejoinWrappedNoteLines;
+    window._stripZeroWidth = stripZeroWidth;
     window._computeGlobalNoteIndex = computeGlobalNoteIndex;
     // Pure JSON ⇄ YAML functions, exposed for the Playwright unit-style fixture
     window._noteFormatInternals = {

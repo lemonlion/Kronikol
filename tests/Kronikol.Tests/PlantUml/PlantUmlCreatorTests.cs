@@ -1403,7 +1403,7 @@ public class PlantUmlCreatorTests
         var grayLines = plantUml.Split('\n')
             .Select(l => l.Trim())
             .Where(l => l.StartsWith("<color:gray>"))
-            .Select(l => l["<color:gray>".Length..])
+            .Select(l => l["<color:gray>".Length..].Replace(DiagramWidth.JoinMarker, ""))
             .ToList();
 
         Assert.NotEmpty(grayLines);
@@ -3825,10 +3825,15 @@ public class PlantUmlCreatorTests
         var plantUml = GetPlantUml(logs);
 
         Assert.Contains(blob[..PlantUmlCreator.MaxUnbrokenRunChars], plantUml);
-        var noteLines = plantUml.Split('\n').Where(l => l.Trim().All(c => c == 'x') && l.Trim().Length > 0).ToList();
+        // Each wrapped line now ends with the join marker (NOTE_COPY_FIDELITY_PLAN): it is zero-width,
+        // so the DRAWN length is what this fact is about and the marker comes off before measuring.
+        var noteLines = plantUml.Split('\n')
+            .Select(l => l.Trim().Replace(DiagramWidth.JoinMarker, ""))
+            .Where(l => l.Length > 0 && l.All(c => c == 'x'))
+            .ToList();
         Assert.True(noteLines.Count >= 5000 / PlantUmlCreator.MaxUnbrokenRunChars);
-        Assert.All(noteLines, l => Assert.True(l.Trim().Length <= PlantUmlCreator.MaxUnbrokenRunChars, $"run of {l.Trim().Length}"));
-        Assert.Equal(5000, noteLines.Sum(l => l.Trim().Length));
+        Assert.All(noteLines, l => Assert.True(l.Length <= PlantUmlCreator.MaxUnbrokenRunChars, $"run of {l.Length}"));
+        Assert.Equal(5000, noteLines.Sum(l => l.Length));
     }
 
     [Fact]
@@ -3855,17 +3860,21 @@ public class PlantUmlCreatorTests
     {
         var run = string.Concat(Enumerable.Range(0, 40).Select(i => $"k{i:00}:v{i:00},")); // 360 chars, no spaces, commas every 9
         var wrapped = PlantUmlCreator.WrapUnbreakableRuns(run);
-        var pieces = wrapped.Split('\n');
+        // Every break now carries the zero-width join marker, so the cut itself is measured with the
+        // marker off — and the round trip is asserted through RejoinMarkedLines rather than by
+        // deleting newlines, which is the stronger statement: this is exactly what a reader copying
+        // the note back out gets.
+        var pieces = wrapped.Split('\n').Select(p => p.Replace(DiagramWidth.JoinMarker, "")).ToArray();
         Assert.True(pieces.Length >= 3);
         Assert.All(pieces, piece => Assert.True(piece.Length <= PlantUmlCreator.MaxUnbrokenRunChars));
         Assert.All(pieces[..^1], piece => Assert.EndsWith(",", piece)); // cut at a comma, not mid-token
-        Assert.Equal(run, wrapped.Replace("\n", ""));
+        Assert.Equal(run, DiagramWidth.RejoinMarkedLines(wrapped));
 
         var tagged = new string('a', 110) + "<color:gray>" + new string('b', 110);
         var wrappedTag = PlantUmlCreator.WrapUnbreakableRuns(tagged);
         Assert.Contains("<color:gray>", wrappedTag); // the tag survived intact
         Assert.DoesNotContain("<color:\ngray>", wrappedTag);
-        Assert.Equal(tagged, wrappedTag.Replace("\n", ""));
+        Assert.Equal(tagged, DiagramWidth.RejoinMarkedLines(wrappedTag));
 
         var shortText = "fits on one line";
         Assert.Same(shortText, PlantUmlCreator.WrapUnbreakableRuns(shortText));

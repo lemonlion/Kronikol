@@ -323,6 +323,39 @@ public class SequenceDiagramWidthTests : IDisposable
         Assert.All(diagrams, d => AssertFits(d, "a batched activity diagram"));
     }
 
+    // ── The copy-fidelity join marker (NOTE_COPY_FIDELITY_PLAN) ────────────
+
+    [Fact]
+    public void A_note_carrying_join_markers_draws_exactly_as_one_without_them()
+    {
+        // The marker only works if it is free. Both forms resolve to the same zero-width space, and a
+        // marked note must draw at the size of the unmarked one to the pixel — otherwise every
+        // wrapped note in every report silently changes shape.
+        var token = new string('Q', 60);
+        var plain = NoteDiagram(token + "\n" + token);
+        var marked = NoteDiagram(token + DiagramWidth.JoinMarker + "\n" + token);
+        var spaceMarked = NoteDiagram(token + DiagramWidth.JoinSpaceMarker + "\n" + token);
+
+        Assert.Equal(DrawnSize(plain), DrawnSize(marked));
+        Assert.Equal(DrawnSize(plain), DrawnSize(spaceMarked));
+    }
+
+    [Fact]
+    public void A_generated_note_full_of_markers_still_fits_and_still_parses()
+    {
+        // The end-to-end statement: the generator's own output, markers and all, through the real
+        // engine. DrawnSize already fails the test on "Syntax Error".
+        var jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." + new string('Q', 900) + ".signature";
+        var note = PlantUmlCreator.WrapUnbreakableRuns(jwt);
+
+        Assert.Contains(DiagramWidth.JoinMarker, note);
+        AssertFits(NoteDiagram(note), "a note carrying join markers");
+    }
+
+    private static string NoteDiagram(string body) =>
+        "@startuml\n!pragma teoz true\nskinparam wrapWidth 800\nparticipant \"A\" as a\n"
+        + "participant \"B\" as b\na -> b: go\nnote left\n" + body + "\nend note\n@enduml";
+
     // ── 3 & 4. Step-delimiter bars ─────────────────────────────────────────
 
     [Fact]

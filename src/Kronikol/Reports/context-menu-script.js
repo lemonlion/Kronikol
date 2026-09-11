@@ -216,6 +216,50 @@
         return parent;
     }
 
+    // ── Turning note SOURCE lines back into what the payload actually was ───
+    // Source-derived lines carry the generation-side creole escapes (~/ for /, etc.) which PlantUML
+    // consumes before display, and the breaks the width budget inserted, which it marks. Both have to
+    // come off, and the ORDER is not free: rejoin first, while the escaping is intact. Unescaping
+    // first would turn a payload's own `~<U+200B>` into a bare marker and a real newline would be
+    // eaten. Every copy, open-in-new-tab and payload-extract path goes through here.
+    function unescapeSourceNoteLine(l) {
+        return l.replace(/~([\/*_\-"\[<#=])/g, '$1');
+    }
+
+    function rejoinNoteSource(text) {
+        return window._rejoinWrappedNoteLines ? window._rejoinWrappedNoteLines(text) : text;
+    }
+
+    function noteLinesToText(lines, unescapeLine) {
+        var stripped = lines.map(function(l) { return l.replace(/^\s*<color:gray>/, ''); });
+        return rejoinNoteSource(stripped.join('\n')).split('\n').map(unescapeLine).join('\n');
+    }
+
+    // A note's gray header lines are a contiguous prefix: the tagged lines, then any blank lines that
+    // separate them from the payload. Both copy paths need the split, so it lives in one place.
+    function splitGrayHeader(lines) {
+        var header = [];
+        var afterGray = false;
+        for (var i = 0; i < lines.length; i++) {
+            var t = lines[i].trim();
+            if (/^<color:gray>/.test(t)) { afterGray = true; header.push(lines[i]); continue; }
+            if (afterGray && t === '') { header.push(lines[i]); continue; }
+            break;
+        }
+        return { header: header, body: lines.slice(header.length) };
+    }
+
+    function joinNoteParts(headerText, bodyText) {
+        return headerText ? headerText + '\n' + bodyText : bodyText;
+    }
+
+    // Text read out of the PAINTED svg rather than the source: the engine resolves the join marker to
+    // a real zero-width space, so it is in the DOM and must not reach the clipboard.
+    function paintedNoteText(grp) {
+        var text = grp.texts.map(function(t) { return t.textContent; }).join('\n');
+        return window._stripZeroWidth ? window._stripZeroWidth(text) : text;
+    }
+
     function extractCallerPayloads(source) {
         if (!source) return '';
         var lines = source.split('\n');
@@ -245,9 +289,12 @@
                 if (line.match(/^\s*end\s+note/)) {
                     inNote = false;
                     afterCallerRequest = false;
-                    var body = noteLines
-                        .filter(function(l) { return !l.match(/^\s*<color:gray>/); })
-                        .join('\n').trim();
+                    // Same treatment as Copy box text: this menu item exists to hand back the
+                    // payloads as captured, so the width budget's breaks and the creole escaping both
+                    // come off. Before this it returned neither.
+                    var body = noteLinesToText(
+                        noteLines.filter(function(l) { return !l.match(/^\s*<color:gray>/); }),
+                        unescapeSourceNoteLine).trim();
                     if (body) payloads.push(body);
                 } else {
                     noteLines.push(line);
@@ -367,14 +414,8 @@
                     globalNoteIdx = window._computeGlobalNoteIndex(container, fragEl, globalNoteIdx);
                 }
 
-                // Copy targets are the DISPLAYED lines. Source-derived lines
-                // carry the generation-side creole escapes (~/~/ for //, etc.)
-                // which PlantUML consumes before display — reverse them, same
-                // contract (and same accepted literal-~ ambiguity) as the
-                // reconstructor in collapsible-notes-script.js.
-                function unescapeSourceNoteLine(l) {
-                    return l.replace(/~([\/*_\-"\[<#=])/g, '$1');
-                }
+                // Copy targets are the DISPLAYED lines; unescapeSourceNoteLine and the rejoin that
+                // has to run before it are module-scope now, shared with extractCallerPayloads.
                 // When the note is displayed as YAML, the payload lines are the
                 // cached YAML lines (keyed on the owner container by global
                 // note index) with the client splice escapes removed — not the
@@ -388,26 +429,20 @@
                 if (resolvedBlockIdx >= 0 && noteBlocks[resolvedBlockIdx]) {
                     var blockLines = noteBlocks[resolvedBlockIdx].contentLines;
                     if (yamlLines) {
-                        // Full text = the note's gray header lines + the full
-                        // YAML view (un-truncated CURRENT view, by design).
-                        var headerLines = [];
-                        var afterGray = false;
-                        for (var hli = 0; hli < blockLines.length; hli++) {
-                            var hlt = blockLines[hli].trim();
-                            if (/^<color:gray>/.test(hlt)) { afterGray = true; headerLines.push(blockLines[hli]); continue; }
-                            if (afterGray && hlt === '') { headerLines.push(blockLines[hli]); continue; }
-                            break;
-                        }
-                        blockLines = headerLines.map(unescapeSourceNoteLine)
-                            .concat(yamlLines.map(window._noteUnescapeDisplayLine));
+                        // Full text = the note's gray header lines + the full YAML view (un-truncated
+                        // CURRENT view, by design). The header is source-derived and can carry both a
+                        // chunked value and its markers; the YAML lines are the client's own and
+                        // carry neither.
+                        var parts = splitGrayHeader(blockLines);
+                        noteText = joinNoteParts(
+                            noteLinesToText(parts.header, unescapeSourceNoteLine),
+                            yamlLines.map(window._noteUnescapeDisplayLine).join('\n'));
                     } else {
-                        blockLines = blockLines.map(unescapeSourceNoteLine);
+                        noteText = noteLinesToText(blockLines, unescapeSourceNoteLine);
                     }
-                    noteText = blockLines.map(function(l) {
-                        return l.replace(/^\s*<color:gray>/, '');
-                    }).join('\n').trim();
+                    noteText = noteText.trim();
                 } else {
-                    noteText = noteGroups[clickedNoteIdx].texts.map(function(t) { return t.textContent; }).join('\n');
+                    noteText = paintedNoteText(noteGroups[clickedNoteIdx]);
                 }
 
                 // Check if note is truncated or collapsed
@@ -422,19 +457,22 @@
                     var curBlockIdx = resolvedBlockIdx >= 0 ? resolvedBlockIdx : clickedNoteIdx;
                     var currentText;
                     if (currentNoteBlocks[curBlockIdx]) {
-                        // Recover the displayed text: YAML payload lines carry
-                        // the client splice escapes, everything else carries
-                        // the generation-side ones — creole ~ escapes must
-                        // never reach the clipboard either way.
-                        var curLines = currentNoteBlocks[curBlockIdx].contentLines.map(function(l) {
-                            if (yamlLines && !/^\s*<color:gray>/.test(l)) return window._noteUnescapeDisplayLine(l);
-                            return unescapeSourceNoteLine(l);
-                        });
-                        currentText = curLines.map(function(l) {
-                            return l.replace(/^\s*<color:gray>/, '');
-                        }).join('\n').trim();
+                        // Recover the displayed text: YAML payload lines carry the client splice
+                        // escapes, everything else carries the generation-side ones — creole ~
+                        // escapes must never reach the clipboard either way, and nor must the width
+                        // budget's breaks.
+                        var curLines = currentNoteBlocks[curBlockIdx].contentLines;
+                        if (yamlLines) {
+                            var curParts = splitGrayHeader(curLines);
+                            currentText = joinNoteParts(
+                                noteLinesToText(curParts.header, unescapeSourceNoteLine),
+                                noteLinesToText(curParts.body, window._noteUnescapeDisplayLine));
+                        } else {
+                            currentText = noteLinesToText(curLines, unescapeSourceNoteLine);
+                        }
+                        currentText = currentText.trim();
                     } else {
-                        currentText = noteGroups[clickedNoteIdx].texts.map(function(t) { return t.textContent; }).join('\n');
+                        currentText = paintedNoteText(noteGroups[clickedNoteIdx]);
                     }
                     _currentNoteText = currentText;
                     menu.appendChild(createSubMenu('Copy box text', [
@@ -482,7 +520,8 @@
         }
         if (selectedText) {
             menu.appendChild(createMenuItem('Copy Highlighted Text', function() {
-                navigator.clipboard.writeText(selectedText);
+                navigator.clipboard.writeText(
+                    window._stripZeroWidth ? window._stripZeroWidth(selectedText) : selectedText);
             }));
             menu.appendChild(createSeparator());
         }

@@ -153,8 +153,11 @@ public class PlantUmlStatementLengthTests
             .Select(l => l.Line.Trim()));
 
         Assert.Contains("Full path", noteBody);
-        // The path is chunked for wrapWidth, so compare after removing the chunk boundaries.
-        Assert.Contains(path.Replace("\n", ""), noteBody.Replace("\n", ""));
+        // The path is chunked for wrapWidth, and each chunk boundary now carries the join marker, so
+        // the comparison drops both. `noteBody` is already the lines concatenated, so the markers sit
+        // inline rather than at line ends and RejoinMarkedLines has nothing to key on.
+        Assert.Contains(path.Replace("\n", ""),
+            noteBody.Replace(DiagramWidth.JoinMarker, "").Replace("\n", ""));
     }
 
     [Fact]

@@ -46,49 +46,64 @@
       "expected": "test -> svc: post: /orders/ppppqqqq more\n"
     },
     {
-      "name": "note-chunk-rejoin-5b",
-      "input": "note left\n<color:gray>[X-H=aaaaaaaa\n<color:gray>bbbbbbbb]\n\n{\n  \"blob\": \"AAAA\nBBBB\",\n  \"ok\": true\n}\nend note",
-      "expected": "note left[x-h=aaaaaaaabbbbbbbb]\n{\n \"blob\": \"aaaabbbb\",\n \"ok\": true}\nend note\n"
+      "name": "note-chunk-rejoin-1b",
+      "input": "note left\n<color:gray>[X-H=aaaaaaaa<U+200B>\n<color:gray>bbbbbbbb]\n\n{\n  \"blob\": \"AAAA<U+200B>\nBBBB\",\n  \"ok\": true\n}\nend note",
+      "expected": "note left\n[x-h=aaaaaaaabbbbbbbb]\n\n{\n \"blob\": \"aaaabbbb\",\n \"ok\": true\n}\nend note\n"
+    },
+    {
+      "name": "marked-break-rejoins",
+      "input": "alpha<U+200B>\nbeta",
+      "expected": "alphabeta\n"
+    },
+    {
+      "name": "marked-space-break-rejoins-with-one-space",
+      "input": "alpha<U+200B><U+200B>\nbeta",
+      "expected": "alpha beta\n"
+    },
+    {
+      "name": "escaped-marker-is-payload-text-not-a-break",
+      "input": "alpha~<U+200B>\nbeta",
+      "expected": "alpha<u+200b>\nbeta\n"
+    },
+    {
+      "name": "marker-only-joins-the-line-it-ends",
+      "input": "a<U+200B>b\nc",
+      "expected": "a<u+200b>b\nc\n"
+    },
+    {
+      "name": "trailing-marker-on-the-last-line-joins-nothing",
+      "input": "alpha<U+200B>",
+      "expected": "alpha<u+200b>\n"
+    },
+    {
+      "name": "flush-left-note-lines-stay-split",
+      "input": "note left\nSELECT a\nFROM t\nend note",
+      "expected": "note left\nselect a\nfrom t\nend note\n"
     },
     {
       "name": "note-boundary-survives",
       "input": "note right\npayload\nend note\nafter -> b: hi",
-      "expected": "note rightpayload\nend note\nafter -> b: hi\n"
+      "expected": "note right\npayload\nend note\nafter -> b: hi\n"
     },
     {
-      "name": "event-note-rejoin",
-      "input": "note<<eventNote>> right\nchunkAAAA\nchunkBBBB\nend note",
-      "expected": "note<<eventnote>> rightchunkaaaachunkbbbb\nend note\n"
+      "name": "event-note-marked-rejoin",
+      "input": "note<<eventNote>> right\nchunkAAAA<U+200B>\nchunkBBBB\nend note",
+      "expected": "note<<eventnote>> right\nchunkaaaachunkbbbb\nend note\n"
     },
     {
-      "name": "assertion-hnote-rejoin",
-      "input": "hnote across <<assertionNote>> #lightgreen\nexpected AAAA\nBBBB tail\nend note",
-      "expected": "hnote across <<assertionnote>> #lightgreenexpected aaaabbbb tail\nend note\n"
+      "name": "assertion-hnote-marked-rejoin",
+      "input": "hnote across <<assertionNote>> #lightgreen\nexpected AAAA<U+200B><U+200B>\nBBBB tail\nend note",
+      "expected": "hnote across <<assertionnote>> #lightgreen\nexpected aaaa bbbb tail\nend note\n"
     },
     {
-      "name": "single-line-hnote-colon-is-not-an-opener",
+      "name": "single-line-hnote-is-untouched",
       "input": "hnote across <<stepDelimiter>> #black:<color:white>Step one\nflushleft\nsecond",
       "expected": "hnote across <<stepdelimiter>> #black:step one\nflushleft\nsecond\n"
     },
     {
-      "name": "single-line-row-hnote-not-an-opener",
+      "name": "single-line-row-hnote-is-untouched",
       "input": "hnote across #lightyellow : Row 1\nflushleft\nsecond",
       "expected": "hnote across #lightyellow : row 1\nflushleft\nsecond\n"
-    },
-    {
-      "name": "note-start-lookalike-is-a-continuation",
-      "input": "note left\nAAAA\nnote leftovers text\nend note",
-      "expected": "note leftaaaanote leftovers text\nend note\n"
-    },
-    {
-      "name": "nel-is-not-js-whitespace-so-rejoins",
-      "input": "note left\nAAAA\nBBBB\nend note",
-      "expected": "note leftaaaabbbb\nend note\n"
-    },
-    {
-      "name": "feff-is-js-whitespace-so-kept-split",
-      "input": "note left\nAAAA\n﻿BBBB\nend note",
-      "expected": "note leftaaaa\n﻿bbbb\nend note\n"
     },
     {
       "name": "whitespace-collapse",

@@ -24,11 +24,11 @@ function check(label, cond, extra) {
 }
 
 check('raw does NOT contain the wrapped blob contiguously (proves the wrap fired)', !raw.toLowerCase().includes(longToken));
-check('rule 5b rejoins 120-char run wrapping: full 200+ char token contiguous', norm.includes(longToken));
-check('rules 4+5b rejoin 80-char gray header chunking: full header value contiguous', norm.includes(longHeader));
+check('rule 1b rejoins 120-char run wrapping (join marker): full 200+ char token contiguous', norm.includes(longToken));
+check('rules 4+1b rejoin 80-char gray header chunking: full header value contiguous', norm.includes(longHeader));
 check('rule 3 unescapes creole: **important** and //slanted// plus __deep__', norm.includes('**important** and //slanted// plus __deep__'));
 check('rule 5a rejoins arrow-label \\n escape: full URL path contiguous', norm.includes(longPath));
-check('rule 5b rejoins wrapped URL inside JSON value', norm.includes(urlRun));
+check('rule 1b rejoins wrapped URL inside JSON value', norm.includes(urlRun));
 check('documented limitation: null property stripped by formatter (not findable)', !norm.includes('nullfield'));
 check('unicode payload text survives untouched (İstanbul, ASCII-fold leaves İ alone)', norm.includes('İstanbul'.replace(/[A-Z]/g, c => c.toLowerCase())));
 check('ordinary sentence with spaces unharmed', norm.includes('a perfectly ordinary sentence with spaces so it wraps normally'));

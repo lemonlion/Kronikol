@@ -208,9 +208,15 @@ public class SearchIndexJintTests : IDisposable
     [Fact]
     public void Deep_match_normalizes_query_like_corpus()
     {
-        // corpus side is chunk-rejoined and case-folded; the query goes through the same rules
-        var corpus = "note left\nAAAA\nBBBB\nend note";
+        // corpus side is chunk-rejoined and case-folded; the query goes through the same rules.
+        // The rejoin keys on the join marker the generator writes (rule 1b) rather than on the old
+        // flush-left guess, so the fixture carries one — as real generated output now does.
+        var corpus = "note left\nAAAA<U+200B>\nBBBB\nend note";
         Assert.True(DeepMatch("aaaabbbb", corpus, [], "Passed"));
+
+        // And the case the flush-left guess got wrong: an UNMARKED break is the payload's own, so
+        // the two lines stay two terms.
+        Assert.False(DeepMatch("aaaabbbb", "note left\nAAAA\nBBBB\nend note", [], "Passed"));
     }
 
     [Theory]

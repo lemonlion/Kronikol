@@ -445,9 +445,12 @@ public static partial class PlantUmlCreator
     /// value is so <c>skinparam wrapWidth</c> can break it. Kronikol's own <c>&lt;color:gray&gt;</c> label
     /// is added after escaping, like the header tags, so it stays live markup rather than printed text.
     /// </summary>
-    private static string AppendFullPathToNote(string noteContent, string pathAndQuery)
+    internal static string AppendFullPathToNote(string noteContent, string pathAndQuery)
     {
-        var chunks = pathAndQuery.ChunksUpTo(MaxNoteChunkChars).Select(EscapeCreoleMarkup);
+        // Marked after escaping, so the marker stays unescaped and is provably Kronikol's own. One
+        // URL chopped into 80-character display lines rejoins to the URL.
+        var chunks = pathAndQuery.ChunksUpTo(MaxNoteChunkChars).Select(EscapeCreoleMarkup).ToArray();
+        for (var i = 0; i < chunks.Length - 1; i++) chunks[i] += DiagramWidth.JoinMarker;
         var block = "<color:gray>[Full path]" + Environment.NewLine + string.Join(Environment.NewLine, chunks);
         return string.IsNullOrEmpty(noteContent)
             ? block
@@ -1165,7 +1168,9 @@ public static partial class PlantUmlCreator
                 while (run.Length - pos > MaxUnbrokenRunChars)
                 {
                     var cut = ChooseCut(run, pos);
-                    sb.Append(run[pos..cut]).Append('\n');
+                    // Every cut here is mid-token, so the marker is the no-space kind: a reader
+                    // copying this note back out gets the run in one piece again.
+                    sb.Append(run[pos..cut]).Append(DiagramWidth.JoinMarker).Append('\n');
                     pos = cut;
                 }
                 sb.Append(run[pos..]);
@@ -1241,7 +1246,7 @@ public static partial class PlantUmlCreator
         && content.Contains('=')
         && content.AsSpan().IndexOfAny(FormUrlEncodedDisqualifiers) < 0;
 
-    private static string FormatFormUrlEncodedContent(string? content, bool escape = true)
+    internal static string FormatFormUrlEncodedContent(string? content, bool escape = true)
     {
         const string divider = "<font color=\"lightgray\">&";
         return content?
@@ -1253,6 +1258,11 @@ public static partial class PlantUmlCreator
                 var chunks = x.ChunksUpTo(MaxNoteChunkChars).Select(c => escape ? EscapeCreoleMarkup(c) : c).ToArray();
                 if (chunks.Length == 0)
                     return chunks;
+                // Only the chunking INSIDE one field is marked. The `&` divider is a deliberate,
+                // visible decomposition of the captured body into its fields — a reader is meant to
+                // see those as separate lines — while an 80-character cut through a value is the
+                // arbitrary break that corrupts what they copy.
+                for (var i = 0; i < chunks.Length - 1; i++) chunks[i] += DiagramWidth.JoinMarker;
                 chunks[^1] += divider;
                 return chunks;
             })
@@ -1260,11 +1270,15 @@ public static partial class PlantUmlCreator
             .TrimEnd(divider) ?? string.Empty;
     }
 
-    private static IEnumerable<string> BatchGray(string value)
+    internal static IEnumerable<string> BatchGray(string value)
     {
         // Escape after chunking so a `~` never ends up split from the character it protects, and prefix the
         // gray tag after escaping so Kronikol's own markup stays live.
-        return value.ChunksUpTo(MaxNoteChunkChars).Select(x => "<color:gray>" + EscapeCreoleMarkup(x));
+        var chunks = value.ChunksUpTo(MaxNoteChunkChars).Select(x => "<color:gray>" + EscapeCreoleMarkup(x)).ToArray();
+        // Each continuation carries the gray tag again so it still draws gray; a consumer strips those
+        // per line BEFORE rejoining, which is why the rejoin itself needs no knowledge of them.
+        for (var i = 0; i < chunks.Length - 1; i++) chunks[i] += DiagramWidth.JoinMarker;
+        return chunks;
     }
 
     /// <summary>

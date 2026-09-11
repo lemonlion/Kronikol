@@ -23,12 +23,21 @@ internal static class SearchNormalizer
         // can enable matches in the next (e.g. a stripped tag merges two space runs that 5a then
         // consumes together; a stripped creole ~ can complete a `</` tag opener), so fusing them
         // into one scan diverges. Each pass is a plain O(n) scan; only the ORDER is semantic.
-        var s = FoldAndCanonicalize(text);   // rules 1 (CRLF) + 2 (ASCII fold)
+        //
+        // Rule 5b used to sit at the end: any note-body line that did not start with whitespace was
+        // welded to the line above, on the assumption that a flush-left continuation could only be a
+        // wrap. Right for indented JSON, wrong for a plain-text or SQL payload whose real lines start
+        // at column 0 — and unnecessary now that the generator marks the breaks it inserts.
+        // Rule 1b runs first, before the fold and before rule 3, because rule 3 strips the `~` that
+        // tells Kronikol's own join marker from a payload that literally contains "<U+200B>". It
+        // calls the generator's implementation rather than restating it — the two JS copies exist
+        // only because they cannot reach this one, and the shared vectors pin all three together.
+        var s = PlantUml.DiagramWidth.RejoinMarkedLines(text.Replace("\r\n", "\n"));  // rules 1 + 1b
+        s = FoldAndCanonicalize(s);          // rule 2 (rule 1 is already applied)
         s = StripCreoleEscapes(s);           // rule 3
         s = StripMarkupTags(s);              // rule 4
         s = StripArrowLabelBreaks(s);        // rule 5a
-        s = RejoinNoteBodies(s);             // rule 5b
-        return CollapseSpaces(s);            // rule 6
+        return CollapseSpaces(s + "\n");     // rule 6
     }
 
     // Creole escape targets: the same set the formatter escapes and the context-menu inverse strips.
@@ -122,101 +131,6 @@ internal static class SearchNormalizer
         return sb.ToString();
     }
 
-    /// <summary>
-    /// The JS <c>/\s/</c> character class, exactly — NOT <see cref="char.IsWhiteSpace(char)"/>.
-    /// The two disagree on U+0085 (NEL: .NET whitespace, JS not) and U+FEFF (JS whitespace,
-    /// .NET not); rule 5b's flush-left test and trims must match the client verify byte-for-byte
-    /// or the index and the verify corpus diverge on those characters (a deep false negative).
-    /// </summary>
-    private static bool IsJsWhitespace(char c) =>
-        c is ' ' or '\t' or '\n' or '\v' or '\f' or '\r' or '\u00a0' or '\u1680'
-          or (>= '\u2000' and <= '\u200a') or '\u2028' or '\u2029' or '\u202f' or '\u205f' or '\u3000' or '\ufeff';
-
-    private static ReadOnlySpan<char> JsTrim(ReadOnlySpan<char> line)
-    {
-        var start = 0;
-        var end = line.Length;
-        while (start < end && IsJsWhitespace(line[start])) start++;
-        while (end > start && IsJsWhitespace(line[end - 1])) end--;
-        return line[start..end];
-    }
-
-    private static bool IsWordChar(char c) => c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_';
-
-    private static readonly string[] NoteSides = ["left", "right", "over", "across"];
-
-    /// <summary>
-    /// Matches the reference regex <c>/^[hr]?note(?:&lt;&lt;[^&gt;]*&gt;&gt;)? (left|right|over|across)\b/</c>
-    /// plus its no-<c>:</c> guard: every multi-line note form the formatter emits (`note left`,
-    /// `note&lt;&lt;class&gt;&gt; right` event notes, `hnote across &lt;&lt;class&gt;&gt;` assertion/render-error
-    /// notes). A colon anywhere on the directive line marks PlantUML's single-line note form
-    /// (step delimiters, row markers) — no body follows, so it must not enter note mode.
-    /// </summary>
-    private static bool IsNoteOpener(ReadOnlySpan<char> trimmed)
-    {
-        if (trimmed.IndexOf(':') >= 0) return false;
-        var i = 0;
-        if (i < trimmed.Length && (trimmed[i] == 'h' || trimmed[i] == 'r')) i++;
-        if (!trimmed[i..].StartsWith("note")) return false;
-        i += 4;
-        if (i + 1 < trimmed.Length && trimmed[i] == '<' && trimmed[i + 1] == '<')
-        {
-            var j = i + 2;
-            while (j < trimmed.Length && trimmed[j] != '>') j++;      // [^>]*
-            if (j + 1 >= trimmed.Length || trimmed[j + 1] != '>') return false;
-            i = j + 2;
-        }
-        if (i >= trimmed.Length || trimmed[i] != ' ') return false;
-        i++;
-        foreach (var side in NoteSides)
-        {
-            if (!trimmed[i..].StartsWith(side)) continue;
-            var after = i + side.Length;
-            return after >= trimmed.Length || !IsWordChar(trimmed[after]); // \b
-        }
-        return false;
-    }
-
-    private static string RejoinNoteBodies(string s)
-    {
-        var sb = new StringBuilder(s.Length + 1);
-        var inNote = false;
-        var first = true;
-        var pos = 0;
-        while (true)
-        {
-            var nl = s.IndexOf('\n', pos);
-            var end = nl < 0 ? s.Length : nl;
-            var line = s.AsSpan(pos, end - pos);
-            var trimmed = JsTrim(line);
-            if (IsNoteOpener(trimmed))
-            {
-                inNote = true;
-                if (!first) sb.Append('\n');
-                sb.Append(line);
-            }
-            else if (trimmed.SequenceEqual("end note"))
-            {
-                inNote = false;
-                if (!first) sb.Append('\n');
-                sb.Append(line);
-            }
-            else if (inNote && !first && line.Length > 0 && !IsJsWhitespace(line[0]))
-            {
-                sb.Append(line); // rejoin flush-left continuation
-            }
-            else
-            {
-                if (!first) sb.Append('\n');
-                sb.Append(line);
-            }
-            first = false;
-            if (nl < 0) break;
-            pos = nl + 1;
-        }
-        sb.Append('\n');
-        return sb.ToString();
-    }
 
     private static string CollapseSpaces(string s)
     {
