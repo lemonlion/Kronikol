@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
@@ -849,7 +850,13 @@ public static partial class PlantUmlCreator
         var payloadIsPreEscaped = false;
         if (parsedContent is null)
         {
-            if (type is RequestResponseType.Response)
+            // Only a body that really is form-url-encoded gets the `&` dividers and the chunking
+            // that go with them (see LooksLikeFormUrlEncoded). Everything else — SQL, XML, CSV,
+            // plain text — reaches the note as captured, on the SAME path a response body takes,
+            // so the two agree for identical bytes. Width is still bounded downstream:
+            // WrapUnbreakableRuns breaks runs over MaxUnbrokenRunChars, and `skinparam wrapWidth`
+            // wraps the rest at spaces when the note is drawn.
+            if (type is RequestResponseType.Response || !LooksLikeFormUrlEncoded(content))
                 parsedContent = content ?? string.Empty;
             else
             {
@@ -1142,6 +1149,22 @@ public static partial class PlantUmlCreator
                 break;
         }
     }
+
+    private static readonly SearchValues<char> FormUrlEncodedDisqualifiers = SearchValues.Create(" \t\r\n");
+
+    /// <summary>
+    /// Whether a request body is form-url-encoded — one physical line of percent-encoded
+    /// <c>k=v</c> pairs. A space in such a body is always encoded (<c>+</c> or <c>%20</c>), so any
+    /// raw newline, space or tab means the body is text — SQL, XML, CSV, a GraphQL document — and
+    /// must reach the note as captured. Getting this wrong in the permissive direction is what
+    /// sliced multi-line SQL into 80-character pieces mid-identifier and wove grey <c>&amp;</c>
+    /// dividers through bitwise operators and XML entities; getting it wrong in the other
+    /// direction only costs a real form body its dividers.
+    /// </summary>
+    internal static bool LooksLikeFormUrlEncoded(string? content) =>
+        !string.IsNullOrEmpty(content)
+        && content.Contains('=')
+        && content.AsSpan().IndexOfAny(FormUrlEncodedDisqualifiers) < 0;
 
     private static string FormatFormUrlEncodedContent(string? content, bool escape = true)
     {

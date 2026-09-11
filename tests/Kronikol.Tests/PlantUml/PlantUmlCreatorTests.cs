@@ -1515,6 +1515,131 @@ public class PlantUmlCreatorTests
         Assert.Contains(new string('v', 80), plantUml);
     }
 
+    [Fact]
+    public void Form_body_divider_still_separates_pairs()
+    {
+        var logs = new[] { MakeRequest(content: "grant_type=client_credentials&scope=read") };
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains("grant_type=client_credentials<font color=\"lightgray\">&", plantUml);
+        Assert.Contains("scope=read", plantUml);
+    }
+
+    // ─── Non-form request bodies ────────────────────────────────
+    // A request body that is not JSON and not form-url-encoded (SQL, XML, CSV, plain text) is shown
+    // as captured: its own line breaks, no fixed-width chunking, no `&` dividers woven through it.
+
+    private const string ClickHouseQuery = """
+                                           WITH base_with_comp AS (
+                                                   SELECT
+                                                     t.*,
+                                                     CASE
+                                                       WHEN {comparisonPeriodOnPeriod:String} = 'WoW' THEN subtractDays(t.transaction_period, 7)
+                                                       WHEN {comparisonPeriodOnPeriod:String} = 'MoM' AND {cadence:String} = 'Weekly' THEN subtractWeeks(t.transaction_period, 4)
+                                                     END AS comparison_date
+                                                   FROM `sme`.`location_performance_weekly` t
+                                                   WHERE t.location_id = {LocationId:String}
+                                                 )
+                                                 SELECT t.transaction_period AS report_date
+                                                 FROM base_with_comp t
+                                                 ORDER BY report_date
+                                           """;
+
+    /// <summary>The note body of the first (and only) note in the generated diagram.</summary>
+    private static string[] NoteLines(string plantUml)
+    {
+        var lines = plantUml.Replace("\r\n", "\n").Split('\n');
+        var start = Array.FindIndex(lines, l => l.TrimStart().StartsWith("note", StringComparison.Ordinal));
+        var end = Array.FindIndex(lines, start + 1, l => l.Trim() == "end note");
+        return lines[(start + 1)..end];
+    }
+
+    [Fact]
+    public void Multi_line_sql_request_body_keeps_its_own_line_breaks()
+    {
+        var plantUml = GetPlantUml([MakeRequest(content: ClickHouseQuery)]);
+        var noteLines = NoteLines(plantUml);
+
+        // Every SQL line survives whole — the identifiers the 80-character chunker used to cut.
+        Assert.Contains(noteLines, l => l.Contains("subtractDays(t.transaction_period, 7)"));
+        Assert.Contains(noteLines, l => l.Contains("{cadence:String} = 'Weekly'"));
+        Assert.Contains(noteLines, l => l.Contains("WHERE t.location_id = {LocationId:String}"));
+        Assert.Contains(noteLines, l => l.Contains("END AS comparison_date"));
+
+        // …and the note carries exactly the query's own lines, no more.
+        Assert.Equal(ClickHouseQuery.Replace("\r\n", "\n").Split('\n').Length, noteLines.Length);
+    }
+
+    [Fact]
+    public void Sql_ampersand_is_not_turned_into_a_divider()
+    {
+        var plantUml = GetPlantUml([MakeRequest(content: "SELECT id\nFROM users\nWHERE flags & 4 = 4 AND name = 'a & b'")]);
+
+        Assert.DoesNotContain("lightgray\">&", plantUml);
+        Assert.Contains(NoteLines(plantUml), l => l.Contains("WHERE flags & 4 = 4 AND name = 'a & b'"));
+    }
+
+    [Fact]
+    public void Xml_request_body_is_not_chunked_and_keeps_its_entities()
+    {
+        const string soap = """
+                            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                              <soap:Body>
+                                <GetQuote><Symbol>ACME &amp; CO</Symbol></GetQuote>
+                              </soap:Body>
+                            </soap:Envelope>
+                            """;
+        var plantUml = GetPlantUml([MakeRequest(content: soap)]);
+        var noteLines = NoteLines(plantUml);
+
+        Assert.DoesNotContain("lightgray\">&", plantUml);
+        // `~` escapes the creole tag start; the tag name itself must not be split across lines.
+        Assert.Contains(noteLines, l => l.Contains("~<soap:Body>"));
+        Assert.Contains(noteLines, l => l.Contains("ACME &amp; CO"));
+        Assert.Equal(soap.Replace("\r\n", "\n").Split('\n').Length, noteLines.Length);
+    }
+
+    [Fact]
+    public void Single_line_sql_is_not_chunked_either()
+    {
+        var sql = "SELECT " + string.Join(", ", Enumerable.Range(0, 12).Select(i => $"column_number_{i}")) + " FROM a_table WHERE id = 1";
+        var plantUml = GetPlantUml([MakeRequest(content: sql)]);
+
+        Assert.Equal([sql], NoteLines(plantUml));
+    }
+
+    [Fact]
+    public void Request_and_response_notes_agree_for_the_same_text_body()
+    {
+        // Longer than the 80-character chunk the form-encoded path used to apply, so the two
+        // branches genuinely have to agree rather than both fitting in one chunk.
+        const string body = "line one is quite long and has a good many words in it, more than eighty characters worth\nline two\nline three";
+
+        var requestNote = NoteLines(GetPlantUml([MakeRequest(content: body)]));
+        var responseNote = NoteLines(GetPlantUml([MakeRequest(), MakeResponse(content: body)]));
+
+        Assert.Equal(responseNote, requestNote);
+    }
+
+    [Theory]
+    // Real form bodies: one line of percent-encoded pairs.
+    [InlineData("a=1&b=2", true)]
+    [InlineData("key=" + "vvvvvvvvvv", true)]
+    [InlineData("grant_type=client_credentials&scope=read%20write", true)]
+    // Text bodies: any raw whitespace, or no '=' at all.
+    [InlineData("SELECT 1 FROM t WHERE a = 1", false)]
+    [InlineData("a=1\nb=2", false)]
+    [InlineData("a=1\r\nb=2", false)]
+    [InlineData("a=1\tb=2", false)]
+    [InlineData("plain text", false)]
+    [InlineData("novalue", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void Form_url_encoded_detection(string? content, bool expected)
+    {
+        Assert.Equal(expected, PlantUmlCreator.LooksLikeFormUrlEncoded(content));
+    }
+
     // ─── ImageTags count matches PlantUmls count ────────────────
 
     [Fact]

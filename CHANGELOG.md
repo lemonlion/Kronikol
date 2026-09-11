@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.84] - 2026-09-11
+
+### Fixed
+- **SQL, XML and plain-text request notes are no longer broken mid-word every 80 characters** (user-reported against a real production report, where a ClickHouse query came back with `subtractDays(t.tran` / `saction_period, 7)` and `'MoM' AN` / `D {cadence:String}`). Every request body that is not JSON fell through to the form-url-encoded formatter, which ran `ChunksUpTo(80)` — `string.Chunk`, fixed slices of the *whole* string — over it. That has no concept of a line or a word, so the payload's own newlines were counted as ordinary characters and a break was inserted every 80 characters of the stream, landing mid-identifier, mid-tag and inside leading indentation. Responses never took that path (they are passed through verbatim), which is what the asymmetry was: form-encoding treatment was never meant to run on a text body. The formatter is now gated on a body that really is form-url-encoded — one physical line of `key=value` with no raw newline, space or tab, since a space in a real form body is always encoded — and everything else reaches the note exactly as captured, on the same path a response takes. Width is still bounded, as it always was, by the two mechanisms downstream: whitespace-free runs over 120 characters are broken at a punctuation boundary, and `skinparam wrapWidth` wraps the rest at spaces when the note is drawn. Measured on a 21-line, 1285-character ClickHouse query rendered through the shipped engine: **37 display lines with 7 broken identifiers at 720px wide → 22 lines, none broken, 1018px**. The chunking was making the note *narrower* and 70% taller. Reaches every tracked SQL call (SqlClient, Npgsql, MySqlConnector, Sqlite, Oracle, ClickHouse, Dapper, EF Core) at any verbosity above Summarised, plus XML/SOAP, CSV, plain-text and unparsed GraphQL request bodies. Kronikol4J: report-output divergence (any non-JSON request note's bytes).
+- **…and an `&` in such a body is no longer turned into a divider** (same line of code) — `content.Split("&")` was unconditional, so a bitwise `WHERE flags & 4 = 4` displayed as `WHERE flags <font color="lightgray">&` followed by a forced line break, and a SOAP body's `ACME &amp; CO` was cut in the middle of the entity. The reader saw a grey `&` that was never in the payload and could not be told apart from Kronikol's own markup. The dividers now appear only where they were designed to: between the pairs of a genuine form-url-encoded body.
+- **…so copying a database note yields SQL that runs** — "Copy box text" builds its text from the note *source* lines and strips creole escapes and the grey header prefix, but not `<font color="lightgray">`. Copying a query out of a report therefore produced the literal markup plus the 80-character breaks. Both causes are gone, so the copy is now the query as captured.
+
+### Tests
+- `PlantUmlCreatorTests` gains a *Non-form request bodies* region: a multi-line ClickHouse query keeps its own line breaks and line count, a bitwise `&` survives, a SOAP body keeps `<soap:Body>` on one line and its `&amp;` intact, a long single-line statement is not chunked, and a request and a response carrying identical bytes produce identical note payloads. A theory pins the form-url-encoded predicate in both directions, and the existing chunking and divider facts for real form bodies stay green.
+- New E2E `SqlNoteWrappingTests` drives the query through the **real** formatter into the browser engine and asserts on the painted SVG — the drawn `<text>` runs are grouped by `y` and ordered by `x` (PlantUML emits one element per word) and checked for split identifiers — plus a clipboard fact for the copy path. All three fail against the old formatter.
+
+### Documentation
+- `Content-Formatting.md`: the formatting pipeline now states what does and does not count as a form-url-encoded body, and what happens to every other non-JSON request body.
+
 ## [3.0.83] - 2026-09-04
 
 ### Fixed

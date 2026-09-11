@@ -3107,6 +3107,64 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// One diagram whose request note is a multi-line ClickHouse query — the shape that used to be
+    /// sliced every 80 characters mid-identifier by the form-url-encoded formatter. Built through
+    /// the REAL formatter, so the fixture carries the exact bytes a tracked SQL call produces.
+    /// </summary>
+    public static string GenerateReportWithMultiLineSqlNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+        var traceId = Guid.NewGuid();
+        var pairId = Guid.NewGuid();
+        RequestResponseLog[] logs =
+        [
+            new("Multi-line SQL", "sql", "SELECT", MultiLineClickHouseQuery,
+                new Uri("clickhouse://insights/location_performance_weekly"), [],
+                "ClickHouse", "DataInsights", RequestResponseType.Request, traceId, pairId,
+                TrackingIgnore: false, DependencyCategory: Kronikol.Constants.DependencyCategories.SQL),
+            new("Multi-line SQL", "sql", "SELECT", """[{"report_date":"2026-09-07"}]""",
+                new Uri("clickhouse://insights/location_performance_weekly"), [],
+                "ClickHouse", "DataInsights", RequestResponseType.Response, traceId, pairId,
+                TrackingIgnore: false, DependencyCategory: Kronikol.Constants.DependencyCategories.SQL),
+        ];
+
+        var source = Kronikol.PlantUml.PlantUmlCreator
+            .GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DiagramAsCode("t1", "", source)], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// Real-shaped analytics SQL: indented, with lines well over 80 characters, a bitwise
+    /// <c>&amp;</c> (which the form-encoded divider used to swallow) and identifiers long enough
+    /// that a blind chunk lands inside one.
+    /// </summary>
+    internal const string MultiLineClickHouseQuery = """
+                                                     WITH base_with_comp AS (
+                                                             SELECT
+                                                               t.*,
+                                                               CASE
+                                                                 WHEN {comparisonPeriodOnPeriod:String} = 'WoW' THEN subtractDays(t.transaction_period, 7)
+                                                                 WHEN {comparisonPeriodOnPeriod:String} = 'MoM' THEN subtractMonths(t.transaction_period, 1)
+                                                               END AS comparison_date
+                                                             FROM `sme`.`location_performance_weekly` t
+                                                             WHERE t.location_id = {LocationId:String}
+                                                               AND bitAnd(t.flags, 4) & 4 = 4
+                                                           )
+                                                           SELECT t.transaction_period AS report_date
+                                                           FROM base_with_comp t
+                                                           ORDER BY report_date
+                                                     """;
+
+    /// <summary>
     /// Two adjacent scenarios, each with one diagram holding a distinguishable
     /// YAML-eligible JSON note (alphaField / betaField) — for the bulk-format
     /// dropdown tests that need scenario isolation and report-wide sync.
