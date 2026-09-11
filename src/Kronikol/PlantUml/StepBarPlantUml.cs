@@ -60,13 +60,18 @@ internal static class StepBarPlantUml
     public static string Build(string label, IReadOnlyList<StepBarTable>? tables = null, string? docString = null)
     {
         var labelLines = (label ?? "").Replace("\r", "").Trim().Split('\n');
-        var labelLine = labelLines[0];
+        // A step quoting a JWT, a base64 blob, a URL or a GUID list has no whitespace for wrapWidth to
+        // break at, and the bar grows with it — measured, a 950-character token drew 9 450 px. Wrapping
+        // here also routes such a step to the styled form automatically: the legacy coloured bar paints
+        // everything after the first display line black-on-black, and the branch below already switches
+        // form as soon as the label carries a break.
+        var labelLine = string.Join(@"\n", DiagramWidth.WrapLines(labelLines[0], DiagramWidth.MaxNoteTextLineChars));
 
         var body = new List<string>();
         // Multi-line marker text (the ingest format allows it) used to fold into the coloured bar as
         // \n escapes and paint black-on-black; as body lines of the styled form it stays readable.
         foreach (var extra in labelLines.Skip(1))
-            body.Add(EscapeBodyLine(extra));
+            body.AddRange(EscapeWrappedBodyLine(extra));
 
         // Each table/doc-string block gets one blank display line above and one below — butted
         // directly against the step text and the note border they read cramped. Adjacent blocks
@@ -96,7 +101,7 @@ internal static class StepBarPlantUml
             body.Add("");
             padded = true;
             foreach (var line in docString!.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
-                body.Add(EscapeBodyLine(line));
+                body.AddRange(EscapeWrappedBodyLine(line));
         }
 
         if (padded)
@@ -117,8 +122,12 @@ internal static class StepBarPlantUml
     private static string TableRow(string[] cells, bool header)
     {
         var sb = new StringBuilder();
+        // Creole table cells are the one construct that never wraps — not even at spaces — so a cell
+        // can only be shortened, and the budget has to be shared across the row because a row's width
+        // is the sum of its cells.
+        var budget = DiagramWidth.TableCellBudget(cells.Length);
         foreach (var cell in cells)
-            sb.Append(header ? "|= " : "| ").Append(EscapeCell(cell)).Append(' ');
+            sb.Append(header ? "|= " : "| ").Append(EscapeCell(cell, budget)).Append(' ');
         return sb.Append('|').ToString();
     }
 
@@ -127,10 +136,10 @@ internal static class StepBarPlantUml
     /// literal-pipe escapes, newlines fold to spaces (a break mid-row tears the table), and the
     /// inline rules of <see cref="EscapeInline"/> apply.
     /// </summary>
-    private static string EscapeCell(string? cell)
+    private static string EscapeCell(string? cell, int budget)
     {
         var flat = (cell ?? "").Replace("\r\n", "\n").Replace('\r', ' ').Replace('\n', ' ').Trim();
-        return EscapeInline(flat).Replace("|", "<U+007C>");
+        return EscapeInline(DiagramWidth.ElideCell(flat, budget)).Replace("|", "<U+007C>");
     }
 
     /// <summary>
@@ -139,6 +148,15 @@ internal static class StepBarPlantUml
     /// row, <c>*</c> a bullet, <c>=</c> a heading, <c>#</c> a numbered item. Leading whitespace is
     /// preserved (indented lines are never table rows, and pretty-printed payloads stay readable).
     /// </summary>
+    /// <summary>
+    /// One source line of body content, broken to <see cref="DiagramWidth.MaxNoteTextLineChars"/> and
+    /// escaped <b>piece by piece</b>. The order matters: <see cref="EscapeInline"/> puts a zero-width
+    /// space after every backslash, so escaping a line the wrapper had already woven line breaks into
+    /// would turn every one of those breaks back into literal text.
+    /// </summary>
+    private static IEnumerable<string> EscapeWrappedBodyLine(string line) =>
+        DiagramWidth.WrapLines(line, DiagramWidth.MaxNoteTextLineChars).Select(EscapeBodyLine);
+
     private static string EscapeBodyLine(string line)
     {
         var escaped = EscapeInline(line.Replace("\r", ""));

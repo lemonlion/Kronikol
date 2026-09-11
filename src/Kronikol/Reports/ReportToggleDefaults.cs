@@ -39,6 +39,20 @@ public record ReportToggleDefaults
     /// </summary>
     public NotePayloadFormat? NotePayloadFormat { get; set; }
 
+    /// <summary>
+    /// The font note payloads start in. Default: <see cref="NoteFontFamily.Default"/> (the engine's
+    /// proportional note font). <see cref="NoteFontFamily.Monospace"/> starts every note in a
+    /// monospace font, so padded SQL columns and indented blocks line up as they were written.
+    /// </summary>
+    public NoteFontFamily? NoteFont { get; set; }
+
+    /// <summary>
+    /// The width notes start at. Default: <see cref="NoteWidthMode.Default"/>.
+    /// <see cref="NoteWidthMode.Full"/> widens every note to fill its diagram's container on first
+    /// paint, which changes every diagram's geometry — worth choosing deliberately.
+    /// </summary>
+    public NoteWidthMode? NoteWidth { get; set; }
+
     /// <summary>Feature sections start expanded (with the Expand All Features button seeded to match). Default: <c>false</c>.</summary>
     public bool? FeaturesExpanded { get; set; }
 

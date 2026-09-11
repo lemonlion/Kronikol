@@ -256,6 +256,50 @@ public class ToggleDefaultsMarkupTests
         Assert.Contains("window._noteFormatDefault = 'yaml'", content);
     }
 
+    [Fact]
+    public void Note_font_default_seeds_selects_and_script()
+    {
+        var content = Generate(t => t.NoteFont = NoteFontFamily.Monospace);
+        Assert.Contains("<option value=\"default\">Aa</option><option value=\"mono\" selected>Mono</option>", content);
+        Assert.Contains("window._noteFontDefault = 'mono'", content);
+    }
+
+    [Fact]
+    public void Note_width_default_seeds_selects_and_script()
+    {
+        var content = Generate(t => t.NoteWidth = NoteWidthMode.Full);
+        Assert.Contains("<option value=\"default\">Fit</option><option value=\"full\" selected>Full</option>", content);
+        Assert.Contains("window._noteWidthDefault = 'full'", content);
+    }
+
+    [Fact]
+    public void Note_appearance_selects_are_emitted_at_report_and_scenario_level()
+    {
+        var content = Generate();
+        Assert.Contains("onchange=\"window._setNoteFont(this)\"", content);
+        Assert.Contains("onchange=\"window._setScenarioNoteFont(this)\"", content);
+        Assert.Contains("onchange=\"window._setNoteWidth(this)\"", content);
+        Assert.Contains("onchange=\"window._setScenarioNoteWidth(this)\"", content);
+    }
+
+    /// <summary>
+    /// Both controls re-render the diagram in the browser, which no other rendering mode can do.
+    /// The gate is the rendering mode, not the presence of interactive diagrams.
+    /// </summary>
+    [Fact]
+    public void Note_appearance_selects_are_absent_outside_browser_rendering()
+    {
+        var diagrams = new[] { new DefaultDiagramsFetcher.DiagramAsCode("s1", "", AllGatesDiagramSource) };
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, SimpleFeatures, DateTime.UtcNow, DateTime.UtcNow,
+            null, $"ToggleMarkupNoBrowser_{Guid.NewGuid():N}.html", "Test", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Server);
+        var content = File.ReadAllText(path);
+
+        Assert.DoesNotContain("note-font-select", content);
+        Assert.DoesNotContain("note-width-select", content);
+    }
+
     // ═══════════════════════════════════════════════════════════
     // Filter modes (M6 C# side)
     // ═══════════════════════════════════════════════════════════

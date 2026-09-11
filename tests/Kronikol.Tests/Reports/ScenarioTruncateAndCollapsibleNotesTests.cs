@@ -87,8 +87,11 @@ public class ScenarioTruncateAndCollapsibleNotesTests
     [Fact]
     public void ProcessRenderQueue_passes_container_truncateLines()
     {
-        var fnBody = ExtractFunctionBody(_script, "processRenderQueue");
-        Assert.Contains("container._truncateLines", fnBody);
+        // The rebuild chain (formats, appearance, note states, filters) lives in composeNoteSource
+        // so the three paths that rebuild a source cannot drift apart; the per-container truncate
+        // setting it reads is pinned on that helper rather than on each caller.
+        Assert.Contains("composeNoteSource(", ExtractFunctionBody(_script, "processRenderQueue"));
+        Assert.Contains("container._truncateLines", ExtractFunctionBody(_script, "composeNoteSource"));
     }
 
     [Fact]

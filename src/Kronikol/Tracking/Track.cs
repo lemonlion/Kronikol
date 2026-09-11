@@ -440,9 +440,12 @@ public static class Track
         // The note is the reader's sentence: capitalise it the way the step list is capitalised.
         var label = Reports.StepText.CapitaliseIfEnabled(formatted) ?? formatted;
 
-        var noteContent = passed
-            ? $"{symbol} {label}"
-            : $"{symbol} {label}\n{failureMessage}";
+        // The assertion note's body never passes through FormatNoteContent, so it is the one note class
+        // that misses the unbreakable-run bound — an assertion diff quoting a token, a connection string
+        // or minified JSON has no whitespace for `skinparam wrapWidth` to break at, and the note simply
+        // grows (measured: a 1200-character run drew 8003px).
+        var noteContent = PlantUml.DiagramWidth.WrapBlockNoteBody(
+            passed ? $"{symbol} {label}" : $"{symbol} {label}\n{failureMessage}");
 
         var plantUml = $"hnote across <<assertionNote>> {color}\n{noteContent}\nend note";
 

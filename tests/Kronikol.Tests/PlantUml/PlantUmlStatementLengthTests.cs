@@ -223,11 +223,38 @@ public class PlantUmlStatementLengthTests
     [Fact]
     public void The_step_delimiter_emitters_cap_the_bar_they_build()
     {
+        // A step with no whitespace in it — a JWT, a base64 blob, a GUID list — is now broken onto
+        // display lines rather than drawn as one, which moves it from the coloured form to the styled
+        // one. That is the whole point: the coloured bar had to be truncated at ~1400 characters
+        // because past there the JS engine overflows its stack, and the survivor was still ONE line
+        // about ten thousand pixels wide (measured 9450px), so the reader lost the step either way.
+        // The styled form carries no inline colour tag, so it rides the far higher note-line ceiling.
         var fromIngest = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml("Given", new string('s', 6000));
 
-        Assert.True(fromIngest.Length <= PlantUmlStatementLimits.MaxColouredNoteBarChars, $"{fromIngest.Length} chars");
-        Assert.StartsWith("hnote across <<stepDelimiter>> #black:<color:white>Given sss", fromIngest);
-        Assert.EndsWith(PlantUmlStatementLimits.TruncationMarker, fromIngest);
+        Assert.StartsWith(Kronikol.PlantUml.StepBarPlantUml.RichPrefix + "Given", fromIngest);
+        Assert.True(fromIngest.Length <= PlantUmlStatementLimits.MaxNoteLineChars, $"{fromIngest.Length} chars");
+        Assert.DoesNotContain("<color:white>", fromIngest);
+
+        // Still one PHYSICAL line — the report's hide-steps strip regex and every line-oriented
+        // consumer depend on that — with the breaks carried as \n escapes.
+        Assert.DoesNotContain("\n", fromIngest);
+        var displayLines = fromIngest[Kronikol.PlantUml.StepBarPlantUml.RichPrefix.Length..].Split(@"\n");
+        Assert.True(displayLines.Length > 1, "a 6000-character unbroken step should be broken onto several display lines");
+        Assert.All(displayLines, line => Assert.True(
+            line.Length <= Kronikol.PlantUml.DiagramWidth.MaxNoteTextLineChars,
+            $"display line of {line.Length} chars"));
+    }
+
+    [Fact]
+    public void A_step_bar_that_already_fits_keeps_the_legacy_coloured_form()
+    {
+        // The flip above is only for steps that have to be broken. Anything that fits on one display
+        // line stays byte-identical to what shipped before tables joined the bar.
+        var bar = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml(
+            "Given", "the order is placed with " + new string('s', 60));
+
+        Assert.StartsWith(Kronikol.PlantUml.StepBarPlantUml.LegacyPrefix, bar);
+        Assert.DoesNotContain(@"\n", bar);
     }
 
     [Fact]

@@ -267,7 +267,8 @@ public static class DefaultDiagramsFetcher
             clientSideSplitting: clientSideSplitting,
             collapseConsecutiveIdenticalCalls: options.CollapseConsecutiveIdenticalCalls,
             collapseThreshold: options.CollapseThreshold,
-            maxArrowsPerDiagram: options.MaxArrowsPerDiagram).ToArray();
+            maxArrowsPerDiagram: options.MaxArrowsPerDiagram,
+            diagramNoteWrapWidth: options.DiagramNoteWrapWidth).ToArray();
     }
 
     public static (DiagramAsCode[] TruncatedDiagrams, DiagramAsCode[] FullDiagrams) GetCiSummaryDiagrams(DiagramsFetcherOptions options, int truncateNotesAfterLines = 10)

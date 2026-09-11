@@ -297,14 +297,11 @@ public sealed record InteractionRecord
     {
         var color = passed ? Track.PassColor : Track.FailColor;
         var symbol = passed ? Track.PassSymbol : Track.FailSymbol;
-        var body = $"{symbol} {EscapeNoteLine(Reports.StepText.CapitaliseIfEnabled(text) ?? "assertion")}";
+        var body = $"{symbol} {Reports.StepText.CapitaliseIfEnabled(text) ?? "assertion"}";
         if (!passed && !string.IsNullOrWhiteSpace(message))
-            body += "\n" + EscapeNoteLine(message!);
-        return $"hnote across <<assertionNote>> {color}\n{body}\nend note";
+            body += "\n" + message!.Trim();
+        return $"hnote across <<assertionNote>> {color}\n{PlantUml.DiagramWidth.WrapBlockNoteBody(body)}\nend note";
     }
-
-    private static string EscapeNoteLine(string text) =>
-        text.Replace("\r", string.Empty).Replace("\n", "\\n").Trim();
 
     private RequestResponseLog OverrideLog(string testName, string testId, bool isStart, string? plantUml) =>
         new(testName, testId, "", "", new Uri("http://override.com"), [], "", "",

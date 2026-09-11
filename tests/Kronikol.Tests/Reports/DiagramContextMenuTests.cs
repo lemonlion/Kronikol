@@ -324,7 +324,7 @@ public class DiagramContextMenuTests
     public void ProcessRenderQueue_passes_headersHidden_to_buildSourceWithNoteStates()
     {
         var funcBody = GetFunction("processRenderQueue");
-        Assert.Contains("container._headersHidden", funcBody);
+        Assert.Contains("composeNoteSource(", funcBody);
     }
 
     // ─── syncRadioButtons ───────────────────────────────────

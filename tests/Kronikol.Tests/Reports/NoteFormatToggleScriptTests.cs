@@ -26,8 +26,17 @@ public class NoteFormatToggleScriptTests
     public void SetNoteState_path_applies_note_formats_before_building_source()
     {
         // The shared rebuild helper must swap YAML payload lines into the
-        // source before buildSourceWithNoteStates truncates/collapses.
-        Assert.Contains("buildSourceWithNoteStates(applyNoteFormats(", _script);
+        // source before buildSourceWithNoteStates truncates/collapses. The chain lives in
+        // composeNoteSource, which every rebuild path goes through so none of them can fork it.
+        var idx = _script.IndexOf("function composeNoteSource(", StringComparison.Ordinal);
+        Assert.True(idx >= 0, "composeNoteSource is the one place the rebuild chain lives");
+        var compose = _script[idx..(_script.IndexOf("\n    }", idx, StringComparison.Ordinal) + 6)];
+        Assert.Contains("applyNoteFormats(", compose);
+        Assert.True(compose.IndexOf("applyNoteFormats(", StringComparison.Ordinal)
+            < compose.IndexOf("buildSourceWithNoteStates(", StringComparison.Ordinal),
+            "formats must be applied before the source is built");
+        Assert.Contains("rerenderWithNoteStates", _script);
+        Assert.Contains("composeNoteSource(container, origSource, noteBlocks)", _script);
     }
 
     [Fact]
@@ -37,7 +46,7 @@ public class NoteFormatToggleScriptTests
         var idx = _script.IndexOf("function processRenderQueue(", StringComparison.Ordinal);
         Assert.True(idx >= 0);
         var body = _script[idx.._script.IndexOf("\n    function buildDetailsQueue(", idx, StringComparison.Ordinal)];
-        Assert.Contains("applyNoteFormats(", body);
+        Assert.Contains("composeNoteSource(", body);
     }
 
     [Fact]
@@ -80,7 +89,7 @@ public class NoteFormatToggleScriptTests
         Assert.True(idx >= 0);
         var body = _script[idx.._script.IndexOf("function processRenderQueue(", idx, StringComparison.Ordinal)];
         Assert.Contains("setAllNoteFormats(", body);
-        Assert.Contains("applyNoteFormats(", body);
+        Assert.Contains("composeNoteSource(", body);
         Assert.Contains("_noteFormatPreference", body);
     }
 

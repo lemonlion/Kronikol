@@ -35,7 +35,7 @@ public static partial class ComponentDiagramGenerator
     /// the browser report looks as it always did.
     /// </para>
     /// </summary>
-    internal const int MaxLabelLineChars = 100;
+    internal const int MaxLabelLineChars = PlantUml.DiagramWidth.MaxLabelLineChars;
 
     /// <summary>
     /// Longest display line a participant's name is drawn on. This is the diagram's other unbounded width
@@ -49,10 +49,7 @@ public static partial class ComponentDiagramGenerator
     /// at roughly 1100 pixels however long the name gets.
     /// </para>
     /// </summary>
-    internal const int MaxNameLineChars = 80;
-
-    /// <summary>Characters that mean a word is creole markup — a link, a tag — and must never be cut.</summary>
-    private static readonly char[] UnsplittableMarkup = ['[', ']', '<', '>', '\\'];
+    internal const int MaxNameLineChars = PlantUml.DiagramWidth.MaxNameLineChars;
 
     public static ComponentRelationship[] ExtractRelationships(
         IEnumerable<RequestResponseLog> logs,
@@ -156,7 +153,9 @@ public static partial class ComponentDiagramGenerator
             sb.AppendLine($"!theme {options.PlantUmlTheme}");
 
         sb.AppendLine();
-        sb.AppendLine($"title {options.Title}");
+        // A title does not wrap at any width, at any skinparam, on either engine: a user-configured
+        // title is one more unbounded width axis, so it takes the same budget an edge label does.
+        sb.AppendLine($"title {WrapLabel(options.Title)}");
         sb.AppendLine();
 
         // Discover all unique participants
@@ -324,26 +323,11 @@ public static partial class ComponentDiagramGenerator
 
     /// <summary>
     /// Wraps each of <paramref name="text"/>'s existing display lines to <paramref name="budget"/>
-    /// characters, and returns it unchanged when they all already fit.
+    /// characters, and returns it unchanged when they all already fit. The wrapper itself is shared
+    /// with the sequence, activity and marker-note emitters — see <see cref="PlantUml.DiagramWidth"/>,
+    /// which records why <c>skinparam wrapWidth</c> cannot stand in for it.
     /// </summary>
-    private static string Wrap(string text, int budget)
-    {
-        if (text.Length <= budget)
-            return text;
-
-        var lines = text.Split("\\n");
-        var wrapped = new List<string>(lines.Length);
-        var changed = false;
-
-        foreach (var line in lines)
-        {
-            var before = wrapped.Count;
-            WrapOneLine(line, budget, wrapped);
-            changed |= wrapped.Count - before != 1 || wrapped[before] != line;
-        }
-
-        return changed ? string.Join("\\n", wrapped) : text;
-    }
+    private static string Wrap(string text, int budget) => PlantUml.DiagramWidth.Wrap(text, budget);
 
     /// <summary>
     /// Re-opens creole bold on each display line of <paramref name="name"/>. Creole bold is line-scoped:
@@ -353,97 +337,6 @@ public static partial class ComponentDiagramGenerator
     /// </summary>
     private static string BoldPerLine(string name) =>
         "**" + string.Join("**\\n**", name.Split("\\n")) + "**";
-
-    /// <summary>Appends <paramref name="line"/> to <paramref name="into"/>, broken between its atoms.</summary>
-    private static void WrapOneLine(string line, int budget, List<string> into)
-    {
-        if (line.Length <= budget)
-        {
-            into.Add(line);
-            return;
-        }
-
-        var current = new StringBuilder();
-
-        foreach (var atom in Atoms(line, budget))
-        {
-            if (current.Length > 0 && current.Length + 1 + atom.Length > budget)
-            {
-                into.Add(current.ToString());
-                current.Clear();
-            }
-
-            if (atom.Length <= budget || !CanSplit(atom))
-            {
-                if (current.Length > 0) current.Append(' ');
-                current.Append(atom);
-                continue;
-            }
-
-            // A word no line could hold and no space in it to break at. Cutting it is the only way to
-            // bound the width, and it is safe precisely because CanSplit ruled out markup. The pieces
-            // are whole lines rather than words, so no space is introduced into the middle of a word.
-            if (current.Length > 0)
-            {
-                into.Add(current.ToString());
-                current.Clear();
-            }
-
-            for (var at = 0; at < atom.Length; at += budget)
-            {
-                var piece = atom.Substring(at, Math.Min(budget, atom.Length - at));
-                if (at + budget < atom.Length)
-                    into.Add(piece);
-                else
-                    current.Append(piece); // the tail carries on, so the next atom can join it
-            }
-        }
-
-        if (current.Length > 0)
-            into.Add(current.ToString());
-    }
-
-    /// <summary>
-    /// The units a label line may be broken between, largest first: one per comma-separated item — the
-    /// method list is the only thing in these labels long enough to wrap, and a line of whole operations
-    /// is what makes the overview readable — falling back to words inside an item too long to stand alone.
-    /// </summary>
-    private static IEnumerable<string> Atoms(string line, int budget)
-    {
-        foreach (var item in CommaSeparatedItems(line))
-        {
-            if (item.Length <= budget)
-            {
-                yield return item;
-                continue;
-            }
-
-            foreach (var word in item.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                yield return word;
-        }
-    }
-
-    /// <summary>Splits on <c>", "</c>, keeping each comma with the item it terminates.</summary>
-    private static IEnumerable<string> CommaSeparatedItems(string line)
-    {
-        var start = 0;
-        for (var i = 0; i + 1 < line.Length; i++)
-        {
-            if (line[i] != ',' || line[i + 1] != ' ') continue;
-            yield return line[start..(i + 1)];
-            start = i + 2;
-        }
-
-        if (start < line.Length)
-            yield return line[start..];
-    }
-
-    /// <summary>
-    /// Whether a word can be cut mid-way. Creole markup cannot: half of <c>[[#anchor</c> is literal text
-    /// and half of <c>&lt;size:10&gt;</c> is a broken tag, and a stranded <c>\</c> would eat the <c>n</c>
-    /// of the break that follows it.
-    /// </summary>
-    private static bool CanSplit(string word) => word.IndexOfAny(UnsplittableMarkup) < 0;
 
     private static string GetComponentShape(DependencyType type) => type switch
     {

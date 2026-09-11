@@ -20,6 +20,10 @@ public static class InternalFlowRenderer
         sb.AppendLine("skinparam ActivityBackgroundColor #f0f4ff");
         sb.AppendLine("skinparam ActivityBorderColor #666");
         sb.AppendLine("skinparam SwimlaneBorderColor #ccc");
+        // Activity diagrams were the one family Kronikol emitted with no wrapWidth and no character
+        // cap of any kind, so one EF-shaped DisplayName drew the whole diagram thousands of pixels
+        // wide (measured: a 120-word label drew 5 962 px, and 828 with this line).
+        sb.AppendLine($"skinparam wrapWidth {PlantUml.DiagramWidth.DefaultWrapWidthPx}");
 
         var currentSwimlane = "";
         foreach (var root in roots)
@@ -73,6 +77,7 @@ public static class InternalFlowRenderer
             sb.AppendLine("skinparam ActivityBackgroundColor #f0f4ff");
             sb.AppendLine("skinparam ActivityBorderColor #666");
             sb.AppendLine("skinparam SwimlaneBorderColor #ccc");
+            sb.AppendLine($"skinparam wrapWidth {PlantUml.DiagramWidth.DefaultWrapWidthPx}");
             var title = truncated
                 ? $"title Part {i + 1} of {totalBatches} (showing first {maxBatches})"
                 : $"title Part {i + 1} of {totalBatches}";
@@ -102,11 +107,13 @@ public static class InternalFlowRenderer
         var source = string.IsNullOrEmpty(node.Span.Source.Name) ? "Unknown" : node.Span.Source.Name;
         if (source != currentSwimlane)
         {
-            sb.AppendLine($"|{EscapePlantUml(source)}|");
+            sb.AppendLine($"|{WrapForWidth(EscapePlantUml(source))}|");
             currentSwimlane = source;
         }
 
-        var label = EscapePlantUml(node.Span.DisplayName ?? node.Span.OperationName);
+        // wrapWidth breaks at whitespace only, and the labels that get long here are SQL text and
+        // fully-qualified type names — the character budget is what bounds the ones that have none.
+        var label = WrapForWidth(EscapePlantUml(node.Span.DisplayName ?? node.Span.OperationName));
         var duration = node.Span.Duration.TotalMilliseconds;
         sb.AppendLine(duration >= 1
             ? $":{label} ({duration:F0}ms);"
@@ -176,6 +183,14 @@ public static class InternalFlowRenderer
     {
         return text.Replace("|", "\\|").Replace(";", "\\;");
     }
+
+    /// <summary>
+    /// Breaks an already-escaped activity label or swimlane name onto display lines of at most
+    /// <see cref="PlantUml.DiagramWidth.MaxLabelLineChars"/> characters. Escaping runs first so the
+    /// wrapper never cuts an escape sequence in half.
+    /// </summary>
+    private static string WrapForWidth(string escaped) =>
+        PlantUml.DiagramWidth.Wrap(escaped, PlantUml.DiagramWidth.MaxLabelLineChars);
 
     /// <summary>
     /// Returns compact flame chart data for client-side rendering.

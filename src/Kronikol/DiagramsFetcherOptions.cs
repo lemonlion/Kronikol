@@ -34,6 +34,9 @@ public record DiagramsFetcherOptions
     public Dictionary<string, string>? ServiceTypeOverrides { get; set; }
     public GraphQlBodyFormat GraphQlBodyFormat { get; set; } = GraphQlBodyFormat.FormattedWithMetadata;
 
+    /// <summary>See <c>ReportConfigurationOptions.DiagramNoteWrapWidth</c>.</summary>
+    public int DiagramNoteWrapWidth { get; set; } = PlantUml.PlantUmlCreator.DefaultNoteWrapWidth;
+
     /// <summary>See <see cref="ReportConfigurationOptions.CollapseConsecutiveIdenticalCalls"/>.</summary>
     public bool CollapseConsecutiveIdenticalCalls { get; set; }
 

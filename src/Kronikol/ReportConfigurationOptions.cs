@@ -321,6 +321,25 @@ public record ReportConfigurationOptions
     public NotePayloadFormat NotePayloadFormat { get; set; } = NotePayloadFormat.Json;
 
     /// <summary>
+    /// How wide, in pixels, a sequence-diagram note body is drawn before PlantUML breaks it at a
+    /// space (<c>skinparam wrapWidth</c>). Default: <c>800</c>.
+    /// <para>
+    /// Raise it when your notes carry wide content — analytics SQL, XML, tabular text — and the report
+    /// is not rendered with <see cref="PlantUmlRendering.BrowserJs"/>: this is the only note-width
+    /// control that reaches <c>Local</c>, <c>NodeJs</c> and a source a reader copies out of the report,
+    /// because the per-note full-width and monospace toggles are client-side. Under <c>BrowserJs</c> it
+    /// sets the width every note <em>starts</em> at; readers can still widen individual notes.
+    /// </para>
+    /// <para>
+    /// Valid range 720-4096. The floor is the width a form-url-encoded note chunk needs to stay on one
+    /// drawn line; the ceiling is PlantUML's own <c>PLANTUML_LIMIT_SIZE</c>, past which a rasterised
+    /// diagram (a PNG render, or a source pasted into plantuml.com) is silently cropped. A value
+    /// outside it fails report generation with the range in the message.
+    /// </para>
+    /// </summary>
+    public int DiagramNoteWrapWidth { get; set; } = PlantUml.PlantUmlCreator.DefaultNoteWrapWidth;
+
+    /// <summary>
     /// Default start states for the interactive report controls (Details radio, truncate lines,
     /// headers/assertions/steps/databases toggles, note format, expand states, diagram tab, panels,
     /// filter modes, disclosure sections). Applies to the HTML test run report AND, unless a

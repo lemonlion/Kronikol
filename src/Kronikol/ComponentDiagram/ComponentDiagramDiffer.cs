@@ -132,7 +132,8 @@ public static partial class ComponentDiagramDiffer
         }
 
         sb.AppendLine();
-        sb.AppendLine($"title {title}");
+        // Titles never wrap — see ComponentDiagramGenerator.MaxLabelLineChars.
+        sb.AppendLine($"title {PlantUml.DiagramWidth.Wrap(title, PlantUml.DiagramWidth.MaxLabelLineChars)}");
         sb.AppendLine();
 
         // Collect all participants

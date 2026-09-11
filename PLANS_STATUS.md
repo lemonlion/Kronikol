@@ -25,6 +25,8 @@ re-verified fresh on 2026-08-30.
 | `SEARCH_INDEX_PLAN.md` | ✅ Done (executed in full, §15 order; Phase 2 §10 deferred by design; post-release audit fixes in 3.0.71; user-requested scope extension in 3.0.72: descriptions/endpoints instant, stack traces deep-only) | 3.0.70–3.0.72 |
 | `NOTE_YAML_TRAILING_WS_PLAN.md` | ✅ Done (executed in full; committed with the release as a design record) | 3.0.79 |
 | `TOGGLE_DEFAULTS_PLAN.md` | ✅ Done (M1–M8 in full, §8 recommendations adopted; committed with the release as a design record) | 3.0.80 |
+| `NOTE_WRAP_AND_WIDTH_PLAN.md` *(2026-09-11)* | ✅ Done — executed in full. Part A (non-JSON request bodies chunked at 80 chars, user-reported) shipped alone; Part B M2–M7 followed with the §2.9 recommendation adopted (monospace first, width second) and every §2.10 measurement folded in. §2.11's HTML-panel alternative stays deliberately not taken. Committed as a design record | 3.0.84, 3.0.85 |
+| `DIAGRAM_WIDTH_PLAN.md` *(2026-09-04)* | ✅ Done — all nine ranked axes closed except #9 (`InsertPlantUml`, user-authored PlantUML, documented rather than fixed by design). The shared width-budget wrapper, the activity-diagram `wrapWidth`, the participant guard and the two formatter-bypassing note bodies all landed; the 4096 limit was re-measured as **raster-only** and the plan corrected. Activity-diagram **height** is recorded as the axis this work did not close | 3.0.83, 3.0.85 |
 | `JAVA_PORT_PLAN.md` | 🟡 Partially done | Kronikol4J v0.1.24 |
 | `NODE_PORT_PLAN.md` | ❌ Not started (design record) | — |
 | `MONOREPO_MIGRATION_PLAN.md` | ❌ Not started (design record) | — |

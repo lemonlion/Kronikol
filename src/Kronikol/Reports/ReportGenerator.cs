@@ -168,6 +168,7 @@ public static class ReportGenerator
             DependencyColors = options.DependencyColors,
             ServiceTypeOverrides = options.ServiceTypeOverrides,
             GraphQlBodyFormat = options.GraphQlBodyFormat,
+            DiagramNoteWrapWidth = options.DiagramNoteWrapWidth,
             CollapseConsecutiveIdenticalCalls = options.CollapseConsecutiveIdenticalCalls,
             CollapseThreshold = options.CollapseThreshold,
             MaxArrowsPerDiagram = options.MaxArrowsPerDiagram
@@ -482,7 +483,8 @@ public static class ReportGenerator
     /// this builder, so they cannot drift (the same contract as the note-format select).
     /// </summary>
     private static string BuildScenarioDiagramToolbar(ResolvedToggleDefaults toggles,
-        bool includeAssertions, bool includeSteps, bool includeDatabases, string scenarioNoteFormatSelect)
+        bool includeAssertions, bool includeSteps, bool includeDatabases, string scenarioNoteFormatSelect,
+        string scenarioNoteFontSelect = "", string scenarioNoteWidthSelect = "")
     {
         var sb = new StringBuilder();
         sb.Append("<span class=\"diagram-toggle-spacer\"></span>");
@@ -495,8 +497,23 @@ public static class ReportGenerator
         if (includeDatabases)
             sb.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: true));
         sb.Append(scenarioNoteFormatSelect);
+        sb.Append(scenarioNoteFontSelect);
+        sb.Append(scenarioNoteWidthSelect);
         return sb.ToString();
     }
+
+    /// <summary>
+    /// The note appearance dropdowns (payload font, note width), emitted beside the filter toggles
+    /// at report and scenario level and built once so the toolbar variants cannot drift — the same
+    /// contract as the JSON/YAML select. Both are <see cref="PlantUmlRendering.BrowserJs"/>-only:
+    /// they re-render the diagram client-side, which no other rendering mode can do.
+    /// </summary>
+    private static string BuildNoteAppearanceSelect(string cssClass, string label, string handler,
+        (string Value, string Text)[] options, string selected) =>
+        $"<select class=\"{cssClass}\" autocomplete=\"off\" aria-label=\"{label}\" title=\"{label}\" onchange=\"window.{handler}(this)\">"
+        + string.Concat(options.Select(o =>
+            $"<option value=\"{o.Value}\"{(o.Value == selected ? " selected" : "")}>{o.Text}</option>"))
+        + "</select>";
 
     public static string GenerateHtmlReport(DefaultDiagramsFetcher.DiagramAsCode[] diagrams,
         Feature[] features,
@@ -704,12 +721,35 @@ public static class ReportGenerator
         var scenarioNoteFormatSelect = hasJsonNotePayloads
             ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Note payload format\" title=\"Note payload format\" onchange=\"window._setScenarioNoteFormat(this)\">{noteFormatOptions}</select>"
             : "";
+        // The note appearance controls need notes to act on, and nothing more: unlike the JSON/YAML
+        // select they apply to any payload, so the gate is simply "this report draws notes".
+        var hasDiagramNotes = isPlantUmlBrowser && (
+            (trackedLogs is not null && trackedLogs.Any(l => l.PlantUml is not null && l.PlantUml.Contains("\nnote "))) ||
+            diagrams.Any(d => d.CodeBehind.Contains("\nnote left") || d.CodeBehind.Contains("\nnote right")));
+        (string, string)[] noteFontOptions = [("default", "Aa"), ("mono", "Mono")];
+        (string, string)[] noteWidthOptions = [("default", "Fit"), ("full", "Full")];
+        var fontSelected = toggles.NoteFont == NoteFontFamily.Monospace ? "mono" : "default";
+        var widthSelected = toggles.NoteWidth == NoteWidthMode.Full ? "full" : "default";
+        var reportNoteFontSelect = hasDiagramNotes
+            ? BuildNoteAppearanceSelect("note-font-select", "Note payload font", "_setNoteFont", noteFontOptions, fontSelected)
+            : "";
+        var scenarioNoteFontSelect = hasDiagramNotes
+            ? BuildNoteAppearanceSelect("note-font-select", "Note payload font", "_setScenarioNoteFont", noteFontOptions, fontSelected)
+            : "";
+        var reportNoteWidthSelect = hasDiagramNotes
+            ? BuildNoteAppearanceSelect("note-width-select", "Note width", "_setNoteWidth", noteWidthOptions, widthSelected)
+            : "";
+        var scenarioNoteWidthSelect = hasDiagramNotes
+            ? BuildNoteAppearanceSelect("note-width-select", "Note width", "_setScenarioNoteWidth", noteWidthOptions, widthSelected)
+            : "";
         // The full scenario-level control run, built once (see BuildScenarioDiagramToolbar). The
         // no-filters variant serves the flow-only branch, which has no sequence content to filter.
         var scenarioToolbarControls = BuildScenarioDiagramToolbar(toggles,
-            hasAssertionNotes, hasStepDelimiters, hasDatabaseParticipants, scenarioNoteFormatSelect);
+            hasAssertionNotes, hasStepDelimiters, hasDatabaseParticipants, scenarioNoteFormatSelect,
+            scenarioNoteFontSelect, scenarioNoteWidthSelect);
         var scenarioToolbarControlsNoFilters = BuildScenarioDiagramToolbar(toggles,
-            includeAssertions: false, includeSteps: false, includeDatabases: false, scenarioNoteFormatSelect);
+            includeAssertions: false, includeSteps: false, includeDatabases: false, scenarioNoteFormatSelect,
+            scenarioNoteFontSelect, scenarioNoteWidthSelect);
         var plantUmlBrowserScript = isPlantUmlBrowser ? DiagramContextMenu.GetPlantUmlBrowserRenderScript(browserRenderWorkers, browserRenderCacheMegabytes, browserFragmentMaxHeight) : "";
         var collapsibleNotesScript = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesScript(toggles) : "";
         var collapsibleNotesStyles = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesStyles() : "";
@@ -1063,6 +1103,8 @@ public static class ReportGenerator
             if (hasDatabaseParticipants)
                 body.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: false));
             body.Append(reportNoteFormatSelect);
+            body.Append(reportNoteFontSelect);
+            body.Append(reportNoteWidthSelect);
         }
         body.Append("</div>");
         body.Append("</div>");

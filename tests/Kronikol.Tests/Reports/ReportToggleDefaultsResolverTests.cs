@@ -30,6 +30,11 @@ public class ReportToggleDefaultsResolverTests
         Assert.True(b.StepsShown);
         Assert.True(b.DatabasesShown);
         Assert.Equal(NotePayloadFormat.Json, b.NotePayloadFormat);
+        // A full-width or monospace START state changes every diagram's geometry on first paint,
+        // which is not something to impose: byte-identity for existing reports is the stronger
+        // constraint, so both built-ins are the states reports already had.
+        Assert.Equal(NoteFontFamily.Default, b.NoteFont);
+        Assert.Equal(NoteWidthMode.Default, b.NoteWidth);
         Assert.False(b.FeaturesExpanded);
         Assert.False(b.ScenariosExpanded);
         Assert.Equal(DiagramTabKind.Sequence, b.DiagramTab);

@@ -962,6 +962,23 @@
 
     window._addZoomButton = addZoomButton;
 
+    // The diagram's NATURAL width in CSS pixels — what it would draw at with the container's
+    // `max-width: 100%` lifted. The note full-width control needs exactly this number to work out
+    // how much slack a diagram has, and measuring it in two places would be two things to keep in
+    // step, so the zoom code's measurement is the one both use.
+    window._getDiagramNaturalWidth = function(container) {
+        var svg = getSvg(container);
+        if (!svg) return 0;
+        var savedMax = svg.style.maxWidth;
+        var savedW = svg.style.width;
+        svg.style.maxWidth = 'none';
+        svg.style.width = '';
+        var naturalW = svg.getBoundingClientRect().width;
+        svg.style.maxWidth = savedMax;
+        svg.style.width = savedW;
+        return naturalW;
+    };
+
     // Lazily add zoom buttons when diagram containers scroll into view.
     // A per-container MutationObserver waits for the SVG to render before
     // checking whether the diagram is wide enough to need a zoom toggle.

@@ -3412,4 +3412,108 @@ public static class ReportTestHelper
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }
+    /// <summary>
+    /// Two notes with the same long unbroken-by-spaces-free text, one of them carrying the width
+    /// class the per-note control stamps. This is the ENGINE CONTRACT fixture: if a future engine
+    /// bump stops honouring `.className { MaximumWidth }` on a stereotyped note, the whole feature
+    /// stops working silently, and this is the fact that says so. It also pins that the class
+    /// composes with a note that already carries one — Kronikol's own &lt;&lt;eventNote&gt;&gt;.
+    /// </summary>
+    public static string GenerateReportWithNoteWidthClassDiagram(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+        var line = string.Join(" ", Enumerable.Range(0, 26).Select(i => $"token{i:D2}"));
+        var source = $$"""
+            @startuml
+            !pragma teoz true
+            <style>
+             .eventNote {
+                 BackgroundColor #cfecf7
+                 FontSize 11
+                 RoundCorner 10
+             }
+            </style>
+            <style>
+             .kronNoteWide {
+                 MaximumWidth 2400
+             }
+             .kronNoteMono {
+                 FontName "Courier New"
+             }
+            </style>
+            skinparam wrapWidth 800
+            autonumber 1
+
+            actor "Caller" as caller
+            entity "Service" as svc
+
+            caller -> svc : narrow
+            note<<eventNote>> left
+            {{line}}
+            end note
+            caller -> svc : wide
+            note<<eventNote>><<kronNoteWide>><<kronNoteMono>> left
+            {{line}}
+            end note
+            @enduml
+            """;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DiagramAsCode("t1", "", source)], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+    /// <summary>
+    /// Analytics SQL of the shape this whole feature exists for: lines long enough that the note
+    /// wraps at the diagram's wrap width (so the full-width control has something to do), and
+    /// <c>AS</c> clauses padded into a column (so the monospace control has something to fix — a
+    /// proportional font destroys that alignment however wide the note is).
+    /// </summary>
+    internal const string WideClickHouseQuery = """
+        SELECT
+          t.transaction_period                                    AS period,
+          t.location_identifier                                   AS location_key,
+          sum(t.net_sales_amount_in_reporting_currency)           AS net_sales,
+          avg(t.basket_size_in_reporting_currency)                AS basket_size,
+          count(DISTINCT t.customer_reference_identifier)         AS customers
+        FROM `sme`.`location_performance_weekly` t WHERE t.location_id = {LocationId:String} AND t.transaction_period >= subtractMonths(today(), 12) AND t.channel IN ('retail', 'online', 'wholesale')
+        GROUP BY t.transaction_period, t.location_identifier ORDER BY t.transaction_period DESC, t.location_identifier ASC LIMIT 500
+        """;
+
+    /// <summary>A report whose one request note carries <see cref="WideClickHouseQuery"/>.</summary>
+    public static string GenerateReportWithWideSqlNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+        var traceId = Guid.NewGuid();
+        var pairId = Guid.NewGuid();
+        RequestResponseLog[] logs =
+        [
+            new("Wide SQL", "sql", "SELECT", WideClickHouseQuery,
+                new Uri("clickhouse://insights/location_performance_weekly"), [],
+                "ClickHouse", "DataInsights", RequestResponseType.Request, traceId, pairId,
+                TrackingIgnore: false, DependencyCategory: Kronikol.Constants.DependencyCategories.SQL),
+            new("Wide SQL", "sql", "SELECT", """[{"period":"2026-09-07"}]""",
+                new Uri("clickhouse://insights/location_performance_weekly"), [],
+                "ClickHouse", "DataInsights", RequestResponseType.Response, traceId, pairId,
+                TrackingIgnore: false, DependencyCategory: Kronikol.Constants.DependencyCategories.SQL),
+        ];
+
+        var source = Kronikol.PlantUml.PlantUmlCreator
+            .GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DiagramAsCode("t1", "", source)], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
 }

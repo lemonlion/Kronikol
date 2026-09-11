@@ -8,7 +8,7 @@
         var notes = [];
         for (var i = 0; i < lines.length; i++) {
             var trimmed = lines[i].trim();
-            if (/^note(?:<<\w+>>)?\s+(left|right)/.test(trimmed)) {
+            if (/^note(?:<<[^>]*>>)*\s+(left|right)/.test(trimmed)) {
                 var start = i;
                 i++;
                 var contentLines = [];
@@ -199,6 +199,22 @@
         return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
     }
 
+    // How many rows a note's text is actually DRAWN on. PlantUML emits one <text> element per
+    // word, so the rows are the distinct y values — the same grouping the E2E facts use to read a
+    // rendered note back.
+    function paintedRowCount(grp) {
+        if (!grp || !grp.texts) return 0;
+        var rows = {};
+        var count = 0;
+        for (var i = 0; i < grp.texts.length; i++) {
+            var y = grp.texts[i].getAttribute('y');
+            if (y === null || rows[y]) continue;
+            rows[y] = true;
+            count++;
+        }
+        return count;
+    }
+
     function isLongNote(contentLines, truncateLines, headersHidden) {
         var limit = truncateLines || window._truncateLines;
         if (!contentLines) return false;
@@ -222,7 +238,7 @@
         return 'truncated';
     }
 
-    function createNoteButtons(svg, bbox, noteStep, onExpand, onContract, onTruncate, onCycle, contentLines, grp, container, forceIsLong, formatInfo) {
+    function createNoteButtons(svg, bbox, noteStep, onExpand, onContract, onTruncate, onCycle, contentLines, grp, container, forceIsLong, formatInfo, appearanceInfo) {
         var size = 12;
         var topSize = 14;
         var pad = 3;
@@ -231,6 +247,41 @@
         var longNote = forceIsLong || isLongNote(contentLines, container._truncateLines, hdrHidden);
         var buttons = [];
         var formatBtn = null;
+        var widthBtn = null;
+
+        // One top-right glyph button, at `slot` places in from the right edge of the note.
+        // Created hidden when `lazy` — eligibility is decided on the note's first hover, never in a
+        // per-render sweep.
+        function glyphButton(slot, glyph, title, onClick, btnName, lazy) {
+            var gx = bbox.x + bbox.width - topSize * slot - pad * slot;
+            var gy = bbox.y + pad;
+            var g = document.createElementNS(SVGNS, 'g');
+            g.setAttribute('class', 'note-toggle-icon note-' + btnName + '-btn');
+            g.setAttribute('data-note-btn', btnName);
+            g.style.cursor = 'pointer';
+            g.style.opacity = '0';
+            if (lazy) g.style.display = 'none';
+            var bg = document.createElementNS(SVGNS, 'rect');
+            bg.setAttribute('x', gx); bg.setAttribute('y', gy);
+            bg.setAttribute('width', topSize); bg.setAttribute('height', topSize);
+            bg.setAttribute('rx', '2'); bg.setAttribute('fill', '#ffffff');
+            bg.setAttribute('stroke', '#999'); bg.setAttribute('stroke-width', '0.5');
+            var titleEl = document.createElementNS(SVGNS, 'title');
+            titleEl.textContent = title;
+            bg.appendChild(titleEl);
+            g.appendChild(bg);
+            var sym = document.createElementNS(SVGNS, 'text');
+            sym.setAttribute('x', gx + topSize / 2); sym.setAttribute('y', gy + topSize - 3);
+            sym.setAttribute('text-anchor', 'middle'); sym.setAttribute('font-size', '10');
+            sym.setAttribute('font-family', 'sans-serif'); sym.setAttribute('fill', '#666');
+            sym.setAttribute('font-weight', 'bold');
+            sym.style.pointerEvents = 'none';
+            sym.textContent = glyph;
+            g.appendChild(sym);
+            bg.addEventListener('click', function(ev) { ev.stopPropagation(); onClick(); });
+            bg.addEventListener('dblclick', function(ev) { ev.stopPropagation(); ev.preventDefault(); });
+            return g;
+        }
 
         // Top-right area: contract buttons — shown when expanded or truncated
         if (state === 'expanded' || state === 'truncated') {
@@ -320,6 +371,27 @@
                 bgF.addEventListener('dblclick', function(ev) { ev.stopPropagation(); ev.preventDefault(); });
                 formatBtn = gf;
                 buttons.push(gf);
+            }
+
+            // Monospace and full-width toggles. Monospace comes FIRST, and is the larger measured
+            // readability win of the two: PlantUML draws note text in a proportional font, and
+            // analytics SQL is written with its AS clauses padded into columns — measured on five
+            // lines whose AS token sits in the same source column, sans-serif scattered them across
+            // 65.8px and Courier New put all of them at the same x. No width can fix that.
+            if (appearanceInfo) {
+                var nextSlot = (state === 'expanded' && longNote) ? 4 : 3;
+                if (appearanceInfo.monoUseful) {
+                    buttons.push(glyphButton(nextSlot,
+                        appearanceInfo.font === 'mono' ? 'A' : 'M',
+                        appearanceInfo.font === 'mono' ? 'Show payload in the default font' : 'Show payload in a monospace font',
+                        function() { appearanceInfo.onToggleFont(); }, 'mono', false));
+                    nextSlot++;
+                }
+                widthBtn = glyphButton(nextSlot,
+                    appearanceInfo.width === 'full' ? '\u2192\u2190' : '\u2194',
+                    appearanceInfo.width === 'full' ? 'Back to the default note width' : 'Widen this note to fill the diagram',
+                    function() { appearanceInfo.onToggleWidth(); }, 'width', appearanceInfo.width !== 'full');
+                buttons.push(widthBtn);
             }
         }
 
@@ -425,6 +497,14 @@
                 if (formatBtn._eligible === undefined) formatBtn._eligible = formatInfo.checkEligible();
                 formatBtn.style.display = formatBtn._eligible ? '' : 'none';
             }
+            // Widening only does something for a note whose text actually wraps. Painted rows vs
+            // source lines is an exact wrapping signal and survives both shapes that could break it:
+            // a blank line paints its own whitespace-only <text> row, and each grey header line
+            // paints one row.
+            if (widthBtn) {
+                if (widthBtn._eligible === undefined) widthBtn._eligible = appearanceInfo.canWiden();
+                widthBtn.style.display = widthBtn._eligible ? '' : 'none';
+            }
             // For tall notes, reposition top-right buttons to the visible
             // portion of the note so they're not scrolled off-screen
             if (bbox.height > 500 && svg.getScreenCTM) {
@@ -438,7 +518,7 @@
                         var btnY = Math.max(bbox.y + pad, Math.min(visSvgY + pad, bbox.y + bbox.height - topSize * 2 - pad));
                         buttons.forEach(function(b) {
                             var btn = b.getAttribute('data-note-btn');
-                            if (btn === 'minus' || btn === 'plus' || btn === 'format') {
+                            if (btn === 'minus' || btn === 'plus' || btn === 'format' || btn === 'mono' || btn === 'width') {
                                 var rects = b.querySelectorAll('rect');
                                 var lines = b.querySelectorAll('line');
                                 var txts = b.querySelectorAll('text');
@@ -778,6 +858,26 @@
                         setNoteFormat(owner, globalIdx, next);
                     }
                 };
+                var appearanceInfo = {
+                    width: noteWidthOf(owner, globalIdx),
+                    font: noteFontOf(owner, globalIdx),
+                    // Monospace is a display preference any multi-line payload can use; a one-line
+                    // note gains nothing from it and does not need the extra glyph.
+                    monoUseful: (noteBlocks[localIdx] ? noteBlocks[localIdx].contentLines.length : 0) > 1,
+                    canWiden: function() {
+                        // An already-widened note always keeps its button: that is the only way back.
+                        if (noteWidthOf(owner, globalIdx) === 'full') return true;
+                        var sourceLines = noteBlocks[localIdx] ? noteBlocks[localIdx].contentLines.length : 0;
+                        return sourceLines > 0 && paintedRowCount(grp) > sourceLines;
+                    },
+                    onToggleFont: function() {
+                        setNoteFont(owner, globalIdx, noteFontOf(owner, globalIdx) === 'mono' ? 'default' : 'mono');
+                    },
+                    onToggleWidth: function() {
+                        var next = noteWidthOf(owner, globalIdx) === 'full' ? 'default' : 'full';
+                        setNoteWidth(owner, globalIdx, next, getNoteBBox(grp).width);
+                    }
+                };
                 // Continuation notes are always "long" — they're chunks of a
                 // larger note, and expand should reveal the full original content.
                 var forceIsLong = !!(fragContinuationMap && localIdx === 0);
@@ -800,8 +900,24 @@
                         else nextStep = long ? 1 : 2;
                         setNoteState(owner, globalIdx, nextStep);
                     },
-                    origContentLines, grp, container, forceIsLong, formatInfo);
+                    origContentLines, grp, container, forceIsLong, formatInfo, appearanceInfo);
             })(ni, sourceIndexMap ? sourceIndexMap[ni] : ni);
+        }
+
+        // Widening a note is not exactly linear: a `note left` pushes the participants right, which
+        // moves the arrow labels drawn over the shifted lifelines. One correction pass is worth its
+        // cost and no more, so the flag is cleared before the retry can set it again.
+        if (container._refineNoteWidth && !container._noteRendering && !window._plantumlRendering) {
+            container._refineNoteWidth = false;
+            var refDrawn = drawnSvgWidth(container);
+            var refInner = containerInnerWidth(container);
+            if (refDrawn > 0 && refInner > 0 && Math.abs(refInner - refDrawn) > 24) {
+                var refined = clampNoteWidth((container._noteWidthPx || FALLBACK_NOTE_WIDTH_PX) + (refInner - refDrawn));
+                if (refined !== container._noteWidthPx) {
+                    container._noteWidthPx = refined;
+                    rerenderWithNoteStates(container, function() {});
+                }
+            }
         }
     }
 
@@ -1226,7 +1342,7 @@
         var afterGray = false;
         for (var i = 0; i < lines.length; i++) {
             var trimmed = lines[i].trim();
-            if (!inNote && /^note(?:<<\w+>>)?\s+(left|right)/.test(trimmed)) {
+            if (!inNote && /^note(?:<<[^>]*>>)*\s+(left|right)/.test(trimmed)) {
                 inNote = true;
                 nIdx++;
                 swapping = noteFormats[nIdx] === 'yaml' && !!noteYamlLines[nIdx];
@@ -1339,6 +1455,240 @@
         return changed;
     }
 
+    // ── Per-note appearance: full width and monospace ────────────────────────
+    // Both ride the SAME mechanism, which is the only per-note width handle PlantUML has:
+    // a `.className { … }` style block plus a stereotype on the note's header line.
+    // Measured on the shipped engine AND on real Java PlantUML — the element selectors
+    // (`note { … }`, `note<<x>> { … }`, `sequenceDiagram { note { … } }`) all silently ignore
+    // MaximumWidth; only the class selector carries it. Nothing is emitted at generation time:
+    // the class and the style block exist only in the client-side re-render source, exactly as
+    // the YAML view's spliced lines do.
+    var NOTE_WIDE_CLASS = 'kronNoteWide';
+    var NOTE_MONO_CLASS = 'kronNoteMono';
+
+    // Courier New is the only name the ENGINE and the BROWSER both resolve. They size and paint
+    // independently — the engine measures the note box from its own metrics, the browser paints the
+    // text — so a name only one of them knows sizes a box for one font and paints another into it.
+    // Measured on one string: no font 665px engine / 221.7 browser; "Courier New" 765 / 280.8 (the
+    // only row that agrees); "monospace" 708 / 221.7 (browser paints sans); "Consolas" 708 / 257.3;
+    // unknown names 615 / 221.7 — note that an unresolved font is NOT a no-op, it resizes the box.
+    // document.fonts.check() is useless as a guard: it returned true for every name tried,
+    // including one that does not exist.
+    var NOTE_MONO_FONT = 'Courier New';
+
+    // A note narrower than this is unreadable whatever the container says, and one wider than this
+    // is past anything anyone asked for. The upper bound is a courtesy bound, not a correctness
+    // requirement: PLANTUML_LIMIT_SIZE is raster-only (measured: the same source drew SVG at
+    // 24185px uncropped and PNG at exactly 4096) and this engine runs at maxSvgSize 98304. Its job
+    // is to stop a pathological container measurement, not to protect anything.
+    var MIN_NOTE_WIDTH_PX = 320;
+    var MAX_NOTE_WIDTH_PX = 4000;
+    var FALLBACK_NOTE_WIDTH_PX = 1200;
+
+    function noteWidthOf(container, idx) {
+        return (container._noteWidths && container._noteWidths[idx]) || 'default';
+    }
+
+    function noteFontOf(container, idx) {
+        return (container._noteFonts && container._noteFonts[idx]) || 'default';
+    }
+
+    function containerHasAppearance(container) {
+        var k;
+        if (container._noteWidths) for (k in container._noteWidths) if (container._noteWidths[k] === 'full') return true;
+        if (container._noteFonts) for (k in container._noteFonts) if (container._noteFonts[k] === 'mono') return true;
+        return false;
+    }
+
+    // The style block, with its tags on their OWN lines: the fragment splitter recognises a style
+    // block by its opening and closing tags standing alone on a line, and replicates it into every
+    // fragment's prefix, so a one-line form would be dropped from every fragment but the first.
+    function noteAppearanceStyle(widthPx) {
+        var open = '<' + 'style>';
+        var close = '</' + 'style>';
+        return open + '\n .' + NOTE_WIDE_CLASS + ' {\n     MaximumWidth ' + widthPx + '\n }\n .'
+            + NOTE_MONO_CLASS + ' {\n     FontName "' + NOTE_MONO_FONT + '"\n }\n' + close;
+    }
+
+    // Stamps each note's appearance stereotypes onto its header line and injects the style block
+    // once. Returns the source UNCHANGED when no note has a non-default appearance, which is every
+    // report until someone clicks something.
+    function applyNoteAppearance(source, container) {
+        if (!containerHasAppearance(container)) return source;
+        var widthPx = container._noteWidthPx || FALLBACK_NOTE_WIDTH_PX;
+        var lines = source.split('\n');
+        var out = [];
+        var nIdx = -1;
+        var injected = false;
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var trimmed = line.trim();
+            // Inject into the PREFIX region — before the first note, and next to the wrapWidth the
+            // per-note MaximumWidth overrides for its own note.
+            if (!injected && (trimmed.indexOf('skinparam wrapWidth') === 0 || trimmed === '@enduml')) {
+                out.push(noteAppearanceStyle(widthPx));
+                injected = true;
+            }
+            if (/^note(?:<<[^>]*>>)*\s+(left|right)/.test(trimmed)) {
+                nIdx++;
+                var stereotypes = '';
+                if (noteWidthOf(container, nIdx) === 'full') stereotypes += '<<' + NOTE_WIDE_CLASS + '>>';
+                if (noteFontOf(container, nIdx) === 'mono') stereotypes += '<<' + NOTE_MONO_CLASS + '>>';
+                if (stereotypes) {
+                    // `note<<a>><<b>> left` and `note left <<a>><<b>>` both work; stamping at the
+                    // keyword keeps the header's shape identical for every downstream matcher.
+                    var lead = line.substring(0, line.length - line.trimStart().length);
+                    out.push(lead + trimmed.replace(/^note/, 'note' + stereotypes));
+                    continue;
+                }
+            }
+            out.push(line);
+        }
+        if (!injected) out.unshift(noteAppearanceStyle(widthPx));
+        return out.join('\n');
+    }
+
+    // The whole source-rebuild chain, in one place. Every caller — a per-note toggle, the zero-click
+    // pre-process, and the bulk render queue — has to apply exactly the same passes in exactly the
+    // same order, or the note indices they each compute stop agreeing with each other.
+    function composeNoteSource(container, origSource, noteBlocks) {
+        var withFormats = applyNoteFormats(origSource, container._noteFormats, container._noteYamlLines);
+        var withAppearance = applyNoteAppearance(withFormats, container);
+        var built = buildSourceWithNoteStates(withAppearance, container._noteSteps, noteBlocks,
+            !!container._headersHidden, container._truncateLines);
+        return applyDatabasesFilter(
+            applyStepsFilter(
+                applyAssertionFilter(built, !!container._assertionsVisible),
+                !!container._stepsVisible),
+            !!container._databasesVisible);
+    }
+
+    // ── Choosing the width ───────────────────────────────────────────────────
+    // `.plantuml-browser svg { max-width: 100% }` scales a diagram wider than its container DOWN
+    // rather than scrolling it, so "wider" is only a readability win while the result still fits:
+    // past the container, wider text is smaller text. "Full width" therefore means fill the
+    // container exactly, and the arithmetic works from the SLACK rather than from the note's x
+    // offset — Kronikol draws a REQUEST payload (the SQL note that prompted all this) as
+    // `note left`, which is anchored at x=0, and widening it pushes the participants right instead
+    // of extending the canvas, so noteBBox.x is not stable across the change.
+    function containerInnerWidth(container) {
+        var inner = container.clientWidth;
+        if (!inner) {
+            // A collapsed <details> measures 0. Fall back to the report body and recompute on the
+            // next toggle, rather than computing a nonsense target from zero.
+            inner = (document.body && document.body.clientWidth) || 0;
+        }
+        var padLeft = 0;
+        try { padLeft = parseFloat(getComputedStyle(container).paddingLeft) || 0; } catch (e) {}
+        return Math.max(0, inner - padLeft);
+    }
+
+    function drawnSvgWidth(container) {
+        if (window._getDiagramNaturalWidth) {
+            var measured = window._getDiagramNaturalWidth(container);
+            if (measured > 0) return measured;
+        }
+        var svg = container.querySelector('svg');
+        return svg ? svg.getBoundingClientRect().width : 0;
+    }
+
+    function clampNoteWidth(px) {
+        return Math.round(Math.max(MIN_NOTE_WIDTH_PX, Math.min(MAX_NOTE_WIDTH_PX, px)));
+    }
+
+    // The widest note currently drawn in this container. MaximumWidth is a MAXIMUM, so one class
+    // per diagram set from the widest note's slack leaves every narrower note exactly where it was.
+    function widestDrawnNoteWidth(container) {
+        var widest = 0;
+        var svgs = container.querySelectorAll('svg');
+        for (var i = 0; i < svgs.length; i++) {
+            var groups = findNoteGroups(svgs[i]);
+            for (var g = 0; g < groups.length; g++) {
+                var w = getNoteBBox(groups[g]).width;
+                if (w > widest) widest = w;
+            }
+        }
+        return widest;
+    }
+
+    function computeNoteWidthTarget(container, noteWidth) {
+        var drawn = drawnSvgWidth(container);
+        var inner = containerInnerWidth(container);
+        if (!noteWidth) noteWidth = widestDrawnNoteWidth(container);
+        if (!noteWidth || !drawn || !inner) return clampNoteWidth(FALLBACK_NOTE_WIDTH_PX);
+        // Give the note the diagram's slack (or take it back, when the diagram already overflows).
+        return clampNoteWidth(noteWidth + (inner - drawn));
+    }
+
+    // Flips one note between default and full width. Structurally the same operation as an
+    // expand/truncate or a JSON/YAML flip: set per-note state, rebuild the source, re-render.
+    function setNoteWidth(container, noteIdx, mode, measuredNoteWidth) {
+        if (container._noteRendering || window._plantumlRendering) return;
+        if (!container._noteWidths) container._noteWidths = {};
+        if (noteWidthOf(container, noteIdx) === mode) return;
+        var oldMode = container._noteWidths[noteIdx];
+        var oldPx = container._noteWidthPx;
+        if (mode === 'full') container._noteWidthPx = computeNoteWidthTarget(container, measuredNoteWidth);
+        container._noteWidths[noteIdx] = mode;
+        // One correction pass after the render: widening a left note also moves the arrow labels
+        // over the shifted lifelines, so the relation is not exactly linear.
+        container._refineNoteWidth = mode === 'full';
+        rerenderWithNoteStates(container, function() {
+            container._noteWidths[noteIdx] = oldMode;
+            container._noteWidthPx = oldPx;
+            container._refineNoteWidth = false;
+        });
+    }
+
+    function setNoteFont(container, noteIdx, font) {
+        if (container._noteRendering || window._plantumlRendering) return;
+        if (!container._noteFonts) container._noteFonts = {};
+        if (noteFontOf(container, noteIdx) === font) return;
+        var oldFont = container._noteFonts[noteIdx];
+        container._noteFonts[noteIdx] = font;
+        rerenderWithNoteStates(container, function() { container._noteFonts[noteIdx] = oldFont; });
+    }
+
+    // Flips every note of one container, for the scenario- and report-level dropdowns. Returns
+    // whether anything actually changed, so a bulk no-op skips its re-render.
+    function setAllNoteWidths(container, mode) {
+        if (container.classList && container.classList.contains('puml-fragment')) return false;
+        if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
+        var source = container._noteOriginalSource;
+        if (!source) return false;
+        var noteBlocks = parseNoteBlocks(source);
+        if (noteBlocks.length === 0) return false;
+        if (!container._noteWidths) container._noteWidths = {};
+        var changed = false;
+        if (mode === 'full') {
+            var target = computeNoteWidthTarget(container, 0);
+            if (container._noteWidthPx !== target) { container._noteWidthPx = target; changed = changed || true; }
+        }
+        for (var i = 0; i < noteBlocks.length; i++) {
+            if (noteWidthOf(container, i) === mode) continue;
+            container._noteWidths[i] = mode;
+            changed = true;
+        }
+        return changed;
+    }
+
+    function setAllNoteFonts(container, font) {
+        if (container.classList && container.classList.contains('puml-fragment')) return false;
+        if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
+        var source = container._noteOriginalSource;
+        if (!source) return false;
+        var noteBlocks = parseNoteBlocks(source);
+        if (noteBlocks.length === 0) return false;
+        if (!container._noteFonts) container._noteFonts = {};
+        var changed = false;
+        for (var i = 0; i < noteBlocks.length; i++) {
+            if (noteFontOf(container, i) === font) continue;
+            container._noteFonts[i] = font;
+            changed = true;
+        }
+        return changed;
+    }
+
     function buildSourceWithNoteStates(origSource, noteSteps, noteBlocks, hideHeaders, truncateLines) {
         var limit = truncateLines || window._truncateLines;
         var lines = origSource.split('\n');
@@ -1352,7 +1702,7 @@
 
         for (var i = 0; i < lines.length; i++) {
             var trimmed = lines[i].trim();
-            if (!inNote && /^note(?:<<\w+>>)?\s+(left|right)/.test(trimmed)) {
+            if (!inNote && /^note(?:<<[^>]*>>)*\s+(left|right)/.test(trimmed)) {
                 inNote = true;
                 justSkippedGray = false;
                 noteContentEmitted = false;
@@ -1438,7 +1788,7 @@
         var origSource = container._noteOriginalSource;
         if (!origSource) { restoreState(); return; }
         var noteBlocks = parseNoteBlocks(origSource);
-        var newSource = applyDatabasesFilter(applyStepsFilter(applyAssertionFilter(buildSourceWithNoteStates(applyNoteFormats(origSource, container._noteFormats, container._noteYamlLines), container._noteSteps, noteBlocks, !!container._headersHidden, container._truncateLines), !!container._assertionsVisible), !!container._stepsVisible), !!container._databasesVisible);
+        var newSource = composeNoteSource(container, origSource, noteBlocks);
 
         container.setAttribute('data-plantuml', newSource);
 
@@ -1649,6 +1999,8 @@
     window._makeNotesCollapsible = makeNotesCollapsible;
     window._findNoteGroups = findNoteGroups;
     window._getNoteBBox = getNoteBBox;
+    window._paintedNoteRowCount = paintedRowCount;
+    window._applyNoteAppearance = applyNoteAppearance;
     window._parseNoteBlocks = parseNoteBlocks;
     window._computeGlobalNoteIndex = computeGlobalNoteIndex;
     // Pure JSON ⇄ YAML functions, exposed for the Playwright unit-style fixture
@@ -1676,6 +2028,8 @@
     window._stepsVisible = __STEPS_VISIBLE_DEFAULT__;
     window._databasesVisible = __DATABASES_VISIBLE_DEFAULT__;
     window._noteFormatDefault = '__NOTE_FORMAT_DEFAULT__';
+    window._noteFontDefault = '__NOTE_FONT_DEFAULT__';
+    window._noteWidthDefault = '__NOTE_WIDTH_DEFAULT__';
 
     function stripAssertionNotes(source) {
         return source.replace(/\n?hnote across <<assertionNote>>[^\n]*\n[\s\S]*?end note\n?/g, '');
@@ -1740,7 +2094,7 @@
         // Note start: "note left", "note right", "note<<stereotype>> left", etc.
         // but NOT "note left of alias" (handled separately above)
         function isPositionalNoteStart(line) {
-            return /^note\s*(?:<<[^>]*>>)?\s+(?:left|right)\s*$/.test(line);
+            return /^note\s*(?:<<[^>]*>>)*\s+(?:left|right)\s*$/.test(line);
         }
 
         var lines = source.split('\n');
@@ -1927,6 +2281,17 @@
         // straight into YAML.
         var fmt = el._noteFormatPreference || window._noteFormatDefault;
         if (fmt === 'yaml') setAllNoteFormats(el, 'yaml');
+        // Same contract for the appearance defaults. A container decompressed after a bulk command
+        // (stamped by _setNoteFont / _setNoteWidth) or under a configured default renders straight
+        // into that appearance rather than flashing the default first.
+        var fontPref = el._noteFontPreference || window._noteFontDefault;
+        if (fontPref === 'mono') setAllNoteFonts(el, 'mono');
+        var widthPref = el._noteWidthPreference || window._noteWidthDefault;
+        if (widthPref === 'full' && setAllNoteWidths(el, 'full')) {
+            // Nothing is drawn yet, so the target starts at the fallback and the correction pass
+            // after the first render is what actually fits it to the container.
+            el._refineNoteWidth = true;
+        }
         var anyYaml = false;
         if (el._noteFormats) {
             for (var fk in el._noteFormats) {
@@ -1948,9 +2313,9 @@
         }
         el._headersHidden = window._headersHidden;
         if (state !== 'expanded' || window._headersHidden || anyYaml) {
-            var built = buildSourceWithNoteStates(applyNoteFormats(source, el._noteFormats, el._noteYamlLines), el._noteSteps, origNoteBlocks, window._headersHidden, el._truncateLines);
-            return applyDatabasesFilter(applyStepsFilter(applyAssertionFilter(built, el._assertionsVisible), el._stepsVisible), el._databasesVisible);
+            return composeNoteSource(el, source, origNoteBlocks);
         }
+        if (containerHasAppearance(el)) return composeNoteSource(el, source, origNoteBlocks);
         return renderSource;
     };
 
@@ -1974,7 +2339,7 @@
             var item = queue.shift();
             var container = item.container;
             var origNoteBlocks = parseNoteBlocks(container._noteOriginalSource);
-            var newSource = applyDatabasesFilter(applyStepsFilter(applyAssertionFilter(buildSourceWithNoteStates(applyNoteFormats(container._noteOriginalSource, container._noteFormats, container._noteYamlLines), container._noteSteps, origNoteBlocks, !!container._headersHidden, container._truncateLines), !!container._assertionsVisible), !!container._stepsVisible), !!container._databasesVisible);
+            var newSource = composeNoteSource(container, container._noteOriginalSource, origNoteBlocks);
             container.setAttribute('data-plantuml', newSource);
 
             // Re-split into fragments if needed
@@ -2511,6 +2876,70 @@
         });
         return queue;
     }
+
+    // The appearance dropdowns are the same shape as the format one: rebuild every container's
+    // source and re-render through renderWithPending, which is the cost the format dropdown already
+    // ships (measured on a 110-container report: 4.7s wall, worst main-thread task 223ms, because
+    // the renders run in workers).
+    function buildNoteAppearanceQueue(containers, applyToContainer) {
+        var queue = [];
+        containers.forEach(function(container) {
+            if (container.classList.contains('puml-fragment')) return;
+            if (isComponentDiagramContainer(container)) return;
+            if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
+            var noteBlocks = parseNoteBlocks(container._noteOriginalSource);
+            if (noteBlocks.length === 0) return;
+            if (container._truncateLines === undefined) container._truncateLines = window._truncateLines;
+            if (!container._noteSteps) container._noteSteps = {};
+            if (applyToContainer(container))
+                queue.push({ container: container, noteBlocks: noteBlocks });
+        });
+        return queue;
+    }
+
+    window._setNoteFont = function(sel) {
+        var font = sel.value === 'mono' ? 'mono' : 'default';
+        window._noteFontDefault = font;
+        document.querySelectorAll('.note-font-select').forEach(function(s) { s.value = font; });
+        document.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) { c._noteFontPreference = font; });
+        renderWithPending(
+            buildNoteAppearanceQueue(document.querySelectorAll('[data-plantuml]'),
+                function(c) { return setAllNoteFonts(c, font); }),
+            document.querySelectorAll('.note-font-select'));
+    };
+
+    window._setScenarioNoteFont = function(sel) {
+        var scenario = sel.closest('details.scenario');
+        if (!scenario) return;
+        var font = sel.value === 'mono' ? 'mono' : 'default';
+        scenario.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) { c._noteFontPreference = font; });
+        renderWithPending(
+            buildNoteAppearanceQueue(scenario.querySelectorAll('[data-plantuml]'),
+                function(c) { return setAllNoteFonts(c, font); }),
+            scenario.querySelectorAll('.note-font-select'));
+    };
+
+    window._setNoteWidth = function(sel) {
+        var mode = sel.value === 'full' ? 'full' : 'default';
+        window._noteWidthDefault = mode;
+        document.querySelectorAll('.note-width-select').forEach(function(s) { s.value = mode; });
+        document.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) { c._noteWidthPreference = mode; });
+        renderWithPending(
+            buildNoteAppearanceQueue(document.querySelectorAll('[data-plantuml]'),
+                function(c) { c._refineNoteWidth = mode === 'full'; return setAllNoteWidths(c, mode); }),
+            document.querySelectorAll('.note-width-select'));
+    };
+
+    window._setScenarioNoteWidth = function(sel) {
+        var scenario = sel.closest('details.scenario');
+        if (!scenario) return;
+        var mode = sel.value === 'full' ? 'full' : 'default';
+        scenario.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) { c._noteWidthPreference = mode; });
+        renderWithPending(
+            buildNoteAppearanceQueue(scenario.querySelectorAll('[data-plantuml]'),
+                function(c) { c._refineNoteWidth = mode === 'full'; return setAllNoteWidths(c, mode); }),
+            scenario.querySelectorAll('.note-width-select'));
+    };
 
     // Report-level: set the note payload format for all scenarios
     window._setNoteFormat = function(sel) {

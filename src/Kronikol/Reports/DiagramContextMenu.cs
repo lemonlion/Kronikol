@@ -110,6 +110,8 @@ public static class DiagramContextMenu
     public static string GetCollapsibleNotesScript(ResolvedToggleDefaults toggleDefaults) =>
         LoadResource("collapsible-notes-script.js")
             .Replace("__NOTE_FORMAT_DEFAULT__", toggleDefaults.NotePayloadFormat == NotePayloadFormat.Yaml ? "yaml" : "json")
+            .Replace("__NOTE_FONT_DEFAULT__", toggleDefaults.NoteFont == NoteFontFamily.Monospace ? "mono" : "default")
+            .Replace("__NOTE_WIDTH_DEFAULT__", toggleDefaults.NoteWidth == NoteWidthMode.Full ? "full" : "default")
             .Replace("__HEADERS_HIDDEN_DEFAULT__", toggleDefaults.HeadersShown ? "false" : "true")
             .Replace("__TRUNCATE_LINES_DEFAULT__", ((int)toggleDefaults.TruncateLines).ToString(System.Globalization.CultureInfo.InvariantCulture))
             .Replace("__DETAILS_DEFAULT__", toggleDefaults.Details switch

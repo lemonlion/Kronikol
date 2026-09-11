@@ -17,14 +17,48 @@ namespace Kronikol.PlantUml;
 /// </summary>
 public static partial class PlantUmlCreator
 {
-    private const int MaxLineWidth = 800;
-    private const int MaxNoteChunkChars = 80; // Must stay under MaxLineWidth at ~9px/char to avoid PlantUML wrapWidth overflow losing color tags
+    /// <summary>
+    /// The built-in note wrap width — how wide a note body is drawn before PlantUML breaks it at a
+    /// space. <c>ReportConfigurationOptions.DiagramNoteWrapWidth</c> overrides it per report; this is
+    /// the value every report shipped with, and the one that keeps existing output byte-identical.
+    /// </summary>
+    internal const int DefaultNoteWrapWidth = DiagramWidth.DefaultWrapWidthPx;
+    /// <summary>
+    /// Slice size for a genuinely form-url-encoded body, which has no whitespace for the engine to
+    /// wrap at. It must stay under the note wrap width at ~9px/char: a chunk the engine has to break
+    /// itself is broken mid-line, which can cut one of Kronikol's own inline colour tags in half.
+    /// <c>DiagramNoteWrapWidth</c> is floored at <see cref="DiagramWidth.MinNoteWrapWidthPx"/> so that
+    /// relationship holds at every configurable width, which is what lets this stay a constant.
+    /// </summary>
+    private const int MaxNoteChunkChars = 80;
+
+    /// <summary>Exposes <see cref="MaxNoteChunkChars"/> to the test that pins it against the width floor.</summary>
+    internal static int MaxNoteChunkCharsForTests => MaxNoteChunkChars;
     private const string EventNoteClass = "eventNote";
     public const int DefaultMaxEncodedDiagramLength = 2000;
     private const int MaxResponseNoteChunkLength = 15_000;
     private const int MaxEstimatedDiagramHeight = 12_000;
     private const int EstimatedArrowHeight = 45;
     private const int EstimatedNoteLineHeight = 18;
+
+    /// <summary>
+    /// How wide the participant row may grow before a diagram is split for width. Measured on real
+    /// PlantUML, a sequence diagram of short-named participants grows about 78px each - 50 services
+    /// drew 4035px and 60 drew 4817px, in ONE diagram, because encoded length and estimated height
+    /// were the only split guards and neither is reached by a test that is merely wide. The budget
+    /// sits below <see cref="DiagramWidth.PlantUmlLimitSize"/> to leave room for the arrow labels and
+    /// notes drawn between the lifelines.
+    /// </summary>
+    private const int MaxParticipantRowWidthPx = 3400;
+
+    /// <summary>Per-character contribution of a participant's drawn name to the row width.</summary>
+    private const int ParticipantPxPerChar = 7;
+
+    /// <summary>Fixed per-participant cost: the box padding and the gap to the next lifeline.</summary>
+    private const int ParticipantBoxPaddingPx = 20;
+
+    /// <summary>No participant box is narrower than this however short its name is.</summary>
+    private const int MinParticipantWidthPx = 80;
 
     public static string[] DefaultExcludedHeaders => ["Cache-Control", "Pragma"];
 
@@ -60,9 +94,11 @@ public static partial class PlantUmlCreator
         bool clientSideSplitting = false,
         bool collapseConsecutiveIdenticalCalls = false,
         int collapseThreshold = 2,
-        int? maxArrowsPerDiagram = null)
+        int? maxArrowsPerDiagram = null,
+        int diagramNoteWrapWidth = DefaultNoteWrapWidth)
     {
         excludedHeaders ??= DefaultExcludedHeaders;
+        DiagramWidth.ValidateNoteWrapWidth(diagramNoteWrapWidth);
 
         var requestsResponseByTraceIdAndTest = requestResponses?.GroupBy(x => x.TestId);
 
@@ -101,7 +137,8 @@ public static partial class PlantUmlCreator
                 clientSideSplitting,
                 collapseConsecutiveIdenticalCalls,
                 collapseThreshold,
-                maxArrowsPerDiagram);
+                maxArrowsPerDiagram,
+                diagramNoteWrapWidth);
             var imageTags = results.Select(x => x.GetPlantUmlImageTag(plantUmlServerRendererUrl, lazyLoadImages)).ToArray();
             return new PlantUmlForTest(testTraces.Key, testName, results.Select(result => (result.PlantUml, result.PlantUmlEncoded)), testTraces.ToList(), imageTags);
         });
@@ -137,7 +174,8 @@ public static partial class PlantUmlCreator
         bool clientSideSplitting = false,
         bool collapseConsecutiveIdenticalCalls = false,
         int collapseThreshold = 2,
-        int? maxArrowsPerDiagram = null)
+        int? maxArrowsPerDiagram = null,
+        int diagramNoteWrapWidth = DefaultNoteWrapWidth)
     {
         // Collapse poll/retry bursts and apply the arrow cap before rendering (no-op when both are off).
         var collapsed = SequenceCollapser.Apply(tracesForTest, collapseConsecutiveIdenticalCalls, collapseThreshold, maxArrowsPerDiagram);
@@ -147,7 +185,8 @@ public static partial class PlantUmlCreator
             return [];
 
         var builder = new DiagramBuilder(tracesForTest, plantUmlTheme, clientSideSplitting ? int.MaxValue : maxEncodedDiagramLength,
-            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides);
+            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides,
+            diagramNoteWrapWidth);
         var lastTrace = tracesForTest[^1];
 
         var currentlyOverriding = false;
@@ -246,6 +285,7 @@ public static partial class PlantUmlCreator
 
             var serviceShortName = SanitizePlantUmlAlias(trace.ServiceName);
             var callerShortName = SanitizePlantUmlAlias(trace.CallerName);
+            builder.UseParticipants(callerShortName, trace.CallerName, serviceShortName, trace.ServiceName);
             var content = effectiveContent ?? string.Empty;
 
             switch (trace.Type)
@@ -259,7 +299,12 @@ public static partial class PlantUmlCreator
                     var actionColor = builder.GetArrowColor(trace.CallerName, actionCategory, trace.CallerName, actionCategory);
                     var actionPrefix = $"{callerShortName} -{actionColor}> {serviceShortName}: ";
                     // A long Playwright locator or action description is one message statement, and the
-                    // engine abandons the whole diagram past 2000 characters.
+                    // engine abandons the whole diagram past 2000 characters. Wrapped before it is
+                    // capped, not after: the `\n` escapes are two characters each and count against the
+                    // cap. This is the one message label in the codebase that is neither chunked nor
+                    // constant, and real Java PlantUML does not wrap arrow labels at any width, so the
+                    // breaks have to be in the source (DiagramWidth).
+                    actionLabel = DiagramWidth.Wrap(actionLabel, DiagramWidth.MaxLabelLineChars);
                     actionLabel = PlantUmlStatementLimits.TruncateLabel(
                         actionLabel, PlantUmlStatementLimits.MaxMessageStatementChars - actionPrefix.Length);
                     builder.AppendLine($"{actionPrefix}{actionLabel}");
@@ -267,7 +312,13 @@ public static partial class PlantUmlCreator
 
                     if (!string.IsNullOrWhiteSpace(content))
                     {
-                        var actionNote = TruncateNoteContent(content, truncateNotesAfterLines);
+                        // The UI detail is a note body, but it never passed through FormatNoteContent,
+                        // so it got neither the creole neutralisation every request/response note has
+                        // nor the unbreakable-run bound — a locator with no whitespace in it drew the
+                        // diagram thousands of pixels wide, and a `**` in a detail string styled the
+                        // text instead of showing.
+                        var actionNote = WrapUnbreakableRuns(EscapeCreoleMarkup(
+                            TruncateNoteContent(content, truncateNotesAfterLines)));
                         builder.AppendLine($"note left");
                         builder.AppendLine(actionNote);
                         builder.AppendLine("end note");
@@ -363,7 +414,18 @@ public static partial class PlantUmlCreator
 
             builder.IncrementStep();
 
-            if (!clientSideSplitting && !builder.HasOpenLoop && (builder.EncodedDiagramExceedsMaxLength || builder.EstimatedHeightExceedsMax) && trace != lastTrace)
+            // The participant guard is deliberately NOT gated on clientSideSplitting, unlike the other
+            // two. Encoded length and estimated height both change with note state, which is why
+            // BrowserJs leaves them to the browser to re-derive after every toggle; the number of
+            // participants a diagram draws does not, so splitting on it server-side is stable and is
+            // the only thing that bounds the default renderer's width. Measured before it existed: a
+            // test touching 60 services drew one 4 817px diagram, and 120 drew 6 382px — with names as
+            // short as "Service37" and no split guard reached, because the diagram was neither long
+            // nor tall, only wide.
+            var splitForWidth = builder.ParticipantRowExceedsMaxWidth;
+            var splitForSize = !clientSideSplitting
+                && (builder.EncodedDiagramExceedsMaxLength || builder.EstimatedHeightExceedsMax);
+            if ((splitForWidth || splitForSize) && !builder.HasOpenLoop && trace != lastTrace)
                 builder.FinishAndStartNewDiagram();
         }
 
@@ -566,7 +628,8 @@ public static partial class PlantUmlCreator
         bool sequenceDiagramArrowColors = true,
         bool sequenceDiagramParticipantColors = false,
         Dictionary<string, string>? dependencyColors = null,
-        Dictionary<string, string>? serviceTypeOverrides = null)
+        Dictionary<string, string>? serviceTypeOverrides = null,
+        int noteWrapWidth = DefaultNoteWrapWidth)
     {
         var entitiesPlantUml = CreateEntitiesPlantUml(tracesForTest, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides);
         var themeDirective = !string.IsNullOrWhiteSpace(plantUmlTheme) ? $"!theme {plantUmlTheme}\n" : "";
@@ -576,7 +639,7 @@ public static partial class PlantUmlCreator
                 {themeDirective}!pragma teoz true
                 {AddEventStyling(tracesForTest)}
                 {AddMarkerNoteStyling(tracesForTest)}
-                skinparam wrapWidth {MaxLineWidth}
+                skinparam wrapWidth {noteWrapWidth}
                 autonumber {stepNumber}
 
                 {entitiesPlantUml}
@@ -707,7 +770,7 @@ public static partial class PlantUmlCreator
 
                 sb.Append(pureCallerShape)
                     .Append(" \"")
-                    .Append(pureCaller)
+                    .Append(WrapParticipantName(pureCaller))
                     .Append("\" as ")
                     .Append(pureCallerAlias)
                     .AppendLine(pureCallerColor);
@@ -715,7 +778,7 @@ public static partial class PlantUmlCreator
             else
             {
                 sb.Append("actor \"")
-                    .Append(pureCaller)
+                    .Append(WrapParticipantName(pureCaller))
                     .Append("\" as ")
                     .AppendLine(pureCallerAlias);
             }
@@ -757,7 +820,7 @@ public static partial class PlantUmlCreator
 
                     sb.Append(callerShape)
                         .Append(" \"")
-                        .Append(trace.CallerName)
+                        .Append(WrapParticipantName(trace.CallerName))
                         .Append("\" as ")
                         .Append(callerShortName)
                         .AppendLine(callerColorSuffix);
@@ -767,7 +830,7 @@ public static partial class PlantUmlCreator
                     // Callers without a category: use actor (first) or entity (subsequent)
                     sb.Append(actorDefined ? "entity" : "actor")
                         .Append(" \"")
-                        .Append(trace.CallerName)
+                        .Append(WrapParticipantName(trace.CallerName))
                         .Append("\" as ")
                         .AppendLine(callerShortName);
                 }
@@ -784,7 +847,7 @@ public static partial class PlantUmlCreator
 
                 sb.Append(shape)
                     .Append(" \"")
-                    .Append(trace.ServiceName)
+                    .Append(WrapParticipantName(trace.ServiceName))
                     .Append("\" as ")
                     .Append(serviceShortName)
                     .AppendLine(colorSuffix);
@@ -793,6 +856,18 @@ public static partial class PlantUmlCreator
 
         return sb.ToString();
     }
+
+    /// <summary>
+    /// A participant's display name, broken onto lines of at most
+    /// <see cref="DiagramWidth.MaxNameLineChars"/> characters. Sequence participant boxes never wrap —
+    /// not at whitespace, not at <c>skinparam wrapWidth</c> — so a long <c>ServiceName</c> or
+    /// <c>CallerName</c> (a host, a fully-qualified type name, a connection descriptor) is drawn on one
+    /// line however wide that makes the diagram: measured, an 800-character name drew 5 650 px, and the
+    /// same name broken every 80 drew 610. Unchanged, byte for byte, for every name short enough to
+    /// fit, which is all of them in practice.
+    /// </summary>
+    private static string WrapParticipantName(string name) =>
+        DiagramWidth.Wrap(name, DiagramWidth.MaxNameLineChars);
 
     [GeneratedRegex(@"[^a-zA-Z0-9_]")]
     private static partial Regex SanitizeAliasRegex();
@@ -1041,7 +1116,7 @@ public static partial class PlantUmlCreator
     /// <summary>
     /// Longest whitespace-free run a note line may carry. PlantUML wraps at spaces only, so this bounds
     /// the width of a note holding a minified payload, a base64 blob or a long URL to roughly
-    /// <see cref="MaxLineWidth"/>; longer runs are broken, preferring a punctuation boundary and never
+    /// the note wrap width; longer runs are broken, preferring a punctuation boundary and never
     /// inside a <c>&lt;tag&gt;</c>.
     /// </summary>
     internal const int MaxUnbrokenRunChars = 120;
@@ -1192,6 +1267,66 @@ public static partial class PlantUmlCreator
         return value.ChunksUpTo(MaxNoteChunkChars).Select(x => "<color:gray>" + EscapeCreoleMarkup(x));
     }
 
+    /// <summary>
+    /// A participant declaration line of a diagram prefix: the shape keyword, the quoted display name
+    /// (which may now carry <c>\n</c> breaks), and the alias the body refers to it by.
+    /// </summary>
+    [GeneratedRegex("""^(?:actor|entity|participant|database|collections|queue|control|boundary) "(?:[^"]*)" as (?<alias>\w+)""",
+        RegexOptions.Multiline)]
+    private static partial Regex ParticipantDeclarationRegex();
+
+    /// <summary>
+    /// The prefix with the participant declarations this fragment does not draw removed.
+    /// <para>
+    /// Splitting a diagram is no width bound while every fragment re-declares every participant the
+    /// whole test touched, because <see cref="CreatePlantUmlPrefix"/> builds from the full trace list —
+    /// each fragment comes out as wide as the unsplit diagram was. <paramref name="used"/> is what the
+    /// generator actually drew arrows for; anything else is kept only if the body names it as a whole
+    /// word, which covers the constructs the trace loop does not register — an explicit
+    /// <c>note left of X</c>, an <c>activate</c>, and user-authored override PlantUML.
+    /// </para>
+    /// <para>
+    /// Returns the prefix unchanged whenever nothing would be removed, which is the single-fragment
+    /// case — that is, every ordinary diagram, byte for byte.
+    /// </para>
+    /// </summary>
+    internal static string DeclareOnlyUsedParticipants(string prefix, string body, IReadOnlySet<string> used)
+    {
+        var declarations = ParticipantDeclarationRegex().Matches(prefix);
+        if (declarations.Count == 0 || used.Count == 0)
+            return prefix;
+
+        var unusedCandidates = declarations
+            .Where(m => !used.Contains(m.Groups["alias"].Value))
+            .ToArray();
+        if (unusedCandidates.Length == 0)
+            return prefix;
+
+        var bodyWords = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var word in IdentifierRegex().EnumerateMatches(body))
+            bodyWords.Add(body.Substring(word.Index, word.Length));
+
+        var drop = unusedCandidates
+            .Where(m => !bodyWords.Contains(m.Groups["alias"].Value))
+            .Select(m => m.Value)
+            .ToHashSet(StringComparer.Ordinal);
+        if (drop.Count == 0)
+            return prefix;
+
+        var kept = new StringBuilder(prefix.Length);
+        foreach (var line in prefix.Split('\n'))
+        {
+            if (drop.Contains(line.TrimEnd('\r'))) continue;
+            if (kept.Length > 0) kept.Append('\n');
+            kept.Append(line);
+        }
+
+        return kept.ToString();
+    }
+
+    [GeneratedRegex(@"\w+")]
+    private static partial Regex IdentifierRegex();
+
     private sealed class DiagramBuilder(
         List<RequestResponseLog> tracesForTest,
         string? plantUmlTheme = null,
@@ -1199,16 +1334,56 @@ public static partial class PlantUmlCreator
         bool sequenceDiagramArrowColors = true,
         bool sequenceDiagramParticipantColors = false,
         Dictionary<string, string>? dependencyColors = null,
-        Dictionary<string, string>? serviceTypeOverrides = null)
+        Dictionary<string, string>? serviceTypeOverrides = null,
+        int noteWrapWidth = DefaultNoteWrapWidth)
     {
         private readonly List<PlantUmlResult> _results = [];
+        // The prefix is kept alongside the buffer it opens so that FinishAndStartNewDiagram can tell
+        // prefix from body and re-issue the participant declarations for just this fragment. An
+        // instance field initialiser cannot read another field, so the (pure, deterministic) prefix
+        // builder is simply called twice for the first diagram; every later one reuses the string.
+        private string _currentPrefix = CreatePlantUmlPrefix(tracesForTest, 1, plantUmlTheme,
+            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth);
         private StringBuilder _currentDiagram = new(CreatePlantUmlPrefix(tracesForTest, 1, plantUmlTheme,
-            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides));
+            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth));
         private int _stepNumber = 1;
         private string? _openPartitionLine;
         private string? _cachedEncoded;
         private int _lengthAtLastEncode;
         private int _estimatedHeight;
+
+        /// <summary>The participants the diagram currently being built actually draws an arrow for.</summary>
+        private readonly HashSet<string> _currentParticipants = new(StringComparer.Ordinal);
+
+        private int _estimatedParticipantRowWidth;
+
+        /// <summary>
+        /// Records that this diagram draws a participant — for the width guard, and so that the
+        /// finished fragment declares only the participants it uses. Each new one widens the
+        /// participant row by roughly its own box: measured, short names ("Service37") cost about
+        /// 78 pixels each, and the estimate is deliberately a little pessimistic so the guard fires
+        /// before the diagram reaches the limit rather than after.
+        /// </summary>
+        public void UseParticipant(string alias, string displayName)
+        {
+            if (string.IsNullOrEmpty(alias) || !_currentParticipants.Add(alias)) return;
+            var drawnChars = Math.Min(displayName?.Length ?? 0, DiagramWidth.MaxNameLineChars);
+            _estimatedParticipantRowWidth += Math.Max(MinParticipantWidthPx, drawnChars * ParticipantPxPerChar + ParticipantBoxPaddingPx);
+        }
+
+        public void UseParticipants(string callerAlias, string callerName, string serviceAlias, string serviceName)
+        {
+            UseParticipant(callerAlias, callerName);
+            UseParticipant(serviceAlias, serviceName);
+        }
+
+        /// <summary>
+        /// Whether this diagram has taken on more participants than it can draw inside
+        /// <see cref="DiagramWidth.PlantUmlLimitSize"/>. Sequence-diagram width accumulates per
+        /// participant and nothing else in the generator bounds it: a test that touches every service
+        /// in a large system is neither long nor tall, only wide, so no existing guard ever fires.
+        /// </summary>
+        public bool ParticipantRowExceedsMaxWidth => _estimatedParticipantRowWidth > MaxParticipantRowWidthPx;
 
         // Build a lookup from ServiceName → resolved DependencyCategory
         private readonly Dictionary<string, string?> _serviceCategoryCache = BuildServiceCategoryCache(tracesForTest, serviceTypeOverrides);
@@ -1362,15 +1537,23 @@ public static partial class PlantUmlCreator
                 AppendLine("end");
 
             AppendLine("@enduml");
-            var plainText = _currentDiagram.ToString();
+            // Splitting is no width bound on its own: the prefix is built from the whole test's traces,
+            // so without this every fragment re-declares every participant the test ever touched and
+            // each one is as wide as the unsplit diagram was. The body is left exactly as it was built
+            // (so the encoded-length guard above measured the same bytes it always did) and only the
+            // participant declarations in the prefix are narrowed to what this fragment draws.
+            var body = _currentDiagram.ToString(_currentPrefix.Length, _currentDiagram.Length - _currentPrefix.Length);
+            var plainText = DeclareOnlyUsedParticipants(_currentPrefix, body, _currentParticipants) + body;
             var encodedPlantUml = PlantUmlTextEncoder.Encode(plainText);
             _cachedEncoded = null;
             _lengthAtLastEncode = 0;
             _estimatedHeight = 0;
+            _currentParticipants.Clear();
             _statementGuard.Reset();
             _results.Add(new PlantUmlResult(plainText, encodedPlantUml));
-            _currentDiagram = new StringBuilder(CreatePlantUmlPrefix(tracesForTest, _stepNumber, plantUmlTheme,
-                sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides));
+            _currentPrefix = CreatePlantUmlPrefix(tracesForTest, _stepNumber, plantUmlTheme,
+                sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth);
+            _currentDiagram = new StringBuilder(_currentPrefix);
 
             if (partitionToReopen != null)
             {

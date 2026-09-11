@@ -18,6 +18,8 @@ public record ResolvedToggleDefaults
     public bool StepsShown { get; init; } = true;
     public bool DatabasesShown { get; init; } = true;
     public NotePayloadFormat NotePayloadFormat { get; init; } = NotePayloadFormat.Json;
+    public NoteFontFamily NoteFont { get; init; } = NoteFontFamily.Default;
+    public NoteWidthMode NoteWidth { get; init; } = NoteWidthMode.Default;
     public bool FeaturesExpanded { get; init; }
     public bool ScenariosExpanded { get; init; }
     public DiagramTabKind DiagramTab { get; init; } = DiagramTabKind.Sequence;
@@ -65,6 +67,8 @@ public static class ReportToggleDefaultsResolver
         StepsShown = overrides.StepsShown ?? baseline.StepsShown,
         DatabasesShown = overrides.DatabasesShown ?? baseline.DatabasesShown,
         NotePayloadFormat = Defined(overrides.NotePayloadFormat) ?? baseline.NotePayloadFormat,
+        NoteFont = Defined(overrides.NoteFont) ?? baseline.NoteFont,
+        NoteWidth = Defined(overrides.NoteWidth) ?? baseline.NoteWidth,
         FeaturesExpanded = overrides.FeaturesExpanded ?? baseline.FeaturesExpanded,
         ScenariosExpanded = overrides.ScenariosExpanded ?? baseline.ScenariosExpanded,
         DiagramTab = Defined(overrides.DiagramTab) ?? baseline.DiagramTab,
