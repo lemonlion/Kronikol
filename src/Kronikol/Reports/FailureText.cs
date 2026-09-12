@@ -52,6 +52,33 @@ public static class FailureText
     }
 
     /// <summary>
+    /// Cuts <paramref name="text"/> to at most <paramref name="limit"/> UTF-16 code units, marking the
+    /// cut with an ellipsis, and never between the halves of a surrogate pair.
+    ///
+    /// <para>Every character outside the Basic Multilingual Plane — emoji, much of CJK — is two code
+    /// units, so a cut at an arbitrary index can leave a lone surrogate, which is not a character.
+    /// <see cref="File.WriteAllText(string,string)"/> encodes UTF-8 with the throwing fallback, so a
+    /// digest containing one does not come out mangled: it does not come out. The write throws, the
+    /// caller records a diagnostic, and the PREVIOUS run's file stays on disk — stale, plausible, and
+    /// describing a different run. Assertion messages and captured third-party payloads are exactly where
+    /// an emoji turns up.</para>
+    /// </summary>
+    public static string Truncate(string text, int limit)
+    {
+        if (text is null || text.Length <= limit)
+            return text ?? "";
+
+        // text[..limit] keeps indices 0..limit-1, so a high surrogate in the last kept position has had
+        // its partner excluded. Drop it rather than orphan it; one character short is not a cost anyone
+        // can see in a value that is being truncated anyway.
+        var cut = limit;
+        if (cut > 0 && char.IsHighSurrogate(text[cut - 1]))
+            cut--;
+
+        return text[..cut] + "…";
+    }
+
+    /// <summary>
     /// Runs of whitespace folded to one space, and the ends trimmed. <see cref="char.IsWhiteSpace(char)"/>
     /// rather than a regex, so that every Unicode separator counts — a key that treats U+00A0 as text on
     /// one surface and as a space on the other splits a cluster in half for no reason a reader can see.

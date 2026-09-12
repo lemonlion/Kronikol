@@ -443,6 +443,10 @@ internal sealed class QueryWriter
         var flat = text.ReplaceLineEndings(" ").Trim();
         while (flat.Contains("  ", StringComparison.Ordinal))
             flat = flat.Replace("  ", " ", StringComparison.Ordinal);
-        return flat.Length <= max ? flat : flat[..max] + "…";
+        // Shared with the digest's Truncate, and for the same reason: `flat[..max]` can land between the
+        // halves of a surrogate pair. Here the result goes to a terminal and into the --json envelope
+        // rather than to a file, so it mangles instead of throwing — which is the worse failure, because
+        // nothing anywhere reports it.
+        return Kronikol.Reports.FailureText.Truncate(flat, max);
     }
 }

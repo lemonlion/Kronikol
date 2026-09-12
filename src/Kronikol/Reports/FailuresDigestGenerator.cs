@@ -256,8 +256,9 @@ public static class FailuresDigestGenerator
         return (end < 0 ? text : text[..end]).Trim();
     }
 
-    private static string Truncate(string text, int limit) =>
-        text.Length <= limit ? text : text[..limit] + "…";
+    // One implementation, shared with QueryWriter.OneLine, because both had the same defect: a cut at an
+    // arbitrary UTF-16 index can split a surrogate pair, and the digest's eight call sites all reach it.
+    private static string Truncate(string text, int limit) => FailureText.Truncate(text, limit);
 
     private static StepLine Line((string Path, ScenarioStep Step) entry) => new(
         entry.Path,
@@ -425,15 +426,15 @@ public static class FailuresDigestGenerator
 
         if (entry.ErrorMessage is { Length: > 0 } message)
         {
-            markdown.Append("**Error**\n\n```\n");
-            markdown.Append(Fence(Truncate(message, 600)));
-            markdown.Append("\n```\n\n");
+            markdown.Append("**Error**\n\n");
+            markdown.Append(Block(Truncate(message, 600)));
+            markdown.Append("\n\n");
         }
 
         if (entry.Expected is not null && entry.Actual is not null)
         {
             markdown.Append("| Expected | Actual |\n|---|---|\n");
-            markdown.Append($"| `{Escape(Truncate(entry.Expected, 160))}` | `{Escape(Truncate(entry.Actual, 160))}` |\n\n");
+            markdown.Append($"| {Code(Truncate(entry.Expected, 160))} | {Code(Truncate(entry.Actual, 160))} |\n\n");
         }
 
         if (entry.Context.Count > 0)
@@ -451,7 +452,7 @@ public static class FailuresDigestGenerator
                 markdown.Append($" ({Escape(file)}:{step.SourceLine})");
             markdown.Append("\n\n");
             if (step.Message is { Length: > 0 } stepMessage)
-                markdown.Append($"```\n{Fence(Truncate(stepMessage, 400))}\n```\n\n");
+                markdown.Append($"{Block(Truncate(stepMessage, 400))}\n\n");
         }
 
         if (entry.Calls.Count > 0)
@@ -459,7 +460,7 @@ public static class FailuresDigestGenerator
             markdown.Append("Calls in the failing step — bodies by address, never inlined:\n\n");
             markdown.Append("| Address | Service | Call | Status | Duration |\n|---|---|---|---|---|\n");
             foreach (var call in entry.Calls)
-                markdown.Append($"| `{call.Address}` | {Escape(call.Service)} | `{Escape(call.Summary)}` | {Escape(call.Status ?? "")} | "
+                markdown.Append($"| `{call.Address}` | {Escape(call.Service)} | {Code(call.Summary)} | {Escape(call.Status ?? "")} | "
                                 + $"{(call.DurationMs is { } ms ? ms.ToString("0", CultureInfo.InvariantCulture) + " ms" : "")} |\n");
             markdown.Append('\n');
         }
@@ -468,7 +469,7 @@ public static class FailuresDigestGenerator
         {
             markdown.Append("Attachments:\n\n");
             foreach (var attachment in entry.Attachments)
-                markdown.Append($"- {Escape(attachment.Name)} — `{Escape(attachment.RelativePath)}`\n");
+                markdown.Append($"- {Escape(attachment.Name)} — {Code(attachment.RelativePath)}\n");
             markdown.Append('\n');
         }
     }
@@ -479,14 +480,74 @@ public static class FailuresDigestGenerator
             : "";
 
     /// <summary>Keeps a captured value from breaking out of its table cell or its fence.</summary>
+    /// <summary>
+    /// Quotes a CAPTURED value as a Markdown inline code span that the value cannot break out of.
+    ///
+    /// <para>Wrapping in a single pair of backticks is what this file used to do, and a backtick inside
+    /// the value closes the span — so the rest of the row renders as prose and whatever follows is
+    /// interpreted as Markdown rather than shown. The values reaching here are assertion messages, URIs,
+    /// SQL and third-party response bodies; a backtick in one is ordinary, and the file's own header
+    /// says everything it quotes is under someone else's control.</para>
+    ///
+    /// <para>CommonMark's rule is the fix: a span delimited by N backticks may contain any run shorter
+    /// than N, and a value that begins or ends with a backtick or a space needs one space of padding,
+    /// which the renderer strips. <see cref="Escape"/> still runs first, so a <c>|</c> stays <c>\|</c> —
+    /// GFM requires that inside a code span in a table too — and CR/LF are still flattened.</para>
+    /// </summary>
+    private static string Code(string? value)
+    {
+        var escaped = Escape(value ?? "");
+        var fence = new string('`', LongestBacktickRun(escaped) + 1);
+
+        // A reader strips one space from each end of a span that has one at both — and only when what is
+        // left is not all spaces. So a value that starts or ends with a backtick or a space needs that
+        // padding to survive the round trip, and a value that is NOTHING but spaces must not get it: the
+        // stripping would not happen, and the padding would come through as two extra spaces. A test
+        // asserting on whitespace is exactly where a pure-space expected value turns up.
+        var padding = escaped.Length > 0
+                      && escaped.Trim().Length > 0
+                      && (escaped[0] == '`' || escaped[^1] == '`' || escaped[0] == ' ' || escaped[^1] == ' ')
+            ? " "
+            : "";
+
+        return fence + padding + escaped + padding + fence;
+    }
+
     private static string Escape(string text) =>
         text.Replace("|", "\\|", StringComparison.Ordinal)
             .Replace("\r", "", StringComparison.Ordinal)
             .Replace("\n", " ", StringComparison.Ordinal);
 
-    /// <summary>Keeps a captured value from closing the fence it sits in.</summary>
-    private static string Fence(string text) =>
-        text.Replace("```", "'''", StringComparison.Ordinal).Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd();
+    /// <summary>
+    /// A captured message inside a fenced code block, with the fence sized so the message cannot close it.
+    ///
+    /// <para>It used to rewrite every <c>```</c> in the payload to <c>'''</c>. That kept the file
+    /// well-formed by falsifying the evidence, which is the one thing a failures digest may never do: an
+    /// assertion over Markdown — a README diff, a captured chat response, any library that formats its own
+    /// output — would be reported as a string the test never saw, and a reader comparing the digest to the
+    /// code would be looking for a difference that Kronikol introduced. CommonMark already has the answer:
+    /// an opening fence longer than any run inside the block, so nothing is removed and nothing is
+    /// substituted.</para>
+    /// </summary>
+    private static string Block(string text)
+    {
+        var body = text.Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd();
+        var fence = new string('`', Math.Max(3, LongestBacktickRun(body) + 1));
+        return fence + "\n" + body + "\n" + fence;
+    }
+
+    private static int LongestBacktickRun(string text)
+    {
+        var longest = 0;
+        var run = 0;
+        foreach (var character in text)
+        {
+            run = character == '`' ? run + 1 : 0;
+            longest = Math.Max(longest, run);
+        }
+
+        return longest;
+    }
 
     // ─── JSONL ─────────────────────────────────────────────────
 
