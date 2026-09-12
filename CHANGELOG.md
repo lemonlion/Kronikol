@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [3.1.0] - unreleased
+## [3.1.0] - 2026-09-12
 
 **Minor bump — the first release numbered under the rule rather than by habit.** Everything through
 3.0.85 took a patch regardless of content and 3.0.86 was genuinely only fixes, so this is the first

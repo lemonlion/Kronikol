@@ -1036,8 +1036,10 @@ guards · M2.9 `--json` envelope + `--out` everywhere + the streaming test · M2
 **Left:** M3.1 MCP, deliberately — see the M3.2/M3.3 log entry above for the three reasons and for the
 correction to the audit's claim that it could not be built at all. Everything else in this plan has
 shipped: §7 documentation and §8's Kronikol4J ledger travel with M3, §6's verification protocol has been
-run. What remains before the tag is the release itself: bump `Directory.Build.props` from 3.0.86 to
-3.1.0 in every package, move the template pins to 3.0.86, tag `v3.1.0`, push.
+run, and the release itself is done: `Directory.Build.props` carries **3.1.0** for every package, the
+twelve template pins moved 3.0.85 → 3.0.86 (a scaffolded project restores from nuget.org on the day it
+is created, so they track the *previous* release), the CHANGELOG entry is dated, and `v3.1.0` is tagged
+and pushed. **This plan is closed** except for M3.1, which now belongs to `MCP_PLAN.md`.
 
 A successor plan now depends on this one finishing. Repo-root `CROSS_RUN_HISTORY_PLAN.md`
 (2026-09-12, investigation complete, not green-lit) states that it **assumes LLM_FRIENDLY_PLAN is
