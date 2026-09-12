@@ -271,11 +271,44 @@ jobs:
           # produces false failures when a scaffold identity overlaps a referenced package.
           dotnet pack templates/Kronikol.Templates.csproj --configuration Release
           PKG=$(ls templates/bin/Release/Kronikol.Templates.*.nupkg | head -n 1)
+
+          # The pack and the instantiation both have to be INSPECTED, not just exercised. Packing and
+          # building prove a template compiles; neither notices a file quietly dropped on the way. The
+          # agent files are exactly the kind that can vanish silently - `.claude/` is a dot-directory
+          # (only NoDefaultExcludes keeps it in the nupkg, and only the absence of a dot-rule in the
+          # template engine's default excludes keeps it in the scaffold) and nothing in a scaffolded
+          # project fails to build without it.
+          SKILL=".claude/skills/kronikol-test-debugging"
+          AGENT_FILES="$SKILL/SKILL.md $SKILL/references/commands.md $SKILL/scripts/query.py CLAUDE.md AGENTS.md"
+          unzip -o -q "$PKG" -d "$RUNNER_TEMP/tpl-pkg"
+          for dir in templates/kronikol-*/; do
+            short=$(basename "$dir")
+            for f in $AGENT_FILES; do
+              if [ ! -f "$RUNNER_TEMP/tpl-pkg/content/$short/$f" ]; then
+                echo "::error::the package is missing content/$short/$f"
+                exit 1
+              fi
+            done
+          done
+
           dotnet new install "$PKG"
           for dir in templates/kronikol-*/; do
             short=$(basename "$dir")
             echo "::group::Instantiating & building $short"
             dotnet new "$short" -n ScaffoldSmoke -o "$RUNNER_TEMP/tpl-smoke/$short"
+            for f in $AGENT_FILES; do
+              if [ ! -f "$RUNNER_TEMP/tpl-smoke/$short/$f" ]; then
+                echo "::error::dotnet new $short did not copy $f out of the package"
+                exit 1
+              fi
+            done
+            # Byte-identical, not merely present: every template.json rewrites SERVICE_NAME, net10.0 and
+            # three more tokens in every file it copies, so a token added to the skill would arrive here
+            # silently changed.
+            if ! diff -q templates/skills/kronikol-test-debugging/SKILL.md "$RUNNER_TEMP/tpl-smoke/$short/$SKILL/SKILL.md"; then
+              echo "::error::$short scaffolded a SKILL.md that is not the canonical one"
+              exit 1
+            fi
             dotnet build "$RUNNER_TEMP/tpl-smoke/$short" --configuration Release
             echo "::endgroup::"
           done

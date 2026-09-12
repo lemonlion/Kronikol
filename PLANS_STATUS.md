@@ -12,7 +12,7 @@ re-verified fresh on 2026-08-30.
 |---|---|---|
 | `BACKGROUND_STEPS_INLINE_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.48 |
 | `LONG_LINE_SYNTAX_ERROR_PLAN.md` | 🟡 ~95% (Java mirror open) | 3.0.48 |
-| `REPORT_QUERY_PLAN.md` | 🟡 ~95% | 3.0.47 |
+| `REPORT_QUERY_PLAN.md` | 🟡 ~99% | 3.0.47, tail in 3.1.0 |
 | `QUERY_V2_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.51–3.0.58 |
 | `BROWSER_RENDER_WORKER_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.45 / 3.0.50 |
 | `NOTE_YAML_TOGGLE_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.59, 3.0.61–63, 3.0.66 (+fixes 3.0.67/68) |
@@ -25,6 +25,9 @@ re-verified fresh on 2026-08-30.
 | `SEARCH_INDEX_PLAN.md` | ✅ Done (executed in full, §15 order; Phase 2 §10 deferred by design; post-release audit fixes in 3.0.71; user-requested scope extension in 3.0.72: descriptions/endpoints instant, stack traces deep-only) | 3.0.70–3.0.72 |
 | `NOTE_YAML_TRAILING_WS_PLAN.md` | ✅ Done (executed in full; committed with the release as a design record) | 3.0.79 |
 | `TOGGLE_DEFAULTS_PLAN.md` | ✅ Done (M1–M8 in full, §8 recommendations adopted; committed with the release as a design record) | 3.0.80 |
+| `LLM_FRIENDLY_PLAN.md` *(new, 2026-09-10)* | 🟡 In progress — green-lit 2026-09-12, §9 recommendations adopted. M0 (six ride-along fixes), M1 (run-end pointer, `Failures.md`/`.jsonl`, `CLAUDE.md`/`AGENTS.md`, `ResultDefaulted`) and M2.1-M2.9 (deep links, parameter hint, run identity, merge JSON + `diff --baseline`, schema contract, source locations, retries, skill distribution + `kronikol init-agents` + drift guards, `query --json` + `--out` everywhere + the streaming test) done; M2.10 and M3 following. §11 is the running log | 3.1.0 (pending) |
+| `LLM_FIRST_PLAN.md` *(new, 2026-09-12)* | ⚪ **Investigation complete, NOT green-lit.** Successor audit to `LLM_FRIENDLY_PLAN` (which finishes on its own terms): 18 read-only lanes, 144 findings, 108 adversarially verified - **47 did not survive as written**, so every row is a claim to re-verify. Only §5.4's three no-green-light-needed items are done (§16): `templates/agents/` staged (CS1566 on a clean checkout), `IsError` taught Kronikol's own six success labels, and `--json`'s `next` made an argument vector. §5.2 is the breaking-change window that closes at the 3.1.0 tag | — |
+| `CROSS_RUN_HISTORY_PLAN.md` *(new, 2026-09-12, untracked)* | ❌ Investigation complete, nothing implemented, **NOT green-lit**. **Read §0.2 first:** `ctrf-io/github-test-reporter` already ships free artifact-relay cross-run flakiness, fail-rate and duration trends with PR comments, and a .NET CTRF emitter exists — so the *status* half of this plan is commodity and the plan now offers three options (recommendation: build the ledger but promote behaviour history ahead of the status surfaces, since the interaction layer, the history-aware gate with quarantine, and the repo-committed ledger are the only parts nobody gives away). **Measured, not assumed:** ledger 228 KB/50 runs, 16.0%% of stableIds collide across test projects, templater ladder 66.9%%→96.6%% over six runs whose ids are 98%% freshly minted, three live consecutive runs 100%% stable, analyzer 65 ms at 5000×50, and a concurrent append **silently loses 34-67%% of run lines** on Windows and Linux unless locked. **Fifteen of the plan’s own decisions were reversed by checking them — two of them on the day they were written — and they are all the same mistake** — an existence check allowed to stand in for a behaviour check; §17.0 names the class, and §17.1 is now split by *how far each check went* (RUN / READ / DOC) rather than by confidence. Latest round: `merge=union` in `.gitattributes` removes the committed ledger’s merge conflicts entirely **but silently corrupts a counter-keyed roster**, and `$flaky` would have evaluated false for exactly the flaky scenarios. **§0.2’s headline moved**: running `github-test-reporter`’s own arithmetic shows `flakyRate` measures **retry volume, not flakiness** — a test failing a third of the time scores 0 while a test that never fails but retries scores 0.67 — so the free chain reports zero flakiness forever for xUnit/ReqNRoll suites, and Kronikol’s honest claim is “flakiness detection at all for non-retrying suites”, not “better flakiness detection”. **Time-sensitive: add `RunAttempt` to `CiMetadata` before 3.1.0 is tagged** (audited: 8 edits, 5 files). **Re-synced 2026-09-12 pm with the in-flight LLM plan**: M2.4’s `--baseline` + `KRONIKOL_BASELINE` landed (§6.2 now follows that precedent, and new Q15 asks whether `--baseline` should read the ledger), and M2.8 added `Commands.cs` (one command table, `CommandTableTests`) plus `init-agents` writing a managed CLAUDE.md/AGENTS.md block from one canonical copy — so §8.3 now splits `query history` (read) from a top-level `history` command (writes) | — |
 | `NOTE_COPY_FIDELITY_PLAN.md` *(2026-09-11)* | Done - executed in full, M1-M6 including the optional M5 that section 11 Q2 had recommended deferring. Every break the width budget writes into a note body is marked with an invisible `<U+200B>` and one shared rejoin undoes exactly those, so Copy box text, Open box text in new tab and Copy all caller request payloads hand back the payload whole; search rule 5b (a flush-left guess that welded flush-left payload lines together) is replaced by an exact pass 1b. Committed as a design record | 3.0.86 |
 | `NOTE_WRAP_AND_WIDTH_PLAN.md` *(2026-09-11)* | ✅ Done — executed in full. Part A (non-JSON request bodies chunked at 80 chars, user-reported) shipped alone; Part B M2–M7 followed with the §2.9 recommendation adopted (monospace first, width second) and every §2.10 measurement folded in. §2.11's HTML-panel alternative stays deliberately not taken. Committed as a design record | 3.0.84, 3.0.85 |
 | `DIAGRAM_WIDTH_PLAN.md` *(2026-09-04)* | ✅ Done — all nine ranked axes closed except #9 (`InsertPlantUml`, user-authored PlantUML, documented rather than fixed by design). The shared width-budget wrapper, the activity-diagram `wrapWidth`, the participant guard and the two formatter-bypassing note bodies all landed; the 4096 limit was re-measured as **raster-only** and the plan corrected. Activity-diagram **height** is recorded as the axis this work did not close | 3.0.83, 3.0.85 |
@@ -207,15 +210,17 @@ truncates and renders. The divergence is now ledgered
 Also open: the §6 Q2 component-diagram limit probe (a defensive ceiling was applied
 instead; the component parser's limits remain unmeasured).
 
-### REPORT_QUERY_PLAN.md (~95%, shipped 3.0.47)
-Unchanged since the audit. Open items:
-- `--json` machine-readable output (§3.1 principle 5) — still absent.
-- The dead `--raw` flag — still parsed (`QueryOptions.cs:48/:156`) and read by no code
-  path; ledgered in the 3.0.64 changelog as "pending a decision to remove".
+### REPORT_QUERY_PLAN.md (~99%, shipped 3.0.47; the tail closed in 3.1.0)
+Three of the five open items closed by LLM_FRIENDLY_PLAN M0 and M2.9:
+- ~~`--json` machine-readable output (§3.1 principle 5)~~ — shipped 3.1.0 on the seven
+  listing verbs, with the two-notes-per-token cost the principle warns about stated in
+  the docs and the skill.
+- ~~The dead `--raw` flag~~ — removed in 3.1.0 (M0).
+- ~~The >100 MB streaming-path test (§3.6)~~ — `QueryStreamingTests`, 3.1.0. Written as a
+  test of allocation rather than of scale, and it immediately found the scanner
+  materialising a UTF-16 copy of every payload: 324 MB for a 142 MB file, now 32 MB.
 - Note-divergence detection (§3.4) — still a blanket caveat footer, no reconciliation.
-- The >100 MB streaming-path test (§3.6) — still missing as a *test*, but the
-  QUERY_PERF harness now being built generates exactly the needed corpus; wiring one
-  test to it would close this.
+  **Stays deferred**: no agent-reported need (LLM_FRIENDLY_PLAN §2.4).
 - Golden output tests remain assertion-based, not snapshots.
 
 ### JAVA_PORT_PLAN.md

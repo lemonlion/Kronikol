@@ -90,7 +90,7 @@ internal static partial class QueryCommand
         var scenarios = chain.Select(t => t.Scenario).Distinct().ToList();
         writer.Line($"trace {traceId[..Math.Min(8, traceId.Length)]}… — {chain.Count} call{(chain.Count == 1 ? "" : "s")} across {scenarios.Count} scenario{(scenarios.Count == 1 ? "" : "s")}");
         if (fileOrder)
-            writer.Line("! a timestamp was absent or unparseable — rows are in file order, not chronological");
+            writer.Note("! a timestamp was absent or unparseable — rows are in file order, not chronological");
 
         var first = ordered.Count > 0 ? ordered[0].At : null;
         foreach (var ((scenario, request, response), at) in ordered)
@@ -105,7 +105,7 @@ internal static partial class QueryCommand
         }
 
         if (scenarios.Count > 1)
-            writer.Line($"! spans {scenarios.Count} scenarios ({string.Join(", ", scenarios.Select(s => s.Address))}) — shared state or fixture leakage");
+            writer.Note($"! spans {scenarios.Count} scenarios ({string.Join(", ", scenarios.Select(s => s.Address))}) — shared state or fixture leakage");
 
         writer.Footer("parent span ids are not captured — this is the chronology of the trace, not its tree");
         return 0;

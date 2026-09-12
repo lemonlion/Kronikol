@@ -44,7 +44,7 @@ public class MergeableReportTests
             internalFlowSegmentData: new Dictionary<string, object> { ["iflow-x"] = new { title = "t", content = "<div>flow</div>" } },
             wholeTestFlow: new Dictionary<string, WholeTestFlowFragment> { ["a1"] = new("<div>act</div>", "<div>flame</div>", 4) },
             WholeTestFlowVisualization.Both,
-            new CiMetadata(CiEnvironment.GitHubActions, "42", "main", "abc123", "https://gh/run/1", "owner/repo", "1"));
+            new CiMetadata(CiEnvironment.GitHubActions, "42", "main", "abc123", "https://gh/run/1", "owner/repo", "1", "2"));
 
     [Fact]
     public void Roundtrip_preserves_features_scenarios_and_steps()
@@ -98,6 +98,10 @@ public class MergeableReportTests
         Assert.Equal(CiEnvironment.GitHubActions, report.CiMetadata!.Provider);
         Assert.Equal("main", report.CiMetadata.Branch);
         Assert.Equal("abc123", report.CiMetadata.CommitSha);
+        // Run identity survives the round trip. The reader is the half that has silently dropped
+        // fields before - a written-but-never-read field is invisible until a merged report is used.
+        Assert.Equal("1", report.CiMetadata.RunId);
+        Assert.Equal("2", report.CiMetadata.RunAttempt);
     }
 
     [Fact]
@@ -173,6 +177,37 @@ public class MergeableReportTests
         // CI metadata taken from the report that captured it.
         Assert.NotNull(merged.CiMetadata);
         Assert.Equal("main", merged.CiMetadata!.Branch);
+    }
+
+    [Fact]
+    public void A_shard_written_off_ci_reads_back_as_no_ci_at_all()
+    {
+        // Since 3.1.0 every data file writes the `ciMetadata` object whether or not there was a CI
+        // to read, so a consumer never has to handle a missing shape. Null is still what "no CI"
+        // means downstream, though - the HTML summary gates its CI table on `ciMetadata is not null`
+        // - so a provider of None has to collapse back to null here, or every merged report built on
+        // a laptop grows a "CI (None)" table.
+        var json = ReportGenerator.GenerateMergeableReportJson(
+            FeaturesA(),
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            diagramLookup: null,
+            componentRelationships: [],
+            internalFlowSegmentData: null,
+            wholeTestFlow: null,
+            WholeTestFlowVisualization.None,
+            ciMetadata: null);
+
+        using (var document = JsonDocument.Parse(json))
+        {
+            var ci = document.RootElement.GetProperty("ciMetadata");
+            Assert.Equal(JsonValueKind.Object, ci.ValueKind);
+            Assert.Equal("None", ci.GetProperty("provider").GetString());
+            // The superset claim: everything the standard file carries is carried here too.
+            Assert.Contains(".NET", document.RootElement.GetProperty("environment").GetProperty("runtime").GetString());
+        }
+
+        Assert.Null(MergeableReportReader.Parse(json).CiMetadata);
     }
 
     [Fact]

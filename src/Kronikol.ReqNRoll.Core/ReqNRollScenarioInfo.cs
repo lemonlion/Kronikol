@@ -26,4 +26,10 @@ public record ReqNRollScenarioInfo
     public string? ExamplesBlockName { get; init; }
     public string? ExamplesBlockDescription { get; init; }
     public int? ExamplesBlockIndex { get; init; }
+
+    /// <summary>The feature file, project-relative with forward slashes, when Reqnroll's messages carry it.</summary>
+    public string? SourceFile { get; init; }
+
+    /// <summary>The line the <c>Scenario:</c> / <c>Scenario Outline:</c> keyword is on.</summary>
+    public int? SourceLine { get; init; }
 }

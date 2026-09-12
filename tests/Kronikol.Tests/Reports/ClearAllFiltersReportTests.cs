@@ -63,9 +63,13 @@ public class ClearAllFiltersReportTests
     }
 
     [Fact]
-    public void Clear_all_function_clears_url_hash()
+    public void Clear_all_function_clears_the_filters_and_keeps_the_anchor()
     {
+        // Since 3.1.0 the fragment is not simply wiped: a `#sid-`/`#scenario-` anchor is not filter
+        // state, and somebody who followed a link to one scenario and then pressed Clear All has
+        // cleared filters, not navigated away from it.
         var content = GenerateReport("ClearAllUrl.html");
-        Assert.Contains("history.replaceState(null, '', window.location.pathname + window.location.search)", content);
+        Assert.Contains("var keptAnchor = current_url_anchor();", content);
+        Assert.Contains("history.replaceState(null, '', window.location.pathname + window.location.search + (keptAnchor ? '#' + keptAnchor : ''))", content);
     }
 }

@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.Net;
 using System.Text.Json;
 using Kronikol.ComponentDiagram;
+using Kronikol.Tracking;
 using static Kronikol.DefaultDiagramsFetcher;
 
 namespace Kronikol.Reports.Merge;
@@ -30,6 +32,9 @@ public static class MergeableReportReader
 
         var features = new List<Feature>();
         var diagrams = new List<DiagramAsCode>();
+        var interactions = new List<RequestResponseLog>();
+        var stepPaths = new Dictionary<string, List<string?>>(StringComparer.Ordinal);
+        var annotations = new Dictionary<string, List<ReportGenerator.ScenarioAnnotation>>(StringComparer.Ordinal);
 
         foreach (var fe in EnumerateArray(root, "features"))
         {
@@ -42,6 +47,9 @@ public static class MergeableReportReader
                 if (se.TryGetProperty("diagrams", out var diags) && diags.ValueKind == JsonValueKind.Array)
                     foreach (var d in diags.EnumerateArray())
                         diagrams.Add(new DiagramAsCode(scenario.Id, "", d.GetString() ?? ""));
+
+                ReadInteractions(se, scenario, interactions, stepPaths);
+                ReadAnnotations(se, scenario.Id, annotations);
             }
 
             features.Add(new Feature
@@ -49,6 +57,7 @@ public static class MergeableReportReader
                 DisplayName = GetString(fe, "name") ?? "",
                 Endpoint = GetString(fe, "endpoint"),
                 Description = GetString(fe, "description"),
+                SourceFile = GetString(fe, "sourceFile"),
                 Labels = ReadStringArray(fe, "labels"),
                 Scenarios = scenarios.ToArray()
             });
@@ -65,7 +74,11 @@ public static class MergeableReportReader
             InternalFlowSegments = ReadObjectMap(root, "internalFlowSegments"),
             WholeTestFlow = ReadWholeTestFlow(root),
             WholeTestVisualization = ReadEnum(GetString(root, "wholeTestVisualization"), WholeTestFlowVisualization.None),
-            CiMetadata = ReadCiMetadata(root)
+            CiMetadata = ReadCiMetadata(root),
+            Interactions = interactions.ToArray(),
+            StepPaths = stepPaths,
+            Annotations = annotations,
+            Diagnostics = ReadDiagnostics(root)
         };
     }
 
@@ -84,12 +97,13 @@ public static class MergeableReportReader
         Labels = ReadStringArray(se, "labels"),
         Categories = ReadStringArray(se, "categories"),
         Rule = GetString(se, "rule"),
+        Attempt = ReadInt(se, "attempt"),
+        SourceFile = GetString(se, "sourceFile"),
+        SourceLine = ReadInt(se, "sourceLine"),
         OutlineId = GetString(se, "outlineId"),
         ExamplesBlockName = GetString(se, "examplesBlockName"),
         ExamplesBlockDescription = GetString(se, "examplesBlockDescription"),
-        ExamplesBlockIndex = se.TryGetProperty("examplesBlockIndex", out var ebi) && ebi.ValueKind == JsonValueKind.Number
-            ? ebi.GetInt32()
-            : null,
+        ExamplesBlockIndex = ReadInt(se, "examplesBlockIndex"),
         ExampleValues = ReadStringDictionary(se, "exampleValues"),
         ExampleFlatValues = ReadStringDictionary(se, "exampleFlatValues") ?? ReadStringDictionary(se, "exampleValues"),
         ExampleDisplayName = GetString(se, "exampleDisplayName"),
@@ -113,6 +127,12 @@ public static class MergeableReportReader
             Duration = s.TryGetProperty("durationSeconds", out var sd) && sd.ValueKind == JsonValueKind.Number
                 ? TimeSpan.FromSeconds(sd.GetDouble())
                 : null,
+            // Written by both step mappers since 3.0.47 and read by neither until 3.1.0: merging a
+            // sharded run silently threw away every step's failure message and every step's location,
+            // which is most of what makes a merged report worth reading.
+            FailureMessage = GetString(s, "failureMessage"),
+            SourceFile = GetString(s, "sourceFile"),
+            SourceLine = ReadInt(s, "sourceLine"),
             BypassReason = GetString(s, "bypassReason"),
             DocString = GetString(s, "docString"),
             DocStringMediaType = GetString(s, "docStringMediaType"),
@@ -267,24 +287,137 @@ public static class MergeableReportReader
         return result;
     }
 
+    /// <summary>
+    /// Rebuilds one scenario's captured traffic. Only the real interactions are in the file - the
+    /// diagram markers are dropped at write time - so <c>stepPath</c> is read back rather than
+    /// re-derived: the derivation walks the markers, which are gone.
+    /// </summary>
+    private static void ReadInteractions(JsonElement se, Scenario scenario, List<RequestResponseLog> into,
+        Dictionary<string, List<string?>> stepPaths)
+    {
+        if (!se.TryGetProperty("httpInteractions", out var array) || array.ValueKind != JsonValueKind.Array)
+            return;
+
+        var paths = new List<string?>();
+        foreach (var element in array.EnumerateArray())
+        {
+            var metaType = ReadEnum(GetString(element, "metaType"), RequestResponseMetaType.Default);
+            var method = GetString(element, "method") ?? "";
+            // An event's "method" is a free-text label; an HTTP call's is a verb. The writer flattens
+            // both to a string, and MetaType is what tells them apart on the way back.
+            OneOf<HttpMethod, string> parsedMethod = metaType == RequestResponseMetaType.Event
+                ? method
+                : HttpMethod.Parse(method);
+
+            OneOf<HttpStatusCode, string>? status = null;
+            if (GetString(element, "statusCode") is { } statusText)
+                status = Enum.TryParse<HttpStatusCode>(statusText, out var code) ? code : statusText;
+
+            var log = new RequestResponseLog(
+                TestName: scenario.DisplayName,
+                TestId: scenario.Id,
+                Method: parsedMethod,
+                Content: GetString(element, "content"),
+                Uri: Uri.TryCreate(GetString(element, "uri"), UriKind.RelativeOrAbsolute, out var uri) ? uri : new Uri("about:blank"),
+                Headers: ReadHeaders(element),
+                ServiceName: GetString(element, "serviceName") ?? "",
+                CallerName: GetString(element, "callerName") ?? "",
+                Type: ReadEnum(GetString(element, "type"), RequestResponseType.Request),
+                TraceId: ReadGuid(element, "traceId"),
+                RequestResponseId: ReadGuid(element, "requestResponseId"),
+                TrackingIgnore: false,
+                StatusCode: status,
+                MetaType: metaType,
+                DependencyCategory: GetString(element, "dependencyCategory"),
+                CallerDependencyCategory: GetString(element, "callerDependencyCategory"))
+            {
+                Timestamp = ReadTimestamp(element),
+                Phase = ReadEnum(GetString(element, "phase"), default(TestPhase)),
+                IsUserAction = element.TryGetProperty("isUserAction", out var ua) && ua.ValueKind == JsonValueKind.True,
+                ActivityTraceId = GetString(element, "activityTraceId"),
+                ActivitySpanId = GetString(element, "activitySpanId"),
+                CapturedBy = GetString(element, "capturedBy"),
+                DurationMs = ReadDouble(element, "durationMs")
+            };
+
+            into.Add(log);
+            paths.Add(GetString(element, "stepPath"));
+        }
+
+        if (paths.Count > 0)
+            stepPaths[scenario.Id] = paths;
+    }
+
+    private static void ReadAnnotations(JsonElement se, string scenarioId,
+        Dictionary<string, List<ReportGenerator.ScenarioAnnotation>> into)
+    {
+        if (!se.TryGetProperty("annotations", out var array) || array.ValueKind != JsonValueKind.Array)
+            return;
+
+        var found = array.EnumerateArray()
+            .Select(a => new ReportGenerator.ScenarioAnnotation(
+                ReadInt(a, "index") ?? 0,
+                ReadEnum(GetString(a, "kind"), default(DiagramMarkerKind)),
+                GetString(a, "text") ?? ""))
+            .ToList();
+
+        if (found.Count > 0)
+            into[scenarioId] = found;
+    }
+
+    private static (string Key, string? Value)[] ReadHeaders(JsonElement element) =>
+        element.TryGetProperty("headers", out var headers) && headers.ValueKind == JsonValueKind.Array
+            ? headers.EnumerateArray().Select(h => (GetString(h, "key") ?? "", GetString(h, "value"))).ToArray()
+            : [];
+
+    private static IReadOnlyList<DiagnosticEntry> ReadDiagnostics(JsonElement root) =>
+        EnumerateArray(root, "diagnostics")
+            .Select(d => new DiagnosticEntry(
+                ReadEnum(GetString(d, "kind"), DiagnosticKind.Other),
+                GetString(d, "message") ?? "",
+                GetString(d, "scenarioId")))
+            .ToArray();
+
+    private static Guid ReadGuid(JsonElement parent, string name) =>
+        Guid.TryParse(GetString(parent, name), out var value) ? value : Guid.Empty;
+
+    private static double? ReadDouble(JsonElement parent, string name) =>
+        parent.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number ? value.GetDouble() : null;
+
+    private static DateTimeOffset? ReadTimestamp(JsonElement parent) =>
+        DateTimeOffset.TryParse(GetString(parent, "timestamp"), CultureInfo.InvariantCulture,
+            DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var value)
+            ? value
+            : null;
+
     private static CiMetadata? ReadCiMetadata(JsonElement root)
     {
         if (!root.TryGetProperty("ciMetadata", out var m) || m.ValueKind != JsonValueKind.Object)
             return null;
+        // Since 3.1.0 the object is always written, with provider None off CI. Null is still what
+        // "there was no CI" means to every reader downstream - the merged report's summary gates its
+        // CI table on it - so collapse it back here rather than letting a None record travel.
+        var provider = ReadEnum(GetString(m, "provider"), CiEnvironment.None);
+        if (provider == CiEnvironment.None)
+            return null;
         return new CiMetadata(
-            Provider: ReadEnum(GetString(m, "provider"), CiEnvironment.None),
+            Provider: provider,
             BuildNumber: GetString(m, "buildNumber"),
             Branch: GetString(m, "branch"),
             CommitSha: GetString(m, "commitSha"),
             PipelineUrl: GetString(m, "pipelineUrl"),
             Repository: GetString(m, "repository"),
-            RunId: GetString(m, "runId"));
+            RunId: GetString(m, "runId"),
+            RunAttempt: GetString(m, "runAttempt"));
     }
 
     private static IEnumerable<JsonElement> EnumerateArray(JsonElement parent, string name) =>
         parent.TryGetProperty(name, out var arr) && arr.ValueKind == JsonValueKind.Array
             ? arr.EnumerateArray()
             : [];
+
+    private static int? ReadInt(JsonElement parent, string name) =>
+        parent.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : null;
 
     private static string? GetString(JsonElement parent, string name) =>
         parent.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;

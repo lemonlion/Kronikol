@@ -130,6 +130,12 @@ public sealed record CucumberScenarioNode
     /// <summary>Node id — the first entry of <see cref="CucumberPickle.AstNodeIds"/>.</summary>
     [JsonPropertyName("id")] public string? Id { get; init; }
 
+    /// <summary>
+    /// Where the <c>Scenario:</c> or <c>Scenario Outline:</c> keyword is, in the file the document's
+    /// <c>uri</c> names. Every producer writes it; nothing read it before 3.1.0.
+    /// </summary>
+    [JsonPropertyName("location")] public CucumberLocation? Location { get; init; }
+
     /// <summary>Own tags (feature/rule tags are <em>not</em> included).</summary>
     [JsonPropertyName("tags")] public CucumberTag[]? Tags { get; init; }
 

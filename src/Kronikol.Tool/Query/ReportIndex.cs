@@ -20,6 +20,28 @@ internal sealed class ReportIndex
     public string? KronikolVersion { get; set; }
     public string? StartTime { get; set; }
     public string? EndTime { get; set; }
+    /// <summary>
+    /// Run identity, from the report's <c>ciMetadata</c> and <c>environment</c> blocks (3.1.0+).
+    /// <see cref="CiProvider"/> is <c>None</c> on a report generated off CI and null on a file written
+    /// by an older Kronikol - the two are different answers, and only the first is a fact about the run.
+    /// This is what a downloaded artifact is identified by, and what a baseline comparison keys on.
+    /// </summary>
+    public string? CiProvider { get; set; }
+    public string? CiBranch { get; set; }
+    public string? CiCommitSha { get; set; }
+    public string? CiBuildNumber { get; set; }
+    public string? CiRunId { get; set; }
+
+    /// <summary>Which try of <see cref="CiRunId"/> this run is - the only field that tells a re-run apart.</summary>
+    public string? CiRunAttempt { get; set; }
+    public string? CiRepository { get; set; }
+    public string? CiPipelineUrl { get; set; }
+    public string? EnvironmentOs { get; set; }
+    public string? EnvironmentRuntime { get; set; }
+
+    /// <summary>The run was on CI and said so - not merely "the file declares the block".</summary>
+    public bool OnCi => CiProvider is not null and not "None";
+
     public List<ScenarioEntry> Scenarios { get; } = [];
     public List<DiagnosticEntry> Diagnostics { get; } = [];
 
@@ -69,6 +91,17 @@ internal sealed class ScenarioEntry
     public string? ErrorMessage { get; set; }
     public string? ErrorStackTrace { get; set; }
     public string? Rule { get; set; }
+
+    /// <summary>
+    /// Where the scenario is written, when the runner knew: a project-relative path and the line of the
+    /// <c>Scenario:</c> keyword. Named like <c>StepEntry</c>'s pair, but a different contract - a step's
+    /// is a bare file name (see the schema).
+    /// </summary>
+    public string? SourceFile { get; set; }
+    public int? SourceLine { get; set; }
+
+    /// <summary>Which run of this scenario produced the result, 1-based; null when the runner said nothing.</summary>
+    public int? Attempt { get; set; }
     public List<string> Labels { get; } = [];
     public List<string> Categories { get; } = [];
     public Dictionary<string, string> ExampleValues { get; } = [];

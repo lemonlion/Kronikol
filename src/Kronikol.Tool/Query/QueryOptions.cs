@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Kronikol.Tool.Query;
 
 /// <summary>
@@ -14,6 +16,14 @@ internal sealed class QueryOptions
     public int Offset { get; private set; }
     public int Limit { get; private set; } = int.MaxValue;
     public bool Count { get; private set; }
+
+    /// <summary>
+    /// One JSON envelope instead of text, on the listing verbs. Not the default and not what an agent
+    /// reading a terminal wants: the same answer costs roughly twice the tokens. It is for scripts, and
+    /// for the MCP wrapper that has to hand structure to a caller that never sees the terminal.
+    /// </summary>
+    public bool Json { get; private set; }
+
     public string? Out { get; private set; }
 
     public string? Result { get; private set; }
@@ -45,11 +55,17 @@ internal sealed class QueryOptions
     public bool Keys { get; private set; }
     public bool Values { get; private set; }
     public bool Group { get; private set; }
-    public bool Raw { get; private set; }
     public bool Stats { get; private set; }
     public bool Request { get; private set; }
     public bool Both { get; private set; }
     public bool Number { get; private set; }
+
+    /// <summary>
+    /// <c>diff --baseline</c>: the report named on the command line is the CURRENT run and the one to
+    /// compare against is found by convention. Diff-only - it is not in <see cref="RerunPrefix"/>
+    /// because <c>diff</c> does not page.
+    /// </summary>
+    public bool Baseline { get; private set; }
 
     /// <summary>Null when a flag was malformed; the message has already been written to <paramref name="error"/>.</summary>
     public static QueryOptions? Parse(IReadOnlyList<string> args, TextWriter error)
@@ -129,14 +145,19 @@ internal sealed class QueryOptions
                 case "--method": if (Next(arg) is not { } method) return null; options.Method = method; break;
                 case "--grep": if (Next(arg) is not { } grep) return null; options.Grep = grep; break;
                 case "--step": if (Next(arg) is not { } step) return null; options.Step = step; break;
-                case "--sort": if (Next(arg) is not { } sort) return null; options.Sort = sort; break;
+                // Lower-cased here, not at the point of use: both are validated case-insensitively and
+                // then consumed by ordinal switches and Contains calls, so an accepted `--sort DURATION`
+                // or `--in BODIES` would sort by the default and search nothing - the same silence the
+                // validation exists to remove, one capital letter further from being noticed.
+                case "--sort": if (Next(arg) is not { } sort) return null; options.Sort = sort.ToLowerInvariant(); break;
                 case "--path": if (Next(arg) is not { } path) return null; options.Path = path; break;
-                case "--in": if (Next(arg) is not { } inTargets) return null; options.In = inTargets; break;
+                case "--in": if (Next(arg) is not { } inTargets) return null; options.In = inTargets.ToLowerInvariant(); break;
                 case "--where": if (Next(arg) is not { } where) return null; options.Where.Add(where); break;
                 case "--group-by": if (Next(arg) is not { } groupBy) return null; options.GroupBy = groupBy; break;
                 case "--tolerance": if (Next(arg) is not { } tolerance) return null; options.Tolerance = tolerance; break;
 
                 case "--count": options.Count = true; break;
+                case "--json": options.Json = true; break;
                 case "--failed": options.Failed = true; break;
                 case "--errors-only": options.ErrorsOnly = true; break;
                 case "--headers": options.Headers = true; break;
@@ -153,11 +174,11 @@ internal sealed class QueryOptions
                 case "--keys": options.Keys = true; break;
                 case "--values": options.Values = true; break;
                 case "--group": options.Group = true; break;
-                case "--raw": options.Raw = true; break;
                 case "--stats": options.Stats = true; break;
                 case "--request": options.Request = true; break;
                 case "--both": options.Both = true; break;
                 case "--number": options.Number = true; break;
+                case "--baseline": options.Baseline = true; break;
 
                 default:
                     if (arg.StartsWith("--", StringComparison.Ordinal))
@@ -177,25 +198,68 @@ internal sealed class QueryOptions
         return options;
     }
 
-    /// <summary>The flags that must be repeated for a paged re-run to mean the same thing.</summary>
-    public string RerunPrefix()
+    /// <summary>
+    /// The flags that must be repeated for a paged re-run to mean the same thing, as argv tokens —
+    /// unquoted, one element per argument. The tokens are the contract and the rendered string is a
+    /// view of them: a value with a space in it (a service genuinely called <c>Dessert Provider</c>)
+    /// cannot survive being flattened into one string, because whatever quoting the footer picks, a
+    /// consumer that splits on whitespace gets a flag and a stray positional.
+    /// </summary>
+    public List<string> RerunArgs()
     {
         var parts = new List<string>();
-        if (Service is not null) parts.Add($"--service {Service}");
-        if (Status is not null) parts.Add($"--status {Status}");
-        if (Method is not null) parts.Add($"--method {Method}");
-        if (Grep is not null) parts.Add($"--grep \"{Grep}\"");
-        if (Result is not null) parts.Add($"--result {Result}");
-        if (Feature is not null) parts.Add($"--feature \"{Feature}\"");
-        if (Label is not null) parts.Add($"--label {Label}");
-        if (Failed) parts.Add("--failed");
-        if (Group) parts.Add("--group");
-        foreach (var where in Where) parts.Add($"--where \"{where}\"");
-        if (GroupBy is not null) parts.Add($"--group-by {GroupBy}");
-        if (Request) parts.Add("--request");
-        if (Both) parts.Add("--both");
-        if (Number) parts.Add("--number");
-        if (Tolerance is not null) parts.Add($"--tolerance {Tolerance}");
-        return parts.Count == 0 ? "" : string.Join(" ", parts) + " ";
+
+        void Flag(string name, string? value = null)
+        {
+            parts.Add(name);
+            if (value is not null)
+                parts.Add(value);
+        }
+
+        if (Service is not null) Flag("--service", Service);
+        if (Status is not null) Flag("--status", Status);
+        if (Method is not null) Flag("--method", Method);
+        if (Grep is not null) Flag("--grep", Grep);
+        if (Result is not null) Flag("--result", Result);
+        if (Feature is not null) Flag("--feature", Feature);
+        if (Label is not null) Flag("--label", Label);
+        if (Failed) Flag("--failed");
+        if (Group) Flag("--group");
+        foreach (var where in Where) Flag("--where", where);
+        if (GroupBy is not null) Flag("--group-by", GroupBy);
+        if (Request) Flag("--request");
+        if (Both) Flag("--both");
+        if (Number) Flag("--number");
+        if (Tolerance is not null) Flag("--tolerance", Tolerance);
+        // Order and corpus, not just filters: an offset means nothing without the ordering it was counted
+        // against, and a grep offset means nothing without the targets it was counted over.
+        if (Sort is not null) Flag("--sort", Sort);
+        if (In is not null) Flag("--in", In);
+        if (Values) Flag("--values");
+        if (Step is not null) Flag("--step", Step);
+        if (SlowerThan is not null) Flag("--slower-than", SlowerThan.Value.ToString(CultureInfo.InvariantCulture));
+        // Format last, so a text footer's flag order is untouched: this only ever fires when --json was
+        // given, and then the whole point of `next` is that it can be appended verbatim to the same call.
+        if (Json) Flag("--json");
+        return parts;
     }
+
+    /// <summary>
+    /// <see cref="RerunArgs"/> rendered for a terminal — quoted only where a token would not survive
+    /// being pasted back into a shell — with the single trailing space a footer appends its offset to.
+    /// </summary>
+    public string RerunPrefix()
+    {
+        var args = RerunArgs();
+        return args.Count == 0 ? "" : Shell(args) + " ";
+    }
+
+    /// <summary>Argv tokens as one pasteable command line.</summary>
+    public static string Shell(IReadOnlyList<string> args) =>
+        string.Join(" ", args.Select(Quote));
+
+    private static string Quote(string arg) =>
+        arg.Length > 0 && !arg.AsSpan().ContainsAny(" \t\"'")
+            ? arg
+            : "\"" + arg.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 }

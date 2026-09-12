@@ -66,6 +66,8 @@ internal static class ScenarioInfoEnumerableExtensions
                                 Labels = labels.Length > 0 ? labels : null,
                                 Categories = categories.Length > 0 ? categories : null,
                                 Rule = x.Rule,
+                                SourceFile = x.SourceFile,
+                                SourceLine = x.SourceLine,
                                 OutlineId = x.OutlineId,
                                 ExampleValues = x.ExampleValues,
                                 ExampleRawValues = x.ExampleRawValues,
@@ -84,6 +86,9 @@ internal static class ScenarioInfoEnumerableExtensions
                     DisplayName = featureGroup.Key.Titleize(),
                     Endpoint = endpoint,
                     Description = GherkinText.NullIfBlank(GherkinText.Dedent(firstScenario.FeatureDescription)),
+                    // Scenarios are grouped by feature title, so any member's path is the feature's -
+                    // and the first that has one wins, matching the Cucumber lane.
+                    SourceFile = featureGroup.Select(x => x.SourceFile).FirstOrDefault(f => f is not null),
                     Labels = featureLabels.Length > 0 ? featureLabels : null,
                     Scenarios = scenarios
                 };

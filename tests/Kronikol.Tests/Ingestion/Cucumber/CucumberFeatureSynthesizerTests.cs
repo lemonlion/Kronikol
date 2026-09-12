@@ -442,4 +442,68 @@ public class CucumberFeatureSynthesizerTests
         Assert.Empty(result.Features);
         Assert.Contains(result.Warnings, w => w.Contains("no pickle"));
     }
+
+    // ─── Source locations (M2.6) ───────────────────────────────
+
+    [Fact]
+    public void The_feature_file_and_the_scenario_line_survive_ingest()
+    {
+        // Both were parsed and thrown away: `GherkinScenario` has carried the document uri since it was
+        // written and nothing read it, and the scenario node never declared `location` at all.
+        var result = CucumberFixtures.Build();
+        var feature = result.Features.Single(f => f.DisplayName == CucumberFixtures.DemoFeature);
+
+        Assert.Equal("features/kronikol-demo.feature", feature.SourceFile);
+
+        var scenario = feature.Scenarios.Single(s => s.DisplayName == CucumberFixtures.SimpleScenario);
+        Assert.Equal("features/kronikol-demo.feature", scenario.SourceFile);
+        Assert.Equal(11, scenario.SourceLine);
+    }
+
+    [Fact]
+    public void A_windows_producers_backslashes_are_normalised()
+    {
+        // The golden fixture was captured by playwright-bdd on Windows and says
+        // `features\kronikol-demo.feature`; cucumber-js on Linux says `features/…`. A consumer
+        // globbing for the path should not have to know which machine ran the tests.
+        var result = CucumberFixtures.Build();
+
+        Assert.All(result.Features, f => Assert.DoesNotContain('\\', f.SourceFile ?? ""));
+        Assert.All(result.Features.SelectMany(f => f.Scenarios),
+            s => Assert.DoesNotContain('\\', s.SourceFile ?? ""));
+    }
+
+    [Fact]
+    public void Every_row_of_an_outline_points_at_the_outline_declaration()
+    {
+        // One line for the whole outline, deliberately: `exampleValues` is what says which row, and a
+        // per-row line would make two scenarios that are the same code look like different code.
+        var result = CucumberFixtures.Build();
+        var rows = result.Features.SelectMany(f => f.Scenarios)
+            .Where(s => s.DisplayName.Contains("outline over pages", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        Assert.True(rows.Length > 1, "the fixture's outline should produce more than one row");
+        Assert.Single(rows.Select(r => r.SourceLine).Distinct());
+        Assert.NotNull(rows[0].SourceLine);
+    }
+
+    [Fact]
+    public void A_retried_scenario_records_which_attempt_finally_ran()
+    {
+        // The `retry N` label has always been there; it is a display artefact a filter can match, not
+        // something a consumer of the data file can read. The field says the same thing structurally,
+        // and uses the SAME 1-based numbering as the label - Cucumber's own `attempt` is 0-based, and a
+        // field that disagreed with the label printed beside it would be worse than no field.
+        var result = CucumberFixtures.Build();
+        var flaky = result.Features.SelectMany(f => f.Scenarios)
+            .Single(s => s.DisplayName == CucumberFixtures.FlakyScenario);
+
+        Assert.Equal(2, flaky.Attempt);
+        Assert.Contains("retry 1", flaky.Labels ?? []);
+
+        var first = result.Features.SelectMany(f => f.Scenarios)
+            .Single(s => s.DisplayName == CucumberFixtures.SimpleScenario);
+        Assert.Equal(1, first.Attempt);
+    }
 }

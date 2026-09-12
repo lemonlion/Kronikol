@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Kronikol.ComponentDiagram;
+using Kronikol.Tracking;
 using static Kronikol.DefaultDiagramsFetcher;
 
 namespace Kronikol.Reports.Merge;
@@ -41,4 +42,34 @@ public sealed class MergeableReport
 
     /// <summary>CI metadata captured for the run, if any.</summary>
     public CiMetadata? CiMetadata { get; init; }
+
+    /// <summary>
+    /// Every captured interaction in the contained run, keyed to its scenario by
+    /// <see cref="RequestResponseLog.TestId"/>. Empty for a file written before 3.1.0, which carried
+    /// no traffic at all - the merged report could then be read but not debugged, and every
+    /// interaction-shaped <c>kronikol query</c> verb came back empty.
+    /// </summary>
+    /// <remarks>
+    /// These are the real interactions only: the diagram markers (step delimiters, assertion notes,
+    /// the Setup/Action boundary) are dropped at write time and never round-trip, which is why
+    /// <see cref="StepPaths"/> and <see cref="Annotations"/> are carried explicitly rather than
+    /// re-derived - the derivation reads the markers.
+    /// </remarks>
+    public RequestResponseLog[] Interactions { get; init; } = [];
+
+    /// <summary>
+    /// Which step each interaction happened under, per scenario id, positionally aligned with that
+    /// scenario's entries in <see cref="Interactions"/>. A null entry means the interaction could not
+    /// be attributed.
+    /// </summary>
+    public IReadOnlyDictionary<string, List<string?>> StepPaths { get; init; } =
+        new Dictionary<string, List<string?>>(StringComparer.Ordinal);
+
+    /// <summary>Diagnostics the run recorded - notably <see cref="DiagnosticKind.ResultDefaulted"/>,
+    /// without which a scenario defaulted to Passed is indistinguishable from a real pass.</summary>
+    public IReadOnlyList<DiagnosticEntry> Diagnostics { get; init; } = [];
+
+    /// <summary>Exported diagram annotations per scenario id.</summary>
+    internal IReadOnlyDictionary<string, List<ReportGenerator.ScenarioAnnotation>> Annotations { get; init; } =
+        new Dictionary<string, List<ReportGenerator.ScenarioAnnotation>>(StringComparer.Ordinal);
 }

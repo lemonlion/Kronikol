@@ -508,9 +508,14 @@ public class ParameterizedGroupRenderTests
         };
         var content = GenerateReport(MakeFeature(scenarios));
 
-        // The JS should have code for finding rows by data-scenario-id
-        Assert.Contains("data-scenario-id", content);
-        Assert.Contains("scenario-parameterized", content);
+        // Anchored on the resolution code itself, not on two strings that the markup also contains:
+        // a bare Contains over the whole report stays green with the entire branch deleted.
+        var reveal = ExtractFunctionBody(content, "reveal_url_anchor");
+        Assert.Contains("tr[data-scenario-id=", reveal);
+        Assert.Contains("details.scenario-parameterized", reveal);
+        Assert.Contains(".click()", reveal);
+        // And the markup it resolves against is really there.
+        Assert.Matches(new Regex(@"<tr[^>]+data-scenario-id=""[^""]+"""), content);
     }
 
     // ── Search row highlighting ──
@@ -1163,14 +1168,18 @@ public class ParameterizedGroupRenderTests
         };
         var content = GenerateReport(MakeFeature(scenarios));
 
-        // Extract the flat table
-        var flatStart = content.IndexOf("param-table-flat");
+        // Extract the flat table. Anchored on the emitted <table>, not on the bare class name: the
+        // flatten-params script names it too, and slicing from there took in half the head.
+        var flatStart = content.IndexOf("<table class=\"param-test-table param-table-flat\"", StringComparison.Ordinal);
         var flatEnd = content.IndexOf("</table>", flatStart);
         var flatTableHtml = content.Substring(flatStart, flatEnd - flatStart + "</table>".Length);
 
-        // Rows should have data-row-idx but not id
+        // Rows should have data-row-idx but not id. Asserted on ` id="` rather than on the slug
+        // prefix: the grouped copy of every row owns the element id, and a flat row that quietly
+        // grew one would duplicate it. `data-stable-id="` is not an id and does not match.
         Assert.Contains("data-row-idx", flatTableHtml);
-        Assert.DoesNotContain("id=\"scenario-", flatTableHtml);
+        Assert.DoesNotContain(" id=\"", flatTableHtml);
+        Assert.Contains("data-stable-id=\"", flatTableHtml);
     }
 
     [Fact]
@@ -1366,5 +1375,25 @@ public class ParameterizedGroupRenderTests
 
         var rowSearch = ReportMarkup.AttributeValue(content, "tr", "data-row-search");
         Assert.Contains("zephyr", rowSearch);
+    }
+
+    /// <summary>
+    /// The body of a JS function in the generated report, matched by brace counting — the same
+    /// device <c>UrlHashFilterTests</c> uses, so an assertion lands inside the function it names
+    /// rather than anywhere in 100 KB of HTML.
+    /// </summary>
+    private static string ExtractFunctionBody(string content, string functionName)
+    {
+        var idx = content.IndexOf($"function {functionName}(", StringComparison.Ordinal);
+        Assert.True(idx >= 0, $"Function '{functionName}' not found in the report");
+        var braceStart = content.IndexOf('{', idx);
+        var depth = 0;
+        for (var i = braceStart; i < content.Length; i++)
+        {
+            if (content[i] == '{') depth++;
+            else if (content[i] == '}') depth--;
+            if (depth == 0) return content[braceStart..(i + 1)];
+        }
+        throw new Exception($"Unmatched braces in '{functionName}'");
     }
 }

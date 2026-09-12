@@ -10,6 +10,40 @@ namespace Kronikol.Tool;
 /// </summary>
 internal static partial class QueryCommand
 {
+    /// <summary>What <c>grep --in</c> accepts. The first four are the default set.</summary>
+    internal static readonly string[] GrepTargets = ["bodies", "uris", "steps", "assertions", "headers", "notes"];
+
+    /// <summary>
+    /// Resolves <c>--in</c>, refusing an unknown target. Dropping one silently is the worst failure this
+    /// command has: <c>--in bodys</c> would search nothing, print nothing, and read exactly like proof
+    /// that the value is not in the report - a false negative on the one question grep exists to answer.
+    /// </summary>
+    private static string[]? ResolveGrepTargets(QueryOptions options, TextWriter error)
+    {
+        var targets = (options.In ?? "bodies,uris,steps,assertions")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // `--in ""`, `","` and `" "` are not null, so the default set does not apply, and they all split
+        // to nothing - leaving a loop that never runs and every target test below false. The guard whose
+        // whole purpose is that grep never silently searches nothing, defeated by the emptiest input.
+        if (targets.Length == 0)
+        {
+            error.WriteLine("--in was given no targets.");
+            error.WriteLine("Valid targets: " + string.Join(", ", GrepTargets));
+            return null;
+        }
+
+        foreach (var target in targets)
+            if (!GrepTargets.Contains(target, StringComparer.OrdinalIgnoreCase))
+            {
+                error.WriteLine($"Unknown --in target: {target}");
+                error.WriteLine("Valid targets: " + string.Join(", ", GrepTargets));
+                return null;
+            }
+
+        return targets;
+    }
+
     internal static int Grep(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
         if (options.Positional.Count == 0)
@@ -18,11 +52,13 @@ internal static partial class QueryCommand
             return 2;
         }
 
+        if (ResolveGrepTargets(options, error) is not { } targets)
+            return 2;
+
         if (options.Number)
-            return NumberGrep(index, options, writer, error);
+            return NumberGrep(index, options, writer, error, targets);
 
         var needle = options.Positional[0];
-        var targets = (options.In ?? "bodies,uris,steps,assertions").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var wantsBodies = targets.Contains("bodies");
         var hits = new List<string>();
 
@@ -104,7 +140,7 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(hits.Count.ToString());
+            writer.Count(hits.Count);
             return 0;
         }
 
@@ -115,8 +151,11 @@ internal static partial class QueryCommand
             return 0;
         }
 
+        // The needle alone was not enough: the offset indexes THIS hit list, and without --in and --values
+        // the command in the footer rebuilds a different one, so page two silently comes from a different
+        // corpus and the total changes underneath the reader. (The numeric path already did this.)
         writer.Page(hits, options.Offset, Math.Min(options.Limit, 200), "hits", hit => writer.Line(hit),
-            $"grep \"{needle}\" ");
+            ["grep", needle, .. options.RerunArgs()]);
         return 0;
     }
 
@@ -199,6 +238,27 @@ internal static partial class QueryCommand
         return 0;
     }
 
+    /// <summary>
+    /// One scenario-level change between two runs: broken, new, fixed, slower or gone. The text form
+    /// is carried alongside so the five sections render exactly as they did when they were built as
+    /// lists of strings, while <c>--json</c> gets one flat list keyed by <c>kind</c>.
+    /// </summary>
+    private sealed record RunChange(string Kind, string Address, string StableId, string Name, string Result,
+        string? ErrorMessage, double? BeforeSeconds, double? AfterSeconds, string Text);
+
+    /// <summary>Scenarios keyed by stableId, each key holding every scenario that carries it, in file order.</summary>
+    private static Dictionary<string, List<ScenarioEntry>> GroupByStableId(ReportIndex index)
+    {
+        var groups = new Dictionary<string, List<ScenarioEntry>>(StringComparer.Ordinal);
+        foreach (var scenario in index.Scenarios)
+        {
+            if (!groups.TryGetValue(scenario.StableId, out var group))
+                groups[scenario.StableId] = group = [];
+            group.Add(scenario);
+        }
+        return groups;
+    }
+
     private static void CompareSequences(QueryWriter writer, string noun, List<string> left, List<string> right)
     {
         writer.Line($"{noun}: {left.Count} vs {right.Count}");
@@ -219,90 +279,271 @@ internal static partial class QueryCommand
             writer.Line("  identical");
     }
 
-    private static int Diff(ReportIndex left, QueryOptions options, QueryWriter writer, TextWriter error)
+    /// <summary>
+    /// Services that captured fewer calls than they did in the older run, worst first, plus the total
+    /// when it fell. This is the "gold standard" check a suite runs after changing tracking
+    /// configuration: interactions can decrease silently, because nothing fails when a client stops
+    /// being tracked - the tests still pass and the diagrams are just thinner.
+    /// </summary>
+    /// <remarks>
+    /// Requests only, so a response the capture missed does not read as a lost call. A report carrying
+    /// no interactions at all is skipped rather than reported as a total loss: that is what every
+    /// mergeable file written before 3.1.0 looks like, and what any run with tracking off looks like.
+    /// </remarks>
+    private static List<string> TrackingLosses(ReportIndex left, ReportIndex right)
     {
-        if (options.Positional.Count == 0)
+        var rows = new List<string>();
+        if (!left.Scenarios.Any(sc => sc.Interactions.Count > 0) || !right.Scenarios.Any(sc => sc.Interactions.Count > 0))
+            return rows;
+
+        static Dictionary<string, int> Requests(ReportIndex index) =>
+            index.Scenarios.SelectMany(sc => sc.Interactions)
+                .Where(i => string.Equals(i.Type, "Request", StringComparison.OrdinalIgnoreCase))
+                .GroupBy(i => i.ServiceName, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+
+        var before = Requests(left);
+        var after = Requests(right);
+
+        var totalBefore = before.Values.Sum();
+        var totalAfter = after.Values.Sum();
+        if (totalAfter < totalBefore)
+            rows.Add($"total  {totalBefore} → {totalAfter} calls  ({totalAfter - totalBefore})");
+
+        foreach (var (service, then) in before.OrderByDescending(e => e.Value - (after.TryGetValue(e.Key, out var n) ? n : 0)))
+        {
+            var now = after.TryGetValue(service, out var count) ? count : 0;
+            if (now >= then)
+                continue;
+            rows.Add(now == 0
+                ? $"{QueryWriter.OneLine(service, 40)}  {then} → 0 calls  — no longer tracked"
+                : $"{QueryWriter.OneLine(service, 40)}  {then} → {now} calls  ({now - then})");
+        }
+
+        return rows;
+    }
+
+    private static ReportIndex? Scan(string path, TextWriter error)
+    {
+        try
+        {
+            return ReportScanner.Scan(path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            error.WriteLine($"Could not read {path}: {exception.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Names for the two sides of a diff: the file name, unless both files are called the same thing -
+    /// which is the norm under <c>--baseline</c> - in which case each is shown relative to the deepest
+    /// directory they share, so the labels differ by exactly what distinguishes the files.
+    /// </summary>
+    private static (string Left, string Right) DiffLabels(string leftPath, string rightPath)
+    {
+        var left = Path.GetFileName(leftPath);
+        var right = Path.GetFileName(rightPath);
+        if (!string.Equals(left, right, StringComparison.OrdinalIgnoreCase))
+            return (left, right);
+
+        var common = CommonDirectory(Path.GetFullPath(leftPath), Path.GetFullPath(rightPath));
+        return common is null
+            ? (leftPath, rightPath)
+            : (Path.GetRelativePath(common, leftPath), Path.GetRelativePath(common, rightPath));
+    }
+
+    private static string? CommonDirectory(string left, string right)
+    {
+        for (var directory = Path.GetDirectoryName(left); !string.IsNullOrEmpty(directory); directory = Path.GetDirectoryName(directory))
+            if (right.StartsWith(directory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                return directory;
+        return null;
+    }
+
+    /// <summary>
+    /// Compares two bodies in one report, or two runs.
+    ///
+    /// <para><paramref name="given"/> is the report named on the command line. In
+    /// <c>diff &lt;old&gt; &lt;new&gt;</c> that is the OLD one; under <c>--baseline</c> it is the CURRENT
+    /// run and the old side is resolved by convention. The two are oriented before anything is printed,
+    /// because a diff running backwards reports every regression as a fix and still exits 0.</para>
+    /// </summary>
+    private static int Diff(ReportIndex given, QueryOptions options, QueryWriter writer, TextWriter error,
+        Func<string, string?> getEnv)
+    {
+        if (options.Positional.Count == 0 && !options.Baseline)
         {
             error.WriteLine("Diff takes two reports (kronikol query diff <old.json> <new.json> [--body s3/i47])");
             error.WriteLine("or two bodies in one report (kronikol query diff <report> s3/i47 s7/i47).");
+            error.WriteLine("Or compare against last-green: kronikol query diff <report> --baseline.");
             return 2;
         }
 
         // A first positional that parses as an address is a body diff inside the single report;
         // otherwise it is the second report of the two-file run diff.
-        if (Address.TryParse(options.Positional[0], out _))
-            return BodyDiff(left, options, writer, error);
+        if (options.Positional.Count > 0 && Address.TryParse(options.Positional[0], out _))
+            return BodyDiff(given, options, writer, error);
 
-        ReportIndex right;
-        try
+        ReportIndex left, right;
+        if (options.Baseline)
         {
-            right = ReportScanner.Scan(options.Positional[0]);
+            if (ResolveBaseline(given, getEnv, error) is not { } baseline)
+                return 2;
+
+            if (Scan(baseline, error) is not { } scanned)
+                return 1;
+
+            // The named report is the new run; the baseline is what it is measured against.
+            (left, right) = (scanned, given);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        else
         {
-            error.WriteLine($"Could not read {options.Positional[0]}: {exception.Message}");
-            return 1;
+            if (Scan(options.Positional[0], error) is not { } scanned)
+                return 1;
+
+            (left, right) = (given, scanned);
         }
 
         if (options.BodyAddress is { } bodyAddress)
             return CrossRunBodyDiff(left, right, bodyAddress, options, writer, error);
 
-        writer.Line($"- {Path.GetFileName(left.Path)}  {left.StartTime}  {left.Scenarios.Count} scenarios, {left.Scenarios.Count(s => s.Failed)} failed");
-        writer.Line($"+ {Path.GetFileName(right.Path)}  {right.StartTime}  {right.Scenarios.Count} scenarios, {right.Scenarios.Count(s => s.Failed)} failed");
+        // Under --baseline both files are usually called TestRunReport.json, so a bare file name would
+        // label the two sides identically.
+        var (leftLabel, rightLabel) = DiffLabels(left.Path, right.Path);
+        writer.Line($"- {leftLabel}  {left.StartTime}  {left.Scenarios.Count} scenarios, {left.Scenarios.Count(s => s.Failed)} failed");
+        writer.Line($"+ {rightLabel}  {right.StartTime}  {right.Scenarios.Count} scenarios, {right.Scenarios.Count(s => s.Failed)} failed");
         writer.Line();
 
         // stableId is the cross-run key: it survives a re-run, and since example values went into the hash
         // it tells one row of a scenario outline from another, which is where per-row matching matters.
-        var before = left.Scenarios.ToDictionary(s => s.StableId, s => s, StringComparer.Ordinal);
-        var after = right.Scenarios.ToDictionary(s => s.StableId, s => s, StringComparer.Ordinal);
+        // It is not unique, though: a [Theory] with repeated data, the same row in two Examples: blocks or a
+        // retried scenario give several scenarios one id, so each id holds a list and the lists are matched
+        // in order — a duplicate key must never take the whole diff down.
+        var before = GroupByStableId(left);
+        var after = GroupByStableId(right);
 
-        var broke = new List<string>();
-        var fixedUp = new List<string>();
-        var slower = new List<string>();
+        // A report older than 3.0.47 carries no stableId at all, so every scenario lands in the
+        // empty-string group. That is not a collision - it is a file with no cross-run identity, and
+        // the match falls back to position. Saying "N scenarios share a stableId (repeated rows or
+        // retries)" about the whole file would be alarming and untrue.
+        var unidentified = before.Values.Concat(after.Values).Where(group => group[0].StableId.Length == 0).Sum(group => group.Count);
+        if (unidentified > 0)
+            writer.Note("! this report has no stableIds (written before 3.0.47) — scenarios matched by position");
 
-        foreach (var (id, now) in after)
+        var repeated = before.Values.Concat(after.Values)
+            .Where(group => group.Count > 1 && group[0].StableId.Length > 0)
+            .Sum(group => group.Count);
+        if (repeated > 0)
+            writer.Note($"! {repeated} scenarios share a stableId (repeated rows or retries) — matched in order");
+
+        // Records, not pre-rendered strings. The text below renders them back byte for byte; a
+        // string is the one thing `items` cannot make structure out of, and these five sections are
+        // the whole content of a run diff.
+        var broke = new List<RunChange>();
+        var fixedUp = new List<RunChange>();
+        var slower = new List<RunChange>();
+
+        foreach (var (id, nowGroup) in after)
         {
-            if (!before.TryGetValue(id, out var then))
+            before.TryGetValue(id, out var thenGroup);
+            for (var position = 0; position < nowGroup.Count; position++)
             {
-                broke.Add($"  new   {now.Address} {QueryWriter.OneLine(now.Name, 70)} [{now.Result}]");
-                continue;
+                var now = nowGroup[position];
+                if (thenGroup is null || position >= thenGroup.Count)
+                {
+                    broke.Add(new RunChange("new", now.Address, now.StableId, now.Name, now.Result, null, null, null,
+                        $"  new   {now.Address} {QueryWriter.OneLine(now.Name, 70)} [{now.Result}]"));
+                    continue;
+                }
+
+                var then = thenGroup[position];
+                if (then.Failed && !now.Failed)
+                    fixedUp.Add(new RunChange("fixed", now.Address, now.StableId, now.Name, now.Result, null, null, null,
+                        $"  fixed {now.Address} {QueryWriter.OneLine(now.Name, 70)}"));
+                else if (!then.Failed && now.Failed)
+                    broke.Add(new RunChange("broke", now.Address, now.StableId, now.Name, now.Result,
+                        now.ErrorMessage, null, null,
+                        $"  BROKE {now.Address} {QueryWriter.OneLine(now.Name, 70)}"
+                        + (now.ErrorMessage is { } e ? $"\n          {QueryWriter.OneLine(e, 100)}" : "")));
+
+                if (then.DurationSeconds > 0.1 && now.DurationSeconds > then.DurationSeconds * 1.5)
+                    slower.Add(new RunChange("slower", now.Address, now.StableId, now.Name, now.Result, null,
+                        then.DurationSeconds, now.DurationSeconds,
+                        $"  {now.Address} {then.DurationSeconds:0.##}s → {now.DurationSeconds:0.##}s  {QueryWriter.OneLine(now.Name, 60)}"));
             }
-
-            if (then.Failed && !now.Failed)
-                fixedUp.Add($"  fixed {now.Address} {QueryWriter.OneLine(now.Name, 70)}");
-            else if (!then.Failed && now.Failed)
-                broke.Add($"  BROKE {now.Address} {QueryWriter.OneLine(now.Name, 70)}"
-                          + (now.ErrorMessage is { } e ? $"\n          {QueryWriter.OneLine(e, 100)}" : ""));
-
-            if (then.DurationSeconds > 0.1 && now.DurationSeconds > then.DurationSeconds * 1.5)
-                slower.Add($"  {now.Address} {then.DurationSeconds:0.##}s → {now.DurationSeconds:0.##}s  {QueryWriter.OneLine(now.Name, 60)}");
         }
 
-        var gone = before.Keys.Except(after.Keys).ToArray();
+        // Every old scenario beyond what the new run holds under the same id — a whole id that vanished,
+        // or the third repeat of a row that now runs twice.
+        var gone = before
+            .SelectMany(entry => entry.Value.Skip(after.TryGetValue(entry.Key, out var nowGroup) ? nowGroup.Count : 0))
+            .ToArray();
+
+        var goneRows = gone
+            .Select(scenario => new RunChange("gone", scenario.Address, scenario.StableId, scenario.Name,
+                scenario.Result, scenario.ErrorMessage, null, null,
+                $"  {QueryWriter.OneLine(scenario.Name, 80)}"))
+            .ToList();
 
         Section("Broken", broke);
         Section("Fixed", fixedUp);
         Section("Slower", slower);
-        if (gone.Length > 0)
+        if (goneRows.Count > 0)
         {
-            writer.Line($"Gone ({gone.Length}):");
-            foreach (var id in gone.Take(10))
-                writer.Line($"  {QueryWriter.OneLine(before[id].Name, 80)}");
+            writer.Line($"Gone ({goneRows.Count}):");
+            foreach (var row in goneRows.Take(10))
+                writer.Line(row.Text);
         }
 
-        if (broke.Count == 0 && fixedUp.Count == 0 && slower.Count == 0 && gone.Length == 0)
-            writer.Line("no change in results or timings");
+        // Tracking fidelity is the failure this diff exists to catch that no test failure will: an
+        // upgrade or a config change stops a client being tracked, every test still passes, and the
+        // diagrams quietly lose a service. Reported only when calls were LOST - a run that captured
+        // more than last time needs no warning.
+        var trackingRows = TrackingLosses(left, right);
+        if (trackingRows.Count > 0)
+        {
+            writer.Line($"Tracking ({trackingRows.Count}):");
+            foreach (var row in trackingRows.Take(10))
+                writer.Line("  " + row);
+            if (trackingRows.Count > 10)
+                writer.Line($"  … and {trackingRows.Count - 10} more");
+            writer.Line();
+        }
+
+        if (broke.Count == 0 && fixedUp.Count == 0 && slower.Count == 0 && goneRows.Count == 0 && trackingRows.Count == 0)
+            writer.Note("no change in results, timings or tracked calls");
+
+        // One flat `items`, each row saying which kind of change it is - the text renders the same
+        // rows under five headings, but a heading is a layout, not a field. Uncapped here on purpose:
+        // the Take(15)/Take(10) above keep the terminal readable, and a script asked for everything.
+        writer.Data("left", new { report = left.Path, startTime = left.StartTime, scenarios = left.Scenarios.Count, failed = left.Scenarios.Count(s => s.Failed) });
+        writer.Data("right", new { report = right.Path, startTime = right.StartTime, scenarios = right.Scenarios.Count, failed = right.Scenarios.Count(s => s.Failed) });
+        foreach (var change in broke.Concat(fixedUp).Concat(slower).Concat(goneRows))
+            writer.Item(new
+            {
+                kind = change.Kind,
+                address = change.Address,
+                stableId = change.StableId,
+                scenario = change.Name,
+                result = change.Result,
+                errorMessage = change.ErrorMessage,
+                beforeSeconds = change.BeforeSeconds,
+                afterSeconds = change.AfterSeconds
+            });
+        writer.Data("tracking", trackingRows);
 
         writer.Footer("matched on stableId · compare s3 s7 for two scenarios in one run");
         return 0;
 
-        void Section(string title, List<string> rows)
+        void Section(string title, List<RunChange> rows)
         {
             if (rows.Count == 0)
                 return;
             writer.Line($"{title} ({rows.Count}):");
             foreach (var row in rows.Take(15))
-                writer.Line(row);
+                writer.Line(row.Text);
             if (rows.Count > 15)
                 writer.Line($"  … {rows.Count - 15} more");
             writer.Line();

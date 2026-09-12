@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using Kronikol.Reports;
 using Kronikol.Tool;
 using Kronikol.Tool.Query;
@@ -86,6 +87,67 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("Expected 4173 but found 3902", output);
         Assert.Contains("OverviewTests.cs:142", output);
         Assert.DoesNotContain("4173, \"currency\"", output);
+    }
+
+    [Fact]
+    public void Summary_says_which_run_the_file_is_when_it_was_built_on_ci()
+    {
+        // The question a downloaded artifact has to answer before any other: which commit is this?
+        var path = Path.Combine(_directory, "OnCi.json");
+        File.Move(ReportGenerator.GenerateTestRunReportData(
+            BuildFeatures(allPassing: false),
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            "OnCiSrc_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json,
+            ciMetadata: new CiMetadata(CiEnvironment.GitHubActions, "412", "main",
+                "9f3c1b2a4d5e6f708192a3b4c5d6e7f809a1b2c3", null, "acme/shop", "99")), path, overwrite: true);
+
+        var output = Run("summary", path);
+
+        Assert.Contains("run: main @9f3c1b2  acme/shop  GitHubActions #412", output);
+    }
+
+    [Fact]
+    public void Summary_says_nothing_about_ci_on_a_run_that_was_not_on_ci()
+    {
+        // `provider: None` is a fact about the run, not a line worth spending the budget on.
+        Assert.DoesNotContain("run: ", Run("summary", Report(fileName: "OffCi.json")));
+    }
+
+    [Fact]
+    public void Failures_hands_back_a_link_that_opens_the_scenario_in_the_report()
+    {
+        // The address an agent prints for a human. `sN` addresses the data file and the stable id
+        // addresses the HTML; the two together are the only pair that survives a rename.
+        var report = Report();
+        File.WriteAllText(Path.ChangeExtension(report, ".html"), "<html></html>");
+
+        var output = Run("failures", report);
+
+        var stableId = ScenarioStableId.Compute("Orders", "Checkout fails on a wrong total");
+        Assert.Contains($"open: TestRunReport.html#sid-{stableId}", output);
+    }
+
+    [Fact]
+    public void Failures_offers_no_link_when_the_html_was_never_generated()
+    {
+        // A JSON-only run has nothing to open, and a link into a file that is not there is worse
+        // than no link at all.
+        var output = Run("failures", Report(fileName: "NoHtml.json"));
+
+        Assert.Contains("Checkout fails on a wrong total", output);
+        Assert.DoesNotContain("#sid-", output);
+    }
+
+    [Fact]
+    public void Steps_offers_the_same_link_next_to_the_stable_id_it_already_prints()
+    {
+        var report = Report();
+        File.WriteAllText(Path.ChangeExtension(report, ".html"), "<html></html>");
+
+        var output = Run("steps", report, "s2");
+
+        Assert.Contains("open: TestRunReport.html#sid-", output);
     }
 
     [Fact]
@@ -329,6 +391,55 @@ public class QueryCommandTests : IDisposable
 
         var services = Run("services", Report(), "s3");
         Assert.Matches(@"(?m)^orders-db\s+\d+\s+1", services);
+    }
+
+    /// <summary>
+    /// Kronikol stamps its own success labels on the calls that are not HTTP - a broker publish is
+    /// <c>Sent</c>, a consume is <c>Ack</c>, a reply is <c>Responded</c>, a cache lookup is <c>Hit</c>
+    /// or <c>Miss</c>, a Spanner transaction is <c>Committed</c>. The classifier treated every one of
+    /// them as an error because none of them is spelled "OK", so a clean run of a message-driven
+    /// service reported one error per call and `services` invented an error rate of 100%.
+    /// </summary>
+    [Fact]
+    public void Kronikols_own_success_labels_are_not_errors()
+    {
+        var services = Run("services", BrokerStatusReport());
+
+        Assert.Matches(@"(?m)^bus\s+3\s+0\b", services);
+        Assert.Matches(@"(?m)^cache\s+2\s+0\b", services);
+        Assert.Matches(@"(?m)^ledger\s+1\s+0\b", services);
+    }
+
+    /// <summary>The negative twin: a refusal is still a refusal, and must not be swept up by the fix above.</summary>
+    [Fact]
+    public void A_negative_acknowledgement_or_a_fault_is_still_an_error()
+    {
+        var services = Run("services", BrokerStatusReport());
+
+        Assert.Matches(@"(?m)^broker\s+2\s+2\b", services);
+    }
+
+    /// <summary>
+    /// A re-run carries the same <c>runId</c> as the run it retried, so the attempt is the only thing
+    /// that tells two downloaded artifacts apart. Reading it into the index and never printing it would
+    /// make it write-only - present in the file, absent from every answer.
+    /// </summary>
+    [Fact]
+    public void Summary_tells_a_re_run_apart_from_the_run_it_retried()
+    {
+        var output = Run("summary", RetriedCiReport());
+
+        Assert.Contains("attempt 2", output);
+    }
+
+    [Fact]
+    public void The_json_run_block_carries_the_whole_run_identity()
+    {
+        var envelope = JsonDocument.Parse(Run("summary", RetriedCiReport(), "--json")).RootElement;
+        var ci = envelope.GetProperty("run").GetProperty("ci");
+
+        Assert.Equal("99", ci.GetProperty("runId").GetString());
+        Assert.Equal("2", ci.GetProperty("runAttempt").GetString());
     }
 
     // ─── values (M2) ───────────────────────────────────────────
@@ -740,6 +851,80 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("stableId", output);
     }
 
+    [Fact]
+    public void Diff_across_runs_survives_duplicate_stableIds()
+    {
+        // A [Theory] with repeated data, the same example row in two Examples: blocks, or a retried
+        // scenario gives two scenarios one stableId. The cross-run diff must match them in order and say
+        // so, never throw on the duplicate key.
+        var older = Write("Dup-old.json", RepeatedRows(secondFails: false), null);
+        var newer = Write("Dup-new.json", RepeatedRows(secondFails: true), null);
+
+        var output = Run("diff", older, newer);
+
+        Assert.Contains("BROKE", output);
+        Assert.Contains("share a stableId", output);
+        Assert.Contains("matched in order", output);
+    }
+
+    [Fact]
+    public void Diff_reports_a_repeated_row_that_disappeared()
+    {
+        var older = Write("Dup-gone-old.json", RepeatedRows(secondFails: false), null);
+        var newer = Write("Dup-gone-new.json", [RepeatedRows(secondFails: false)[0] with { Scenarios = [RepeatedRows(secondFails: false)[0].Scenarios[0]] }], null);
+
+        var output = Run("diff", older, newer);
+
+        Assert.Contains("Gone (1)", output);
+    }
+
+    private static Feature[] RepeatedRows(bool secondFails) =>
+    [
+        new Feature
+        {
+            DisplayName = "Retries",
+            Scenarios =
+            [
+                new Scenario { Id = "d0", DisplayName = "Repeated row", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) },
+                new Scenario
+                {
+                    Id = "d1", DisplayName = "Repeated row", Duration = TimeSpan.FromSeconds(1),
+                    Result = secondFails ? ExecutionResult.Failed : ExecutionResult.Passed,
+                    ErrorMessage = secondFails ? "second attempt failed" : null
+                }
+            ]
+        }
+    ];
+
+    [Fact]
+    public void Parse_rejects_the_dead_raw_flag()
+    {
+        var error = new StringWriter();
+
+        var options = QueryOptions.Parse(["TestRunReport.json", "--raw"], error);
+
+        Assert.Null(options);
+        Assert.Contains("Unknown option: --raw", error.ToString());
+    }
+
+    [Fact]
+    public void Provenance_names_the_mergeable_format_not_a_merge()
+    {
+        // mergeableFormatVersion means "the superset format a runner wrote", which every runner in a
+        // sharded build produces; it does not mean the file is the result of a merge.
+        var json = ReportGenerator.GenerateMergeableReportJson(BuildFeatures(allPassing: true),
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc), new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            diagramLookup: null, componentRelationships: null, internalFlowSegmentData: null, wholeTestFlow: null,
+            WholeTestFlowVisualization.None, ciMetadata: null);
+        var path = Path.Combine(_directory, "Mergeable.json");
+        File.WriteAllText(path, json);
+
+        var output = Run("summary", path);
+
+        Assert.Contains("! mergeable-format report", output);
+        Assert.DoesNotContain("merge of several runs", output);
+    }
+
     // ─── Body diff (M4) ────────────────────────────────────────
 
     [Fact]
@@ -795,6 +980,41 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("line 2", output);
         Assert.Contains("4173", output);
         Assert.Contains("3902", output);
+    }
+
+    [Fact]
+    public void Scenarios_marks_the_rows_that_share_one_identity()
+    {
+        // A [Theory] with repeated data, the same Examples: row twice, or a retry: several scenarios,
+        // one stableId. Nothing in the listing said so, and the first symptom was `diff` behaving in a
+        // way that looked wrong. The marker says which rows a cross-run match cannot tell apart.
+        var report = WriteWithDuplicateStableIds("Repeated.json");
+
+        var output = Run("scenarios", report);
+
+        Assert.Contains("\u00d72", output);
+    }
+
+    [Fact]
+    public void Scenarios_marks_nothing_when_every_identity_is_distinct()
+    {
+        Assert.DoesNotContain("\u00d7", Run("scenarios", Report()));
+    }
+
+    [Fact]
+    public void Diff_of_a_report_with_no_stableIds_says_so_rather_than_claiming_a_collision()
+    {
+        // A pre-3.0.47 report carries no stableId at all, so every scenario falls into the empty-string
+        // group. The duplicate warning then announced that every scenario in the file "shares a
+        // stableId (repeated rows or retries)", which is both alarming and untrue - what actually
+        // happens is that the two runs are matched by position, and that is what it should say.
+        var before = WriteWithoutStableIds("BeforeNoIds.json");
+        var after = WriteWithoutStableIds("AfterNoIds.json");
+
+        var output = Run("diff", before, after);
+
+        Assert.DoesNotContain("share a stableId", output);
+        Assert.Contains("no stableIds", output);
     }
 
     [Fact]
@@ -909,6 +1129,63 @@ public class QueryCommandTests : IDisposable
     }
 
     [Fact]
+    public void A_page_whose_first_row_does_not_fit_says_so_instead_of_pointing_at_itself()
+    {
+        // The budget is smaller than one row, so nothing renders. The old footer read
+        // `next: --offset 0` - the offset it was already at. A human raises the budget; a script that
+        // follows `next` re-runs the identical command forever. There is no next page at this budget,
+        // so there must be no pointer to one.
+        var output = Run("interactions", Report(), "s0", "--max-bytes", "40");
+
+        Assert.DoesNotContain("next:", output);
+        Assert.Contains("--max-bytes", output);
+    }
+
+    [Fact]
+    public void An_offset_past_the_end_says_the_listing_is_exhausted_rather_than_pointing_past_it()
+    {
+        // Same infinite loop from the other end: nothing to render, so the old footer echoed the offset
+        // back. It also printed a nonsense range - `scenarios: 100-99 of 7`.
+        var output = Run("scenarios", Report(), "--offset", "99");
+
+        Assert.DoesNotContain("next:", output);
+        Assert.DoesNotContain("100-99", output);
+        Assert.Contains("7 scenarios", output);
+    }
+
+    [Fact]
+    public void A_last_page_reached_by_offset_does_not_offer_a_page_after_it()
+    {
+        // Completion was judged as `last >= all.Count && offset == 0`, so the final page of a paged walk
+        // - which by definition has a non-zero offset - still advertised a next page that holds nothing.
+        var output = Run("scenarios", Report(), "--offset", "5");
+
+        Assert.Contains("6-7 of 7", output);
+        Assert.DoesNotContain("next:", output);
+    }
+
+    [Fact]
+    public void Failures_pages_by_the_limit_it_was_given_rather_than_by_a_hard_coded_25()
+    {
+        // The footer arithmetic hard-coded 25, the default cap, and ignored --limit entirely: three
+        // failures with --limit 2 printed two and then claimed "3 failed" with no way to resume - the
+        // one shape the footer contract exists to prevent.
+        var output = Run("failures", ManyFailuresReport(), "--limit", "2");
+
+        Assert.Contains("failures: 1-2 of 3", output);
+        Assert.Contains("--offset 2", output);
+    }
+
+    [Fact]
+    public void The_last_page_of_failures_says_it_is_the_last()
+    {
+        var output = Run("failures", ManyFailuresReport(), "--limit", "2", "--offset", "2");
+
+        Assert.Contains("3 failed", output);
+        Assert.DoesNotContain("next: --offset", output);
+    }
+
+    [Fact]
     public void Grouping_collapses_repeated_calls_into_one_row()
     {
         var ungrouped = Run("interactions", Report(), "s0", "--limit", "500");
@@ -916,6 +1193,161 @@ public class QueryCommandTests : IDisposable
 
         Assert.True(grouped.Split('\n').Length < ungrouped.Split('\n').Length);
         Assert.Contains("×", grouped);
+    }
+
+    [Fact]
+    public void A_mistyped_grep_target_is_refused_rather_than_matching_nothing()
+    {
+        // The dangerous outcome is not the typo, it is the answer: an unknown target used to be dropped
+        // silently, so `--in bodys` searched nothing, found nothing, and read exactly like proof the
+        // value is not in the report.
+        var (_, error, exit) = RunFull("grep", Report(), "4173", "--in", "bodys");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("bodys", error);
+        Assert.Contains("bodies", error);
+    }
+
+    [Fact]
+    public void A_mistyped_grep_target_is_refused_on_the_numeric_path_too()
+    {
+        var (_, error, exit) = RunFull("grep", Report(), "4173", "--number", "--in", "notez");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("notez", error);
+    }
+
+    [Fact]
+    public void Every_documented_grep_target_is_still_accepted()
+    {
+        foreach (var target in QueryCommand.GrepTargets)
+        {
+            var (_, error, exit) = RunFull("grep", Report(), "4173", "--in", target);
+            Assert.True(exit == 0, $"--in {target} exited {exit}: {error}");
+        }
+    }
+
+    [Fact]
+    public void An_empty_grep_target_list_is_refused_rather_than_searching_nothing()
+    {
+        // `--in ""` is not null, so the default set is not applied, and the split drops the empty entry -
+        // leaving zero targets, which the validating loop then passes by never running. An agent that
+        // builds the flag by joining a list that came back empty would get a confident false negative.
+        foreach (var empty in new[] { "", ",", " , " })
+        {
+            var (_, error, exit) = RunFull("grep", Report(), "4173", "--in", empty);
+            Assert.True(exit == 2, $"--in \"{empty}\" exited {exit}");
+            Assert.Contains("bodies", error);
+        }
+    }
+
+    [Fact]
+    public void Sorting_the_ungrouped_interaction_list_is_refused_rather_than_ignored()
+    {
+        // Nothing reads --sort on this path. Now that its two sibling views exit 2 on a value they cannot
+        // apply, silently accepting one here is the stronger wrong signal: the agent reads row one as the
+        // slowest call when it is merely the first captured.
+        var (_, error, exit) = RunFull("interactions", Report(), "--sort", "duration");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("--group-by", error);
+    }
+
+    [Fact]
+    public void A_grouped_listing_hands_back_a_next_line_that_keeps_the_sort()
+    {
+        // The offset was computed against the sorted order. A next: line that drops --sort re-buckets in
+        // the default order, so page two is an offset into a different list - it repeats rows already
+        // shown and then reports the listing exhausted.
+        var first = Run("interactions", Report(), "--group-by", "service,status", "--sort", "errors", "--limit", "2");
+        var next = first.Split('\n').First(l => l.Contains("next:", StringComparison.Ordinal));
+
+        Assert.Contains("--sort errors", next);
+
+        var second = Run("interactions", Report(), "--group-by", "service,status", "--sort", "errors", "--offset", "2");
+        Assert.NotEqual(Rows(first), Rows(second));
+    }
+
+    [Fact]
+    public void A_narrowed_grep_hands_back_a_next_line_that_keeps_the_narrowing()
+    {
+        var first = Run("grep", Report(), "4173", "--in", "bodies", "--limit", "1");
+        var next = first.Split('\n').First(l => l.Contains("next:", StringComparison.Ordinal));
+
+        Assert.Contains("--in bodies", next);
+    }
+
+    [Fact]
+    public void A_scenario_listing_hands_back_a_next_line_that_keeps_its_filter()
+    {
+        var output = Run("scenarios", Report(), "--slower-than", "0.1", "--limit", "1");
+        var next = output.Split('\n').First(l => l.Contains("next:", StringComparison.Ordinal));
+
+        Assert.Contains("--slower-than 0.1", next);
+    }
+
+    [Fact]
+    public void The_rerun_prefix_carries_every_flag_that_changes_which_rows_are_listed()
+    {
+        // Directly on the prefix rather than through a listing: this is the contract every paging footer
+        // is built from, and a flag missing here breaks whichever verb happens to truncate first.
+        var error = new StringWriter();
+        var options = QueryOptions.Parse(
+            ["r.json", "--sort", "errors", "--in", "bodies", "--values", "--step", "2", "--slower-than", "5"], error);
+        Assert.NotNull(options);
+
+        var prefix = options.RerunPrefix();
+        foreach (var flag in new[] { "--sort errors", "--in bodies", "--values", "--step 2", "--slower-than 5" })
+            Assert.Contains(flag, prefix, StringComparison.Ordinal);
+    }
+
+    /// <summary>The listing rows only, so two pages can be compared without their headers and footers.</summary>
+    private static string Rows(string output) =>
+        string.Join("\n", output.Split('\n').Where(l => l.Length > 0 && !l.StartsWith("next:", StringComparison.Ordinal)
+                                                          && !l.Contains(" of ", StringComparison.Ordinal)));
+
+    [Fact]
+    public void A_grep_target_in_the_wrong_case_searches_the_target_rather_than_nothing()
+    {
+        // The validator accepts it case-insensitively, so the consumer has to as well. Accepting
+        // `--in BODIES` and then matching nothing would put the silent false negative straight back,
+        // one capital letter further away from being noticed.
+        var upper = Run("grep", Report(), "4173", "--in", "BODIES");
+        var lower = Run("grep", Report(), "4173", "--in", "bodies");
+
+        Assert.Equal(lower, upper);
+        Assert.Contains("body", lower);
+    }
+
+    [Fact]
+    public void A_sort_in_the_wrong_case_orders_the_way_it_was_asked_to()
+    {
+        var upper = Run("services", Report(), "--sort", "DURATION");
+        var lower = Run("services", Report(), "--sort", "duration");
+
+        Assert.Equal(lower, upper);
+        Assert.NotEqual(Run("services", Report()), lower);
+    }
+
+    [Fact]
+    public void A_mistyped_sort_is_refused_rather_than_silently_ordering_by_something_else()
+    {
+        var (_, error, exit) = RunFull("services", Report(), "--sort", "slowest");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("slowest", error);
+        Assert.Contains("duration", error);
+    }
+
+    [Fact]
+    public void A_sort_that_only_one_view_supports_is_refused_by_the_other()
+    {
+        // `services --sort bytes` is real; `--group-by ... --sort bytes` is not, and used to fall through
+        // to the default ordering as though it had been honoured.
+        var (_, error, exit) = RunFull("interactions", Report(), "--group-by", "service", "--sort", "bytes");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("bytes", error);
     }
 
     // ─── Addressing and errors ─────────────────────────────────
@@ -1104,7 +1536,7 @@ public class QueryCommandTests : IDisposable
         };
 
         Assert.True(exit == 0, $"exit {exit}: {error}");
-        writer.Flush();
+        writer.Flush(error);
         return output.ToString();
     }
 
@@ -1144,6 +1576,55 @@ public class QueryCommandTests : IDisposable
         var path = Write(fileName, BuildFeatures(allPassing), BuildLogs(), BuildDiagrams());
         if (!allPassing && fileName == "TestRunReport.json")
             _report = path;
+        return path;
+    }
+
+    /// <summary>Two scenarios carrying the same <c>stableId</c> - a repeated Theory row, or a retry.</summary>
+    private string WriteWithDuplicateStableIds(string fileName)
+    {
+        var path = Path.Combine(_directory, fileName);
+        File.WriteAllText(path, """
+            {
+              "kronikolVersion": "3.1.0",
+              "startTime": "2026-01-01T10:00:00Z",
+              "endTime": "2026-01-01T10:05:00Z",
+              "features": [
+                {
+                  "name": "Catalogue",
+                  "labels": [],
+                  "scenarios": [
+                    { "id": "t0", "stableId": "aaaabbbbccccdddd", "name": "Browse", "result": "Passed", "durationSeconds": 1.0, "labels": [], "categories": [], "steps": [] },
+                    { "id": "t1", "stableId": "aaaabbbbccccdddd", "name": "Browse", "result": "Failed", "durationSeconds": 0.4, "labels": [], "categories": [], "steps": [] },
+                    { "id": "t2", "stableId": "eeeeffff00001111", "name": "Search", "result": "Passed", "durationSeconds": 0.2, "labels": [], "categories": [], "steps": [] }
+                  ]
+                }
+              ]
+            }
+            """);
+        return path;
+    }
+
+    /// <summary>A report from before 3.0.47: no <c>stableId</c> on any scenario at all.</summary>
+    private string WriteWithoutStableIds(string fileName)
+    {
+        var path = Path.Combine(_directory, fileName);
+        File.WriteAllText(path, """
+            {
+              "kronikolVersion": "3.0.44",
+              "startTime": "2026-01-01T10:00:00Z",
+              "endTime": "2026-01-01T10:05:00Z",
+              "features": [
+                {
+                  "name": "Catalogue",
+                  "labels": [],
+                  "scenarios": [
+                    { "id": "t0", "name": "Browse", "result": "Passed", "durationSeconds": 1.0, "labels": [], "categories": [], "steps": [] },
+                    { "id": "t1", "name": "Search", "result": "Passed", "durationSeconds": 0.4, "labels": [], "categories": [], "steps": [] }
+                  ]
+                }
+              ]
+            }
+            """);
         return path;
     }
 
@@ -1235,6 +1716,109 @@ public class QueryCommandTests : IDisposable
         }.Concat(BuildFeatures(allPassing: false)).ToArray();
 
         return _shifted = Write("Shifted.json", features, BuildLogs(totalDrift: true), BuildDiagrams());
+    }
+
+    private string? _manyFailures;
+
+    /// <summary>
+    /// Three failing scenarios, which the main fixture cannot supply: it has exactly one, and a footer
+    /// that pages can only be wrong about a listing longer than one page.
+    /// </summary>
+    private string ManyFailuresReport()
+    {
+        if (_manyFailures is not null)
+            return _manyFailures;
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Regressions",
+                Scenarios = Enumerable.Range(1, 3).Select(i => new Scenario
+                {
+                    Id = $"f{i}",
+                    DisplayName = $"Regression {i}",
+                    Result = ExecutionResult.Failed,
+                    Duration = TimeSpan.FromSeconds(0.5),
+                    ErrorMessage = $"Assert.Equal() Failure {i}",
+                    Steps =
+                    [
+                        new ScenarioStep
+                        {
+                            Keyword = "Then", Text = $"case {i} holds", Status = ExecutionResult.Failed,
+                            FailureMessage = $"Expected {i} but found 0",
+                            SourceFile = "RegressionTests.cs", SourceLine = 10 + i
+                        }
+                    ]
+                }).ToArray()
+            }
+        };
+
+        return _manyFailures = Write("ManyFailures.json", features, null);
+    }
+
+    private string? _brokerStatuses;
+
+    /// <summary>
+    /// One scenario carrying the non-HTTP status labels Kronikol itself stamps, success and failure
+    /// side by side, so the error classifier has a fixture that is not all HTTP numbers.
+    /// </summary>
+    private string BrokerStatusReport()
+    {
+        if (_brokerStatuses is not null)
+            return _brokerStatuses;
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Messaging",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "b0",
+                        DisplayName = "An order is placed",
+                        Result = ExecutionResult.Passed,
+                        Duration = TimeSpan.FromSeconds(0.5),
+                    }
+                ]
+            }
+        };
+
+        var at = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(Pair("b0", "bus", "PUBLISH", "http://bus/orders", "{}", "Sent", at));
+        logs.AddRange(Pair("b0", "bus", "CONSUME", "http://bus/orders", "{}", "Ack", at.AddSeconds(1)));
+        logs.AddRange(Pair("b0", "bus", "REPLY", "http://bus/orders/reply", "{}", "Responded", at.AddSeconds(2)));
+        logs.AddRange(Pair("b0", "cache", "GET", "http://cache/order:9", "{}", "Hit", at.AddSeconds(3)));
+        logs.AddRange(Pair("b0", "cache", "GET", "http://cache/order:10", "{}", "Miss", at.AddSeconds(4)));
+        logs.AddRange(Pair("b0", "ledger", "COMMIT", "http://ledger/tx", "{}", "Committed", at.AddSeconds(5)));
+        logs.AddRange(Pair("b0", "broker", "CONSUME", "http://broker/dead", "{}", "Nack", at.AddSeconds(6)));
+        logs.AddRange(Pair("b0", "broker", "SEND", "http://broker/saga", "{}", "Fault", at.AddSeconds(7)));
+
+        return _brokerStatuses = Write("BrokerStatuses.json", features, logs.ToArray());
+    }
+
+    private string? _retriedCi;
+
+    /// <summary>A report written by the second attempt of a GitHub Actions run.</summary>
+    private string RetriedCiReport()
+    {
+        if (_retriedCi is not null)
+            return _retriedCi;
+
+        var written = ReportGenerator.GenerateTestRunReportData(
+            BuildFeatures(allPassing: true),
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            "RetriedCi_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json,
+            ciMetadata: new CiMetadata(CiEnvironment.GitHubActions, "412", "main", "abc1234def5678",
+                "https://github.com/acme/shop/actions/runs/99", "acme/shop", "99", "2"));
+
+        var path = Path.Combine(_directory, "RetriedCi.json");
+        File.Move(written, path, overwrite: true);
+        return _retriedCi = path;
     }
 
     private string? _wide;

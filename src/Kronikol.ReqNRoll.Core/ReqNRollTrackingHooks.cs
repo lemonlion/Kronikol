@@ -189,6 +189,8 @@ public class ReqNRollTrackingHooks
         var examplesBlock = exampleValues is not null
             ? ExamplesBlockResolver.Resolve(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo)
             : ExamplesBlock.None;
+        // Unconditional, unlike the Examples: lookup - every scenario has a source, outline or not.
+        var source = ExamplesBlockResolver.ResolveSource(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo);
 
         ReqNRollScenarioCollector.Collect(new ReqNRollScenarioInfo
         {
@@ -210,7 +212,9 @@ public class ReqNRollTrackingHooks
             ExampleFlatValues = exampleFlatValues,
             ExamplesBlockName = examplesBlock.Name,
             ExamplesBlockDescription = examplesBlock.Description,
-            ExamplesBlockIndex = examplesBlock.Index
+            ExamplesBlockIndex = examplesBlock.Index,
+            SourceFile = source.File,
+            SourceLine = source.Line
         });
 
         ReqNRollTestContext.CurrentTestInfo = null;

@@ -173,7 +173,11 @@ internal static class ReportScanner
                 "id", "stableId", "result", "isHappyPath", "errorMessage", "errorStackTrace", "rule",
                 "features", "scenarios", "httpInteractions", "annotations", "attachments", "diagnostics",
                 "steps", "backgroundSteps", "subSteps", "headers", "labels", "categories", "exampleValues",
-                "diagrams", "comments", "parameters",
+                "diagrams", "comments", "parameters", "attempt",
+                // Run identity (3.1.0). Interned for the same reason as the rest: the scanner
+                // sees these on every report and an uninterned name allocates per document.
+                "ciMetadata", "environment", "provider", "buildNumber", "branch", "commitSha",
+                "pipelineUrl", "repository", "runId", "runAttempt", "os", "runtime",
             ];
             var known = new Dictionary<string, string>(names.Length, StringComparer.Ordinal);
             foreach (var name in names)
@@ -384,6 +388,31 @@ internal static class ReportScanner
                 }
             }
 
+            // Run identity sits one level down, and before `features` - so it is in the index by the
+            // time any scenario is, whatever the file's size.
+            if (_path.Count == 2 && _path[^1] == "ciMetadata")
+            {
+                switch (key)
+                {
+                    case "provider": index.CiProvider = reader.GetString(); return;
+                    case "branch": index.CiBranch = reader.GetString(); return;
+                    case "commitSha": index.CiCommitSha = reader.GetString(); return;
+                    case "buildNumber": index.CiBuildNumber = reader.GetString(); return;
+                    case "runId": index.CiRunId = reader.GetString(); return;
+                    case "runAttempt": index.CiRunAttempt = reader.GetString(); return;
+                    case "repository": index.CiRepository = reader.GetString(); return;
+                    case "pipelineUrl": index.CiPipelineUrl = reader.GetString(); return;
+                }
+            }
+            else if (_path.Count == 2 && _path[^1] == "environment")
+            {
+                switch (key)
+                {
+                    case "os": index.EnvironmentOs = reader.GetString(); return;
+                    case "runtime": index.EnvironmentRuntime = reader.GetString(); return;
+                }
+            }
+
             if (_diagnostic is not null)
             {
                 switch (key)
@@ -487,15 +516,52 @@ internal static class ReportScanner
                     interaction.DurationMs = reader.TokenType == JsonTokenType.Number && reader.TryGetDouble(out var ms) ? ms : null;
                     break;
                 case "content":
+                {
                     if (reader.TokenType != JsonTokenType.String)
                         break;
-                    var content = reader.GetString();
-                    if (content is null)
-                        break;
-                    interaction.BodyLength = content.Length;
-                    interaction.BodyHash = HashBody(content);
+
+                    // Every payload in the file passes through here, and all this needs from one is two
+                    // numbers. GetString() allocated a UTF-16 copy of the body and HashBody then allocated
+                    // a UTF-8 copy of that, so indexing a 142 MB report produced over 300 MB of garbage
+                    // before a single question had been answered - the text dropped again immediately,
+                    // since what the index keeps is the byte range. Neither copy is needed: the hash is
+                    // over exactly the bytes the reader is already sitting on, and the length is a count.
+                    if (!reader.ValueIsEscaped && !reader.HasValueSequence)
+                    {
+                        interaction.BodyLength = Encoding.UTF8.GetCharCount(reader.ValueSpan);
+                        interaction.BodyHash = HashBody(reader.ValueSpan);
+                    }
+                    else
+                    {
+                        // Escaped, or split across the read window. Decode once, into pooled buffers -
+                        // the hash is over the same characters either way, so no `b:` address moves.
+                        var raw = (int)(reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length);
+                        var chars = ArrayPool<char>.Shared.Rent(raw);
+                        try
+                        {
+                            var written = reader.CopyString(chars);
+                            interaction.BodyLength = written;
+
+                            var utf8 = ArrayPool<byte>.Shared.Rent(Encoding.UTF8.GetMaxByteCount(written));
+                            try
+                            {
+                                var encoded = Encoding.UTF8.GetBytes(chars.AsSpan(0, written), utf8);
+                                interaction.BodyHash = HashBody(utf8.AsSpan(0, encoded));
+                            }
+                            finally
+                            {
+                                ArrayPool<byte>.Shared.Return(utf8);
+                            }
+                        }
+                        finally
+                        {
+                            ArrayPool<char>.Shared.Return(chars);
+                        }
+                    }
+
                     interaction.Body = TokenSlice(ref reader, windowStart);
                     break;
+                }
             }
         }
 
@@ -566,6 +632,9 @@ internal static class ReportScanner
                 case "errorMessage": scenario.ErrorMessage = reader.GetString(); break;
                 case "errorStackTrace": scenario.ErrorStackTrace = reader.GetString(); break;
                 case "rule": scenario.Rule = reader.GetString(); break;
+                case "attempt": scenario.Attempt = reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var attempt) ? attempt : null; break;
+                case "sourceFile": scenario.SourceFile = reader.GetString(); break;
+                case "sourceLine": scenario.SourceLine = reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var scenarioLine) ? scenarioLine : null; break;
             }
         }
 
@@ -591,9 +660,15 @@ internal static class ReportScanner
         /// collide at a rate no report reaches; the point is that two identical bodies get one address, so
         /// an agent that has read one has read all of them.
         /// </summary>
-        private static string HashBody(string content)
+        /// <summary>
+        /// The <c>b:</c> address of a body: the first four bytes of the SHA-1 of its UTF-8 form. Takes the
+        /// bytes rather than a string because the caller usually has them already — but they are the same
+        /// bytes the old string overload encoded, so every address a shipped report contains still resolves.
+        /// </summary>
+        private static string HashBody(ReadOnlySpan<byte> utf8)
         {
-            var hash = SHA1.HashData(Encoding.UTF8.GetBytes(content));
+            Span<byte> hash = stackalloc byte[SHA1.HashSizeInBytes];
+            SHA1.HashData(utf8, hash);
             return "b:" + Convert.ToHexString(hash)[..8].ToLowerInvariant();
         }
     }

@@ -10,7 +10,9 @@ namespace Kronikol.Tool;
 /// </summary>
 internal static partial class QueryCommand
 {
-    private static readonly string[] GroupByDimensions =
+    /// <summary>The dimensions <c>interactions --group-by</c> accepts. Internal so SkillDriftTests can pin
+    /// the help text and the skill's reference to the one list the tool actually validates against.</summary>
+    internal static readonly string[] GroupByDimensions =
         ["service", "method", "status", "path", "step", "phase", "category", "kind", "capturedBy"];
 
     private static int GroupedInteractions(List<(ScenarioEntry Scenario, InteractionEntry Request, InteractionEntry? Response)> matches,
@@ -48,9 +50,12 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(buckets.Count.ToString());
+            writer.Count(buckets.Count);
             return 0;
         }
+
+        if (!SortIsValid(options, BucketSorts, error))
+            return 2;
 
         var ordered = options.Sort switch
         {
@@ -62,7 +67,7 @@ internal static partial class QueryCommand
         // The bare stepPath string collides across scenarios — say so rather than pretending the
         // buckets are comparable.
         if (only is null && dims.Contains("step", StringComparer.OrdinalIgnoreCase))
-            writer.Line("! step \"2\" spans scenarios — the same path is a different step in each; scope with s3 for one scenario's steps");
+            writer.Note("! step \"2\" spans scenarios — the same path is a different step in each; scope with s3 for one scenario's steps");
 
         var widths = dims.Select((d, i) => Math.Max(d.Length, ordered.Count == 0 ? 0 : ordered.Max(b => b.Values[i].Length)) + 2).ToArray();
         writer.Line(string.Concat(dims.Select((d, i) => d.PadRight(widths[i]))) + $"{"calls",5} {"errors",6} {"median",8} {"max",8} {"bodies",6}");
@@ -71,7 +76,19 @@ internal static partial class QueryCommand
         {
             var cells = string.Concat(bucket.Values.Select((v, i) => v.PadRight(widths[i])));
             writer.Line($"{cells}{bucket.Calls,5} {bucket.Errors,6} {QueryWriter.Duration(bucket.Median()),8} {QueryWriter.Duration(bucket.Max()),8} {bucket.Bodies.Count,6}");
-        }, options.RerunPrefix());
+        }, options.RerunArgs(), bucket => new
+        {
+            // The bucket holds its dimension values positionally against `dims`, so the key has to come
+            // from the dimension list: an object of {service, status} says what a ["payments","500"]
+            // cannot, and the column header a text reader uses for the same job is suppressed in JSON.
+            key = dims.Select((d, i) => new KeyValuePair<string, string>(d, bucket.Values[i]))
+                .ToDictionary(e => e.Key, e => e.Value, StringComparer.Ordinal),
+            calls = bucket.Calls,
+            errors = bucket.Errors,
+            medianMs = bucket.Median(),
+            maxMs = bucket.Max(),
+            bodies = bucket.Bodies.Count
+        });
 
         return 0;
     }

@@ -87,7 +87,7 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(buckets.Values.Where(b => b.Value != "(absent)").Sum(b => b.Count).ToString());
+            writer.Count(buckets.Values.Where(b => b.Value != "(absent)").Sum(b => b.Count));
             return 0;
         }
 
@@ -121,7 +121,7 @@ internal static partial class QueryCommand
                 : string.Join(", ", bucket.Addresses);
             var tag = bucket.Direction is { } d ? $"{d,-5}" : "";
             writer.Line($"  {bucket.Value,-12} ×{bucket.Count,-4} {tag}{addresses}");
-        }, options.RerunPrefix() + $"--path \"{options.Path}\" ");
+        }, [.. options.RerunArgs(), "--path", options.Path!]);
 
         Footnotes();
         return 0;
@@ -188,7 +188,7 @@ internal static partial class QueryCommand
             if (unevaluable > 0)
                 writer.Line($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
             if (truncated > 0)
-                writer.Line($"! {truncated} {(truncated == 1 ? "body was" : "bodies were")} capped at capture time — the rest was never recorded");
+                writer.Note($"! {truncated} {(truncated == 1 ? "body was" : "bodies were")} capped at capture time — the rest was never recorded");
         }
 
         static string N(double value) => value.ToString("0.####", CultureInfo.InvariantCulture);

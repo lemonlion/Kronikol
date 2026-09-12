@@ -17,7 +17,17 @@ public static class FeatureSynthesizer
     /// <param name="Start">Earliest timestamp observed (UTC) — the run start.</param>
     /// <param name="End">Latest timestamp observed (UTC) — the run end.</param>
     /// <param name="TestNames">Display name per test id, for normalising log <c>TestName</c>s.</param>
-    public sealed record Result(Feature[] Features, DateTime Start, DateTime End, IReadOnlyDictionary<string, string> TestNames);
+    public sealed record Result(Feature[] Features, DateTime Start, DateTime End, IReadOnlyDictionary<string, string> TestNames)
+    {
+        /// <summary>
+        /// How many scenarios started but never reported an end, and so were given
+        /// <c>resultWhenUnknown</c> rather than a recorded verdict. Zero is the happy path; anything else
+        /// means that many scenarios' results are a default, not an observation — which with the
+        /// compatibility default of <see cref="ExecutionResult.Passed"/> is the difference between a green
+        /// report and a crashed worker.
+        /// </summary>
+        public int DefaultedResultCount { get; init; }
+    }
 
     /// <summary>
     /// Synthesises features. <paramref name="defaultFeatureName"/> groups scenarios that carry no feature.
@@ -124,9 +134,13 @@ public static class FeatureSynthesizer
         var names = new Dictionary<string, string>(StringComparer.Ordinal);
         DateTimeOffset? runStart = null, runEnd = null;
 
+        var defaultedResults = 0;
+
         foreach (var testId in order)
         {
             var acc = byTest[testId];
+            if (!acc.HasEnd)
+                defaultedResults++;
             var name = acc.Name ?? testId;
             names[testId] = name;
 
@@ -208,7 +222,10 @@ public static class FeatureSynthesizer
             features,
             (runStart ?? now).UtcDateTime,
             (runEnd ?? runStart ?? now).UtcDateTime,
-            names);
+            names)
+        {
+            DefaultedResultCount = defaultedResults,
+        };
     }
 
     /// <summary>

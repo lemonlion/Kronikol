@@ -14,6 +14,15 @@ internal readonly record struct ExamplesBlock(string? Name, string? Description,
 }
 
 /// <summary>
+/// Where a scenario is written, from the same embedded Gherkin document the <c>Examples:</c> lookup reads.
+/// Both null when Reqnroll's messages are unavailable - the report then renders exactly as before.
+/// </summary>
+internal readonly record struct ScenarioSource(string? File, int? Line)
+{
+    public static readonly ScenarioSource None = new(null, null);
+}
+
+/// <summary>
 /// Maps a running Reqnroll scenario back to the <c>Examples:</c> block its row came from.
 /// Reqnroll's generated code embeds the feature's Cucumber messages (Gherkin document + pickles)
 /// in every <see cref="FeatureInfo"/>; only the two properties that expose the plumbing are
@@ -44,6 +53,31 @@ internal static class ExamplesBlockResolver
         catch
         {
             return ExamplesBlock.None;
+        }
+    }
+
+    /// <summary>
+    /// Where the running scenario is written. Same reflection seam, same silent-degradation contract as
+    /// <see cref="Resolve"/>: anything unexpected yields <see cref="ScenarioSource.None"/>.
+    /// </summary>
+    public static ScenarioSource ResolveSource(FeatureInfo? featureInfo, ScenarioInfo? scenarioInfo)
+    {
+        if (featureInfo is null || scenarioInfo is null)
+            return ScenarioSource.None;
+        try
+        {
+            var lookup = LookupCache.GetValue(featureInfo, BuildLookup);
+            if (lookup.Uri is null)
+                return ScenarioSource.None;
+            return new ScenarioSource(
+                lookup.Uri,
+                scenarioInfo.Title is { Length: > 0 } title && lookup.LinesByScenarioName.TryGetValue(title, out var line)
+                    ? line
+                    : null);
+        }
+        catch
+        {
+            return ScenarioSource.None;
         }
     }
 
@@ -118,6 +152,16 @@ internal static class ExamplesBlockResolver
     {
         public Dictionary<string, RowEntry> RowsById { get; } = new(StringComparer.Ordinal);
         public List<Pickle> Pickles { get; } = [];
+
+        /// <summary>The feature file, project-relative with forward slashes (<c>Features/Cake.feature</c>).</summary>
+        public string? Uri { get; set; }
+
+        /// <summary>
+        /// Scenario title to the line its keyword is on. Keyed by title rather than by ast id because
+        /// that is all <see cref="ScenarioInfo"/> offers, and because every row of an outline shares the
+        /// outline's title and therefore its declaration line - which is the line we want.
+        /// </summary>
+        public Dictionary<string, int> LinesByScenarioName { get; } = new(StringComparer.Ordinal);
     }
 
     private static FeatureBlockLookup BuildLookup(FeatureInfo featureInfo)
@@ -132,9 +176,14 @@ internal static class ExamplesBlockResolver
             }
 
             lookup.Pickles.AddRange(messages.Pickles ?? []);
+            lookup.Uri = GherkinText.NullIfBlank(messages.GherkinDocument?.Uri)?.Replace('\\', '/');
 
             foreach (var scenario in ScenarioNodes(messages.GherkinDocument?.Feature))
+            {
+                if (scenario.Name is { Length: > 0 } scenarioName && scenario.Location is { } location)
+                    lookup.LinesByScenarioName[scenarioName] = (int)location.Line;
                 IndexScenario(lookup, scenario);
+            }
         }
         catch
         {

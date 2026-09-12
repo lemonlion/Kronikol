@@ -256,6 +256,10 @@ internal static class IngestCommand
 
         var options = IngestPipeline.DefaultOptions();
         options.ReportsFolderPath = Path.GetFullPath(output);
+        // The command speaks with one voice: the library's own run-end pointer goes to Console directly,
+        // and this command already reports counts, diagnostics and paths through its own writer. The
+        // pointer's substance — the failures and the command that explains them — is printed below instead.
+        options.WriteRunSummaryToConsole = false;
         options.PlantUmlRendering = render;
         options.CollapseConsecutiveIdenticalCalls = collapse;
         options.CollapseThreshold = collapseThreshold;
@@ -316,6 +320,16 @@ internal static class IngestCommand
             PrintDiagnostics(result.Diagnostics, @out);
             @out.WriteLine($"Wrote reports to {result.ReportsDirectory}");
             @out.WriteLine($"  {result.TestRunReportHtml}");
+
+            var summary = RunSummaryConsoleWriter.Summarise(
+                result.Features,
+                result.ReportsDirectory,
+                ["TestRunReport.html", "TestRunReport.json", "Failures.md"],
+                agentInstructionsWritten: File.Exists(Path.Combine(result.ReportsDirectory, AgentInstructionsGenerator.ClaudeFileName)));
+            // Skip(1): the first line names the directory, which the two lines above already did.
+            foreach (var line in RunSummaryConsoleWriter.Build(summary).TrimEnd('\n').Split('\n').Skip(1))
+                @out.WriteLine(line);
+
             return 0;
         }
         catch (FormatException ex)

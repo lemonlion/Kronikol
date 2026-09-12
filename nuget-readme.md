@@ -48,7 +48,7 @@ See the [Quick Start guide](https://github.com/lemonlion/Kronikol/wiki/Quick-Sta
 | Proxy tap (out-of-process capture for uninstrumentable backends) | `Kronikol.Extensions.ProxyTap` |
 | OTLP tap + export (OTel spans in, Kronikol captures out as spans) | `Kronikol.Extensions.Otlp` |
 | Playwright (browser-driven E2E identity) | `Kronikol.Playwright` |
-| CLI (`kronikol merge`, `kronikol ingest`, `kronikol query`, `kronikol export`) | `Kronikol.Tool` |
+| CLI (`kronikol merge`, `kronikol ingest`, `kronikol query`, `kronikol export`, `kronikol init-agents`) | `Kronikol.Tool` |
 
 ## Use Cases
 
@@ -68,7 +68,23 @@ kronikol query summary  ./Reports              # the run, its failures, the slow
 kronikol query failures ./Reports              # why each one failed, with assertion messages
 kronikol query trace    ./Reports 4bf92f3577b34da6  # follow one W3C trace across scenarios, in order
 kronikol query grep     ./Reports "4173" --values   # where a wrong value entered the system
+kronikol query failures ./Reports --json            # the same answer as one envelope, for scripts
 ```
+
+## Teach your agents to use it
+
+An agent asked to debug a failing test will reach for `Read` and spend its whole context on the report.
+One command stops that for good:
+
+```bash
+kronikol init-agents .
+```
+
+It installs the `kronikol-test-debugging` skill into `.claude/skills/` and adds a short instruction block
+to `CLAUDE.md` and `AGENTS.md` — both, because Claude Code reads one and Codex, Cursor and Copilot read
+the other. Safe to re-run: the block is delimited and replaced in place. A project scaffolded from a
+`kronikol-*` template ships with both already. See
+[Querying Reports](https://github.com/lemonlion/Kronikol/wiki/Querying-Reports#using-it-from-an-ai-agent).
 
 ## Documentation
 

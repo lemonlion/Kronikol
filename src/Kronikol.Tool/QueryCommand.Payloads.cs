@@ -59,17 +59,28 @@ internal static partial class QueryCommand
         if (options.GroupBy is not null)
             return GroupedInteractions(matches, options, writer, error, only);
 
+        // Nothing reads --sort on the ungrouped path: the list is capture order, always. Accepting the
+        // flag and discarding it lets an agent read row one as the slowest call when it is merely the
+        // first - and now that the two views which DO sort refuse a value they cannot apply, silence here
+        // is the stronger wrong signal of the two.
+        if (options.Sort is { Length: > 0 })
+        {
+            error.WriteLine("interactions lists calls in capture order and cannot sort them.");
+            error.WriteLine("Use --group-by (then --sort calls|duration|errors), or `services --sort duration` for per-service timings.");
+            return 2;
+        }
+
         if (options.Count)
         {
-            writer.Line(matches.Count.ToString());
+            writer.Count(matches.Count);
             return 0;
         }
 
         if (matches.Count == 0)
         {
-            writer.Line("nothing matched");
+            writer.Note("nothing matched");
             if (unevaluable > 0)
-                writer.Line($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+                writer.Note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
             writer.Footer($"{inScope} calls in {(only is null ? "the run" : only.Address)} · drop a filter, or try services");
             return 0;
         }
@@ -78,7 +89,20 @@ internal static partial class QueryCommand
         {
             var groups = Collapse(matches);
             writer.Page(groups, options.Offset, Math.Min(options.Limit, 200), "groups",
-                group => writer.Line(group), options.RerunPrefix());
+                group => writer.Line(group.Render()), options.RerunArgs(),
+                group => new
+                {
+                    address = group.Address,
+                    service = group.Service,
+                    summary = group.Summary,
+                    count = group.Count,
+                    bodyHash = group.BodyHash,
+                    bodyLength = group.BodyLength
+                });
+
+            if (unevaluable > 0)
+                writer.Note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+
             return 0;
         }
 
@@ -93,10 +117,32 @@ internal static partial class QueryCommand
                 : "";
             writer.Line($"{interaction.Address(scenario),-9} {interaction.ServiceName,-16} {QueryWriter.OneLine(interaction.Summary(), 62),-62} "
                         + $"{response?.StatusCode ?? "",-6} {QueryWriter.Duration(interaction.DurationMs ?? response?.DurationMs),8}{payload}{responsePayload}");
-        }, options.RerunPrefix());
+        }, options.RerunArgs(), row =>
+        {
+            var (scenario, interaction, response) = row;
+            // Addresses and metadata only. Serializing the entry wholesale would put a captured body into
+            // a listing that promises never to print one - the invariant No_overview_command_emits_a_payload
+            // guards, and which a projector is exactly the way to break by accident.
+            return new
+            {
+                address = interaction.Address(scenario),
+                scenario = scenario.Address,
+                service = interaction.ServiceName,
+                method = interaction.Method,
+                uri = interaction.Uri,
+                summary = interaction.Summary(),
+                status = response?.StatusCode,
+                durationMs = interaction.DurationMs ?? response?.DurationMs,
+                stepPath = interaction.StepPath,
+                request = new { bodyHash = interaction.BodyHash, bodyLength = interaction.BodyLength },
+                response = response is null
+                    ? null
+                    : new { bodyHash = response.BodyHash, bodyLength = response.BodyLength }
+            };
+        });
 
         if (unevaluable > 0)
-            writer.Line($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+            writer.Note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
 
         return 0;
     }
@@ -133,9 +179,23 @@ internal static partial class QueryCommand
     /// Folds runs of identical calls into one row. A hundred and twenty calls to the same cache key are one
     /// fact, and printing them separately is the difference between an answer that fits and one that does not.
     /// </summary>
-    private static List<string> Collapse(List<(ScenarioEntry Scenario, InteractionEntry Request, InteractionEntry? Response)> matches)
+    /// <summary>
+    /// One folded run of identical calls. A record rather than the pre-rendered string this used to be,
+    /// because a string is the one thing <c>--json</c> cannot make structure out of - and
+    /// <see cref="Render"/> keeps the text byte-identical to what the string produced.
+    /// </summary>
+    private sealed record CollapsedCall(string Address, string Service, string Summary, int Count,
+        string? BodyHash, int BodyLength)
     {
-        var rows = new List<string>();
+        public string Render() =>
+            $"{Address,-14} {Service,-16} {QueryWriter.OneLine(Summary, 62),-62}"
+            + (Count > 1 ? $"  ×{Count}" : "")
+            + (BodyHash is { } hash ? $"  {hash} {QueryWriter.Size(BodyLength)}" : "");
+    }
+
+    private static List<CollapsedCall> Collapse(List<(ScenarioEntry Scenario, InteractionEntry Request, InteractionEntry? Response)> matches)
+    {
+        var rows = new List<CollapsedCall>();
         var i = 0;
         while (i < matches.Count)
         {
@@ -148,9 +208,8 @@ internal static partial class QueryCommand
 
             var count = last - i + 1;
             var address = count == 1 ? first.Address(scenario) : $"{scenario.Address}/i{first.Ordinal}-i{matches[last].Request.Ordinal}";
-            var body = first.BodyHash is { } hash ? $"  {hash} {QueryWriter.Size(first.BodyLength)}" : "";
-            rows.Add($"{address,-14} {first.ServiceName,-16} {QueryWriter.OneLine(first.Summary(), 62),-62}"
-                     + (count > 1 ? $"  ×{count}" : "") + body);
+            rows.Add(new CollapsedCall(address, first.ServiceName, first.Summary(), count,
+                first.BodyHash, first.BodyLength));
             i = last + 1;
         }
 
@@ -269,7 +328,7 @@ internal static partial class QueryCommand
         }
 
         if (body.Contains("…truncated (", StringComparison.Ordinal))
-            writer.Line("! this body was capped at capture time — the rest was never recorded");
+            writer.Note("! this body was capped at capture time — the rest was never recorded");
 
         if (options.Out is { } path)
         {
@@ -379,7 +438,7 @@ internal static partial class QueryCommand
 
             writer.Page(matches, options.Offset, Math.Min(options.Limit, 200), "values",
                 match => writer.Line($"{match.Path} = {match.Value.Row()}"),
-                $"--path \"{jsonPath}\" ");
+                ["--path", jsonPath]);
             return 0;
         }
     }

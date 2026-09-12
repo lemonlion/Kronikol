@@ -145,7 +145,7 @@ Splitting a large suite across several parallel CI runners is faster, but you st
 
 ```bash
 dotnet tool install --global Kronikol.Tool
-kronikol merge ./artifacts -o TestRunReport.html
+kronikol merge ./artifacts -o TestRunReport.html   # writes TestRunReport.json beside it
 ```
 
 See the [Merging Parallel Reports](https://github.com/lemonlion/Kronikol/wiki/Merging-Parallel-Reports) wiki page for a full GitHub Actions example.
@@ -188,7 +188,9 @@ kronikol query diff     ./Reports s3/i47 s5/i47      # two bodies, only the path
 kronikol query http     ./Reports s3/i47 --keys      # a payload's shape, then --path $.x for one value
 ```
 
-Every command prints addresses rather than payloads, announces any truncation with the flags that resume it, and fetches a body only when you name one. There is a Claude Code skill in [`templates/skills/kronikol-test-debugging/`](templates/skills/kronikol-test-debugging) that teaches an agent the whole workflow — copy it into your project's `.claude/skills/`. See [Querying Reports](https://github.com/lemonlion/Kronikol/wiki/Querying-Reports).
+Every command prints addresses rather than payloads, announces any truncation with the flags that resume it, and fetches a body only when you name one. `--out FILE` saves any answer to a file instead of printing it, without the budget; `--json` turns the listing verbs into one machine-readable envelope for scripts (text stays the default, and is what to read in a terminal - the same answer as JSON costs about twice the tokens).
+
+The agent skill that teaches this whole workflow installs itself. A project scaffolded from a `kronikol-*` template ships with `.claude/skills/kronikol-test-debugging/` and a `CLAUDE.md`/`AGENTS.md` block already in place; for a repository that came first, `kronikol init-agents .` adds the same three files and appends the block to both instruction files. It is safe to re-run — the block sits between markers and is replaced in place, so upgrading is the same command — and it leaves everything you wrote around it alone. The canonical copy is [`templates/skills/kronikol-test-debugging/`](templates/skills/kronikol-test-debugging) if you would rather copy it by hand. See [Querying Reports](https://github.com/lemonlion/Kronikol/wiki/Querying-Reports).
 
 ---
 
@@ -287,7 +289,7 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 | **PlantUML IKVM** | `Kronikol.PlantUml.Ikvm` | Local PlantUML rendering via IKVM — no remote server or Java installation required | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.PlantUml.Ikvm)](https://www.nuget.org/packages/Kronikol.PlantUml.Ikvm) |
 | **Proxy Tap** | `Kronikol.Extensions.ProxyTap` | Out-of-process HTTP tee that captures any hop of an uninstrumentable (polyglot / third-party / legacy) backend, attributes by `test-tracking-*` headers or the W3C trace id, re-injects correlation, redacts secrets at capture | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.ProxyTap)](https://www.nuget.org/packages/Kronikol.Extensions.ProxyTap) |
 | **Playwright** | `Kronikol.Playwright` | Browser-driven E2E client: per-test identity stamped on every `BrowserContext`/`Page` request (+ `traceparent`), in-process scope bridge | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Playwright)](https://www.nuget.org/packages/Kronikol.Playwright) |
-| **CLI** | `Kronikol.Tool` | `kronikol merge` (combine parallel runners' reports), `kronikol ingest` (replay language-neutral NDJSON captures into a full report), `kronikol query` (debug a run without reading the report) and `kronikol export` (push NDJSON captures to an OTLP collector as OTel spans) | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Tool)](https://www.nuget.org/packages/Kronikol.Tool) |
+| **CLI** | `Kronikol.Tool` | `kronikol merge` (combine parallel runners' reports), `kronikol ingest` (replay language-neutral NDJSON captures into a full report), `kronikol query` (debug a run without reading the report), `kronikol export` (push NDJSON captures to an OTLP collector as OTel spans) and `kronikol init-agents` (install the test-debugging skill and CLAUDE.md/AGENTS.md block into a repository) | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Tool)](https://www.nuget.org/packages/Kronikol.Tool) |
 | **Step Tracking** | `Kronikol.StepTracking` | IL weaver that instruments `[GivenStep]`, `[WhenStep]`, `[ThenStep]` methods with BDD step tracking and timing | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.StepTracking)](https://www.nuget.org/packages/Kronikol.StepTracking) |
 
 All packages from 1.23.X onwards target **.NET 8.0**, **.NET 9.0**, and **.NET 10.0** (multi-target).

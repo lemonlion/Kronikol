@@ -79,12 +79,19 @@ public static class ReportGenerator
     {
         var previous = ActiveReportsDirectory.Value;
         ActiveReportsDirectory.Value = ResolveReportsDirectory(options);
+        // A host that already scoped a collector (kronikol ingest, a dashboard) keeps it — its entries and
+        // ours land in the same report. An adapter-driven run has none, and without one every
+        // ReportDiagnosticsScope.Record on this path — render failures, attachment failures, step
+        // attribution mismatches, output failures — was a silent no-op and the JSON's diagnostics array was
+        // always empty. The AsyncLocal keeps concurrent generations apart.
+        var ownScope = ReportDiagnosticsScope.Current is null ? ReportDiagnosticsScope.Begin(new ReportDiagnosticsCollector()) : null;
         try
         {
             CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options);
         }
         finally
         {
+            ownScope?.Dispose();
             ActiveReportsDirectory.Value = previous;
         }
     }
@@ -287,7 +294,7 @@ public static class ReportGenerator
             }
             else
             {
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata));
             }
         }
 
@@ -305,6 +312,28 @@ public static class ReportGenerator
                 wholeTestSegments: wholeTestSegments));
         }
 
+        // Rung zero of the debugging ladder, and the bait that makes the instruction file below load: one
+        // isolated action for both halves, so a digest that throws can never cost anyone the report.
+        if (options.GenerateFailuresDigest)
+        {
+            Add(FailuresDigestFileName, () =>
+            {
+                var digest = FailuresDigestGenerator.Generate(features, dataLogs, options.HtmlTestRunReportFileName, KronikolVersion, reportDiagnostics);
+                WriteFile(digest.Markdown, FailuresDigestFileName);
+                WriteFile(digest.Jsonl, FailuresDigestJsonlFileName);
+            });
+        }
+
+        if (options.WriteAgentInstructions)
+        {
+            Add(AgentInstructionsGenerator.ClaudeFileName, () =>
+            {
+                var instructions = AgentInstructionsGenerator.Build(options.HtmlTestRunReportFileName);
+                WriteFile(instructions, AgentInstructionsGenerator.ClaudeFileName);
+                WriteFile(instructions, AgentInstructionsGenerator.AgentsFileName);
+            });
+        }
+
         RunOutputs(actions);
 
         var diagnostics = ReportDiagnostics.Analyse(
@@ -316,11 +345,28 @@ public static class ReportGenerator
         if (options.DiagnosticMode)
             DiagnosticReportGenerator.Generate(RequestResponseLogger.RequestAndResponseLogs, features, options);
 
+        // Gathered once, from what actually reached disk: an output the isolated list could not write is
+        // never named by the pointer or offered in the CI summary.
+        var runSummary = RunSummaryConsoleWriter.Summarise(
+            features,
+            reportsDir,
+            [
+                $"{options.HtmlTestRunReportFileName}.html",
+                $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}",
+                FailuresDigestFileName
+            ],
+            agentInstructionsWritten: options.WriteAgentInstructions
+                                      && File.Exists(Path.Combine(reportsDir, AgentInstructionsGenerator.ClaudeFileName)));
+
         if (options.WriteCiSummary)
         {
             var (truncatedDiagrams, fullDiagrams) = DefaultDiagramsFetcher.GetCiSummaryDiagrams(fetcherOptions);
             var markdown = CiSummaryGenerator.GenerateMarkdown(features, truncatedDiagrams, fullDiagrams, startRunTime, endRunTime, options.MaxCiSummaryDiagrams,
                 options.DiagramFormat, options.PlantUmlServerBaseUrl, options.LocalDiagramRenderer);
+
+            // The job summary is written to a file descriptor rather than to stdout, so unlike the console
+            // pointer it survives every runner — which makes it the reliable place to say how to debug.
+            markdown += RunSummaryConsoleWriter.BuildCiSummarySection(runSummary);
 
             var directory = CurrentReportsDirectory;
             Directory.CreateDirectory(directory);
@@ -337,12 +383,21 @@ public static class ReportGenerator
             if (Directory.Exists(ciReportsDir))
             {
                 var reportFiles = Directory.GetFiles(ciReportsDir)
-                    .Where(f => f.EndsWith(".html") || f.EndsWith(".yml") || f.EndsWith(".md") || f.EndsWith(".json") || f.EndsWith(".xml"))
+                    .Where(f => f.EndsWith(".html") || f.EndsWith(".yml") || f.EndsWith(".md") || f.EndsWith(".json") || f.EndsWith(".jsonl") || f.EndsWith(".xml"))
                     .ToArray();
                 CiArtifactPublisher.Publish(reportFiles, ciEnv, options.CiArtifactName, options.CiArtifactRetentionDays);
             }
         }
+
+        // Last, so it is the final thing the run says.
+        if (options.WriteRunSummaryToConsole)
+            RunSummaryConsoleWriter.Write(runSummary, CiEnvironmentDetector.Detect(), Console.WriteLine);
     }
+
+    /// <summary>The failure digest's two file names — the markdown an agent reads and its machine-readable twin.</summary>
+    internal const string FailuresDigestFileName = "Failures.md";
+
+    internal const string FailuresDigestJsonlFileName = "Failures.jsonl";
 
     /// <summary>
     /// Runs the report outputs in parallel, isolating each one: an output that throws is recorded as an
@@ -1411,8 +1466,15 @@ public static class ReportGenerator
                     _ => ""
                 };
 
+                // The second address this element answers to. `id` is a slug of the display name, so
+                // it moves on a rename and collides across features; the stable id is what the data
+                // file, `kronikol query` and Failures.md all speak, and `#sid-<id>` resolves here.
+                // It goes BEFORE ` id=`: the cluster-link pins match `[^>]*id="([^"]+)"` greedily,
+                // and `data-stable-id="` ends in a word-boundary `id="` that would win that race.
+                var scenarioStableId = ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+
                 body.Append($"""
-                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr} id="{anchorId}" tabindex="0">
+                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr} data-stable-id="{scenarioStableId}" id="{anchorId}" tabindex="0">
                             <summary class="h3{(failed ? " failed" : skipped ? " skipped" : "")}" title="{scenarioTooltip}">{scenario.DisplayName}{(scenario.IsHappyPath ? " <span class=\"label\">Happy Path</span>" : "")}{scenarioLabelsHtml}{durationBadge}<button class="copy-scenario-name" title="Copy scenario name" data-scenario-name="{encodedName}" onclick="copy_scenario_name(this, event)">&#128203;</button><a class="scenario-link" href="#{anchorId}" title="Link to this scenario" onclick="event.stopPropagation()">&#128279;</a></summary>
                          """);
 
@@ -2237,7 +2299,12 @@ public static class ReportGenerator
                 if (blockBands is not null && blockBands.TryGetValue(ri, out var flatBand))
                     AppendExamplesBlockBand(body, flatBand, 1 + flatNames.Length + 2);
 
-                body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
+                // The flat table is the one displayed by default, so its rows carry the stable id
+                // too — deliberately without an `id`, which the grouped copy of the same row owns
+                // (Flat_table_rows_have_no_id_attribute). Duplicate data attributes are legal; the
+                // hash script picks whichever copy is displayed.
+                var flatRowStableId = ScenarioStableId.Compute(featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
+                body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\" data-stable-id=\"{flatRowStableId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
                 body.Append($"<td>{ri + 1}</td>");
 
                 foreach (var name in flatNames)
@@ -2341,7 +2408,10 @@ public static class ReportGenerator
             }
 
             var rowAnchorId = scenarioAnchorIds?.GetValueOrDefault(s.Id) ?? GenerateScenarioAnchorId(s.DisplayName);
-            body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\" id=\"{rowAnchorId}\" data-scenario-id=\"{rowAnchorId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
+            // Every row of an outline shares one display name, so the slug cannot address a row and
+            // the stable id — which hashes the example values — is the only handle `#sid-` can use.
+            var rowStableId = ScenarioStableId.Compute(featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
+            body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\" data-stable-id=\"{rowStableId}\" id=\"{rowAnchorId}\" data-scenario-id=\"{rowAnchorId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
             body.Append($"<td>{ri + 1}</td>");
 
             if (group.Rule is ParameterDisplayRule.ScalarColumns or ParameterDisplayRule.FlattenedObject && group.ParameterNames.Length > 0)
@@ -3433,11 +3503,36 @@ public static class ReportGenerator
         return html.ToString();
     }
 
+    /// <summary>
+    /// The <c>ciMetadata</c> object, emitted whether or not the run was on CI. A shape that appears
+    /// only sometimes is a shape nothing can key on, so off CI the same eight keys come back with
+    /// <c>provider: "None"</c> and nulls beneath it — <see cref="CiMetadataDetector.Detect()"/> keeps
+    /// returning null, because the HTML summary's CI table is gated on exactly that.
+    /// </summary>
+    private static object MapCiMetadataJson(CiMetadata? ciMetadata) => new
+    {
+        Provider = (ciMetadata?.Provider ?? CiEnvironment.None).ToString(),
+        ciMetadata?.BuildNumber,
+        ciMetadata?.Branch,
+        ciMetadata?.CommitSha,
+        ciMetadata?.PipelineUrl,
+        ciMetadata?.Repository,
+        ciMetadata?.RunId,
+        ciMetadata?.RunAttempt
+    };
+
+    /// <summary>The <c>environment</c> object: what the run executed on, and nothing about who ran it.</summary>
+    private static object MapEnvironmentJson() => new
+    {
+        Os = RunEnvironment.Current.Os,
+        Runtime = RunEnvironment.Current.Runtime
+    };
+
     /// <summary>The <c>diagnostics</c> array of the data files: <c>{kind, message, scenarioId}</c> per entry.</summary>
     private static object[] MapDiagnosticsJson(IReadOnlyList<DiagnosticEntry>? diagnostics) =>
         (diagnostics ?? []).Select(d => (object)new { Kind = d.Kind.ToString(), d.Message, d.ScenarioId }).ToArray();
 
-    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true)
+    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         // Diagram markers belong to the diagram, not the interaction list: exported as-is they read as
@@ -3448,9 +3543,9 @@ public static class ReportGenerator
 
         return format switch
         {
-            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations), fileName),
-            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths), fileName),
-            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths), fileName),
+            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata), fileName),
+            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths, ciMetadata), fileName),
+            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths, ciMetadata), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
@@ -3460,7 +3555,7 @@ public static class ReportGenerator
     /// data file. Step and assertion markers are deliberately excluded — those are already structured in
     /// <c>steps</c>, and repeating them would be duplication rather than disclosure.
     /// </summary>
-    private sealed record ScenarioAnnotation(int Index, DiagramMarkerKind Kind, string Text);
+    internal sealed record ScenarioAnnotation(int Index, DiagramMarkerKind Kind, string Text);
 
     /// <summary>
     /// Walks one test's ordered log stream and works out, for every real interaction, which step it happened
@@ -3474,6 +3569,9 @@ public static class ReportGenerator
     /// disagreement produces a null <c>stepPath</c> and a diagnostic rather than a confident wrong
     /// answer.</para>
     /// </summary>
+    internal static Dictionary<string, List<string?>> AttributeInteractionsToStepPaths(RequestResponseLog[]? trackedLogs, Feature[] features) =>
+        AttributeInteractionsToSteps(trackedLogs, features).StepPaths;
+
     private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)
         AttributeInteractionsToSteps(RequestResponseLog[]? trackedLogs, Feature[] features)
     {
@@ -3618,7 +3716,7 @@ public static class ReportGenerator
         return durations;
     }
 
-    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null)
+    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
         var data = new
@@ -3626,6 +3724,10 @@ public static class ReportGenerator
             KronikolVersion = KronikolVersion,
             StartTime = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             EndTime = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            // Before `features`, which is nearly the whole file: a streaming reader and a person
+            // running `head` both see which run this is without the megabytes after it.
+            CiMetadata = MapCiMetadataJson(ciMetadata),
+            Environment = MapEnvironmentJson(),
             Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations),
             Diagnostics = MapDiagnosticsJson(diagnostics)
         };
@@ -3645,6 +3747,7 @@ public static class ReportGenerator
             ["name"] = f.DisplayName,
             ["endpoint"] = f.Endpoint,
             ["description"] = f.Description,
+            ["sourceFile"] = f.SourceFile,
             ["labels"] = f.Labels ?? [],
             ["scenarios"] = f.Scenarios.Select(s =>
             {
@@ -3662,6 +3765,9 @@ public static class ReportGenerator
                     ["labels"] = s.Labels ?? [],
                     ["categories"] = s.Categories ?? [],
                     ["rule"] = s.Rule,
+                    ["attempt"] = s.Attempt,
+                    ["sourceFile"] = s.SourceFile,
+                    ["sourceLine"] = s.SourceLine,
                     ["outlineId"] = s.OutlineId,
                     ["examplesBlockName"] = s.ExamplesBlockName,
                     ["examplesBlockDescription"] = s.ExamplesBlockDescription,
@@ -3757,13 +3863,22 @@ public static class ReportGenerator
         return GenerateMergeableReportJson(
             features, startTime, endTime, diagramLookup,
             relationships, internalFlowSegmentData, wholeTestFlow,
-            options.WholeTestFlowVisualization, ciMetadata, diagnostics);
+            options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs);
     }
 
     /// <summary>
-    /// Serializes the enriched "mergeable" test-run report: the standard JSON model plus everything
-    /// needed to reconstruct a full HTML report when merging multiple files — component relationships,
-    /// precomputed internal-flow segment data, precomputed whole-test-flow fragments, and CI metadata.
+    /// Serializes the enriched "mergeable" test-run report: the standard JSON model — captured
+    /// interactions and all — plus everything needed to reconstruct a full HTML report when merging
+    /// multiple files: component relationships, precomputed internal-flow segment data, precomputed
+    /// whole-test-flow fragments, CI metadata and the run's diagnostics.
+    ///
+    /// <para><paramref name="trackedLogs"/> is the run's captured traffic. Supplying it makes the file a
+    /// genuine superset of the standard report; omitting it writes scenarios with no
+    /// <c>httpInteractions</c>, which is what every mergeable file written before 3.1.0 looks like.</para>
+    ///
+    /// <para><paramref name="kronikolVersion"/> is the version that produced the run. It defaults to the
+    /// writing assembly's, which is right for a live run and wrong for a merge —
+    /// <see cref="Merge.MergeableReportRenderer"/> passes the source's.</para>
     /// </summary>
     internal static string GenerateMergeableReportJson(
         Feature[] features,
@@ -3775,16 +3890,43 @@ public static class ReportGenerator
         Dictionary<string, Merge.WholeTestFlowFragment>? wholeTestFlow,
         WholeTestFlowVisualization wholeTestVisualization,
         CiMetadata? ciMetadata,
-        IReadOnlyList<DiagnosticEntry>? diagnostics = null)
+        IReadOnlyList<DiagnosticEntry>? diagnostics = null,
+        RequestResponseLog[]? trackedLogs = null,
+        string? kronikolVersion = null,
+        IReadOnlyDictionary<string, List<string?>>? stepPathsOverride = null,
+        IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotationsOverride = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
+
+        // The same derivation the standard writer does. Without it the "superset" was missing the one
+        // thing that dominates a report - every captured call - so a merged run could be read but not
+        // debugged, and `kronikol query services|interactions|body|values|flow|trace` all came back empty.
+        var logLookup = trackedLogs?.Where(l => !l.IsDiagramMarker).ToLookup(l => l.TestId);
+        var durations = ComputeInteractionDurations(trackedLogs);
+
+        // A merge hands both in: attribution reads the diagram markers, and those never round-trip
+        // through the file, so re-deriving from re-read logs would quietly blank every stepPath.
+        IReadOnlyDictionary<string, List<string?>> stepPaths;
+        IReadOnlyDictionary<string, List<ScenarioAnnotation>> annotations;
+        if (stepPathsOverride is not null || annotationsOverride is not null)
+        {
+            stepPaths = stepPathsOverride ?? new Dictionary<string, List<string?>>();
+            annotations = annotationsOverride ?? new Dictionary<string, List<ScenarioAnnotation>>();
+        }
+        else
+        {
+            (stepPaths, annotations) = AttributeInteractionsToSteps(trackedLogs, features);
+        }
+
         var data = new Dictionary<string, object?>
         {
-            ["kronikolVersion"] = KronikolVersion,
+            // The version that produced the RUN, not the one doing the writing: a merge re-serialises
+            // someone else's data, and `query summary` prints this to say which contract the file honours.
+            ["kronikolVersion"] = string.IsNullOrEmpty(kronikolVersion) ? KronikolVersion : kronikolVersion,
             ["mergeableFormatVersion"] = 1,
             ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup: null, fullStepDetail: true),
+            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail: true, durations, stepPaths, annotations),
             ["wholeTestVisualization"] = wholeTestVisualization.ToString(),
             ["componentRelationships"] = (componentRelationships ?? []).Select(r => new
             {
@@ -3804,16 +3946,8 @@ public static class ReportGenerator
                     kvp.Value.FlameHtml,
                     kvp.Value.SpanCount
                 }),
-            ["ciMetadata"] = ciMetadata is null ? null : new
-            {
-                Provider = ciMetadata.Provider.ToString(),
-                ciMetadata.BuildNumber,
-                ciMetadata.Branch,
-                ciMetadata.CommitSha,
-                ciMetadata.PipelineUrl,
-                ciMetadata.Repository,
-                ciMetadata.RunId
-            },
+            ["ciMetadata"] = MapCiMetadataJson(ciMetadata),
+            ["environment"] = MapEnvironmentJson(),
             ["diagnostics"] = MapDiagnosticsJson(diagnostics)
         };
         return JsonSerializer.Serialize(data, options);
@@ -3959,19 +4093,24 @@ public static class ReportGenerator
         s.TableReferenceFormattedValue
     };
 
-    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null)
+    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null)
     {
         var doc = new XDocument(
             new XElement("TestRunReport",
                 new XElement("KronikolVersion", KronikolVersion),
                 new XElement("StartTime", startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
                 new XElement("EndTime", endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
+                MapCiMetadataXml(ciMetadata),
+                new XElement("Environment",
+                    new XElement("Os", RunEnvironment.Current.Os),
+                    new XElement("Runtime", RunEnvironment.Current.Runtime)),
                 new XElement("Features",
                     features.OrderBy(f => f.DisplayName).Select(f =>
                         new XElement("Feature",
                             new XElement("Name", f.DisplayName),
                             f.Endpoint != null ? new XElement("Endpoint", f.Endpoint) : null,
                             f.Description != null ? new XElement("Description", f.Description) : null,
+                            f.SourceFile != null ? new XElement("SourceFile", f.SourceFile) : null,
                             (f.Labels is { Length: > 0 }) ? new XElement("Labels", f.Labels.Select(l => new XElement("Label", l))) : null,
                             new XElement("Scenarios",
                                 f.Scenarios.Select(s =>
@@ -3990,6 +4129,9 @@ public static class ReportGenerator
                                         (s.Labels is { Length: > 0 }) ? new XElement("Labels", s.Labels.Select(l => new XElement("Label", l))) : null,
                                         (s.Categories is { Length: > 0 }) ? new XElement("Categories", s.Categories.Select(c => new XElement("Category", c))) : null,
                                         s.Rule != null ? new XElement("Rule", s.Rule) : null,
+                                        s.Attempt != null ? new XElement("Attempt", s.Attempt.Value.ToString(CultureInfo.InvariantCulture)) : null,
+                                        s.SourceFile != null ? new XElement("SourceFile", s.SourceFile) : null,
+                                        s.SourceLine != null ? new XElement("SourceLine", s.SourceLine.Value.ToString(CultureInfo.InvariantCulture)) : null,
                                         (s.BackgroundSteps is { Length: > 0 }) ? new XElement("BackgroundSteps", s.BackgroundSteps.Select(MapStepXml)) : null,
                                         (s.Steps is { Length: > 0 }) ? new XElement("Steps", s.Steps.Select(MapStepXml)) : null,
                                         (s.Attachments is { Length: > 0 }) ? new XElement("Attachments", s.Attachments.Select(MapAttachmentXml)) : null
@@ -4055,6 +4197,23 @@ public static class ReportGenerator
             ? paths[index]
             : null;
 
+    /// <summary>
+    /// The <c>&lt;CiMetadata&gt;</c> block. The element itself is always written - <c>Provider</c> alone
+    /// says whether there was a CI to read - but its empty children are omitted, which is this writer's
+    /// convention throughout (the JSON keeps every key, and is the shape a consumer keys on).
+    /// </summary>
+    private static XElement MapCiMetadataXml(CiMetadata? ciMetadata) =>
+        new("CiMetadata",
+            new XElement("Provider", (ciMetadata?.Provider ?? CiEnvironment.None).ToString()),
+            ciMetadata?.BuildNumber != null ? new XElement("BuildNumber", ciMetadata.BuildNumber) : null,
+            ciMetadata?.Branch != null ? new XElement("Branch", ciMetadata.Branch) : null,
+            ciMetadata?.CommitSha != null ? new XElement("CommitSha", ciMetadata.CommitSha) : null,
+            ciMetadata?.PipelineUrl != null ? new XElement("PipelineUrl", ciMetadata.PipelineUrl) : null,
+            ciMetadata?.Repository != null ? new XElement("Repository", ciMetadata.Repository) : null,
+            ciMetadata?.RunId != null ? new XElement("RunId", ciMetadata.RunId) : null,
+            ciMetadata?.RunAttempt != null ? new XElement("RunAttempt", ciMetadata.RunAttempt) : null
+        );
+
     private static XElement MapStepXml(ScenarioStep step) =>
         new("Step",
             step.Keyword != null ? new XElement("Keyword", step.Keyword) : null,
@@ -4068,12 +4227,30 @@ public static class ReportGenerator
             (step.Attachments is { Length: > 0 }) ? new XElement("Attachments", step.Attachments.Select(MapAttachmentXml)) : null
         );
 
-    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null)
+    /// <summary>A YAML line written only when its value is there - the writer omits, it does not blank.</summary>
+    private static void AppendYamlIfPresent(StringBuilder yml, string prefix, string? value)
+    {
+        if (value is not null) yml.Append(prefix + value.SanitiseForYml() + "\n");
+    }
+
+    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null)
     {
         var yml = new StringBuilder();
         yml.Append("KronikolVersion: " + KronikolVersion + "\n");
         yml.Append("StartTime: " + startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "\n");
         yml.Append("EndTime: " + endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "\n");
+        yml.Append("CiMetadata:\n");
+        yml.Append("  Provider: " + (ciMetadata?.Provider ?? CiEnvironment.None) + "\n");
+        AppendYamlIfPresent(yml, "  BuildNumber: ", ciMetadata?.BuildNumber);
+        AppendYamlIfPresent(yml, "  Branch: ", ciMetadata?.Branch);
+        AppendYamlIfPresent(yml, "  CommitSha: ", ciMetadata?.CommitSha);
+        AppendYamlIfPresent(yml, "  PipelineUrl: ", ciMetadata?.PipelineUrl);
+        AppendYamlIfPresent(yml, "  Repository: ", ciMetadata?.Repository);
+        AppendYamlIfPresent(yml, "  RunId: ", ciMetadata?.RunId);
+        AppendYamlIfPresent(yml, "  RunAttempt: ", ciMetadata?.RunAttempt);
+        yml.Append("Environment:\n");
+        yml.Append("  Os: " + RunEnvironment.Current.Os.SanitiseForYml() + "\n");
+        yml.Append("  Runtime: " + RunEnvironment.Current.Runtime.SanitiseForYml() + "\n");
         yml.Append("Features:\n");
 
         foreach (var feature in features.OrderBy(f => f.DisplayName))
@@ -4085,6 +4262,9 @@ public static class ReportGenerator
 
             if (feature.Description is not null)
                 yml.Append("    Description: " + feature.Description.SanitiseForYml() + "\n");
+
+            if (feature.SourceFile is not null)
+                yml.Append("    SourceFile: " + feature.SourceFile.SanitiseForYml() + "\n");
 
             if (feature.Labels is { Length: > 0 })
             {
@@ -4100,6 +4280,12 @@ public static class ReportGenerator
                 yml.Append("        StableId: " + ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues) + "\n");
                 if (scenario.Description is not null)
                     yml.Append("        Description: " + scenario.Description.SanitiseForYml() + "\n");
+                if (scenario.Attempt is not null)
+                    yml.Append("        Attempt: " + scenario.Attempt.Value.ToString(CultureInfo.InvariantCulture) + "\n");
+                if (scenario.SourceFile is not null)
+                    yml.Append("        SourceFile: " + scenario.SourceFile.SanitiseForYml() + "\n");
+                if (scenario.SourceLine is not null)
+                    yml.Append("        SourceLine: " + scenario.SourceLine.Value.ToString(CultureInfo.InvariantCulture) + "\n");
                 yml.Append("        Result: " + scenario.Result + "\n");
                 yml.Append("        DurationSeconds: " + (scenario.Duration?.TotalSeconds ?? 0.0).ToString("F3") + "\n");
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
@@ -4663,6 +4849,12 @@ public static class ReportGenerator
         };
     }
 
+    /// <summary>
+    /// The schema is the field-level contract of <c>TestRunReport.json</c> — what an agent reads instead of
+    /// the file. Every property the writer emits is declared here and every declaration carries a
+    /// description; <c>TestRunReportSchemaContractTests</c> walks a generated report against it and fails on
+    /// the first undeclared key or undescribed property, so a new field cannot land in the writer alone.
+    /// </summary>
     private static string GenerateTestRunReportJsonSchema()
     {
         var resultEnumValues = Enum.GetNames(typeof(ExecutionResult));
@@ -4670,9 +4862,26 @@ public static class ReportGenerator
 
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
 
+        static Dictionary<string, object?> Attachment(string description) => new()
+        {
+            ["type"] = "array",
+            ["description"] = description,
+            ["items"] = new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["properties"] = new Dictionary<string, object?>
+                {
+                    ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Display name, normally the file name" },
+                    ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Path relative to the report directory (attachments/<file>), or an absolute URL when the attachment is a link; join it to the report's own directory to open the file" },
+                    ["mediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "IANA media type; image/* renders inline, anything else as a link" }
+                }
+            }
+        };
+
         var schema = new Dictionary<string, object?>
         {
             ["$schema"] = "https://json-schema.org/draft/2020-12/schema",
+            ["$comment"] = "A real TestRunReport.json runs to megabytes, with single embedded diagrams past 600 KB, so do not read it whole: `kronikol query <command> <report>` (dotnet tool install -g Kronikol.Tool) answers questions about it under a byte budget — summary, failures, steps sN, services, flow sN, http sN/iN. This schema is the field-level contract of that file.",
             ["title"] = "TestRunReport",
             ["description"] = "Schema for Kronikol test run report data",
             ["type"] = "object",
@@ -4682,6 +4891,32 @@ public static class ReportGenerator
                 ["kronikolVersion"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Version of Kronikol that generated this report" },
                 ["startTime"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["description"] = "UTC start time of the test run" },
                 ["endTime"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["description"] = "UTC end time of the test run" },
+                ["ciMetadata"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["description"] = "Which run this file is: the CI provider and the build it came from. Always present with the same eight keys; off CI provider is None and the rest are null. This is what a baseline index keys on - commitSha identifies the code, runId the run, runAttempt which try of it.",
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["provider"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(CiEnvironment)), ["description"] = "The CI system detected from the environment, or None when the run was not on CI" },
+                        ["buildNumber"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The provider's human-facing build number (GITHUB_RUN_NUMBER, BUILD_BUILDNUMBER)" },
+                        ["branch"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The branch or ref the run was triggered on" },
+                        ["commitSha"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The full commit SHA the run built", ["examples"] = new[] { "9f3c1b2a4d5e6f708192a3b4c5d6e7f809a1b2c3" } },
+                        ["pipelineUrl"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Link back to the run in the provider's UI, when enough of the environment was present to build one" },
+                        ["repository"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Repository the run belongs to (org/repo on GitHub)" },
+                        ["runId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The provider's own identifier for the run - what an artifact download is addressed by" },
+                        ["runAttempt"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Which try of that run this is, counting from 1 (GITHUB_RUN_ATTEMPT). The run id is unchanged by a re-run, so this is the only thing that tells a retry apart from the run it retried. Null off GitHub Actions." }
+                    }
+                },
+                ["environment"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["description"] = "What the run executed on. Two fields and no more: a report is an artifact other people download, so no machine name, user name or environment dump.",
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["os"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Operating system description, as the runtime reports it - a description, not a parseable identifier", ["examples"] = new[] { "Microsoft Windows 10.0.26200" } },
+                        ["runtime"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The .NET runtime the tests executed on", ["examples"] = new[] { ".NET 10.0.0" } }
+                    }
+                },
                 ["diagnostics"] = new Dictionary<string, object?>
                 {
                     ["type"] = "array",
@@ -4691,75 +4926,73 @@ public static class ReportGenerator
                 ["features"] = new Dictionary<string, object?>
                 {
                     ["type"] = "array",
+                    ["description"] = "One entry per feature (a test class, a Gherkin Feature:), ordered by name. Scenario ordinals in kronikol query (s0, s1, ...) count through this list in order.",
                     ["items"] = new Dictionary<string, object?>
                     {
                         ["type"] = "object",
                         ["required"] = new[] { "name", "labels", "scenarios" },
                         ["properties"] = new Dictionary<string, object?>
                         {
-                            ["name"] = new Dictionary<string, object?> { ["type"] = "string" },
-                            ["endpoint"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true },
-                            ["description"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true },
-                            ["labels"] = new Dictionary<string, object?> { ["type"] = "array", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                            ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Feature display name: the test class, or the title after Feature: in Gherkin" },
+                            ["endpoint"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The endpoint or component the feature covers, when declared (an @endpoint: tag, or the adapter's attribute)" },
+                            ["description"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Free text under the Feature: line, dedented" },
+                            ["sourceFile"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Where the feature is written: a project-relative path with forward slashes, from the Gherkin document. Null on the lanes that cannot supply one (unit-test adapters, the tests NDJSON). Features are grouped by display name, so two files sharing a Feature: title collapse into one entry and the first path seen wins.", ["examples"] = new[] { "Features/Cake.feature" } },
+                            ["labels"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Feature-level tags (in Gherkin the feature's own tags; otherwise the labels every scenario shares)", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
                             ["scenarios"] = new Dictionary<string, object?>
                             {
                                 ["type"] = "array",
+                                ["description"] = "The feature's scenarios in run order",
                                 ["items"] = new Dictionary<string, object?>
                                 {
                                     ["type"] = "object",
                                     ["required"] = new[] { "id", "stableId", "name", "result", "durationSeconds", "isHappyPath", "labels", "categories", "steps" },
                                     ["properties"] = new Dictionary<string, object?>
                                     {
-                                        ["id"] = new Dictionary<string, object?> { ["type"] = "string" },
-                                        ["stableId"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Deterministic cross-run identifier derived from feature name + scenario display name (+ outline ID and ordered example values for parameterized scenarios). Use this for matching the same test across runs." },
-                                        ["name"] = new Dictionary<string, object?> { ["type"] = "string" },
+                                        ["id"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The runtime id the test framework gave this scenario (a test case id, a pickle id). Unique within the run but not stable across runs; use stableId for that." },
+                                        ["stableId"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Deterministic cross-run identifier derived from feature name + scenario display name (+ outline ID and ordered example values for parameterized scenarios). Use this for matching the same test across runs. Not unique: repeated rows and retries share one.", ["examples"] = new[] { "a1b2c3d4e5f60718" } },
+                                        ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Scenario display name; an outline row shows its expanded name" },
                                         ["description"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The scenario's own free-text description (the prose under Scenario:)" },
-                                        ["result"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = resultEnumValues },
-                                        ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = "number" },
-                                        ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean" },
-                                        ["errorMessage"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true },
-                                        ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true },
-                                        ["labels"] = new Dictionary<string, object?> { ["type"] = "array", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
-                                        ["categories"] = new Dictionary<string, object?> { ["type"] = "array", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                                        ["result"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = resultEnumValues, ["description"] = "The scenario's verdict" },
+                                        ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["description"] = "Wall-clock seconds the scenario took; 0 when unknown" },
+                                        ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Marked as the happy path (an @happy-path tag or the adapter's attribute); the report lists happy paths first" },
+                                        ["errorMessage"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The failure message the framework reported, when the scenario failed" },
+                                        ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The stack trace the framework reported, when the scenario failed" },
+                                        ["labels"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Scenario-level tags (feature tags are on the feature)", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                                        ["categories"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Category tags (@category: in Gherkin, the framework's category attribute otherwise); the report's category filter reads these", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
                                         ["rule"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Gherkin Rule grouping this scenario belongs to" },
+                                        ["attempt"] = new Dictionary<string, object?> { ["type"] = "integer", ["nullable"] = true, ["description"] = "Which run of this scenario produced the result, when the runner retries: 1 for the first, 2 for the first retry. 1-based, matching the retry N label in the HTML (Cucumber's own wire value is 0-based). Null where the runner reports nothing about attempts." },
+                                        ["sourceFile"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Where the scenario is written, matching the feature's sourceFile. NOT the same contract as a step's sourceFile, which is a bare file name from [CallerFilePath] on the build machine.", ["examples"] = new[] { "Features/Cake.feature" } },
+                                        ["sourceLine"] = new Dictionary<string, object?> { ["type"] = "integer", ["nullable"] = true, ["description"] = "The line the Scenario: or Scenario Outline: keyword is on - the declaration, not the Examples: row, so every row of an outline points at the same line. exampleValues is what says which row." },
                                         ["outlineId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Original scenario outline name for parameterized scenarios" },
                                         ["examplesBlockName"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Name of the Examples: block this outline row came from" },
                                         ["examplesBlockDescription"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Free-text description under the Examples: header" },
                                         ["examplesBlockIndex"] = new Dictionary<string, object?> { ["type"] = "integer", ["nullable"] = true, ["description"] = "0-based position of the Examples: block within the outline" },
                                         ["exampleValues"] = new Dictionary<string, object?> { ["type"] = "object", ["nullable"] = true, ["description"] = "Example parameter values for parameterized scenarios", ["additionalProperties"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                                        ["exampleFlatValues"] = new Dictionary<string, object?> { ["type"] = "object", ["nullable"] = true, ["description"] = "exampleValues flattened to one level (nested objects become dotted keys): the columns of the report's parameterized table, and what a merged report groups on", ["additionalProperties"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                                        ["exampleDisplayName"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The display name of this example row when the producer gave one that differs from name" },
                                         ["backgroundSteps"] = new Dictionary<string, object?>
                                         {
                                             ["type"] = "array",
+                                            ["description"] = "Steps from the Gherkin Background:, addressed b0, b1, ... by stepPath",
                                             ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/step" }
                                         },
                                         ["steps"] = new Dictionary<string, object?>
                                         {
                                             ["type"] = "array",
+                                            ["description"] = "The scenario's own steps in order, addressed 0, 1, ... by stepPath; tracked assertions are keyword-less sub-steps",
                                             ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/step" }
                                         },
-                                        ["attachments"] = new Dictionary<string, object?>
-                                        {
-                                            ["type"] = "array",
-                                            ["description"] = "Scenario-level file attachments (added when no step was active)",
-                                            ["items"] = new Dictionary<string, object?>
-                                            {
-                                                ["type"] = "object",
-                                                ["properties"] = new Dictionary<string, object?>
-                                                {
-                                                    ["name"] = new Dictionary<string, object?> { ["type"] = "string" },
-                                                    ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string" },
-                                                    ["mediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "IANA media type; image/* renders inline, anything else as a link" }
-                                                }
-                                            }
-                                        },
+                                        ["attachments"] = Attachment("Scenario-level file attachments (added when no step was active)"),
                                         ["diagrams"] = new Dictionary<string, object?>
                                         {
                                             ["type"] = "array",
+                                            ["description"] = "Raw PlantUML source of each sequence diagram rendered for the scenario: hundreds of kilobytes each, never needed to answer a question (kronikol query flow sN tells the same story in a couple of KB)",
                                             ["items"] = new Dictionary<string, object?> { ["type"] = "string" }
                                         },
                                         ["httpInteractions"] = new Dictionary<string, object?>
                                         {
                                             ["type"] = "array",
+                                            ["description"] = "Every captured call in capture order, both halves of each request/response pair: the bulk of the file. kronikol query addresses one as sN/iM where M is its index here.",
                                             ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/httpInteraction" }
                                         },
                                         ["annotations"] = new Dictionary<string, object?>
@@ -4772,8 +5005,8 @@ public static class ReportGenerator
                                                 ["properties"] = new Dictionary<string, object?>
                                                 {
                                                     ["index"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Position in httpInteractions the marker sat before" },
-                                                    ["kind"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = new[] { "Row", "Custom" } },
-                                                    ["text"] = new Dictionary<string, object?> { ["type"] = "string" }
+                                                    ["kind"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = new[] { "Row", "Custom" }, ["description"] = "Row: which row of a tabular input the following calls belong to; Custom: a fragment the test author injected" },
+                                                    ["text"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The marker's text as rendered in the diagram" }
                                                 }
                                             }
                                         }
@@ -4802,29 +5035,17 @@ public static class ReportGenerator
                     ["type"] = "object",
                     ["properties"] = new Dictionary<string, object?>
                     {
-                        ["keyword"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true },
-                        ["text"] = new Dictionary<string, object?> { ["type"] = "string" },
-                        ["status"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = statusEnumValues, ["nullable"] = true },
-                        ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["nullable"] = true },
+                        ["keyword"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Gherkin keyword (Given, When, Then, And, But); null for a tracked assertion or a sub-step" },
+                        ["text"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The step text, capitalised per CapitaliseStepText, placeholders expanded for an outline row" },
+                        ["status"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = statusEnumValues, ["nullable"] = true, ["description"] = "The step's own verdict; null when the producer recorded none" },
+                        ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["nullable"] = true, ["description"] = "Seconds the step took; null when unknown" },
                         ["subSteps"] = new Dictionary<string, object?>
                         {
                             ["type"] = "array",
+                            ["description"] = "Nested steps and tracked assertions, addressed <parent>.0, <parent>.1, ... by stepPath",
                             ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/step" }
                         },
-                        ["attachments"] = new Dictionary<string, object?>
-                        {
-                            ["type"] = "array",
-                            ["items"] = new Dictionary<string, object?>
-                            {
-                                ["type"] = "object",
-                                ["properties"] = new Dictionary<string, object?>
-                                {
-                                    ["name"] = new Dictionary<string, object?> { ["type"] = "string" },
-                                    ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string" },
-                                    ["mediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "IANA media type; image/* renders inline, anything else as a link" }
-                                }
-                            }
-                        },
+                        ["attachments"] = Attachment("Files attached while this step was active"),
                         ["bypassReason"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Why the step was skipped, when its status is Bypassed" },
                         ["docString"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The step's Gherkin doc-string body" },
                         ["docStringMediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Media type declared on the doc string, when the source gave one" },
@@ -4841,39 +5062,40 @@ public static class ReportGenerator
                     ["type"] = "object",
                     ["properties"] = new Dictionary<string, object?>
                     {
-                        ["type"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = new[] { "Request", "Response" } },
-                        ["method"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true },
-                        ["uri"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uri" },
-                        ["serviceName"] = new Dictionary<string, object?> { ["type"] = "string" },
-                        ["callerName"] = new Dictionary<string, object?> { ["type"] = "string" },
-                        ["content"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true },
+                        ["type"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = new[] { "Request", "Response" }, ["description"] = "Which half of a call this is; the two halves share requestResponseId" },
+                        ["method"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "HTTP verb, or the operation label a non-HTTP tracker recorded (SELECT, GET for a cache, Publish for a message); null for a bare event" },
+                        ["uri"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uri", ["description"] = "The request URI; for non-HTTP dependencies a synthetic scheme://service/path the tracker built" },
+                        ["serviceName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The dependency (callee), as named in the diagram" },
+                        ["callerName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The caller: the system under test, or the test itself" },
+                        ["content"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The body as captured, after capture-time redaction and any MaxContentLength cap (a capped body ends with an ...truncated (N chars total) marker); null when there was none" },
                         ["headers"] = new Dictionary<string, object?>
                         {
                             ["type"] = "array",
+                            ["description"] = "Captured headers after capture-time redaction; the render-time ExcludedHeaders list does not apply here",
                             ["items"] = new Dictionary<string, object?>
                             {
                                 ["type"] = "object",
                                 ["properties"] = new Dictionary<string, object?>
                                 {
-                                    ["key"] = new Dictionary<string, object?> { ["type"] = "string" },
-                                    ["value"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true }
+                                    ["key"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Header name" },
+                                    ["value"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Header value; null when the header was present without one" }
                                 }
                             }
                         },
-                        ["statusCode"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true },
-                        ["traceId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid" },
-                        ["requestResponseId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid" },
-                        ["timestamp"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["nullable"] = true },
+                        ["statusCode"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "HTTP status code, or the outcome word a non-HTTP tracker recorded (OK, Error, Timeout); null on the request half" },
+                        ["traceId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Kronikol's own id for the request/response pair. Not the W3C trace id — that is activityTraceId." },
+                        ["requestResponseId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Pairs a request with its response: both halves carry the same value" },
+                        ["timestamp"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["nullable"] = true, ["description"] = "When this half was captured (UTC); null when the capture path recorded none" },
                         ["metaType"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(RequestResponseMetaType)), ["description"] = "Default for a request/response exchange, Event for a fire-and-forget publish" },
                         ["dependencyCategory"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "What kind of thing the callee is (database, cache, queue, ...) — drives participant shape and arrow colour in the diagram" },
                         ["callerDependencyCategory"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The same, for the caller" },
                         ["phase"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(TestPhase)), ["description"] = "Whether the call happened during Setup or the Action under test; Unknown when phase detection is off" },
                         ["isUserAction"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "A UI interaction (click, navigate) rather than a dependency call" },
-                        ["activityTraceId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "W3C trace id — the bridge to OpenTelemetry traces and application logs. Unlike traceId, which is Kronikol's own identifier for the request/response pair." },
+                        ["activityTraceId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "W3C trace id — the bridge to OpenTelemetry traces and application logs. Unlike traceId, which is Kronikol's own identifier for the request/response pair.", ["examples"] = new[] { "4bf92f3577b34da6a3ce929d0e0e4736" } },
                         ["activitySpanId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "W3C span id" },
                         ["capturedBy"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Which capture path produced this entry: wire (proxy/TCP tap) or span (OpenTelemetry receiver)" },
                         ["durationMs"] = new Dictionary<string, object?> { ["type"] = "number", ["nullable"] = true, ["description"] = "Wall-clock milliseconds between the request and its response, derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered or timestamps are absent." },
-                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic." }
+                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } }
                     }
                 }
             }
@@ -4995,6 +5217,9 @@ public static class ReportGenerator
                     )
                 ),
                 new XElement(xs + "element", new XAttribute("name", "Rule"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "Attempt"), new XAttribute("type", "xs:int"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "SourceFile"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "SourceLine"), new XAttribute("type", "xs:int"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "BackgroundSteps"), new XAttribute("minOccurs", "0"),
                     new XElement(xs + "complexType",
                         new XElement(xs + "sequence",
@@ -5046,6 +5271,7 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "Name"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "Endpoint"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Description"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "SourceFile"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Labels"), new XAttribute("minOccurs", "0"),
                     new XElement(xs + "complexType",
                         new XElement(xs + "sequence",
@@ -5062,6 +5288,28 @@ public static class ReportGenerator
                 )
             ));
 
+        // Provider is always written; the six optional children are omitted when empty, which is what
+        // this writer does everywhere. The JSON keeps every key - that is the shape to key on.
+        var ciMetadataType = new XElement(xs + "complexType",
+            new XAttribute("name", "CiMetadataType"),
+            new XElement(xs + "sequence",
+                new XElement(xs + "element", new XAttribute("name", "Provider"), new XAttribute("type", "xs:string")),
+                new XElement(xs + "element", new XAttribute("name", "BuildNumber"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "Branch"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "CommitSha"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "PipelineUrl"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "Repository"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "RunId"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "RunAttempt"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
+            ));
+
+        var runEnvironmentType = new XElement(xs + "complexType",
+            new XAttribute("name", "RunEnvironmentType"),
+            new XElement(xs + "sequence",
+                new XElement(xs + "element", new XAttribute("name", "Os"), new XAttribute("type", "xs:string")),
+                new XElement(xs + "element", new XAttribute("name", "Runtime"), new XAttribute("type", "xs:string"))
+            ));
+
         var doc = new XDocument(
             new XElement(xs + "schema",
                 new XAttribute(XNamespace.Xmlns + "xs", "http://www.w3.org/2001/XMLSchema"),
@@ -5071,6 +5319,8 @@ public static class ReportGenerator
                 httpInteractionType,
                 scenarioType,
                 featureType,
+                ciMetadataType,
+                runEnvironmentType,
                 new XElement(xs + "element",
                     new XAttribute("name", "TestRunReport"),
                     new XElement(xs + "complexType",
@@ -5078,6 +5328,10 @@ public static class ReportGenerator
                             new XElement(xs + "element", new XAttribute("name", "KronikolVersion"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                             new XElement(xs + "element", new XAttribute("name", "StartTime"), new XAttribute("type", "xs:string")),
                             new XElement(xs + "element", new XAttribute("name", "EndTime"), new XAttribute("type", "xs:string")),
+                            // xs:sequence is ordered: these sit exactly where GenerateTestRunReportXml
+                            // writes them, and minOccurs="0" keeps every pre-3.1.0 file valid.
+                            new XElement(xs + "element", new XAttribute("name", "CiMetadata"), new XAttribute("type", "CiMetadataType"), new XAttribute("minOccurs", "0")),
+                            new XElement(xs + "element", new XAttribute("name", "Environment"), new XAttribute("type", "RunEnvironmentType"), new XAttribute("minOccurs", "0")),
                             new XElement(xs + "element", new XAttribute("name", "Features"),
                                 new XElement(xs + "complexType",
                                     new XElement(xs + "sequence",

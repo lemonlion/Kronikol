@@ -10,7 +10,8 @@ public record CiMetadata(
     string? CommitSha,
     string? PipelineUrl,
     string? Repository,
-    string? RunId);
+    string? RunId,
+    string? RunAttempt = null);
 
 /// <summary>
 /// Detects CI metadata (build number, branch, commit SHA, etc.) from environment variables.
@@ -47,7 +48,10 @@ public static class CiMetadataDetector
             CommitSha: getEnvVar("GITHUB_SHA"),
             PipelineUrl: pipelineUrl,
             Repository: repo,
-            RunId: runId);
+            RunId: runId,
+            // GITHUB_RUN_ID does not change when a run is re-run, so the id alone folds a retry onto
+            // the run it retried - and re-running a failed job until it passes is how a flake vanishes.
+            RunAttempt: getEnvVar("GITHUB_RUN_ATTEMPT"));
     }
 
     private static CiMetadata DetectAzureDevOps(Func<string, string?> getEnvVar)
@@ -68,5 +72,7 @@ public static class CiMetadataDetector
             PipelineUrl: pipelineUrl,
             Repository: getEnvVar("BUILD_REPOSITORY_NAME"),
             RunId: buildId);
+        // No RunAttempt: Azure DevOps exposes no equivalent variable, and a null is honest where a
+        // guess would not be. Its own retry handling re-runs the pipeline under a new BUILD_BUILDID.
     }
 }

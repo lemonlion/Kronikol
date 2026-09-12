@@ -203,6 +203,40 @@ public record ReportConfigurationOptions
     /// </summary>
     public bool TestRunReportFullStepDetail { get; set; } = true;
 
+    /// <summary>
+    /// When <c>true</c>, the run prints one closing block naming the reports directory, the size of the
+    /// data file, the failing scenarios and the <c>kronikol query failures</c> command that explains them.
+    /// Paths, counts, stableIds and scenario names only — never a message, a URI or a body, because CI logs
+    /// are read far more widely than artifacts. On GitHub Actions a matching <c>::notice</c> annotation
+    /// follows it. Default: <c>true</c>.
+    /// </summary>
+    /// <remarks>
+    /// The console is a best-effort channel, not a guaranteed one: measured on .NET 10, every VSTest-hosted
+    /// runner under <c>dotnet test</c> swallows what a library writes from a run-end hook unless the
+    /// verbosity is <c>detailed</c>, and TUnit's runner suppresses it at any verbosity. The channels that
+    /// always work are the files — see <see cref="GenerateFailuresDigest"/> and
+    /// <see cref="WriteAgentInstructions"/> — and the CI job summary.
+    /// </remarks>
+    public bool WriteRunSummaryToConsole { get; set; } = true;
+
+    /// <summary>
+    /// When <c>true</c>, writes <c>Failures.md</c> and <c>Failures.jsonl</c> next to the report: every
+    /// failure in context — error, parsed expected/actual, the failing step and its source location, the
+    /// calls made inside it, attachments, and the query address of each — clustered so that twenty
+    /// scenarios broken by one cause read as one cause. Written on a green run too (as <c>No failures</c>),
+    /// so its absence always means the run did not finish. Never contains a payload, a header or a diagram.
+    /// Default: <c>true</c>.
+    /// </summary>
+    public bool GenerateFailuresDigest { get; set; } = true;
+
+    /// <summary>
+    /// When <c>true</c>, writes byte-identical <c>CLAUDE.md</c> and <c>AGENTS.md</c> files into the reports
+    /// directory telling an AI agent to read <c>Failures.md</c> and use <c>kronikol query</c> rather than
+    /// open the report. Static text — no scenario names, no captured content — because an instruction file
+    /// carrying attacker-influenceable text is a prompt-injection channel. Default: <c>true</c>.
+    /// </summary>
+    public bool WriteAgentInstructions { get; set; } = true;
+
     /// <summary>When <c>true</c>, writes a test summary to the CI job summary (e.g. GitHub Actions).</summary>
     public bool WriteCiSummary { get; set; }
 

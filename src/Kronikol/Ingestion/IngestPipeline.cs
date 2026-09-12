@@ -368,6 +368,15 @@ public static class IngestPipeline
             }
         }
 
+        // A scenario that started and never ended took ResultWhenUnknown rather than a verdict. With the
+        // compatibility default of Passed that is invisible in the report — a crashed worker looks green —
+        // so it is recorded as a diagnostic, which every reader of the file (and `kronikol query`) surfaces.
+        if (synthesised.DefaultedResultCount > 0)
+            diagnostics.Add(DiagnosticKind.ResultDefaulted,
+                $"{synthesised.DefaultedResultCount} scenario(s) recorded no result and were reported as "
+                + $"{request.ResultWhenUnknown}. Set IngestRequest.ResultWhenUnknown = ExecutionResult.Failed if your "
+                + "producer always writes an end record.");
+
         var scenarioCount = synthesised.Features.Sum(f => f.Scenarios.Length);
 
         if (scenarioCount == 0 && !request.AllowEmpty)

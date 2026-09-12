@@ -85,10 +85,46 @@ internal static partial class QueryCommand
         return true;
     }
 
+    /// <summary>The orderings <c>services --sort</c> understands.</summary>
+    internal static readonly string[] ServiceSorts = ["calls", "duration", "bytes", "errors"];
+
+    /// <summary>The orderings <c>interactions --group-by ... --sort</c> understands. Narrower than
+    /// <see cref="ServiceSorts"/>: a bucket has no single byte total to sort on.</summary>
+    internal static readonly string[] BucketSorts = ["calls", "duration", "errors"];
+
+    /// <summary>
+    /// Refuses an ordering the view cannot apply. Both call sites used to end in a <c>_ =&gt;</c> arm, so a
+    /// misspelling - or a value only the other view supports, like <c>--group-by ... --sort bytes</c> -
+    /// silently produced the default ordering while the agent read the output as sorted by what it asked
+    /// for. Wrong order is a quieter failure than no output, which is exactly why it needs saying.
+    /// </summary>
+    internal static bool SortIsValid(QueryOptions options, string[] allowed, TextWriter error)
+    {
+        if (options.Sort is not { Length: > 0 } sort || allowed.Contains(sort, StringComparer.OrdinalIgnoreCase))
+            return true;
+
+        error.WriteLine($"Unknown --sort value: {sort}");
+        error.WriteLine("Valid here: " + string.Join(", ", allowed));
+        return false;
+    }
+
+    /// <summary>
+    /// The statuses that are not numbers and are not failures. The HTTP non-200 successes, and then the
+    /// labels Kronikol itself stamps on calls that have no status code: a broker publish is <c>Sent</c>,
+    /// a consume <c>Ack</c>, a reply <c>Responded</c> (<c>MessageTracker</c>'s own defaults), a cache
+    /// lookup <c>Hit</c> or <c>Miss</c> — a miss is an outcome, not a failure — and a Spanner
+    /// transaction <c>Committed</c>. A refusal (<c>Nack</c>, <c>Fault</c>) is deliberately absent.
+    /// </summary>
+    private static readonly HashSet<string> NonErrorStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Created", "Accepted", "NoContent",
+        "Sent", "Ack", "Responded", "Hit", "Miss", "Committed",
+    };
+
     /// <summary>
     /// Treats anything that is not a success as an error, including the non-numeric statuses the non-HTTP
-    /// taps use (a database driver reports <c>ERROR</c>, not 500) — while knowing the non-200 successes
-    /// (<c>Created</c>, <c>Accepted</c>, <c>NoContent</c>) by name. The single classifier behind
+    /// taps use (a database driver reports <c>ERROR</c>, not 500) — while knowing the successes that are
+    /// not spelled <c>OK</c> by name (<see cref="NonErrorStatuses"/>). The single classifier behind
     /// <c>services</c>, <c>flow --errors-only</c> and <c>--group-by</c>, so no two commands can disagree
     /// about the same call.
     /// </summary>
@@ -97,7 +133,5 @@ internal static partial class QueryCommand
         && (int.TryParse(status, out var numeric)
             ? numeric >= 400
             : !status.StartsWith("OK", StringComparison.OrdinalIgnoreCase)
-              && !status.Equals("Created", StringComparison.OrdinalIgnoreCase)
-              && !status.Equals("Accepted", StringComparison.OrdinalIgnoreCase)
-              && !status.Equals("NoContent", StringComparison.OrdinalIgnoreCase));
+              && !NonErrorStatuses.Contains(status));
 }

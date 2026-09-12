@@ -199,7 +199,10 @@ public static class CucumberFeatureSynthesizer
 
             if (!featureGroups.TryGetValue(featureName, out var group))
             {
-                featureGroups[featureName] = group = new FeatureAccumulator(featureName, node?.Feature);
+                // The accumulator is created once per feature NAME, so where two files share a
+                // `Feature:` title the first path seen wins - the same first-wins rule the display-name
+                // grouping already imposes on description, endpoint and tags.
+                featureGroups[featureName] = group = new FeatureAccumulator(featureName, node?.Feature, NormalisePath(node?.Uri));
                 featureOrder.Add(featureName);
             }
 
@@ -502,6 +505,12 @@ public static class CucumberFeatureSynthesizer
             Labels = labels.Count > 0 ? labels.ToArray() : null,
             Categories = categories.Length > 0 ? categories : null,
             Rule = NullIfBlank(node?.Rule),
+            // 1-based, like the `retry N` label above; Cucumber's wire value counts from 0.
+            Attempt = winner.Attempt + 1,
+            // The pickle carries the uri too, and is the fallback when the gherkinDocument for this
+            // scenario never arrived (a producer may emit pickles without documents).
+            SourceFile = NormalisePath(node?.Uri ?? pickle.Uri),
+            SourceLine = node?.Node.Location?.Line,
             OutlineId = exampleRow is null ? null : node?.Node.Name,
             ExampleValues = exampleValues,
             ExampleRawValues = exampleRaw,
@@ -797,6 +806,17 @@ public static class CucumberFeatureSynthesizer
         return result;
     }
 
+    /// <summary>
+    /// Feature-file paths as one shape whatever produced them. The golden fixture from playwright-bdd on
+    /// Windows says <c>features\kronikol-demo.feature</c>; cucumber-js on Linux and Reqnroll both say
+    /// <c>Features/Cake.feature</c>. A consumer globbing or grepping for the path should not have to know
+    /// which machine ran the tests, so separators are normalised to <c>/</c>. The trade: a POSIX file name
+    /// that genuinely contains a backslash would be rewritten - vanishingly rare, and the alternative is a
+    /// field whose shape depends on the producer's OS.
+    /// </summary>
+    private static string? NormalisePath(string? uri) =>
+        NullIfBlank(uri)?.Replace('\\', '/');
+
     internal static string? NullIfBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
     internal static string? Strip(string? tag) =>
@@ -817,7 +837,7 @@ public static class CucumberFeatureSynthesizer
     }
 
     /// <summary>Collects the scenarios of one feature while they arrive out of the message stream.</summary>
-    private sealed class FeatureAccumulator(string name, CucumberFeatureNode? node)
+    private sealed class FeatureAccumulator(string name, CucumberFeatureNode? node, string? sourceFile)
     {
         public List<Scenario> Scenarios { get; } = [];
         public string? Endpoint { get; set; }
@@ -837,6 +857,7 @@ public static class CucumberFeatureSynthesizer
                 DisplayName = name,
                 Description = NullIfBlank(Dedent(node?.Description)),
                 Endpoint = Endpoint,
+                SourceFile = sourceFile,
                 Labels = labels.Length > 0 ? labels : null,
                 Scenarios = Scenarios.ToArray(),
             };

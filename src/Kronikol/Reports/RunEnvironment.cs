@@ -1,0 +1,28 @@
+using System.Runtime.InteropServices;
+
+namespace Kronikol.Reports;
+
+/// <summary>
+/// What a run executed on, as the data files record it: the operating system and the .NET runtime.
+/// Deliberately two fields and no more — a report is an artifact other people download, so the machine
+/// name, the user name and the environment block stay out of it (LLM_FRIENDLY_PLAN §3.3). Together with
+/// <see cref="CiMetadata"/> this is what tells a downloaded <c>TestRunReport.json</c> which run it is,
+/// which is what a baseline index has to key on.
+/// </summary>
+/// <param name="Os">
+/// <see cref="RuntimeInformation.OSDescription"/> — e.g. <c>Microsoft Windows 10.0.26200</c> or
+/// <c>Linux 6.8.0-1017-azure #20-Ubuntu SMP</c>. A description, not a parseable identifier.
+/// </param>
+/// <param name="Runtime">
+/// <see cref="RuntimeInformation.FrameworkDescription"/> — e.g. <c>.NET 10.0.0</c>. The runtime that
+/// produced the report, which for a test run is the runtime the tests executed on.
+/// </param>
+public sealed record RunEnvironment(string Os, string Runtime)
+{
+    /// <summary>
+    /// This process's environment, computed once. Machine-varying by nature, which is why the Java port
+    /// takes it from its caller rather than computing it (its parity fixtures are byte goldens).
+    /// </summary>
+    public static RunEnvironment Current { get; } =
+        new(RuntimeInformation.OSDescription, RuntimeInformation.FrameworkDescription);
+}

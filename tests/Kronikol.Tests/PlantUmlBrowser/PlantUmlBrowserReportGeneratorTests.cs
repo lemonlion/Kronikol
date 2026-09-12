@@ -335,14 +335,22 @@ public class PlantUmlBrowserReportGeneratorTests
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
         var content = File.ReadAllText(html);
-        // Diagram source is now in a JSON script block
+        // Diagram source is now in a JSON script block. Take the first occurrence whose body actually
+        // parses as the payload rather than the first textual match: a report also carries scripts that
+        // *mention* this tag (the filtered-HTML export writes one), and matching one of those turns a
+        // real regression into a confusing JSON parse error somewhere else entirely.
         var scriptTag = "<script id=\"puml-data\" type=\"application/json\">";
-        var scriptStart = content.IndexOf(scriptTag, StringComparison.Ordinal);
-        Assert.True(scriptStart >= 0);
-        var jsonStart = scriptStart + scriptTag.Length;
-        var scriptEnd = content.IndexOf("</script>", jsonStart, StringComparison.Ordinal);
-        var json = content[jsonStart..scriptEnd];
-        var map = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+        Dictionary<string, string>? map = null;
+        for (var at = content.IndexOf(scriptTag, StringComparison.Ordinal); at >= 0;
+             at = content.IndexOf(scriptTag, at + scriptTag.Length, StringComparison.Ordinal))
+        {
+            var jsonStart = at + scriptTag.Length;
+            var scriptEnd = content.IndexOf("</script>", jsonStart, StringComparison.Ordinal);
+            if (scriptEnd < 0) continue;
+            try { map = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(content[jsonStart..scriptEnd]); }
+            catch (System.Text.Json.JsonException) { continue; }
+            if (map is { Count: > 0 }) break;
+        }
         Assert.NotNull(map);
         Assert.NotEmpty(map);
         var compressed = map.Values.First();

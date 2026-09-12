@@ -1,0 +1,222 @@
+using System.Text;
+
+namespace Kronikol.Reports;
+
+/// <summary>One output file the run-end pointer names, and how big it is on disk.</summary>
+/// <param name="Name">File name only — the pointer prints the directory once.</param>
+/// <param name="Bytes">Size on disk; the pointer shows it only for the machine-readable data file.</param>
+public sealed record RunSummaryFile(string Name, long Bytes);
+
+/// <summary>
+/// One failing scenario, reduced to what is safe to print on a console: an id, a feature and a name.
+/// </summary>
+/// <param name="StableId">The cross-run identifier, so the line is an address rather than a label.</param>
+/// <param name="FeatureName">The feature the scenario belongs to.</param>
+/// <param name="ScenarioName">The scenario's display name.</param>
+public sealed record RunSummaryFailure(string StableId, string FeatureName, string ScenarioName);
+
+/// <summary>What the run-end pointer says, gathered before anything is formatted.</summary>
+/// <param name="Directory">The directory the reports were written to.</param>
+/// <param name="Files">The files worth naming, in the order they should be printed.</param>
+/// <param name="ScenarioCount">How many scenarios the run held.</param>
+/// <param name="Failures">The failing scenarios, in report order.</param>
+/// <param name="AgentInstructionsWritten">Whether <c>CLAUDE.md</c> / <c>AGENTS.md</c> sit in the directory.</param>
+public sealed record RunSummary(
+    string Directory,
+    IReadOnlyList<RunSummaryFile> Files,
+    int ScenarioCount,
+    IReadOnlyList<RunSummaryFailure> Failures,
+    bool AgentInstructionsWritten);
+
+/// <summary>
+/// The last thing a run says: where the reports are, how big the data file is, what failed, and the one
+/// command that explains it.
+///
+/// <para>Report generation has never been silent — <see cref="ReportDiagnostics.Analyse"/>'s lines print on
+/// every run — but nothing ever pointed at the reports, so an agent watching a failing build had no signal
+/// that <c>kronikol query failures</c> exists. This is that signal.</para>
+///
+/// <para><b>Nothing captured is ever printed here.</b> The console is the widest-read surface a test run
+/// touches: CI logs are visible to more people than artifacts, are copied into chat, and are pasted into
+/// issues. So the pointer carries paths, counts, stableIds and scenario names — never a message, a URI, a
+/// SQL statement or a body. The one place captured content is written is
+/// <see cref="FailuresDigestGenerator">the digest</see>, which is a file in the reports directory, subject
+/// to the same exposure as the report it derives from.</para>
+///
+/// <para><b>The console is not a reliable channel</b> and this is not the only one. Measured on .NET 10
+/// (2026-09-12): under <c>dotnet test</c> every VSTest-hosted runner — xUnit v2/v3, NUnit, MSTest —
+/// swallows what the library writes from a run-end hook at every verbosity, and TUnit's own runner
+/// suppresses it too; only a directly executed MTP host (<c>dotnet run --project</c>, xUnit v3) shows it.
+/// The durable channels are the files this release adds next to the report — <c>Failures.md</c> and
+/// <c>CLAUDE.md</c>/<c>AGENTS.md</c> — plus the CI job summary, which is written to a file descriptor
+/// rather than to stdout and therefore survives. The pointer is free where it lands and harmless where it
+/// does not.</para>
+/// </summary>
+public static class RunSummaryConsoleWriter
+{
+    /// <summary>Failure lines printed before the rest are elided; a wall of names helps nobody.</summary>
+    internal const int MaxFailureLines = 20;
+
+    private const string DigestFileName = "Failures.md";
+
+    /// <summary>
+    /// Gathers the pointer's facts. <paramref name="candidateFiles"/> are the names it should mention;
+    /// those absent from disk are dropped, so the pointer never claims a file an output failure prevented.
+    /// </summary>
+    public static RunSummary Summarise(Feature[] features, string directory, IEnumerable<string> candidateFiles, bool agentInstructionsWritten)
+    {
+        ArgumentNullException.ThrowIfNull(features);
+        ArgumentNullException.ThrowIfNull(directory);
+        ArgumentNullException.ThrowIfNull(candidateFiles);
+
+        var files = new List<RunSummaryFile>();
+        foreach (var name in candidateFiles)
+        {
+            long length;
+            try
+            {
+                var info = new FileInfo(Path.Combine(directory, name));
+                if (!info.Exists)
+                    continue;
+                length = info.Length;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                continue;
+            }
+
+            files.Add(new RunSummaryFile(name, length));
+        }
+
+        var failures = new List<RunSummaryFailure>();
+        var scenarioCount = 0;
+        foreach (var feature in features)
+        {
+            foreach (var scenario in feature.Scenarios ?? [])
+            {
+                scenarioCount++;
+                if (scenario.Result != ExecutionResult.Failed)
+                    continue;
+                failures.Add(new RunSummaryFailure(
+                    ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues),
+                    feature.DisplayName,
+                    scenario.DisplayName));
+            }
+        }
+
+        return new RunSummary(directory, files, scenarioCount, failures, agentInstructionsWritten);
+    }
+
+    /// <summary>Formats the pointer. Ends with a newline; a run with nothing failing is one line.</summary>
+    public static string Build(RunSummary summary)
+    {
+        ArgumentNullException.ThrowIfNull(summary);
+
+        var text = new StringBuilder();
+        var files = summary.Files.Count == 0
+            ? ""
+            : "  (" + string.Join(" · ", summary.Files.Select(Describe)) + ")";
+        text.Append("Kronikol: reports written to ").Append(summary.Directory).Append(files).Append('\n');
+
+        if (summary.Failures.Count > 0)
+        {
+            text.Append($"  {summary.Failures.Count} failed — kronikol query failures {summary.Directory}\n");
+            foreach (var failure in summary.Failures.Take(MaxFailureLines))
+                text.Append($"    {failure.StableId}  {failure.FeatureName} › {failure.ScenarioName}\n");
+
+            var remaining = summary.Failures.Count - MaxFailureLines;
+            if (remaining > 0)
+                text.Append(HasDigest(summary)
+                    ? $"    … and {remaining} more (see {DigestFileName})\n"
+                    : $"    … and {remaining} more (kronikol query failures {summary.Directory})\n");
+
+            // The bait for the nested instruction file: an agent that reads anything in this directory
+            // loads the CLAUDE.md sitting beside it, and that file is what teaches it never to open the
+            // JSON. Only printed when something failed — a green run has nothing to debug, and a pointer
+            // that speaks on every run is a pointer people learn to skip.
+            text.Append(summary.AgentInstructionsWritten
+                ? $"  agents: read {Path.Combine(summary.Directory, "CLAUDE.md")} first; never open TestRunReport.json\n"
+                : "  agents: run kronikol query --help; never open TestRunReport.json\n");
+        }
+
+        return text.ToString();
+    }
+
+    /// <summary>
+    /// The GitHub Actions annotation for a failing run, or null when nothing failed or the run is not on
+    /// GitHub. One line, same content rules as the pointer.
+    /// </summary>
+    public static string? BuildGitHubNotice(RunSummary summary)
+    {
+        ArgumentNullException.ThrowIfNull(summary);
+        if (summary.Failures.Count == 0)
+            return null;
+
+        var digest = HasDigest(summary) ? $" · {DigestFileName}" : "";
+        return $"::notice title=Kronikol::{summary.Failures.Count} failed of {summary.ScenarioCount} scenarios "
+               + $"— kronikol query failures {summary.Directory}{digest}";
+    }
+
+    /// <summary>
+    /// Writes the pointer through <paramref name="write"/> (one call per line), and on GitHub Actions the
+    /// <c>::notice</c> annotation after it.
+    /// </summary>
+    public static void Write(RunSummary summary, CiEnvironment environment, Action<string> write)
+    {
+        ArgumentNullException.ThrowIfNull(summary);
+        ArgumentNullException.ThrowIfNull(write);
+
+        foreach (var line in Build(summary).TrimEnd('\n').Split('\n'))
+            write(line);
+
+        if (environment == CiEnvironment.GitHubActions && BuildGitHubNotice(summary) is { } notice)
+            write(notice);
+    }
+
+    /// <summary>
+    /// The "Debug this run" section appended to <c>CiSummary.md</c>: the CI job summary is written to a
+    /// file descriptor rather than to stdout, so it survives the runners that swallow console output.
+    /// </summary>
+    public static string BuildCiSummarySection(RunSummary summary)
+    {
+        ArgumentNullException.ThrowIfNull(summary);
+
+        var markdown = new StringBuilder();
+        markdown.Append("## Debug this run\n\n");
+        markdown.Append("Do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, ");
+        markdown.Append("and a single embedded diagram can be larger than a context window. Query it instead:\n\n");
+        markdown.Append("```bash\ndotnet tool install -g Kronikol.Tool\n");
+        markdown.Append($"kronikol query summary {summary.Directory}\n");
+        if (summary.Failures.Count > 0)
+            markdown.Append($"kronikol query failures {summary.Directory}\n");
+        markdown.Append("```\n\n");
+
+        if (HasDigest(summary))
+            markdown.Append($"The artifact also carries `{DigestFileName}` — every failure in context, ready to read.\n\n");
+
+        return markdown.ToString();
+    }
+
+    private static bool HasDigest(RunSummary summary) =>
+        summary.Files.Any(f => string.Equals(f.Name, DigestFileName, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// A file name, plus its size when the size is the point: the data file is the one an agent is tempted
+    /// to read and the one that makes reading impossible, so its megabytes are stated at the moment it is
+    /// written rather than discovered later.
+    /// </summary>
+    private static string Describe(RunSummaryFile file) =>
+        IsDataFile(file.Name) ? $"{file.Name} {Size(file.Bytes)}" : file.Name;
+
+    private static bool IsDataFile(string name) =>
+        !name.EndsWith(".schema.json", StringComparison.OrdinalIgnoreCase)
+        && !name.EndsWith(".schema.xsd", StringComparison.OrdinalIgnoreCase)
+        && (name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".yml", StringComparison.OrdinalIgnoreCase));
+
+    internal static string Size(long bytes) =>
+        bytes < 1024 ? $"{bytes} B"
+        : bytes < 1024 * 1024 ? $"{bytes / 1024.0:0.#} KB"
+        : $"{bytes / (1024.0 * 1024.0):0.#} MB";
+}

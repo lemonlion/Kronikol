@@ -29,8 +29,27 @@ public static class MergeableReportMerger
             WholeTestVisualization = reports
                 .Select(r => r.WholeTestVisualization)
                 .FirstOrDefault(v => v != WholeTestFlowVisualization.None),
-            CiMetadata = ReconcileCiMetadata(reports)
+            CiMetadata = ReconcileCiMetadata(reports),
+            // Shards run disjoint subsets, so their traffic simply concatenates - no dedup, because a
+            // request and its response deliberately share one RequestResponseId.
+            Interactions = reports.SelectMany(r => r.Interactions).ToArray(),
+            StepPaths = MergeByScenario(reports.Select(r => r.StepPaths)),
+            Annotations = MergeByScenario(reports.Select(r => r.Annotations)),
+            Diagnostics = reports.SelectMany(r => r.Diagnostics).ToArray()
         };
+    }
+
+    /// <summary>
+    /// Unions per-scenario side tables. A scenario id belongs to exactly one shard, so a collision means
+    /// the same runner's output was supplied twice; first wins, matching how scenarios themselves merge.
+    /// </summary>
+    private static IReadOnlyDictionary<string, T> MergeByScenario<T>(IEnumerable<IReadOnlyDictionary<string, T>> sources)
+    {
+        var merged = new Dictionary<string, T>(StringComparer.Ordinal);
+        foreach (var source in sources)
+            foreach (var entry in source)
+                merged.TryAdd(entry.Key, entry.Value);
+        return merged;
     }
 
     /// <summary>
@@ -62,6 +81,7 @@ public static class MergeableReportMerger
                 {
                     Scenarios = merged,
                     Endpoint = existing.Endpoint ?? feature.Endpoint,
+                    SourceFile = existing.SourceFile ?? feature.SourceFile,
                     Description = existing.Description ?? feature.Description,
                     Labels = existing.Labels ?? feature.Labels
                 };

@@ -35,7 +35,7 @@ internal static partial class QueryCommand
         if (!TryResolveBody(index, first, error, out var left) || !TryResolveBody(index, second, error, out var right))
             return 2;
 
-        return EmitBodyDiff(writer, options, left, right);
+        return EmitBodyDiff(writer, options, error, left, right);
     }
 
     private static bool TryResolveBody(ReportIndex index, Address address, TextWriter error, out BodyRef body)
@@ -94,7 +94,11 @@ internal static partial class QueryCommand
             return 2;
         }
 
-        var match = right.Scenarios.FirstOrDefault(s => s.StableId.Length > 0 && s.StableId == oldScenario.StableId);
+        // Repeated rows and retries share a stableId; the n-th holder in the old report is matched to the
+        // n-th in the new, falling back to the first when the new run has fewer of them.
+        var position = left.Scenarios.Where(s => s.StableId == oldScenario.StableId).ToList().IndexOf(oldScenario);
+        var candidates = right.Scenarios.Where(s => s.StableId.Length > 0 && s.StableId == oldScenario.StableId).ToList();
+        var match = position >= 0 && position < candidates.Count ? candidates[position] : candidates.FirstOrDefault();
         if (match is null)
         {
             error.WriteLine($"No scenario in {Path.GetFileName(right.Path)} with stableId {oldScenario.StableId} ({QueryWriter.OneLine(oldScenario.Name, 60)}).");
@@ -124,30 +128,36 @@ internal static partial class QueryCommand
             oldHash, oldInteraction.BodyLength, PayloadReader.Read(left, oldInteraction.Body));
         var rightRef = new BodyRef($"{Path.GetFileName(right.Path)} {match.Address}/i{address.Interaction}",
             newHash, newInteraction.BodyLength, PayloadReader.Read(right, newInteraction.Body));
-        return EmitBodyDiff(writer, options, leftRef, rightRef);
+        return EmitBodyDiff(writer, options, error, leftRef, rightRef);
     }
 
-    private static int EmitBodyDiff(QueryWriter writer, QueryOptions options, BodyRef left, BodyRef right)
+    private static int EmitBodyDiff(QueryWriter writer, QueryOptions options, TextWriter error,
+        BodyRef left, BodyRef right)
     {
         if (left.Hash == right.Hash)
         {
             // The index already knows, without reading anything.
             if (options.Count)
             {
-                writer.Line("0");
+                writer.Count(0);
                 return 0;
             }
             writer.Line($"- {left.Label}  {left.Hash}");
             writer.Line($"+ {right.Label}  {right.Hash}");
             writer.Line();
             writer.Line("byte-identical");
+            // No rows to page, so `items` stays empty and this is what says the empty array means
+            // "identical" rather than "nothing was compared".
+            writer.Data("byteIdentical", true);
             writer.Footer("");
             return 0;
         }
 
         if (left.Content is null || right.Content is null)
         {
-            writer.Line("A body could not be read back from the report.");
+            // On stderr, not through the writer: nothing is flushed on a non-zero exit, so this message
+            // was written into a buffer that was then thrown away - the failure reported nothing at all.
+            error.WriteLine("A body could not be read back from the report.");
             return 1;
         }
 
@@ -155,20 +165,33 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(rows.Count.ToString());
+            writer.Count(rows.Count);
             return 0;
         }
 
         writer.Line($"- {left.Label}  {left.Hash}  {QueryWriter.Size(Encoding.UTF8.GetByteCount(left.Content))}");
         writer.Line($"+ {right.Label}  {right.Hash}  {QueryWriter.Size(Encoding.UTF8.GetByteCount(right.Content))}");
         if (left.Content.Contains("…truncated (", StringComparison.Ordinal) || right.Content.Contains("…truncated (", StringComparison.Ordinal))
-            writer.Line("! a body was capped at capture time — the rest was never recorded, so this diff covers what was");
+            writer.Note("! a body was capped at capture time — the rest was never recorded, so this diff covers what was");
         writer.Line();
-        writer.Page(rows, options.Offset, Math.Min(options.Limit, 200), "paths differ", row => writer.Line(row), "");
+        // No flags to repeat: a body diff is addressed positionally, so the text footer's `next` is
+        // appended to the original command, addresses and all. The JSON argv rebuilds them from the
+        // envelope, which is why it does not need them here.
+        writer.Page(rows, options.Offset, Math.Min(options.Limit, 200), "paths differ",
+            row => { foreach (var line in row.Text.Split('\n')) writer.Line(line); }, [],
+            row => new { kind = row.Kind, path = row.Path, before = row.Before, after = row.After });
         return 0;
     }
 
-    private static List<string> DiffBodies(string leftBody, string rightBody)
+    /// <summary>
+    /// One difference between two bodies. A record rather than the pre-rendered string these used to
+    /// be: a string is the one thing an <c>items</c> array cannot make structure out of.
+    /// <paramref name="Text"/> carries the rendered form - one line for a JSON path, two for the
+    /// line-by-line fallback - so the text output stays exactly what it was.
+    /// </summary>
+    private sealed record DiffRow(string Kind, string Path, string? Before, string? After, string Text);
+
+    private static List<DiffRow> DiffBodies(string leftBody, string rightBody)
     {
         JsonDocument leftDocument;
         JsonDocument rightDocument;
@@ -193,22 +216,23 @@ internal static partial class QueryCommand
         using (leftDocument)
         using (rightDocument)
         {
-            var rows = new List<string>();
+            var rows = new List<DiffRow>();
             DiffElements(rows, leftDocument.RootElement, rightDocument.RootElement, "$");
             return rows;
         }
     }
 
-    private static void DiffElements(List<string> rows, JsonElement a, JsonElement b, string path)
+    private static void DiffElements(List<DiffRow> rows, JsonElement a, JsonElement b, string path)
     {
         if (a.ValueKind != b.ValueKind)
         {
             if (a.ValueKind is JsonValueKind.True or JsonValueKind.False && b.ValueKind is JsonValueKind.True or JsonValueKind.False)
             {
-                rows.Add($"{path}: {RenderScalar(a)} → {RenderScalar(b)}");
+                rows.Add(Changed(path, RenderScalar(a), RenderScalar(b)));
                 return;
             }
-            rows.Add($"{path}: {DescribeTyped(a)} → {DescribeTyped(b)}");
+            rows.Add(new DiffRow("retyped", path, DescribeTyped(a), DescribeTyped(b),
+                $"{path}: {DescribeTyped(a)} → {DescribeTyped(b)}"));
             return;
         }
 
@@ -221,11 +245,11 @@ internal static partial class QueryCommand
                     if (b.TryGetProperty(property.Name, out var other))
                         DiffElements(rows, property.Value, other, childPath);
                     else
-                        rows.Add($"{childPath}: {RenderOrShape(property.Value)} → (absent)");
+                        rows.Add(Removed(childPath, RenderOrShape(property.Value)));
                 }
                 foreach (var property in b.EnumerateObject())
                     if (!a.TryGetProperty(property.Name, out _))
-                        rows.Add($"{PathEngine.Append(path, property.Name)}: (absent) → {RenderOrShape(property.Value)}");
+                        rows.Add(Added(PathEngine.Append(path, property.Name), RenderOrShape(property.Value)));
                 break;
 
             case JsonValueKind.Array:
@@ -234,12 +258,12 @@ internal static partial class QueryCommand
 
             default:
                 if (!ScalarEquals(a, b))
-                    rows.Add($"{path}: {RenderScalar(a)} → {RenderScalar(b)}");
+                    rows.Add(Changed(path, RenderScalar(a), RenderScalar(b)));
                 break;
         }
     }
 
-    private static void DiffArrays(List<string> rows, JsonElement a, JsonElement b, string path)
+    private static void DiffArrays(List<DiffRow> rows, JsonElement a, JsonElement b, string path)
     {
         var lengthA = a.GetArrayLength();
         var lengthB = b.GetArrayLength();
@@ -276,28 +300,30 @@ internal static partial class QueryCommand
 
                 if (shared >= compared / 2.0)
                 {
-                    rows.Add($"{path}: elements shifted/reordered — {lengthA} vs {lengthB}, {shared} identical");
+                    rows.Add(new DiffRow("reordered", path, $"{lengthA} elements", $"{lengthB} elements",
+                        $"{path}: elements shifted/reordered — {lengthA} vs {lengthB}, {shared} identical"));
                     return;
                 }
             }
         }
 
         if (lengthA != lengthB)
-            rows.Add($"{path}: {lengthA} → {lengthB} elements");
+            rows.Add(new DiffRow("length", path, $"{lengthA} elements", $"{lengthB} elements",
+                $"{path}: {lengthA} → {lengthB} elements"));
         for (var i = 0; i < compared; i++)
             DiffElements(rows, a[i], b[i], $"{path}[{i}]");
         for (var i = compared; i < lengthA; i++)
-            rows.Add($"{path}[{i}]: {RenderOrShape(a[i])} → (absent)");
+            rows.Add(Removed($"{path}[{i}]", RenderOrShape(a[i])));
         for (var i = compared; i < lengthB; i++)
-            rows.Add($"{path}[{i}]: (absent) → {RenderOrShape(b[i])}");
+            rows.Add(Added($"{path}[{i}]", RenderOrShape(b[i])));
     }
 
     /// <summary>First 20 differing lines of the pretty-printed texts — the fallback when either side is not JSON.</summary>
-    private static List<string> DiffLines(string leftBody, string rightBody)
+    private static List<DiffRow> DiffLines(string leftBody, string rightBody)
     {
         var left = PayloadReader.Pretty(leftBody).ReplaceLineEndings("\n").Split('\n');
         var right = PayloadReader.Pretty(rightBody).ReplaceLineEndings("\n").Split('\n');
-        var rows = new List<string>();
+        var rows = new List<DiffRow>();
         var shown = 0;
 
         for (var i = 0; i < Math.Max(left.Length, right.Length); i++)
@@ -308,16 +334,29 @@ internal static partial class QueryCommand
                 continue;
             if (shown == 20)
             {
-                rows.Add("… more lines differ — --out both bodies and diff the files");
+                rows.Add(new DiffRow("elided", "", null, null,
+                    "… more lines differ — --out both bodies and diff the files"));
                 break;
             }
-            rows.Add($"line {i + 1}:  - {QueryWriter.OneLine(a ?? "(none)", 80)}");
-            rows.Add($"          + {QueryWriter.OneLine(b ?? "(none)", 80)}");
+            // ONE record, two rendered lines. As two rows the count double-counted every difference,
+            // so the footer said "40 of 40" about twenty of them.
+            rows.Add(new DiffRow("line", $"line {i + 1}", a, b,
+                $"line {i + 1}:  - {QueryWriter.OneLine(a ?? "(none)", 80)}\n"
+                + $"          + {QueryWriter.OneLine(b ?? "(none)", 80)}"));
             shown++;
         }
 
         return rows;
     }
+
+    private static DiffRow Changed(string path, string before, string after) =>
+        new("changed", path, before, after, $"{path}: {before} → {after}");
+
+    private static DiffRow Removed(string path, string before) =>
+        new("removed", path, before, null, $"{path}: {before} → (absent)");
+
+    private static DiffRow Added(string path, string after) =>
+        new("added", path, null, after, $"{path}: (absent) → {after}");
 
     private static bool ScalarEquals(JsonElement a, JsonElement b)
     {

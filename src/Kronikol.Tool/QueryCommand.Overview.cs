@@ -14,16 +14,56 @@ internal static partial class QueryCommand
         var scenarios = index.Scenarios;
         if (options.Count)
         {
-            writer.Line(scenarios.Count.ToString());
+            writer.Count(scenarios.Count);
             return 0;
         }
 
         var failed = scenarios.Count(s => s.Failed);
         var interactions = scenarios.Sum(s => s.Interactions.Count);
 
+        // Five heterogeneous sections and no list, so `items` alone would be a lie: the per-feature rows
+        // are the one repeated thing here, and the rest are named members beside them. Inert in text mode.
+        writer.Data("run", new
+        {
+            file = Path.GetFileName(index.Path),
+            sizeBytes = index.FileLength,
+            startTime = index.StartTime,
+            endTime = index.EndTime,
+            scenarios = scenarios.Count,
+            failed,
+            interactions,
+            distinctBodies = index.Bodies.Count,
+            ci = index.OnCi
+                ? new
+                {
+                    provider = index.CiProvider,
+                    branch = index.CiBranch,
+                    commit = index.CiCommitSha,
+                    repository = index.CiRepository,
+                    build = index.CiBuildNumber,
+                    runId = index.CiRunId,
+                    runAttempt = index.CiRunAttempt
+                }
+                : null
+        });
+
         writer.Line($"{Path.GetFileName(index.Path)}  {QueryWriter.Size((int)Math.Min(index.FileLength, int.MaxValue))}"
                     + (index.KronikolVersion is { } v ? $"  Kronikol {v}" : ""));
         writer.Line($"{index.StartTime} → {index.EndTime}");
+        // Only when there was a CI to read: a line saying "None" on every local run is noise, and the
+        // budget is spent on answers. This is the line that tells two downloaded artifacts apart.
+        if (index.OnCi)
+        {
+            var sha = index.CiCommitSha is { Length: > 7 } full ? full[..7] : index.CiCommitSha;
+            writer.Line($"run: {index.CiBranch ?? "?"} @{sha ?? "?"}"
+                        + (index.CiRepository is { } repo ? $"  {repo}" : "")
+                        + $"  {index.CiProvider}"
+                        + (index.CiBuildNumber is { } build ? $" #{build}" : "")
+                        // Only past the first: an attempt of 1 is every ordinary run, and the line is
+                        // budget. An attempt above it is the one thing that tells this artifact from
+                        // the one the same runId already produced.
+                        + (index.CiRunAttempt is { } attempt && attempt != "1" ? $"  attempt {attempt}" : ""));
+        }
         writer.Line($"{scenarios.Count} scenarios · {failed} failed · {interactions} interactions · {index.Bodies.Count} distinct bodies");
         writer.Line();
 
@@ -32,6 +72,13 @@ internal static partial class QueryCommand
             var featureFailed = feature.Count(s => s.Failed);
             writer.Line($"{feature.Key}  {feature.Count() - featureFailed} passed"
                         + (featureFailed > 0 ? $", {featureFailed} FAILED" : ""));
+            writer.Item(new
+            {
+                feature = feature.Key,
+                total = feature.Count(),
+                passed = feature.Count() - featureFailed,
+                failed = featureFailed
+            });
         }
 
         if (failed > 0)
@@ -44,6 +91,18 @@ internal static partial class QueryCommand
             if (failed > 10)
                 writer.Line($"  … {failed - 10} more · scenarios --result Failed");
             writer.Line("  → failures");
+
+            // The same ten, and the same reason for the cap: this is the orientation view, and `failures`
+            // is the one that pages. `failedTotal` says how many the ten came out of.
+            writer.Data("failed", scenarios.Where(s => s.Failed).Take(10).Select(s => new
+            {
+                address = s.Address,
+                stableId = s.StableId,
+                feature = s.FeatureName,
+                scenario = s.Name,
+                errorMessage = s.ErrorMessage
+            }));
+            writer.Data("failedTotal", failed);
         }
 
         var slowest = scenarios.OrderByDescending(s => s.DurationSeconds).Take(3).ToArray();
@@ -53,6 +112,13 @@ internal static partial class QueryCommand
             writer.Line("Slowest:");
             foreach (var scenario in slowest)
                 writer.Line($"  {scenario.Address}  {scenario.DurationSeconds:0.##}s  {QueryWriter.OneLine(scenario.Name, 70)}");
+
+            writer.Data("slowest", slowest.Select(s => new
+            {
+                address = s.Address,
+                durationSeconds = s.DurationSeconds,
+                scenario = s.Name
+            }));
         }
 
         if (index.Diagnostics.Count > 0)
@@ -61,6 +127,13 @@ internal static partial class QueryCommand
             writer.Line($"Diagnostics ({index.Diagnostics.Count}):");
             foreach (var group in index.Diagnostics.GroupBy(d => d.Kind))
                 writer.Line($"  {group.Key} ×{group.Count()}  {QueryWriter.OneLine(group.First().Message, 90)}");
+
+            writer.Data("diagnostics", index.Diagnostics.GroupBy(d => d.Kind).Select(g => new
+            {
+                kind = g.Key,
+                count = g.Count(),
+                message = g.First().Message
+            }));
         }
 
         writer.Footer(failed > 0 ? "next: failures" : "next: scenarios · services");
@@ -73,25 +146,55 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(matches.Count.ToString());
+            writer.Count(matches.Count);
             return 0;
         }
 
         if (matches.Count == 0)
         {
-            writer.Line("no scenarios matched");
+            writer.Note("no scenarios matched");
             writer.Footer($"{index.Scenarios.Count} scenarios in the report");
             return 0;
         }
 
+        // Several scenarios can carry one stableId - a [Theory] with repeated data, the same Examples:
+        // row in two blocks, a retry. A cross-run diff cannot tell them apart except by position, and
+        // nothing in the listing used to say so. Empty ids are skipped: a report written before 3.0.47
+        // has none at all, and marking every row would say the opposite of the truth.
+        var shared = index.Scenarios
+            .Where(s => s.StableId.Length > 0)
+            .GroupBy(s => s.StableId, StringComparer.Ordinal)
+            .Where(g => g.Count() > 1)
+            .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+
         writer.Page(matches, options.Offset, Math.Min(options.Limit, 200), "scenarios", scenario =>
         {
             var flags = scenario.Failed ? "FAIL" : scenario.Result.Length > 0 ? scenario.Result[..Math.Min(4, scenario.Result.Length)].ToLowerInvariant() : "";
+            var repeats = shared.TryGetValue(scenario.StableId, out var count) ? $"  ×{count}" : "";
+            var attempt = scenario.Attempt is > 1 ? $"  attempt {scenario.Attempt}" : "";
             writer.Line($"{scenario.Address,-5} {flags,-4} {scenario.DurationSeconds,6:0.##}s  {scenario.Interactions.Count,4} calls  "
-                        + QueryWriter.OneLine(scenario.Name, 80));
+                        + QueryWriter.OneLine(scenario.Name, 80) + repeats + attempt);
             if (scenario.Failed && scenario.ErrorMessage is { } message)
                 writer.Line($"        {QueryWriter.OneLine(message, 100)}");
-        }, options.RerunPrefix());
+        }, options.RerunArgs(), scenario => new
+        {
+            address = scenario.Address,
+            stableId = scenario.StableId,
+            feature = scenario.FeatureName,
+            scenario = scenario.Name,
+            result = scenario.Result,
+            failed = scenario.Failed,
+            durationSeconds = scenario.DurationSeconds,
+            interactions = scenario.Interactions.Count,
+            // Full, not one-lined: the flattening exists so a listing stays one row per item, which is a
+            // property of a terminal. A consumer that wants a summary can take one itself.
+            errorMessage = scenario.ErrorMessage,
+            attempt = scenario.Attempt,
+            stableIdShared = shared.TryGetValue(scenario.StableId, out var repeats) ? repeats : 1,
+            labels = scenario.Labels,
+            categories = scenario.Categories,
+            exampleValues = scenario.ExampleValues
+        });
 
         return 0;
     }
@@ -144,17 +247,22 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(stats.Count.ToString());
+            writer.Count(stats.Count);
             return 0;
         }
 
         if (stats.Count == 0)
         {
-            // Absence is the answer this command exists to give, so say it plainly rather than printing nothing.
-            writer.Line("no services were called");
+            // Absence is the answer this command exists to give, so say it plainly rather than printing
+            // nothing - and as a note rather than a row, or `--json` would answer the negative question
+            // with an empty array and no explanation of it.
+            writer.Note("no services were called");
             writer.Footer("nothing was captured for this scope — check the capture is attached, not that the test skipped the call");
             return 0;
         }
+
+        if (!SortIsValid(options, ServiceSorts, error))
+            return 2;
 
         var ordered = options.Sort switch
         {
@@ -165,12 +273,28 @@ internal static partial class QueryCommand
         };
 
         writer.Line($"{"service",-24} {"calls",5} {"errors",6} {"bytes",9} {"p50",8} {"max",8}  statuses");
-        foreach (var entry in ordered)
-            writer.Line($"{QueryWriter.OneLine(entry.Name, 24),-24} {entry.Calls,5} {entry.Errors,6} "
-                        + $"{QueryWriter.Size(entry.Bytes),9} {QueryWriter.Duration(entry.Median()),8} {QueryWriter.Duration(entry.MaxMs),8}  "
-                        + entry.StatusSummary());
 
-        writer.Footer($"{ordered.Count} services · a service missing here was never called");
+        // Paged like every other listing rather than printed whole: it used to hand-roll its loop and its
+        // footer, which is how it came to be the one listing that could overflow the budget with nothing
+        // said about how to resume. The closing line is preserved because it says what a row count cannot.
+        writer.Page(ordered, options.Offset, Math.Min(options.Limit, 200), "services", entry =>
+                writer.Line($"{QueryWriter.OneLine(entry.Name, 24),-24} {entry.Calls,5} {entry.Errors,6} "
+                            + $"{QueryWriter.Size(entry.Bytes),9} {QueryWriter.Duration(entry.Median()),8} {QueryWriter.Duration(entry.MaxMs),8}  "
+                            + entry.StatusSummary()),
+            options.RerunArgs(),
+            entry => new
+            {
+                service = entry.Name,
+                calls = entry.Calls,
+                errors = entry.Errors,
+                bytes = entry.Bytes,
+                medianMs = entry.Median(),
+                maxMs = entry.MaxMs,
+                totalMs = entry.TotalMs,
+                statuses = entry.Statuses
+            },
+            $"{ordered.Count} services · a service missing here was never called");
+
         return 0;
     }
 
@@ -218,5 +342,11 @@ internal static partial class QueryCommand
 
         public string StatusSummary() =>
             _statuses.Count == 0 ? "" : string.Join(" ", _statuses.OrderByDescending(s => s.Value).Take(4).Select(s => $"{s.Key}×{s.Value}"));
+
+        /// <summary>
+        /// The whole status mix, unsummarised and uncapped. <see cref="StatusSummary"/> renders a column;
+        /// this is the fact behind it, which is what <c>--json</c> owes a consumer that wants to count.
+        /// </summary>
+        public IReadOnlyDictionary<string, int> Statuses => _statuses;
     }
 }

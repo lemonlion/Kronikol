@@ -16,12 +16,23 @@
     <ToolCommandName>kronikol</ToolCommandName>
     <PackageId>Kronikol.Tool</PackageId>
     <Title>Kronikol CLI</Title>
-    <Description>Command-line companion for Kronikol. Includes `kronikol merge`, which combines several mergeable TestRunReport.json files (produced with GenerateMergeableData enabled — e.g. by parallel CI runners) into a single combined TestRunReport.html; `kronikol ingest`, which replays language-neutral NDJSON interaction captures (from an out-of-process proxy tap or any non-.NET capturer) into a full Kronikol report; `kronikol query`, which answers questions about a TestRunReport.json — why a test failed, what a service returned, where a wrong value came from — without loading the file, so a 10 MB report is debuggable by tooling and by AI agents; and `kronikol export`, which pushes NDJSON interaction captures to an OTLP/HTTP collector as OpenTelemetry spans so the traffic only Kronikol saw appears in Tempo/Jaeger next to the app's real traces.</Description>
+    <Description>Command-line companion for Kronikol. Includes `kronikol merge`, which combines several mergeable TestRunReport.json files (produced with GenerateMergeableData enabled — e.g. by parallel CI runners) into a single combined TestRunReport.html plus the merged TestRunReport.json beside it, so a sharded run is queryable and can serve as a baseline; `kronikol ingest`, which replays language-neutral NDJSON interaction captures (from an out-of-process proxy tap or any non-.NET capturer) into a full Kronikol report; `kronikol query`, which answers questions about a TestRunReport.json — why a test failed, what a service returned, where a wrong value came from — without loading the file, so a 10 MB report is debuggable by tooling and by AI agents; `kronikol export`, which pushes NDJSON interaction captures to an OTLP/HTTP collector as OpenTelemetry spans so the traffic only Kronikol saw appears in Tempo/Jaeger next to the app's real traces; and `kronikol init-agents`, which installs the test-debugging skill and the CLAUDE.md/AGENTS.md instruction block into an existing repository, so its agents know the report is there and how to read it.</Description>
     <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Kronikol.Tests" />
+  </ItemGroup>
+
+  <!-- `kronikol init-agents` installs these into an existing repository. templates/ holds the ONE canonical
+       copy (plan section 9 Q6): the twelve dotnet new templates pack the same bytes, the repo's own
+       .claude/skills/ mirrors them, and SkillDriftTests pins every copy - including the set of files
+       embedded here - to it. Forward-slash logical names so the subfolder structure survives. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\templates\skills\kronikol-test-debugging\SKILL.md" LogicalName="skills/kronikol-test-debugging/SKILL.md" />
+    <EmbeddedResource Include="..\..\templates\skills\kronikol-test-debugging\references\commands.md" LogicalName="skills/kronikol-test-debugging/references/commands.md" />
+    <EmbeddedResource Include="..\..\templates\skills\kronikol-test-debugging\scripts\query.py" LogicalName="skills/kronikol-test-debugging/scripts/query.py" />
+    <EmbeddedResource Include="..\..\templates\agents\CLAUDE.md" LogicalName="agents/CLAUDE.md" />
   </ItemGroup>
 
   <ItemGroup>

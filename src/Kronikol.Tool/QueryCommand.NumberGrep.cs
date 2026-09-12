@@ -16,7 +16,7 @@ internal static partial class QueryCommand
 {
     private static readonly Regex NumericToken = new(@"[-+]?\d[\d,._]*(\.\d+)?", RegexOptions.Compiled);
 
-    private static int NumberGrep(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
+    private static int NumberGrep(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error, string[] targets)
     {
         var needle = options.Positional[0].TrimStart('$', '€', '£').Trim();
         var wanted = Interpretations(needle).ToArray();
@@ -57,7 +57,6 @@ internal static partial class QueryCommand
 
         string Approx(string raw) => raw == needle ? "" : $" (≈ {needle})";
 
-        var targets = (options.In ?? "bodies,uris,steps,assertions").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var hits = new List<string>();
 
         // One open handle for every body and diagram read in this command (QUERY_PERF_PLAN 3.3). The
@@ -168,7 +167,7 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(hits.Count.ToString());
+            writer.Count(hits.Count);
             return 0;
         }
 
@@ -180,7 +179,7 @@ internal static partial class QueryCommand
         }
 
         writer.Page(hits, options.Offset, Math.Min(options.Limit, 200), "hits", hit => writer.Line(hit),
-            $"grep \"{needle}\" " + options.RerunPrefix());
+            ["grep", needle, .. options.RerunArgs()]);
         return 0;
     }
 

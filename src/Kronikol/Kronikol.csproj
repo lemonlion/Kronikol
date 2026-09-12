@@ -35,6 +35,7 @@
 		<EmbeddedResource Include="Reports\plantuml-browser-render-script.js" />
 		<EmbeddedResource Include="Reports\plantuml-worker-host.js" />
 		<EmbeddedResource Include="Reports\report-*.js" />
+		<EmbeddedResource Include="Reports\agent-instructions.md" />
 	</ItemGroup>
 
 	<ItemGroup>

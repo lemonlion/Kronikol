@@ -118,7 +118,7 @@ public class FailureClusterReportTests
         Assert.True(hrefMatches.Count >= 2, $"Expected at least 2 cluster links, found {hrefMatches.Count}");
 
         // Extract all scenario element ids
-        var idMatches = Regex.Matches(content, @"<details\s+class=""scenario[^""]*""[^>]*\bid=""([^""]+)""");
+        var idMatches = Regex.Matches(content, @"<details\s+class=""scenario[^""]*""[^>]*\sid=""([^""]+)""");
         var elementIds = idMatches.Select(m => m.Groups[1].Value).ToHashSet();
 
         // Every cluster link href must target an existing element id
@@ -144,7 +144,7 @@ public class FailureClusterReportTests
         var onclickId = onclickMatch.Groups[1].Value;
 
         // Extract all scenario element ids
-        var idMatches = Regex.Matches(content, @"<details\s+class=""scenario[^""]*""[^>]*\bid=""([^""]+)""");
+        var idMatches = Regex.Matches(content, @"<details\s+class=""scenario[^""]*""[^>]*\sid=""([^""]+)""");
         var elementIds = idMatches.Select(m => m.Groups[1].Value).ToHashSet();
 
         Assert.True(elementIds.Contains(onclickId),

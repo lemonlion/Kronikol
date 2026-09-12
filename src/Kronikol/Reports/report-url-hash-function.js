@@ -1,3 +1,49 @@
+function current_url_anchor() {
+    // Two anchor forms name an element rather than filter state: `#scenario-<slug>`, which the
+    // report's own link buttons write, and `#sid-<stableId>`, which `kronikol query` and Failures.md
+    // print. The slug is the display name, so it moves on a rename and collides when two features
+    // name a scenario the same thing; the stable id does neither. Filter state is `k=v&k=v`, so an
+    // anchor rides in front of it as the first segment and survives every rewrite.
+    var first = window.location.hash.substring(1).split('&')[0];
+    return first.indexOf('scenario-') === 0 || first.indexOf('sid-') === 0 ? first : null;
+}
+function element_for_stable_id(id) {
+    // An outline row is rendered TWICE — once in the flat parameter table and once in the grouped
+    // one — and only one of the two tables is displayed. Both copies carry the stable id, so pick
+    // the displayed one; a collapsed <details> is not "hidden" here, since opening it is the whole
+    // point of following the link.
+    var all = document.querySelectorAll('[data-stable-id="' + id + '"]');
+    for (var i = 0; i < all.length; i++) {
+        var hidden = false;
+        for (var p = all[i]; p; p = p.parentElement) {
+            if (p.style && p.style.display === 'none') { hidden = true; break; }
+        }
+        if (!hidden) return all[i];
+    }
+    return all.length > 0 ? all[0] : null;
+}
+function reveal_url_anchor(anchor) {
+    var el = anchor.indexOf('sid-') === 0
+        ? element_for_stable_id(anchor.substring(4))
+        : (document.getElementById(anchor) || document.querySelector('tr[data-scenario-id="' + anchor + '"]'));
+    if (!el) return;
+    // Only the grouped copy of an outline row carries an `id`, so a slug anchor always lands there
+    // even when the flat table is the one on display. Re-resolve through the stable id both rows
+    // share so the row that gets selected is the row somebody can see.
+    if (el.tagName === 'TR' && el.getAttribute('data-stable-id')) {
+        el = element_for_stable_id(el.getAttribute('data-stable-id')) || el;
+    }
+    // Open EVERY enclosing <details>, not only the feature: an example row lives inside a
+    // parameterized group that starts collapsed, so opening the feature alone scrolls to nothing.
+    var p = el;
+    while (p) { if (p.tagName === 'DETAILS') p.setAttribute('open', ''); p = p.parentElement; }
+    var target = el;
+    if (el.tagName === 'TR') {
+        el.click();
+        target = el.closest('details.scenario-parameterized') || el;
+    }
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 function update_url_hash() {
     var parts = [];
     var search = document.getElementById('searchbar');
@@ -20,36 +66,17 @@ function update_url_hash() {
     if (dur && dur.value) parts.push('dur=' + dur.value);
     var activeP = document.querySelector('.percentile-btn.percentile-active');
     if (activeP) parts.push('pctl=' + encodeURIComponent(activeP.textContent));
+    // Filter state is rewritten; the anchor is not. Somebody who followed a link to one scenario and
+    // then narrowed the list still wants that link to be what they can copy back out.
+    var anchor = current_url_anchor();
+    if (anchor) parts.unshift(anchor);
     var hash = parts.length > 0 ? '#' + parts.join('&') : '';
     history.replaceState(null, '', window.location.pathname + window.location.search + hash);
 }
 function parse_url_hash() {
     var hash = window.location.hash.substring(1);
     if (!hash) return;
-    // Check if it's a scenario anchor (starts with 'scenario-')
-    if (hash.indexOf('scenario-') === 0) {
-        var el = document.getElementById(hash);
-        if (el) {
-            var feature = el.closest('details.feature');
-            if (feature) feature.setAttribute('open', '');
-            el.setAttribute('open', '');
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-        // Not a direct element — check if it's a row inside a parameterized group
-        var row = document.querySelector('tr[data-scenario-id="' + hash + '"]');
-        if (row) {
-            var group = row.closest('details.scenario-parameterized');
-            if (group) {
-                var feature = group.closest('details.feature');
-                if (feature) feature.setAttribute('open', '');
-                group.setAttribute('open', '');
-                row.click();
-                group.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-        return;
-    }
+    var anchor = current_url_anchor();
     var params = {};
     hash.split('&').forEach(function(p) {
         var kv = p.split('=');
@@ -114,4 +141,7 @@ function parse_url_hash() {
         });
         filter_categories();
     }
+    // Last, because a filter pass can collapse what the anchor has to open, and the scroll has to
+    // land on the layout the filters produced rather than the one they replaced.
+    if (anchor) reveal_url_anchor(anchor);
 }

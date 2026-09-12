@@ -35,20 +35,63 @@ function clear_all_filters() {
     for (var i = 0; i < c.items.length; i++) c.items[i].cat = false;
     // Clear deep-search state (chip + in-flight queries)
     if (window._kronDeepReset) window._kronDeepReset();
-    // Apply and clear URL
+    // Apply and clear URL. The anchor is not filter state: somebody who followed a link to one
+    // scenario and then pressed Clear All has cleared filters, not navigated away from it.
     applyVisibility(c);
-    history.replaceState(null, '', window.location.pathname + window.location.search);
+    var keptAnchor = current_url_anchor();
+    history.replaceState(null, '', window.location.pathname + window.location.search + (keptAnchor ? '#' + keptAnchor : ''));
+}
+// Everything a diagram needs in order to draw itself is in the head — except its source. Under
+// BrowserJs rendering the element is an empty `<div class="plantuml-browser" id="puml-N">`, and every
+// source lives gzipped in the body's `<script id="puml-data">`, keyed by that id. Copying the head and
+// the visible features alone therefore shipped the whole render machinery with none of the data:
+// `getPumlZ` returned null, the render queue silently dropped the element, and every diagram that had
+// not already been drawn before the export stayed blank forever — no error, no message, just an empty
+// box. The body holds exactly these data payloads and no behaviour (they are `application/json`), so
+// carrying them cannot re-run anything the head already ran.
+function export_data_scripts(exported) {
+    // `#puml-data` covers the whole report; a filtered export only needs the ids it actually contains.
+    // Pruning is safe to the letter because `_pumlData` has exactly one reader — `_pumlData[el.id]` in
+    // the render script's getPumlZ — so an id that is not in the exported markup can never be asked for.
+    // The ids are read off the live elements rather than by re-parsing the serialised markup, which for
+    // a large report is megabytes of needless work.
+    var wanted = {};
+    for (var i = 0; i < exported.length; i++) {
+        if (exported[i].id) wanted[exported[i].id] = true;
+        exported[i].querySelectorAll('[id]').forEach(function (el) { wanted[el.id] = true; });
+    }
+
+    var out = '';
+    document.body.querySelectorAll(':scope > script').forEach(function (s) {
+        if (s.id !== 'puml-data') { out += s.outerHTML; return; }
+        var all;
+        try { all = JSON.parse(s.textContent); } catch (e) { out += s.outerHTML; return; }
+        var kept = {};
+        for (var k in all) if (wanted[k]) kept[k] = all[k];
+        // Clone the element and swap its text rather than writing the tag out by hand: the attributes
+        // come from the real thing, and the report does not end up carrying a second, decoy
+        // `<script id="puml-data">` in its source for anything scanning the file to trip over.
+        var pruned = s.cloneNode(false);
+        pruned.textContent = JSON.stringify(kept);
+        out += pruned.outerHTML;
+    });
+    return out;
 }
 function export_html() {
     var c = fc();
     var head = document.querySelector('head');
     var headHtml = head ? head.innerHTML : '';
-    var html = '<html><head>' + headHtml + '</head><body>';
-    html += '<h1>Filtered Report</h1>';
+    var exported = [];
+    var featuresHtml = '';
     for (var i = 0; i < c.features.length; i++) {
         if (c.features[i].style.display === 'none') continue;
-        html += c.features[i].outerHTML;
+        exported.push(c.features[i]);
+        featuresHtml += c.features[i].outerHTML;
     }
+    var html = '<html><head>' + headHtml + '</head><body>';
+    html += '<h1>Filtered Report</h1>';
+    html += featuresHtml;
+    html += export_data_scripts(exported);
     html += '</body></html>';
     var blob = new Blob([html], { type: 'text/html' });
     var a = document.createElement('a');

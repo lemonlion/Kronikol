@@ -45,6 +45,20 @@ dotnet new kronikol-xunit3 --name MyService.Tests.Component \
 | `--downstream-port` | 15050 | Port for downstream service HTTP fake |
 | `--framework` | net10.0 | Target framework (net8.0/net9.0/net10.0) |
 
+## What's Included
+
+Alongside the test project itself, every template scaffolds the files that teach an AI agent how to debug
+the runs it produces:
+
+| Path | Purpose |
+|---|---|
+| `.claude/skills/kronikol-test-debugging/` | The skill: the command ladder, the recipes, the full flag reference, and a Python fallback for machines without the CLI |
+| `CLAUDE.md`, `AGENTS.md` | Byte-identical instruction files pointing at the reports directory and the skill — two names because Claude Code reads one and Codex, Cursor and Copilot read the other |
+
+They need no setup. An agent that opens the project reads them and knows to run `kronikol query` rather
+than open a report that does not fit in its context. To add the same thing to a repository that predates
+the templates, install `Kronikol.Tool` and run `kronikol init-agents .`.
+
 ## After Scaffolding
 
 1. Add a `<ProjectReference>` to your API project in the generated `.csproj`

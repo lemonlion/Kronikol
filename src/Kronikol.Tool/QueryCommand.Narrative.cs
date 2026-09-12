@@ -1,3 +1,4 @@
+using Kronikol.Reports;
 using Kronikol.Tool.Query;
 
 namespace Kronikol.Tool;
@@ -15,22 +16,31 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(failed.Count.ToString());
+            writer.Count(failed.Count);
             return 0;
         }
 
         if (failed.Count == 0)
         {
-            writer.Line("nothing failed");
+            writer.Note("nothing failed");
             writer.Footer($"{index.Scenarios.Count} scenarios, all passed · next: scenarios · services");
             return 0;
         }
 
-        foreach (var scenario in failed.Skip(options.Offset).Take(Math.Min(options.Limit, 25)))
+        var deepLink = DeepLinkPrefix(index);
+
+        // Paged through the one pager rather than a hand-rolled Skip/Take with a hand-rolled footer. That
+        // footer hard-coded the 25 cap and ignored --limit, so `--limit 2` on three failures printed two
+        // and then said "3 failed" with no resume - the one shape the footer contract exists to prevent.
+        writer.Page(failed, options.Offset, Math.Min(options.Limit, 25), "failures", scenario =>
         {
             writer.Line($"{scenario.Address}  {scenario.FeatureName} › {scenario.Name}");
             if (scenario.ExampleValues.Count > 0)
                 writer.Line("  example: " + string.Join(", ", scenario.ExampleValues.Select(e => $"{e.Key}={e.Value}")));
+            if (scenario.SourceFile is { } source)
+                writer.Line($"  at {source}" + (scenario.SourceLine is { } line ? $":{line}" : ""));
+            if (deepLink is not null && scenario.StableId.Length > 0)
+                writer.Line($"  open: {deepLink}{scenario.StableId}");
             if (scenario.ErrorMessage is { } message)
                 writer.Line("  " + QueryWriter.OneLine(message, 240));
 
@@ -60,12 +70,57 @@ internal static partial class QueryCommand
                     writer.Line($"  attachment: {attachment.Name} → {attachment.Resolve(index.Directory)}");
 
             writer.Line();
-        }
+        }, options.RerunArgs(), scenario => FailureRecord(index, scenario, deepLink),
+            $"{failed.Count} failed · steps s? for the whole tree · grep \"<value>\" --values to trace a number");
 
-        writer.Footer(failed.Count > options.Offset + 25
-            ? $"failures: {options.Offset + 1}-{options.Offset + 25} of {failed.Count} · next: --offset {options.Offset + 25}"
-            : $"{failed.Count} failed · steps s? for the whole tree · grep \"<value>\" --values to trace a number");
+        if (NeedsParameterCaptureHint(index, failed))
+            writer.Note("! " + ParameterCaptureHint.Message);
+
         return 0;
+    }
+
+    /// <summary>
+    /// One failure as an object, in the field names <c>Failures.jsonl</c> already uses
+    /// (<c>FailuresDigestGenerator.BuildJsonl</c>). The same concept must not reach a consumer under two
+    /// shapes depending on whether it read the digest the run wrote or asked the tool for it afterwards.
+    /// </summary>
+    private static object FailureRecord(ReportIndex index, ScenarioEntry scenario, string? deepLink)
+    {
+        var failingSteps = scenario.AllSteps().Where(s => s.Step.Failed).ToArray();
+
+        return new
+        {
+            address = scenario.Address,
+            stableId = scenario.StableId,
+            feature = scenario.FeatureName,
+            scenario = scenario.Name,
+            exampleValues = scenario.ExampleValues,
+            durationSeconds = scenario.DurationSeconds,
+            errorMessage = scenario.ErrorMessage,
+            deepLink = deepLink is not null && scenario.StableId.Length > 0 ? deepLink + scenario.StableId : null,
+            sourceFile = scenario.SourceFile,
+            sourceLine = scenario.SourceLine,
+            failingSteps = failingSteps.Select(s => new
+            {
+                path = $"{scenario.Address}/{s.Path}",
+                text = s.Step.Display,
+                message = s.Step.FailureMessage,
+                sourceFile = s.Step.SourceFile,
+                sourceLine = s.Step.SourceLine,
+                calls = scenario.Interactions
+                    .Where(i => i.StepPath == s.Path && i.Type == "Request")
+                    .Take(6)
+                    .Select(i => new
+                    {
+                        address = i.Address(scenario),
+                        service = i.ServiceName,
+                        summary = i.Summary(),
+                        durationMs = i.DurationMs
+                    })
+            }),
+            attachments = scenario.Attachments.Take(4)
+                .Select(a => new { name = a.Name, path = a.Resolve(index.Directory) })
+        };
     }
 
     private static int Steps(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
@@ -75,6 +130,10 @@ internal static partial class QueryCommand
 
         writer.Line($"{scenario.Address}  {scenario.FeatureName} › {scenario.Name}  [{scenario.Result}]  {scenario.DurationSeconds:0.##}s");
         writer.Line($"stableId {scenario.StableId}");
+        if (scenario.SourceFile is { } scenarioSource)
+            writer.Line($"at {scenarioSource}" + (scenario.SourceLine is { } scenarioLine ? $":{scenarioLine}" : ""));
+        if (DeepLinkPrefix(index) is { } stepsLink && scenario.StableId.Length > 0)
+            writer.Line($"open: {stepsLink}{scenario.StableId}");
         if (scenario.ExampleValues.Count > 0)
             writer.Line("example: " + string.Join(", ", scenario.ExampleValues.Select(e => $"{e.Key}={e.Value}")));
         writer.Line();
@@ -138,13 +197,13 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(rows.Count.ToString());
+            writer.Count(rows.Count);
             return 0;
         }
 
         if (rows.Count == 0)
         {
-            writer.Line(options.Failed ? "no assertions failed" : "no tracked assertions in this report");
+            writer.Note(options.Failed ? "no assertions failed" : "no tracked assertions in this report");
             writer.Footer("assertions reach the data file only when IncludeTrackedAssertionsInStepList is on");
             return 0;
         }
@@ -157,7 +216,17 @@ internal static partial class QueryCommand
                 writer.Line($"     {QueryWriter.OneLine(message, 180)}");
             if (row.Step.SourceFile is { } file)
                 writer.Line($"     at {file}:{row.Step.SourceLine}");
-        }, options.RerunPrefix());
+        }, options.RerunArgs(), row => new
+        {
+            address = $"{row.Scenario.Address}/{row.Path}",
+            scenario = row.Scenario.Name,
+            path = row.Path,
+            text = row.Step.Text,
+            passed = !row.Step.Failed,
+            message = row.Step.FailureMessage,
+            sourceFile = row.Step.SourceFile,
+            sourceLine = row.Step.SourceLine
+        });
 
         return 0;
     }
@@ -169,7 +238,7 @@ internal static partial class QueryCommand
 
         if (options.Count)
         {
-            writer.Line(scenario.Annotations.Count.ToString());
+            writer.Count(scenario.Annotations.Count);
             return 0;
         }
 
@@ -294,5 +363,46 @@ internal static partial class QueryCommand
 
         scenario = found;
         return true;
+    }
+
+    /// <summary>
+    /// Whether any failing scenario made a SQL call whose statement names placeholders it never fills in
+    /// (<see cref="ParameterCaptureHint"/>). The index holds no content — only a hash, a length and an
+    /// offset — so this is a payload read, and it is bounded on purpose: failing scenarios only,
+    /// SQL-shaped request interactions only, short statements only, and it stops at the first hit. A
+    /// green run opens nothing at all.
+    /// </summary>
+    private static bool NeedsParameterCaptureHint(ReportIndex index, IReadOnlyList<ScenarioEntry> failed)
+    {
+        const int LongestStatementWorthReading = 8192;
+
+        foreach (var scenario in failed)
+        {
+            foreach (var interaction in scenario.Interactions)
+            {
+                if (interaction.Type != "Request"
+                    || interaction.BodyLength is 0 or > LongestStatementWorthReading
+                    || !ParameterCaptureHint.IsSqlShaped(interaction.DependencyCategory))
+                {
+                    continue;
+                }
+
+                if (ParameterCaptureHint.ContentLacksParameters(PayloadReader.Read(index, interaction.Body)))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// <c>TestRunReport.html#sid-</c> when that file is sitting next to the data file this command read,
+    /// otherwise null. The HTML is optional output, and a link into a file that was never generated is
+    /// worse than no link: it sends a reader looking for something that does not exist.
+    /// </summary>
+    private static string? DeepLinkPrefix(ReportIndex index)
+    {
+        var htmlName = Path.GetFileNameWithoutExtension(index.Path) + ".html";
+        return File.Exists(Path.Combine(index.Directory, htmlName)) ? $"{htmlName}#sid-" : null;
     }
 }

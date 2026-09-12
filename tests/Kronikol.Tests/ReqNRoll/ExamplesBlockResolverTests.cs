@@ -41,14 +41,14 @@ public class ExamplesBlockResolverTests
     /// </summary>
     private static FeatureInfo BuildFeatureInfo()
     {
-        var outline = new Scenario(Loc, [], "Scenario Outline", OutlineName, "", [],
+        var outline = new Scenario(new Location(12, 3), [], "Scenario Outline", OutlineName, "", [],
             [
                 Block("ex-0", "the merchant gained share", "  only upward movement", Row("row-0a", "OneWeek", "2.50"), Row("row-0b", "OneYear", "5.00")),
                 Block("ex-1", "the merchant lost share", "", Row("row-1a", "FourWeeks", "-2.50")),
                 Block("ex-2", "", "", Row("row-2a", "RollingYear", "0.00"))
             ], "outline-1");
 
-        var plain = new Scenario(Loc, [], "Scenario", "A plain scenario", "", [], [], "plain-1");
+        var plain = new Scenario(new Location(5, 3), [], "Scenario", "A plain scenario", "", [], [], "plain-1");
 
         var ruled = new Scenario(Loc, [], "Scenario Outline", "Ruled outline", "", [],
             [Block("ex-r", "ruled block", "", Row("row-r1", "X", "1"))], "outline-2");
@@ -209,5 +209,61 @@ public class ExamplesBlockResolverTests
         var pickleId = typeof(ScenarioInfo).GetProperty("PickleId", flags);
         Assert.NotNull(pickleId);
         Assert.Equal(typeof(string), pickleId!.PropertyType);
+
+        // The source location rides on the same document. These are public Cucumber message types
+        // rather than Reqnroll internals, but a rename would degrade the feature just as silently.
+        Assert.Equal(typeof(string), typeof(GherkinDocument).GetProperty("Uri", flags)?.PropertyType);
+        Assert.Equal(typeof(Location), typeof(Io.Cucumber.Messages.Types.Scenario).GetProperty("Location", flags)?.PropertyType);
+        Assert.Equal(typeof(long), typeof(Location).GetProperty("Line", flags)?.PropertyType);
+    }
+
+    // ─── Source locations (M2.6) ───────────────────────────────
+
+    [Fact]
+    public void Source_resolves_the_document_uri_and_the_declaration_line()
+    {
+        // Reqnroll's FeatureInfo.FolderPath gives only "Features" - the file name is unreachable from
+        // it, because a feature's Title is not its file name. The embedded Gherkin document has both,
+        // and this resolver already holds it for the Examples: lookup.
+        var source = ExamplesBlockResolver.ResolveSource(BuildFeatureInfo(),
+            MakeScenarioInfo("A plain scenario", null));
+
+        Assert.Equal("market-share.feature", source.File);
+        Assert.Equal(5, source.Line);
+    }
+
+    [Fact]
+    public void Every_row_of_an_outline_reports_the_outline_declaration()
+    {
+        var first = ExamplesBlockResolver.ResolveSource(BuildFeatureInfo(),
+            MakeScenarioInfo(OutlineName, "1", ("Period", "OneWeek"), ("Change", "2.50")));
+        var third = ExamplesBlockResolver.ResolveSource(BuildFeatureInfo(),
+            MakeScenarioInfo(OutlineName, "3", ("Period", "FourWeeks"), ("Change", "-2.50")));
+
+        Assert.Equal(12, first.Line);
+        Assert.Equal(first, third);
+    }
+
+    [Fact]
+    public void Source_degrades_to_nothing_when_reqnroll_carries_no_messages()
+    {
+        // The contract every path through this resolver keeps: anything unexpected renders the report
+        // exactly as it did before the feature existed.
+        var featureInfo = new FeatureInfo(CultureInfo.InvariantCulture, "Features", "Market share", "",
+            ProgrammingLanguage.CSharp, [], new FakeMessages(null, []));
+
+        Assert.Equal(ScenarioSource.None, ExamplesBlockResolver.ResolveSource(featureInfo, MakeScenarioInfo("A plain scenario", null)));
+        Assert.Equal(ScenarioSource.None, ExamplesBlockResolver.ResolveSource(null, MakeScenarioInfo("A plain scenario", null)));
+        Assert.Equal(ScenarioSource.None, ExamplesBlockResolver.ResolveSource(BuildFeatureInfo(), null));
+    }
+
+    [Fact]
+    public void A_scenario_the_document_does_not_name_still_gets_the_file()
+    {
+        // Half an answer is better than none: the file is a property of the feature, the line is not.
+        var source = ExamplesBlockResolver.ResolveSource(BuildFeatureInfo(), MakeScenarioInfo("Renamed since generation", null));
+
+        Assert.Equal("market-share.feature", source.File);
+        Assert.Null(source.Line);
     }
 }

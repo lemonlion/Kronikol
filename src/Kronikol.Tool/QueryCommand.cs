@@ -1,3 +1,4 @@
+using Kronikol.Reports;
 using Kronikol.Tool.Query;
 
 namespace Kronikol.Tool;
@@ -13,8 +14,17 @@ namespace Kronikol.Tool;
 /// </summary>
 internal static partial class QueryCommand
 {
-    public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error)
+    /// <summary>
+    /// Dispatches one <c>kronikol query</c> invocation and returns its exit code.
+    ///
+    /// <para><paramref name="getEnv"/> is how to read an environment variable, injected rather than read
+    /// directly so a test never has to mutate process environment - the query tests run in the same
+    /// parallel xunit process as the rest of the suite. The repo convention, cf.
+    /// <c>CiMetadataDetector.Detect</c>.</para>
+    /// </summary>
+    public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?>? getEnv = null)
     {
+        getEnv ??= Environment.GetEnvironmentVariable;
         if (args.Count == 0)
         {
             PrintUsage(error);
@@ -64,7 +74,30 @@ internal static partial class QueryCommand
             return 1;
         }
 
-        var writer = new QueryWriter(@out, options.MaxBytes);
+        // Only `services` and `interactions --group-by` order their rows; everywhere else the order is the
+        // report's and cannot be changed. Accepting --sort and discarding it is the same silence the
+        // per-verb validators were added to remove - an agent reads row one as the slowest or the worst
+        // when it is merely the first, and nothing said otherwise. `interactions` answers for itself,
+        // because there the flag is legal with --group-by and refused without it.
+        if (options.Sort is not null && command is not ("services" or "interactions"))
+        {
+            error.WriteLine($"{command} lists rows in the report's own order and cannot sort them.");
+            error.WriteLine("Only `services --sort calls|duration|bytes|errors` and `interactions --group-by … --sort calls|duration|errors` order their rows.");
+            return 2;
+        }
+
+        if (options.Json && !JsonCommands.Contains(command, StringComparer.Ordinal))
+        {
+            error.WriteLine($"--json is not available on '{command}'. It answers: " + string.Join(", ", JsonCommands) + ".");
+            error.WriteLine("The rest print prose - a step tree, a payload, a trace - that has no honest object form.");
+            return 2;
+        }
+
+        // http, body, note and diagram write the payload to --out themselves, and a second writer aiming
+        // at the same file would overwrite it with one line. Everywhere else the answer IS what --out saves.
+        var outPath = command is "http" or "body" or "note" or "diagram" ? null : options.Out;
+        var envelope = options.Json ? new QueryEnvelope(command, index.Path, index.KronikolVersion, [.. options.Positional]) : null;
+        var writer = new QueryWriter(@out, options.MaxBytes, envelope, outPath);
         WriteProvenance(writer, index, command);
 
         var exit = command switch
@@ -86,15 +119,25 @@ internal static partial class QueryCommand
             "grep" => Grep(index, options, writer, error),
             "trace" => Trace(index, options, writer, error),
             "compare" => Compare(index, options, writer, error),
-            "diff" => Diff(index, options, writer, error),
+            "diff" => Diff(index, options, writer, error, getEnv),
             _ => Unknown(command, error)
         };
 
-        if (exit == 0)
-            writer.Flush();
+        if (exit == 0 && !writer.Flush(error))
+            return 1;
 
         return exit;
     }
+
+    /// <summary>
+    /// The verbs <c>--json</c> answers: the ones whose output is a list of like things, plus
+    /// <c>summary</c> and <c>diff</c>, whose sections are named members of the envelope. Every other verb
+    /// prints something shaped for a reader - a step tree, a payload, a chronology - and an object form of
+    /// it would either be an array of rendered strings or a second data model to keep in step with this
+    /// one. Internal so SkillDriftTests can hold the docs to the same list.
+    /// </summary>
+    internal static readonly string[] JsonCommands =
+        ["summary", "scenarios", "failures", "services", "interactions", "assertions", "diff"];
 
     private static int Unknown(string command, TextWriter error)
     {
@@ -105,8 +148,8 @@ internal static partial class QueryCommand
 
     /// <summary>
     /// One header line, and only when it changes how the answer should be read: an old report whose
-    /// assertion detail and step attribution are absent, or a merged file. Silence means the answer came
-    /// from the full data.
+    /// assertion detail and step attribution are absent, or a mergeable-format file. Silence means the
+    /// answer came from the full data.
     /// </summary>
     private static void WriteProvenance(QueryWriter writer, ReportIndex index, string command)
     {
@@ -114,10 +157,17 @@ internal static partial class QueryCommand
             return;
 
         if (!index.Enriched)
-            writer.Line("! report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.");
+            writer.Note("! report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.");
 
+        // A scenario that never reported a verdict took the configured default. Everything below reads as
+        // if it were a real result, so the reader is told before the answer, not after it.
+        foreach (var defaulted in index.Diagnostics.Where(d => d.Kind == nameof(DiagnosticKind.ResultDefaulted)))
+            writer.Note("! " + defaulted.Message);
+
+        // The flag means "the superset format a runner writes for kronikol merge", not "the result of a
+        // merge": every shard of a sharded build produces one.
         if (index.Mergeable)
-            writer.Line("! mergeable report (a merge of several runs)");
+            writer.Note("! mergeable-format report");
     }
 
     /// <summary>
@@ -140,8 +190,11 @@ internal static partial class QueryCommand
         if (File.Exists(direct))
             return direct;
 
+        // A `baseline/` folder beside the report is the --baseline convention, not a second report:
+        // without this, adopting the convention turns every directory lookup into an ambiguity.
         var found = Directory.GetFiles(path, "*.json", SearchOption.AllDirectories)
-            .Where(f => Path.GetFileName(f).EndsWith("TestRunReport.json", StringComparison.OrdinalIgnoreCase))
+            .Where(f => Path.GetFileName(f).EndsWith("TestRunReport.json", StringComparison.OrdinalIgnoreCase)
+                        && !IsUnderBaselineFolder(path, f))
             .Take(20)
             .ToArray();
 
@@ -158,6 +211,50 @@ internal static partial class QueryCommand
                     error.WriteLine("  " + file);
                 return null;
         }
+    }
+
+    /// <summary>The conventional folder name a <c>--baseline</c> report lives in, beside the current one.</summary>
+    internal const string BaselineFolderName = "baseline";
+
+    private static bool IsUnderBaselineFolder(string root, string file) =>
+        Path.GetRelativePath(root, file)
+            .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            .Any(segment => string.Equals(segment, BaselineFolderName, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Finds the report a <c>--baseline</c> diff compares against: the conventional
+    /// <c>&lt;reports&gt;/baseline/</c> folder beside the current report first, then
+    /// <c>$KRONIKOL_BASELINE</c> (a file or a directory, resolved the same way any report path is).
+    /// Convention wins, so a stale exported variable cannot quietly override what is on disk.
+    /// </summary>
+    private static string? ResolveBaseline(ReportIndex index, Func<string, string?> getEnv, TextWriter error)
+    {
+        var folder = Path.Combine(index.Directory, BaselineFolderName);
+        var conventional = Path.Combine(folder, "TestRunReport.json");
+        if (File.Exists(conventional))
+            return conventional;
+
+        if (Directory.Exists(folder))
+        {
+            var single = Directory.GetFiles(folder, "*.json", SearchOption.TopDirectoryOnly)
+                .Where(f => !f.EndsWith(".schema.json", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            if (single.Length == 1)
+                return single[0];
+        }
+
+        if (getEnv("KRONIKOL_BASELINE") is { Length: > 0 } named)
+        {
+            // Silent here: ResolveReport has already said precisely what was wrong with the path.
+            var resolved = ResolveReport(named, error);
+            if (resolved is not null)
+                return resolved;
+            return null;
+        }
+
+        error.WriteLine($"No baseline to compare against. Looked for {conventional}, and $KRONIKOL_BASELINE is not set.");
+        error.WriteLine("Point $KRONIKOL_BASELINE at a report (or a directory holding one), or name the older report: kronikol query diff <old.json> <new.json>");
+        return null;
     }
 
     public static void PrintUsage(TextWriter writer)
@@ -200,10 +297,17 @@ internal static partial class QueryCommand
         writer.WriteLine("  compare      <report> s3 s7                  two scenarios in one run");
         writer.WriteLine("  diff         <report> s3/i47 s7/i47          two bodies in one report — only the differing paths (also b:hashes)");
         writer.WriteLine("  diff         <old.json> <new.json> [--body s3/i47]   two runs matched on stableId; --body diffs one call across them");
+        writer.WriteLine("  diff         <report> --baseline               the same, against last-green: <reports>/baseline/TestRunReport.json,");
+        writer.WriteLine("                                                 else $KRONIKOL_BASELINE (a report, or a directory holding one)");
         writer.WriteLine();
         writer.WriteLine("Everywhere");
         writer.WriteLine("  --max-bytes N   output budget, default 6000 (0 removes it)");
         writer.WriteLine("  --offset N      resume a truncated listing         --limit N   cap rows");
-        writer.WriteLine("  --count         print only how many matched        --out FILE  write the payload to a file instead");
+        writer.WriteLine("  --count         print only how many matched        --out FILE  write the answer to a file instead");
+        writer.WriteLine("                  (--out lifts the byte budget: a file is not a context window)");
+        writer.WriteLine("  --json          one envelope { formatVersion, command, report, kronikolVersion, notes, items, total,");
+        writer.WriteLine("                  truncated, next } instead of text, on: " + string.Join(", ", JsonCommands));
+        writer.WriteLine("                  Text is the default and is what to read in a terminal - JSON costs about twice the");
+        writer.WriteLine("                  tokens. Errors stay plain text on stderr in both formats.");
     }
 }

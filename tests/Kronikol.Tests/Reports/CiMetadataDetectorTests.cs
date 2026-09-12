@@ -22,7 +22,8 @@ public class CiMetadataDetectorTests
             ["GITHUB_SHA"] = "abc123def456789",
             ["GITHUB_SERVER_URL"] = "https://github.com",
             ["GITHUB_REPOSITORY"] = "owner/repo",
-            ["GITHUB_RUN_ID"] = "12345"
+            ["GITHUB_RUN_ID"] = "12345",
+            ["GITHUB_RUN_ATTEMPT"] = "1"
         };
 
         var result = CiMetadataDetector.Detect(key => envVars.GetValueOrDefault(key));
@@ -35,6 +36,44 @@ public class CiMetadataDetectorTests
         Assert.Equal("https://github.com/owner/repo/actions/runs/12345", result.PipelineUrl);
         Assert.Equal("owner/repo", result.Repository);
         Assert.Equal("12345", result.RunId);
+        Assert.Equal("1", result.RunAttempt);
+    }
+
+    /// <summary>
+    /// The attempt is the only part of a run's identity that cannot be reconstructed afterwards.
+    /// GitHub's own reference is explicit that <c>GITHUB_RUN_ID</c> "does not change if you re-run",
+    /// so a report that records the id and not the attempt collapses a re-run onto the run it retried —
+    /// and re-running a failed job until it passes is exactly how a flake disappears from history.
+    /// </summary>
+    [Fact]
+    public void A_re_run_is_told_apart_from_the_run_it_retried()
+    {
+        var first = CiMetadataDetector.Detect(key => new Dictionary<string, string?>
+        {
+            ["GITHUB_ACTIONS"] = "true", ["GITHUB_RUN_ID"] = "12345", ["GITHUB_RUN_ATTEMPT"] = "1"
+        }.GetValueOrDefault(key));
+
+        var retry = CiMetadataDetector.Detect(key => new Dictionary<string, string?>
+        {
+            ["GITHUB_ACTIONS"] = "true", ["GITHUB_RUN_ID"] = "12345", ["GITHUB_RUN_ATTEMPT"] = "2"
+        }.GetValueOrDefault(key));
+
+        Assert.Equal(first!.RunId, retry!.RunId);
+        Assert.NotEqual(first.RunAttempt, retry.RunAttempt);
+    }
+
+    /// <summary>Azure DevOps has no equivalent variable, and a guess would be worse than a null.</summary>
+    [Fact]
+    public void Azure_devops_reports_no_attempt_rather_than_a_guess()
+    {
+        var result = CiMetadataDetector.Detect(key => new Dictionary<string, string?>
+        {
+            ["TF_BUILD"] = "True", ["BUILD_BUILDID"] = "77"
+        }.GetValueOrDefault(key));
+
+        Assert.Equal(CiEnvironment.AzureDevOps, result!.Provider);
+        Assert.Equal("77", result.RunId);
+        Assert.Null(result.RunAttempt);
     }
 
     [Fact]

@@ -37,6 +37,30 @@
     <Compile Remove="**\*" />
   </ItemGroup>
 
+  <!-- Every template ships the agent skill and the CLAUDE.md/AGENTS.md block, from ONE copy on disk.
+       `templates/skills/` and `templates/agents/CLAUDE.md` are canonical (plan section 9 Q6); the repo's own
+       `.claude/skills/` copy, `kronikol init-agents` and these twelve templates all install those same
+       bytes, and SkillDriftTests pins every copy to them. Packing by PackagePath rather than copying the
+       files into twelve folders keeps that one copy honest - 36 physical duplicates would drift.
+       AGENTS.md exists only as a package path: `.gitignore` ignores that file name at every depth, so a
+       real `templates/*/AGENTS.md` would build here and be silently missing from CI's checkout.
+       NoDefaultExcludes above is what lets the dot-directory survive `dotnet pack`; do not remove it. -->
+  <ItemGroup>
+    <KronikolTemplateRoot Include="kronikol-xunit3;kronikol-xunit2;kronikol-tunit;kronikol-nunit4;kronikol-mstest;kronikol-lightbdd-xunit3;kronikol-lightbdd-xunit2;kronikol-lightbdd-tunit;kronikol-bddfy-xunit3;kronikol-reqnroll-xunit3;kronikol-reqnroll-xunit2;kronikol-reqnroll-tunit" />
+    <KronikolSkillFile Include="skills\kronikol-test-debugging\**\*" />
+  </ItemGroup>
+
+  <Target Name="_PackKronikolAgentFilesIntoEveryTemplate" BeforeTargets="_GetPackageFiles" Outputs="%(KronikolTemplateRoot.Identity)">
+    <PropertyGroup>
+      <_KronikolTemplateRoot>%(KronikolTemplateRoot.Identity)</_KronikolTemplateRoot>
+    </PropertyGroup>
+    <ItemGroup>
+      <Content Include="@(KronikolSkillFile)" PackagePath="content\$(_KronikolTemplateRoot)\.claude\skills\kronikol-test-debugging\%(RecursiveDir)%(Filename)%(Extension)" />
+      <Content Include="agents\CLAUDE.md" PackagePath="content\$(_KronikolTemplateRoot)\CLAUDE.md" />
+      <Content Include="agents\CLAUDE.md" PackagePath="content\$(_KronikolTemplateRoot)\AGENTS.md" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <None Include="..\LICENSE" Pack="true" PackagePath="\" Link="LICENSE" />
     <None Include="README.md" Pack="true" PackagePath="\" />

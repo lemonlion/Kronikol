@@ -51,6 +51,15 @@ public enum DiagnosticKind
     /// thread, where a record can enqueue after the following step's marker.
     /// </summary>
     StepAttributionMismatch,
+
+    /// <summary>
+    /// Scenarios that started but never reported an end were given
+    /// <see cref="Kronikol.Ingestion.IngestRequest.ResultWhenUnknown"/> instead of a real verdict — by
+    /// default <see cref="ExecutionResult.Passed"/>, so <b>a test whose process died mid-run renders as
+    /// passed</b>. Nothing else in the report distinguishes that from a genuine pass, which is why it is
+    /// recorded here: a reader can see the default was applied, and to how many.
+    /// </summary>
+    ResultDefaulted,
 }
 
 /// <summary>
