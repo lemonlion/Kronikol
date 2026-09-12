@@ -237,6 +237,28 @@ public record ReportConfigurationOptions
     /// </summary>
     public bool WriteAgentInstructions { get; set; } = true;
 
+    /// <summary>
+    /// When <c>true</c>, writes <c>ctrf-report.json</c> next to the report: the run in the Common Test
+    /// Report Format, for the CI tooling that already speaks it — annotation actions, PR comment bots,
+    /// flaky-test dashboards. One test per scenario with its status, duration, failure message and trace,
+    /// plus the <c>sN</c> address that leads back into <c>kronikol query</c>. It carries failure messages
+    /// verbatim and is swept up by <see cref="PublishCiArtifacts"/> like every other <c>.json</c> in the
+    /// folder. Off by default: it is written for a consumer, and a run with no such consumer should not
+    /// pay for it. Default: <c>false</c>.
+    /// </summary>
+    public bool GenerateCtrfReport { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, writes <c>&lt;YamlSpecificationsFileName&gt;.md</c> next to the report: the
+    /// specification as prose — every feature, rule, scenario and step, with no result, no duration, no
+    /// interaction and no diagram. The same suite run red and run green produces the same bytes, which is
+    /// what makes it safe to commit to a docs site, and it is deliberately NOT blanked on a failed run the
+    /// way <c>Specifications.html</c> and the specifications data file are: a reader who reaches for it
+    /// mid-failure needs the narrative most. Suppressed by <see cref="ExpectedTestCount"/> like every
+    /// other specification output. Default: <c>false</c>.
+    /// </summary>
+    public bool GenerateSpecificationsMarkdown { get; set; }
+
     /// <summary>When <c>true</c>, writes a test summary to the CI job summary (e.g. GitHub Actions).</summary>
     public bool WriteCiSummary { get; set; }
 

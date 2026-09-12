@@ -32,6 +32,9 @@ internal static class Commands
         new("export",
             "Push NDJSON interaction captures to an OTLP/HTTP collector as OpenTelemetry spans.",
             (a, o, e) => ExportCommand.Run(a, o, e), ExportCommand.PrintUsage),
+        new("ctrf",
+            "Convert a TestRunReport.json into a Common Test Report Format document.",
+            (a, o, e) => CtrfCommand.Run(a, o, e), CtrfCommand.PrintUsage),
         new("init-agents",
             "Install the test-debugging skill and the CLAUDE.md/AGENTS.md block into a repository.",
             (a, o, e) => InitAgentsCommand.Run(a, o, e), InitAgentsCommand.PrintUsage)

@@ -73,6 +73,30 @@ public class FailuresDigestGeneratorTests
     }
 
     [Fact]
+    public void The_ordering_is_the_reports_own_ordering_even_when_case_decides_it()
+    {
+        // Every other writer orders features with the default culture-sensitive comparer, and the JSON
+        // file order is what gives `kronikol query` its sN. Under an ordinal comparer an upper-case
+        // initial beats every lower-case one, so "Gamma" would come before "beta" and both addresses
+        // below would be off by one - pointing the reader at the wrong scenario entirely.
+        var features = new[]
+        {
+            new Feature { DisplayName = "Alpha", Scenarios = [new Scenario { Id = "a1", DisplayName = "Alpha one", Result = ExecutionResult.Passed }] },
+            new Feature { DisplayName = "beta", Scenarios = [new Scenario { Id = "b1", DisplayName = "beta fails", Result = ExecutionResult.Failed, ErrorMessage = "boom" }] },
+            new Feature { DisplayName = "Gamma", Scenarios = [new Scenario { Id = "g1", DisplayName = "Gamma fails", Result = ExecutionResult.Failed, ErrorMessage = "bang" }] }
+        };
+
+        var digest = Generate(features);
+
+        var addresses = digest.Jsonl.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => JsonDocument.Parse(line).RootElement)
+            .ToDictionary(e => e.GetProperty("scenario").GetString()!, e => e.GetProperty("address").GetString());
+
+        Assert.Equal("s1", addresses["beta fails"]);
+        Assert.Equal("s2", addresses["Gamma fails"]);
+    }
+
+    [Fact]
     public void Each_failure_carries_its_stableId_and_a_deep_link()
     {
         var digest = Generate(OneFailure());

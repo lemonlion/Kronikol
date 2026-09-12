@@ -82,6 +82,14 @@ internal sealed class ScenarioEntry
     public int Ordinal { get; init; }
     public string FeatureName { get; set; } = "";
     public string[] FeatureLabels { get; set; } = [];
+
+    /// <summary>
+    /// Where the feature is written, when the lane supplied it - a project-relative path, the contract
+    /// <see cref="Kronikol.Reports.Feature.SourceFile"/> makes. Carried on the scenario because that is
+    /// the only shape the scanner produces, and because a scenario with no source of its own still
+    /// belongs to a file somebody can open.
+    /// </summary>
+    public string? FeatureSourceFile { get; set; }
     public string Id { get; set; } = "";
     public string StableId { get; set; } = "";
     public string Name { get; set; } = "";

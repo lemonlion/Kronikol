@@ -173,9 +173,10 @@ internal static partial class QueryCommand
     /// <summary>
     /// Accepts a file or the directory holding one, because a solution with several test projects has
     /// several reports and an agent should not have to guess which. Ambiguity is reported, never resolved
-    /// by picking one.
+    /// by picking one. Internal because <c>kronikol ctrf</c> takes a report the same way and must find it
+    /// by the same rule.
     /// </summary>
-    private static string? ResolveReport(string path, TextWriter error)
+    internal static string? ResolveReport(string path, TextWriter error)
     {
         if (File.Exists(path))
             return path;

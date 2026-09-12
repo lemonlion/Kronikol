@@ -111,11 +111,17 @@ public static class FailuresDigestGenerator
     /// <summary>
     /// Scenarios in the order <c>kronikol query</c> numbers them: features by display name, scenarios in
     /// file order. The digest's <c>sN</c> addresses are worthless if they disagree with the tool's.
+    /// <para>The comparer is the default culture-sensitive one on purpose, and it must stay that way: the
+    /// tool reads its ordinals off <c>TestRunReport.json</c>, whose feature order comes from
+    /// <c>BuildFeaturesJsonModel</c>'s bare <c>OrderBy(f => f.DisplayName)</c> - as does the XML's, the
+    /// YAML's and every specifications writer's. An ordinal comparer sorts every upper-case initial ahead
+    /// of every lower-case one, so a run with an "Order API" and an "Order api" numbered them differently
+    /// here and in the file, and the digest sent its reader to a scenario that had not failed.</para>
     /// </summary>
     private static IEnumerable<Located> Enumerate(Feature[] features)
     {
         var ordinal = 0;
-        foreach (var feature in features.OrderBy(f => f.DisplayName, StringComparer.Ordinal))
+        foreach (var feature in features.OrderBy(f => f.DisplayName))
             foreach (var scenario in feature.Scenarios ?? [])
                 yield return new Located(feature, scenario, ordinal++);
     }

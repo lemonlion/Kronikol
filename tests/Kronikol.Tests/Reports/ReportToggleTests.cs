@@ -276,6 +276,43 @@ public class ReportToggleTests : IDisposable
     }
 
     [Fact]
+    public void Specification_narrative_skipped_when_scenario_count_below_expected()
+    {
+        // Same reason as the html and the yml above: a partial run must not overwrite a good spec with a
+        // shorter one. A new spec-surface output that is not listed in the guard silently stops the guard
+        // covering the surface it exists to cover.
+        var options = MakeOptions(o =>
+        {
+            o.ExpectedTestCount = () => 5;
+            o.GenerateSpecificationsMarkdown = true;
+        });
+
+        ReportGenerator.CreateStandardReportsWithDiagrams(
+            SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
+
+        Assert.False(File.Exists(Path.Combine(_reportsDir, $"Specifications_{_suffix}.md")));
+    }
+
+    [Fact]
+    public void Specification_narrative_written_when_the_run_is_whole()
+    {
+        var options = MakeOptions(o =>
+        {
+            o.ExpectedTestCount = () => 1;
+            o.GenerateSpecificationsMarkdown = true;
+        });
+
+        ReportGenerator.CreateStandardReportsWithDiagrams(
+            SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
+
+        var path = Path.Combine(_reportsDir, $"Specifications_{_suffix}.md");
+        Assert.True(File.Exists(path));
+        // Named from the data file's option, not the html's, so renaming the data file renames its
+        // narrative with it.
+        Assert.StartsWith("# ", File.ReadAllText(path));
+    }
+
+    [Fact]
     public void TestRunReport_still_generated_when_scenario_count_below_expected()
     {
         var options = MakeOptions(o => o.ExpectedTestCount = () => 5);

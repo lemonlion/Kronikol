@@ -136,6 +136,7 @@ public static class ReportGenerator
             {
                 options.GenerateSpecificationsReport = false;
                 options.GenerateSpecificationsData = false;
+                options.GenerateSpecificationsMarkdown = false;
             }
         }
 
@@ -322,6 +323,23 @@ public static class ReportGenerator
                 WriteFile(digest.Markdown, FailuresDigestFileName);
                 WriteFile(digest.Jsonl, FailuresDigestJsonlFileName);
             });
+        }
+
+        if (options.GenerateSpecificationsMarkdown)
+        {
+            var specsMarkdownFileName = $"{options.YamlSpecificationsFileName}.md";
+            Add(specsMarkdownFileName, () => WriteFile(
+                SpecificationsMarkdownGenerator.Generate(features, options.SpecificationsTitle),
+                specsMarkdownFileName));
+        }
+
+        // Written for somebody else's tooling rather than for a reader of this directory, which is why it
+        // is off by default and why it sits in the isolated list like everything else.
+        if (options.GenerateCtrfReport)
+        {
+            Add(CtrfReportGenerator.FileName, () => WriteFile(
+                CtrfReportGenerator.Generate(features, startRunTime, endRunTime, ciMetadata, KronikolVersion),
+                CtrfReportGenerator.FileName));
         }
 
         if (options.WriteAgentInstructions)

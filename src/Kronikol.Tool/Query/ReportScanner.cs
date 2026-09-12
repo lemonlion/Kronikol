@@ -96,6 +96,7 @@ internal static class ReportScanner
         private string _featureName = "";
         private string[] _featureLabels = [];
         private readonly List<string> _pendingFeatureLabels = [];
+        private string? _featureSourceFile;
         private int _scenarioOrdinal;
         private int _interactionOrdinal;
 
@@ -262,12 +263,13 @@ internal static class ReportScanner
             if (At("features", "#"))
             {
                 _featureName = "";
+                _featureSourceFile = null;
                 _featureLabels = [];
                 _pendingFeatureLabels.Clear();
             }
             else if (At("scenarios", "#"))
             {
-                _scenario = new ScenarioEntry { Ordinal = _scenarioOrdinal++, FeatureName = _featureName, FeatureLabels = _featureLabels };
+                _scenario = new ScenarioEntry { Ordinal = _scenarioOrdinal++, FeatureName = _featureName, FeatureLabels = _featureLabels, FeatureSourceFile = _featureSourceFile };
                 _interactionOrdinal = 0;
                 _stepStack.Clear();
             }
@@ -467,6 +469,13 @@ internal static class ReportScanner
             if (At("features", "#") && key == "name")
             {
                 _featureName = reader.GetString() ?? "";
+                return;
+            }
+
+            // Read before the scenarios array, so every scenario of the feature is built with it.
+            if (At("features", "#") && key == "sourceFile")
+            {
+                _featureSourceFile = reader.GetString();
                 return;
             }
 

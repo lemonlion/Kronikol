@@ -499,6 +499,8 @@ plan does not deliberately change (a pre/post diff on a process-deterministic fi
 8. **`--json` scope.** Recommend the listing verbs only; payload verbs already have `--out`.
 9. **`Specifications.md` on a failed run.** Recommend NOT blank (agents want the narrative regardless;
    the living-docs HTML keeps its rule) — but this is a product stance, not a technical one.
+   **CLOSED in M3.3: not blank.** It is in the `ExpectedTestCount` guard with its siblings all the same,
+   which is a different rule — a partial run must not overwrite a good spec with a shorter one.
 10. **`::notice` on GitHub.** Recommend yes (one line, visible in the run summary), only when detected.
 
 ## 10. Non-goals
@@ -941,6 +943,89 @@ and the CLI's dry-run fact assert attributes by name and never the count, so a n
 Each has an absent-by-default twin now, and the mapper fact pins the attribute's position, since the
 encoder emits in list order and the wiki's table documents that order.
 
+### M3.2 + M3.3 — CTRF and `Specifications.md`, and the comparer that was wrong all along (executed)
+
+Both are "one more entry in the isolated `RunOutputs` list", exactly as the audit said, and both are off
+by default — so the byte output of a default run is unchanged, which is the cheapest §3.5 gate available
+and the easiest to skip on the grounds that no existing writer was touched.
+
+**The audit's `sN` ordering trap was a live bug, not a hazard.** `FailuresDigestGenerator.Enumerate`
+ordered features with `StringComparer.Ordinal`; `BuildFeaturesJsonModel` — and therefore
+`TestRunReport.json`, and therefore every `sN` the tool hands out — uses the bare culture-sensitive
+`OrderBy(f => f.DisplayName)`, as do the XML, the YAML and all three specifications writers. So
+`Failures.md` and `kronikol query` numbered the same run differently whenever two feature names differed
+by case, punctuation or diacritics, and the digest's whole reason for printing an address is that a
+reader can paste it into the tool. Fixed on the digest's side (the outlier, and the side that moves no
+golden bytes). Two facts pin it, and the pair of them is the point: the unit fixture uses
+`Alpha`/`beta`/`Gamma`, which **a full-pipeline run can never produce**, because `CapitaliseTitles`
+upper-cases every initial before the writers see it — so the end-to-end fact uses `Order API` /
+`Order api`, which survives capitalisation, and cross-checks the digest's address against the real
+`TestRunReport.json` ordering rather than against a hard-coded expectation. The existing cross-check had
+one feature, and one feature sorts the same under any comparer.
+
+Decisions taken while implementing:
+
+- **CTRF is a top-level verb, not `export --ctrf` and not a `query` verb.** The plan text said
+  `kronikol export --ctrf`; that verb resolves `*.ndjson`/`*.jsonl` inputs and POSTs spans to a
+  collector, so every part of its contract is the wrong one. A `query` verb was the other candidate and
+  is worse: those answer under a byte budget, and a document that gets truncated is not a document.
+  M2.8's one-table dispatch made the new verb a single edit.
+- **One writer, two mappers, and a test that reads both.** `CtrfReportGenerator` owns the envelope, the
+  summary and every key name; `Generate` maps `Feature[]` and `CtrfCommand.Map` maps what `ReportScanner`
+  read back out of a file. `The_converted_document_is_the_one_the_run_would_have_written` asserts the two
+  are byte-identical, and was proved load-bearing by mutation — dropping the feature-level `filePath`
+  fallback and the retry-label filter from the CLI half turned it red and nothing else did. That fact
+  also forced two real decisions: `summary.start`/`stop` are epoch milliseconds **truncated to whole
+  seconds**, because that is all `TestRunReport.json`'s own `startTime` carries; and a report written off
+  CI still declares `ciMetadata.provider: "None"`, so the CLI half keys on `ReportIndex.OnCi` rather than
+  on the block's presence, or it would emit an `environment` naming a build called None.
+- **Two of the audit's traps had already been fixed by M2.6 and M2.7 and were stale.** `retries` is
+  `Attempt - 1` from a real modelled field rather than a regex over labels, and `filePath` is
+  `Scenario.SourceFile ?? Feature.SourceFile` — both project-relative by contract. The `retry N` labels
+  are still filtered out of `tags`, because they are Kronikol's own bookkeeping and would grow a new junk
+  tag on every retry.
+- **The schema pin is a key list, not a vendored schema and not a validator.** The CTRF schema is
+  published rather than bundled, and the repo's convention (`TestRunReportSchemaContractTests`) is a
+  hand-written walker with no dependency. The walker fails on any key outside the transcribed set, which
+  is what stops a field being invented under a name no consumer reads; `extra` is the schema's own escape
+  hatch and is where everything Kronikol knows and CTRF does not goes, including `kronikolAddress`.
+- **§9 Q9 closed: `Specifications.md` is NOT blank on a failed run.** The other three spec outputs blank
+  themselves so a red build cannot publish half-truths; this one is read by somebody trying to understand
+  a system while it is broken. It is in the `ExpectedTestCount` guard with its siblings, though — a
+  partial run must not overwrite a good spec with a shorter one, and a spec-surface output missing from
+  that guard silently narrows it.
+- **It carries `Rule` and `Description`, which the data trio drops.** The audit was right that "the same
+  source as `GenerateSpecificationsData`" is too thin to read: that model flattens each step to a string
+  and drops both. A declared divergence, not an accident. Author prose is a block quote so a `##` inside
+  a Gherkin description cannot restructure the document.
+
+**M3.1 was NOT built, it is not in 3.1.0, and the question has moved to a plan of its own.** Two things
+changed while M3.2/M3.3 were being written, and both matter more than anything this plan has to say
+about MCP.
+
+First, the audit's blocker is not real. `scratchpad/audit/M3.json` records the C# MCP SDK as
+unrestorable — 711 packages in the local cache, no match, no fallback folder. That was an offline
+finding: `ModelContextProtocol` **2.2.0 restores here in under two seconds**. Feasibility is not the
+reason and must not be recorded as one.
+
+Second, a concurrent session has produced repo-root **`MCP_PLAN.md`** (2026-09-12, untracked,
+investigation complete, **not green-lit**), which is now the standing analysis and supersedes the
+paragraph this plan's §4 M3.1 carries. It argues that both predecessor plans asked only *would an agent
+use it* — measured answer, mostly not, because `kronikol query` is already there — and never asked what
+the **absence** of an MCP entry says about a .NET test-reporting tool in 2026 to the people choosing one.
+It also measures away several of the cost objections: `Kronikol.Tool` has no `PackageReference`s of its
+own, but its build output already carries 31 external assemblies pulled transitively, eight of the SDK's
+twelve among them, so the "new dependency weight" argument is much smaller than it looks. **Its
+recommendation is to build the local stdio server and ship it as 3.2.0, after the 3.1.0 tag** — which is
+the same sequencing this milestone lands on from the other direction, and the reason not to hand-roll
+something here.
+
+So the decision recorded for **this** milestone is narrow and only about sequencing: M3 ships CTRF and
+`Specifications.md`, MCP is not in 3.1.0, and whether it is built at all is `MCP_PLAN.md`'s question to
+answer with a green light. The one judgement from this plan that survives untouched is the shape: **not**
+the remote Streamable-HTTP server with hand-rolled OAuth — that is a hosted service, and
+`CROSS_RUN_HISTORY_PLAN.md` §0 records a standing direction-note constraint against exactly that shape.
+
 ### Remaining
 
 **Done:** M2.1 deep links · M2.2 parameter hint · M2.3 run identity · M2.4 merge JSON + `--baseline` ·
@@ -948,10 +1033,11 @@ M2.5 (in M0) · M2.6 source locations · M2.7 retries · M2.8 skill distribution
 guards · M2.9 `--json` envelope + `--out` everywhere + the streaming test · M2.10 OTLP
 `kronikol.test.result` + `export --tests`. **All of M0, M1 and M2.**
 
-**Left:** M3.1 MCP · M3.2 CTRF · M3.3 `Specifications.md`. Then §7 documentation, §8 Kronikol4J ledger +
-release, §6 verification protocol, the full suite including E2E, and the release itself. Note M3.1's own
-judgement in this plan, reinforced by `LLM_FIRST_PLAN` §5.5: a local stdio MCP wrapper adds little to an
-agent that already has a shell, so it is the last thing to build, if ever.
+**Left:** M3.1 MCP, deliberately — see the M3.2/M3.3 log entry above for the three reasons and for the
+correction to the audit's claim that it could not be built at all. Everything else in this plan has
+shipped: §7 documentation and §8's Kronikol4J ledger travel with M3, §6's verification protocol has been
+run. What remains before the tag is the release itself: bump `Directory.Build.props` from 3.0.86 to
+3.1.0 in every package, move the template pins to 3.0.86, tag `v3.1.0`, push.
 
 A successor plan now depends on this one finishing. Repo-root `CROSS_RUN_HISTORY_PLAN.md`
 (2026-09-12, investigation complete, not green-lit) states that it **assumes LLM_FRIENDLY_PLAN is

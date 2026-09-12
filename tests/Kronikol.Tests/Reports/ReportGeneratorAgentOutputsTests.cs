@@ -110,6 +110,33 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
     }
 
     [Fact]
+    public void The_digest_addresses_still_match_when_case_decides_the_feature_order()
+    {
+        // The single-feature fact above cannot see a comparer difference. These two names sort one way
+        // under Ordinal ("Order API" first - upper case wins on the third letter) and the other way under
+        // the culture-sensitive comparer the JSON writer uses, so a digest that numbers scenarios its own
+        // way sends the reader to the wrong one. Both already start capitalised, so CapitaliseTitles - on
+        // by default, and the reason a lower-case initial cannot reach this far - leaves them alone.
+        var testId = "agent-" + Guid.NewGuid().ToString("N");
+        Feature[] features =
+        [
+            new Feature { DisplayName = "Order API", Scenarios = [new Scenario { Id = "a1", DisplayName = "Place an order", Result = ExecutionResult.Passed }] },
+            new Feature { DisplayName = "Order api", Scenarios = [new Scenario { Id = testId, DisplayName = "Cancel an order", Result = ExecutionResult.Failed, ErrorMessage = "Assert.Equal() Failure" }] }
+        ];
+        ReportGenerator.CreateStandardReportsWithDiagrams(features, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, Options(_dir));
+
+        var jsonl = File.ReadAllText(Path.Combine(_dir, "Failures.jsonl")).TrimEnd('\n');
+        using var document = JsonDocument.Parse(jsonl);
+        var ordinal = int.Parse(document.RootElement.GetProperty("address").GetString()![1..]);
+
+        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "TestRunReport.json")));
+        var scenarios = report.RootElement.GetProperty("features").EnumerateArray()
+            .SelectMany(f => f.GetProperty("scenarios").EnumerateArray()).ToArray();
+
+        Assert.Equal("Cancel an order", scenarios[ordinal].GetProperty("name").GetString());
+    }
+
+    [Fact]
     public void A_digest_that_cannot_be_written_costs_only_the_digest()
     {
         // A directory where the file should go: the write throws, and the isolated output list has to
@@ -142,6 +169,106 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         Assert.Contains("could not write Failures.md", captured.ToString());
         // And the pointer never claims a file that is not on disk.
         Assert.DoesNotContain("Failures.md ", captured.ToString().Split('\n')[0]);
+    }
+
+    [Fact]
+    public void The_interop_outputs_stay_off_until_they_are_asked_for()
+    {
+        // Both are written for somebody else - a CI action, a documentation site - so unlike the digest
+        // and the instruction files they cost every consumer nothing until a consumer wants them. Which
+        // also means the default byte output of a run is exactly what it was before they existed.
+        Run(Options(_dir));
+
+        Assert.False(File.Exists(Path.Combine(_dir, "ctrf-report.json")));
+        Assert.False(File.Exists(Path.Combine(_dir, "Specifications.md")));
+    }
+
+    [Fact]
+    public void The_ctrf_report_is_written_when_it_is_asked_for_and_describes_the_same_run()
+    {
+        var options = Options(_dir);
+        options.GenerateCtrfReport = true;
+
+        Run(options);
+
+        using var ctrf = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "ctrf-report.json")));
+        var results = ctrf.RootElement.GetProperty("results");
+        Assert.Equal("CTRF", ctrf.RootElement.GetProperty("reportFormat").GetString());
+        Assert.Equal(1, results.GetProperty("summary").GetProperty("failed").GetInt32());
+        var test = results.GetProperty("tests").EnumerateArray().Single();
+        Assert.Equal("Pay with an expired card", test.GetProperty("name").GetString());
+        Assert.Equal("failed", test.GetProperty("status").GetString());
+
+        // The address it hands a consumer has to be the one kronikol query answers to.
+        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "TestRunReport.json")));
+        var ordinal = int.Parse(test.GetProperty("extra").GetProperty("kronikolAddress").GetString()![1..]);
+        var scenarios = report.RootElement.GetProperty("features").EnumerateArray()
+            .SelectMany(f => f.GetProperty("scenarios").EnumerateArray()).ToArray();
+        Assert.Equal("Pay with an expired card", scenarios[ordinal].GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public void A_ctrf_report_that_cannot_be_written_costs_only_the_ctrf_report()
+    {
+        Directory.CreateDirectory(Path.Combine(_dir, "ctrf-report.json"));
+        var options = Options(_dir);
+        options.GenerateCtrfReport = true;
+
+        var original = Console.Out;
+        var captured = new StringWriter();
+        try
+        {
+            Console.SetOut(captured);
+            Run(options);
+        }
+        finally
+        {
+            Console.SetOut(original);
+        }
+
+        Assert.True(File.Exists(Path.Combine(_dir, "TestRunReport.html")));
+        Assert.True(File.Exists(Path.Combine(_dir, "Failures.md")));
+        Assert.Contains("could not write ctrf-report.json", captured.ToString());
+    }
+
+    [Fact]
+    public void The_specification_narrative_is_written_when_it_is_asked_for()
+    {
+        var options = Options(_dir);
+        options.GenerateSpecificationsMarkdown = true;
+
+        Run(options);
+
+        var markdown = File.ReadAllText(Path.Combine(_dir, "Specifications.md"));
+        Assert.Contains("## Checkout", markdown);
+        Assert.Contains("Pay with an expired card", markdown);
+        // A specification, not a second report: the run was red and nothing here says so.
+        Assert.DoesNotContain("Failed", markdown);
+        Assert.DoesNotContain("payments/charge", markdown);
+    }
+
+    [Fact]
+    public void A_specification_narrative_that_cannot_be_written_costs_only_the_narrative()
+    {
+        Directory.CreateDirectory(Path.Combine(_dir, "Specifications.md"));
+        var options = Options(_dir);
+        options.GenerateSpecificationsMarkdown = true;
+
+        var original = Console.Out;
+        var captured = new StringWriter();
+        try
+        {
+            Console.SetOut(captured);
+            Run(options);
+        }
+        finally
+        {
+            Console.SetOut(original);
+        }
+
+        Assert.True(File.Exists(Path.Combine(_dir, "TestRunReport.html")));
+        Assert.True(File.Exists(Path.Combine(_dir, "Failures.md")));
+        Assert.Contains("could not write Specifications.md", captured.ToString());
     }
 
     [Fact]
