@@ -117,6 +117,59 @@ public class FailureFieldsTests
         Assert.Contains("FailureCause: Timeout", yaml);
     }
 
+    /// <summary>
+    /// The report renders a failure through two different code paths — one for an ordinary scenario, one
+    /// for a row of a parameterized group — and they are written in two different styles, a raw string
+    /// literal and a sequence of appends. They drifted apart by a blank line the moment a second field
+    /// was added to the block. A byte-for-byte golden in the Java port fails on exactly that, and no
+    /// assertion about either path on its own can see it.
+    /// </summary>
+    [Fact]
+    public void Both_failure_blocks_render_the_same_shape()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Orders",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "plain", DisplayName = "Cancel order", Result = ExecutionResult.Failed,
+                        ErrorMessage = "Assert.Equal() Failure", FailureCause = "Assertion",
+                        Duration = TimeSpan.FromSeconds(1)
+                    },
+                    new Scenario
+                    {
+                        Id = "row", DisplayName = "Cancel order", Result = ExecutionResult.Failed,
+                        ErrorMessage = "Assert.Equal() Failure", FailureCause = "Assertion",
+                        Duration = TimeSpan.FromSeconds(1),
+                        OutlineId = "cancel",
+                        ExampleValues = new Dictionary<string, string> { ["tier"] = "gold" }
+                    }
+                ]
+            }
+        };
+
+        var html = File.ReadAllText(ReportGenerator.GenerateHtmlReport(
+            [], features, Start, End, null, "BothBlocks.html", "Contract", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            groupParameterizedTests: true));
+
+        var blocks = System.Text.RegularExpressions.Regex
+            .Matches(html, "<pre>(.*?)</pre>", System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Select(m => m.Groups[1].Value)
+            .Where(b => b.Contains("Error:", StringComparison.Ordinal))
+            .Select(b => b.Trim().ReplaceLineEndings("\n"))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.NotEmpty(blocks);
+        Assert.Single(blocks);
+        Assert.Equal("Error: Assert.Equal() Failure\nCause: Assertion", blocks[0]);
+    }
+
     [Fact]
     public void The_schema_declares_it()
     {

@@ -74,7 +74,15 @@ public static class MergeableReportRenderer
             fullSearchIndex: options.FullSearchIndex,
             toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false),
             // The shards' suite, so the HTML's data-stable-id attributes agree with the merged data file.
-            suite: report.Suite);
+            //
+            // `?? ""` rather than `?? null`, and the distinction is the whole point: GenerateHtmlReport
+            // reads a null suite as "the caller did not say" and resolves one from the running assembly,
+            // while the merged JSON beside it takes the same null and writes unscoped ids. A merge
+            // produces a null suite deliberately — MergeableReportMerger keeps the suite only when every
+            // shard agrees — so on that path the HTML would scope its ids to whatever process happened to
+            // run the merge and every `#sid-` link out of the data file would miss. The empty string says
+            // "deliberately no suite", which both writers agree means the pre-3.1.0 id.
+            suite: report.Suite ?? "");
 
         // GenerateHtmlReport always writes under <BaseDir>/Reports/<fileName>; relocate to the
         // caller's requested path when different.

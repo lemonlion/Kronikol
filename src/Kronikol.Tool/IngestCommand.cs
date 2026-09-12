@@ -325,7 +325,14 @@ internal static class IngestCommand
                 result.Features,
                 result.ReportsDirectory,
                 ["TestRunReport.html", "TestRunReport.json", "Failures.md"],
-                agentInstructionsWritten: File.Exists(Path.Combine(result.ReportsDirectory, AgentInstructionsGenerator.ClaudeFileName)));
+                agentInstructionsWritten: File.Exists(Path.Combine(result.ReportsDirectory, AgentInstructionsGenerator.ClaudeFileName)),
+                // The same suite the pipeline wrote the report under. Without it this pointer prints ids
+                // computed with no suite at all, addressing a report whose own ids were computed with one
+                // — and since `WriteRunSummaryToConsole` is off just above, this is the ONLY pointer an
+                // ingest user sees, so there is no correctly-scoped second voice to catch the drift. The
+                // shipped CLI agrees by luck (RunSuite rejects the name `Kronikol.Tool`); it stops
+                // agreeing the moment an ingest is given a suite or runs inside a host that resolves one.
+                suite: RunSuite.Resolve(options));
             // Skip(1): the first line names the directory, which the two lines above already did.
             foreach (var line in RunSummaryConsoleWriter.Build(summary).TrimEnd('\n').Split('\n').Skip(1))
                 @out.WriteLine(line);

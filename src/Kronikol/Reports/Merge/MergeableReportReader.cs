@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Kronikol.ComponentDiagram;
@@ -130,6 +130,7 @@ public static class MergeableReportReader
         IsHappyPath = se.TryGetProperty("isHappyPath", out var hp) && hp.ValueKind == JsonValueKind.True,
         ErrorMessage = GetString(se, "errorMessage"),
         ErrorStackTrace = GetString(se, "errorStackTrace"),
+        FailureCause = GetString(se, "failureCause"),
         Labels = ReadStringArray(se, "labels"),
         Categories = ReadStringArray(se, "categories"),
         Rule = GetString(se, "rule"),

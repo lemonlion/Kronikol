@@ -40,8 +40,15 @@ public static class ReportGenerator
     /// coincidentally readable on xUnit v3 — whose adapter spliced the cause onto the message — and a
     /// mislabel on the other seven adapters, where the text after it is the assertion, not the cause.
     /// </summary>
+    /// <remarks>
+    /// Ends with its own newline and contributes NOTHING when there is no cause, so that both failure
+    /// blocks — the raw-string one, where the interpolation sits on a line of its own and so supplies a
+    /// line break whatever this returns, and the appended one, which supplies its own — produce the same
+    /// spacing. They briefly did not, and one blank line of drift between two renderings of the same
+    /// failure is exactly the sort of difference a byte-for-byte golden in the Java port fails on.
+    /// </remarks>
     private static string FailureCauseLine(string? failureCause) =>
-        failureCause is null ? "\n" : $"Cause: {System.Net.WebUtility.HtmlEncode(failureCause)}\n\n";
+        failureCause is null ? "" : $"Cause: {System.Net.WebUtility.HtmlEncode(failureCause)}\n";
 
     internal static bool ShouldEmbedComponentDiagram(ReportConfigurationOptions options) =>
         (options.ComponentDiagramOptions ?? new ComponentDiagramOptions()).EmbedInTestRunReport;
@@ -2566,8 +2573,7 @@ public static class ReportGenerator
                         diffHtml = ErrorDiffParser.GenerateDiffHtml(diffResult.Expected, diffResult.Actual);
                     body.Append("<details class=\"failure-result\" open><summary class=\"h4\">Failure Result</summary><pre>");
                     if (s.ErrorMessage is not null)
-                        body.Append($"Error: {System.Net.WebUtility.HtmlEncode(s.ErrorMessage)}\n");
-                    body.Append(FailureCauseLine(s.FailureCause));
+                        body.Append($"Error: {System.Net.WebUtility.HtmlEncode(s.ErrorMessage)}\n{FailureCauseLine(s.FailureCause)}\n");
                     if (s.ErrorStackTrace is not null)
                     {
                         body.Append(System.Net.WebUtility.HtmlEncode(s.ErrorStackTrace));

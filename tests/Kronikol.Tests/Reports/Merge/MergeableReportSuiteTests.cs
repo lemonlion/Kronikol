@@ -70,4 +70,50 @@ public class MergeableReportSuiteTests
         Assert.Contains(ScenarioStableId.Compute(null, "Orders", "Place order"),
             MergeableReportRenderer.Serialize(merged));
     }
+
+    /// <summary>
+    /// The merged HTML and the merged data file are the two halves of one answer, and a <c>#sid-</c> link
+    /// crosses between them. They are written by different methods from the same model, and one of them
+    /// treats a null suite as "the caller did not say" while the other treats it as "there is none" — so
+    /// on the case a merge deliberately produces (shards that disagree, and every shard written before
+    /// suites existed) the HTML scoped its ids to whatever process ran the merge while the JSON left them
+    /// unscoped, and every link from the data file missed.
+    ///
+    /// <para>Asserted as an equality between the two artifacts rather than against a recomputed id,
+    /// because both halves stay internally consistent while drifting apart: each is individually
+    /// plausible and only the pairing is wrong.</para>
+    /// </summary>
+    [Theory]
+    [InlineData("Alpha.Tests", "Alpha.Tests")]   // every shard agrees — the suite survives
+    [InlineData("Alpha.Tests", "Beta.Tests")]    // they disagree — the merge keeps no suite at all
+    [InlineData(null, null)]                     // shards written before suites existed
+    public void A_merged_report_carries_one_set_of_ids_across_both_files(string? first, string? second)
+    {
+        var merged = MergeableReportMerger.Merge(
+        [
+            MergeableReportReader.Parse(Shard(first, "a1", "Place order")),
+            MergeableReportReader.Parse(Shard(second, "b1", "Cancel order"))
+        ]);
+
+        var directory = Directory.CreateTempSubdirectory("kronikol-merge-ids").FullName;
+        try
+        {
+            var html = File.ReadAllText(MergeableReportRenderer.Render(merged, Path.Combine(directory, "Merged.html")));
+            var json = MergeableReportRenderer.Serialize(merged);
+
+            var inHtml = System.Text.RegularExpressions.Regex.Matches(html, "data-stable-id=\"([0-9a-f]{16})\"")
+                .Select(m => m.Groups[1].Value).Distinct(StringComparer.Ordinal)
+                .OrderBy(id => id, StringComparer.Ordinal).ToArray();
+            var inJson = System.Text.RegularExpressions.Regex.Matches(json, "\"stableId\": \"([0-9a-f]{16})\"")
+                .Select(m => m.Groups[1].Value).Distinct(StringComparer.Ordinal)
+                .OrderBy(id => id, StringComparer.Ordinal).ToArray();
+
+            Assert.NotEmpty(inJson);
+            Assert.Equal(inJson, inHtml);
+        }
+        finally
+        {
+            try { Directory.Delete(directory, recursive: true); } catch (IOException) { }
+        }
+    }
 }

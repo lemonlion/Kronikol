@@ -38,6 +38,7 @@ public abstract class DiagrammedComponentTest
         var methodInfo = type.GetMethod(TestContext.TestName!);
         var isHappyPath = methodInfo?.GetCustomAttribute<HappyPathAttribute>() is not null;
         var parameterNames = methodInfo?.GetParameters().Select(p => p.Name).ToArray();
+        var failed = TestContext.CurrentTestOutcome.ToExecutionResult() == ExecutionResult.Failed;
 
         DiagrammedTestRun.TestContexts.Enqueue(new MSTestScenarioInfo
         {
@@ -51,11 +52,14 @@ public abstract class DiagrammedComponentTest
             // other — the failures digest groups on the first line of this field, so a whole suite
             // collapsed into one cluster with one worked example. It also pointed the reader at
             // ErrorStackTrace, which nothing ever assigned, so the field it named was always null.
-            ErrorMessage = FailureText.OrNull(TestContext.TestException?.Message),
-            ErrorStackTrace = FailureText.OrNull(TestContext.TestException?.StackTrace),
-            FailureCause = TestContext.CurrentTestOutcome == UnitTestOutcome.Failed
-                ? TestContext.TestException?.GetType().Name
-                : null,
+            // Gated on the outcome, not merely on there being an exception to report. `Assert.Inconclusive`
+            // throws, so TestException is set on a SKIPPED test too — and a skipped scenario carrying an
+            // errorMessage is the same defect this commit removed from xUnit v3, arriving by another door.
+            // The gate is the mapped result rather than `== Failed`, so Error, Timeout and Aborted, which
+            // are failures, keep their message.
+            ErrorMessage = failed ? FailureText.OrNull(TestContext.TestException?.Message) : null,
+            ErrorStackTrace = failed ? FailureText.OrNull(TestContext.TestException?.StackTrace) : null,
+            FailureCause = failed ? TestContext.TestException?.GetType().Name : null,
             Endpoint = endpoint,
             IsHappyPath = isHappyPath,
             Duration = _stopwatch?.Elapsed,
