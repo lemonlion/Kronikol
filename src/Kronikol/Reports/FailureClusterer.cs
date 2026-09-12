@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace Kronikol.Reports;
 
 /// <summary>
@@ -14,26 +12,24 @@ public static class FailureClusterer
 
     public static FailureCluster[] Cluster(Scenario[] scenarios)
     {
+        // Keyed, then filtered on the key rather than on the message. `ErrorMessage is not null` let a
+        // present-but-empty message through, so two failures that said nothing formed a cluster headed by
+        // the empty string here while the failures digest - which filters on the key - formed none.
         var failed = scenarios
-            .Where(s => s.Result == ExecutionResult.Failed && s.ErrorMessage is not null)
+            .Where(s => s.Result == ExecutionResult.Failed)
+            .Select(s => (Scenario: s, Key: FailureText.FirstLine(s.ErrorMessage)))
+            .Where(x => x.Key.Length > 0)
             .ToArray();
 
         if (failed.Length == 0)
             return [];
 
         return failed
-            .GroupBy(s => NormalizeKey(s.ErrorMessage!))
+            .GroupBy(x => x.Key, x => x.Scenario, StringComparer.Ordinal)
             .Where(g => g.Count() >= 2)
             .OrderByDescending(g => g.Count())
             .Select(g => new FailureCluster(g.Key, g.ToArray()))
             .ToArray();
     }
 
-    private static string NormalizeKey(string errorMessage)
-    {
-        // Use only the first line of the error message
-        var firstLine = errorMessage.Split('\n')[0].Trim();
-        // Collapse multiple whitespace
-        return Regex.Replace(firstLine, @"\s+", " ").Trim();
-    }
 }

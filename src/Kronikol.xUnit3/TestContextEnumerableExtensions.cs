@@ -40,8 +40,20 @@ internal static class TestContextEnumerableExtensions
                                 Result = x.TestState!.Result.ToExecutionResult(),
                                 DisplayName = displayName,
                                 IsHappyPath = x.Test!.Traits.ContainsKey(HappyPathAttribute.HappyPathTraitKey),
-                                ErrorMessage = string.Join(Environment.NewLine, x.TestState!.FailureCause) + Environment.NewLine + string.Join(Environment.NewLine, x.TestState!.ExceptionMessages ?? []),
-                                ErrorStackTrace = string.Join(Environment.NewLine, x.TestState!.ExceptionStackTraces ?? []),
+                                // The message is what was thrown, and nothing else. Until 3.1.0 the
+                                // FailureCause enum was joined onto the front of it, which made the first
+                                // line of every failure in the run the same word - and the first line is
+                                // what the failures digest and the HTML cluster panel group on, so a run
+                                // of unrelated assertion failures read as one cause with one worked
+                                // example. It is carried in its own field below. The join also ran for
+                                // PASSING tests, where it produced a bare line separator: measured on
+                                // Example.Api.Tests.Component.xUnit3, three of three passing scenarios
+                                // shipped `"errorMessage": "\r\n"`.
+                                ErrorMessage = FailureText.Join(x.TestState!.ExceptionMessages),
+                                ErrorStackTrace = FailureText.Join(x.TestState!.ExceptionStackTraces),
+                                FailureCause = x.TestState!.Result.ToExecutionResult() == ExecutionResult.Failed
+                                    ? FailureText.OrNull(x.TestState!.FailureCause?.ToString())
+                                    : null,
                                 Duration = x.TestState!.ExecutionTime is > 0 ? TimeSpan.FromMilliseconds((double)x.TestState.ExecutionTime.Value) : null,
                                 OutlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(displayName)) : null,
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null,

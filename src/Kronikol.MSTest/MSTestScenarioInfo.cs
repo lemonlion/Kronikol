@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Kronikol.MSTest;
 
@@ -14,6 +14,9 @@ public record MSTestScenarioInfo
     public required UnitTestOutcome Outcome { get; init; }
     public string? ErrorMessage { get; init; }
     public string? ErrorStackTrace { get; init; }
+
+    /// <summary>The exception type name, when the test failed. A category, never a cause.</summary>
+    public string? FailureCause { get; init; }
     public string? Endpoint { get; init; }
     public bool IsHappyPath { get; init; }
     public TimeSpan? Duration { get; init; }

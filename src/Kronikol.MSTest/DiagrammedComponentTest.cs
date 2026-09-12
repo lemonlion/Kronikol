@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Kronikol.Tracking;
+using Kronikol.Reports;
 
 namespace Kronikol.MSTest;
 
@@ -45,8 +46,15 @@ public abstract class DiagrammedComponentTest
             TestDisplayName = TestContext.TestDisplayName,
             TestId = $"{TestContext.FullyQualifiedTestClassName}.{TestContext.TestName}",
             Outcome = TestContext.CurrentTestOutcome,
-            ErrorMessage = TestContext.CurrentTestOutcome == UnitTestOutcome.Failed
-                ? "Test failed — see ErrorStackTrace for details"
+            // What was actually thrown. Until 3.1.0 this was the constant sentence "Test failed — see
+            // ErrorStackTrace for details", which made every MSTest failure in a run identical to every
+            // other — the failures digest groups on the first line of this field, so a whole suite
+            // collapsed into one cluster with one worked example. It also pointed the reader at
+            // ErrorStackTrace, which nothing ever assigned, so the field it named was always null.
+            ErrorMessage = FailureText.OrNull(TestContext.TestException?.Message),
+            ErrorStackTrace = FailureText.OrNull(TestContext.TestException?.StackTrace),
+            FailureCause = TestContext.CurrentTestOutcome == UnitTestOutcome.Failed
+                ? TestContext.TestException?.GetType().Name
                 : null,
             Endpoint = endpoint,
             IsHappyPath = isHappyPath,

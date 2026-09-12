@@ -288,9 +288,13 @@ public static class FailuresDigestGenerator
         }
     }
 
-    /// <summary>The same normalisation <see cref="FailureClusterer"/> uses: first line, collapsed spaces.</summary>
-    private static string ClusterKey(string? errorMessage) =>
-        errorMessage is null ? "" : string.Join(' ', FirstLine(errorMessage).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+    /// <summary>
+    /// Literally the same normalisation <see cref="FailureClusterer"/> uses, because it is now the same
+    /// function. There were two, and they disagreed on bare-CR line endings, on empty-versus-null
+    /// messages and on which characters count as whitespace — so one report could group its failures two
+    /// ways and give a reader no way to tell which grouping was the run.
+    /// </summary>
+    private static string ClusterKey(string? errorMessage) => FailureText.FirstLine(errorMessage);
 
     // ─── Markdown ──────────────────────────────────────────────
 
@@ -378,7 +382,13 @@ public static class FailuresDigestGenerator
             markdown.Append("is in `Failures.jsonl`, and `kronikol query failures .` has them all:\n\n");
             markdown.Append("| Address | stableId | Scenario | Error |\n|---|---|---|---|\n");
             foreach (var entry in entries.Where(e => !shown.Contains(e)))
-                markdown.Append($"| `{entry.Address}` | `{entry.StableId}` | {Escape(entry.Scenario)} | {Escape(Truncate(FirstLine(entry.ErrorMessage ?? ""), 80))} |\n");
+                // The WHOLE message flattened, not its first line. This column is the only thing a reader
+                // is told about a failure that was clustered away, and the first line is the line the
+                // clustering already established they share — so printing it here spends the column
+                // repeating the heading above and says nothing about this failure in particular.
+                // `kronikol query failures` has always flattened instead, which is why the two surfaces
+                // could show the same run as one cause and as four.
+                markdown.Append($"| `{entry.Address}` | `{entry.StableId}` | {Escape(entry.Scenario)} | {Escape(Truncate(FailureText.CollapseWhitespace(entry.ErrorMessage ?? ""), 80))} |\n");
             markdown.Append('\n');
         }
 

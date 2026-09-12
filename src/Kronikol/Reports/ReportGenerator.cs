@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -33,6 +33,15 @@ public static class ReportGenerator
     /// or type, which is exactly when a reader must stop rather than continue.</para>
     /// </summary>
     public const int ReportFormatVersion = 1;
+
+    /// <summary>
+    /// The framework's classification of a failure, on its own line and only when there is one. Until
+    /// 3.1.0 the label <c>Failure Cause:</c> sat in front of the error <em>message</em>, which was
+    /// coincidentally readable on xUnit v3 — whose adapter spliced the cause onto the message — and a
+    /// mislabel on the other seven adapters, where the text after it is the assertion, not the cause.
+    /// </summary>
+    private static string FailureCauseLine(string? failureCause) =>
+        failureCause is null ? "\n" : $"Cause: {System.Net.WebUtility.HtmlEncode(failureCause)}\n\n";
 
     internal static bool ShouldEmbedComponentDiagram(ReportConfigurationOptions options) =>
         (options.ComponentDiagramOptions ?? new ComponentDiagramOptions()).EmbedInTestRunReport;
@@ -1538,8 +1547,8 @@ public static class ReportGenerator
                               <details class="failure-result" open>
                                  <summary class="h4">Failure Result</summary>
                                  <pre>
-                              Failure Cause: {System.Net.WebUtility.HtmlEncode(scenario.ErrorMessage)}
-
+                              Error: {System.Net.WebUtility.HtmlEncode(scenario.ErrorMessage)}
+                              {FailureCauseLine(scenario.FailureCause)}
                               {System.Net.WebUtility.HtmlEncode(scenario.ErrorStackTrace)}
                                  </pre>
                                  {diffHtml}
@@ -2557,7 +2566,8 @@ public static class ReportGenerator
                         diffHtml = ErrorDiffParser.GenerateDiffHtml(diffResult.Expected, diffResult.Actual);
                     body.Append("<details class=\"failure-result\" open><summary class=\"h4\">Failure Result</summary><pre>");
                     if (s.ErrorMessage is not null)
-                        body.Append($"Failure Cause: {System.Net.WebUtility.HtmlEncode(s.ErrorMessage)}\n\n");
+                        body.Append($"Error: {System.Net.WebUtility.HtmlEncode(s.ErrorMessage)}\n");
+                    body.Append(FailureCauseLine(s.FailureCause));
                     if (s.ErrorStackTrace is not null)
                     {
                         body.Append(System.Net.WebUtility.HtmlEncode(s.ErrorStackTrace));
@@ -3817,6 +3827,7 @@ public static class ReportGenerator
                     ["isHappyPath"] = s.IsHappyPath,
                     ["errorMessage"] = s.ErrorMessage,
                     ["errorStackTrace"] = s.ErrorStackTrace,
+                    ["failureCause"] = s.FailureCause,
                     ["labels"] = s.Labels ?? [],
                     ["categories"] = s.Categories ?? [],
                     ["rule"] = s.Rule,
@@ -4189,6 +4200,7 @@ public static class ReportGenerator
                                         new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLower()),
                                         s.ErrorMessage != null ? new XElement("ErrorMessage", s.ErrorMessage) : null,
                                         s.ErrorStackTrace != null ? new XElement("ErrorStackTrace", s.ErrorStackTrace) : null,
+                                        s.FailureCause != null ? new XElement("FailureCause", s.FailureCause) : null,
                                         (s.Labels is { Length: > 0 }) ? new XElement("Labels", s.Labels.Select(l => new XElement("Label", l))) : null,
                                         (s.Categories is { Length: > 0 }) ? new XElement("Categories", s.Categories.Select(c => new XElement("Category", c))) : null,
                                         s.Rule != null ? new XElement("Rule", s.Rule) : null,
@@ -4362,6 +4374,9 @@ public static class ReportGenerator
 
                 if (scenario.ErrorStackTrace is not null)
                     yml.Append("        ErrorStackTrace: " + scenario.ErrorStackTrace.SanitiseForYml() + "\n");
+
+                if (scenario.FailureCause is not null)
+                    yml.Append("        FailureCause: " + scenario.FailureCause.SanitiseForYml() + "\n");
 
                 if (scenario.Labels is { Length: > 0 })
                 {
@@ -5031,6 +5046,7 @@ public static class ReportGenerator
                                         ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Marked as the happy path (an @happy-path tag or the adapter's attribute); the report lists happy paths first" },
                                         ["errorMessage"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The failure message the framework reported, when the scenario failed" },
                                         ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The stack trace the framework reported, when the scenario failed" },
+                                        ["failureCause"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The framework's CLASSIFICATION of the failure (xUnit v3: Assertion, Exception, Timeout, Other; MSTest: the exception type name), null where the framework does not classify. A category, not a cause - it says an assertion failed, never which one - so it is never a grouping key" },
                                         ["labels"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Scenario-level tags (feature tags are on the feature)", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
                                         ["categories"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Category tags (@category: in Gherkin, the framework's category attribute otherwise); the report's category filter reads these", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
                                         ["rule"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Gherkin Rule grouping this scenario belongs to" },
@@ -5278,6 +5294,7 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "IsHappyPath"), new XAttribute("type", "xs:boolean")),
                 new XElement(xs + "element", new XAttribute("name", "ErrorMessage"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "ErrorStackTrace"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "FailureCause"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Labels"), new XAttribute("minOccurs", "0"),
                     new XElement(xs + "complexType",
                         new XElement(xs + "sequence",

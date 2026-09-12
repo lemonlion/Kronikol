@@ -19,6 +19,20 @@ public record Scenario
     public ExecutionResult Result { get; set; }
     public string? ErrorMessage { get; set; }
     public string? ErrorStackTrace { get; set; }
+
+    /// <summary>
+    /// The framework's own <em>classification</em> of the failure — xUnit v3's <c>FailureCause</c>
+    /// (<c>Assertion</c>, <c>Exception</c>, <c>Timeout</c>, <c>Other</c>) — and null on the frameworks
+    /// that do not classify, which is most of them.
+    ///
+    /// <para>It is a category, never a cause: it says an assertion failed, not which one, so a run of
+    /// four unrelated assertion failures reports the same value four times. Until 3.1.0 the xUnit v3
+    /// adapter spliced it onto the front of <see cref="ErrorMessage"/>, which made it the first line of
+    /// every message and therefore the key the failures digest clustered on — one cluster per run, and a
+    /// digest that worked through one failure in fifteen while claiming the rest were the same one.
+    /// Nothing may group on this field.</para>
+    /// </summary>
+    public string? FailureCause { get; set; }
     public TimeSpan? Duration { get; set; }
     public ScenarioStep[]? Steps { get; set; }
     public ScenarioStep[]? BackgroundSteps { get; set; }

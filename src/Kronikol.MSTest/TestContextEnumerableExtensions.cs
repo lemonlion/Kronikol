@@ -1,4 +1,4 @@
-using Kronikol.Reports;
+﻿using Kronikol.Reports;
 using Kronikol.Tracking;
 
 namespace Kronikol.MSTest;
@@ -35,6 +35,7 @@ internal static class TestContextEnumerableExtensions
                                 IsHappyPath = x.IsHappyPath,
                                 ErrorMessage = x.ErrorMessage,
                                 ErrorStackTrace = x.ErrorStackTrace,
+                                FailureCause = x.FailureCause,
                                 Duration = x.Duration,
                                 Steps = StepCollector.GetSteps(x.TestId) is { Length: > 0 } steps ? steps : null,
                                 Attachments = StepCollector.GetScenarioAttachments(x.TestId),
