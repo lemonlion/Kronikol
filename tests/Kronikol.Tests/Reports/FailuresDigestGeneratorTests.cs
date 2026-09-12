@@ -36,7 +36,15 @@ public class FailuresDigestGeneratorTests
 
         Assert.Contains("# No failures", digest.Markdown);
         Assert.Contains("kronikol query summary", digest.Markdown);
-        Assert.Equal("", digest.Jsonl);
+
+        // The jsonl used to be ZERO BYTES here, which made "the file is empty" and "the file was never
+        // written" read identically - and the absence of this file is the signal that the run did not
+        // finish. It now says, in one line, that the run had no failures and how many scenarios it had.
+        var lines = digest.Jsonl.TrimEnd('\n').Split('\n');
+        var header = JsonDocument.Parse(Assert.Single(lines)).RootElement;
+        Assert.Equal("header", header.GetProperty("kind").GetString());
+        Assert.Equal(0, header.GetProperty("failures").GetInt32());
+        Assert.True(header.GetProperty("scenarios").GetInt32() > 0);
     }
 
     [Fact]
@@ -88,8 +96,7 @@ public class FailuresDigestGeneratorTests
 
         var digest = Generate(features);
 
-        var addresses = digest.Jsonl.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => JsonDocument.Parse(line).RootElement)
+        var addresses = FailuresJsonl.Failures(digest.Jsonl)
             .ToDictionary(e => e.GetProperty("scenario").GetString()!, e => e.GetProperty("address").GetString());
 
         Assert.Equal("s1", addresses["beta fails"]);
@@ -100,7 +107,7 @@ public class FailuresDigestGeneratorTests
     public void Each_failure_carries_its_stableId_and_a_deep_link()
     {
         var digest = Generate(OneFailure());
-        var stableId = ScenarioStableId.Compute("Checkout", "Pay with an expired card");
+        var stableId = ScenarioStableId.Compute(null, "Checkout", "Pay with an expired card");
 
         Assert.Contains(stableId, digest.Markdown);
         Assert.Contains($"TestRunReport.html#sid-{stableId}", digest.Markdown);
@@ -238,7 +245,7 @@ public class FailuresDigestGeneratorTests
         Assert.Contains("15 further failures", digest.Markdown);
         Assert.Contains("kronikol query failures", digest.Markdown);
         // Every failure still reaches the machine-readable file, capped or not.
-        Assert.Equal(40, digest.Jsonl.TrimEnd('\n').Split('\n').Length);
+        Assert.Equal(40, FailuresJsonl.Failures(digest.Jsonl).Count);
     }
 
     [Fact]
@@ -255,15 +262,27 @@ public class FailuresDigestGeneratorTests
     // ─── The machine-readable twin ─────────────────────────────
 
     [Fact]
-    public void Every_jsonl_line_declares_its_format_version_first()
+    public void The_jsonl_opens_with_a_header_declaring_the_contract_and_the_denominator()
     {
         var digest = Generate(Distinct(3));
+        var lines = digest.Jsonl.TrimEnd('\n').Split('\n');
 
-        foreach (var line in digest.Jsonl.TrimEnd('\n').Split('\n'))
+        using var header = JsonDocument.Parse(lines[0]);
+        Assert.Equal("formatVersion", header.RootElement.EnumerateObject().First().Name);
+        Assert.Equal(1, header.RootElement.GetProperty("formatVersion").GetInt32());
+        Assert.Equal("header", header.RootElement.GetProperty("kind").GetString());
+        Assert.Equal(3, header.RootElement.GetProperty("failures").GetInt32());
+
+        // The denominator is the point: a consumer reading only the failure lines cannot otherwise tell
+        // 3 of 4 from 3 of 4,000.
+        Assert.True(header.RootElement.GetProperty("scenarios").GetInt32() >= 3);
+
+        foreach (var line in lines[1..])
         {
             using var document = JsonDocument.Parse(line);
-            Assert.Equal("formatVersion", document.RootElement.EnumerateObject().First().Name);
-            Assert.Equal(1, document.RootElement.GetProperty("formatVersion").GetInt32());
+            Assert.Equal("failure", document.RootElement.GetProperty("kind").GetString());
+            // The contract is stated once, in the header, rather than repeated on every record.
+            Assert.False(document.RootElement.TryGetProperty("formatVersion", out _));
         }
     }
 
@@ -272,12 +291,13 @@ public class FailuresDigestGeneratorTests
     {
         var digest = Generate(WithSteps(), CallLogs());
 
-        using var document = JsonDocument.Parse(digest.Jsonl.TrimEnd('\n'));
+        // Line 0 is the header; the failures start at line 1.
+        using var document = JsonDocument.Parse(digest.Jsonl.TrimEnd('\n').Split('\n')[1]);
         var root = document.RootElement;
 
         Assert.Equal("s2", root.GetProperty("address").GetString());
         Assert.Equal("Checkout", root.GetProperty("feature").GetString());
-        Assert.Equal(ScenarioStableId.Compute("Checkout", "Pay with an expired card"), root.GetProperty("stableId").GetString());
+        Assert.Equal(ScenarioStableId.Compute(null, "Checkout", "Pay with an expired card"), root.GetProperty("stableId").GetString());
         Assert.Equal("OrderTests.cs", root.GetProperty("failingSteps")[0].GetProperty("sourceFile").GetString());
         Assert.Equal("s2/i0", root.GetProperty("calls")[0].GetProperty("address").GetString());
         Assert.False(root.TryGetProperty("body", out _));

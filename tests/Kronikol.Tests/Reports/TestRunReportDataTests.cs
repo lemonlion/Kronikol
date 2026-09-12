@@ -407,7 +407,8 @@ public class TestRunReportDataTests
 
         var response = interactions[1];
         Assert.Equal("Response", response.GetProperty("type").GetString());
-        Assert.Equal("Created", response.GetProperty("statusCode").GetString());
+        Assert.Equal(201, response.GetProperty("statusCode").GetInt32());
+        Assert.Equal("Created", response.GetProperty("statusText").GetString());
         Assert.Equal("{\"id\":1}", response.GetProperty("content").GetString());
     }
 
@@ -990,7 +991,7 @@ public class TestRunReportDataTests
         Assert.Matches("^[0-9a-f]{16}$", s1StableId);
 
         // Verify it matches the standalone computation
-        Assert.Equal(ScenarioStableId.Compute("Orders", "Place order"), s1StableId);
+        Assert.Equal(ScenarioStableId.Compute(null, "Orders", "Place order"), s1StableId);
     }
 
     [Fact]
@@ -1011,7 +1012,7 @@ public class TestRunReportDataTests
         var stableId = scenario.Element("StableId")?.Value;
 
         Assert.NotNull(stableId);
-        Assert.Equal(ScenarioStableId.Compute("Orders", "Place order"), stableId);
+        Assert.Equal(ScenarioStableId.Compute(null, "Orders", "Place order"), stableId);
     }
 
     [Fact]
@@ -1029,7 +1030,7 @@ public class TestRunReportDataTests
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_stableId.yml", DataFormat.Yaml);
         var content = File.ReadAllText(path);
 
-        Assert.Contains("StableId: " + ScenarioStableId.Compute("Orders", "Place order"), content);
+        Assert.Contains("StableId: " + ScenarioStableId.Compute(null, "Orders", "Place order"), content);
     }
 
     [Fact]
@@ -1056,8 +1057,8 @@ public class TestRunReportDataTests
         var s2StableId = scenarios[1].GetProperty("stableId").GetString();
 
         Assert.NotEqual(s1StableId, s2StableId);
-        Assert.Equal(ScenarioStableId.Compute("Checkout", "Pay with visa", "Pay with card"), s1StableId);
-        Assert.Equal(ScenarioStableId.Compute("Checkout", "Pay with mastercard", "Pay with card"), s2StableId);
+        Assert.Equal(ScenarioStableId.Compute(null, "Checkout", "Pay with visa", "Pay with card"), s1StableId);
+        Assert.Equal(ScenarioStableId.Compute(null, "Checkout", "Pay with mastercard", "Pay with card"), s2StableId);
     }
 
     [Fact]

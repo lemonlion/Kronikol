@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    A run that FAILS INSIDE A STEP. This project exists because nothing else in the repository produced
+    one: across 37 captured reports and 4,944 step objects, `step.status` was `Passed` 4,944 times and no
+    step anywhere carried a `failureMessage`. Every fixture with failures (CiPreview.Mixed, AllFailing)
+    was step-less, and every fixture with steps was green - so the digest's `calls` table, which is
+    emitted only when a *failing step* carries an attributed interaction, was unverifiable from captured
+    output and `calls: []` on every row on disk.
+
+    It is deliberately red and is therefore NOT part of the merge gate. ci.yml's auto-discovery only walks
+    tests/*; this runs in ci-summary-preview.yml with continue-on-error, beside the other CiPreview
+    projects.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="appsettings.componenttests.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.componenttests.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitHubActionsTestLogger" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="LightBDD.XUnit3" Version="3.12.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Example.Api.Tests.Component.Shared\Example.Api.Tests.Component.Shared.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Kronikol.LightBDD.xUnit3\Kronikol.LightBDD.xUnit3.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

@@ -96,9 +96,8 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
     {
         Run(Options(_dir));
 
-        var jsonl = File.ReadAllText(Path.Combine(_dir, "Failures.jsonl")).TrimEnd('\n');
-        using var document = JsonDocument.Parse(jsonl);
-        var address = document.RootElement.GetProperty("address").GetString();
+        var failure = Assert.Single(FailuresJsonl.Failures(File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"))));
+        var address = failure.GetProperty("address").GetString();
 
         using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "TestRunReport.json")));
         var ordinal = int.Parse(address![1..]);
@@ -106,7 +105,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray()).ToArray();
 
         Assert.Equal("Pay with an expired card", scenarios[ordinal].GetProperty("name").GetString());
-        Assert.Equal(scenarios[ordinal].GetProperty("stableId").GetString(), document.RootElement.GetProperty("stableId").GetString());
+        Assert.Equal(scenarios[ordinal].GetProperty("stableId").GetString(), failure.GetProperty("stableId").GetString());
     }
 
     [Fact]
@@ -125,9 +124,8 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         ];
         ReportGenerator.CreateStandardReportsWithDiagrams(features, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, Options(_dir));
 
-        var jsonl = File.ReadAllText(Path.Combine(_dir, "Failures.jsonl")).TrimEnd('\n');
-        using var document = JsonDocument.Parse(jsonl);
-        var ordinal = int.Parse(document.RootElement.GetProperty("address").GetString()![1..]);
+        var caseFailure = Assert.Single(FailuresJsonl.Failures(File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"))));
+        var ordinal = int.Parse(caseFailure.GetProperty("address").GetString()![1..]);
 
         using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "TestRunReport.json")));
         var scenarios = report.RootElement.GetProperty("features").EnumerateArray()
@@ -346,7 +344,11 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         }
 
         Assert.Contains("# No failures", File.ReadAllText(Path.Combine(_dir, "Failures.md")));
-        Assert.Equal("", File.ReadAllText(Path.Combine(_dir, "Failures.jsonl")));
+        // A green run writes one header line rather than nothing: an empty file and a missing file are the
+        // same bytes to a reader, and the absence of this file is the signal that the run did not finish.
+        var greenJsonl = File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"));
+        Assert.Equal(0, FailuresJsonl.Header(greenJsonl).GetProperty("failures").GetInt32());
+        Assert.Empty(FailuresJsonl.Failures(greenJsonl));
         var pointer = captured.ToString().Split('\n').Where(l => l.StartsWith("Kronikol: reports written to", StringComparison.Ordinal)).ToArray();
         Assert.Single(pointer);
         Assert.DoesNotContain("failed —", captured.ToString());

@@ -124,7 +124,7 @@ public class QueryCommandTests : IDisposable
 
         var output = Run("failures", report);
 
-        var stableId = ScenarioStableId.Compute("Orders", "Checkout fails on a wrong total");
+        var stableId = ScenarioStableId.Compute(null, "Orders", "Checkout fails on a wrong total");
         Assert.Contains($"open: TestRunReport.html#sid-{stableId}", output);
     }
 
@@ -362,6 +362,38 @@ public class QueryCommandTests : IDisposable
 
         Assert.Matches(@"(?m)^s4/i0\s+payments\s+POST /charge\s+OK\b", output);
         Assert.Matches(@"(?m)^s4/i1\s+payments\s+POST /charge\s+InternalServerError", output);
+    }
+
+    /// <summary>
+    /// <c>--status</c> had no test at all, and the class of filter it advertises most prominently — the
+    /// range form, documented twice in the usage text — was <b>dead code</b> for every HTTP call ever
+    /// captured. The report stored the enum NAME, so <c>int.TryParse</c> failed and the whole <c>Nxx</c>
+    /// branch could never match; measured against a report containing a BadRequest, <c>--status 4xx</c>
+    /// and <c>--status 400</c> each returned "nothing matched" while <c>--status BadRequest</c> matched.
+    ///
+    /// <para>All three forms are pinned together because the fix has to keep the name working: a reader
+    /// who learned <c>--status InternalServerError</c> should not be re-taught by a release.</para>
+    /// </summary>
+    [Theory]
+    [InlineData("5xx")]
+    [InlineData("500")]
+    [InlineData("InternalServerError")]
+    public void Status_filters_by_range_by_number_and_by_name(string status)
+    {
+        var output = Run("interactions", Report(), "--status", status);
+
+        Assert.Matches(@"(?m)^s4/i1\s+payments\s+POST /charge\s+InternalServerError", output);
+        Assert.DoesNotContain("nothing matched", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_status_range_that_matches_nothing_says_so_rather_than_matching_everything()
+    {
+        // The other half of the range form: 3xx is absent from this report, and the filter has to be able
+        // to return nothing. A filter that silently matched everything would pass the facts above too.
+        var output = Run("interactions", Report(), "--status", "3xx");
+
+        Assert.Contains("nothing matched", output, StringComparison.Ordinal);
     }
 
     [Fact]

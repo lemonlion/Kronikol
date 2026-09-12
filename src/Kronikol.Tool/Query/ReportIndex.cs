@@ -71,6 +71,16 @@ internal sealed class ReportIndex
     /// <summary>The mergeable format version, when the file declares one. An unknown value is fatal, not ignored.</summary>
     public int? MergeableFormatVersion { get; set; }
 
+    /// <summary>
+    /// The report's own shape version, from the root <c>formatVersion</c> key (3.1.0+). Null on every
+    /// report written before it, which is a legitimate state; <see cref="ReportScanner.UnreadableVersion"/>
+    /// when the key is there but is not an integer, which is not.
+    /// </summary>
+    public int? FormatVersion { get; set; }
+
+    /// <summary>The suite every stableId in this report is scoped to. Null on a report written before 3.1.0.</summary>
+    public string? Suite { get; set; }
+
     public string Directory => System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(Path)) ?? ".";
 
     public ScenarioEntry? Scenario(int ordinal) =>
@@ -187,6 +197,13 @@ internal sealed class InteractionEntry
     public string ServiceName { get; set; } = "";
     public string CallerName { get; set; } = "";
     public string? StatusCode { get; set; }
+
+    /// <summary>
+    /// The label beside the code (3.1.0+). On an older report this is null and <see cref="StatusCode"/>
+    /// holds the name instead, which is why every consumer goes through
+    /// <c>InteractionStatus.Read</c> rather than reading either field directly.
+    /// </summary>
+    public string? StatusText { get; set; }
     public string? Timestamp { get; set; }
 
     /// <summary>

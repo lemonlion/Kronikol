@@ -317,10 +317,12 @@ internal static partial class QueryCommand
 
             Bytes += interaction.BodyLength;
 
-            if (interaction.StatusCode is { Length: > 0 } status)
+            // Counted by LABEL, not by code: `services` prints `OK x9`, and a reader wants the name.
+            // The error test uses the number, which is the whole point of the two fields.
+            if (StatusOf(interaction).Text is { Length: > 0 } status)
             {
                 _statuses[status] = _statuses.GetValueOrDefault(status) + 1;
-                if (IsError(status))
+                if (IsError(interaction.StatusCode, interaction.StatusText))
                     Errors++;
             }
 

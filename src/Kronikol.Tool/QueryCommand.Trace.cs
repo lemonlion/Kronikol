@@ -101,7 +101,7 @@ internal static partial class QueryCommand
             var span = request.ActivitySpanId is { Length: > 0 } spanId
                 ? $"   span {spanId[..Math.Min(8, spanId.Length)]}"
                 : "";
-            writer.Line($"  {offset,-9} {request.Address(scenario),-9} {request.ServiceName,-12} {QueryWriter.OneLine(request.Summary(), 50),-50} {response?.StatusCode ?? "",-6}{span}");
+            writer.Line($"  {offset,-9} {request.Address(scenario),-9} {request.ServiceName,-12} {QueryWriter.OneLine(request.Summary(), 50),-50} {StatusOf(response).Text ?? "",-6}{span}");
         }
 
         if (scenarios.Count > 1)

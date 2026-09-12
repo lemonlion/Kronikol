@@ -1,3 +1,4 @@
+using System.Reflection;
 using Kronikol.Tool;
 
 namespace Kronikol.Tests.Tool;
@@ -95,6 +96,104 @@ public class CommandTableTests
         Assert.Equal(2, exit);
         Assert.Contains("Unknown command: summary", error, StringComparison.Ordinal);
         Assert.Contains("--help", error, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Two entries pointing at the same command class is the one mis-wiring every other fact here is
+    /// blind to. <c>Every_command_answers_its_own_help_with_its_own_usage</c> anchors on the first line of
+    /// each usage block, which catches a <c>query</c> entry wired to <c>MergeCommand</c> - but only because
+    /// the two blocks open differently. It cannot catch the duplicate itself: if both <c>Run</c> delegates
+    /// resolved to <c>MergeCommand.Run</c> while the <c>PrintUsage</c> pair stayed correct, every existing
+    /// fact would pass and one command would silently execute another.
+    ///
+    /// <para>Mutation applied to confirm this fact can fail: pointing the <c>ctrf</c> entry's <c>Run</c> at
+    /// <c>CtrfCommand.Run</c> twice - once as <c>ctrf</c>, once as <c>export</c> - fails here and nowhere
+    /// else.</para>
+    /// </summary>
+    [Fact]
+    public void No_two_commands_share_an_implementation()
+    {
+        // Delegate.Method, not the delegate itself: every entry holds a distinct lambda instance, so
+        // comparing the delegates compares nothing. The lambda's target method is what identifies the
+        // command class behind it.
+        var runTargets = Commands.Table
+            .Select(e => (e.Name, Method: DescribeTarget(e.Run.Method)))
+            .ToList();
+
+        // Without this the fact is vacuous: if the IL walk resolved nothing it would fall back to each
+        // lambda's own compiler-generated identity, which is distinct by construction, and the duplicate
+        // check below could never fail. Every entry must have resolved through its lambda to a real
+        // command class named for the command it serves.
+        foreach (var (name, target) in runTargets)
+        {
+            Assert.DoesNotContain("<>c", target, StringComparison.Ordinal);
+            var expected = "Kronikol.Tool." + string.Concat(name.Split('-')
+                .Select(part => char.ToUpperInvariant(part[0]) + part[1..])) + "Command.Run";
+            Assert.Equal(expected, target);
+        }
+        var duplicateRuns = runTargets.GroupBy(t => t.Method).Where(g => g.Count() > 1).ToList();
+        Assert.True(duplicateRuns.Count == 0,
+            "These commands run the same implementation: " +
+            string.Join("; ", duplicateRuns.Select(g => $"{string.Join(", ", g.Select(t => t.Name))} -> {g.Key}")));
+
+        var usageTargets = Commands.Table
+            .Select(e => (e.Name, Method: DescribeTarget(e.PrintUsage.Method)))
+            .ToList();
+        var duplicateUsages = usageTargets.GroupBy(t => t.Method).Where(g => g.Count() > 1).ToList();
+        Assert.True(duplicateUsages.Count == 0,
+            "These commands print the same usage: " +
+            string.Join("; ", duplicateUsages.Select(g => $"{string.Join(", ", g.Select(t => t.Name))} -> {g.Key}")));
+    }
+
+    /// <summary>
+    /// The <c>Run</c> entries are lambdas, so their own <c>Method</c> is a compiler-generated
+    /// <c>&lt;&gt;c.&lt;.cctor&gt;b__N_M</c> that is distinct per entry whatever it calls. What identifies
+    /// the command is the single method that lambda body invokes, so the IL is read for it. A lambda that
+    /// calls nothing, or several things, falls back to its own identity - which is distinct, so it can
+    /// only ever produce a false pass, never a false failure.
+    /// </summary>
+    private static string DescribeTarget(MethodInfo method)
+    {
+        var resolved = CommandMethodCalledBy(method) ?? method;
+        return $"{resolved.DeclaringType?.FullName}.{resolved.Name}";
+    }
+
+    /// <summary>
+    /// The one <c>*Command</c> method a table entry's lambda calls.
+    ///
+    /// <para>Scanning for call tokens rather than walking the instruction stream is deliberate. A precise
+    /// walk has to know the whole opcode table, and an unrecognised byte aborts it - which is how the first
+    /// version of this fact came to pass vacuously for <c>query</c> while resolving the other five. A
+    /// token-scan over the body cannot abort: it over-reads, resolving some bytes that are operands rather
+    /// than opcodes, and the <c>*Command</c> filter throws those away. The residual risk is a false
+    /// duplicate, not a false pass, and the assert on the expected class name below would catch it.</para>
+    /// </summary>
+    private static MethodInfo? CommandMethodCalledBy(MethodInfo method)
+    {
+        var il = method.GetMethodBody()?.GetILAsByteArray();
+        if (il is null) return null;
+
+        var module = method.Module;
+        var generics = method.DeclaringType?.GetGenericArguments() ?? [];
+        var found = new List<MethodInfo>();
+
+        for (var i = 0; i + 4 < il.Length; i++)
+        {
+            if (il[i] is not (0x28 or 0x6F)) continue; // call, callvirt
+
+            try
+            {
+                if (module.ResolveMethod(BitConverter.ToInt32(il, i + 1), generics, []) is MethodInfo m
+                    && m.DeclaringType?.Name.EndsWith("Command", StringComparison.Ordinal) == true
+                    && !found.Any(f => f.DeclaringType == m.DeclaringType && f.Name == m.Name))
+                {
+                    found.Add(m);
+                }
+            }
+            catch (ArgumentException) { /* not a method token - this byte was an operand */ }
+        }
+
+        return found.Count == 1 ? found[0] : null;
     }
 
     [Fact]

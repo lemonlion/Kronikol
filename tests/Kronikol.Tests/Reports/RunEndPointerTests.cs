@@ -98,7 +98,7 @@ public class RunEndPointerTests
             Assert.Contains("TestRunReport.json 2 KB", text);
             Assert.DoesNotContain("Failures.md", text.Split('\n')[0]); // not on disk, so not claimed
             Assert.Contains("Checkout › Pay with an expired card", text);
-            Assert.Equal(ScenarioStableId.Compute("Checkout", "Pay with an expired card"), summary.Failures.Single().StableId);
+            Assert.Equal(ScenarioStableId.Compute(null, "Checkout", "Pay with an expired card"), summary.Failures.Single().StableId);
             Assert.DoesNotContain("s3cr3t", text);
             Assert.DoesNotContain("payments.example", text);
         }

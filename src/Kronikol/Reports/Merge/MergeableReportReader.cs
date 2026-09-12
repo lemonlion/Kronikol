@@ -13,6 +13,13 @@ namespace Kronikol.Reports.Merge;
 /// </summary>
 public static class MergeableReportReader
 {
+    /// <summary>
+    /// The mergeable superset's own shape version — the one <c>GenerateMergeableReportJson</c> stamps.
+    /// A constant rather than a literal in two places, because the writer and the reader disagreeing
+    /// about it is precisely the defect the version exists to catch.
+    /// </summary>
+    internal const int MergeableFormatVersion = 1;
+
     /// <summary>Reads and parses a mergeable report from a file path.</summary>
     public static MergeableReport ReadFile(string path) => Parse(File.ReadAllText(path));
 
@@ -25,10 +32,38 @@ public static class MergeableReportReader
         if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("features", out _))
             throw new FormatException("Not a recognised Kronikol test-run report (missing 'features').");
 
-        if (!root.TryGetProperty("mergeableFormatVersion", out _) && !root.TryGetProperty("componentRelationships", out _))
+        if (!root.TryGetProperty("mergeableFormatVersion", out var mergeableVersion) && !root.TryGetProperty("componentRelationships", out _))
             throw new FormatException(
                 "This report was not produced with GenerateMergeableData enabled, so it lacks the data needed to " +
                 "reconstruct a full combined report. Re-run the tests with ReportConfigurationOptions.GenerateMergeableData = true.");
+
+        // The same gate `kronikol query` applies, and it was missing here — so a shard declaring a version
+        // this build does not understand was read anyway, and the merge then re-stamped its output as
+        // version 1, laundering the unknown format past the gate for every reader downstream.
+        if (mergeableVersion.ValueKind is not JsonValueKind.Undefined)
+        {
+            if (mergeableVersion.ValueKind != JsonValueKind.Number || !mergeableVersion.TryGetInt32(out var declared))
+                throw new FormatException(
+                    "This report declares a mergeableFormatVersion that is not a number, so it is not a mergeable " +
+                    "report this build can read.");
+
+            if (declared != MergeableFormatVersion)
+                throw new FormatException(
+                    $"This report declares mergeableFormatVersion {declared}; this build of Kronikol writes and reads " +
+                    $"{MergeableFormatVersion}. Upgrade Kronikol to merge it.");
+        }
+
+        // The report's own shape version, gated for the same reason.
+        if (root.TryGetProperty("formatVersion", out var formatVersion))
+        {
+            if (formatVersion.ValueKind != JsonValueKind.Number || !formatVersion.TryGetInt32(out var shape))
+                throw new FormatException("This report declares a formatVersion that is not a number.");
+
+            if (shape != ReportGenerator.ReportFormatVersion)
+                throw new FormatException(
+                    $"This report declares formatVersion {shape}; this build of Kronikol understands " +
+                    $"{ReportGenerator.ReportFormatVersion}. Upgrade Kronikol to merge it.");
+        }
 
         var features = new List<Feature>();
         var diagrams = new List<DiagramAsCode>();
@@ -309,9 +344,18 @@ public static class MergeableReportReader
                 ? method
                 : HttpMethod.Parse(method);
 
+            // Both shapes: 3.1.0 writes a number plus a label, older shards wrote the name alone. The
+            // enum is preferred when the number names one, so a round trip through a merge produces the
+            // same two fields the run wrote rather than degrading them to text.
             OneOf<HttpStatusCode, string>? status = null;
-            if (GetString(element, "statusCode") is { } statusText)
-                status = Enum.TryParse<HttpStatusCode>(statusText, out var code) ? code : statusText;
+            var (statusNumber, statusLabel) = InteractionStatus.Read(
+                GetNumberOrString(element, "statusCode"), GetString(element, "statusText"));
+            if (statusNumber is { } numeric && Enum.IsDefined(typeof(HttpStatusCode), numeric))
+                status = (HttpStatusCode)numeric;
+            else if (statusLabel is { } label)
+                status = label;
+            else if (statusNumber is { } bare)
+                status = bare.ToString(CultureInfo.InvariantCulture);
 
             var log = new RequestResponseLog(
                 TestName: scenario.DisplayName,
@@ -421,6 +465,21 @@ public static class MergeableReportReader
 
     private static string? GetString(JsonElement parent, string name) =>
         parent.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+
+    /// <summary>
+    /// For a field whose JSON type changed across releases. <c>statusCode</c> is a number from 3.1.0 and
+    /// was a string before it, so a reader that insists on one kind silently drops the other - which on
+    /// this path means every merged shard losing its statuses rather than failing loudly.
+    /// </summary>
+    private static string? GetNumberOrString(JsonElement parent, string name) =>
+        !parent.TryGetProperty(name, out var v)
+            ? null
+            : v.ValueKind switch
+            {
+                JsonValueKind.String => v.GetString(),
+                JsonValueKind.Number => v.GetRawText(),
+                _ => null
+            };
 
     private static string[]? ReadStringArray(JsonElement parent, string name)
     {

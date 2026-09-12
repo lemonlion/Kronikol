@@ -63,7 +63,7 @@ public static class RunSummaryConsoleWriter
     /// Gathers the pointer's facts. <paramref name="candidateFiles"/> are the names it should mention;
     /// those absent from disk are dropped, so the pointer never claims a file an output failure prevented.
     /// </summary>
-    public static RunSummary Summarise(Feature[] features, string directory, IEnumerable<string> candidateFiles, bool agentInstructionsWritten)
+    public static RunSummary Summarise(Feature[] features, string directory, IEnumerable<string> candidateFiles, bool agentInstructionsWritten, string? suite = null)
     {
         ArgumentNullException.ThrowIfNull(features);
         ArgumentNullException.ThrowIfNull(directory);
@@ -98,7 +98,7 @@ public static class RunSummaryConsoleWriter
                 if (scenario.Result != ExecutionResult.Failed)
                     continue;
                 failures.Add(new RunSummaryFailure(
-                    ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues),
+                    ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues),
                     feature.DisplayName,
                     scenario.DisplayName));
             }

@@ -239,7 +239,7 @@ public class CtrfReportGeneratorTests
         Assert.Equal("s0", tests[0].GetProperty("extra").GetProperty("kronikolAddress").GetString());
         Assert.Equal("s1", tests[1].GetProperty("extra").GetProperty("kronikolAddress").GetString());
         Assert.Equal(
-            ScenarioStableId.Compute("Checkout", "Pay with an expired card"),
+            ScenarioStableId.Compute(null, "Checkout", "Pay with an expired card"),
             tests[1].GetProperty("extra").GetProperty("stableId").GetString());
     }
 

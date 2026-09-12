@@ -54,7 +54,7 @@ public static class FailuresDigestGenerator
     /// the failures without their calls rather than nothing at all.
     /// </summary>
     public static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string htmlFileName,
-        string kronikolVersion, IReadOnlyList<DiagnosticEntry>? diagnostics = null)
+        string kronikolVersion, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null)
     {
         ArgumentNullException.ThrowIfNull(features);
 
@@ -64,7 +64,7 @@ public static class FailuresDigestGenerator
         var interactions = IndexInteractions(trackedLogs);
 
         var entries = failures
-            .Select(f => Build(f, stepPaths, interactions, htmlFileName))
+            .Select(f => Build(f, stepPaths, interactions, htmlFileName, suite))
             .ToArray();
 
         // Judged over every interaction of every failing scenario, not only the calls the digest lists:
@@ -78,7 +78,7 @@ public static class FailuresDigestGenerator
 
         return new FailuresDigest(
             BuildMarkdown(entries, scenarios.Length, kronikolVersion, diagnostics, unparameterisedSql),
-            BuildJsonl(entries));
+            BuildJsonl(entries, scenarios.Length, kronikolVersion, suite));
     }
 
     // ─── Model ─────────────────────────────────────────────────
@@ -145,11 +145,11 @@ public static class FailuresDigestGenerator
     }
 
     private static Entry Build(Located located, IReadOnlyDictionary<string, List<string?>> stepPaths,
-        IReadOnlyDictionary<string, List<RequestResponseLog>> interactions, string htmlFileName)
+        IReadOnlyDictionary<string, List<RequestResponseLog>> interactions, string htmlFileName, string? suite)
     {
         var scenario = located.Scenario;
         var address = "s" + located.Ordinal;
-        var stableId = ScenarioStableId.Compute(located.Feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+        var stableId = ScenarioStableId.Compute(suite, located.Feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
         var diff = ErrorDiffParser.TryParseExpectedActual(scenario.ErrorMessage);
 
         var ordered = OrderedSteps(scenario).ToArray();
@@ -465,19 +465,35 @@ public static class FailuresDigestGenerator
 
     // ─── JSONL ─────────────────────────────────────────────────
 
-    private static string BuildJsonl(IReadOnlyList<Entry> entries)
+    private static string BuildJsonl(IReadOnlyList<Entry> entries, int scenarioCount, string kronikolVersion, string? suite)
     {
-        if (entries.Count == 0)
-            return "";
-
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         var lines = new StringBuilder();
+
+        // One header line, then one line per failure.
+        //
+        // It replaces a `formatVersion` repeated on every record, which stated the contract N times and
+        // never once for a run with no failures - a green run wrote ZERO BYTES, so the file said nothing
+        // at all, and "the file is empty" and "the file was never written" read identically. That matters
+        // because the absence of this file is the signal that the run did not finish. The header also
+        // carries the denominator: a consumer reading only the failures cannot otherwise tell 3 of 4 from
+        // 3 of 4,000.
+        var header = new Dictionary<string, object?>
+        {
+            ["formatVersion"] = JsonlFormatVersion,
+            ["kind"] = "header",
+            ["kronikolVersion"] = kronikolVersion,
+            ["suite"] = suite,
+            ["scenarios"] = scenarioCount,
+            ["failures"] = entries.Count
+        };
+        lines.Append(JsonSerializer.Serialize(header, options)).Append('\n');
+
         foreach (var entry in entries)
         {
-            // formatVersion first, so a consumer that reads one line can check the contract before the rest.
             var record = new Dictionary<string, object?>
             {
-                ["formatVersion"] = JsonlFormatVersion,
+                ["kind"] = "failure",
                 ["address"] = entry.Address,
                 ["stableId"] = entry.StableId,
                 ["feature"] = entry.Feature,

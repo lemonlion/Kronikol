@@ -23,6 +23,23 @@ public record ReportConfigurationOptions
     /// <summary>Title displayed at the top of the test run report. When set, overrides the default title derived from <see cref="ComponentDiagram.ComponentDiagramOptions.Title"/> or <see cref="FixedNameForReceivingService"/>. Default: <c>null</c> (auto-derived).</summary>
     public string? TestRunReportTitle { get; set; }
 
+    /// <summary>
+    /// The suite this run belongs to. It scopes every <c>stableId</c>, so it is what stops two projects
+    /// that both have a <c>Cake</c> feature with an <c>Order a cake</c> scenario from minting the same id
+    /// and colliding when their reports are combined — by <c>kronikol merge</c>, by an ingest folding two
+    /// runners, or by a cross-run ledger.
+    ///
+    /// <para>Default: <c>null</c>, which means Kronikol resolves it from the test assembly that produced
+    /// the run (see <see cref="Reports.RunSuite"/>). Set it explicitly when the assembly name is not the
+    /// identity you want carried across runs — for example when one assembly is sharded into several jobs
+    /// that should stay distinguishable, or when an assembly is renamed and existing ids must survive.
+    /// </para>
+    ///
+    /// <para>Changing this value re-keys every scenario in the run: deep links of the form
+    /// <c>#sid-&lt;id&gt;</c> and any stored baseline are keyed on it.</para>
+    /// </summary>
+    public string? SuiteName { get; set; }
+
     /// <summary>Title displayed at the top of the specifications report. Default: <c>"Service Specifications"</c>.</summary>
     public string SpecificationsTitle { get; set; } = "Service Specifications";
 

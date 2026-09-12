@@ -158,7 +158,7 @@ public static class CtrfReportGenerator
 
     /// <summary>The CTRF document for a completed run.</summary>
     public static string Generate(Feature[] features, DateTime startRunTime, DateTime endRunTime,
-        CiMetadata? ciMetadata, string kronikolVersion)
+        CiMetadata? ciMetadata, string kronikolVersion, string? suite = null)
     {
         ArgumentNullException.ThrowIfNull(features);
 
@@ -188,7 +188,7 @@ public static class CtrfReportGenerator
                     Flaky = retries > 0 && scenario.Result == ExecutionResult.Passed,
                     RawStatus = scenario.Result.ToString(),
                     Address = "s" + ordinal++,
-                    StableId = ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues),
+                    StableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues),
                     Categories = scenario.Categories ?? []
                 });
             }

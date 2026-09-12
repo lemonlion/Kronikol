@@ -112,8 +112,8 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task A_sid_link_opens_the_scenario_it_names_and_not_its_namesake()
     {
         var url = Generate("SidDeepLink.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute("Refunds", "Pay");
-        var other = ScenarioStableId.Compute("Checkout", "Pay");
+        var wanted = ScenarioStableId.Compute(null, "Refunds", "Pay");
+        var other = ScenarioStableId.Compute(null, "Checkout", "Pay");
 
         await Page.GotoAsync(url + "#sid-" + wanted);
         await Page.WaitForFunctionAsync(
@@ -132,7 +132,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task Filtering_after_following_a_link_keeps_the_link_in_the_url()
     {
         var url = Generate("SidKeptOnFilter.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute("Refunds", "Pay");
+        var wanted = ScenarioStableId.Compute(null, "Refunds", "Pay");
 
         await Page.GotoAsync(url + "#sid-" + wanted);
         await Page.WaitForFunctionAsync(
@@ -154,7 +154,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task A_link_that_carries_filter_state_applies_both()
     {
         var url = Generate("SidWithFilters.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute("Checkout", "Pay");
+        var wanted = ScenarioStableId.Compute(null, "Checkout", "Pay");
 
         await Page.GotoAsync($"{url}#sid-{wanted}&status=Failed");
         await Page.WaitForFunctionAsync(
@@ -170,7 +170,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task Clearing_every_filter_keeps_the_link_but_drops_the_filters()
     {
         var url = Generate("SidSurvivesClearAll.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute("Checkout", "Pay");
+        var wanted = ScenarioStableId.Compute(null, "Checkout", "Pay");
 
         await Page.GotoAsync($"{url}#sid-{wanted}&status=Failed");
         await Page.WaitForFunctionAsync(
@@ -193,7 +193,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         // of a report that was already open did nothing at all — the one way a human actually uses
         // a link an agent handed them mid-session.
         var url = Generate("SidHashChange.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute("Refunds", "Pay");
+        var wanted = ScenarioStableId.Compute(null, "Refunds", "Pay");
 
         await Page.GotoAsync(url);
         Assert.False(await Page.Locator($"[data-stable-id='{wanted}']").First
@@ -210,7 +210,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task A_sid_link_to_an_example_row_opens_the_group_and_selects_the_row()
     {
         var url = Generate("SidExampleRow.html", AnOutline());
-        var silver = ScenarioStableId.Compute("Pricing", "Discount applies", "discount",
+        var silver = ScenarioStableId.Compute(null, "Pricing", "Discount applies", "discount",
             new Dictionary<string, string> { ["tier"] = "silver" });
 
         await Page.GotoAsync(url + "#sid-" + silver);
@@ -232,7 +232,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         // Both copies carry the stable id, so the link has to pick the displayed one — otherwise it
         // selects a row inside `display:none` and the reader sees nothing happen.
         var url = Generate("SidFlatRow.html", AnOutlineWithFlatValues());
-        var silver = ScenarioStableId.Compute("Pricing", "Discount applies", "discount",
+        var silver = ScenarioStableId.Compute(null, "Pricing", "Discount applies", "discount",
             new Dictionary<string, string> { ["tier"] = "silver" });
 
         await Page.GotoAsync(url + "#sid-" + silver);

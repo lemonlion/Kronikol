@@ -22,6 +22,18 @@ public static class ReportGenerator
         ?? typeof(ReportGenerator).Assembly.GetName().Version?.ToString()
         ?? "unknown";
 
+    /// <summary>
+    /// The version of the <i>shape</i> of the data files — <c>TestRunReport.json</c>, <c>.xml</c> and
+    /// <c>.yml</c> — as distinct from <see cref="KronikolVersion"/>, which is the build that wrote them.
+    ///
+    /// <para>It exists so a reader can refuse a file it does not understand instead of half-parsing it.
+    /// <c>kronikolVersion</c> cannot do that job: it moves on every release whether or not the shape did,
+    /// and every working-tree build stamps the same string. Additive changes — a new key — do not move
+    /// this number; a reader that does not know the key ignores it. It moves when a key changes meaning
+    /// or type, which is exactly when a reader must stop rather than continue.</para>
+    /// </summary>
+    public const int ReportFormatVersion = 1;
+
     internal static bool ShouldEmbedComponentDiagram(ReportConfigurationOptions options) =>
         (options.ComponentDiagramOptions ?? new ComponentDiagramOptions()).EmbedInTestRunReport;
 
@@ -116,6 +128,11 @@ public static class ReportGenerator
 
             return;
         }
+
+        // Resolved once per run and handed to every writer, so the stableId in the HTML, the data file,
+        // the digest, the CTRF document and the run-end pointer is the same string. A writer that
+        // resolved its own would be the comparer bug again, in a different field.
+        var suite = RunSuite.Resolve(options);
 
         // One pass over the finished model, before anything reads it, so the HTML, JSON, XML and YAML
         // views of a step all show the same sentence (Reports.StepText explains the rule).
@@ -272,12 +289,12 @@ public static class ReportGenerator
 
         if (options.GenerateSpecificationsReport)
         {
-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true)));
+            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite));
         }
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false)));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite));
         }
 
         if (options.GenerateSpecificationsData)
@@ -290,12 +307,12 @@ public static class ReportGenerator
             if (options.GenerateMergeableData && options.TestRunReportDataFormat == DataFormat.Json)
             {
                 Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => WriteFile(
-                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, trackedLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics),
+                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, trackedLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite),
                     $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"));
             }
             else
             {
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite));
             }
         }
 
@@ -319,7 +336,7 @@ public static class ReportGenerator
         {
             Add(FailuresDigestFileName, () =>
             {
-                var digest = FailuresDigestGenerator.Generate(features, dataLogs, options.HtmlTestRunReportFileName, KronikolVersion, reportDiagnostics);
+                var digest = FailuresDigestGenerator.Generate(features, dataLogs, options.HtmlTestRunReportFileName, KronikolVersion, reportDiagnostics, suite);
                 WriteFile(digest.Markdown, FailuresDigestFileName);
                 WriteFile(digest.Jsonl, FailuresDigestJsonlFileName);
             });
@@ -338,7 +355,7 @@ public static class ReportGenerator
         if (options.GenerateCtrfReport)
         {
             Add(CtrfReportGenerator.FileName, () => WriteFile(
-                CtrfReportGenerator.Generate(features, startRunTime, endRunTime, ciMetadata, KronikolVersion),
+                CtrfReportGenerator.Generate(features, startRunTime, endRunTime, ciMetadata, KronikolVersion, suite),
                 CtrfReportGenerator.FileName));
         }
 
@@ -374,7 +391,8 @@ public static class ReportGenerator
                 FailuresDigestFileName
             ],
             agentInstructionsWritten: options.WriteAgentInstructions
-                                      && File.Exists(Path.Combine(reportsDir, AgentInstructionsGenerator.ClaudeFileName)));
+                                      && File.Exists(Path.Combine(reportsDir, AgentInstructionsGenerator.ClaudeFileName)),
+            suite: suite);
 
         if (options.WriteCiSummary)
         {
@@ -626,7 +644,8 @@ public static class ReportGenerator
         NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json,
         bool fullSearchIndex = true,
         SearchIndex.SearchIndexBuildCache? searchIndexCache = null,
-        ResolvedToggleDefaults? toggleDefaults = null)
+        ResolvedToggleDefaults? toggleDefaults = null,
+        string? suite = null)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -1489,7 +1508,7 @@ public static class ReportGenerator
                 // file, `kronikol query` and Failures.md all speak, and `#sid-<id>` resolves here.
                 // It goes BEFORE ` id=`: the cluster-link pins match `[^>]*id="([^"]+)"` greedily,
                 // and `data-stable-id="` ends in a word-boundary `id="` that would win that race.
-                var scenarioStableId = ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+                var scenarioStableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
 
                 body.Append($"""
                          <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr} data-stable-id="{scenarioStableId}" id="{anchorId}" tabindex="0">
@@ -2153,7 +2172,8 @@ public static class ReportGenerator
         string scenarioNoteFormatSelect = "",
         Dictionary<string, List<string>>? searchIndexPieces = null,
         string scenarioToolbarControls = "",
-        ResolvedToggleDefaults? toggleDefaults = null)
+        ResolvedToggleDefaults? toggleDefaults = null,
+        string? suite = null)
     {
         var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn;
         var scenarios = group.Scenarios;
@@ -2321,7 +2341,7 @@ public static class ReportGenerator
                 // too — deliberately without an `id`, which the grouped copy of the same row owns
                 // (Flat_table_rows_have_no_id_attribute). Duplicate data attributes are legal; the
                 // hash script picks whichever copy is displayed.
-                var flatRowStableId = ScenarioStableId.Compute(featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
+                var flatRowStableId = ScenarioStableId.Compute(suite, featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
                 body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\" data-stable-id=\"{flatRowStableId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
                 body.Append($"<td>{ri + 1}</td>");
 
@@ -2428,7 +2448,7 @@ public static class ReportGenerator
             var rowAnchorId = scenarioAnchorIds?.GetValueOrDefault(s.Id) ?? GenerateScenarioAnchorId(s.DisplayName);
             // Every row of an outline shares one display name, so the slug cannot address a row and
             // the stable id — which hashes the example values — is the only handle `#sid-` can use.
-            var rowStableId = ScenarioStableId.Compute(featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
+            var rowStableId = ScenarioStableId.Compute(suite, featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
             body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\" data-stable-id=\"{rowStableId}\" id=\"{rowAnchorId}\" data-scenario-id=\"{rowAnchorId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
             body.Append($"<td>{ri + 1}</td>");
 
@@ -3550,7 +3570,7 @@ public static class ReportGenerator
     private static object[] MapDiagnosticsJson(IReadOnlyList<DiagnosticEntry>? diagnostics) =>
         (diagnostics ?? []).Select(d => (object)new { Kind = d.Kind.ToString(), d.Message, d.ScenarioId }).ToArray();
 
-    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null)
+    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null, string? suite = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         // Diagram markers belong to the diagram, not the interaction list: exported as-is they read as
@@ -3561,9 +3581,9 @@ public static class ReportGenerator
 
         return format switch
         {
-            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata), fileName),
-            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths, ciMetadata), fileName),
-            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths, ciMetadata), fileName),
+            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite), fileName),
+            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths, ciMetadata, suite), fileName),
+            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths, ciMetadata, suite), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
@@ -3734,19 +3754,23 @@ public static class ReportGenerator
         return durations;
     }
 
-    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null)
+    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
         var data = new
         {
+            // First, so a reader can check the contract before parsing anything that depends on it. The
+            // same idiom the other two machine outputs already use (Failures.jsonl, query --json).
+            FormatVersion = ReportFormatVersion,
             KronikolVersion = KronikolVersion,
+            Suite = suite ?? RunSuite.Current,
             StartTime = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             EndTime = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             // Before `features`, which is nearly the whole file: a streaming reader and a person
             // running `head` both see which run this is without the megabytes after it.
             CiMetadata = MapCiMetadataJson(ciMetadata),
             Environment = MapEnvironmentJson(),
-            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations),
+            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, suite),
             Diagnostics = MapDiagnosticsJson(diagnostics)
         };
         return JsonSerializer.Serialize(data, options);
@@ -3757,7 +3781,7 @@ public static class ReportGenerator
     /// and the enriched "mergeable" JSON. Keeping a single source of truth ensures the mergeable
     /// format remains a strict superset that the merge reader can parse.
     /// </summary>
-    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null)
+    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, string? suite = null)
     {
         Func<ScenarioStep, object> stepMapper = fullStepDetail ? MapStepJsonFull : MapStepJson;
         return features.OrderBy(f => f.DisplayName).Select(f => (object)new Dictionary<string, object?>
@@ -3772,7 +3796,7 @@ public static class ReportGenerator
                 var scenario = new Dictionary<string, object?>
                 {
                     ["id"] = s.Id,
-                    ["stableId"] = ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues),
+                    ["stableId"] = ScenarioStableId.Compute(suite, f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues),
                     ["name"] = s.DisplayName,
                     ["description"] = s.Description,
                     ["result"] = s.Result.ToString(),
@@ -3835,7 +3859,8 @@ public static class ReportGenerator
         Dictionary<string, InternalFlowSegment>? wholeTestSegments,
         CiMetadata? ciMetadata,
         ReportConfigurationOptions options,
-        IReadOnlyList<DiagnosticEntry>? diagnostics = null)
+        IReadOnlyList<DiagnosticEntry>? diagnostics = null,
+        string? suite = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
 
@@ -3881,7 +3906,7 @@ public static class ReportGenerator
         return GenerateMergeableReportJson(
             features, startTime, endTime, diagramLookup,
             relationships, internalFlowSegmentData, wholeTestFlow,
-            options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs);
+            options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs, suite: suite);
     }
 
     /// <summary>
@@ -3912,7 +3937,8 @@ public static class ReportGenerator
         RequestResponseLog[]? trackedLogs = null,
         string? kronikolVersion = null,
         IReadOnlyDictionary<string, List<string?>>? stepPathsOverride = null,
-        IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotationsOverride = null)
+        IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotationsOverride = null,
+        string? suite = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
 
@@ -3940,11 +3966,13 @@ public static class ReportGenerator
         {
             // The version that produced the RUN, not the one doing the writing: a merge re-serialises
             // someone else's data, and `query summary` prints this to say which contract the file honours.
+            ["formatVersion"] = ReportFormatVersion,
             ["kronikolVersion"] = string.IsNullOrEmpty(kronikolVersion) ? KronikolVersion : kronikolVersion,
-            ["mergeableFormatVersion"] = 1,
+            ["mergeableFormatVersion"] = Merge.MergeableReportReader.MergeableFormatVersion,
+            ["suite"] = suite,
             ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail: true, durations, stepPaths, annotations),
+            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail: true, durations, stepPaths, annotations, suite),
             ["wholeTestVisualization"] = wholeTestVisualization.ToString(),
             ["componentRelationships"] = (componentRelationships ?? []).Select(r => new
             {
@@ -3986,7 +4014,8 @@ public static class ReportGenerator
         log.CallerName,
         log.Content,
         Headers = log.Headers.Select(h => new { h.Key, h.Value }).ToArray(),
-        StatusCode = log.StatusCode?.Value?.ToString(),
+        StatusCode = InteractionStatus.Split(log.StatusCode).Code,
+        StatusText = InteractionStatus.Split(log.StatusCode).Text,
         TraceId = log.TraceId.ToString(),
         RequestResponseId = log.RequestResponseId.ToString(),
         Timestamp = log.Timestamp?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
@@ -4111,11 +4140,13 @@ public static class ReportGenerator
         s.TableReferenceFormattedValue
     };
 
-    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null)
+    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null, string? suite = null)
     {
         var doc = new XDocument(
             new XElement("TestRunReport",
+                new XElement("FormatVersion", ReportFormatVersion),
                 new XElement("KronikolVersion", KronikolVersion),
+                (suite ?? RunSuite.Current) is { Length: > 0 } xmlSuite ? new XElement("Suite", xmlSuite) : null,
                 new XElement("StartTime", startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
                 new XElement("EndTime", endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
                 MapCiMetadataXml(ciMetadata),
@@ -4136,7 +4167,7 @@ public static class ReportGenerator
                                     var scenarioElements = new List<object?>
                                     {
                                         new XElement("Id", s.Id),
-                                        new XElement("StableId", ScenarioStableId.Compute(f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues)),
+                                        new XElement("StableId", ScenarioStableId.Compute(suite, f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues)),
                                         new XElement("Name", s.DisplayName),
                                         s.Description != null ? new XElement("Description", s.Description) : null,
                                         new XElement("Result", s.Result.ToString()),
@@ -4190,7 +4221,8 @@ public static class ReportGenerator
             new XElement("CallerName", log.CallerName),
             log.Content != null ? new XElement("Content", log.Content) : null,
             log.Headers.Length > 0 ? new XElement("Headers", log.Headers.Select(h => new XElement("Header", new XElement("Key", h.Key), new XElement("Value", h.Value)))) : null,
-            log.StatusCode != null ? new XElement("StatusCode", log.StatusCode.Value?.ToString()) : null,
+            InteractionStatus.Split(log.StatusCode).Code is { } xmlStatusCode ? new XElement("StatusCode", xmlStatusCode) : null,
+            InteractionStatus.Split(log.StatusCode).Text is { } xmlStatusText ? new XElement("StatusText", xmlStatusText) : null,
             new XElement("TraceId", log.TraceId.ToString()),
             new XElement("RequestResponseId", log.RequestResponseId.ToString()),
             log.Timestamp != null ? new XElement("Timestamp", log.Timestamp.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) : null,
@@ -4251,10 +4283,12 @@ public static class ReportGenerator
         if (value is not null) yml.Append(prefix + value.SanitiseForYml() + "\n");
     }
 
-    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null)
+    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null, string? suite = null)
     {
         var yml = new StringBuilder();
+        yml.Append("FormatVersion: " + ReportFormatVersion + "\n");
         yml.Append("KronikolVersion: " + KronikolVersion + "\n");
+        AppendYamlIfPresent(yml, "Suite: ", suite ?? RunSuite.Current);
         yml.Append("StartTime: " + startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "\n");
         yml.Append("EndTime: " + endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "\n");
         yml.Append("CiMetadata:\n");
@@ -4295,7 +4329,7 @@ public static class ReportGenerator
             foreach (var scenario in feature.Scenarios)
             {
                 yml.Append("      - Name: " + scenario.DisplayName.SanitiseForYml() + "\n");
-                yml.Append("        StableId: " + ScenarioStableId.Compute(feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues) + "\n");
+                yml.Append("        StableId: " + ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues) + "\n");
                 if (scenario.Description is not null)
                     yml.Append("        Description: " + scenario.Description.SanitiseForYml() + "\n");
                 if (scenario.Attempt is not null)
@@ -4428,8 +4462,11 @@ public static class ReportGenerator
         yml.Append(indent + "  CallerName: " + log.CallerName.SanitiseForYml() + "\n");
         if (log.Content is not null)
             yml.Append(indent + "  Content: " + log.Content.SanitiseForYml() + "\n");
-        if (log.StatusCode is not null)
-            yml.Append(indent + "  StatusCode: " + log.StatusCode.Value + "\n");
+        var (ymlStatusCode, ymlStatusText) = InteractionStatus.Split(log.StatusCode);
+        if (ymlStatusCode is not null)
+            yml.Append(indent + "  StatusCode: " + ymlStatusCode.Value.ToString(CultureInfo.InvariantCulture) + "\n");
+        if (ymlStatusText is not null)
+            yml.Append(indent + "  StatusText: " + ymlStatusText.SanitiseForYml() + "\n");
         yml.Append(indent + "  TraceId: " + log.TraceId + "\n");
         yml.Append(indent + "  RequestResponseId: " + log.RequestResponseId + "\n");
         if (log.Timestamp is not null)
@@ -4903,10 +4940,14 @@ public static class ReportGenerator
             ["title"] = "TestRunReport",
             ["description"] = "Schema for Kronikol test run report data",
             ["type"] = "object",
-            ["required"] = new[] { "startTime", "endTime", "features" },
+            // formatVersion is required because a reader that cannot find it is reading a file written
+            // before the contract was versioned, and should say so rather than guess.
+            ["required"] = new[] { "formatVersion", "startTime", "endTime", "features" },
             ["properties"] = new Dictionary<string, object?>
             {
+                ["formatVersion"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Version of the report SHAPE, as distinct from the Kronikol build that wrote it. Bumped when a key changes meaning or type, not when one is added." },
                 ["kronikolVersion"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Version of Kronikol that generated this report" },
+                ["suite"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The test suite this run belongs to. Every stableId in the file is scoped to it, which is what stops two suites that name a feature and a scenario the same way from minting the same id. Null when it could not be resolved, in which case ids are unscoped." },
                 ["startTime"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["description"] = "UTC start time of the test run" },
                 ["endTime"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["description"] = "UTC end time of the test run" },
                 ["ciMetadata"] = new Dictionary<string, object?>
@@ -5100,7 +5141,8 @@ public static class ReportGenerator
                                 }
                             }
                         },
-                        ["statusCode"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "HTTP status code, or the outcome word a non-HTTP tracker recorded (OK, Error, Timeout); null on the request half" },
+                        ["statusCode"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "The numeric status. Null on the request half, and null for a tracker whose outcome has no number (a broker Ack, a cache Hit) - those carry statusText only." },
+                        ["statusText"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The label for the status: the .NET name for an HTTP code (OK, BadRequest) or the word a non-HTTP tracker recorded (Ack, Responded, Hit). Null on the request half." },
                         ["traceId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Kronikol's own id for the request/response pair. Not the W3C trace id — that is activityTraceId." },
                         ["requestResponseId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Pairs a request with its response: both halves carry the same value" },
                         ["timestamp"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["nullable"] = true, ["description"] = "When this half was captured (UTC); null when the capture path recorded none" },
@@ -5192,7 +5234,8 @@ public static class ReportGenerator
                         )
                     )
                 ),
-                new XElement(xs + "element", new XAttribute("name", "StatusCode"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "StatusCode"), new XAttribute("type", "xs:int"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "StatusText"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "TraceId"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "RequestResponseId"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "Timestamp"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
@@ -5343,7 +5386,9 @@ public static class ReportGenerator
                     new XAttribute("name", "TestRunReport"),
                     new XElement(xs + "complexType",
                         new XElement(xs + "sequence",
+                            new XElement(xs + "element", new XAttribute("name", "FormatVersion"), new XAttribute("type", "xs:int"), new XAttribute("minOccurs", "0")),
                             new XElement(xs + "element", new XAttribute("name", "KronikolVersion"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                            new XElement(xs + "element", new XAttribute("name", "Suite"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                             new XElement(xs + "element", new XAttribute("name", "StartTime"), new XAttribute("type", "xs:string")),
                             new XElement(xs + "element", new XAttribute("name", "EndTime"), new XAttribute("type", "xs:string")),
                             // xs:sequence is ordered: these sit exactly where GenerateTestRunReportXml

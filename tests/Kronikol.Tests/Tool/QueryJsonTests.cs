@@ -47,7 +47,7 @@ public class QueryJsonTests : IDisposable
             Assert.EndsWith(".json", envelope.GetProperty("report").GetString());
             Assert.Equal(JsonValueKind.Array, envelope.GetProperty("notes").ValueKind);
             Assert.Equal(JsonValueKind.Array, envelope.GetProperty("items").ValueKind);
-            Assert.False(envelope.GetProperty("truncated").GetBoolean(), $"{command} overflowed the default budget");
+            Assert.Equal(JsonValueKind.Null, envelope.GetProperty("truncated").ValueKind);
             Assert.Equal(JsonValueKind.Null, envelope.GetProperty("next").ValueKind);
         }
     }
@@ -86,22 +86,62 @@ public class QueryJsonTests : IDisposable
         var (output, error, exit) = RunFull("steps", Report(), "s0", "--json");
 
         Assert.Equal(2, exit);
-        Assert.Empty(output);
         Assert.Contains("--json is not available on 'steps'", error);
         foreach (var supported in QueryCommand.JsonCommands)
             Assert.Contains(supported, error, StringComparison.Ordinal);
+
+        // The refusal is itself an envelope. `items` is empty rather than absent, so a consumer's loop is
+        // safe on both paths and the failure shows up where it is checked for.
+        var envelope = JsonDocument.Parse(output).RootElement;
+        Assert.Equal(2, envelope.GetProperty("error").GetProperty("exitCode").GetInt32());
+        Assert.Equal(0, envelope.GetProperty("items").GetArrayLength());
     }
 
+    /// <summary>
+    /// The single thing that decides whether a machine channel is usable. Until 3.2.0 a non-zero exit
+    /// printed prose on stderr and <b>nothing at all</b> on stdout - the whole buffered answer, provenance
+    /// banners included, was discarded - so a wrapper got valid JSON when the call worked and an empty
+    /// string when it did not, which is the one path it most needs to handle.
+    /// </summary>
     [Fact]
-    public void An_error_stays_plain_text_on_stderr_in_json_mode()
+    public void A_failure_answers_with_an_envelope_too_rather_than_an_empty_stdout()
     {
-        // Documented, and worth a fact: a script that assumes every invocation returns an envelope will
-        // hand a parser an empty string on the one path it most needs to handle.
         var (output, error, exit) = RunFull("scenarios", Report(), "--json", "--sort", "nonsense");
 
         Assert.Equal(2, exit);
-        Assert.Empty(output);
+        // The prose is unchanged and still goes to stderr, where the rest of the tool's failures go.
         Assert.Contains("cannot sort", error);
+
+        var envelope = JsonDocument.Parse(output).RootElement;
+        Assert.Equal(1, envelope.GetProperty("formatVersion").GetInt32());
+        Assert.Equal("scenarios", envelope.GetProperty("command").GetString());
+
+        var failure = envelope.GetProperty("error");
+        Assert.Equal(2, failure.GetProperty("exitCode").GetInt32());
+        Assert.Contains("cannot sort", failure.GetProperty("message").GetString());
+        // Everything the tool said after the first line is remediation, and it is the half a caller can act on.
+        Assert.Contains("--sort", failure.GetProperty("hint").GetString());
+    }
+
+    [Fact]
+    public void A_successful_answer_carries_no_error_member()
+    {
+        var envelope = JsonDocument.Parse(Run("summary")).RootElement;
+        Assert.False(envelope.TryGetProperty("error", out _));
+    }
+
+    [Fact]
+    public void A_failure_before_the_report_is_resolved_still_answers_with_an_envelope()
+    {
+        // The earliest possible failure: the file does not exist, so there is no report, no version and no
+        // scan. The envelope still has to be well formed, with nulls where the facts are unknown.
+        var (output, _, exit) = RunFull("summary", "./no-such-report.json", "--json");
+
+        Assert.Equal(2, exit);
+        var envelope = JsonDocument.Parse(output).RootElement;
+        Assert.Equal(JsonValueKind.Null, envelope.GetProperty("report").ValueKind);
+        Assert.Equal(JsonValueKind.Null, envelope.GetProperty("kronikolVersion").ValueKind);
+        Assert.Contains("No such file", envelope.GetProperty("error").GetProperty("message").GetString());
     }
 
     // ─── Notes carry what layout used to ───────────────────────
@@ -258,7 +298,11 @@ public class QueryJsonTests : IDisposable
     {
         var envelope = JsonDocument.Parse(Run("scenarios", ["--max-bytes", "40"])).RootElement;
 
-        Assert.True(envelope.GetProperty("truncated").GetBoolean());
+        // An object, not a bool: a consumer learning that rows were dropped and never how many is the
+        // silent-skip defect re-encoded rather than fixed.
+        var truncated = envelope.GetProperty("truncated");
+        Assert.Equal(40, truncated.GetProperty("limitBytes").GetInt32());
+        Assert.True(truncated.GetProperty("droppedItems").GetInt32() > 0);
         Assert.Equal(JsonValueKind.Null, envelope.GetProperty("next").ValueKind);
         Assert.Contains(Notes(envelope), n => n.Contains("raise --max-bytes", StringComparison.Ordinal));
     }
@@ -271,7 +315,7 @@ public class QueryJsonTests : IDisposable
         var output = Run("interactions", ["--max-bytes", "300"]);
         var envelope = JsonDocument.Parse(output).RootElement;
 
-        Assert.True(envelope.GetProperty("truncated").GetBoolean());
+        Assert.True(envelope.GetProperty("truncated").GetProperty("droppedItems").GetInt32() > 0);
         foreach (var item in envelope.GetProperty("items").EnumerateArray())
             Assert.Equal(JsonValueKind.Object, item.ValueKind);
     }
@@ -479,7 +523,7 @@ public class QueryJsonTests : IDisposable
         Run("interactions", ["--out", path, "--max-bytes", "200"]);
 
         var envelope = JsonDocument.Parse(File.ReadAllText(path)).RootElement;
-        Assert.False(envelope.GetProperty("truncated").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, envelope.GetProperty("truncated").ValueKind);
         Assert.True(envelope.GetProperty("items").GetArrayLength() > 1);
     }
 

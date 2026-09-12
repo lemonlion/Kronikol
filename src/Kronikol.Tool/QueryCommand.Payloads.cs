@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Kronikol.Tool.Query;
 
@@ -116,7 +117,7 @@ internal static partial class QueryCommand
                 ? $"  → {QueryWriter.Size(response.BodyLength)} {responseHash}"
                 : "";
             writer.Line($"{interaction.Address(scenario),-9} {interaction.ServiceName,-16} {QueryWriter.OneLine(interaction.Summary(), 62),-62} "
-                        + $"{response?.StatusCode ?? "",-6} {QueryWriter.Duration(interaction.DurationMs ?? response?.DurationMs),8}{payload}{responsePayload}");
+                        + $"{StatusOf(response).Text ?? "",-6} {QueryWriter.Duration(interaction.DurationMs ?? response?.DurationMs),8}{payload}{responsePayload}");
         }, options.RerunArgs(), row =>
         {
             var (scenario, interaction, response) = row;
@@ -131,7 +132,8 @@ internal static partial class QueryCommand
                 method = interaction.Method,
                 uri = interaction.Uri,
                 summary = interaction.Summary(),
-                status = response?.StatusCode,
+                status = StatusOf(response).Text,
+                statusCode = StatusOf(response).Code,
                 durationMs = interaction.DurationMs ?? response?.DurationMs,
                 stepPath = interaction.StepPath,
                 request = new { bodyHash = interaction.BodyHash, bodyLength = interaction.BodyLength },
@@ -160,13 +162,22 @@ internal static partial class QueryCommand
 
         if (options.Status is { } status)
         {
-            var actual = FindResponse(scenario, interaction)?.StatusCode ?? "";
+            // Both halves of the filter run against both halves of the status. Before 3.1.0 the report
+            // held the enum NAME, so `int.TryParse` failed on every HTTP call and the whole `Nxx` branch
+            // was dead: measured against a report containing a BadRequest, `--status 4xx` and
+            // `--status 400` each matched nothing while `--status BadRequest` matched one.
+            var (code, text) = StatusOf(FindResponse(scenario, interaction));
+
             if (status.EndsWith("xx", StringComparison.OrdinalIgnoreCase))
             {
-                if (!int.TryParse(actual, out var numeric) || numeric / 100 != status[0] - '0')
+                if (code is not { } klass || klass / 100 != status[0] - '0')
                     return false;
             }
-            else if (!actual.Equals(status, StringComparison.OrdinalIgnoreCase))
+            else if (int.TryParse(status, NumberStyles.Integer, CultureInfo.InvariantCulture, out var wanted))
+            {
+                if (code != wanted) return false;
+            }
+            else if (!(text ?? "").Equals(status, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
@@ -241,8 +252,14 @@ internal static partial class QueryCommand
 
         writer.Line($"{address}  {interaction.Type}  {interaction.CallerName} → {interaction.ServiceName}");
         writer.Line($"{interaction.Method} {interaction.Uri}");
-        if (interaction.StatusCode is { } status)
-            writer.Line("status " + status);
+        // `500 InternalServerError` reads better than either half alone, and keeps the file greppable
+        // by name now that the name is no longer what is stored.
+        if (StatusOf(interaction) is { Text: not null } or { Code: not null })
+        {
+            var (statusCode, statusText) = StatusOf(interaction);
+            writer.Line("status " + (statusCode is { } c && statusText is { } t ? $"{c} {t}"
+                : statusCode?.ToString(CultureInfo.InvariantCulture) ?? statusText));
+        }
         if (interaction.DurationMs is { } ms)
             writer.Line("took " + QueryWriter.Duration(ms));
         if (interaction.StepPath is { } step)

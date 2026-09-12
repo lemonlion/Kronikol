@@ -128,10 +128,26 @@ internal static partial class QueryCommand
     /// <c>services</c>, <c>flow --errors-only</c> and <c>--group-by</c>, so no two commands can disagree
     /// about the same call.
     /// </summary>
-    internal static bool IsError(string? status) =>
-        status is { Length: > 0 }
-        && (int.TryParse(status, out var numeric)
-            ? numeric >= 400
-            : !status.StartsWith("OK", StringComparison.OrdinalIgnoreCase)
-              && !NonErrorStatuses.Contains(status));
+    internal static bool IsError(string? statusCode, string? statusText = null)
+    {
+        var (code, text) = Kronikol.Reports.InteractionStatus.Read(statusCode, statusText);
+
+        // A number settles it on its own: from 3.1.0 every HTTP call has one, so the name list below is
+        // only ever consulted for the taps that genuinely have no code.
+        if (code is { } numeric) return numeric >= 400;
+
+        return text is { Length: > 0 }
+               && !text.StartsWith("OK", StringComparison.OrdinalIgnoreCase)
+               && !NonErrorStatuses.Contains(text);
+    }
+
+    /// <summary>
+    /// The numeric code and the label for an interaction, reading both the current two-field shape and
+    /// the pre-3.1.0 single field. Every status question in the tool goes through here so no two verbs
+    /// can disagree about the same call.
+    /// </summary>
+    internal static (int? Code, string? Text) StatusOf(InteractionEntry? interaction) =>
+        interaction is null
+            ? (null, null)
+            : Kronikol.Reports.InteractionStatus.Read(interaction.StatusCode, interaction.StatusText);
 }

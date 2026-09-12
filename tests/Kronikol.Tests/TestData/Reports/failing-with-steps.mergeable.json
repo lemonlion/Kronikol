@@ -1,0 +1,3247 @@
+{
+  "kronikolVersion": "3.1.0\u002B0ef107b1f2fb77bac2dd263cd288d0b3401293c2",
+  "mergeableFormatVersion": 1,
+  "startTime": "2026-09-12T19:12:12Z",
+  "endTime": "2026-09-12T19:12:13Z",
+  "features": [
+    {
+      "name": "Dessert Feature",
+      "endpoint": null,
+      "description": "Failures that happen inside steps, in every shape the digest has to distinguish.\n\nThis run is deliberately red. It is a fixture, not a test of the API.",
+      "sourceFile": null,
+      "labels": [],
+      "scenarios": [
+        {
+          "id": "f5b1248a-9d9c-405f-8b4b-3467ad345183",
+          "stableId": "4c95bfc550cbe8b2",
+          "name": "Checking the recipe fails without calling anything",
+          "description": null,
+          "result": "Failed",
+          "durationSeconds": 0.0081374,
+          "isHappyPath": false,
+          "errorMessage": "Step 2: Xunit.Sdk.XunitException : Expected _cakeRequest.Milk to be a match with the expectation, but it differs at index 0:\r\n\t   \u2193 (actual)\r\n\t  \u0022Some_Fresh_Milk\u0022\r\n\t  \u0022Buttermilk\u0022\r\n\t   \u2191 (expected)\r\n\tat FluentAssertions.Primitives.StringAssertions\u00601.Be(String expected, String because, Object[] becauseArgs)\r\n\tat Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_recipe_is_checked_locally_and_is_rejected() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 55",
+          "errorStackTrace": "   at FluentAssertions.Primitives.StringAssertions\u00601.Be(String expected, String because, Object[] becauseArgs)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_recipe_is_checked_locally_and_is_rejected() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 55\r\n   at LightBDD.Framework.Scenarios.ExtendedExtensions.RunScenarioAsync[TContext](IBddRunner\u00601 runner, Expression\u00601[] steps)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Checking_the_recipe_fails_without_calling_anything() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.cs:line 54\r\n   at Xunit.v3.TestRunner\u00602.\u003C\u003Ec__DisplayClass5_0.\u003C\u003CInvokeTest\u003Eb__1\u003Ed.MoveNext() in /_/src/xunit.v3.core/Runners/TestRunner.cs:line 170\r\n--- End of stack trace from previous location ---\r\n   at Xunit.v3.ExceptionAggregator.RunAsync(Func\u00601 code) in /_/src/xunit.v3.core/Exceptions/ExceptionAggregator.cs:line 124",
+          "labels": [],
+          "categories": [],
+          "rule": null,
+          "attempt": null,
+          "sourceFile": null,
+          "sourceLine": null,
+          "outlineId": null,
+          "examplesBlockName": null,
+          "examplesBlockDescription": null,
+          "examplesBlockIndex": null,
+          "exampleValues": null,
+          "exampleFlatValues": null,
+          "exampleDisplayName": null,
+          "attachments": [],
+          "backgroundSteps": [],
+          "steps": [
+            {
+              "keyword": "GIVEN",
+              "text": "A valid cake request",
+              "status": "Passed",
+              "durationSeconds": 0.0024894,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "WHEN",
+              "text": "The recipe is checked locally and is rejected",
+              "status": "Failed",
+              "durationSeconds": 0.0036174,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "THEN",
+              "text": "The order is recorded",
+              "status": "SkippedAfterFailure",
+              "durationSeconds": null,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ],
+          "diagrams": [
+            "@startuml\n!pragma teoz true\n\n\nskinparam wrapWidth 800\nautonumber 1\n\nactor \u0022Caller\u0022 as caller\r\nentity \u0022Dessert Provider\u0022 as dessertProvider\r\nentity \u0022Cow Service\u0022 as cowService\r\n\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGIVEN A valid cake request\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-385d824a-361f-4d03-9bb6-61e3a508d5ce GET: /milk]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-3e634993cb0c6459fa5b9de367914a72-9ca75b4f5116480b-00]\r\nend note\r\ndessertProvider -[#438DD5]\u003E cowService: [[#iflow-4ff9a7bc-b681-40ac-a0cd-76abda8a3cd3 GET: /milk]]\r\ncowService -[#438DD5]-\u003E dessertProvider: OK\r\nnote right\r\n\u003Ccolor:gray\u003E[Date=Sat, 12 Sep 2026 19:12:13 GMT]\r\n\u003Ccolor:gray\u003E[Server=Kestrel]\r\n\u003Ccolor:gray\u003E[Transfer-Encoding=chunked]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-53a81192-952d-4e3f-a271-ffbbc3966250 GET: /eggs]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-7dccf8cb278fb40e485030957675fd0b-bddfe82c23e8ccbd-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-5b79cc98-4dbe-4d59-acb1-97bd74494e42 GET: /flour]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-a2611506382715df0f476c093c435583-b82d84ca5f869f88-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022\r\n}\r\nend note\r\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EWHEN The recipe is checked locally and is rejected\n\n@enduml\r\n"
+          ],
+          "httpInteractions": [
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-3e634993cb0c6459fa5b9de367914a72-9ca75b4f5116480b-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "be9364be-2b70-4785-9dc5-ded90b03e065",
+              "requestResponseId": "385d824a-361f-4d03-9bb6-61e3a508d5ce",
+              "timestamp": "2026-09-12T19:12:13.831Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "3e634993cb0c6459fa5b9de367914a72",
+              "activitySpanId": "9ca75b4f5116480b",
+              "capturedBy": null,
+              "durationMs": 1.4977,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "traceId": "be9364be-2b70-4785-9dc5-ded90b03e065",
+              "requestResponseId": "4ff9a7bc-b681-40ac-a0cd-76abda8a3cd3",
+              "timestamp": "2026-09-12T19:12:13.832Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "3e634993cb0c6459fa5b9de367914a72",
+              "activitySpanId": "3c629b8983268ba2",
+              "capturedBy": null,
+              "durationMs": 0.8635,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [
+                {
+                  "key": "Date",
+                  "value": "Sat, 12 Sep 2026 19:12:13 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "statusCode": "OK",
+              "traceId": "be9364be-2b70-4785-9dc5-ded90b03e065",
+              "requestResponseId": "4ff9a7bc-b681-40ac-a0cd-76abda8a3cd3",
+              "timestamp": "2026-09-12T19:12:13.832Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "3e634993cb0c6459fa5b9de367914a72",
+              "activitySpanId": "3c629b8983268ba2",
+              "capturedBy": null,
+              "durationMs": 0.8635,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "be9364be-2b70-4785-9dc5-ded90b03e065",
+              "requestResponseId": "385d824a-361f-4d03-9bb6-61e3a508d5ce",
+              "timestamp": "2026-09-12T19:12:13.833Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "3e634993cb0c6459fa5b9de367914a72",
+              "activitySpanId": "9ca75b4f5116480b",
+              "capturedBy": null,
+              "durationMs": 1.4977,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-7dccf8cb278fb40e485030957675fd0b-bddfe82c23e8ccbd-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "bf0e2274-ef3a-4ef6-bcbf-ac6b7645aabd",
+              "requestResponseId": "53a81192-952d-4e3f-a271-ffbbc3966250",
+              "timestamp": "2026-09-12T19:12:13.833Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "7dccf8cb278fb40e485030957675fd0b",
+              "activitySpanId": "bddfe82c23e8ccbd",
+              "capturedBy": null,
+              "durationMs": 0.3012,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "bf0e2274-ef3a-4ef6-bcbf-ac6b7645aabd",
+              "requestResponseId": "53a81192-952d-4e3f-a271-ffbbc3966250",
+              "timestamp": "2026-09-12T19:12:13.833Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "7dccf8cb278fb40e485030957675fd0b",
+              "activitySpanId": "bddfe82c23e8ccbd",
+              "capturedBy": null,
+              "durationMs": 0.3012,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-a2611506382715df0f476c093c435583-b82d84ca5f869f88-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "d7d21305-f1ec-4a3a-b1cf-760ff8e3db98",
+              "requestResponseId": "5b79cc98-4dbe-4d59-acb1-97bd74494e42",
+              "timestamp": "2026-09-12T19:12:13.833Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "a2611506382715df0f476c093c435583",
+              "activitySpanId": "b82d84ca5f869f88",
+              "capturedBy": null,
+              "durationMs": 0.2332,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022flour\u0022:\u0022Some_Flour\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "d7d21305-f1ec-4a3a-b1cf-760ff8e3db98",
+              "requestResponseId": "5b79cc98-4dbe-4d59-acb1-97bd74494e42",
+              "timestamp": "2026-09-12T19:12:13.834Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "a2611506382715df0f476c093c435583",
+              "activitySpanId": "b82d84ca5f869f88",
+              "capturedBy": null,
+              "durationMs": 0.2332,
+              "stepPath": "0"
+            }
+          ],
+          "annotations": []
+        },
+        {
+          "id": "a4f952a5-990c-4f1e-baf2-b263ca2b4823",
+          "stableId": "a5032e9de8bc2979",
+          "name": "Ordering a cake fails inside a nested step",
+          "description": null,
+          "result": "Failed",
+          "durationSeconds": 0.0225615,
+          "isHappyPath": false,
+          "errorMessage": "Step 2.2: Xunit.Sdk.XunitException : Expected _cakeResponseMessage!.StatusCode to be HttpStatusCode.Conflict {value: 409}, but found HttpStatusCode.OK {value: 200}.\r\n\tat FluentAssertions.Primitives.EnumAssertions\u00602.Be(TEnum expected, String because, Object[] becauseArgs)\r\n\tat Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_placed_order_is_confirmed_as_a_conflict() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 75",
+          "errorStackTrace": "   at FluentAssertions.Primitives.EnumAssertions\u00602.Be(TEnum expected, String because, Object[] becauseArgs)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_placed_order_is_confirmed_as_a_conflict() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 75\r\n   at LightBDD.Framework.Scenarios.ExtendedExtensions.RunScenarioAsync[TContext](IBddRunner\u00601 runner, Expression\u00601[] steps)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Ordering_a_cake_fails_inside_a_nested_step() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.cs:line 64\r\n   at Xunit.v3.TestRunner\u00602.\u003C\u003Ec__DisplayClass5_0.\u003C\u003CInvokeTest\u003Eb__1\u003Ed.MoveNext() in /_/src/xunit.v3.core/Runners/TestRunner.cs:line 170\r\n--- End of stack trace from previous location ---\r\n   at Xunit.v3.ExceptionAggregator.RunAsync(Func\u00601 code) in /_/src/xunit.v3.core/Exceptions/ExceptionAggregator.cs:line 124",
+          "labels": [],
+          "categories": [],
+          "rule": null,
+          "attempt": null,
+          "sourceFile": null,
+          "sourceLine": null,
+          "outlineId": null,
+          "examplesBlockName": null,
+          "examplesBlockDescription": null,
+          "examplesBlockIndex": null,
+          "exampleValues": null,
+          "exampleFlatValues": null,
+          "exampleDisplayName": null,
+          "attachments": [],
+          "backgroundSteps": [],
+          "steps": [
+            {
+              "keyword": "GIVEN",
+              "text": "A valid cake request",
+              "status": "Passed",
+              "durationSeconds": 0.0034237,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "WHEN",
+              "text": "The cake is ordered through a composite step",
+              "status": "Failed",
+              "durationSeconds": 0.0161411,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [
+                {
+                  "keyword": null,
+                  "text": "The order is placed",
+                  "status": "Passed",
+                  "durationSeconds": 0.0018931,
+                  "bypassReason": null,
+                  "docString": null,
+                  "docStringMediaType": null,
+                  "failureMessage": null,
+                  "sourceFile": null,
+                  "sourceLine": null,
+                  "comments": [],
+                  "subSteps": [],
+                  "attachments": [],
+                  "parameters": [],
+                  "textSegments": null
+                },
+                {
+                  "keyword": null,
+                  "text": "The placed order is confirmed as a conflict",
+                  "status": "Failed",
+                  "durationSeconds": 0.00873,
+                  "bypassReason": null,
+                  "docString": null,
+                  "docStringMediaType": null,
+                  "failureMessage": null,
+                  "sourceFile": null,
+                  "sourceLine": null,
+                  "comments": [],
+                  "subSteps": [],
+                  "attachments": [],
+                  "parameters": [],
+                  "textSegments": null
+                }
+              ],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "THEN",
+              "text": "The order is recorded",
+              "status": "SkippedAfterFailure",
+              "durationSeconds": null,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ],
+          "diagrams": [
+            "@startuml\n!pragma teoz true\n\u003Cstyle\u003E\n .eventNote {\n     BackgroundColor #cfecf7\n     FontSize 11\n     RoundCorner 10\n }\n\u003C/style\u003E\n\nskinparam wrapWidth 800\nautonumber 1\n\nactor \u0022Caller\u0022 as caller\r\nentity \u0022Dessert Provider\u0022 as dessertProvider\r\nentity \u0022Cow Service\u0022 as cowService\r\nqueue \u0022Event broker\u0022 as eventBroker\r\n\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGIVEN A valid cake request\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-8d73c43d-fbb9-4f0c-864d-b539cbaf8993 GET: /milk]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-1f8e2c8a98e0c9376c7a0cc1da6609a0-9a5549dfec653a54-00]\r\nend note\r\ndessertProvider -[#438DD5]\u003E cowService: [[#iflow-2589d166-f816-410a-a0ed-8df8812047a4 GET: /milk]]\r\ncowService -[#438DD5]-\u003E dessertProvider: OK\r\nnote right\r\n\u003Ccolor:gray\u003E[Date=Sat, 12 Sep 2026 19:12:13 GMT]\r\n\u003Ccolor:gray\u003E[Server=Kestrel]\r\n\u003Ccolor:gray\u003E[Transfer-Encoding=chunked]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-42834a61-e12f-4b76-a1a7-8c6e6d2e5971 GET: /eggs]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-7980b662f4245474636a6e1e037e4577-48c7fa222513e66e-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-ded8e40b-b6df-4339-9d51-36589729e7f8 GET: /flour]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-9961bac456b6dc8d1ed4612914bc1cc9-6dacdacc6bd14053-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022\r\n}\r\nend note\r\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EWHEN The cake is ordered through a composite step\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-bdd832f3-954e-4039-bd24-b733f2891222 POST: /cake]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-72081ed2a1c1270948276f1843d0e62d-25eae3eff118da7e-00]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022,\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022,\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ndessertProvider -[#9B59B6]\u003E eventBroker: [[#iflow-53a840a2-e3cf-49a0-a519-bb45fc6da0f8 Send (Event Protocol): /cake_events]]\r\nnote\u003C\u003CeventNote\u003E\u003E left\r\n{\r\n  \u0022BatchId\u0022: \u00228bdcfa6c-1e3c-419e-94f4-5848f263a615\u0022,\r\n  \u0022Ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\neventBroker -[#9B59B6]-\u003E dessertProvider: Responded\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022batchId\u0022: \u00228bdcfa6c-1e3c-419e-94f4-5848f263a615\u0022,\r\n  \u0022ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\n@enduml\r\n"
+          ],
+          "httpInteractions": [
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-1f8e2c8a98e0c9376c7a0cc1da6609a0-9a5549dfec653a54-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "cbbc4a96-92ab-473c-9cdf-58c8ec0ee91b",
+              "requestResponseId": "8d73c43d-fbb9-4f0c-864d-b539cbaf8993",
+              "timestamp": "2026-09-12T19:12:13.795Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "1f8e2c8a98e0c9376c7a0cc1da6609a0",
+              "activitySpanId": "9a5549dfec653a54",
+              "capturedBy": null,
+              "durationMs": 2.0858,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "traceId": "cbbc4a96-92ab-473c-9cdf-58c8ec0ee91b",
+              "requestResponseId": "2589d166-f816-410a-a0ed-8df8812047a4",
+              "timestamp": "2026-09-12T19:12:13.796Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "1f8e2c8a98e0c9376c7a0cc1da6609a0",
+              "activitySpanId": "175e9f6325f4e003",
+              "capturedBy": null,
+              "durationMs": 1.1608,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [
+                {
+                  "key": "Date",
+                  "value": "Sat, 12 Sep 2026 19:12:13 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "statusCode": "OK",
+              "traceId": "cbbc4a96-92ab-473c-9cdf-58c8ec0ee91b",
+              "requestResponseId": "2589d166-f816-410a-a0ed-8df8812047a4",
+              "timestamp": "2026-09-12T19:12:13.797Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "1f8e2c8a98e0c9376c7a0cc1da6609a0",
+              "activitySpanId": "175e9f6325f4e003",
+              "capturedBy": null,
+              "durationMs": 1.1608,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "cbbc4a96-92ab-473c-9cdf-58c8ec0ee91b",
+              "requestResponseId": "8d73c43d-fbb9-4f0c-864d-b539cbaf8993",
+              "timestamp": "2026-09-12T19:12:13.797Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "1f8e2c8a98e0c9376c7a0cc1da6609a0",
+              "activitySpanId": "9a5549dfec653a54",
+              "capturedBy": null,
+              "durationMs": 2.0858,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-7980b662f4245474636a6e1e037e4577-48c7fa222513e66e-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "e865c499-bb32-40f8-8957-bd3bceadf7fb",
+              "requestResponseId": "42834a61-e12f-4b76-a1a7-8c6e6d2e5971",
+              "timestamp": "2026-09-12T19:12:13.798Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "7980b662f4245474636a6e1e037e4577",
+              "activitySpanId": "48c7fa222513e66e",
+              "capturedBy": null,
+              "durationMs": 0.4474,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "e865c499-bb32-40f8-8957-bd3bceadf7fb",
+              "requestResponseId": "42834a61-e12f-4b76-a1a7-8c6e6d2e5971",
+              "timestamp": "2026-09-12T19:12:13.798Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "7980b662f4245474636a6e1e037e4577",
+              "activitySpanId": "48c7fa222513e66e",
+              "capturedBy": null,
+              "durationMs": 0.4474,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-9961bac456b6dc8d1ed4612914bc1cc9-6dacdacc6bd14053-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "c60a3d88-6e75-4f15-9d22-4424f9b22abf",
+              "requestResponseId": "ded8e40b-b6df-4339-9d51-36589729e7f8",
+              "timestamp": "2026-09-12T19:12:13.798Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "9961bac456b6dc8d1ed4612914bc1cc9",
+              "activitySpanId": "6dacdacc6bd14053",
+              "capturedBy": null,
+              "durationMs": 0.3229,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022flour\u0022:\u0022Some_Flour\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "c60a3d88-6e75-4f15-9d22-4424f9b22abf",
+              "requestResponseId": "ded8e40b-b6df-4339-9d51-36589729e7f8",
+              "timestamp": "2026-09-12T19:12:13.798Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "9961bac456b6dc8d1ed4612914bc1cc9",
+              "activitySpanId": "6dacdacc6bd14053",
+              "capturedBy": null,
+              "durationMs": 0.3229,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022,\u0022flour\u0022:\u0022Some_Flour\u0022,\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-72081ed2a1c1270948276f1843d0e62d-25eae3eff118da7e-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "07c226fc-0c99-4073-84d5-637bd776a22f",
+              "requestResponseId": "bdd832f3-954e-4039-bd24-b733f2891222",
+              "timestamp": "2026-09-12T19:12:13.804Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "72081ed2a1c1270948276f1843d0e62d",
+              "activitySpanId": "25eae3eff118da7e",
+              "capturedBy": null,
+              "durationMs": 0.9366,
+              "stepPath": "1"
+            },
+            {
+              "type": "Request",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022BatchId\u0022:\u00228bdcfa6c-1e3c-419e-94f4-5848f263a615\u0022,\u0022Ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": null,
+              "traceId": "07c226fc-0c99-4073-84d5-637bd776a22f",
+              "requestResponseId": "53a840a2-e3cf-49a0-a519-bb45fc6da0f8",
+              "timestamp": "2026-09-12T19:12:13.805Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "72081ed2a1c1270948276f1843d0e62d",
+              "activitySpanId": "fd729d97e590069f",
+              "capturedBy": null,
+              "durationMs": 0.0184,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "",
+              "headers": [],
+              "statusCode": "Responded",
+              "traceId": "07c226fc-0c99-4073-84d5-637bd776a22f",
+              "requestResponseId": "53a840a2-e3cf-49a0-a519-bb45fc6da0f8",
+              "timestamp": "2026-09-12T19:12:13.805Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "72081ed2a1c1270948276f1843d0e62d",
+              "activitySpanId": "fd729d97e590069f",
+              "capturedBy": null,
+              "durationMs": 0.0184,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022batchId\u0022:\u00228bdcfa6c-1e3c-419e-94f4-5848f263a615\u0022,\u0022ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "07c226fc-0c99-4073-84d5-637bd776a22f",
+              "requestResponseId": "bdd832f3-954e-4039-bd24-b733f2891222",
+              "timestamp": "2026-09-12T19:12:13.805Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "72081ed2a1c1270948276f1843d0e62d",
+              "activitySpanId": "25eae3eff118da7e",
+              "capturedBy": null,
+              "durationMs": 0.9366,
+              "stepPath": "1"
+            }
+          ],
+          "annotations": []
+        },
+        {
+          "id": "9f615d02-0194-40f4-b81e-22204c993699",
+          "stableId": "52ee3d9d6949cc09",
+          "name": "Ordering a cake reports the wrong status",
+          "description": null,
+          "result": "Failed",
+          "durationSeconds": 0.8598139,
+          "isHappyPath": false,
+          "errorMessage": "Step 2: Xunit.Sdk.XunitException : Expected _cakeResponseMessage.StatusCode to be HttpStatusCode.Conflict {value: 409}, but found HttpStatusCode.OK {value: 200}.\r\n\tat FluentAssertions.Primitives.EnumAssertions\u00602.Be(TEnum expected, String because, Object[] becauseArgs)\r\n\tat Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_cake_is_ordered_and_the_response_is_a_conflict() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 41",
+          "errorStackTrace": "   at FluentAssertions.Primitives.EnumAssertions\u00602.Be(TEnum expected, String because, Object[] becauseArgs)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_cake_is_ordered_and_the_response_is_a_conflict() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 41\r\n   at LightBDD.Framework.Scenarios.ExtendedExtensions.RunScenarioAsync[TContext](IBddRunner\u00601 runner, Expression\u00601[] steps)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Ordering_a_cake_reports_the_wrong_status() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.cs:line 24\r\n   at Xunit.v3.TestRunner\u00602.\u003C\u003Ec__DisplayClass5_0.\u003C\u003CInvokeTest\u003Eb__1\u003Ed.MoveNext() in /_/src/xunit.v3.core/Runners/TestRunner.cs:line 170\r\n--- End of stack trace from previous location ---\r\n   at Xunit.v3.ExceptionAggregator.RunAsync(Func\u00601 code) in /_/src/xunit.v3.core/Exceptions/ExceptionAggregator.cs:line 124",
+          "labels": [],
+          "categories": [],
+          "rule": null,
+          "attempt": null,
+          "sourceFile": null,
+          "sourceLine": null,
+          "outlineId": null,
+          "examplesBlockName": null,
+          "examplesBlockDescription": null,
+          "examplesBlockIndex": null,
+          "exampleValues": null,
+          "exampleFlatValues": null,
+          "exampleDisplayName": null,
+          "attachments": [],
+          "backgroundSteps": [],
+          "steps": [
+            {
+              "keyword": "GIVEN",
+              "text": "A valid cake request",
+              "status": "Passed",
+              "durationSeconds": 0.2459606,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "WHEN",
+              "text": "The cake is ordered and the response is a conflict",
+              "status": "Failed",
+              "durationSeconds": 0.491467,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "THEN",
+              "text": "The order is recorded",
+              "status": "SkippedAfterFailure",
+              "durationSeconds": null,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ],
+          "diagrams": [
+            "@startuml\n!pragma teoz true\n\u003Cstyle\u003E\n .eventNote {\n     BackgroundColor #cfecf7\n     FontSize 11\n     RoundCorner 10\n }\n\u003C/style\u003E\n\nskinparam wrapWidth 800\nautonumber 1\n\nactor \u0022Caller\u0022 as caller\r\nentity \u0022Dessert Provider\u0022 as dessertProvider\r\nentity \u0022Cow Service\u0022 as cowService\r\nqueue \u0022Event broker\u0022 as eventBroker\r\n\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGIVEN A valid cake request\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-e50adc98-b89b-42b7-965e-1b6ad1f5716c GET: /milk]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-2e1321a37d006553b48306fb4d16b488-b7a65162186bc6f5-00]\r\nend note\r\ndessertProvider -[#438DD5]\u003E cowService: [[#iflow-8805f4b0-cb53-4f81-bc4d-30916abe56d1 GET: /milk]]\r\ncowService -[#438DD5]-\u003E dessertProvider: OK\r\nnote right\r\n\u003Ccolor:gray\u003E[Date=Sat, 12 Sep 2026 19:12:12 GMT]\r\n\u003Ccolor:gray\u003E[Server=Kestrel]\r\n\u003Ccolor:gray\u003E[Transfer-Encoding=chunked]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-fba3b2b8-e0e6-4d85-860b-9ac9f537701f GET: /eggs]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-9108c0b047f9db919a3a2ef643f490a7-a3385ba53f9a3bb0-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-1af22bd9-3962-47de-b5f5-729ad9db470b GET: /flour]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-0ba77890f244b22b956312d8624ca47a-e0c1b0a8ca8ddc04-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022\r\n}\r\nend note\r\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EWHEN The cake is ordered and the response is a conflict\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-148d0b7b-82a8-4773-87f0-bd7e3ee6a0c4 POST: /cake]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-92c982f8c88bd46b145b20bb78e800a4-c824fb31c8e302cd-00]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022,\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022,\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ndessertProvider -[#9B59B6]\u003E eventBroker: [[#iflow-b3c1a81f-0ae3-4172-9979-daf4ce6e1f26 Send (Event Protocol): /cake_events]]\r\nnote\u003C\u003CeventNote\u003E\u003E left\r\n{\r\n  \u0022BatchId\u0022: \u002247bdb4dd-40b5-4b02-a825-540ea0aec596\u0022,\r\n  \u0022Ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\neventBroker -[#9B59B6]-\u003E dessertProvider: Responded\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022batchId\u0022: \u002247bdb4dd-40b5-4b02-a825-540ea0aec596\u0022,\r\n  \u0022ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\n@enduml\r\n"
+          ],
+          "httpInteractions": [
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-2e1321a37d006553b48306fb4d16b488-b7a65162186bc6f5-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "5bc185b6-bc8b-49b9-a33a-3869a06114dc",
+              "requestResponseId": "e50adc98-b89b-42b7-965e-1b6ad1f5716c",
+              "timestamp": "2026-09-12T19:12:13.009Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "2e1321a37d006553b48306fb4d16b488",
+              "activitySpanId": "b7a65162186bc6f5",
+              "capturedBy": null,
+              "durationMs": 198.772,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "traceId": "5bc185b6-bc8b-49b9-a33a-3869a06114dc",
+              "requestResponseId": "8805f4b0-cb53-4f81-bc4d-30916abe56d1",
+              "timestamp": "2026-09-12T19:12:13.076Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "2e1321a37d006553b48306fb4d16b488",
+              "activitySpanId": "b5170fc273e1be4b",
+              "capturedBy": null,
+              "durationMs": 111.0536,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [
+                {
+                  "key": "Date",
+                  "value": "Sat, 12 Sep 2026 19:12:12 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "statusCode": "OK",
+              "traceId": "5bc185b6-bc8b-49b9-a33a-3869a06114dc",
+              "requestResponseId": "8805f4b0-cb53-4f81-bc4d-30916abe56d1",
+              "timestamp": "2026-09-12T19:12:13.187Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "2e1321a37d006553b48306fb4d16b488",
+              "activitySpanId": "b5170fc273e1be4b",
+              "capturedBy": null,
+              "durationMs": 111.0536,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "5bc185b6-bc8b-49b9-a33a-3869a06114dc",
+              "requestResponseId": "e50adc98-b89b-42b7-965e-1b6ad1f5716c",
+              "timestamp": "2026-09-12T19:12:13.207Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "2e1321a37d006553b48306fb4d16b488",
+              "activitySpanId": "b7a65162186bc6f5",
+              "capturedBy": null,
+              "durationMs": 198.772,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-9108c0b047f9db919a3a2ef643f490a7-a3385ba53f9a3bb0-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "e6de6d85-a8d2-4f8d-94b3-059ef06235b6",
+              "requestResponseId": "fba3b2b8-e0e6-4d85-860b-9ac9f537701f",
+              "timestamp": "2026-09-12T19:12:13.208Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "9108c0b047f9db919a3a2ef643f490a7",
+              "activitySpanId": "a3385ba53f9a3bb0",
+              "capturedBy": null,
+              "durationMs": 4.3421,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "e6de6d85-a8d2-4f8d-94b3-059ef06235b6",
+              "requestResponseId": "fba3b2b8-e0e6-4d85-860b-9ac9f537701f",
+              "timestamp": "2026-09-12T19:12:13.212Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "9108c0b047f9db919a3a2ef643f490a7",
+              "activitySpanId": "a3385ba53f9a3bb0",
+              "capturedBy": null,
+              "durationMs": 4.3421,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-0ba77890f244b22b956312d8624ca47a-e0c1b0a8ca8ddc04-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "b0dcc816-0eba-4986-a254-9781186816b6",
+              "requestResponseId": "1af22bd9-3962-47de-b5f5-729ad9db470b",
+              "timestamp": "2026-09-12T19:12:13.213Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "0ba77890f244b22b956312d8624ca47a",
+              "activitySpanId": "e0c1b0a8ca8ddc04",
+              "capturedBy": null,
+              "durationMs": 2.6507,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022flour\u0022:\u0022Some_Flour\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "b0dcc816-0eba-4986-a254-9781186816b6",
+              "requestResponseId": "1af22bd9-3962-47de-b5f5-729ad9db470b",
+              "timestamp": "2026-09-12T19:12:13.216Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "0ba77890f244b22b956312d8624ca47a",
+              "activitySpanId": "e0c1b0a8ca8ddc04",
+              "capturedBy": null,
+              "durationMs": 2.6507,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022,\u0022flour\u0022:\u0022Some_Flour\u0022,\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-92c982f8c88bd46b145b20bb78e800a4-c824fb31c8e302cd-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "c9902851-8754-442f-910f-f4fa6619b2c8",
+              "requestResponseId": "148d0b7b-82a8-4773-87f0-bd7e3ee6a0c4",
+              "timestamp": "2026-09-12T19:12:13.403Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "92c982f8c88bd46b145b20bb78e800a4",
+              "activitySpanId": "c824fb31c8e302cd",
+              "capturedBy": null,
+              "durationMs": 35.3459,
+              "stepPath": "1"
+            },
+            {
+              "type": "Request",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022BatchId\u0022:\u002247bdb4dd-40b5-4b02-a825-540ea0aec596\u0022,\u0022Ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": null,
+              "traceId": "c9902851-8754-442f-910f-f4fa6619b2c8",
+              "requestResponseId": "b3c1a81f-0ae3-4172-9979-daf4ce6e1f26",
+              "timestamp": "2026-09-12T19:12:13.437Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "92c982f8c88bd46b145b20bb78e800a4",
+              "activitySpanId": "704a254e5e57d9ce",
+              "capturedBy": null,
+              "durationMs": 0.7969,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "",
+              "headers": [],
+              "statusCode": "Responded",
+              "traceId": "c9902851-8754-442f-910f-f4fa6619b2c8",
+              "requestResponseId": "b3c1a81f-0ae3-4172-9979-daf4ce6e1f26",
+              "timestamp": "2026-09-12T19:12:13.438Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "92c982f8c88bd46b145b20bb78e800a4",
+              "activitySpanId": "704a254e5e57d9ce",
+              "capturedBy": null,
+              "durationMs": 0.7969,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022batchId\u0022:\u002247bdb4dd-40b5-4b02-a825-540ea0aec596\u0022,\u0022ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "c9902851-8754-442f-910f-f4fa6619b2c8",
+              "requestResponseId": "148d0b7b-82a8-4773-87f0-bd7e3ee6a0c4",
+              "timestamp": "2026-09-12T19:12:13.439Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "92c982f8c88bd46b145b20bb78e800a4",
+              "activitySpanId": "c824fb31c8e302cd",
+              "capturedBy": null,
+              "durationMs": 35.3459,
+              "stepPath": "1"
+            }
+          ],
+          "annotations": []
+        },
+        {
+          "id": "1177f53a-8b34-40b7-b589-72a04a3c5471",
+          "stableId": "c61856a5129a9b60",
+          "name": "Ordering a cake returns the wrong ingredients",
+          "description": null,
+          "result": "Failed",
+          "durationSeconds": 0.0150111,
+          "isHappyPath": false,
+          "errorMessage": "Step 2: Xunit.Sdk.XunitException : Expected _cakeResponse!.Ingredients {\u0022Some_Eggs\u0022, \u0022Some_Fresh_Milk\u0022, \u0022Some_Flour\u0022} to contain \u0022Marzipan\u0022.\r\n\tat FluentAssertions.Collections.GenericCollectionAssertions\u00603.Contain(T expected, String because, Object[] becauseArgs)\r\n\tat Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_cake_is_ordered_and_the_ingredients_are_wrong() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 49",
+          "errorStackTrace": "   at FluentAssertions.Collections.GenericCollectionAssertions\u00603.Contain(T expected, String because, Object[] becauseArgs)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_cake_is_ordered_and_the_ingredients_are_wrong() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 49\r\n   at LightBDD.Framework.Scenarios.ExtendedExtensions.RunScenarioAsync[TContext](IBddRunner\u00601 runner, Expression\u00601[] steps)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Ordering_a_cake_returns_the_wrong_ingredients() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.cs:line 44\r\n   at Xunit.v3.TestRunner\u00602.\u003C\u003Ec__DisplayClass5_0.\u003C\u003CInvokeTest\u003Eb__1\u003Ed.MoveNext() in /_/src/xunit.v3.core/Runners/TestRunner.cs:line 170\r\n--- End of stack trace from previous location ---\r\n   at Xunit.v3.ExceptionAggregator.RunAsync(Func\u00601 code) in /_/src/xunit.v3.core/Exceptions/ExceptionAggregator.cs:line 124",
+          "labels": [],
+          "categories": [],
+          "rule": null,
+          "attempt": null,
+          "sourceFile": null,
+          "sourceLine": null,
+          "outlineId": null,
+          "examplesBlockName": null,
+          "examplesBlockDescription": null,
+          "examplesBlockIndex": null,
+          "exampleValues": null,
+          "exampleFlatValues": null,
+          "exampleDisplayName": null,
+          "attachments": [],
+          "backgroundSteps": [],
+          "steps": [
+            {
+              "keyword": "GIVEN",
+              "text": "A valid cake request",
+              "status": "Passed",
+              "durationSeconds": 0.0039669,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "WHEN",
+              "text": "The cake is ordered and the ingredients are wrong",
+              "status": "Failed",
+              "durationSeconds": 0.0081914,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "THEN",
+              "text": "The order is recorded",
+              "status": "SkippedAfterFailure",
+              "durationSeconds": null,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ],
+          "diagrams": [
+            "@startuml\n!pragma teoz true\n\u003Cstyle\u003E\n .eventNote {\n     BackgroundColor #cfecf7\n     FontSize 11\n     RoundCorner 10\n }\n\u003C/style\u003E\n\nskinparam wrapWidth 800\nautonumber 1\n\nactor \u0022Caller\u0022 as caller\r\nentity \u0022Dessert Provider\u0022 as dessertProvider\r\nentity \u0022Cow Service\u0022 as cowService\r\nqueue \u0022Event broker\u0022 as eventBroker\r\n\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGIVEN A valid cake request\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-7eea7a28-b59c-4cfa-85bb-877d1f699bc8 GET: /milk]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-428f60361b6b7408438e1d7dd3366830-4832329303c791cf-00]\r\nend note\r\ndessertProvider -[#438DD5]\u003E cowService: [[#iflow-ba98107d-b256-487c-b0a6-8a60e9e4bc39 GET: /milk]]\r\ncowService -[#438DD5]-\u003E dessertProvider: OK\r\nnote right\r\n\u003Ccolor:gray\u003E[Date=Sat, 12 Sep 2026 19:12:13 GMT]\r\n\u003Ccolor:gray\u003E[Server=Kestrel]\r\n\u003Ccolor:gray\u003E[Transfer-Encoding=chunked]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-81fd670d-229e-42fa-b8b3-18435001f552 GET: /eggs]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-c73cb8912b5918028ff44bb431c86596-7466d0514ac02978-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-6daf85de-cb2e-4fc5-8da6-86edbb0b9f35 GET: /flour]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-c8c0c194391dccd834059e4a74260b7b-74c9e9c00225a115-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022\r\n}\r\nend note\r\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EWHEN The cake is ordered and the ingredients are wrong\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-01013630-19e1-460d-a823-f5dabcf94a71 POST: /cake]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-ce876728138ed1ccc66fb71e9c5ef406-1e5fa56bb332664c-00]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022,\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022,\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ndessertProvider -[#9B59B6]\u003E eventBroker: [[#iflow-c5acd63f-c6d4-4a1b-9f88-c5c4b7600e1b Send (Event Protocol): /cake_events]]\r\nnote\u003C\u003CeventNote\u003E\u003E left\r\n{\r\n  \u0022BatchId\u0022: \u0022b4ee8bff-e542-4d0e-b674-348f7bfd32ee\u0022,\r\n  \u0022Ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\neventBroker -[#9B59B6]-\u003E dessertProvider: Responded\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022batchId\u0022: \u0022b4ee8bff-e542-4d0e-b674-348f7bfd32ee\u0022,\r\n  \u0022ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\n@enduml\r\n"
+          ],
+          "httpInteractions": [
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-428f60361b6b7408438e1d7dd3366830-4832329303c791cf-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "83e57e00-e049-429b-8106-49741c88539d",
+              "requestResponseId": "7eea7a28-b59c-4cfa-85bb-877d1f699bc8",
+              "timestamp": "2026-09-12T19:12:13.777Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "428f60361b6b7408438e1d7dd3366830",
+              "activitySpanId": "4832329303c791cf",
+              "capturedBy": null,
+              "durationMs": 2.3681,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "traceId": "83e57e00-e049-429b-8106-49741c88539d",
+              "requestResponseId": "ba98107d-b256-487c-b0a6-8a60e9e4bc39",
+              "timestamp": "2026-09-12T19:12:13.778Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "428f60361b6b7408438e1d7dd3366830",
+              "activitySpanId": "f5e4f90ab7d673cd",
+              "capturedBy": null,
+              "durationMs": 1.2838,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [
+                {
+                  "key": "Date",
+                  "value": "Sat, 12 Sep 2026 19:12:13 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "statusCode": "OK",
+              "traceId": "83e57e00-e049-429b-8106-49741c88539d",
+              "requestResponseId": "ba98107d-b256-487c-b0a6-8a60e9e4bc39",
+              "timestamp": "2026-09-12T19:12:13.779Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "428f60361b6b7408438e1d7dd3366830",
+              "activitySpanId": "f5e4f90ab7d673cd",
+              "capturedBy": null,
+              "durationMs": 1.2838,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "83e57e00-e049-429b-8106-49741c88539d",
+              "requestResponseId": "7eea7a28-b59c-4cfa-85bb-877d1f699bc8",
+              "timestamp": "2026-09-12T19:12:13.779Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "428f60361b6b7408438e1d7dd3366830",
+              "activitySpanId": "4832329303c791cf",
+              "capturedBy": null,
+              "durationMs": 2.3681,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-c73cb8912b5918028ff44bb431c86596-7466d0514ac02978-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "a5d90bd2-e1af-4fc8-9b32-ca9b7f788e80",
+              "requestResponseId": "81fd670d-229e-42fa-b8b3-18435001f552",
+              "timestamp": "2026-09-12T19:12:13.779Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "c73cb8912b5918028ff44bb431c86596",
+              "activitySpanId": "7466d0514ac02978",
+              "capturedBy": null,
+              "durationMs": 0.6015,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "a5d90bd2-e1af-4fc8-9b32-ca9b7f788e80",
+              "requestResponseId": "81fd670d-229e-42fa-b8b3-18435001f552",
+              "timestamp": "2026-09-12T19:12:13.780Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "c73cb8912b5918028ff44bb431c86596",
+              "activitySpanId": "7466d0514ac02978",
+              "capturedBy": null,
+              "durationMs": 0.6015,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-c8c0c194391dccd834059e4a74260b7b-74c9e9c00225a115-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "311aa0a6-95da-449a-81cf-ed9280d27cdd",
+              "requestResponseId": "6daf85de-cb2e-4fc5-8da6-86edbb0b9f35",
+              "timestamp": "2026-09-12T19:12:13.780Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "c8c0c194391dccd834059e4a74260b7b",
+              "activitySpanId": "74c9e9c00225a115",
+              "capturedBy": null,
+              "durationMs": 0.3249,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022flour\u0022:\u0022Some_Flour\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "311aa0a6-95da-449a-81cf-ed9280d27cdd",
+              "requestResponseId": "6daf85de-cb2e-4fc5-8da6-86edbb0b9f35",
+              "timestamp": "2026-09-12T19:12:13.781Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "c8c0c194391dccd834059e4a74260b7b",
+              "activitySpanId": "74c9e9c00225a115",
+              "capturedBy": null,
+              "durationMs": 0.3249,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022,\u0022flour\u0022:\u0022Some_Flour\u0022,\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-ce876728138ed1ccc66fb71e9c5ef406-1e5fa56bb332664c-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "bde922c5-0436-401f-a583-cb7864d47bd7",
+              "requestResponseId": "01013630-19e1-460d-a823-f5dabcf94a71",
+              "timestamp": "2026-09-12T19:12:13.782Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "ce876728138ed1ccc66fb71e9c5ef406",
+              "activitySpanId": "1e5fa56bb332664c",
+              "capturedBy": null,
+              "durationMs": 0.9586,
+              "stepPath": "1"
+            },
+            {
+              "type": "Request",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022BatchId\u0022:\u0022b4ee8bff-e542-4d0e-b674-348f7bfd32ee\u0022,\u0022Ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": null,
+              "traceId": "bde922c5-0436-401f-a583-cb7864d47bd7",
+              "requestResponseId": "c5acd63f-c6d4-4a1b-9f88-c5c4b7600e1b",
+              "timestamp": "2026-09-12T19:12:13.782Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "ce876728138ed1ccc66fb71e9c5ef406",
+              "activitySpanId": "0b00a52492689a40",
+              "capturedBy": null,
+              "durationMs": 0.0156,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "",
+              "headers": [],
+              "statusCode": "Responded",
+              "traceId": "bde922c5-0436-401f-a583-cb7864d47bd7",
+              "requestResponseId": "c5acd63f-c6d4-4a1b-9f88-c5c4b7600e1b",
+              "timestamp": "2026-09-12T19:12:13.782Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "ce876728138ed1ccc66fb71e9c5ef406",
+              "activitySpanId": "0b00a52492689a40",
+              "capturedBy": null,
+              "durationMs": 0.0156,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022batchId\u0022:\u0022b4ee8bff-e542-4d0e-b674-348f7bfd32ee\u0022,\u0022ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "bde922c5-0436-401f-a583-cb7864d47bd7",
+              "requestResponseId": "01013630-19e1-460d-a823-f5dabcf94a71",
+              "timestamp": "2026-09-12T19:12:13.783Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "ce876728138ed1ccc66fb71e9c5ef406",
+              "activitySpanId": "1e5fa56bb332664c",
+              "capturedBy": null,
+              "durationMs": 0.9586,
+              "stepPath": "1"
+            }
+          ],
+          "annotations": []
+        },
+        {
+          "id": "bd5d9125-75c8-4d94-b99c-667097ae4ab3",
+          "stableId": "12872d7f3dc81754",
+          "name": "Ordering a cake succeeds",
+          "description": null,
+          "result": "Passed",
+          "durationSeconds": 0.0138545,
+          "isHappyPath": false,
+          "errorMessage": null,
+          "errorStackTrace": null,
+          "labels": [],
+          "categories": [],
+          "rule": null,
+          "attempt": null,
+          "sourceFile": null,
+          "sourceLine": null,
+          "outlineId": null,
+          "examplesBlockName": null,
+          "examplesBlockDescription": null,
+          "examplesBlockIndex": null,
+          "exampleValues": null,
+          "exampleFlatValues": null,
+          "exampleDisplayName": null,
+          "attachments": [],
+          "backgroundSteps": [],
+          "steps": [
+            {
+              "keyword": "GIVEN",
+              "text": "A valid cake request",
+              "status": "Passed",
+              "durationSeconds": 0.0049235,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "WHEN",
+              "text": "The cake is ordered",
+              "status": "Passed",
+              "durationSeconds": 0.001444,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "THEN",
+              "text": "The response is successful",
+              "status": "Passed",
+              "durationSeconds": 0.005275,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ],
+          "diagrams": [
+            "@startuml\n!pragma teoz true\n\u003Cstyle\u003E\n .eventNote {\n     BackgroundColor #cfecf7\n     FontSize 11\n     RoundCorner 10\n }\n\u003C/style\u003E\n\nskinparam wrapWidth 800\nautonumber 1\n\nactor \u0022Caller\u0022 as caller\r\nentity \u0022Dessert Provider\u0022 as dessertProvider\r\nentity \u0022Cow Service\u0022 as cowService\r\nqueue \u0022Event broker\u0022 as eventBroker\r\n\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGIVEN A valid cake request\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-2b3ea271-d0a2-4376-ab72-022c5a60fd0b GET: /milk]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-1ad35ee87302d760a4f0c3620c2dd419-ac4677f7e6a567df-00]\r\nend note\r\ndessertProvider -[#438DD5]\u003E cowService: [[#iflow-9ec9f16f-e16c-4044-95ae-35ea800a0307 GET: /milk]]\r\ncowService -[#438DD5]-\u003E dessertProvider: OK\r\nnote right\r\n\u003Ccolor:gray\u003E[Date=Sat, 12 Sep 2026 19:12:13 GMT]\r\n\u003Ccolor:gray\u003E[Server=Kestrel]\r\n\u003Ccolor:gray\u003E[Transfer-Encoding=chunked]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-0fa92430-b9f6-4e95-becd-41e6463fc042 GET: /eggs]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-83c6f781198c6e87f601652c1267d96d-43ad89f80adf4468-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-cff16a56-98ec-4a4c-8243-f6c7221cf568 GET: /flour]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-e4200a08d9046064c1a2cab74f3a29f3-656dbc517d517d82-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022\r\n}\r\nend note\r\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EWHEN The cake is ordered\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-2fda0c81-84de-44be-91cd-3bb83999cd34 POST: /cake]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-0028b94ca9be872d86fdd12348dab5cd-6d69a7013383cfed-00]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022,\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022,\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ndessertProvider -[#9B59B6]\u003E eventBroker: [[#iflow-1b7435cc-2e86-48e6-aa76-ee711e5c09b6 Send (Event Protocol): /cake_events]]\r\nnote\u003C\u003CeventNote\u003E\u003E left\r\n{\r\n  \u0022BatchId\u0022: \u0022c9112277-2d51-409d-a991-4642db004561\u0022,\r\n  \u0022Ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\neventBroker -[#9B59B6]-\u003E dessertProvider: Responded\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022batchId\u0022: \u0022c9112277-2d51-409d-a991-4642db004561\u0022,\r\n  \u0022ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003ETHEN The response is successful\n\n@enduml\r\n"
+          ],
+          "httpInteractions": [
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-1ad35ee87302d760a4f0c3620c2dd419-ac4677f7e6a567df-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "7d8e5a05-654c-45d5-b8db-c9e79901c413",
+              "requestResponseId": "2b3ea271-d0a2-4376-ab72-022c5a60fd0b",
+              "timestamp": "2026-09-12T19:12:13.749Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "1ad35ee87302d760a4f0c3620c2dd419",
+              "activitySpanId": "ac4677f7e6a567df",
+              "capturedBy": null,
+              "durationMs": 3.5545,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "traceId": "7d8e5a05-654c-45d5-b8db-c9e79901c413",
+              "requestResponseId": "9ec9f16f-e16c-4044-95ae-35ea800a0307",
+              "timestamp": "2026-09-12T19:12:13.749Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "1ad35ee87302d760a4f0c3620c2dd419",
+              "activitySpanId": "db5c3b3ad24ad998",
+              "capturedBy": null,
+              "durationMs": 2.5704,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [
+                {
+                  "key": "Date",
+                  "value": "Sat, 12 Sep 2026 19:12:13 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "statusCode": "OK",
+              "traceId": "7d8e5a05-654c-45d5-b8db-c9e79901c413",
+              "requestResponseId": "9ec9f16f-e16c-4044-95ae-35ea800a0307",
+              "timestamp": "2026-09-12T19:12:13.752Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "1ad35ee87302d760a4f0c3620c2dd419",
+              "activitySpanId": "db5c3b3ad24ad998",
+              "capturedBy": null,
+              "durationMs": 2.5704,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "7d8e5a05-654c-45d5-b8db-c9e79901c413",
+              "requestResponseId": "2b3ea271-d0a2-4376-ab72-022c5a60fd0b",
+              "timestamp": "2026-09-12T19:12:13.752Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "1ad35ee87302d760a4f0c3620c2dd419",
+              "activitySpanId": "ac4677f7e6a567df",
+              "capturedBy": null,
+              "durationMs": 3.5545,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-83c6f781198c6e87f601652c1267d96d-43ad89f80adf4468-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "1f9c6fbe-908e-4f90-a1e6-3f4639ebde06",
+              "requestResponseId": "0fa92430-b9f6-4e95-becd-41e6463fc042",
+              "timestamp": "2026-09-12T19:12:13.752Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "83c6f781198c6e87f601652c1267d96d",
+              "activitySpanId": "43ad89f80adf4468",
+              "capturedBy": null,
+              "durationMs": 0.4907,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "1f9c6fbe-908e-4f90-a1e6-3f4639ebde06",
+              "requestResponseId": "0fa92430-b9f6-4e95-becd-41e6463fc042",
+              "timestamp": "2026-09-12T19:12:13.753Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "83c6f781198c6e87f601652c1267d96d",
+              "activitySpanId": "43ad89f80adf4468",
+              "capturedBy": null,
+              "durationMs": 0.4907,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-e4200a08d9046064c1a2cab74f3a29f3-656dbc517d517d82-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "c7502c26-84e2-4cac-b815-4ebc0d8e9b05",
+              "requestResponseId": "cff16a56-98ec-4a4c-8243-f6c7221cf568",
+              "timestamp": "2026-09-12T19:12:13.753Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "e4200a08d9046064c1a2cab74f3a29f3",
+              "activitySpanId": "656dbc517d517d82",
+              "capturedBy": null,
+              "durationMs": 0.3195,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022flour\u0022:\u0022Some_Flour\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "c7502c26-84e2-4cac-b815-4ebc0d8e9b05",
+              "requestResponseId": "cff16a56-98ec-4a4c-8243-f6c7221cf568",
+              "timestamp": "2026-09-12T19:12:13.753Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "e4200a08d9046064c1a2cab74f3a29f3",
+              "activitySpanId": "656dbc517d517d82",
+              "capturedBy": null,
+              "durationMs": 0.3195,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022,\u0022flour\u0022:\u0022Some_Flour\u0022,\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-0028b94ca9be872d86fdd12348dab5cd-6d69a7013383cfed-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "44f53003-d2ec-4ff0-966e-3925a4a04f36",
+              "requestResponseId": "2fda0c81-84de-44be-91cd-3bb83999cd34",
+              "timestamp": "2026-09-12T19:12:13.754Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "0028b94ca9be872d86fdd12348dab5cd",
+              "activitySpanId": "6d69a7013383cfed",
+              "capturedBy": null,
+              "durationMs": 0.8381,
+              "stepPath": "1"
+            },
+            {
+              "type": "Request",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022BatchId\u0022:\u0022c9112277-2d51-409d-a991-4642db004561\u0022,\u0022Ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": null,
+              "traceId": "44f53003-d2ec-4ff0-966e-3925a4a04f36",
+              "requestResponseId": "1b7435cc-2e86-48e6-aa76-ee711e5c09b6",
+              "timestamp": "2026-09-12T19:12:13.755Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "0028b94ca9be872d86fdd12348dab5cd",
+              "activitySpanId": "db536a58513a0ee9",
+              "capturedBy": null,
+              "durationMs": 0.0135,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "",
+              "headers": [],
+              "statusCode": "Responded",
+              "traceId": "44f53003-d2ec-4ff0-966e-3925a4a04f36",
+              "requestResponseId": "1b7435cc-2e86-48e6-aa76-ee711e5c09b6",
+              "timestamp": "2026-09-12T19:12:13.755Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "0028b94ca9be872d86fdd12348dab5cd",
+              "activitySpanId": "db536a58513a0ee9",
+              "capturedBy": null,
+              "durationMs": 0.0135,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022batchId\u0022:\u0022c9112277-2d51-409d-a991-4642db004561\u0022,\u0022ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "44f53003-d2ec-4ff0-966e-3925a4a04f36",
+              "requestResponseId": "2fda0c81-84de-44be-91cd-3bb83999cd34",
+              "timestamp": "2026-09-12T19:12:13.755Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "0028b94ca9be872d86fdd12348dab5cd",
+              "activitySpanId": "6d69a7013383cfed",
+              "capturedBy": null,
+              "durationMs": 0.8381,
+              "stepPath": "1"
+            }
+          ],
+          "annotations": []
+        },
+        {
+          "id": "9162fab5-1cf7-4755-a1f8-97ee6a5656de",
+          "stableId": "c558d546c1296bfd",
+          "name": "Ordering a second cake reports the wrong status",
+          "description": null,
+          "result": "Failed",
+          "durationSeconds": 0.0085021,
+          "isHappyPath": false,
+          "errorMessage": "Step 2: Xunit.Sdk.XunitException : Expected _cakeResponseMessage.StatusCode to be HttpStatusCode.Conflict {value: 409}, but found HttpStatusCode.OK {value: 200}.\r\n\tat FluentAssertions.Primitives.EnumAssertions\u00602.Be(TEnum expected, String because, Object[] becauseArgs)\r\n\tat Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_cake_is_ordered_and_the_response_is_a_conflict() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 41",
+          "errorStackTrace": "   at FluentAssertions.Primitives.EnumAssertions\u00602.Be(TEnum expected, String because, Object[] becauseArgs)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.The_cake_is_ordered_and_the_response_is_a_conflict() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.steps.cs:line 41\r\n   at LightBDD.Framework.Scenarios.ExtendedExtensions.RunScenarioAsync[TContext](IBddRunner\u00601 runner, Expression\u00601[] steps)\r\n   at Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Ordering_a_second_cake_reports_the_wrong_status() in C:\\Code\\Kronikol\\examples\\Example.Api\\tests\\Example.Api.Tests.CiPreview.FailingWithSteps\\Scenarios\\Dessert_Feature.cs:line 34\r\n   at Xunit.v3.TestRunner\u00602.\u003C\u003Ec__DisplayClass5_0.\u003C\u003CInvokeTest\u003Eb__1\u003Ed.MoveNext() in /_/src/xunit.v3.core/Runners/TestRunner.cs:line 170\r\n--- End of stack trace from previous location ---\r\n   at Xunit.v3.ExceptionAggregator.RunAsync(Func\u00601 code) in /_/src/xunit.v3.core/Exceptions/ExceptionAggregator.cs:line 124",
+          "labels": [],
+          "categories": [],
+          "rule": null,
+          "attempt": null,
+          "sourceFile": null,
+          "sourceLine": null,
+          "outlineId": null,
+          "examplesBlockName": null,
+          "examplesBlockDescription": null,
+          "examplesBlockIndex": null,
+          "exampleValues": null,
+          "exampleFlatValues": null,
+          "exampleDisplayName": null,
+          "attachments": [],
+          "backgroundSteps": [],
+          "steps": [
+            {
+              "keyword": "GIVEN",
+              "text": "A valid cake request",
+              "status": "Passed",
+              "durationSeconds": 0.0039114,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "WHEN",
+              "text": "The cake is ordered and the response is a conflict",
+              "status": "Failed",
+              "durationSeconds": 0.0024685,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "THEN",
+              "text": "The order is recorded",
+              "status": "SkippedAfterFailure",
+              "durationSeconds": null,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ],
+          "diagrams": [
+            "@startuml\n!pragma teoz true\n\u003Cstyle\u003E\n .eventNote {\n     BackgroundColor #cfecf7\n     FontSize 11\n     RoundCorner 10\n }\n\u003C/style\u003E\n\nskinparam wrapWidth 800\nautonumber 1\n\nactor \u0022Caller\u0022 as caller\r\nentity \u0022Dessert Provider\u0022 as dessertProvider\r\nentity \u0022Cow Service\u0022 as cowService\r\nqueue \u0022Event broker\u0022 as eventBroker\r\n\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGIVEN A valid cake request\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-4ae4143a-bb37-4363-872f-3d01ed7349a3 GET: /milk]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-741cad5141f5d23409154a4d0d3f416a-8a55e7e4c1ab643a-00]\r\nend note\r\ndessertProvider -[#438DD5]\u003E cowService: [[#iflow-eafc7f06-e3c1-49ec-95f3-54592790be77 GET: /milk]]\r\ncowService -[#438DD5]-\u003E dessertProvider: OK\r\nnote right\r\n\u003Ccolor:gray\u003E[Date=Sat, 12 Sep 2026 19:12:13 GMT]\r\n\u003Ccolor:gray\u003E[Server=Kestrel]\r\n\u003Ccolor:gray\u003E[Transfer-Encoding=chunked]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-82bcbd11-881c-48ac-a2e5-7f5391046792 GET: /eggs]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-fbf21e7fe9751031c238baf02fe22af9-7020cdd4184c1d6b-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-bc53516c-7a41-427f-8bcc-22cd5fd027fb GET: /flour]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-cc7b699d521db1e80f1afc542d4718aa-937a9f890d593345-00]\r\nend note\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022\r\n}\r\nend note\r\n\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EWHEN The cake is ordered and the response is a conflict\n\ncaller -[#438DD5]\u003E dessertProvider: [[#iflow-b6927a23-9aa4-4dc8-94c3-7a470525f41c POST: /cake]]\r\nnote left\r\n\u003Ccolor:gray\u003E[traceparent=00-b49d789581b245be89e28be27116fc41-aa991bb4148844c3-00]\r\n\r\n{\r\n  \u0022milk\u0022: \u0022Some_Fresh_Milk\u0022,\r\n  \u0022flour\u0022: \u0022Some_Flour\u0022,\r\n  \u0022eggs\u0022: \u0022Some_Eggs\u0022\r\n}\r\nend note\r\ndessertProvider -[#9B59B6]\u003E eventBroker: [[#iflow-771d61b4-61cb-457c-a88a-97a38f8153bc Send (Event Protocol): /cake_events]]\r\nnote\u003C\u003CeventNote\u003E\u003E left\r\n{\r\n  \u0022BatchId\u0022: \u00220b0d6782-03b7-4774-8db2-4a8806b1e6fd\u0022,\r\n  \u0022Ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\neventBroker -[#9B59B6]-\u003E dessertProvider: Responded\r\ndessertProvider -[#438DD5]-\u003E caller: OK\r\nnote right\r\n{\r\n  \u0022batchId\u0022: \u00220b0d6782-03b7-4774-8db2-4a8806b1e6fd\u0022,\r\n  \u0022ingredients\u0022: [\r\n    \u0022Some_Eggs\u0022,\r\n    \u0022Some_Fresh_Milk\u0022,\r\n    \u0022Some_Flour\u0022\r\n  ]\r\n}\r\nend note\r\n@enduml\r\n"
+          ],
+          "httpInteractions": [
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-741cad5141f5d23409154a4d0d3f416a-8a55e7e4c1ab643a-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "98fe1b9c-fb37-45f0-a4c4-9a16610e045b",
+              "requestResponseId": "4ae4143a-bb37-4363-872f-3d01ed7349a3",
+              "timestamp": "2026-09-12T19:12:13.765Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "741cad5141f5d23409154a4d0d3f416a",
+              "activitySpanId": "8a55e7e4c1ab643a",
+              "capturedBy": null,
+              "durationMs": 2.7794,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "traceId": "98fe1b9c-fb37-45f0-a4c4-9a16610e045b",
+              "requestResponseId": "eafc7f06-e3c1-49ec-95f3-54592790be77",
+              "timestamp": "2026-09-12T19:12:13.765Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "741cad5141f5d23409154a4d0d3f416a",
+              "activitySpanId": "aa6f3719d4abba8c",
+              "capturedBy": null,
+              "durationMs": 1.5785,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost:15040/milk",
+              "serviceName": "Cow Service",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [
+                {
+                  "key": "Date",
+                  "value": "Sat, 12 Sep 2026 19:12:13 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "statusCode": "OK",
+              "traceId": "98fe1b9c-fb37-45f0-a4c4-9a16610e045b",
+              "requestResponseId": "eafc7f06-e3c1-49ec-95f3-54592790be77",
+              "timestamp": "2026-09-12T19:12:13.767Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "741cad5141f5d23409154a4d0d3f416a",
+              "activitySpanId": "aa6f3719d4abba8c",
+              "capturedBy": null,
+              "durationMs": 1.5785,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/milk",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "98fe1b9c-fb37-45f0-a4c4-9a16610e045b",
+              "requestResponseId": "4ae4143a-bb37-4363-872f-3d01ed7349a3",
+              "timestamp": "2026-09-12T19:12:13.767Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "741cad5141f5d23409154a4d0d3f416a",
+              "activitySpanId": "8a55e7e4c1ab643a",
+              "capturedBy": null,
+              "durationMs": 2.7794,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-fbf21e7fe9751031c238baf02fe22af9-7020cdd4184c1d6b-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "af591644-98a0-40b4-a18d-16e085188e5a",
+              "requestResponseId": "82bcbd11-881c-48ac-a2e5-7f5391046792",
+              "timestamp": "2026-09-12T19:12:13.767Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "fbf21e7fe9751031c238baf02fe22af9",
+              "activitySpanId": "7020cdd4184c1d6b",
+              "capturedBy": null,
+              "durationMs": 0.372,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/eggs",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "af591644-98a0-40b4-a18d-16e085188e5a",
+              "requestResponseId": "82bcbd11-881c-48ac-a2e5-7f5391046792",
+              "timestamp": "2026-09-12T19:12:13.768Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "fbf21e7fe9751031c238baf02fe22af9",
+              "activitySpanId": "7020cdd4184c1d6b",
+              "capturedBy": null,
+              "durationMs": 0.372,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": null,
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-cc7b699d521db1e80f1afc542d4718aa-937a9f890d593345-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "65d296bb-1995-4567-ab8d-b46730b39acf",
+              "requestResponseId": "bc53516c-7a41-427f-8bcc-22cd5fd027fb",
+              "timestamp": "2026-09-12T19:12:13.768Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "cc7b699d521db1e80f1afc542d4718aa",
+              "activitySpanId": "937a9f890d593345",
+              "capturedBy": null,
+              "durationMs": 0.2416,
+              "stepPath": "0"
+            },
+            {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost/flour",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022flour\u0022:\u0022Some_Flour\u0022}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "65d296bb-1995-4567-ab8d-b46730b39acf",
+              "requestResponseId": "bc53516c-7a41-427f-8bcc-22cd5fd027fb",
+              "timestamp": "2026-09-12T19:12:13.768Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Setup",
+              "isUserAction": false,
+              "activityTraceId": "cc7b699d521db1e80f1afc542d4718aa",
+              "activitySpanId": "937a9f890d593345",
+              "capturedBy": null,
+              "durationMs": 0.2416,
+              "stepPath": "0"
+            },
+            {
+              "type": "Request",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022milk\u0022:\u0022Some_Fresh_Milk\u0022,\u0022flour\u0022:\u0022Some_Flour\u0022,\u0022eggs\u0022:\u0022Some_Eggs\u0022}",
+              "headers": [
+                {
+                  "key": "traceparent",
+                  "value": "00-b49d789581b245be89e28be27116fc41-aa991bb4148844c3-00"
+                }
+              ],
+              "statusCode": null,
+              "traceId": "21835e60-e13e-4e55-b9aa-7fd231b0fe3a",
+              "requestResponseId": "b6927a23-9aa4-4dc8-94c3-7a470525f41c",
+              "timestamp": "2026-09-12T19:12:13.768Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "b49d789581b245be89e28be27116fc41",
+              "activitySpanId": "aa991bb4148844c3",
+              "capturedBy": null,
+              "durationMs": 0.6094,
+              "stepPath": "1"
+            },
+            {
+              "type": "Request",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "{\u0022BatchId\u0022:\u00220b0d6782-03b7-4774-8db2-4a8806b1e6fd\u0022,\u0022Ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": null,
+              "traceId": "21835e60-e13e-4e55-b9aa-7fd231b0fe3a",
+              "requestResponseId": "771d61b4-61cb-457c-a88a-97a38f8153bc",
+              "timestamp": "2026-09-12T19:12:13.769Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "b49d789581b245be89e28be27116fc41",
+              "activitySpanId": "deab8e9a8fdf48ff",
+              "capturedBy": null,
+              "durationMs": 0.0313,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "SEND (EVENT PROTOCOL)",
+              "uri": "event://event-broker/cake_events",
+              "serviceName": "Event broker",
+              "callerName": "Dessert Provider",
+              "content": "",
+              "headers": [],
+              "statusCode": "Responded",
+              "traceId": "21835e60-e13e-4e55-b9aa-7fd231b0fe3a",
+              "requestResponseId": "771d61b4-61cb-457c-a88a-97a38f8153bc",
+              "timestamp": "2026-09-12T19:12:13.769Z",
+              "metaType": "Event",
+              "dependencyCategory": "MessageQueue",
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "isUserAction": false,
+              "activityTraceId": "b49d789581b245be89e28be27116fc41",
+              "activitySpanId": "deab8e9a8fdf48ff",
+              "capturedBy": null,
+              "durationMs": 0.0313,
+              "stepPath": "1"
+            },
+            {
+              "type": "Response",
+              "method": "POST",
+              "uri": "http://localhost/cake",
+              "serviceName": "Dessert Provider",
+              "callerName": "Caller",
+              "content": "{\u0022batchId\u0022:\u00220b0d6782-03b7-4774-8db2-4a8806b1e6fd\u0022,\u0022ingredients\u0022:[\u0022Some_Eggs\u0022,\u0022Some_Fresh_Milk\u0022,\u0022Some_Flour\u0022]}",
+              "headers": [],
+              "statusCode": "OK",
+              "traceId": "21835e60-e13e-4e55-b9aa-7fd231b0fe3a",
+              "requestResponseId": "b6927a23-9aa4-4dc8-94c3-7a470525f41c",
+              "timestamp": "2026-09-12T19:12:13.769Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "isUserAction": false,
+              "activityTraceId": "b49d789581b245be89e28be27116fc41",
+              "activitySpanId": "aa991bb4148844c3",
+              "capturedBy": null,
+              "durationMs": 0.6094,
+              "stepPath": "1"
+            }
+          ],
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "wholeTestVisualization": "Both",
+  "componentRelationships": [
+    {
+      "caller": "Caller",
+      "service": "Dessert Provider",
+      "protocol": "HTTP",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "callCount": 23,
+      "testCount": 6,
+      "dependencyCategory": null
+    },
+    {
+      "caller": "Dessert Provider",
+      "service": "Cow Service",
+      "protocol": "HTTP",
+      "methods": [
+        "GET"
+      ],
+      "callCount": 6,
+      "testCount": 6,
+      "dependencyCategory": null
+    },
+    {
+      "caller": "Dessert Provider",
+      "service": "Event broker",
+      "protocol": "MessageQueue",
+      "methods": [
+        "Send (Event Protocol)"
+      ],
+      "callCount": 5,
+      "testCount": 5,
+      "dependencyCategory": "MessageQueue"
+    }
+  ],
+  "internalFlowSegments": {
+    "iflow-e50adc98-b89b-42b7-965e-1b6ad1f5716c": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-e50adc98-b89b-42b7-965e-1b6ad1f5716c-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACq3QvQrCQBAE4D6Qdziw0SZE1BC1iYqohRb\u002BYH1c7vRIshv3NgYhDy9KCgVL252PGdjEsSSuitz3XGahlCQLMVNs75Yfc6myC2EF6QJzJNExoRka85MipZpaFkXRpznUtsgl6C\u002BjlPo0NcnybFO\u002BijgMfa/ZWkXo0HAwc\u002BVO8wJJN743\u002BXUP1ujYwiVYM5d7fau04w2Ibj8eFa439b3mBBlgDa\u002BC1fIouvG4Df4xM2jLEg3p\u002B5FPFxZagVQBAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            185
+          ],
+          [
+            1,
+            "GET",
+            36.28,
+            47.96,
+            1,
+            89
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            61.41,
+            21.1,
+            2,
+            39
+          ]
+        ]
+      }
+    },
+    "iflow-8805f4b0-cb53-4f81-bc4d-30916abe56d1": {
+      "title": "Internal Flow (2 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-8805f4b0-cb53-4f81-bc4d-30916abe56d1-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PSwuCQBSG4b3gfxhoYxsRCumy0SKyRS260HoYZ2pQz7EzxyTwx0fRwsDtx8MHb\u002BJYEjdV6XuusFBLkpVIFdun5ddKquJG2EC\u002BxhJJjExkpsYMUqRc04/Fcdw3p9ZWpQT9Z5RSfdOSrK8257uYRZHvdRcoAFvofG\u002Bx3ZxFMJtXbrz0vW5vFaFDw2Hq6oPmNZL\u002BqKE9zNCxhVuYMddH/Wi04x2IYPI7SzTk3/Q3zonX7wYBAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Unknown",
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "GET",
+            0,
+            100,
+            0,
+            89
+          ],
+          [
+            1,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            52.4,
+            44.01,
+            1,
+            39
+          ]
+        ]
+      }
+    },
+    "iflow-fba3b2b8-e0e6-4d85-860b-9ac9f537701f": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-fba3b2b8-e0e6-4d85-860b-9ac9f537701f-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdwi46FI6lCK6VLvUQQcdnEN\u002BamiTG29uLUIfXhCHCl0P33KqRBJp8D1nqXMhSpReHBS5l6P3UaquRRiCrqEHFCub28LaRQqoDf5YWZZzcxud72Uwf0YpNTcjynh3mh5im\u002BecTWenEBJYyg4pXgzVgGbibLfUswYSudBmDVG8mudgEp2CWBc\u002BbfacVSbo7\u002BAHrr7EZOwAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            4
+          ]
+        ]
+      }
+    },
+    "iflow-1af22bd9-3962-47de-b5f5-729ad9db470b": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-1af22bd9-3962-47de-b5f5-729ad9db470b-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdwi46FKKSBFdrF3qoIMOziE/NbTJjTe3FqEPL4hDha6HbzmHRBKp9x1nqXUhSpRelIrcy9H7KFXbIPRBV9ABioXN7cbaWQqoDf5YURRTcxuc72Qwf0YpNTUDynh3mh5im\u002BecjWenEBJYysoUL4YqQDNytpvrWQ2JXGiymihezbM3iU5BLNc\u002BrfacHUzQ38EPStdVN\u002BwAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            2
+          ]
+        ]
+      }
+    },
+    "iflow-148d0b7b-82a8-4773-87f0-bd7e3ee6a0c4": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-148d0b7b-82a8-4773-87f0-bd7e3ee6a0c4-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4b2Qdwi46FIKahFdWrvUQQcdnEN\u002BamiTG29uLUIfXhCHCl0P33KKSAKpdx1LYmt9ECgcLyXZl6X3Uci2Qei9qqAD5AuTmY0xsxRQafyxPM\u002Bn5jZY1wmv/4yUcmoGFOFuFT34LstYMp6tRIhgKC1juGiqAPXIkv1cT2uIZH2T1kThqp\u002B9jnTyfLneurg6sKTQXn0PPz0qSlztAAAA\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            35
+          ]
+        ]
+      }
+    },
+    "iflow-b3c1a81f-0ae3-4172-9979-daf4ce6e1f26": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-b3c1a81f-0ae3-4172-9979-daf4ce6e1f26-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4b2Qdwi46FIKahFdWrvUQQcdnEN\u002BamiTG29uLUIfXhCHCl0P33KKSAKpdx1LYmt9ECgcLyXZl6X3Uci2Qei9qqAD5AuTmY0xsxRQafyxPM\u002Bn5jZY1wmv/4yUcmoGFOFuFT34LstYMp6tRIhgKC1juGiqAPXIkv1cT2uIZH2T1kThqp\u002B9jnTyfLneurg6sKTQXn0PPz0qSlztAAAA\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            35
+          ]
+        ]
+      }
+    },
+    "iflow-2b3ea271-d0a2-4376-ab72-022c5a60fd0b": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-2b3ea271-d0a2-4376-ab72-022c5a60fd0b-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCMBQF4D2Qdwi46FKKShFdqiLqoIM/OIc00dD23npzaxH68KI4KLi5Hr7DgZMG1sR1WUgRcg\u002BVJl2qqWF/83yfaZOfCWvI5lggqY6L3dC5nxQps/RmSZJ8mn3jy0KD/TLGmE/TkK5OPuOLGsWxFO3GG8KAjqNpqLaW50i2lWL8K49WGNjDOVoxVzt7rW3gNajuoAy9iRTtEXLABp715eKguv13/v/GRIrUQva67wGXqPd2SgEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            3
+          ],
+          [
+            1,
+            "GET",
+            17.47,
+            69.92,
+            1,
+            2
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            67.03,
+            15,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-9ec9f16f-e16c-4044-95ae-35ea800a0307": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-9ec9f16f-e16c-4044-95ae-35ea800a0307-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCMBQF4D2Qdwi46FKKShFdqiLqoIM/OIc00dD23npzaxH68KI4KLi5Hr7DgZMG1sR1WUgRcg\u002BVJl2qqWF/83yfaZOfCWvI5lggqY6L3dC5nxQps/RmSZJ8mn3jy0KD/TLGmE/TkK5OPuOLGsWxFO3GG8KAjqNpqLaW50i2lWL8K49WGNjDOVoxVzt7rW3gNajuoAy9iRTtEXLABp715eKguv13/v/GRIrUQva67wGXqPd2SgEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            3
+          ],
+          [
+            1,
+            "GET",
+            17.47,
+            69.92,
+            1,
+            2
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            67.03,
+            15,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-0fa92430-b9f6-4e95-becd-41e6463fc042": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-0fa92430-b9f6-4e95-becd-41e6463fc042-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-cff16a56-98ec-4a4c-8243-f6c7221cf568": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-cff16a56-98ec-4a4c-8243-f6c7221cf568-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-2fda0c81-84de-44be-91cd-3bb83999cd34": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-2fda0c81-84de-44be-91cd-3bb83999cd34-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-1b7435cc-2e86-48e6-aa76-ee711e5c09b6": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-1b7435cc-2e86-48e6-aa76-ee711e5c09b6-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-4ae4143a-bb37-4363-872f-3d01ed7349a3": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-4ae4143a-bb37-4363-872f-3d01ed7349a3-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCMBQF4D2Qdwi46FKqSBFdqiLqoIM/OIc00dD23npzaxH68KI4KLi5Hr7DgZMG1sR1WUgRcg\u002BVJl2qqWF/83yfaZOfCWvI5lggqY6L3dC5nxQps/RmSZJ8mn3jy0KD/TLGmE/TkK5OPuOLGsWxFO3GG8KAjqNpqLaW50i2lWL8K49WGNjDOVoxVzt7rW3gNajuoAy9iRTtEXLABp715eKguv13/v/GRIrUQva67wEi2CK1SgEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            2
+          ],
+          [
+            1,
+            "GET",
+            28.48,
+            58.79,
+            1,
+            1
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            53.3,
+            26.96,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-eafc7f06-e3c1-49ec-95f3-54592790be77": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-eafc7f06-e3c1-49ec-95f3-54592790be77-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCMBQF4D2Qdwi46FKqSBFdqiLqoIM/OIc00dD23npzaxH68KI4KLi5Hr7DgZMG1sR1WUgRcg\u002BVJl2qqWF/83yfaZOfCWvI5lggqY6L3dC5nxQps/RmSZJ8mn3jy0KD/TLGmE/TkK5OPuOLGsWxFO3GG8KAjqNpqLaW50i2lWL8K49WGNjDOVoxVzt7rW3gNajuoAy9iRTtEXLABp715eKguv13/v/GRIrUQva67wEi2CK1SgEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            2
+          ],
+          [
+            1,
+            "GET",
+            28.48,
+            58.79,
+            1,
+            1
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            53.3,
+            26.96,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-82bcbd11-881c-48ac-a2e5-7f5391046792": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-82bcbd11-881c-48ac-a2e5-7f5391046792-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-bc53516c-7a41-427f-8bcc-22cd5fd027fb": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-bc53516c-7a41-427f-8bcc-22cd5fd027fb-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-b6927a23-9aa4-4dc8-94c3-7a470525f41c": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-b6927a23-9aa4-4dc8-94c3-7a470525f41c-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-771d61b4-61cb-457c-a88a-97a38f8153bc": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-771d61b4-61cb-457c-a88a-97a38f8153bc-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-7eea7a28-b59c-4cfa-85bb-877d1f699bc8": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-7eea7a28-b59c-4cfa-85bb-877d1f699bc8-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCMBQF4D2Qdwi46FKqSBFdqiLqoIM/OIc00dD23npzaxH68KI4KLi5Hr7DgZMG1sR1WUgRcg\u002BVJl2qqWF/83yfaZOfCWvI5lggqY6L3dC5nxQps/RmSZJ8mn3jy0KD/TLGmE/TkK5OPuOLGsWxFO3GG8KAjqNpqLaW50i2lWL8K49WGNjDOVoxVzt7rW3gNajuoAy9iRTtEXLABp715eKguv13/v/GRIrUQva67wEi2CK1SgEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            2
+          ],
+          [
+            1,
+            "GET",
+            25.39,
+            55.29,
+            1,
+            1
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            61.67,
+            9.64,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-ba98107d-b256-487c-b0a6-8a60e9e4bc39": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-ba98107d-b256-487c-b0a6-8a60e9e4bc39-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCMBQF4D2Qdwi46FKqSBFdqiLqoIM/OIc00dD23npzaxH68KI4KLi5Hr7DgZMG1sR1WUgRcg\u002BVJl2qqWF/83yfaZOfCWvI5lggqY6L3dC5nxQps/RmSZJ8mn3jy0KD/TLGmE/TkK5OPuOLGsWxFO3GG8KAjqNpqLaW50i2lWL8K49WGNjDOVoxVzt7rW3gNajuoAy9iRTtEXLABp715eKguv13/v/GRIrUQva67wEi2CK1SgEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            2
+          ],
+          [
+            1,
+            "GET",
+            25.39,
+            55.29,
+            1,
+            1
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            61.67,
+            9.64,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-81fd670d-229e-42fa-b8b3-18435001f552": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-81fd670d-229e-42fa-b8b3-18435001f552-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-6daf85de-cb2e-4fc5-8da6-86edbb0b9f35": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-6daf85de-cb2e-4fc5-8da6-86edbb0b9f35-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-01013630-19e1-460d-a823-f5dabcf94a71": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-01013630-19e1-460d-a823-f5dabcf94a71-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-c5acd63f-c6d4-4a1b-9f88-c5c4b7600e1b": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-c5acd63f-c6d4-4a1b-9f88-c5c4b7600e1b-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-8d73c43d-fbb9-4f0c-864d-b539cbaf8993": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-8d73c43d-fbb9-4f0c-864d-b539cbaf8993-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCQBAE4P7g3iFgo00IIkG0MQYxFlr4g/VxuYtHkt24tzEIeXhRLBTsbIdvppiFZ0Xc1pUUvnTQKFJ1kGh2N8f3pdJlQdhCnmKFFAxsZCfW/qRIuaE3i\u002BP40xw6V1cKzJfRWn\u002BajlRzdjlfgmkUSdFvnSb0aDlMfLMznCKZXorZrzzM0LODIsyYm725tsbzBoLhuPajuRT9CUrADp719er4TP5fn0uxMJC/jnsAti84c0QBAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            2
+          ],
+          [
+            1,
+            "GET",
+            20.88,
+            54.28,
+            1,
+            0
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            52.58,
+            12.69,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-2589d166-f816-410a-a0ed-8df8812047a4": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-2589d166-f816-410a-a0ed-8df8812047a4-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCQBAE4P7g3iFgo00IIkG0MQYxFlr4g/VxuYtHkt24tzEIeXhRLBTsbIdvppiFZ0Xc1pUUvnTQKFJ1kGh2N8f3pdJlQdhCnmKFFAxsZCfW/qRIuaE3i\u002BP40xw6V1cKzJfRWn\u002BajlRzdjlfgmkUSdFvnSb0aDlMfLMznCKZXorZrzzM0LODIsyYm725tsbzBoLhuPajuRT9CUrADp719er4TP5fn0uxMJC/jnsAti84c0QBAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            2
+          ],
+          [
+            1,
+            "GET",
+            20.88,
+            54.28,
+            1,
+            0
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            52.58,
+            12.69,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-42834a61-e12f-4b76-a1a7-8c6e6d2e5971": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-42834a61-e12f-4b76-a1a7-8c6e6d2e5971-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-ded8e40b-b6df-4339-9d51-36589729e7f8": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-ded8e40b-b6df-4339-9d51-36589729e7f8-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-bdd832f3-954e-4039-bd24-b733f2891222": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-bdd832f3-954e-4039-bd24-b733f2891222-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-53a840a2-e3cf-49a0-a519-bb45fc6da0f8": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-53a840a2-e3cf-49a0-a519-bb45fc6da0f8-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-385d824a-361f-4d03-9bb6-61e3a508d5ce": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-385d824a-361f-4d03-9bb6-61e3a508d5ce-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCQBAE4P7g3iFgo02IIEG0MQYxFlr4g/VxuYtHkt24tzEIeXhRLBTsbIdvppiFZ0Xc1pUUvnTQKFJ1kGh2N8f3pdJlQdhCnmKFFAxsZCfW/qRIuaE3i\u002BP40xw6V1cKzJfRWn\u002BajlRzdjlfgmkUSdFvnSb0aDlMfLMznCKZXorZrzzM0LODIsyYm725tsbzBoLhuPajuRT9CUrADp719er4TP5fn0uxMJC/jnsAgW77ZkQBAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            1
+          ],
+          [
+            1,
+            "GET",
+            20.82,
+            59.02,
+            1,
+            0
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            63.09,
+            9.89,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-4ff9a7bc-b681-40ac-a0cd-76abda8a3cd3": {
+      "title": "Internal Flow (3 spans)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-4ff9a7bc-b681-40ac-a0cd-76abda8a3cd3-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACqXQvQrCQBAE4P7g3iFgo02IIEG0MQYxFlr4g/VxuYtHkt24tzEIeXhRLBTsbIdvppiFZ0Xc1pUUvnTQKFJ1kGh2N8f3pdJlQdhCnmKFFAxsZCfW/qRIuaE3i\u002BP40xw6V1cKzJfRWn\u002BajlRzdjlfgmkUSdFvnSb0aDlMfLMznCKZXorZrzzM0LODIsyYm725tsbzBoLhuPajuRT9CUrADp719er4TP5fn0uxMJC/jnsAgW77ZkQBAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore",
+          "Unknown"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            1
+          ],
+          [
+            1,
+            "GET",
+            20.82,
+            59.02,
+            1,
+            0
+          ],
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            63.09,
+            9.89,
+            2,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-53a81192-952d-4e3f-a271-ffbbc3966250": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-53a81192-952d-4e3f-a271-ffbbc3966250-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "iflow-5b79cc98-4dbe-4d59-acb1-97bd74494e42": {
+      "title": "Internal Flow (1 span)",
+      "content": "\u003Cdiv class=\u0022iflow-toggle\u0022\u003E\u003Cbutton class=\u0022iflow-toggle-btn iflow-toggle-active\u0022 data-view=\u0022main\u0022\u003EActivity\u003C/button\u003E\u003Cbutton class=\u0022iflow-toggle-btn\u0022 data-view=\u0022flame\u0022\u003EFlame Chart\u003C/button\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-main\u0022\u003E\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-5b79cc98-4dbe-4d59-acb1-97bd74494e42-request\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACm3PvQrCMBRA4T2Qdyi4lw5SRJfWLnXQQQfnkJ96aZMbb24tQh9eEIcKXQ/fcqrEinj0gxSphxAVKZ/VmuEF/D4q3XeEYzANDkjZxhVu69wqRTKWfqwsy6W5TeAHFeyf0VovzUQq3sHwI9sVhRTzGTRhQsd5neLFcoNkZyn2az1vMTGELm\u002BZ49U\u002BR5v4FA5SVDaY79oHcPPE3OYAAAA=\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E\u003C/div\u003E\u003Cdiv class=\u0022iflow-view iflow-view-flame\u0022 style=\u0022display:none\u0022\u003E\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022\u003E\u003C/div\u003E\u003C/div\u003E",
+      "flameData": {
+        "s": [
+          "Microsoft.AspNetCore"
+        ],
+        "f": [
+          [
+            0,
+            "Microsoft.AspNetCore.Hosting.HttpRequestIn",
+            0,
+            100,
+            0,
+            0
+          ]
+        ]
+      }
+    }
+  },
+  "wholeTestFlow": {
+    "f5b1248a-9d9c-405f-8b4b-3467ad345183": {
+      "activityHtml": "\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-whole-f5b1248a-9d9c-405f-8b4b-3467ad345183\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACrXRPwuCUBQF8F3wOwgttYhBSOSSSWRDDf2h\u002BfF8zx7qvXbfNQn88GE0GLRF6\u002BF3znKWlgVxU5WuYwsDtSBRebFkczf8WAlZ5IQNZAmWSN5IB3qm9VeKlCl6szAMh\u002BbYmqoUoD6MlHJoWhL1xWR89eZB4DrdzkhCi5r92NZ7xQmS6lxn8S33U7RsIPdT5vqgbo2yvAVvPK3sJHKd7gwFYAt9fbM\u002B9cnv69F/9VJB9jrlCa8E3UigAQAA\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E",
+      "flameHtml": "\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022 data-flame-z=\u0022H4sIAAAAAAAACp2QMYsCMRSE/8rx6uGZZBPjbnccohZecXhVSHVkl0VNdBOxEP\u002B7rGhnc7Yf8w3MXChT42jd/w0pp7bwZz58h/KVhkCg37iN6RzJg1pqnBN4meRlyqWPHS9LOfyE4ynksooEgalgYSAgPZwELeYbglRsUBnWGhLC47\u002BtleVZDcO1hnrHt5algmUN8Y5eV2xmmLJWd9\u002BD9uM1UrK\u002BD2w\u002BJvt\u002BtyUPZ9U48gFD1\u002BUR1pKFesJ2l04DeX\u002B9ATI5fbGIAQAA\u0022\u003E\u003C/div\u003E",
+      "spanCount": 5
+    },
+    "a4f952a5-990c-4f1e-baf2-b263ca2b4823": {
+      "activityHtml": "\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-whole-a4f952a5-990c-4f1e-baf2-b263ca2b4823\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACs3RPwuCUBQF8F3wOwgttYhESOSSSWRDDf2h\u002BfF8zx7qvXbfNQn88GE0GLS1tB5\u002B5yxnaVkQN1XpOrYwUAsSlRdLNnfDj5WQRU7YQJZgieSNdKBnWn\u002BlSJmiNwvDcGiOralKAerDSCmHpiVRX0zGV28eBK7T7YwktKjZj229V5wgqc51Ft9yP0XLBnI/Za4P6tYoy1vwxtPKTiLX6c5QALbQ1zfrU5/8vh79k14qyF4XPgHCH0B1zgEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E",
+      "flameHtml": "\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022 data-flame-z=\u0022H4sIAAAAAAAACp3QMUvEQBAF4L8SplIYxp3JmkvSiRyehXp4WoVFJG5CSG73zO5pIf53SVCwsDHtx3sz8D4gQFnBTVePPvgm0kU43Np46UcLCI\u002Bud/7dgUFooKwqhX8maeND7FxLmxgP9/b1aEO8doAKuSBhVCgGK0a4Wj8AalKMrEinyKgM/vcqK2IU0hplSV00nacoJBrVon5B2fSf02X9QijLcUWpzH2DsJ\u002BmTWkl80Blcrbvhh4MViK/0LZtmDGnXP9gM/jjOGnBxDnC9m43cf3c21lz4gxhZ91LcrJ\u002Bsy4m29FHX/vh9Dv2ZCcOYMznF7egIakMAgAA\u0022\u003E\u003C/div\u003E",
+      "spanCount": 6
+    },
+    "9f615d02-0194-40f4-b81e-22204c993699": {
+      "activityHtml": "\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-whole-9f615d02-0194-40f4-b81e-22204c993699\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACq2RPYvCQBCG\u002B0D\u002Bw4KN14T4cSFqYwyiV2ihJ9bLZleXJDNxdnJByI\u002BXO1Io2CjXzjzPOzDv3LEkrsvC91xuoZIkS5Eotj\u002BWrwup8hNhDVmKBZLomdCMjXmKImWaOiyKontm39iykKAfGKXUPdOQrI4247OIw9D32o1VhA4NB4mrtppTJN363vTZPFijYwunYM1c7fSl1o6/QPQH8WfpPma\u002B1x4gB2zgN2C1/Bb9eNIt/uPMqAt7SRq/4QzfcEbdC\u002BYasr\u002BWbxt0mlrxAQAA\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E",
+      "flameHtml": "\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022 data-flame-z=\u0022H4sIAAAAAAAACp3QQUsDMRAF4L9S5qTwGDObZN30JlKsB7VYe1qCSE1LaZvUTaoH8b/LFnvz0l4/3huG902Zhi09rOZdymlR\u002BCbvHkO5TV0g0CyuY/qK5EELGratwr9JHqdcVnHJ41J2z\u002BFjH3K5jwQFY1g0FKSxHq2A7kYvBKlZCSphqSFonMepl6trFjjWggr6jL4x7KDY9b\u002BZM\u002Bo1SwXFtoFCdXrfCdcWDWsLBW29B237fUWzbg4jDQdX29VmTR6tMdzYI4blMh\u002BwZuWOuNikfderE7Y1aPI07Xn\u002Btg4HdWwr0DTE98HF6DPEMph0qaR52lz\u002BxV5Dz5m8//kFb24IWBICAAA=\u0022\u003E\u003C/div\u003E",
+      "spanCount": 6
+    },
+    "1177f53a-8b34-40b7-b589-72a04a3c5471": {
+      "activityHtml": "\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-whole-1177f53a-8b34-40b7-b589-72a04a3c5471\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACs3RvQrCQBAE4D6Qdziw0SZEkSDaJAZRCy38wfq43MUjyW7c2xiEPLwoFgp2NrbDN0wxsWNJ3FSl77nCQi1JViJRbK\u002BWb3OpipywgSzFEkn0TGjGxnylSJmmF4ui6N3sW1uVEvSHUUq9m5ZkfbIZn8UkDH2v21hF6NBwkLh6qzlF0p3vTb/lwQodW8iDFXO905dGO16D6I8qN5j5XneEArCFR325OIj\u002B8JX/vjH7Jx1ryJ5H3gHYMWHc1AEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E",
+      "flameHtml": "\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022 data-flame-z=\u0022H4sIAAAAAAAACp3QzUoDMRQF4Fcpd6VwuGaSmWRmdiLFulCL1dUQRMZMKW2TOkl1Ib67xL\u002BVm3b7cc7lcN8pUtvR9aofQwxD4vO4u3HpIoyOQA9\u002B7cObJwsaqO06gX\u002BTPAsxrfySZynt7tzL3sV05QkCSnMDAWnRFaDL6T2hYWUgBZcoUFgcelNKNhqKKw0JcXi/1CwVNCsFcUy/qrmRkNyY4/q1YWFQSG6\u002BB1jQNr\u002B25sp8faidnG1XmzVZdKViWf2iWy5jxsqw\u002BsNhE/Zj1rpkpUHz20Xm/mntsjY676SF88\u002BTk\u002Bmr82kyH0MKfdic/sQeXeZI1n58AkquUJYMAgAA\u0022\u003E\u003C/div\u003E",
+      "spanCount": 6
+    },
+    "bd5d9125-75c8-4d94-b99c-667097ae4ab3": {
+      "activityHtml": "\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-whole-bd5d9125-75c8-4d94-b99c-667097ae4ab3\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACs3RvQrCQBAE4D6Qdziw0SYElSDaJAZRCy38wfq43MUjyW7c2xiEPLwoFgp2NrbDN0wxsWNJ3FSl77nCQi1JViJRbK\u002BWb3OpipywgSzFEkn0TGjGxnylSJmmF4ui6N3sW1uVEvSHUUq9m5ZkfbIZn8UkDH2v21hF6NBwkLh6qzlF0p3vTb/lwQodW8iDFXO905dGO16D6I8qN5j5XneEArCFR325OIj\u002B8JX/vjH7Jx1ryJ5H3gFs5ETr1AEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E",
+      "flameHtml": "\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022 data-flame-z=\u0022H4sIAAAAAAAACp2QMU/DMBSE/0r0JpBOr47TOnY2hCrKAFQUpshCKLhVlNYusQsD4r8jAwMDS7t\u002Bujudvg\u002BK1LR003djiGGd\u002BCLub126DKMj0KMffHj3ZEFratpW4N8kL0JMvd/wIqX9vXs9uJiuPUFgprg2EKgs2hJ0NX8gGDYSleG6RAlpcexqpVkoaJ5JSIjj\u002B0pyNcWUtYQ4pV9LVjNIVif2tWalUJb5RR6woF2Wq9nU34qaYrLrtwNZtEpw\u002BeOtKSZus4kZ1uJPcr0NhzFTXbPQoOXdKuPueXCZGs2VAq2cfynO5m/Op2I5hhS6sD3/jT25jCNZ\u002B/kFhMPaCw4CAAA=\u0022\u003E\u003C/div\u003E",
+      "spanCount": 6
+    },
+    "9162fab5-1cf7-4755-a1f8-97ee6a5656de": {
+      "activityHtml": "\u003Cdiv class=\u0022plantuml-browser iflow-diagram\u0022 id=\u0022iflow-puml-whole-9162fab5-1cf7-4755-a1f8-97ee6a5656de\u0022 data-plantuml-z=\u0022H4sIAAAAAAAACs3RvQrCQBAE4D6Qdziw0SZEkSDaJAZRCy38wfq43MUjyW7c2xiEPLwoFgp2NrbDN0wxsWNJ3FSl77nCQi1JViJRbK\u002BWb3OpipywgSzFEkn0TGjGxnylSJmmF4ui6N3sW1uVEvSHUUq9m5ZkfbIZn8UkDH2v21hF6NBwkLh6qzlF0p3vTb/lwQodW8iDFXO905dGO16D6I8qN5j5XneEArCFR325OIj\u002B8JX/vjH7Jx1ryJ5H3gHYMWHc1AEAAA==\u0022 data-diagram-type=\u0022plantuml\u0022\u003E\u003C/div\u003E",
+      "flameHtml": "\u003Cdiv class=\u0022iflow-flame\u0022 data-diagram-type=\u0022flamechart\u0022 data-flame-z=\u0022H4sIAAAAAAAACp3QwUvDMBQG8H9lvJPC45k0SZP2JjKcB3U4PZUgUtNS2iWzyfQg/u\u002BS4W5etuuP7/t4vG\u002BIUDdwP7RziKFLdB13Dy7dhNkBwosfffjyYBE6qJuG4b9JWoWYBt/TKqXdk/vYu5juPCBDZagokWFhseEIt8tnQF6SqlBIKhRy5BZPnRWcmEKuSHMskJ0\u002BUGqqJEqqFLJz\u002BtqQLFCQNOf1jSElkHOS\u002BjBgEbb5vVyREYcv1Yur7TCNYLEpFYnyiK7vY0atiekjdlPYz1mNRlg/brK1b6PLVJX5VNg4/764WH46nxbrOaTQhunyL/bqMkew9ucXNfgHIQ4CAAA=\u0022\u003E\u003C/div\u003E",
+      "spanCount": 6
+    }
+  },
+  "ciMetadata": {
+    "provider": "None",
+    "buildNumber": null,
+    "branch": null,
+    "commitSha": null,
+    "pipelineUrl": null,
+    "repository": null,
+    "runId": null,
+    "runAttempt": null
+  },
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "runtime": ".NET 10.0.11"
+  },
+  "diagnostics": []
+}

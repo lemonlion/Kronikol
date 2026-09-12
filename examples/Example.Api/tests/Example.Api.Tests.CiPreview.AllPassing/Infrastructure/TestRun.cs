@@ -20,7 +20,15 @@ public class TestRun : DiagrammedTestRun, IDisposable
         DisposeHttpFakes();
 
         XUnitReportGenerator.CreateStandardReportsWithDiagrams(TestContexts, StartRunTime, EndRunTime,
-            new ReportConfigurationOptions { SpecificationsTitle = "CI Preview — All Passing", WriteCiSummary = true });
+            new ReportConfigurationOptions
+            {
+                SpecificationsTitle = "CI Preview — All Passing",
+                WriteCiSummary = true,
+                // The second real shard. Together with CiPreview.FailingWithSteps this is the first
+                // sharded run the repository has ever produced: every previous assertion about
+                // `kronikol merge` was made against hand-built JSON, because no project turned this on.
+                GenerateMergeableData = true
+            });
     }
 
     private void StartHttpFakes()

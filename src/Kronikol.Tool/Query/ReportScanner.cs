@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Buffers;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,6 +17,13 @@ namespace Kronikol.Tool.Query;
 /// </summary>
 internal static class ReportScanner
 {
+    /// <summary>
+    /// A version field that is present and is not an integer. Distinct from null, which means the key was
+    /// absent - a file written before the shape was versioned. A file that declares a version this tool
+    /// cannot read is refused; a file that declares none is read on its merits.
+    /// </summary>
+    internal const int UnreadableVersion = -1;
+
     private const int InitialWindow = 128 * 1024;
 
     public static ReportIndex Scan(string path)
@@ -165,9 +173,9 @@ internal static class ReportScanner
             // Every name Enter/Leave/Value dispatch on, plus the report's other high-frequency keys.
             string[] names =
             [
-                "kronikolVersion", "startTime", "endTime", "mergeableFormatVersion", "kind", "message",
+                "kronikolVersion", "startTime", "endTime", "mergeableFormatVersion", "formatVersion", "suite", "kind", "message",
                 "scenarioId", "name", "relativePath", "mediaType", "index", "text", "key", "value", "type",
-                "method", "uri", "serviceName", "callerName", "statusCode", "timestamp", "requestResponseId",
+                "method", "uri", "serviceName", "callerName", "statusCode", "statusText", "timestamp", "requestResponseId",
                 "traceId", "stepPath", "phase", "metaType", "dependencyCategory", "activityTraceId",
                 "activitySpanId", "capturedBy", "isUserAction", "durationMs", "content", "keyword", "status",
                 "durationSeconds", "failureMessage", "sourceFile", "sourceLine", "bypassReason", "docString",
@@ -380,12 +388,26 @@ internal static class ReportScanner
             {
                 switch (key)
                 {
+                    case "formatVersion":
+                        // Absent means "written before the shape was versioned", which is a real answer;
+                        // present-but-not-an-integer means the file is not what it claims, and must not
+                        // read the same as absent.
+                        index.FormatVersion = reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var format)
+                            ? format
+                            : UnreadableVersion;
+                        return;
                     case "kronikolVersion": index.KronikolVersion = reader.GetString(); return;
+                    case "suite": index.Suite = reader.TokenType == JsonTokenType.String ? reader.GetString() : null; return;
                     case "startTime": index.StartTime = reader.GetString(); return;
                     case "endTime": index.EndTime = reader.GetString(); return;
                     case "mergeableFormatVersion":
                         index.Mergeable = true;
-                        index.MergeableFormatVersion = reader.TryGetInt32(out var version) ? version : null;
+                        // Same rule. This used to be `reader.TryGetInt32(out var v) ? v : null`, so a
+                        // string, a float or a null landed as null - indistinguishable from a file with
+                        // no version at all - and the gate one layer up accepted it silently.
+                        index.MergeableFormatVersion = reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var version)
+                            ? version
+                            : UnreadableVersion;
                         return;
                 }
             }
@@ -503,7 +525,17 @@ internal static class ReportScanner
                 case "uri": interaction.Uri = reader.GetString() ?? ""; break;
                 case "serviceName": interaction.ServiceName = reader.GetString() ?? ""; break;
                 case "callerName": interaction.CallerName = reader.GetString() ?? ""; break;
-                case "statusCode": interaction.StatusCode = reader.GetString(); break;
+                // Both shapes. From 3.1.0 this is a Number and the label lives in statusText; before
+                // that it was the enum NAME or a bare numeric string. GetString() throws
+                // InvalidOperationException on a Number token, and the dispatch catch list does not
+                // include it - so reading only the new shape would crash the tool on every old report
+                // and reading only the old one would crash it on every new one.
+                case "statusCode":
+                    interaction.StatusCode = reader.TokenType == JsonTokenType.Number
+                        ? (reader.TryGetInt32(out var code) ? code.ToString(CultureInfo.InvariantCulture) : null)
+                        : reader.GetString();
+                    break;
+                case "statusText": interaction.StatusText = reader.GetString(); break;
                 case "timestamp": interaction.Timestamp = reader.GetString(); break;
                 case "requestResponseId": interaction.RequestResponseId = NonEmptyId(reader.GetString()); break;
                 case "traceId": interaction.TraceId = NonEmptyId(reader.GetString()); break;

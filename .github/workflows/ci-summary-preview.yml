@@ -20,12 +20,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: "CI Preview — All Passing (10 tests)"
+          # Counts are from the committed sources. They said 10/10/5-pass-5-fail from the 3.0.0 rebrand
+          # until 3.2.0 and had been wrong the whole time.
+          - name: "CI Preview — All Passing (11 tests)"
             project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing
-          - name: "CI Preview — All Failing (10 tests)"
+          - name: "CI Preview — All Failing (11 tests)"
             project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllFailing
-          - name: "CI Preview — Mixed (5 pass, 5 fail)"
+          - name: "CI Preview — Mixed (5 pass, 15 fail)"
             project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.Mixed
+          # The only fixture in the repository that fails INSIDE a step, which is the only shape that can
+          # populate the digest's calls table. Everything else with failures is step-less.
+          - name: "CI Preview — Failing Inside a Step (1 pass, 5 fail)"
+            project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.FailingWithSteps
     steps:
       - uses: actions/checkout@v5
 

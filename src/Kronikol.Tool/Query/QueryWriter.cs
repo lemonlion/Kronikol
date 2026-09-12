@@ -8,14 +8,60 @@ namespace Kronikol.Tool.Query;
 /// What <c>--json</c> has to state before the first row: which file was read, by which Kronikol, to
 /// answer which question. Null everywhere else, which is the default — text is what an agent reading a
 /// terminal should ask for, because the same answer as JSON costs it roughly twice the tokens.
-/// </summary>
-/// <summary>
-/// What the envelope knows about the call that produced it. <paramref name="Addresses"/> is every
-/// positional after the report - a scenario, an interaction, the two ends of a diff - because a resume
-/// pointer that drops them silently widens the question it was resuming.
+///
+/// <para><paramref name="Addresses"/> is every positional after the report - a scenario, an interaction,
+/// the two ends of a diff - because a resume pointer that drops them silently widens the question it was
+/// resuming.</para>
 /// </summary>
 internal sealed record QueryEnvelope(string Command, string Report, string? KronikolVersion,
     IReadOnlyList<string> Addresses);
+
+/// <summary>
+/// The envelope for a call that failed.
+///
+/// <para>Until 3.2.0 a non-zero exit printed prose on stderr and <b>nothing at all</b> on stdout - the
+/// whole buffered answer, provenance banners included, was discarded by
+/// <c>if (exit == 0 &amp;&amp; !writer.Flush(error))</c>. So a wrapper asking for <c>--json</c> got valid
+/// JSON when the call worked and unparseable text when it did not, which is precisely the case a machine
+/// channel exists to handle. The prose still goes to stderr; this is what goes to stdout beside it.</para>
+/// </summary>
+internal static class QueryErrorEnvelope
+{
+    public static string Build(string command, string? report, string? kronikolVersion, int exit, string message)
+    {
+        var compact = new JsonSerializerOptions { WriteIndented = false };
+        var text = message.Replace("\r\n", "\n").TrimEnd('\n');
+        var lines = text.Split('\n');
+
+        var envelope = new StringBuilder("{");
+        void Member(string name, string value)
+        {
+            if (envelope.Length > 1) envelope.Append(',');
+            envelope.Append(JsonSerializer.Serialize(name, compact)).Append(':').Append(value);
+        }
+
+        Member("formatVersion", QueryWriter.JsonFormatVersion.ToString(CultureInfo.InvariantCulture));
+        Member("command", JsonSerializer.Serialize(command, compact));
+        Member("report", JsonSerializer.Serialize(report, compact));
+        Member("kronikolVersion", JsonSerializer.Serialize(kronikolVersion, compact));
+        Member("notes", "[]");
+        // Empty rather than absent, so a consumer's `for (const item of envelope.items)` is safe on both
+        // paths and the failure shows up where it is checked for - in `error` - rather than as a crash.
+        Member("items", "[]");
+        Member("total", "null");
+        Member("truncated", "null");
+        Member("next", "null");
+        Member("error", "{"
+            + "\"exitCode\":" + exit.ToString(CultureInfo.InvariantCulture)
+            + ",\"message\":" + JsonSerializer.Serialize(lines[0], compact)
+            // Everything the tool said after the first line is remediation - `Run 'kronikol query --help'`,
+            // the legal values for a flag - which is the half a caller can act on.
+            + ",\"hint\":" + JsonSerializer.Serialize(lines.Length > 1 ? string.Join("\n", lines[1..]) : null, compact)
+            + "}");
+
+        return envelope.Append("}\n").ToString();
+    }
+}
 
 /// <summary>
 /// Writes a command's answer under a byte budget, as text or as one JSON envelope.
@@ -56,6 +102,13 @@ internal sealed class QueryWriter
 
     private int _bytes;
     private bool _overBudget;
+
+    /// <summary>
+    /// How many rows the budget refused. A bare <c>truncated: true</c> tells a consumer that rows were
+    /// dropped and never how many, which is the silent-skip defect re-encoded as a boolean rather than
+    /// fixed - so the envelope carries the count.
+    /// </summary>
+    private int _dropped;
     private string? _footer;
     private int? _count;
     private int? _total;
@@ -163,13 +216,17 @@ internal sealed class QueryWriter
             return !_overBudget;
 
         if (_overBudget)
+        {
+            _dropped++;
             return false;
+        }
 
         var fragment = JsonSerializer.Serialize(value, Compact);
         var cost = Encoding.UTF8.GetByteCount(fragment) + 1;
         if (_maxBytes > 0 && _bytes + cost > _maxBytes)
         {
             _overBudget = true;
+            _dropped++;
             return false;
         }
 
@@ -347,11 +404,18 @@ internal sealed class QueryWriter
         else
         {
             Member("items", "[" + string.Join(",", _items) + "]");
-            if (_total is { } total)
-                Member("total", total.ToString(CultureInfo.InvariantCulture));
+            // Always present, null when the verb does not page. `kronikolVersion` is deliberately
+            // present-and-null for the same reason: a consumer that has to branch on key PRESENCE cannot
+            // tell "no total" from "old tool", and `summary` and `diff` were the two verbs breaking it.
+            Member("total", _total is { } total ? total.ToString(CultureInfo.InvariantCulture) : "null");
         }
 
-        Member("truncated", _overBudget ? "true" : "false");
+        // An object, not a bool: "some rows were dropped" is not an answer a script can act on. null when
+        // nothing was dropped, so the presence of the key is itself the signal.
+        Member("truncated", _overBudget
+            ? "{\"limitBytes\":" + _maxBytes.ToString(CultureInfo.InvariantCulture)
+              + ",\"droppedItems\":" + _dropped.ToString(CultureInfo.InvariantCulture) + "}"
+            : "null");
         Member("next", _next is null ? "null" : JsonSerializer.Serialize(_next, Compact));
 
         return envelope.Append("}\n").ToString();

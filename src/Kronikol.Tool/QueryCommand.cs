@@ -37,6 +37,35 @@ internal static partial class QueryCommand
             return 0;
         }
 
+        // Under --json every failure has to reach stdout as an envelope too, and the failures are raised
+        // by forty-odd call sites that each write a sentence to `error` and return a code. Rather than
+        // rewrite all of them, the error writer is teed: stderr still gets the prose, and whatever was
+        // said is available here to put in `error.message` if the call ends non-zero. Asked for as a flag
+        // rather than inferred, because `--json` is parsed by QueryOptions further down and a wrapper
+        // needs the envelope even when the failure is the parse itself.
+        var wantsJson = args.Any(a => a is "--json");
+        var captured = wantsJson ? new StringWriter() : null;
+        var errorSink = captured is null ? error : new TeeTextWriter(error, captured);
+        var exitCode = RunCore(args, @out, errorSink, getEnv);
+        if (exitCode != 0 && captured is not null)
+        {
+            @out.Write(QueryErrorEnvelope.Build(
+                args[0], _lastResolvedReport, _lastKronikolVersion, exitCode, captured.ToString()));
+        }
+
+        return exitCode;
+    }
+
+    /// <summary>What the failure envelope reports as the file it was reading, when it got that far.</summary>
+    [ThreadStatic] private static string? _lastResolvedReport;
+
+    [ThreadStatic] private static string? _lastKronikolVersion;
+
+    private static int RunCore(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?> getEnv)
+    {
+        _lastResolvedReport = null;
+        _lastKronikolVersion = null;
+
         var command = args[0];
         var options = QueryOptions.Parse(args.Skip(1).ToList(), error);
         if (options is null)
@@ -51,6 +80,8 @@ internal static partial class QueryCommand
         var resolved = ResolveReport(options.File, error);
         if (resolved is null)
             return 2;
+
+        _lastResolvedReport = resolved;
 
         ReportIndex index;
         try
@@ -68,9 +99,25 @@ internal static partial class QueryCommand
             return 1;
         }
 
+        _lastKronikolVersion = index.KronikolVersion;
+
+        // The report's own shape version. Absent is fine and means "written before 3.1.0"; a version this
+        // build does not know is refused, because half-reading a shape whose keys have changed meaning
+        // produces a confident wrong answer rather than an error, which is the outcome the field exists
+        // to prevent.
+        if (index.FormatVersion is { } reportFormat && reportFormat != Kronikol.Reports.ReportGenerator.ReportFormatVersion)
+        {
+            error.WriteLine(reportFormat == ReportScanner.UnreadableVersion
+                ? $"{resolved} declares a formatVersion that is not a number. It is not a Kronikol report this tool can read."
+                : $"{resolved} declares formatVersion {reportFormat}; this tool understands {Kronikol.Reports.ReportGenerator.ReportFormatVersion}. Upgrade Kronikol.Tool.");
+            return 1;
+        }
+
         if (index.MergeableFormatVersion is { } version and not 1)
         {
-            error.WriteLine($"{resolved} declares mergeableFormatVersion {version}, which this tool does not understand. Upgrade Kronikol.Tool.");
+            error.WriteLine(version == ReportScanner.UnreadableVersion
+                ? $"{resolved} declares a mergeableFormatVersion that is not a number. It is not a mergeable report this tool can read."
+                : $"{resolved} declares mergeableFormatVersion {version}, which this tool does not understand. Upgrade Kronikol.Tool.");
             return 1;
         }
 

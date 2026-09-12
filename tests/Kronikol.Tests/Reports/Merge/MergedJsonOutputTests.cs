@@ -198,7 +198,8 @@ public class MergedJsonOutputTests : IDisposable
         Assert.Equal("OrdersApi", interactions[0].GetProperty("serviceName").GetString());
         Assert.Equal("POST", interactions[0].GetProperty("method").GetString());
         Assert.Equal("{\"sku\":\"A1\"}", interactions[0].GetProperty("content").GetString());
-        Assert.Equal("OK", interactions[1].GetProperty("statusCode").GetString());
+        Assert.Equal(200, interactions[1].GetProperty("statusCode").GetInt32());
+        Assert.Equal("OK", interactions[1].GetProperty("statusText").GetString());
     }
 
     [Fact]

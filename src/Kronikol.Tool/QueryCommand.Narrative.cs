@@ -297,8 +297,8 @@ internal static partial class QueryCommand
                 continue;
 
             var response = FindResponse(scenario, interaction);
-            var status = response?.StatusCode ?? "";
-            if (options.ErrorsOnly && !IsError(status))
+            var status = StatusOf(response).Text ?? "";
+            if (options.ErrorsOnly && !IsError(response?.StatusCode, response?.StatusText))
                 continue;
 
             var payload = interaction.BodyHash is { } hash ? $"  {hash} {QueryWriter.Size(interaction.BodyLength)}" : "";

@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
@@ -64,6 +64,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Api.Tests.Component.ReqNRoll.TUnit", "tests\Example.Api.Tests.Component.ReqNRoll.TUnit\Example.Api.Tests.Component.ReqNRoll.TUnit.csproj", "{822810FA-CE39-40CD-96EE-685C1BD57AA9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kronikol.ReqNRoll.TUnit", "..\..\src\Kronikol.ReqNRoll.TUnit\Kronikol.ReqNRoll.TUnit.csproj", "{8B9A2B95-4A19-4381-A930-078797531F0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Api.Tests.CiPreview.FailingWithSteps", "tests\Example.Api.Tests.CiPreview.FailingWithSteps\Example.Api.Tests.CiPreview.FailingWithSteps.csproj", "{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -435,6 +437,18 @@ Global
 		{8B9A2B95-4A19-4381-A930-078797531F0C}.Release|x64.Build.0 = Release|Any CPU
 		{8B9A2B95-4A19-4381-A930-078797531F0C}.Release|x86.ActiveCfg = Release|Any CPU
 		{8B9A2B95-4A19-4381-A930-078797531F0C}.Release|x86.Build.0 = Release|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Debug|x64.Build.0 = Debug|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Debug|x86.Build.0 = Debug|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Release|x64.ActiveCfg = Release|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Release|x64.Build.0 = Release|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Release|x86.ActiveCfg = Release|Any CPU
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -457,6 +471,7 @@ Global
 		{AE4EF407-0762-41D0-8AC9-2B3DB2BDEACD} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{E8428228-1360-4425-9A00-99A83B11C8D2} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{822810FA-CE39-40CD-96EE-685C1BD57AA9} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{BF7FF6BF-EA36-4569-94F5-D2E4249C23C2} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4A2CB93A-F7C2-46F7-B64F-8849E34F7556}

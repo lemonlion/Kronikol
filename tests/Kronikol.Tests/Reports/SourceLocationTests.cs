@@ -183,8 +183,8 @@ public class SourceLocationTests
 
         Assert.Contains("Features/Checkout.feature:42", digest.Markdown);
 
-        var line = JsonDocument.Parse(digest.Jsonl.TrimEnd('\n'));
-        Assert.Equal("Features/Checkout.feature", line.RootElement.GetProperty("sourceFile").GetString());
-        Assert.Equal(42, line.RootElement.GetProperty("sourceLine").GetInt32());
+        var line = Assert.Single(FailuresJsonl.Failures(digest.Jsonl));
+        Assert.Equal("Features/Checkout.feature", line.GetProperty("sourceFile").GetString());
+        Assert.Equal(42, line.GetProperty("sourceLine").GetInt32());
     }
 }

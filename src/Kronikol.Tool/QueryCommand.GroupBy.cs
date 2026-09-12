@@ -40,7 +40,7 @@ internal static partial class QueryCommand
             if (!buckets.TryGetValue(key, out var bucket))
                 buckets[key] = bucket = new GroupBucket(values);
             bucket.Calls++;
-            if (IsError(response?.StatusCode))
+            if (IsError(response?.StatusCode, response?.StatusText))
                 bucket.Errors++;
             if ((request.DurationMs ?? response?.DurationMs) is { } ms)
                 bucket.Durations.Add(ms);
@@ -98,7 +98,7 @@ internal static partial class QueryCommand
         {
             "service" => request.ServiceName,
             "method" => request.Method ?? "-",
-            "status" => response?.StatusCode ?? "-",
+            "status" => StatusOf(response).Text ?? "-",
             "path" => UriPath(request.Uri),
             "step" => request.StepPath ?? "-",
             "phase" => request.Phase ?? "-",
