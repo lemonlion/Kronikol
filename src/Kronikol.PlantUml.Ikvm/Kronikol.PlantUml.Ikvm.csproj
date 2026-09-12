@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework />
@@ -7,6 +7,10 @@
     <Description>Local PlantUML rendering via IKVM for Kronikol. Generates diagrams without requiring a remote PlantUML server.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.PlantUml.Ikvm" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="IKVM" Version="8.15.0" />

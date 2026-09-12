@@ -82,15 +82,7 @@ public class ComponentDiagramLabelWidthTests
     /// (the SVG is not subject to <c>PLANTUML_LIMIT_SIZE</c>, so it reports the size the diagram
     /// <em>wanted</em> — which is exactly what has to stay under the limit).
     /// </summary>
-    private static (int Width, int Height) DrawnSize(string plantUml)
-    {
-        var svg = System.Text.Encoding.UTF8.GetString(
-            IkvmPlantUmlRenderer.Render(plantUml, PlantUmlImageFormat.Svg));
-        Assert.DoesNotContain("Syntax Error", svg, StringComparison.Ordinal);
-        var viewBox = Regex.Match(svg, @"viewBox=""0 0 (\d+) (\d+)""");
-        Assert.True(viewBox.Success, "no viewBox in the rendered SVG");
-        return (int.Parse(viewBox.Groups[1].Value), int.Parse(viewBox.Groups[2].Value));
-    }
+    private static (int Width, int Height) DrawnSize(string plantUml) => RenderedDiagram.Size(plantUml);
 
     [Fact]
     public void The_reported_diagram_fits_inside_plantumls_default_size_limit()
@@ -115,6 +107,14 @@ public class ComponentDiagramLabelWidthTests
         var width = (png[16] << 24) | (png[17] << 16) | (png[18] << 8) | png[19];
 
         Assert.True(width < PlantUmlLimitSize, $"the rasterised diagram was cropped to {width}px");
+
+        // And the nodes, which is what the name of this fact promises and what the width was only ever a
+        // proxy for. A raster narrower than the limit proves nothing on its own: PlantUML's own
+        // "Cannot find Graphviz" card is 400px wide and contains no dependency at all, which is exactly
+        // what this assertion was passing against on CI before the runner had Graphviz.
+        var drawn = RenderedDiagram.DrawnLine(RenderedDiagram.Svg(plantUml));
+        foreach (var service in ReportedRelationships().Select(r => r.Service).Distinct(StringComparer.Ordinal))
+            Assert.Contains(service, drawn, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -159,8 +159,7 @@ public class ComponentDiagramLabelWidthTests
             new("Caller", name, "HTTP", ["GET"], 5, 3, null),
         };
 
-        var svg = System.Text.Encoding.UTF8.GetString(IkvmPlantUmlRenderer.Render(
-            ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false), PlantUmlImageFormat.Svg));
+        var svg = RenderedDiagram.Svg(ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false));
 
         var nameRuns = Regex.Matches(svg, @"<text\b[^>]*>([^<]*x{10,}[^<]*)</text>")
             .Select(m => m.Value)

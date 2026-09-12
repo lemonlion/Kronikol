@@ -1,4 +1,4 @@
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 using Kronikol.Reports;
 using static Kronikol.DefaultDiagramsFetcher;
 
@@ -91,6 +91,19 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         return features;
     }
 
+    /// <summary>
+    /// The id the report will actually carry, resolved the way the generator resolves it.
+    ///
+    /// <para>Since 3.1.0 a stableId is scoped to the test SUITE, and <c>GenerateHtmlReport</c> resolves
+    /// that suite itself when the caller does not name one - so a fact that recomputes an id has to
+    /// resolve it the same way. Passing <c>null</c> here asserted against ids no report has written since
+    /// the suite landed: the element simply was not there, and the browser said
+    /// <c>Cannot read properties of null</c> seven times.</para>
+    /// </summary>
+    private static string Sid(string feature, string scenario, string? outlineId = null,
+        IReadOnlyDictionary<string, string>? exampleValues = null) =>
+        ScenarioStableId.Compute(RunSuite.Current, feature, scenario, outlineId, exampleValues);
+
     private string Generate(string fileName, Feature[] features)
     {
         var diagrams = features.SelectMany(f => f.Scenarios)
@@ -112,8 +125,8 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task A_sid_link_opens_the_scenario_it_names_and_not_its_namesake()
     {
         var url = Generate("SidDeepLink.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute(null, "Refunds", "Pay");
-        var other = ScenarioStableId.Compute(null, "Checkout", "Pay");
+        var wanted = Sid("Refunds", "Pay");
+        var other = Sid("Checkout", "Pay");
 
         await Page.GotoAsync(url + "#sid-" + wanted);
         await Page.WaitForFunctionAsync(
@@ -132,7 +145,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task Filtering_after_following_a_link_keeps_the_link_in_the_url()
     {
         var url = Generate("SidKeptOnFilter.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute(null, "Refunds", "Pay");
+        var wanted = Sid("Refunds", "Pay");
 
         await Page.GotoAsync(url + "#sid-" + wanted);
         await Page.WaitForFunctionAsync(
@@ -154,7 +167,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task A_link_that_carries_filter_state_applies_both()
     {
         var url = Generate("SidWithFilters.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute(null, "Checkout", "Pay");
+        var wanted = Sid("Checkout", "Pay");
 
         await Page.GotoAsync($"{url}#sid-{wanted}&status=Failed");
         await Page.WaitForFunctionAsync(
@@ -170,7 +183,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task Clearing_every_filter_keeps_the_link_but_drops_the_filters()
     {
         var url = Generate("SidSurvivesClearAll.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute(null, "Checkout", "Pay");
+        var wanted = Sid("Checkout", "Pay");
 
         await Page.GotoAsync($"{url}#sid-{wanted}&status=Failed");
         await Page.WaitForFunctionAsync(
@@ -193,7 +206,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         // of a report that was already open did nothing at all — the one way a human actually uses
         // a link an agent handed them mid-session.
         var url = Generate("SidHashChange.html", SameNameInTwoFeatures());
-        var wanted = ScenarioStableId.Compute(null, "Refunds", "Pay");
+        var wanted = Sid("Refunds", "Pay");
 
         await Page.GotoAsync(url);
         Assert.False(await Page.Locator($"[data-stable-id='{wanted}']").First
@@ -210,7 +223,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
     public async Task A_sid_link_to_an_example_row_opens_the_group_and_selects_the_row()
     {
         var url = Generate("SidExampleRow.html", AnOutline());
-        var silver = ScenarioStableId.Compute(null, "Pricing", "Discount applies", "discount",
+        var silver = Sid("Pricing", "Discount applies", "discount",
             new Dictionary<string, string> { ["tier"] = "silver" });
 
         await Page.GotoAsync(url + "#sid-" + silver);
@@ -232,7 +245,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         // Both copies carry the stable id, so the link has to pick the displayed one — otherwise it
         // selects a row inside `display:none` and the reader sees nothing happen.
         var url = Generate("SidFlatRow.html", AnOutlineWithFlatValues());
-        var silver = ScenarioStableId.Compute(null, "Pricing", "Discount applies", "discount",
+        var silver = Sid("Pricing", "Discount applies", "discount",
             new Dictionary<string, string> { ["tier"] = "silver" });
 
         await Page.GotoAsync(url + "#sid-" + silver);

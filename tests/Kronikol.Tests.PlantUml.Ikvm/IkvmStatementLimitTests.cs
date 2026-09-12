@@ -19,6 +19,9 @@ namespace Kronikol.Tests.PlantUml.Ikvm;
 /// </summary>
 public class IkvmStatementLimitTests
 {
+    // Not RenderedDiagram.Svg: these facts deliberately push PlantUML past its own statement limits and
+    // then ASK whether it fell back to something else, so an error image is a legitimate answer here
+    // rather than a reason to stop. Every other render in this project goes through the guard.
     private static string RenderSvg(string body)
         => System.Text.Encoding.UTF8.GetString(
             IkvmPlantUmlRenderer.Render($"@startuml\n{body}\n@enduml", PlantUmlImageFormat.Svg));

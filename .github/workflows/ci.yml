@@ -74,9 +74,12 @@ jobs:
           - name: Playwright Adapter Tests
             projects: tests/Kronikol.Tests.Playwright
             needs-playwright: true
+          # Graphviz: the component-diagram width facts render through real Java PlantUML, which needs
+          # `dot` to lay a component diagram out at all.
           - name: PlantUml IKVM Tests
             projects: tests/Kronikol.Tests.PlantUml.Ikvm
             needs-disk-cleanup: true
+            needs-graphviz: true
           - name: E2E (Popups & Flows)
             projects: tests/Kronikol.Tests.EndToEnd
             filter: IflowPopupTests|ComponentFlowPopupTests|WholeTestFlowTests
@@ -188,6 +191,18 @@ jobs:
             8.0.x
             9.0.x
             10.0.x
+
+      # Java PlantUML lays COMPONENT diagrams out with Graphviz and, when `dot` is missing, does not
+      # fail: it renders a small "Cannot find Graphviz" card instead. So every width bound in
+      # ComponentDiagramLabelWidthTests was measured against a ~400px error image on this runner and
+      # passed for the wrong reason — the guard against the reported 6697px crop was certifying nothing.
+      # The tests now reject that card outright; this is what makes them able to answer.
+      - name: Install Graphviz
+        if: matrix.needs-graphviz
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq graphviz
+          dot -V
 
       - name: Restore dependencies
         if: matrix.restore-first

@@ -38,9 +38,7 @@ public class SequenceDiagramWidthTests : IDisposable
     /// <summary>The size real PlantUML draws <paramref name="plantUml"/> at, off the SVG viewBox.</summary>
     private static (int Width, int Height) DrawnSize(string plantUml)
     {
-        var svg = System.Text.Encoding.UTF8.GetString(
-            IkvmPlantUmlRenderer.Render(plantUml, PlantUmlImageFormat.Svg));
-        Assert.DoesNotContain("Syntax Error", svg, StringComparison.Ordinal);
+        var svg = RenderedDiagram.Svg(plantUml);
         var viewBox = Regex.Match(svg, @"viewBox=""0 0 (\d+) (\d+)""");
         Assert.True(viewBox.Success, "no viewBox in the rendered SVG");
         return (int.Parse(viewBox.Groups[1].Value), int.Parse(viewBox.Groups[2].Value));
@@ -138,8 +136,7 @@ public class SequenceDiagramWidthTests : IDisposable
         var plantUml = Diagram(Log(RequestResponseType.Request, isUserAction: true, method: "Click",
             content: "Locator: menu **bold** item"));
 
-        var svg = System.Text.Encoding.UTF8.GetString(
-            IkvmPlantUmlRenderer.Render(plantUml, PlantUmlImageFormat.Svg));
+        var svg = RenderedDiagram.Svg(plantUml);
 
         // The stars are data, not emphasis: unescaped, creole eats them and bolds the word instead.
         Assert.Contains("**bold**", System.Net.WebUtility.HtmlDecode(svg), StringComparison.Ordinal);

@@ -120,6 +120,46 @@ public class ReportContractShapeTests
     }
 
     /// <summary>
+    /// The HTML and the data file are two renderings of one run, and a <c>#sid-</c> link crosses between
+    /// them: <c>Failures.md</c> and <c>kronikol query</c> read an id out of the data and hand it to the
+    /// browser, which looks for it in the HTML. So the two must carry the SAME ids, and nothing that
+    /// compares either one against a recomputation can see it when they drift apart — both surfaces can
+    /// be internally plausible and still not meet.
+    ///
+    /// <para>They did drift: <c>GenerateHtmlReport</c> resolved the suite while a direct caller's data
+    /// file did not, and separately the flat outline rows were never handed the suite at all, so one
+    /// report carried two identity schemes. This asserts the property itself rather than either half.</para>
+    /// </summary>
+    [Fact]
+    public void The_html_and_the_data_file_carry_the_same_ids()
+    {
+        var features = Features();
+
+        var jsonPath = ReportGenerator.GenerateTestRunReportData(features, Start, End, "Contract_ids.json", DataFormat.Json);
+        var htmlPath = ReportGenerator.GenerateHtmlReport(
+            [], features, Start, End, null, "Contract_ids.html", "Contract", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        var inData = JsonDocument.Parse(File.ReadAllText(jsonPath)).RootElement
+            .GetProperty("features").EnumerateArray()
+            .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
+            .Select(s => s.GetProperty("stableId").GetString())
+            .Where(id => !string.IsNullOrEmpty(id))
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToArray();
+
+        var inHtml = System.Text.RegularExpressions.Regex
+            .Matches(File.ReadAllText(htmlPath), "data-stable-id=\"([0-9a-f]{16})\"")
+            .Select(m => m.Groups[1].Value)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.NotEmpty(inData);
+        Assert.Equal(inData, inHtml);
+    }
+
+    /// <summary>
     /// <c>statusCode</c> was the enum NAME when .NET had one and a number when it did not, so
     /// <c>--status 5xx</c> found a 599 and missed a 500, and the only way to ask about a 400 was to know
     /// that .NET spells it <c>BadRequest</c>. The number is the interoperable value and belongs in the
