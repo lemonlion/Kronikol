@@ -338,7 +338,7 @@ first filed.
 | A2 | `calls: []` whenever the failing step carries no attributed interaction — 52% of real scenarios, plus every ingest run, plus every hook/fixture failure | yes |
 | A3 | `Escape()` does three replacements; nine emission sites put captured text in headings and bare cells; an odd backtick count breaks out of every inline span | yes |
 | A4 | `Truncate` cuts UTF-16 code units, so a non-BMP character at a boundary throws `EncoderFallbackException`; under 8192 units the file is **zero bytes**, at or above it **no file is written and the previous run's survives, stale, beside a stale `.jsonl`** | no |
-| A5 | `Failures.jsonl` has no per-field cap and writes the whole first line twice (`errorMessage` + `cluster`): a 2,000,047-char message yields **4,000,639 bytes** | yes |
+| A5 | `Failures.jsonl` has **no cap on the message fields**, and `cluster` repeats the first line of `errorMessage` verbatim, so the line is written twice: a 2,000,047-char message yields **4,000,639 bytes**. *(Restated per §14.3 item 15 — the earlier "no per-field cap" was pre-narrowing wording; call summaries **are** capped at 120 at build time, C43.)* | yes |
 | A6 | An all-skipped run writes `# No failures — All 12 scenarios passed`; `query failures` and `query summary` print the same falsehood from their own arithmetic | no |
 | A7 | `Failures.jsonl` is **0 bytes on a green run** (pinned by a test) and its `formatVersion` has **no reader anywhere** — §3.4's "query refuses unknown versions loudly" is unimplemented | yes |
 | A8 | The digest bakes `#sid-` links unconditionally; the CLI gates on the HTML existing. A failed HTML write under the default config produces a dangling link in a persisted file | yes |
@@ -485,7 +485,7 @@ Any ordering that creates a third is wrong, and the old M0/M3 split created one.
 
 | | Milestone | Size (est.) | Ships alone? | Breaking | Forces a re-pin of |
 |---|---|---|---|---|---|
-| **M0** | **The release compiles from a clean checkout, and the tool stops calling successes errors** — stage `templates/agents/` (untracked today, while `Kronikol.Tool.csproj:35` embeds it by literal path: CS1566 on a fresh checkout); template pins 3.0.85 → 3.0.86; rewrite the K4J 3.1.0 ledger paragraph (§9); `IsError` learns `Ack`/`Responded`/`Sent` | **trivial** — one `git add`, an 8-line predicate, three call sites | it is the condition of any release, not a release | no | nothing |
+| **M0** | **The release compiles from a clean checkout, and the tool stops calling successes errors** — ~~stage `templates/agents/`~~ **DONE 18:1x by `e91cffb` (C98)**, which also tracked `.claude/skills/`, so the CS1566-on-fresh-checkout item is closed and M0 shrinks to the predicate work; template pins 3.0.85 → 3.0.86; rewrite the K4J 3.1.0 ledger paragraph (§9); `IsError` learns `Ack`/`Responded`/`Sent` | **trivial** — one `git add`, an 8-line predicate, three call sites | it is the condition of any release, not a release | no | nothing |
 | **M1** | **The shapes that can never change again** — the whole of clock A in one release, **before the tag**: `--json`'s `next` → argv + an envelope on non-zero exits + `truncated` carrying a count; `ciMetadata.runAttempt`; `formatVersion` as the first key + the reader that gates on it; `statusCode` → integer with `statusText` beside it (and the tool reading **both** forms); suite-scoped `stableId`; the `Failures.jsonl` header line. Carries only the fixtures its own red tests need | **large** | **yes, and it must** | **yes — all of it, by design** | K4J `report-data.{json,xml,yaml}` + `testrunreport-schema.{json,xsd}` + **all 45 HTML** (suite scoping moves every `data-stable-id`, which 3.1.0 is introducing anyway — one cycle, not two); `RunIdentityDataTests` key array; `QueryJsonTests` (28); the schema contract walker; every `CiPreview` fixture |
 | **M2** | **`Failures.md` tells the truth** — A1 at all four key sites, A2 + a `callsScope` discriminator, A3 fencing, A4 surrogate-safe truncation + the two-action `RunOutputs` split, A5 caps, A6 all-skipped, A8 link gating, A9's digest half (`file:line` + FQN), Q1's suppression cap | **medium–large** | **yes — and for this repo's own daily use it is the first release that pays** | output shape only (no consumer contract survives M1) | `FailuresDigestGeneratorTests` (20), `FailureClustererTests`, the HTML cluster panel; the port must adopt the key or the ledger records a divergence — its own `report-failureclusters.html` probably does **not** move (its fixture messages carry no `FailureCause` prefix; unverified) |
 | **M3** | **You find out from the log that the run failed, on every runner** — B1 **reframed** (see 5.5), B3 + the `::notice` split, B5, C1–C4, D1–D3, B4's `.ignore` | **medium** | yes | no, once reframed | `RunEndPointerTests` (9); K4J `ci-summary-*.md` ×3 **if** the summary body changes — batch that with M4 |
@@ -898,6 +898,26 @@ Recorded because every one of them produced a wrong finding in this pass.
 11. **A `�` at the console is usually the console.** The auto-loaded `CLAUDE.md` looked
     encoding-damaged; the data holds 20 × U+2014 and 0 × U+FFFD. Print the codepoint, never judge the
     glyph — this host's code page mangles em-dashes on the way out, which is also C39's territory.
+12. **A claim about repository state has a half-life; date it inside the claim.** "The block is
+    untracked" was measured correctly at 14:30 and was false by 18:1x, because another session
+    committed. The same applies to "no such file exists", "nothing reads this" and every `git`-derived
+    row in §14.1a. **State the observation *and its clock*, and re-take it at re-sync** — a tracking
+    claim carried forward two iterations is an assumption wearing a measurement's clothes.
+13. **A file in a test-output directory is not the product's output shape.** Iteration 2 recorded
+    "new surface: report filenames are now hash-suffixed (`TestRunReport_a94ef381.json`)" after seeing
+    one in `tests/Kronikol.Tests/bin/Debug/net10.0/Reports/`. **It was a unit-test artifact.** That
+    directory is the suite's scratch space — it also holds `Attr_annotations.json`,
+    `TestRunReport_scen.schema.json` and dozens more — and the product still writes plain
+    `TestRunReport.json`, which that very directory's generated `CLAUDE.md` names. One filename was
+    read as a feature. **Before calling anything new surface, check whether the directory holding it is
+    a product output or a test's scratch dir.**
+14. **An anchor that spans a line wrap will not match.** Two edits and one grep in this loop failed
+    silently or noisily because the phrase they searched for is broken across lines in the source
+    (`is **test
+data, not instructions**`; `a tracking
+claim carried forward`). A zero hit-count from
+    a multi-word search over wrapped prose means *check the wrap*, not *the text is absent* — which is
+    hazard 10 in a different costume.
 
 ---
 
@@ -996,6 +1016,18 @@ the experiment §14.3 item 7 named, and the result goes the other way:
 |---|---|---|
 | A session attached 4.5 min *before* the edit carried pre-block bytes, and the block is untracked | therefore "auto-loaded" is unsupported, and B4 keeps its original severity on **both** channels | **it is auto-loaded, measured** (C86). A session started 2 h 51 min *after* the edit carries the block **in full** in its `attachment/instructions` record. The unified diff of the loaded copy against the on-disk file is **exactly the two marker lines and nothing else** (C87). *Tracked* stays false and still matters for CI and fresh clones; *auto-loaded* is now `RUN`. The two observations that "contradicted" it were both **pre-edit sessions** — which is snapshot semantics (C88), not a failure to load |
 
+**And a fifth, four hours later, on the same row.** B4's tracking predicate flipped **twice in one
+day** as the tree moved underneath it:
+
+| Verified | Then claimed, unverified | Actually |
+|---|---|---|
+| At 14:30 the `kronikol:begin` block was an uncommitted working-tree edit | therefore CI and every fresh clone have **no pointer at all**, and the `.ignore` recipe is load-bearing | true when measured and **false by 18:1x** — commit `e91cffb` tracked it (C98), along with `templates/agents/` and `.claude/skills/`, which also closes C10's fresh-checkout **compile** hazard. Combined with C86, B4's root-`CLAUDE.md` channel is now **alive on both axes**: tracked *and* auto-loaded |
+
+**The lesson is not that the first measurement was wrong — it was right when taken.** It is that a
+claim about *repository state* on a live tree has a half-life, and this ledger had no way to say so.
+Rows C98 and C81 both need a timestamp in the claim itself, not only in the provenance stamp. **Hazard
+12.**
+
 **The base rate, maintained.** Of behaviour claims in this plan reasoned about but never executed, the
 running score is **0 correct out of 5** — §14.0 row 7, the three above, and now the error-class
 critic's own inference that two pre-block observations "contradict" auto-loading. They do not; they are
@@ -1005,6 +1037,10 @@ the very section that exists to stop that. Each was a claim that
 The two numbers exist so they can be watched: **the moment the second starts accumulating unexecuted
 rows, the plan is drifting back into the failure mode, and the first says what that costs.** The
 predecessor's score after a far longer run was also zero.
+**The fifth reversal above is deliberately *not* counted in that five.** It was not a reasoning
+error — the measurement was correct when taken and the tree moved. Counting it would hide the real
+lesson, which is hazard 12, not carelessness. Reversals and errors are different tallies: **six
+reversals, five errors.**
 
 **The pattern across all ten reversals is now specific enough to act on: every one came from a check
 that succeeded.** Nobody was ever stopped by an absent citation. What failed was the step *after* the
@@ -1023,7 +1059,7 @@ consumer sees it". Which is why §14.3 exists as a standing list rather than a p
 | C7 | `WriteCiSummary` and `PublishCiArtifacts` have no initialiser and default false | read |
 | C8 | Three of 86 public options appear in none of the 98 wiki pages, and they are exactly the three M1 added | grep, both directions |
 | C9 | The verb set is duplicated by hand in four places plus a byte-identical dogfood copy | read |
-| C10 | `Kronikol.Tool.csproj` has a tracked `EmbeddedResource` literal path into untracked `templates/agents/` | `git status` + read |
+| C10 | ~~`Kronikol.Tool.csproj` has a tracked `EmbeddedResource` literal path into untracked `templates/agents/`~~ — **true at 14:30, CLOSED by 18:1x** | `git status` + read; re-taken iteration 2 (C98): `git ls-files templates/agents/` → 1 file, committed in `e91cffb`. The fresh-checkout **compile** error is gone |
 | C11 | The community marketplace holds 2,282 entries, zero Kronikol; `category`/`tags` are not `plugin.json` fields | fetched catalog + two manifests |
 | C12 | The MCP registry's OpenAPI spec defines `search` as substring-over-name | fetched spec |
 | C13 | Five projects already override `PackageTags`; three deviations are visible on the published feed | read + feed |
@@ -1103,8 +1139,8 @@ below `RUN` indefinitely.
 | C78 | A ripgrep-based agent other than Claude Code honours a `.ignore` file | **DOC** | B4's fix for non-Claude hosts | ripgrep's documented behaviour, proven for Claude Code's Grep and for `rg` 14.1.1 directly; **not executed for Codex or Cursor.** |
 | C79 | A community-marketplace submission would be accepted, and which submission form applies to this account | **DOC** | M6's cost | Read the docs; **did not attempt a submission.** |
 | C80 | `claude plugin eval` measures whether an agent reaches for the tool | **DOC** | M6's measurement story | It is the only instrument in H2 that measures *use* rather than *reach*. **Run it once before depending on it.** |
-| C81 | M2.9 shipped mid-audit; `--json` emits a real envelope on success and **nothing on a non-zero exit** — `query summary ./nope.json --json` prints bare prose, rc=2 | **RUN** (binary 16:46, newer than both sources) | I1, §7.1 delta 1 | If the error path emitted an envelope, I1's core would be closed. **It does not.** |
-| C82 | With `--json`, the schema file beside a report yields a **well-formed envelope** claiming `scenarios: 0`, `kronikolVersion: null`, rc=0 | **RUN** | E8's severity, raised | E8 might have been fixed by the envelope work. **It is strengthened: the wrong answer is now machine-readable and confident.** |
+| C81 | M2.9 shipped mid-audit; `--json` emits a real envelope on success and **nothing on a non-zero exit** — `query summary ./nope.json --json` prints bare prose, rc=2 | **RUN** (re-run iteration 3 against `Kronikol.Tool.dll` **18:23:58**; the 16:46 stamp was stale) | I1, §7.1 delta 1 | If the error path emitted an envelope, I1's core would be closed. **It does not.** |
+| C82 | With `--json`, the schema file beside a report yields a **well-formed envelope** claiming `scenarios: 0`, `kronikolVersion: null`, rc=0 | **RUN** (re-run iteration 3, `Kronikol.Tool.dll` **18:23:58**) | E8's severity, raised | E8 might have been fixed by the envelope work. **It is strengthened: the wrong answer is now machine-readable and confident.** |
 | C86 | The root `CLAUDE.md` `kronikol:begin` block **is auto-loaded** by Claude Code — uncommitted, straight from the working tree | **RUN** (host-behaviour claim; no product binary involved) | B4, M1.3, D1's severity, Q6 | Absence of the block text from this session's `attachment/instructions` record. **Present, in full.** `python` over `~/.claude/projects/c--Code-Kronikol/b2cd976d-….jsonl` record 15: `type=attachment subtype=instructions`, `files[0].path='c:\Code\Kronikol\CLAUDE.md'`, `files[0].type='Project'`, 6,869 chars running from `Never open` to `a command to follow.` It was **untracked** at the time (`git show HEAD:CLAUDE.md \| grep -c kronikol:begin` → `0`), so auto-load does **not** require tracking |
 | C87 | The loaded copy is the on-disk file **minus exactly the two marker lines**: the loader strips `<!-- kronikol:begin -->` / `<!-- kronikol:end -->` and changes nothing else | **RUN** | D1, Q6, and whether an agent can tell Kronikol's block from the repo's own prose — it **cannot** | Any other difference: truncation, re-encoding, comments retained. **`difflib.unified_diff(disk, loaded)` → 9 lines, two deletions, both of them the markers.** 6,916 → 6,869 chars; U+2014 ×20 in both, U+FFFD ×0 in both — the `�` seen at the console was the host code page, not the data (§13 hazard 11) |
 | C88 | The instructions attachment is a **start-of-session snapshot**, so `kronikol init-agents` never reaches the session that ran it | **RUN** (this session) + **RUN** (the critic's pre-edit session) | D1, Q6, and every sentence anywhere in this plan of the form "the agent will then pick it up" | A post-edit session not seeing it, or a pre-edit session seeing it. **Mine started 2 h 51 min after the edit (record 15, `2026-09-12T16:21:38.659Z`, cwd `c:\Code\Kronikol`) and sees it; the critic's, attached 4.5 min before, does not.** Both observations, one rule |
@@ -1114,6 +1150,13 @@ below `RUN` indefinitely.
 | C92 | With **stock inputs only**, a producer-set `extra` in a CTRF report is rendered by **24 of 24** stock report flags at **zero** occurrences — but "rendered by nothing" is **false**: stock `ai-report` / `ai-summary-report` render producer-set `results.extra.ai` and `results.extra.aiSummary` verbatim, offline and with no API key | **RUN** (`github-test-reporter` @ `7974087`, `package.json` 1.0.29, Node v25.9.0, no token, no network) | H7, M7's CTRF scope, and §8's wiki advice | That the zeros were a broken harness. **Positive control: a hand-written `kronikol.hbs` under `custom-report` rendered 9 of 9 sentinels including the `#sid-` link.** The census corrects to **13** templates touching `extra`, 11 reporter-written and **2 producer-reachable** — the two AI ones, which the earlier census missed |
 | C93 | **`$GITHUB_STEP_SUMMARY` is not the job log.** Content written to the step summary is **absent** from `gh run view --log` — the command an agent reaches for | **RUN**, two independent runs | C84, §12 Q5 and Q8, and B1's proposed run-end channel | That the summary text appears in the log. **It does not.** grafana/grafana run 34702879360: the workflow echoes two lines into `$GITHUB_STEP_SUMMARY`; the 726,412-byte log holds only the **unexpanded** `${STORYBOOK_URL}` script echo, and the **composed** line as it exists in the summary appears **zero** times. ctrf-io run 34678802541, where the action writes the summary in code and the YAML never names the variable: all **10** fixture test names appear **0** times in the 527,382-byte log. Source-read confirms `core.summary.write()` appends to the file and emits nothing to stdout |
 | C94 | **`tee -a "$GITHUB_STEP_SUMMARY"` *does* put the text in the log** — via stdout, not via the summary | **RUN (source + workflow read)** | that C93 is not falsified by the first counter-example someone finds | A `tee` sighting read as "the summary reaches the log". grafana's `pr-bundle-size.yml` uses exactly this shape. **It is stdout doing the work**, and it is also the thing that makes a run-end pointer reachable at all: write it to **stdout**, and *additionally* to the summary |
+| C95 | **The run-end pointer is emitted and then swallowed by VSTest** — not disabled, not missing. Same assembly, same binary, one A/B | **RUN** (`Kronikol.dll` 18:18:25; report regenerated 18:19) | §14.3 item 2, and B1, B3, Q4, §0.1 #3 — all of which rested on a **prior session's** table nobody had re-run | That the option was simply off, which would make the absence meaningless. **It is not.** `dotnet test … --no-build` → 376 B at default, 3,016 B at `-v normal`, 3,035 B at `--logger console;verbosity=detailed`; the pointer appears in **none**. The **same** `Example.Api.Tests.Component.xUnit3.exe` run **directly** → 4,236 B containing `Kronikol: reports written to …  (TestRunReport.html · TestRunReport.json 38 KB · Failures.md)`. Control: that report's `CLAUDE.md`/`AGENTS.md`/`ComponentDiagram.html` were all restamped 18:19, so generation ran in both arms |
+| C96 | **Kronikol's own pointer prints an UPPERCASE drive letter** — `C:\Code\Kronikol\…\Reports` | **RUN** (the C95 direct-run output, verbatim) | §14.3 item 8's product half, previously parked BLOCKED(tree) | A lowercase or a relative path. **Neither.** This is the defect closing on itself: C91 measured that `C:/…` does **not** fire the nested-`CLAUDE.md` injection from a lowercase cwd, and here is Kronikol directing the agent to exactly that spelling. **An agent that follows the product's own printed path defeats the mechanism M1.3 is built on** |
+| C97 | **Nothing reaches stderr in either arm** — 0 bytes under `dotnet test -v normal`, 0 bytes on the direct run | **RUN** | C76, §14.4 item 1 | That stderr carried the pointer, or anything at all. **It carries nothing**, consistent with C6 (no `Console.Error` in the product outside the Tool). So **C76 is not "unmeasured", it is unmeasurable as shipped** — promote it only behind a source change |
+| C98 | **The tracking-state rows flipped at ~18:1x**: commit `e91cffb` (LLM_FRIENDLY_PLAN M0–M2.9) made the root `CLAUDE.md` `kronikol:begin` block **tracked**, and committed `templates/agents/` (1 file) and `.claude/skills/` (3 files) | **RUN** | B4, C10, and the CS1566-on-fresh-checkout hazard | `git show HEAD:CLAUDE.md \| grep -c kronikol:begin` → **`1`**, where iteration 1 measured **`0`** four hours earlier. `git ls-files templates/agents/` → 1; `.claude/skills/` → 3. **C10's compile hazard is closed** — the tracked `EmbeddedResource` no longer points at an untracked directory |
+| C99 | The repo's **root `AGENTS.md` is neither tracked nor auto-loaded** | **RUN** | §3.2's "emit both, identical" — in this host that file is dead on both axes | Either predicate holding. **`git ls-files --error-unmatch AGENTS.md` → `did not match any file(s) known to git`**, and it is absent from the instructions attachment (C89) |
+| C100 | **New surface, M2.10 (landed 18:2x): `kronikol export --tests <file>` gives every span a `kronikol.test.result` attribute, and "without it no span claims a verdict"** | **READ (help text only)** | nothing in this plan yet — but it is the first Kronikol output that asserts a *verdict* into someone else's telemetry, so M7/§8 will need it | Whether the attribute reaches the emitted document. **Not run.** The command ships its own A/B and its own offline instrument: `kronikol export <captures> --tests <tests.ndjson> --dry-run --out <scratchpad>/otlp.json` versus the same without `--tests`, then grep for `kronikol.test.result`. **Blocked only by inputs, not by the tree:** `find . -name "*.ndjson"` returns **3 files, all Cucumber messages**, and **no** interaction-shaped capture or tests NDJSON exists on disk. Reconstructing both from a real report's `httpInteractions` would make it `RUN(proxy)` and risks testing my own reconstruction, so it is left honest at `READ` |
+| C101 | ~~Report filenames are now hash-suffixed (`TestRunReport_a94ef381.json`)~~ — **REFUTED, and it was my own claim** | **RUN** | nothing — but it is the cleanest example of §14.0's error class committed inside the loop that exists to catch it | That the file was a product output. **It is a unit-test artifact.** `tests/Kronikol.Tests/bin/Debug/net10.0/Reports/` is the suite's scratch directory (`Attr_annotations.json`, `TestRunReport_scen.schema.json`, dozens more); the product writes plain `TestRunReport.json`, which that directory's own generated `CLAUDE.md` names. See §13 hazard 13 |
 
 ### 14.2 Not verified — and what this plan does about each
 | Assumption | Status | How the plan avoids depending on it |
@@ -1153,14 +1196,40 @@ scoped), E3 (`services` prints `Event broker 8 calls 8 errors Respondedx8` today
    highest-value unpromoted row in the ledger. Fold in C84 below — the same run answers both.
 
 2. **C74 — the M1.0 channel table is a prior session's measurement, re-used, not re-run.**
-   **Experiment: re-run it with the stderr column** (C76), which is owed anyway. Until then B1, B3, Q4
-   and §0.1 #3 all rest on a table nobody in this pass executed.
+   **SETTLED for the stdout column — loop iteration 2 (C95, C97), with the A/B control the original
+   table never had.** Re-run on `Kronikol.dll` 18:18:25 via `--no-build`, so the other session's tree
+   was never touched. The pointer is **absent** from `dotnet test` at default (376 B), `-v normal`
+   (3,016 B) and `--logger console;verbosity=detailed` (3,035 B), and **present** in the *same*
+   assembly executed **directly** (4,236 B). The report was regenerated in both arms, so the option is
+   on and the line is emitted: **VSTest swallows it.** B1, B3, Q4 and §0.1 #3 now rest on an executed
+   measurement rather than a re-used table.
+   **The stderr column is closed differently from how it was posed:** 0 bytes on stderr in *both* arms
+   (C97). There is nothing to survive, so **C76 is unmeasurable as shipped** and stays unpromotable
+   until someone writes to `Console.Error` on purpose. §14.4 item 1 should say that rather than
+   "unmeasured, cheap".
+   **Still not re-run:** the other seven adapters and the MTP/TUnit runner. The "every VSTest runner"
+   quantifier is still the prior session's.
 
 3. **C44–C47 — every `merge` row is `RUN(proxy)` over synthetic shards.** **Experiment: one real
    sharded run** (M0.0). Shape evidence is not behaviour evidence.
+   **Re-measured 18:28, loop iteration 3 — still zero, and the blocker is not what this list says.**
+   `grep -rl "mergeableFormatVersion" --include=*.json examples tests` → **0 files**. M2.4 shipped
+   `merge` writing JSON and `diff --baseline`, and M0–M2 are now **all** complete, yet **no mergeable
+   report has ever been written to this disk** — `GenerateMergeableData` is off by default and no
+   project in the tree turns it on. **So this row is not BLOCKED(tree), and `--no-build` does not reach
+   it**: it needs a project configured to emit mergeable data, which is a source change outside
+   `LLM_FIRST_PLAN.md`. **Unpromotable by this loop.** Falsifier: set
+   `ReportConfigurationOptions.GenerateMergeableData = true` in one example project, `dotnet test
+   --no-build`, then `kronikol merge`. F1–F3 and E2 all still rest on synthetic shards and the plan
+   must keep saying so.
 
-4. **C53 — the deep-link suite is jsdom.** **Experiment: re-run the four positive cases in Chromium.**
-   Nothing rests on it, and C57 reversed a jsdom result in this very pass.
+4. ~~**C53 — the deep-link suite is jsdom.**~~ **CLOSED as decides-nothing — loop iteration 3.** The
+   row's own Decides cell reads "§0.2; nothing in this plan", and three iterations have confirmed it:
+   no milestone, recommendation or open-question answer rests on it, because M4's behaviour claims are
+   carried by C54–C57, which are **already real Chromium**. Per the loop's own rule — *a row that
+   decides nothing may stay below `RUN` forever, and should say so rather than consume an iteration* —
+   this row is now **permanently parked at `RUN(proxy — jsdom)`**. The falsifier is unchanged and cheap
+   if anyone ever wants it (re-run the four positive cases in Chromium); nothing should wait for it.
 
 5. **C77, C78 — the whole non-Claude half of M1.3's reach.** **Experiment: one Codex or Cursor session**
    reading a generated `AGENTS.md` from a gitignored directory.
@@ -1213,8 +1282,13 @@ scoped), E3 (`services` prints `Event broker 8 calls 8 errors Respondedx8` today
    itself — **unpromotable in-session; falsifier: open one Claude Code session in `C:\Code\Kronikol`
    and repeat the 2×2.** The distinction is not academic: under "matches the cwd" the fix is to echo the
    path in the cwd's case, under "lowercase" it is to lowercase the drive letter unconditionally.
-   The product half — what case the **library** pointer prints under `dotnet test` — stays
-   **BLOCKED(tree)**; the command that clears it is `dotnet test tests/Kronikol.Tests` on a quiet tree.
+   **The product half is now SETTLED — loop iteration 2 (C96), and it confirms the bad case.** The
+   pointer prints `Kronikol: reports written to C:\Code\Kronikol\…\Reports` — **uppercase `C:`**,
+   captured verbatim from the direct-run arm of C95. So the two halves meet: the product tells the
+   agent to go to a spelling that C91 measured **does not** fire the injection. **The fix is one line
+   and it is now specified**, whichever way the cause falls out — print the reports directory
+   **relative to the cwd**, which is correct under both the "matches the cwd" and the "lowercase"
+   hypothesis and is shorter output besides.
 
 9. **NEW — C83 (§2.3 case B, "the mechanism is alive").** The populated-`calls` output was produced by a
    **reflection harness** that loaded `Kronikol.dll` and called `FailuresDigestGenerator.Generate` with
@@ -1246,9 +1320,17 @@ scoped), E3 (`services` prints `Event broker 8 calls 8 errors Respondedx8` today
     marks "yes". Under `dotnet test` + VSTest at default or `-v normal` — the configuration §0.1 #3
     calls the default — the same table says the pointer never reaches the job log, so nothing reaches
     the command parser either. B1 and C1 cannot both be true of one channel and neither row names its
-    configuration. **Experiment: in the §10 gate-6 run, plant a hostile scenario name and compare a
-    `dotnet test` step against a `kronikol ingest` step in the same job.** State C1's severity against
-    whichever channel survives.
+    configuration.
+    **RESOLVED — loop iteration 3, from C95 rather than from gate 6.** The contradiction dissolves once
+    the channel is measured instead of assumed. C95 showed that under `dotnet test` + VSTest **nothing
+    Kronikol writes reaches stdout at all** — not the pointer, therefore not a `::` command either — and
+    that the *same* assembly run **directly** puts it there. So **C1's severity is scoped to the
+    channels where output survives**: a directly executed test host (xUnit v3's self-hosting exe, MTP),
+    and `kronikol ingest` / `kronikol query` in their own processes. Under the configuration §0.1 #3
+    calls the default, C1 is **unreachable** — which is not reassurance, because it is unreachable for
+    exactly the reason B1 is a defect. **State it as one sentence: the injection rides whichever channel
+    carries the pointer, so fixing B1 without fixing C1 ships the hole.** The gate-6 run is no longer
+    needed to settle this, only to confirm it on a runner.
 
 11. **NEW — C84: `$GITHUB_STEP_SUMMARY` is not the job log.** The verifier's correction to B1's proposal
     ("writing the notice to the step summary does **not** put anything in the log; `gh run view --log`,
@@ -1308,10 +1390,10 @@ scoped), E3 (`services` prints `Event broker 8 calls 8 errors Respondedx8` today
     TUnit, LightBDD, ReqNRoll) with two distinct failures of the same assert type; count clusters.**
     Restate §0.1 as: the *prefix* is one adapter of eight; the *first-line key* is all eight.
 
-15. **C43 / A5 — "no per-field cap" is the pre-narrowing wording.** C43 records that call summaries
-    **are** capped at 120 at build time. A5's row in §4.1 still says the file has no per-field cap.
-    No experiment needed; restate as "no cap on the message fields, and `cluster` repeats the first line
-    of `errorMessage` verbatim".
+15. ~~**C43 / A5 — "no per-field cap" is the pre-narrowing wording.**~~ **DONE — loop iteration 3.**
+    A5's row in §4.1 now reads "no cap on the **message fields**, and `cluster` repeats the first line
+    of `errorMessage` verbatim", with the C43 narrowing (call summaries **are** capped at 120 at build
+    time) stated inline. No experiment was needed and none was run.
 
 16. **C71 / §9 — the count survives, the reason does not.** Re-run: `data-stable-id` lands on
     `<details class="scenario">` and nowhere else (20 attributes, 20 scenarios, **0** of 24 `<tr>` rows
@@ -1330,9 +1412,12 @@ scoped), E3 (`services` prints `Event broker 8 calls 8 errors Respondedx8` today
 eleven, and reversed three of §0.2's and §4's own conclusions — EC1, EC2 and EC3 below.*
 
 ### 14.4 Open investigations
-1. **Does `Console.Error` survive VSTest?** (C76) Unmeasured, cheap, and it may make the pointer work
-   everywhere. Note the measured trap: the swap is not one delegate — the `::notice` rides the same
-   sink and only works on stdout.
+1. **Does `Console.Error` survive VSTest?** (C76) **Not "unmeasured, cheap" — unmeasurable as
+   shipped, and that is now executed** (C97): stderr is **0 bytes** under `dotnet test -v normal` and
+   0 bytes on a direct run, because the product writes nothing there (C6). The question cannot be asked
+   until something is written to `Console.Error` on purpose, so this is an experiment that **requires a
+   source change first**, not a measurement someone forgot to take. Note the measured trap that still
+   stands: the swap is not one delegate — the `::notice` rides the same sink and only works on stdout.
 2. **Is the `.ignore` recipe complete?** The nine-line recipe was found incomplete in three measured
    ways, each a location the default `ReportsFolderPath` can resolve to. Settle the full set before
    `init-agents` writes it.
@@ -1519,9 +1604,12 @@ actually fire for 81 of them. Either stamp them or stop claiming the mechanism w
 
 **New surface that landed mid-iteration**, needing its own claims next time: three Component fixtures
 regenerated 17:04–17:05 (xUnit3, LightBDD.xUnit3, ReqNRoll.xUnit3), and — observed live at ~18:05 — a
-generated `Reports/CLAUDE.md` whose report filename is now **hash-suffixed**
-(`TestRunReport_a94ef381.json` / `.html`, interpolated correctly into the prose *and* into the
-`#sid-` row of the address table). Nothing in §14 covers report-filename derivation.
+generated `Reports/CLAUDE.md` whose report filename appeared **hash-suffixed**
+(`TestRunReport_a94ef381.json` / `.html`, interpolated into the prose *and* into the `#sid-` row of the
+address table). **~~New surface~~ — REFUTED in iteration 3 (C101): that was a unit-test artifact, not a
+product change.** The directory is `tests/Kronikol.Tests/…/Reports/`, the suite's own scratch space;
+the product still writes plain `TestRunReport.json`. Left in place rather than deleted, because it is
+the error class committed *inside* the loop built to catch it — see §13 hazard 13.
 
 **Rows attempted, and the commands.**
 
@@ -1583,6 +1671,140 @@ paths are under the session scratchpad. *(Noted because the first draft of this 
 tree the end-of-iteration check is the measurement; copying the opening number forward is hazard 1
 wearing a different hat.)*
 
+### 2026-09-12 (loop iteration 2) — the build window opened, and it was taken
+
+**Re-sync, and the target moved hard.** `git status --short` → **104 entries, down from 198**, and
+`git log` shows a **new commit**: `e91cffb` *"Make Kronikol a tool an agent can debug with … 
+(LLM_FRIENDLY_PLAN M0–M2.9)"*. The other session committed the entire uncommitted diff this ledger had
+been reasoning about. `Kronikol.dll` **18:18:25**, `Kronikol.Tool.dll` 18:04:09. Only **two** tracked
+files remained modified: `tests/Kronikol.Tests.Otlp/OtlpSpanMapperTests.cs` (their M2.10, in flight)
+and `.claude/scheduled_tasks.lock` — **which is mine**, written by this loop's own `ScheduleWakeup`.
+Recorded rather than glossed: the constraint says to confirm `git status` lists nothing I created, and
+that lock file is the one thing that does. It is harness state, not content, and I did not author it
+by hand — but it is not the other session's either.
+
+**The window, and how it was taken without interference.** With one source file in flight, a
+solution-wide build was still off the table, so every run used **`--no-build`** against the 18:18:25
+binaries. Nothing was compiled, nothing was written to the repo beyond the gitignored
+`bin/Debug/net10.0/Reports/` of one example project, which the other session regenerates constantly
+anyway. **This is the pattern for future iterations: `--no-build` converts "BLOCKED(tree)" into
+"reachable" for every row that needs a *run* rather than a *compile*.** Four of the five rows parked
+BLOCKED(tree) at iteration 1 were compile-free and should never have been parked as a group.
+
+**Rows attempted, and the commands.**
+
+| Row | Verdict | Instrument |
+|---|---|---|
+| §14.3 item 2 → **C95, C97** | **SETTLED** for stdout; C76 reclassified **unmeasurable as shipped** | `dotnet test … --no-build` at three verbosities, **A/B against the same assembly run directly** |
+| §14.3 item 8 product half → **C96** | **SETTLED**, and it confirms the bad case | the direct-run stdout, verbatim |
+| B4 / C10 / C81 tracking → **C98, C99** | **REVERSED AGAIN** — now tracked | `git show HEAD:CLAUDE.md \| grep -c kronikol:begin` → `1`; `git ls-files templates/agents/ .claude/skills/` |
+| §14.3 item 14 restatement | **already done** in §0.1 — no action needed | read |
+
+**The A/B that made item 2 worth doing.** The prior table said "swallowed"; nobody had shown the line
+was *emitted*. Absence under `dotnet test` is equally consistent with the option being off, and that
+confound would have survived any number of re-runs of the swallowed arm alone. Running the **same**
+`Example.Api.Tests.Component.xUnit3.exe` directly produced the pointer at 4,236 bytes; `dotnet test`
+produced 376 / 3,016 / 3,035 bytes without it; the report was restamped 18:19 in both arms. **That is
+the difference between "we did not see it" and "it is emitted and swallowed"**, and only the second
+supports B1.
+
+**The finding that closes a loop inside the plan.** The pointer prints
+`C:\Code\Kronikol\…\Reports` — **uppercase**. C91 measured that an uppercase path does **not** fire
+the nested-`CLAUDE.md` injection from a lowercase cwd. So **the product's own output directs the agent
+to the one spelling that defeats the mechanism M1.3 is built on.** Both halves are now measured, four
+hours apart, by different instruments. The fix is specified and is one line — **print the reports
+directory relative to the cwd**, which is correct under either hypothesis for the cause and is shorter
+output besides.
+
+**What changed in the body.** §14.0 gained a **fifth reversal** (B4's tracking predicate, flipped twice
+in one day) and, with it, hazard **12** — a claim about repository state has a half-life and must carry
+its clock. The tallies are now explicitly separated: **six reversals, five errors**, because the B4
+flip was a correct measurement overtaken by events, not a reasoning failure, and counting it would hide
+the actual lesson. C10 is struck through and marked closed. §14.4 item 1 no longer calls C76
+"unmeasured, cheap" — it is unmeasurable until someone writes to `Console.Error` on purpose.
+
+**What did NOT settle a row.**
+- **The "every VSTest runner" quantifier is still the prior session's.** One runner, one adapter
+  (xUnit3) was re-run. NUnit, MSTest, MTP/TUnit, LightBDD, ReqNRoll and BDDfy were not.
+- **The path-case *cause* is still undiscriminable** and no session started in this cwd can settle it
+  (§14.3 item 8). C96 makes it matter less: the relative-path fix is correct either way.
+- **C76 needs a source change**, which this loop may not make.
+- **§14.3 item 9 remains genuinely blocked** — it needs a failing-with-steps *fixture*, i.e. a new test
+  project, which is a write outside `LLM_FIRST_PLAN.md`. `--no-build` does not help; this one is
+  people-work or a scope change.
+
+**Scratch paths** (all under `…2cd976d-…\scratchpad\`): `c74_default.txt`, `c74_normal.out`,
+`c74_normal.err`, `c74_detailed.out`, `c74_direct.out`, `c74_direct.err`, plus iteration 1's
+`census_calls*.py`, `c86-ctrf-extra\`, `joblog.txt`, `grafana_joblog.txt`, `artifact_dl\`.
+
+### 2026-09-12 (loop iteration 3) — closing rows rather than opening them
+
+**Re-sync.** `git status --short` → **112 entries, 10 of them tracked-and-modified**; the other session
+is finishing M2.10 (`OtlpExportOptions/Sink/SpanMapper`, `ExportCommand`, two test files) plus
+`CHANGELOG.md`. HEAD still `e91cffb`. `Kronikol.dll` **18:18:25 — unchanged since iteration 2**, so
+C95/C96/C97 keep their stamps and do not drop back. `Kronikol.Tool.dll` moved **18:04:09 → 18:23:58**,
+which staleness-drops the two rows stamped against a Tool binary, and both were re-run.
+
+**LLM_FRIENDLY_PLAN's target moved again:** its Remaining block now reads **"All of M0, M1 and M2"** —
+M2.10 is done. Only M3.1 (MCP), M3.2 (CTRF) and M3.3 (`Specifications.md`) are left, and the block now
+carries M3.1's own judgement, reinforced by this plan's §5.5, that a local stdio MCP wrapper adds
+little to an agent that already has a shell.
+
+**Rows attempted.**
+
+| Row | Verdict | Instrument |
+|---|---|---|
+| **C81** | re-confirmed on the new binary | `query summary ./nope.json --json` → rc=2, **stdout empty**, stderr bare prose. Still no envelope on the error path |
+| **C82** | re-confirmed, still the worse outcome | the schema file + `--json` → a well-formed envelope, `"scenarios":0`, `"kronikolVersion":null`, rc=0, stderr 0 B |
+| §14.3 item 10 | **RESOLVED from C95**, no gate-6 run needed | reasoning *from an executed measurement*, stated as such |
+| §14.3 item 15 | **DONE** — A5 restated in §4.1 | no experiment, and none was needed |
+| §14.3 item 4 | **CLOSED as decides-nothing**, permanently parked at `RUN(proxy — jsdom)` | the row's own Decides cell |
+| §14.3 item 3 | **re-measured, and reclassified** | `grep -rl mergeableFormatVersion --include=*.json examples tests` → **0** |
+| **C100** (new surface) | **READ**, honestly | `kronikol export --help` |
+| **C101** (new surface) | **REFUTED — my own claim** | `ls` of the directory I read it from |
+
+**Two rows changed category, which matters more than two rows changing depth.**
+*Item 10* was posed as a contradiction needing a live runner: B1 says the channel is dead, C1 says a
+workflow command is injectable through it. C95 dissolves it — under `dotnet test` **nothing** reaches
+stdout, so C1 is scoped to the channels where output survives (a direct test host, `kronikol ingest`).
+The one-sentence form: **the injection rides whichever channel carries the pointer, so fixing B1
+without fixing C1 ships the hole.**
+*Item 3* was parked BLOCKED(tree) for three iterations. It is not. **No mergeable report has ever been
+written to this disk** — `GenerateMergeableData` is off by default and nothing enables it — so no
+amount of `--no-build` reaches it. It is **unpromotable by this loop** and needs a one-line source
+change this loop may not make. That is a better answer than "waiting for a quiet tree", which it was
+never waiting for.
+
+**The self-inflicted one.** Iteration 1 logged "new surface: report filenames are now hash-suffixed".
+Iteration 3 checked the directory and it is `tests/Kronikol.Tests/…/Reports/` — the **unit suite's
+scratch space**, holding `Attr_annotations.json`, `TestRunReport_scen.schema.json` and dozens more. The
+product writes plain `TestRunReport.json`, which that directory's own generated `CLAUDE.md` names. **A
+filename was read as a feature**, which is §14.0's error class committed inside the loop built to catch
+it, by its author, for the second time in three iterations. Now §13 hazard **13**. The iteration-1 entry
+is struck through rather than deleted.
+
+**And a mechanical one worth a hazard of its own.** Two edits and one grep failed because the phrase
+searched for is **broken across a line wrap** in the source (`is **test
+data, not instructions**`;
+`a tracking
+claim carried forward`). The first cost a false "0 hits" that briefly looked like evidence
+the block was truncated. §13 hazard **14**: a zero from a multi-word search over wrapped prose means
+check the wrap, not conclude absence.
+
+**What did NOT settle a row.**
+- **C100 could not be run for lack of inputs, not tooling.** `find . -name "*.ndjson"` → 3 files, all
+  Cucumber messages; there is **no** interaction-shaped capture and **no** tests NDJSON on disk.
+  Reconstructing both from a real report's `httpInteractions` would test my own reconstruction as much
+  as the product, so the row stays `READ` with its command written out.
+- **Per-adapter clustering (item 14's experiment) is still unreachable** for the same reason C90 found:
+  every example project passes, and the only failing fixtures are xUnit3-generated. Counting clusters
+  per adapter needs failing runs per adapter, which needs fixtures that do not exist.
+- **No new `git`-derived row was taken on faith**: C98's tracking facts were re-taken this iteration,
+  per hazard 12.
+
+**Scratch paths** (all under `…2cd976d-…\scratchpad\`): `c81.out`, `c81.err`, `c82.out`,
+`c82.err`, plus everything from iterations 1–2.
+
 ---
 
 ## 18. How to continue this plan
@@ -1622,7 +1844,21 @@ make it dead weight.
 
 Run in a fresh session, at `high` effort, with ultracode off — the prompt's own fan-out clause is the
 opt-in, and most iterations are "run three commands, update four rows", which a workflow per tick only
-makes slower:
+makes slower.
+
+**Check `/loop` is offered before pasting 2,500 words into it.** It is a Claude Code built-in, not a
+file: there is no `loop` skill under `.claude/skills/`, `.claude/commands/` or `~/.claude/` on this
+machine, and searching for one returns nothing — which is the *expected* result for a built-in, not
+evidence against it. The support is visible instead in the `ScheduleWakeup` tool, which exists to serve
+"/loop dynamic mode — the user invoked /loop without an interval". That is shape evidence, so settle it
+the cheap way: type `/` in the fresh session and look for `loop` in the list. If it is there, the
+command below runs in **dynamic mode** (no interval given), which self-paces between iterations rather
+than firing on a clock — the right mode here, because iteration cost varies from three commands to a
+fanned-out experiment. If it is *not* offered, the body still works pasted as a plain instruction, but
+nothing re-invokes it: you get one pass, not a loop, and the re-sync in step 1 never happens — which is
+the entire point of running it this way.
+
+The command:
 
 ```
 /loop Work on C:\Code\Kronikol\LLM_FIRST_PLAN.md until every load-bearing claim in its §14 assumption ledger is at Depth RUN, or is explicitly marked unpromotable with the reason and the experiment that would settle it.

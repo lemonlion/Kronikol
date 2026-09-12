@@ -23,6 +23,10 @@ namespace Kronikol.Extensions.Otlp;
 /// and pushes the current batch; <see cref="DisposeAsync"/> additionally exports still-pending requests
 /// as orphans, waiting at most <see cref="OtlpExportOptions.ShutdownTimeout"/> before cancelling an
 /// in-flight POST so a hung collector cannot hold the process open.</para>
+/// <para><strong>No verdict on this path.</strong> Spans leave here while the test is still running, so
+/// <see cref="OtlpExportOptions.TestResult"/> has nothing to answer with and <c>kronikol.test.result</c>
+/// is absent. Holding spans back until a verdict existed would defeat the rule this whole class is built
+/// on - capture never blocks - so a run that needs the attribute exports in batch at the end instead.</para>
 /// </remarks>
 public sealed class OtlpExportSink : IRequestResponseSink, IAsyncDisposable
 {

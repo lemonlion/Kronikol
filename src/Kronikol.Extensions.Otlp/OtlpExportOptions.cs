@@ -65,6 +65,29 @@ public sealed class OtlpExportOptions
     public TraceIdStrategy TraceIdStrategy { get; set; } = TraceIdStrategy.PerTest;
 
     /// <summary>
+    /// Optional lookup from a test id to that test's verdict, exported as <c>kronikol.test.result</c>.
+    /// Return null - the default for every id - to leave the attribute off.
+    /// <para>
+    /// It lives here rather than on <see cref="RequestResponseLog"/> because a captured call has no
+    /// verdict and never can: the result exists only once a framework adapter has assembled the run,
+    /// long after the call was recorded, and forty-odd tracker packages construct that record. The join
+    /// is free, though - a log's <c>TestId</c> <em>is</em> its <c>Scenario.Id</c> - so a host holding the
+    /// finished features wires it in one line:
+    /// <code>
+    /// var byId = features.SelectMany(f => f.Scenarios).ToDictionary(s => s.Id);
+    /// options.TestResult = id => byId.TryGetValue(id, out var s) ? s.Result.ToString() : null;
+    /// </code>
+    /// A delegate rather than a dictionary so a caller with a large run need not materialise one.
+    /// </para>
+    /// <para>
+    /// <see cref="OtlpExportSink"/> will almost always see null here: it POSTs on a flush interval while
+    /// the test is still running, so no verdict exists yet. That is by design - holding spans back until
+    /// one did would break the rule that capture never blocks.
+    /// </para>
+    /// </summary>
+    public Func<string, string?>? TestResult { get; set; }
+
+    /// <summary>
     /// Streaming sink only: how many log entries may wait to be batched. The queue is bounded and the
     /// newest entry is dropped when it is full (D3: capture never blocks), counted in
     /// <see cref="OtlpExportSink.EntriesDropped"/>. Default 4096.

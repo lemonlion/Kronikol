@@ -145,6 +145,99 @@ public class ExportCommandTests : IDisposable
         Assert.Contains("failed", err.ToString());
     }
 
+    /// <summary>
+    /// The verdict is not in the interaction capture and cannot be - it is written by the runner when the
+    /// test ends. `--tests` is how the CLI learns it, the same companion NDJSON `kronikol ingest` reads.
+    /// </summary>
+    [Fact]
+    public void Tests_ndjson_gives_every_span_of_a_test_its_verdict()
+    {
+        var capture = WriteCapture();
+        var tests = WriteTests("failed");
+        var outFile = Path.Combine(_dir, "export.json");
+
+        var exit = ExportCommand.Run([capture, "--tests", tests, "--dry-run", "--out", outFile], new StringWriter(), new StringWriter());
+
+        Assert.Equal(0, exit);
+        var span = Assert.Single(OtlpTraceReader.ReadJson(File.ReadAllBytes(outFile)));
+        Assert.Equal("Failed", span.Attribute("kronikol.test.result"));
+    }
+
+    [Fact]
+    public void Without_tests_ndjson_no_span_claims_a_verdict()
+    {
+        var capture = WriteCapture();
+        var outFile = Path.Combine(_dir, "export.json");
+
+        ExportCommand.Run([capture, "--dry-run", "--out", outFile], new StringWriter(), new StringWriter());
+
+        var span = Assert.Single(OtlpTraceReader.ReadJson(File.ReadAllBytes(outFile)));
+        Assert.Null(span.Attribute("kronikol.test.result"));
+    }
+
+    /// <summary>
+    /// The status words a runner writes are not the words the report uses, and the two must not disagree:
+    /// the CLI maps them through the same <c>FeatureSynthesizer.MapStatus</c> the ingest does.
+    /// </summary>
+    [Theory]
+    [InlineData("passed", "Passed")]
+    [InlineData("ok", "Passed")]
+    [InlineData("timedOut", "Failed")]
+    [InlineData("skipped", "Skipped")]
+    public void A_runners_status_word_becomes_the_result_the_report_would_show(string status, string expected)
+    {
+        var capture = WriteCapture();
+        var outFile = Path.Combine(_dir, "export.json");
+
+        ExportCommand.Run([capture, "--tests", WriteTests(status), "--dry-run", "--out", outFile],
+            new StringWriter(), new StringWriter());
+
+        var span = Assert.Single(OtlpTraceReader.ReadJson(File.ReadAllBytes(outFile)));
+        Assert.Equal(expected, span.Attribute("kronikol.test.result"));
+    }
+
+    [Fact]
+    public void A_tests_file_inside_an_input_directory_is_not_read_as_interactions()
+    {
+        // Both files live in _dir and the input is the directory, so the sweep would otherwise pick the
+        // tests file up as a capture and report every line of it malformed.
+        WriteCapture();
+        WriteTests("passed", "tests.ndjson");
+        var outFile = Path.Combine(_dir, "export.json");
+        var err = new StringWriter();
+
+        var exit = ExportCommand.Run([_dir, "--tests", Path.Combine(_dir, "tests.ndjson"), "--dry-run", "--out", outFile],
+            new StringWriter(), err);
+
+        Assert.Equal(0, exit);
+        Assert.DoesNotContain("malformed", err.ToString());
+        var span = Assert.Single(OtlpTraceReader.ReadJson(File.ReadAllBytes(outFile)));
+        Assert.Equal("Passed", span.Attribute("kronikol.test.result"));
+    }
+
+    [Fact]
+    public void A_missing_tests_file_is_a_runtime_failure_and_says_so()
+    {
+        var err = new StringWriter();
+        var exit = ExportCommand.Run([WriteCapture(), "--tests", Path.Combine(_dir, "nope.ndjson"), "--dry-run"],
+            new StringWriter(), err);
+
+        Assert.Equal(1, exit);
+        Assert.Contains("Tests file not found", err.ToString());
+    }
+
+    private string WriteTests(string status, string name = "tests-run.ndjson")
+    {
+        var path = Path.Combine(_dir, name);
+        File.WriteAllLines(path,
+        [
+            $$"""{"event":"testrun","testId":"__run__","status":"started"}""",
+            $$"""{"event":"start","testId":"{{TestId}}","testName":"cli › exports"}""",
+            $$"""{"event":"end","testId":"{{TestId}}","status":"{{status}}","durationMs":30}""",
+        ]);
+        return path;
+    }
+
     [Fact]
     public void Usage_errors()
     {

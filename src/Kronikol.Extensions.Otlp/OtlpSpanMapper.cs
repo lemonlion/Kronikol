@@ -105,6 +105,10 @@ public sealed record OtlpExportBatch(IReadOnlyList<OtlpExportSpan> Spans, int Sk
 /// (<c>CapturedBy</c> = <c>span</c> or <c>wire + span</c>) are skipped unless
 /// <see cref="OtlpExportOptions.IncludeSpanSourced"/> — re-exporting them would duplicate spans the
 /// backend already stores. Diagram markers and <c>TrackingIgnore</c> records are always skipped.</para>
+/// <para><strong>The verdict is the one attribute that does not come from the record.</strong>
+/// <c>kronikol.test.result</c> is emitted only when <see cref="OtlpExportOptions.TestResult"/> answers
+/// for the span's test id, because a captured call has no outcome at capture time. It is therefore
+/// present on a batch export from a host holding the finished run, and absent from a streaming one.</para>
 /// </remarks>
 public static class OtlpSpanMapper
 {
@@ -200,7 +204,7 @@ public static class OtlpSpanMapper
             endNano = startNano;
 
         var (status, statusText, statusMessage) = StatusOf(response ?? primary);
-        var attributes = new List<OtlpExportAttribute>(12)
+        var attributes = new List<OtlpExportAttribute>(13)
         {
             OtlpExportAttribute.Str("url.full", primary.Uri.ToString()),
         };
@@ -215,6 +219,10 @@ public static class OtlpSpanMapper
         attributes.Add(OtlpExportAttribute.Str("kronikol.test.id", primary.TestId));
         if (!string.IsNullOrEmpty(primary.TestName))
             attributes.Add(OtlpExportAttribute.Str("kronikol.test.name", primary.TestName));
+        // Beside the identity it qualifies. Unlike every other kronikol.* attribute this one does not
+        // come from the record - see OtlpExportOptions.TestResult for why it cannot.
+        if (options.TestResult?.Invoke(primary.TestId) is { Length: > 0 } testResult)
+            attributes.Add(OtlpExportAttribute.Str("kronikol.test.result", testResult));
         if (primary.Phase != TestPhase.Unknown)
             attributes.Add(OtlpExportAttribute.Str("kronikol.phase", primary.Phase.ToString()));
         if (!string.IsNullOrEmpty(primary.DependencyCategory))

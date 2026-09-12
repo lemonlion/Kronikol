@@ -910,15 +910,48 @@ append-to-what-you-ran meaning and now quotes what it must; both are rendered fr
 is the same lever as the rest of this milestone. `formatVersion` stays 1 — nothing released ever emitted
 the string form.
 
+### M2.10 — `kronikol.test.result`, and the layer the fact had to come from (executed)
+
+The audit's blocker was real and structural, and it decided the design. `RequestResponseLog` has no
+verdict and never can: every field on it is written at capture time, and the result exists only once a
+framework adapter has assembled `Feature[]`/`Scenario[]`. Adding a field would mean forty-odd tracker
+packages stamping a value none of them holds. **The join is free, though** — `log.TestId == scenario.Id`,
+which `ReportGenerator` already relies on in four places — so the attribute arrives through a new
+`OtlpExportOptions.TestResult` lookup. A delegate rather than a dictionary, so a caller with a large run
+need not materialise one, and on the options rather than a `Map` parameter, so all three layers pick it
+up from one place. The insertion is in `OtlpSpanMapper.Map`, the only site where a span is built.
+
+Decisions taken while implementing:
+
+- **The value is `ExecutionResult.ToString()`**, and the CLI reaches it through the public
+  `FeatureSynthesizer.MapStatus` the ingest already uses, so a span attribute and the report the same
+  files would produce cannot disagree. That settles the audit's open question about unrecognised status
+  words in favour of agreement: an unknown word still maps to `Failed`, because that is what the report
+  would say, and **the words are named on stderr** so a producer's typo does not redden spans silently.
+  Omitting the attribute instead would have made the two disagree, which is the failure that matters.
+- **`kronikol export --tests`** mirrors `IngestCommand` including the `files.Remove(testsFull)` guard — a
+  tests file inside an input directory must not be swept up as an interaction capture. The malformed-line
+  reporting was extracted so both readers report identically instead of the new one growing its own.
+- **The streaming sink's limit is documented, not engineered around.** It POSTs on a flush interval while
+  the test is still running, so the lookup has nothing to answer with. Buffering until a verdict existed
+  would break D3, which is the rule the class is built on.
+
+**Both tests that should have caught a new attribute were silently weakened** — `Maps_the_core_span_fields`
+and the CLI's dry-run fact assert attributes by name and never the count, so a new one passes unnoticed.
+Each has an absent-by-default twin now, and the mapper fact pins the attribute's position, since the
+encoder emits in list order and the wiki's table documents that order.
+
 ### Remaining
 
 **Done:** M2.1 deep links · M2.2 parameter hint · M2.3 run identity · M2.4 merge JSON + `--baseline` ·
 M2.5 (in M0) · M2.6 source locations · M2.7 retries · M2.8 skill distribution + `init-agents` + drift
-guards · M2.9 `--json` envelope + `--out` everywhere + the streaming test. **All of M2 except M2.10.**
+guards · M2.9 `--json` envelope + `--out` everywhere + the streaming test · M2.10 OTLP
+`kronikol.test.result` + `export --tests`. **All of M0, M1 and M2.**
 
-**Left:** M2.10 OTLP `kronikol.test.result` · M3.1 MCP · M3.2 CTRF · M3.3 `Specifications.md`. Then §7
-documentation, §8 Kronikol4J ledger + release, §6 verification protocol, the full suite including E2E,
-and the release itself.
+**Left:** M3.1 MCP · M3.2 CTRF · M3.3 `Specifications.md`. Then §7 documentation, §8 Kronikol4J ledger +
+release, §6 verification protocol, the full suite including E2E, and the release itself. Note M3.1's own
+judgement in this plan, reinforced by `LLM_FIRST_PLAN` §5.5: a local stdio MCP wrapper adds little to an
+agent that already has a shell, so it is the last thing to build, if ever.
 
 A successor plan now depends on this one finishing. Repo-root `CROSS_RUN_HISTORY_PLAN.md`
 (2026-09-12, investigation complete, not green-lit) states that it **assumes LLM_FRIENDLY_PLAN is

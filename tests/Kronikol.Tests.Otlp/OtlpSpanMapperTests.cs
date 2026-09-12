@@ -241,6 +241,61 @@ public class OtlpSpanMapperTests
         Assert.Null(plain.Attribute("kronikol.captured.by"));
     }
 
+    // ------------------------------------------------------------------ verdict
+
+    /// <summary>
+    /// The verdict cannot come from the log. Every field on <c>RequestResponseLog</c> is capture-time,
+    /// and the result exists only once a framework adapter has assembled the run - so it arrives through
+    /// the options, keyed on the test id, which <em>is</em> the scenario id.
+    /// </summary>
+    [Fact]
+    public void The_test_result_is_exported_when_the_run_can_answer_for_the_test()
+    {
+        var (request, response) = Pair();
+        var options = Options();
+        options.TestResult = id => id == request.TestId ? "Failed" : null;
+
+        var span = OtlpSpanMapper.Map(request, response, options, ExportTime);
+
+        Assert.Equal("Failed", span.Attribute("kronikol.test.result"));
+        // Beside the identity it qualifies: the kronikol.test.* run stays contiguous, and the encoder
+        // emits in list order, which is the order the wiki's attribute table documents.
+        Assert.Equal(["kronikol.test.id", "kronikol.test.name", "kronikol.test.result"],
+            span.Attributes.TakeLast(3).Select(a => a.Key));
+    }
+
+    [Fact]
+    public void There_is_no_test_result_by_default()
+    {
+        var (request, response) = Pair();
+        var span = OtlpSpanMapper.Map(request, response, Options(), ExportTime);
+        Assert.Null(span.Attribute("kronikol.test.result"));
+    }
+
+    [Fact]
+    public void A_test_the_lookup_does_not_know_gets_no_result_rather_than_a_guess()
+    {
+        var (request, response) = Pair();
+        var options = Options();
+        options.TestResult = _ => null;
+
+        var span = OtlpSpanMapper.Map(request, response, options, ExportTime);
+
+        Assert.Null(span.Attribute("kronikol.test.result"));
+    }
+
+    [Fact]
+    public void Both_halves_of_a_pair_carry_the_same_verdict()
+    {
+        // `primary` is request ?? response, so an unpaired response must answer the same as its request.
+        var (request, response) = Pair();
+        var options = Options();
+        options.TestResult = _ => "Passed";
+
+        Assert.Equal("Passed", OtlpSpanMapper.Map(request, null, options, ExportTime).Attribute("kronikol.test.result"));
+        Assert.Equal("Passed", OtlpSpanMapper.Map(null, response, options, ExportTime).Attribute("kronikol.test.result"));
+    }
+
     // ------------------------------------------------------------------ bodies
 
     [Fact]

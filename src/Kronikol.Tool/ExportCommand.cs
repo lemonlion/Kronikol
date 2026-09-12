@@ -36,12 +36,17 @@ internal static class ExportCommand
         var gzip = false;
         var dryRun = false;
         string? outFile = null;
+        string? tests = null;
 
         for (var i = 0; i < args.Count; i++)
         {
             var arg = args[i];
             switch (arg)
             {
+                case "--tests":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    tests = args[i];
+                    break;
                 case "--otlp":
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     if (!Uri.TryCreate(args[i], UriKind.Absolute, out endpoint) || endpoint.Scheme is not ("http" or "https"))
@@ -128,6 +133,18 @@ internal static class ExportCommand
         }
 
         var files = CliInputs.Resolve(inputs, InteractionPatterns, error);
+        if (tests is not null)
+        {
+            var testsFull = Path.GetFullPath(tests);
+            files.Remove(testsFull); // a tests file inside an input directory is not an interaction file
+            if (!File.Exists(testsFull))
+            {
+                error.WriteLine($"Tests file not found: {tests}");
+                return 1;
+            }
+            tests = testsFull;
+        }
+
         if (files.Count == 0)
         {
             error.WriteLine("No matching capture files found (*.ndjson / *.jsonl).");
@@ -146,14 +163,7 @@ internal static class ExportCommand
             return 1;
         }
 
-        if (malformed.Count > 0)
-        {
-            error.WriteLine($"{malformed.Count} malformed line(s) skipped:");
-            foreach (var line in malformed.Take(5))
-                error.WriteLine($"  {line.Source}:{line.LineNumber}: {line.Message}");
-            if (malformed.Count > 5)
-                error.WriteLine($"  … and {malformed.Count - 5} more");
-        }
+        ReportMalformed(malformed, error);
 
         // The NDJSON path is the one capture path where nothing has redacted yet — apply it here,
         // before anything is mapped, exactly as ingest-replay would.
@@ -180,6 +190,8 @@ internal static class ExportCommand
         };
         if (bodyCap is not null)
             options.BodyAttributeCapBytes = bodyCap.Value;
+        if (tests is not null && ReadVerdicts(tests, error) is { } verdicts)
+            options.TestResult = id => verdicts.GetValueOrDefault(id);
         foreach (var (name, value) in headers)
             options.Headers[name] = value;
 
@@ -215,6 +227,70 @@ internal static class ExportCommand
         return 1;
     }
 
+    /// <summary>Names the lines that could not be parsed, capped so a broken file cannot flood the output.</summary>
+    private static void ReportMalformed(List<MalformedLine> malformed, TextWriter error)
+    {
+        if (malformed.Count == 0)
+            return;
+
+        error.WriteLine($"{malformed.Count} malformed line(s) skipped:");
+        foreach (var line in malformed.Take(5))
+            error.WriteLine($"  {line.Source}:{line.LineNumber}: {line.Message}");
+        if (malformed.Count > 5)
+            error.WriteLine($"  … and {malformed.Count - 5} more");
+    }
+
+    /// <summary>
+    /// testId -> verdict from the companion tests NDJSON, read from its <c>end</c> events. The status
+    /// words a runner writes are mapped through the same <see cref="FeatureSynthesizer.MapStatus"/> the
+    /// ingest uses, so a span attribute and the report it would have produced never disagree - which is
+    /// also why an unrecognised word becomes <c>Failed</c> rather than being dropped. Unrecognised words
+    /// are named on stderr, because a producer typo would otherwise paint a span red in silence.
+    /// </summary>
+    private static Dictionary<string, string>? ReadVerdicts(string path, TextWriter error)
+    {
+        var malformed = new List<MalformedLine>();
+        List<TestRunRecord> records;
+        try
+        {
+            records = NdjsonTestRunReader.ReadFile(path, malformed);
+        }
+        catch (IOException exception)
+        {
+            error.WriteLine("Failed to read the tests file: " + exception.Message);
+            return null;
+        }
+
+        ReportMalformed(malformed, error);
+
+        var verdicts = new Dictionary<string, string>(StringComparer.Ordinal);
+        var unknown = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var record in records)
+        {
+            if (!string.Equals(record.Event, TestRunRecord.Events.End, StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (record.Status is not { Length: > 0 } status)
+                continue;
+
+            if (!KnownStatuses.Contains(status.Trim()))
+                unknown.Add(status.Trim());
+            verdicts[record.TestId] = FeatureSynthesizer.MapStatus(status).ToString();
+        }
+
+        if (unknown.Count > 0)
+            error.WriteLine($"{unknown.Count} unrecognised status word(s) exported as Failed: {string.Join(", ", unknown.Order())}");
+
+        return verdicts;
+    }
+
+    /// <summary>Every word <see cref="FeatureSynthesizer.MapStatus"/> maps deliberately; anything else falls through to Failed.</summary>
+    private static readonly HashSet<string> KnownStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "passed", "pass", "ok", "success", "succeeded",
+        "failed", "fail", "error", "timedOut", "timed-out", "timeout", "interrupted", "broken",
+        "skipped", "skip", "pending", "todo", "ignored", "bypassed", "skippedAfterFailure",
+    };
+
     private static string Summary(string verb, int spans, int traces, int skipped, int orphans) =>
         $"{verb} {spans} span(s) in {traces} trace(s), {skipped} record(s) skipped, {orphans} orphan(s)";
 
@@ -232,6 +308,8 @@ internal static class ExportCommand
         w.WriteLine("Options:");
         w.WriteLine("  --otlp <endpoint>        The OTLP/HTTP traces endpoint, e.g. http://localhost:4318/v1/traces.");
         w.WriteLine("  --header <name=value>    Header added to every export request (repeatable) — auth tokens etc.");
+        w.WriteLine("  --tests <file>           The run's companion tests NDJSON. Its end events give each span a");
+        w.WriteLine("                           kronikol.test.result attribute; without it no span claims a verdict.");
         w.WriteLine("  --include-bodies         Export request/response bodies as kronikol.request.body /");
         w.WriteLine("                           kronikol.response.body span attributes (default: off).");
         w.WriteLine("  --body-cap <n>           Cap per body attribute when --include-bodies is on (default: 8192).");
@@ -247,5 +325,6 @@ internal static class ExportCommand
         w.WriteLine();
         w.WriteLine("Example:");
         w.WriteLine("  kronikol export ./captures --otlp http://localhost:4318/v1/traces --header \"authorization=Bearer t\"");
+        w.WriteLine("  kronikol export ./captures --tests ./captures/tests.ndjson --otlp http://localhost:4318/v1/traces");
     }
 }
