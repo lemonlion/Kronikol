@@ -124,7 +124,7 @@ public class QueryCommandTests : IDisposable
 
         var output = Run("failures", report);
 
-        var stableId = ScenarioStableId.Compute(null, "Orders", "Checkout fails on a wrong total");
+        var stableId = ScenarioStableId.Compute(RunSuite.Current, "Orders", "Checkout fails on a wrong total");
         Assert.Contains($"open: TestRunReport.html#sid-{stableId}", output);
     }
 

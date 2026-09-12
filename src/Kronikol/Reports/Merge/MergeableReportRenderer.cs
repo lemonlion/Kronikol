@@ -72,7 +72,9 @@ public static class MergeableReportRenderer
             browserFragmentMaxHeight: options.BrowserFragmentMaxHeight,
             notePayloadFormat: options.NotePayloadFormat,
             fullSearchIndex: options.FullSearchIndex,
-            toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false),
+            // The shards' suite, so the HTML's data-stable-id attributes agree with the merged data file.
+            suite: report.Suite);
 
         // GenerateHtmlReport always writes under <BaseDir>/Reports/<fileName>; relocate to the
         // caller's requested path when different.
@@ -117,7 +119,10 @@ public static class MergeableReportRenderer
             // The version that ran the tests, not the one merging them.
             report.KronikolVersion,
             report.StepPaths,
-            report.Annotations);
+            report.Annotations,
+            // The shards' suite, not this machine's: the merge recomputes every stableId, so without it
+            // a merged report's ids match neither its own shards nor a baseline promoted from it.
+            suite: report.Suite);
     }
 
     /// <summary>

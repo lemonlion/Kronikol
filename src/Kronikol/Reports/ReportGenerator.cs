@@ -650,6 +650,11 @@ public static class ReportGenerator
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
 
+        // Defaulted here as well as in the data writers, and for the same reason: the HTML's
+        // data-stable-id attributes and the data file's stableId values are the same identity, and a
+        // caller that reaches one writer directly must not get a different answer from the other.
+        suite ??= RunSuite.Current;
+
         // The resolved toggle-defaults record wins when provided; the legacy notePayloadFormat
         // parameter (kept for compatibility — tests and helpers call it directly) folds into the
         // built-ins otherwise.
@@ -1434,7 +1439,11 @@ public static class ReportGenerator
                         scenarioNoteFormatSelect: scenarioNoteFormatSelect,
                         searchIndexPieces: searchIndexPieces,
                         scenarioToolbarControls: scenarioToolbarControls,
-                        toggleDefaults: toggles);
+                        toggleDefaults: toggles,
+                        // Without this the flat outline rows compute their ids with no suite while the
+                        // scenario <details> around them computes with one, so one report carries two
+                        // identity schemes and the deep link from a flat row resolves to nothing.
+                        suite: suite);
                     continue;
                 }
 
@@ -3757,20 +3766,24 @@ public static class ReportGenerator
     private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
+        // Resolved ONCE and used for both the key and the ids under it. Writing `suite ?? RunSuite.Current`
+        // at the key while passing the un-defaulted `suite` to the model made the file disagree with
+        // itself: it named a suite its own stableIds had not been computed under.
+        var resolvedSuite = suite ?? RunSuite.Current;
         var data = new
         {
             // First, so a reader can check the contract before parsing anything that depends on it. The
             // same idiom the other two machine outputs already use (Failures.jsonl, query --json).
             FormatVersion = ReportFormatVersion,
             KronikolVersion = KronikolVersion,
-            Suite = suite ?? RunSuite.Current,
+            Suite = resolvedSuite,
             StartTime = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             EndTime = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             // Before `features`, which is nearly the whole file: a streaming reader and a person
             // running `head` both see which run this is without the megabytes after it.
             CiMetadata = MapCiMetadataJson(ciMetadata),
             Environment = MapEnvironmentJson(),
-            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, suite),
+            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, resolvedSuite),
             Diagnostics = MapDiagnosticsJson(diagnostics)
         };
         return JsonSerializer.Serialize(data, options);
@@ -4142,11 +4155,12 @@ public static class ReportGenerator
 
     private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null, string? suite = null)
     {
+        var resolvedSuite = suite ?? RunSuite.Current;
         var doc = new XDocument(
             new XElement("TestRunReport",
                 new XElement("FormatVersion", ReportFormatVersion),
                 new XElement("KronikolVersion", KronikolVersion),
-                (suite ?? RunSuite.Current) is { Length: > 0 } xmlSuite ? new XElement("Suite", xmlSuite) : null,
+                resolvedSuite is { Length: > 0 } xmlSuite ? new XElement("Suite", xmlSuite) : null,
                 new XElement("StartTime", startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
                 new XElement("EndTime", endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
                 MapCiMetadataXml(ciMetadata),
@@ -4167,7 +4181,7 @@ public static class ReportGenerator
                                     var scenarioElements = new List<object?>
                                     {
                                         new XElement("Id", s.Id),
-                                        new XElement("StableId", ScenarioStableId.Compute(suite, f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues)),
+                                        new XElement("StableId", ScenarioStableId.Compute(resolvedSuite, f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues)),
                                         new XElement("Name", s.DisplayName),
                                         s.Description != null ? new XElement("Description", s.Description) : null,
                                         new XElement("Result", s.Result.ToString()),
@@ -4285,10 +4299,11 @@ public static class ReportGenerator
 
     private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null, string? suite = null)
     {
+        var resolvedSuite = suite ?? RunSuite.Current;
         var yml = new StringBuilder();
         yml.Append("FormatVersion: " + ReportFormatVersion + "\n");
         yml.Append("KronikolVersion: " + KronikolVersion + "\n");
-        AppendYamlIfPresent(yml, "Suite: ", suite ?? RunSuite.Current);
+        AppendYamlIfPresent(yml, "Suite: ", resolvedSuite);
         yml.Append("StartTime: " + startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "\n");
         yml.Append("EndTime: " + endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "\n");
         yml.Append("CiMetadata:\n");
@@ -4329,7 +4344,7 @@ public static class ReportGenerator
             foreach (var scenario in feature.Scenarios)
             {
                 yml.Append("      - Name: " + scenario.DisplayName.SanitiseForYml() + "\n");
-                yml.Append("        StableId: " + ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues) + "\n");
+                yml.Append("        StableId: " + ScenarioStableId.Compute(resolvedSuite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues) + "\n");
                 if (scenario.Description is not null)
                     yml.Append("        Description: " + scenario.Description.SanitiseForYml() + "\n");
                 if (scenario.Attempt is not null)

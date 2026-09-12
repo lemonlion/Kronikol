@@ -101,6 +101,7 @@ public static class MergeableReportReader
         return new MergeableReport
         {
             KronikolVersion = GetString(root, "kronikolVersion") ?? "",
+            Suite = GetString(root, "suite"),
             StartTime = ReadDate(root, "startTime"),
             EndTime = ReadDate(root, "endTime"),
             Features = features.ToArray(),

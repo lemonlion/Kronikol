@@ -19,7 +19,7 @@ internal sealed record QueryEnvelope(string Command, string Report, string? Kron
 /// <summary>
 /// The envelope for a call that failed.
 ///
-/// <para>Until 3.2.0 a non-zero exit printed prose on stderr and <b>nothing at all</b> on stdout - the
+/// <para>Before 3.1.0 a non-zero exit printed prose on stderr and <b>nothing at all</b> on stdout - the
 /// whole buffered answer, provenance banners included, was discarded by
 /// <c>if (exit == 0 &amp;&amp; !writer.Flush(error))</c>. So a wrapper asking for <c>--json</c> got valid
 /// JSON when the call worked and unparseable text when it did not, which is precisely the case a machine
@@ -417,6 +417,10 @@ internal sealed class QueryWriter
               + ",\"droppedItems\":" + _dropped.ToString(CultureInfo.InvariantCulture) + "}"
             : "null");
         Member("next", _next is null ? "null" : JsonSerializer.Serialize(_next, Compact));
+        // Present and null, never absent - the same rule `kronikolVersion` and `total` follow. A consumer
+        // that has to branch on key PRESENCE cannot tell "this call succeeded" from "an older tool wrote
+        // this", and the point of the envelope is that one shape answers both paths.
+        Member("error", "null");
 
         return envelope.Append("}\n").ToString();
     }

@@ -19,6 +19,16 @@ public static class MergeableReportMerger
         return new MergeableReport
         {
             KronikolVersion = reports[0].KronikolVersion,
+
+            // Only when every shard agrees. Shards of one run share a suite, and that is the case this
+            // carries; shards of DIFFERENT suites have no single answer, and inventing one would re-key
+            // every scenario in the merged file to a suite half of them never belonged to. Null there is
+            // the honest answer and reproduces the pre-3.1.0 ids, which is also the only id scheme two
+            // different suites ever shared.
+            Suite = reports.Select(r => r.Suite).Distinct(StringComparer.Ordinal).Count() == 1
+                ? reports[0].Suite
+                : null,
+
             StartTime = reports.Min(r => r.StartTime),
             EndTime = reports.Max(r => r.EndTime),
             Features = MergeFeatures(reports),

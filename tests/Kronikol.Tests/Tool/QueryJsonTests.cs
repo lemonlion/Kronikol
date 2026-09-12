@@ -98,7 +98,7 @@ public class QueryJsonTests : IDisposable
     }
 
     /// <summary>
-    /// The single thing that decides whether a machine channel is usable. Until 3.2.0 a non-zero exit
+    /// The single thing that decides whether a machine channel is usable. Before 3.1.0 a non-zero exit
     /// printed prose on stderr and <b>nothing at all</b> on stdout - the whole buffered answer, provenance
     /// banners included, was discarded - so a wrapper got valid JSON when the call worked and an empty
     /// string when it did not, which is the one path it most needs to handle.
@@ -124,10 +124,15 @@ public class QueryJsonTests : IDisposable
     }
 
     [Fact]
-    public void A_successful_answer_carries_no_error_member()
+    public void A_successful_answer_carries_error_present_and_null()
     {
+        // Present-and-null, not absent - the same rule `kronikolVersion` and `total` follow. A consumer
+        // branching on key PRESENCE cannot tell "this call succeeded" from "an older tool wrote this",
+        // and one shape answering both paths is the whole point of the envelope.
         var envelope = JsonDocument.Parse(Run("summary")).RootElement;
-        Assert.False(envelope.TryGetProperty("error", out _));
+
+        Assert.True(envelope.TryGetProperty("error", out var error));
+        Assert.Equal(JsonValueKind.Null, error.ValueKind);
     }
 
     [Fact]

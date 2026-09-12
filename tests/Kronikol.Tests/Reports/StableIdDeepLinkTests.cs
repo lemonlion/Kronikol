@@ -109,7 +109,7 @@ public class StableIdDeepLinkTests
         // the attribute in a script selector would pass a naive Contains and fail every real link.
         foreach (var (feature, scenario) in new[] { ("Checkout", "Pay"), ("Refunds", "Pay") })
         {
-            var expected = ScenarioStableId.Compute(null, feature, scenario);
+            var expected = ScenarioStableId.Compute(RunSuite.Current, feature, scenario);
             Assert.Matches(new Regex($"<details class=\"scenario\"[^>]*data-stable-id=\"{expected}\""), html);
         }
 
@@ -125,7 +125,7 @@ public class StableIdDeepLinkTests
 
         foreach (var tier in new[] { "gold", "silver" })
         {
-            var expected = ScenarioStableId.Compute(null, "Pricing", "Discount applies", "discount",
+            var expected = ScenarioStableId.Compute(RunSuite.Current, "Pricing", "Discount applies", "discount",
                 new Dictionary<string, string> { ["tier"] = tier });
             Assert.Matches(new Regex($"<tr class=\"[^\"]*\"[^>]*data-stable-id=\"{expected}\""), html);
         }
@@ -142,7 +142,7 @@ public class StableIdDeepLinkTests
         // link resolves into a table nobody is looking at.
         var html = GenerateHtml(AnOutlineWithFlatValues());
 
-        var silver = ScenarioStableId.Compute(null, "Pricing", "Discount applies", "discount",
+        var silver = ScenarioStableId.Compute(RunSuite.Current, "Pricing", "Discount applies", "discount",
             new Dictionary<string, string> { ["tier"] = "silver" });
         Assert.Equal(2, Regex.Matches(html, $"data-stable-id=\"{silver}\"").Count);
 
@@ -179,7 +179,7 @@ public class StableIdDeepLinkTests
         // Same renderer, same model — the spec document gets deep links for free rather than by a branch.
         var html = GenerateHtml(TwoFeaturesSharingAScenarioName(), testRunReport: false);
 
-        Assert.Contains(ScenarioStableId.Compute(null, "Checkout", "Pay"), StableIdsIn(html));
+        Assert.Contains(ScenarioStableId.Compute(RunSuite.Current, "Checkout", "Pay"), StableIdsIn(html));
     }
 
     [Fact]

@@ -101,11 +101,22 @@ public class ReportContractShapeTests
     {
         var root = Json("Contract_suite.json");
 
-        // The suite is a hash input, so it has to be in the file: an id whose scope cannot be read back
-        // is an id nobody can recompute or explain.
-        Assert.True(root.TryGetProperty("suite", out var suite), "the report must name its suite");
-        Assert.Equal(JsonValueKind.String, suite.ValueKind);
-        Assert.False(string.IsNullOrWhiteSpace(suite.GetString()));
+        // The suite is a hash input, so the key has to be in the file: an id whose scope cannot be read
+        // back is an id nobody can recompute or explain. The VALUE is deliberately allowed to be null —
+        // RunSuite returns null rather than guessing when the output directory cannot answer — so
+        // asserting a non-empty string here would be asserting a property of the machine running the
+        // test rather than of the product, and would fail on any host whose layout differs.
+        Assert.True(root.TryGetProperty("suite", out var suite), "the report must carry a suite key");
+        Assert.True(suite.ValueKind is JsonValueKind.String or JsonValueKind.Null,
+            $"suite must be a string or null, was {suite.ValueKind}");
+
+        // What is unconditionally true, and is the thing that matters: whatever the report says its suite
+        // is, that is the suite its ids were computed under.
+        var scenario = root.GetProperty("features")[0].GetProperty("scenarios")[0];
+        Assert.Equal(
+            ScenarioStableId.Compute(suite.ValueKind == JsonValueKind.String ? suite.GetString() : null,
+                "Orders", "Place order"),
+            scenario.GetProperty("stableId").GetString());
     }
 
     /// <summary>

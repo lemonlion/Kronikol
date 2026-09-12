@@ -46,6 +46,9 @@ public class ProjectAssetTrackingTests
     [MemberData(nameof(PackableProjects))]
     public void Every_file_a_project_names_by_literal_path_is_tracked(string relativeProject)
     {
+        Assert.SkipUnless(GitCanAnswer.Value,
+            "git cannot read this working tree (no git on PATH, or not a checkout), so tracking is unanswerable here");
+
         var projectPath = Path.Combine(RepoRoot, relativeProject.Replace('/', Path.DirectorySeparatorChar));
         var projectDir = Path.GetDirectoryName(projectPath)!;
         var document = XDocument.Load(projectPath);
@@ -107,11 +110,30 @@ public class ProjectAssetTrackingTests
         return Directory.EnumerateFiles(directory, mask.Length == 0 ? "*" : mask, option).Any(IsTracked);
     }
 
+    /// <summary>
+    /// Whether git can answer at all here, established against a file that is certainly tracked.
+    ///
+    /// <para>Without this the fact fails for the wrong reason in exactly the environment it was written
+    /// for. A CI runner checks the repository out as one user and runs the build as another, and git then
+    /// refuses every command in that directory with <c>detected dubious ownership</c> — a non-zero exit
+    /// that this check would otherwise read as "none of these files is tracked" and report as forty
+    /// missing assets. <c>-c safe.directory</c> below removes the usual cause; this removes the class.</para>
+    /// </summary>
+    private static readonly Lazy<bool> GitCanAnswer = new(() =>
+        RunGit($"ls-files --error-unmatch \"{Path.Combine(RepoRoot, "Directory.Build.props")}\"") == 0);
+
     private static bool IsTracked(string fullPath)
     {
         if (!File.Exists(fullPath)) return false;
+        return RunGit($"ls-files --error-unmatch \"{fullPath}\"") == 0;
+    }
 
-        var start = new ProcessStartInfo("git", $"ls-files --error-unmatch \"{fullPath}\"")
+    /// <summary>The exit code, or -1 when git could not be started at all.</summary>
+    private static int RunGit(string arguments)
+    {
+        // -c safe.directory: the checkout and the build often run as different users on CI, and git
+        // refuses to touch a repository it thinks belongs to someone else.
+        var start = new ProcessStartInfo("git", $"-c safe.directory=\"{RepoRoot}\" {arguments}")
         {
             WorkingDirectory = RepoRoot,
             RedirectStandardOutput = true,
@@ -119,10 +141,17 @@ public class ProjectAssetTrackingTests
             UseShellExecute = false
         };
 
-        using var process = Process.Start(start);
-        if (process is null) return true; // no git here: this fact cannot answer, and must not invent a failure
-        process.WaitForExit(20_000);
-        return process.ExitCode == 0;
+        try
+        {
+            using var process = Process.Start(start);
+            if (process is null) return -1;
+            process.WaitForExit(20_000);
+            return process.ExitCode;
+        }
+        catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            return -1;
+        }
     }
 
     /// <summary>
@@ -132,6 +161,8 @@ public class ProjectAssetTrackingTests
     [Fact]
     public void The_tracking_check_can_tell_a_tracked_file_from_an_untracked_one()
     {
+        Assert.SkipUnless(GitCanAnswer.Value, "git cannot read this working tree");
+
         var tracked = Path.Combine(RepoRoot, "src", "Kronikol.Tool", "Kronikol.Tool.csproj");
         Assert.True(IsTracked(tracked), $"{tracked} should be tracked");
 

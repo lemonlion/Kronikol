@@ -16,6 +16,14 @@ public sealed class MergeableReport
     /// <summary>The Kronikol version that produced the source report (informational).</summary>
     public string KronikolVersion { get; init; } = "";
 
+    /// <summary>
+    /// The suite the shard's <c>stableId</c>s were computed under. It has to travel, because a merge
+    /// RECOMPUTES ids rather than copying them - so a merged report written without it carries the
+    /// unscoped, pre-3.1.0 form even when every shard resolved a suite, and its ids then match neither
+    /// its own shards nor a baseline promoted from it.
+    /// </summary>
+    public string? Suite { get; init; }
+
     /// <summary>Earliest start time across the contained run.</summary>
     public DateTime StartTime { get; init; }
 
