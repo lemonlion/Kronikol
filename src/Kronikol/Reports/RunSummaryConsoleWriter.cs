@@ -116,26 +116,26 @@ public static class RunSummaryConsoleWriter
         var files = summary.Files.Count == 0
             ? ""
             : "  (" + string.Join(" · ", summary.Files.Select(Describe)) + ")";
-        text.Append("Kronikol: reports written to ").Append(summary.Directory).Append(files).Append('\n');
+        text.Append("Kronikol: reports written to ").Append(OneLine(summary.Directory)).Append(files).Append('\n');
 
         if (summary.Failures.Count > 0)
         {
-            text.Append($"  {summary.Failures.Count} failed — kronikol query failures {summary.Directory}\n");
+            text.Append($"  {summary.Failures.Count} failed — kronikol query failures {Quote(summary.Directory)}\n");
             foreach (var failure in summary.Failures.Take(MaxFailureLines))
-                text.Append($"    {failure.StableId}  {failure.FeatureName} › {failure.ScenarioName}\n");
+                text.Append($"    {OneLine(failure.StableId)}  {OneLine(failure.FeatureName)} › {OneLine(failure.ScenarioName)}\n");
 
             var remaining = summary.Failures.Count - MaxFailureLines;
             if (remaining > 0)
                 text.Append(HasDigest(summary)
                     ? $"    … and {remaining} more (see {DigestFileName})\n"
-                    : $"    … and {remaining} more (kronikol query failures {summary.Directory})\n");
+                    : $"    … and {remaining} more (kronikol query failures {Quote(summary.Directory)})\n");
 
             // The bait for the nested instruction file: an agent that reads anything in this directory
             // loads the CLAUDE.md sitting beside it, and that file is what teaches it never to open the
             // JSON. Only printed when something failed — a green run has nothing to debug, and a pointer
             // that speaks on every run is a pointer people learn to skip.
             text.Append(summary.AgentInstructionsWritten
-                ? $"  agents: read {Path.Combine(summary.Directory, "CLAUDE.md")} first; never open TestRunReport.json\n"
+                ? $"  agents: read {Quote(Path.Combine(summary.Directory, "CLAUDE.md"))} first; never open TestRunReport.json\n"
                 : "  agents: run kronikol query --help; never open TestRunReport.json\n");
         }
 
@@ -154,7 +154,7 @@ public static class RunSummaryConsoleWriter
 
         var digest = HasDigest(summary) ? $" · {DigestFileName}" : "";
         return $"::notice title=Kronikol::{summary.Failures.Count} failed of {summary.ScenarioCount} scenarios "
-               + $"— kronikol query failures {summary.Directory}{digest}";
+               + $"— kronikol query failures {Quote(summary.Directory)}{digest}";
     }
 
     /// <summary>
@@ -186,15 +186,52 @@ public static class RunSummaryConsoleWriter
         markdown.Append("Do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, ");
         markdown.Append("and a single embedded diagram can be larger than a context window. Query it instead:\n\n");
         markdown.Append("```bash\ndotnet tool install -g Kronikol.Tool\n");
-        markdown.Append($"kronikol query summary {summary.Directory}\n");
+        markdown.Append($"kronikol query summary {Quote(summary.Directory)}\n");
         if (summary.Failures.Count > 0)
-            markdown.Append($"kronikol query failures {summary.Directory}\n");
+            markdown.Append($"kronikol query failures {Quote(summary.Directory)}\n");
         markdown.Append("```\n\n");
 
         if (HasDigest(summary))
             markdown.Append($"The artifact also carries `{DigestFileName}` — every failure in context, ready to read.\n\n");
 
         return markdown.ToString();
+    }
+
+    /// <summary>
+    /// A run-derived string flattened onto the one line that holds it.
+    ///
+    /// <para>The pointer is a one-line-per-thing channel — <see cref="Write"/> splits on newlines and
+    /// writes one line per call — and three of the strings in it come from the run rather than from
+    /// Kronikol: the reports directory, and every failing feature and scenario name. Producers take those
+    /// names from feature files, theory arguments and parameterised titles, so a line ending in one is a
+    /// line the pointer never composed. On GitHub Actions that is not cosmetic: a line the run controls,
+    /// starting at column zero, is a workflow command, and a scenario named <c>"a\n::error::x"</c> emits a
+    /// failing annotation attributed to Kronikol. A bare CR does not even split the string — it returns
+    /// the cursor to column zero and overwrites what was already printed.</para>
+    ///
+    /// <para><see cref="string.ReplaceLineEndings(string)"/> rather than a <c>\r\n</c> replace, because it
+    /// knows the whole set: CR, LF, CRLF, FF, VT, NEL and the two Unicode separators. Nothing is dropped —
+    /// each becomes a space, so the name is still reported in full.</para>
+    /// </summary>
+    private static string OneLine(string? text) => (text ?? "").ReplaceLineEndings(" ");
+
+    /// <summary>
+    /// A path as an argument on a command line the reader is meant to copy. Every one of these lines ends
+    /// in a command, and an unquoted path with a space in it is a command that fails — which is the whole
+    /// value of printing it. <c>C:\Program Files</c> and a CI workspace under a user's Documents are not
+    /// exotic.
+    ///
+    /// <para>Quoted only when it needs to be: quoting every path would make every pointer harder to read
+    /// for the one in a hundred that has a space. The escape targets POSIX shells, which is what the
+    /// <c>```bash</c> block in the CI summary declares and what every CI runner uses; a Windows path
+    /// cannot contain a quote at all, so the shells that spell that escape differently never see one.</para>
+    /// </summary>
+    private static string Quote(string? path)
+    {
+        var flat = OneLine(path);
+        return flat.Contains(' ', StringComparison.Ordinal) || flat.Contains('"', StringComparison.Ordinal)
+            ? "\"" + flat.Replace("\"", "\\\"", StringComparison.Ordinal) + "\""
+            : flat;
     }
 
     private static bool HasDigest(RunSummary summary) =>

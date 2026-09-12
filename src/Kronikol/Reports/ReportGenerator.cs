@@ -346,16 +346,21 @@ public static class ReportGenerator
                 wholeTestSegments: wholeTestSegments));
         }
 
-        // Rung zero of the debugging ladder, and the bait that makes the instruction file below load: one
-        // isolated action for both halves, so a digest that throws can never cost anyone the report.
+        // Rung zero of the debugging ladder, and the bait that makes the instruction file below load.
+        //
+        // Two actions, not one. Generation is shared — same data, same code, and a Lazy so the work still
+        // happens once — but the WRITES fail independently: a file held open by a reader, a path already
+        // taken by a directory, a disk that filled between them. One action meant either failure cost both
+        // files, and the isolation rule this list exists for stopped at the pair. What is left behind when
+        // a write fails is not nothing, it is the PREVIOUS run's file: stale, plausible, and describing
+        // different failures, in the directory an agent has just been told to read first.
         if (options.GenerateFailuresDigest)
         {
-            Add(FailuresDigestFileName, () =>
-            {
-                var digest = FailuresDigestGenerator.Generate(features, dataLogs, options.HtmlTestRunReportFileName, KronikolVersion, reportDiagnostics, suite);
-                WriteFile(digest.Markdown, FailuresDigestFileName);
-                WriteFile(digest.Jsonl, FailuresDigestJsonlFileName);
-            });
+            var digest = new Lazy<FailuresDigest>(() =>
+                FailuresDigestGenerator.Generate(features, dataLogs, options.HtmlTestRunReportFileName, KronikolVersion, reportDiagnostics, suite));
+
+            Add(FailuresDigestFileName, () => WriteFile(digest.Value.Markdown, FailuresDigestFileName));
+            Add(FailuresDigestJsonlFileName, () => WriteFile(digest.Value.Jsonl, FailuresDigestJsonlFileName));
         }
 
         if (options.GenerateSpecificationsMarkdown)

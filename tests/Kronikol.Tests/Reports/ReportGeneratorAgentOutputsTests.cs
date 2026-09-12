@@ -158,8 +158,15 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         Assert.True(File.Exists(Path.Combine(_dir, "TestRunReport.json")));
         Assert.True(File.Exists(Path.Combine(_dir, "CLAUDE.md")));
         Assert.True(File.Exists(Path.Combine(_dir, "AGENTS.md")));
-        // The two halves of the digest are one action, so the jsonl goes with the markdown.
-        Assert.False(File.Exists(Path.Combine(_dir, "Failures.jsonl")));
+        // ...and the digest's own two halves are two actions, so the machine-readable one survives the
+        // human-readable one. They are written from the same data by the same code, so what they share is
+        // generation — but the WRITES fail independently: one file held open by a reader or an editor, one
+        // path already taken by a directory. Losing the jsonl because the markdown could not be replaced
+        // leaves the PREVIOUS run's jsonl on disk in a directory an agent is about to read: stale,
+        // plausible, and describing different failures.
+        Assert.True(File.Exists(Path.Combine(_dir, "Failures.jsonl")),
+            "the jsonl went down with the markdown");
+        Assert.Contains("\"kind\":\"failure\"", File.ReadAllText(Path.Combine(_dir, "Failures.jsonl")), StringComparison.Ordinal);
 
         // The failure is announced rather than swallowed. It cannot reach the data files' `diagnostics`
         // array: that snapshot is taken before the outputs run, so the HTML and the JSON agree with each
