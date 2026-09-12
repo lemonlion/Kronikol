@@ -229,9 +229,42 @@ internal static partial class QueryCommand
 
     private static int Http(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        if (options.Positional.Count == 0
-            || !Address.TryParse(options.Positional[0], out var address)
-            || address.Kind != AddressKind.Interaction)
+        if (options.Positional.Count == 0 || !Address.TryParse(options.Positional[0], out var address))
+        {
+            error.WriteLine("Which interaction? Pass an address like s3/i47 — 'interactions s3' lists them.");
+            return 2;
+        }
+
+        // A content address is a legitimate thing to be holding: it is what every listing prints beside a
+        // call, and it is the only address a `grep` hit carries. Being told "that is the wrong kind of
+        // address" by the command whose whole job is to describe the call is a dead end with the answer
+        // one lookup away, so the lookup is done here.
+        if (address.Kind == AddressKind.Body)
+        {
+            if (!index.Bodies.TryGetValue(address.BodyHash!, out var carried))
+            {
+                error.WriteLine($"No body {address.BodyHash} in this report.");
+                return 2;
+            }
+
+            writer.Line($"{address.BodyHash} is carried by {carried.Occurrences.Count} call{(carried.Occurrences.Count == 1 ? "" : "s")}:");
+            foreach (var occurrence in carried.Occurrences.Take(12))
+                writer.Line("  " + Describe(index, occurrence));
+            if (carried.Occurrences.Count > 12)
+                writer.Line($"  … {carried.Occurrences.Count - 12} more");
+            writer.Line();
+
+            if (!Address.TryParse(carried.Occurrences[0], out address))
+            {
+                error.WriteLine($"Could not read {carried.Occurrences[0]} back as an address.");
+                return 1;
+            }
+
+            if (carried.Occurrences.Count > 1)
+                writer.Note($"showing the first — every one of them carries the same {QueryWriter.Size(carried.Length)}");
+        }
+
+        if (address.Kind != AddressKind.Interaction)
         {
             error.WriteLine("Which interaction? Pass an address like s3/i47 — 'interactions s3' lists them.");
             return 2;
@@ -264,6 +297,13 @@ internal static partial class QueryCommand
             writer.Line("took " + QueryWriter.Duration(ms));
         if (interaction.StepPath is { } step)
             writer.Line($"in step {scenario.Address}/{step}");
+        // The other half of the call, by address. A listing folds a request and its response into one row
+        // under the REQUEST's address, so the response's own address — which is what a content address
+        // resolves to, and the only address that fetches the response body — appears in no listing at all.
+        // Naming it here is what makes the round trip close.
+        if (Counterpart(scenario, interaction) is { } pair)
+            writer.Line($"{pair.Role} {pair.Other.Address(scenario)}"
+                        + (pair.Other.BodyHash is { } counterpartHash ? $" · {QueryWriter.Size(pair.Other.BodyLength)} {counterpartHash}" : ""));
         if (interaction.ActivityTraceId is { } trace)
             writer.Line($"trace {trace}" + (interaction.ActivitySpanId is { } span ? $" span {span}" : "") + "   (W3C — matches your OTel traces and app logs)");
         foreach (var (name, value) in new[]
@@ -309,13 +349,52 @@ internal static partial class QueryCommand
 
     private static int Body(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        if (options.Positional.Count == 0 || !options.Positional[0].StartsWith("b:", StringComparison.OrdinalIgnoreCase))
+        if (options.Positional.Count == 0 || !Address.TryParse(options.Positional[0], out var given))
         {
             error.WriteLine("Which body? Pass a content address like b:4bdea521 — listings print them beside each call.");
             return 2;
         }
 
-        var hash = options.Positional[0].ToLowerInvariant();
+        string hash;
+        if (given.Kind == AddressKind.Body)
+        {
+            hash = given.BodyHash!;
+        }
+        else if (given.Kind == AddressKind.Interaction)
+        {
+            // The address a listing prints on the row is the one a reader has in hand, and asking for the
+            // body at it is the obvious next question. Refusing it — while `http` refused the content
+            // address in the other direction — left the two halves of one lookup speaking different
+            // languages about the same call.
+            if (index.Scenario(given.Scenario) is not { } holder)
+            {
+                error.WriteLine($"No scenario s{given.Scenario}.");
+                return 2;
+            }
+
+            var call = holder.Interactions.FirstOrDefault(i => i.Ordinal == given.Interaction);
+            if (call is null)
+            {
+                error.WriteLine($"No interaction i{given.Interaction} in {holder.Address} — it has {holder.Interactions.Count}.");
+                return 2;
+            }
+
+            if (call.BodyHash is null)
+            {
+                error.WriteLine($"{given} carried no body.");
+                if (Counterpart(holder, call) is { Other.BodyHash: not null } pair)
+                    error.WriteLine($"Its {pair.Role} {pair.Other.Address(holder)} did: {pair.Other.BodyHash}.");
+                return 2;
+            }
+
+            hash = call.BodyHash;
+        }
+        else
+        {
+            error.WriteLine("Which body? Pass a content address like b:4bdea521, or the address of a call — listings print both.");
+            return 2;
+        }
+
         if (!index.Bodies.TryGetValue(hash, out var entry))
         {
             error.WriteLine($"No body {hash} in this report.");
@@ -324,7 +403,7 @@ internal static partial class QueryCommand
 
         writer.Line($"{hash}  {QueryWriter.Size(entry.Length)}  at {entry.Occurrences.Count} address(es)");
         foreach (var occurrence in entry.Occurrences.Take(12))
-            writer.Line("  " + occurrence);
+            writer.Line("  " + Describe(index, occurrence));
         if (entry.Occurrences.Count > 12)
             writer.Line($"  … {entry.Occurrences.Count - 12} more");
         writer.Line();

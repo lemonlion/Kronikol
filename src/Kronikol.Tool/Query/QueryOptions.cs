@@ -67,6 +67,33 @@ internal sealed class QueryOptions
     /// </summary>
     public bool Baseline { get; private set; }
 
+    /// <summary>
+    /// The flags actually written on the command line, as their argv tokens. A value alone cannot answer
+    /// this: <c>--limit</c> defaults to <see cref="int.MaxValue"/> and <c>--failed</c> to false, so a verb
+    /// asking "was this given?" would get "no" from a flag that was given its own default. Per-verb
+    /// legality is decided from this set, before any verb runs.
+    /// </summary>
+    public HashSet<string> Given { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Every flag the switch below has a case for. Kept beside it rather than derived from it, and held to
+    /// it by <c>Every_flag_the_table_names_parses_as_a_flag</c> — a name here that reaches no case is a
+    /// name the command line does not have.
+    /// <para>
+    /// Drift in the other direction is safe by construction: a flag added to the parser and not to a
+    /// verb's list is refused on every verb, which is loud, rather than accepted and ignored, which is the
+    /// silence this whole mechanism exists to remove.
+    /// </para>
+    /// </summary>
+    public static readonly string[] KnownFlags =
+    [
+        "--max-bytes", "--offset", "--limit", "--slower-than", "--lines", "--out", "--result", "--feature",
+        "--label", "--service", "--status", "--method", "--grep", "--step", "--sort", "--path", "--in",
+        "--where", "--group-by", "--tolerance", "--count", "--json", "--failed", "--errors-only",
+        "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
+        "--number", "--baseline"
+    ];
+
     /// <summary>Null when a flag was malformed; the message has already been written to <paramref name="error"/>.</summary>
     public static QueryOptions? Parse(IReadOnlyList<string> args, TextWriter error)
     {
@@ -193,6 +220,11 @@ internal sealed class QueryOptions
                         options.Positional.Add(arg);
                     break;
             }
+
+            // After the switch, so the token recorded is the flag and not the value it swallowed. An
+            // unknown flag never reaches here - it has already returned.
+            if (arg.StartsWith("--", StringComparison.Ordinal))
+                options.Given.Add(arg);
         }
 
         return options;

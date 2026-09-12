@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Text.Json;
 using Kronikol.Reports;
@@ -261,7 +261,10 @@ public class QueryCommandTests : IDisposable
         Assert.True(File.Exists(target));
         Assert.Contains("3902", File.ReadAllText(target));
         Assert.DoesNotContain("3902", output);
-        Assert.True(Encoding.UTF8.GetByteCount(output) < 300);
+        // The metadata block, and nothing else. It grew by one line in 3.1.0 — the address of the call's
+        // other half — so the bound moved with it; what the bound is for is that the payload is not here.
+        var cost = Encoding.UTF8.GetByteCount(output);
+        Assert.True(cost < 400, $"{cost} bytes of output for a payload that went to a file:\n{output}");
     }
 
     [Fact]
@@ -1570,6 +1573,183 @@ public class QueryCommandTests : IDisposable
         Assert.True(exit == 0, $"exit {exit}: {error}");
         writer.Flush(error);
         return output.ToString();
+    }
+
+    // ─── Per-verb flag legality ────────────────────────────────
+
+    /// <summary>
+    /// A flag the verb never reads is worse than an unknown one. <c>--nonsense</c> is refused, but
+    /// <c>failures --service Nope</c> used to print every failure in the report under a filter that had
+    /// never been applied — an answer indistinguishable from "no call to Nope broke anything", which is
+    /// the one conclusion the output does not support.
+    /// </summary>
+    [Theory]
+    [InlineData("--service", "failures", "--service", "payments")]
+    [InlineData("--status", "scenarios", "--status", "500")]
+    [InlineData("--limit", "summary", "--limit", "3")]
+    [InlineData("--limit", "annotations", "s0", "--limit", "5")]
+    [InlineData("--failed", "steps", "s0", "--failed")]
+    [InlineData("--grep", "flow", "s2", "--grep", "charge")]
+    [InlineData("--errors-only", "interactions", "--errors-only")]
+    [InlineData("--headers", "values", "--path", "$.total", "--headers")]
+    [InlineData("--stats", "http", "s2/i1", "--stats")]
+    public void A_flag_a_verb_never_reads_is_refused_rather_than_ignored(string illegal, string command, params string[] args)
+    {
+        var (output, error, exit) = RunFull(command, Report(), args);
+
+        Assert.Equal(2, exit);
+        Assert.Contains(illegal, error, StringComparison.Ordinal);
+        Assert.Contains(command, error, StringComparison.Ordinal);
+        // Refusal is the whole answer: half a listing under a filter that did not run is the defect.
+        Assert.Equal("", output);
+    }
+
+    [Theory]
+    [InlineData("failures", "--limit", "1")]
+    [InlineData("scenarios", "--feature", "Checkout")]
+    [InlineData("scenarios", "--slower-than", "0")]
+    [InlineData("assertions", "--failed")]
+    [InlineData("interactions", "--service", "payments")]
+    [InlineData("interactions", "--status", "5xx")]
+    [InlineData("values", "--path", "$.total", "--service", "payments")]
+    [InlineData("flow", "s2", "--errors-only")]
+    [InlineData("services", "--sort", "duration")]
+    [InlineData("grep", "4173", "--in", "bodies")]
+    [InlineData("http", "s2/i1", "--headers")]
+    public void The_flags_a_verb_does_read_are_still_accepted(string command, params string[] args)
+    {
+        var (_, error, exit) = RunFull(command, Report(), args);
+
+        Assert.True(exit == 0, $"exit {exit}: {error}");
+    }
+
+    [Fact]
+    public void Every_verb_declares_the_flags_it_reads()
+    {
+        var undeclared = QueryCommand.Verbs
+            .Where(verb => !QueryCommand.FlagsByVerb.ContainsKey(verb))
+            .ToArray();
+
+        Assert.Empty(undeclared);
+    }
+
+    [Fact]
+    public void Every_flag_the_table_names_is_one_the_parser_knows()
+    {
+        // Guards the table against a typo, which would otherwise read as "this verb accepts nothing of
+        // the sort" and refuse a flag that works.
+        var unknown = QueryCommand.FlagsByVerb.Values
+            .SelectMany(flags => flags)
+            .Concat(QueryCommand.UniversalFlags)
+            .Distinct(StringComparer.Ordinal)
+            .Where(flag => !QueryOptions.KnownFlags.Contains(flag, StringComparer.Ordinal))
+            .ToArray();
+
+        Assert.Empty(unknown);
+    }
+
+    [Fact]
+    public void Every_flag_the_parser_accepts_is_legal_on_some_verb()
+    {
+        // The non-vacuity half: a table that refused everything would pass every test above. A flag no
+        // verb can use is either dead surface or a missing table entry, and both are defects.
+        var orphans = QueryOptions.KnownFlags
+            .Where(flag => !QueryCommand.UniversalFlags.Contains(flag, StringComparer.Ordinal))
+            .Where(flag => !QueryCommand.FlagsByVerb.Values.Any(flags => flags.Contains(flag, StringComparer.Ordinal)))
+            .ToArray();
+
+        Assert.Empty(orphans);
+    }
+
+    [Fact]
+    public void Every_flag_the_table_names_parses_as_a_flag()
+    {
+        // KnownFlags is a list, and a list drifts. Each entry has to reach a real case in the parser -
+        // "Unknown option" here means the name in the table is not the name on the command line.
+        foreach (var flag in QueryOptions.KnownFlags)
+        {
+            var error = new StringWriter();
+            QueryOptions.Parse([flag, "value"], error);
+
+            Assert.DoesNotContain("Unknown option", error.ToString(), StringComparison.Ordinal);
+        }
+    }
+
+    // ─── Addresses round-trip ──────────────────────────────────
+
+    /// <summary>
+    /// The listing prints a call at <c>s2/i8</c> and, beside it, the content address of the body that
+    /// answered it. Asking for that body used to report an address like <c>s2/i11</c> — the response's own
+    /// ordinal, which is real and which <c>http</c> accepts, but which appears in no listing anywhere. An
+    /// address a reader cannot get back to is not a reference, it is a dead end.
+    /// </summary>
+    [Fact]
+    public void A_body_names_the_call_the_listing_printed_it_beside()
+    {
+        var report = Report();
+        var row = ResponseRow(report);
+
+        var body = Run("body", report, row.ResponseHash);
+
+        Assert.Contains(row.Address, body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_call_names_the_response_that_answered_it()
+    {
+        var report = Report();
+        var row = ResponseRow(report);
+
+        var call = Run("http", report, row.Address);
+
+        var line = call.Split('\n').FirstOrDefault(l => l.StartsWith("response ", StringComparison.Ordinal));
+        Assert.NotNull(line);
+        var responseAddress = line!.Split(' ', StringSplitOptions.RemoveEmptyEntries)[1];
+        // ... and the address it names fetches the body the listing showed on this row.
+        Assert.Contains(row.ResponseHash, Run("http", report, responseAddress), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Body_accepts_the_call_address_a_listing_printed()
+    {
+        var report = Report();
+        var row = RequestBodyRow(report);
+
+        var body = Run("body", report, row.Address);
+
+        Assert.Contains(row.RequestHash, body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Http_given_a_content_address_names_the_calls_that_carry_it()
+    {
+        var report = Report();
+        var row = RequestBodyRow(report);
+
+        var (output, error, exit) = RunFull("http", report, row.RequestHash);
+
+        Assert.True(exit == 0, $"exit {exit}: {error}");
+        Assert.Contains(row.Address, output, StringComparison.Ordinal);
+    }
+
+    /// <summary>The first listing row that carries a response body, with the addresses it printed.</summary>
+    private (string Address, string ResponseHash) ResponseRow(string report)
+    {
+        var row = Run("interactions", report)
+            .Split('\n')
+            .First(l => l.Contains("→ ", StringComparison.Ordinal) && l.Contains("b:", StringComparison.Ordinal));
+        var tokens = row.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return (tokens[0], tokens.Last(t => t.StartsWith("b:", StringComparison.Ordinal)));
+    }
+
+    /// <summary>The first listing row that carries a request body, with the addresses it printed.</summary>
+    private (string Address, string RequestHash) RequestBodyRow(string report)
+    {
+        var row = Run("interactions", report)
+            .Split('\n')
+            .First(l => l.Contains(" body ", StringComparison.Ordinal) && l.Contains("b:", StringComparison.Ordinal));
+        var tokens = row.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return (tokens[0], tokens.First(t => t.StartsWith("b:", StringComparison.Ordinal)));
     }
 
     // ─── Harness ───────────────────────────────────────────────

@@ -13,7 +13,7 @@ lists them and stops rather than guessing.
 | interaction | `s3/i47` | ordinal within the scenario, in capture order |
 | step | `s3/2`, `s3/b0` | the same value the report's `stepPath` carries; `b` prefixes a background step |
 | assertion / sub-step | `s3/2.1` | dotted path under its step |
-| body | `b:4bdea521` | first 8 hex of SHA-1 of the content — stable across runs and scenarios |
+| body | `b:4bdea521` | first 8 hex of SHA-1 of the content — stable across runs and scenarios. `http` and `body` both take this and `s3/i47` |
 | diagram | `s3/d0` | |
 | note within a diagram | `s3/d0/n12` | |
 
@@ -22,12 +22,22 @@ Across runs, use `stableId` and `b:` hashes — both survive a re-run.
 
 ## Shared flags
 
+Only `--max-bytes` and `--out` are read by every verb; the rest are read by the verbs listed against
+them. **A flag a verb does not read is refused, not ignored** — the tool names the flag, says which verbs
+do read it, and lists what this one accepts. Before 3.1.0 `failures <report> --service payments` printed
+every failure in the report under a filter that had never run, which reads exactly like "no call to
+payments broke anything".
+
+The distinction worth holding on to: some flags filter **scenarios** (`--result`, `--feature`, `--label`,
+`--slower-than`), others filter **calls** (`--service`, `--status`, `--method`, `--step`). `--grep`
+belongs to both and means different things — a scenario name on `scenarios`, a URI on `interactions`.
+
 | Flag | Effect |
 |---|---|
-| `--max-bytes N` | output budget, default `6000`; `0` removes it |
-| `--offset N` | resume a truncated listing at row N |
-| `--limit N` | cap rows |
-| `--count` | print how many matched, and nothing else |
+| `--max-bytes N` | output budget, default `6000`; `0` removes it. Every verb |
+| `--offset N` | resume a truncated listing at row N. The verbs that list rows |
+| `--limit N` | cap rows. The verbs that list rows |
+| `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps` |
 | `--out FILE` | write the answer to a file instead of the terminal; prints one line. Lifts the byte budget — a file is not a context window. `http`, `body`, `note` and `diagram` write the payload; every other verb writes what it would have printed |
 | `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `services`, `interactions`, `assertions`, `diff`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
 
@@ -200,9 +210,12 @@ would discard. Distinct from `--group` (which folds *adjacent identical* calls i
 order) — the two don't compose. At run scope, `step` buckets collide across scenarios and the header
 says so.
 
-### `http <report> s3/i47 [flags]`
-The interaction: direction, participants, method, URI, status, duration, owning step, W3C trace and span
+### `http <report> s3/i47 | b:4bdea521 [flags]`
+The interaction: direction, participants, method, URI, status, duration, owning step, the address of the
+call's other half (`response s3/i50` on a request, `answers s3/i47` on a response), W3C trace and span
 ids, phase, dependency category, capture path.
+
+Given a `b:` address instead, it names every call carrying that payload and describes the first.
 
 With no payload flag it *describes* the body — size, `b:` address, how many other places it occurs — and
 lists the cheap ways to look at it.
@@ -233,9 +246,18 @@ A miss suggests the nearest key that does exist (`$.data.custmers is not in this
 $.data.customers`). A result too big for the budget *describes itself* — kind, element count, size, and
 the flags that window it — instead of refusing.
 
-### `body <report> b:4bdea521 [same payload flags]`
-The same views, addressed by content instead of by location, plus every address the body occurs at. Two
+### `body <report> b:4bdea521 | s3/i47 [same payload flags]`
+The same views, addressed by content **or** by location, plus every address the body occurs at. Two
 identical bodies are one entry: reading it once is reading all of them.
+
+Both address kinds work here and in `http`, because both are addresses a listing hands you and neither
+tells you which verb it belongs to. `body s3/i47` is the payload that call carried; `http b:4bdea521`
+names the calls that carry that payload and describes the first.
+
+A listing folds a request and the response that answered it into one row, under the **request's**
+address — so a response body's own address (`s3/i50`) appears in no listing. Both ends now say so: the
+occurrence list marks it (`s3/i50  (the response to s3/i47)`) and `http s3/i47` prints a `response`
+line naming it. That is the address that fetches the response body.
 
 ### `note <report> s3/d0 [/n12] [--out FILE]`
 `s3/d0` lists a diagram's notes with sizes; `s3/d0/n12` prints one.

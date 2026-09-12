@@ -167,6 +167,53 @@ public class SkillDriftTests
     }
 
     /// <summary>
+    /// Vocabulary is not legality. Every flag below is a real flag and every verb below is a real verb,
+    /// and <c>kronikol query failures &lt;report&gt; --service X</c> is still a command the tool refuses —
+    /// so a reference that assembles the two independently can tell an agent to type something that
+    /// cannot run. This reads whole command lines and puts each one through the same table the tool
+    /// enforces.
+    /// </summary>
+    [Fact]
+    public void Every_command_line_the_reference_prints_uses_flags_that_verb_reads()
+    {
+        var illegal = new List<string>();
+
+        foreach (var line in Reference.ReplaceLineEndings("\n").Split('\n'))
+            foreach (Match invocation in Regex.Matches(line, @"kronikol query ([a-z][a-z-]*)([^\n`|]*)"))
+            {
+                var verb = invocation.Groups[1].Value;
+                if (!QueryCommand.FlagsByVerb.TryGetValue(verb, out var legal))
+                    continue;
+
+                foreach (Match flag in Regex.Matches(invocation.Groups[2].Value, @"--[a-z][a-z-]*"))
+                    if (!legal.Contains(flag.Value, StringComparer.Ordinal)
+                        && !QueryCommand.UniversalFlags.Contains(flag.Value, StringComparer.Ordinal))
+                        illegal.Add($"{verb} {flag.Value}  —  {line.Trim()}");
+            }
+
+        Assert.True(illegal.Count == 0,
+            "references/commands.md tells an agent to type commands the tool refuses:\n  " + string.Join("\n  ", illegal));
+    }
+
+    [Fact]
+    public void Every_flag_the_parser_has_a_case_for_is_listed_in_KnownFlags()
+    {
+        // The other direction is covered by a parse round-trip in QueryCommandTests. This one keeps the
+        // list from falling behind the switch, which would drop a real flag out of the legality table and
+        // so refuse it on every verb.
+        var cases = Regex.Matches(
+                File.ReadAllText(Path.Combine(RepoRoot, "src", "Kronikol.Tool", "Query", "QueryOptions.cs")),
+                @"case ""(--[a-z][a-z-]*)""")
+            .Select(m => m.Groups[1].Value)
+            .Distinct(StringComparer.Ordinal);
+
+        var missing = cases.Except(QueryOptions.KnownFlags, StringComparer.Ordinal).ToList();
+
+        Assert.True(missing.Count == 0,
+            "QueryOptions.KnownFlags has fallen behind the parser: " + string.Join(", ", missing));
+    }
+
+    /// <summary>
     /// Finds the line that enumerates something, and checks the enumeration against the tool's own array.
     ///
     /// <para>Anchored on the line rather than on the whole document, because a bare

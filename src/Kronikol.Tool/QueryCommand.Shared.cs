@@ -34,6 +34,64 @@ internal static partial class QueryCommand
         }
     }
 
+    /// <summary>
+    /// The request a response answers — <see cref="FindResponse"/> run backwards, and by the same rule:
+    /// the exact pairing id when the entry carries one, a short backward scan when it does not.
+    /// </summary>
+    internal static InteractionEntry? FindRequest(ScenarioEntry scenario, InteractionEntry response)
+    {
+        if (response.RequestResponseId is { } id)
+        {
+            foreach (var candidate in scenario.Interactions)
+                if (candidate.Type.Equals("Request", StringComparison.OrdinalIgnoreCase)
+                    && candidate.RequestResponseId == id)
+                    return candidate;
+            return null;
+        }
+
+        for (var i = response.Ordinal - 1; i >= 0 && i >= response.Ordinal - 4; i--)
+        {
+            var candidate = scenario.Interactions[i];
+            if (candidate.Type.Equals("Request", StringComparison.OrdinalIgnoreCase)
+                && candidate.ServiceName == response.ServiceName)
+                return candidate;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// The other half of a call, with the word for how it relates. Null for an entry that has no other
+    /// half — a marker, a user action, a fire-and-forget publish.
+    /// </summary>
+    internal static (string Role, InteractionEntry Other)? Counterpart(ScenarioEntry scenario, InteractionEntry interaction) =>
+        interaction.Type.Equals("Request", StringComparison.OrdinalIgnoreCase)
+            ? FindResponse(scenario, interaction) is { } response ? ("response", response) : null
+            : interaction.Type.Equals("Response", StringComparison.OrdinalIgnoreCase)
+                ? FindRequest(scenario, interaction) is { } request ? ("answers", request) : null
+                : null;
+
+    /// <summary>
+    /// An address as a reader can act on it. A response's own address fetches the response, but appears in
+    /// no listing — every listing folds the pair into one row under the request's address — so on its own
+    /// it cannot be traced back to the call it belongs to. Naming both closes that gap without widening
+    /// every row in the tool to carry an address most readers never need.
+    /// </summary>
+    internal static string Describe(ReportIndex index, string occurrence)
+    {
+        if (!Address.TryParse(occurrence, out var address)
+            || address.Kind != AddressKind.Interaction
+            || index.Scenario(address.Scenario) is not { } scenario)
+            return occurrence;
+
+        var interaction = scenario.Interactions.FirstOrDefault(i => i.Ordinal == address.Interaction);
+        if (interaction is null || !interaction.Type.Equals("Response", StringComparison.OrdinalIgnoreCase))
+            return occurrence;
+
+        return FindRequest(scenario, interaction) is { } request
+            ? $"{occurrence}  (the response to {request.Address(scenario)})"
+            : occurrence;
+    }
+
     private static Dictionary<string, InteractionEntry> ResponsesById(ScenarioEntry scenario)
     {
         var byId = new Dictionary<string, InteractionEntry>(StringComparer.Ordinal);

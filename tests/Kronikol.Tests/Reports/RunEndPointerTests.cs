@@ -9,7 +9,11 @@ namespace Kronikol.Tests.Reports;
 /// </summary>
 public class RunEndPointerTests
 {
-    private const string Dir = @"C:\proj\Reports";
+    // Native to whichever platform is running, because half of what this class pins is how a path is
+    // SHAPED on the way to the console: that the directory travels through verbatim, and that the
+    // instruction file beside it is joined with the platform's own separator. A Windows literal asserted
+    // on a Linux runner tests neither, and the mismatch is invisible until CI runs it.
+    private static readonly string Dir = OperatingSystem.IsWindows() ? @"C:\proj\Reports" : "/proj/Reports";
 
     private static RunSummary Summary(int failures, bool agents = true, string? digest = "Failures.md") => new(
         Dir,
@@ -58,7 +62,7 @@ public class RunEndPointerTests
     {
         var text = RunSummaryConsoleWriter.Build(Summary(1));
 
-        Assert.Contains($"  agents: read {Dir}\\CLAUDE.md first; never open TestRunReport.json", text);
+        Assert.Contains($"  agents: read {Path.Combine(Dir, "CLAUDE.md")} first; never open TestRunReport.json", text);
     }
 
     [Fact]

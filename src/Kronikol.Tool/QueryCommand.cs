@@ -140,6 +140,9 @@ internal static partial class QueryCommand
             return 2;
         }
 
+        if (RefuseFlagsTheVerbCannotRead(command, options, error) is { } refused)
+            return refused;
+
         // http, body, note and diagram write the payload to --out themselves, and a second writer aiming
         // at the same file would overwrite it with one line. Everywhere else the answer IS what --out saves.
         var outPath = command is "http" or "body" or "note" or "diagram" ? null : options.Out;
@@ -185,6 +188,84 @@ internal static partial class QueryCommand
     /// </summary>
     internal static readonly string[] JsonCommands =
         ["summary", "scenarios", "failures", "services", "interactions", "assertions", "diff"];
+
+    /// <summary>Every verb <see cref="RunCore"/> dispatches, in the order the help prints them.</summary>
+    internal static readonly string[] Verbs =
+    [
+        "summary", "scenarios", "services", "failures", "steps", "assertions", "flow", "annotations",
+        "values", "interactions", "http", "body", "note", "diagram", "grep", "trace", "compare", "diff"
+    ];
+
+    /// <summary>
+    /// Flags that mean the same thing on every verb because no verb implements them: the byte budget and
+    /// the escape to a file are applied by <see cref="QueryWriter"/> around whatever the verb produced.
+    /// </summary>
+    internal static readonly string[] UniversalFlags = ["--max-bytes", "--out"];
+
+    /// <summary>
+    /// What each verb actually reads, beside <see cref="UniversalFlags"/>. Not documentation — the list is
+    /// enforced, so a flag missing from it is refused rather than silently discarded.
+    ///
+    /// <para>The distinction the table draws is between the flags that filter <em>scenarios</em>
+    /// (<c>--result</c>, <c>--feature</c>, <c>--label</c>, <c>--slower-than</c>) and the flags that filter
+    /// <em>calls</em> (<c>--service</c>, <c>--status</c>, <c>--method</c>, <c>--step</c>). They read alike
+    /// and they are not interchangeable: <c>--grep</c> matches a scenario name on <c>scenarios</c> and a
+    /// URI on <c>interactions</c>, and neither verb has any use for the other's set.</para>
+    /// </summary>
+    internal static readonly Dictionary<string, string[]> FlagsByVerb = new(StringComparer.Ordinal)
+    {
+        ["summary"] = ["--count", "--json"],
+        ["scenarios"] = ["--result", "--failed", "--feature", "--label", "--grep", "--slower-than", "--count", "--offset", "--limit", "--json"],
+        ["services"] = ["--sort", "--count", "--offset", "--limit", "--json"],
+        ["failures"] = ["--count", "--offset", "--limit", "--json"],
+        ["steps"] = [],
+        ["assertions"] = ["--failed", "--count", "--offset", "--limit", "--json"],
+        ["flow"] = ["--step", "--service", "--errors-only", "--count"],
+        ["annotations"] = ["--count"],
+        ["values"] = ["--path", "--service", "--status", "--method", "--step", "--grep", "--where", "--request", "--both", "--stats", "--count", "--offset", "--limit"],
+        ["interactions"] = ["--service", "--status", "--method", "--step", "--grep", "--where", "--group", "--group-by", "--sort", "--count", "--offset", "--limit", "--json"],
+        ["http"] = ["--headers", "--body", "--keys", "--path", "--lines"],
+        ["body"] = ["--keys", "--path", "--lines", "--offset", "--limit"],
+        ["note"] = [],
+        ["diagram"] = [],
+        ["grep"] = ["--in", "--values", "--number", "--tolerance", "--count", "--offset", "--limit"],
+        ["trace"] = ["--count"],
+        ["compare"] = ["--count"],
+        ["diff"] = ["--baseline", "--body", "--count", "--offset", "--limit", "--json"]
+    };
+
+    /// <summary>
+    /// Refuses a flag the verb does not read, and says which verbs do. <c>--sort</c> and <c>--json</c> are
+    /// left to the two validators below, which know enough about the verb to say something more useful
+    /// than a list.
+    /// </summary>
+    private static int? RefuseFlagsTheVerbCannotRead(string command, QueryOptions options, TextWriter error)
+    {
+        if (!FlagsByVerb.TryGetValue(command, out var legal))
+            return null;
+
+        foreach (var flag in options.Given)
+        {
+            if (flag is "--sort" or "--json"
+                || legal.Contains(flag, StringComparer.Ordinal)
+                || UniversalFlags.Contains(flag, StringComparer.Ordinal))
+                continue;
+
+            error.WriteLine($"{command} does not read {flag} — it was accepted and ignored before 3.1.0, which made an unfiltered answer look like a filtered one.");
+
+            var elsewhere = Verbs.Where(v => FlagsByVerb[v].Contains(flag, StringComparer.Ordinal)).ToArray();
+            if (elsewhere.Length > 0)
+                error.WriteLine($"{flag} is read by: {string.Join(", ", elsewhere)}.");
+
+            var accepted = legal.Concat(UniversalFlags).ToArray();
+            error.WriteLine(accepted.Length > 0
+                ? $"{command} reads: {string.Join(", ", accepted)}."
+                : $"{command} reads no flags beyond {string.Join(", ", UniversalFlags)}.");
+            return 2;
+        }
+
+        return null;
+    }
 
     private static int Unknown(string command, TextWriter error)
     {
@@ -350,12 +431,18 @@ internal static partial class QueryCommand
         writer.WriteLine();
         writer.WriteLine("Everywhere");
         writer.WriteLine("  --max-bytes N   output budget, default 6000 (0 removes it)");
-        writer.WriteLine("  --offset N      resume a truncated listing         --limit N   cap rows");
-        writer.WriteLine("  --count         print only how many matched        --out FILE  write the answer to a file instead");
+        writer.WriteLine("  --out FILE      write the answer to a file instead");
         writer.WriteLine("                  (--out lifts the byte budget: a file is not a context window)");
+        writer.WriteLine();
+        writer.WriteLine("On the verbs that list rows");
+        writer.WriteLine("  --offset N      resume a truncated listing         --limit N   cap rows");
+        writer.WriteLine("  --count         print only how many matched");
         writer.WriteLine("  --json          one envelope { formatVersion, command, report, kronikolVersion, notes, items, total,");
         writer.WriteLine("                  truncated, next } instead of text, on: " + string.Join(", ", JsonCommands));
         writer.WriteLine("                  Text is the default and is what to read in a terminal - JSON costs about twice the");
         writer.WriteLine("                  tokens. Errors stay plain text on stderr in both formats.");
+        writer.WriteLine();
+        writer.WriteLine("  Flags are per-verb. A flag a verb does not read is refused and named, never accepted and");
+        writer.WriteLine("  ignored - `failures --service X` used to print every failure under a filter that never ran.");
     }
 }
