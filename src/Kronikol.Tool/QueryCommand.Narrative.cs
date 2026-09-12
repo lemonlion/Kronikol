@@ -23,7 +23,12 @@ internal static partial class QueryCommand
         if (failed.Count == 0)
         {
             writer.Note("nothing failed");
-            writer.Footer($"{index.Scenarios.Count} scenarios, all passed · next: scenarios · services");
+            // Counted, not inferred from the absence of failures. A scenario that was skipped did not
+            // pass, and saying it did is the one line here that ends an investigation.
+            var passed = index.Scenarios.Count(s => s.Result.Equals("Passed", StringComparison.OrdinalIgnoreCase));
+            writer.Footer(passed == index.Scenarios.Count
+                ? $"{index.Scenarios.Count} scenarios, all passed · next: scenarios · services"
+                : $"{index.Scenarios.Count} scenarios: {passed} passed, {index.Scenarios.Count - passed} did not run · next: scenarios · services");
             return 0;
         }
 

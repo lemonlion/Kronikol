@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Kronikol.Tracking;
@@ -77,7 +77,7 @@ public static class FailuresDigestGenerator
                              && ParameterCaptureHint.Applies(l.DependencyCategory, l.Content)));
 
         return new FailuresDigest(
-            BuildMarkdown(entries, scenarios.Length, kronikolVersion, diagnostics, unparameterisedSql),
+            BuildMarkdown(entries, scenarios.Length, scenarios.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql),
             BuildJsonl(entries, scenarios.Length, kronikolVersion, suite));
     }
 
@@ -298,7 +298,7 @@ public static class FailuresDigestGenerator
 
     // ─── Markdown ──────────────────────────────────────────────
 
-    private static string BuildMarkdown(IReadOnlyList<Entry> entries, int scenarioCount, string kronikolVersion,
+    private static string BuildMarkdown(IReadOnlyList<Entry> entries, int scenarioCount, int passedCount, string kronikolVersion,
         IReadOnlyList<DiagnosticEntry>? diagnostics, bool unparameterisedSql)
     {
         var markdown = new StringBuilder();
@@ -314,7 +314,15 @@ public static class FailuresDigestGenerator
         if (entries.Count == 0)
         {
             markdown.Append("# No failures\n\n");
-            markdown.Append($"All {scenarioCount} scenarios passed. Kronikol {kronikolVersion}.\n\n");
+            // "No failures" and "everything passed" are different facts, and a run where half the
+            // scenarios were skipped satisfies only the first. This used to count every scenario that did
+            // not FAIL as one that passed, so an all-skipped run announced "All 12 scenarios passed" —
+            // the one sentence in the file that stops an agent looking, printed over a suite that had
+            // not run.
+            markdown.Append(passedCount == scenarioCount
+                ? $"All {scenarioCount} scenarios passed. Kronikol {kronikolVersion}.\n\n"
+                : $"{passedCount} of {scenarioCount} scenarios passed; {scenarioCount - passedCount} did not run "
+                  + $"(skipped, bypassed, or skipped after an earlier failure). Nothing failed. Kronikol {kronikolVersion}.\n\n");
             foreach (var message in defaulted)
                 markdown.Append($"> **Read that carefully:** {Escape(message)}\n\n");
             markdown.Append("This file is written on every run, so its absence means the run did not finish — not that\n");
@@ -353,8 +361,15 @@ public static class FailuresDigestGenerator
         if (clusters.Length > 0)
         {
             markdown.Append("## Clusters\n\n");
-            markdown.Append("Failures sharing an error message. Each is worked through once below; the rest are the ");
-            markdown.Append("same failure and need the same fix.\n\n");
+            // What was measured, not what it probably means. The old sentence — "the rest are the same
+            // failure and need the same fix" — asserted a shared cause from a shared first line, which is
+            // a different claim and is sometimes false: two unrelated assertions can open the same way.
+            // It was catastrophically false while the xUnit v3 adapter prefixed every message with its
+            // FailureCause, when one group of fifteen unrelated failures carried that sentence above it.
+            markdown.Append("Failures whose error messages begin with the same line. One of each group is worked ");
+            markdown.Append("through in full below; the rest are listed here with their addresses. The grouping is by ");
+            markdown.Append("that first line and nothing more, so treat a group as a strong hint that one cause is ");
+            markdown.Append("behind all of them rather than as a finding that one is.\n\n");
             foreach (var cluster in clusters)
             {
                 markdown.Append($"### {Escape(Truncate(cluster.Key, 160))} — {cluster.Count()} scenarios\n\n");

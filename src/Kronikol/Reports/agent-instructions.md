@@ -1,4 +1,4 @@
-# Debugging this test run
+﻿# Debugging this test run
 
 You are in a Kronikol reports directory. This file is generated; do not edit it.
 
@@ -15,8 +15,10 @@ Two things here answer instead.
 ## 1. `Failures.md` — read this first
 
 Every failure of this run, in context: the error, the parsed expected/actual, the failing step with its
-source location, the calls made inside that step, attachments, and the address of each. Failures that share
-an error message are clustered, so twenty scenarios broken by one cause read as one cause.
+source location, the calls made inside that step, attachments, and the address of each. Failures whose error
+messages begin with the same line are grouped, and one of each group is worked through in full while
+the rest are listed with their addresses. Grouping is by that first line and nothing more, so a group is
+a strong hint that one cause is behind all of them, not a finding that one is.
 
 `Failures.jsonl` is the same data, one JSON object per line, for scripts. Each line starts with
 `formatVersion`.
