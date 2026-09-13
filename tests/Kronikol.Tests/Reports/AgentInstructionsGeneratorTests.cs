@@ -1,3 +1,5 @@
+using System.Reflection;
+using Kronikol.Tracking;
 using Kronikol.Reports;
 
 namespace Kronikol.Tests.Reports;
@@ -65,14 +67,41 @@ public class AgentInstructionsGeneratorTests
     [Fact]
     public void It_is_static_text_with_no_room_for_run_data()
     {
-        // The signature is the guarantee: there is no overload that takes features, logs or a summary, so
-        // an attacker-influenced string has no route into an instruction file. Belt and braces, the text
-        // also says so.
-        var overloads = typeof(AgentInstructionsGenerator).GetMethods()
+        // The signature is the guarantee: nothing here takes features, logs or a summary, so
+        // attacker-influenced text has no route into an instruction file. An instruction file is the one
+        // artifact an agent is told to treat as directions rather than as data, which is why the route has
+        // to be closed at the type and not only in the prose.
+        //
+        // The previous version of this asserted that every parameter of every `Build` is a `string`, over
+        // a bare `GetMethods()`. Both halves were wrong. `GetMethods()` with no flags returns public
+        // members only, so a non-public overload taking `Feature[]` was invisible to it; and "all
+        // parameters are strings" is satisfied by `Build(string report, string capturedBody)`, which is
+        // precisely the injection this test exists to forbid. It was also vacuous under a rename, because
+        // `Assert.All` over an empty array passes.
+        const BindingFlags Everything = BindingFlags.Public | BindingFlags.NonPublic
+                                        | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+
+        var builders = typeof(AgentInstructionsGenerator).GetMethods(Everything)
             .Where(m => m.Name == nameof(AgentInstructionsGenerator.Build))
             .ToArray();
 
-        Assert.All(overloads, m => Assert.All(m.GetParameters(), p => Assert.Equal(typeof(string), p.ParameterType)));
+        // Exactly one way in, taking exactly one thing, and that thing is a file name.
+        var build = Assert.Single(builders);
+        var parameter = Assert.Single(build.GetParameters());
+        Assert.Equal(typeof(string), parameter.ParameterType);
+        Assert.Equal("htmlTestRunReportFileName", parameter.Name);
+
+        // And nothing else on the type — public or not, property or method — accepts a run. Named by type
+        // rather than by count, so adding a legitimate helper does not redden this and adding a route does.
+        Type[] runShapes = [typeof(Feature), typeof(Scenario), typeof(ScenarioStep), typeof(RequestResponseLog), typeof(FailuresDigest)];
+        foreach (var method in typeof(AgentInstructionsGenerator).GetMethods(Everything))
+            foreach (var each in method.GetParameters())
+            {
+                var type = each.ParameterType;
+                var element = type.IsArray ? type.GetElementType()! : type;
+                Assert.DoesNotContain(element, runShapes);
+            }
+
         Assert.Contains("captured test data", AgentInstructionsGenerator.Build("TestRunReport"));
     }
 }

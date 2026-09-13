@@ -319,6 +319,58 @@ public class SkillDriftTests
         return banner.Length > 55 ? banner[..55].Trim() : banner;
     }
 
+    /// <summary>
+    /// The emitted <c>Reports/CLAUDE.md</c>, checked the same way the skill and the reference are.
+    ///
+    /// <para>It was outside every one of these guards, and it is the copy that matters most: the skill
+    /// ships with the templates and is installed on purpose, while this file is written beside every
+    /// report on every run and is what an agent loads by walking into the directory. A command in it that
+    /// the tool refuses costs the reader their first move, at the moment they have the least context.</para>
+    ///
+    /// <para>Only one direction is checked. Every verb it names must be real; it need NOT name every verb,
+    /// because it is deliberately a short ladder rather than a reference, and requiring completeness here
+    /// would push the whole flag table into a file whose entire value is being short.</para>
+    /// </summary>
+    private static string EmittedInstructions => AgentInstructionsGenerator.Build("TestRunReport");
+
+    [Fact]
+    public void Every_verb_the_emitted_instructions_name_is_a_real_command()
+    {
+        var named = Regex.Matches(EmittedInstructions, @"kronikol query ([a-z][a-z-]*)")
+            .Select(m => m.Groups[1].Value)
+            .Where(v => v != "help")
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        Assert.NotEmpty(named);
+
+        var invented = named.Except(UsageVerbs(), StringComparer.Ordinal).ToList();
+        Assert.True(invented.Count == 0,
+            "the emitted CLAUDE.md sends an agent to commands the tool does not have: " + string.Join(", ", invented));
+    }
+
+    [Fact]
+    public void Every_flag_the_emitted_instructions_show_is_legal_for_its_verb()
+    {
+        var illegal = new List<string>();
+
+        foreach (var line in EmittedInstructions.ReplaceLineEndings("\n").Split('\n'))
+            foreach (Match invocation in Regex.Matches(line, @"kronikol query ([a-z][a-z-]*)([^\n`|]*)"))
+            {
+                var verb = invocation.Groups[1].Value;
+                if (!QueryCommand.FlagsByVerb.TryGetValue(verb, out var legal))
+                    continue;
+
+                foreach (Match flag in Regex.Matches(invocation.Groups[2].Value, @"--[a-z][a-z-]*"))
+                    if (!legal.Contains(flag.Value, StringComparer.Ordinal)
+                        && !QueryCommand.UniversalFlags.Contains(flag.Value, StringComparer.Ordinal))
+                        illegal.Add($"{verb} {flag.Value}  \u2014  {line.Trim()}");
+            }
+
+        Assert.True(illegal.Count == 0,
+            "the emitted CLAUDE.md tells an agent to type commands the tool refuses:\n  " + string.Join("\n  ", illegal));
+    }
+
     [Fact]
     public void Every_banner_the_tool_can_print_is_explained_in_the_skill()
     {
