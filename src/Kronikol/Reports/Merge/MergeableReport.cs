@@ -11,7 +11,7 @@ namespace Kronikol.Reports.Merge;
 /// Holds everything required to render a full HTML report — and to merge several such reports
 /// (e.g. from parallel CI runners) into a single combined report.
 /// </summary>
-public sealed class MergeableReport
+public sealed record MergeableReport
 {
     /// <summary>The Kronikol version that produced the source report (informational).</summary>
     public string KronikolVersion { get; init; } = "";

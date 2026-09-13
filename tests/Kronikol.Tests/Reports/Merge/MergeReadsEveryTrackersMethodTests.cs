@@ -141,8 +141,8 @@ public class MergeReadsEveryTrackersMethodTests : IDisposable
               "startTime": "2026-01-01T10:00:00Z",
               "endTime": "2026-01-01T10:01:00Z",
               "features": [
-                { "displayName": "Orders", "scenarios": [
-                  { "id": "r1s1", "displayName": "Place order", "result": "Passed", "durationSeconds": 1.0,
+                { "name": "Orders", "scenarios": [
+                  { "id": "r1s1", "name": "Place order", "result": "Passed", "durationSeconds": 1.0,
                     "httpInteractions": [
                       { "type": "Request", "metaType": "Default", "method": {{encoded}},
                         "uri": "sqlserver://orders/customers", "serviceName": "CustomersDb",
