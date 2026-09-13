@@ -455,6 +455,25 @@ public static class ReportGenerator
             }
         }
 
+        // A failing CI job says how to debug itself, on both channels, without anyone having had to turn
+        // on the 48 KB diagram-bearing CiSummary.md to get it. Two channels because neither is enough on
+        // its own: content written only to $GITHUB_STEP_SUMMARY is absent from `gh run view --log`, which
+        // is the command an agent reaches for, and the console is swallowed by runners — measured on .NET
+        // 10, `dotnet test` under NUnit 4 let a library's stderr through and swallowed its stdout, while
+        // xUnit 2 swallowed both.
+        //
+        // Skipped when WriteCiSummary already ran, which appends the same block to the same place.
+        if (options.WriteCiDebugSection && !options.WriteCiSummary && runSummary.Failures.Count > 0)
+        {
+            var environment = CiEnvironmentDetector.Detect();
+            if (environment != CiEnvironment.None)
+            {
+                var debugSection = RunSummaryConsoleWriter.BuildCiSummarySection(runSummary);
+                Console.WriteLine(debugSection);
+                CiSummaryWriter.Write(debugSection, environment);
+            }
+        }
+
         // Last, so it is the final thing the run says.
         if (options.WriteRunSummaryToConsole)
             RunSummaryConsoleWriter.Write(runSummary, CiEnvironmentDetector.Detect(), Console.WriteLine);

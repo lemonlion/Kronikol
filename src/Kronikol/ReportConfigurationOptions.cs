@@ -279,6 +279,32 @@ public record ReportConfigurationOptions
     /// <summary>When <c>true</c>, writes a test summary to the CI job summary (e.g. GitHub Actions).</summary>
     public bool WriteCiSummary { get; set; }
 
+    /// <summary>
+    /// When <c>true</c> (the default), a CI run with failures prints a short "Debug this run" block naming
+    /// the reports directory and the two commands that explain it - to <b>stdout and, additionally, to the
+    /// job summary</b>.
+    ///
+    /// <para><b>Why it is separate from <see cref="WriteCiSummary"/>.</b> That option generates the full
+    /// <c>CiSummary.md</c>, which carries rendered diagrams and has been measured at 48&#160;KB; turning it
+    /// on to get four lines of debugging advice is a different cost/benefit entirely, and merging the two
+    /// behind one flag is what left a failing CI job saying nothing about how to debug itself. This is a
+    /// new option defaulting to on rather than a change to either existing default, because flipping a
+    /// default so existing code behaves differently without being touched is a MAJOR bump under this
+    /// repository's own rule.</para>
+    ///
+    /// <para><b>Why both channels, measured.</b> The step summary is not the job log: content written only
+    /// to <c>$GITHUB_STEP_SUMMARY</c> is absent from <c>gh run view --log</c>, which is the command an
+    /// agent reaches for - so a summary-only block is invisible to the reader it is written for. And the
+    /// console alone is not enough either: measured on .NET&#160;10, <c>dotnet test</c> under NUnit&#160;4
+    /// swallowed a library's stdout while letting its stderr through, and under xUnit&#160;2 swallowed
+    /// <b>both</b>. No console channel survives every runner, which is why this writes to two places and
+    /// why the files beside the report remain the channel that always works.</para>
+    ///
+    /// <para>Silent on a green run and off CI: a block that speaks on every run is a block people learn to
+    /// skip. Default: <c>true</c>.</para>
+    /// </summary>
+    public bool WriteCiDebugSection { get; set; } = true;
+
     /// <summary>Maximum number of diagrams to include in the CI summary output. Default: <c>10</c>.</summary>
     public int MaxCiSummaryDiagrams { get; set; } = 10;
 

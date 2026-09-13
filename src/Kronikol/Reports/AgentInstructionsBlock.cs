@@ -25,8 +25,14 @@ public static class AgentInstructionsBlock
     public const string EndMarker = "<!-- kronikol:end -->";
 
     /// <summary>The block as it is written into a file: the body between the two markers.</summary>
-    public static string Wrap(string body) =>
-        BeginMarker + "\n" + body.TrimEnd('\r', '\n') + "\n" + EndMarker;
+    public static string Wrap(string body) => Wrap(body, BeginMarker, EndMarker);
+
+    /// <summary>
+    /// The block for a file whose comment syntax is not HTML — a <c>.ignore</c> file takes <c>#</c>. Same
+    /// protocol, different marker text, one implementation.
+    /// </summary>
+    public static string Wrap(string body, string begin, string end) =>
+        begin + "\n" + body.TrimEnd('\r', '\n') + "\n" + end;
 
     /// <summary>
     /// <paramref name="existing"/> with <paramref name="block"/> put in place of the region Kronikol owns,
@@ -34,10 +40,16 @@ public static class AgentInstructionsBlock
     /// file cannot be merged into safely — which is always a refusal rather than a guess, because every
     /// repair for a half-marked file deletes something.
     /// </summary>
-    public static string? Merge(string existing, string block, out string? problem)
+    public static string? Merge(string existing, string block, out string? problem) =>
+        Merge(existing, block, BeginMarker, EndMarker, out problem);
+
+    /// <inheritdoc cref="Merge(string,string,out string?)"/>
+    public static string? Merge(string existing, string block, string begin, string end, out string? problem)
     {
         ArgumentNullException.ThrowIfNull(existing);
         ArgumentNullException.ThrowIfNull(block);
+        ArgumentException.ThrowIfNullOrWhiteSpace(begin);
+        ArgumentException.ThrowIfNullOrWhiteSpace(end);
 
         problem = null;
 
@@ -47,7 +59,7 @@ public static class AgentInstructionsBlock
         if (crlf)
             text = text.Replace("\n", "\r\n", StringComparison.Ordinal);
 
-        var (start, end, count) = FindRegion(existing);
+        var (start, regionEnd, count) = FindRegion(existing, begin, end);
 
         if (count > 1)
         {
@@ -58,15 +70,15 @@ public static class AgentInstructionsBlock
         }
 
         string merged;
-        if (start >= 0 && end > start)
+        if (start >= 0 && regionEnd > start)
         {
-            merged = existing[..start] + text.TrimEnd('\r', '\n') + existing[end..];
+            merged = existing[..start] + text.TrimEnd('\r', '\n') + existing[regionEnd..];
         }
         else if (start >= 0)
         {
-            problem = $"opens a Kronikol block ({BeginMarker}) and never closes it. Every repair for "
+            problem = $"opens a Kronikol block ({begin}) and never closes it. Every repair for "
                       + "that is a guess, and a wrong guess deletes the rest of the file. Add a "
-                      + $"{EndMarker} line where the block ends, or delete the opening line.";
+                      + $"{end} line where the block ends, or delete the opening line.";
             return null;
         }
         else
@@ -90,12 +102,16 @@ public static class AgentInstructionsBlock
     /// after it. Only the first region is considered: replacing the least text that can be right is the
     /// safe reading when a file somehow holds two.</para>
     /// </summary>
-    public static (int Start, int End, int Count) FindRegion(string text)
+    public static (int Start, int End, int Count) FindRegion(string text) =>
+        FindRegion(text, BeginMarker, EndMarker);
+
+    /// <inheritdoc cref="FindRegion(string)"/>
+    public static (int Start, int End, int Count) FindRegion(string text, string begin, string end)
     {
         ArgumentNullException.ThrowIfNull(text);
 
         var start = -1;
-        var end = -1;
+        var regionEnd = -1;
         var count = 0;
         var offset = 0;
 
@@ -103,21 +119,21 @@ public static class AgentInstructionsBlock
         {
             var trimmed = line.Trim();
 
-            if (trimmed == BeginMarker)
+            if (trimmed == begin)
             {
                 count++;
                 if (start < 0) start = offset;
             }
-            else if (start >= 0 && end < 0 && trimmed == EndMarker)
+            else if (start >= 0 && regionEnd < 0 && trimmed == end)
             {
                 // Just past the marker text, not past the line: the CR of a CRLF break belongs to the
                 // tail that gets kept, or the replacement would leave a bare LF in a CRLF file.
-                end = offset + line.TrimEnd().Length;
+                regionEnd = offset + line.TrimEnd().Length;
             }
 
             offset += line.Length + 1;
         }
 
-        return (start, end, count);
+        return (start, regionEnd, count);
     }
 }

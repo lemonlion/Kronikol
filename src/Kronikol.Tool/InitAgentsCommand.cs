@@ -30,6 +30,44 @@ internal static class InitAgentsCommand
     public const string EndMarker = Kronikol.Reports.AgentInstructionsBlock.EndMarker;
 
     /// <summary>
+    /// The file that makes a written report findable by a content search.
+    ///
+    /// <para>A report is written under the test project's build output, and <c>bin/</c> is gitignored in
+    /// every .NET repository on earth — so `rg`, and every tool built on the same ignore rules, walks
+    /// straight past <c>Failures.md</c> and the <c>CLAUDE.md</c> beside it. An agent told "search the repo
+    /// for why the tests failed" finds nothing, and concludes there is nothing.</para>
+    ///
+    /// <para><c>.ignore</c> is ripgrep's own file and outranks <c>.gitignore</c>, so it can re-include what
+    /// <c>.gitignore</c> excluded. Measured both ways on a scratch repository: with <c>bin/</c> ignored and
+    /// no <c>.ignore</c>, a search for a string inside <c>bin/Debug/net10.0/Reports/Failures.md</c> returns
+    /// nothing; with this block, it returns the file. Git itself is unaffected — it does not read
+    /// <c>.ignore</c>, so nothing becomes committable that was not before.</para>
+    /// </summary>
+    private const string IgnoreFileName = ".ignore";
+
+    private const string IgnoreBegin = "# kronikol:begin";
+
+    private const string IgnoreEnd = "# kronikol:end";
+
+    /// <summary>
+    /// Directories are re-included before their contents, because an ignore rule cannot re-include a file
+    /// whose parent directory is still excluded.
+    /// </summary>
+    private const string IgnoreBody = """
+        # Kronikol writes its reports under the build output, which .gitignore excludes. These lines put
+        # Failures.md, Failures.jsonl and the CLAUDE.md beside them back within reach of a content search.
+        # Git does not read this file, so nothing here becomes committable.
+        !bin/
+        !bin/**/Reports/
+        !bin/**/Reports/**
+        !TestResults/
+        !TestResults/**
+        !.logs/kronikol/
+        !.logs/kronikol/**
+        """;
+
+
+    /// <summary>
     /// The five strings every <c>templates/kronikol-*/.template.config/template.json</c> rewrites in every
     /// file it copies. None may appear in the shipped agent files: <c>net10.0</c> in SKILL.md would arrive
     /// in a scaffolded project as <c>net8.0</c>, silently, with nothing failing.
@@ -119,6 +157,17 @@ internal static class InitAgentsCommand
                 }
                 Report(@out, root, destination, WriteIfChanged(destination, merged));
             }
+
+            {
+                var ignore = Path.Combine(root, IgnoreFileName);
+                var (merged, problem) = Merge(ignore, Encoding.UTF8.GetBytes(Kronikol.Reports.AgentInstructionsBlock.Wrap(IgnoreBody, IgnoreBegin, IgnoreEnd) + Environment.NewLine), IgnoreBegin, IgnoreEnd);
+                if (merged is null)
+                {
+                    error.WriteLine($"{ignore}: {problem}");
+                    return 1;
+                }
+                Report(@out, root, ignore, WriteIfChanged(ignore, merged));
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -166,7 +215,10 @@ internal static class InitAgentsCommand
     /// UTF-8, a block opened and never closed, and two blocks in one file. Every repair for those is a
     /// guess, and a wrong guess deletes or corrupts somebody's instructions - so nothing is written.</para>
     /// </summary>
-    private static (byte[]? Bytes, string? Problem) Merge(string path, byte[] block)
+    private static (byte[]? Bytes, string? Problem) Merge(string path, byte[] block) =>
+        Merge(path, block, Kronikol.Reports.AgentInstructionsBlock.BeginMarker, Kronikol.Reports.AgentInstructionsBlock.EndMarker);
+
+    private static (byte[]? Bytes, string? Problem) Merge(string path, byte[] block, string begin, string end)
     {
         if (!File.Exists(path))
             return (block, null);
@@ -189,7 +241,7 @@ internal static class InitAgentsCommand
         }
 
         var text = Encoding.UTF8.GetString(block);
-        var merged = Kronikol.Reports.AgentInstructionsBlock.Merge(existing, text, out var problem);
+        var merged = Kronikol.Reports.AgentInstructionsBlock.Merge(existing, text, begin, end, out var problem);
         if (merged is null)
             return (null, problem);
 
