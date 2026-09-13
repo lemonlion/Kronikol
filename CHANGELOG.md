@@ -4,6 +4,81 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.4.0] - 2026-09-13
+
+**Minor bump - the schema tells the truth about the file beside it** (LLM_FIRST_PLAN M4). New public
+surface: `RunEnvironment.Unrecorded`, `MergeableReport.Environment`, `CucumberMeta.Os`/`.Runtime`/
+`.ToRunEnvironment()`, and an `environment` parameter on `GenerateTestRunReportData` and
+`CreateStandardReportsWithDiagrams`. No default moved: a null environment still means this machine, so
+every existing caller writes exactly what it wrote before.
+
+### Fixed
+- **`TestRunReport.yml` was not YAML.** `SanitiseForYml` substituted characters rather than escaping
+  them - `[` became `<`, `: ` became ` = `, `{` became `(`, so a captured body of `{"item":"Widget"}`
+  was written as `("item":"Widget")` - and it did nothing at all about newlines. A value containing one
+  put its second line at column 0, which ends the block mapping: the document stopped parsing. Every
+  failing run produces such a value (an assertion message, a stack trace), so the YAML data file did not
+  parse for exactly the runs anyone would open it for. Replaced by an emitter that picks the form the
+  value needs - plain where nothing can be misread, a literal block for multi-line text so a stack trace
+  stays legible, double quotes otherwise - pinned by 59 round-trip cases through a real YAML parser. It
+  also rejects the YAML 1.1 booleans and timestamps, not just the 1.2 core set, so a scenario named `No`
+  does not come back as `false` in somebody else's pipeline. `SanitiseForYml` remains, public and
+  `[Obsolete]`; both `Specifications` YAML writers move with the fix.
+- **The schema beside a YAML report described a file nobody writes.** YAML runs were handed the JSON
+  Schema, whose property names are camelCase; the YAML writer emits PascalCase. Nothing matched. A
+  validator reported only four missing required keys rather than "none of this matches", because a
+  schema with no `additionalProperties` silently permits every key it has not heard of. YAML now gets
+  the same contract written in its own casing, with its own `$comment` - the JSON one points at
+  `kronikol query`, which reads `TestRunReport.json` and refuses a YAML directory.
+- **XML and YAML dropped `diagnostics` and `annotations`.** Neither writer took the parameters, so a
+  reader could not tell a run with nothing to report from a format that could not have told them.
+  `diagnostics` is where a degraded capture, a diagram that failed to render and a step whose
+  interactions could not be attributed are recorded; an annotation is a diagram marker carrying text
+  found nowhere else in the file. Both now reach all three formats, and the XSD moved with the writer.
+- **A YAML report did not carry the scenario `id`.** The writer used it internally to look up that
+  scenario's diagrams and interactions and never wrote it down, so a YAML consumer could not correlate
+  them. `Labels`, `Categories` and `Steps` are now written even when empty, as the JSON always has.
+- **`<Method />` and a header's `<Value />` were written blank instead of omitted.** Every other line of
+  the XML writer omits what it has no value for. A blank element is not "no value", it is the empty
+  string; XML cannot tell those apart, so an absent one is now absent.
+- **A merged report claimed the merging machine's environment.** `MergeableReport` carried no
+  environment, so a shard's was discarded at parse and a new one synthesised at write. Shards from
+  ubuntu and windows merged on a third machine produced a file naming the third, with nothing left to
+  say the other two disagreed. The merge now carries the shards' environment when every shard agrees -
+  the rule `suite` already follows - and otherwise records none, with a run-level diagnostic naming the
+  environments it saw. A target-framework matrix disagrees by construction, so those builds get the
+  diagnostic every time; that is the honest answer, and the merge documentation says so.
+- **An ingested report claimed .NET for runs that never touched it.** `kronikol ingest` is a net10.0
+  tool reading output another language may have produced, and it wrote its own operating system and
+  runtime into every report. The Cucumber Messages `meta` envelope carries `os` and `runtime` - this
+  repository's own fixture reports node.js 25.9.0 on win32 - and Kronikol's model read the protocol
+  version and the implementation and stopped. It is read now; a source that says nothing leaves the key
+  out rather than borrowing the reader's.
+
+### Changed
+- **The generated JSON Schema is closed.** Every object node with a fixed key set now carries
+  `additionalProperties: false`, so the schema detects an undeclared key - the one thing it exists to
+  detect, and something it could not do at any node. That check was being done instead by a walker in
+  this repository's own test suite, which meant it ran here and nowhere else; a consumer with a
+  validator and no walker saw nothing. Applied as a rule in the generator rather than node by node, so a
+  node added later is closed unless it opts out.
+- **Two step shapes are described rather than declared `{"type": "object"}`.** `parameters` and
+  `textSegments` were placeholders hiding data tables, tree values, compared values and text segments -
+  and the walker returned early on exactly those two nodes, so nothing checked them from either side.
+  They are `$ref`s into `$defs` now.
+- **The mergeable superset is declared in the schema.** `mergeableFormatVersion`,
+  `wholeTestVisualization`, `componentRelationships`, `internalFlowSegments` and `wholeTestFlow` are
+  optional properties of the same document, because the mergeable file is written under the same name
+  with the same schema beside it. `internalFlowSegments` is deliberately left value-open: a merge
+  re-serialises those payloads verbatim from shards another version may have written, so pinning them
+  would make `kronikol merge` emit a file that fails its own schema.
+
+### Known limitations
+- **`TestRunReportFullStepDetail` is JSON-only.** The XML and YAML writers were never handed the flag,
+  so setting it changes nothing there and a step in those formats carries nine fields rather than
+  fifteen. Closing the gap means porting the parameter, tree and text-segment shapes to both writers and
+  to the XSD; the option now documents the limit rather than implying a behaviour it does not have.
+
 ## [3.3.0] - 2026-09-13
 
 **Minor bump - you find out from the log that the run failed** (LLM_FIRST_PLAN M3). New public surface:

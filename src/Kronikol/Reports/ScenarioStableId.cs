@@ -23,6 +23,13 @@ public static class ScenarioStableId
     /// run. A null or empty suite reproduces the pre-3.1.0 id byte for byte, deliberately: a caller whose
     /// suite cannot be resolved keeps the ids it has always had rather than silently minting new ones.
     /// </param>
+    /// <param name="featureName">The feature's display name — the test class, or the title after Feature:.</param>
+    /// <param name="scenarioDisplayName">The scenario's display name; for an outline row, its expanded name.</param>
+    /// <param name="outlineId">The outline the scenario belongs to, when it is a row of one.</param>
+    /// <param name="exampleValues">
+    /// The row's example values, in declaration order. What tells row 1 from row 3 when both carry the
+    /// same display name.
+    /// </param>
     public static string Compute(string? suite, string featureName, string scenarioDisplayName, string? outlineId = null,
         IReadOnlyDictionary<string, string>? exampleValues = null)
     {

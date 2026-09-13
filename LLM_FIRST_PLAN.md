@@ -2323,6 +2323,59 @@ project was rebuilt (`dotnet build … CiPreview.Mixed`, DLL beside the fixture 
 report regenerated. `Failures.md` (19:40, 4,180 B):
 
 ```
+### 2026-09-13 (M4) — the schema tells the truth about the file beside it, released as 3.4.0
+
+Six rows: E1, E2, E4, E8 (three commits, already logged), then E6, E5 and the
+`additionalProperties: false` guard. Four of the plan's own statements about them were wrong, and the
+writing of the acceptance tests is what found it each time.
+
+**E6's headline was not the one the row records.** The row says XML and YAML emit no `diagnostics`, and
+that a YAML run ships the camelCase JSON Schema beside PascalCase data. Both hold. But writing
+`Yaml_report_validates_against_the_schema_generated_for_Yaml` produced a **parse error**, not a
+validation result: `SanitiseForYml` substituted characters rather than escaping them (`[` to `<`, `: `
+to ` = `, `{` to `(`, so a captured body `{"item":"Widget"}` was written `("item":"Widget")`) and did
+nothing about newlines, so a multi-line assertion message put its second line at column 0 and ended the
+block mapping. **Every failing run produces one**, so `TestRunReport.yml` did not parse for exactly the
+runs anyone would open it for. The row's "fails on three required root keys" is also stale twice over:
+it is four since 78b8311, and once the file parsed the true count was **one error covering four keys** —
+because a schema with no `additionalProperties` permits every key it has not heard of, so "none of this
+matches" presents as "four keys missing".
+
+**Two same-class defects the row did not name.** `annotations` is dropped by the identical three lines
+as `diagnostics`, and an annotation carries text recorded nowhere else in the file. And
+`TestRunReportFullStepDetail` is inert for XML and YAML — neither writer was ever handed the flag. The
+first is fixed; the second is a format-parity gap of real size (parameter, tree and text-segment shapes
+plus XSD types) and is **recorded as its own item rather than bundled**, with the option's own
+documentation now stating the limit.
+
+**E5 was narrowed in the wrong direction.** The row confines itself to `merge` on the grounds that
+nothing reads `environment` yet. Ingest is the worse lane *and the truth was already in the file*: the
+Cucumber Messages `meta` envelope carries `os` and `runtime`, this repository's fixture reports
+**node.js 25.9.0 on win32**, and Kronikol's model read the protocol version and the implementation and
+stopped — so an ingested report claimed the .NET version of the tool doing the reading, two fields away
+from something it was already parsing.
+
+**The `additionalProperties` row needed its slogan corrected.** "everywhere, so the key-walker becomes
+redundant" cannot hold: `internalFlowSegments` is re-serialised verbatim through a merge from shard
+files another version may have written, so pinning its values would make `kronikol merge` emit a file
+that fails its own schema with no code change on either side. The honest wording, and what shipped, is
+**`additionalProperties: false` on every node with a fixed key set, with two maps deliberately left
+open**. 22 of 22 fixed-key nodes are closed; `exampleValues` and `wholeTestFlow` constrain their values
+but not their keys; `internalFlowSegments` is open by design and has a test that says so.
+
+**The proof is on real data, not a fixture.** The CI-preview measuring project was regenerated (15
+deliberate failures) and its 234,627-byte `TestRunReport.json` validated against its own 42,130-byte
+schema by a conformant 2020-12 validator: **0 errors**. Before E1 the same pairing produced 5,464.
+
+Suite 4,529 → **4,639**, all green; solution builds clean. Released as **3.4.0** — minor, because
+`RunEnvironment.Unrecorded`, `MergeableReport.Environment`, `CucumberMeta.Os`/`.Runtime` and an
+`environment` parameter on two public methods are new surface. No default moved: a null environment
+still means this machine.
+
+**Plan-table correction.** §14's acceptance table and the milestone table are offset by one milestone,
+recorded during M3 and confirmed again here — the row labelled M3 in the acceptance table holds M4's
+schema tests. Read the milestone table as authoritative.
+
 ## Clusters
 Failures sharing an error message. Each is worked through once below; the rest are the same failure and need the same fix.
 ### Assertion — 15 scenarios

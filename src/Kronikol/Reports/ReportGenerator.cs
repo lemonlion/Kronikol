@@ -124,12 +124,16 @@ public static class ReportGenerator
         public void Dispose() => ActiveReportsDirectory.Value = previous;
     }
 
-    /// <param name="environment">
-    /// What the run executed on. Null means this machine, which is right for a test run generating its
-    /// own report. <see cref="RunEnvironment.Unrecorded"/> leaves the key out, which is what
-    /// <c>kronikol ingest</c> needs when the source file does not say what the run ran on - the tool's
-    /// own operating system and .NET version describe the machine doing the reading, not the run.
-    /// </param>
+    /// <summary>
+    /// Writes the standard set of reports for a finished run.
+    /// </summary>
+    /// <remarks>
+    /// <c>environment</c> is what the run executed on. Null means this machine, which is right for a
+    /// test run generating its own report. <see cref="RunEnvironment.Unrecorded"/> leaves the key out of
+    /// the data file, which is what <c>kronikol ingest</c> needs when the source does not say what the
+    /// run ran on - the tool's own operating system and .NET version describe the machine doing the
+    /// reading, not the run.
+    /// </remarks>
     public static void CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment = null)
     {
         var previous = ActiveReportsDirectory.Value;
@@ -3681,10 +3685,13 @@ public static class ReportGenerator
     private static object[] MapDiagnosticsJson(IReadOnlyList<DiagnosticEntry>? diagnostics) =>
         (diagnostics ?? []).Select(d => (object)new { Kind = d.Kind.ToString(), d.Message, d.ScenarioId }).ToArray();
 
-    /// <param name="environment">
-    /// What the run executed on. Null means this machine, which is what a live run wants;
-    /// <see cref="RunEnvironment.Unrecorded"/> leaves the key out, for a lane that cannot know.
-    /// </param>
+    /// <summary>
+    /// Writes the test-run data file in the requested format.
+    /// </summary>
+    /// <remarks>
+    /// <c>environment</c> is what the run executed on. Null means this machine, which is what a live run
+    /// wants; <see cref="RunEnvironment.Unrecorded"/> leaves the key out, for a lane that cannot know.
+    /// </remarks>
     public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
@@ -5263,10 +5270,11 @@ public static class ReportGenerator
     /// description; <c>TestRunReportSchemaContractTests</c> walks a generated report against it and fails on
     /// the first undeclared key or undescribed property, so a new field cannot land in the writer alone.
     /// </summary>
-    /// <param name="pascalCasePropertyNames">
-    /// Renames the declared properties to the casing the XML and YAML writers use. The schema is one
-    /// contract written once; only the spelling of the names differs between the formats that carry it.
-    /// </param>
+    /// <remarks>
+    /// <c>pascalCasePropertyNames</c> renames the declared properties to the casing the YAML writer
+    /// uses. The schema is one contract written once; only the spelling of the names differs between the
+    /// formats that carry it.
+    /// </remarks>
     private static string GenerateTestRunReportJsonSchema(bool pascalCasePropertyNames = false)
     {
         var resultEnumValues = Enum.GetNames(typeof(ExecutionResult));
@@ -5341,6 +5349,44 @@ public static class ReportGenerator
                     ["type"] = "array",
                     ["description"] = "Everything worth knowing about how this report was produced: capture health handed in by the host (CaptureDegraded), skipped malformed lines, diagrams that could not be rendered, labels that still do not read as sentences. Empty is the happy path.",
                     ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/diagnostic" }
+                },
+                // The mergeable superset. It is written under the SAME name as the standard file, with
+                // this same schema beside it, so a schema that closed its root without declaring these
+                // would make a merged report fail the contract shipped next to it. Optional, because the
+                // standard file - the common case - has none of them.
+                ["mergeableFormatVersion"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Present only on a report written with GenerateMergeableData. Versions the mergeable superset, separately from formatVersion, which versions the shape both files share." },
+                ["wholeTestVisualization"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(WholeTestFlowVisualization)), ["description"] = "Mergeable only: which whole-test-flow rendering the run produced, so a merge rebuilds the same one" },
+                ["componentRelationships"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "array",
+                    ["description"] = "Mergeable only: the caller-to-service edges the run observed, which is what the component diagram is drawn from",
+                    ["items"] = new Dictionary<string, object?>
+                    {
+                        ["type"] = "object",
+                        ["required"] = new[] { "caller", "service", "protocol", "methods", "callCount", "testCount" },
+                        ["properties"] = new Dictionary<string, object?>
+                        {
+                            ["caller"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The component that made the calls" },
+                            ["service"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The component that received them" },
+                            ["protocol"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "How they talked (HTTP, SQL, a message bus)" },
+                            ["methods"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "The distinct operation labels seen on this edge, sorted", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                            ["callCount"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "How many calls crossed this edge" },
+                            ["testCount"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "How many scenarios used it" },
+                            ["dependencyCategory"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The category the service was classified as, when one was resolved" }
+                        },
+                        ["additionalProperties"] = false
+                    }
+                },
+                // Deliberately open. A merge re-serialises these payloads verbatim from the shard files
+                // it read, which a different Kronikol version may have written, so pinning what is inside
+                // them would make `kronikol merge` emit a file that fails its own schema with no code
+                // change on either side.
+                ["internalFlowSegments"] = new Dictionary<string, object?> { ["type"] = "object", ["description"] = "Mergeable only: precomputed internal-flow payloads keyed by segment id. The values are rendering data carried through a merge unchanged, and are deliberately not described here - a merged file may hold shapes written by another version." },
+                ["wholeTestFlow"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["description"] = "Mergeable only: per-scenario whole-test-flow fragments, keyed by scenario id",
+                    ["additionalProperties"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/wholeTestFlowFragment" }
                 },
                 ["features"] = new Dictionary<string, object?>
                 {
@@ -5439,6 +5485,128 @@ public static class ReportGenerator
             },
             ["$defs"] = new Dictionary<string, object?>
             {
+                ["wholeTestFlowFragment"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["description"] = "One scenario's precomputed whole-test-flow rendering, inlined so a merge needs no shared diagram-data map",
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["activityHtml"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The activity view, as HTML" },
+                        ["flameHtml"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The flame view, as HTML" },
+                        ["spanCount"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Spans in the fragment, which is what the median-span threshold is measured against" }
+                    },
+                    ["additionalProperties"] = false
+                },
+                ["stepParameter"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["description"] = "One input to a step. Exactly one of inlineValue, tabularValue and treeValue is set; which one is what `kind` names.",
+                    ["required"] = new[] { "name", "kind" },
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["name"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The parameter's name, as the step or the example column named it" },
+                        ["kind"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(StepParameterKind)), ["description"] = "Which of the three value shapes this parameter carries" },
+                        ["inlineValue"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/comparedValue" },
+                        ["tabularValue"] = new Dictionary<string, object?>
+                        {
+                            ["type"] = new[] { "object", "null" },
+                            ["description"] = "A data table: its columns, then its rows of cells",
+                            ["required"] = new[] { "columns", "rows" },
+                            ["properties"] = new Dictionary<string, object?>
+                            {
+                                ["columns"] = new Dictionary<string, object?>
+                                {
+                                    ["type"] = "array",
+                                    ["description"] = "The table's columns in order",
+                                    ["items"] = new Dictionary<string, object?>
+                                    {
+                                        ["type"] = "object",
+                                        ["required"] = new[] { "name" },
+                                        ["properties"] = new Dictionary<string, object?>
+                                        {
+                                            ["name"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Column heading" },
+                                            ["isKey"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Whether this column identifies the row, which is what a row-level comparison matches on" }
+                                        },
+                                        ["additionalProperties"] = false
+                                    }
+                                },
+                                ["rows"] = new Dictionary<string, object?>
+                                {
+                                    ["type"] = "array",
+                                    ["description"] = "The table's rows, each a list of cells in column order",
+                                    ["items"] = new Dictionary<string, object?>
+                                    {
+                                        ["type"] = "object",
+                                        ["required"] = new[] { "type", "values" },
+                                        ["properties"] = new Dictionary<string, object?>
+                                        {
+                                            ["type"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(TableRowType)), ["description"] = "Whether the row was expected, actual, or matched" },
+                                            ["values"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "The row's cells, in column order", ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/comparedValue" } }
+                                        },
+                                        ["additionalProperties"] = false
+                                    }
+                                },
+                                ["isLinkedOutput"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Whether the table is an output linked to an earlier input table rather than a parameter in its own right" }
+                            },
+                            ["additionalProperties"] = false
+                        },
+                        ["treeValue"] = new Dictionary<string, object?>
+                        {
+                            ["type"] = new[] { "object", "null" },
+                            ["description"] = "A structured value, compared node by node",
+                            ["required"] = new[] { "root" },
+                            ["properties"] = new Dictionary<string, object?>
+                            {
+                                ["root"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/treeNode" }
+                            },
+                            ["additionalProperties"] = false
+                        }
+                    },
+                    ["additionalProperties"] = false
+                },
+                ["comparedValue"] = new Dictionary<string, object?>
+                {
+                    ["type"] = new[] { "object", "null" },
+                    ["description"] = "A value that was checked: what was there, what was wanted, and how that came out. The same shape for an inline parameter and for a table cell.",
+                    ["required"] = new[] { "status" },
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["value"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The value as it was, rendered for display" },
+                        ["expectation"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "What the test said it should be; null when the value was not an assertion" },
+                        ["status"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(VerificationStatus)), ["description"] = "How the comparison came out" }
+                    },
+                    ["additionalProperties"] = false
+                },
+                ["treeNode"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["description"] = "One node of a structured parameter value, with its children",
+                    ["required"] = new[] { "path", "node", "status" },
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["path"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Dotted path from the root, which is how a failing node is addressed" },
+                        ["node"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "This node's own name" },
+                        ["value"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The leaf value, rendered for display; null for a branch" },
+                        ["expectation"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "What the test said this node should be" },
+                        ["status"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(VerificationStatus)), ["description"] = "How this node's comparison came out" },
+                        ["children"] = new Dictionary<string, object?> { ["type"] = new[] { "array", "null" }, ["description"] = "Nested nodes", ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/treeNode" } }
+                    },
+                    ["additionalProperties"] = false
+                },
+                ["textSegment"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["description"] = "One run of the step text: either literal prose, or the place a parameter value was substituted into it",
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["text"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The literal text of this segment" },
+                        ["parameterName"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The parameter this segment stands for, when it is a substitution rather than prose" },
+                        ["parameter"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/comparedValue" },
+                        ["tableReference"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The data table this segment points at, when the step text names one" },
+                        ["tableReferenceFormattedValue"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "That table rendered for display inside the step text" }
+                    },
+                    ["additionalProperties"] = false
+                },
                 ["diagnostic"] = new Dictionary<string, object?>
                 {
                     ["type"] = "object",
@@ -5470,8 +5638,8 @@ public static class ReportGenerator
                         ["docString"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The step's Gherkin doc-string body" },
                         ["docStringMediaType"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Media type declared on the doc string, when the source gave one" },
                         ["comments"] = new Dictionary<string, object?> { ["type"] = "array", ["items"] = new Dictionary<string, object?> { ["type"] = "string" }, ["description"] = "Comment lines attached to the step in the source" },
-                        ["parameters"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "The step's inputs: inline values, data tables (columns and rows) and tree values. Present unless TestRunReportFullStepDetail is turned off.", ["items"] = new Dictionary<string, object?> { ["type"] = "object" } },
-                        ["textSegments"] = new Dictionary<string, object?> { ["type"] = new[] { "array", "null" }, ["description"] = "The step text split into literal prose and inline parameter values, for highlighted rendering", ["items"] = new Dictionary<string, object?> { ["type"] = "object" } },
+                        ["parameters"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "The step's inputs: inline values, data tables (columns and rows) and tree values. Present unless TestRunReportFullStepDetail is turned off.", ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/stepParameter" } },
+                        ["textSegments"] = new Dictionary<string, object?> { ["type"] = new[] { "array", "null" }, ["description"] = "The step text split into literal prose and inline parameter values, for highlighted rendering", ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/textSegment" } },
                         ["failureMessage"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Why this step or assertion failed — the assertion message, or the exception that ended the step" },
                         ["sourceFile"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "File the assertion was written in (name only), when the caller supplied it" },
                         ["sourceLine"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "Line in sourceFile" }
@@ -5522,6 +5690,8 @@ public static class ReportGenerator
             }
         };
 
+        CloseDeclaredObjects(schema);
+
         if (pascalCasePropertyNames)
         {
             UsePascalCasePropertyNames(schema);
@@ -5536,6 +5706,41 @@ public static class ReportGenerator
         }
 
         return JsonSerializer.Serialize(schema, options);
+    }
+
+    /// <summary>
+    /// Adds <c>additionalProperties: false</c> to every object node that declares a fixed set of
+    /// properties, in place.
+    /// </summary>
+    /// <remarks>
+    /// <para>Without it a JSON Schema permits every key it has not heard of, so the schema could not
+    /// detect the one thing it exists to detect - a writer emitting a field nobody declared. That check
+    /// was being done instead by a hand-written walker in the test suite, which meant it ran here and
+    /// nowhere else: a consumer with a validator and no walker saw nothing.</para>
+    ///
+    /// <para>Applied as a rule rather than written out node by node, so a node added to the schema later
+    /// is closed by default and has to opt out deliberately. Opting out is what "already declares
+    /// <c>additionalProperties</c>" means, and a node with no <c>properties</c> at all is not a fixed
+    /// key set in the first place - that is how <c>internalFlowSegments</c> stays open, which it must,
+    /// because a merge carries those payloads through verbatim from shards another version wrote.</para>
+    /// </remarks>
+    private static void CloseDeclaredObjects(object? node)
+    {
+        switch (node)
+        {
+            case Dictionary<string, object?> map:
+                if (map.ContainsKey("properties") && !map.ContainsKey("additionalProperties"))
+                    map["additionalProperties"] = false;
+
+                foreach (var value in map.Values.ToArray())
+                    CloseDeclaredObjects(value);
+                break;
+
+            case System.Collections.IEnumerable sequence and not string:
+                foreach (var item in sequence)
+                    CloseDeclaredObjects(item);
+                break;
+        }
     }
 
     /// <summary>
