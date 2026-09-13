@@ -79,6 +79,59 @@ public static class FailureText
     }
 
     /// <summary>
+    /// The frame a failure was thrown from: the first one in <paramref name="stackTrace"/> that carries a
+    /// file and a line, with the method that owns it. <c>null</c> when there is none.
+    ///
+    /// <para>The first such frame rather than the topmost, because the topmost frames are the assertion
+    /// library's and the runtime's, and those assemblies ship without PDBs — so "has source information"
+    /// is a good enough proxy for "is code someone in this repository wrote". Emitting a frame without one
+    /// would put <c>Xunit.Assert.Equal</c> where the reader expects their own test, which is worse than
+    /// the blank this replaces.</para>
+    ///
+    /// <para>Only the invariant-culture shape is parsed. The runtime localises <c>at</c> and <c>in</c>, so
+    /// a translated trace yields null and the digest simply says nothing — the alternative, guessing at a
+    /// shape, is how a reader ends up at a file and line that are not where anything happened.</para>
+    /// </summary>
+    public static (string Method, string File, int Line)? ThrownAt(string? stackTrace)
+    {
+        if (string.IsNullOrWhiteSpace(stackTrace))
+            return null;
+
+        foreach (var raw in stackTrace.ReplaceLineEndings("\n").Split('\n'))
+        {
+            var line = raw.Trim();
+            if (!line.StartsWith("at ", StringComparison.Ordinal))
+                continue;
+
+            // Split on the LAST " in ", because a method signature can contain one: a parameter named
+            // `in` is impossible, but a generic argument or a local function name is not, and the path is
+            // always last. Same reasoning for `:line ` — a Windows path has a colon of its own.
+            var marker = line.LastIndexOf(" in ", StringComparison.Ordinal);
+            if (marker < 0)
+                continue;
+
+            var method = line[3..marker].Trim();
+            var rest = line[(marker + 4)..];
+
+            var lineMarker = rest.LastIndexOf(":line ", StringComparison.Ordinal);
+            if (lineMarker < 0)
+                continue;
+
+            if (!int.TryParse(rest[(lineMarker + 6)..].Trim(), System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out var number))
+                continue;
+
+            var file = rest[..lineMarker].Trim();
+            if (method.Length == 0 || file.Length == 0)
+                continue;
+
+            return (method, file, number);
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Runs of whitespace folded to one space, and the ends trimmed. <see cref="char.IsWhiteSpace(char)"/>
     /// rather than a regex, so that every Unicode separator counts — a key that treats U+00A0 as text on
     /// one surface and as a space on the other splits a cluster in half for no reason a reader can see.

@@ -357,7 +357,13 @@ public static class ReportGenerator
         if (options.GenerateFailuresDigest)
         {
             var digest = new Lazy<FailuresDigest>(() =>
-                FailuresDigestGenerator.Generate(features, dataLogs, options.HtmlTestRunReportFileName, KronikolVersion, reportDiagnostics, suite));
+                FailuresDigestGenerator.Generate(features, dataLogs,
+                    // Null when no report is being written, so the digest links to nothing rather than to
+                    // a path that will not exist. It is a decision, not a race: the HTML is written by a
+                    // sibling action in this same parallel list, so File.Exists here would answer whatever
+                    // the scheduler happened to have done.
+                    options.GenerateTestRunReport ? options.HtmlTestRunReportFileName : null,
+                    KronikolVersion, reportDiagnostics, suite));
 
             Add(FailuresDigestFileName, () => WriteFile(digest.Value.Markdown, FailuresDigestFileName));
             Add(FailuresDigestJsonlFileName, () => WriteFile(digest.Value.Jsonl, FailuresDigestJsonlFileName));

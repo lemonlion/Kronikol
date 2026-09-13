@@ -50,10 +50,25 @@ public static class FailuresDigestGenerator
     private const int JsonlFormatVersion = 1;
 
     /// <summary>
+    /// Characters of any one free-text field in a <c>Failures.jsonl</c> record.
+    ///
+    /// <para>Deliberately far more generous than the markdown's 600, because a script is not reading this
+    /// on screen — but bounded, because "one JSON object per line" stops meaning anything when the line is
+    /// megabytes. Every field went in at full length, and <c>cluster</c> is the first line of
+    /// <c>errorMessage</c>, so that line was written twice: a measured 2,000,047-character message produced
+    /// 4,000,639 bytes. An assertion message reaches that size the ordinary way, by comparing two captured
+    /// response bodies, which is the case the digest exists for.</para>
+    ///
+    /// <para>Nothing is lost by it. The full text is in <c>TestRunReport.json</c>, at the address and the
+    /// stableId every record already carries, and <c>truncated</c> says when to go there.</para>
+    /// </summary>
+    private const int JsonlFieldLimit = 4000;
+
+    /// <summary>
     /// Builds both files. <paramref name="trackedLogs"/> may be null (no capture); the digest then reports
     /// the failures without their calls rather than nothing at all.
     /// </summary>
-    public static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string htmlFileName,
+    public static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string? htmlFileName,
         string kronikolVersion, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null)
     {
         ArgumentNullException.ThrowIfNull(features);
@@ -104,9 +119,10 @@ public static class FailuresDigestGenerator
         IReadOnlyList<StepLine> Failing,
         IReadOnlyList<CallLine> Calls,
         IReadOnlyList<FileAttachment> Attachments,
-        string DeepLink,
+        string? DeepLink,
         string? SourceFile,
-        int? SourceLine);
+        int? SourceLine,
+        (string Method, string File, int Line)? ThrownAt);
 
     /// <summary>
     /// Scenarios in the order <c>kronikol query</c> numbers them: features by display name, scenarios in
@@ -145,7 +161,7 @@ public static class FailuresDigestGenerator
     }
 
     private static Entry Build(Located located, IReadOnlyDictionary<string, List<string?>> stepPaths,
-        IReadOnlyDictionary<string, List<RequestResponseLog>> interactions, string htmlFileName, string? suite)
+        IReadOnlyDictionary<string, List<RequestResponseLog>> interactions, string? htmlFileName, string? suite)
     {
         var scenario = located.Scenario;
         var address = "s" + located.Ordinal;
@@ -175,9 +191,10 @@ public static class FailuresDigestGenerator
             ClusterKey(scenario.ErrorMessage),
             context, failing, calls,
             scenario.Attachments ?? [],
-            $"{htmlFileName}.html#sid-{stableId}",
+            htmlFileName is null ? null : $"{htmlFileName}.html#sid-{stableId}",
             scenario.SourceFile,
-            scenario.SourceLine);
+            scenario.SourceLine,
+            FailureText.ThrownAt(scenario.ErrorStackTrace));
     }
 
     private static IReadOnlyList<CallLine> BuildCalls(Located located, IReadOnlyList<StepLine> failing,
@@ -414,7 +431,15 @@ public static class FailuresDigestGenerator
     private static void AppendEntry(StringBuilder markdown, Entry entry, int number)
     {
         markdown.Append($"### {number}. {Escape(entry.Feature)} › {Escape(entry.Scenario)}\n\n");
-        markdown.Append($"`{entry.Address}` · stableId `{entry.StableId}` · [open in the report]({entry.DeepLink})");
+        markdown.Append($"`{entry.Address}` · stableId `{entry.StableId}`");
+        // Only when there is a report to open. The digest used to bake this link whatever the configuration
+        // said, so `GenerateTestRunReport = false` persisted a path to a file that was never written — and
+        // the query tool, which gates the same link on the HTML being there, disagreed with the file on
+        // disk about whether a report existed. The residual case is a report whose write threw: the digest
+        // is in the same isolated, parallel output list and cannot know, which is why the tool checks again
+        // at read time.
+        if (entry.DeepLink is { } deepLink)
+            markdown.Append($" · [open in the report]({deepLink})");
         if (entry.SourceFile is { } source)
             markdown.Append($" · written at `{source}" + (entry.SourceLine is { } line ? $":{line}" : "") + "`");
         if (entry.DurationSeconds > 0)
@@ -423,6 +448,14 @@ public static class FailuresDigestGenerator
 
         if (entry.ExampleValues is { Count: > 0 } examples)
             markdown.Append($"Example row: {Escape(string.Join(", ", examples.Select(kvp => $"{kvp.Key}={kvp.Value}")))}\n\n");
+
+        // Where it was thrown, which is not where the scenario was written: the line above names the
+        // declaration site an adapter reported, this one names the frame that raised. Every other surface
+        // has carried `errorStackTrace` all along — the HTML, CiSummary.md, the XML and CTRF exports — and
+        // the digest showed none of it while the CLAUDE.md written beside it tells the reader not to open
+        // the HTML, so the run's own instructions pointed at the only surface that had dropped the field.
+        if (entry.ThrownAt is { } thrown)
+            markdown.Append($"Thrown at {Code(thrown.Method)} — {Code(thrown.File + ":" + thrown.Line.ToString(CultureInfo.InvariantCulture))}\n\n");
 
         if (entry.ErrorMessage is { Length: > 0 } message)
         {
@@ -577,6 +610,19 @@ public static class FailuresDigestGenerator
 
         foreach (var entry in entries)
         {
+            // Every free-text field through one cap, and a flag saying whether any of them fired. A cut
+            // that only shows as a trailing ellipsis cannot be told from a message that genuinely ends in
+            // one, and handing back less evidence than exists without saying so is the defect this file
+            // keeps producing.
+            var truncated = false;
+            string? Capped(string? text)
+            {
+                if (text is null || text.Length <= JsonlFieldLimit)
+                    return text;
+                truncated = true;
+                return FailureText.Truncate(text, JsonlFieldLimit);
+            }
+
             var record = new Dictionary<string, object?>
             {
                 ["kind"] = "failure",
@@ -586,24 +632,29 @@ public static class FailuresDigestGenerator
                 ["scenario"] = entry.Scenario,
                 ["exampleValues"] = entry.ExampleValues,
                 ["durationSeconds"] = entry.DurationSeconds,
-                ["errorMessage"] = entry.ErrorMessage,
-                ["expected"] = entry.Expected,
-                ["actual"] = entry.Actual,
-                ["cluster"] = entry.ClusterKey.Length > 0 ? entry.ClusterKey : null,
+                ["errorMessage"] = Capped(entry.ErrorMessage),
+                ["expected"] = Capped(entry.Expected),
+                ["actual"] = Capped(entry.Actual),
+                ["cluster"] = entry.ClusterKey.Length > 0 ? Capped(entry.ClusterKey) : null,
                 ["deepLink"] = entry.DeepLink,
                 ["sourceFile"] = entry.SourceFile,
                 ["sourceLine"] = entry.SourceLine,
+                ["thrownAt"] = entry.ThrownAt is { } frame
+                    ? new { method = frame.Method, file = frame.File, line = frame.Line }
+                    : null,
                 ["failingSteps"] = entry.Failing.Select(s => new
                 {
                     Path = $"{entry.Address}/{s.Path}",
-                    s.Text,
-                    s.Message,
+                    Text = Capped(s.Text),
+                    Message = Capped(s.Message),
                     s.SourceFile,
                     s.SourceLine
                 }).ToArray(),
-                ["stepsBefore"] = entry.Context.Select(s => new { Path = $"{entry.Address}/{s.Path}", s.Text, s.Status }).ToArray(),
+                ["stepsBefore"] = entry.Context.Select(s => new { Path = $"{entry.Address}/{s.Path}", Text = Capped(s.Text), s.Status }).ToArray(),
                 ["calls"] = entry.Calls.Select(c => new { c.Address, c.Service, c.Summary, c.Status, c.DurationMs }).ToArray(),
-                ["attachments"] = entry.Attachments.Select(a => new { a.Name, Path = a.RelativePath }).ToArray()
+                ["attachments"] = entry.Attachments.Select(a => new { a.Name, Path = a.RelativePath }).ToArray(),
+                // Last, so that it is written after every Capped call that could set it.
+                ["truncated"] = truncated
             };
             lines.Append(JsonSerializer.Serialize(record, options)).Append('\n');
         }
