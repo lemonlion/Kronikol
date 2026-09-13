@@ -4,9 +4,121 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [3.2.0] - 2026-09-13
+
+**Minor bump - `Failures.md` tells the truth** (LLM_FIRST_PLAN M2). It adds new public surface
+(`FailureText.ThrownAt`, `InteractionStatus.IsError`, `DependencyCategories.IsStatementShaped`,
+`FailuresDigestGenerator.MaxCallsPerFailure`) and three new fields in every `Failures.jsonl` record
+(`thrownAt`, `callsScope`, `truncated`), so the highest-ranking change decides. The bug fixes travel
+with it and do not lower the bump. No consumer contract from 3.1.0 is broken: every field that existed
+still exists and still means what it did.
+
+### Added
+- **`Failures.md` says where each failure was thrown.** `errorStackTrace` has carried the frame all
+  along - the HTML shows it, `CiSummary.md` shows it, the XML and CTRF exports carry it - and the digest
+  showed none of it, while the `CLAUDE.md` written beside it tells the reader never to open the HTML. So
+  the run's own instructions pointed at the only surface that had dropped the field. Each worked failure
+  now carries a `Thrown at` line with the method and `file:line`, and each `Failures.jsonl` record a
+  `thrownAt: {method, file, line}`. Not the whole trace, which is assertion-library and runtime frames
+  and would be the digest doing the thing it exists to prevent. **Choosing the frame had to be measured
+  rather than reasoned about:** the obvious rule, "the topmost frame with source information", is wrong,
+  because xUnit v3 ships source-linked PDBs - on a real `CiPreview.Mixed` run all nine worked examples
+  pointed at `/_/src/xunit.v3.assert/Asserts/StringAsserts.cs`, which is exactly the outcome the rule was
+  written to avoid. The frame in the file the producer said the scenario was declared in now wins, with a
+  framework-namespace skip as the fallback; all nine now name the test. A trace that cannot be parsed
+  yields nothing rather than a guess.
+- **`callsScope` on every `Failures.jsonl` record** - `failingStep`, `scenario` or `none`. An empty
+  `calls` array used to mean three different things at once: the failing step made no calls, the scenario
+  made none, or nothing could be attributed to the step at all. The third was the common case and the
+  file never said so, which is how "we did not look there" and "there was nothing there" became one fact.
+- **`truncated` on every `Failures.jsonl` record**, with a 4,000-character cap on each free-text field.
+  A cut that shows only as a trailing ellipsis cannot be told from a message that genuinely ends in one.
+- **`InteractionStatus.IsError` and `DependencyCategories.IsStatementShaped`** are public. The first moved
+  out of the tool so the digest asks the same question `query services` and `flow --errors-only` ask - its
+  own documentation calls it "the single classifier", and a second copy would have made that false. The
+  second says whether a call's captured content is its own identity (a statement) or a payload it carried.
 
 ### Fixed
+- **A failure inside a composite step could never show the calls made in it.** Interactions are
+  attributed to top-level steps - `OrderedStepPaths` emits `b0..bN` and `0..N` and nothing else - while
+  the digest walks the whole tree and asks for the failing step by its nested path, `1.0`. Those two sets
+  never intersect, so `calls` was empty for every such scenario whatever it had done. A call attributed to
+  step `1` is now taken as the answer for a failure in `1.0` - it is the call that happened while that
+  subtree was running - matched segment by segment, so step `1` is not an ancestor of step `10`. Where
+  the failing step genuinely made no calls, the digest falls back to the scenario's own, failures first
+  and then the most recent, under a heading that says so: a naive last-N pushes out the 502 that is the
+  reason anyone is reading the file, and calls from a step that *passed*, presented as the calls that
+  broke it, would be a worse answer than the empty list they replace.
+- **The digest printed a message body in the Call column.** Its own contract is that bodies are addresses
+  rather than content, and the rule deciding this was "anything that is not an HTTP verb is a statement,
+  so show its first line" - but a `MessageQueue` send carries the method `SEND (EVENT PROTOCOL)`, which is
+  neither empty nor an HTTP verb. Measured on a real run: an Event broker publish appeared as 120
+  characters of its own serialised payload, beside calls shown as `GET /milk`. The dependency category now
+  decides, as a positive list, so a category added later shows its target rather than its content - losing
+  detail instead of leaking a body. A call with no category still falls back to the method, because taps
+  that predate categories write real statements.
+- **A backtick in captured text broke out of the code span quoting it.** Expected and actual are pulled
+  straight out of an assertion message and printed inside backticks in a table, and `Escape` handled only
+  `|`, CR and LF - so the rest of the row rendered as prose and whatever followed it was interpreted as
+  Markdown rather than shown. Every Markdown-formatted error message has one. The delimiter is now sized
+  past the longest run inside the value, CommonMark's own answer.
+- **The fenced error block rewrote a ``` run in the payload to three apostrophes.** That kept the file
+  well-formed by falsifying the evidence, which is the one thing a failures digest may never do: a test
+  asserting over Markdown would be reported as a string it never saw, and a reader diffing the digest
+  against the code would hunt a difference Kronikol had introduced. The fence widens instead.
+- **Truncation could split a surrogate pair.** Every character outside the BMP - emoji, much of CJK - is
+  two UTF-16 code units, and `text[..limit]` can land between them. `File.WriteAllText` encodes UTF-8 with
+  the throwing fallback, so the digest did not come out mangled: it did not come out, and the **previous**
+  run's `Failures.md` stayed on disk, stale and plausible and describing a different run. Assertion
+  messages and captured third-party payloads are exactly where an emoji turns up. `QueryWriter.OneLine`
+  had the same defect with a worse ending - a terminal and the `--json` envelope both mangle silently
+  rather than throwing.
+- **`Failures.jsonl` had no cap on any field, and wrote the same line twice.** `cluster` is the first line
+  of `errorMessage`, so a measured 2,000,047-character message produced 4,000,639 bytes. An assertion
+  message reaches that size the ordinary way, by comparing two captured response bodies, which is the case
+  the digest exists for. The full text is still in `TestRunReport.json` at the address every record
+  carries.
+- **One cluster could stand for the whole run.** Grouping by a first line is a heuristic and was
+  measurably wrong once already; the protection cannot be a better key. A cluster is now **sampled** -
+  one worked example plus one more for every ten members, up to five - so a grouping that merged unrelated
+  failures shows more than one kind. Both previously unbounded lists are capped (20 members per cluster,
+  100 rows in the closing table) and each says how many it stopped short of: a list that ends without
+  saying so reads as the whole list. Measured: 1,200 failures now produce under 80,000 characters of
+  markdown, and every one of them is still in the jsonl.
+- **The digest linked to a report that was never written.** It baked `TestRunReport.html#sid-...` into
+  every worked failure whatever the configuration said, while `kronikol query` gates the same link on the
+  HTML being there - so the two surfaces disagreed about whether a report existed and the one that
+  persists to disk was the one guessing. With `GenerateTestRunReport = false` the digest now links to
+  nothing.
+- **A failure writing `Failures.md` took `Failures.jsonl` with it.** They were one entry in the isolated
+  output list, so the rule that an output which throws costs only itself stopped at the pair. What a
+  failed write leaves behind is not nothing, it is the previous run's file, in the directory an agent has
+  just been told to read first. Generation is still shared, so the work happens once.
+- **The run-end pointer was a channel the run could write to.** It is one line per thing -
+  `RunSummaryConsoleWriter.Write` splits the built text on newlines and writes one line per call - and
+  three of the strings in it come from the run: the reports directory, and every failing feature and
+  scenario name, which producers take from feature files, theory arguments and parameterised titles. A
+  newline in one is a line the pointer never composed, and on GitHub Actions a line the run controls at
+  column zero is a workflow command: a scenario named with an embedded newline followed by
+  `::error::something` emitted a failing annotation attributed to Kronikol. A bare CR does not even split
+  the string - it returns the cursor to column zero and overwrites what was already printed. Every
+  run-derived string is now flattened with `ReplaceLineEndings`, which knows the whole set including NEL
+  and the two Unicode separators, and nothing is dropped.
+- **Every command the pointer prints is now copy-pasteable.** An unquoted path with a space in it is a
+  command that fails, which is the whole value of printing it; a Program Files path is not exotic. The
+  pointer, the `::notice` and the CI summary's bash block all quote when they need to.
+- **`kronikol`'s stdout is UTF-8 by declaration rather than by luck.** It was whatever code page the host
+  console reports, while every line is charged against `--max-bytes` with `Encoding.UTF8.GetByteCount` and
+  the addresses a reader feeds back are separated by a middle dot and a single guillemet. Measured: with
+  the console forced to CP437 the old build wrote `0xFA` for the middle dot, which is not valid UTF-8 at
+  all - a consumer decoding the pipe gets an exception, not a wrong character - and the new one writes
+  `C2 B7` under the same code page. Many machines and runners report 65001, which is exactly why this went
+  unnoticed.
+- **`MaxCallsPerStep` was documented as a per-step cap and applied once per failure**, so a failure with
+  three failing steps showed eight calls while the name said twenty-four. It is `MaxCallsPerFailure`.
+- **The emitted `AGENTS.md`/`CLAUDE.md` said every `Failures.jsonl` line starts with `formatVersion`.**
+  That stopped being true when the file gained its header line: only the header carries it, and every line
+  after it is `kind: "failure"`.
 - **`Kronikol.PlantUml.Ikvm` handed back an error image instead of a diagram on any machine without Graphviz.** Component, class and state diagrams are laid out by `dot`, and without it PlantUML does not fail — it returns a perfectly valid SVG of a small card reading *"Cannot find Graphviz"*. Kronikol's architecture overview **is** a component diagram, so a user who plugged this package into `PlantUmlRendering.Local` without Graphviz installed got that card in place of their overview, with nothing anywhere saying why. The renderer now asks `GraphvizUtils.getDotVersion()` once and, when `dot` is unusable, names PlantUML's own pure-Java layout engine in the source (`!pragma layout smetana`). A machine that **has** Graphviz is untouched — the pragma is never added, so no output that renders today moves by a byte. Measured on a Linux container with no Graphviz at all: the whole IKVM suite, 49 facts including every component-diagram width bound, passes. Also measured, and the reason the fallback is applied to every diagram rather than only the ones that need a graph layout: for a sequence and an activity diagram, which never touch Graphviz, the drawn image is byte-identical with and without the pragma — the only difference is PlantUML's trailing `SRC=[…]` comment, which echoes the source.
 - **The failures digest worked through one failure in fifteen and called the other fourteen the same one.** Measured on `Example.Api.Tests.CiPreview.Mixed`, a run with at least four distinct causes: `Failures.md` printed a single cluster, `### Assertion — 15 scenarios`, under the sentence "the rest are the same failure and need the same fix". The cause was the xUnit v3 adapter, which spliced `TestState.FailureCause` — an enum with five members — onto the front of every error message. Both surfaces that group failures key on the message's **first line**, so on xUnit v3 the key could take five values run-wide and normally took one. The same run now reports **five clusters and works through nine failures**, because the message is the message: the classification moved to a `failureCause` field of its own, declared in the JSON Schema and the XSD and written by all three data writers, where it is documented as a category that nothing may group on. MSTest had the identical defect by a different route — it set the constant string `"Test failed — see ErrorStackTrace for details"` for every failure, which is one cluster run-wide *and* pointed the reader at a field nothing ever assigned; it now reports the exception's own message and stack trace.
 - **Every passing xUnit v3 scenario claimed to have failed.** The same splice ran for passing tests, where it joined an empty list with a line separator and produced `"errorMessage": "\r\n"` — measured on three of three passing scenarios of `Example.Api.Tests.Component.xUnit3`, and carried into `ctrf-report.json` too. Consumers treat a present `errorMessage` as evidence something went wrong, so this was not a harmless default; it also meant `errorMessage is null` was not a usable proxy for "did not fail" on any xUnit v3 report. Absent is now `null` on all five.

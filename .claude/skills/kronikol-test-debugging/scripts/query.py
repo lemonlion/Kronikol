@@ -161,6 +161,10 @@ def cmd_failures(_path, report, _args):
         lines.append(f"s{index}  {scenario['_feature']} › {scenario.get('name')}")
         if scenario.get("errorMessage"):
             lines.append("  " + one_line(scenario["errorMessage"], 200))
+        # A category, never the message. The framework's own name for what went wrong (3.1.0) - shown
+        # after the message so it cannot be read as the message, and never grouped on.
+        if scenario.get("failureCause"):
+            lines.append("  cause: " + one_line(scenario["failureCause"], 120))
         for path, depth, step in walk_steps(scenario):
             if step.get("status") != "Failed":
                 continue
