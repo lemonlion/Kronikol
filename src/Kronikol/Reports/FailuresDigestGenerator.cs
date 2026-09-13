@@ -49,6 +49,29 @@ public static class FailuresDigestGenerator
     /// <summary>The <c>Failures.jsonl</c> contract version, mirroring <c>mergeableFormatVersion</c>.</summary>
     private const int JsonlFormatVersion = 1;
 
+    /// <summary>Members of one cluster listed under its heading before the rest become a count.</summary>
+    private const int MaxClusterMembersListed = 20;
+
+    /// <summary>Rows in the closing table of failures that were not worked through.</summary>
+    private const int MaxFurtherFailuresListed = 100;
+
+    /// <summary>
+    /// Worked examples taken from one cluster: one, plus one more for every ten members, up to five.
+    ///
+    /// <para>Clustering pays for itself with suppression, and suppression is only safe while the key is
+    /// right — which cannot be relied on, because grouping by a first line is a heuristic. It was
+    /// measurably wrong while the xUnit v3 adapter prefixed every message with its failure cause: fifteen
+    /// unrelated failures became one group, and the digest worked through one of them and called the other
+    /// fourteen the same thing.</para>
+    ///
+    /// <para>So the protection is not a better key. It is that no one cluster may be represented by a
+    /// single instance: a large group is sampled, so a key that merged unrelated failures shows more than
+    /// one kind and a reader can see the grouping is wrong. The ceiling keeps a run that fails wholesale
+    /// from spending the whole file on one group, and <see cref="MaxDetailedFailures"/> still bounds the
+    /// total.</para>
+    /// </summary>
+    private static int ExamplesFrom(int clusterSize) => Math.Clamp(1 + clusterSize / 10, 1, 5);
+
     /// <summary>
     /// Characters of any one free-text field in a <c>Failures.jsonl</c> record.
     ///
@@ -392,13 +415,15 @@ public static class FailuresDigestGenerator
             {
                 markdown.Append($"### {Escape(Truncate(cluster.Key, 160))} — {cluster.Count()} scenarios\n\n");
                 markdown.Append("| Address | stableId | Scenario |\n|---|---|---|\n");
-                foreach (var member in cluster)
+                foreach (var member in cluster.Take(MaxClusterMembersListed))
                     markdown.Append($"| `{member.Address}` | `{member.StableId}` | {Escape(member.Scenario)} |\n");
+                AppendElision(markdown, cluster.Count() - MaxClusterMembersListed);
                 markdown.Append('\n');
             }
         }
 
-        var clustered = clusters.SelectMany(c => c.Skip(1)).ToHashSet();
+        // Sampled, not reduced to one. See ExamplesFrom for why the protection cannot be a better key.
+        var clustered = clusters.SelectMany(c => c.Skip(ExamplesFrom(c.Count()))).ToHashSet();
         var detailed = entries.Where(e => !clustered.Contains(e)).ToArray();
         var shown = detailed.Take(MaxDetailedFailures).ToArray();
 
@@ -414,7 +439,8 @@ public static class FailuresDigestGenerator
             markdown.Append("Not worked through here — clustered above, or past this file's budget. Every one of them ");
             markdown.Append("is in `Failures.jsonl`, and `kronikol query failures .` has them all:\n\n");
             markdown.Append("| Address | stableId | Scenario | Error |\n|---|---|---|---|\n");
-            foreach (var entry in entries.Where(e => !shown.Contains(e)))
+            var further = entries.Where(e => !shown.Contains(e)).ToArray();
+            foreach (var entry in further.Take(MaxFurtherFailuresListed))
                 // The WHOLE message flattened, not its first line. This column is the only thing a reader
                 // is told about a failure that was clustered away, and the first line is the line the
                 // clustering already established they share — so printing it here spends the column
@@ -422,6 +448,7 @@ public static class FailuresDigestGenerator
                 // `kronikol query failures` has always flattened instead, which is why the two surfaces
                 // could show the same run as one cause and as four.
                 markdown.Append($"| `{entry.Address}` | `{entry.StableId}` | {Escape(entry.Scenario)} | {Escape(Truncate(FailureText.CollapseWhitespace(entry.ErrorMessage ?? ""), 80))} |\n");
+            AppendElision(markdown, further.Length - MaxFurtherFailuresListed);
             markdown.Append('\n');
         }
 
@@ -562,6 +589,23 @@ public static class FailuresDigestGenerator
     /// an opening fence longer than any run inside the block, so nothing is removed and nothing is
     /// substituted.</para>
     /// </summary>
+    /// <summary>
+    /// Says how many rows a table stopped short of, or nothing when it stopped short of none.
+    ///
+    /// <para>A list that ends without saying so reads as the whole list, and "there were no other
+    /// failures" is a conclusion this file must never let a reader reach by accident. The count goes
+    /// outside the table, because a row saying "and 1,095 more" is a row a script would parse as a
+    /// failure.</para>
+    /// </summary>
+    private static void AppendElision(StringBuilder markdown, int hidden)
+    {
+        if (hidden <= 0)
+            return;
+
+        markdown.Append($"\n_{hidden.ToString("N0", CultureInfo.InvariantCulture)} more not listed — every one of them is in "
+                        + "`Failures.jsonl`, and `kronikol query failures .` has them all._\n");
+    }
+
     private static string Block(string text)
     {
         var body = text.Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd();

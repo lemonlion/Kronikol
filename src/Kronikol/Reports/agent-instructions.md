@@ -20,8 +20,10 @@ messages begin with the same line are grouped, and one of each group is worked t
 the rest are listed with their addresses. Grouping is by that first line and nothing more, so a group is
 a strong hint that one cause is behind all of them, not a finding that one is.
 
-`Failures.jsonl` is the same data, one JSON object per line, for scripts. Each line starts with
-`formatVersion`.
+`Failures.jsonl` is the same data, one JSON object per line, for scripts. The first line is a header —
+`kind: "header"`, with `formatVersion`, the scenario count and the failure count — and every line after it
+is `kind: "failure"`. A record whose `truncated` is true had a long field cut; the full text is in the data
+file at that record's `address`.
 
 If `Failures.md` says `# No failures`, nothing failed. If it is absent, the run did not finish.
 
