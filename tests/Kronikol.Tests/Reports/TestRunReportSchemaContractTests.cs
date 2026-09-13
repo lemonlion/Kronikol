@@ -14,9 +14,9 @@ namespace Kronikol.Tests.Reports;
 /// </summary>
 public class TestRunReportSchemaContractTests
 {
-    private static readonly DateTime Start = new(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
-    private static readonly DateTime End = new(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc);
-    private const string TestId = "schema-t1";
+    internal static readonly DateTime Start = new(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+    internal static readonly DateTime End = new(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc);
+    internal const string TestId = "schema-t1";
 
     [Fact]
     public void Every_key_the_json_writer_emits_is_declared_in_the_schema()
@@ -144,7 +144,7 @@ public class TestRunReportSchemaContractTests
 
     // ─── A fixture that touches every emitter ───────────────────
 
-    private static Feature[] RichFeatures() =>
+    internal static Feature[] RichFeatures() =>
     [
         new Feature
         {
@@ -239,15 +239,15 @@ public class TestRunReportSchemaContractTests
         }
     ];
 
-    private static DiagramAsCode[] Diagrams() => [new DiagramAsCode(TestId, "", "@startuml\nA -> B\n@enduml")];
+    internal static DiagramAsCode[] Diagrams() => [new DiagramAsCode(TestId, "", "@startuml\nA -> B\n@enduml")];
 
-    private static IReadOnlyList<DiagnosticEntry> Diagnostics() =>
+    internal static IReadOnlyList<DiagnosticEntry> Diagnostics() =>
     [
         new DiagnosticEntry(DiagnosticKind.RenderFailure, "Building the diagram failed: TimeoutException: no answer", TestId),
         new DiagnosticEntry(DiagnosticKind.Other, "host says hello")
     ];
 
-    private static RequestResponseLog[] Logs()
+    internal static RequestResponseLog[] Logs()
     {
         var at = new DateTimeOffset(2026, 1, 1, 10, 0, 1, TimeSpan.Zero);
         var pairId = Guid.NewGuid();

@@ -730,12 +730,12 @@ public class TestRunReportDataTests
         // Follow the $ref to the step definition
         var stepDef = doc.RootElement.GetProperty("$defs").GetProperty("step");
         var stepProps = stepDef.GetProperty("properties");
-        Assert.Equal("string", stepProps.GetProperty("keyword").GetProperty("type").GetString());
-        Assert.Equal("string", stepProps.GetProperty("text").GetProperty("type").GetString());
+        Assert.Equal("string", DeclaredType(stepProps.GetProperty("keyword")));
+        Assert.Equal("string", DeclaredType(stepProps.GetProperty("text")));
 
         // SubSteps should reference the same step definition (recursive via $ref)
         var subSteps = stepProps.GetProperty("subSteps");
-        Assert.Equal("array", subSteps.GetProperty("type").GetString());
+        Assert.Equal("array", DeclaredType(subSteps));
         Assert.Equal("#/$defs/step", subSteps.GetProperty("items").GetProperty("$ref").GetString());
     }
 
@@ -756,12 +756,12 @@ public class TestRunReportDataTests
         var httpDef = doc.RootElement.GetProperty("$defs").GetProperty("httpInteraction");
         var httpProps = httpDef.GetProperty("properties");
 
-        Assert.Equal("string", httpProps.GetProperty("type").GetProperty("type").GetString());
-        Assert.Equal("string", httpProps.GetProperty("method").GetProperty("type").GetString());
-        Assert.Equal("string", httpProps.GetProperty("uri").GetProperty("type").GetString());
-        Assert.Equal("string", httpProps.GetProperty("serviceName").GetProperty("type").GetString());
-        Assert.Equal("string", httpProps.GetProperty("callerName").GetProperty("type").GetString());
-        Assert.Equal("array", httpProps.GetProperty("headers").GetProperty("type").GetString());
+        Assert.Equal("string", DeclaredType(httpProps.GetProperty("type")));
+        Assert.Equal("string", DeclaredType(httpProps.GetProperty("method")));
+        Assert.Equal("string", DeclaredType(httpProps.GetProperty("uri")));
+        Assert.Equal("string", DeclaredType(httpProps.GetProperty("serviceName")));
+        Assert.Equal("string", DeclaredType(httpProps.GetProperty("callerName")));
+        Assert.Equal("array", DeclaredType(httpProps.GetProperty("headers")));
     }
 
     [Fact]
@@ -1544,4 +1544,19 @@ public class TestRunReportDataTests
 
         Assert.DoesNotContain("HttpInteractions:", content);
     }
+
+    /// <summary>
+    /// The type a schema node declares, whether that is a bare <c>"string"</c> or the draft 2020-12 union
+    /// <c>["string","null"]</c> an optional field uses. Optionality is expressed in <c>type</c> itself since
+    /// OpenAPI's <c>nullable</c> was removed — it is not a JSON Schema keyword, so a validator ignored it and
+    /// enforced the <c>type</c> beside it — which means a type assertion has to read both forms.
+    /// </summary>
+    private static string DeclaredType(JsonElement node)
+    {
+        var type = node.GetProperty("type");
+        return type.ValueKind == JsonValueKind.Array
+            ? type.EnumerateArray().Select(t => t.GetString()).First(t => t != "null")!
+            : type.GetString()!;
+    }
+
 }

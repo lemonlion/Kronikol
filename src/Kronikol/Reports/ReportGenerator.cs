@@ -5077,7 +5077,10 @@ public static class ReportGenerator
     private static string GenerateTestRunReportJsonSchema()
     {
         var resultEnumValues = Enum.GetNames(typeof(ExecutionResult));
-        var statusEnumValues = resultEnumValues;
+        // A step's status may be absent, and `enum` is type-blind: it is asserted against every instance,
+        // including null, so widening `type` to ["string","null"] is not enough on its own. The null has to
+        // be a member of the enum as well, or a step the producer left unjudged fails its own schema.
+        object?[] statusEnumValues = [.. resultEnumValues, null];
 
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
 
@@ -5092,7 +5095,7 @@ public static class ReportGenerator
                 {
                     ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Display name, normally the file name" },
                     ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Path relative to the report directory (attachments/<file>), or an absolute URL when the attachment is a link; join it to the report's own directory to open the file" },
-                    ["mediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "IANA media type; image/* renders inline, anything else as a link" }
+                    ["mediaType"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "IANA media type; image/* renders inline, anything else as a link" }
                 }
             }
         };
@@ -5121,13 +5124,13 @@ public static class ReportGenerator
                     ["properties"] = new Dictionary<string, object?>
                     {
                         ["provider"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(CiEnvironment)), ["description"] = "The CI system detected from the environment, or None when the run was not on CI" },
-                        ["buildNumber"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The provider's human-facing build number (GITHUB_RUN_NUMBER, BUILD_BUILDNUMBER)" },
-                        ["branch"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The branch or ref the run was triggered on" },
-                        ["commitSha"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The full commit SHA the run built", ["examples"] = new[] { "9f3c1b2a4d5e6f708192a3b4c5d6e7f809a1b2c3" } },
-                        ["pipelineUrl"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Link back to the run in the provider's UI, when enough of the environment was present to build one" },
-                        ["repository"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Repository the run belongs to (org/repo on GitHub)" },
-                        ["runId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The provider's own identifier for the run - what an artifact download is addressed by" },
-                        ["runAttempt"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Which try of that run this is, counting from 1 (GITHUB_RUN_ATTEMPT). The run id is unchanged by a re-run, so this is the only thing that tells a retry apart from the run it retried. Null off GitHub Actions." }
+                        ["buildNumber"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The provider's human-facing build number (GITHUB_RUN_NUMBER, BUILD_BUILDNUMBER)" },
+                        ["branch"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The branch or ref the run was triggered on" },
+                        ["commitSha"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The full commit SHA the run built", ["examples"] = new[] { "9f3c1b2a4d5e6f708192a3b4c5d6e7f809a1b2c3" } },
+                        ["pipelineUrl"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Link back to the run in the provider's UI, when enough of the environment was present to build one" },
+                        ["repository"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Repository the run belongs to (org/repo on GitHub)" },
+                        ["runId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The provider's own identifier for the run - what an artifact download is addressed by" },
+                        ["runAttempt"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which try of that run this is, counting from 1 (GITHUB_RUN_ATTEMPT). The run id is unchanged by a re-run, so this is the only thing that tells a retry apart from the run it retried. Null off GitHub Actions." }
                     }
                 },
                 ["environment"] = new Dictionary<string, object?>
@@ -5157,9 +5160,9 @@ public static class ReportGenerator
                         ["properties"] = new Dictionary<string, object?>
                         {
                             ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Feature display name: the test class, or the title after Feature: in Gherkin" },
-                            ["endpoint"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The endpoint or component the feature covers, when declared (an @endpoint: tag, or the adapter's attribute)" },
-                            ["description"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Free text under the Feature: line, dedented" },
-                            ["sourceFile"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Where the feature is written: a project-relative path with forward slashes, from the Gherkin document. Null on the lanes that cannot supply one (unit-test adapters, the tests NDJSON). Features are grouped by display name, so two files sharing a Feature: title collapse into one entry and the first path seen wins.", ["examples"] = new[] { "Features/Cake.feature" } },
+                            ["endpoint"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The endpoint or component the feature covers, when declared (an @endpoint: tag, or the adapter's attribute)" },
+                            ["description"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Free text under the Feature: line, dedented" },
+                            ["sourceFile"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Where the feature is written: a project-relative path with forward slashes, from the Gherkin document. Null on the lanes that cannot supply one (unit-test adapters, the tests NDJSON). Features are grouped by display name, so two files sharing a Feature: title collapse into one entry and the first path seen wins.", ["examples"] = new[] { "Features/Cake.feature" } },
                             ["labels"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Feature-level tags (in Gherkin the feature's own tags; otherwise the labels every scenario shares)", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
                             ["scenarios"] = new Dictionary<string, object?>
                             {
@@ -5174,26 +5177,26 @@ public static class ReportGenerator
                                         ["id"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The runtime id the test framework gave this scenario (a test case id, a pickle id). Unique within the run but not stable across runs; use stableId for that." },
                                         ["stableId"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Deterministic cross-run identifier derived from feature name + scenario display name (+ outline ID and ordered example values for parameterized scenarios). Use this for matching the same test across runs. Not unique: repeated rows and retries share one.", ["examples"] = new[] { "a1b2c3d4e5f60718" } },
                                         ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Scenario display name; an outline row shows its expanded name" },
-                                        ["description"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The scenario's own free-text description (the prose under Scenario:)" },
+                                        ["description"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The scenario's own free-text description (the prose under Scenario:)" },
                                         ["result"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = resultEnumValues, ["description"] = "The scenario's verdict" },
                                         ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["description"] = "Wall-clock seconds the scenario took; 0 when unknown" },
                                         ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Marked as the happy path (an @happy-path tag or the adapter's attribute); the report lists happy paths first" },
-                                        ["errorMessage"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The failure message the framework reported, when the scenario failed" },
-                                        ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The stack trace the framework reported, when the scenario failed" },
-                                        ["failureCause"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The framework's CLASSIFICATION of the failure (xUnit v3: Assertion, Exception, Timeout, Other; MSTest: the exception type name), null where the framework does not classify. A category, not a cause - it says an assertion failed, never which one - so it is never a grouping key" },
+                                        ["errorMessage"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The failure message the framework reported, when the scenario failed" },
+                                        ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The stack trace the framework reported, when the scenario failed" },
+                                        ["failureCause"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The framework's CLASSIFICATION of the failure (xUnit v3: Assertion, Exception, Timeout, Other; MSTest: the exception type name), null where the framework does not classify. A category, not a cause - it says an assertion failed, never which one - so it is never a grouping key" },
                                         ["labels"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Scenario-level tags (feature tags are on the feature)", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
                                         ["categories"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Category tags (@category: in Gherkin, the framework's category attribute otherwise); the report's category filter reads these", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
-                                        ["rule"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Gherkin Rule grouping this scenario belongs to" },
-                                        ["attempt"] = new Dictionary<string, object?> { ["type"] = "integer", ["nullable"] = true, ["description"] = "Which run of this scenario produced the result, when the runner retries: 1 for the first, 2 for the first retry. 1-based, matching the retry N label in the HTML (Cucumber's own wire value is 0-based). Null where the runner reports nothing about attempts." },
-                                        ["sourceFile"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Where the scenario is written, matching the feature's sourceFile. NOT the same contract as a step's sourceFile, which is a bare file name from [CallerFilePath] on the build machine.", ["examples"] = new[] { "Features/Cake.feature" } },
-                                        ["sourceLine"] = new Dictionary<string, object?> { ["type"] = "integer", ["nullable"] = true, ["description"] = "The line the Scenario: or Scenario Outline: keyword is on - the declaration, not the Examples: row, so every row of an outline points at the same line. exampleValues is what says which row." },
-                                        ["outlineId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Original scenario outline name for parameterized scenarios" },
-                                        ["examplesBlockName"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Name of the Examples: block this outline row came from" },
-                                        ["examplesBlockDescription"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Free-text description under the Examples: header" },
-                                        ["examplesBlockIndex"] = new Dictionary<string, object?> { ["type"] = "integer", ["nullable"] = true, ["description"] = "0-based position of the Examples: block within the outline" },
-                                        ["exampleValues"] = new Dictionary<string, object?> { ["type"] = "object", ["nullable"] = true, ["description"] = "Example parameter values for parameterized scenarios", ["additionalProperties"] = new Dictionary<string, object?> { ["type"] = "string" } },
-                                        ["exampleFlatValues"] = new Dictionary<string, object?> { ["type"] = "object", ["nullable"] = true, ["description"] = "exampleValues flattened to one level (nested objects become dotted keys): the columns of the report's parameterized table, and what a merged report groups on", ["additionalProperties"] = new Dictionary<string, object?> { ["type"] = "string" } },
-                                        ["exampleDisplayName"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The display name of this example row when the producer gave one that differs from name" },
+                                        ["rule"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Gherkin Rule grouping this scenario belongs to" },
+                                        ["attempt"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "Which run of this scenario produced the result, when the runner retries: 1 for the first, 2 for the first retry. 1-based, matching the retry N label in the HTML (Cucumber's own wire value is 0-based). Null where the runner reports nothing about attempts." },
+                                        ["sourceFile"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Where the scenario is written, matching the feature's sourceFile. NOT the same contract as a step's sourceFile, which is a bare file name from [CallerFilePath] on the build machine.", ["examples"] = new[] { "Features/Cake.feature" } },
+                                        ["sourceLine"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "The line the Scenario: or Scenario Outline: keyword is on - the declaration, not the Examples: row, so every row of an outline points at the same line. exampleValues is what says which row." },
+                                        ["outlineId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Original scenario outline name for parameterized scenarios" },
+                                        ["examplesBlockName"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Name of the Examples: block this outline row came from" },
+                                        ["examplesBlockDescription"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Free-text description under the Examples: header" },
+                                        ["examplesBlockIndex"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "0-based position of the Examples: block within the outline" },
+                                        ["exampleValues"] = new Dictionary<string, object?> { ["type"] = new[] { "object", "null" }, ["description"] = "Example parameter values for parameterized scenarios", ["additionalProperties"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                                        ["exampleFlatValues"] = new Dictionary<string, object?> { ["type"] = new[] { "object", "null" }, ["description"] = "exampleValues flattened to one level (nested objects become dotted keys): the columns of the report's parameterized table, and what a merged report groups on", ["additionalProperties"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                                        ["exampleDisplayName"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The display name of this example row when the producer gave one that differs from name" },
                                         ["backgroundSteps"] = new Dictionary<string, object?>
                                         {
                                             ["type"] = "array",
@@ -5251,7 +5254,7 @@ public static class ReportGenerator
                     {
                         ["kind"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(DiagnosticKind)), ["description"] = "What the entry is about (DiagnosticKind)" },
                         ["message"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "One-line description, safe to print" },
-                        ["scenarioId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The scenario the entry belongs to, when it is scenario-specific" }
+                        ["scenarioId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The scenario the entry belongs to, when it is scenario-specific" }
                     }
                 },
                 ["step"] = new Dictionary<string, object?>
@@ -5259,10 +5262,10 @@ public static class ReportGenerator
                     ["type"] = "object",
                     ["properties"] = new Dictionary<string, object?>
                     {
-                        ["keyword"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Gherkin keyword (Given, When, Then, And, But); null for a tracked assertion or a sub-step" },
+                        ["keyword"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Gherkin keyword (Given, When, Then, And, But); null for a tracked assertion or a sub-step" },
                         ["text"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The step text, capitalised per CapitaliseStepText, placeholders expanded for an outline row" },
-                        ["status"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = statusEnumValues, ["nullable"] = true, ["description"] = "The step's own verdict; null when the producer recorded none" },
-                        ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["nullable"] = true, ["description"] = "Seconds the step took; null when unknown" },
+                        ["status"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["enum"] = statusEnumValues, ["description"] = "The step's own verdict; null when the producer recorded none" },
+                        ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Seconds the step took; null when unknown" },
                         ["subSteps"] = new Dictionary<string, object?>
                         {
                             ["type"] = "array",
@@ -5270,15 +5273,15 @@ public static class ReportGenerator
                             ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/step" }
                         },
                         ["attachments"] = Attachment("Files attached while this step was active"),
-                        ["bypassReason"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Why the step was skipped, when its status is Bypassed" },
-                        ["docString"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The step's Gherkin doc-string body" },
-                        ["docStringMediaType"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Media type declared on the doc string, when the source gave one" },
+                        ["bypassReason"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Why the step was skipped, when its status is Bypassed" },
+                        ["docString"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The step's Gherkin doc-string body" },
+                        ["docStringMediaType"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Media type declared on the doc string, when the source gave one" },
                         ["comments"] = new Dictionary<string, object?> { ["type"] = "array", ["items"] = new Dictionary<string, object?> { ["type"] = "string" }, ["description"] = "Comment lines attached to the step in the source" },
                         ["parameters"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "The step's inputs: inline values, data tables (columns and rows) and tree values. Present unless TestRunReportFullStepDetail is turned off.", ["items"] = new Dictionary<string, object?> { ["type"] = "object" } },
-                        ["textSegments"] = new Dictionary<string, object?> { ["type"] = "array", ["nullable"] = true, ["description"] = "The step text split into literal prose and inline parameter values, for highlighted rendering", ["items"] = new Dictionary<string, object?> { ["type"] = "object" } },
-                        ["failureMessage"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Why this step or assertion failed — the assertion message, or the exception that ended the step" },
-                        ["sourceFile"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "File the assertion was written in (name only), when the caller supplied it" },
-                        ["sourceLine"] = new Dictionary<string, object?> { ["type"] = "integer", ["nullable"] = true, ["description"] = "Line in sourceFile" }
+                        ["textSegments"] = new Dictionary<string, object?> { ["type"] = new[] { "array", "null" }, ["description"] = "The step text split into literal prose and inline parameter values, for highlighted rendering", ["items"] = new Dictionary<string, object?> { ["type"] = "object" } },
+                        ["failureMessage"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Why this step or assertion failed — the assertion message, or the exception that ended the step" },
+                        ["sourceFile"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "File the assertion was written in (name only), when the caller supplied it" },
+                        ["sourceLine"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "Line in sourceFile" }
                     }
                 },
                 ["httpInteraction"] = new Dictionary<string, object?>
@@ -5287,11 +5290,11 @@ public static class ReportGenerator
                     ["properties"] = new Dictionary<string, object?>
                     {
                         ["type"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = new[] { "Request", "Response" }, ["description"] = "Which half of a call this is; the two halves share requestResponseId" },
-                        ["method"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "HTTP verb, or the operation label a non-HTTP tracker recorded (SELECT, GET for a cache, Publish for a message); null for a bare event" },
+                        ["method"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "HTTP verb, or the operation label a non-HTTP tracker recorded (SELECT, GET for a cache, Publish for a message); null for a bare event" },
                         ["uri"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uri", ["description"] = "The request URI; for non-HTTP dependencies a synthetic scheme://service/path the tracker built" },
                         ["serviceName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The dependency (callee), as named in the diagram" },
                         ["callerName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The caller: the system under test, or the test itself" },
-                        ["content"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The body as captured, after capture-time redaction and any MaxContentLength cap (a capped body ends with an ...truncated (N chars total) marker); null when there was none" },
+                        ["content"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The body as captured, after capture-time redaction and any MaxContentLength cap (a capped body ends with an ...truncated (N chars total) marker); null when there was none" },
                         ["headers"] = new Dictionary<string, object?>
                         {
                             ["type"] = "array",
@@ -5302,7 +5305,7 @@ public static class ReportGenerator
                                 ["properties"] = new Dictionary<string, object?>
                                 {
                                     ["key"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Header name" },
-                                    ["value"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Header value; null when the header was present without one" }
+                                    ["value"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Header value; null when the header was present without one" }
                                 }
                             }
                         },
@@ -5310,17 +5313,17 @@ public static class ReportGenerator
                         ["statusText"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The label for the status: the .NET name for an HTTP code (OK, BadRequest) or the word a non-HTTP tracker recorded (Ack, Responded, Hit). Null on the request half." },
                         ["traceId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Kronikol's own id for the request/response pair. Not the W3C trace id — that is activityTraceId." },
                         ["requestResponseId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Pairs a request with its response: both halves carry the same value" },
-                        ["timestamp"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["nullable"] = true, ["description"] = "When this half was captured (UTC); null when the capture path recorded none" },
+                        ["timestamp"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["format"] = "date-time", ["description"] = "When this half was captured (UTC); null when the capture path recorded none" },
                         ["metaType"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(RequestResponseMetaType)), ["description"] = "Default for a request/response exchange, Event for a fire-and-forget publish" },
-                        ["dependencyCategory"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "What kind of thing the callee is (database, cache, queue, ...) — drives participant shape and arrow colour in the diagram" },
-                        ["callerDependencyCategory"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "The same, for the caller" },
+                        ["dependencyCategory"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "What kind of thing the callee is (database, cache, queue, ...) — drives participant shape and arrow colour in the diagram" },
+                        ["callerDependencyCategory"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The same, for the caller" },
                         ["phase"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(TestPhase)), ["description"] = "Whether the call happened during Setup or the Action under test; Unknown when phase detection is off" },
                         ["isUserAction"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "A UI interaction (click, navigate) rather than a dependency call" },
-                        ["activityTraceId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "W3C trace id — the bridge to OpenTelemetry traces and application logs. Unlike traceId, which is Kronikol's own identifier for the request/response pair.", ["examples"] = new[] { "4bf92f3577b34da6a3ce929d0e0e4736" } },
-                        ["activitySpanId"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "W3C span id" },
-                        ["capturedBy"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Which capture path produced this entry: wire (proxy/TCP tap) or span (OpenTelemetry receiver)" },
-                        ["durationMs"] = new Dictionary<string, object?> { ["type"] = "number", ["nullable"] = true, ["description"] = "Wall-clock milliseconds between the request and its response, derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered or timestamps are absent." },
-                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = "string", ["nullable"] = true, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } }
+                        ["activityTraceId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C trace id — the bridge to OpenTelemetry traces and application logs. Unlike traceId, which is Kronikol's own identifier for the request/response pair.", ["examples"] = new[] { "4bf92f3577b34da6a3ce929d0e0e4736" } },
+                        ["activitySpanId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C span id" },
+                        ["capturedBy"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which capture path produced this entry: wire (proxy/TCP tap) or span (OpenTelemetry receiver)" },
+                        ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response, derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered or timestamps are absent." },
+                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } }
                     }
                 }
             }
