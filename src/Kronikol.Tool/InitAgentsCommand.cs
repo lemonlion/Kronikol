@@ -24,10 +24,10 @@ namespace Kronikol.Tool;
 internal static class InitAgentsCommand
 {
     /// <summary>Opens the region this command owns. Anything outside it belongs to the user.</summary>
-    public const string BeginMarker = "<!-- kronikol:begin -->";
+    public const string BeginMarker = Kronikol.Reports.AgentInstructionsBlock.BeginMarker;
 
     /// <summary>Closes the region this command owns.</summary>
-    public const string EndMarker = "<!-- kronikol:end -->";
+    public const string EndMarker = Kronikol.Reports.AgentInstructionsBlock.EndMarker;
 
     /// <summary>
     /// The five strings every <c>templates/kronikol-*/.template.config/template.json</c> rewrites in every
@@ -188,79 +188,13 @@ internal static class InitAgentsCommand
                           + "there. Re-save it as UTF-8 and run this again.");
         }
 
-        var crlf = existing.Contains("\r\n", StringComparison.Ordinal);
-        var text = Encoding.UTF8.GetString(block).Replace("\r\n", "\n", StringComparison.Ordinal);
-        if (crlf)
-            text = text.Replace("\n", "\r\n", StringComparison.Ordinal);
-
-        var newLine = crlf ? "\r\n" : "\n";
-        var (start, end, count) = FindRegion(existing);
-
-        if (count > 1)
-            return (null, "contains the Kronikol block twice. Upgrading only the first would leave the "
-                          + "second - possibly written by a much older tool - as the last word an agent reads. "
-                          + "Delete the one you do not want, then run this again.");
-
-        string merged;
-        if (start >= 0 && end > start)
-        {
-            merged = existing[..start] + text.TrimEnd('\r', '\n') + existing[end..];
-        }
-        else if (start >= 0)
-        {
-            return (null, $"opens a Kronikol block ({BeginMarker}) and never closes it. Every repair for "
-                          + "that is a guess, and a wrong guess deletes the rest of the file. Add a "
-                          + $"{EndMarker} line where the block ends, or delete the opening line.");
-        }
-        else
-        {
-            var head = existing.TrimEnd('\r', '\n');
-            merged = head.Length == 0 ? text : head + newLine + newLine + text;
-        }
-
-        if (!merged.EndsWith(newLine, StringComparison.Ordinal))
-            merged += newLine;
+        var text = Encoding.UTF8.GetString(block);
+        var merged = Kronikol.Reports.AgentInstructionsBlock.Merge(existing, text, out var problem);
+        if (merged is null)
+            return (null, problem);
 
         var bytes = Utf8NoBom.GetBytes(merged);
         return (bom ? [0xEF, 0xBB, 0xBF, .. bytes] : bytes, null);
-    }
-
-    /// <summary>
-    /// The half-open character range of the managed region, or <c>(-1, -1)</c> when there is none.
-    ///
-    /// <para>A marker counts only on a line of its own. The wiki, the README and this command's own help
-    /// all quote the marker strings, so a repository whose instructions document this feature will contain
-    /// them in prose - and treating a sentence about the block as the block itself would delete whatever
-    /// came after it. Only the first region is considered: replacing the least text that can be right is
-    /// the safe reading when a file somehow holds two.</para>
-    /// </summary>
-    private static (int Start, int End, int Count) FindRegion(string text)
-    {
-        var start = -1;
-        var end = -1;
-        var count = 0;
-        var offset = 0;
-
-        foreach (var line in text.Split('\n'))
-        {
-            var trimmed = line.Trim();
-
-            if (trimmed == BeginMarker)
-            {
-                count++;
-                if (start < 0) start = offset;
-            }
-            else if (start >= 0 && end < 0 && trimmed == EndMarker)
-            {
-                // Just past the marker text, not past the line: the CR of a CRLF break belongs to the
-                // tail that gets kept, or the replacement would leave a bare LF in a CRLF file.
-                end = offset + line.TrimEnd().Length;
-            }
-
-            offset += line.Length + 1;
-        }
-
-        return (start, end, count);
     }
 
     private static byte[] Resource(string logicalName)

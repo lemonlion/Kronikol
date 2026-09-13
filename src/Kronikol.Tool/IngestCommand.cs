@@ -318,9 +318,6 @@ internal static class IngestCommand
 
             @out.WriteLine($"Replayed {result.InteractionCount} interaction record(s) into {result.ScenarioCount} scenario(s).");
             PrintDiagnostics(result.Diagnostics, @out);
-            @out.WriteLine($"Wrote reports to {result.ReportsDirectory}");
-            @out.WriteLine($"  {result.TestRunReportHtml}");
-
             var summary = RunSummaryConsoleWriter.Summarise(
                 result.Features,
                 result.ReportsDirectory,
@@ -333,9 +330,15 @@ internal static class IngestCommand
                 // shipped CLI agrees by luck (RunSuite rejects the name `Kronikol.Tool`); it stops
                 // agreeing the moment an ingest is given a suite or runs inside a host that resolves one.
                 suite: RunSuite.Resolve(options));
-            // Skip(1): the first line names the directory, which the two lines above already did.
-            foreach (var line in RunSummaryConsoleWriter.Build(summary).TrimEnd('\n').Split('\n').Skip(1))
-                @out.WriteLine(line);
+            // The whole pointer, through the writer that also emits the `::notice`. It used to print two
+            // lines of its own naming the directory and the HTML, and then Skip(1) the pointer's first
+            // line as a duplicate — but that line is the one carrying the FILE SIZES, and the size is the
+            // whole warning. A reader never told `TestRunReport.json 48.2 MB` has no reason not to open
+            // it, which is the single behaviour the rest of this design exists to prevent. This is also
+            // the only pointer an ingest user sees (`WriteRunSummaryToConsole` is off above) and the one
+            // channel where a workflow annotation is guaranteed to survive: `ingest` runs as a CI step and
+            // owns its stdout, which the library pointer under VSTest does not.
+            RunSummaryConsoleWriter.Write(summary, CiEnvironmentDetector.Detect(), @out.WriteLine);
 
             return 0;
         }

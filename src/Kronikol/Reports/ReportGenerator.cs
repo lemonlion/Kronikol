@@ -390,9 +390,9 @@ public static class ReportGenerator
         {
             Add(AgentInstructionsGenerator.ClaudeFileName, () =>
             {
-                var instructions = AgentInstructionsGenerator.Build(options.HtmlTestRunReportFileName);
-                WriteFile(instructions, AgentInstructionsGenerator.ClaudeFileName);
-                WriteFile(instructions, AgentInstructionsGenerator.AgentsFileName);
+                var block = AgentInstructionsBlock.Wrap(AgentInstructionsGenerator.Build(options.HtmlTestRunReportFileName));
+                WriteAgentInstructionsFile(block, AgentInstructionsGenerator.ClaudeFileName);
+                WriteAgentInstructionsFile(block, AgentInstructionsGenerator.AgentsFileName);
             });
         }
 
@@ -4860,6 +4860,52 @@ public static class ReportGenerator
         } while (usedNames.Contains(candidate));
 
         return candidate;
+    }
+
+    /// <summary>
+    /// Writes the agent block into <paramref name="fileName"/> without destroying anything else in it.
+    ///
+    /// <para>These two names are not Kronikol's alone. <c>kronikol init-agents</c> writes the same block
+    /// into a file a human owns and has always spliced; this used to overwrite. Where a reports folder and
+    /// an instruction file share a directory, a run silently deleted somebody's standing instructions —
+    /// and the body it left behind had no markers, so a later <c>init-agents</c> appended to it instead of
+    /// replacing it. One protocol now, in <see cref="AgentInstructionsBlock"/>, used by both.</para>
+    ///
+    /// <para>A file the protocol refuses (a block opened and never closed, or two blocks) is left exactly
+    /// as it is and recorded as a diagnostic. Every repair for those is a guess, and a wrong guess deletes
+    /// text nobody can get back.</para>
+    /// </summary>
+    private static void WriteAgentInstructionsFile(string block, string fileName)
+    {
+        var path = Path.Combine(CurrentReportsDirectory, fileName);
+
+        string? existing = null;
+        if (File.Exists(path))
+        {
+            try
+            {
+                existing = File.ReadAllText(path);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                // Fall through to the plain write, which reports its own failure.
+            }
+        }
+
+        if (existing is null)
+        {
+            WriteFile(block + "\n", fileName);
+            return;
+        }
+
+        if (AgentInstructionsBlock.Merge(existing, block, out var problem) is { } merged)
+        {
+            WriteFile(merged, fileName);
+            return;
+        }
+
+        ReportDiagnosticsScope.Record(DiagnosticKind.OutputFailure, $"Left {fileName} alone: it {problem}");
+        Console.WriteLine($"⚠ WARNING: left {fileName} alone — it {problem}");
     }
 
     private static string WriteFile(string text, string fileName)
