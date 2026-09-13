@@ -61,7 +61,7 @@ internal sealed class ReportIndex
     /// <summary>
     /// How many payload <see cref="FileStream"/>s have been opened over this report so far — every
     /// payload open goes through <see cref="PayloadReader.Open"/>, which counts here. The deterministic
-    /// observable the perf tests assert on instead of wall-clock (QUERY_PERF_PLAN.md §4.2): a bulk
+    /// observable the perf tests assert on instead of wall-clock (plans/QUERY_PERF_PLAN.md §4.2): a bulk
     /// command reads its thousands of bodies over one shared handle, and a regression to
     /// open-per-body fails those tests rather than just showing up as a slow report. Instance state,
     /// not static, so parallel test runs cannot race it.

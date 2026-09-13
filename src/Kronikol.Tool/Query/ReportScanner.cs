@@ -169,7 +169,7 @@ internal static class ReportScanner
 
         // ─── Position tracking ─────────────────────────────────
 
-        // The scanner's hottest bookkeeping (QUERY_PERF_PLAN.md §3.4): it runs per token over a 100 MB+
+        // The scanner's hottest bookkeeping (plans/QUERY_PERF_PLAN.md §3.4): it runs per token over a 100 MB+
         // file, so property names are interned against the closed set the walker dispatches on (no
         // per-name string), array positions travel as a null segment (no Index.ToString() per element),
         // and At is fixed-arity (no params array per call).

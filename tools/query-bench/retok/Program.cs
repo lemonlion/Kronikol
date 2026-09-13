@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-// The BCL-only re-tokenization benchmark behind QUERY_PERF_PLAN.md sections 1.3/1.6: a faithful minimal
+// The BCL-only re-tokenization benchmark behind plans/QUERY_PERF_PLAN.md sections 1.3/1.6: a faithful minimal
 // scan of a TestRunReport.json doing only the scanner's real obligations - every property name
 // materialized, every "content" string unescaped and SHA-1-hashed - with none of the walker's
 // bookkeeping. The difference between this and ReportScanner.Scan is the scanner's overhead.

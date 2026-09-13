@@ -1,4 +1,4 @@
-# CLI wall-clock bench for QUERY_PERF_PLAN.md: same-session medians of 3 (after 1 warmup), Release.
+# CLI wall-clock bench for plans/QUERY_PERF_PLAN.md: same-session medians of 3 (after 1 warmup), Release.
 # Numbers are only comparable within one session on one machine - see README.md for the protocol.
 #
 #   dotnet build src/Kronikol.Tool -c Release

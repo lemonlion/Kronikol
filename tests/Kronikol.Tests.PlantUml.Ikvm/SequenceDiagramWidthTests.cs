@@ -309,7 +309,7 @@ public class SequenceDiagramWidthTests : IDisposable
         // height. AssertFits still measures height, because the SVG viewBox is the crop proxy for
         // every axis — but 4096 is raster-only and these diagrams always render client-side, so past
         // about seventy nodes it is a PNG render or a copied-out source that suffers, never the
-        // report. A separate, pre-existing axis, recorded in DIAGRAM_WIDTH_PLAN.md rather than
+        // report. A separate, pre-existing axis, recorded in plans/DIAGRAM_WIDTH_PLAN.md rather than
         // fixed here.
         var sql = "SELECT " + string.Join(", ", Enumerable.Range(0, 7)
             .Select(i => $"o.CustomerReferenceNumber{i:D2}")) + " FROM Orders AS o WHERE o.Status = @p0";

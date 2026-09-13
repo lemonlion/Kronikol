@@ -1,4 +1,4 @@
-# query-bench — the QUERY_PERF_PLAN.md measurement harness
+# query-bench — the plans/QUERY_PERF_PLAN.md measurement harness
 
 Manual wall-clock benchmarks for `kronikol query` on a large report. **Not wired into CI** — wall-clock
 in CI is noise; this exists so before/after comparisons and any future regression hunt are one command.
@@ -35,7 +35,7 @@ dotnet run -c Release --project tools/query-bench/retok -- tools/query-bench/Tes
 
 ### 2026-08-26 — the plan's original cost model (dev box A, Windows, 129.7 MB report)
 
-The measurements Part 1 of `QUERY_PERF_PLAN.md` is built on (pre-harness session; preserved from the
+The measurements Part 1 of `plans/QUERY_PERF_PLAN.md` is built on (pre-harness session; preserved from the
 plan, not reproducible by this harness byte-for-byte):
 
 | Command | Baseline | With §3.1 alone |

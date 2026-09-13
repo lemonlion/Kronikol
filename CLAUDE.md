@@ -41,6 +41,10 @@ After every session of work is complete and the full test suite has passed:
 
 After any changes are made that might affect the public API or functionality, documentation must be updated to reflect those changes. This includes updating the README (if relevant), the changelog, and mainly the wiki at `../Kronikol.wiki`.
 
+## Plans
+
+Design records live in `plans/`, never at the repo root. A new `*_PLAN.md` goes there, and `plans/PLANS_STATUS.md` is the index — add or update its row when a plan is created, advances or is completed.
+
 ## Playwright E2E Test Rules
 
 When writing or modifying Playwright end-to-end tests in `tests/Kronikol.Tests.EndToEnd/`:

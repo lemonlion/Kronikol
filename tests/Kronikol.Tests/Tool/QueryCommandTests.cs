@@ -1480,7 +1480,7 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("filler", File.ReadAllText(target));
     }
 
-    // ─── Perf observables (QUERY_PERF_PLAN.md) ─────────────────
+    // ─── Perf observables (plans/QUERY_PERF_PLAN.md) ─────────────────
     // Perf properties are asserted on deterministic observables, never on wall-clock — wall-clock lives
     // in the manual harness at tools/query-bench.
 

@@ -2,7 +2,7 @@ namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
 /// The per-note appearance controls: monospace payload text and full-width notes
-/// (NOTE_WRAP_AND_WIDTH_PLAN.md Part B). Every assertion here reads what the engine
+/// (plans/NOTE_WRAP_AND_WIDTH_PLAN.md Part B). Every assertion here reads what the engine
 /// <b>paints</b> — PlantUML emits one <c>&lt;text&gt;</c> element per word, so display rows are the
 /// distinct <c>y</c> values and a row's text is its elements ordered by <c>x</c>. Asserting on the
 /// source would pass for a source that draws nothing of the sort.

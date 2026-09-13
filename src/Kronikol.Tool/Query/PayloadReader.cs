@@ -22,7 +22,7 @@ internal static class PayloadReader
     /// <summary>
     /// The same read over an already-open handle — the bulk path. <see cref="BodyCache"/> holds one
     /// handle for a whole command; opening per body was measured at up to ~0.75 s per bulk command on a
-    /// 130 MB report (QUERY_PERF_PLAN.md §1.2). Single-shot call sites keep the path-opening overload.
+    /// 130 MB report (plans/QUERY_PERF_PLAN.md §1.2). Single-shot call sites keep the path-opening overload.
     /// </summary>
     public static string? Read(FileStream stream, Slice slice)
     {

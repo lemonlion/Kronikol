@@ -3,7 +3,7 @@ using Kronikol.Reports;
 namespace Kronikol.Tests.Reports;
 
 /// <summary>
-/// The toggle-defaults resolution chain (TOGGLE_DEFAULTS_PLAN.md §3.2), modelled on
+/// The toggle-defaults resolution chain (plans/TOGGLE_DEFAULTS_PLAN.md §3.2), modelled on
 /// <c>SqlResponseDetailResolverTests</c>: built-in passthrough, TestRunReport override,
 /// Specifications inherit-unless-overridden, per-property independence, the flat
 /// <c>NotePayloadFormat</c> precedence, and the undefined-enum-cast guard.

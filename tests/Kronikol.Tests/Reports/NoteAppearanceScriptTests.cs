@@ -4,7 +4,7 @@ namespace Kronikol.Tests.Reports;
 
 /// <summary>
 /// Structural tests for the per-note appearance controls — monospace payload text and full-width
-/// notes (NOTE_WRAP_AND_WIDTH_PLAN.md Part B). Behavioural coverage is in the Playwright suite
+/// notes (plans/NOTE_WRAP_AND_WIDTH_PLAN.md Part B). Behavioural coverage is in the Playwright suite
 /// (<c>NoteAppearanceTests</c>), which renders real diagrams and reads the painted SVG back; these
 /// pin the wiring that a refactor could quietly break.
 /// </summary>

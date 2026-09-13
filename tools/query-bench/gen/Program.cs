@@ -2,7 +2,7 @@ using System.Net;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
-// Synthesizes the QUERY_PERF_PLAN.md benchmark report: 200 scenarios x 60 request/response pairs
+// Synthesizes the plans/QUERY_PERF_PLAN.md benchmark report: 200 scenarios x 60 request/response pairs
 // (24,000 interaction entries), every body distinct so distinct-body dedup wins nothing, responses
 // ~6 KB. Lands at roughly 130 MB of TestRunReport.json.
 //
