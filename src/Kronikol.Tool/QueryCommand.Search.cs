@@ -11,7 +11,7 @@ namespace Kronikol.Tool;
 internal static partial class QueryCommand
 {
     /// <summary>What <c>grep --in</c> accepts. The first four are the default set.</summary>
-    internal static readonly string[] GrepTargets = ["bodies", "uris", "steps", "assertions", "headers", "notes"];
+    internal static readonly string[] GrepTargets = ["bodies", "uris", "steps", "assertions", "names", "errors", "headers", "notes"];
 
     /// <summary>
     /// Resolves <c>--in</c>, refusing an unknown target. Dropping one silently is the worst failure this
@@ -20,7 +20,12 @@ internal static partial class QueryCommand
     /// </summary>
     private static string[]? ResolveGrepTargets(QueryOptions options, TextWriter error)
     {
-        var targets = (options.In ?? "bodies,uris,steps,assertions")
+        // `names` and `errors` are in the default set because they are the answer to the question the verb
+        // is usually asked - where did this value come from - and because they cost nothing: both are
+        // already in the index, and neither opens a payload. Their absence made a value that is in the
+        // report in three places come back as `"…" is not in bodies, uris, steps, assertions`, which
+        // reads as a proof of absence from the one verb whose job is to give one honestly.
+        var targets = (options.In ?? "bodies,uris,steps,assertions,names,errors")
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         // `--in ""`, `","` and `" "` are not null, so the default set does not apply, and they all split
@@ -82,6 +87,19 @@ internal static partial class QueryCommand
                         hits.Add($"{scenario.Address}/{path,-6} {(step.IsAssertion ? "assertion" : "step")}  "
                                  + QueryWriter.OneLine(step.FailureMessage ?? step.Text, 110));
                 }
+            }
+
+            if (targets.Contains("names")
+                && (scenario.Name.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                    || scenario.FeatureName.Contains(needle, StringComparison.OrdinalIgnoreCase)))
+                hits.Add($"{scenario.Address,-9} name       {QueryWriter.OneLine($"{scenario.FeatureName} › {scenario.Name}", 110)}");
+
+            if (targets.Contains("errors"))
+            {
+                if (scenario.ErrorMessage is { } message && message.Contains(needle, StringComparison.OrdinalIgnoreCase))
+                    hits.Add($"{scenario.Address,-9} error      {QueryWriter.OneLine(message, 110)}");
+                if (scenario.ErrorStackTrace is { } stack && stack.Contains(needle, StringComparison.OrdinalIgnoreCase))
+                    hits.Add($"{scenario.Address,-9} stack      {QueryWriter.OneLine(StackFrameAround(stack, needle), 110)}");
             }
 
             if (targets.Contains("uris"))
@@ -170,6 +188,19 @@ internal static partial class QueryCommand
         writer.Page(hits, options.Offset, Math.Min(options.Limit, 200), "hits", hit => writer.Line(hit),
             ["grep", needle, .. options.RerunArgs()]);
         return 0;
+    }
+
+    /// <summary>
+    /// The one stack frame the needle is in, rather than the whole trace. A stack is the longest string a
+    /// scenario carries and printing it whole would make one hit cost more than the rest of the answer;
+    /// the frame that matched is what tells the reader where to look.
+    /// </summary>
+    private static string StackFrameAround(string stack, string needle)
+    {
+        foreach (var line in stack.Split('\n'))
+            if (line.Contains(needle, StringComparison.OrdinalIgnoreCase))
+                return line.Trim();
+        return stack;
     }
 
     private static string Excerpt(string text, string needle)

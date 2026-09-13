@@ -105,7 +105,8 @@ matters.
 - Read the `… 24 of 127 · next: --offset 24` footer. It is always there; if you did not see one, you saw
   everything.
 - **Filter harder before paging.** `--service`, `--status 5xx`, `--step`, `--grep` and `--group` all beat
-  `--offset`. On `grep`, `--in` narrows the targets (default `bodies,uris,steps,assertions`; `--in bodies`
+  `--offset`. On `grep`, `--in` narrows the targets (default `bodies,uris,steps,assertions,names,errors`;
+  `--in bodies`
   alone is cheaper, `notes` is the expensive add-on).
 - **Aggregate instead of paging.** `interactions --group-by service,status --sort errors` turns hundreds
   of rows into one bucket table; `values --path` does the same for a body field.

@@ -243,8 +243,37 @@ internal static partial class QueryCommand
 
         if (rows.Count == 0)
         {
-            writer.Note(options.Failed ? "no assertions failed" : "no tracked assertions in this report");
-            writer.Footer("assertions reach the data file only when IncludeTrackedAssertionsInStepList is on");
+            // "no assertions failed" was printed over a run with fifteen failures, and the remedy named an
+            // option that was already on. Two different states were being answered with one sentence, and
+            // the one the reader is in decides what to do next: a report that tracks no assertions at all
+            // (the option), against a report that tracks them and had none fail (the failure was not at an
+            // assertion - the test threw first, which is a per-failure fact, not a per-project one).
+            // Either way, if the report says scenarios failed, the answer must not read as "nothing did".
+            var tracked = scope.Sum(s => s.AllSteps().Count(row => row.Step.IsAssertion
+                                                                   && (stepScope is null || Address.PathCoveredBy(row.Path, stepScope))));
+            var failedScenarios = index.Scenarios.Count(s => s.Failed);
+            var still = failedScenarios > 0
+                ? $" · {failedScenarios} scenario{(failedScenarios == 1 ? "" : "s")} failed — `failures` has the message and the failing step"
+                : "";
+
+            if (tracked == 0)
+            {
+                writer.Note("this report tracks no assertions");
+                writer.Footer("assertions reach the data file only when IncludeTrackedAssertionsInStepList is on" + still);
+            }
+            else if (options.Failed)
+            {
+                writer.Note($"no assertion failed — {tracked} tracked, all passed");
+                writer.Footer(failedScenarios > 0
+                    ? $"{failedScenarios} scenario{(failedScenarios == 1 ? "" : "s")} failed without reaching a tracked assertion — `failures` has the message"
+                    : "nothing failed");
+            }
+            else
+            {
+                writer.Note("no tracked assertions in this scope");
+                writer.Footer($"the report holds {tracked}{still}");
+            }
+
             return 0;
         }
 

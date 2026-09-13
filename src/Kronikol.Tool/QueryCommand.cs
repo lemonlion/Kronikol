@@ -463,7 +463,7 @@ internal static partial class QueryCommand
         writer.WriteLine("  diagram      <report> s3/d0 --out F          the raw PlantUML; never printed to stdout");
         writer.WriteLine();
         writer.WriteLine("Search and comparison");
-        writer.WriteLine("  grep         <report> \"4173\" [--in bodies,headers,uris,steps,assertions,notes] [--values]");
+        writer.WriteLine("  grep         <report> \"4173\" [--in bodies,uris,steps,assertions,names,errors,headers,notes] [--values]");
         writer.WriteLine("               [--number [--tolerance 0.5|1%]]   numeric match across formatting — 4,173.00 ≈ 4173 ≈ 4.173,00");
         writer.WriteLine("  trace        <report> <id | prefix≥8hex | s3/i47>   follow a W3C trace id across the run, chronologically");
         writer.WriteLine("  compare      <report> s3 s7                  two scenarios in one run");

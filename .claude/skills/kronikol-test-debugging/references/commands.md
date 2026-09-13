@@ -294,8 +294,12 @@ when the matched text differed from the needle it says so (`$.display = "4,173.0
 a 1e-9 relative epsilon so `4173.0` matches `4173`. A non-numeric needle with `--number` exits 2 —
 drop the flag for text search.
 
-`--in` picks the targets, as a comma list: `bodies`, `uris`, `steps` and `assertions` are the default
-set; `headers` and `notes` are opt-in, and notes are searched last because they are the expensive target.
+`--in` picks the targets, as a comma list: `bodies`, `uris`, `steps`, `assertions`, `names` and `errors`
+are the default set; `headers` and `notes` are opt-in, and notes are searched last because they are the
+expensive target. `names` covers the feature and scenario titles; `errors` covers a scenario's
+`errorMessage` and `errorStackTrace`, and a stack hit prints the frame the needle is in rather than the
+whole trace. Both are in the default set because they are the answer to the question the verb is usually
+asked, and because both are already in the index and open no payload.
 An unknown target exits 2 rather than searching nothing — a silently dropped `--in bodys` would have read
 exactly like proof the value is absent — and so does an empty one (`--in ""`, `--in ,`), which is what you
 get from joining a list that came back empty. Every paging footer carries `--in` and `--values` forward, so
