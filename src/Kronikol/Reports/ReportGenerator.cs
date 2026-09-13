@@ -1960,19 +1960,19 @@ public static class ReportGenerator
 
         foreach (var feature in features.OrderBy(x => x.DisplayName))
         {
-            yml.Append("  - Feature: " + feature.DisplayName.SanitiseForYml() + "\n");
+            AppendYaml(yml, "  - Feature: ", feature.DisplayName);
 
             if (feature.Endpoint is not null)
                 yml.Append("    Endpoint: " + feature.Endpoint + "\n");
 
             if (feature.Description is not null)
-                yml.Append("    Description: " + feature.Description.SanitiseForYml() + "\n");
+                AppendYaml(yml, "    Description: ", feature.Description);
 
             if (feature.Labels is { Length: > 0 })
             {
                 yml.Append("    Labels:\n");
                 foreach (var label in feature.Labels)
-                    yml.Append("      - " + label.SanitiseForYml() + "\n");
+                    AppendYaml(yml, "      - ", label);
             }
 
             yml.Append("    Scenarios:\n");
@@ -1980,21 +1980,21 @@ public static class ReportGenerator
             var orderedScenarios = feature.Scenarios.OrderByDescending(x => x.IsHappyPath).ThenBy(x => x.DisplayName);
             foreach (var scenario in orderedScenarios)
             {
-                yml.Append("      - Scenario: " + scenario.DisplayName.SanitiseForYml() + "\n");
+                AppendYaml(yml, "      - Scenario: ", scenario.DisplayName);
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
 
                 if (scenario.Labels is { Length: > 0 })
                 {
                     yml.Append("        Labels:\n");
                     foreach (var label in scenario.Labels)
-                        yml.Append("          - " + label.SanitiseForYml() + "\n");
+                        AppendYaml(yml, "          - ", label);
                 }
 
                 if (scenario.Categories is { Length: > 0 })
                 {
                     yml.Append("        Categories:\n");
                     foreach (var cat in scenario.Categories)
-                        yml.Append("          - " + cat.SanitiseForYml() + "\n");
+                        AppendYaml(yml, "          - ", cat);
                 }
 
                 // Emitted as a sibling of Steps, matching the TestRunReport writers: merging the two would
@@ -2023,7 +2023,7 @@ public static class ReportGenerator
     private static void AppendYamlStep(StringBuilder yml, ScenarioStep step, string indent)
     {
         var text = step.Keyword is not null ? $"{step.Keyword} {step.Text}" : step.Text;
-        yml.Append(indent + "- " + text.SanitiseForYml() + "\n");
+        AppendYaml(yml, indent + "- ", text);
 
         if (step.SubSteps is { Length: > 0 })
         {
@@ -3673,8 +3673,8 @@ public static class ReportGenerator
         return format switch
         {
             DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite), fileName),
-            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths, ciMetadata, suite), fileName),
-            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, durations, stepPaths, ciMetadata, suite), fileName),
+            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite), fileName),
+            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
@@ -4251,7 +4251,7 @@ public static class ReportGenerator
         s.TableReferenceFormattedValue
     };
 
-    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null, string? suite = null)
+    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null)
     {
         var resolvedSuite = suite ?? RunSuite.Current;
         var doc = new XDocument(
@@ -4311,6 +4311,13 @@ public static class ReportGenerator
                                         var logs = logLookup[s.Id].ToArray();
                                         if (logs.Length > 0)
                                             scenarioElements.Add(new XElement("HttpInteractions", logs.Select((l, i) => MapLogXml(l, durations, StepPathAt(stepPaths, s.Id, i)))));
+
+                                        if (annotations is not null && annotations.TryGetValue(s.Id, out var scenarioAnnotations) && scenarioAnnotations.Count > 0)
+                                            scenarioElements.Add(new XElement("Annotations", scenarioAnnotations.Select(a =>
+                                                new XElement("Annotation",
+                                                    new XElement("Index", a.Index.ToString(CultureInfo.InvariantCulture)),
+                                                    new XElement("Kind", a.Kind.ToString()),
+                                                    new XElement("Text", a.Text)))));
                                     }
 
                                     return new XElement("Scenario", scenarioElements.ToArray());
@@ -4318,22 +4325,45 @@ public static class ReportGenerator
                             )
                         )
                     )
-                )
+                ),
+                MapDiagnosticsXml(diagnostics)
             )
         );
         return doc.ToString();
     }
 
+    /// <summary>
+    /// The <c>Diagnostics</c> element: the XML spelling of what <see cref="MapDiagnosticsJson"/> writes.
+    /// </summary>
+    /// <remarks>
+    /// Written even when empty, because the alternative is that a reader cannot tell a clean run from a
+    /// format that does not carry diagnostics - which is the state this element was added to end. It sits
+    /// last, where the JSON has it, and the XSD's sequence says so too.
+    /// </remarks>
+    private static XElement MapDiagnosticsXml(IReadOnlyList<DiagnosticEntry>? diagnostics) =>
+        new("Diagnostics", (diagnostics ?? []).Select(d =>
+            new XElement("Diagnostic",
+                new XElement("Kind", d.Kind.ToString()),
+                new XElement("Message", d.Message),
+                d.ScenarioId is { Length: > 0 } scenarioId ? new XElement("ScenarioId", scenarioId) : null)));
+
     /// <inheritdoc cref="MapLogJson"/>
     private static XElement MapLogXml(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null) =>
         new("HttpInteraction",
             new XElement("Type", log.Type.ToString()),
-            new XElement("Method", log.Method.Value?.ToString()?.ToUpperInvariant()),
+            // Omitted when there is none, like every other line here. It used to be written
+            // unconditionally, so a bare event - which has no verb - produced <Method />: not "no
+            // method" but the empty string, which is a different claim. XML has no way to tell those two
+            // apart in element content, so an empty label is written as absent rather than as blank.
+            log.Method.Value?.ToString()?.ToUpperInvariant() is { Length: > 0 } xmlMethod ? new XElement("Method", xmlMethod) : null,
             new XElement("Uri", log.Uri.ToString()),
             new XElement("ServiceName", log.ServiceName),
             new XElement("CallerName", log.CallerName),
             log.Content != null ? new XElement("Content", log.Content) : null,
-            log.Headers.Length > 0 ? new XElement("Headers", log.Headers.Select(h => new XElement("Header", new XElement("Key", h.Key), new XElement("Value", h.Value)))) : null,
+            log.Headers.Length > 0 ? new XElement("Headers", log.Headers.Select(h => new XElement("Header",
+                new XElement("Key", h.Key),
+                // Same again: a header sent with no value at all read back identically to one sent empty.
+                h.Value is { Length: > 0 } headerValue ? new XElement("Value", headerValue) : null))) : null,
             InteractionStatus.Split(log.StatusCode).Code is { } xmlStatusCode ? new XElement("StatusCode", xmlStatusCode) : null,
             InteractionStatus.Split(log.StatusCode).Text is { } xmlStatusText ? new XElement("StatusText", xmlStatusText) : null,
             new XElement("TraceId", log.TraceId.ToString()),
@@ -4393,20 +4423,91 @@ public static class ReportGenerator
     /// <summary>A YAML line written only when its value is there - the writer omits, it does not blank.</summary>
     private static void AppendYamlIfPresent(StringBuilder yml, string prefix, string? value)
     {
-        if (value is not null) yml.Append(prefix + value.SanitiseForYml() + "\n");
+        if (value is not null) AppendYaml(yml, prefix, value);
     }
 
-    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, CiMetadata? ciMetadata = null, string? suite = null)
+    /// <summary>
+    /// Writes <c>{prefix}{value}</c> and a newline, with the value in whichever YAML form reads back as
+    /// exactly the string given.
+    /// </summary>
+    /// <remarks>
+    /// A block scalar's lines are written at <paramref name="prefix"/>'s own width, which is past the end
+    /// of the key and therefore deeper than the mapping holding it - the indentation is what makes those
+    /// lines part of this value rather than the start of the next key.
+    /// </remarks>
+    private static void AppendYaml(StringBuilder yml, string prefix, string value)
+    {
+        yml.Append(prefix).Append(value.ToYamlScalar(new string(' ', BlockIndentFor(prefix)))).Append('\n');
+    }
+
+    /// <summary>
+    /// The column a block scalar written after <paramref name="prefix"/> puts its lines at.
+    /// </summary>
+    /// <remarks>
+    /// A block scalar has to be indented past its parent node, and the parent is whatever the prefix
+    /// opened last: for <c>"        ErrorMessage: "</c> that is the mapping at column 8, and for
+    /// <c>"          - Kind: "</c> it is the mapping inside the sequence entry, at column 12. So the
+    /// measure is where the key begins - after the indentation and after any <c>- </c> indicators - plus
+    /// two. Using the prefix's own length instead is always safe but indents a two-line message twenty
+    /// columns in, which defeats the point of choosing YAML.
+    /// </remarks>
+    private static int BlockIndentFor(string prefix)
+    {
+        var at = 0;
+        while (at < prefix.Length && prefix[at] == ' ') at++;
+        while (at + 1 < prefix.Length && prefix[at] == '-' && prefix[at + 1] == ' ') at += 2;
+        return at + 2;
+    }
+
+    /// <summary>
+    /// The same, for a value that may be absent. An absent one is written as an empty scalar, which reads
+    /// back as null - matching the JSON writer, which emits the key with a null rather than dropping it.
+    /// </summary>
+    private static void AppendYamlNullable(StringBuilder yml, string prefix, string? value)
+    {
+        if (value is null)
+            yml.Append(prefix.TrimEnd()).Append('\n');
+        else
+            AppendYaml(yml, prefix, value);
+    }
+
+    /// <summary>
+    /// A YAML sequence of strings, written even when it is empty.
+    /// </summary>
+    /// <remarks>
+    /// An empty block sequence cannot be expressed - there is nothing to indent - so an empty one is
+    /// written in flow form as <c>[]</c>. It has to be written at all because the schema marks these
+    /// keys required, and it is required because the JSON writer emits them unconditionally: the two
+    /// files are the same report, and a consumer should not have to ask which format it is holding
+    /// before it knows whether a missing `labels` means "none" or "not recorded".
+    /// </remarks>
+    private static void AppendYamlSequence(StringBuilder yml, string indent, string key, IEnumerable<string>? values)
+    {
+        var items = values?.ToArray() ?? [];
+        if (items.Length == 0)
+        {
+            yml.Append(indent).Append(key).Append(": []\n");
+            return;
+        }
+
+        yml.Append(indent).Append(key).Append(":\n");
+        foreach (var item in items)
+            AppendYaml(yml, indent + "  - ", item);
+    }
+
+    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null)
     {
         var resolvedSuite = suite ?? RunSuite.Current;
         var yml = new StringBuilder();
         yml.Append("FormatVersion: " + ReportFormatVersion + "\n");
-        yml.Append("KronikolVersion: " + KronikolVersion + "\n");
+        AppendYaml(yml, "KronikolVersion: ", KronikolVersion);
         AppendYamlIfPresent(yml, "Suite: ", resolvedSuite);
-        yml.Append("StartTime: " + startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "\n");
-        yml.Append("EndTime: " + endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "\n");
+        // Quoted, by the emitter: an unquoted 2026-01-01T10:00:00Z is a timestamp to a YAML 1.1
+        // parser, and the schema says these two are strings.
+        AppendYaml(yml, "StartTime: ", startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"));
+        AppendYaml(yml, "EndTime: ", endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"));
         yml.Append("CiMetadata:\n");
-        yml.Append("  Provider: " + (ciMetadata?.Provider ?? CiEnvironment.None) + "\n");
+        AppendYaml(yml, "  Provider: ", (ciMetadata?.Provider ?? CiEnvironment.None).ToString());
         AppendYamlIfPresent(yml, "  BuildNumber: ", ciMetadata?.BuildNumber);
         AppendYamlIfPresent(yml, "  Branch: ", ciMetadata?.Branch);
         AppendYamlIfPresent(yml, "  CommitSha: ", ciMetadata?.CommitSha);
@@ -4415,72 +4516,57 @@ public static class ReportGenerator
         AppendYamlIfPresent(yml, "  RunId: ", ciMetadata?.RunId);
         AppendYamlIfPresent(yml, "  RunAttempt: ", ciMetadata?.RunAttempt);
         yml.Append("Environment:\n");
-        yml.Append("  Os: " + RunEnvironment.Current.Os.SanitiseForYml() + "\n");
-        yml.Append("  Runtime: " + RunEnvironment.Current.Runtime.SanitiseForYml() + "\n");
+        AppendYaml(yml, "  Os: ", RunEnvironment.Current.Os);
+        AppendYaml(yml, "  Runtime: ", RunEnvironment.Current.Runtime);
         yml.Append("Features:\n");
 
         foreach (var feature in features.OrderBy(f => f.DisplayName))
         {
-            yml.Append("  - Name: " + feature.DisplayName.SanitiseForYml() + "\n");
+            AppendYaml(yml, "  - Name: ", feature.DisplayName);
 
             if (feature.Endpoint is not null)
-                yml.Append("    Endpoint: " + feature.Endpoint + "\n");
+                AppendYaml(yml, "    Endpoint: ", feature.Endpoint);
 
             if (feature.Description is not null)
-                yml.Append("    Description: " + feature.Description.SanitiseForYml() + "\n");
+                AppendYaml(yml, "    Description: ", feature.Description);
 
             if (feature.SourceFile is not null)
-                yml.Append("    SourceFile: " + feature.SourceFile.SanitiseForYml() + "\n");
+                AppendYaml(yml, "    SourceFile: ", feature.SourceFile);
 
-            if (feature.Labels is { Length: > 0 })
-            {
-                yml.Append("    Labels:\n");
-                foreach (var label in feature.Labels)
-                    yml.Append("      - " + label.SanitiseForYml() + "\n");
-            }
+            AppendYamlSequence(yml, "    ", "Labels", feature.Labels);
 
             yml.Append("    Scenarios:\n");
             foreach (var scenario in feature.Scenarios)
             {
-                yml.Append("      - Name: " + scenario.DisplayName.SanitiseForYml() + "\n");
-                yml.Append("        StableId: " + ScenarioStableId.Compute(resolvedSuite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues) + "\n");
+                AppendYaml(yml, "      - Id: ", scenario.Id);
+                AppendYaml(yml, "        Name: ", scenario.DisplayName);
+                AppendYaml(yml, "        StableId: ", ScenarioStableId.Compute(resolvedSuite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues));
                 if (scenario.Description is not null)
-                    yml.Append("        Description: " + scenario.Description.SanitiseForYml() + "\n");
+                    AppendYaml(yml, "        Description: ", scenario.Description);
                 if (scenario.Attempt is not null)
                     yml.Append("        Attempt: " + scenario.Attempt.Value.ToString(CultureInfo.InvariantCulture) + "\n");
                 if (scenario.SourceFile is not null)
-                    yml.Append("        SourceFile: " + scenario.SourceFile.SanitiseForYml() + "\n");
+                    AppendYaml(yml, "        SourceFile: ", scenario.SourceFile);
                 if (scenario.SourceLine is not null)
                     yml.Append("        SourceLine: " + scenario.SourceLine.Value.ToString(CultureInfo.InvariantCulture) + "\n");
-                yml.Append("        Result: " + scenario.Result + "\n");
+                AppendYaml(yml, "        Result: ", scenario.Result.ToString());
                 yml.Append("        DurationSeconds: " + (scenario.Duration?.TotalSeconds ?? 0.0).ToString("F3") + "\n");
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
 
                 if (scenario.ErrorMessage is not null)
-                    yml.Append("        ErrorMessage: " + scenario.ErrorMessage.SanitiseForYml() + "\n");
+                    AppendYaml(yml, "        ErrorMessage: ", scenario.ErrorMessage);
 
                 if (scenario.ErrorStackTrace is not null)
-                    yml.Append("        ErrorStackTrace: " + scenario.ErrorStackTrace.SanitiseForYml() + "\n");
+                    AppendYaml(yml, "        ErrorStackTrace: ", scenario.ErrorStackTrace);
 
                 if (scenario.FailureCause is not null)
-                    yml.Append("        FailureCause: " + scenario.FailureCause.SanitiseForYml() + "\n");
+                    AppendYaml(yml, "        FailureCause: ", scenario.FailureCause);
 
-                if (scenario.Labels is { Length: > 0 })
-                {
-                    yml.Append("        Labels:\n");
-                    foreach (var label in scenario.Labels)
-                        yml.Append("          - " + label.SanitiseForYml() + "\n");
-                }
-
-                if (scenario.Categories is { Length: > 0 })
-                {
-                    yml.Append("        Categories:\n");
-                    foreach (var cat in scenario.Categories)
-                        yml.Append("          - " + cat.SanitiseForYml() + "\n");
-                }
+                AppendYamlSequence(yml, "        ", "Labels", scenario.Labels);
+                AppendYamlSequence(yml, "        ", "Categories", scenario.Categories);
 
                 if (scenario.Rule is not null)
-                    yml.Append("        Rule: " + scenario.Rule.SanitiseForYml() + "\n");
+                    AppendYaml(yml, "        Rule: ", scenario.Rule);
 
                 if (scenario.BackgroundSteps is { Length: > 0 })
                 {
@@ -4495,16 +4581,20 @@ public static class ReportGenerator
                     foreach (var step in scenario.Steps)
                         AppendTestRunYamlStep(yml, step, "          ");
                 }
+                else
+                {
+                    yml.Append("        Steps: []\n");
+                }
 
                 if (scenario.Attachments is { Length: > 0 })
                 {
                     yml.Append("        Attachments:\n");
                     foreach (var att in scenario.Attachments)
                     {
-                        yml.Append("          - Name: " + att.Name.SanitiseForYml() + "\n");
-                        yml.Append("            RelativePath: " + att.RelativePath.SanitiseForYml() + "\n");
+                        AppendYaml(yml, "          - Name: ", att.Name);
+                        AppendYaml(yml, "            RelativePath: ", att.RelativePath);
                         if (att.MediaType is not null)
-                            yml.Append("            MediaType: " + att.MediaType.SanitiseForYml() + "\n");
+                            AppendYaml(yml, "            MediaType: ", att.MediaType);
                     }
                 }
 
@@ -4515,7 +4605,7 @@ public static class ReportGenerator
                     {
                         yml.Append("        Diagrams:\n");
                         foreach (var diag in diags)
-                            yml.Append("          - |\n" + string.Join("\n", diag.Split('\n').Select(line => "            " + line)) + "\n");
+                            AppendYaml(yml, "          - ", diag);
                     }
                 }
 
@@ -4528,7 +4618,37 @@ public static class ReportGenerator
                         for (var i = 0; i < logs.Length; i++)
                             AppendTestRunYamlLog(yml, logs[i], "          ", durations, StepPathAt(stepPaths, scenario.Id, i));
                     }
+
+                    if (annotations is not null && annotations.TryGetValue(scenario.Id, out var scenarioAnnotations) && scenarioAnnotations.Count > 0)
+                    {
+                        yml.Append("        Annotations:\n");
+                        foreach (var annotation in scenarioAnnotations)
+                        {
+                            yml.Append("          - Index: " + annotation.Index.ToString(CultureInfo.InvariantCulture) + "\n");
+                            AppendYaml(yml, "            Kind: ", annotation.Kind.ToString());
+                            AppendYaml(yml, "            Text: ", annotation.Text);
+                        }
+                    }
                 }
+            }
+        }
+
+        // Last, where the JSON has it, and written even when empty - a reader has to be able to tell a
+        // run with nothing to report from a format that could not have told them either way.
+        yml.Append("Diagnostics:");
+        if (diagnostics is not { Count: > 0 })
+        {
+            yml.Append(" []\n");
+        }
+        else
+        {
+            yml.Append('\n');
+            foreach (var entry in diagnostics)
+            {
+                AppendYaml(yml, "  - Kind: ", entry.Kind.ToString());
+                AppendYaml(yml, "    Message: ", entry.Message);
+                if (entry.ScenarioId is { Length: > 0 } scenarioId)
+                    AppendYaml(yml, "    ScenarioId: ", scenarioId);
             }
         }
 
@@ -4537,15 +4657,15 @@ public static class ReportGenerator
 
     private static void AppendTestRunYamlStep(StringBuilder yml, ScenarioStep step, string indent)
     {
-        yml.Append(indent + "- Keyword: " + (step.Keyword ?? "").SanitiseForYml() + "\n");
-        yml.Append(indent + "  Text: " + step.Text.SanitiseForYml() + "\n");
-        yml.Append(indent + "  Status: " + (step.Status?.ToString() ?? "") + "\n");
+        AppendYaml(yml, indent + "- Keyword: ", (step.Keyword ?? ""));
+        AppendYaml(yml, indent + "  Text: ", step.Text);
+        AppendYamlNullable(yml, indent + "  Status: ", step.Status?.ToString());
         if (step.Duration != null)
             yml.Append(indent + "  DurationSeconds: " + step.Duration.Value.TotalSeconds.ToString("F3") + "\n");
         if (step.FailureMessage != null)
-            yml.Append(indent + "  FailureMessage: " + step.FailureMessage.SanitiseForYml() + "\n");
+            AppendYaml(yml, indent + "  FailureMessage: ", step.FailureMessage);
         if (step.SourceFile != null)
-            yml.Append(indent + "  SourceFile: " + step.SourceFile.SanitiseForYml() + "\n");
+            AppendYaml(yml, indent + "  SourceFile: ", step.SourceFile);
         if (step.SourceLine != null)
             yml.Append(indent + "  SourceLine: " + step.SourceLine.Value.ToString(CultureInfo.InvariantCulture) + "\n");
 
@@ -4561,10 +4681,10 @@ public static class ReportGenerator
             yml.Append(indent + "  Attachments:\n");
             foreach (var att in step.Attachments)
             {
-                yml.Append(indent + "    - Name: " + att.Name.SanitiseForYml() + "\n");
-                yml.Append(indent + "      RelativePath: " + att.RelativePath.SanitiseForYml() + "\n");
+                AppendYaml(yml, indent + "    - Name: ", att.Name);
+                AppendYaml(yml, indent + "      RelativePath: ", att.RelativePath);
                 if (att.MediaType is not null)
-                    yml.Append(indent + "      MediaType: " + att.MediaType.SanitiseForYml() + "\n");
+                    AppendYaml(yml, indent + "      MediaType: ", att.MediaType);
             }
         }
     }
@@ -4572,47 +4692,53 @@ public static class ReportGenerator
     /// <inheritdoc cref="MapLogJson"/>
     private static void AppendTestRunYamlLog(StringBuilder yml, RequestResponseLog log, string indent, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null)
     {
-        yml.Append(indent + "- Type: " + log.Type + "\n");
-        yml.Append(indent + "  Method: " + (log.Method.Value?.ToString()?.ToUpperInvariant() ?? "") + "\n");
-        yml.Append(indent + "  Uri: " + log.Uri + "\n");
-        yml.Append(indent + "  ServiceName: " + log.ServiceName.SanitiseForYml() + "\n");
-        yml.Append(indent + "  CallerName: " + log.CallerName.SanitiseForYml() + "\n");
+        AppendYaml(yml, indent + "- Type: ", log.Type.ToString());
+        AppendYamlNullable(yml, indent + "  Method: ", log.Method.Value?.ToString()?.ToUpperInvariant());
+        AppendYaml(yml, indent + "  Uri: ", log.Uri?.ToString() ?? "");
+        AppendYaml(yml, indent + "  ServiceName: ", log.ServiceName);
+        AppendYaml(yml, indent + "  CallerName: ", log.CallerName);
         if (log.Content is not null)
-            yml.Append(indent + "  Content: " + log.Content.SanitiseForYml() + "\n");
+            AppendYaml(yml, indent + "  Content: ", log.Content);
         var (ymlStatusCode, ymlStatusText) = InteractionStatus.Split(log.StatusCode);
         if (ymlStatusCode is not null)
             yml.Append(indent + "  StatusCode: " + ymlStatusCode.Value.ToString(CultureInfo.InvariantCulture) + "\n");
         if (ymlStatusText is not null)
-            yml.Append(indent + "  StatusText: " + ymlStatusText.SanitiseForYml() + "\n");
-        yml.Append(indent + "  TraceId: " + log.TraceId + "\n");
-        yml.Append(indent + "  RequestResponseId: " + log.RequestResponseId + "\n");
+            AppendYaml(yml, indent + "  StatusText: ", ymlStatusText);
+        AppendYaml(yml, indent + "  TraceId: ", log.TraceId.ToString());
+        AppendYaml(yml, indent + "  RequestResponseId: ", log.RequestResponseId.ToString());
         if (log.Timestamp is not null)
-            yml.Append(indent + "  Timestamp: " + FormatInstant(log.Timestamp.Value) + "\n");
+            AppendYaml(yml, indent + "  Timestamp: ", FormatInstant(log.Timestamp.Value));
         if (log.MetaType != RequestResponseMetaType.Default)
-            yml.Append(indent + "  MetaType: " + log.MetaType + "\n");
+            AppendYaml(yml, indent + "  MetaType: ", log.MetaType.ToString());
         if (log.DependencyCategory is not null)
-            yml.Append(indent + "  DependencyCategory: " + log.DependencyCategory.SanitiseForYml() + "\n");
+            AppendYaml(yml, indent + "  DependencyCategory: ", log.DependencyCategory);
         if (log.CallerDependencyCategory is not null)
-            yml.Append(indent + "  CallerDependencyCategory: " + log.CallerDependencyCategory.SanitiseForYml() + "\n");
+            AppendYaml(yml, indent + "  CallerDependencyCategory: ", log.CallerDependencyCategory);
         if (log.Phase != TestPhase.Unknown)
-            yml.Append(indent + "  Phase: " + log.Phase + "\n");
+            AppendYaml(yml, indent + "  Phase: ", log.Phase.ToString());
         if (log.IsUserAction)
             yml.Append(indent + "  IsUserAction: true\n");
         if (log.ActivityTraceId is not null)
-            yml.Append(indent + "  ActivityTraceId: " + log.ActivityTraceId.SanitiseForYml() + "\n");
+            AppendYaml(yml, indent + "  ActivityTraceId: ", log.ActivityTraceId);
         if (log.ActivitySpanId is not null)
-            yml.Append(indent + "  ActivitySpanId: " + log.ActivitySpanId.SanitiseForYml() + "\n");
+            AppendYaml(yml, indent + "  ActivitySpanId: ", log.ActivitySpanId);
         if (log.CapturedBy is not null)
-            yml.Append(indent + "  CapturedBy: " + log.CapturedBy.SanitiseForYml() + "\n");
+            AppendYaml(yml, indent + "  CapturedBy: ", log.CapturedBy);
         if (durations is not null && durations.TryGetValue(log.RequestResponseId, out var ms))
             yml.Append(indent + "  DurationMs: " + ms.ToString("F3", CultureInfo.InvariantCulture) + "\n");
         if (stepPath is not null)
-            yml.Append(indent + "  StepPath: " + stepPath + "\n");
+            AppendYaml(yml, indent + "  StepPath: ", stepPath);
         if (log.Headers.Length > 0)
         {
             yml.Append(indent + "  Headers:\n");
             foreach (var h in log.Headers)
-                yml.Append(indent + "    - Key: " + h.Key.SanitiseForYml() + "\n" + indent + "      Value: " + (h.Value ?? "").SanitiseForYml() + "\n");
+            {
+                AppendYaml(yml, indent + "    - Key: ", h.Key);
+                // A header with no value is null here, as it is in the JSON. It used to be coalesced to
+                // "" first, which made a header that was sent empty and one that carried no value at all
+                // read back as the same thing.
+                AppendYamlNullable(yml, indent + "      Value: ", h.Value);
+            }
         }
     }
 
@@ -4638,19 +4764,19 @@ public static class ReportGenerator
 
         foreach (var feature in features.OrderBy(x => x.DisplayName))
         {
-            yml.Append("  - Feature: " + feature.DisplayName.SanitiseForYml() + "\n");
+            AppendYaml(yml, "  - Feature: ", feature.DisplayName);
 
             if (feature.Endpoint is not null)
                 yml.Append("    Endpoint: " + feature.Endpoint + "\n");
 
             if (feature.Description is not null)
-                yml.Append("    Description: " + feature.Description.SanitiseForYml() + "\n");
+                AppendYaml(yml, "    Description: ", feature.Description);
 
             if (feature.Labels is { Length: > 0 })
             {
                 yml.Append("    Labels:\n");
                 foreach (var label in feature.Labels)
-                    yml.Append("      - " + label.SanitiseForYml() + "\n");
+                    AppendYaml(yml, "      - ", label);
             }
 
             yml.Append("    Scenarios:\n");
@@ -4658,21 +4784,21 @@ public static class ReportGenerator
             var orderedScenarios = feature.Scenarios.OrderByDescending(x => x.IsHappyPath).ThenBy(x => x.DisplayName);
             foreach (var scenario in orderedScenarios)
             {
-                yml.Append("      - Scenario: " + scenario.DisplayName.SanitiseForYml() + "\n");
+                AppendYaml(yml, "      - Scenario: ", scenario.DisplayName);
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
 
                 if (scenario.Labels is { Length: > 0 })
                 {
                     yml.Append("        Labels:\n");
                     foreach (var label in scenario.Labels)
-                        yml.Append("          - " + label.SanitiseForYml() + "\n");
+                        AppendYaml(yml, "          - ", label);
                 }
 
                 if (scenario.Categories is { Length: > 0 })
                 {
                     yml.Append("        Categories:\n");
                     foreach (var cat in scenario.Categories)
-                        yml.Append("          - " + cat.SanitiseForYml() + "\n");
+                        AppendYaml(yml, "          - ", cat);
                 }
 
                 // Emitted as a sibling of Steps, matching the TestRunReport writers: merging the two would
@@ -5068,7 +5194,7 @@ public static class ReportGenerator
     {
         DataFormat.Json => "json",
         DataFormat.Xml => "xsd",
-        DataFormat.Yaml => "json", // YAML uses JSON Schema
+        DataFormat.Yaml => "json", // YAML is described by JSON Schema, as it is everywhere else
         _ => throw new ArgumentOutOfRangeException(nameof(format))
     };
 
@@ -5078,7 +5204,11 @@ public static class ReportGenerator
         {
             DataFormat.Json => WriteFile(GenerateTestRunReportJsonSchema(), fileName),
             DataFormat.Xml => WriteFile(GenerateTestRunReportXmlSchema(), fileName),
-            DataFormat.Yaml => WriteFile(GenerateTestRunReportJsonSchema(), fileName), // YAML uses JSON Schema
+            // The same document, with the property names the YAML writer uses. Handing YAML the JSON
+            // one described a file nobody writes: every name differed, and because a schema with no
+            // additionalProperties permits whatever it has not heard of, that showed up as four missing
+            // required keys rather than as "none of this matches".
+            DataFormat.Yaml => WriteFile(GenerateTestRunReportJsonSchema(pascalCasePropertyNames: true), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
@@ -5089,7 +5219,11 @@ public static class ReportGenerator
     /// description; <c>TestRunReportSchemaContractTests</c> walks a generated report against it and fails on
     /// the first undeclared key or undescribed property, so a new field cannot land in the writer alone.
     /// </summary>
-    private static string GenerateTestRunReportJsonSchema()
+    /// <param name="pascalCasePropertyNames">
+    /// Renames the declared properties to the casing the XML and YAML writers use. The schema is one
+    /// contract written once; only the spelling of the names differs between the formats that carry it.
+    /// </param>
+    private static string GenerateTestRunReportJsonSchema(bool pascalCasePropertyNames = false)
     {
         var resultEnumValues = Enum.GetNames(typeof(ExecutionResult));
         // A step's status may be absent, and `enum` is type-blind: it is asserted against every instance,
@@ -5344,8 +5478,55 @@ public static class ReportGenerator
             }
         };
 
+        if (pascalCasePropertyNames)
+        {
+            UsePascalCasePropertyNames(schema);
+
+            // The root $comment points at `kronikol query`, which reads TestRunReport.json and says
+            // "No TestRunReport.json under <path>" for a directory holding a YAML run. Inheriting it
+            // would ship an instruction that cannot be followed from the file it is attached to.
+            schema["$comment"] = "The field-level contract of TestRunReport.yml. Property names are the "
+                + "YAML writer's; the JSON file beside a JSON run uses the same contract in camelCase. "
+                + "`kronikol query` reads the JSON form only, so a YAML run is read with a YAML parser "
+                + "rather than with the tool.";
+        }
+
         return JsonSerializer.Serialize(schema, options);
     }
+
+    /// <summary>
+    /// Rewrites a schema's declared property names into PascalCase, in place.
+    /// </summary>
+    /// <remarks>
+    /// Only two things name a property: the keys of a <c>properties</c> object, and the entries of a
+    /// <c>required</c> array. Everything else that looks like a name is not one — <c>$defs</c> keys are
+    /// definition names a <c>$ref</c> points at, and renaming either would break the reference — so the
+    /// walk renames exactly those two and recurses through the rest untouched.
+    /// </remarks>
+    private static void UsePascalCasePropertyNames(object? node)
+    {
+        switch (node)
+        {
+            case Dictionary<string, object?> map:
+                if (map.TryGetValue("properties", out var properties) && properties is Dictionary<string, object?> declared)
+                    map["properties"] = declared.ToDictionary(entry => PascalCase(entry.Key), entry => entry.Value);
+
+                if (map.TryGetValue("required", out var required) && required is string[] names)
+                    map["required"] = names.Select(PascalCase).ToArray();
+
+                foreach (var value in map.Values.ToArray())
+                    UsePascalCasePropertyNames(value);
+                break;
+
+            case System.Collections.IEnumerable sequence and not string:
+                foreach (var item in sequence)
+                    UsePascalCasePropertyNames(item);
+                break;
+        }
+    }
+
+    private static string PascalCase(string name) =>
+        name.Length == 0 ? name : char.ToUpperInvariant(name[0]) + name[1..];
 
     private static string GenerateTestRunReportXmlSchema()
     {
@@ -5507,7 +5688,32 @@ public static class ReportGenerator
                             new XElement(xs + "element", new XAttribute("name", "HttpInteraction"), new XAttribute("type", "HttpInteractionType"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
                         )
                     )
+                ),
+                new XElement(xs + "element", new XAttribute("name", "Annotations"), new XAttribute("minOccurs", "0"),
+                    new XElement(xs + "complexType",
+                        new XElement(xs + "sequence",
+                            new XElement(xs + "element", new XAttribute("name", "Annotation"), new XAttribute("type", "AnnotationType"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
+                        )
+                    )
                 )
+            ));
+
+        var annotationType = new XElement(xs + "complexType",
+            new XAttribute("name", "AnnotationType"),
+            new XElement(xs + "sequence",
+                new XElement(xs + "element", new XAttribute("name", "Index"), new XAttribute("type", "xs:int")),
+                new XElement(xs + "element", new XAttribute("name", "Kind"), new XAttribute("type", "xs:string")),
+                new XElement(xs + "element", new XAttribute("name", "Text"), new XAttribute("type", "xs:string"))
+            ));
+
+        // ScenarioId is absent on a report-level entry, which is the same omit-don't-blank rule the rest
+        // of this writer follows.
+        var diagnosticType = new XElement(xs + "complexType",
+            new XAttribute("name", "DiagnosticType"),
+            new XElement(xs + "sequence",
+                new XElement(xs + "element", new XAttribute("name", "Kind"), new XAttribute("type", "xs:string")),
+                new XElement(xs + "element", new XAttribute("name", "Message"), new XAttribute("type", "xs:string")),
+                new XElement(xs + "element", new XAttribute("name", "ScenarioId"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
             ));
 
         var featureType = new XElement(xs + "complexType",
@@ -5563,6 +5769,8 @@ public static class ReportGenerator
                 stepType,
                 httpInteractionType,
                 scenarioType,
+                annotationType,
+                diagnosticType,
                 featureType,
                 ciMetadataType,
                 runEnvironmentType,
@@ -5583,6 +5791,15 @@ public static class ReportGenerator
                                 new XElement(xs + "complexType",
                                     new XElement(xs + "sequence",
                                         new XElement(xs + "element", new XAttribute("name", "Feature"), new XAttribute("type", "FeatureType"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
+                                    )
+                                )
+                            ),
+                            // Last, matching the writer and the JSON. minOccurs="0" because every XML
+                            // report written before this element existed is still a valid one.
+                            new XElement(xs + "element", new XAttribute("name", "Diagnostics"), new XAttribute("minOccurs", "0"),
+                                new XElement(xs + "complexType",
+                                    new XElement(xs + "sequence",
+                                        new XElement(xs + "element", new XAttribute("name", "Diagnostic"), new XAttribute("type", "DiagnosticType"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
                                     )
                                 )
                             )

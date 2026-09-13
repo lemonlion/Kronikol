@@ -217,6 +217,13 @@ public record ReportConfigurationOptions
     /// This is what makes a parameterised failure legible from the data file alone — without it the inputs
     /// that produced the failure are only in the HTML. Step detail is measured in kilobytes against
     /// megabytes of payload, so turn this off only if the file size genuinely matters. Default: <c>true</c>.
+    ///
+    /// <para><b>JSON only.</b> The XML and YAML writers emit the reduced step shape whatever this is set
+    /// to — they were never handed the flag — so on those formats a step carries keyword, text, status,
+    /// duration, failure message, source location, sub-steps and attachments, and nothing else. Setting
+    /// this to <c>false</c> to shrink an XML or YAML file therefore changes nothing. Closing that gap
+    /// means porting the parameter, tree and text-segment shapes to both writers and to the XSD; it is
+    /// tracked as its own item rather than implied by this flag.</para>
     /// </summary>
     public bool TestRunReportFullStepDetail { get; set; } = true;
 

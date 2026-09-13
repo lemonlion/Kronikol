@@ -104,7 +104,7 @@ public class SchemaValidationTests
         return errors;
     }
 
-    private static void Collect(EvaluationResults results, List<string> errors)
+    internal static void Collect(EvaluationResults results, List<string> errors)
     {
         if (results is { IsValid: false, Errors: { } found })
             foreach (var (keyword, message) in found)
