@@ -81,6 +81,43 @@ public class MergeSaysWhatItLostTests
         Assert.Equal("<i>A</i>", Assert.Single(merged.WholeTestFlow).Value.ActivityHtml);
     }
 
+    /// <summary>
+    /// A shard that does not say how a scenario ended is read as Passed, which is the compatible default
+    /// and the right one — but it was applied in silence, so a scenario nobody had a verdict for was
+    /// indistinguishable from a real pass. The reachable triggers are a third-party writer, a hand-edited
+    /// file, and version skew between the Kronikol that wrote the shard and the one merging it.
+    /// </summary>
+    [Theory]
+    [InlineData("""{ "id": "s1", "name": "Place order" }""")]
+    [InlineData("""{ "id": "s1", "name": "Place order", "result": null }""")]
+    [InlineData("""{ "id": "s1", "name": "Place order", "result": "Borked" }""")]
+    [InlineData("""{ "id": "s1", "name": "Place order", "result": 2 }""")]
+    public void A_shard_that_does_not_say_how_a_scenario_ended_says_the_result_was_defaulted(string scenario)
+    {
+        var report = MergeableReportReader.Parse($$"""
+            { "mergeableFormatVersion": 1, "kronikolVersion": "3.5.1",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [ {{scenario}} ] } ] }
+            """);
+
+        var entry = Assert.Single(report.Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted);
+        Assert.Contains("Passed", entry.Message, StringComparison.Ordinal);
+        Assert.Contains("Place order", entry.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_shard_that_states_its_results_says_nothing()
+    {
+        var report = MergeableReportReader.Parse("""
+            { "mergeableFormatVersion": 1, "kronikolVersion": "3.5.1",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [
+                { "id": "s1", "name": "Place order", "result": "Failed" } ] } ] }
+            """);
+
+        Assert.DoesNotContain(report.Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted);
+    }
+
     private static MergeableReport Shard(string? suite = null, string id = "s1", string? commit = null,
         string? branch = null, string? flow = null) => new()
     {

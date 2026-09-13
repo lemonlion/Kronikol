@@ -70,6 +70,7 @@ public static class MergeableReportReader
         var interactions = new List<RequestResponseLog>();
         var stepPaths = new Dictionary<string, List<string?>>(StringComparer.Ordinal);
         var annotations = new Dictionary<string, List<ReportGenerator.ScenarioAnnotation>>(StringComparer.Ordinal);
+        var defaultedResults = new List<string>();
 
         foreach (var fe in EnumerateArray(root, "features"))
         {
@@ -78,6 +79,9 @@ public static class MergeableReportReader
             {
                 var scenario = ReadScenario(se);
                 scenarios.Add(scenario);
+
+                if (!DeclaresAResult(se))
+                    defaultedResults.Add(scenario.DisplayName ?? scenario.Id);
 
                 if (se.TryGetProperty("diagrams", out var diags) && diags.ValueKind == JsonValueKind.Array)
                     foreach (var d in diags.EnumerateArray())
@@ -115,8 +119,34 @@ public static class MergeableReportReader
             Interactions = interactions.ToArray(),
             StepPaths = stepPaths,
             Annotations = annotations,
-            Diagnostics = ReadDiagnostics(root)
+            Diagnostics = [.. ReadDiagnostics(root), .. DefaultedResultDiagnostics(defaultedResults)]
         };
+    }
+
+    /// <summary>
+    /// Whether the scenario states a result this build understands.
+    /// </summary>
+    /// <remarks>
+    /// A missing or unparseable <c>result</c> is read as <see cref="ExecutionResult.Passed"/>, which is
+    /// the compatible default and the right one - but it was applied in silence, so a shard that said
+    /// nothing about how a scenario ended, or said something this build does not recognise, merged as a
+    /// pass indistinguishable from a real one. That is the same trap
+    /// <see cref="DiagnosticKind.ResultDefaulted"/> exists to close on the ingestion side, and the merge
+    /// reaches it by a different door: a third-party writer, a hand-edited file, or version skew between
+    /// the Kronikol that wrote the shard and the one merging it.
+    /// </remarks>
+    private static bool DeclaresAResult(JsonElement se) =>
+        GetString(se, "result") is { } text && Enum.TryParse<ExecutionResult>(text, ignoreCase: true, out _);
+
+    private static IEnumerable<DiagnosticEntry> DefaultedResultDiagnostics(List<string> scenarios)
+    {
+        if (scenarios.Count == 0)
+            yield break;
+
+        yield return new DiagnosticEntry(
+            DiagnosticKind.ResultDefaulted,
+            $"{scenarios.Count} scenario(s) in a merged shard recorded no result this build understands and were "
+            + $"reported as {ExecutionResult.Passed}. First: {string.Join(", ", scenarios.Take(3))}.");
     }
 
     private static Scenario ReadScenario(JsonElement se) => new()
