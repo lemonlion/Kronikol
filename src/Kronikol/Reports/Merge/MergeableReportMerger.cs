@@ -253,10 +253,16 @@ public static class MergeableReportMerger
 
     private static Dictionary<string, T> MergeMap<T>(IEnumerable<Dictionary<string, T>> maps)
     {
+        // First wins, matching MergeByScenario and matching how the scenarios themselves merge. This was
+        // last-wins, so one surviving scenario could take its verdict, steps and annotations from the
+        // first shard and its internal-flow segment and whole-test flow from the second - a chimera of
+        // two runs under one id, with no rule saying which half came from where. Ids are unique across
+        // disjoint runners and DisambiguateRuntimeIds now makes that true even when the frameworks
+        // disagree, so in practice nothing collides; where something does, one shard is better than two.
         var result = new Dictionary<string, T>();
         foreach (var map in maps)
             foreach (var kvp in map)
-                result[kvp.Key] = kvp.Value; // scenario/segment ids are unique across disjoint runners
+                result.TryAdd(kvp.Key, kvp.Value);
         return result;
     }
 
@@ -278,15 +284,40 @@ public static class MergeableReportMerger
     private static IEnumerable<DiagnosticEntry> DisagreementDiagnostics(IReadOnlyList<MergeableReport> reports)
     {
         var environments = reports.Select(r => r.Environment).Distinct().ToArray();
-        if (environments.Length <= 1)
-            yield break;
+        if (environments.Length > 1)
+        {
+            var described = environments.Select(e => e is null ? "(not recorded)" : $"{e.Os} / {e.Runtime}");
 
-        var described = environments.Select(e => e is null ? "(not recorded)" : $"{e.Os} / {e.Runtime}");
+            yield return new DiagnosticEntry(
+                DiagnosticKind.Other,
+                $"Merged {reports.Count} reports that do not agree on the environment, so the merged report records none. "
+                + "Seen: " + string.Join("; ", described) + ".");
+        }
 
-        yield return new DiagnosticEntry(
-            DiagnosticKind.Other,
-            $"Merged {reports.Count} reports that do not agree on the environment, so the merged report records none. "
-            + "Seen: " + string.Join("; ", described) + ".");
+        // Dropping the suite is not a cosmetic loss. ScenarioStableId folds it into the hash, so a
+        // merged report with no suite re-keys EVERY scenario in it - the ids match neither the shards
+        // it came from nor a baseline promoted from an earlier run of the same suite, and `diff` then
+        // reports every scenario as both new and gone. That happened in silence.
+        var suites = reports.Select(r => r.Suite).Distinct(StringComparer.Ordinal).ToArray();
+        if (suites.Length > 1)
+            yield return new DiagnosticEntry(
+                DiagnosticKind.Other,
+                $"Merged {reports.Count} reports from {suites.Length} different suites, so the merged report records none "
+                + "and every stableId in it is computed without one — they will not match either the shards or a baseline. "
+                + "Seen: " + string.Join("; ", suites.Select(x => x is null ? "(not recorded)" : x)) + ".");
+
+        // Run identity, same argument. The first shard's commit and branch were taken for the whole
+        // merge with nothing said, so a merge of artifacts from two builds looked like one build.
+        var runs = reports.Select(r => r.CiMetadata)
+            .Where(m => m is not null)
+            .Select(m => $"{m!.CommitSha ?? "(no commit)"}@{m.Branch ?? "(no branch)"}")
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        if (runs.Length > 1)
+            yield return new DiagnosticEntry(
+                DiagnosticKind.Other,
+                $"Merged reports from {runs.Length} different CI runs; the merged report records the first. "
+                + "Seen: " + string.Join("; ", runs) + ".");
     }
 
     private static CiMetadata? ReconcileCiMetadata(IReadOnlyList<MergeableReport> reports) =>
