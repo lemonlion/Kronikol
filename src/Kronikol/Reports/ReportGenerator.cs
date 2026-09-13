@@ -2030,16 +2030,33 @@ public static class ReportGenerator
         return WriteFile(yml.ToString(), fileName);
     }
 
+    /// <summary>
+    /// One step of the Specifications YAML: a plain string, or a mapping when it has sub-steps under it.
+    /// </summary>
+    /// <remarks>
+    /// Sub-steps used to be written as a deeper-indented <c>-</c> beneath the parent's own scalar, which
+    /// is not nesting - a parser folds those lines into the parent's text, so a step with one sub-step
+    /// read back as <c>When the order is placed - And payment processed</c>. It went unnoticed because
+    /// every step was a plain scalar and a plain scalar swallows the lines silently; a step that has to
+    /// be quoted (one ending in <c>:</c>, which is what a step introducing a data table looks like)
+    /// turns the same shape into a parse error instead. So the nesting is real now. A step with no
+    /// sub-steps stays the plain string it has always been, which is most of them, and is what keeps the
+    /// file worth reading.
+    /// </remarks>
     private static void AppendYamlStep(StringBuilder yml, ScenarioStep step, string indent)
     {
         var text = step.Keyword is not null ? $"{step.Keyword} {step.Text}" : step.Text;
-        AppendYaml(yml, indent + "- ", text);
 
-        if (step.SubSteps is { Length: > 0 })
+        if (step.SubSteps is not { Length: > 0 })
         {
-            foreach (var sub in step.SubSteps)
-                AppendYamlStep(yml, sub, indent + "  ");
+            AppendYaml(yml, indent + "- ", text);
+            return;
         }
+
+        AppendYaml(yml, indent + "- Step: ", text);
+        yml.Append(indent).Append("  SubSteps:\n");
+        foreach (var sub in step.SubSteps)
+            AppendYamlStep(yml, sub, indent + "    ");
     }
 
     private static int CountStepsRecursive(ScenarioStep[] steps)

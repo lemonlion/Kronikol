@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.4.1] - 2026-09-13
+
+**Patch - two defects the 3.4.0 CI run found, both older than 3.4.0.** No new public surface.
+
+### Fixed
+- **`Specifications.yml` has never been valid YAML for a feature with a prose description.** Every one of
+  the six archived example files in this repository fails to load, at the second line of the Cake
+  feature's `Description` - the writer emitted the description raw, so its second line landed at column 0
+  and ended the mapping. 3.4.0's escaping work already fixed that; what it also exposed is the second
+  half. Sub-steps were written as a deeper-indented `-` beneath the parent step's plain scalar, which is
+  not nesting: a parser folds those lines into the parent's text, so a step with one sub-step read back
+  as `When the order is placed - And payment processed`. That fold was silent while every step was a
+  plain scalar, and became a hard parse error once a step needed quoting - which a Gherkin step that
+  introduces a data table does, because it ends with a colon. A step with sub-steps is now written as a
+  mapping (`Step` plus `SubSteps`); a step without them stays the plain string it has always been, which
+  is most of them and is what keeps the file worth reading.
+- **`TcpTap` reaped healthy connections after dropping a segment.** The pump forwards bytes first and
+  hands a copy to a bounded channel second, with `TryWrite`, so when the decode task falls behind
+  segments are dropped and forwarding carries on unaffected. If the dropped segment was a **reply**, the
+  decoder never saw the answer, its oldest unanswered command never cleared, and the stuck-connection
+  reaper closed a connection that was working perfectly. The reaper already stands down when decoding has
+  been disabled, for exactly this reason - a decoder frozen mid-flight must never read as a wedged client
+  - and a dropped segment leaves it in the same state by a different route. It now stands down for that
+  too. Found as an intermittent CI failure of `AnIdleConnectionWithNothingUnansweredIsNeverReaped`, which
+  is the same defect seen from the other end: a busy machine, a full channel, a healthy connection killed.
+
+### Known issue
+- `IngestPipelineTests.Replays_captures_attributes_by_test_id_and_writes_a_full_report_to_the_output_dir`
+  fails intermittently in the Release configuration only (it passes in CI's Core Tests job and locally).
+  The scenario comes out with no interactions attributed. The class is already collection-isolated, so
+  the remaining suspect is the process-global state the report path still carries - which is the obstacle
+  `LLM_FIRST_PLAN` M6 already tracks for the `FinishRun` extraction. Not caused by 3.4.0 and not fixed
+  here; recorded so it is not rediscovered as new.
+
 ## [3.4.0] - 2026-09-13
 
 **Minor bump - the schema tells the truth about the file beside it** (LLM_FIRST_PLAN M4). New public

@@ -682,11 +682,80 @@ public class TcpTapTests
         public void Dispose() { }
     }
 
+    /// <summary>
+    /// A connection whose segments have been dropped is never reaped.
+    /// </summary>
+    /// <remarks>
+    /// The pump forwards bytes first and hands a copy to a bounded channel second, with
+    /// <c>TryWrite</c> - so when the decode task falls behind, segments are dropped and forwarding
+    /// carries on. If the dropped segment is a REPLY, the decoder never sees the answer, its oldest
+    /// unanswered command never clears, and the reaper closes a connection that is working perfectly.
+    /// The reaper already stands down when decoding has been disabled, for exactly this reason - its
+    /// own comment says a decoder frozen mid-flight "must never read as a wedged client" - and a
+    /// dropped segment leaves it in the same state by a different route. Seen as an intermittent CI
+    /// failure of AnIdleConnectionWithNothingUnansweredIsNeverReaped, which is the same defect from the
+    /// other end: a busy machine, a full channel, a healthy connection killed.
+    /// </remarks>
+    [Fact]
+    public async Task AConnectionWhoseSegmentsWereDroppedIsNeverReaped()
+    {
+        var release = new ManualResetEventSlim(false);
+        await using var server = new StubServer(_ => null);
+        var options = RedisOptions(server, new RecordingSink(), o =>
+        {
+            o.ChannelCapacity = 2;
+            o.ReadBufferBytes = 1024;
+            o.ReapStuckConnectionsAfter = TimeSpan.FromMilliseconds(1200);
+        });
+        options.DecoderFactory = _ => new StuckBlockingDecoder(release);
+
+        await using var tap = new TcpTapCore(options);
+        await tap.StartAsync();
+
+        var (client, stream) = await ConnectAsync(tap);
+        try
+        {
+            for (var i = 0; i < 50; i++)
+                await stream.WriteAsync(new byte[1024]);
+
+            Assert.True(await Wait.UntilAsync(() => tap.SegmentsDropped > 0, 5000), "no segment was dropped, so the case under test was never reached");
+
+            // Past the reaper's threshold and two of its one-second ticks.
+            await Task.Delay(2_600);
+
+            Assert.Equal(0, tap.StuckConnectionsReaped);
+        }
+        finally
+        {
+            release.Set();
+            client.Dispose();
+        }
+    }
+
     private sealed class BlockingDecoder(ManualResetEventSlim release) : IProtocolDecoder
     {
         public void OnClientToServer(ReadOnlySpan<byte> data, DateTimeOffset timestamp) => release.Wait();
 
         public void OnServerToClient(ReadOnlySpan<byte> data, DateTimeOffset timestamp) => release.Wait();
+
+        public void OnConnectionClosed() { }
+
+        public void Dispose() { }
+    }
+
+    /// <summary>
+    /// Blocks like <see cref="BlockingDecoder"/> - so the bounded decode channel fills and the pump
+    /// starts dropping segments - and reports a command that has been unanswered since long ago, which
+    /// is what the reaper acts on. Together those are the shape of the defect: the decoder is missing
+    /// bytes it will never see, so its pending queue can never drain.
+    /// </summary>
+    private sealed class StuckBlockingDecoder(ManualResetEventSlim release) : IProtocolDecoder
+    {
+        public void OnClientToServer(ReadOnlySpan<byte> data, DateTimeOffset timestamp) => release.Wait();
+
+        public void OnServerToClient(ReadOnlySpan<byte> data, DateTimeOffset timestamp) => release.Wait();
+
+        public DateTimeOffset? OldestUnansweredSince => DateTimeOffset.UtcNow.AddMinutes(-5);
 
         public void OnConnectionClosed() { }
 

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using AngleSharp;
 using AngleSharp.Dom;
+using YamlDotNet.RepresentationModel;
 
 namespace Example.Api.Tests.Integration.Helpers;
 
@@ -143,53 +144,60 @@ public static class ReportParser
     /// <summary>
     /// Extracts each scenario's ordered top-level step texts (keyword + text, e.g.
     /// "Given a valid post request for the Cake endpoint") from the specifications YAML
-    /// data report. Sub-steps (assertion tracking) are nested two spaces deeper and are
-    /// deliberately excluded — only the scenario's own steps are returned.
+    /// data report. Sub-steps (assertion tracking) are deliberately excluded - only the
+    /// scenario's own steps are returned.
     /// </summary>
+    /// <remarks>
+    /// This used to scan lines and slice off a fixed indent, which meant it read the file as text rather
+    /// than as YAML: a quoted scalar came back with its quotes and backslashes still in it, and a
+    /// multi-line feature description was not noticed at all. It was also, for the same reason, unable
+    /// to tell that the file it was reading did not parse - every archived Specifications.yml in this
+    /// repository fails to load, at the second line of the Cake feature's description. Reading it with
+    /// the YAML parser this project already references makes the test fail when the generator writes
+    /// something invalid, which is the point of having it.
+    /// </remarks>
     public static async Task<ParsedYamlScenario[]> ExtractScenarioStepsFromYamlAsync(string yamlFilePath)
     {
-        // The generated YAML has a fixed layout (see ReportGenerator's specifications
-        // writer): scenarios at 6-space indent, their keys at 8, step items at 10.
-        const string scenarioPrefix = "      - Scenario: ";
-        const string backgroundHeader = "        BackgroundSteps:";
-        const string stepsHeader = "        Steps:";
-        const string stepItemPrefix = "          - ";
+        var stream = new YamlStream();
+        stream.Load(new StringReader(await File.ReadAllTextAsync(yamlFilePath)));
 
-        var results = new List<ParsedYamlScenario>();
-        string? currentName = null;
-        List<string>? backgroundSteps = null;
-        List<string>? steps = null;
-        List<string>? currentSection = null;
+        if (stream.Documents.Count == 0 || stream.Documents[0].RootNode is not YamlMappingNode root)
+            return [];
 
-        void Flush()
-        {
-            if (currentName is not null)
-                results.Add(new ParsedYamlScenario(currentName, backgroundSteps?.ToArray() ?? [], steps?.ToArray() ?? []));
-        }
+        if (!root.Children.TryGetValue(new YamlScalarNode("Features"), out var featuresNode))
+            return [];
 
-        foreach (var line in await File.ReadAllLinesAsync(yamlFilePath))
-        {
-            if (line.StartsWith(scenarioPrefix))
-            {
-                Flush();
-                currentName = line[scenarioPrefix.Length..].Trim();
-                backgroundSteps = [];
-                steps = [];
-                currentSection = null;
-            }
-            else if (line == backgroundHeader)
-                currentSection = backgroundSteps;
-            else if (line == stepsHeader)
-                currentSection = steps;
-            else if (line.StartsWith(stepItemPrefix)) // sub-steps sit deeper (12+ spaces) and never match this prefix
-                currentSection?.Add(line[stepItemPrefix.Length..].Trim());
-            else if (line.StartsWith("        ") && !line.StartsWith("         "))
-                currentSection = null; // some other 8-space scenario key (Labels:, Categories:, …)
-        }
-
-        Flush();
-        return results.ToArray();
+        return ((YamlSequenceNode)featuresNode).Children
+            .OfType<YamlMappingNode>()
+            .SelectMany(feature => Sequence(feature, "Scenarios").OfType<YamlMappingNode>())
+            .Select(scenario => new ParsedYamlScenario(
+                Text(scenario, "Scenario") ?? "",
+                [.. Sequence(scenario, "BackgroundSteps").Select(StepText)],
+                [.. Sequence(scenario, "Steps").Select(StepText)]))
+            .ToArray();
     }
+
+    private static IEnumerable<YamlNode> Sequence(YamlMappingNode node, string key) =>
+        node.Children.TryGetValue(new YamlScalarNode(key), out var value) && value is YamlSequenceNode sequence
+            ? sequence.Children
+            : [];
+
+    /// <summary>
+    /// A step is a plain string, or a mapping with its text under <c>Step</c> when it carries sub-steps.
+    /// Either way this returns only the step's own text; the sub-steps beneath it are not the caller's
+    /// business.
+    /// </summary>
+    private static string StepText(YamlNode step) => step switch
+    {
+        YamlScalarNode scalar => scalar.Value ?? "",
+        YamlMappingNode mapping => Text(mapping, "Step") ?? "",
+        _ => ""
+    };
+
+    private static string? Text(YamlMappingNode node, string key) =>
+        node.Children.TryGetValue(new YamlScalarNode(key), out var value) && value is YamlScalarNode scalar
+            ? scalar.Value
+            : null;
 
     public record DiagramImgInfo(string Src, bool HasLazyLoading);
 

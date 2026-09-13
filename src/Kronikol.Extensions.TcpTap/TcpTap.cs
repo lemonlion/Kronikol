@@ -335,7 +335,13 @@ public class TcpTap : IAsyncDisposable
         while (Volatile.Read(ref state.Closed) == 0)
         {
             await Task.Delay(1_000).ConfigureAwait(false);
-            if (Volatile.Read(ref state.Closed) != 0 || Volatile.Read(ref state.DecodingBroken) != 0)
+            // Two ways the decoder's pending state stops meaning what the reaper reads it to mean:
+            // decoding was disabled outright, or a segment was dropped. After a drop the decoder is
+            // missing bytes it will never be given - and if the dropped segment was a REPLY, the
+            // command it answered stays unanswered for ever and a working connection looks wedged.
+            if (Volatile.Read(ref state.Closed) != 0
+                || Volatile.Read(ref state.DecodingBroken) != 0
+                || Volatile.Read(ref state.DecodeViewIncomplete) != 0)
                 return;
 
             DateTimeOffset? since;
@@ -363,6 +369,10 @@ public class TcpTap : IAsyncDisposable
 
     private void CountDrop(TapDirection direction, ConnectionPumpState state)
     {
+        // Forwarding is unaffected by a drop, but the decoder's view of this connection now has a hole
+        // in it, so the stuck-connection reaper must not act on it again.
+        Volatile.Write(ref state.DecodeViewIncomplete, 1);
+
         var total = direction == TapDirection.ClientToServer
             ? Interlocked.Increment(ref _droppedClientToServer)
             : Interlocked.Increment(ref _droppedServerToClient);
@@ -721,6 +731,14 @@ public class TcpTap : IAsyncDisposable
 
         /// <summary>1 once decoding has been disabled for the connection — the reaper is blind then and never guesses.</summary>
         public int DecodingBroken;
+
+        /// <summary>
+        /// 1 once a segment has been dropped for this connection, so the decoder has been shown less
+        /// than the wire carried. Forwarding is unaffected; what is affected is the reaper, which reads
+        /// the decoder's oldest-unanswered command and would otherwise close a healthy connection whose
+        /// reply it simply never saw.
+        /// </summary>
+        public int DecodeViewIncomplete;
     }
 }
 
