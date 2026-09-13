@@ -174,7 +174,7 @@ internal static partial class QueryCommand
         if (hits.Count == 0)
         {
             writer.Line($"{needle} is not in {string.Join(", ", targets)} — as a number, under any formatting");
-            writer.Footer("--tolerance 0.5 or --tolerance 1% widens the match · --in bodies,headers,uris,steps,assertions,notes widens the search");
+            writer.Footer($"--tolerance 0.5 or --tolerance 1% widens the match · --in {string.Join(",", GrepTargets)} widens the search");
             return 0;
         }
 

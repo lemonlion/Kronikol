@@ -178,7 +178,7 @@ internal static partial class QueryCommand
                     _ => $"! {needle} is an address, not text — `steps {needle}` opens it"
                 });
 
-            writer.Footer("--in bodies,headers,uris,steps,assertions,notes widens the search · notes are searched last because they are the expensive one");
+            writer.Footer($"--in {string.Join(",", GrepTargets)} widens the search · notes are searched last because they are the expensive one");
             return 0;
         }
 

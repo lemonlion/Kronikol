@@ -4,6 +4,122 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.5.0] - 2026-09-13
+
+**Minor - every address the tool prints, the tool now accepts.** A `stableId` is new public CLI
+surface (`sid:<hash>`), `grep` gains two search targets, and the rest is bug fixes to the answers
+`kronikol query` gives. The highest-ranking change is the new surface, so the bump is minor.
+
+This is milestone M5 of `plans/LLM_FIRST_PLAN.md`: rows G1, G2, G4, G5, G6, G7, G8, G9, G10 and
+section 3.1.
+
+### Added
+- **`sid:<stableId>` is an address.** The cross-run identity both reference documents tell you to use,
+  printed by `steps` and handed back by `diff`'s own refusal message, was an address no verb would
+  take. It now works anywhere a scenario address does. The `sid:` prefix is mandatory rather than a
+  convenience: `diff` decides whether its second positional is an address or a report **file** by
+  asking the address grammar, so a bare sixteen-hex form would flip a hash-named CI artifact path from
+  "the new run" to "a body to compare". Several scenarios can carry one id (a repeated `[Theory]` row,
+  the same `Examples:` row in two blocks, a retry), so an ambiguous one is reported with the ordinals
+  that resolve it rather than resolved to the first match.
+- **`grep --in names` and `--in errors`, both in the default target set.** `grep` could not see a
+  scenario's name, its `errorMessage` or its `errorStackTrace` — on the one verb whose job is "where
+  did this value come from", a value present in the report in three places came back as `"…" is not in
+  bodies, uris, steps, assertions`, the shape of a proof of absence. Both are already in the index and
+  neither opens a payload, so the default costs nothing. A stack-trace hit prints the frame the needle
+  is in rather than the whole trace.
+
+### Fixed
+- **A step path in an address was parsed and thrown away**, so `steps s0/99` was byte-identical to
+  `steps s0`: a nonsense path and a real one produced the same confident answer. The sharpest case was
+  `assertions`, which prints one address per assertion — under a JSON field literally named `address` —
+  and answered a strictly wider set at exit 0 when handed one back. A step path now scopes `steps`,
+  `assertions`, `flow`, `interactions` and `values`, and covers **that step and everything under it**;
+  `--step` follows the same rule, so the flag and the address cannot disagree. A path that is in no
+  scenario is refused once, in the resolver, rather than widened five different ways.
+- **`summary`, `scenarios` and `failures` accepted an address and ignored it**, so an agent that had
+  narrowed to one scenario got the whole run back with nothing saying it had not been narrowed.
+  `failures` and `scenarios` now scope to it, with a `!` line when the address named a step;
+  `summary` has no per-scenario form and refuses, naming the verbs that answer narrowly;
+  `annotations` are recorded per scenario and refuse a step path. `grep`'s positional is a search
+  term, so an address pasted there is still searched for literally — and the miss now says so instead
+  of reading as a confident negative.
+- **`--body`'s value was dropped in silence when it was not an address.** `diff <old> <new> --body
+  s0/1` printed a full unfiltered run diff at exit 0 and never mentioned the request it had been asked
+  about; the token was never consumed and landed unread in the positionals. This is the silence the
+  per-verb flag validator exists to remove, arriving through a flag's value rather than its name.
+- **`trace` refused its own header.** The verb heads its answer `trace c90a1912… — 2 calls` and then
+  rejected that string as "not a trace id": the ellipsis is punctuation, not part of the id. And a
+  **span id**, which `http` prints beside the trace id, was accepted by nothing at all — the refusal
+  appeared one line below the place the id had come from. There is no per-span view to give, so it
+  resolves to the trace that span belongs to and says so.
+- **The provenance banner fired on green runs it had nothing to say about.** Enrichment was detected
+  from four keys that only appear when the run *produced* something to attribute, so a passing suite
+  that makes no HTTP calls read as a file written before attribution existed — and the banner asserted
+  of it that "source locations are absent" while the steps beneath it carried them. The report has
+  always declared which Kronikol wrote it; from 3.0.47 that alone settles the question.
+- **The banner corrupted `--count`**, which is documented as one token and whose callers parse the
+  whole of stdout. Under `--count` the notes now go to stderr: still said, not in the answer.
+- **Twelve of the thirteen `DiagnosticKind`s never reached the banner.** Only `ResultDefaulted` did;
+  the rest were recorded, carried through the merge, printed in `summary`'s inventory, and warned
+  nobody reading any other answer — including the two the banner's own oldest line claims to be about.
+  Every kind meaning the report holds less than the run produced now leads the answer, grouped by kind
+  with `×N` and capped to one line. The sharpest is `services`, the one view whose whole purpose is to
+  answer a negative question, which is exactly the answer a degraded capture makes false. The two
+  capitalisation kinds are deliberately excluded: they change no answer and fire in bulk on a healthy
+  run. Both still appear in `summary`'s Diagnostics section.
+- **`diff` printed no provenance at all**, because a note with two reports in scope does not say which
+  one it is about. It now names the side: a defaulted verdict in the **new** run turns a scenario that
+  died mid-run into `Fixed`, and the same diagnostic in the **old** run means the opposite.
+- **`assertions --failed` said "no assertions failed" over a run with fifteen failures**, and blamed
+  `IncludeTrackedAssertionsInStepList` — an option a project that hits this has usually already set.
+  One sentence was answering two different states: a report that tracks no assertions at all, and a
+  report that tracks them and had none fail because the test threw before reaching one. Either way,
+  when the report says scenarios failed, the answer now carries that forward.
+- **A `--limit` above a verb's ceiling was silently lowered.** `failures --limit 50` showed 25 and said
+  nothing, so a consumer advancing by the 50 it asked for stepped over rows 25 to 49 — the same silent
+  skip the pager exists to remove, arriving through the flag rather than the footer. Twelve clamp
+  sites now go through one place that says when the cap bit.
+- **`next` did not carry `--max-bytes`.** The budget is part of the corpus, not the presentation: a
+  page counted against a different one holds a different number of rows, so a pointer that dropped it
+  resumed a walk other than the one it came from.
+- **`--out ""` was an unhandled exception** — `File.WriteAllText` throws `ArgumentException`, which was
+  in no catch clause in the tool, so the flag whose purpose is to keep a large answer out of the
+  caller's context answered with a stack trace and a CLR exit code outside the 0-255 range a shell can
+  read. There were **six** writes of a caller-supplied path and only two were guarded at all, both too
+  narrowly: `QueryWriter`, `body --out`, `note --out`, `diagram --out`, `kronikol merge`'s data file
+  and `kronikol export --dry-run --out`. All six go through one guard.
+- **`CiSummary.md` was a live markdown breakout on captured text, on a surface rendered as HTML.**
+  Three fixed-width fences — one around a stack trace, two around PlantUML source that embeds captured
+  bodies as notes — where the digest's own fence-sizing fix from 3.2.0 was never propagated. The
+  captured `errorMessage` was also the one field on those lines that was not HTML-escaped, while the
+  feature and scenario names beside it were, in a generator that emits `<details>` by design.
+- **`Specifications.md` had no data-vs-voice line and no escaping on its headings.** Every heading
+  below the first is a feature or scenario name, so a scenario named `## Admin` became a level-two
+  heading and a suite could restructure the document describing it.
+- **Nine display sites printed report text uncapped**, including `interaction.Uri`, which `grep` caps
+  at 110 three files away. A value wide enough to wrap reads as the tool's next line; `writer.Note`
+  now collapses line endings for the same reason. A payload printed by `body` or `http --body` ends
+  with a closer saying where the captured bytes stopped.
+- **`diff` would not take a directory for its second report** — fixed earlier by the identity-gate
+  work, but nothing pinned it. Now it is pinned.
+- **The two copies of the debugging skill had drifted.** `.claude/skills/` and `templates/skills/` are
+  two checkouts of one document, the second being what `kronikol init-agents` installs, and the
+  shipped `scripts/query.py` was missing a line the repo's copy grew in 3.1.0. They are now pinned
+  file-for-file. `query.py` had also reimplemented the step-path defect independently, and raised an
+  uncaught `ValueError` traceback on a malformed address where the tool prints a sentence.
+- **The banner drift test could not see two whole classes of banner** — one written as a `switch` arm
+  rather than as a direct call argument, and any banner in the `Query/` subdirectory, which its
+  non-recursive file enumeration never visited.
+
+### Behaviour changes, called out
+- `grep <needle>` with no `--in` searches two more targets, so it can return rows it did not before.
+  That is the bug being fixed, not a side effect.
+- `--step N` now covers `N`'s sub-steps. The addresses `failures` prints are frequently parents of the
+  step that actually failed, so exact-match was the wrong answer in the common case.
+- `summary <address>`, `annotations <scenario>/<step>` and `--body <not-an-address>` now exit 2 where
+  they used to exit 0. Each replaces a silently wrong or silently ignored answer.
+
 ## [3.4.1] - 2026-09-13
 
 **Patch - two defects the 3.4.0 CI run found, both older than 3.4.0.** No new public surface.
