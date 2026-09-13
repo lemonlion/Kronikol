@@ -135,9 +135,9 @@ internal static partial class QueryCommand
 
         var exit = command switch
         {
-            "summary" => Summary(index, options, writer),
-            "scenarios" => Scenarios(index, options, writer),
-            "failures" => Failures(index, options, writer),
+            "summary" => Summary(index, options, writer, error),
+            "scenarios" => Scenarios(index, options, writer, error),
+            "failures" => Failures(index, options, writer, error),
             "steps" => Steps(index, options, writer, error),
             "assertions" => Assertions(index, options, writer, error),
             "services" => Services(index, options, writer, error),

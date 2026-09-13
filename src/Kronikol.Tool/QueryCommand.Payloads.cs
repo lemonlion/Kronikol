@@ -25,9 +25,10 @@ internal static partial class QueryCommand
         ScenarioEntry? only = null;
         if (options.Positional.Count > 0)
         {
-            if (!TryScenario(index, options, error, out var one))
+            if (!TryScenario(index, options, error, out var one, out var addressedStep))
                 return 2;
             only = one;
+            options.ScopeToStep(addressedStep);
         }
 
         var clauses = ParseWheres(options, error);
@@ -155,7 +156,7 @@ internal static partial class QueryCommand
             return false;
         if (options.Method is { } method && !string.Equals(interaction.Method, method, StringComparison.OrdinalIgnoreCase))
             return false;
-        if (options.Step is { } step && interaction.StepPath != step)
+        if (options.Step is { } step && !Address.PathCoveredBy(interaction.StepPath, step))
             return false;
         if (options.Grep is { } grep && !interaction.Uri.Contains(grep, StringComparison.OrdinalIgnoreCase))
             return false;

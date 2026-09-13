@@ -275,8 +275,12 @@ public class SkillDriftTests
     {
         var phrases = new List<string>();
 
+        // Any string literal that opens with `! `, wherever it sits. Keying on `Note($"! ` instead - the
+        // shape the banners happened to be written in - left a banner invisible the moment one was
+        // written as a switch arm rather than as the direct argument of the call, which is precisely the
+        // drift this fact exists to catch.
         foreach (var file in Directory.GetFiles(Path.Combine(RepoRoot, "src", "Kronikol.Tool"), "*.cs"))
-        foreach (Match match in Regex.Matches(File.ReadAllText(file), @"(?:Line|Note)\(\$?""! (.*)$", RegexOptions.Multiline))
+        foreach (Match match in Regex.Matches(File.ReadAllText(file), @"\$?""! (.*)$", RegexOptions.Multiline))
             phrases.Add(Anchor(match.Groups[1].Value));
 
         // The two the tool composes at run time, keyed on the stable half of each message.
@@ -369,6 +373,42 @@ public class SkillDriftTests
 
         Assert.True(illegal.Count == 0,
             "the emitted CLAUDE.md tells an agent to type commands the tool refuses:\n  " + string.Join("\n  ", illegal));
+    }
+
+    /// <summary>
+    /// The repo's own copy of the skill and the copy shipped in <c>templates/</c> are the same files.
+    ///
+    /// <para>They are two checkouts of one document: <c>.claude/skills/</c> is what this repo's agent
+    /// loads and <c>templates/skills/</c> is what <c>kronikol init-agents</c> installs into a consumer's
+    /// project. Nothing made them agree, and they had already drifted — the shipped
+    /// <c>scripts/query.py</c> was missing the <c>failureCause</c> line the repo's copy grew in 3.1.0, so
+    /// the fallback a user without the .NET tool reaches for was a version behind the one every test here
+    /// exercises. The drift is invisible from inside either copy.</para>
+    /// </summary>
+    [Fact]
+    public void The_two_copies_of_the_skill_are_the_same_files()
+    {
+        var mine = Path.Combine(RepoRoot, ".claude", "skills", "kronikol-test-debugging");
+        var shipped = Path.Combine(RepoRoot, "templates", "skills", "kronikol-test-debugging");
+
+        var minesFiles = Relative(mine);
+        var shippedFiles = Relative(shipped);
+        Assert.Equal(minesFiles, shippedFiles);
+
+        var differing = minesFiles
+            .Where(f => !File.ReadAllText(Path.Combine(mine, f)).ReplaceLineEndings("\n")
+                    .Equals(File.ReadAllText(Path.Combine(shipped, f)).ReplaceLineEndings("\n"), StringComparison.Ordinal))
+            .ToList();
+
+        Assert.True(differing.Count == 0,
+            ".claude/skills and templates/skills have drifted apart, so the skill this repo reads is not the "
+            + "skill `kronikol init-agents` installs: " + string.Join(", ", differing));
+
+        static List<string> Relative(string root) =>
+            Directory.GetFiles(root, "*", SearchOption.AllDirectories)
+                .Select(f => Path.GetRelativePath(root, f).Replace('\\', '/'))
+                .OrderBy(f => f, StringComparer.Ordinal)
+                .ToList();
     }
 
     [Fact]

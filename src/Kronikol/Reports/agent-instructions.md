@@ -54,9 +54,14 @@ Stop at the first rung that answers the question. Most stop at the third.
 | step | `s3/2`, `s3/b0` (background), `s3/2.1` (assertion) |
 | body | `b:4bdea521` — a content hash; the same hash means byte-identical |
 | diagram / note | `s3/d0`, `s3/d0/n12` |
+| scenario, across runs | `sid:1a2b3c4d5e6f7a8b` — its `stableId`; the `sid:` prefix is required |
 | the same scenario, for a human | `__REPORT__.html#sid-<stableId>` — opens it in the report |
 
-Ordinals are per-file. Across runs use `stableId` and `b:` hashes. When you hand a failure to a
+Every address here goes back into a command. A step address narrows to that step **and everything
+under it**, so `steps s3/2` and `flow s3/2` answer for the sub-steps too, and `--step 2` means the
+same thing. `summary` is the one verb with no narrower form and says so instead of ignoring you.
+
+Ordinals are per-file. Across runs use `sid:` and `b:` hashes. When you hand a failure to a
 person, hand them the `#sid-` link: it opens that scenario with its diagram, not a 10 MB file.
 
 ### Recipes

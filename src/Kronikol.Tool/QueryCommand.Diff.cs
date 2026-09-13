@@ -101,7 +101,7 @@ internal static partial class QueryCommand
         var match = position >= 0 && position < candidates.Count ? candidates[position] : candidates.FirstOrDefault();
         if (match is null)
         {
-            error.WriteLine($"No scenario in {Path.GetFileName(right.Path)} with stableId {oldScenario.StableId} ({QueryWriter.OneLine(oldScenario.Name, 60)}).");
+            error.WriteLine($"No scenario in {Path.GetFileName(right.Path)} with stableId sid:{oldScenario.StableId} ({QueryWriter.OneLine(oldScenario.Name, 60)}).");
             return 2;
         }
 

@@ -58,6 +58,7 @@ def scenarios(report):
     for feature in report.get("features", []):
         for scenario in feature.get("scenarios", []):
             scenario["_feature"] = feature.get("name", "")
+            scenario["_ordinal"] = len(found)
             found.append(scenario)
     return found
 
@@ -111,13 +112,49 @@ def die(message):
 
 
 def resolve_scenario(report, address):
-    if not address.startswith("s"):
-        die(f"Not a scenario address: {address}")
+    """The scenario an address names, and the step path it narrows to.
+
+    The script advertises "the same addressing" as the tool, and for a while it was not: `s0/99` was
+    parsed for its scenario ordinal and its step path was thrown away, so a nonsense path answered with
+    the whole scenario — the same defect the tool carried, reimplemented independently. `sabc` was worse:
+    `int("abc")` raised an uncaught ValueError and the user got a Python traceback where the tool says
+    `Not an address: sabc` and exits 2.
+    """
     found = scenarios(report)
-    index = int(address[1:].split("/")[0])
+
+    if address.startswith("sid:"):
+        wanted = address[4:].strip().lower()
+        matches = [s for s in found if (s.get("stableId") or "").lower() == wanted]
+        if not matches:
+            die(f"No scenario with stableId {wanted} in this report")
+        if len(matches) > 1:
+            names = ", ".join(f"s{s['_ordinal']}" for s in matches)
+            die(f"{len(matches)} scenarios share stableId {wanted} (a repeated row, or a retry) — "
+                f"name the one you mean: {names}")
+        return matches[0], None
+
+    parts = address.split("/")
+    if not parts[0].startswith("s") or not parts[0][1:].isdigit():
+        die(f"Not an address: {address}")
+
+    index = int(parts[0][1:])
     if index >= len(found):
         die(f"No scenario s{index} — the report has {len(found)}")
-    return found[index]
+    scenario = found[index]
+
+    step_path = None
+    if len(parts) > 1 and not parts[1].startswith("i") and not parts[1].startswith("d"):
+        step_path = parts[1]
+        if not any(covered_by(path, step_path) for path, _, _ in walk_steps(scenario)):
+            die(f"No step {step_path} in s{index} — `steps <report> s{index}` lists its paths")
+
+    return scenario, step_path
+
+
+def covered_by(path, scope):
+    """A step path in an address covers that step and everything under it — the tool's rule, segment-wise
+    so `1` does not swallow `10`."""
+    return path == scope or path.startswith(scope + ".")
 
 
 # ─── Commands ──────────────────────────────────────────────────
@@ -182,8 +219,8 @@ def cmd_failures(_path, report, _args):
 def cmd_steps(_path, report, args):
     if not args:
         die("Which scenario? steps <report> s3")
-    address = "s" + args[0][1:].split("/")[0]
-    scenario = resolve_scenario(report, args[0])
+    scenario, step_scope = resolve_scenario(report, args[0])
+    address = "s" + str(scenario["_ordinal"])
 
     by_step = {}
     for i, interaction in enumerate(scenario.get("httpInteractions") or []):
@@ -197,7 +234,14 @@ def cmd_steps(_path, report, args):
         lines.append(f"open: TestRunReport.html#sid-{scenario['stableId']}")
     lines.append("")
 
-    for path, depth, step in walk_steps(scenario):
+    rows = [r for r in walk_steps(scenario) if step_scope is None or covered_by(r[0], step_scope)]
+    base = min((r[1] for r in rows), default=0) if step_scope else 0
+    if step_scope:
+        lines.append(f"scoped to step {step_scope} and its sub-steps — `steps <report> {address}` for the whole scenario")
+        lines.append("")
+
+    for path, raw_depth, step in rows:
+        depth = raw_depth - base
         mark = "✗" if step.get("status") == "Failed" else " "
         keyword = (step.get("keyword") or "").strip()
         calls = by_step.get(path, [])
@@ -210,7 +254,7 @@ def cmd_steps(_path, report, args):
 
 
 def cmd_services(_path, report, args):
-    scope = [resolve_scenario(report, args[0])] if args else scenarios(report)
+    scope = [resolve_scenario(report, args[0])[0]] if args else scenarios(report)
 
     stats = {}
     for scenario in scope:
@@ -303,8 +347,11 @@ def cmd_http(_path, report, args):
     if "/i" not in address:
         die(f"Not an interaction address: {address}")
 
-    scenario = resolve_scenario(report, address)
-    index = int(address.split("/i")[1])
+    scenario, _ = resolve_scenario(report, address)
+    ordinal = address.split("/i")[1]
+    if not ordinal.isdigit():
+        die(f"Not an interaction address: {address}")
+    index = int(ordinal)
     interactions = scenario.get("httpInteractions") or []
     if index >= len(interactions):
         die(f"No interaction i{index} — the scenario has {len(interactions)}")

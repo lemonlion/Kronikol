@@ -49,14 +49,31 @@ internal static partial class QueryCommand
         }
         else
         {
-            var prefix = argument.ToLowerInvariant();
+            // `trace` heads its own answer `trace c90a1912… — 2 calls across 1 scenario`, and that header
+            // pasted back was refused as "not a trace id": the ellipsis is the tool's punctuation, not
+            // part of the id. Three dots too, because a terminal that cannot render U+2026 shows those.
+            var prefix = argument.TrimEnd('…', '.', ' ').ToLowerInvariant();
             if (prefix.Length < 8 || !prefix.All(Uri.IsHexDigit))
             {
-                error.WriteLine($"Not a trace id or address: {argument} — pass a W3C trace id (or an unambiguous prefix of at least 8 hex chars), or an interaction address like s3/i47.");
+                error.WriteLine($"Not a trace id or address: {argument} — pass a W3C trace id (or an unambiguous prefix of at least 8 hex chars), a span id, or an interaction address like s3/i47.");
                 return 2;
             }
 
             var candidates = distinctIds.Where(id => id!.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            // A span id is the second identifier the tool prints - `http` puts it on the same line as the
+            // trace id - and until now nothing in the tool accepted one. It is sixteen hex, so it passes
+            // the shape test above and then matches no trace prefix: the refusal was printed one line
+            // below the place the id had come from. Resolving it to its trace is the only route from a
+            // span to anything at all, and the note says that is what happened.
+            if (candidates.Count == 0 && prefix.Length == 16
+                && all.FirstOrDefault(t => string.Equals(t.Request.ActivitySpanId, prefix, StringComparison.OrdinalIgnoreCase))
+                    is { Request.ActivityTraceId: { Length: > 0 } spanTrace })
+            {
+                writer.Note($"! {argument} is a span id, not a trace id — showing the trace that span belongs to");
+                candidates = [spanTrace];
+            }
+
             switch (candidates.Count)
             {
                 case 0:

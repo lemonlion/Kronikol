@@ -16,9 +16,19 @@ lists them and stops rather than guessing.
 | body | `b:4bdea521` | first 8 hex of SHA-1 of the content — stable across runs and scenarios. `http` and `body` both take this and `s3/i47` |
 | diagram | `s3/d0` | |
 | note within a diagram | `s3/d0/n12` | |
+| scenario by cross-run identity | `sid:1a2b3c4d5e6f7a8b` | its `stableId`, as `steps` prints it. The `sid:` prefix is **required**: `diff`'s second positional is a report path unless it parses as an address, and a bare sixteen-hex form would capture hash-named artifact paths |
+| W3C trace | `c90a1912…` or the full 32 hex | `trace` takes the ellipsised form it prints, and a 16-hex **span** id resolves to the trace that span belongs to |
+
+Every address above is accepted by some verb, and a verb that cannot narrow the way an address asks
+says so rather than widening in silence. A **step path covers that step and everything under it** —
+`steps s3/2`, `assertions s3/2`, `flow s3/2`, `interactions s3/2`, `values s3/2` — and `--step 2`
+means exactly the same. `scenarios` and `failures` answer per scenario, so a step address scopes to
+its scenario with a `!` line saying so; `summary` has no narrower form and refuses; `annotations` are
+recorded per scenario and refuse a step path; `grep`'s positional is a search term, so an address
+pasted there is searched for literally and the miss says so.
 
 Ordinals are deterministic for a given file (features by display name, scenarios in file order).
-Across runs, use `stableId` and `b:` hashes — both survive a re-run.
+Across runs, use `sid:` and `b:` hashes — both survive a re-run.
 
 ## Shared flags
 

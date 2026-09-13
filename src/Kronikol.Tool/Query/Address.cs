@@ -10,7 +10,16 @@ namespace Kronikol.Tool.Query;
 ///
 /// <para>A step is addressed by its <c>stepPath</c> — <c>s3/2</c>, <c>s3/b0</c> for a background step,
 /// <c>s3/2.1</c> for an assertion under it — rather than by a scheme of its own, so the address printed
-/// beside an interaction is the address that fetches the step it belongs to.</para>
+/// beside an interaction is the address that fetches the step it belongs to. A step path always means
+/// <b>that step and everything under it</b>: the addresses <c>failures</c> prints are frequently parents,
+/// so exact-match would be the wrong answer in the common case rather than in the corner.</para>
+///
+/// <para><c>sid:1a2b3c4d5e6f7a8b</c> is a scenario by its <c>stableId</c> — the cross-run identity the
+/// reference documents tell you to use, printed by <c>steps</c> and handed back by <c>diff</c>'s own
+/// refusal message, and until 3.5.0 an address no verb would take. The <c>sid:</c> prefix is mandatory
+/// rather than a convenience: <c>diff</c> decides whether its second positional is an address or a report
+/// FILE by asking this grammar, so a bare sixteen-hex form would flip a hash-named artifact path from
+/// "the new run" to "a body to compare", which is how CI layouts name files.</para>
 /// </summary>
 internal readonly record struct Address(
     AddressKind Kind,
@@ -19,7 +28,8 @@ internal readonly record struct Address(
     int Diagram = -1,
     int Note = -1,
     string? StepPath = null,
-    string? BodyHash = null)
+    string? BodyHash = null,
+    string? StableId = null)
 {
     public static bool TryParse(string text, out Address address)
     {
@@ -30,6 +40,16 @@ internal readonly record struct Address(
         if (text.StartsWith("b:", StringComparison.OrdinalIgnoreCase))
         {
             address = new Address(AddressKind.Body, BodyHash: text.ToLowerInvariant());
+            return true;
+        }
+
+        if (text.StartsWith("sid:", StringComparison.OrdinalIgnoreCase))
+        {
+            var stableId = text[4..].Trim();
+            if (stableId.Length == 0)
+                return false;
+
+            address = new Address(AddressKind.StableId, StableId: stableId.ToLowerInvariant());
             return true;
         }
 
@@ -91,9 +111,24 @@ internal readonly record struct Address(
         return body.Length > 0 && body.Split('.').All(part => int.TryParse(part, out _));
     }
 
+    /// <summary>
+    /// Whether <paramref name="path"/> is <paramref name="scope"/> or sits under it.
+    /// </summary>
+    /// <remarks>
+    /// The one definition of what a step path in an address covers, because the alternative is two: the
+    /// <c>--step</c> flag used string equality while an address would have to walk the subtree, and one
+    /// address form meaning two different things depending on which door it came through is worse than
+    /// either. Segment-wise, so <c>1</c> does not swallow <c>10</c>.
+    /// </remarks>
+    public static bool PathCoveredBy(string? path, string scope) =>
+        path is not null
+        && (string.Equals(path, scope, StringComparison.Ordinal)
+            || path.StartsWith(scope + ".", StringComparison.Ordinal));
+
     public override string ToString() => Kind switch
     {
         AddressKind.Body => BodyHash ?? "b:?",
+        AddressKind.StableId => $"sid:{StableId}",
         AddressKind.Scenario => $"s{Scenario}",
         AddressKind.Interaction => $"s{Scenario}/i{Interaction}",
         AddressKind.Step => $"s{Scenario}/{StepPath}",
@@ -111,4 +146,5 @@ internal enum AddressKind
     Diagram,
     Note,
     Body,
+    StableId,
 }

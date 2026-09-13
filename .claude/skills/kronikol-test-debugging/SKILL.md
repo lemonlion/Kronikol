@@ -129,8 +129,11 @@ matters.
   nowhere else. So if the user quotes something you cannot find, `note s3/d0` is where it is.
 - **`b:` addresses are content hashes.** The same hash means byte-identical: read it once, and know that
   every other address carrying that hash holds exactly the same bytes.
-- **Ordinals are per-file.** `s3/i47` means nothing in another run. Across runs use `stableId` (printed by
-  `steps`) and `b:` hashes.
+- **Ordinals are per-file.** `s3/i47` means nothing in another run. Across runs use `sid:<stableId>`
+  (printed by `steps`, and an address in its own right — the `sid:` prefix is required) and `b:` hashes.
+- **A step path covers its sub-steps.** `steps s3/2`, `assertions s3/2` and `flow s3/2` answer for `2` and
+  for everything under it, and `--step 2` means the same. The addresses `failures` prints are frequently
+  parents of the step that actually failed, so this is the common case, not the corner.
 - **A body ending `…truncated (N chars total)` was capped at capture time.** The rest was never recorded —
   it is not somewhere else in the file. `query` says so when it prints one.
 - **Attachments are pointers.** `failures` and `steps` print absolute paths for screenshots; `Read` them
@@ -168,6 +171,12 @@ matters.
   to be. Read stderr on a count you intend to act on.
 
   The rest belong to one command each:
+  - `! … is an address, not text` (`grep`) — the positional you gave `grep` is a search
+    TERM, and the thing you pasted is an address. `grep` did search for it literally and did not find it;
+    that is not evidence the scenario is absent. Use the verb the line names.
+  - `! a scenario listing has no per-step form` (`scenarios`) and `! the failure digest is per scenario`
+    (`failures`) — you gave a step address to a verb that answers per scenario. It scoped to the
+    scenario, which is the nearest true answer, and the line names the verb that answers for the step.
   - `! this report has no stableIds` (`diff`) — written before 3.0.47, so the two runs are **matched by
     position**. A scenario added or removed anywhere shifts everything after it and the diff is noise.
   - `! N scenarios share a stableId` (`diff`) — a `[Theory]` with repeated data, the same `Examples:` row
@@ -183,6 +192,8 @@ matters.
     real, the arguments are absent. Do not guess them from the surrounding text.
   - `! step "2" spans scenarios` (`interactions --group-by step`) — the same step path is a different step
     in each scenario, so the bucket mixes them. Scope with `s3`.
+  - `! … is a span id, not a trace id` (`trace`) — you passed the 16-hex span `http` prints beside the
+    trace id. There is no per-span view; the trace that span belongs to is shown instead.
   - `! a timestamp was absent or unparseable` (`trace`) — the rows are in **file order, not chronological**,
     so do not read the sequence as causality.
   - `! spans N scenarios … shared state or fixture leakage` (`trace`) — one trace id reached more than one

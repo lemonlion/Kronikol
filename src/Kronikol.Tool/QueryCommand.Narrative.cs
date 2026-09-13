@@ -10,9 +10,22 @@ namespace Kronikol.Tool;
 /// </summary>
 internal static partial class QueryCommand
 {
-    private static int Failures(ReportIndex index, QueryOptions options, QueryWriter writer)
+    private static int Failures(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        var failed = index.Scenarios.Where(s => s.Failed).ToList();
+        // `failures` prints step addresses (`s1/1.1`) and used to refuse to take one back: the positional
+        // was parsed and discarded, so the whole run came back looking like the narrowed answer.
+        var scope = index.Scenarios.AsEnumerable();
+        if (options.Positional.Count > 0)
+        {
+            if (!TryScenario(index, options, error, out var one, out var step))
+                return 2;
+
+            scope = [one];
+            if (step is not null)
+                writer.Note($"! the failure digest is per scenario — scoped to {one.Address}; `steps {one.Address}/{step}` answers for the step");
+        }
+
+        var failed = scope.Where(s => s.Failed).ToList();
 
         if (options.Count)
         {
@@ -139,7 +152,7 @@ internal static partial class QueryCommand
 
     private static int Steps(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        if (!TryScenario(index, options, error, out var scenario))
+        if (!TryScenario(index, options, error, out var scenario, out var scope))
             return 2;
 
         writer.Line($"{scenario.Address}  {scenario.FeatureName} › {scenario.Name}  [{scenario.Result}]  {scenario.DurationSeconds:0.##}s");
@@ -157,8 +170,16 @@ internal static partial class QueryCommand
             .GroupBy(i => i.StepPath)
             .ToDictionary(g => g.Key ?? "", g => g.ToArray());
 
-        foreach (var (path, depth, step) in scenario.AllSteps())
+        // A step address answers for that step and everything under it. The depth is re-based on the
+        // scope so a scoped tree reads as a tree rather than as an indented fragment of one.
+        var rows = scenario.AllSteps().Where(row => scope is null || Address.PathCoveredBy(row.Path, scope)).ToList();
+        var baseDepth = scope is null ? 0 : rows.Min(row => row.Depth);
+        if (scope is not null)
+            writer.Line($"scoped to step {scope} and its sub-steps — `steps {scenario.Address}` for the whole scenario\n");
+
+        foreach (var (path, rawDepth, step) in rows)
         {
+            var depth = rawDepth - baseDepth;
             var mark = step.Failed ? "✗" : step.Status is "Bypassed" ? "~" : step.IsAssertion ? "·" : " ";
             var indent = new string(' ', depth * 2);
             var duration = step.DurationSeconds is { } d and > 0.001 ? $"  {d:0.##}s" : "";
@@ -184,7 +205,7 @@ internal static partial class QueryCommand
                 writer.Line($"{indent}      attachment: {attachment.Name} → {attachment.Resolve(index.Directory)}");
         }
 
-        var unattributed = byStep.TryGetValue("", out var loose) ? loose.Length : 0;
+        var unattributed = scope is null && byStep.TryGetValue("", out var loose) ? loose.Length : 0;
         if (unattributed > 0)
             writer.Line($"\n  {unattributed} calls belong to no step"
                         + (index.Enriched ? " (before the first step, or attribution was not trusted)" : " (this report has no step attribution)"));
@@ -196,17 +217,22 @@ internal static partial class QueryCommand
     private static int Assertions(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
         var scope = index.Scenarios.AsEnumerable();
+        string? stepScope = null;
         if (options.Positional.Count > 0)
         {
-            if (!TryScenario(index, options, error, out var one))
+            if (!TryScenario(index, options, error, out var one, out stepScope))
                 return 2;
             scope = [one];
         }
 
+        // `assertions` prints one address per assertion, under a JSON field literally named `address`.
+        // Feeding one back used to return every assertion in the scenario: the verb that printed the
+        // address could not use it, and answered with a strictly wider set at exit 0.
         var rows = new List<(ScenarioEntry Scenario, string Path, StepEntry Step)>();
         foreach (var scenario in scope)
         foreach (var (path, _, step) in scenario.AllSteps())
-            if (step.IsAssertion && (!options.Failed || step.Failed))
+            if (step.IsAssertion && (!options.Failed || step.Failed)
+                && (stepScope is null || Address.PathCoveredBy(path, stepScope)))
                 rows.Add((scenario, path, step));
 
         if (options.Count)
@@ -247,8 +273,16 @@ internal static partial class QueryCommand
 
     private static int Annotations(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        if (!TryScenario(index, options, error, out var scenario))
+        if (!TryScenario(index, options, error, out var scenario, out var addressedStep))
             return 2;
+
+        // Exported annotations are attributed to the scenario, not to a step: there is no narrower answer
+        // to give, and giving the wider one silently is how a step address came to mean nothing at all.
+        if (addressedStep is not null)
+        {
+            error.WriteLine($"Annotations are recorded per scenario, not per step — drop the /{addressedStep} and ask for {scenario.Address}.");
+            return 2;
+        }
 
         if (options.Count)
         {
@@ -272,8 +306,11 @@ internal static partial class QueryCommand
 
     private static int Flow(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        if (!TryScenario(index, options, error, out var scenario))
+        if (!TryScenario(index, options, error, out var scenario, out var addressedStep))
             return 2;
+
+        // `flow s0/1` and `flow s0 --step 1` are the same question, and both cover the step's sub-steps.
+        options.ScopeToStep(addressedStep);
 
         writer.Line($"{scenario.Address}  {QueryWriter.OneLine(scenario.Name, 90)}  [{scenario.Result}]");
         writer.Line();
@@ -305,7 +342,7 @@ internal static partial class QueryCommand
             if (!interaction.Type.Equals("Request", StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            if (options.Step is { } wanted && interaction.StepPath != wanted)
+            if (options.Step is { } wanted && !Address.PathCoveredBy(interaction.StepPath, wanted))
                 continue;
             if (options.Service is { } service && !interaction.ServiceName.Contains(service, StringComparison.OrdinalIgnoreCase))
                 continue;
@@ -353,30 +390,106 @@ internal static partial class QueryCommand
         return null;
     }
 
-    private static bool TryScenario(ReportIndex index, QueryOptions options, TextWriter error, out ScenarioEntry scenario)
+    private static bool TryScenario(ReportIndex index, QueryOptions options, TextWriter error, out ScenarioEntry scenario) =>
+        TryScenario(index, options, error, out scenario, out _);
+
+    /// <summary>
+    /// The one place an address on the command line becomes a scenario, and - when the address named a
+    /// step - the path that scopes the answer.
+    /// </summary>
+    /// <remarks>
+    /// <para>This never looked at <see cref="Address.Kind"/>. It read <see cref="Address.Scenario"/> and
+    /// returned, so a step path was parsed and thrown away: <c>steps s0/99</c> was byte-identical to
+    /// <c>steps s0</c>, and an address printed by <c>failures</c> or <c>assertions</c> came back as the
+    /// whole scenario at exit 0. An answer that is strictly wider than the one that was asked for, with
+    /// nothing said, is the failure mode the per-verb flag validator exists to prevent, arriving through
+    /// the positional instead of through a flag.</para>
+    ///
+    /// <para><paramref name="stepPath"/> is null unless the address named a step, and the path is checked
+    /// against the scenario here rather than by each caller, so a path that is in no scenario is refused
+    /// once instead of being widened five different ways.</para>
+    /// </remarks>
+    private static bool TryScenario(ReportIndex index, QueryOptions options, TextWriter error, out ScenarioEntry scenario, out string? stepPath)
     {
         scenario = null!;
+        stepPath = null;
 
         if (options.Positional.Count == 0)
         {
-            error.WriteLine("Which scenario? Pass an address like s3 — 'scenarios' lists them.");
+            error.WriteLine("Which scenario? Pass an address like s3, or sid:<stableId> — 'scenarios' lists them.");
             return false;
         }
 
-        if (!Address.TryParse(options.Positional[0], out var address))
+        var text = options.Positional[0];
+        if (!Address.TryParse(text, out var address))
         {
-            error.WriteLine($"Not an address: {options.Positional[0]}");
+            error.WriteLine($"Not an address: {text}");
+            return false;
+        }
+
+        if (address.Kind == AddressKind.StableId)
+            return TryStableId(index, address.StableId!, error, out scenario);
+
+        if (address.Kind is AddressKind.Body)
+        {
+            error.WriteLine($"{text} is a body address, not a scenario. `body <report> {text}` reads it.");
             return false;
         }
 
         if (index.Scenario(address.Scenario) is not { } found)
         {
-            error.WriteLine($"No scenario s{address.Scenario} — the report has {index.Scenarios.Count} (s0-s{index.Scenarios.Count - 1}).");
+            error.WriteLine(index.Scenarios.Count == 0
+                ? $"No scenario s{address.Scenario} — the report has none."
+                : $"No scenario s{address.Scenario} — the report has {index.Scenarios.Count} (s0-s{index.Scenarios.Count - 1}).");
             return false;
+        }
+
+        if (address.Kind == AddressKind.Step)
+        {
+            var wanted = address.StepPath!;
+            if (!found.AllSteps().Any(step => Address.PathCoveredBy(step.Path, wanted)))
+            {
+                error.WriteLine($"No step {wanted} in {found.Address} — `steps {found.Address}` lists its paths.");
+                return false;
+            }
+
+            stepPath = wanted;
         }
 
         scenario = found;
         return true;
+    }
+
+    /// <summary>
+    /// A scenario by its <c>stableId</c>. Several scenarios can carry one - a repeated <c>[Theory]</c>
+    /// row, the same <c>Examples:</c> row in two blocks, a retry - so an ambiguous id is reported with
+    /// the ordinals that resolve it rather than silently resolved to the first match.
+    /// </summary>
+    private static bool TryStableId(ReportIndex index, string stableId, TextWriter error, out ScenarioEntry scenario)
+    {
+        scenario = null!;
+
+        var matches = index.Scenarios
+            .Where(s => string.Equals(s.StableId, stableId, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        switch (matches.Count)
+        {
+            case 0:
+                error.WriteLine($"No scenario with stableId {stableId} in {Path.GetFileName(index.Path)}.");
+                error.WriteLine(index.Scenarios.Any(s => s.StableId.Length > 0)
+                    ? "`scenarios --json` lists every stableId in this report."
+                    : "This report carries no stableIds at all (written before 3.0.47) — address scenarios by ordinal.");
+                return false;
+            case 1:
+                scenario = matches[0];
+                return true;
+            default:
+                error.WriteLine($"{matches.Count} scenarios share stableId {stableId} (a repeated row, or a retry) — name the one you mean:");
+                foreach (var match in matches)
+                    error.WriteLine($"  {match.Address}  {QueryWriter.OneLine(match.Name, 70)}  [{match.Result}]");
+                return false;
+        }
     }
 
     /// <summary>

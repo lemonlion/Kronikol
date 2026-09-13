@@ -34,6 +34,14 @@ internal sealed class QueryOptions
     public string? Method { get; private set; }
     public string? Grep { get; private set; }
     public string? Step { get; private set; }
+
+    /// <summary>
+    /// Narrows to a step path that arrived as part of the positional address rather than through
+    /// <c>--step</c>. A null does nothing, so a caller can hand over whatever the address resolver gave
+    /// it; an explicit <c>--step</c> wins, because a caller that passed both said the narrower thing
+    /// twice and the flag is the one they can see.
+    /// </summary>
+    internal void ScopeToStep(string? stepPath) => Step ??= stepPath;
     public string? Sort { get; private set; }
     public string? Path { get; private set; }
     public string? In { get; private set; }
@@ -191,12 +199,30 @@ internal sealed class QueryOptions
                 case "--body":
                     // Bare `--body` prints the payload; `--body s3/i47` (cross-run diff) names one.
                     // Disambiguated by lookahead so one flag never silently swallows a positional.
-                    if (i + 1 < args.Count && !args[i + 1].StartsWith("--", StringComparison.Ordinal)
-                        && Address.TryParse(args[i + 1], out var bodyAddress)
-                        && bodyAddress.Kind is AddressKind.Interaction or AddressKind.Body)
-                        options.BodyAddress = args[++i];
+                    //
+                    // A value that is NOT an address used to fall through to bare `--body`, leaving the
+                    // token unconsumed in the positionals where nothing read it: `diff <old> <new> --body
+                    // s0/1` printed a full unfiltered run diff at exit 0 and never mentioned the request
+                    // it had been asked about. That is the silence the per-verb flag validator exists to
+                    // remove, arriving through a flag's VALUE instead of through its name.
+                    if (i + 1 < args.Count && !args[i + 1].StartsWith("--", StringComparison.Ordinal))
+                    {
+                        var given = args[++i];
+                        if (!Address.TryParse(given, out var bodyAddress)
+                            || bodyAddress.Kind is not (AddressKind.Interaction or AddressKind.Body))
+                        {
+                            error.WriteLine($"--body {given}: not a call or body address.");
+                            error.WriteLine("Give it s3/i47 (a call) or b:4bdea521 (a body), or pass --body on its own to print the payload.");
+                            return null;
+                        }
+
+                        options.BodyAddress = given;
+                    }
                     else
+                    {
                         options.Body = true;
+                    }
+
                     break;
                 case "--keys": options.Keys = true; break;
                 case "--values": options.Values = true; break;

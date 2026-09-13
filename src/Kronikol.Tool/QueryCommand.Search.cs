@@ -147,6 +147,19 @@ internal static partial class QueryCommand
         if (hits.Count == 0)
         {
             writer.Line($"\"{needle}\" is not in {string.Join(", ", targets)}");
+
+            // `grep`'s positional is a search TERM, so an address pasted into it was reinterpreted as a
+            // needle and answered "not found" at exit 0 - a confident negative about a scenario that is
+            // in the report, from the one verb whose whole job is to answer that question honestly.
+            // The grammar stays as it is; the miss says what it did with what it was given.
+            if (Address.TryParse(needle, out var mistaken))
+                writer.Note(mistaken.Kind switch
+                {
+                    AddressKind.Body => $"! {needle} is an address, not text — `body <report> {needle}` reads that payload",
+                    AddressKind.StableId => $"! {needle} is an address, not text — `steps <report> {needle}` opens that scenario",
+                    _ => $"! {needle} is an address, not text — `steps {needle}` opens it"
+                });
+
             writer.Footer("--in bodies,headers,uris,steps,assertions,notes widens the search · notes are searched last because they are the expensive one");
             return 0;
         }

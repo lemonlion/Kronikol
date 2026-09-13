@@ -124,6 +124,69 @@ public class FallbackScriptTests : IDisposable
             StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// The script's docstring claims "the same addressing", and for a while that was untrue in two ways
+    /// at once: a step path was parsed for its scenario ordinal and then discarded, so <c>s1/99</c> was
+    /// byte-identical to <c>s1</c>; and a malformed ordinal reached <c>int()</c>, so <c>sabc</c> produced
+    /// a Python traceback where the tool prints a sentence and exits 2. A fallback that answers something
+    /// else, or crashes, is worse than one that is not there.
+    /// </summary>
+    [Fact]
+    public void A_step_address_scopes_the_fallback_the_way_it_scopes_the_tool()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var report = WriteReport();
+
+        var whole = PythonProbe.Run(ScriptPath, "steps", report, "s1");
+        var scoped = PythonProbe.Run(ScriptPath, "steps", report, "s1/0");
+
+        Assert.Contains("the total is right", whole, StringComparison.Ordinal);
+        Assert.Contains("the total is right", scoped, StringComparison.Ordinal);
+        Assert.NotEqual(whole, scoped);
+        Assert.Contains("scoped to step 0", scoped, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_step_path_the_scenario_does_not_have_is_refused_by_the_fallback_too()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var report = WriteReport();
+
+        var (output, error, exit) = PythonProbe.RunFull(ScriptPath, "steps", report, "s1/99");
+
+        Assert.Equal(2, exit);
+        Assert.DoesNotContain("the total is right", output, StringComparison.Ordinal);
+        Assert.Contains("99", error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_malformed_address_is_a_sentence_not_a_traceback()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var report = WriteReport();
+
+        var (_, error, exit) = PythonProbe.RunFull(ScriptPath, "steps", report, "sabc");
+
+        Assert.Equal(2, exit);
+        Assert.DoesNotContain("Traceback", error, StringComparison.Ordinal);
+        Assert.Contains("Not an address", error, StringComparison.Ordinal);
+    }
+
+    /// <summary>The cross-run identity, which the fallback has to take for the same reason the tool does.</summary>
+    [Fact]
+    public void The_fallback_takes_a_stableId_address()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var report = WriteReport();
+
+        var stableId = Regex.Match(PythonProbe.Run(ScriptPath, "steps", report, "s1"), @"stableId (\S+)");
+        Assert.True(stableId.Success, "query.py steps no longer prints a stableId");
+
+        Assert.Equal(
+            PythonProbe.Run(ScriptPath, "steps", report, "s1"),
+            PythonProbe.Run(ScriptPath, "steps", report, "sid:" + stableId.Groups[1].Value));
+    }
+
     [Fact]
     public void It_names_the_same_services_as_the_tool()
     {

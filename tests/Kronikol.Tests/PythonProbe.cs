@@ -47,6 +47,17 @@ internal static class PythonProbe
     /// <summary>Runs <c>python query.py args…</c> and returns stdout; throws on a non-zero exit.</summary>
     public static string Run(string scriptPath, params string[] args)
     {
+        var (stdout, stderr, exit) = RunFull(scriptPath, args);
+        if (exit != 0) throw new InvalidOperationException($"query.py exited {exit}: {stderr}");
+        return stdout;
+    }
+
+    /// <summary>
+    /// The same run, handing back the exit code instead of throwing on it - which is the only way to
+    /// assert that the script REFUSES something, and refusing well is half of what it has to do.
+    /// </summary>
+    public static (string Output, string Error, int Exit) RunFull(string scriptPath, params string[] args)
+    {
         var psi = new ProcessStartInfo(Interpreter.Value ?? throw new InvalidOperationException("no python"))
         {
             RedirectStandardOutput = true,
@@ -67,7 +78,6 @@ internal static class PythonProbe
         var stdout = process.StandardOutput.ReadToEndAsync();
         var stderr = process.StandardError.ReadToEndAsync();
         if (!process.WaitForExit(60_000)) { try { process.Kill(); } catch { } throw new TimeoutException("query.py timed out"); }
-        if (process.ExitCode != 0) throw new InvalidOperationException($"query.py exited {process.ExitCode}: {stderr.Result}");
-        return stdout.Result;
+        return (stdout.Result, stderr.Result, process.ExitCode);
     }
 }

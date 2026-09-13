@@ -9,8 +9,18 @@ namespace Kronikol.Tool;
 /// </summary>
 internal static partial class QueryCommand
 {
-    private static int Summary(ReportIndex index, QueryOptions options, QueryWriter writer)
+    private static int Summary(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
+        // An address used to be read and discarded here, so `summary s3` answered for the whole run and
+        // looked like an answer about s3. There is no such thing as a summary of one scenario, so this
+        // refuses rather than inventing one - and names the two verbs that do answer narrowly.
+        if (options.Positional.Count > 0)
+        {
+            error.WriteLine($"summary answers for the whole run; it has no per-scenario form ({options.Positional[0]} was given).");
+            error.WriteLine("For one scenario: `steps <address>` for its step tree, `flow <address>` for its calls.");
+            return 2;
+        }
+
         var scenarios = index.Scenarios;
         if (options.Count)
         {
@@ -140,9 +150,22 @@ internal static partial class QueryCommand
         return 0;
     }
 
-    private static int Scenarios(ReportIndex index, QueryOptions options, QueryWriter writer)
+    private static int Scenarios(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        var matches = index.Scenarios.Where(s => Matches(s, options)).ToList();
+        // An address narrows the listing to one scenario. It used to be parsed and thrown away, so an
+        // agent that had narrowed got the whole run back with nothing saying it had not been narrowed.
+        var scope = index.Scenarios.AsEnumerable();
+        if (options.Positional.Count > 0)
+        {
+            if (!TryScenario(index, options, error, out var one, out var step))
+                return 2;
+
+            scope = [one];
+            if (step is not null)
+                writer.Note($"! a scenario listing has no per-step form — scoped to {one.Address}; `steps {one.Address}/{step}` answers for the step");
+        }
+
+        var matches = scope.Where(s => Matches(s, options)).ToList();
 
         if (options.Count)
         {
