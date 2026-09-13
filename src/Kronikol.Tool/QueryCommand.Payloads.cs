@@ -450,7 +450,7 @@ internal static partial class QueryCommand
 
         if (options.LineRange is { } range)
         {
-            writer.Line(PayloadReader.Lines(pretty, range.From, range.To).TrimEnd('\n'));
+            writer.Payload(PayloadReader.Lines(pretty, range.From, range.To).TrimEnd('\n'));
             writer.Footer($"{pretty.ReplaceLineEndings("\n").Split('\n').Length} lines total");
             return 0;
         }
@@ -468,7 +468,7 @@ internal static partial class QueryCommand
             return 0;
         }
 
-        writer.Line(pretty);
+        writer.Payload(pretty);
         writer.Footer("");
         return 0;
     }
@@ -527,7 +527,7 @@ internal static partial class QueryCommand
                     return 0;
                 }
 
-                writer.Line(text);
+                writer.Payload(text);
                 writer.Footer("");
                 return 0;
             }

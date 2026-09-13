@@ -142,7 +142,28 @@ internal sealed class QueryWriter
     /// are the text rendering, not the answer, and a script that had to strip them out of an array would
     /// be parsing a terminal again.
     /// </summary>
-    public void Line(string text = "")
+    public void Line(string text = "") => Write(text.ReplaceLineEndings(" "));
+
+    /// <summary>
+    /// A captured payload, written with its own line breaks intact — the one thing <see cref="Line"/>
+    /// deliberately will not do.
+    ///
+    /// <para>The split exists so the safe behaviour is the default. Nearly everything the tool prints is
+    /// composed by the tool around run-derived text — feature names, scenario names, service names, step
+    /// text — and a line ending inside one of those is a line the tool never composed. Run as a CI step
+    /// `kronikol` owns its own stdout, so that line reaches the job log at column zero, where
+    /// <c>actions/runner</c>'s <c>ActionCommand.TryParseV2</c> trims whitespace only and consumes it as a
+    /// workflow command; <c>::stop-commands::&lt;token&gt;</c> then switches off command processing for
+    /// the rest of the job. Flattening at the three payload sites instead would mean remembering it at
+    /// every site that is added later.</para>
+    ///
+    /// <para>It is still charged against <c>--max-bytes</c> exactly like a line. Opting out of flattening
+    /// must not opt out of the budget, or the method that writes the tool's largest strings would be the
+    /// one the budget cannot see.</para>
+    /// </summary>
+    public void Payload(string text) => Write(text);
+
+    private void Write(string text)
     {
         if (_capture is not null)
         {

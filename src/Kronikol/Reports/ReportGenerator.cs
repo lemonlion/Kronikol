@@ -396,7 +396,7 @@ public static class ReportGenerator
             });
         }
 
-        RunOutputs(actions);
+        var written = RunOutputs(actions);
 
         var diagnostics = ReportDiagnostics.Analyse(
             RequestResponseLogger.RequestAndResponseLogs, features,
@@ -407,16 +407,19 @@ public static class ReportGenerator
         if (options.DiagnosticMode)
             DiagnosticReportGenerator.Generate(RequestResponseLogger.RequestAndResponseLogs, features, options);
 
-        // Gathered once, from what actually reached disk: an output the isolated list could not write is
-        // never named by the pointer or offered in the CI summary.
+        // Gathered once, from what THIS RUN actually wrote: an output the isolated list could not write is
+        // never named by the pointer or offered in the CI summary. Existence alone is not the test — a
+        // file the previous run left behind exists, so naming it would hand the reader another run's bytes
+        // under this run's heading, which is the one failure mode a pointer cannot afford.
         var runSummary = RunSummaryConsoleWriter.Summarise(
             features,
             reportsDir,
-            [
+            new[]
+            {
                 $"{options.HtmlTestRunReportFileName}.html",
                 $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}",
                 FailuresDigestFileName
-            ],
+            }.Where(written.Contains),
             agentInstructionsWritten: options.WriteAgentInstructions
                                       && File.Exists(Path.Combine(reportsDir, AgentInstructionsGenerator.ClaudeFileName)),
             suite: suite);
@@ -472,13 +475,23 @@ public static class ReportGenerator
     /// serialisation bug in one scenario's data, and the HTML nobody could otherwise reproduce went with
     /// it. A report is diagnostics: a partial one beats none.
     /// </remarks>
-    private static void RunOutputs(List<(string Name, Action Run)> outputs)
+    /// <returns>
+    /// The names of the outputs that completed. The pointer is built from this rather than from what is on
+    /// disk, because a file left behind by an EARLIER run exists — so an output that threw left the
+    /// previous run's bytes under the name everything uses, and the pointer named them, sized them and
+    /// sent the reader to them. The worst case read exactly like the best one.
+    /// </returns>
+    private static HashSet<string> RunOutputs(List<(string Name, Action Run)> outputs)
     {
+        var written = new HashSet<string>(StringComparer.Ordinal);
+
         Parallel.Invoke(outputs.Select(output => (Action)(() =>
         {
             try
             {
                 output.Run();
+                lock (written)
+                    written.Add(output.Name);
             }
             catch (Exception ex)
             {
@@ -486,6 +499,8 @@ public static class ReportGenerator
                 Console.WriteLine($"⚠ WARNING: could not write {output.Name}: {ex.GetType().Name}: {ex.Message}");
             }
         })).ToArray());
+
+        return written;
     }
 
     /// <summary>
@@ -4856,12 +4871,28 @@ public static class ReportGenerator
         {
             File.WriteAllText(filePath, text);
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            // The salvage: the canonical path is unusable — held open by a reader, a viewer, a previous
+            // process — so the bytes go somewhere rather than nowhere. But this used to return as though
+            // it had succeeded, which is the worse half: the run was never marked, and the canonical name
+            // on disk still held the PREVIOUS run's bytes, under the name the pointer prints, the CI
+            // summary offers and `kronikol query` opens. Writing the salvage and then rethrowing is the
+            // accurate report of what happened — this output did not produce the file it was asked for.
             var fallback = Path.Combine(directory,
                 Path.GetFileNameWithoutExtension(fileName) + "2" + Path.GetExtension(fileName));
-            File.WriteAllText(fallback, text);
-            return fallback;
+            try
+            {
+                File.WriteAllText(fallback, text);
+                Console.WriteLine($"⚠ WARNING: {fileName} was not writable — this run's copy is in {Path.GetFileName(fallback)}; "
+                                  + $"{fileName} on disk is from an earlier run.");
+            }
+            catch (Exception salvageFailure) when (salvageFailure is IOException or UnauthorizedAccessException)
+            {
+                // Nothing more to try. The rethrow below is what marks the run.
+            }
+
+            throw new IOException($"Could not write {fileName}: {exception.Message}", exception);
         }
         return filePath;
     }
