@@ -88,6 +88,15 @@ internal static partial class QueryCommand
     /// One failure as an object, in the field names <c>Failures.jsonl</c> already uses
     /// (<c>FailuresDigestGenerator.BuildJsonl</c>). The same concept must not reach a consumer under two
     /// shapes depending on whether it read the digest the run wrote or asked the tool for it afterwards.
+    ///
+    /// <para><b>They are not yet the same object, and this is the list.</b> The digest carries
+    /// <c>expected</c>, <c>actual</c>, <c>cluster</c>, <c>stepsBefore</c>, <c>thrownAt</c>,
+    /// <c>callsScope</c> and <c>truncated</c>; this does not. This nests <c>calls</c> under the failing
+    /// step that made them and caps them at six per step; the digest lists them once per failure, with a
+    /// <c>status</c>, capped at eight. Attachments are capped at four here and uncapped there. Closing
+    /// that gap needs <c>ReportScanner</c> to read <c>errorStackTrace</c>, which it does not, so it is
+    /// M7's work and not a line to add here — but the divergence is written down rather than left for a
+    /// consumer to discover by diffing two files that claim to describe the same failure.</para>
     /// </summary>
     private static object FailureRecord(ReportIndex index, ScenarioEntry scenario, string? deepLink)
     {

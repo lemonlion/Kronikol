@@ -167,37 +167,13 @@ internal static partial class QueryCommand
     }
 
     /// <summary>
-    /// The statuses that are not numbers and are not failures. The HTTP non-200 successes, and then the
-    /// labels Kronikol itself stamps on calls that have no status code: a broker publish is <c>Sent</c>,
-    /// a consume <c>Ack</c>, a reply <c>Responded</c> (<c>MessageTracker</c>'s own defaults), a cache
-    /// lookup <c>Hit</c> or <c>Miss</c> — a miss is an outcome, not a failure — and a Spanner
-    /// transaction <c>Committed</c>. A refusal (<c>Nack</c>, <c>Fault</c>) is deliberately absent.
+    /// Whether a captured status is a failure. Delegates to <see cref="Kronikol.Reports.InteractionStatus"/>,
+    /// which is where the rule moved when the failures digest started asking the same question: a digest
+    /// that called a cache <c>Miss</c> an error while <c>query services</c> did not would be two surfaces
+    /// of one report disagreeing about one call.
     /// </summary>
-    private static readonly HashSet<string> NonErrorStatuses = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Created", "Accepted", "NoContent",
-        "Sent", "Ack", "Responded", "Hit", "Miss", "Committed",
-    };
-
-    /// <summary>
-    /// Treats anything that is not a success as an error, including the non-numeric statuses the non-HTTP
-    /// taps use (a database driver reports <c>ERROR</c>, not 500) — while knowing the successes that are
-    /// not spelled <c>OK</c> by name (<see cref="NonErrorStatuses"/>). The single classifier behind
-    /// <c>services</c>, <c>flow --errors-only</c> and <c>--group-by</c>, so no two commands can disagree
-    /// about the same call.
-    /// </summary>
-    internal static bool IsError(string? statusCode, string? statusText = null)
-    {
-        var (code, text) = Kronikol.Reports.InteractionStatus.Read(statusCode, statusText);
-
-        // A number settles it on its own: from 3.1.0 every HTTP call has one, so the name list below is
-        // only ever consulted for the taps that genuinely have no code.
-        if (code is { } numeric) return numeric >= 400;
-
-        return text is { Length: > 0 }
-               && !text.StartsWith("OK", StringComparison.OrdinalIgnoreCase)
-               && !NonErrorStatuses.Contains(text);
-    }
+    internal static bool IsError(string? statusCode, string? statusText = null) =>
+        Kronikol.Reports.InteractionStatus.IsError(statusCode, statusText);
 
     /// <summary>
     /// The numeric code and the label for an interaction, reading both the current two-field shape and

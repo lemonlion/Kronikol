@@ -73,4 +73,41 @@ public static class InteractionStatus
             ? (legacy, Enum.IsDefined(typeof(HttpStatusCode), legacy) ? ((HttpStatusCode)legacy).ToString() : statusCode)
             : (Enum.TryParse<HttpStatusCode>(statusCode, out var parsed) ? (int)parsed : null, statusCode);
     }
+
+    /// <summary>
+    /// The statuses that are not numbers and are not failures. The HTTP non-200 successes, and then the
+    /// labels Kronikol itself stamps on calls that have no status code: a broker publish is <c>Sent</c>,
+    /// a consume <c>Ack</c>, a reply <c>Responded</c> (<c>MessageTracker</c>'s own defaults), a cache
+    /// lookup <c>Hit</c> or <c>Miss</c> - a miss is an outcome, not a failure - and a Spanner
+    /// transaction <c>Committed</c>. A refusal (<c>Nack</c>, <c>Fault</c>) is deliberately absent.
+    /// </summary>
+    private static readonly HashSet<string> NonErrorStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Created", "Accepted", "NoContent",
+        "Sent", "Ack", "Responded", "Hit", "Miss", "Committed",
+    };
+
+    /// <summary>
+    /// Treats anything that is not a success as an error, including the non-numeric statuses the non-HTTP
+    /// taps use (a database driver reports <c>ERROR</c>, not 500) - while knowing the successes that are
+    /// not spelled <c>OK</c> by name (<see cref="NonErrorStatuses"/>).
+    ///
+    /// <para>It lives here rather than in the tool because the failures digest asks the same question when
+    /// it decides which of a scenario's calls to show first, and a digest that called a <c>Miss</c> an
+    /// error while <c>query services</c> did not would be two surfaces of one report disagreeing about one
+    /// call. One classifier behind <c>services</c>, <c>flow --errors-only</c>, <c>--group-by</c> and the
+    /// digest.</para>
+    /// </summary>
+    public static bool IsError(string? statusCode, string? statusText = null)
+    {
+        var (code, text) = Read(statusCode, statusText);
+
+        // A number settles it on its own: from 3.1.0 every HTTP call has one, so the name list above is
+        // only ever consulted for the taps that genuinely have no code.
+        if (code is { } numeric) return numeric >= 400;
+
+        return text is { Length: > 0 }
+               && !text.StartsWith("OK", StringComparison.OrdinalIgnoreCase)
+               && !NonErrorStatuses.Contains(text);
+    }
 }

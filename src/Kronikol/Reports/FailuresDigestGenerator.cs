@@ -40,8 +40,13 @@ public static class FailuresDigestGenerator
     /// <summary>Steps shown before the failing one — enough for context, not a transcript.</summary>
     private const int StepsBeforeFailure = 3;
 
-    /// <summary>Calls listed per failing step; past this the answer is <c>kronikol query flow</c>.</summary>
-    private const int MaxCallsPerStep = 8;
+    /// <summary>
+    /// Calls listed for one failure, across all of its failing steps; past this the answer is
+    /// <c>kronikol query flow</c>. It was called <c>MaxCallsPerStep</c> and documented as a per-step cap
+    /// while the loop applied it once for the whole entry, so a failure with three failing steps showed
+    /// eight calls in total and the name said twenty-four.
+    /// </summary>
+    public const int MaxCallsPerFailure = 8;
 
     /// <summary>Characters of a statement or URI kept on its one line.</summary>
     private const int OneLineLimit = 120;
@@ -141,6 +146,7 @@ public static class FailuresDigestGenerator
         IReadOnlyList<StepLine> Context,
         IReadOnlyList<StepLine> Failing,
         IReadOnlyList<CallLine> Calls,
+        string CallsScope,
         IReadOnlyList<FileAttachment> Attachments,
         string? DeepLink,
         string? SourceFile,
@@ -203,7 +209,7 @@ public static class FailuresDigestGenerator
             ? []
             : ordered.Take(failingIndexes[0]).TakeLast(StepsBeforeFailure).Select(Line).ToArray();
 
-        var calls = BuildCalls(located, failing, stepPaths, interactions, address);
+        var (calls, callsScope) = BuildCalls(located, failing, stepPaths, interactions, address);
 
         return new Entry(
             address, stableId, located.Feature.DisplayName, scenario.DisplayName,
@@ -212,7 +218,7 @@ public static class FailuresDigestGenerator
             scenario.ErrorMessage,
             diff?.Expected, diff?.Actual,
             ClusterKey(scenario.ErrorMessage),
-            context, failing, calls,
+            context, failing, calls, callsScope,
             scenario.Attachments ?? [],
             htmlFileName is null ? null : $"{htmlFileName}.html#sid-{stableId}",
             scenario.SourceFile,
@@ -220,16 +226,20 @@ public static class FailuresDigestGenerator
             FailureText.ThrownAt(scenario.ErrorStackTrace));
     }
 
-    private static IReadOnlyList<CallLine> BuildCalls(Located located, IReadOnlyList<StepLine> failing,
+    /// <summary>
+    /// The calls to show for a failure, and — just as importantly — which question they answer.
+    ///
+    /// <para><c>calls: []</c> used to mean three different things at once: the failing step made no calls,
+    /// the scenario made no calls, or nothing could be attributed to the step at all. The third was the
+    /// common case and the file never said so, which is how "we did not look there" and "there was nothing
+    /// there" became the same fact. <c>callsScope</c> separates them.</para>
+    /// </summary>
+    private static (IReadOnlyList<CallLine> Calls, string Scope) BuildCalls(Located located, IReadOnlyList<StepLine> failing,
         IReadOnlyDictionary<string, List<string?>> stepPaths,
         IReadOnlyDictionary<string, List<RequestResponseLog>> interactions, string address)
     {
-        if (failing.Count == 0
-            || !interactions.TryGetValue(located.Scenario.Id, out var logs)
-            || !stepPaths.TryGetValue(located.Scenario.Id, out var paths))
-            return [];
-
-        var wanted = failing.Select(f => f.Path).ToHashSet(StringComparer.Ordinal);
+        if (!interactions.TryGetValue(located.Scenario.Id, out var logs))
+            return ([], "none");
 
         // A response is not a row of its own: it supplies the status and the duration of the request it
         // answers, and the request's ordinal is the address an agent can act on.
@@ -238,30 +248,86 @@ public static class FailuresDigestGenerator
             .GroupBy(l => l.RequestResponseId)
             .ToDictionary(g => g.Key, g => g.First());
 
-        var calls = new List<CallLine>();
-        for (var i = 0; i < logs.Count && calls.Count < MaxCallsPerStep; i++)
+        CallLine Line(int index, RequestResponseLog log)
         {
-            var log = logs[i];
-            if (log.Type != RequestResponseType.Request)
-                continue;
-
-            var path = i < paths.Count ? paths[i] : null;
-            if (path is null || !wanted.Contains(QualifiedPath(path)))
-                continue;
-
             responses.TryGetValue(log.RequestResponseId, out var response);
-            calls.Add(new CallLine(
-                $"{address}/i{i}",
+            return new CallLine(
+                $"{address}/i{index}",
                 log.ServiceName,
                 Summarise(log),
                 response?.StatusCode?.Value?.ToString(),
-                Duration(log, response)));
+                Duration(log, response));
         }
 
-        return calls;
+        var requests = logs
+            .Select((log, index) => (Index: index, Log: log))
+            .Where(x => x.Log.Type == RequestResponseType.Request)
+            .ToArray();
+
+        if (requests.Length == 0)
+            return ([], "none");
+
+        stepPaths.TryGetValue(located.Scenario.Id, out var paths);
+        var inStep = failing.Count == 0 || paths is null
+            ? []
+            : requests
+                .Where(x =>
+                {
+                    var attributed = x.Index < paths.Count ? paths[x.Index] : null;
+                    return attributed is not null && failing.Any(f => Covers(attributed, f.Path));
+                })
+                .Take(MaxCallsPerFailure)
+                .Select(x => Line(x.Index, x.Log))
+                .ToArray();
+
+        if (inStep.Length > 0)
+            return (inStep, "failingStep");
+
+        // The fallback. The scenario's own calls, failures first, then the most recent — because a naive
+        // "last N" pushes out the 502 that is the reason anyone is reading this, and a naive "first N"
+        // shows the setup. Labelled `scenario` so nothing downstream can mistake these for the calls the
+        // failing step made: presented as those, calls from a step that PASSED are a worse answer than the
+        // empty list they replace.
+        var errored = requests.Where(x => IsError(x, responses)).ToArray();
+        var rest = requests.Where(x => !IsError(x, responses)).TakeLast(MaxCallsPerFailure).ToArray();
+
+        var chosen = errored.Concat(rest).Take(MaxCallsPerFailure).Select(x => Line(x.Index, x.Log)).ToArray();
+        return chosen.Length > 0 ? (chosen, "scenario") : ([], "none");
+
+        static bool IsError((int Index, RequestResponseLog Log) request, Dictionary<Guid, RequestResponseLog> responses)
+        {
+            if (!responses.TryGetValue(request.Log.RequestResponseId, out var response))
+                return false;
+
+            var (code, text) = InteractionStatus.Split(response.StatusCode);
+            return InteractionStatus.IsError(code?.ToString(CultureInfo.InvariantCulture), text);
+        }
     }
 
-    private static string QualifiedPath(string stepPath) => stepPath;
+    /// <summary>
+    /// Whether an interaction attributed to <paramref name="attributed"/> happened inside
+    /// <paramref name="failingStep"/> — the same step, or an ancestor of it.
+    ///
+    /// <para>The ancestor case is the whole point. Interactions are attributed to TOP-LEVEL steps
+    /// (<c>ReportGenerator.OrderedStepPaths</c> emits <c>b0..bN</c> and <c>0..N</c> and nothing else) while
+    /// the digest walks the whole tree and names a failing step by its nested path, <c>1.0</c>. Comparing
+    /// those two for equality can never match, so a scenario whose failure was inside a composite step
+    /// could not populate <c>calls</c> at all, whatever it had done. A call attributed to step <c>1</c> is
+    /// the best available answer for a failure in <c>1.0</c>: it is the call that happened while that
+    /// subtree was running.</para>
+    ///
+    /// <para>Compared segment by segment rather than with <c>StartsWith</c>, which would make step
+    /// <c>1</c> an ancestor of step <c>10</c>.</para>
+    /// </summary>
+    private static bool Covers(string attributed, string failingStep)
+    {
+        if (string.Equals(attributed, failingStep, StringComparison.Ordinal))
+            return true;
+
+        return failingStep.Length > attributed.Length
+               && failingStep[attributed.Length] == '.'
+               && failingStep.AsSpan(0, attributed.Length).SequenceEqual(attributed);
+    }
 
     private static double? Duration(RequestResponseLog request, RequestResponseLog? response) =>
         request.Timestamp is { } start && response?.Timestamp is { } end && end >= start
@@ -517,7 +583,12 @@ public static class FailuresDigestGenerator
 
         if (entry.Calls.Count > 0)
         {
-            markdown.Append("Calls in the failing step — bodies by address, never inlined:\n\n");
+            // The heading says which question the list answers. Calls from a step that PASSED, presented
+            // as the calls the failing step made, are a worse answer than the empty list they replace.
+            markdown.Append(entry.CallsScope == "scenario"
+                ? "Calls in this scenario — none were attributed to the failing step, so these are the "
+                  + "scenario's own, failures first. Bodies by address, never inlined:\n\n"
+                : "Calls in the failing step — bodies by address, never inlined:\n\n");
             markdown.Append("| Address | Service | Call | Status | Duration |\n|---|---|---|---|---|\n");
             foreach (var call in entry.Calls)
                 markdown.Append($"| `{call.Address}` | {Escape(call.Service)} | {Code(call.Summary)} | {Escape(call.Status ?? "")} | "
@@ -696,6 +767,10 @@ public static class FailuresDigestGenerator
                 }).ToArray(),
                 ["stepsBefore"] = entry.Context.Select(s => new { Path = $"{entry.Address}/{s.Path}", Text = Capped(s.Text), s.Status }).ToArray(),
                 ["calls"] = entry.Calls.Select(c => new { c.Address, c.Service, c.Summary, c.Status, c.DurationMs }).ToArray(),
+                // Which question the list above answers: the failing step's own calls, the scenario's
+                // because the step had none attributed to it, or nothing captured at all. Without it an
+                // empty array meant all three.
+                ["callsScope"] = entry.CallsScope,
                 ["attachments"] = entry.Attachments.Select(a => new { a.Name, Path = a.RelativePath }).ToArray(),
                 // Last, so that it is written after every Capped call that could set it.
                 ["truncated"] = truncated
