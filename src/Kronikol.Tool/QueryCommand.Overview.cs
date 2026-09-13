@@ -80,7 +80,7 @@ internal static partial class QueryCommand
         foreach (var feature in scenarios.GroupBy(s => s.FeatureName))
         {
             var featureFailed = feature.Count(s => s.Failed);
-            writer.Line($"{feature.Key}  {feature.Count() - featureFailed} passed"
+            writer.Line($"{QueryWriter.OneLine(feature.Key, 80)}  {feature.Count() - featureFailed} passed"
                         + (featureFailed > 0 ? $", {featureFailed} FAILED" : ""));
             writer.Item(new
             {

@@ -193,10 +193,14 @@ internal sealed class QueryWriter
     /// </summary>
     public void Note(string text)
     {
+        // One line, always. A note is the tool's voice wrapped around text the report supplied, and a
+        // value carrying a newline put its second half at column 0 - where it reads as the tool's own
+        // next line rather than as the continuation of a quoted value.
+        var oneLine = text.ReplaceLineEndings(" ");
         if (Json)
-            _notes.Add(text);
+            _notes.Add(oneLine);
         else
-            Line(text);
+            Line(oneLine);
     }
 
     /// <summary>

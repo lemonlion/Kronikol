@@ -383,7 +383,7 @@ internal static partial class QueryCommand
 
             var payload = interaction.BodyHash is { } hash ? $"  {hash} {QueryWriter.Size(interaction.BodyLength)}" : "";
             var timing = interaction.DurationMs ?? response?.DurationMs;
-            writer.Line($"  {interaction.Address(scenario),-9} {interaction.CallerName} → {interaction.ServiceName}  "
+            writer.Line($"  {interaction.Address(scenario),-9} {QueryWriter.OneLine(interaction.CallerName, 40)} → {QueryWriter.OneLine(interaction.ServiceName, 40)}  "
                         + $"{QueryWriter.OneLine(interaction.Summary(), 60)}  {status}  {QueryWriter.Duration(timing)}{payload}");
             shown++;
         }

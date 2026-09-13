@@ -110,7 +110,7 @@ internal static partial class QueryCommand
                 foreach (var interaction in scenario.Interactions.Where(i => i.HeaderCount > 0))
                     foreach (var (key, value) in PayloadReader.Headers(index, interaction))
                         if (key.Contains(needle, StringComparison.OrdinalIgnoreCase) || (value?.Contains(needle, StringComparison.OrdinalIgnoreCase) ?? false))
-                            hits.Add($"{interaction.Address(scenario),-9} header     {key}: {QueryWriter.OneLine(value, 90)}");
+                            hits.Add($"{interaction.Address(scenario),-9} header     {QueryWriter.OneLine(key, 60)}: {QueryWriter.OneLine(value, 90)}");
         }
 
         // Bodies are searched once per distinct content, not once per occurrence: the same body appears
@@ -240,7 +240,7 @@ internal static partial class QueryCommand
                 var a = left.ExampleValues.GetValueOrDefault(key, "—");
                 var b = right.ExampleValues.GetValueOrDefault(key, "—");
                 if (a != b)
-                    writer.Line($"example {key}: {a} → {b}");
+                    writer.Line($"example {QueryWriter.OneLine(key, 40)}: {QueryWriter.OneLine(a, 60)} → {QueryWriter.OneLine(b, 60)}");
             }
             writer.Line();
         }
