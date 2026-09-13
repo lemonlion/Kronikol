@@ -85,6 +85,52 @@ public class ThrownAtTests
         Assert.Equal(42, thrownAt.GetProperty("line").GetInt32());
     }
 
+    /// <summary>
+    /// The real trace from a CiPreview.Mixed run, copied rather than invented. xUnit v3 ships source-linked
+    /// PDBs, so THREE assertion frames carry a file and a line before the test does — which is why "the
+    /// first frame with source information" was the wrong rule and why this had to be measured on output
+    /// rather than reasoned about.
+    /// </summary>
+    private const string RealXunitV3Trace = """
+           at Xunit.Assert.Equal(ReadOnlySpan`1 expected, ReadOnlySpan`1 actual, Boolean ignoreCase, Boolean ignoreLineEndingDifferences, Boolean ignoreWhiteSpaceDifferences, Boolean ignoreAllWhiteSpace) in /_/src/xunit.v3.assert/Asserts/StringAsserts.cs:line 875
+           at Xunit.Assert.Equal(String expected, String actual, Boolean ignoreCase, Boolean ignoreLineEndingDifferences, Boolean ignoreWhiteSpaceDifferences, Boolean ignoreAllWhiteSpace) in /_/src/xunit.v3.assert/Asserts/StringAsserts.cs:line 1354
+           at Xunit.Assert.Equal(String expected, String actual) in /_/src/xunit.v3.assert/Asserts/StringAsserts.cs:line 825
+           at Example.Api.Tests.CiPreview.Mixed.Scenarios.Cake_Error_Diff_Feature.Cake_batch_id_should_be_a_specific_value() in C:\src\Scenarios\CakeErrorDiff.cs:line 31
+        """;
+
+    [Fact]
+    public void An_assertion_librarys_own_frames_are_not_the_answer()
+    {
+        var frame = FailureText.ThrownAt(RealXunitV3Trace);
+
+        Assert.NotNull(frame);
+        Assert.Equal("Example.Api.Tests.CiPreview.Mixed.Scenarios.Cake_Error_Diff_Feature.Cake_batch_id_should_be_a_specific_value()",
+            frame!.Value.Method);
+        Assert.Equal(31, frame.Value.Line);
+    }
+
+    [Fact]
+    public void The_file_the_scenario_was_declared_in_wins_over_the_namespace_guess()
+    {
+        // The signal that needs no list. A producer that reported a source file has already said which
+        // file the test is in, so the frame in that file is the frame — whatever its namespace looks like.
+        var frame = FailureText.ThrownAt(RealXunitV3Trace, preferFile: "Scenarios/CakeErrorDiff.cs");
+
+        Assert.NotNull(frame);
+        Assert.Equal(31, frame!.Value.Line);
+    }
+
+    [Fact]
+    public void A_trace_that_is_all_framework_still_names_the_assertion_that_threw()
+    {
+        // Better than the blank: a reader learns WHICH assertion failed even when no frame is theirs.
+        var frame = FailureText.ThrownAt(
+            "   at Xunit.Assert.Equal(String expected, String actual) in /_/src/xunit.v3.assert/Asserts/StringAsserts.cs:line 825");
+
+        Assert.NotNull(frame);
+        Assert.Equal(825, frame!.Value.Line);
+    }
+
     [Fact]
     public void A_failure_with_no_stack_trace_gains_no_empty_section()
     {

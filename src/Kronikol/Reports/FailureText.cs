@@ -92,10 +92,59 @@ public static class FailureText
     /// a translated trace yields null and the digest simply says nothing — the alternative, guessing at a
     /// shape, is how a reader ends up at a file and line that are not where anything happened.</para>
     /// </summary>
-    public static (string Method, string File, int Line)? ThrownAt(string? stackTrace)
+    /// <param name="stackTrace">The captured trace.</param>
+    /// <param name="preferFile">
+    /// The file the scenario was declared in, when a producer reported one. Measured against a real run:
+    /// "the first frame with source information" is NOT the caller's code, because xUnit v3 ships
+    /// source-linked PDBs, so three <c>Xunit.Assert.Equal</c> frames carry a file and a line before the
+    /// test does. Matching the declaring file first is the signal that needs no list; the namespace skip
+    /// below is the fallback for when a producer reported no file.
+    /// </param>
+    public static (string Method, string File, int Line)? ThrownAt(string? stackTrace, string? preferFile = null)
     {
         if (string.IsNullOrWhiteSpace(stackTrace))
             return null;
+
+        var frames = ParseFrames(stackTrace);
+        if (frames.Count == 0)
+            return null;
+
+        if (preferFile is { Length: > 0 })
+        {
+            var wanted = System.IO.Path.GetFileName(preferFile);
+            foreach (var frame in frames)
+                if (string.Equals(System.IO.Path.GetFileName(frame.File), wanted, StringComparison.OrdinalIgnoreCase))
+                    return frame;
+        }
+
+        foreach (var frame in frames)
+            if (!IsFrameworkFrame(frame.Method))
+                return frame;
+
+        // Everything looked like a framework frame. One of them is still better than nothing: a reader who
+        // sees Xunit.Assert.Equal learns the assertion that threw, which is more than a blank line says.
+        return frames[0];
+    }
+
+    /// <summary>
+    /// Namespaces whose frames are never the code someone here wrote. A blocklist is a heuristic and will
+    /// be wrong for anyone whose own test namespace starts with one of these — which is why it is the
+    /// fallback and the declaring file is tried first.
+    /// </summary>
+    private static readonly string[] FrameworkNamespaces =
+    [
+        "Xunit.", "NUnit.", "TUnit.", "MSTest.", "Microsoft.VisualStudio.TestTools.",
+        "Shouldly.", "FluentAssertions.", "AwesomeAssertions.", "LightBDD.", "Reqnroll.",
+        "TechTalk.SpecFlow.", "TestStack.BDDfy.", "Kronikol.",
+        "System.", "Microsoft.", "Castle.", "Moq.", "NSubstitute.",
+    ];
+
+    private static bool IsFrameworkFrame(string method) =>
+        FrameworkNamespaces.Any(prefix => method.StartsWith(prefix, StringComparison.Ordinal));
+
+    private static List<(string Method, string File, int Line)> ParseFrames(string stackTrace)
+    {
+        var frames = new List<(string Method, string File, int Line)>();
 
         foreach (var raw in stackTrace.ReplaceLineEndings("\n").Split('\n'))
         {
@@ -125,10 +174,10 @@ public static class FailureText
             if (method.Length == 0 || file.Length == 0)
                 continue;
 
-            return (method, file, number);
+            frames.Add((method, file, number));
         }
 
-        return null;
+        return frames;
     }
 
     /// <summary>

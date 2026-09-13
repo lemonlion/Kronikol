@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using Kronikol.Constants;
 using Kronikol.Tracking;
 
 namespace Kronikol.Reports;
@@ -223,7 +224,7 @@ public static class FailuresDigestGenerator
             htmlFileName is null ? null : $"{htmlFileName}.html#sid-{stableId}",
             scenario.SourceFile,
             scenario.SourceLine,
-            FailureText.ThrownAt(scenario.ErrorStackTrace));
+            FailureText.ThrownAt(scenario.ErrorStackTrace, scenario.SourceFile));
     }
 
     /// <summary>
@@ -347,20 +348,47 @@ public static class FailuresDigestGenerator
 
         // A database call's statement is the only place its identity lives; its URI is a synthetic
         // scheme://service/table. One line of it beats a path that says nothing.
-        if (log.Content is { Length: > 0 } content && IsStatementLike(method))
+        if (log.Content is { Length: > 0 } content && ShowsStatement(log, method))
             return Truncate(FirstLine(content), OneLineLimit);
 
         return string.IsNullOrEmpty(method) ? Truncate(target, OneLineLimit) : $"{method} {Truncate(target, OneLineLimit)}";
     }
 
-    private static bool IsStatementLike(string? method) =>
-        method is not null && method is not ("GET" or "POST" or "PUT" or "PATCH" or "DELETE" or "HEAD" or "OPTIONS" or "TRACE" or "CONNECT");
+    /// <summary>
+    /// Whether this call's content is its own identity rather than a payload it carried.
+    ///
+    /// <para>The category decides it when there is one, because that is the only thing that actually knows:
+    /// measured on a real run, a <c>MessageQueue</c> send whose method is <c>SEND (EVENT PROTOCOL)</c> is
+    /// neither empty nor an HTTP verb, so the method heuristic called its business payload a statement and
+    /// the digest printed the message body in the Call column — the one thing this file says it never
+    /// does. A call with no category falls back to the method, because taps that predate categories still
+    /// write real statements.</para>
+    /// </summary>
+    private static bool ShowsStatement(RequestResponseLog log, string? method) =>
+        log.DependencyCategory is { Length: > 0 } category
+            ? DependencyCategories.IsStatementShaped(category)
+            : IsStatementLike(method);
 
-    private static string FirstLine(string text)
-    {
-        var end = text.AsSpan().IndexOfAny('\r', '\n');
-        return (end < 0 ? text : text[..end]).Trim();
-    }
+    /// <summary>
+    /// Whether an uncategorised call's content is its own identity — a statement — rather than a payload.
+    ///
+    /// <para>The method has to be NON-EMPTY. It used to be "anything that is not an HTTP verb", and an
+    /// empty method is not an HTTP verb, so a broker publish with no operation label took the statement
+    /// path and the digest printed the message body in the Call column — the one thing this file says it
+    /// never does ("bodies are addresses rather than content"). Measured on a real run: an Event broker
+    /// publish appeared as its serialised payload, 120 characters of it, beside calls shown as
+    /// <c>GET /milk</c>. No method means no operation label, so the only honest identity left is the
+    /// target, and the body already has an address of its own.</para>
+    /// </summary>
+    private static bool IsStatementLike(string? method) =>
+        method is { Length: > 0 }
+        && method is not ("GET" or "POST" or "PUT" or "PATCH" or "DELETE" or "HEAD" or "OPTIONS" or "TRACE" or "CONNECT");
+
+    // The fourth first-line implementation this file used to contain, and the last one standing on its
+    // own. It was not a cluster key — it summarises a SQL statement — but it trimmed where the shared one
+    // collapses, so two functions with the same name in the same file disagreed about what a line is.
+    // Collapsing is strictly better here anyway: a statement indented across lines reads as one.
+    private static string FirstLine(string text) => FailureText.FirstLine(text);
 
     // One implementation, shared with QueryWriter.OneLine, because both had the same defect: a cut at an
     // arbitrary UTF-16 index can split a surrogate pair, and the digest's eight call sites all reach it.

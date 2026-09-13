@@ -76,4 +76,29 @@ public static class DependencyCategories
     // ─── Extension-specific (not in DependencyPalette) ───────
     /// <summary>MongoDB Atlas Data API (REST-based MongoDB access).</summary>
     public const string AtlasDataApi = "AtlasDataApi";
+
+    /// <summary>
+    /// The categories whose captured content is the call's own identity — a query, a statement, a command —
+    /// rather than a payload it carried.
+    ///
+    /// <para>It decides whether a surface may quote the content inline. For a database call the statement
+    /// IS the call and a URI like <c>sql://OrdersDb/Orders</c> says nothing; for a broker publish the
+    /// content is a business message, and quoting it puts a payload where a reader expected a call. That
+    /// was measured: <c>Failures.md</c> showed a <c>MessageQueue</c> send as 120 characters of its own
+    /// serialised body, beside calls shown as <c>GET /milk</c>, in a file whose contract is that bodies are
+    /// addresses rather than content.</para>
+    ///
+    /// <para>A positive list on purpose, so the safe answer is the default: a category added later and not
+    /// named here shows its target rather than its content, which loses detail instead of leaking a body.
+    /// A call with NO category is not decided here at all — the caller falls back to reading the method,
+    /// because taps that predate categories still write real statements.</para>
+    /// </summary>
+    public static bool IsStatementShaped(string? dependencyCategory) =>
+        dependencyCategory is not null && StatementShaped.Contains(dependencyCategory);
+
+    private static readonly HashSet<string> StatementShaped = new(StringComparer.OrdinalIgnoreCase)
+    {
+        SQL, Database, PostgreSQL, SqlServer, MySQL, SQLite, Oracle, ClickHouse, Spanner, BigQuery,
+        CosmosDB, MongoDB, DynamoDB, Elasticsearch, Bigtable, Redis, AtlasDataApi,
+    };
 }

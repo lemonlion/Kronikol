@@ -167,4 +167,58 @@ public class DigestCallScopeTests
         Assert.Equal("failingStep", record.GetProperty("callsScope").GetString());
         Assert.Equal(FailuresDigestGenerator.MaxCallsPerFailure, calls.Length);
     }
+
+    [Fact]
+    public void A_call_with_no_operation_label_is_named_by_its_target_not_its_payload()
+    {
+        // Measured on a real run, and the method is the reason the first guess at this was wrong: a
+        // MessageQueue send carries the method "SEND (EVENT PROTOCOL)", which is neither empty nor an HTTP
+        // verb, so "anything that is not an HTTP verb is a statement" called a business payload a statement
+        // and the digest printed 120 characters of message body in the Call column, beside calls shown as
+        // `GET /milk`. The category is the only thing that actually knows which it is.
+        var pairId = Guid.NewGuid();
+        var traceId = Guid.NewGuid();
+        var body = "{\"BatchId\":\"7175f68b-7685-4c17-93b7-d8128d1e3e2a\",\"Ingredients\":[\"Some_Eggs\"]}";
+
+        var digest = Generate(WithNestedFailure(),
+        [
+            Marker("t0", "a basket"),
+            Marker("t0", "the order is placed"),
+            new RequestResponseLog("t0", "t0", "SEND (EVENT PROTOCOL)", body, new Uri("broker://events/cake-batches"), [],
+                "Event broker", "test", RequestResponseType.Request, traceId, pairId, false,
+                DependencyCategory: Kronikol.Constants.DependencyCategories.MessageQueue) { Timestamp = T0 },
+            new RequestResponseLog("t0", "t0", "SEND (EVENT PROTOCOL)", "", new Uri("broker://events/cake-batches"), [],
+                "Event broker", "test", RequestResponseType.Response, traceId, pairId, false, "Responded",
+                DependencyCategory: Kronikol.Constants.DependencyCategories.MessageQueue) { Timestamp = T0.AddMilliseconds(1) }
+        ]);
+
+        Assert.DoesNotContain("BatchId", digest.Markdown, StringComparison.Ordinal);
+        Assert.DoesNotContain("Some_Eggs", digest.Markdown, StringComparison.Ordinal);
+        // Named by where it went, and addressable for anyone who wants the payload.
+        Assert.Contains("cake-batches", digest.Markdown, StringComparison.Ordinal);
+        Assert.Contains("s0/i0", digest.Markdown, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_statement_with_a_real_operation_label_is_still_shown()
+    {
+        // Non-vacuity: the statement IS the identity of a database call, and this must not have turned
+        // every SQL row into a synthetic sql:// URI.
+        var pairId = Guid.NewGuid();
+        var traceId = Guid.NewGuid();
+
+        var digest = Generate(WithNestedFailure(),
+        [
+            Marker("t0", "a basket"),
+            Marker("t0", "the order is placed"),
+            new RequestResponseLog("t0", "t0", "INSERT", "INSERT INTO Orders (Item, Qty)\nVALUES ('Widget', 2)",
+                new Uri("sql://OrdersDb/Orders"), [], "OrdersDb", "test",
+                RequestResponseType.Request, traceId, pairId, false) { Timestamp = T0 },
+            new RequestResponseLog("t0", "t0", "INSERT", "", new Uri("sql://OrdersDb/Orders"), [], "OrdersDb", "test",
+                RequestResponseType.Response, traceId, pairId, false, HttpStatusCode.OK) { Timestamp = T0.AddMilliseconds(1) }
+        ]);
+
+        Assert.Contains("INSERT INTO Orders", digest.Markdown, StringComparison.Ordinal);
+        Assert.DoesNotContain("VALUES", digest.Markdown, StringComparison.Ordinal);
+    }
 }
