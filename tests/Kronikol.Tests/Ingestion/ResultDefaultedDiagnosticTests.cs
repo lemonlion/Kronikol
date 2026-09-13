@@ -70,24 +70,30 @@ public class ResultDefaultedDiagnosticTests : IDisposable
         Assert.Contains("Failed", Assert.Single(result.Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted).Message);
     }
 
-    [Fact]
-    public void A_run_where_every_test_ended_records_nothing()
+    /// <summary>A run where every test that started also ended, in the same two features.</summary>
+    private IngestResult CleanRun(string subdirectory = "clean")
     {
         var options = IngestPipeline.DefaultOptions();
-        options.ReportsFolderPath = Path.Combine(_dir, "clean");
+        options.ReportsFolderPath = Path.Combine(_dir, subdirectory);
         options.GenerateComponentDiagram = false;
 
-        var result = IngestPipeline.Run(new IngestRequest
+        return IngestPipeline.Run(new IngestRequest
         {
             Options = options,
             TestRecords =
             [
-                new TestRunRecord { Event = "start", TestId = "t1", TestName = "finishes", Timestamp = T0 },
+                new TestRunRecord { Event = "start", TestId = "t1", TestName = "finishes", Feature = "Checkout", Timestamp = T0 },
                 new TestRunRecord { Event = "end", TestId = "t1", Status = "passed", Timestamp = T0.AddSeconds(1) },
+                new TestRunRecord { Event = "start", TestId = "t2", TestName = "never ends", Feature = "Checkout", Timestamp = T0 },
+                new TestRunRecord { Event = "end", TestId = "t2", Status = "failed", Timestamp = T0.AddSeconds(1) },
             ],
         });
+    }
 
-        Assert.DoesNotContain(result.Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted);
+    [Fact]
+    public void A_run_where_every_test_ended_records_nothing()
+    {
+        Assert.DoesNotContain(CleanRun().Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted);
     }
 
     [Fact]
@@ -111,6 +117,29 @@ public class ResultDefaultedDiagnosticTests : IDisposable
             Assert.Equal(0, QueryCommand.Run([command, report], output, error));
             Assert.Contains("! 1 scenario(s) recorded no result", output.ToString());
         }
+    }
+
+    /// <summary>
+    /// `diff` was the one verb that returned early from the provenance header, because a note with two
+    /// reports in scope does not say which one it is about. The consequence is the worst reading of a
+    /// defaulted run there is: a scenario that died mid-run is recorded as Passed, so against a baseline
+    /// where it genuinely failed, `diff` reports it under <c>Fixed</c> — a regression printed as a
+    /// success. The side is what was missing, so the side is what the note now names.
+    /// </summary>
+    [Fact]
+    public void Diff_says_which_side_had_its_verdicts_defaulted()
+    {
+        var old = Path.Combine(CleanRun().ReportsDirectory, "TestRunReport.json");
+        var current = Path.Combine(Ingest(subdirectory: "new").ReportsDirectory, "TestRunReport.json");
+
+        var output = new StringWriter();
+        var error = new StringWriter();
+        Assert.Equal(0, QueryCommand.Run(["diff", old, current], output, error));
+
+        var text = output.ToString();
+        Assert.Contains("recorded no result", text);
+        Assert.Contains("new:", text);
+        Assert.DoesNotContain("old:", text);
     }
 
     [Fact]

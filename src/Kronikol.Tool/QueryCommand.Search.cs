@@ -353,6 +353,13 @@ internal static partial class QueryCommand
         return ReportGate.Refuse(index, resolved, error) is null ? index : null;
     }
 
+    /// <summary>One side's provenance header, prefixed with which side it is.</summary>
+    private static void WriteSideProvenance(ReportIndex index, string side, QueryWriter writer)
+    {
+        foreach (var line in QueryCommand.ProvenanceNotes(index))
+            writer.Note($"! {side}: {line}");
+    }
+
     /// <summary>
     /// Names for the two sides of a diff: the file name, unless both files are called the same thing -
     /// which is the norm under <c>--baseline</c> - in which case each is shown relative to the deepest
@@ -425,6 +432,14 @@ internal static partial class QueryCommand
 
         if (options.BodyAddress is { } bodyAddress)
             return CrossRunBodyDiff(left, right, bodyAddress, options, writer, error);
+
+        // The provenance header every other verb gets, which `diff` alone used to skip because a note
+        // with two reports in scope does not say which one it is about. The side is the whole point: a
+        // defaulted verdict on the NEW run turns a scenario that died mid-run into `Fixed`, and the same
+        // diagnostic on the OLD run means the opposite. `WriteProvenance` returns early for this verb so
+        // that these can be written once both sides are resolved and can be named.
+        WriteSideProvenance(left, "old", writer);
+        WriteSideProvenance(right, "new", writer);
 
         // Under --baseline both files are usually called TestRunReport.json, so a bare file name would
         // label the two sides identically.

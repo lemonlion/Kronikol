@@ -143,18 +143,31 @@ matters.
 - **A leading `!` line is a caveat, never an error.** It says the answer below it is thinner, or narrower,
   or means something other than it looks like. Do not skip one, and do not report it as a failure.
 
-  Three come from the report itself and can lead any command:
+  These come from the report itself and can lead any command:
   - `! report predates step attribution and assertion detail` — an older Kronikol wrote the file:
     assertion messages, source locations and `stepPath` are absent. The answers are correct, just
     thinner. Re-running the suite on a current Kronikol fills them in.
   - `! N scenario(s) recorded no result and were reported as Passed` — those scenarios never reported a
     verdict and took the configured default. **A green run carrying this line is not evidence that
     anything passed**; a crashed worker looks exactly like this.
+  - **A diagnostic the run recorded**, quoted as the report wrote it and capped to one line, with `×N`
+    when several of one kind were recorded. Every one of them means the report holds **less than the run
+    produced**, so a count below it is a lower bound and an absence is not a negative: a lost capture
+    record, an interaction that could not be attributed or was dropped, an unparsed capture line, a
+    missing attachment, a diagram or an output file that failed. The sharpest is on `services`, which is
+    the one view that answers a negative question — a service absent from the table was never called —
+    and is exactly the answer a degraded capture makes false.
   - `! mergeable-format report` — the superset format written for `kronikol merge`. Every shard of a
     sharded build produces one, so this does not mean you are looking at a merged run.
 
-  The rest belong to one command each. `diff` prints none of the three above, so on a diff these are the
-  only ones you will see:
+  On `diff` these are **prefixed with the side they belong to** — `! new: 1 scenario(s) recorded no
+  result…` — because which run was degraded decides how to read the verdict: a defaulted scenario in the
+  new run shows up under `Fixed`, and the same diagnostic in the old run under `Broken`.
+
+  With `--count` they go to **stderr**, so the answer on stdout stays the single token it is documented
+  to be. Read stderr on a count you intend to act on.
+
+  The rest belong to one command each:
   - `! this report has no stableIds` (`diff`) — written before 3.0.47, so the two runs are **matched by
     position**. A scenario added or removed anywhere shifts everything after it and the diff is noise.
   - `! N scenarios share a stableId` (`diff`) — a `[Theory]` with repeated data, the same `Examples:` row

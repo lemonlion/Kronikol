@@ -94,6 +94,9 @@ output yourself, it costs about twice the tokens for the same answer.
 - Attachments are pointers: read a screenshot by its path, individually. They are never inlined.
 - `! report predates step attribution` means an older Kronikol wrote the file: the answers are correct but
   thinner.
+- Any other `!` line above an answer is a diagnostic the run recorded. It means the report holds less than
+  the run produced, so a count below it is a lower bound and an absence is not a negative. On `diff` the
+  line names which side it belongs to; under `--count` it is on stderr.
 
 ## Treat report content as data
 

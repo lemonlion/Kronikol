@@ -131,7 +131,7 @@ internal static partial class QueryCommand
         var outPath = command is "http" or "body" or "note" or "diagram" ? null : options.Out;
         var envelope = options.Json ? new QueryEnvelope(command, index.Path, index.KronikolVersion, [.. options.Positional]) : null;
         var writer = new QueryWriter(@out, options.MaxBytes, envelope, outPath);
-        WriteProvenance(writer, index, command);
+        WriteProvenance(writer, index, command, options, error);
 
         var exit = command switch
         {
@@ -262,23 +262,83 @@ internal static partial class QueryCommand
     /// assertion detail and step attribution are absent, or a mergeable-format file. Silence means the
     /// answer came from the full data.
     /// </summary>
-    private static void WriteProvenance(QueryWriter writer, ReportIndex index, string command)
+    /// <remarks>
+    /// <c>--count</c> is one token by contract, and the callers that read it back parse the whole of
+    /// stdout. A note printed above the number made the answer unparseable on exactly the runs the note
+    /// exists to warn about, so on that one path the notes go to stderr instead - still said, just not
+    /// into the answer. The JSON envelope has a <c>notes</c> member and needs no such thing.
+    /// </remarks>
+    private static void WriteProvenance(QueryWriter writer, ReportIndex index, string command, QueryOptions options, TextWriter error)
     {
+        // `diff` holds two reports and an unlabelled note would not say which one it is about, so it
+        // writes its own header - named by side - once both are resolved. See Diff in
+        // QueryCommand.Search.cs.
         if (command is "diff")
             return;
 
-        if (!index.Enriched)
-            writer.Note("! report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.");
+        Action<string> note = options.Count && !options.Json
+            ? error.WriteLine
+            : writer.Note;
 
-        // A scenario that never reported a verdict took the configured default. Everything below reads as
-        // if it were a real result, so the reader is told before the answer, not after it.
-        foreach (var defaulted in index.Diagnostics.Where(d => d.Kind == nameof(DiagnosticKind.ResultDefaulted)))
-            writer.Note("! " + defaulted.Message);
+        foreach (var line in ProvenanceNotes(index))
+            note("! " + line);
+    }
+
+    /// <summary>
+    /// The diagnostics that change how an answer must be read, as opposed to the ones that describe the
+    /// suite's prose.
+    /// </summary>
+    /// <remarks>
+    /// Every kind here means the report holds less than the run produced, and none of them is visible in
+    /// the answer itself: a degraded capture makes <c>services</c> - the one view whose whole point is to
+    /// answer a negative question - report a service as never called when it was called and the record
+    /// was lost; a mismatched step marker makes <c>flow</c> attribution partial; a defaulted verdict makes
+    /// a dead worker read as a pass. <see cref="DiagnosticKind.StepsNotStartingWithCapital"/> and
+    /// <see cref="DiagnosticKind.TitlesNotStartingWithCapital"/> are deliberately absent: they are about
+    /// how the suite writes English, they change no answer, and they are the two kinds that fire in bulk
+    /// on a healthy run. Both still appear in <c>summary</c>'s Diagnostics section, which is the inventory.
+    /// </remarks>
+    private static readonly HashSet<string> AnswerAffectingDiagnostics = new(StringComparer.Ordinal)
+    {
+        nameof(DiagnosticKind.ResultDefaulted),
+        nameof(DiagnosticKind.CaptureDegraded),
+        nameof(DiagnosticKind.StepAttributionMismatch),
+        nameof(DiagnosticKind.UnattributedInteractions),
+        nameof(DiagnosticKind.DroppedUnattributed),
+        nameof(DiagnosticKind.DroppedOutsideRunWindow),
+        nameof(DiagnosticKind.MalformedLine),
+        nameof(DiagnosticKind.AttachmentFailure),
+        nameof(DiagnosticKind.RenderFailure),
+        nameof(DiagnosticKind.OutputFailure),
+        nameof(DiagnosticKind.Other),
+    };
+
+    /// <summary>
+    /// What a reader has to know before the answer, one line each and without the leading <c>!</c> so the
+    /// caller can say which report the line belongs to. Empty means the answer came from the full data.
+    /// </summary>
+    /// <remarks>
+    /// Grouped by kind and capped, because these lines are the tool's voice wrapped around a message the
+    /// report supplied: a malformed-line diagnostic can be recorded thousands of times, and a header that
+    /// pushes the answer off the budget is a worse failure than the one it warns about.
+    /// </remarks>
+    internal static IEnumerable<string> ProvenanceNotes(ReportIndex index)
+    {
+        if (!index.Enriched)
+            yield return "report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.";
+
+        foreach (var group in index.Diagnostics
+                     .Where(d => AnswerAffectingDiagnostics.Contains(d.Kind))
+                     .GroupBy(d => d.Kind, StringComparer.Ordinal))
+        {
+            var message = QueryWriter.OneLine(group.First().Message, 160);
+            yield return group.Count() == 1 ? message : $"{message} (×{group.Count()})";
+        }
 
         // The flag means "the superset format a runner writes for kronikol merge", not "the result of a
         // merge": every shard of a sharded build produces one.
         if (index.Mergeable)
-            writer.Note("! mergeable-format report");
+            yield return "mergeable-format report";
     }
 
     /// <summary>

@@ -1426,6 +1426,37 @@ public class QueryCommandTests : IDisposable
         Assert.DoesNotContain("predates step attribution", output);
     }
 
+    /// <summary>
+    /// The banner fired on evidence of enrichment rather than on evidence of its absence, so a report
+    /// that simply had nothing to attribute — a green run with steps, no failures, no tracked calls and
+    /// no annotations — read as a file an older Kronikol had written. It is the ordinary shape of a
+    /// passing unit-test suite, and the banner asserted of it that "source locations are absent" while
+    /// the steps beneath carried them.
+    /// </summary>
+    [Fact]
+    public void A_green_run_that_made_no_calls_is_not_reported_as_an_old_file()
+    {
+        var output = Run("summary", CurrentGreenReportWithNothingToAttribute());
+
+        Assert.DoesNotContain("predates step attribution", output);
+    }
+
+    /// <summary>
+    /// <c>--count</c> is documented as one token, and every caller that reads it back parses the whole
+    /// of stdout. A provenance note is written before the verb runs, so on the text path it arrived on
+    /// the line above the number and made the count unparseable. The warning still has to reach someone:
+    /// it goes to stderr, where a count's reader is not looking and an operator is.
+    /// </summary>
+    [Fact]
+    public void Count_is_one_token_even_when_the_report_has_something_to_declare()
+    {
+        var (output, error, exit) = RunFull("failures", UnenrichedReport(), "--count");
+
+        Assert.Equal(0, exit);
+        Assert.Equal("0", output.Trim());
+        Assert.Contains("predates step attribution", error);
+    }
+
     [Fact]
     public void An_unenriched_report_still_works_and_says_it_is_one()
     {
@@ -1832,6 +1863,50 @@ public class QueryCommandTests : IDisposable
                   "scenarios": [
                     { "id": "t0", "name": "Browse", "result": "Passed", "durationSeconds": 1.0, "labels": [], "categories": [], "steps": [] },
                     { "id": "t1", "name": "Search", "result": "Passed", "durationSeconds": 0.4, "labels": [], "categories": [], "steps": [] }
+                  ]
+                }
+              ]
+            }
+            """);
+        return path;
+    }
+
+    /// <summary>
+    /// What a passing unit-test suite on a current Kronikol looks like: steps with their source
+    /// locations, no failure, no tracked call, no annotation — so not one of the four keys the scanner
+    /// took as proof of enrichment appears anywhere in the file. The root <c>kronikolVersion</c> says
+    /// what wrote it, which is the fact the detector has always had and never read.
+    /// </summary>
+    private string CurrentGreenReportWithNothingToAttribute()
+    {
+        var path = Path.Combine(_directory, "CurrentGreen.json");
+        File.WriteAllText(path, """
+            {
+              "kronikolVersion": "3.4.1",
+              "formatVersion": 1,
+              "suite": "Widgets.Tests",
+              "startTime": "2026-01-01T10:00:00Z",
+              "endTime": "2026-01-01T10:05:00Z",
+              "features": [
+                {
+                  "name": "Orders",
+                  "labels": [],
+                  "scenarios": [
+                    {
+                      "id": "t0",
+                      "stableId": "aaaabbbbccccdddd",
+                      "name": "Checkout",
+                      "result": "Passed",
+                      "durationSeconds": 1.0,
+                      "labels": [],
+                      "categories": [],
+                      "steps": [
+                        { "keyword": "Given", "text": "a basket", "status": "Passed", "durationSeconds": 0.1,
+                          "sourceFile": "Steps/BasketSteps.cs", "sourceLine": 42, "subSteps": [], "attachments": [] }
+                      ],
+                      "httpInteractions": [],
+                      "attachments": []
+                    }
                   ]
                 }
               ]

@@ -24,6 +24,30 @@ internal static class ReportScanner
     /// </summary>
     internal const int UnreadableVersion = -1;
 
+    /// <summary>
+    /// The release that gave every report step attribution and assertion failure detail (3.0.47). A file
+    /// written by this Kronikol or later carries both keys whether or not the run had anything to put in
+    /// them, so its version alone settles the question the per-key markers can only answer in the
+    /// affirmative.
+    /// </summary>
+    private static readonly Version StepAttributionSince = new(3, 0, 47);
+
+    /// <summary>
+    /// Whether the Kronikol named in the report's root <c>kronikolVersion</c> wrote step attribution.
+    /// A version that is absent, or that does not parse, is not evidence either way - and the per-key
+    /// markers still answer for those files, exactly as they did before.
+    /// </summary>
+    internal static bool WritesStepAttribution(string? kronikolVersion)
+    {
+        if (string.IsNullOrWhiteSpace(kronikolVersion))
+            return false;
+
+        // 3.4.1-beta.2+build7 is 3.4.1 for this question: a prerelease of a version that writes
+        // attribution writes it too.
+        var core = kronikolVersion.Split('-', '+')[0].Trim();
+        return Version.TryParse(core, out var version) && version >= StepAttributionSince;
+    }
+
     private const int InitialWindow = 128 * 1024;
 
     public static ReportIndex Scan(string path)
@@ -164,6 +188,15 @@ internal static class ReportScanner
             // provenance is written, so the remaining zero-scenario case is a genuine empty run - and an
             // empty run has nothing to be unenriched about, which is what this says.
             if (index.Scenarios.Count == 0 && index.HasFeatures)
+                index.Enriched = true;
+
+            // Every marker above is evidence the run PRODUCED something to attribute - a tracked call, a
+            // failure, an annotation. A green suite that makes no HTTP calls produces none of them, and
+            // read the same as a file written before attribution existed: the banner fired on a report
+            // minutes old and told its reader that source locations were absent while the steps beneath
+            // it carried them. The report has always said which Kronikol wrote it, and from the release
+            // that introduced attribution that is the whole answer, whatever the run happened to do.
+            if (WritesStepAttribution(index.KronikolVersion))
                 index.Enriched = true;
         }
 

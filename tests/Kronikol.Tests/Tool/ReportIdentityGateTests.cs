@@ -97,6 +97,31 @@ public class ReportIdentityGateTests : IDisposable
         Assert.Contains("tsconfig.json", error, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Every other verb takes the directory holding a report, and the emitted <c>Reports/CLAUDE.md</c>
+    /// says so without qualification. `diff`'s second operand was the one place that did not: it went
+    /// straight to the scanner, so a directory arrived as a path that is not a file and came back as a
+    /// raw .NET access error naming a folder the caller had been told to name.
+    /// </summary>
+    [Fact]
+    public void Diff_takes_a_directory_for_its_second_report_the_way_every_other_verb_does()
+    {
+        var left = AReport();
+        var rightDirectory = Path.Combine(_dir, "second-run");
+        Directory.CreateDirectory(rightDirectory);
+        File.WriteAllText(Path.Combine(rightDirectory, "TestRunReport.json"), """
+            { "formatVersion": 1, "startTime": "2026-01-02T10:00:00Z", "endTime": "2026-01-02T10:05:00Z",
+              "features": [ { "name": "Orders", "scenarios": [
+                { "id": "t0", "name": "Place an order", "result": "Failed" } ] } ] }
+            """);
+
+        var (output, error, exit) = Run("diff", left, rightDirectory);
+
+        Assert.Equal("", error);
+        Assert.Equal(0, exit);
+        Assert.Contains("Place an order", output, StringComparison.Ordinal);
+    }
+
     // ─── A report is still a report ─────────────────────────────
 
     [Fact]
