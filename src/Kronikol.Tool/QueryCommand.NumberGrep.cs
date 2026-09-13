@@ -178,7 +178,7 @@ internal static partial class QueryCommand
             return 0;
         }
 
-        writer.Page(hits, options.Offset, Math.Min(options.Limit, 200), "hits", hit => writer.Line(hit),
+        writer.Page(hits, options.Offset, options.PageSize(200, writer, "hits"), "hits", hit => writer.Line(hit),
             ["grep", needle, .. options.RerunArgs()]);
         return 0;
     }

@@ -90,7 +90,7 @@ internal static partial class QueryCommand
         if (options.Group)
         {
             var groups = Collapse(matches);
-            writer.Page(groups, options.Offset, Math.Min(options.Limit, 200), "groups",
+            writer.Page(groups, options.Offset, options.PageSize(200, writer, "groups"), "groups",
                 group => writer.Line(group.Render()), options.RerunArgs(),
                 group => new
                 {
@@ -108,7 +108,7 @@ internal static partial class QueryCommand
             return 0;
         }
 
-        writer.Page(matches, options.Offset, Math.Min(options.Limit, 120), "calls", row =>
+        writer.Page(matches, options.Offset, options.PageSize(120, writer, "calls"), "calls", row =>
         {
             var (scenario, interaction, response) = row;
             var payload = interaction.BodyHash is { } hash
@@ -430,7 +430,8 @@ internal static partial class QueryCommand
         if (options.Out is { } path)
         {
             var text = PayloadReader.Pretty(body);
-            File.WriteAllText(path, text);
+            if (!QueryWriter.TryWriteFile(path, text, error))
+                return 1;
             writer.Line($"wrote {QueryWriter.Size(Encoding.UTF8.GetByteCount(text))} → {Path.GetFullPath(path)}");
             writer.Footer("grep the file — reading it back through here would cost the tokens this just saved");
             return 0;
@@ -533,7 +534,7 @@ internal static partial class QueryCommand
                 return 0;
             }
 
-            writer.Page(matches, options.Offset, Math.Min(options.Limit, 200), "values",
+            writer.Page(matches, options.Offset, options.PageSize(200, writer, "values"), "values",
                 match => writer.Line($"{match.Path} = {match.Value.Row()}"),
                 ["--path", jsonPath]);
             return 0;
@@ -573,7 +574,8 @@ internal static partial class QueryCommand
 
         if (options.Out is { } path)
         {
-            File.WriteAllText(path, note.Text);
+            if (!QueryWriter.TryWriteFile(path, note.Text, error))
+                return 1;
             writer.Line($"wrote {QueryWriter.Size(Encoding.UTF8.GetByteCount(note.Text))} → {Path.GetFullPath(path)}");
             writer.Footer("");
             return 0;
@@ -607,7 +609,8 @@ internal static partial class QueryCommand
             return 2;
         }
 
-        File.WriteAllText(options.Out, diagram);
+        if (!QueryWriter.TryWriteFile(options.Out, diagram, error))
+            return 1;
         writer.Line($"wrote {QueryWriter.Size(size)} → {Path.GetFullPath(options.Out)}");
         writer.Footer($"flow {scenario.Address} says the same thing in a fraction of the bytes");
         return 0;

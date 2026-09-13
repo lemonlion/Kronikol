@@ -185,7 +185,7 @@ internal static partial class QueryCommand
         // The needle alone was not enough: the offset indexes THIS hit list, and without --in and --values
         // the command in the footer rebuilds a different one, so page two silently comes from a different
         // corpus and the total changes underneath the reader. (The numeric path already did this.)
-        writer.Page(hits, options.Offset, Math.Min(options.Limit, 200), "hits", hit => writer.Line(hit),
+        writer.Page(hits, options.Offset, options.PageSize(200, writer, "hits"), "hits", hit => writer.Line(hit),
             ["grep", needle, .. options.RerunArgs()]);
         return 0;
     }

@@ -79,7 +79,7 @@ internal static class CtrfCommand
         {
             index = ReportScanner.Scan(resolved);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (Kronikol.Tool.Query.QueryWriter.IsAWriteFailure(exception))
         {
             error.WriteLine($"Could not read {resolved}: {exception.Message}");
             return 1;
@@ -114,7 +114,7 @@ internal static class CtrfCommand
             if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
             File.WriteAllText(outFile, document);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (Kronikol.Tool.Query.QueryWriter.IsAWriteFailure(exception))
         {
             error.WriteLine($"Could not write {outFile}: {exception.Message}");
             return 1;

@@ -279,7 +279,9 @@ public class SkillDriftTests
         // shape the banners happened to be written in - left a banner invisible the moment one was
         // written as a switch arm rather than as the direct argument of the call, which is precisely the
         // drift this fact exists to catch.
-        foreach (var file in Directory.GetFiles(Path.Combine(RepoRoot, "src", "Kronikol.Tool"), "*.cs"))
+        // Recursively: `Query/` is a subdirectory, so a top-directory-only enumeration could not see
+        // QueryWriter or QueryOptions - two files that between them hold the pager's own caveats.
+        foreach (var file in Directory.GetFiles(Path.Combine(RepoRoot, "src", "Kronikol.Tool"), "*.cs", SearchOption.AllDirectories))
         foreach (Match match in Regex.Matches(File.ReadAllText(file), @"\$?""! (.*)$", RegexOptions.Multiline))
             phrases.Add(Anchor(match.Groups[1].Value));
 

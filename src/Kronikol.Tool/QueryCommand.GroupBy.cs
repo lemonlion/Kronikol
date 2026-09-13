@@ -72,7 +72,7 @@ internal static partial class QueryCommand
         var widths = dims.Select((d, i) => Math.Max(d.Length, ordered.Count == 0 ? 0 : ordered.Max(b => b.Values[i].Length)) + 2).ToArray();
         writer.Line(string.Concat(dims.Select((d, i) => d.PadRight(widths[i]))) + $"{"calls",5} {"errors",6} {"median",8} {"max",8} {"bodies",6}");
 
-        writer.Page(ordered, options.Offset, Math.Min(options.Limit, 200), "buckets", bucket =>
+        writer.Page(ordered, options.Offset, options.PageSize(200, writer, "buckets"), "buckets", bucket =>
         {
             var cells = string.Concat(bucket.Values.Select((v, i) => v.PadRight(widths[i])));
             writer.Line($"{cells}{bucket.Calls,5} {bucket.Errors,6} {QueryWriter.Duration(bucket.Median()),8} {QueryWriter.Duration(bucket.Max()),8} {bucket.Bodies.Count,6}");

@@ -285,14 +285,60 @@ internal sealed class QueryWriter
         {
             File.WriteAllText(_outPath, text);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (IsAWriteFailure(exception))
         {
-            error.WriteLine($"Could not write {_outPath}: {exception.Message}");
+            ReportWriteFailure(_outPath, exception, error);
             return false;
         }
 
         _output.Write($"wrote {Size(Encoding.UTF8.GetByteCount(text))} → {Path.GetFullPath(_outPath)}\n");
         return true;
+    }
+
+    /// <summary>
+    /// Writes a caller-named file, turning every way that can fail into one sentence on stderr.
+    /// </summary>
+    /// <remarks>
+    /// <para>There were five writes of a caller-supplied path in the tool and only two of them were
+    /// guarded at all - and both of those caught <c>IOException</c> and <c>UnauthorizedAccessException</c>
+    /// only. <c>--out ""</c> is neither: <see cref="File.WriteAllText(string,string)"/> throws
+    /// <see cref="ArgumentException"/>, which nothing caught, so the flag whose entire purpose is to keep
+    /// a large answer OUT of the caller's context answered with a stack trace and a CLR exit code outside
+    /// the 0-255 range a shell can read.</para>
+    ///
+    /// <para>The path is the caller's input, so every way it can be wrong belongs to the same sentence
+    /// and to one place, rather than to five catch clauses that have already drifted apart once.</para>
+    /// </remarks>
+    public static bool TryWriteFile(string path, string text, TextWriter error, string flag = "--out", Encoding? encoding = null)
+    {
+        try
+        {
+            // GetFullPath is inside the guard, not before it: it throws the same ArgumentException on the
+            // same empty path, one line earlier, which is how one of these sites failed.
+            var full = Path.GetFullPath(path);
+            if (encoding is null)
+                File.WriteAllText(full, text);
+            else
+                File.WriteAllText(full, text, encoding);
+            return true;
+        }
+        catch (Exception exception) when (IsAWriteFailure(exception))
+        {
+            ReportWriteFailure(path, exception, error, flag);
+            return false;
+        }
+    }
+
+    /// <summary>Every way writing a caller-named file fails without the process being at fault.</summary>
+    internal static bool IsAWriteFailure(Exception exception) =>
+        exception is IOException or UnauthorizedAccessException
+            or ArgumentException or NotSupportedException or System.Security.SecurityException;
+
+    private static void ReportWriteFailure(string path, Exception exception, TextWriter error, string flag = "--out")
+    {
+        error.WriteLine(path.Trim().Length == 0
+            ? $"{flag} was given an empty path."
+            : $"Could not write {flag} {path}: {exception.Message}");
     }
 
     /// <summary>

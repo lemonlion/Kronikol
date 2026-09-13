@@ -112,7 +112,11 @@ internal static class MergeCommand
             return;
         }
 
-        File.WriteAllText(destination, MergeableReportRenderer.Serialize(merged));
+        // Unguarded until 3.5.0, and masked only by the HTML render running first: an unwritable -o
+        // reached this line as an unhandled throw after the merge had already succeeded.
+        if (!Kronikol.Tool.Query.QueryWriter.TryWriteFile(destination, MergeableReportRenderer.Serialize(merged), error, "-o"))
+            return;
+
         @out.WriteLine($"Wrote merged data to {destination}");
     }
 

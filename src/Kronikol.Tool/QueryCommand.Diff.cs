@@ -177,7 +177,7 @@ internal static partial class QueryCommand
         // No flags to repeat: a body diff is addressed positionally, so the text footer's `next` is
         // appended to the original command, addresses and all. The JSON argv rebuilds them from the
         // envelope, which is why it does not need them here.
-        writer.Page(rows, options.Offset, Math.Min(options.Limit, 200), "paths differ",
+        writer.Page(rows, options.Offset, options.PageSize(200, writer, "paths"), "paths differ",
             row => { foreach (var line in row.Text.Split('\n')) writer.Line(line); }, [],
             row => new { kind = row.Kind, path = row.Path, before = row.Before, after = row.After });
         return 0;

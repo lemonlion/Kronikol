@@ -190,7 +190,7 @@ internal static partial class QueryCommand
             .Where(g => g.Count() > 1)
             .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
 
-        writer.Page(matches, options.Offset, Math.Min(options.Limit, 200), "scenarios", scenario =>
+        writer.Page(matches, options.Offset, options.PageSize(200, writer, "scenarios"), "scenarios", scenario =>
         {
             var flags = scenario.Failed ? "FAIL" : scenario.Result.Length > 0 ? scenario.Result[..Math.Min(4, scenario.Result.Length)].ToLowerInvariant() : "";
             var repeats = shared.TryGetValue(scenario.StableId, out var count) ? $"  ×{count}" : "";
@@ -300,7 +300,7 @@ internal static partial class QueryCommand
         // Paged like every other listing rather than printed whole: it used to hand-roll its loop and its
         // footer, which is how it came to be the one listing that could overflow the budget with nothing
         // said about how to resume. The closing line is preserved because it says what a row count cannot.
-        writer.Page(ordered, options.Offset, Math.Min(options.Limit, 200), "services", entry =>
+        writer.Page(ordered, options.Offset, options.PageSize(200, writer, "services"), "services", entry =>
                 writer.Line($"{QueryWriter.OneLine(entry.Name, 24),-24} {entry.Calls,5} {entry.Errors,6} "
                             + $"{QueryWriter.Size(entry.Bytes),9} {QueryWriter.Duration(entry.Median()),8} {QueryWriter.Duration(entry.MaxMs),8}  "
                             + entry.StatusSummary()),

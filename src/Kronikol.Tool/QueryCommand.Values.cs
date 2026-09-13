@@ -114,7 +114,7 @@ internal static partial class QueryCommand
             .ThenBy(b => b.Value, StringComparer.Ordinal)
             .ToList();
 
-        writer.Page(ordered, options.Offset, Math.Min(options.Limit, 120), "values", bucket =>
+        writer.Page(ordered, options.Offset, options.PageSize(120, writer, "values"), "values", bucket =>
         {
             var addresses = bucket.Count > bucket.Addresses.Count
                 ? "e.g. " + bucket.Addresses[0]

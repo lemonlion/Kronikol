@@ -12,7 +12,7 @@ internal sealed class QueryOptions
     public string? File { get; private set; }
     public List<string> Positional { get; } = [];
 
-    public int MaxBytes { get; private set; } = 6000;
+    public int MaxBytes { get; private set; } = DefaultMaxBytes;
     public int Offset { get; private set; }
     public int Limit { get; private set; } = int.MaxValue;
     public bool Count { get; private set; }
@@ -256,6 +256,34 @@ internal sealed class QueryOptions
         return options;
     }
 
+    /// <summary>The default byte budget, and the value <see cref="RerunArgs"/> leaves unsaid.</summary>
+    internal const int DefaultMaxBytes = 6000;
+
+    /// <summary>
+    /// The page size a verb will actually use: <see cref="Limit"/> capped at that verb's ceiling, and a
+    /// note when the cap bit.
+    /// </summary>
+    /// <remarks>
+    /// Every verb caps its page, and the cap used to be silent: <c>failures --limit 50</c> showed 25 rows
+    /// and said nothing, so a consumer advancing by the 50 it asked for stepped over rows 25 to 49. That
+    /// is the same silent skip the pager exists to remove, arriving through the flag rather than through
+    /// the footer. The footer's own offset was always right; what was missing was any sign that the page
+    /// was not the size that had been requested.
+    /// </remarks>
+    public int PageSize(int ceiling, QueryWriter writer, string noun)
+    {
+        if (Limit <= ceiling)
+            return Limit;
+
+        // Only when the caller actually asked for more. `Limit` defaults to int.MaxValue, which is above
+        // every ceiling in the tool, so keying on the value alone would put this note on every page of
+        // every answer - and a caveat that is always true is one a reader stops reading.
+        if (Given.Contains("--limit"))
+            writer.Note($"! --limit {Limit} is above this verb's ceiling of {ceiling} {noun} a page — showing {ceiling}; follow `next:` for the rest");
+
+        return ceiling;
+    }
+
     /// <summary>
     /// The flags that must be repeated for a paged re-run to mean the same thing, as argv tokens —
     /// unquoted, one element per argument. The tokens are the contract and the rendered string is a
@@ -299,6 +327,11 @@ internal sealed class QueryOptions
         // Format last, so a text footer's flag order is untouched: this only ever fires when --json was
         // given, and then the whole point of `next` is that it can be appended verbatim to the same call.
         if (Json) Flag("--json");
+        // The budget is part of the corpus, not of the presentation: page two counted against a different
+        // one holds a different number of rows than page one did, so a pointer that drops it resumes a
+        // walk other than the one it came from. Said only when it differs from the default, so the common
+        // footer is unchanged.
+        if (MaxBytes != DefaultMaxBytes) Flag("--max-bytes", MaxBytes.ToString(CultureInfo.InvariantCulture));
         return parts;
     }
 

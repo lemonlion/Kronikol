@@ -171,6 +171,10 @@ matters.
   With `--count` they go to **stderr**, so the answer on stdout stays the single token it is documented
   to be. Read stderr on a count you intend to act on.
 
+  - `! --limit N is above this verb's ceiling of M … a page` — every verb caps its page size, and you
+    asked for more than this one gives. **Advance by M, not by N**: the `next:` offset is the page that
+    was actually shown. Without this line a walk that stepped by the limit it asked for skipped rows.
+
   The rest belong to one command each:
   - `! … is an address, not text` (`grep`) — the positional you gave `grep` is a search
     TERM, and the thing you pasted is an address. `grep` did search for it literally and did not find it;

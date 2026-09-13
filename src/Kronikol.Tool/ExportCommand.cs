@@ -208,7 +208,10 @@ internal static class ExportCommand
             }
             else
             {
-                File.WriteAllText(Path.GetFullPath(outFile), json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                if (!Kronikol.Tool.Query.QueryWriter.TryWriteFile(outFile, json, error, "--out",
+                        new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)))
+                    return 1;
+
                 @out.WriteLine(Summary("Wrote", batch.Spans.Count, traces, batch.SkippedRecords, batch.OrphanSpans)
                                + $" to {Path.GetFullPath(outFile)} (dry run; nothing POSTed)");
             }

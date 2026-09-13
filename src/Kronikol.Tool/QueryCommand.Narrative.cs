@@ -50,7 +50,7 @@ internal static partial class QueryCommand
         // Paged through the one pager rather than a hand-rolled Skip/Take with a hand-rolled footer. That
         // footer hard-coded the 25 cap and ignored --limit, so `--limit 2` on three failures printed two
         // and then said "3 failed" with no resume - the one shape the footer contract exists to prevent.
-        writer.Page(failed, options.Offset, Math.Min(options.Limit, 25), "failures", scenario =>
+        writer.Page(failed, options.Offset, options.PageSize(25, writer, "failures"), "failures", scenario =>
         {
             writer.Line($"{scenario.Address}  {scenario.FeatureName} › {scenario.Name}");
             if (scenario.ExampleValues.Count > 0)
@@ -277,7 +277,7 @@ internal static partial class QueryCommand
             return 0;
         }
 
-        writer.Page(rows, options.Offset, Math.Min(options.Limit, 200), "assertions", row =>
+        writer.Page(rows, options.Offset, options.PageSize(200, writer, "assertions"), "assertions", row =>
         {
             var mark = row.Step.Failed ? "✗" : "✓";
             writer.Line($"{mark} {row.Scenario.Address}/{row.Path,-5} {QueryWriter.OneLine(row.Step.Text, 100)}");
