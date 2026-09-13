@@ -4179,10 +4179,29 @@ public static class ReportGenerator
     private static string FormatInstant(DateTimeOffset instant) =>
         instant.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
 
+    /// <summary>
+    /// The <c>method</c> field as the data writers emit it: an <see cref="HttpMethod"/> upper-cased,
+    /// and a label left exactly as the tracker wrote it.
+    /// </summary>
+    /// <remarks>
+    /// All three writers upper-cased the whole slot. For a real verb that is a no-op -
+    /// <c>HttpMethod.Get.ToString()</c> is already <c>GET</c> - and for everything else it rewrote
+    /// content the run supplied: Redis's <c>GET (Hit)</c> came back as <c>GET (HIT)</c>, and a cache
+    /// label of <c>Cache Get (Hit)</c> as <c>CACHE GET (HIT)</c>. The schema's own description of the
+    /// field names <c>Publish</c> as an example value, in mixed case, so the file and its contract had
+    /// disagreed since the field existed.
+    /// </remarks>
+    private static string? MethodText(OneOf<HttpMethod, string> method) => method.Value switch
+    {
+        HttpMethod verb => verb.ToString().ToUpperInvariant(),
+        string label => label,
+        _ => null
+    };
+
     private static object MapLogJson(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null) => new
     {
         Type = log.Type.ToString(),
-        Method = log.Method.Value?.ToString()?.ToUpperInvariant(),
+        Method = MethodText(log.Method),
         Uri = log.Uri.ToString(),
         log.ServiceName,
         log.CallerName,
@@ -4420,7 +4439,7 @@ public static class ReportGenerator
             // unconditionally, so a bare event - which has no verb - produced <Method />: not "no
             // method" but the empty string, which is a different claim. XML has no way to tell those two
             // apart in element content, so an empty label is written as absent rather than as blank.
-            log.Method.Value?.ToString()?.ToUpperInvariant() is { Length: > 0 } xmlMethod ? new XElement("Method", xmlMethod) : null,
+            MethodText(log.Method) is { Length: > 0 } xmlMethod ? new XElement("Method", xmlMethod) : null,
             new XElement("Uri", log.Uri.ToString()),
             new XElement("ServiceName", log.ServiceName),
             new XElement("CallerName", log.CallerName),
@@ -4761,7 +4780,7 @@ public static class ReportGenerator
     private static void AppendTestRunYamlLog(StringBuilder yml, RequestResponseLog log, string indent, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null)
     {
         AppendYaml(yml, indent + "- Type: ", log.Type.ToString());
-        AppendYamlNullable(yml, indent + "  Method: ", log.Method.Value?.ToString()?.ToUpperInvariant());
+        AppendYamlNullable(yml, indent + "  Method: ", MethodText(log.Method));
         AppendYaml(yml, indent + "  Uri: ", log.Uri?.ToString() ?? "");
         AppendYaml(yml, indent + "  ServiceName: ", log.ServiceName);
         AppendYaml(yml, indent + "  CallerName: ", log.CallerName);

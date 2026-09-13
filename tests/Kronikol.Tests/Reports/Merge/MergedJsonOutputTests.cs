@@ -139,11 +139,22 @@ public class MergedJsonOutputTests : IDisposable
         Assert.Equal("3.0.50", root.GetProperty("kronikolVersion").GetString());
     }
 
+    /// <summary>
+    /// `kronikol merge ./artifacts -o ./artifacts/runner1.html` would otherwise overwrite the shard it
+    /// just read, and the next run of the same command would re-ingest its own output.
+    /// </summary>
+    /// <remarks>
+    /// Until 3.6.0 this asserted <c>exit == 0</c> and that the HTML was written anyway, which is what
+    /// the tool did and not what it should have done: the refusal ran after the render, so a "refused"
+    /// merge left a rewritten report beside a stale data file, each describing a different run, and a CI
+    /// step reading <c>$?</c> saw success. Both assertions are inverted deliberately. The wider defect
+    /// the old shape concealed is in
+    /// <see cref="MergeRefusesBeforeItWritesTests"/>: only this <c>.html</c> spelling was ever checked,
+    /// so <c>-o runner1.json</c> destroyed the shard outright.
+    /// </remarks>
     [Fact]
     public void The_json_is_never_written_over_one_of_the_merge_inputs()
     {
-        // `kronikol merge ./artifacts -o ./artifacts/runner1.html` would otherwise overwrite the shard
-        // it just read, and the next run of the same command would re-ingest its own output.
         WriteShard("runner1.json", "Orders", "r1s1", "Place order", ExecutionResult.Passed);
         WriteShard("runner2.json", "Inventory", "r2s1", "Adjust stock", ExecutionResult.Failed);
         var shard = Out("runner1.json");
@@ -151,8 +162,8 @@ public class MergedJsonOutputTests : IDisposable
 
         var (exit, _, error) = Merge(Out("runner1.html"));
 
-        Assert.True(exit == 0, error);
-        Assert.True(File.Exists(Out("runner1.html")), "The HTML is still written.");
+        Assert.Equal(2, exit);
+        Assert.False(File.Exists(Out("runner1.html")), "A refused merge writes nothing at all.");
         Assert.Equal(before, File.ReadAllText(shard));
         Assert.Contains("runner1.json", error);
     }

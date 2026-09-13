@@ -61,6 +61,13 @@ internal static class MergeCommand
             return 1;
         }
 
+        // Before anything is read or written. The check used to live below the render, where it could
+        // only ever report the damage: the HTML destination was never compared against the inputs at all
+        // - only the .json name derived from it - so `-o <a-shard>.json` overwrote a shard with half a
+        // megabyte of HTML and then printed a message saying the shard had been protected.
+        if (RefuseAnOutputThatIsAnInput(output, writeJson, files, error))
+            return 2;
+
         @out.WriteLine($"Merging {files.Count} report file(s):");
         foreach (var f in files)
             @out.WriteLine("  " + f);
@@ -73,10 +80,7 @@ internal static class MergeCommand
 
             // Only after the render succeeded: a data file beside a report that was never written is
             // worse than neither, because the next command finds it and believes the merge worked.
-            if (writeJson)
-                WriteMergedData(merged, written, files, @out, error);
-
-            return 0;
+            return writeJson && !WriteMergedData(merged, written, @out, error) ? 1 : 0;
         }
         catch (FormatException ex)
         {
@@ -88,6 +92,47 @@ internal static class MergeCommand
             error.WriteLine("A report file is not valid JSON: " + ex.Message);
             return 1;
         }
+        catch (Exception ex) when (Query.QueryWriter.IsAWriteFailure(ex))
+        {
+            error.WriteLine($"Could not write {output}: {ex.Message}");
+            return 1;
+        }
+    }
+
+    /// <summary>
+    /// Refuses, before a byte is written, an <c>-o</c> that names one of the files being merged.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Both</b> destinations are checked, because <c>merge</c> writes two files from one
+    /// argument. The guard used to compare only the <c>.json</c> name derived from <c>-o</c>, so the
+    /// <c>.html</c> spelling was protected and the <c>.json</c> spelling destroyed the shard it was
+    /// pointed at - while printing a refusal that described a protection which had not happened. Because
+    /// a directory input is swept recursively for <c>*.json</c>, the next run of the same command would
+    /// then merge its own output back in and double-count everything.</para>
+    ///
+    /// <para><c>--no-json</c> skipped the helper the old check lived inside, so the one invocation that
+    /// produces no data file at all was also the one with no protection and nothing on stderr. It is now
+    /// the reason the JSON destination is checked only when it will actually be written, and the reason
+    /// the HTML destination is checked unconditionally.</para>
+    /// </remarks>
+    private static bool RefuseAnOutputThatIsAnInput(string output, bool writeJson, List<string> inputs, TextWriter error)
+    {
+        var html = Path.GetFullPath(output);
+        var json = Path.GetFullPath(Path.ChangeExtension(output, ".json"));
+
+        foreach (var (destination, what) in writeJson
+                     ? new[] { (html, "combined report"), (json, "merged data file") }
+                     : [(html, "combined report")])
+        {
+            if (!inputs.Any(f => string.Equals(f, destination, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            error.WriteLine($"Not merging: the {what} would be written to {destination}, which is one of the inputs.");
+            error.WriteLine("Choose a different -o — outside the directory being merged, or with a name no shard uses.");
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -100,24 +145,19 @@ internal static class MergeCommand
     /// directory input is swept recursively for <c>*.json</c>, the next run of the same command would
     /// then merge its own output back in and double-count everything.
     /// </remarks>
-    private static void WriteMergedData(MergeableReport merged, string writtenHtml, List<string> inputs,
-        TextWriter @out, TextWriter error)
+    private static bool WriteMergedData(MergeableReport merged, string writtenHtml, TextWriter @out, TextWriter error)
     {
         var destination = Path.GetFullPath(Path.ChangeExtension(writtenHtml, ".json"));
 
-        if (inputs.Any(f => string.Equals(f, destination, StringComparison.OrdinalIgnoreCase)))
-        {
-            error.WriteLine($"Not writing the merged data file: {destination} is one of the inputs. " +
-                            "Choose a different -o, or pass --no-json.");
-            return;
-        }
-
         // Unguarded until 3.5.0, and masked only by the HTML render running first: an unwritable -o
-        // reached this line as an unhandled throw after the merge had already succeeded.
-        if (!Kronikol.Tool.Query.QueryWriter.TryWriteFile(destination, MergeableReportRenderer.Serialize(merged), error, "-o"))
-            return;
+        // reached this line as an unhandled throw after the merge had already succeeded. Since 3.6.0 the
+        // caller acts on the answer rather than discarding it - a merge that wrote a report and failed to
+        // write the data file beside it has not done what it was asked, and must not exit 0.
+        if (!Query.QueryWriter.TryWriteFile(destination, MergeableReportRenderer.Serialize(merged), error, "-o"))
+            return false;
 
         @out.WriteLine($"Wrote merged data to {destination}");
+        return true;
     }
 
     /// <summary>

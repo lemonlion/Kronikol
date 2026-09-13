@@ -156,7 +156,22 @@ public static class MergeableReportRenderer
     /// </summary>
     public static MergeableReport MergeFiles(IEnumerable<string> inputJsonPaths)
     {
-        var reports = inputJsonPaths.Select(MergeableReportReader.ReadFile).ToList();
+        var reports = new List<MergeableReport>();
+        foreach (var path in inputJsonPaths)
+        {
+            // Per file, so a failure names the file. A merge is handed N shards and the read threw from
+            // whichever one was malformed, several frames away: `Failed to read a report: The format of
+            // the HTTP method is invalid.` out of fifteen artifacts is not a diagnosis, it is a hunt.
+            try
+            {
+                reports.Add(MergeableReportReader.ReadFile(path));
+            }
+            catch (Exception exception) when (exception is FormatException or System.Text.Json.JsonException or ArgumentException)
+            {
+                throw new FormatException($"{path}: {exception.Message}", exception);
+            }
+        }
+
         if (reports.Count == 0)
             throw new ArgumentException("No input report files were supplied.", nameof(inputJsonPaths));
         return MergeableReportMerger.Merge(reports);

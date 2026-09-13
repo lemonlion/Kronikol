@@ -82,7 +82,10 @@ public class IngestPipelineTests : IDisposable
         Assert.Equal("Request", interactions[0].GetProperty("type").GetString());
         Assert.Equal("http://localhost:8081/sidekick", interactions[0].GetProperty("uri").GetString());
         Assert.Equal("Response", interactions[1].GetProperty("type").GetString());
-        Assert.Equal("QUERY", interactions[2].GetProperty("method").GetString());
+        // The label the capture recorded, not an upper-cased version of it: BigQuery's operation is
+        // called `Query`, and until 3.6.0 all three data writers upper-cased the whole method slot -
+        // a no-op for a real verb, and the writer rewriting the tracker's own text for everything else.
+        Assert.Equal("Query", interactions[2].GetProperty("method").GetString());
 
         // Stored logs carry the normalised name.
         Assert.All(RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId), l => Assert.Equal("overview › renders", l.TestName));

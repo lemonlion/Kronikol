@@ -326,6 +326,52 @@ public static class MergeableReportReader
     }
 
     /// <summary>
+    /// The <c>method</c> field, back in the shape the run wrote it: an <see cref="HttpMethod"/> when it
+    /// is one, and the label itself when it is not.
+    /// </summary>
+    /// <remarks>
+    /// <para>This read <c>MetaType == Event ? label : HttpMethod.Parse(...)</c>, on the premise that only
+    /// an event carries a free-text label. That premise is wrong, and <see cref="DiagramMethod"/>'s own
+    /// documentation says so: the slot is "either an HttpMethod (for standard HTTP operations) or a
+    /// string (for custom labels like \"Blob Upload\", \"Cache Get (Hit)\")". Every non-HTTP tracker in
+    /// the repo writes one at the default <c>MetaType</c> - <c>SELECT FROM CUSTOMERS</c> from SQL,
+    /// <c>GET (Hit)</c> from Redis, <c>Orders/Place [unary]</c> from gRPC - and a SQL response carries the
+    /// empty string. <see cref="HttpMethod.Parse"/> is total only over RFC-7230 tokens, so a spaced label
+    /// threw <see cref="FormatException"/> and an empty one threw <see cref="ArgumentException"/>, which
+    /// no catch clause in the tool covered: an unhandled exception and a stack trace, from merging a
+    /// shard that had captured a database call.</para>
+    ///
+    /// <para>It is <b>not</b> <c>InteractionRecord.ParseMethod</c>, which substitutes <c>"CALL"</c> for an
+    /// empty method. That is right when synthesising a record from a capture that named none, and wrong
+    /// here: this is reading back a file that already holds the answer, and a merge must round-trip what
+    /// it was given rather than invent a label the run never wrote.</para>
+    /// </remarks>
+    private static OneOf<HttpMethod, string> ReadMethod(string method, RequestResponseMetaType metaType)
+    {
+        if (metaType == RequestResponseMetaType.Event)
+            return method;
+
+        // The NINE standard verbs, not "anything HttpMethod.Parse will take". Parse accepts any RFC-7230
+        // token, so `Publish` - which a message-queue tracker writes as a LABEL - came back as an
+        // HttpMethod, and the writer then upper-cased it to `PUBLISH`. Matching the known set is what
+        // makes the round trip exact, and it is the rule InteractionRecord.ParseMethod already uses on
+        // the ingestion side.
+        return method.ToUpperInvariant() switch
+        {
+            "GET" => HttpMethod.Get,
+            "POST" => HttpMethod.Post,
+            "PUT" => HttpMethod.Put,
+            "DELETE" => HttpMethod.Delete,
+            "PATCH" => HttpMethod.Patch,
+            "HEAD" => HttpMethod.Head,
+            "OPTIONS" => HttpMethod.Options,
+            "TRACE" => HttpMethod.Trace,
+            "CONNECT" => HttpMethod.Connect,
+            _ => method
+        };
+    }
+
+    /// <summary>
     /// Rebuilds one scenario's captured traffic. Only the real interactions are in the file - the
     /// diagram markers are dropped at write time - so <c>stepPath</c> is read back rather than
     /// re-derived: the derivation walks the markers, which are gone.
@@ -341,11 +387,7 @@ public static class MergeableReportReader
         {
             var metaType = ReadEnum(GetString(element, "metaType"), RequestResponseMetaType.Default);
             var method = GetString(element, "method") ?? "";
-            // An event's "method" is a free-text label; an HTTP call's is a verb. The writer flattens
-            // both to a string, and MetaType is what tells them apart on the way back.
-            OneOf<HttpMethod, string> parsedMethod = metaType == RequestResponseMetaType.Event
-                ? method
-                : HttpMethod.Parse(method);
+            OneOf<HttpMethod, string> parsedMethod = ReadMethod(method, metaType);
 
             // Both shapes: 3.1.0 writes a number plus a label, older shards wrote the name alone. The
             // enum is preferred when the number names one, so a round trip through a merge produces the
