@@ -232,7 +232,12 @@ public class TestRunReportSchemaContractTests
                                 new ScenarioStep { Text = "total == 4173", Status = ExecutionResult.Failed, FailureMessage = "Expected 4173 but found 3902", SourceFile = "OrderTests.cs", SourceLine = 42 }
                             ]
                         },
-                        new ScenarioStep { Keyword = "And", Text = "an email is sent", Status = ExecutionResult.Bypassed, BypassReason = "no SMTP in this environment" }
+                        new ScenarioStep { Keyword = "And", Text = "an email is sent", Status = ExecutionResult.Bypassed, BypassReason = "no SMTP in this environment" },
+                        // A step the producer recorded no verdict for. `status` is the schema's one nullable
+                        // enum, and `enum` is asserted against every instance including null, so this is the
+                        // only shape that proves widening `type` alone is not enough. No report on disk
+                        // contains one, so without it the conformance check cannot reach that node.
+                        new ScenarioStep { Keyword = "And", Text = "the ledger is updated", Status = null }
                     ]
                 }
             ]

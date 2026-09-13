@@ -83,12 +83,14 @@ public static class DiagnosticReportGenerator
                 .ToArray();
             sb.AppendLine($"<h3 class=\"warn\">⚠ Unknown Entries Breakdown ({unknownLogs.Length} entries)</h3>");
             sb.AppendLine("<p>These log entries have test ID \"unknown\" — typically from background threads without test correlation.</p>");
-            sb.AppendLine("<table><tr><th>Service</th><th>Method</th><th>Count</th><th>First Seen</th><th>Last Seen</th></tr>");
+            sb.AppendLine("<table><tr><th>Service</th><th>Method</th><th>Count</th><th>First Seen (UTC)</th><th>Last Seen (UTC)</th></tr>");
             foreach (var g in byServiceMethod.Take(50))
             {
                 var timestamps = g.Where(l => l.Timestamp.HasValue).Select(l => l.Timestamp!.Value).ToArray();
-                var first = timestamps.Length > 0 ? timestamps.Min().ToString("yyyy-MM-dd HH:mm:ss") : "?";
-                var last = timestamps.Length > 0 ? timestamps.Max().ToString("yyyy-MM-dd HH:mm:ss") : "?";
+                // UTC, and said so in the column heading: these are compared against instants from other
+                // machines, and an unconverted local reading with no label cannot be compared with anything.
+                var first = timestamps.Length > 0 ? timestamps.Min().ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") : "?";
+                var last = timestamps.Length > 0 ? timestamps.Max().ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") : "?";
                 sb.AppendLine($"<tr><td>{Escape(g.Key.ServiceName)}</td><td>{Escape(g.Key.Method)}</td><td>{g.Count()}</td><td>{first}</td><td>{last}</td></tr>");
             }
             sb.AppendLine("</table>");

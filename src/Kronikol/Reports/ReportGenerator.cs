@@ -4101,6 +4101,21 @@ public static class ReportGenerator
     /// OpenTelemetry and application logs, which capture path produced it, and the derived duration —
     /// so a reader of the JSON is never told less than a reader of the diagram.
     /// </summary>
+    /// <summary>
+    /// An interaction instant, as UTC, in the one format all three data writers share.
+    /// </summary>
+    /// <remarks>
+    /// The trailing <c>Z</c> is a literal: uppercase <c>Z</c> is not a .NET format specifier (the offset
+    /// specifiers are lowercase <c>z</c>/<c>zz</c>/<c>zzz</c>), so it is copied to the output and asserts
+    /// UTC without doing anything to make it true. The conversion has to be explicit, which is why this
+    /// exists once rather than at each writer: all three had the format string and none had the
+    /// conversion, so a timestamp carrying a non-zero offset kept its local wall-clock reading and was
+    /// then labelled UTC - off by exactly the offset. The run-level stamps in the same writers always
+    /// converted first, which is what showed the omission was accidental.
+    /// </remarks>
+    private static string FormatInstant(DateTimeOffset instant) =>
+        instant.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
+
     private static object MapLogJson(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null) => new
     {
         Type = log.Type.ToString(),
@@ -4114,7 +4129,7 @@ public static class ReportGenerator
         StatusText = InteractionStatus.Split(log.StatusCode).Text,
         TraceId = log.TraceId.ToString(),
         RequestResponseId = log.RequestResponseId.ToString(),
-        Timestamp = log.Timestamp?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+        Timestamp = log.Timestamp is { } jsonAt ? FormatInstant(jsonAt) : null,
         MetaType = log.MetaType.ToString(),
         log.DependencyCategory,
         log.CallerDependencyCategory,
@@ -4323,7 +4338,7 @@ public static class ReportGenerator
             InteractionStatus.Split(log.StatusCode).Text is { } xmlStatusText ? new XElement("StatusText", xmlStatusText) : null,
             new XElement("TraceId", log.TraceId.ToString()),
             new XElement("RequestResponseId", log.RequestResponseId.ToString()),
-            log.Timestamp != null ? new XElement("Timestamp", log.Timestamp.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) : null,
+            log.Timestamp is { } xmlAt ? new XElement("Timestamp", FormatInstant(xmlAt)) : null,
             // XML omits what carries nothing rather than writing empty elements, as the rest of this writer does.
             log.MetaType != RequestResponseMetaType.Default ? new XElement("MetaType", log.MetaType.ToString()) : null,
             log.DependencyCategory != null ? new XElement("DependencyCategory", log.DependencyCategory) : null,
@@ -4572,7 +4587,7 @@ public static class ReportGenerator
         yml.Append(indent + "  TraceId: " + log.TraceId + "\n");
         yml.Append(indent + "  RequestResponseId: " + log.RequestResponseId + "\n");
         if (log.Timestamp is not null)
-            yml.Append(indent + "  Timestamp: " + log.Timestamp.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") + "\n");
+            yml.Append(indent + "  Timestamp: " + FormatInstant(log.Timestamp.Value) + "\n");
         if (log.MetaType != RequestResponseMetaType.Default)
             yml.Append(indent + "  MetaType: " + log.MetaType + "\n");
         if (log.DependencyCategory is not null)
