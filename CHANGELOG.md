@@ -4,6 +4,89 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.3.0] - 2026-09-13
+
+**Minor bump - you find out from the log that the run failed** (LLM_FIRST_PLAN M3). New public surface:
+the `WriteCiDebugSection` option, `AgentInstructionsBlock`, `QueryWriter.Payload`, a second sink on
+`RunSummaryConsoleWriter.Write`, and a `.ignore` file installed by `kronikol init-agents`. Neither
+existing default moved: `WriteCiSummary` and `PublishCiArtifacts` are still false, because flipping a
+default so existing code behaves differently without being touched is a MAJOR bump under this
+repository's own rule.
+
+### Added
+- **`WriteCiDebugSection` (default on): a failing CI run says how to debug itself.** A short "Debug this
+  run" block naming the reports directory and the two commands that explain it, written to stdout **and**
+  to the job summary. It used to require `WriteCiSummary`, which generates the full `CiSummary.md` with
+  rendered diagrams at a measured 48&#160;KB - four lines of advice and a 48&#160;KB artifact were one
+  switch, so almost nobody had the four lines. Silent on a green run and off CI: a block that speaks on
+  every run is a block people learn to skip.
+- **Both channels, because neither is enough on its own - measured.** Content written only to
+  `$GITHUB_STEP_SUMMARY` is absent from `gh run view --log`, the command an agent reaches for. And no
+  console stream survives every runner: on .NET&#160;10, `dotnet test` under NUnit&#160;4 let a library's
+  **stderr** through while swallowing its **stdout**, and under xUnit&#160;2 swallowed **both**. This
+  reverses the plan's own premise for the row - "if stderr survives VSTest the pointer belongs there" -
+  so the pointer does not move. The numbers are recorded in the option's documentation rather than left
+  to be re-derived.
+- **`kronikol init-agents` installs a managed block in `.ignore`, so a written report can be found by
+  searching for it.** A report lives under the test project's build output and `bin/` is gitignored in
+  every .NET repository, so `rg` - and every tool built on the same ignore rules - walks straight past
+  `Failures.md` and the `CLAUDE.md` beside it. An agent told to search the repository for why the tests
+  failed finds nothing, and the absence is indistinguishable from there being nothing to find. `.ignore`
+  is ripgrep's own file and outranks `.gitignore`; git never reads it, so nothing becomes committable
+  that was not before. Measured with real ripgrep both ways on a scratch repository, before and after.
+  The rules re-include the directories before their contents, because an ignore rule cannot re-include a
+  file whose parent directory is still excluded.
+- **`AgentInstructionsBlock`** - the marker protocol for `CLAUDE.md` and `AGENTS.md`, now public and
+  shared by the two things that write those names, with overloads taking the marker text so `.ignore` can
+  use `#` comments.
+- **A second sink on `RunSummaryConsoleWriter.Write`**, for the GitHub annotation. The pointer is a
+  diagnostic and could reasonably move; the `::notice` is a workflow command GitHub parses from stdout
+  and nowhere else, so moving it does not make it quieter, it makes it disappear. Sharing one sink meant
+  a future decision about the first would silently take the second with it.
+
+### Fixed
+- **`kronikol merge -o /some/where/Combined.html` wrote somewhere else as well.** The renderer reduced
+  the caller's path to its file name, wrote under `<BaseDirectory>/Reports`, and copied the result to the
+  destination. The copy meant the requested file did appear - so nothing looked wrong - while every merge
+  also left the report in the tool's own install directory, and two merges of different shards to
+  different destinations raced each other over one intermediate name. The write is now scoped to the
+  destination directory.
+- **`kronikol query` could be made to write a line it never composed.** It prints feature names, scenario
+  names, service names and step text, all from the run, and run as a CI step it owns its own stdout - so
+  a newline in one reached the job log at column zero, where `actions/runner`'s `ActionCommand.TryParseV2`
+  trims whitespace only and consumes it as a workflow command. `::stop-commands::<token>` then switches
+  off command processing for the rest of the job. `QueryWriter.Line` now flattens and the three places
+  that deliberately write a multi-line payload say so with `Payload`, which is still charged against
+  `--max-bytes`.
+- **The pointer named the previous run's files after a failed write.** `Summarise` kept the outputs that
+  exist, and a file left behind by an earlier run exists - so the worst case read exactly like the best
+  one: `TestRunReport.json 48.2 MB` on the pointer, a query tool that opens it happily, and an answer
+  about a different run. The pointer is now built from what this run actually wrote.
+- **An unwritable output could fail silently.** On `IOException` the writer wrote `<name>2.<ext>` and
+  returned as though it had succeeded, so nothing marked the run while the canonical name on disk still
+  held the older bytes. It still writes the salvage and says where it went, then reports the failure -
+  which is how the merge bug above was found.
+- **`kronikol ingest` never told anyone how big the report was.** It printed two lines naming the
+  directory and the HTML, then skipped the pointer's first line as a duplicate - but that line carries
+  the file sizes, and the size is the whole warning. This is the only pointer an ingest user sees, and it
+  emitted no `::notice` on any runner despite being the one channel where a workflow annotation is
+  guaranteed to survive.
+- **Generating a report deleted instructions somebody else had written.** `init-agents` writes a
+  marker-delimited block into `CLAUDE.md`/`AGENTS.md` and splices; report generation wrote the same two
+  names with a plain overwrite. Where both land in one directory a run silently destroyed a human's
+  standing instructions - and the body it left behind had no markers, so a later `init-agents` appended
+  to it instead of replacing it, and the repository's instructions ended up carrying one run's report
+  notes as though they were the repository's own prose.
+
+### Tests
+- **Two guards were green for the wrong reason.** The one promising no run data can reach an instruction
+  file asserted that every parameter of every `Build` is a `string`, over a bare `GetMethods()` - which
+  returns public members only, so a non-public overload taking `Feature[]` was invisible, and "all
+  parameters are strings" is satisfied by `Build(string report, string capturedBody)`, precisely the
+  injection it exists to forbid. And the emitted `Reports/CLAUDE.md` was outside every drift guard while
+  the skill and the flag reference are both checked against the real command table - though it is the
+  copy an agent loads by walking into a directory. Both rewritten and mutation-proved.
+
 ## [3.2.0] - 2026-09-13
 
 **Minor bump - `Failures.md` tells the truth** (LLM_FIRST_PLAN M2). It adds new public surface

@@ -1727,6 +1727,59 @@ row owns `Query_refuses_an_unknown_formatVersion`) and A9's query half (M7 — `
 `FailureRecord`'s own docstring** rather than left for a consumer to find by diffing two files that claim
 to describe the same failure: seven fields and three caps differ.
 
+### 2026-09-13 — M3, you find out from the log that the run failed — shipped as 3.3.0
+
+Every row, and **two of them came back different from how they were written**.
+
+**B3 is the reversal.** Q4 said: "if stderr survives VSTest, the pointer is a diagnostic and belongs
+there on principle." Measured rather than assumed — a probe line written to stderr from the run-end hook,
+then `dotnet test`: under **NUnit 4 the stderr line survives while the stdout pointer is swallowed**;
+under **xUnit 2 both are swallowed**. Both are VSTest. So stderr is better on one runner and no better on
+another, and the premise is half-true, which is not enough to move a channel on. **The pointer does not
+move.** The honest conclusion is that the console cannot be made reliable by choosing a different stream,
+which is why the fix that works is B1's two channels and why the files beside the report remain the one
+that always works. The numbers are now in `WriteCiDebugSection`'s own documentation so the next person
+does not re-derive them. The structural half of B3 — a separate sink for the `::notice` — shipped anyway,
+because the constraint is real whatever the default is: the annotation is a workflow command GitHub parses
+from stdout and nowhere else, so one shared sink meant a future decision about the pointer would silently
+delete the annotation.
+
+**B1** shipped as §5.5 requires: a NEW option, `WriteCiDebugSection`, default on, rather than flipping
+`WriteCiSummary` or `PublishCiArtifacts`, either of which is a MAJOR bump under the repository's own rule.
+Writes to stdout AND the job summary, per C93/C94.
+
+**B4** shipped and is measured end to end with real ripgrep, on a scratch repository, before and after:
+without `.ignore`, a marker inside `bin/Debug/net10.0/Reports/Failures.md` is not found; with the block
+`init-agents` actually writes, it is. The non-obvious part is ordering — an ignore rule cannot re-include a
+file whose parent directory is still excluded, so `!bin/**/Reports/**` alone does nothing.
+
+**B5, C1, C3, D1, D2, D3** shipped as written. **C2 and C4 were already closed by M2's pointer work** and
+were re-verified rather than re-done.
+
+**A bug the plan had filed for M6 came due early, and the way it surfaced is the point.** C3 made an
+unwritable output report itself instead of silently salvaging to `<name>2.ext`. Within one test run that
+turned a green suite intermittently red — two different tests across runs, both in `Reports.Merge`, on
+`Combined.html`. The cause was not the tests: `MergeableReportRenderer.Render` reduced the caller's path
+to its file name, wrote under `<BaseDirectory>/Reports`, and copied the result to the destination. The
+copy meant the requested file did appear, so nothing ever looked wrong, while every merge also left the
+report in the tool's own install directory and two merges to different destinations raced over one
+intermediate name. Fixed here rather than deferred, because the alternative was a red suite or restoring
+the silence that hid it. **This is the clearest evidence so far for §17.0's class:** a defect that no
+amount of reading the merge code had surfaced, found by making a different subsystem honest.
+
+**A discrepancy in the plan itself.** The acceptance table (§ at the "Slice / Red first / Guards" heading)
+is **offset by one** from the milestone table: its `M2` row holds the console and pointer tests
+(`Pointer_collapses_CR_LF_in_every_run_derived_string`, `Pointer_quotes_a_path_containing_a_space`,
+`Pointer_names_only_outputs_that_reached_disk`, `Tool_stdout_round_trips_through_strict_UTF8`), which are
+M3's content, and its `M3` row holds the schema tests, which are M4's. All four of the first set were
+landed during M2 and are green. Read the acceptance table one row up from the milestone it names.
+
+**Verification:** 4,529 unit / 0 failed, run twice (from 4,498 at the end of M2); 49 IKVM / 0 failed;
+solution builds clean. The `~Reports.Merge` filter, which reproduced the flake 3 times out of 3, is green
+3 times out of 3. Mutation-proved: disabling the CI debug block reddens its stdout+summary fact; an
+internal `Build(string, Feature[])` reddens the rewritten injection guard; renaming one verb in
+`agent-instructions.md` reddens the new emitted-instructions drift guard.
+
 ---
 
 ## 17. Verification log
