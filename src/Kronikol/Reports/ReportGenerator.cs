@@ -124,7 +124,13 @@ public static class ReportGenerator
         public void Dispose() => ActiveReportsDirectory.Value = previous;
     }
 
-    public static void CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options)
+    /// <param name="environment">
+    /// What the run executed on. Null means this machine, which is right for a test run generating its
+    /// own report. <see cref="RunEnvironment.Unrecorded"/> leaves the key out, which is what
+    /// <c>kronikol ingest</c> needs when the source file does not say what the run ran on - the tool's
+    /// own operating system and .NET version describe the machine doing the reading, not the run.
+    /// </param>
+    public static void CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment = null)
     {
         var previous = ActiveReportsDirectory.Value;
         ActiveReportsDirectory.Value = ResolveReportsDirectory(options);
@@ -136,7 +142,7 @@ public static class ReportGenerator
         var ownScope = ReportDiagnosticsScope.Current is null ? ReportDiagnosticsScope.Begin(new ReportDiagnosticsCollector()) : null;
         try
         {
-            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options);
+            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options, environment);
         }
         finally
         {
@@ -145,7 +151,7 @@ public static class ReportGenerator
         }
     }
 
-    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options)
+    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment)
     {
         // Guard: skip report generation entirely when there are zero scenarios.
         // This prevents the xUnit v3 test-discovery pass (which triggers
@@ -344,12 +350,12 @@ public static class ReportGenerator
             if (options.GenerateMergeableData && options.TestRunReportDataFormat == DataFormat.Json)
             {
                 Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => WriteFile(
-                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, trackedLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite),
+                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, trackedLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment),
                     $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"));
             }
             else
             {
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment));
             }
         }
 
@@ -486,12 +492,12 @@ public static class ReportGenerator
         // Skipped when WriteCiSummary already ran, which appends the same block to the same place.
         if (options.WriteCiDebugSection && !options.WriteCiSummary && runSummary.Failures.Count > 0)
         {
-            var environment = CiEnvironmentDetector.Detect();
-            if (environment != CiEnvironment.None)
+            var ciEnvironment = CiEnvironmentDetector.Detect();
+            if (ciEnvironment != CiEnvironment.None)
             {
                 var debugSection = RunSummaryConsoleWriter.BuildCiSummarySection(runSummary);
                 Console.WriteLine(debugSection);
-                CiSummaryWriter.Write(debugSection, environment);
+                CiSummaryWriter.Write(debugSection, ciEnvironment);
             }
         }
 
@@ -3650,18 +3656,36 @@ public static class ReportGenerator
         ciMetadata?.RunAttempt
     };
 
-    /// <summary>The <c>environment</c> object: what the run executed on, and nothing about who ran it.</summary>
-    private static object MapEnvironmentJson() => new
+    /// <summary>
+    /// What to write for <c>environment</c>: the value given, this machine when the caller said nothing,
+    /// or null when the caller said there is nothing true to write.
+    /// </summary>
+    /// <remarks>
+    /// Null from the caller means "this machine", matching the <c>kronikolVersion</c> parameter beside it
+    /// and leaving every existing caller writing exactly what it wrote before.
+    /// <see cref="RunEnvironment.Unrecorded"/> is the other answer, and the writers leave the key out
+    /// entirely for it - a merge whose shards disagreed, or an ingest of a run that was never on .NET,
+    /// has no environment to report and should not borrow the reading process's.
+    /// </remarks>
+    private static RunEnvironment? ResolveEnvironment(RunEnvironment? environment)
     {
-        Os = RunEnvironment.Current.Os,
-        Runtime = RunEnvironment.Current.Runtime
-    };
+        var resolved = environment ?? RunEnvironment.Current;
+        return ReferenceEquals(resolved, RunEnvironment.Unrecorded) ? null : resolved;
+    }
+
+    /// <summary>The <c>environment</c> object: what the run executed on, and nothing about who ran it.</summary>
+    private static object? MapEnvironmentJson(RunEnvironment? environment) =>
+        ResolveEnvironment(environment) is { } resolved ? new { resolved.Os, resolved.Runtime } : null;
 
     /// <summary>The <c>diagnostics</c> array of the data files: <c>{kind, message, scenarioId}</c> per entry.</summary>
     private static object[] MapDiagnosticsJson(IReadOnlyList<DiagnosticEntry>? diagnostics) =>
         (diagnostics ?? []).Select(d => (object)new { Kind = d.Kind.ToString(), d.Message, d.ScenarioId }).ToArray();
 
-    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null, string? suite = null)
+    /// <param name="environment">
+    /// What the run executed on. Null means this machine, which is what a live run wants;
+    /// <see cref="RunEnvironment.Unrecorded"/> leaves the key out, for a lane that cannot know.
+    /// </param>
+    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         // Diagram markers belong to the diagram, not the interaction list: exported as-is they read as
@@ -3672,9 +3696,9 @@ public static class ReportGenerator
 
         return format switch
         {
-            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite), fileName),
-            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite), fileName),
-            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite), fileName),
+            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment), fileName),
+            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment), fileName),
+            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
@@ -3845,29 +3869,37 @@ public static class ReportGenerator
         return durations;
     }
 
-    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null)
+    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
         // Resolved ONCE and used for both the key and the ids under it. Writing `suite ?? RunSuite.Current`
         // at the key while passing the un-defaulted `suite` to the model made the file disagree with
         // itself: it named a suite its own stableIds had not been computed under.
         var resolvedSuite = suite ?? RunSuite.Current;
-        var data = new
+        // A dictionary rather than an anonymous type, because `environment` is left out when there is
+        // none to report and an anonymous type cannot drop a member. Keys are written in their final
+        // casing: the naming policy renames properties, not dictionary keys, and the feature model below
+        // is already built the same way.
+        var data = new Dictionary<string, object?>
         {
             // First, so a reader can check the contract before parsing anything that depends on it. The
             // same idiom the other two machine outputs already use (Failures.jsonl, query --json).
-            FormatVersion = ReportFormatVersion,
-            KronikolVersion = KronikolVersion,
-            Suite = resolvedSuite,
-            StartTime = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            EndTime = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            ["formatVersion"] = ReportFormatVersion,
+            ["kronikolVersion"] = KronikolVersion,
+            ["suite"] = resolvedSuite,
+            ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             // Before `features`, which is nearly the whole file: a streaming reader and a person
             // running `head` both see which run this is without the megabytes after it.
-            CiMetadata = MapCiMetadataJson(ciMetadata),
-            Environment = MapEnvironmentJson(),
-            Features = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, resolvedSuite),
-            Diagnostics = MapDiagnosticsJson(diagnostics)
+            ["ciMetadata"] = MapCiMetadataJson(ciMetadata)
         };
+
+        if (MapEnvironmentJson(environment) is { } environmentJson)
+            data["environment"] = environmentJson;
+
+        data["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, resolvedSuite);
+        data["diagnostics"] = MapDiagnosticsJson(diagnostics);
+
         return JsonSerializer.Serialize(data, options);
     }
 
@@ -3956,7 +3988,8 @@ public static class ReportGenerator
         CiMetadata? ciMetadata,
         ReportConfigurationOptions options,
         IReadOnlyList<DiagnosticEntry>? diagnostics = null,
-        string? suite = null)
+        string? suite = null,
+        RunEnvironment? environment = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
 
@@ -4002,7 +4035,7 @@ public static class ReportGenerator
         return GenerateMergeableReportJson(
             features, startTime, endTime, diagramLookup,
             relationships, internalFlowSegmentData, wholeTestFlow,
-            options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs, suite: suite);
+            options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs, suite: suite, environment: environment);
     }
 
     /// <summary>
@@ -4034,7 +4067,8 @@ public static class ReportGenerator
         string? kronikolVersion = null,
         IReadOnlyDictionary<string, List<string?>>? stepPathsOverride = null,
         IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotationsOverride = null,
-        string? suite = null)
+        string? suite = null,
+        RunEnvironment? environment = null)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
 
@@ -4089,9 +4123,14 @@ public static class ReportGenerator
                     kvp.Value.SpanCount
                 }),
             ["ciMetadata"] = MapCiMetadataJson(ciMetadata),
-            ["environment"] = MapEnvironmentJson(),
             ["diagnostics"] = MapDiagnosticsJson(diagnostics)
         };
+
+        // Left out rather than written as null: a merged report whose shards disagreed has no
+        // environment, and a null would read as "unknown" rather than "this file does not record one".
+        if (MapEnvironmentJson(environment) is { } environmentJson)
+            data["environment"] = environmentJson;
+
         return JsonSerializer.Serialize(data, options);
     }
 
@@ -4251,7 +4290,7 @@ public static class ReportGenerator
         s.TableReferenceFormattedValue
     };
 
-    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null)
+    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
     {
         var resolvedSuite = suite ?? RunSuite.Current;
         var doc = new XDocument(
@@ -4262,9 +4301,11 @@ public static class ReportGenerator
                 new XElement("StartTime", startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
                 new XElement("EndTime", endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
                 MapCiMetadataXml(ciMetadata),
-                new XElement("Environment",
-                    new XElement("Os", RunEnvironment.Current.Os),
-                    new XElement("Runtime", RunEnvironment.Current.Runtime)),
+                ResolveEnvironment(environment) is { } xmlEnvironment
+                    ? new XElement("Environment",
+                        new XElement("Os", xmlEnvironment.Os),
+                        new XElement("Runtime", xmlEnvironment.Runtime))
+                    : null,
                 new XElement("Features",
                     features.OrderBy(f => f.DisplayName).Select(f =>
                         new XElement("Feature",
@@ -4495,7 +4536,7 @@ public static class ReportGenerator
             AppendYaml(yml, indent + "  - ", item);
     }
 
-    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null)
+    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
     {
         var resolvedSuite = suite ?? RunSuite.Current;
         var yml = new StringBuilder();
@@ -4515,9 +4556,12 @@ public static class ReportGenerator
         AppendYamlIfPresent(yml, "  Repository: ", ciMetadata?.Repository);
         AppendYamlIfPresent(yml, "  RunId: ", ciMetadata?.RunId);
         AppendYamlIfPresent(yml, "  RunAttempt: ", ciMetadata?.RunAttempt);
-        yml.Append("Environment:\n");
-        AppendYaml(yml, "  Os: ", RunEnvironment.Current.Os);
-        AppendYaml(yml, "  Runtime: ", RunEnvironment.Current.Runtime);
+        if (ResolveEnvironment(environment) is { } ymlEnvironment)
+        {
+            yml.Append("Environment:\n");
+            AppendYaml(yml, "  Os: ", ymlEnvironment.Os);
+            AppendYaml(yml, "  Runtime: ", ymlEnvironment.Runtime);
+        }
         yml.Append("Features:\n");
 
         foreach (var feature in features.OrderBy(f => f.DisplayName))

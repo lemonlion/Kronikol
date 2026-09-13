@@ -40,12 +40,20 @@ public static class MergeableReportMerger
                 .Select(r => r.WholeTestVisualization)
                 .FirstOrDefault(v => v != WholeTestFlowVisualization.None),
             CiMetadata = ReconcileCiMetadata(reports),
+
+            // Only when every shard agrees, for the same reason `Suite` above is: there is no single
+            // answer otherwise, and the merging machine's own environment is not one of the candidates.
+            // A shard that recorded none contributes a null, which fails the test - that is deliberate,
+            // since one shard's environment does not describe a shard that never said.
+            Environment = reports.Select(r => r.Environment).Distinct().Count() == 1
+                ? reports[0].Environment
+                : null,
             // Shards run disjoint subsets, so their traffic simply concatenates - no dedup, because a
             // request and its response deliberately share one RequestResponseId.
             Interactions = reports.SelectMany(r => r.Interactions).ToArray(),
             StepPaths = MergeByScenario(reports.Select(r => r.StepPaths)),
             Annotations = MergeByScenario(reports.Select(r => r.Annotations)),
-            Diagnostics = reports.SelectMany(r => r.Diagnostics).ToArray()
+            Diagnostics = [.. reports.SelectMany(r => r.Diagnostics), .. DisagreementDiagnostics(reports)]
         };
     }
 
@@ -156,6 +164,31 @@ public static class MergeableReportMerger
     /// Picks the first report that captured CI metadata. Runners in the same workflow share repository,
     /// branch and commit, so the first non-null record represents the combined run.
     /// </summary>
+    /// <summary>
+    /// What the merge itself has to report about the merge: today, that the shards did not agree on the
+    /// environment, so the merged file records none.
+    /// </summary>
+    /// <remarks>
+    /// Dropping the key is the honest answer, but silence is only honest if a reader can find out why
+    /// nothing was said. The distinct environments go in the message rather than into a widened
+    /// <c>environment</c> value, which keeps that key's declared shape - an object of exactly os and
+    /// runtime - and so needs no format version bump. A shard that recorded none is listed as such,
+    /// because "one shard did not say" is the reason as often as "they ran on different machines".
+    /// </remarks>
+    private static IEnumerable<DiagnosticEntry> DisagreementDiagnostics(IReadOnlyList<MergeableReport> reports)
+    {
+        var environments = reports.Select(r => r.Environment).Distinct().ToArray();
+        if (environments.Length <= 1)
+            yield break;
+
+        var described = environments.Select(e => e is null ? "(not recorded)" : $"{e.Os} / {e.Runtime}");
+
+        yield return new DiagnosticEntry(
+            DiagnosticKind.Other,
+            $"Merged {reports.Count} reports that do not agree on the environment, so the merged report records none. "
+            + "Seen: " + string.Join("; ", described) + ".");
+    }
+
     private static CiMetadata? ReconcileCiMetadata(IReadOnlyList<MergeableReport> reports) =>
         reports.Select(r => r.CiMetadata).FirstOrDefault(m => m is not null);
 }

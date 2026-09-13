@@ -52,6 +52,19 @@ public sealed class MergeableReport
     public CiMetadata? CiMetadata { get; init; }
 
     /// <summary>
+    /// What the shard's tests executed on, or null when the shard did not say - which is every shard
+    /// written before this was carried, and every merge whose shards disagreed.
+    /// </summary>
+    /// <remarks>
+    /// The reason this exists on the model at all: without it the shard's environment was discarded at
+    /// parse and the merged file's was synthesised from the merging process, so a set of shards from
+    /// ubuntu and windows merged on a third machine named the third and left no sign the other two had
+    /// ever differed. It sits beside <see cref="CiMetadata"/> because they answer the same question -
+    /// which run is this - and are the two things a downloaded report is identified by.
+    /// </remarks>
+    public RunEnvironment? Environment { get; init; }
+
+    /// <summary>
     /// Every captured interaction in the contained run, keyed to its scenario by
     /// <see cref="RequestResponseLog.TestId"/>. Empty for a file written before 3.1.0, which carried
     /// no traffic at all - the merged report could then be read but not debugged, and every

@@ -25,4 +25,20 @@ public sealed record RunEnvironment(string Os, string Runtime)
     /// </summary>
     public static RunEnvironment Current { get; } =
         new(RuntimeInformation.OSDescription, RuntimeInformation.FrameworkDescription);
+
+    /// <summary>
+    /// The marker a writer is handed when nobody can say what the run executed on. The key is left out
+    /// of the data file entirely rather than filled in with the writing process's own answer.
+    /// </summary>
+    /// <remarks>
+    /// <para>Two lanes need it. <c>kronikol merge</c> runs on whichever machine collects the shards, and
+    /// when they do not agree there is no single environment to report. <c>kronikol ingest</c> may be
+    /// reading a suite that never ran on .NET at all - the repo's own Cucumber fixture is a node.js run -
+    /// so unless the source file says, nothing does.</para>
+    ///
+    /// <para>Passing <c>null</c> instead means "this machine", which is what a live run wants and what
+    /// the <c>kronikolVersion</c> parameter beside it already means. This is the other answer, and it
+    /// has a name so that the difference is visible at the call site.</para>
+    /// </remarks>
+    public static RunEnvironment Unrecorded { get; } = new("", "");
 }

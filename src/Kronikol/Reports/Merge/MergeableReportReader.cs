@@ -111,6 +111,7 @@ public static class MergeableReportReader
             WholeTestFlow = ReadWholeTestFlow(root),
             WholeTestVisualization = ReadEnum(GetString(root, "wholeTestVisualization"), WholeTestFlowVisualization.None),
             CiMetadata = ReadCiMetadata(root),
+            Environment = ReadEnvironment(root),
             Interactions = interactions.ToArray(),
             StepPaths = stepPaths,
             Annotations = annotations,
@@ -435,6 +436,20 @@ public static class MergeableReportReader
             DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var value)
             ? value
             : null;
+
+    /// <summary>
+    /// The shard's <c>environment</c>, or null when it has none - which is every shard written before
+    /// the merge carried it, and any merged shard whose own inputs disagreed.
+    /// </summary>
+    private static RunEnvironment? ReadEnvironment(JsonElement root)
+    {
+        if (!root.TryGetProperty("environment", out var e) || e.ValueKind != JsonValueKind.Object)
+            return null;
+
+        var os = GetString(e, "os");
+        var runtime = GetString(e, "runtime");
+        return os is null && runtime is null ? null : new RunEnvironment(os ?? "", runtime ?? "");
+    }
 
     private static CiMetadata? ReadCiMetadata(JsonElement root)
     {

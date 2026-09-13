@@ -71,6 +71,17 @@ public sealed record CucumberSynthesisResult(
 {
     /// <summary>Every scenario id the messages own — what the merger replaces in the tests-file model.</summary>
     public IEnumerable<string> ScenarioIds => TestNames.Keys;
+
+    /// <summary>
+    /// What the producing run executed on, as the messages' own <c>meta</c> envelope reports it, or
+    /// <see cref="RunEnvironment.Unrecorded"/> when it does not report it.
+    /// </summary>
+    /// <remarks>
+    /// The one place in the ingest lane that can answer the question honestly. Every other source
+    /// Kronikol ingests says nothing about its environment, and the reading process's own is not an
+    /// answer — a playwright-bdd run is node.js, and `kronikol ingest` is .NET 10.
+    /// </remarks>
+    public RunEnvironment Environment { get; init; } = RunEnvironment.Unrecorded;
 }
 
 /// <summary>
@@ -229,7 +240,10 @@ public static class CucumberFeatureSynthesizer
             testNames,
             stepWindows,
             joined,
-            warnings);
+            warnings)
+        {
+            Environment = messages.Meta?.ToRunEnvironment() ?? RunEnvironment.Unrecorded
+        };
     }
 
     private sealed record BuiltScenario(

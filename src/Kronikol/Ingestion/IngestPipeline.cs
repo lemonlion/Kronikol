@@ -391,7 +391,11 @@ public static class IngestPipeline
         DefaultDiagramsFetcher.Reset();
         using (ReportDiagnosticsScope.Begin(diagnostics))
         {
-            ReportGenerator.CreateStandardReportsWithDiagrams(synthesised.Features, synthesised.Start, synthesised.End, options);
+            // What the SOURCE said the run ran on, never this process's. `kronikol ingest` is a net10.0
+            // tool reading files a suite in another language may have produced - the Cucumber fixture in
+            // this repo is playwright-bdd on node.js - so writing RunEnvironment.Current here named the
+            // machine doing the reading and called it the machine that ran the tests.
+            ReportGenerator.CreateStandardReportsWithDiagrams(synthesised.Features, synthesised.Start, synthesised.End, options, cucumber?.Environment ?? RunEnvironment.Unrecorded);
         }
 
         DefaultDiagramsFetcher.Reset();

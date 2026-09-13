@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Kronikol.Reports;
 
 namespace Kronikol.Ingestion.Cucumber;
 
@@ -31,6 +32,35 @@ public sealed record CucumberMeta
 
     /// <summary>The producing tool.</summary>
     [JsonPropertyName("implementation")] public CucumberProduct? Implementation { get; init; }
+
+    /// <summary>The operating system the producing run executed on, e.g. <c>win32 10.0.26200</c>.</summary>
+    [JsonPropertyName("os")] public CucumberProduct? Os { get; init; }
+
+    /// <summary>The language runtime the producing run executed on, e.g. <c>node.js 25.9.0</c>.</summary>
+    [JsonPropertyName("runtime")] public CucumberProduct? Runtime { get; init; }
+
+    /// <summary>
+    /// What this file says the run executed on, or <see cref="RunEnvironment.Unrecorded"/> when it does
+    /// not say.
+    /// </summary>
+    /// <remarks>
+    /// These two fields were in the envelope all along and were not read, so an ingested report named
+    /// the operating system and .NET version of whatever machine ran <c>kronikol ingest</c>. For a
+    /// Cucumber source that is routinely a different language: the fixture in this repo is playwright-bdd
+    /// on node.js, and the report Kronikol wrote from it claimed .NET.
+    /// </remarks>
+    public RunEnvironment ToRunEnvironment()
+    {
+        var os = Describe(Os);
+        var runtime = Describe(Runtime);
+
+        // Half an answer is still worth having - a source may name the runtime and not the OS - but no
+        // answer at all has to stay absent rather than become two empty strings.
+        return os.Length == 0 && runtime.Length == 0 ? RunEnvironment.Unrecorded : new RunEnvironment(os, runtime);
+    }
+
+    private static string Describe(CucumberProduct? product) =>
+        string.Join(" ", new[] { product?.Name, product?.Version }.Where(part => !string.IsNullOrWhiteSpace(part)));
 }
 
 /// <summary>A named, versioned product in <see cref="CucumberMeta"/>.</summary>

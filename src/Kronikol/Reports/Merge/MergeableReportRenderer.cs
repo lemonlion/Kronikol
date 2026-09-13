@@ -143,7 +143,11 @@ public static class MergeableReportRenderer
             report.Annotations,
             // The shards' suite, not this machine's: the merge recomputes every stableId, so without it
             // a merged report's ids match neither its own shards nor a baseline promoted from it.
-            suite: report.Suite);
+            suite: report.Suite,
+            // And the shards' environment, for the same reason. Null here means "the shards did not
+            // agree, or did not say", and the key is left out rather than filled in with the
+            // environment of whatever machine happens to be collecting the artifacts.
+            environment: report.Environment ?? RunEnvironment.Unrecorded);
     }
 
     /// <summary>
