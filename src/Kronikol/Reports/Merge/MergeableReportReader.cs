@@ -18,7 +18,7 @@ public static class MergeableReportReader
     /// A constant rather than a literal in two places, because the writer and the reader disagreeing
     /// about it is precisely the defect the version exists to catch.
     /// </summary>
-    internal const int MergeableFormatVersion = 1;
+    public const int MergeableFormatVersion = 1;
 
     /// <summary>Reads and parses a mergeable report from a file path.</summary>
     public static MergeableReport ReadFile(string path) => Parse(File.ReadAllText(path));

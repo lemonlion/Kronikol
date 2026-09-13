@@ -81,6 +81,19 @@ internal sealed class ReportIndex
     /// <summary>The suite every stableId in this report is scoped to. Null on a report written before 3.1.0.</summary>
     public string? Suite { get; set; }
 
+    /// <summary>
+    /// Whether the file carried a root <c>features</c> ARRAY — the one marker every Kronikol writer has
+    /// always emitted, on every format version, which is why the identity gate keys on it rather than on
+    /// <c>formatVersion</c> (absent on everything before 3.1.0, and legitimately so).
+    /// </summary>
+    /// <remarks>
+    /// It has to be the array and not merely the key, so that this agrees with
+    /// <c>MergeableReportReader</c>, which tests presence on a parsed document, about exactly the
+    /// malformed inputs the gate exists to catch. <see cref="Scenarios"/> cannot stand in for it: an empty
+    /// list is also what a real run that discovered nothing produces.
+    /// </remarks>
+    public bool HasFeatures { get; set; }
+
     public string Directory => System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(Path)) ?? ".";
 
     public ScenarioEntry? Scenario(int ordinal) =>

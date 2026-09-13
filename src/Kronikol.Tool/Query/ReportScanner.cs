@@ -127,6 +127,11 @@ internal static class ReportScanner
 
                     case JsonTokenType.StartObject:
                     case JsonTokenType.StartArray:
+                        // A root `features` array is what makes the file a run. `_path` holds only "$" while
+                        // we are inside the root object, so this is the root-member test - the same depth
+                        // rule that keeps the schema file's nested `properties.features` invisible.
+                        if (_path.Count == 1 && reader.TokenType == JsonTokenType.StartArray && CurrentSegment() == "features")
+                            index.HasFeatures = true;
                         _path.Add(CurrentSegment());
                         _containers.Add(new Container { IsArray = reader.TokenType == JsonTokenType.StartArray });
                         Enter();
@@ -152,7 +157,13 @@ internal static class ReportScanner
         {
             // A report with no failure detail and no attribution predates the enrichment; say so rather
             // than letting every command silently answer less than it was asked.
-            if (index.Scenarios.Count == 0)
+            //
+            // Zero scenarios used to be treated as "enriched" too, which gave the benefit of the doubt in
+            // the one case where doubt was the whole point: it suppressed the only note that would have
+            // fired on a file that was not a report at all. The identity gate now refuses those before
+            // provenance is written, so the remaining zero-scenario case is a genuine empty run - and an
+            // empty run has nothing to be unenriched about, which is what this says.
+            if (index.Scenarios.Count == 0 && index.HasFeatures)
                 index.Enriched = true;
         }
 

@@ -101,25 +101,8 @@ internal static partial class QueryCommand
 
         _lastKronikolVersion = index.KronikolVersion;
 
-        // The report's own shape version. Absent is fine and means "written before 3.1.0"; a version this
-        // build does not know is refused, because half-reading a shape whose keys have changed meaning
-        // produces a confident wrong answer rather than an error, which is the outcome the field exists
-        // to prevent.
-        if (index.FormatVersion is { } reportFormat && reportFormat != Kronikol.Reports.ReportGenerator.ReportFormatVersion)
-        {
-            error.WriteLine(reportFormat == ReportScanner.UnreadableVersion
-                ? $"{resolved} declares a formatVersion that is not a number. It is not a Kronikol report this tool can read."
-                : $"{resolved} declares formatVersion {reportFormat}; this tool understands {Kronikol.Reports.ReportGenerator.ReportFormatVersion}. Upgrade Kronikol.Tool.");
-            return 1;
-        }
-
-        if (index.MergeableFormatVersion is { } version and not 1)
-        {
-            error.WriteLine(version == ReportScanner.UnreadableVersion
-                ? $"{resolved} declares a mergeableFormatVersion that is not a number. It is not a mergeable report this tool can read."
-                : $"{resolved} declares mergeableFormatVersion {version}, which this tool does not understand. Upgrade Kronikol.Tool.");
-            return 1;
-        }
+        if (ReportGate.Refuse(index, resolved, error) is { } notAReport)
+            return notAReport;
 
         // Only `services` and `interactions --group-by` order their rows; everywhere else the order is the
         // report's and cannot be changed. Accepting --sort and discarding it is the same silence the

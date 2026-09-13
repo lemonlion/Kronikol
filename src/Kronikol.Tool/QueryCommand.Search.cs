@@ -323,17 +323,34 @@ internal static partial class QueryCommand
         return rows;
     }
 
+    /// <summary>
+    /// The second report of a diff, resolved and gated exactly as the first one is.
+    /// </summary>
+    /// <remarks>
+    /// This is the third path to <see cref="ReportScanner"/> and it used to be the least careful: no
+    /// identity gate, no version gates, and no <see cref="QueryCommand.ResolveReport"/>, so it could not
+    /// be handed a directory the way every other verb can, and an arbitrary JSON file became "the new
+    /// run" - producing a full removed-everything diff against a file that was never a run at all.
+    /// `diff` is also the one verb that returns early from WriteProvenance, so nothing downstream would
+    /// have remarked on it either.
+    /// </remarks>
     private static ReportIndex? Scan(string path, TextWriter error)
     {
+        if (QueryCommand.ResolveReport(path, error) is not { } resolved)
+            return null;
+
+        ReportIndex index;
         try
         {
-            return ReportScanner.Scan(path);
+            index = ReportScanner.Scan(resolved);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
-            error.WriteLine($"Could not read {path}: {exception.Message}");
+            error.WriteLine($"Could not read {resolved}: {exception.Message}");
             return null;
         }
+
+        return ReportGate.Refuse(index, resolved, error) is null ? index : null;
     }
 
     /// <summary>
