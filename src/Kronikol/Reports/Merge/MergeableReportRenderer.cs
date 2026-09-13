@@ -47,6 +47,18 @@ public static class MergeableReportRenderer
         if (string.IsNullOrEmpty(fileName))
             fileName = "TestRunReport.html";
 
+        // Write where the caller asked, rather than writing under <BaseDirectory>/Reports and copying.
+        //
+        // The copy left the merged report in the tool's own directory on every run — so `kronikol merge`
+        // littered wherever it happened to be installed, and two merges of different shards into
+        // different destinations raced each other over one intermediate name. That race was invisible for
+        // as long as a failed write silently salvaged to `<name>2.html`; it surfaced the moment an
+        // unwritable output started being reported, which is the point of reporting it.
+        var destinationDirectory = Path.GetDirectoryName(Path.GetFullPath(outputPath));
+        using var scope = string.IsNullOrEmpty(destinationDirectory)
+            ? null
+            : ReportGenerator.ScopeReportsDirectory(destinationDirectory);
+
         var written = ReportGenerator.GenerateHtmlReport(
             report.Diagrams,
             report.Features,
@@ -84,8 +96,9 @@ public static class MergeableReportRenderer
             // "deliberately no suite", which both writers agree means the pre-3.1.0 id.
             suite: report.Suite ?? "");
 
-        // GenerateHtmlReport always writes under <BaseDir>/Reports/<fileName>; relocate to the
-        // caller's requested path when different.
+        // Normally a no-op now that the write is scoped to the destination. Kept for the one case the
+        // scope cannot cover — an outputPath with no directory part at all — where the write lands under
+        // the default reports directory and still has to reach the name the caller asked for.
         var destination = Path.GetFullPath(outputPath);
         if (!string.Equals(Path.GetFullPath(written), destination, StringComparison.OrdinalIgnoreCase))
         {

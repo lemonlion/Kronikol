@@ -87,6 +87,24 @@ public class RunEndPointerSafetyTests
     }
 
     [Fact]
+    public void The_annotation_has_its_own_sink_so_a_choice_about_the_pointer_cannot_lose_it()
+    {
+        // The pointer is a diagnostic and could reasonably move to stderr. The ::notice is a WORKFLOW
+        // COMMAND, which GitHub parses from stdout and nowhere else, so moving it does not make it quieter
+        // - it makes it disappear. One sink meant a decision about the first would silently take the
+        // second with it.
+        var pointer = new List<string>();
+        var annotations = new List<string>();
+
+        RunSummaryConsoleWriter.Write(Summary("/proj/Reports", "Checkout", "Pay"),
+            CiEnvironment.GitHubActions, pointer.Add, annotations.Add);
+
+        Assert.DoesNotContain(pointer, l => l.StartsWith("::notice", StringComparison.Ordinal));
+        Assert.Contains(annotations, l => l.StartsWith("::notice", StringComparison.Ordinal));
+        Assert.NotEmpty(pointer);
+    }
+
+    [Fact]
     public void Ci_summary_quotes_a_path_containing_a_space()
     {
         // Same contract, and this one survives runners that swallow stdout — so it is the copy-paste

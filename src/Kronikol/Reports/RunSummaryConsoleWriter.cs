@@ -162,15 +162,35 @@ public static class RunSummaryConsoleWriter
     /// <c>::notice</c> annotation after it.
     /// </summary>
     public static void Write(RunSummary summary, CiEnvironment environment, Action<string> write)
+        => Write(summary, environment, write, write);
+
+    /// <summary>
+    /// The pointer through <paramref name="write"/> and the GitHub annotation through
+    /// <paramref name="writeAnnotation"/>.
+    ///
+    /// <para>Two sinks because the two have different requirements and only one of them is negotiable. The
+    /// pointer is a diagnostic and could reasonably go to stderr; the <c>::notice</c> is a <b>workflow
+    /// command</b>, which GitHub parses from stdout and nowhere else, so routing it anywhere else does not
+    /// make it quieter — it makes it disappear. Sharing one sink meant a future decision about the pointer
+    /// would silently take the annotation with it.</para>
+    ///
+    /// <para>The decision itself was measured and went the other way, which is why the default still sends
+    /// both to the same place: on .NET&#160;10, <c>dotnet test</c> under NUnit&#160;4 let a library's
+    /// stderr through while swallowing its stdout, and under xUnit&#160;2 swallowed both. No console stream
+    /// survives every runner, so choosing a different one does not make the channel reliable. The
+    /// separation stands anyway, because the constraint is real whatever the default is.</para>
+    /// </summary>
+    public static void Write(RunSummary summary, CiEnvironment environment, Action<string> write, Action<string> writeAnnotation)
     {
         ArgumentNullException.ThrowIfNull(summary);
         ArgumentNullException.ThrowIfNull(write);
+        ArgumentNullException.ThrowIfNull(writeAnnotation);
 
         foreach (var line in Build(summary).TrimEnd('\n').Split('\n'))
             write(line);
 
         if (environment == CiEnvironment.GitHubActions && BuildGitHubNotice(summary) is { } notice)
-            write(notice);
+            writeAnnotation(notice);
     }
 
     /// <summary>

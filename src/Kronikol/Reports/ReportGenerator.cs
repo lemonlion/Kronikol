@@ -103,6 +103,27 @@ public static class ReportGenerator
     internal static string CurrentReportsDirectory =>
         ActiveReportsDirectory.Value ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
 
+    /// <summary>
+    /// Scopes the directory every <c>WriteFile</c> on this async flow writes into, for callers that reach
+    /// <see cref="GenerateHtmlReport"/> without going through
+    /// <see cref="CreateStandardReportsWithDiagrams"/> — which is how <c>kronikol merge</c> gets here.
+    ///
+    /// <para>Without it those callers fall back to <c>&lt;BaseDirectory&gt;/Reports</c>, so a merge asked
+    /// to write <c>/some/where/Combined.html</c> put the file beside the running binary instead. The path
+    /// the caller passed was reduced to its file name and the directory silently discarded.</para>
+    /// </summary>
+    internal static IDisposable ScopeReportsDirectory(string directory)
+    {
+        var previous = ActiveReportsDirectory.Value;
+        ActiveReportsDirectory.Value = directory;
+        return new DirectoryScope(previous);
+    }
+
+    private sealed class DirectoryScope(string? previous) : IDisposable
+    {
+        public void Dispose() => ActiveReportsDirectory.Value = previous;
+    }
+
     public static void CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options)
     {
         var previous = ActiveReportsDirectory.Value;
