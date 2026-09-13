@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.5.1] - 2026-09-13
+
+**Patch - one platform-dependent contract, found by CI on the 3.5.0 tag.** No new public surface.
+
+`v3.5.0` is tagged and has a GitHub release, but its Release job failed on the test below before
+`dotnet nuget push`, so **no 3.5.0 package was ever published**. NuGet reads `3.3.0, 3.4.1, 3.5.1`.
+The template pins therefore stay at **3.4.1**, the last release that actually shipped, exactly as they
+did through the identical 3.4.0 case.
+
+### Fixed
+- **`--out "   "` meant two different things depending on the operating system.** 3.5.0 put every write
+  of a caller-supplied path behind one guard, and that guard caught the failure rather than checking
+  for it - so the answer was whatever the platform threw. Windows rejects a whitespace-only path with
+  `ArgumentException` and refused it; POSIX accepts it as a file literally named three spaces, wrote
+  the answer there, and reported success. A caller that passes one has almost certainly interpolated a
+  variable that was empty, and a tool documented once should not answer the same mistake two ways
+  depending on where it runs. The path is now validated before the write, on every platform, with the
+  sentence the empty case already had. `QueryWriter.Flush` also goes through the same helper now
+  rather than keeping a second copy of the write that agreed with it only by inspection.
+
 ## [3.5.0] - 2026-09-13
 
 **Minor - every address the tool prints, the tool now accepts.** A `stableId` is new public CLI

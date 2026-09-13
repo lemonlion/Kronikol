@@ -285,15 +285,8 @@ internal sealed class QueryWriter
             return true;
         }
 
-        try
-        {
-            File.WriteAllText(_outPath, text);
-        }
-        catch (Exception exception) when (IsAWriteFailure(exception))
-        {
-            ReportWriteFailure(_outPath, exception, error);
+        if (!TryWriteFile(_outPath, text, error))
             return false;
-        }
 
         _output.Write($"wrote {Size(Encoding.UTF8.GetByteCount(text))} → {Path.GetFullPath(_outPath)}\n");
         return true;
@@ -315,6 +308,17 @@ internal sealed class QueryWriter
     /// </remarks>
     public static bool TryWriteFile(string path, string text, TextWriter error, string flag = "--out", Encoding? encoding = null)
     {
+        // Checked before the write rather than caught after it, because the two platforms disagree about
+        // what it means: Windows rejects a whitespace-only path with ArgumentException, and POSIX accepts
+        // it as a file literally named "   ", which the caller will never find again. A caller that
+        // passes one has almost certainly interpolated a variable that was empty, and a tool documented
+        // once should not answer the same mistake two different ways depending on where it is running.
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            error.WriteLine($"{flag} was given an empty path.");
+            return false;
+        }
+
         try
         {
             // GetFullPath is inside the guard, not before it: it throws the same ArgumentException on the
@@ -338,12 +342,8 @@ internal sealed class QueryWriter
         exception is IOException or UnauthorizedAccessException
             or ArgumentException or NotSupportedException or System.Security.SecurityException;
 
-    private static void ReportWriteFailure(string path, Exception exception, TextWriter error, string flag = "--out")
-    {
-        error.WriteLine(path.Trim().Length == 0
-            ? $"{flag} was given an empty path."
-            : $"Could not write {flag} {path}: {exception.Message}");
-    }
+    private static void ReportWriteFailure(string path, Exception exception, TextWriter error, string flag = "--out") =>
+        error.WriteLine($"Could not write {flag} {path}: {exception.Message}");
 
     /// <summary>
     /// Renders a paged listing and its footer in one place, so no command can page without saying so.

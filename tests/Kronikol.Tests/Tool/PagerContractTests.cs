@@ -89,6 +89,12 @@ public class PagerContractTests : IDisposable
     /// range a shell can read — from the flag whose entire purpose is to keep a large answer OUT of the
     /// caller's context. The path is the caller's input, so every way it can be invalid belongs to the
     /// same sentence.
+    ///
+    /// <para>The whitespace case is the one that has to be checked rather than caught, and it is the one
+    /// that shipped broken: Windows rejects <c>"   "</c> with <c>ArgumentException</c> and POSIX accepts
+    /// it as a file literally named three spaces, which the caller will never find again. Both rows here
+    /// come from the same mistake — a variable that was empty when it was interpolated — and a tool
+    /// documented once must not answer it two ways depending on where it runs.</para>
     /// </summary>
     [Theory]
     [InlineData("")]
