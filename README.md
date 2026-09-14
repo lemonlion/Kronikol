@@ -7,6 +7,8 @@
 
 # <img src="icon.svg" width="32" height="32" alt="Kronikol icon" style="vertical-align: middle;"> Kronikol
 
+*Formerly **TestTrackingDiagrams** — the same project, renamed in 3.0.0 (May 2026). The `TestTrackingDiagrams.*` NuGet packages are the old identity and are no longer updated; install `Kronikol.*`.*
+
 Automatically generates [rich interactive HTML reports](https://lemonlion.github.io/BreakfastProvider/) with PlantUML sequence, activity and component diagrams, with timeline visualizations from your integration/component test HTTP traffic (real or faked) and telemetry.
 
 Tracks interactions between your test caller, your Service Under Test (SUT), and its dependencies — including HTTP calls, Azure Cosmos DB operations, SQL queries (via EF Core), Redis commands, events/messages, and arbitrary method calls — then converts them into sequence diagrams embedded in searchable HTML reports and YAML specification files.  Method flow within the SUT itself is turned into activity diagrams.  And the combination is turned into flame diagrams.  All the flows combined are turned into a C4 Component Diagram for your service.  A Scenario Timeline diagram allows you to visually compare the execution time of your services.

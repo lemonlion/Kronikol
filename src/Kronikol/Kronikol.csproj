@@ -3,8 +3,10 @@
   <PropertyGroup>
     <TargetFramework />
     <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
-    <Title>Test Tracking Diagrams</Title>
-    <Description>Autogenerate PlantUML sequence diagrams from your component and acceptance tests. Tracks HTTP calls, database operations (Cosmos DB, SQL via EF Core), Redis commands, events/messages, and arbitrary method calls, then converts them into searchable HTML reports and structured data files.</Description>
+    <Title>Kronikol</Title>
+    <!-- "formerly TestTrackingDiagrams" stays in the description on purpose: the old identity still ranks
+         first for the capability query and carries most of the ~3M lifetime downloads (LLM_FIRST_PLAN H1). -->
+    <Description>Kronikol, formerly TestTrackingDiagrams. Autogenerate PlantUML sequence diagrams from your component and acceptance tests. Tracks HTTP calls, database operations (Cosmos DB, SQL via EF Core), Redis commands, events/messages, and arbitrary method calls, then converts them into searchable HTML reports and structured data files.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 

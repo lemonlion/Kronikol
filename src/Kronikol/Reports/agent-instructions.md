@@ -32,6 +32,7 @@ If `Failures.md` says `# No failures`, nothing failed. If it is absent, the run 
 ```bash
 dotnet tool install -g Kronikol.Tool     # once; needs the .NET 10 runtime
 kronikol query summary .                 # the run, its failures, the slowest scenarios
+dnx Kronikol.Tool query summary .        # no install: the .NET 10 SDK runs the last published version (needs the feed each call, slower)
 ```
 
 `.` works: every command takes the report file or the directory holding it.

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "kronikol",
+  "displayName": "Kronikol",
+  "version": "3.7.0",
+  "description": "Debug a dotnet test run from its Kronikol report without opening it: why the tests failed (the failures digest), what a service actually returned, where a wrong value came from, what changed between runs, what was slow. Reads the report an xUnit, NUnit, MSTest, TUnit, Reqnroll or LightBDD run wrote, through the kronikol query CLI, so a 10 MB TestRunReport.json costs an agent a few hundred tokens instead of its whole context.",
+  "author": {
+    "name": "Aryeh Citron",
+    "url": "https://github.com/lemonlion"
+  },
+  "homepage": "https://github.com/lemonlion/Kronikol/wiki/Querying-Reports",
+  "repository": "https://github.com/lemonlion/Kronikol",
+  "license": "MIT",
+  "keywords": [
+    "dotnet",
+    "test",
+    "test-report",
+    "failures",
+    "test-debugging",
+    "xunit",
+    "nunit",
+    "mstest",
+    "tunit",
+    "reqnroll",
+    "lightbdd",
+    "sequence-diagram",
+    "http-tracking",
+    "ci"
+  ],
+  "skills": [
+    "./templates/skills"
+  ]
+}

@@ -24,7 +24,11 @@ Use `kronikol query` instead. Every command prints an answer plus the addresses 
 ```
 dotnet tool install -g Kronikol.Tool      # once, if `kronikol` is not on PATH
 kronikol query summary .logs/kronikol/TestRunReport.json
+dnx Kronikol.Tool query summary .logs/kronikol/TestRunReport.json   # no install: the .NET 10 SDK runs the last published version
 ```
+
+`dnx` is for a one-off: it fetches from the feed on every call with no offline fallback, costs 3-5x per
+command, and answers its own help and version flags rather than the tool's. For a session, install.
 
 `<report>` can be the directory holding the report; the tool finds it, and says so if there are several.
 If the tool is genuinely unavailable, use `scripts/query.py` in this skill — it degrades to a smaller set
