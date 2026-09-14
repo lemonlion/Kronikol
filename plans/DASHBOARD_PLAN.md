@@ -364,10 +364,25 @@ write to the dashboard repository: the source's own `GITHUB_TOKEN` is limited to
 (§2), so this is a fine-grained PAT or a GitHub App token held as a secret in the source. A dashboard
 whose sources are all public needs no dispatch at all: the page refreshes itself.
 
-**(c) Kronikol's own dogfood.** A `dashboard.yml` in this repository publishing
-`https://lemonlion.github.io/Kronikol/` from its own view with BreakfastProvider as the second, live,
-public source. Requires Pages to be enabled on the repository with the source set to GitHub Actions,
-which is a settings change only the owner can make (§9, question 1).
+**(c) Two dogfood sites, decided 2026-09-14 (§9, question 2).** As with every other feature, Kronikol's
+own repository exercises it for test purposes and BreakfastProvider exercises it for demo and test
+purposes; nothing is built that neither site runs.
+
+- **Kronikol's site,** `https://lemonlion.github.io/Kronikol/`, from a `dashboard.yml` in this
+  repository: its own view (snapshot, refreshed live) plus BreakfastProvider as the second, live, public
+  source. This is the multi-source page against real data on every push of `main`. It also carries the
+  **dispatch path**: BreakfastProvider's history job sends `repository_dispatch`
+  (`kronikol-history-updated`) to `lemonlion/Kronikol` after it pushes its view, so the baked snapshot of
+  BreakfastProvider is rebuilt on every BreakfastProvider run. That keeps the private-source mechanics,
+  a snapshot rebuilt on dispatch, running continuously even though the source is public. The token is a
+  fine-grained PAT with Contents write on `lemonlion/Kronikol`, or a GitHub App installed on both, held
+  as a secret in BreakfastProvider (§2: a source's own `GITHUB_TOKEN` cannot do this).
+- **BreakfastProvider's site,** `https://lemonlion.github.io/BreakfastProvider/`: its eighteen lanes,
+  built by a job after its history job in the same workflow, live against its own branch. This is the
+  single-repository recipe end to end, and the demo a visitor is sent to.
+
+Both need Pages enabled with the source set to GitHub Actions, a settings change only the owner can
+make (§9, question 1).
 
 **(d) Private sources.** Snapshot mode; the page says "snapshot from <time>" for them. Hosting the file
 privately is the team's choice of static host: Pages on Enterprise Cloud, Azure Static Web Apps with
@@ -465,9 +480,10 @@ Tests written first:
 ### M2 — many repositories, live refresh, the recipes
 
 Tool: `--sources`, `--live`, the manifest, the fetch loop with in-place replacement and the unreachable
-banner. Repo: `.github/workflows/dashboard.yml` publishing Kronikol's own Pages site with
-BreakfastProvider as a live source; the source-repository one-flag change on BreakfastProvider's history
-job; a reusable workflow template under `templates/` for a dashboard repository. Library: the
+banner. Repos: `.github/workflows/dashboard.yml` publishing Kronikol's own Pages site with
+BreakfastProvider as a live source and as a dispatcher; on BreakfastProvider the one-flag change on its
+history job, the dispatch step, and its own `dashboard.yml` publishing the demo site (§4.6c); a reusable
+workflow template under `templates/` for a dashboard repository. Library: the
 `HistoryDashboardUrl` option and `dashboard: <url>` on the pointer's `history:` line and in the CI
 summary, when set. Wiki: `Dashboard.md`, linked from Home and the sidebar; a README section.
 
@@ -484,9 +500,10 @@ Tests written first:
   replaced view within one interval without reload; a `304` leaves the DOM node identity unchanged; a
   `404` keeps the snapshot and shows the banner; a source without the CORS header keeps the snapshot and
   shows the banner; the request count over three intervals with an unchanged view is three `304`s.
-- Workflow verification, logged in §10: the Pages URL serving; BreakfastProvider fetched live from the
-  page; two BreakfastProvider lanes recording concurrently and the view regenerated on the rebase;
-  dispatch-to-deploy latency measured once.
+- Workflow verification, logged in §10: both Pages URLs serving; BreakfastProvider fetched live from
+  Kronikol's page; two BreakfastProvider lanes recording concurrently and the view regenerated on the
+  rebase; BreakfastProvider's dispatch rebuilding Kronikol's snapshot, with the latency from its push
+  to the redeployed page measured once.
 
 ### M3 — per-scenario dependencies (optional, needs a ledger change)
 
@@ -551,9 +568,10 @@ things this section keeps out stay out of it."
 
 1. **Enable Pages on `lemonlion/Kronikol`** (source: GitHub Actions) for the dogfood in M2, and give
    BreakfastProvider's history job the `--view` flag so it is the second, live, public source?
-2. **Where the reference multi-repository dashboard lives:** Kronikol's own Pages site with
-   BreakfastProvider as a source (recommended: one repository to keep green), or a separate
-   `lemonlion/kronikol-dashboard` repository that exercises the dispatch path end to end?
+2. ~~Where the reference multi-repository dashboard lives~~ **Decided 2026-09-14: both, as with every
+   other feature.** Kronikol's own Pages site for test purposes, with BreakfastProvider as its live second
+   source and as the sender of the dispatch that rebuilds its snapshot; BreakfastProvider's own Pages
+   site for demo and test purposes. No separate dashboard repository (§4.6c).
 3. **Default view window:** 200 runs per stream per suite?
 4. **Rendering:** hand-rolled SVG (recommended), or vendor uPlot from the start?
 5. **Names:** `history.view.json`, `kronikol history view`, `kronikol dashboard build`?
