@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.12.0] - 2026-09-14
+
+**Minor - a pull request reads against the branch it targets.** Two new `ReportConfigurationOptions`
+members, so this is a minor bump; nothing else changes and a run that sets neither is what 3.11.0 wrote.
+
+### Added
+- **`HistoryBranch`** - the branch stream to read the run against instead of its own. Verdicts are
+  computed within a stream, and a pull request's run forms its own, so it read as a cold start when
+  the question was what changed against the branch it targets. On GitHub Actions
+  `Environment.GetEnvironmentVariable("GITHUB_BASE_REF")` is that branch on a pull request and null on
+  a push, which makes it the natural value. The run's own line still records under its own branch, so
+  the target's history stays the target's.
+- **`HistoryCompareBranch`** - a second stream to read the same run against, reported beside the run's
+  own reading on the failures digest, the run-end pointer and the report's History section:
+  `on main: 1 broke (against 12 earlier runs on main)`. The same reading `kronikol query history
+  --compare-branch` has printed since 3.9.0, now from the run itself.
+
 ## [3.11.0] - 2026-09-14
 
 **Minor - the report shows what the last runs said, and this repository keeps a ledger of its own.**

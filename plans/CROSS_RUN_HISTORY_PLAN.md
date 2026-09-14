@@ -1936,6 +1936,13 @@ M5, M6, M7. Two finished beat six open.
   README + `.gitattributes` + `history.jsonl`) and recorded one line per suite — four rosters, four
   runs under `gh:34854297755:1`, nine lines in all — in 43 seconds, and `history show` wrote what the
   branch holds into the job summary. Proof 1 (the E2E remainder) and 10 run on CI.
+- **3.12.0 (2026-09-14).** `dotnet test tests/Kronikol.Tests` green (5,001: +2 in `HistoryOutputsTests`).
+  Closes the gap the dogfood surfaced: a pull request's runs form their own stream, so a run read as a
+  cold start when the question was what changed against the branch it targets. `HistoryBranch` reads
+  the run against another stream (`GITHUB_BASE_REF` on GitHub) and `HistoryCompareBranch` adds a second
+  reading beside the run's own on the digest, the pointer and the report's History section; the run's
+  own line still records under its own branch (`A_run_reads_against_the_stream_it_is_told_to`,
+  `A_compare_branch_is_read_out_beside_the_run_s_own_stream`). No-ledger output untouched.
 
 ---
 

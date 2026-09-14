@@ -1306,7 +1306,7 @@
             margin-left: 0.6em;
             color: rgb(90, 90, 90);
         }
-        .history-meta, .history-note {
+        .history-meta, .history-note, .history-compare {
             font-size: 0.85em;
             color: rgb(90, 90, 90);
             margin: 0.4em 0;

@@ -111,6 +111,8 @@ internal static class HistoryHtml
         sb.Append("</p>");
         if (history.ColdStart && history.ColdStartMessage is { } cold)
             sb.Append($"<p class=\"history-note\">{HtmlEncode(cold)}</p>");
+        if (history.Compare is { } compare)
+            sb.Append($"<p class=\"history-compare\">on <code>{HtmlEncode(compare.Stream)}</code>: {HtmlEncode(HistorySummary.Line(compare))}</p>");
 
         if (history.Runs.Count >= 2)
         {

@@ -116,7 +116,9 @@ public sealed class HistoryRunContext
                         FlakyRate = options.HistoryFlakyRate,
                         SlowerBy = options.HistorySlowerBy,
                         PartialThreshold = options.HistoryPartialThreshold,
-                        ReportReordered = options.HistoryReordered
+                        ReportReordered = options.HistoryReordered,
+                        Branch = string.IsNullOrWhiteSpace(options.HistoryBranch) ? null : options.HistoryBranch.Trim(),
+                        CompareBranch = string.IsNullOrWhiteSpace(options.HistoryCompareBranch) ? null : options.HistoryCompareBranch.Trim()
                     }, quarantine, aliases);
 
                     if (verdicts.Partial)
@@ -200,7 +202,7 @@ public sealed class HistoryRunContext
     public string Summary()
     {
         if (Verdicts is not null)
-            return "history: " + HistorySummary.Line(Verdicts);
+            return "history: " + HistorySummary.Line(Verdicts) + HistorySummary.CompareTail(Verdicts);
 
         return Location.Source switch
         {
@@ -241,6 +243,16 @@ public static class HistorySummary
             ? $" ({verdicts.ColdStartMessage})"
             : $" (against {verdicts.RunsRecorded} earlier run{(verdicts.RunsRecorded == 1 ? "" : "s")} on {verdicts.Stream})";
         return head + tail;
+    }
+
+    /// <summary>
+    /// The second reading, when the run was read against another stream too: <c> · on main: 1 broke
+    /// (against 12 earlier runs on main)</c>, or nothing.
+    /// </summary>
+    public static string CompareTail(HistoryVerdicts verdicts)
+    {
+        ArgumentNullException.ThrowIfNull(verdicts);
+        return verdicts.Compare is { } compare ? $" · on {compare.Stream}: {Line(compare)}" : "";
     }
 
     /// <summary>

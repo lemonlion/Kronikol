@@ -587,6 +587,23 @@ public record ReportConfigurationOptions
     public bool HistoryReordered { get; set; }
 
     /// <summary>
+    /// The branch stream to read the run against instead of its own. Default: <c>null</c>, the run's own
+    /// branch (<c>local</c> off CI). Verdicts are computed within a stream, so a pull request's run
+    /// would otherwise read against the pull request's own earlier runs — a cold start — when the
+    /// question is what changed against the branch it targets: on GitHub Actions,
+    /// <c>Environment.GetEnvironmentVariable("GITHUB_BASE_REF")</c> is that branch on a pull request
+    /// and null on a push. The run's own line still records under its own branch.
+    /// </summary>
+    public string? HistoryBranch { get; set; }
+
+    /// <summary>
+    /// A second branch stream to read the same run against, reported beside the run's own reading — on
+    /// the failures digest, the run-end pointer and the report's History section — as
+    /// <c>on main: 1 broke (against 12 earlier runs on main)</c>. Default: <c>null</c>, no second reading.
+    /// </summary>
+    public string? HistoryCompareBranch { get; set; }
+
+    /// <summary>
     /// Whether the run writes <c>History.run.json</c> into the reports directory: its own line of history,
     /// with the roster it needs. Default: <c>true</c>. It is what a sharded or CI build hands to
     /// <c>kronikol history record</c>, which folds the fragments of one run into one ledger line.

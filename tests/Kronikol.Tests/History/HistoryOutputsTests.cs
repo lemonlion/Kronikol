@@ -254,4 +254,59 @@ public class HistoryOutputsTests : IDisposable
         // The ledger still saw the run: embedding is about the file, not about recording.
         Assert.Contains("test:3:1", File.ReadAllText(Ledger));
     }
+
+    /// <summary>Three earlier runs of the same roster recorded on the <c>main</c> stream, so a local run has another stream to read against.</summary>
+    private void SeedMain(params string[] results)
+    {
+        var (roster, run) = HistoryRunBuilder.Build(Features(ExecutionResult.Passed), [], "HistorySuite", null,
+            new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero), new HistoryBuildOptions(), "gh:0:1");
+        for (var i = 0; i < results.Length; i++)
+        {
+            var line = run with
+            {
+                Id = $"gh:{i + 1}:1", Branch = "main", Commit = $"c{i + 1:D6}", At = run.At.AddHours(i),
+                Results = results[i], Attempts = new string('-', results[i].Length),
+                Durations = Enumerable.Repeat<int?>(100, results[i].Length).ToArray(),
+                Errors = results[i].Select(r => r == 'F' ? "e1" : null).ToArray(),
+                ErrorText = results[i].Contains('F') ? new Dictionary<string, string> { ["e1"] = "boom" } : new Dictionary<string, string>()
+            };
+            Assert.Equal(HistoryAppendOutcome.Appended, HistoryLedgerWriter.Append(Ledger, roster, line, "3.12.0").Outcome);
+        }
+    }
+
+    [Fact]
+    public void A_run_reads_against_the_stream_it_is_told_to()
+    {
+        // A pull request's run forms its own stream and would read as a cold start; told to read against
+        // main, a failure that passed on main is the regression it is.
+        SeedMain("PP", "PP", "PP");
+
+        Run("own", "test:9:1", Features(ExecutionResult.Failed), o => o.GenerateTestRunReport = true);
+        Run("main", "test:9:2", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.HistoryBranch = "main"; });
+
+        var own = File.ReadAllText(Path.Combine(Reports("own"), "Failures.md"));
+        Assert.DoesNotContain("**broke**", own);
+
+        var against = File.ReadAllText(Path.Combine(Reports("main"), "Failures.md"));
+        Assert.Contains("**broke**", against);
+        Assert.Contains("against 3 earlier runs on main", against);
+        Assert.Contains(@"data-history-verdicts=""broke""", File.ReadAllText(Path.Combine(Reports("main"), "TestRunReport.html")));
+        // The run's own line still records under its own stream, so main's history stays main's.
+        var ownLine = File.ReadAllLines(Ledger).Single(l => l.Contains(@"""id"":""test:9:2""", StringComparison.Ordinal));
+        Assert.DoesNotContain(@"""branch"":""main""", ownLine);
+    }
+
+    [Fact]
+    public void A_compare_branch_is_read_out_beside_the_run_s_own_stream()
+    {
+        SeedMain("PP", "PP", "PP");
+
+        Run("cmp", "test:9:3", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.HistoryCompareBranch = "main"; });
+
+        var digest = File.ReadAllText(Path.Combine(Reports("cmp"), "Failures.md"));
+        Assert.Contains("on main: 1 broke (against 3 earlier runs on main)", digest);
+        var html = File.ReadAllText(Path.Combine(Reports("cmp"), "TestRunReport.html"));
+        Assert.Contains(@"class=""history-compare""", html);
+        Assert.Contains("on <code>main</code>: 1 broke", html);
+    }
 }

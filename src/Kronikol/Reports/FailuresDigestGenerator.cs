@@ -507,7 +507,7 @@ public static class FailuresDigestGenerator
         // differently from the fifth day of the same red, and the entries below are ordered accordingly.
         if (history is not null)
         {
-            markdown.Append($"**History:** {Escape(HistorySummary.Line(history))}. Failures are worked through ");
+            markdown.Append($"**History:** {Escape(HistorySummary.Line(history) + HistorySummary.CompareTail(history))}. Failures are worked through ");
             markdown.Append("regressions first, then those with no history, then those already failing, then those that flip; ");
             markdown.Append("each carries its verdict and the runs behind it. `kronikol query history .` has the whole run.\n\n");
         }
