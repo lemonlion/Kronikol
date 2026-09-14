@@ -10,7 +10,7 @@ re-verified fresh on 2026-08-30.
 
 | Plan | Status | Shipped in |
 |---|---|---|
-| `BACKGROUND_ATTRIBUTION_PLAN.md` *(new, 2026-09-14)* | ❌ Plan written, nothing implemented, **NOT green-lit**. Dependency calls made outside a scenario's own flow (message consumers draining earlier scenarios' messages, hosted services) are attributed to whichever scenario is running: measured on BreakfastProvider, a toppings test holding fourteen orders-container calls with trace ids no scenario owns. Recommends attribution by correlation with a `background` bucket, staged behind a provenance mark. | — |
+| `BACKGROUND_ATTRIBUTION_PLAN.md` *(new, 2026-09-14; cause traced the same day)* | ❌ Plan written, nothing implemented, **NOT green-lit**. A web host started inside a test inherits the test's `AsyncLocal` identity, so everything its hosted services do — measured on BreakfastProvider: the outbox processor's polls, and its claims of other scenarios' pending messages — lands in that test; the static host's background work is dropped instead. Recommends a detached-start helper (`SuppressFlow`), identity expiry at scenario end, a `background` bucket, then message-carried correlation and a provenance mark. Two defects found while tracing (no timestamp on non-HTTP captures; a Cosmos query-plan request read as `Create`) are fixed as bugs regardless. | — |
 | `BACKGROUND_STEPS_INLINE_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.48 |
 | `LONG_LINE_SYNTAX_ERROR_PLAN.md` | 🟡 ~95% (Java mirror open) | 3.0.48 |
 | `REPORT_QUERY_PLAN.md` | 🟡 ~99% | 3.0.47, tail in 3.1.0 |

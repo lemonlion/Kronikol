@@ -1973,7 +1973,8 @@ M5, M6, M7. Two finished beat six open.
 - **3.15.0 (2026-09-14).** The consumer's docker lanes still flagged 1 to 20 scenarios a run after 3.14.0,
   and the diff of two runs showed why: the CAPTURED calls differ - one document Created 7 times in one
   run and 8 in the next (retries, or consumers' work), and a toppings test holding fourteen calls on the
-  orders container that message consumers made (`plans/BACKGROUND_ATTRIBUTION_PLAN.md`). The user's
+  orders container it did not make — traced after release to the outbox processor of a host the test
+  itself started, which inherits the test's identity (`plans/BACKGROUND_ATTRIBUTION_PLAN.md`). The user's
   call: sensitivity earned per scenario rather than a run-count ramp. The set fingerprint is now the
   set of distinct calls (rule 3); a count-only change is `behaviour-changed` once the count has been
   constant over `HistoryMinRuns` runs, read out otherwise. `dotnet test tests/Kronikol.Tests` green
