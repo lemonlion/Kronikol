@@ -52,18 +52,24 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         return html.Contains($"{scenarioLabel} status code");
     }
 
-    private async Task WaitForSvgChange(ILocator scenario, string previousSvgHtml, int timeoutMs = 90000)
+    /// <summary>
+    /// Click a control that re-renders a diagram, and return once that render has COMPLETED.
+    /// </summary>
+    /// <remarks>
+    /// Not "until the SVG differs from before". The render queue swaps an SVG in only when it is done, but
+    /// the post-render hooks of the PREVIOUS render (the zoom button, tooltips, the note-width correction
+    /// pass) mutate the old SVG on their own schedule, so under CI load a snapshot taken right after
+    /// <c>RenderAllDiagramsAndWait</c> could differ before the click's render had begun - and the
+    /// assertion read the old diagram (<c>Assertions_survive_details_state_change</c>, 2026-09-14). A
+    /// bare wait on <c>!window._plantumlRendering</c> has the mirror defect: the click QUEUES the render,
+    /// so the flag is still false for a moment afterwards. The queue's completion counter is the signal
+    /// every other toggle test in this suite waits on, and now the only one this class does.
+    /// </remarks>
+    private async Task ClickAndWaitForRender(ILocator control)
     {
-        var idx = await GetScenarioIndex(scenario);
-        await Page.WaitForFunctionAsync(
-            @"(args) => {
-                var sc = document.querySelectorAll('details.scenario')[args.idx];
-                if (!sc) return false;
-                var svg = sc.querySelector('[data-diagram-type=""plantuml""] svg');
-                return svg && svg.outerHTML !== args.prev;
-            }",
-            new { idx, prev = previousSvgHtml },
-            new() { Timeout = timeoutMs, PollingInterval = 200 });
+        var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await control.ClickAsync();
+        await WaitForRenderComplete(renderCount);
     }
 
     private async Task WaitForRenderComplete(int previousCount, int timeoutMs = 90000)
@@ -72,25 +78,6 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
             "(prev) => !window._plantumlRendering && (window._renderCompleteCount || 0) > prev",
             previousCount,
             new() { Timeout = timeoutMs, PollingInterval = 200 });
-    }
-
-    private async Task<string> GetScenarioSvgHtml(ILocator scenario)
-    {
-        return await scenario.Locator("[data-diagram-type='plantuml'] svg").First
-            .EvaluateAsync<string>("el => el.outerHTML");
-    }
-
-    private async Task<int> GetScenarioIndex(ILocator scenario)
-    {
-        var all = Page.Locator("details.scenario");
-        var count = await all.CountAsync();
-        var targetSummary = await scenario.Locator("summary").First.InnerTextAsync();
-        for (int i = 0; i < count; i++)
-        {
-            var t = await all.Nth(i).Locator("summary").First.InnerTextAsync();
-            if (t == targetSummary) return i;
-        }
-        return 0;
     }
 
     // === BUG FIX: Scenario-level Show should NOT affect other scenarios ===
@@ -108,9 +95,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         Assert.False(await SvgContainsAssertionText(scenario2, "Scenario2"));
 
         // Click Show for scenario 1 only
-        var s1SvgBefore = await GetScenarioSvgHtml(scenario1);
-        await AssertionShowBtn(scenario1).ClickAsync();
-        await WaitForSvgChange(scenario1, s1SvgBefore);
+        await ClickAndWaitForRender(AssertionShowBtn(scenario1));
 
         // Scenario 1 should now show assertion text
         Assert.True(await SvgContainsAssertionText(scenario1, "Scenario1"));
@@ -138,9 +123,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
             null, new() { Timeout = 30000, PollingInterval = 200 });
 
         // Now hide assertions for scenario 1 only
-        var s1SvgBefore = await GetScenarioSvgHtml(scenario1);
-        await AssertionHideBtn(scenario1).ClickAsync();
-        await WaitForSvgChange(scenario1, s1SvgBefore);
+        await ClickAndWaitForRender(AssertionHideBtn(scenario1));
 
         // Scenario 1 should NOT show assertion text
         Assert.False(await SvgContainsAssertionText(scenario1, "Scenario1"));
@@ -209,15 +192,11 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         var scenario1 = ScenarioLocator(0);
 
         // Show assertions for scenario 1
-        var svgBefore = await GetScenarioSvgHtml(scenario1);
-        await AssertionShowBtn(scenario1).ClickAsync();
-        await WaitForSvgChange(scenario1, svgBefore);
+        await ClickAndWaitForRender(AssertionShowBtn(scenario1));
         Assert.True(await SvgContainsAssertionText(scenario1, "Scenario1"));
 
-        // Now change details to Expand — wait for render queue to process
-        await scenario1.Locator(".details-radio-btn[data-state='expanded']").ClickAsync();
-        await Page.WaitForFunctionAsync("() => !window._plantumlRendering",
-            null, new() { Timeout = 15000, PollingInterval = 200 });
+        // Now change details to Expand and wait for THAT render to complete.
+        await ClickAndWaitForRender(scenario1.Locator(".details-radio-btn[data-state='expanded']"));
 
         // Assertions should still be visible
         Assert.True(await SvgContainsAssertionText(scenario1, "Scenario1"));
@@ -231,14 +210,10 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         var scenario1 = ScenarioLocator(0);
 
         // Show assertions
-        var svgBefore = await GetScenarioSvgHtml(scenario1);
-        await AssertionShowBtn(scenario1).ClickAsync();
-        await WaitForSvgChange(scenario1, svgBefore);
+        await ClickAndWaitForRender(AssertionShowBtn(scenario1));
 
         // Change to collapsed
-        svgBefore = await GetScenarioSvgHtml(scenario1);
-        await scenario1.Locator(".details-radio-btn[data-state='collapsed']").ClickAsync();
-        await WaitForSvgChange(scenario1, svgBefore);
+        await ClickAndWaitForRender(scenario1.Locator(".details-radio-btn[data-state='collapsed']"));
 
         // Assertions should still be present
         Assert.True(await SvgContainsAssertionText(scenario1, "Scenario1"));
@@ -254,14 +229,10 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         var scenario1 = ScenarioLocator(0);
 
         // Show assertions
-        var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
-        await AssertionShowBtn(scenario1).ClickAsync();
-        await WaitForRenderComplete(renderCount);
+        await ClickAndWaitForRender(AssertionShowBtn(scenario1));
 
         // Hide headers — headers toggle triggers a full PlantUML re-render
-        renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
-        await scenario1.Locator(".toggle-btn[data-toggle='headers'][data-shown='true']").ClickAsync();
-        await WaitForRenderComplete(renderCount);
+        await ClickAndWaitForRender(scenario1.Locator(".toggle-btn[data-toggle='headers'][data-shown='true']"));
 
         // Assertions should still be present
         Assert.True(await SvgContainsAssertionText(scenario1, "Scenario1"));
@@ -274,10 +245,9 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
 
         var scenario1 = ScenarioLocator(0);
 
-        // Assertions start hidden (default). Toggle headers hide — wait for render queue
-        await scenario1.Locator(".toggle-btn[data-toggle='headers'][data-shown='true']").ClickAsync();
-        await Page.WaitForFunctionAsync("() => !window._plantumlRendering",
-            null, new() { Timeout = 15000, PollingInterval = 200 });
+        // Assertions start hidden (default). Toggle headers hide and wait for that render to complete -
+        // Assert.False on the OLD SVG would pass without having looked at the re-rendered one.
+        await ClickAndWaitForRender(scenario1.Locator(".toggle-btn[data-toggle='headers'][data-shown='true']"));
 
         // Assertions should still be hidden
         Assert.False(await SvgContainsAssertionText(scenario1, "Scenario1"));
@@ -339,9 +309,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
             null, new() { Timeout = 30000, PollingInterval = 200 });
 
         // Now hide for scenario 1 only
-        var s1SvgBefore = await GetScenarioSvgHtml(scenario1);
-        await AssertionHideBtn(scenario1).ClickAsync();
-        await WaitForSvgChange(scenario1, s1SvgBefore);
+        await ClickAndWaitForRender(AssertionHideBtn(scenario1));
 
         // Scenario 1 hidden, scenario 2 still shown
         Assert.False(await SvgContainsAssertionText(scenario1, "Scenario1"));
@@ -357,9 +325,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         var scenario2 = ScenarioLocator(1);
 
         // Assertions are already hidden by default; show for scenario 1 only
-        var s1SvgBefore = await GetScenarioSvgHtml(scenario1);
-        await AssertionShowBtn(scenario1).ClickAsync();
-        await WaitForSvgChange(scenario1, s1SvgBefore);
+        await ClickAndWaitForRender(AssertionShowBtn(scenario1));
 
         // Scenario 1 shown, scenario 2 still hidden
         Assert.True(await SvgContainsAssertionText(scenario1, "Scenario1"));

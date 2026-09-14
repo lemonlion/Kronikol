@@ -168,7 +168,9 @@ public class ReportContractShapeTests
     [Fact]
     public void An_http_status_is_a_number_with_its_name_beside_it()
     {
-        RequestResponseLogger.Clear();
+        // No RequestResponseLogger.Clear() here: the generator reads only the trackedLogs it is given, and
+        // the process-global queue is read by seventeen other test classes running in parallel - clearing
+        // it between their StartStep and their read emptied StepBarPlantUmlTests on CI (2026-09-14).
         var logs = new[]
         {
             new RequestResponseLog("Cancel order", "s2", HttpMethod.Post, null,
@@ -196,7 +198,6 @@ public class ReportContractShapeTests
     [Fact]
     public void A_non_numeric_status_carries_text_and_no_number()
     {
-        RequestResponseLogger.Clear();
         var logs = new[]
         {
             new RequestResponseLog("Cancel order", "s2", "PUBLISH", null,

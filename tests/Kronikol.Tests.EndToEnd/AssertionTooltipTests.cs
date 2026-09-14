@@ -20,21 +20,15 @@ public class AssertionTooltipTests : DiagramNotePlaywrightBase
         var showBtn = Page.Locator("details.scenario").First
             .Locator(".toggle-btn[data-toggle='assertions'][data-shown='false']");
 
-        var svgBefore = await Page.Locator("details.scenario").First
-            .Locator("[data-diagram-type='plantuml'] svg").First
-            .EvaluateAsync<string>("el => el.outerHTML");
-
+        // Wait for the render to COMPLETE, not for the SVG to differ: the previous render's post-render
+        // hooks mutate the old SVG on their own schedule, so "differs" can be true before the click's
+        // render has begun (the same race that flaked AssertionToggleTests on CI, 2026-09-14).
+        var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
         await showBtn.ClickAsync();
-
         await Page.WaitForFunctionAsync(
-            @"(prev) => {
-                var sc = document.querySelector('details.scenario');
-                if (!sc) return false;
-                var svg = sc.querySelector('[data-diagram-type=""plantuml""] svg');
-                return svg && svg.outerHTML !== prev;
-            }",
-            svgBefore,
-            new() { Timeout = 15000, PollingInterval = 200 });
+            "(prev) => !window._plantumlRendering && (window._renderCompleteCount || 0) > prev",
+            renderCount,
+            new() { Timeout = 30000, PollingInterval = 200 });
     }
 
     [Fact]
