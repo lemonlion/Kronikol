@@ -182,8 +182,18 @@ matters.
   - `! a scenario listing has no per-step form` (`scenarios`) and `! the failure digest is per scenario`
     (`failures`) — you gave a step address to a verb that answers per scenario. It scoped to the
     scenario, which is the nearest true answer, and the line names the verb that answers for the step.
-  - `! this report has no stableIds` (`diff`) — written before 3.0.47, so the two runs are **matched by
-    position**. A scenario added or removed anywhere shifts everything after it and the diff is noise.
+  - `! this report has no stableIds` (`diff`) — both runs were written before 3.0.47, so they are
+    **matched by position**. A scenario added or removed anywhere shifts everything after it and the
+    diff is noise. When only ONE side lacks ids, or both have ids and none agree while the scenario
+    names do (the ids were computed under different suites — a renamed `SuiteName`, a merge across
+    suites, a Kronikol4J run beside a .NET one), `diff` refuses with exit 2 and names the side or the
+    suites, rather than reporting every scenario as both new and gone.
+  - `! old: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared`
+    and `! new: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared`
+    (`diff`) — that side cannot hold traffic at all, so its emptiness is not a run that lost every call.
+    The Tracking section is skipped and the closing line says `no change in results or timings`,
+    claiming nothing about calls. A run that CAN carry traffic and captured none where the other side
+    captured calls is reported as the total loss it is (`total N → 0 calls — nothing tracked`).
   - `! N scenarios share a stableId` (`diff`) — a `[Theory]` with repeated data, the same `Examples:` row
     in two blocks, or a retry. Those scenarios are **matched in order**, not by identity, so a change in
     how many times a row runs re-pairs every one of them and the rows either side may be misattributed.

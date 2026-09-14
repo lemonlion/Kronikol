@@ -324,35 +324,52 @@ internal static partial class QueryCommand
     }
 
     /// <summary>
-    /// Services that captured fewer calls than they did in the older run, worst first, plus the total
-    /// when it fell. This is the "gold standard" check a suite runs after changing tracking
+    /// Services that captured fewer calls in the new run than in the old, over the scenarios both runs
+    /// hold, worst first; the total when it fell; and a service one scenario stopped seeing entirely even
+    /// where the total held. This is the "gold standard" check a suite runs after changing tracking
     /// configuration: interactions can decrease silently, because nothing fails when a client stops
     /// being tracked - the tests still pass and the diagrams are just thinner.
     /// </summary>
     /// <remarks>
-    /// Requests only, so a response the capture missed does not read as a lost call. A report carrying
-    /// no interactions at all is skipped rather than reported as a total loss: that is what every
-    /// mergeable file written before 3.1.0 looks like, and what any run with tracking off looks like.
+    /// <para>Over MATCHED scenarios, not whole files. Whole-file totals were compared, so one added test
+    /// hid a total capture loss - its calls made up the difference - and one removed test invented one,
+    /// its calls read as "no longer tracked". What the unmatched scenarios carried is stated, never
+    /// compared.</para>
+    ///
+    /// <para>Requests only, so a response the capture missed does not read as a lost call. A new run that
+    /// captured NOTHING where the old run captured calls is the total loss, and reads as one: tracking
+    /// switched off is exactly the regression this section exists for, and it used to be skipped as
+    /// "absent is not lost" - after which the diff printed "no change in tracked calls". The one absence
+    /// that is not a loss is a file that cannot carry traffic at all, a mergeable file written before
+    /// 3.1.0, and the caller tells that apart by its version rather than by its count.</para>
     /// </remarks>
-    private static List<string> TrackingLosses(ReportIndex left, ReportIndex right)
+    private static List<string> TrackingLosses(
+        IReadOnlyList<(ScenarioEntry Then, ScenarioEntry Now)> matched,
+        IReadOnlyList<ScenarioEntry> gone,
+        IReadOnlyList<ScenarioEntry> fresh)
     {
         var rows = new List<string>();
-        if (!left.Scenarios.Any(sc => sc.Interactions.Count > 0) || !right.Scenarios.Any(sc => sc.Interactions.Count > 0))
+        if (matched.Count == 0)
             return rows;
 
-        static Dictionary<string, int> Requests(ReportIndex index) =>
-            index.Scenarios.SelectMany(sc => sc.Interactions)
+        static Dictionary<string, int> Requests(IEnumerable<ScenarioEntry> scenarios) =>
+            scenarios.SelectMany(sc => sc.Interactions)
                 .Where(i => string.Equals(i.Type, "Request", StringComparison.OrdinalIgnoreCase))
                 .GroupBy(i => i.ServiceName, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
 
-        var before = Requests(left);
-        var after = Requests(right);
+        var before = Requests(matched.Select(m => m.Then));
+        var after = Requests(matched.Select(m => m.Now));
 
         var totalBefore = before.Values.Sum();
         var totalAfter = after.Values.Sum();
+        if (totalBefore == 0)
+            return rows;
+
         if (totalAfter < totalBefore)
-            rows.Add($"total  {totalBefore} → {totalAfter} calls  ({totalAfter - totalBefore})");
+            rows.Add(totalAfter == 0
+                ? $"total  {totalBefore} → 0 calls  — nothing tracked"
+                : $"total  {totalBefore} → {totalAfter} calls  ({totalAfter - totalBefore})");
 
         foreach (var (service, then) in before.OrderByDescending(e => e.Value - (after.TryGetValue(e.Key, out var n) ? n : 0)))
         {
@@ -364,7 +381,82 @@ internal static partial class QueryCommand
                 : $"{QueryWriter.OneLine(service, 40)}  {then} → {now} calls  ({now - then})");
         }
 
+        // A service one scenario stopped seeing entirely while the totals held, because another scenario
+        // gained the same calls. Correlation breaking in one test looks exactly like this; so does a
+        // refactor that moved the calls, and the reader can tell which - the diff cannot.
+        foreach (var (then, now) in matched)
+        {
+            var nowServices = Requests([now]);
+            foreach (var (service, count) in Requests([then]))
+            {
+                if (nowServices.ContainsKey(service))
+                    continue;
+                var elsewhere = after.TryGetValue(service, out var still) ? still : 0;
+                if (elsewhere < before[service])
+                    continue;
+                rows.Add($"{QueryWriter.OneLine(service, 40)}  {count} → 0 calls in {now.Address} {QueryWriter.OneLine(now.Name, 40)}  — still {elsewhere} elsewhere");
+            }
+        }
+
+        if (rows.Count > 0)
+        {
+            var parts = new List<string>();
+            var goneCalls = Requests(gone).Values.Sum();
+            if (goneCalls > 0)
+                parts.Add($"{goneCalls} calls in {gone.Count} scenario(s) only in the old run");
+            var freshCalls = Requests(fresh).Values.Sum();
+            if (freshCalls > 0)
+                parts.Add($"{freshCalls} calls in {fresh.Count} new scenario(s)");
+            if (parts.Count > 0)
+                rows.Add("not compared: " + string.Join(", ", parts));
+        }
+
         return rows;
+    }
+
+    /// <summary>
+    /// The two shapes of run pair that cannot be matched on stableId, refused with the reason - rather
+    /// than reported as "every scenario is new and every scenario is gone" at exit 0, which is what a
+    /// diff across them printed, under a note saying the scenarios had been matched by position.
+    /// </summary>
+    /// <remarks>
+    /// A side with no scenarios at all takes part in neither check: it has nothing to match, and an empty
+    /// old run against a full new one is a true answer, not a mismatch.
+    /// </remarks>
+    private static int? RefuseUnmatchable(ReportIndex left, ReportIndex right,
+        Dictionary<string, List<ScenarioEntry>> before, Dictionary<string, List<ScenarioEntry>> after, TextWriter error)
+    {
+        if (left.Scenarios.Count == 0 || right.Scenarios.Count == 0)
+            return null;
+
+        var leftHasIds = left.Scenarios.Any(s => s.StableId.Length > 0);
+        var rightHasIds = right.Scenarios.Any(s => s.StableId.Length > 0);
+        if (leftHasIds != rightHasIds)
+        {
+            var (lacking, side) = leftHasIds ? (right, "new") : (left, "old");
+            error.WriteLine($"Cannot match scenarios: the {side} report ({Path.GetFileName(lacking.Path)}) has no stableIds — written before 3.0.47, or by hand — and the other has.");
+            error.WriteLine("Matched by position, every scenario would read as new and gone. Re-run the older side with a current Kronikol, or compare two reports of the same vintage.");
+            return 2;
+        }
+
+        // Both sides have ids and none agrees, while the scenario NAMES do: the ids were computed under
+        // different suites. Since 3.1.0 the suite is folded into the hash, so a run whose SuiteName
+        // changed, a merge across suites, or a Kronikol4J run (which scopes its ids to no suite) beside a
+        // .NET run of the same tests share nothing but names. Two unrelated suites share no names and are
+        // compared as they always were - everything gone, everything new - which for them is the truth.
+        if (leftHasIds && !before.Keys.Intersect(after.Keys, StringComparer.Ordinal).Any())
+        {
+            var names = left.Scenarios.Select(s => s.Name).Intersect(right.Scenarios.Select(s => s.Name), StringComparer.Ordinal).Count();
+            if (names > 0)
+            {
+                error.WriteLine($"Cannot match scenarios: no stableId is shared by the two reports, yet {names} scenario name(s) are. "
+                    + $"The ids were computed under different suites — old: {left.Suite ?? "(none recorded)"}, new: {right.Suite ?? "(none recorded)"}.");
+                error.WriteLine("Matched by stableId, every scenario would read as new and gone. Give both runs the same SuiteName, or compare two reports of one suite.");
+                return 2;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -477,6 +569,18 @@ internal static partial class QueryCommand
         if (options.BodyAddress is { } bodyAddress)
             return CrossRunBodyDiff(left, right, bodyAddress, options, writer, error);
 
+        // stableId is the cross-run key: it survives a re-run, and since example values went into the hash
+        // it tells one row of a scenario outline from another, which is where per-row matching matters.
+        // It is not unique, though: a [Theory] with repeated data, the same row in two Examples: blocks or a
+        // retried scenario give several scenarios one id, so each id holds a list and the lists are matched
+        // in order — a duplicate key must never take the whole diff down.
+        var before = GroupByStableId(left);
+        var after = GroupByStableId(right);
+
+        // Before a line is written: a pair that cannot be matched is refused whole, not half-answered.
+        if (RefuseUnmatchable(left, right, before, after, error) is { } refusal)
+            return refusal;
+
         // The provenance header every other verb gets, which `diff` alone used to skip because a note
         // with two reports in scope does not say which one it is about. The side is the whole point: a
         // defaulted verdict on the NEW run turns a scenario that died mid-run into `Fixed`, and the same
@@ -491,14 +595,6 @@ internal static partial class QueryCommand
         writer.Line($"- {leftLabel}  {left.StartTime}  {left.Scenarios.Count} scenarios, {left.Scenarios.Count(s => s.Failed)} failed");
         writer.Line($"+ {rightLabel}  {right.StartTime}  {right.Scenarios.Count} scenarios, {right.Scenarios.Count(s => s.Failed)} failed");
         writer.Line();
-
-        // stableId is the cross-run key: it survives a re-run, and since example values went into the hash
-        // it tells one row of a scenario outline from another, which is where per-row matching matters.
-        // It is not unique, though: a [Theory] with repeated data, the same row in two Examples: blocks or a
-        // retried scenario give several scenarios one id, so each id holds a list and the lists are matched
-        // in order — a duplicate key must never take the whole diff down.
-        var before = GroupByStableId(left);
-        var after = GroupByStableId(right);
 
         // A report older than 3.0.47 carries no stableId at all, so every scenario lands in the
         // empty-string group. That is not a collision - it is a file with no cross-run identity, and
@@ -515,11 +611,14 @@ internal static partial class QueryCommand
             writer.Note($"! {repeated} scenarios share a stableId (repeated rows or retries) — matched in order");
 
         // Records, not pre-rendered strings. The text below renders them back byte for byte; a
-        // string is the one thing `items` cannot make structure out of, and these five sections are
+        // string is the one thing `items` cannot make structure out of, and these six sections are
         // the whole content of a run diff.
         var broke = new List<RunChange>();
         var fixedUp = new List<RunChange>();
+        var fresh = new List<RunChange>();
         var slower = new List<RunChange>();
+        var matched = new List<(ScenarioEntry Then, ScenarioEntry Now)>();
+        var freshScenarios = new List<ScenarioEntry>();
 
         foreach (var (id, nowGroup) in after)
         {
@@ -529,12 +628,16 @@ internal static partial class QueryCommand
                 var now = nowGroup[position];
                 if (thenGroup is null || position >= thenGroup.Count)
                 {
-                    broke.Add(new RunChange("new", now.Address, now.StableId, now.Name, now.Result, null, null, null,
-                        $"  new   {now.Address} {QueryWriter.OneLine(now.Name, 70)} [{now.Result}]"));
+                    // Its own section. These rendered under "Broken", so a new scenario that PASSED was
+                    // listed as broken - the JSON always said `new`, and the text now agrees with it.
+                    fresh.Add(new RunChange("new", now.Address, now.StableId, now.Name, now.Result, null, null, null,
+                        $"  {now.Address} {QueryWriter.OneLine(now.Name, 70)} [{now.Result}]"));
+                    freshScenarios.Add(now);
                     continue;
                 }
 
                 var then = thenGroup[position];
+                matched.Add((then, now));
                 if (then.Failed && !now.Failed)
                     fixedUp.Add(new RunChange("fixed", now.Address, now.StableId, now.Name, now.Result, null, null, null,
                         $"  fixed {now.Address} {QueryWriter.OneLine(now.Name, 70)}"));
@@ -565,19 +668,29 @@ internal static partial class QueryCommand
 
         Section("Broken", broke);
         Section("Fixed", fixedUp);
+        Section("New", fresh);
         Section("Slower", slower);
         if (goneRows.Count > 0)
         {
             writer.Line($"Gone ({goneRows.Count}):");
             foreach (var row in goneRows.Take(10))
                 writer.Line(row.Text);
+            writer.Line();
         }
 
         // Tracking fidelity is the failure this diff exists to catch that no test failure will: an
         // upgrade or a config change stops a client being tracked, every test still passes, and the
         // diagrams quietly lose a service. Reported only when calls were LOST - a run that captured
-        // more than last time needs no warning.
-        var trackingRows = TrackingLosses(left, right);
+        // more than last time needs no warning - and only over the scenarios both runs hold. A side
+        // that cannot carry traffic at all is said, and left out of the comparison rather than read as
+        // a run that lost all of it.
+        var leftCarries = ReportScanner.CarriesInteractions(left);
+        var rightCarries = ReportScanner.CarriesInteractions(right);
+        if (!leftCarries)
+            writer.Note("! old: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared");
+        if (!rightCarries)
+            writer.Note("! new: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared");
+        var trackingRows = leftCarries && rightCarries ? TrackingLosses(matched, gone, freshScenarios) : [];
         if (trackingRows.Count > 0)
         {
             writer.Line($"Tracking ({trackingRows.Count}):");
@@ -588,15 +701,17 @@ internal static partial class QueryCommand
             writer.Line();
         }
 
-        if (broke.Count == 0 && fixedUp.Count == 0 && slower.Count == 0 && goneRows.Count == 0 && trackingRows.Count == 0)
-            writer.Note("no change in results, timings or tracked calls");
+        if (broke.Count == 0 && fixedUp.Count == 0 && fresh.Count == 0 && slower.Count == 0 && goneRows.Count == 0 && trackingRows.Count == 0)
+            writer.Note(leftCarries && rightCarries
+                ? "no change in results, timings or tracked calls"
+                : "no change in results or timings");
 
         // One flat `items`, each row saying which kind of change it is - the text renders the same
         // rows under five headings, but a heading is a layout, not a field. Uncapped here on purpose:
         // the Take(15)/Take(10) above keep the terminal readable, and a script asked for everything.
         writer.Data("left", new { report = left.Path, startTime = left.StartTime, scenarios = left.Scenarios.Count, failed = left.Scenarios.Count(s => s.Failed) });
         writer.Data("right", new { report = right.Path, startTime = right.StartTime, scenarios = right.Scenarios.Count, failed = right.Scenarios.Count(s => s.Failed) });
-        foreach (var change in broke.Concat(fixedUp).Concat(slower).Concat(goneRows))
+        foreach (var change in broke.Concat(fixedUp).Concat(fresh).Concat(slower).Concat(goneRows))
             writer.Item(new
             {
                 kind = change.Kind,

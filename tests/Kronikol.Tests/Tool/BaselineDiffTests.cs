@@ -208,15 +208,22 @@ public class BaselineDiffTests : IDisposable
     }
 
     [Fact]
-    public void A_report_with_no_interactions_is_not_reported_as_a_total_loss()
+    public void A_run_that_captured_nothing_where_the_baseline_captured_calls_is_a_total_loss()
     {
-        // Tracking off, or a mergeable file written before 3.1.0: absent is not the same as lost.
+        // Tracking switched off is exactly the regression this section exists for. This used to be
+        // skipped as "absent is not the same as lost", after which the diff printed "no change in
+        // results, timings or tracked calls" - the affirmative false. The one absence that is not a loss
+        // is a file that cannot carry traffic at all, a mergeable file written before 3.1.0, and that is
+        // told apart by its version, not by its count (RunDiffTests).
         WriteReport(Path.Combine(_directory, "baseline"), "TestRunReport.json", "Passed", services: ["OrdersApi"]);
         var current = WriteReport(_directory, "TestRunReport.json", "Passed");
 
         var output = Run(current, "--baseline").Output;
 
-        Assert.DoesNotContain("Tracking", output);
+        Assert.Contains("Tracking", output);
+        Assert.Contains("1 \u2192 0 calls", output);
+        Assert.Contains("nothing tracked", output);
+        Assert.DoesNotContain("no change in results, timings or tracked calls", output);
     }
 
     // ─── Fixtures ──────────────────────────────────────────────

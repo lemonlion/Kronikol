@@ -374,14 +374,21 @@ $.total: 4173 → 3902
 - Non-JSON bodies fall back to a line diff (`line 12:  - … / + …`).
 - Two scenario addresses are refused with a pointer at `compare`.
 
-**Run diff** (two files) reports what broke, was fixed, got slower, disappeared — matched on `stableId`,
-so one row of a scenario outline is distinguished from another. `--body s3/i47` resolves the address in
-the *old* report, matches the scenario into the new run by `stableId` (ordinals shift between runs), and
-diffs that one call's bodies across the two files.
+**Run diff** (two files) reports what broke, was fixed, is new, got slower, disappeared — matched on
+`stableId`, so one row of a scenario outline is distinguished from another. `--body s3/i47` resolves the
+address in the *old* report, matches the scenario into the new run by `stableId` (ordinals shift between
+runs), and diffs that one call's bodies across the two files. A pair that cannot be matched — only one
+side has `stableId`s, or none agree while the scenario names do — is refused with exit 2 naming the side
+or the two suites, never "matched by position" into a page of new-and-gone.
 
-It also reports **Tracking** losses: services that captured fewer calls than in the older run, and any
-that fell to zero. Nothing fails when a client stops being tracked — the tests still pass and the
-diagrams are just thinner — so this is the only place that regression shows up.
+It also reports **Tracking** losses, over the scenarios both runs hold: services that captured fewer
+calls than in the older run, any that fell to zero, a service one scenario stopped seeing entirely while
+the total held, and — as a total loss — a new run that captured nothing at all. Calls in scenarios only
+one run has are stated (`not compared: …`), never counted into the comparison, so an added or removed
+test neither hides a loss nor invents one. Nothing fails when a client stops being tracked — the tests
+still pass and the diagrams are just thinner — so this is the only place that regression shows up. The
+one absence that is not a loss is a side that cannot carry traffic at all (a mergeable file written
+before 3.1.0); that side is noted and the section skipped.
 
 **`--baseline`** names only the current report and resolves the other side itself:
 `<reports>/baseline/TestRunReport.json` beside it, else `$KRONIKOL_BASELINE` (a report, or a directory

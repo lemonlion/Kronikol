@@ -37,15 +37,33 @@ internal static class ReportScanner
     /// A version that is absent, or that does not parse, is not evidence either way - and the per-key
     /// markers still answer for those files, exactly as they did before.
     /// </summary>
-    internal static bool WritesStepAttribution(string? kronikolVersion)
+    internal static bool WritesStepAttribution(string? kronikolVersion) =>
+        AtLeast(kronikolVersion, StepAttributionSince);
+
+    /// <summary>
+    /// The first Kronikol whose mergeable file carried the traffic. A shard written before it has no
+    /// <c>httpInteractions</c> by construction, and its emptiness is not a run that captured nothing.
+    /// </summary>
+    private static readonly Version MergeableTrafficSince = new(3, 1, 0);
+
+    /// <summary>
+    /// Whether the report can carry interactions at all. A standard report always could; the mergeable
+    /// format could not before 3.1.0, and a file that cannot carry traffic must not be read as a run that
+    /// lost all of it. A mergeable file whose version is absent or unreadable is not evidence either way,
+    /// and is treated as one that may carry none.
+    /// </summary>
+    internal static bool CarriesInteractions(ReportIndex index) =>
+        index.MergeableFormatVersion is null || AtLeast(index.KronikolVersion, MergeableTrafficSince);
+
+    private static bool AtLeast(string? kronikolVersion, Version floor)
     {
         if (string.IsNullOrWhiteSpace(kronikolVersion))
             return false;
 
         // 3.4.1-beta.2+build7 is 3.4.1 for this question: a prerelease of a version that writes
-        // attribution writes it too.
+        // something writes it too.
         var core = kronikolVersion.Split('-', '+')[0].Trim();
-        return Version.TryParse(core, out var version) && version >= StepAttributionSince;
+        return Version.TryParse(core, out var version) && version >= floor;
     }
 
     private const int InitialWindow = 128 * 1024;
