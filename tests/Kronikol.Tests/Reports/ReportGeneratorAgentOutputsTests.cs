@@ -318,7 +318,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
             Console.SetOut(original);
         }
 
-        Assert.DoesNotContain("Kronikol: reports written to", captured.ToString());
+        Assert.DoesNotContain("Kronikol: reports written to", ConsoleLines.About(captured.ToString(), _dir));
     }
 
     [Fact]
@@ -356,8 +356,9 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         var greenJsonl = File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"));
         Assert.Equal(0, FailuresJsonl.Header(greenJsonl).GetProperty("failures").GetInt32());
         Assert.Empty(FailuresJsonl.Failures(greenJsonl));
-        var pointer = captured.ToString().Split('\n').Where(l => l.StartsWith("Kronikol: reports written to", StringComparison.Ordinal)).ToArray();
+        var own = ConsoleLines.About(captured.ToString(), _dir);
+        var pointer = own.Split('\n').Where(l => l.StartsWith("Kronikol: reports written to", StringComparison.Ordinal)).ToArray();
         Assert.Single(pointer);
-        Assert.DoesNotContain("failed —", captured.ToString());
+        Assert.DoesNotContain("failed —", own);
     }
 }

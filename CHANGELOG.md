@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.15.1] - 2026-09-14
+
+**Patch - captures say when, and a query plan is not a create.** Two capture defects and one test
+flake, found while tracing why a consumer's scenarios held calls they did not make; nothing new to call.
+Template pins move to 3.15.0.
+
+### Fixed
+
+- **Every capture carries a timestamp.** Only the HTTP handler and `RequestResponseLogger.LogPair`
+  stamped `Timestamp`; every capturer that builds its own log - Cosmos DB, Kafka, the EF Core SQL
+  interceptor, MongoDB, Spanner, ClickHouse, BigQuery - enqueued it with none, so on a consumer's
+  docker-lane report 549 of 835 dependency requests had no `timestamp` and could not be placed in time.
+  `RequestResponseLogger.Log` now stamps the time when the capturer did not. Report output changes:
+  those interactions gain `timestamp` in the JSON, YAML and XML data files, and a `durationMs` where a
+  request and its response were logged separately.
+- **A Cosmos DB query-plan request is not a `Create`.** Before running a query the SDK fetches its plan
+  with a POST to the documents resource marked `x-ms-cosmos-is-query-plan-request`; the classifier read
+  it as a document create, so every `Query` in a report was preceded by a `Create` that never happened,
+  and a scenario that only polled a container was shown creating four documents. The plan fetch is now
+  `Other`: skipped in `Summarised`, shown as `Other` in `Detailed`. Cross-run history reads the phantom
+  `Create` leaving a scenario's set of calls as `behaviour-changed` once, on the first run after
+  upgrading; the evidence names it.
+- **A stale-output test read another test's console.** `Console.SetOut` is process-wide, so a report
+  written by a test in another collection printed its pointer into the captured output and the
+  assertion read the wrong run (one CI failure on 3.15.0). Every console assertion is now scoped to
+  the run's own directory.
+
 ## [3.15.0] - 2026-09-14
 
 **Minor - the behaviour verdict earns its sensitivity.** A design change to a verdict rule on a feature

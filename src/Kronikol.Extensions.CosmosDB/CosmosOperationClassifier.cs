@@ -35,9 +35,14 @@ public static partial class CosmosOperationClassifier
 
         var isQuery = HasHeader(request, "x-ms-documentdb-isquery", "True");
         var isUpsert = HasHeader(request, "x-ms-documentdb-is-upsert", "true");
+        // Before running a query the SDK fetches its plan: a POST to the documents resource that carries
+        // the query text and this header, not the query header. Without the rule it read as a document
+        // create, so every query in a report was preceded by a Create that never happened.
+        var isQueryPlan = HasHeader(request, "x-ms-cosmos-is-query-plan-request", "True");
 
         var operation = (method, resourceType, hasResourceId, isQuery, isUpsert) switch
         {
+            _ when isQueryPlan => CosmosOperation.Other,
             ("POST", "docs", false, false, false) => CosmosOperation.Create,
             ("POST", "docs", false, false, true) => CosmosOperation.Upsert,
             ("POST", "docs", false, true, _) => CosmosOperation.Query,

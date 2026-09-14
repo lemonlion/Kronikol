@@ -51,6 +51,28 @@ public class CosmosOperationClassifierTests
     }
 
     [Fact]
+    public void Classify_PostToDocs_WithQueryPlanHeader_IsNotACreate()
+    {
+        // Before running a query the SDK fetches its plan with a POST to the documents resource that
+        // carries the query text but not the query header. Measured on a consumer's report, every Query
+        // was preceded by a "Create" that never happened, and a scenario that only queried was shown
+        // creating documents.
+        var request = new HttpRequestMessage(HttpMethod.Post,
+            "https://account.documents.azure.com/dbs/mydb/colls/mycoll/docs")
+        {
+            Content = new StringContent("""{"query": "SELECT VALUE root FROM root WHERE (root[\"status\"] = \"Pending\")", "parameters": []}""")
+        };
+        request.Headers.Add("x-ms-cosmos-is-query-plan-request", "True");
+        request.Headers.Add("x-ms-cosmos-supported-query-features", "NonValueAggregate, Aggregate, Distinct, MultipleOrderBy, OffsetAndLimit, OrderBy, Top, CompositeAggregate, GroupBy, MultipleAggregates");
+
+        var result = CosmosOperationClassifier.Classify(request);
+
+        Assert.NotEqual(CosmosOperation.Create, result.Operation);
+        Assert.Equal(CosmosOperation.Other, result.Operation);
+        Assert.Equal("mycoll", result.CollectionName);
+    }
+
+    [Fact]
     public void Classify_GetDocById_ReturnsRead()
     {
         var request = new HttpRequestMessage(HttpMethod.Get,

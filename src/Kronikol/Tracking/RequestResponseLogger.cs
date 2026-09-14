@@ -40,6 +40,11 @@ public static class RequestResponseLogger
         if (MaxContentLength is { } max && log.Content is { Length: var len } && len > max)
             log = log with { Content = $"{log.Content[..max]}\n\n…truncated ({len} chars total)" };
 
+        // Only the HTTP handler and LogPair stamp the time; every capturer that builds its own log left it
+        // null, and two thirds of a docker-lane report's dependency calls could not be placed in time.
+        if (log.Timestamp is null)
+            log = log with { Timestamp = DateTimeOffset.UtcNow };
+
         RequestsAndResponses.Enqueue(log);
     }
 

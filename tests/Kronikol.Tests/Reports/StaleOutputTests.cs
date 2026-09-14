@@ -78,7 +78,9 @@ public class StaleOutputTests : IDisposable
             Console.SetOut(original);
         }
 
-        return captured.ToString();
+        // Only this run's lines: the capture is process-wide, and a report written by a test in another
+        // collection prints its own pointer into it (see ConsoleLines).
+        return ConsoleLines.About(captured.ToString(), _dir);
     }
 
     private static string Pointer(string console) =>

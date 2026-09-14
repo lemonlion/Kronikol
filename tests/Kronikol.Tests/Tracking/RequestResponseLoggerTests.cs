@@ -471,6 +471,35 @@ public class RequestResponseLoggerTests
         Assert.All(logs, l => Assert.Equal("Scoped Test", l.TestName));
     }
 
+    // ─── Timestamps ──────────────────────────────────────────────
+
+    [Fact]
+    public void Log_stamps_the_time_when_the_capturer_did_not()
+    {
+        // Only the HTTP handler and LogPair set Timestamp. Every capturer that builds its own log —
+        // Cosmos, Kafka, the SQL interceptor, MongoDB, Spanner, ClickHouse, BigQuery — enqueued it with
+        // none, and on a consumer's docker-lane report 549 of 835 dependency requests could not be placed
+        // in time. The logger stamps what the capturer did not.
+        var before = DateTimeOffset.UtcNow;
+
+        RequestResponseLogger.Log(MakeLog("no time"));
+
+        var log = Assert.Single(GetLogsFromThisTest());
+        Assert.NotNull(log.Timestamp);
+        Assert.InRange(log.Timestamp!.Value, before, DateTimeOffset.UtcNow);
+    }
+
+    [Fact]
+    public void Log_keeps_the_time_the_capturer_set()
+    {
+        var stamped = new DateTimeOffset(2026, 9, 14, 21, 3, 18, TimeSpan.Zero);
+
+        RequestResponseLogger.Log(MakeLog("stamped") with { Timestamp = stamped });
+
+        var log = Assert.Single(GetLogsFromThisTest());
+        Assert.Equal(stamped, log.Timestamp);
+    }
+
     private RequestResponseLog MakeLog(string? content) => new(
         "My Test", _testId, "Op", content, new Uri("mock://svc/op"),
         [], "Svc", "Caller", RequestResponseType.Request,

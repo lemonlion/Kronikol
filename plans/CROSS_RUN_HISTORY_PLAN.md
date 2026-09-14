@@ -1979,6 +1979,11 @@ M5, M6, M7. Two finished beat six open.
   set of distinct calls (rule 3); a count-only change is `behaviour-changed` once the count has been
   constant over `HistoryMinRuns` runs, read out otherwise. `dotnet test tests/Kronikol.Tests` green
   (+4: `InteractionShapeTests`, `HistoryAnalyzerTests`).
+- **3.15.1 (2026-09-14).** Tracing the attribution cause (`plans/BACKGROUND_ATTRIBUTION_PLAN.md`) found
+  two capture defects: no timestamp on any non-HTTP capture, and the Cosmos query-plan fetch read as
+  `Create`. Fixed as a patch. The second changes the set of calls of every scenario that queries
+  Cosmos DB, which history reads as `behaviour-changed` once on the first run after upgrading, the
+  evidence naming the phantom `Create`.
 
 ---
 

@@ -135,29 +135,43 @@ are nobody's flow. Their calls are **background**: reported, in no scenario, in 
 | D | **Identity expires when the scenario ends.** The framework adapters observe completion; a call resolved at level 2 or 4 to a finished scenario is background. | Every run-long leak: `SharedFactoryCache` hosts attributing the whole run's outbox work to one health-check test, per-test hosts between test end and dispose, fire-and-forget tasks. | Calls a leaked context makes **while the test still runs** — the test-started host's first poll runs during the test. | A finished-scenario registry in core, one check in the resolver, one call per adapter at completion. |
 | E | **Detached host start.** Start hosts and other long-lived infrastructure with execution-context flow suppressed, so their loops have no identity: `using (TestIdentityScope.SuppressFlow()) { _ = factory.Services; }`. Kronikol supplies the helper and the guidance; the consumer makes the call. | The measured case at its root, first poll included; the thirteen classes' diagrams. | Nothing for consumers that *should* be attributed (needs A). | A tiny API; a BreakfastProvider change in `CreateAppAndClient`, the shared-factory cache, and the other five fixtures. |
 | F | **`background` bucket.** Identity-less calls are recorded under a reserved id instead of dropped, listed in a report section by service and operation, excluded from fingerprints and scenario diagrams by default. | The main host's outbox and consumer work becomes visible; diagnostics can count leaks. | — | A report section; history excludes the bucket; an option to keep today's drop. |
+| G | **Hosted services detach themselves.** Wherever Kronikol is registered in the SUT's container (`AddTestTrackingContextPropagation()` today; one registration for all of it), a decorator starts every `IHostedService` under a detached marker — a Kronikol `AsyncLocal` the resolver checks before the framework fetcher — so a host's loops carry no scenario however the host was started. | The measured case at its root, first poll included, with nothing for the consumer to call per host. | Infrastructure Kronikol cannot see: a consumer's own `Task.Run` loop, a Change Feed Processor, a timer. | A decorator over `IHostedService`, one marker, one resolver check. |
 
-**Recommendation (revised):** E, D and F in Kronikol, A for consumers, B for diagnostics — in that
-order, each a minor release, §7 first as a patch:
+**Principle (the user's, 2026-09-14):** people end up using Kronikol in various ways. A test-started
+host is an ordinary pattern — a `WebApplicationFactory` per test class is in every ASP.NET Core testing
+guide — so a rule that depends on the consumer calling something per host is the last resort, not the
+first. Every mechanism below is automatic or degrades to today's behaviour; E is the escape hatch for
+what Kronikol cannot see.
+
+**Recommendation (revised):** §7 as a patch, then D, then measure, then G with E, then F, A, B — each a
+minor release:
 
 1. **§7 now, patch.** Timestamps on every capture; query-plan requests no longer read as `Create`.
-2. **E.** `TestIdentityScope.SuppressFlow()` plus a documented pattern for test-started hosts, and
-   BreakfastProvider starts its per-test and shared-override hosts detached. Acceptance: no `Query` or
-   `Replace` on `orders` in the thirteen classes' read-only scenarios; two consecutive docker-lane runs
-   read `nothing changed`.
-3. **D.** A finished-scenario registry; a level-2 or level-4 identity naming a finished scenario is
+2. **D.** A finished-scenario registry; a level-2 or level-4 identity naming a finished scenario is
    background, with a per-scenario diagnostic ("N calls arrived after this scenario ended"). An explicit
    scope (level 3, `Begin` or a per-message scope) is the caller saying whose work it is and is honoured
-   after the end, but marked.
-4. **F.** The bucket and its section; the `unknown` diagnostics fold into it.
-5. **A.** `SetFromMessage` becomes a scope restored after the handler in all five wrappers (a fix);
+   after the end, but marked. Automatic: nothing to wire.
+3. **Measure.** With §7.1 in the consumer's report, compare every Cosmos call's timestamp with the
+   scenario's own request timestamps. A scenario lasts tens of milliseconds and the outbox polls seconds
+   apart, so most of the four polls must land after the scenario ended — D covers those — and the first
+   may not. How many land inside decides how much G and E still carry.
+4. **G**, automatic for every consumer that registers Kronikol in the SUT's container, and **E**
+   (`TestIdentityScope.SuppressFlow()`) for infrastructure it cannot see, documented as the pattern for
+   test-started hosts. Acceptance: no `Query` or `Replace` on `orders` in the thirteen classes' read-only
+   scenarios; two consecutive docker-lane runs read `nothing changed`.
+5. **F.** The bucket and its section; the `unknown` diagnostics fold into it.
+6. **A.** `SetFromMessage` becomes a scope restored after the handler in all five wrappers (a fix);
    Pub/Sub attributes stamped on publish; BreakfastProvider's raw consumers go through the wrappers or
    copy their three lines, and register `AddTestTrackingContextPropagation()`.
-6. **B.** `AttributionSource` on the log, in `MapLogJson`, counted in the diagnostics report.
+7. **B.** `AttributionSource` on the log, in `MapLogJson`, counted in the diagnostics report.
 
 ## 5. Tests that would decide it
 
+- **G.** An `IHostedService` started by a host built inside a test makes calls that resolve to no
+  scenario, with nothing called but the registration (integration: an Example.Api hosted service started
+  inside a test).
 - **E.** A host started inside `SuppressFlow` makes calls that resolve to no identity (unit: resolver
-  under a suppressed context; integration: an Example.Api hosted service started inside a test).
+  under a suppressed context).
 - **D.** A call resolved to a finished test's id is background and counted; a call inside an explicit
   scope naming a finished test is still attributed and marked; nothing changes for a running test.
 - **F.** Background calls appear in the report section, in no scenario, and never in
@@ -189,5 +203,7 @@ order, each a minor release, §7 first as a patch:
 2. **A Cosmos query-plan request reads as `Create`.** The SDK fetches a query plan with a `POST` to the
    container's documents resource before running a query; the classifier reads that `POST` as a document
    create, so every `Query` in the report is preceded by a `Create` that never happened, and a scenario
-   that only queried is shown creating documents. Fix: classify the plan request from its headers as
-   internal (`Other`, skipped in `Summarised`), and as its own operation in `Detailed`/`Raw`.
+   that only queried is shown creating documents. Fix (3.15.1): the plan request is classified from its
+   header as internal (`Other`): skipped in `Summarised`, shown as `Other` in `Detailed`, the raw
+   `POST` in `Raw`. Cross-run history reads the phantom `Create` leaving a scenario's set of calls as
+   `behaviour-changed` once, on the first run after upgrading; the evidence names it.

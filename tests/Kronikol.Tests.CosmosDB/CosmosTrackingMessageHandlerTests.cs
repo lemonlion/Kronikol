@@ -86,6 +86,21 @@ public class CosmosTrackingMessageHandlerTests : IDisposable
             "https://account.documents.azure.com/dbs/mydb/colls/orders/pkranges");
     }
 
+    /// <summary>
+    /// The plan fetch the SDK makes before running a query: a POST to the documents resource carrying the
+    /// query text, marked by its own header and not by the query header.
+    /// </summary>
+    private static HttpRequestMessage MakeQueryPlanRequest()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post,
+            "https://account.documents.azure.com/dbs/mydb/colls/orders/docs")
+        {
+            Content = new StringContent("""{"query":"SELECT * FROM c WHERE c.status = 'active'","parameters":[]}""")
+        };
+        request.Headers.Add("x-ms-cosmos-is-query-plan-request", "True");
+        return request;
+    }
+
     public void Dispose()
     {
         _innerHandler.Dispose();
@@ -247,6 +262,37 @@ public class CosmosTrackingMessageHandlerTests : IDisposable
 
         var logs = GetLogsFromThisTest();
         Assert.Empty(logs);
+    }
+
+    [Fact]
+    public async Task Summarised_SkipsTheQueryPlanFetchThatPrecedesAQuery()
+    {
+        // Measured on a consumer's report: every Query was preceded by a "Create" that never happened,
+        // and a scenario that only polled a container was shown creating four documents.
+        using var invoker = CreateInvoker(MakeOptions(CosmosTrackingVerbosity.Summarised));
+        _innerHandler.ResponseToReturn = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"partitionedQueryExecutionInfoVersion":2,"queryInfo":{"rewrittenQuery":""}}""")
+        };
+
+        await invoker.SendAsync(MakeQueryPlanRequest(), CancellationToken.None);
+        await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);
+
+        var logs = GetLogsFromThisTest();
+        Assert.NotEmpty(logs);
+        Assert.All(logs, l => Assert.Equal("Query", l.Method.Value?.ToString()));
+    }
+
+    [Fact]
+    public async Task Detailed_ShowsTheQueryPlanFetchAsOther_NeverAsCreate()
+    {
+        using var invoker = CreateInvoker(MakeOptions(CosmosTrackingVerbosity.Detailed));
+
+        await invoker.SendAsync(MakeQueryPlanRequest(), CancellationToken.None);
+
+        var logs = GetLogsFromThisTest();
+        Assert.NotEmpty(logs);
+        Assert.All(logs, l => Assert.Equal("Other", l.Method.Value?.ToString()));
     }
 
     // ─── Raw verbosity ────────────────────────────────────────
