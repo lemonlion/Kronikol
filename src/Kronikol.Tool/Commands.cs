@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace Kronikol.Tool;
 
 /// <summary>
@@ -43,6 +45,17 @@ internal static class Commands
     /// <summary>The full names, for anything that needs to enumerate them.</summary>
     public static IEnumerable<(string Name, string Blurb)> All => Table.Select(e => (e.Name, e.Blurb));
 
+    /// <summary>
+    /// The tool's version, as <c>kronikol --version</c> prints it and <c>query --describe</c> records it:
+    /// the informational version without its build metadata. One line off the attribute the build already
+    /// stamps; it did not exist, so a wrapper that wanted to know what it had installed had to parse a
+    /// NuGet listing.
+    /// </summary>
+    public static string Version =>
+        (typeof(Commands).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+         ?? typeof(Commands).Assembly.GetName().Version?.ToString(3)
+         ?? "unknown").Split('+')[0];
+
     public static int Dispatch(IReadOnlyList<string> args, TextWriter @out, TextWriter error)
     {
         if (args.Count == 0)
@@ -53,8 +66,15 @@ internal static class Commands
             foreach (var entry in Table)
                 error.WriteLine($"  {entry.Name,-12} {entry.Blurb}");
             error.WriteLine();
-            error.WriteLine("Run 'kronikol <command> --help' for details.");
+            error.WriteLine("Run 'kronikol <command> --help' for details, 'kronikol --version' for the version,");
+            error.WriteLine("and 'kronikol query --describe' for the query verbs, flags and addresses as JSON.");
             return 2;
+        }
+
+        if (args[0] is "--version" or "-v" or "version")
+        {
+            @out.WriteLine(Version);
+            return 0;
         }
 
         if (args[0] is "-h" or "--help" or "help")

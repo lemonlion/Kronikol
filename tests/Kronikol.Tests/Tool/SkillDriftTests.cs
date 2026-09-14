@@ -45,14 +45,13 @@ public class SkillDriftTests
     }
 
     /// <summary>
-    /// The verbs, read out of the rendered help rather than out of the source. <c>QueryCommand.Run</c>
-    /// dispatches on a switch <i>expression</i>, which no reflection can enumerate, and a private array
-    /// shared by the switch and the help text would let the help drift from what the array promises.
-    /// Parsing the rendered text is the only reading that catches both.
-    ///
-    /// <para>The count is asserted so that a verb whose help line stops matching the shape - the longest
-    /// name, <c>interactions</c>, already leaves only a single space before <c>&lt;report&gt;</c> - fails
-    /// here rather than silently shrinking every check below it into a weaker one.</para>
+    /// The verbs, read out of the rendered help and held equal to <see cref="VerbTable"/>. Since 3.7.0 the
+    /// table is the one source - the help is rendered from it, the dispatch refuses anything outside it,
+    /// and <c>--describe</c> prints it - so the reading here exists for one reason: a verb whose usage
+    /// line stops matching the shape (the longest name, <c>interactions</c>, leaves a single space before
+    /// <c>&lt;report&gt;</c>) fails here rather than silently shrinking every check below into a weaker
+    /// one. Equality with the table replaces the literal count the previous version asserted, which was
+    /// a promise the next verb broke.
     /// </summary>
     internal static IReadOnlyList<string> UsageVerbs()
     {
@@ -61,7 +60,7 @@ public class SkillDriftTests
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Equal(18, verbs.Count);
+        Assert.Equal(VerbTable.Names, verbs);
         return verbs;
     }
 

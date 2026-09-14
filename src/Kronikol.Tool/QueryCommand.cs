@@ -37,6 +37,14 @@ internal static partial class QueryCommand
             return 0;
         }
 
+        // Needs no report and is answered before one is looked for: it is the document a wrapper reads to
+        // learn what it may ask, so it has to work in an empty directory.
+        if (args.Any(a => a is "--describe"))
+        {
+            @out.Write(Describe());
+            return 0;
+        }
+
         // Under --json every failure has to reach stdout as an envelope too, and the failures are raised
         // by forty-odd call sites that each write a sentence to `error` and return a code. Rather than
         // rewrite all of them, the error writer is teed: stderr still gets the prose, and whatever was
@@ -67,6 +75,13 @@ internal static partial class QueryCommand
         _lastKronikolVersion = null;
 
         var command = args[0];
+
+        // The table is what exists; the switch below is only how a verb is reached. A name absent from
+        // the table is refused here, before a report is opened, so a switch arm without a row is
+        // unreachable and --describe cannot promise a verb the tool will not dispatch.
+        if (VerbTable.Find(command) is null)
+            return Unknown(command, error);
+
         var options = QueryOptions.Parse(args.Skip(1).ToList(), error);
         if (options is null)
             return 2;
@@ -169,21 +184,16 @@ internal static partial class QueryCommand
     /// it would either be an array of rendered strings or a second data model to keep in step with this
     /// one. Internal so SkillDriftTests can hold the docs to the same list.
     /// </summary>
-    internal static readonly string[] JsonCommands =
-        ["summary", "scenarios", "failures", "services", "interactions", "assertions", "diff"];
+    internal static readonly string[] JsonCommands = VerbTable.JsonVerbs;
 
-    /// <summary>Every verb <see cref="RunCore"/> dispatches, in the order the help prints them.</summary>
-    internal static readonly string[] Verbs =
-    [
-        "summary", "scenarios", "services", "failures", "steps", "assertions", "flow", "annotations",
-        "values", "interactions", "http", "body", "note", "diagram", "grep", "trace", "compare", "diff"
-    ];
+    /// <summary>Every verb <see cref="RunCore"/> dispatches, in the order the help prints them - read from <see cref="VerbTable"/>, which <c>--describe</c> prints.</summary>
+    internal static readonly string[] Verbs = VerbTable.Names;
 
     /// <summary>
     /// Flags that mean the same thing on every verb because no verb implements them: the byte budget and
     /// the escape to a file are applied by <see cref="QueryWriter"/> around whatever the verb produced.
     /// </summary>
-    internal static readonly string[] UniversalFlags = ["--max-bytes", "--out"];
+    internal static readonly string[] UniversalFlags = VerbTable.UniversalFlags;
 
     /// <summary>
     /// What each verb actually reads, beside <see cref="UniversalFlags"/>. Not documentation — the list is
@@ -195,27 +205,7 @@ internal static partial class QueryCommand
     /// and they are not interchangeable: <c>--grep</c> matches a scenario name on <c>scenarios</c> and a
     /// URI on <c>interactions</c>, and neither verb has any use for the other's set.</para>
     /// </summary>
-    internal static readonly Dictionary<string, string[]> FlagsByVerb = new(StringComparer.Ordinal)
-    {
-        ["summary"] = ["--count", "--json"],
-        ["scenarios"] = ["--result", "--failed", "--feature", "--label", "--grep", "--slower-than", "--count", "--offset", "--limit", "--json"],
-        ["services"] = ["--sort", "--count", "--offset", "--limit", "--json"],
-        ["failures"] = ["--count", "--offset", "--limit", "--json"],
-        ["steps"] = [],
-        ["assertions"] = ["--failed", "--count", "--offset", "--limit", "--json"],
-        ["flow"] = ["--step", "--service", "--errors-only", "--count"],
-        ["annotations"] = ["--count"],
-        ["values"] = ["--path", "--service", "--status", "--method", "--step", "--grep", "--where", "--request", "--both", "--stats", "--count", "--offset", "--limit"],
-        ["interactions"] = ["--service", "--status", "--method", "--step", "--grep", "--where", "--group", "--group-by", "--sort", "--count", "--offset", "--limit", "--json"],
-        ["http"] = ["--headers", "--body", "--keys", "--path", "--lines"],
-        ["body"] = ["--keys", "--path", "--lines", "--offset", "--limit"],
-        ["note"] = [],
-        ["diagram"] = [],
-        ["grep"] = ["--in", "--values", "--number", "--tolerance", "--count", "--offset", "--limit"],
-        ["trace"] = ["--count"],
-        ["compare"] = ["--count"],
-        ["diff"] = ["--baseline", "--body", "--count", "--offset", "--limit", "--json"]
-    };
+    internal static readonly Dictionary<string, string[]> FlagsByVerb = VerbTable.FlagsByVerb();
 
     /// <summary>
     /// Refuses a flag the verb does not read, and says which verbs do. <c>--sort</c> and <c>--json</c> are
@@ -434,48 +424,25 @@ internal static partial class QueryCommand
         writer.WriteLine("kronikol query <command> <report> [args]   Debug a test run without reading the report.");
         writer.WriteLine();
         writer.WriteLine("  <report> is a TestRunReport.json, or a directory holding one.");
-        writer.WriteLine();
-        writer.WriteLine("Overview");
-        writer.WriteLine("  summary      <report>                        run header, per-feature results, slowest scenarios, diagnostics");
-        writer.WriteLine("  scenarios    <report> [--result Failed] [--feature X] [--label L] [--grep T] [--slower-than 5]");
-        writer.WriteLine("  services     <report> [s3] [--sort duration]  per service: calls, status mix, errors, bytes, timings");
-        writer.WriteLine();
-        writer.WriteLine("Narrative");
-        writer.WriteLine("  failures     <report>                        why each failing test failed, in context");
-        writer.WriteLine("  steps        <report> s3                     the step and assertion tree, with interaction ranges");
-        writer.WriteLine("  assertions   <report> [s3] [--failed]        flat assertion list with results and source locations");
-        writer.WriteLine("  flow         <report> s3 [--step 2] [--service X] [--errors-only]");
-        writer.WriteLine("  annotations  <report> s3                     example-row markers and injected diagram fragments");
-        writer.WriteLine();
-        writer.WriteLine("Aggregation (reads bodies freely, prints values one-lined, never whole payloads)");
-        writer.WriteLine("  values       <report> [s3] --path '$.status' [--service X] [--status 5xx] [--method M] [--step 2]");
-        writer.WriteLine("               [--grep URI] [--where E] [--stats] [--request|--both]   distinct values × counts, with addresses");
-        writer.WriteLine();
-        writer.WriteLine("Payloads (never printed unless asked for)");
-        writer.WriteLine("  interactions <report> [s3] [--service X] [--status 5xx] [--method GET] [--grep T] [--group]");
-        writer.WriteLine("               [--where \"$.success = false\"]   repeatable; AND; req: prefix targets the request body");
-        writer.WriteLine("               [--group-by service,status]      buckets with calls/errors/median/max/bodies; dims:");
-        writer.WriteLine("                                                service method status path step phase category kind capturedBy");
-        writer.WriteLine("  http         <report> s3/i47 [--headers] [--body] [--keys] [--path $.a.b] [--lines 20-60] [--out F]");
-        writer.WriteLine("  body         <report> b:4bdea521 [--keys] [--path $.a.b] [--lines 20-60] [--out F]");
-        writer.WriteLine("               --path grammar: $.a.b[2] · [*] every element · ['a.b'] dotted key · .length() count — quote the path");
-        writer.WriteLine("  note         <report> s3/d0 [/n12] [--out F]  what the HTML rendered, when it differs from the capture");
-        writer.WriteLine("  diagram      <report> s3/d0 --out F          the raw PlantUML; never printed to stdout");
-        writer.WriteLine();
-        writer.WriteLine("Search and comparison");
-        writer.WriteLine("  grep         <report> \"4173\" [--in bodies,uris,steps,assertions,names,errors,headers,notes] [--values]");
-        writer.WriteLine("               [--number [--tolerance 0.5|1%]]   numeric match across formatting — 4,173.00 ≈ 4173 ≈ 4.173,00");
-        writer.WriteLine("  trace        <report> <id | prefix≥8hex | s3/i47>   follow a W3C trace id across the run, chronologically");
-        writer.WriteLine("  compare      <report> s3 s7                  two scenarios in one run");
-        writer.WriteLine("  diff         <report> s3/i47 s7/i47          two bodies in one report — only the differing paths (also b:hashes)");
-        writer.WriteLine("  diff         <old.json> <new.json> [--body s3/i47]   two runs matched on stableId; --body diffs one call across them");
-        writer.WriteLine("  diff         <report> --baseline               the same, against last-green: <reports>/baseline/TestRunReport.json,");
-        writer.WriteLine("                                                 else $KRONIKOL_BASELINE (a report, or a directory holding one)");
+
+        // Rendered from the table --describe prints, so the help cannot list a verb the table lacks or
+        // omit one it has. The lines themselves are the table's, verbatim.
+        foreach (var (group, caption) in VerbTable.Groups)
+        {
+            writer.WriteLine();
+            writer.WriteLine(caption is null ? group : $"{group} ({caption})");
+            foreach (var verb in VerbTable.Verbs.Where(v => string.Equals(v.Group, group, StringComparison.Ordinal)))
+                foreach (var line in verb.Usage)
+                    writer.WriteLine(line);
+        }
+
         writer.WriteLine();
         writer.WriteLine("Everywhere");
         writer.WriteLine("  --max-bytes N   output budget, default 6000 (0 removes it)");
         writer.WriteLine("  --out FILE      write the answer to a file instead");
         writer.WriteLine("                  (--out lifts the byte budget: a file is not a context window)");
+        writer.WriteLine("  --describe      the verbs, their flags, the address forms and the exit codes as one JSON");
+        writer.WriteLine("                  document, for tooling; needs no report");
         writer.WriteLine();
         writer.WriteLine("On the verbs that list rows");
         writer.WriteLine("  --offset N      resume a truncated listing         --limit N   cap rows");

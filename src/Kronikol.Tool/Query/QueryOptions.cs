@@ -99,8 +99,15 @@ internal sealed class QueryOptions
         "--label", "--service", "--status", "--method", "--grep", "--step", "--sort", "--path", "--in",
         "--where", "--group-by", "--tolerance", "--count", "--json", "--failed", "--errors-only",
         "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
-        "--number", "--baseline"
+        "--number", "--baseline", "--describe"
     ];
+
+    /// <summary>
+    /// <c>--describe</c>. Answered by <c>QueryCommand.Run</c> before any report is resolved, so this is
+    /// never read there; the case exists so the flag is a flag the parser knows, which is what the
+    /// reference documents and the drift guard checks.
+    /// </summary>
+    public bool Describe { get; set; }
 
     /// <summary>Null when a flag was malformed; the message has already been written to <paramref name="error"/>.</summary>
     public static QueryOptions? Parse(IReadOnlyList<string> args, TextWriter error)
@@ -193,6 +200,7 @@ internal sealed class QueryOptions
 
                 case "--count": options.Count = true; break;
                 case "--json": options.Json = true; break;
+                case "--describe": options.Describe = true; break;
                 case "--failed": options.Failed = true; break;
                 case "--errors-only": options.ErrorsOnly = true; break;
                 case "--headers": options.Headers = true; break;

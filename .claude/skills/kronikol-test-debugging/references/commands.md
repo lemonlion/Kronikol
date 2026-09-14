@@ -56,6 +56,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps` |
 | `--out FILE` | write the answer to a file instead of the terminal; prints one line. Lifts the byte budget — a file is not a context window. `http`, `body`, `note` and `diagram` write the payload; every other verb writes what it would have printed |
 | `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `services`, `interactions`, `assertions`, `diff`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
+| `--describe` | one JSON document naming every verb, the flags each one reads (with what each takes), the address forms with a parsing example of each, the exit codes and the envelope's members: `kronikol query --describe`. Needs no report. Generated from the table the tool dispatches and validates from, so it cannot name a verb the tool will not run. For tooling — a wrapper validating arguments, an MCP server building a tool list — not for reading; this document is the prose form of the same table (3.7.0) |
 
 ### The `--json` envelope
 
@@ -75,8 +76,9 @@ belongs to both and means different things — a scenario name on `scenarios`, a
   (`run`, `failed`, `slowest`, `diagnostics`; `left`, `right`, `tracking`).
 - Row caps still apply (25 for `failures`, 120 for `interactions` rows, 200 elsewhere), so `total` can
   exceed what one page returns whatever `--limit` says.
-- Errors are unchanged: plain text on stderr, exit 2 for usage and 1 for a read failure. Nothing is
-  written to stdout on a non-zero exit, in either format.
+- Errors: plain text on stderr, exit 2 for usage and 1 for a read failure. Under `--json` stdout also
+  carries an envelope with an `error` member — `{ exitCode, message, hint }` beside empty `items` — so a
+  wrapper parses JSON on both paths; in text mode nothing is written to stdout on a non-zero exit.
 
 ## Overview
 

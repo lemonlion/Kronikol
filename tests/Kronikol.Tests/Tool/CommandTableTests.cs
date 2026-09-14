@@ -42,6 +42,17 @@ public class CommandTableTests
             Assert.Contains(name, output, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Version_prints_the_tools_version_and_nothing_else()
+    {
+        var (output, error, exit) = Run("--version");
+
+        Assert.Equal(0, exit);
+        Assert.Equal("", error);
+        Assert.Matches(@"^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?\r?\n$", output);
+        Assert.Equal(Commands.Version + Environment.NewLine, output);
+    }
+
     public static TheoryData<string> EveryCommand()
     {
         var data = new TheoryData<string>();

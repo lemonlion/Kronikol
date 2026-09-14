@@ -79,7 +79,7 @@ person, hand them the `#sid-` link: it opens that scenario with its diagram, not
 | what changed since the last run? | `kronikol query diff old.json new.json` — matched on `stableId` |
 | why is it slow? | `kronikol query services . --sort duration` then `kronikol query flow . s3` |
 
-Full list: `kronikol query --help`.
+Full list: `kronikol query --help`; as one JSON document for tooling, `kronikol query --describe` (no report needed).
 
 ### Budget
 
