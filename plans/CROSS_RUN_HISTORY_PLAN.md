@@ -1954,6 +1954,15 @@ M5, M6, M7. Two finished beat six open.
   process *is* on main, so the run under test sat on the stream it was reading across to; the tests
   seed `trunk` now, and the suite's own-stream tests pin `HistoryBranch = ""` so a pull request build
   of this repository reads them as a push does.
+- **Proof 10 on a consumer (2026-09-14).** BreakfastProvider (lemonlion/BreakfastProvider, 3.0.83 →
+  3.13.0) runs the recipe on all 18 CI lanes: one suite per lane (`KRONIKOL_SUITE`), the ledger fetched
+  from an orphan `kronikol-history` branch before the tests, `history gate --min-runs 3` and the CTRF
+  reporter into the job summary, a `history` job folding the `*-report` artifacts, a nightly schedule.
+  Run 34881911876 created the branch (16 suites: the three TUnit lanes, which run through a separate
+  reusable workflow, recorded as one suite until that workflow got the same steps); run 34886898742
+  read it (18 suites, 55 lines) and published reports with sparklines and verdicts against the earlier
+  run. Two things learned: `gh run cancel` leaves an `if: always()` history job recording whatever lanes
+  finished, and a first run on an empty stream reads as `stable`, not `new`, by the analyzer's rule.
 
 ---
 
