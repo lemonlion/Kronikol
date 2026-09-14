@@ -4,6 +4,53 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.8.0] - 2026-09-14
+
+**Minor - an agent that never heard of Kronikol finds it.** New surface: a Claude Code plugin manifest
+and marketplace (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`) that install the
+test-debugging skill with one command, and the tool package's own tags. The rest is words: the old
+identity named where search reads, the discovery terms in the package descriptions, and the no-install
+`dnx Kronikol.Tool` route documented with what it costs. A new integration is a minor bump; nothing a
+consumer calls changed.
+
+This is milestone M8 of `plans/LLM_FIRST_PLAN.md`, rows H1-H5, in-repo only, and it completes the plan.
+Nothing was published outward: the marketplace submission, the old packages' deprecation on NuGet and
+the reserved-prefix application are people-work and are listed as such in the plan (section 14.3).
+
+Template pins move to **3.7.0**, the last release that shipped.
+
+### Added
+- **A Claude Code plugin.** `.claude-plugin/plugin.json` names the `kronikol` plugin and points its
+  `skills` at `templates/skills`, the canonical copy of `kronikol-test-debugging`;
+  `.claude-plugin/marketplace.json` lists it from this repository, so
+  `/plugin marketplace add lemonlion/Kronikol` and then `/plugin install kronikol@kronikol` installs the
+  skill without `kronikol init-agents`. The manifest's description and keywords carry the words an agent
+  that has never heard of Kronikol types - `dotnet`, `test`, `report`, `failures`, `xunit`, `nunit` -
+  because a plugin manifest has no category or tag field and the registries search names and
+  descriptions by substring. `PluginManifestTests` is the offline stand-in for
+  `claude plugin validate --strict`: documented fields only, kebab-case names, component paths that
+  start with `./` and hold a skill, and the version pinned to `Directory.Build.props` so the release
+  helper moves it or the build fails.
+- **`Kronikol.Tool` says what it is.** Its NuGet description opens with the same terms and its tags add
+  `dotnet-tool`, `cli`, `test-report`, `test-results`, `failures`, `debugging`, `ai`, `agent`, `llm`,
+  `claude-code`, `ctrf`, `merge`, `ingest` and `opentelemetry` to the shared set; it ranked 23rd of 36
+  for "test report" with no tag saying what it was or who it was for.
+- **`dnx Kronikol.Tool query ...`**, the no-install way to run the tool on the .NET 10 SDK, is on every
+  agent-facing install site (both skill copies, the emitted `Reports/CLAUDE.md`, the instruction block,
+  the wiki) beside `dotnet tool install`, which stays primary, with the measured trade stated: it needs
+  the feed on every call with no offline fallback, costs 3-5x per command, runs the last published
+  version, and answers `--help` and `--version` itself.
+
+### Changed
+- **The old name is named.** `README.md`, the NuGet readme, the wiki home and the `Kronikol` package
+  description say "formerly TestTrackingDiagrams": the old identity still ranks first for the
+  capability query and carries most of the ~3M lifetime downloads, and none of those pages mentioned it.
+
+### Fixed
+- **The `Kronikol` package's NuGet title still read "Test Tracking Diagrams"**, four months after the
+  rename. It is "Kronikol"; the old name moves to the description, where it keeps ranking without
+  mislabelling the package.
+
 ## [3.7.0] - 2026-09-14
 
 **Minor - one question, one command.** New public surface: the `kronikol query repro` verb,

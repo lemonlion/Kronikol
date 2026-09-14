@@ -1533,6 +1533,13 @@ scoped), E3 (`services` prints `Event broker 8 calls 8 errors Respondedx8` today
     so the residue is real and is the only thing M0's row should carry. M0's row was separately
     corrected this iteration for `templates/agents/`, which `e91cffb` closed (C98).
 
+**Left for a person by M8 (2026-09-14) — outward-facing, not for a session:** (a) submit
+`.claude-plugin/marketplace.json` to the community marketplace (C79); (b) run
+`claude plugin validate --strict` and `claude plugin eval` once against the manifest (C80) —
+`PluginManifestTests` is the offline stand-in until then; (c) deprecate the `TestTrackingDiagrams.*`
+packages on nuget.org naming `Kronikol.*` as the alternate (H1); (d) apply for the `Kronikol.` reserved
+prefix (H4); (e) publish the MCP registry entry only if `MCP_PLAN.md` is green-lit (H3).
+
 *This list is the error-class critic's, adopted wholesale. It removed one row it settled (C48), added
 eleven, and reversed three of §0.2's and §4's own conclusions — EC1, EC2 and EC3 below.*
 
@@ -2572,6 +2579,62 @@ the two runner options are named in prose without their dashes.
 
 Suite 4,790 → **4,815**. Minor: `repro`, `--describe`, `--version`, `FailureText.TestFilter` /
 `RerunCommand` and the three record members are new surface. Pins → 3.6.0, which published.
+
+---
+
+### 2026-09-14 (M8) — an agent that never heard of Kronikol finds it, released as 3.8.0
+
+Rows H1–H5, in-repo only, one commit (`5337c0e1`). Nothing was published outward; the outward steps are
+listed in §14.3 as people-work.
+
+**H2/H3 — a plugin manifest, held by a test instead of a binary.** `.claude-plugin/plugin.json` names
+the `kronikol` plugin and points `skills` at `./templates/skills`, the canonical copy (`.claude/skills/`
+is the dogfood mirror and stays pinned to it); `.claude-plugin/marketplace.json` lists it from this
+repository (`source: "./"`), so `/plugin marketplace add lemonlion/Kronikol` then
+`/plugin install kronikol@kronikol` installs the skill without `kronikol init-agents`. C11 held:
+`category`/`tags` are marketplace-entry fields, not manifest fields, so discoverability is the
+description and `keywords`, and both literally carry `dotnet`, `test`, `report`, `failures`, `xunit`,
+`nunit`. `claude plugin validate --strict` has no runner here (C80's instrument is still absent), so
+`PluginManifestTests` is the offline stand-in: documented fields only (the misspelling class `--strict`
+exists for), kebab-case names, `./` component paths that stay inside the plugin and hold a `SKILL.md`
+whose frontmatter name is the folder, the version equal to `Directory.Build.props` so the release helper
+moves it or the build fails, and the same terms on `Kronikol.Tool`'s description. The MCP registry entry
+itself (H3's shelf) stays out: `MCP_PLAN.md` is not green-lit, and the terms are applied where an entry
+would be generated from.
+
+**H4 — tags.** `Kronikol.Tool` overrides `PackageTags` the way four sibling projects already do
+(`$(PackageTags);dotnet-tool;cli;test-report;test-results;failures;debugging;ai;agent;llm;claude-code;ctrf;merge;ingest;opentelemetry`)
+and its description opens with the search sentence. The reserved-prefix application is people-work.
+
+**H1 — the old name, named.** `README.md`, `nuget-readme.md`, the wiki `Home` and the `Kronikol`
+package description say "formerly TestTrackingDiagrams". Found on the way: the core package's NuGet
+`<Title>` still read `Test Tracking Diagrams`, four months after the rename — which is part of why the
+capability query ranked the old identity first. The title is `Kronikol`; the old name lives in the
+description, where it keeps ranking without mislabelling the package. Deprecating the
+`TestTrackingDiagrams.*` packages on NuGet is people-work.
+
+**H5 — `dnx`, with its costs.** The no-install route is on every agent-facing install site (both skill
+copies, the emitted `Reports/CLAUDE.md`, the `templates/agents` block and its installed copies in this
+repo's `CLAUDE.md`/`AGENTS.md`, the wiki) beside `dotnet tool install`, which stays primary, with C65's
+four measured counts stated: feed on every call and no offline fallback, 3–5× per command, last
+*published* version only, and it swallows the tool's `--help`/`--version`. The run-end pointer and
+`CiSummary.md` were left alone: one line each, already naming the installed command.
+
+**A release defect found by the 3.7.0 tag, fixed under it.** `ReproTests` asserted a Windows path's
+file name through `Path.GetFileName`, which on the Linux release runner does not split `\`; the Release
+job failed on that one test and published nothing. The same trap was in `FailureText.ThrownAt`'s
+declaring-file match — a report written on Windows and read on a Linux runner compared whole paths
+where it meant file names and fell through to the namespace skip — fixed with a separator-agnostic
+`FileNameOf` and a guard that passes on Windows either way and fails on Linux without the fix. The tag
+was moved to the fixed commit; the version did not change because nothing a consumer calls did.
+
+Suite 4,815 → **4,823**. Minor: a plugin manifest is a new integration; the tool's tags and the old-name
+pointers are words. Pins → 3.7.0.
+
+**The plan is complete.** Eight milestones, one release each, 3.1.0 → 3.8.0. What no session could do is
+in §14.3 as people-work: a real GitHub Actions run of a default project (C75), a non-Claude agent
+session (C77/C78), the marketplace submission (C79), `claude plugin eval` (C80), the old packages'
+deprecation and the reserved-prefix application (H1/H4).
 
 ---
 
