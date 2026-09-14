@@ -1,9 +1,12 @@
 # CROSS_RUN_HISTORY_PLAN — what this test did last time, and the fifty times before that
 
-Status: **green-lit and in execution (2026-09-14).** 3.9.0 shipped M0, M1, M2, M3 and M6 — the ledger,
-the verdicts, the digest/CTRF/pointer surfaces, `kronikol query history` and the `kronikol history`
-maintenance verbs; 3.10.0 shipped M4 and M7 — the gate, quarantine, rename aliases, the doctor and
-imports from CTRF and Allure; M5 and M8 follow in 3.11.0. Three decisions below moved under
+Status: **EXECUTED (2026-09-14).** 3.9.0 shipped M0, M1, M2, M3 and M6 — the ledger, the verdicts,
+the digest/CTRF/pointer surfaces, `kronikol query history` and the `kronikol history` maintenance
+verbs; 3.10.0 shipped M4 and M7 — the gate, quarantine, rename aliases, the doctor and imports from
+CTRF and Allure; 3.11.0 shipped M5 and M8 — history in the HTML report (rendered on the generation
+side, one element per sparkline, rather than the payload-script design below; the verdict filter is the
+search box's `$` sigil, the toolbar control waits for the toolbar redesign), `merge --history`, the
+dogfood on the orphan branch `kronikol-history`, the wiki and the Kronikol4J divergence entry. Three decisions below moved under
 implementation (the roster key includes the suite; flaky needs two failing episodes, not two flips; a
 first failure with nothing earlier to compare against is `unknown`, not `broke`) and the code and the
 changelog record why. Before that: investigation complete (2026-09-12), nothing implemented. Revised across
@@ -1920,6 +1923,17 @@ M5, M6, M7. Two finished beat six open.
   and `HistoryMaintenanceTests`). Library untouched, so the 3.9.0 coverage stands. The gate's advisory
   rule, the quarantine trip, the rename suggestion and the CTRF/Allure imports are pinned by tests;
   none of the numbered proofs moved.
+- **3.11.0 (2026-09-14).** `dotnet test tests/Kronikol.Tests` green (4,999: +6 in `HistoryHtmlTests`,
+  `HistoryOutputsTests`, `MergeCommandTests`), `Kronikol.Tests.SearchEngine` green (210: +8 verdict
+  tests), Playwright: the four history classes green (10: sparkline, section, `$flaky` filter, export)
+  plus the search, deep-search, export, grouping, stable-id, hash and toggle-default classes (110).
+  Proof 5 now holds for the HTML: `ToggleDefaultsBaselineTests` pins the no-ledger report byte for byte
+  and stayed green; `Without_history_nothing_about_history_reaches_the_html` pins the markup. The M5
+  design moved: rendered on the generation side, one node per sparkline, no payload script, so the
+  export needs no special case (the export proof is `HistoryExportTests`). Proofs 3b, 6, 9: the dogfood
+  workflow on the orphan branch `kronikol-history` is the executed recipe (§11.1); its first run is the
+  push of this release, and `history show` writes what the branch holds into the job summary. Proof 1
+  (the E2E remainder) and 10 run on CI.
 
 ---
 

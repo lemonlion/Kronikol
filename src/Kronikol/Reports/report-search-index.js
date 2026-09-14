@@ -234,9 +234,9 @@ function kronQueryCanRemove(input) {
 // Deep match for one item: the EXISTING matcher semantics, run over the full normalized corpus.
 // Corpus pieces are '\n'-joined — tokens and phrases never contain '\n', so matches can never
 // span piece boundaries. Falls back to the legacy path exactly like run_search_scenarios does.
-function kronDeepMatchesItem(input, deepInput, corpus, tags, status) {
+function kronDeepMatchesItem(input, deepInput, corpus, tags, status, verdicts) {
     if (isAdvancedSearch(input)) {
-        var result = advancedSearchMatch(deepInput, corpus, tags, status);
+        var result = advancedSearchMatch(deepInput, corpus, tags, status, verdicts);
         if (result !== null) return result;
     }
     var split = splitLegacyTagExpression(deepInput);
@@ -341,7 +341,7 @@ function kronSearchWorkerMain(self) {
             var idx = candItems[c];
             var corpus = await corpusForItem(idx);
             var item = items[idx];
-            if (kronDeepMatchesItem(input, deepInput, corpus, new Set(item.tags), item.status))
+            if (kronDeepMatchesItem(input, deepInput, corpus, new Set(item.tags), item.status, item.verdicts ? new Set(item.verdicts) : null))
                 matches.push(idx);
             if (matches.length > 0 && matches.length % BATCH_SIZE === 0)
                 self.postMessage({ type: 'result', gen: gen, done: false, matches: matches.slice() });
@@ -464,6 +464,7 @@ function kronSearchWorkerMain(self) {
                 searchText: c.items[i].searchText,
                 tags: tags,
                 status: c.items[i].status,
+                verdicts: c.items[i].verdicts ? Array.from(c.items[i].verdicts) : null,
                 diagramIds: diagramIds,
                 plantumlZ: plantumlZ,
                 rawTexts: rawTexts,

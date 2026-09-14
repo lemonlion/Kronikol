@@ -36,8 +36,10 @@ public static class MergedRunOutputs
     /// <param name="output">Where the pointer and any CI workflow commands go: the merge's stdout, which a CI step owns in a way the library under a test runner never does.</param>
     /// <param name="error">Where an output that could not be written is reported.</param>
     /// <param name="getEnvironmentVariable">The environment the CI detection and the CI writers read; the process's own when null.</param>
+    /// <param name="history">The merged run read against a cross-run ledger, when <c>merge --history</c> named one: the digest works through regressions first and carries a history line per failure, and the pointer says what changed.</param>
     public static IReadOnlyCollection<string> Write(MergeableReport report, string htmlPath, string? dataFilePath,
-        ReportConfigurationOptions options, TextWriter output, TextWriter error, Func<string, string?>? getEnvironmentVariable = null)
+        ReportConfigurationOptions options, TextWriter output, TextWriter error, Func<string, string?>? getEnvironmentVariable = null,
+        History.HistoryVerdicts? history = null)
     {
         ArgumentNullException.ThrowIfNull(report);
         ArgumentException.ThrowIfNullOrWhiteSpace(htmlPath);
@@ -76,7 +78,8 @@ public static class MergedRunOutputs
                 report.KronikolVersion,
                 report.Diagnostics,
                 report.Suite,
-                report.StepPaths));
+                report.StepPaths,
+                history: history));
 
             Attempt(ReportGenerator.FailuresDigestFileName,
                 () => File.WriteAllText(Path.Combine(directory, ReportGenerator.FailuresDigestFileName), digest.Value.Markdown));
@@ -115,7 +118,10 @@ public static class MergedRunOutputs
             candidates,
             agentInstructionsWritten: written.Contains(AgentInstructionsGenerator.ClaudeFileName),
             suite: report.Suite,
-            queryTarget: QueryTarget(dataFilePath));
+            queryTarget: QueryTarget(dataFilePath),
+            history: history is not null && (history.HasAnything || report.Features.Any(f => (f.Scenarios ?? []).Any(s => s.Result == ExecutionResult.Failed)))
+                ? "history: " + History.HistorySummary.Line(history)
+                : null);
 
         var ci = CiEnvironmentDetector.Detect(getEnv);
 

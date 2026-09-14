@@ -111,4 +111,64 @@ public class MergeCommandTests
             Directory.Delete(dir, recursive: true);
         }
     }
+
+    [Fact]
+    public void Merge_with_a_ledger_renders_history_and_never_writes_to_it()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "kronikol-cli-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var start = new DateTime(2026, 9, 14, 10, 0, 0, DateTimeKind.Utc);
+            var shards = Path.Combine(dir, "shards");
+            Directory.CreateDirectory(shards);
+            WriteMergeableJson(shards, "runner1.json",
+                [ new Feature { DisplayName = "Orders", Scenarios = [ new Scenario { Id = "h1s1", DisplayName = "Place order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(50) } ] } ],
+                [], start, start.AddMinutes(2));
+            WriteMergeableJson(Path.Combine(dir, "shards"), "runner2.json",
+                [ new Feature { DisplayName = "Inventory", Scenarios = [ new Scenario { Id = "h2s1", DisplayName = "Adjust stock", Result = ExecutionResult.Failed, ErrorMessage = "oops", Duration = TimeSpan.FromMilliseconds(80) } ] } ],
+                [], start, start.AddMinutes(3));
+
+            // Three earlier runs in which both scenarios passed, over the roster the merged run itself builds.
+            var merged = Kronikol.Reports.Merge.MergeableReportRenderer.MergeFiles(Directory.GetFiles(Path.Combine(dir, "shards")));
+            var (roster, run) = Kronikol.History.HistoryRunBuilder.Build(merged.Features, [], merged.Suite, null, new DateTimeOffset(start), new Kronikol.History.HistoryBuildOptions());
+            var ledger = Path.Combine(dir, ".kronikol", "history.jsonl");
+            for (var i = 1; i <= 3; i++)
+                Kronikol.History.HistoryLedgerWriter.Append(ledger, roster, run with
+                {
+                    Id = $"gh:{i}:1", At = new DateTimeOffset(start).AddHours(i - 4), Results = new string('P', roster.Count),
+                    Attempts = new string('-', roster.Count), Errors = new string?[roster.Count], ErrorText = new Dictionary<string, string>()
+                }, "3.11.0");
+            var lengthBefore = new FileInfo(ledger).Length;
+
+            var output = Path.Combine(dir, "Combined.html");
+            var outWriter = new StringWriter();
+            var errWriter = new StringWriter();
+            var exit = MergeCommand.Run([Path.Combine(dir, "shards"), "-o", output, "--history", ledger], outWriter, errWriter);
+
+            Assert.True(exit == 0, errWriter.ToString());
+            var html = File.ReadAllText(output);
+            Assert.Contains("<details id=\"history-section\"", html);
+            Assert.Contains("data-history-verdicts=\"broke\"", html);
+            Assert.Contains("history-sparkline", html);
+            var digest = File.ReadAllText(Path.Combine(dir, "Failures.md"));
+            Assert.Contains("**History:**", digest);
+            Assert.Contains("**broke**", digest);
+            Assert.Contains("history: 1 broke", outWriter.ToString());
+            Assert.Equal(lengthBefore, new FileInfo(ledger).Length); // a merge is a render, never a record
+
+            var plain = Path.Combine(dir, "Plain.html");
+            Assert.Equal(0, MergeCommand.Run([Path.Combine(dir, "shards"), "-o", plain], new StringWriter(), new StringWriter()));
+            Assert.DoesNotContain("<details id=\"history-section\"", File.ReadAllText(plain));
+
+            var missing = new StringWriter();
+            Assert.Equal(2, MergeCommand.Run([Path.Combine(dir, "shards"), "-o", Path.Combine(dir, "Missing.html"), "--history", Path.Combine(dir, "nowhere.jsonl")], new StringWriter(), missing));
+            Assert.Contains("No ledger at", missing.ToString());
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
 }
+

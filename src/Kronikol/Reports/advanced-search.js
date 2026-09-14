@@ -246,9 +246,11 @@ function advancedSearchParse(tokens) {
  * @param {string} searchText - Lowercased pre-computed search text for the scenario
  * @param {object} tags - A Set (or object with .has()) of lowercased tag strings
  * @param {string} status - The scenario status string (e.g. "Passed", "Failed")
+ * @param {object} [verdicts] - A Set of the scenario's lowercased cross-run history verdicts
+ *   ("flaky", "broke", "new"...), or null/undefined when the report carries no history
  * @returns {boolean}
  */
-function advancedSearchEvaluate(ast, searchText, tags, status) {
+function advancedSearchEvaluate(ast, searchText, tags, status, verdicts) {
     if (!ast) return false;
 
     switch (ast.type) {
@@ -259,15 +261,22 @@ function advancedSearchEvaluate(ast, searchText, tags, status) {
         case 'tag':
             return tags.has(ast.value);
         case 'status':
-            return status.toLowerCase() === ast.value;
+            // `$failed` is the execution result; `$flaky`, `$broke`, `$new`... are the cross-run
+            // history verdicts, carried as their own set because a scenario is routinely both (a
+            // flaky scenario's status is Passed). An execution-result name is always the status and
+            // is never looked up as a verdict, so nothing existing can be shadowed.
+            if (status.toLowerCase() === ast.value) return true;
+            if (ast.value === 'passed' || ast.value === 'failed' || ast.value === 'skipped' ||
+                ast.value === 'bypassed' || ast.value === 'skippedafterfailure') return false;
+            return !!(verdicts && verdicts.has(ast.value));
         case 'and':
-            return advancedSearchEvaluate(ast.left, searchText, tags, status) &&
-                   advancedSearchEvaluate(ast.right, searchText, tags, status);
+            return advancedSearchEvaluate(ast.left, searchText, tags, status, verdicts) &&
+                   advancedSearchEvaluate(ast.right, searchText, tags, status, verdicts);
         case 'or':
-            return advancedSearchEvaluate(ast.left, searchText, tags, status) ||
-                   advancedSearchEvaluate(ast.right, searchText, tags, status);
+            return advancedSearchEvaluate(ast.left, searchText, tags, status, verdicts) ||
+                   advancedSearchEvaluate(ast.right, searchText, tags, status, verdicts);
         case 'not':
-            return !advancedSearchEvaluate(ast.operand, searchText, tags, status);
+            return !advancedSearchEvaluate(ast.operand, searchText, tags, status, verdicts);
         default:
             return false;
     }
@@ -277,10 +286,10 @@ function advancedSearchEvaluate(ast, searchText, tags, status) {
  * Convenience entry point: tokenise → parse → evaluate.
  * Returns true/false on success, or null on parse error (caller falls back to legacy).
  */
-function advancedSearchMatch(input, searchText, tags, status) {
+function advancedSearchMatch(input, searchText, tags, status, verdicts) {
     var tokens = advancedSearchTokenise(input);
     if (tokens.length === 0) return null;
     var ast = advancedSearchParse(tokens);
     if (ast === null) return null;
-    return advancedSearchEvaluate(ast, searchText, tags, status);
+    return advancedSearchEvaluate(ast, searchText, tags, status, verdicts);
 }

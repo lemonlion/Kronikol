@@ -349,7 +349,7 @@ public static class ReportGenerator
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null));
         }
 
         if (options.GenerateSpecificationsData)
@@ -762,7 +762,8 @@ public static class ReportGenerator
         bool fullSearchIndex = true,
         SearchIndex.SearchIndexBuildCache? searchIndexCache = null,
         ResolvedToggleDefaults? toggleDefaults = null,
-        string? suite = null)
+        string? suite = null,
+        HistoryVerdicts? history = null)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -1413,6 +1414,13 @@ public static class ReportGenerator
         if (includeTestRunData && diagnostics is { Count: > 0 })
             body.Append(RenderReportDiagnostics(diagnostics, toggles.DiagnosticsOpen));
 
+        // Cross-run history (plans/CROSS_RUN_HISTORY_PLAN.md §8.1): the section sits beside the timeline,
+        // and the per-scenario entries are looked up by stable id as the scenarios render below. Null
+        // when the run had no ledger, and then nothing about history reaches the file.
+        var historySlots = history is null ? null : new Dictionary<string, int>(StringComparer.Ordinal);
+        if (history is not null)
+            body.Append(HistoryHtml.Section(history));
+
         // Scenario timeline / Gantt (hidden by default)
         if (hasDurations)
         {
@@ -1560,7 +1568,9 @@ public static class ReportGenerator
                         // Without this the flat outline rows compute their ids with no suite while the
                         // scenario <details> around them computes with one, so one report carries two
                         // identity schemes and the deep link from a flat row resolves to nothing.
-                        suite: suite);
+                        suite: suite,
+                        history: history,
+                        historySlots: historySlots);
                     continue;
                 }
 
@@ -1635,10 +1645,13 @@ public static class ReportGenerator
                 // It goes BEFORE ` id=`: the cluster-link pins match `[^>]*id="([^"]+)"` greedily,
                 // and `data-stable-id="` ends in a word-boundary `id="` that would win that race.
                 var scenarioStableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+                var historyEntry = history is null ? null : HistoryHtml.Entry(history, historySlots!, scenarioStableId);
+                var historyAttr = historyEntry is null ? "" : HistoryHtml.VerdictAttribute(historyEntry);
+                var historyBadges = historyEntry is null ? "" : HistoryHtml.Sparkline(historyEntry) + HistoryHtml.Pill(historyEntry);
 
                 body.Append($"""
-                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr} data-stable-id="{scenarioStableId}" id="{anchorId}" tabindex="0">
-                            <summary class="h3{(failed ? " failed" : skipped ? " skipped" : "")}" title="{scenarioTooltip}">{scenario.DisplayName}{(scenario.IsHappyPath ? " <span class=\"label\">Happy Path</span>" : "")}{scenarioLabelsHtml}{durationBadge}<button class="copy-scenario-name" title="Copy scenario name" data-scenario-name="{encodedName}" onclick="copy_scenario_name(this, event)">&#128203;</button><a class="scenario-link" href="#{anchorId}" title="Link to this scenario" onclick="event.stopPropagation()">&#128279;</a></summary>
+                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr}{historyAttr} data-stable-id="{scenarioStableId}" id="{anchorId}" tabindex="0">
+                            <summary class="h3{(failed ? " failed" : skipped ? " skipped" : "")}" title="{scenarioTooltip}">{scenario.DisplayName}{(scenario.IsHappyPath ? " <span class=\"label\">Happy Path</span>" : "")}{scenarioLabelsHtml}{durationBadge}{historyBadges}<button class="copy-scenario-name" title="Copy scenario name" data-scenario-name="{encodedName}" onclick="copy_scenario_name(this, event)">&#128203;</button><a class="scenario-link" href="#{anchorId}" title="Link to this scenario" onclick="event.stopPropagation()">&#128279;</a></summary>
                          """);
 
                 if (failed)
@@ -2316,10 +2329,31 @@ public static class ReportGenerator
         Dictionary<string, List<string>>? searchIndexPieces = null,
         string scenarioToolbarControls = "",
         ResolvedToggleDefaults? toggleDefaults = null,
-        string? suite = null)
+        string? suite = null,
+        HistoryVerdicts? history = null,
+        Dictionary<string, int>? historySlots = null)
     {
         var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn;
         var scenarios = group.Scenarios;
+
+        // Cross-run history per row: the group element carries the union of its rows' verdicts (so
+        // `$broke` finds the group), its summary one pill for the worst of them, and every row its own.
+        Dictionary<string, ScenarioHistory>? rowHistory = null;
+        var groupHistoryAttr = "";
+        var groupHistoryBadge = "";
+        if (history is not null && historySlots is not null)
+        {
+            rowHistory = new Dictionary<string, ScenarioHistory>(StringComparer.Ordinal);
+            foreach (var row in scenarios)
+            {
+                var rowId = ScenarioStableId.Compute(suite, featureDisplayName ?? "", row.DisplayName, row.OutlineId, row.ExampleValues);
+                if (HistoryHtml.Entry(history, historySlots, rowId) is { } rowEntry)
+                    rowHistory[row.Id] = rowEntry;
+            }
+            groupHistoryAttr = HistoryHtml.VerdictAttribute(rowHistory.Values);
+            groupHistoryBadge = HistoryHtml.GroupPill(rowHistory.Values);
+        }
+        string RowHistoryAttr(Scenario row) => rowHistory is not null && rowHistory.TryGetValue(row.Id, out var entry) ? HistoryHtml.VerdictAttribute(entry) : "";
 
         // Named Examples: blocks render as separator bands only when the group actually has
         // block structure; a single unnamed block (or no block data at all) must produce
@@ -2400,8 +2434,8 @@ public static class ReportGenerator
         var happyPathClass = isGroupHappyPath ? " happy-path" : "";
         var happyPathBadge = isGroupHappyPath ? " <span class=\"label\">Happy Path</span>" : "";
 
-        body.Append($"<details class=\"scenario scenario-parameterized{happyPathClass}\"{(toggles.ScenariosExpanded ? " open" : "")} data-status=\"{overallStatus}\"{depsAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr} id=\"{anchorId}\" tabindex=\"0\">");
-        body.Append($"<summary class=\"h3{(hasFailure ? " failed" : hasSkipped ? " skipped" : "")}\">{encodedGroupName}{happyPathBadge}{summaryText}{durationBadge}<button class=\"copy-scenario-name\" title=\"Copy scenario name\" data-scenario-name=\"{encodedGroupName}\" onclick=\"copy_scenario_name(this, event)\">&#128203;</button><a class=\"scenario-link\" href=\"#{anchorId}\" title=\"Link to this scenario\" onclick=\"event.stopPropagation()\">&#128279;</a></summary>");
+        body.Append($"<details class=\"scenario scenario-parameterized{happyPathClass}\"{(toggles.ScenariosExpanded ? " open" : "")} data-status=\"{overallStatus}\"{depsAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr}{groupHistoryAttr} id=\"{anchorId}\" tabindex=\"0\">");
+        body.Append($"<summary class=\"h3{(hasFailure ? " failed" : hasSkipped ? " skipped" : "")}\">{encodedGroupName}{happyPathBadge}{summaryText}{durationBadge}{groupHistoryBadge}<button class=\"copy-scenario-name\" title=\"Copy scenario name\" data-scenario-name=\"{encodedGroupName}\" onclick=\"copy_scenario_name(this, event)\">&#128203;</button><a class=\"scenario-link\" href=\"#{anchorId}\" title=\"Link to this scenario\" onclick=\"event.stopPropagation()\">&#128279;</a></summary>");
 
         // Parameter table — where both views exist, the configured default picks which one
         // starts visible (toggleFlattenParams reads live visibility, so it needs no seeding).
@@ -2485,7 +2519,7 @@ public static class ReportGenerator
                 // (Flat_table_rows_have_no_id_attribute). Duplicate data attributes are legal; the
                 // hash script picks whichever copy is displayed.
                 var flatRowStableId = ScenarioStableId.Compute(suite, featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
-                body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\" data-stable-id=\"{flatRowStableId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
+                body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\"{RowHistoryAttr(s)} data-stable-id=\"{flatRowStableId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
                 body.Append($"<td>{ri + 1}</td>");
 
                 foreach (var name in flatNames)
@@ -2592,7 +2626,7 @@ public static class ReportGenerator
             // Every row of an outline shares one display name, so the slug cannot address a row and
             // the stable id — which hashes the example values — is the only handle `#sid-` can use.
             var rowStableId = ScenarioStableId.Compute(suite, featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
-            body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\" data-stable-id=\"{rowStableId}\" id=\"{rowAnchorId}\" data-scenario-id=\"{rowAnchorId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
+            body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\"{RowHistoryAttr(s)} data-stable-id=\"{rowStableId}\" id=\"{rowAnchorId}\" data-scenario-id=\"{rowAnchorId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
             body.Append($"<td>{ri + 1}</td>");
 
             if (group.Rule is ParameterDisplayRule.ScalarColumns or ParameterDisplayRule.FlattenedObject && group.ParameterNames.Length > 0)

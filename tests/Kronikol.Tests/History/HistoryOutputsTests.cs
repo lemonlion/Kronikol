@@ -235,4 +235,23 @@ public class HistoryOutputsTests : IDisposable
         Assert.DoesNotContain("\"history\"", File.ReadAllText(Path.Combine(Reports("r1"), "Failures.jsonl")));
         Assert.DoesNotContain("kronikolHistory", File.ReadAllText(Path.Combine(Reports("r1"), CtrfReportGenerator.FileName)));
     }
+
+    [Fact]
+    public void The_html_report_embeds_history_unless_told_not_to()
+    {
+        Run("h1", "test:1:1", Features(ExecutionResult.Passed), o => o.GenerateTestRunReport = true);
+        Run("h2", "test:2:1", Features(ExecutionResult.Failed), o => o.GenerateTestRunReport = true);
+        Run("h3", "test:3:1", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.EmbedHistoryInReport = false; });
+
+        var second = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.html"));
+        Assert.Contains("<details id=\"history-section\"", second);
+        Assert.Contains("data-history-verdicts=\"broke\"", second);
+        Assert.Contains("history-sparkline", second);
+
+        var third = File.ReadAllText(Path.Combine(Reports("h3"), "TestRunReport.html"));
+        Assert.DoesNotContain("<details id=\"history-section\"", third);
+        Assert.DoesNotContain("data-history-verdicts=\"", third);
+        // The ledger still saw the run: embedding is about the file, not about recording.
+        Assert.Contains("test:3:1", File.ReadAllText(Ledger));
+    }
 }

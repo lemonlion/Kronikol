@@ -18,7 +18,8 @@ public static class MergeableReportRenderer
     /// <param name="outputPath">Absolute or relative path of the HTML file to write.</param>
     /// <param name="title">Report title. Defaults to "Test Run Report".</param>
     /// <param name="options">Optional configuration influencing component-diagram styling and internal-flow popup behaviour.</param>
-    public static string Render(MergeableReport report, string outputPath, string? title = null, ReportConfigurationOptions? options = null)
+    /// <param name="history">The merged run read against a cross-run ledger, when <c>merge --history</c> named one; renders the History section, the sparklines and the verdict pills.</param>
+    public static string Render(MergeableReport report, string outputPath, string? title = null, ReportConfigurationOptions? options = null, History.HistoryVerdicts? history = null)
     {
         options ??= new ReportConfigurationOptions();
         title ??= "Test Run Report";
@@ -94,7 +95,8 @@ public static class MergeableReportRenderer
             // shard agrees — so on that path the HTML would scope its ids to whatever process happened to
             // run the merge and every `#sid-` link out of the data file would miss. The empty string says
             // "deliberately no suite", which both writers agree means the pre-3.1.0 id.
-            suite: report.Suite ?? "");
+            suite: report.Suite ?? "",
+            history: history);
 
         // Normally a no-op now that the write is scoped to the destination. Kept for the one case the
         // scope cannot cover — an outputPath with no directory part at all — where the write lands under

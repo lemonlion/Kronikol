@@ -11,7 +11,9 @@ function fc() {
             var s = sc[si];
             var raw = s.getAttribute('data-dependencies') || '';
             var d = raw ? new Set(raw.split(',')) : new Set();
-            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', hp: false, dep: false, st: false, sr: false, dur: false, cat: false };
+            // The cross-run history verdicts, when the run had a ledger: what `$flaky` and `$broke` read.
+            var hv = s.getAttribute('data-history-verdicts') || '';
+            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', verdicts: hv ? new Set(hv.split(',')) : null, isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', hp: false, dep: false, st: false, sr: false, dur: false, cat: false };
             items.push(item);
             fMap.set(s, features[fi]);
         }

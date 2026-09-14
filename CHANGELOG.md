@@ -4,6 +4,57 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.11.0] - 2026-09-14
+
+**Minor - the report shows what the last runs said, and this repository keeps a ledger of its own.**
+New surface: history rendered in `TestRunReport.html`, the verdicts in the search box, and
+`kronikol merge --history`. A new optional parameter on `ReportGenerator.GenerateHtmlReport`,
+`MergeableReportRenderer.Render` and `MergedRunOutputs.Write` and a new `merge` flag are new public
+surface, so this is a minor bump. A report rendered with no ledger is byte for byte what 3.10.0
+wrote.
+
+This closes `plans/CROSS_RUN_HISTORY_PLAN.md`: milestones M5 (the HTML report) and M8 (the dogfood,
+the documentation, the Kronikol4J ledger). Two of M5's design decisions moved under implementation
+and are recorded in the code: the history is rendered on the generation side rather than shipped as a
+payload script and drawn by the page - the sparkline is one element painting a colour stop per run,
+so two hundred scenarios cost two hundred nodes and the filtered export needs no special case - and
+the verdict filter is the search box's `$` sigil rather than a new toolbar control, which waits for
+the toolbar redesign.
+
+Template pins move to **3.10.0**, the last release that shipped.
+
+### Added
+- **History in the HTML report.** Every scenario header carries a sparkline of its last runs beside
+  the duration badge - oldest left, this run right, the verdict and each run's commit, date, result
+  and duration in its tooltip - and a pill for any verdict other than stable: `broke`, `failing`,
+  `always-failing`, `fixed`, `flaky`, `new`, `slower`, `behaviour-changed`, `quarantined`... A
+  parameterised group carries the union of its rows' verdicts and one pill for the worst of them. A
+  **History** section beside the timeline opens when there is something to say: the run's summary
+  line, the pass-rate and total-duration trend of the last runs, and the lists - new failures,
+  failing since, flaky, newly fixed, slower, behaviour changed, new scenarios, quarantined, absent
+  since the previous run, new dependencies - each scenario linked by its `#sid-` stable id, so the
+  link opens the scenario the way a link from `Failures.md` does. `EmbedHistoryInReport = false`
+  leaves the HTML as it was; `Specifications.html` gets none of it.
+- **`$flaky`, `$broke`, `$new`, `$failing`, `$fixed`, `$slower`, `$stable`... in the search box.** The
+  verdicts join the `$status` sigil and combine with statuses and each other: `$failed && !!$flaky`
+  is the regressions, `$passed && $flaky` the flaky ones that happened to pass this time. An
+  execution-result name always means the status and is never looked up as a verdict. The deep-search
+  worker reads the same verdicts, so both paths of the search box agree.
+- **`kronikol merge --history <ledger>`** renders the merged report against the ledger: the section,
+  the sparklines and the pills in the HTML, the history lines in `Failures.md`, the summary in the
+  pointer. It never writes to the ledger - folding the shards' `History.run.json` fragments stays
+  `kronikol history record` - because a merge is a render, and a render that recorded would count
+  every re-render as a run.
+- **The filtered export carries history.** Export Filtered HTML keeps the sparklines and pills, which
+  live in the scenario headers it copies, and leaves the History section behind on purpose, as it
+  does the timeline.
+- **This repository dogfoods the ledger** (`.github/workflows/ci-summary-preview.yml`): every CI
+  Summary Preview run reads the ledger from the orphan data branch `kronikol-history` before it
+  starts, so its `Failures.md` and job summary carry the verdicts; each run's `History.run.json` is
+  uploaded as its own 90-day artifact; and a `history` job folds them into the branch with
+  `kronikol history record` and pushes with a rebase retry. It is the recipe the wiki recommends,
+  executed.
+
 ## [3.10.0] - 2026-09-14
 
 **Minor - the ledger gates the build, and knows what to leave alone.** New surface on `kronikol

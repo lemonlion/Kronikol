@@ -40,5 +40,108 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      # Cross-run history, dogfooded (plans/CROSS_RUN_HISTORY_PLAN.md §11): the ledger lives on the
+      # orphan data branch `kronikol-history`, never in main's working tree. It is read here, before the
+      # run, so the reports these jobs write already carry the verdicts - Failures.md works through
+      # regressions first and the job summary says what changed. The copy in $RUNNER_TEMP is discarded;
+      # what survives is the History.run.json each run writes beside its report, uploaded below and
+      # folded into the branch by the `history` job once every project has run.
+      - name: Fetch the history ledger
+        run: |
+          if git fetch --depth=1 origin kronikol-history 2>/dev/null; then
+            git show FETCH_HEAD:history.jsonl > "$RUNNER_TEMP/history.jsonl"
+            echo "KRONIKOL_HISTORY=$RUNNER_TEMP/history.jsonl" >> "$GITHUB_ENV"
+            echo "ledger: $(wc -l < "$RUNNER_TEMP/history.jsonl") lines from origin/kronikol-history"
+          else
+            echo "no kronikol-history branch yet: this run starts it"
+          fi
+
       - name: Build & Test
         run: dotnet test "${{ matrix.project }}" --configuration Release --verbosity normal || true
+
+      # Its own artifact with its own retention: the reports artifact a run publishes keeps one day, and
+      # a fragment that rode along in it would be gone before the next run could compare against it.
+      - name: Upload the run's history fragment
+        uses: actions/upload-artifact@v4
+        with:
+          name: history-${{ strategy.job-index }}
+          path: ${{ matrix.project }}/**/History.run.json
+          retention-days: 90
+          if-no-files-found: warn
+
+  history:
+    name: Record the runs in the history ledger
+    needs: ci-preview
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Download the fragments
+        uses: actions/download-artifact@v4
+        with:
+          pattern: history-*
+          path: fragments
+
+      # `kronikol history record` folds every History.run.json under `fragments` into the ledger: one line
+      # per run and suite, a run already recorded skipped as a duplicate, so a re-run of this job is safe.
+      # The branch is an orphan - no shared history with main, so a fetch of it costs nothing and a merge
+      # into main can never happen by accident - and its .gitattributes carries merge=union, which is what
+      # lets the rebase below reconcile two runs that recorded at the same time without a conflict.
+      - name: Fold the fragments into the kronikol-history branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          WT="$RUNNER_TEMP/history-branch"
+          if git fetch origin kronikol-history; then
+            git worktree add "$WT" FETCH_HEAD
+            git -C "$WT" checkout -q -B kronikol-history FETCH_HEAD
+          else
+            git worktree add --detach "$WT"
+            git -C "$WT" checkout -q --orphan kronikol-history
+            git -C "$WT" rm -rfq .
+            printf '%s\n' "# Kronikol history ledger" "" \
+              "The cross-run ledger of this repository's own CI Summary Preview runs (plans/CROSS_RUN_HISTORY_PLAN.md, section 11):" \
+              "an orphan data branch, appended to by the history job of .github/workflows/ci-summary-preview.yml and never merged into main." \
+              "" "Read it with: git fetch origin kronikol-history && git show FETCH_HEAD:history.jsonl" \
+              > "$WT/README.md"
+            printf '%s\n' "history.jsonl merge=union text eol=lf" > "$WT/.gitattributes"
+          fi
+          if [ ! -d fragments ] || [ -z "$(find fragments -name History.run.json -print -quit)" ]; then
+            echo "no fragments to record"
+            exit 0
+          fi
+          dotnet run --project src/Kronikol.Tool/Kronikol.Tool.csproj --framework net10.0 --configuration Release -- \
+            history record fragments --history "$WT/history.jsonl"
+          cd "$WT"
+          git add history.jsonl README.md .gitattributes
+          if git diff --cached --quiet; then
+            echo "nothing new to record"
+            exit 0
+          fi
+          git commit -q -m "Record run ${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT} (${GITHUB_SHA::7})"
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:kronikol-history; then
+              exit 0
+            fi
+            echo "push $attempt lost the race; rebasing onto the branch as it is now"
+            git fetch origin kronikol-history
+            git rebase origin/kronikol-history
+          done
+          echo "could not push the ledger after 5 attempts"
+          exit 1
+
+      - name: What the ledger holds now
+        run: |
+          if [ -f "$RUNNER_TEMP/history-branch/history.jsonl" ]; then
+            dotnet run --project src/Kronikol.Tool/Kronikol.Tool.csproj --framework net10.0 --configuration Release -- \
+              history show --history "$RUNNER_TEMP/history-branch/history.jsonl" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi

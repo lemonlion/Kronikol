@@ -66,33 +66,48 @@ public abstract class JintTestBase : IDisposable
         return ConvertAstNode(result.AsObject());
     }
 
-    protected bool? CallMatch(string input, string searchText, string[] tags, string status)
+    protected bool? CallMatch(string input, string searchText, string[] tags, string status, string[]? verdicts = null)
     {
         // Build a JS Set from the tags array
         JsEngine.SetValue("__tags", tags);
         JsEngine.Execute("var __tagSet = new Set(__tags.map(function(t) { return t.toLowerCase(); }));");
+        SetVerdicts(verdicts);
 
-        var result = JsEngine.Invoke("advancedSearchMatch", input.ToLowerInvariant(), searchText.ToLowerInvariant(), JsEngine.GetValue("__tagSet"), status);
+        var result = JsEngine.Invoke("advancedSearchMatch", input.ToLowerInvariant(), searchText.ToLowerInvariant(), JsEngine.GetValue("__tagSet"), status, JsEngine.GetValue("__verdictSet"));
 
         if (result.IsNull()) return null;
         return result.AsBoolean();
     }
 
-    protected bool CallEvaluate(object ast, string searchText, string[] tags, string status)
+    protected bool CallEvaluate(object ast, string searchText, string[] tags, string status, string[]? verdicts = null)
     {
         // Serialize AST back to JS
         var jsAst = SerializeAstToJs(ast);
         JsEngine.SetValue("__tags", tags);
         JsEngine.Execute("var __tagSet = new Set(__tags.map(function(t) { return t.toLowerCase(); }));");
+        SetVerdicts(verdicts);
         JsEngine.Execute($"var __ast = {jsAst};");
 
         var result = JsEngine.Invoke("advancedSearchEvaluate",
             JsEngine.GetValue("__ast"),
             searchText.ToLowerInvariant(),
             JsEngine.GetValue("__tagSet"),
-            status);
+            status,
+            JsEngine.GetValue("__verdictSet"));
 
         return result.AsBoolean();
+    }
+
+    /// <summary>The verdict set the page passes when the report carries history, and null when it does not.</summary>
+    private void SetVerdicts(string[]? verdicts)
+    {
+        if (verdicts is null)
+        {
+            JsEngine.Execute("var __verdictSet = null;");
+            return;
+        }
+        JsEngine.SetValue("__verdicts", verdicts);
+        JsEngine.Execute("var __verdictSet = new Set(__verdicts.map(function(v) { return v.toLowerCase(); }));");
     }
 
     private static string SerializeAstToJs(object ast)

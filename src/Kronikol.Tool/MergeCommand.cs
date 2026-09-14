@@ -28,6 +28,7 @@ internal static class MergeCommand
         var writeJson = true;
         var ciSummary = false;
         var publishArtifacts = false;
+        string? historyPath = null;
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -50,6 +51,10 @@ internal static class MergeCommand
                     break;
                 case "--publish-artifacts":
                     publishArtifacts = true;
+                    break;
+                case "--history":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    historyPath = args[i];
                     break;
                 case "-h" or "--help":
                     PrintUsage(@out);
@@ -92,10 +97,17 @@ internal static class MergeCommand
 
         string written;
         MergeableReport merged;
+        History.HistoryVerdicts? history = null;
         try
         {
             merged = MergeableReportRenderer.MergeFiles(files);
-            written = MergeableReportRenderer.Render(merged, output, title);
+            if (historyPath is not null)
+            {
+                history = ReadHistory(historyPath, merged, error, out var historyExit);
+                if (history is null)
+                    return historyExit;
+            }
+            written = MergeableReportRenderer.Render(merged, output, title, history: history);
             @out.WriteLine($"Wrote combined report to {written}");
         }
         catch (FormatException ex)
@@ -135,7 +147,7 @@ internal static class MergeCommand
                 WriteCiSummary = ciSummary,
                 PublishCiArtifacts = publishArtifacts
             };
-            MergedRunOutputs.Write(merged, written, dataFile, options, @out, error, getEnvironmentVariable);
+            MergedRunOutputs.Write(merged, written, dataFile, options, @out, error, getEnvironmentVariable, history);
             return 0;
         }
         catch (Exception ex)
@@ -145,6 +157,49 @@ internal static class MergeCommand
             error.WriteLine($"The merged report was written, but the files beside it were not: {ex.Message}");
             return 1;
         }
+    }
+
+    /// <summary>
+    /// The merged run read against the ledger <c>--history</c> named: the same analysis a run performs,
+    /// over the merged features, so the merged report renders history and the digest works through
+    /// regressions first. Never folds — the shards' fragments are <c>kronikol history record</c>'s job —
+    /// because a merge is a render, and a render that also wrote to the ledger would record every
+    /// re-render as a run.
+    /// </summary>
+    private static History.HistoryVerdicts? ReadHistory(string path, MergeableReport merged, TextWriter error, out int exit)
+    {
+        var full = Path.GetFullPath(path);
+        if (!File.Exists(full))
+        {
+            error.WriteLine($"No ledger at {full}. --history names the .kronikol/history.jsonl the shards' runs were recorded into (kronikol history record folds their History.run.json fragments into it).");
+            exit = 2;
+            return null;
+        }
+
+        var read = History.HistoryLedgerReader.Read(full, 50);
+        if (read.Ledger is not { } ledger)
+        {
+            error.WriteLine(read.Message);
+            exit = 1;
+            return null;
+        }
+
+        var (roster, run) = History.HistoryRunBuilder.Build(merged.Features, merged.Interactions, merged.Suite, merged.CiMetadata,
+            new DateTimeOffset(merged.EndTime.ToUniversalTime()), new History.HistoryBuildOptions());
+        History.HistoryQuarantineList? quarantine = null;
+        History.HistoryAliases? aliases = null;
+        try
+        {
+            quarantine = History.HistoryQuarantineList.Load(History.HistoryQuarantineList.PathBeside(full));
+            aliases = History.HistoryAliases.Load(History.HistoryAliases.PathBeside(full));
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException or System.Text.Json.JsonException)
+        {
+            error.WriteLine($"The quarantine or alias file beside {full} could not be read and was ignored: {exception.Message}");
+        }
+
+        exit = 0;
+        return History.HistoryAnalyzer.Analyse(ledger, roster, run, new History.HistoryAnalysisOptions(), quarantine, aliases);
     }
 
     /// <summary>
@@ -271,7 +326,7 @@ internal static class MergeCommand
 
     public static void PrintUsage(TextWriter w)
     {
-        w.WriteLine("Usage: kronikol merge <inputs...> [-o <output.html>] [-t <title>] [--no-json] [--ci-summary] [--publish-artifacts]");
+        w.WriteLine("Usage: kronikol merge <inputs...> [-o <output.html>] [-t <title>] [--no-json] [--ci-summary] [--publish-artifacts] [--history <ledger>]");
         w.WriteLine();
         w.WriteLine("  Combines several mergeable TestRunReport.json files (produced with");
         w.WriteLine("  ReportConfigurationOptions.GenerateMergeableData = true) into one combined HTML report, and");
@@ -296,6 +351,10 @@ internal static class MergeCommand
         w.WriteLine("      --publish-artifacts");
         w.WriteLine("                       Hand the output directory to the CI artifact upload (GitHub Actions");
         w.WriteLine("                       `reports-path` output, Azure DevOps artifact.upload).");
+        w.WriteLine("      --history <path> Read the cross-run ledger (.kronikol/history.jsonl) and render what the last runs");
+        w.WriteLine("                       said: the History section, sparklines and verdict pills in the HTML, and the");
+        w.WriteLine("                       history lines in Failures.md. Never writes to the ledger; `kronikol history");
+        w.WriteLine("                       record` folds the shards' History.run.json fragments into it.");
         w.WriteLine("  -h, --help           Show this help.");
         w.WriteLine();
         w.WriteLine("Example:");
