@@ -146,7 +146,7 @@ public class TrackingDbCommand : DbCommand
         var op = DapperOperationClassifier.Classify(CommandText, CommandType);
         if (_options.ExcludedOperations.Contains(op.Operation)) return null;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return null;
 
         var traceId = Guid.NewGuid();
@@ -176,6 +176,7 @@ public class TrackingDbCommand : DbCommand
             false,
             DependencyCategory: DependencyCategories.SQL)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
@@ -200,7 +201,7 @@ public class TrackingDbCommand : DbCommand
         var op = DapperOperationClassifier.Classify(CommandText, CommandType);
         if (_options.ExcludedOperations.Contains(op.Operation)) return;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         var label = DapperOperationClassifier.GetDiagramLabel(op, effectiveVerbosity);
@@ -228,6 +229,7 @@ public class TrackingDbCommand : DbCommand
             (OneOf<HttpStatusCode, string>)"OK",
             DependencyCategory: DependencyCategories.SQL)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
@@ -250,7 +252,7 @@ public class TrackingDbCommand : DbCommand
         var op = DapperOperationClassifier.Classify(CommandText, CommandType);
         if (_options.ExcludedOperations.Contains(op.Operation)) return;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         var label = DapperOperationClassifier.GetDiagramLabel(op, effectiveVerbosity);
@@ -276,6 +278,7 @@ public class TrackingDbCommand : DbCommand
             (OneOf<HttpStatusCode, string>)"OK",
             DependencyCategory: DependencyCategories.SQL)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>

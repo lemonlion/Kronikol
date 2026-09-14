@@ -31,7 +31,7 @@ public class ServiceBusTracker : ITrackingComponent
 
         Interlocked.Increment(ref _invocationCount);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return (Guid.Empty, Guid.Empty);
 
@@ -69,6 +69,7 @@ public class ServiceBusTracker : ITrackingComponent
             DependencyCategory: DependencyCategories.ServiceBus
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -86,7 +87,7 @@ public class ServiceBusTracker : ITrackingComponent
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return;
 
@@ -124,6 +125,7 @@ public class ServiceBusTracker : ITrackingComponent
             DependencyCategory: DependencyCategories.ServiceBus
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(

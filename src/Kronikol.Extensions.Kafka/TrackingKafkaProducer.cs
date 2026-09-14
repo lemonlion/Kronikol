@@ -105,7 +105,7 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
     {
         if (!_options.PropagateTestIdentity) return;
 
-        var testInfo = TestInfoResolver.Resolve(null, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(null, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         message.Headers ??= new Headers();

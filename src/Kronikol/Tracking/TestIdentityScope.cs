@@ -46,6 +46,33 @@ public static class TestIdentityScope
     public static readonly (string Name, string Id) UnknownIdentity = (UnknownTestName, UnknownTestId);
 
     private static readonly AsyncLocal<(string Name, string Id)?> CurrentIdentity = new();
+    private static readonly AsyncLocal<bool> DetachedFlow = new();
+
+    /// <summary>
+    /// Whether the current flow is detached from any test identity: inside <see cref="Detach"/>, or work
+    /// started there. A detached flow resolves to no scenario unless a <see cref="Begin"/> scope names one.
+    /// </summary>
+    public static bool IsDetached => DetachedFlow.Value;
+
+    /// <summary>
+    /// Detaches the current flow from the test identity it would otherwise inherit, until the returned
+    /// scope is disposed. Work started inside — a host, its hosted services, a timer, a consumer loop —
+    /// inherits the detachment, so a web host built inside a test no longer carries that test into every
+    /// background call it makes for the rest of its life. An explicit <see cref="Begin"/> scope inside
+    /// a detached flow still names its scenario: a consumer handling a correlated message is that
+    /// scenario's work.
+    /// </summary>
+    public static IDisposable Detach()
+    {
+        var previous = DetachedFlow.Value;
+        DetachedFlow.Value = true;
+        return new DetachScope(previous);
+    }
+
+    private sealed class DetachScope(bool previous) : IDisposable
+    {
+        public void Dispose() => DetachedFlow.Value = previous;
+    }
 
     private static readonly object GlobalFallbackLock = new();
     private static (string Name, string Id)? _globalFallback;

@@ -49,6 +49,15 @@ public record RequestResponseLog(
     public string? PlantUml { get; set; }
     public string[]? FocusFields { get; set; }
     public DateTimeOffset? Timestamp { get; set; }
+
+    /// <summary>How the call got its scenario; null when the capture path predates the mark.</summary>
+    public AttributionSource? AttributionSource { get; set; }
+
+    /// <summary>
+    /// When <see cref="AttributionSource"/> is <see cref="Tracking.AttributionSource.Expired"/>: the scenario
+    /// whose context the call inherited after that scenario had ended.
+    /// </summary>
+    public string? ExpiredFromTestId { get; set; }
     public string? ActivitySpanId { get; set; }
     public string? ActivityTraceId { get; set; }
     public TestPhase Phase { get; set; }

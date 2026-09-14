@@ -8,6 +8,64 @@ namespace Kronikol.Tests.Tracking;
 public class TestInfoResolverTests
 {
     [Fact]
+    public void ResolveWithSource_says_which_level_answered()
+    {
+        Assert.Equal(AttributionSource.TestContext, TestInfoResolver.ResolveWithSource(null, () => ("T", "t-1"))!.Value.Source);
+
+        using (TestIdentityScope.Begin("S", "s-1"))
+            Assert.Equal(AttributionSource.Scope, TestInfoResolver.ResolveWithSource(null, (Func<(string, string)>?)null)!.Value.Source);
+
+        var accessor = new HttpContextAccessor { HttpContext = new DefaultHttpContext() };
+        accessor.HttpContext!.Request.Headers[TestTrackingHttpHeaders.CurrentTestNameHeader] = "H";
+        accessor.HttpContext.Request.Headers[TestTrackingHttpHeaders.CurrentTestIdHeader] = "h-1";
+        var fromHeaders = TestInfoResolver.ResolveWithSource(accessor, () => ("T", "t-1"))!.Value;
+        Assert.Equal(("h-1", AttributionSource.RequestHeader, true), (fromHeaders.Id, fromHeaders.Source, fromHeaders.IsAttributed));
+    }
+
+    [Fact]
+    public void A_detached_flow_resolves_to_no_scenario_unless_a_scope_names_one()
+    {
+        // A web host built inside a test starts its hosted services under the test's context. Detached,
+        // that inherited context counts for nothing; a scope a message carried still does.
+        Func<(string, string)> inherited = () => ("Inherited", "inherited-1");
+
+        using (TestIdentityScope.Detach())
+        {
+            Assert.Null(TestInfoResolver.Resolve(null, inherited));
+            Assert.Null(TestInfoResolver.ResolveWithSource(null, inherited));
+
+            using (TestIdentityScope.Begin("Correlated", "c-1"))
+            {
+                var who = TestInfoResolver.ResolveWithSource(null, inherited)!.Value;
+                Assert.Equal(("c-1", AttributionSource.Scope), (who.Id, who.Source));
+            }
+        }
+
+        Assert.Equal("inherited-1", TestInfoResolver.Resolve(null, inherited)!.Value.Id);
+    }
+
+    [Fact]
+    public void Background_capture_hands_back_the_unknown_identity_with_its_reason()
+    {
+        RequestResponseLogger.CaptureBackground = true;
+        try
+        {
+            var none = TestInfoResolver.ResolveWithSource(null, (Func<(string, string)>?)null)!.Value;
+            Assert.Equal((TestIdentityScope.UnknownTestId, AttributionSource.None, false), (none.Id, none.Source, none.IsAttributed));
+
+            using (TestIdentityScope.Detach())
+            {
+                Assert.Equal(AttributionSource.Detached, TestInfoResolver.ResolveWithSource(null, () => ("Inherited", "inherited-1"))!.Value.Source);
+                Assert.Equal(TestIdentityScope.UnknownTestId, TestInfoResolver.Resolve(null, () => ("Inherited", "inherited-1"))!.Value.Id);
+            }
+        }
+        finally
+        {
+            RequestResponseLogger.CaptureBackground = false;
+        }
+    }
+
+    [Fact]
     public void Returns_null_when_both_accessor_and_delegate_are_null()
     {
         var result = TestInfoResolver.Resolve(null, (Func<(string, string)>?)null);

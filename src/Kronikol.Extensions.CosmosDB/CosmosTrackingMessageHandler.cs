@@ -45,7 +45,7 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
         if (effectiveVerbosity == CosmosTrackingVerbosity.Summarised && cosmosOp.Operation == CosmosOperation.Other)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -82,6 +82,7 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
             DependencyCategory: DependencyCategories.CosmosDB
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -113,6 +114,7 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
             DependencyCategory: DependencyCategories.CosmosDB
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -127,7 +129,7 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
         return response;
     }
 
-    private void AutoCorrelateIfWrite(CosmosOperationInfo cosmosOp, (string Name, string Id) testInfo, HttpResponseMessage response, string? responseContent)
+    private void AutoCorrelateIfWrite(CosmosOperationInfo cosmosOp, TestIdentity testInfo, HttpResponseMessage response, string? responseContent)
     {
         if (!_options.AutoCorrelateWrites) return;
         if (!response.IsSuccessStatusCode) return;

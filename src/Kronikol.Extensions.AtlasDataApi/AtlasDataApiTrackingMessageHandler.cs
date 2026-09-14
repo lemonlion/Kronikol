@@ -62,7 +62,7 @@ public class AtlasDataApiTrackingMessageHandler : DelegatingHandler, ITrackingCo
             && apiOp.Operation == AtlasDataApiOperation.Other)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -98,6 +98,7 @@ public class AtlasDataApiTrackingMessageHandler : DelegatingHandler, ITrackingCo
             DependencyCategory: DependencyCategories.AtlasDataApi
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -129,6 +130,7 @@ public class AtlasDataApiTrackingMessageHandler : DelegatingHandler, ITrackingCo
             DependencyCategory: DependencyCategories.AtlasDataApi
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(

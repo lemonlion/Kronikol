@@ -4275,6 +4275,8 @@ public static class ReportGenerator
         log.DependencyCategory,
         log.CallerDependencyCategory,
         Phase = log.Phase.ToString(),
+        AttributionSource = log.AttributionSource?.ToString(),
+        ExpiredFrom = log.ExpiredFromTestId,
         log.IsUserAction,
         log.ActivityTraceId,
         log.ActivitySpanId,
@@ -4517,6 +4519,8 @@ public static class ReportGenerator
             log.DependencyCategory != null ? new XElement("DependencyCategory", log.DependencyCategory) : null,
             log.CallerDependencyCategory != null ? new XElement("CallerDependencyCategory", log.CallerDependencyCategory) : null,
             log.Phase != TestPhase.Unknown ? new XElement("Phase", log.Phase.ToString()) : null,
+            log.AttributionSource is { } xmlSource ? new XElement("AttributionSource", xmlSource.ToString()) : null,
+            log.ExpiredFromTestId is not null ? new XElement("ExpiredFrom", log.ExpiredFromTestId) : null,
             log.IsUserAction ? new XElement("IsUserAction", "true") : null,
             log.ActivityTraceId != null ? new XElement("ActivityTraceId", log.ActivityTraceId) : null,
             log.ActivitySpanId != null ? new XElement("ActivitySpanId", log.ActivitySpanId) : null,
@@ -4862,6 +4866,10 @@ public static class ReportGenerator
             AppendYaml(yml, indent + "  CallerDependencyCategory: ", log.CallerDependencyCategory);
         if (log.Phase != TestPhase.Unknown)
             AppendYaml(yml, indent + "  Phase: ", log.Phase.ToString());
+        if (log.AttributionSource is { } ymlSource)
+            AppendYaml(yml, indent + "  AttributionSource: ", ymlSource.ToString());
+        if (log.ExpiredFromTestId is not null)
+            AppendYaml(yml, indent + "  ExpiredFrom: ", log.ExpiredFromTestId);
         if (log.IsUserAction)
             yml.Append(indent + "  IsUserAction: true\n");
         if (log.ActivityTraceId is not null)
@@ -5774,6 +5782,8 @@ public static class ReportGenerator
                         ["dependencyCategory"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "What kind of thing the callee is (database, cache, queue, ...) — drives participant shape and arrow colour in the diagram" },
                         ["callerDependencyCategory"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The same, for the caller" },
                         ["phase"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(TestPhase)), ["description"] = "Whether the call happened during Setup or the Action under test; Unknown when phase detection is off" },
+                        ["attributionSource"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["enum"] = Enum.GetNames(typeof(AttributionSource)).Append(null).ToArray(), ["description"] = "How the call got its scenario: RequestHeader (the scenario's own request carried it), TestContext (the test framework's ambient context, or work that inherited it), Scope (an explicit scope or a message-carried identity), GlobalFallback, Detached (a detached flow, no scenario), None (nothing resolved), Expired (inherited from a scenario that had already ended: background). Null when the capture path predates the mark." },
+                        ["expiredFrom"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "When attributionSource is Expired: the id of the scenario whose context the call inherited after that scenario had ended" },
                         ["isUserAction"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "A UI interaction (click, navigate) rather than a dependency call" },
                         ["activityTraceId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C trace id — the bridge to OpenTelemetry traces and application logs. Unlike traceId, which is Kronikol's own identifier for the request/response pair.", ["examples"] = new[] { "4bf92f3577b34da6a3ce929d0e0e4736" } },
                         ["activitySpanId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C span id" },

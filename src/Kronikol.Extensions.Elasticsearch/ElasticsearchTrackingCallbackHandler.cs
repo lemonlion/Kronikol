@@ -53,7 +53,7 @@ public class ElasticsearchTrackingCallbackHandler : ITrackingComponent
             return;
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         var method = new System.Net.Http.HttpMethod(httpMethod);
@@ -95,6 +95,7 @@ public class ElasticsearchTrackingCallbackHandler : ITrackingComponent
                 : null,
             DependencyCategory: DependencyCategories.Elasticsearch)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
@@ -120,6 +121,7 @@ public class ElasticsearchTrackingCallbackHandler : ITrackingComponent
                 : null,
             DependencyCategory: DependencyCategories.Elasticsearch)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>

@@ -56,7 +56,7 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
         {
             ReconstructContent(request, requestBody);
@@ -104,6 +104,7 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -140,6 +141,7 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(

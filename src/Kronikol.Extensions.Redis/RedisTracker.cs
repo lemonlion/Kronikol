@@ -41,7 +41,7 @@ public class RedisTracker : ITrackingComponent
         if (effectiveVerbosity == RedisTrackingVerbosity.Summarised && op.Operation == RedisOperation.Other)
             return (Guid.Empty, Guid.Empty);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return (Guid.Empty, Guid.Empty);
 
@@ -75,6 +75,7 @@ public class RedisTracker : ITrackingComponent
             DependencyCategory: DependencyCategories.Redis
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
@@ -102,7 +103,7 @@ public class RedisTracker : ITrackingComponent
         if (effectiveVerbosity == RedisTrackingVerbosity.Summarised && op.Operation == RedisOperation.Other)
             return;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return;
 
@@ -132,6 +133,7 @@ public class RedisTracker : ITrackingComponent
             DependencyCategory: DependencyCategories.Redis
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>

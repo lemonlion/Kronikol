@@ -57,7 +57,7 @@ public class DynamoDbTrackingMessageHandler : DelegatingHandler, ITrackingCompon
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
         {
             ReconstructContent(request, requestBody);
@@ -99,6 +99,7 @@ public class DynamoDbTrackingMessageHandler : DelegatingHandler, ITrackingCompon
             DependencyCategory: DependencyCategories.DynamoDB
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -136,6 +137,7 @@ public class DynamoDbTrackingMessageHandler : DelegatingHandler, ITrackingCompon
             DependencyCategory: DependencyCategories.DynamoDB
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(

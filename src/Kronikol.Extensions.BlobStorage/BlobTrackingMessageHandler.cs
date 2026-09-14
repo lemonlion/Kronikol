@@ -46,7 +46,7 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         if (effectiveVerbosity == BlobTrackingVerbosity.Summarised && blobOp.Operation == BlobOperation.Other)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -82,6 +82,7 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             DependencyCategory: DependencyCategories.BlobStorage
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -113,6 +114,7 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             DependencyCategory: DependencyCategories.BlobStorage
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(

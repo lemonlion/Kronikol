@@ -207,7 +207,7 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
             return;
         }
 
-        var testInfo = TestInfoResolver.Resolve(_options.HttpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_options.HttpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         RequestResponseLogger.LogPair(
@@ -220,6 +220,6 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
             responseContent,
             statusCode,
             TestPhaseContext.Current,
-            _options.DependencyCategory);
+            _options.DependencyCategory, source: testInfo.Value.Source);
     }
 }

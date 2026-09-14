@@ -138,6 +138,7 @@ public class MessageTracker : ITrackingComponent
             CallerDependencyCategory: _callerDependencyCategory
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Timestamp = DateTimeOffset.UtcNow,
             NoteOnRight = noteOnRight,
             ActivitySpanId = Activity.Current?.SpanId.ToString(),
@@ -197,6 +198,7 @@ public class MessageTracker : ITrackingComponent
             CallerDependencyCategory: _callerDependencyCategory
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Timestamp = DateTimeOffset.UtcNow,
             ActivitySpanId = Activity.Current?.SpanId.ToString(),
             ActivityTraceId = Activity.Current?.TraceId.ToString(),
@@ -275,6 +277,7 @@ public class MessageTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Timestamp = now,
             ActivitySpanId = Activity.Current?.SpanId.ToString(),
             ActivityTraceId = Activity.Current?.TraceId.ToString(),
@@ -300,6 +303,7 @@ public class MessageTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Timestamp = now,
             ActivitySpanId = Activity.Current?.SpanId.ToString(),
             ActivityTraceId = Activity.Current?.TraceId.ToString(),
@@ -346,7 +350,7 @@ public class MessageTracker : ITrackingComponent
         return ReferenceEquals(requestAccessor, _httpContextAccessor);
     }
 
-    private (string TestName, string TestId, Guid TraceId)? GetTestInfo()
+    private (string TestName, string TestId, Guid TraceId, AttributionSource Source)? GetTestInfo()
     {
         var context = _httpContextAccessor?.HttpContext;
         if (context is not null)
@@ -363,33 +367,15 @@ public class MessageTracker : ITrackingComponent
                 return (
                     testNameValues.First()!,
                     testIdValues.First()!,
-                    Guid.Parse(traceIdValues.First()!)
+                    Guid.Parse(traceIdValues.First()!),
+                    AttributionSource.RequestHeader
                 );
             }
         }
 
-        if (_testInfoFallback is not null)
-        {
-            try
-            {
-                var info = _testInfoFallback();
-                if (!string.Equals(info.Id, TestIdentityScope.UnknownTestId, StringComparison.OrdinalIgnoreCase))
-                    return (info.Name, info.Id, Guid.NewGuid());
-            }
-            catch
-            {
-                // Delegate threw — fall through to scope
-            }
-        }
-
-        var scope = TestIdentityScope.Current;
-        if (scope is not null)
-            return (scope.Value.Name, scope.Value.Id, Guid.NewGuid());
-
-        var globalFallback = TestIdentityScope.GlobalFallback;
-        if (globalFallback is not null)
-            return (globalFallback.Value.Name, globalFallback.Value.Id, Guid.NewGuid());
-
-        return null;
+        // The shared chain: the framework context, an explicit scope, the global fallback — and a detached
+        // flow, which resolves to nothing unless a scope names its scenario.
+        var who = TestInfoResolver.ResolveWithSource(null, _testInfoFallback);
+        return who is { } identity ? (identity.Name, identity.Id, Guid.NewGuid(), identity.Source) : null;
     }
 }

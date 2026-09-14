@@ -88,7 +88,7 @@ public class MassTransitTracker : ITrackingComponent
 
     private void LogOutgoing(MassTransitOperationInfo op, object? message)
     {
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
@@ -110,6 +110,7 @@ public class MassTransitTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -127,6 +128,7 @@ public class MassTransitTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -137,7 +139,7 @@ public class MassTransitTracker : ITrackingComponent
 
     private void LogIncoming(MassTransitOperationInfo op, object? message)
     {
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
@@ -160,6 +162,7 @@ public class MassTransitTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -177,6 +180,7 @@ public class MassTransitTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -187,7 +191,7 @@ public class MassTransitTracker : ITrackingComponent
 
     private void LogFault(MassTransitOperationInfo op, Exception exception, bool outgoing)
     {
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
@@ -208,6 +212,7 @@ public class MassTransitTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -224,6 +229,7 @@ public class MassTransitTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(

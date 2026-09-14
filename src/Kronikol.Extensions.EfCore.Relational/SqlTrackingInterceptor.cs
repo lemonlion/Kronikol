@@ -83,6 +83,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
             DependencyCategory: DependencyCategories.SQL
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         };
 
@@ -139,6 +140,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
             DependencyCategory: DependencyCategories.SQL
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         };
 
@@ -236,8 +238,8 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
 
     // ─── Test identity resolution ────────────────────────────────
 
-    private (string Name, string Id)? GetTestInfo()
-        => TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+    private TestIdentity? GetTestInfo()
+        => TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
 
     // ─── URI construction ──────────────────────────────────────
 
@@ -348,6 +350,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
             DependencyCategory: DependencyCategories.SQL
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         };
 
@@ -436,6 +439,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
             DependencyCategory: DependencyCategories.SQL
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         };
 

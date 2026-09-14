@@ -192,31 +192,20 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             hasCallerNameHeader = _httpContextAccessor.HttpContext.Request.Headers.TryGetValue(TestTrackingHttpHeaders.CallerNameHeader, out callerNameHeaders);
         }
 
-        var currentTestInfoFetcher = (hasCurrentTestNameHeader && hasCurrentTestIdHeader) ? () => (currentTestNameHeaders.First()!, currentTestIdHeaders.First()!) : _currentTestInfoFetcher;
-
-        // Resolve test info once — if the fetcher throws, fall back to TestIdentityScope,
-        // then skip all tracking and just forward the request.
-        (string Name, string Id) currentTestInfo;
-        try
+        // Resolve test info once. A request that carries the scenario's own headers is that scenario's
+        // (RequestHeader); anything else goes through the shared chain, which honours a detached flow
+        // and says which level answered. Nothing resolved: skip all tracking and just forward.
+        TestIdentity currentTestInfo;
+        if (hasCurrentTestNameHeader && hasCurrentTestIdHeader)
         {
-            if (currentTestInfoFetcher is null)
-            {
-                var scopeIdentity = TestIdentityScope.Current ?? TestIdentityScope.GlobalFallback;
-                if (scopeIdentity is null)
-                    return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-                currentTestInfo = scopeIdentity.Value;
-            }
-            else
-            {
-                currentTestInfo = currentTestInfoFetcher();
-            }
+            currentTestInfo = new TestIdentity(currentTestNameHeaders.First()!, currentTestIdHeaders.First()!, AttributionSource.RequestHeader);
         }
-        catch
+        else
         {
-            var scopeIdentity = TestIdentityScope.Current ?? TestIdentityScope.GlobalFallback;
-            if (scopeIdentity is null)
+            var resolved = TestInfoResolver.ResolveWithSource(null, _currentTestInfoFetcher);
+            if (resolved is null)
                 return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            currentTestInfo = scopeIdentity.Value;
+            currentTestInfo = resolved.Value;
         }
 
         var traceId = hasTraceIdHeader ? Guid.Parse(traceIdHeaders.First()!) : Guid.NewGuid();
@@ -264,7 +253,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             Timestamp = DateTimeOffset.UtcNow,
             ActivitySpanId = activitySpanId,
             ActivityTraceId = activityTraceId,
-            Phase = currentPhase
+            Phase = currentPhase,
+            AttributionSource = currentTestInfo.Source
         });
 
         var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -292,7 +282,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             Timestamp = DateTimeOffset.UtcNow,
             ActivitySpanId = activitySpanId,
             ActivityTraceId = activityTraceId,
-            Phase = currentPhase
+            Phase = currentPhase,
+            AttributionSource = currentTestInfo.Source
         });
 
         return response;
@@ -314,7 +305,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         }
     }
 
-    private void InjectImplicitActionStartIfNeeded((string Name, string Id) currentTestInfo)
+    private void InjectImplicitActionStartIfNeeded(TestIdentity currentTestInfo)
     {
         if (_actionStartInjected || _currentStepTypeFetcher is null)
             return;

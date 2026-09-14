@@ -45,7 +45,7 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
         if (effectiveVerbosity == CloudStorageTrackingVerbosity.Summarised && gcsOp.Operation == CloudStorageOperation.Other)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -81,6 +81,7 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
             DependencyCategory: DependencyCategories.CloudStorage
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -112,6 +113,7 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
             DependencyCategory: DependencyCategories.CloudStorage
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(

@@ -57,7 +57,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         if (_options.ExcludedOperations.Contains(op.Operation))
             return;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return;
 
@@ -88,6 +88,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             false,
             DependencyCategory: _options.DependencyCategory)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         };
 
@@ -111,7 +112,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
             _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return;
 
@@ -141,6 +142,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             status,
             DependencyCategory: _options.DependencyCategory)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         };
 
@@ -183,7 +185,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         if (_options.ExcludedOperations.Contains(op.Operation))
             return null;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return null;
 
@@ -213,6 +215,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             false,
             DependencyCategory: _options.DependencyCategory)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         };
 
@@ -232,7 +235,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
             _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return;
 
@@ -262,6 +265,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             status,
             DependencyCategory: _options.DependencyCategory)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         };
 
@@ -293,7 +297,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
             _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return;
 
@@ -321,6 +325,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             status,
             DependencyCategory: _options.DependencyCategory)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         };
 

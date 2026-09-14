@@ -43,7 +43,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             return continuation(request, context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return continuation(request, context);
 
@@ -90,7 +90,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             return continuation(request, context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return continuation(request, context);
 
@@ -138,7 +138,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             return continuation(request, context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return continuation(request, context);
 
@@ -177,7 +177,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             return continuation(context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return continuation(context);
 
@@ -215,7 +215,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             return continuation(context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return continuation(context);
 
@@ -245,7 +245,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
     private async Task<TResponse> WrapUnaryResponse<TResponse>(
         Task<TResponse> responseTask,
-        (string Name, string Id) testInfo,
+        TestIdentity testInfo,
         string label, Uri uri, string serviceName,
         Guid traceId, Guid requestResponseId, GrpcTrackingVerbosity effectiveVerbosity,
         string? activityTraceId, string? activitySpanId,
@@ -271,7 +271,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     }
 
     private void LogRequest(
-        (string Name, string Id) testInfo, string label, string? content,
+        TestIdentity testInfo, string label, string? content,
         Uri uri, (string Key, string? Value)[] headers, string serviceName,
         Guid traceId, Guid requestResponseId,
         string? activityTraceId, string? activitySpanId,
@@ -285,6 +285,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             DependencyCategory: DependencyCategories.Grpc)
         {
             Phase = TestPhaseContext.Current,
+            AttributionSource = testInfo.Source,
             Timestamp = DateTimeOffset.UtcNow,
             ActivityTraceId = activityTraceId,
             ActivitySpanId = activitySpanId
@@ -297,7 +298,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     }
 
     private void LogResponse(
-        (string Name, string Id) testInfo, string label, string? content,
+        TestIdentity testInfo, string label, string? content,
         Uri uri, string serviceName,
         Guid traceId, Guid requestResponseId, HttpStatusCode statusCode,
         string? activityTraceId, string? activitySpanId,
@@ -312,6 +313,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             DependencyCategory: DependencyCategories.Grpc)
         {
             Phase = TestPhaseContext.Current,
+            AttributionSource = testInfo.Source,
             Timestamp = DateTimeOffset.UtcNow,
             ActivityTraceId = activityTraceId,
             ActivitySpanId = activitySpanId

@@ -77,7 +77,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
         if (_options.IgnoredCommands.Contains(e.CommandName)) return;
         if (!_options.TrackGetMore && e.CommandName.Equals("getMore", StringComparison.OrdinalIgnoreCase)) return;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         var opInfo = MongoDbOperationClassifier.Classify(
@@ -116,6 +116,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             RequestResponseType.Request, traceId, requestResponseId, false,
             DependencyCategory: DependencyCategories.MongoDB)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
@@ -158,6 +159,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             HttpStatusCode.OK,
             DependencyCategory: DependencyCategories.MongoDB)
         {
+            AttributionSource = pending.TestInfo.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
@@ -189,6 +191,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             HttpStatusCode.InternalServerError,
             DependencyCategory: DependencyCategories.MongoDB)
         {
+            AttributionSource = pending.TestInfo.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -217,7 +220,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
     }
 
     private record PendingOperation(
-        (string Name, string Id) TestInfo,
+        TestIdentity TestInfo,
         MongoDbOperationInfo OpInfo,
         Uri Uri,
         string Label,

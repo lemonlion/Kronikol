@@ -27,6 +27,14 @@ public static class RequestResponseLogger
     /// </summary>
     public static CaptureRedaction? Redaction { get; set; }
 
+    /// <summary>
+    /// Whether a call that resolves to no scenario is captured under the background identity
+    /// (<see cref="TestIdentityScope.UnknownIdentity"/>) instead of being dropped. Default <c>false</c>:
+    /// today's behaviour. On, the report's background section shows what the system under test did on
+    /// its own — a hosted service's polls, a consumer draining a queue — in no scenario's diagram.
+    /// </summary>
+    public static bool CaptureBackground { get; set; }
+
     public static void Log(RequestResponseLog log)
     {
         if (Redaction is { } redaction)
@@ -67,7 +75,8 @@ public static class RequestResponseLogger
         string? responseContent = null,
         HttpStatusCode? statusCode = null,
         TestPhase phase = TestPhase.Unknown,
-        string? dependencyCategory = null)
+        string? dependencyCategory = null,
+        AttributionSource? source = null)
     {
         var traceId = Guid.NewGuid();
         var requestResponseId = Guid.NewGuid();
@@ -78,7 +87,8 @@ public static class RequestResponseLogger
             DependencyCategory: dependencyCategory)
         {
             Timestamp = now,
-            Phase = phase
+            Phase = phase,
+            AttributionSource = source
         });
 
         Log(new RequestResponseLog(testName, testId, method, responseContent, uri,
@@ -87,7 +97,8 @@ public static class RequestResponseLogger
             DependencyCategory: dependencyCategory)
         {
             Timestamp = now,
-            Phase = phase
+            Phase = phase,
+            AttributionSource = source
         });
     }
 
@@ -119,25 +130,11 @@ public static class RequestResponseLogger
         TestPhase phase = TestPhase.Unknown,
         string? dependencyCategory = null)
     {
-        (string Name, string Id)? testInfo = null;
-
-        if (testInfoFetcher is not null)
-        {
-            try
-            {
-                var info = testInfoFetcher();
-                if (!string.Equals(info.Id, TestIdentityScope.UnknownTestId, StringComparison.OrdinalIgnoreCase))
-                    testInfo = info;
-            }
-            catch { /* Delegate threw — fall through to scope */ }
-        }
-
-        testInfo ??= TestIdentityScope.Current;
-
-        if (testInfo is null)
+        var who = TestInfoResolver.ResolveWithSource(null, testInfoFetcher);
+        if (who is null)
             return;
 
-        LogPair(testInfo.Value.Name, testInfo.Value.Id, method, uri, serviceName, callerName,
-            requestContent, responseContent, statusCode, phase, dependencyCategory);
+        LogPair(who.Value.Name, who.Value.Id, method, uri, serviceName, callerName,
+            requestContent, responseContent, statusCode, phase, dependencyCategory, who.Value.Source);
     }
 }

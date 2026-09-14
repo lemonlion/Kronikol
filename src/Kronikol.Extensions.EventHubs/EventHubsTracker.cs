@@ -32,7 +32,7 @@ public class EventHubsTracker : ITrackingComponent
 
         Interlocked.Increment(ref _invocationCount);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return (Guid.Empty, Guid.Empty);
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
@@ -52,6 +52,7 @@ public class EventHubsTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -69,7 +70,7 @@ public class EventHubsTracker : ITrackingComponent
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
@@ -86,6 +87,7 @@ public class EventHubsTracker : ITrackingComponent
             RequestResponseType.Response, traceId, requestResponseId, false,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(

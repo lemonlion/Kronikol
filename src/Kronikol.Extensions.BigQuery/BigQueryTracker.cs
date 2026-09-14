@@ -33,7 +33,7 @@ public class BigQueryTracker : ITrackingComponent
 
         Interlocked.Increment(ref _invocationCount);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return (Guid.Empty, Guid.Empty);
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
@@ -55,6 +55,7 @@ public class BigQueryTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.BigQuery)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -72,7 +73,7 @@ public class BigQueryTracker : ITrackingComponent
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
@@ -91,6 +92,7 @@ public class BigQueryTracker : ITrackingComponent
             RequestResponseType.Response, traceId, requestResponseId, false,
             DependencyCategory: DependencyCategories.BigQuery)
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(

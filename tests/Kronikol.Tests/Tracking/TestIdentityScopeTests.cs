@@ -6,6 +6,35 @@ namespace Kronikol.Tests.Tracking;
 public class TestIdentityScopeTests
 {
     [Fact]
+    public void Detach_marks_the_flow_and_restores_on_dispose()
+    {
+        Assert.False(TestIdentityScope.IsDetached);
+        using (TestIdentityScope.Detach())
+        {
+            Assert.True(TestIdentityScope.IsDetached);
+            using (TestIdentityScope.Detach())
+                Assert.True(TestIdentityScope.IsDetached);
+            Assert.True(TestIdentityScope.IsDetached);
+        }
+        Assert.False(TestIdentityScope.IsDetached);
+    }
+
+    [Fact]
+    public async Task Work_started_inside_a_detached_flow_stays_detached_after_the_scope_ends()
+    {
+        // A host built inside a test starts its hosted services there; their loops run on for as long
+        // as the host lives and must not carry the test.
+        var seen = new TaskCompletionSource<bool>();
+        Task loop;
+        using (TestIdentityScope.Detach())
+            loop = Task.Run(async () => { await Task.Delay(20); seen.SetResult(TestIdentityScope.IsDetached); });
+
+        Assert.False(TestIdentityScope.IsDetached);
+        Assert.True(await seen.Task);
+        await loop;
+    }
+
+    [Fact]
     public void Current_is_null_when_no_scope_active()
     {
         TestIdentityScope.Reset();

@@ -44,7 +44,7 @@ public class S3TrackingMessageHandler : DelegatingHandler, ITrackingComponent
         if (effectiveVerbosity == S3TrackingVerbosity.Summarised && s3Op.Operation == S3Operation.Other)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var testInfo = TestInfoResolver.Resolve(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -80,6 +80,7 @@ public class S3TrackingMessageHandler : DelegatingHandler, ITrackingComponent
             DependencyCategory: DependencyCategories.S3
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
@@ -111,6 +112,7 @@ public class S3TrackingMessageHandler : DelegatingHandler, ITrackingComponent
             DependencyCategory: DependencyCategories.S3
         )
         {
+            AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
