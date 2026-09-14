@@ -50,7 +50,7 @@ See the [Quick Start guide](https://github.com/lemonlion/Kronikol/wiki/Quick-Sta
 | Proxy tap (out-of-process capture for uninstrumentable backends) | `Kronikol.Extensions.ProxyTap` |
 | OTLP tap + export (OTel spans in, Kronikol captures out as spans) | `Kronikol.Extensions.Otlp` |
 | Playwright (browser-driven E2E identity) | `Kronikol.Playwright` |
-| CLI (`kronikol merge`, `kronikol ingest`, `kronikol query`, `kronikol export`, `kronikol ctrf`, `kronikol init-agents`) | `Kronikol.Tool` |
+| CLI (`kronikol merge`, `kronikol ingest`, `kronikol query`, `kronikol export`, `kronikol ctrf`, `kronikol history`, `kronikol init-agents`) | `Kronikol.Tool` |
 
 ## Use Cases
 
@@ -68,6 +68,7 @@ On a real suite `TestRunReport.json` runs to megabytes; the `Kronikol.Tool` CLI 
 ```bash
 kronikol query summary  ./Reports              # the run, its failures, the slowest scenarios
 kronikol query failures ./Reports              # why each one failed, with assertion messages
+kronikol query history  ./Reports              # what the last runs say: a regression, flaky, or failing since when
 kronikol query trace    ./Reports 4bf92f3577b34da6  # follow one W3C trace across scenarios, in order
 kronikol query grep     ./Reports "4173" --values   # where a wrong value entered the system
 kronikol query failures ./Reports --json            # the same answer as one envelope, for scripts

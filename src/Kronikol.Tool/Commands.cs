@@ -37,6 +37,9 @@ internal static class Commands
         new("ctrf",
             "Convert a TestRunReport.json into a Common Test Report Format document.",
             (a, o, e) => CtrfCommand.Run(a, o, e), CtrfCommand.PrintUsage),
+        new("history",
+            "Maintain the cross-run history ledger: record a run's fragments, create it, show, verify, prune or compact it.",
+            (a, o, e) => HistoryCommand.Run(a, o, e), HistoryCommand.PrintUsage),
         new("init-agents",
             "Install the test-debugging skill and the CLAUDE.md/AGENTS.md block into a repository.",
             (a, o, e) => InitAgentsCommand.Run(a, o, e), InitAgentsCommand.PrintUsage)

@@ -65,6 +65,15 @@ public record Scenario
     public int? Attempt { get; set; }
 
     /// <summary>
+    /// True when <see cref="Result"/> was not reported by the runner but defaulted — a scenario that
+    /// started and never ended, given <c>IngestRequest.ResultWhenUnknown</c>. The report's
+    /// <c>ResultDefaulted</c> diagnostic says how many; this says which. The cross-run ledger records such
+    /// a scenario as unknown rather than as the default, because a crashed worker's scenarios written as
+    /// passes would poison the trend permanently.
+    /// </summary>
+    public bool ResultDefaulted { get; set; }
+
+    /// <summary>
     /// Where the scenario is written - a project-relative path with forward slashes, matching
     /// <see cref="Feature.SourceFile"/>. Null on the lanes that cannot supply one. Deliberately NOT the
     /// bare-file-name contract of <see cref="ScenarioStep.SourceFile"/>: a step's path comes from

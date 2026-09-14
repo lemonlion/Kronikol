@@ -494,4 +494,118 @@ public record ReportConfigurationOptions
     /// full Specifications report.
     /// </summary>
     public Func<int>? ExpectedTestCount { get; set; }
+
+    // ─── Cross-run history ─────────────────────────────────────
+
+    /// <summary>
+    /// The history ledger this run reads and appends to: an append-only <c>history.jsonl</c> holding the
+    /// last runs of every suite, so a report can say whether a failure is new, whether the scenario has
+    /// been failing since a particular run, and whether it flips.
+    ///
+    /// <para>Default: <c>null</c>, which resolves the ledger in this order: the <c>KRONIKOL_HISTORY</c>
+    /// environment variable (the value <c>off</c> switches history off for the run), then
+    /// <c>&lt;repository root&gt;/.kronikol/history.jsonl</c> for the nearest repository or
+    /// <c>.kronikol</c> directory above the test output or the reports directory. A relative path is
+    /// taken against the repository root when there is one. When nothing resolves, the run still writes
+    /// its <c>History.run.json</c> fragment and records a <c>HistoryUnavailable</c> diagnostic saying how
+    /// to enable it.</para>
+    /// </summary>
+    public string? HistoryFilePath { get; set; }
+
+    /// <summary>
+    /// The identity this run is recorded under, for a CI provider Kronikol does not detect. Default:
+    /// <c>null</c>, which derives it: <c>gh:&lt;run id&gt;:&lt;attempt&gt;</c> on GitHub Actions,
+    /// <c>ado:&lt;build id&gt;:1</c> on Azure DevOps, and a timestamped <c>local:</c> id elsewhere. Set it
+    /// from the pipeline's own variables — <c>gitlab:$CI_PIPELINE_ID:1</c> — so that shards of one pipeline
+    /// fold into one run and a re-run does not overwrite the run it re-ran. One identity per suite per
+    /// run: a second append under the same identity is ignored as a duplicate.
+    /// </summary>
+    public string? HistoryRunId { get; set; }
+
+    /// <summary>
+    /// How many earlier runs of the suite the verdicts look back over. Default: 50. The ledger is scanned
+    /// end to end whatever the window; only the windowed runs are parsed, so this bounds the cost of
+    /// reading history at the end of a run. <c>kronikol history prune</c> drops runs outside it.
+    /// </summary>
+    public int HistoryWindow { get; set; } = 50;
+
+    /// <summary>
+    /// How many pass-or-fail verdicts a scenario needs before it can be called flaky or slower.
+    /// Default: 5. Below it the status verdicts (new, broke, failing, fixed) still apply and the report
+    /// says how many runs are recorded.
+    /// </summary>
+    public int HistoryMinRuns { get; set; } = 5;
+
+    /// <summary>Whether per-scenario durations are recorded, which is what the slower verdict and the duration trend need. Default: <c>true</c>.</summary>
+    public bool HistoryDurations { get; set; } = true;
+
+    /// <summary>
+    /// Whether the interaction fingerprint — the set of calls each scenario made, with ids and
+    /// timestamps templated away — and the call count are recorded. They are what the behaviour-changed
+    /// verdict compares. Default: <c>true</c>.
+    /// </summary>
+    public bool HistoryShapes { get; set; } = true;
+
+    /// <summary>
+    /// Whether the first line of each failure message (at most 200 characters) is kept in the ledger as
+    /// the failure's cluster key. Default: <c>true</c>. Set <c>false</c> to keep only a hash of that
+    /// line: failures still cluster across runs and no message text reaches the ledger.
+    /// </summary>
+    public bool HistoryErrorKeys { get; set; } = true;
+
+    /// <summary>
+    /// The flip rate — changes between pass and fail over the transitions between verdicts — at or above
+    /// which a scenario is flaky, once it has failed, recovered and failed again. Default: 0.1. Flip rate
+    /// rather than fail rate: a scenario that failed five of ten in a row broke and was fixed, one that
+    /// failed five of ten alternating is flaky, and the fail rate cannot tell them apart.
+    /// </summary>
+    public double HistoryFlakyRate { get; set; } = 0.1;
+
+    /// <summary>
+    /// The factor over the window's 95th-percentile duration that makes a scenario slower, when both this
+    /// run and the previous one exceed it. Default: 1.5.
+    /// </summary>
+    public double HistorySlowerBy { get; set; } = 1.5;
+
+    /// <summary>
+    /// The share of the previous run's scenarios a run may lack before it is recorded as partial — a
+    /// filtered run, a crashed half — so its missing scenarios are not reported absent and it is not the
+    /// run the next one is compared against. Default: 0.10.
+    /// </summary>
+    public double HistoryPartialThreshold { get; set; } = 0.10;
+
+    /// <summary>
+    /// Whether this run is partial. Default: <c>null</c>, which applies <see cref="HistoryPartialThreshold"/>.
+    /// <c>true</c> records it as partial whatever it holds; <c>false</c> records it as complete.
+    /// </summary>
+    public bool? HistoryPartialRun { get; set; }
+
+    /// <summary>
+    /// Whether the same calls in a different order is a verdict (<c>reordered</c>). Default: <c>false</c>,
+    /// because parallel steps reorder calls run to run without anything having changed.
+    /// </summary>
+    public bool HistoryReordered { get; set; }
+
+    /// <summary>
+    /// Whether the run writes <c>History.run.json</c> into the reports directory: its own line of history,
+    /// with the roster it needs. Default: <c>true</c>. It is what a sharded or CI build hands to
+    /// <c>kronikol history record</c>, which folds the fragments of one run into one ledger line.
+    /// </summary>
+    public bool GenerateHistoryFragment { get; set; } = true;
+
+    /// <summary>
+    /// Whether the run appends its line to the ledger itself. Default: <c>null</c>: append when the ledger
+    /// was named explicitly (<see cref="HistoryFilePath"/> or <c>KRONIKOL_HISTORY</c>), or when the run is
+    /// not on CI. A CI run that merely found the repository's ledger writes only its fragment — the
+    /// checkout is discarded, and the fragments are what the workflow records — while a developer's run
+    /// appends to the working tree's ledger directly. <c>true</c> always appends; <c>false</c> never does.
+    /// </summary>
+    public bool? WriteHistoryLedger { get; set; }
+
+    /// <summary>
+    /// Whether the test run report embeds the history it read — a sparkline and verdict beside each
+    /// scenario, a History section beside the timeline. Default: <c>true</c>. With no ledger the report
+    /// is byte-for-byte what it was without history.
+    /// </summary>
+    public bool EmbedHistoryInReport { get; set; } = true;
 }

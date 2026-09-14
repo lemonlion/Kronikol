@@ -10,7 +10,7 @@ namespace Kronikol.Tool;
 /// </summary>
 internal static partial class QueryCommand
 {
-    private static int Failures(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
+    private static int Failures(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error, Func<string, string?> getEnv)
     {
         // `failures` prints step addresses (`s1/1.1`) and used to refuse to take one back: the positional
         // was parsed and discarded, so the whole run came back looking like the narrowed answer.
@@ -47,6 +47,11 @@ internal static partial class QueryCommand
 
         var deepLink = DeepLinkPrefix(index);
 
+        // What the last runs say about each failure, when a ledger resolves without being asked for: the
+        // one line that tells a regression from the fifth day of the same red. Silent when nothing
+        // resolves - this verb never mentioned history and must not start failing over it.
+        var history = ReportHistory.TryVerdictsSilently(index, getEnv, _workingDirectory);
+
         // Paged through the one pager rather than a hand-rolled Skip/Take with a hand-rolled footer. That
         // footer hard-coded the 25 cap and ignored --limit, so `--limit 2` on three failures printed two
         // and then said "3 failed" with no resume - the one shape the footer contract exists to prevent.
@@ -67,6 +72,8 @@ internal static partial class QueryCommand
             }
             if (deepLink is not null && scenario.StableId.Length > 0)
                 writer.Line($"  open: {deepLink}{scenario.StableId}");
+            if (history?.At(scenario.Ordinal, scenario.StableId) is { } verdict)
+                writer.Line($"  history: {Kronikol.History.HistoryVerdictNames.Name(verdict.Primary)} — {QueryWriter.OneLine(verdict.Evidence, 160)} · {verdict.Series}");
             if (scenario.ErrorMessage is { } message)
                 writer.Line("  " + QueryWriter.OneLine(message, 240));
 

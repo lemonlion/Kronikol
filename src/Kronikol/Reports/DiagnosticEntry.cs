@@ -60,6 +60,24 @@ public enum DiagnosticKind
     /// recorded here: a reader can see the default was applied, and to how many.
     /// </summary>
     ResultDefaulted,
+
+    /// <summary>
+    /// Cross-run history was not read or not written for this run: no ledger could be found, the file
+    /// declares a newer format, it stayed locked past the retry budget, or a companion file beside it
+    /// could not be read. The message names what to do. The run's <c>History.run.json</c> fragment is
+    /// still written wherever it can be, so nothing is lost for a later <c>kronikol history record</c>.
+    /// </summary>
+    HistoryUnavailable,
+
+    /// <summary>
+    /// The run lacks more than <see cref="ReportConfigurationOptions.HistoryPartialThreshold"/> of the
+    /// previous run's scenarios — a filtered run, a crashed half — and was recorded as partial: nothing
+    /// is reported absent, and it is not the run the next one is compared against.
+    /// </summary>
+    HistoryPartialRun,
+
+    /// <summary>Lines of the history ledger could not be parsed and were skipped; <c>kronikol history verify</c> says which.</summary>
+    HistoryLedgerDamaged,
 }
 
 /// <summary>

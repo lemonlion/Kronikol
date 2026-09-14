@@ -75,6 +75,36 @@ internal sealed class QueryOptions
     /// </summary>
     public bool Baseline { get; private set; }
 
+    /// <summary><c>history --history FILE</c>: the ledger, instead of the one resolved from the environment or the report's repository.</summary>
+    public string? HistoryPath { get; private set; }
+
+    /// <summary><c>history --flaky</c>.</summary>
+    public bool Flaky { get; private set; }
+
+    /// <summary><c>history --new</c>.</summary>
+    public bool New { get; private set; }
+
+    /// <summary><c>history --failing</c>.</summary>
+    public bool Failing { get; private set; }
+
+    /// <summary><c>history --regressed</c>.</summary>
+    public bool Regressed { get; private set; }
+
+    /// <summary><c>history --changed</c>.</summary>
+    public bool Changed { get; private set; }
+
+    /// <summary><c>history --branch NAME</c>: the stream to read against.</summary>
+    public string? Branch { get; private set; }
+
+    /// <summary><c>history --compare-branch NAME</c>: a second stream to read against.</summary>
+    public string? CompareBranch { get; private set; }
+
+    /// <summary><c>history --suite NAME</c>: the suite, when the report does not carry one.</summary>
+    public string? SuiteOverride { get; private set; }
+
+    /// <summary>The window the history verb reads; the library's default, because the verb has no flag for it yet.</summary>
+    public int HistoryWindowOrDefault => 50;
+
     /// <summary>
     /// The flags actually written on the command line, as their argv tokens. A value alone cannot answer
     /// this: <c>--limit</c> defaults to <see cref="int.MaxValue"/> and <c>--failed</c> to false, so a verb
@@ -99,7 +129,8 @@ internal sealed class QueryOptions
         "--label", "--service", "--status", "--method", "--grep", "--step", "--sort", "--path", "--in",
         "--where", "--group-by", "--tolerance", "--count", "--json", "--failed", "--errors-only",
         "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
-        "--number", "--baseline", "--describe"
+        "--number", "--baseline", "--describe", "--history", "--flaky", "--new", "--failing", "--regressed",
+        "--changed", "--branch", "--compare-branch", "--suite"
     ];
 
     /// <summary>
@@ -240,6 +271,15 @@ internal sealed class QueryOptions
                 case "--both": options.Both = true; break;
                 case "--number": options.Number = true; break;
                 case "--baseline": options.Baseline = true; break;
+                case "--history": if (Next(arg) is not { } history) return null; options.HistoryPath = history; break;
+                case "--branch": if (Next(arg) is not { } branch) return null; options.Branch = branch; break;
+                case "--compare-branch": if (Next(arg) is not { } compareBranch) return null; options.CompareBranch = compareBranch; break;
+                case "--suite": if (Next(arg) is not { } suiteName) return null; options.SuiteOverride = suiteName; break;
+                case "--flaky": options.Flaky = true; break;
+                case "--new": options.New = true; break;
+                case "--failing": options.Failing = true; break;
+                case "--regressed": options.Regressed = true; break;
+                case "--changed": options.Changed = true; break;
 
                 default:
                     if (arg.StartsWith("--", StringComparison.Ordinal))
@@ -332,6 +372,17 @@ internal sealed class QueryOptions
         if (Values) Flag("--values");
         if (Step is not null) Flag("--step", Step);
         if (SlowerThan is not null) Flag("--slower-than", SlowerThan.Value.ToString(CultureInfo.InvariantCulture));
+        // The history verb's corpus: which ledger, which stream, which verdicts - a page resumed against
+        // a different ledger or stream is a different listing.
+        if (HistoryPath is not null) Flag("--history", HistoryPath);
+        if (SuiteOverride is not null) Flag("--suite", SuiteOverride);
+        if (Branch is not null) Flag("--branch", Branch);
+        if (CompareBranch is not null) Flag("--compare-branch", CompareBranch);
+        if (Flaky) Flag("--flaky");
+        if (New) Flag("--new");
+        if (Failing) Flag("--failing");
+        if (Regressed) Flag("--regressed");
+        if (Changed) Flag("--changed");
         // Format last, so a text footer's flag order is untouched: this only ever fires when --json was
         // given, and then the whole point of `next` is that it can be appended verbatim to the same call.
         if (Json) Flag("--json");

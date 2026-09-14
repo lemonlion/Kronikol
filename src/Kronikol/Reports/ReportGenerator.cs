@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using Kronikol.History;
+using System.Globalization;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -300,6 +301,13 @@ public static class ReportGenerator
             .Where(x => !(x?.TrackingIgnore ?? true))
             .ToArray();
 
+        // Cross-run history: resolved, read and analysed once, before any output is written, so the
+        // digest, the CTRF document, the pointer and the report all say the same thing about this run
+        // (plans/CROSS_RUN_HISTORY_PLAN.md §6.6). It never throws — anything that stops it is a diagnostic —
+        // and it is null only when history is switched off.
+        var history = HistoryRunContext.Create(features, dataLogs, suite, ciMetadata, new DateTimeOffset(endRunTime.ToUniversalTime()),
+            options, CurrentReportsDirectory, KronikolVersion);
+
         var specsDataExtension = GetDataFormatExtension(options.SpecificationsDataFormat);
         var testRunDataExtension = GetDataFormatExtension(options.TestRunReportDataFormat);
 
@@ -394,7 +402,7 @@ public static class ReportGenerator
                     // sibling action in this same parallel list, so File.Exists here would answer whatever
                     // the scheduler happened to have done.
                     options.GenerateTestRunReport ? options.HtmlTestRunReportFileName : null,
-                    KronikolVersion, reportDiagnostics, suite));
+                    KronikolVersion, reportDiagnostics, suite, history: history?.Verdicts));
 
             Add(FailuresDigestFileName, () => WriteFile(digest.Value.Markdown, FailuresDigestFileName));
             Add(FailuresDigestJsonlFileName, () => WriteFile(digest.Value.Jsonl, FailuresDigestJsonlFileName));
@@ -413,8 +421,16 @@ public static class ReportGenerator
         if (options.GenerateCtrfReport)
         {
             Add(CtrfReportGenerator.FileName, () => WriteFile(
-                CtrfReportGenerator.Generate(features, startRunTime, endRunTime, ciMetadata, KronikolVersion, suite),
+                CtrfReportGenerator.Generate(features, startRunTime, endRunTime, ciMetadata, KronikolVersion, suite, history?.Verdicts),
                 CtrfReportGenerator.FileName));
+        }
+
+        // The run's own line of history, with the roster it needs: race-free (one process, its own
+        // directory), part of the CI artifact by construction, and the unit `kronikol history record`
+        // folds — which is what makes eight shards one run (plans/CROSS_RUN_HISTORY_PLAN.md §3.6).
+        if (options.GenerateHistoryFragment && history is not null)
+        {
+            Add(HistoryFormat.FragmentFileName, () => WriteFile(history.Fragment(), HistoryFormat.FragmentFileName));
         }
 
         if (options.WriteAgentInstructions)
@@ -428,6 +444,10 @@ public static class ReportGenerator
         }
 
         var written = RunOutputs(actions);
+
+        // After every output is on disk: a run whose report failed to write still has its fragment, and a
+        // ledger that stays locked past the retry budget costs a diagnostic, never the run.
+        history?.Append();
 
         var diagnostics = ReportDiagnostics.Analyse(
             RequestResponseLogger.RequestAndResponseLogs, features,
@@ -453,7 +473,12 @@ public static class ReportGenerator
             }.Where(written.Contains),
             agentInstructionsWritten: options.WriteAgentInstructions
                                       && File.Exists(Path.Combine(reportsDir, AgentInstructionsGenerator.ClaudeFileName)),
-            suite: suite);
+            suite: suite,
+            // Only when it has something to say, or when the pointer is speaking anyway: a line on every
+            // green run is a line people learn to skip.
+            history: history is not null && (history.Verdicts?.HasAnything == true || features.Any(f => (f.Scenarios ?? []).Any(s => s.Result == ExecutionResult.Failed)))
+                ? history.Summary()
+                : null);
 
         if (options.WriteCiSummary)
         {

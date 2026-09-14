@@ -97,7 +97,7 @@ matters.
 | "what broke since yesterday?" | `diff <report> --baseline` — finds last-green itself; or name both: `diff old.json new.json`. Matched on `stableId`, and it also reports services that stopped being tracked |
 | "these two runs/scenarios differ — how?" | `compare s3 s7` (it names the first differing body) → `diff s3/i47 s7/i47` — only the differing paths, never two payloads |
 | "why is this slow?" | `summary` → `services --sort duration` → `flow s3` |
-| "is this flaky?" | `diff` across runs; `stableId` survives re-runs, ordinals do not — and `trace <id>` flags a trace id leaking across scenarios, the classic flaky smell |
+| "is this flaky?" / "has this failed before?" / "is this failure new?" | `history <report> s3` — the ledger's verdict with the evidence: `broke` (a regression), `failing` since which run, `flaky` (flip rate, not fail rate), `new`. `history <report> --flaky` lists every flaky scenario; `failures` already prints the same `history:` line under each failure when a ledger is there. `trace <id>` flags a trace id leaking across scenarios, the classic flaky smell |
 | "is this one request or a chain?" | `trace s3/i47` — every call sharing that W3C trace id, chronologically |
 | "the report shows X but I can't find it" | `note s3/d0` — see **Notes are a rendering** below |
 | "show me the flow" | `flow s3` — never the diagram |
@@ -187,6 +187,17 @@ matters.
   - `! a scenario listing has no per-step form` (`scenarios`) and `! the failure digest is per scenario`
     (`failures`) — you gave a step address to a verb that answers per scenario. It scoped to the
     scenario, which is the nearest true answer, and the line names the verb that answers for the step.
+  - `! no History.run.json beside the report` (`history`) — the run's own line of history is not next
+    to the report, so the ledger is read against the report's results alone: status, attempt and
+    duration verdicts still hold, behaviour verdicts (`behaviour-changed`, `reordered`) are off.
+  - `! no ledger at … yet — every scenario reads as its first run; the next recorded run starts the history`
+    (`history`) — the ledger resolves to a file nobody has written yet. Not an error: record a run.
+  - `! N line(s) of the ledger could not be parsed and were skipped — kronikol history verify says which`
+    (`history`) — skipped, not fatal; `kronikol history compact` rewrites the file without them.
+  - `! the quarantine list beside the ledger could not be read and was ignored` and
+    `! the alias file beside the ledger could not be read and was ignored` (`history`) —
+    `.kronikol/quarantine.json` or `aliases.json` is malformed; the verdicts are computed without it.
+  - `! history is per scenario` (`history`) — a step address was given; the answer is the scenario's.
   - `! this report has no stableIds` (`diff`) — both runs were written before 3.0.47, so they are
     **matched by position**. A scenario added or removed anywhere shifts everything after it and the
     diff is noise. When only ONE side lacks ids, or both have ids and none agree while the scenario

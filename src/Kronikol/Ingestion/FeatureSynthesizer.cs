@@ -154,6 +154,7 @@ public static class FeatureSynthesizer
                 DisplayName = name,
                 Description = acc.Description,
                 Result = acc.HasEnd ? MapStatus(acc.Status) : resultWhenUnknown,
+                ResultDefaulted = !acc.HasEnd,
                 ErrorMessage = acc.Error,
                 ErrorStackTrace = acc.StackTrace,
                 Duration = acc.DurationMs is { } ms ? TimeSpan.FromMilliseconds(ms)

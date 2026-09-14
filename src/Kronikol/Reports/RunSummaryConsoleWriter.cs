@@ -27,13 +27,18 @@ public sealed record RunSummaryFailure(string StableId, string FeatureName, stri
 /// pointer that printed the directory for <c>Combined.json</c> printed a command that fails. Null means
 /// the directory is enough.
 /// </param>
+/// <param name="History">
+/// The one line the cross-run ledger has to say about this run — what broke, what was fixed, what flips —
+/// or null when there is nothing worth a line. Printed as given, on both channels.
+/// </param>
 public sealed record RunSummary(
     string Directory,
     IReadOnlyList<RunSummaryFile> Files,
     int ScenarioCount,
     IReadOnlyList<RunSummaryFailure> Failures,
     bool AgentInstructionsWritten,
-    string? QueryTarget = null);
+    string? QueryTarget = null,
+    string? History = null);
 
 /// <summary>
 /// The last thing a run says: where the reports are, how big the data file is, what failed, and the one
@@ -70,7 +75,7 @@ public static class RunSummaryConsoleWriter
     /// Gathers the pointer's facts. <paramref name="candidateFiles"/> are the names it should mention;
     /// those absent from disk are dropped, so the pointer never claims a file an output failure prevented.
     /// </summary>
-    public static RunSummary Summarise(Feature[] features, string directory, IEnumerable<string> candidateFiles, bool agentInstructionsWritten, string? suite = null, string? queryTarget = null)
+    public static RunSummary Summarise(Feature[] features, string directory, IEnumerable<string> candidateFiles, bool agentInstructionsWritten, string? suite = null, string? queryTarget = null, string? history = null)
     {
         ArgumentNullException.ThrowIfNull(features);
         ArgumentNullException.ThrowIfNull(directory);
@@ -111,7 +116,7 @@ public static class RunSummaryConsoleWriter
             }
         }
 
-        return new RunSummary(directory, files, scenarioCount, failures, agentInstructionsWritten, queryTarget);
+        return new RunSummary(directory, files, scenarioCount, failures, agentInstructionsWritten, queryTarget, history);
     }
 
     /// <summary>Formats the pointer. Ends with a newline; a run with nothing failing is one line.</summary>
@@ -124,6 +129,11 @@ public static class RunSummaryConsoleWriter
             ? ""
             : "  (" + string.Join(" · ", summary.Files.Select(Describe)) + ")";
         text.Append("Kronikol: reports written to ").Append(OneLine(summary.Directory)).Append(files).Append('\n');
+
+        // What the last runs say about this one, when they say anything: the reader of a failing build
+        // wants "1 broke, 2 flaky" before the list of names.
+        if (summary.History is { Length: > 0 } history)
+            text.Append("  ").Append(OneLine(history)).Append('\n');
 
         if (summary.Failures.Count > 0)
         {
@@ -219,6 +229,9 @@ public static class RunSummaryConsoleWriter
         if (summary.Failures.Count > 0)
             markdown.Append($"kronikol query failures {target}\n");
         markdown.Append("```\n\n");
+
+        if (summary.History is { Length: > 0 } history)
+            markdown.Append(OneLine(history)).Append("\n\n");
 
         if (HasDigest(summary))
             markdown.Append($"The artifact also carries `{DigestFileName}` — every failure in context, ready to read.\n\n");

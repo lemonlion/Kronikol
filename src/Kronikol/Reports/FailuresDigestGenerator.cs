@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using Kronikol.History;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Kronikol.Constants;
@@ -107,7 +108,7 @@ public static class FailuresDigestGenerator
     /// </remarks>
     public static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string? htmlFileName,
         string kronikolVersion, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null,
-        IReadOnlyDictionary<string, List<string?>>? stepPaths = null)
+        IReadOnlyDictionary<string, List<string?>>? stepPaths = null, HistoryVerdicts? history = null)
     {
         ArgumentNullException.ThrowIfNull(features);
 
@@ -117,8 +118,14 @@ public static class FailuresDigestGenerator
         var interactions = IndexInteractions(trackedLogs);
 
         var entries = failures
-            .Select(f => Build(f, attributed, interactions, htmlFileName, suite))
+            .Select(f => Build(f, attributed, interactions, htmlFileName, suite, history))
             .ToArray();
+
+        // With history known, what broke is worked through before what was already failing and before
+        // what flips (HistorySummary.Rank). A stable sort, so the sN order still decides within a rank.
+        // Without history the order is untouched, and so is every byte of the file.
+        if (history is not null)
+            entries = entries.OrderBy(e => HistorySummary.Rank(e.History)).ToArray();
 
         // Judged over every interaction of every failing scenario, not only the calls the digest lists:
         // the values are missing from the report whether or not the statement ran inside the step that
@@ -130,7 +137,7 @@ public static class FailuresDigestGenerator
                              && ParameterCaptureHint.Applies(l.DependencyCategory, l.Content)));
 
         return new FailuresDigest(
-            BuildMarkdown(entries, scenarios.Length, scenarios.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql),
+            BuildMarkdown(entries, scenarios.Length, scenarios.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql, history),
             BuildJsonl(entries, scenarios.Length, kronikolVersion, suite));
     }
 
@@ -161,7 +168,8 @@ public static class FailuresDigestGenerator
         string? DeepLink,
         string? SourceFile,
         int? SourceLine,
-        (string Method, string File, int Line)? ThrownAt);
+        (string Method, string File, int Line)? ThrownAt,
+        ScenarioHistory? History);
 
     /// <summary>
     /// Scenarios in the order <c>kronikol query</c> numbers them: features by display name, scenarios in
@@ -200,11 +208,12 @@ public static class FailuresDigestGenerator
     }
 
     private static Entry Build(Located located, IReadOnlyDictionary<string, List<string?>> stepPaths,
-        IReadOnlyDictionary<string, List<RequestResponseLog>> interactions, string? htmlFileName, string? suite)
+        IReadOnlyDictionary<string, List<RequestResponseLog>> interactions, string? htmlFileName, string? suite, HistoryVerdicts? history)
     {
         var scenario = located.Scenario;
         var address = "s" + located.Ordinal;
         var stableId = ScenarioStableId.Compute(suite, located.Feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+        var scenarioHistory = history?.At(located.Ordinal, stableId);
         var diff = ErrorDiffParser.TryParseExpectedActual(scenario.ErrorMessage);
 
         var ordered = OrderedSteps(scenario).ToArray();
@@ -233,7 +242,8 @@ public static class FailuresDigestGenerator
             htmlFileName is null ? null : $"{htmlFileName}.html#sid-{stableId}",
             scenario.SourceFile,
             scenario.SourceLine,
-            FailureText.ThrownAt(scenario.ErrorStackTrace, scenario.SourceFile));
+            FailureText.ThrownAt(scenario.ErrorStackTrace, scenario.SourceFile),
+            scenarioHistory);
     }
 
     /// <summary>
@@ -443,7 +453,7 @@ public static class FailuresDigestGenerator
     // ─── Markdown ──────────────────────────────────────────────
 
     private static string BuildMarkdown(IReadOnlyList<Entry> entries, int scenarioCount, int passedCount, string kronikolVersion,
-        IReadOnlyList<DiagnosticEntry>? diagnostics, bool unparameterisedSql)
+        IReadOnlyList<DiagnosticEntry>? diagnostics, bool unparameterisedSql, HistoryVerdicts? history)
     {
         var markdown = new StringBuilder();
 
@@ -492,6 +502,15 @@ public static class FailuresDigestGenerator
         markdown.Append("kronikol query steps . s3           # one scenario's whole tree\n");
         markdown.Append("kronikol query flow . s3            # its calls, in order, instead of the diagram\n");
         markdown.Append("kronikol query http . s3/i0 --body  # one payload, once you have named it\n```\n\n");
+
+        // What the last runs say about this one, before any failure is read: a regression reads
+        // differently from the fifth day of the same red, and the entries below are ordered accordingly.
+        if (history is not null)
+        {
+            markdown.Append($"**History:** {Escape(HistorySummary.Line(history))}. Failures are worked through ");
+            markdown.Append("regressions first, then those with no history, then those already failing, then those that flip; ");
+            markdown.Append("each carries its verdict and the runs behind it. `kronikol query history .` has the whole run.\n\n");
+        }
 
         // The one dead end the report cannot answer its way out of. Once, not per call: a run with this
         // configuration has it on every statement, and repeating it would bury the failures.
@@ -583,6 +602,11 @@ public static class FailuresDigestGenerator
 
         if (entry.ExampleValues is { Count: > 0 } examples)
             markdown.Append($"Example row: {Escape(string.Join(", ", examples.Select(kvp => $"{kvp.Key}={kvp.Value}")))}\n\n");
+
+        // The verdict and the numbers behind it, so a reader can disagree with the word. The series is
+        // the last results oldest first, this run last: PPPPF is a regression, FPFPF is not.
+        if (entry.History is { } history)
+            markdown.Append($"History: **{HistoryVerdictNames.Name(history.Primary)}** — {Escape(history.Evidence)} · last runs `{history.Series}`\n\n");
 
         // Where it was thrown, which is not where the scenario was written: the line above names the
         // declaration site an adapter reported, this one names the frame that raised. Every other surface
@@ -821,10 +845,26 @@ public static class FailuresDigestGenerator
                 // because the step had none attributed to it, or nothing captured at all. Without it an
                 // empty array meant all three.
                 ["callsScope"] = entry.CallsScope,
-                ["attachments"] = entry.Attachments.Select(a => new { a.Name, Path = a.RelativePath }).ToArray(),
-                // Last, so that it is written after every Capped call that could set it.
-                ["truncated"] = truncated
+                ["attachments"] = entry.Attachments.Select(a => new { a.Name, Path = a.RelativePath }).ToArray()
             };
+
+            // The cross-run verdict, when a ledger was read: the word, every verdict that applies, the
+            // evidence, and the series a sparkline is drawn from. Absent — not null — when there was no
+            // history, so a run without a ledger writes the bytes it always wrote.
+            if (entry.History is { } history)
+                record["history"] = new
+                {
+                    primary = HistoryVerdictNames.Name(history.Primary),
+                    verdicts = history.Verdicts.OrderBy(HistoryAnalyzer.Precedence).Select(HistoryVerdictNames.Name).ToArray(),
+                    evidence = Capped(history.Evidence),
+                    series = history.Series,
+                    failingSince = history.FailingSince?.RunId,
+                    failRate = Math.Round(history.FailRate, 3),
+                    flipRate = Math.Round(history.FlipRate, 3)
+                };
+
+            // Last, so that it is written after every Capped call that could set it.
+            record["truncated"] = truncated;
             lines.Append(JsonSerializer.Serialize(record, options)).Append('\n');
         }
 

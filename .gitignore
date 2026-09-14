@@ -376,3 +376,6 @@ AGENTS.md
 
 # query-bench corpus: ~140 MB, regenerated in one command (tools/query-bench/README.md)
 tools/query-bench/TestRunReport*.json
+
+# Cross-run history for this repository lives on the kronikol-history branch, not in the working tree
+.kronikol/

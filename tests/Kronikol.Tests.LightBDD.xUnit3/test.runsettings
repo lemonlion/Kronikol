@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  These tests generate Kronikol reports in-process, hundreds of them per run, and the report generator
+  resolves the cross-run history ledger by walking up from the test output to the nearest repository:
+  this one. Every generation would append a line to c:/.../Kronikol/.kronikol/history.jsonl. The
+  sentinel switches history off for the whole process; tests of the feature itself name a ledger
+  explicitly with ReportConfigurationOptions.HistoryFilePath, which wins over the variable.
+-->
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <KRONIKOL_HISTORY>off</KRONIKOL_HISTORY>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>

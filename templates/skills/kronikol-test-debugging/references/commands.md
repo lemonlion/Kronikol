@@ -56,6 +56,10 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps` |
 | `--out FILE` | write the answer to a file instead of the terminal; prints one line. Lifts the byte budget — a file is not a context window. `http`, `body`, `note` and `diagram` write the payload; every other verb writes what it would have printed |
 | `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `services`, `interactions`, `assertions`, `diff`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
+| `--history FILE` | the cross-run ledger `history` reads, instead of `$KRONIKOL_HISTORY` or the `.kronikol/history.jsonl` above the report. `history` only |
+| `--flaky`, `--new`, `--failing`, `--regressed`, `--changed` | which verdicts `history` lists; several combine as OR. `history` only |
+| `--branch NAME`, `--compare-branch NAME` | the branch stream `history` reads against, and a second one to read the same run against. `history` only |
+| `--suite NAME` | the suite `history` looks the run up under, when the report does not carry one. `history` only |
 | `--describe` | one JSON document naming every verb, the flags each one reads (with what each takes), the address forms with a parsing example of each, the exit codes and the envelope's members: `kronikol query --describe`. Needs no report. Generated from the table the tool dispatches and validates from, so it cannot name a verb the tool will not run. For tooling — a wrapper validating arguments, an MCP server building a tool list — not for reading; this document is the prose form of the same table (3.7.0) |
 
 ### The `--json` envelope
@@ -411,6 +415,65 @@ before 3.1.0); that side is noted and the section skipped.
 holding one), else exit 2 naming both. The argument order inverts on purpose — `diff old new` names the
 old report first, `diff <report> --baseline` names the current one — but the output is oriented the same
 way either way: `-` is the older run, `+` the newer, `BROKE` means it passed then and fails now.
+
+### `history <report> [s3 | sid:<id>] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--suite NAME] [--history FILE]`
+
+```
+kronikol query history <report>                  # every scenario with a verdict, regressions first
+kronikol query history <report> --flaky          # only the ones the ledger calls flaky
+kronikol query history <report> s3               # one scenario: its verdicts, the numbers, its last runs
+kronikol query history <report> --branch main --compare-branch feature/x
+```
+
+What the last runs say about this one, read from the cross-run ledger — the append-only
+`.kronikol/history.jsonl` a run appends to (or, on CI, the `History.run.json` fragments that
+`kronikol history record` folds into it). The first line is the run's summary — `1 broke, 2 flaky
+(against 12 earlier runs on main)` — then one entry per scenario with a verdict:
+
+```
+s3  Checkout › Pay with an expired card
+  broke              PPPPPF     passed in gh:18273645:1 (abc1234), failing now
+s7  Refunds › Refund twice
+  flaky              PFPPFPPPFP failed 3 of the last 10 runs with a verdict, 6 flips, last failed 1 run ago
+```
+
+The vocabulary, and what each word is measured from:
+
+| Verdict | Meaning |
+|---|---|
+| `broke` | failing now, passing in the previous run that had a verdict — a regression |
+| `failing` | failing now and in the previous run; the evidence says since which run |
+| `always-failing` | failing in every run of the window; it has never been seen passing |
+| `fixed` | passing now, failing in the previous run |
+| `flaky` | it has failed, recovered and failed again, at or above the flip rate — or it passed on a retry. **Flip rate, not fail rate**: five failures in a row is one break and one fix; five alternating is flakiness |
+| `new` | not in any earlier run of this stream |
+| `slower` | above the window's p95 duration by the factor, in this run and the previous one |
+| `behaviour-changed` | the same status with a different set of calls than the previous run; the evidence gives the call counts |
+| `reordered` | the same calls in a different order — only reported when the run asked for it |
+| `unstable-shape` | the calls change most runs, so behaviour verdicts are suppressed for it |
+| `quarantined` | on `.kronikol/quarantine.json`; additive, with the reason |
+| `unknown` | no verdict — a defaulted result, or a failure with nothing earlier to compare against |
+
+The series (`PPPPPF`) is the last results oldest first, this run last: `P` passed, `F` failed, `S`
+skipped, `?` no verdict, `.` not in that run. Verdicts are computed **within a branch stream** (the
+run's own branch; runs off CI form the `local` stream), so a feature branch's failure is not main's
+history — `--branch` reads against another stream and `--compare-branch` adds a second reading of the
+same run. A run that lacks more than a tenth of the previous run's scenarios (a filtered run, a
+crashed half) is **partial**: nothing is reported absent from it, and the next run is not compared
+against it. Below the minimum number of runs the status verdicts still apply, and the header says how
+many runs are recorded and how many flakiness needs.
+
+`s3` answers for one scenario in full: every verdict, the flip and fail rates, since when it has been
+failing, its duration against the p95, its calls against the previous run, its quarantine entry, and
+its last runs one per line with commit and duration. `--json` carries the same rows plus a `history`
+member with the run-level summary, the counts per verdict, the absent scenarios and any new
+`caller>service` dependency pairs.
+
+The verdicts are the library's own — the same analysis the run performed when it wrote `Failures.md`
+(which carries a `History:` line per failure and works through regressions first) and
+`ctrf-report.json` (`extra.kronikolHistory`, and `flaky` set from the ledger) — read again here
+against the ledger as it stands now. `failures` prints the same `history:` line under each failure
+whenever a ledger resolves on its own, and says nothing about history when none does.
 
 ## Exit codes
 

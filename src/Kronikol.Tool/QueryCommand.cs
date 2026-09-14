@@ -22,9 +22,13 @@ internal static partial class QueryCommand
     /// parallel xunit process as the rest of the suite. The repo convention, cf.
     /// <c>CiMetadataDetector.Detect</c>.</para>
     /// </summary>
-    public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?>? getEnv = null)
+    public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?>? getEnv = null, string? workingDirectory = null)
     {
         getEnv ??= Environment.GetEnvironmentVariable;
+        // Injected for the same reason as getEnv: the history verb walks up from the working directory
+        // when nothing else names a ledger, and a test that runs inside this repository would otherwise
+        // find this repository's.
+        _workingDirectory = workingDirectory;
         if (args.Count == 0)
         {
             PrintUsage(error);
@@ -68,6 +72,9 @@ internal static partial class QueryCommand
     [ThreadStatic] private static string? _lastResolvedReport;
 
     [ThreadStatic] private static string? _lastKronikolVersion;
+
+    /// <summary>Where the invocation runs from, for the verbs that look around it; null means the process's own.</summary>
+    [ThreadStatic] private static string? _workingDirectory;
 
     private static int RunCore(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?> getEnv)
     {
@@ -152,7 +159,7 @@ internal static partial class QueryCommand
         {
             "summary" => Summary(index, options, writer, error),
             "scenarios" => Scenarios(index, options, writer, error),
-            "failures" => Failures(index, options, writer, error),
+            "failures" => Failures(index, options, writer, error, getEnv),
             "repro" => Repro(index, options, writer, error),
             "steps" => Steps(index, options, writer, error),
             "assertions" => Assertions(index, options, writer, error),
@@ -169,6 +176,7 @@ internal static partial class QueryCommand
             "trace" => Trace(index, options, writer, error),
             "compare" => Compare(index, options, writer, error),
             "diff" => Diff(index, options, writer, error, getEnv),
+            "history" => History(index, options, writer, error, getEnv),
             _ => Unknown(command, error)
         };
 

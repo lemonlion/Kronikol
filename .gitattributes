@@ -25,3 +25,6 @@
 *.jpg       binary
 *.ico       binary
 *.nupkg     binary
+
+# The cross-run history ledger is append-only: two branches that both appended merge without a conflict
+history.jsonl merge=union text eol=lf

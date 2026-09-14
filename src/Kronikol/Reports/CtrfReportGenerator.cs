@@ -1,3 +1,4 @@
+using Kronikol.History;
 using System.Text.Json;
 
 namespace Kronikol.Reports;
@@ -58,6 +59,9 @@ public sealed record CtrfTest
 
     /// <summary>The scenario's categories — <c>extra.categories</c>, not tags.</summary>
     public IReadOnlyList<string> Categories { get; init; } = [];
+
+    /// <summary>The cross-run verdict — <c>extra.kronikolHistory</c> — when a ledger was read.</summary>
+    public ScenarioHistory? History { get; init; }
 }
 
 /// <summary>
@@ -158,7 +162,7 @@ public static class CtrfReportGenerator
 
     /// <summary>The CTRF document for a completed run.</summary>
     public static string Generate(Feature[] features, DateTime startRunTime, DateTime endRunTime,
-        CiMetadata? ciMetadata, string kronikolVersion, string? suite = null)
+        CiMetadata? ciMetadata, string kronikolVersion, string? suite = null, HistoryVerdicts? history = null)
     {
         ArgumentNullException.ThrowIfNull(features);
 
@@ -173,6 +177,11 @@ public static class CtrfReportGenerator
             {
                 var retries = scenario.Attempt is { } attempt && attempt > 1 ? attempt - 1 : 0;
                 var labels = (scenario.Labels ?? []).Where(l => !IsGeneratedRetryLabel(l)).ToArray();
+                var stableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+                // The ledger's flaky verdict counts as CTRF's flaky flag: a consumer that lists flaky tests
+                // (github-test-reporter's flaky table) then sees what the last runs saw, not only what
+                // this run's retries saw.
+                var scenarioHistory = history?.At(ordinal, stableId);
                 tests.Add(new CtrfTest
                 {
                     Name = scenario.DisplayName,
@@ -185,11 +194,12 @@ public static class CtrfReportGenerator
                     Line = scenario.SourceFile is { Length: > 0 } ? scenario.SourceLine : null,
                     Tags = labels,
                     Retries = retries,
-                    Flaky = retries > 0 && scenario.Result == ExecutionResult.Passed,
+                    Flaky = retries > 0 && scenario.Result == ExecutionResult.Passed || scenarioHistory?.Has(HistoryVerdictKind.Flaky) == true,
                     RawStatus = scenario.Result.ToString(),
                     Address = "s" + ordinal++,
-                    StableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues),
-                    Categories = scenario.Categories ?? []
+                    StableId = stableId,
+                    Categories = scenario.Categories ?? [],
+                    History = scenarioHistory
                 });
             }
         }
@@ -275,6 +285,14 @@ public static class CtrfReportGenerator
         Set(extra, "kronikolAddress", test.Address);
         Set(extra, "stableId", test.StableId);
         if (test.Categories.Count > 0) extra["categories"] = test.Categories;
+        if (test.History is { } history)
+            extra["kronikolHistory"] = new Dictionary<string, object?>
+            {
+                ["primary"] = HistoryVerdictNames.Name(history.Primary),
+                ["verdicts"] = history.Verdicts.OrderBy(HistoryAnalyzer.Precedence).Select(HistoryVerdictNames.Name).ToArray(),
+                ["evidence"] = history.Evidence,
+                ["series"] = history.Series
+            };
         if (extra.Count > 0) mapped["extra"] = extra;
 
         return mapped;

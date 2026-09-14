@@ -4,6 +4,81 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.9.0] - 2026-09-14
+
+**Minor - a report knows what the last runs said.** New surface: the cross-run history ledger. A run
+reads an append-only `.kronikol/history.jsonl` in the repository, writes its own line beside its report
+as `History.run.json`, and says on every surface it already had - the failures digest, the CTRF
+document, the run-end pointer - whether a failure is a regression, has been failing since a particular
+run, or flips; and a new `kronikol query history` reads any report against the ledger after the fact.
+Fourteen new `ReportConfigurationOptions` members, a new `kronikol history` command and a new query
+verb are new public surface, so this is a minor bump; every default preserves today's output byte for
+byte when there is no ledger.
+
+This is milestones M0, M1, M2, M3 and M6 of `plans/CROSS_RUN_HISTORY_PLAN.md` - the ledger, the
+verdicts, the agent surfaces, the CTRF interop and the fold - with the gate, the maintenance verbs for
+renames and imports, and the HTML rendering to follow in 3.10.0 and 3.11.0. Three of the plan's own
+decisions moved under implementation and are recorded in the code: the roster key includes the suite,
+so two suites that share ids keep their own rosters; a scenario is flaky when it has failed, recovered
+and failed again (two failing episodes) at or above the flip rate, because one break and one fix is two
+flips and no flakiness; and a failing scenario with nothing earlier to compare against is `unknown`, not
+`broke`.
+
+Template pins move to **3.8.0**, the last release that shipped.
+
+### Added
+- **The ledger** (`Kronikol.History`). Append-only JSONL, one header line, roster lines interned by a
+  content hash of the suite and its scenario ids, one run line per run with a result character per roster
+  position (`P F S B A ? .`), attempts, durations, call counts, two interaction fingerprints, error cluster
+  keys and dependency pairs. Written under an exclusive lock with a jittered retry - measured, a plain
+  append from thirty-two processes silently lost a third of its lines - and read by streaming: every line
+  scanned, only the last `HistoryWindow` runs per suite parsed, a damaged line skipped and counted, a
+  newer format version refused by the reader and the writer both. `history.jsonl merge=union text eol=lf`
+  in `.gitattributes` lets two branches append without a conflict; a roster keyed on a counter would
+  corrupt silently under that driver, which is why the key is a hash.
+- **Where it lives.** `HistoryFilePath`, then `KRONIKOL_HISTORY` (`off` switches history off for the
+  run), then the nearest `.kronikol` or `.git` directory above the test output or the reports directory.
+  Nothing found still writes the fragment and records a `HistoryUnavailable` diagnostic that names the
+  fix. A CI run that merely found the repository's ledger writes only its fragment
+  (`WriteHistoryLedger = null`); a developer's run appends directly.
+- **The verdicts.** Per scenario, within the run's branch stream: `broke`, `failing` (since which run),
+  `always-failing`, `fixed`, `flaky` (flip rate, never fail rate; or passed on a retry), `new`, `slower`
+  (above the window's p95 by `HistorySlowerBy`, twice running), `behaviour-changed` (same status,
+  different set of calls; ids, timestamps and bare numbers templated out of the URIs first),
+  `reordered` (only with `HistoryReordered`), `unstable-shape`, `quarantined`, `unknown`; and at run
+  level the absent scenarios, the new `caller>service` pairs, the pass-rate and duration series, and a
+  cold-start line until `HistoryMinRuns` runs exist. A filtered run - one test in the debugger - is
+  recorded as partial by `HistoryPartialThreshold` and reports nothing absent.
+- **The surfaces.** `Failures.md` opens with a `**History:**` line, works through regressions before
+  long-standing failures before flaky ones, and carries `History: **broke** - passed in gh:…, failing
+  now · last runs PPPPF` per failure; `Failures.jsonl` records a `history` member per failure;
+  `ctrf-report.json` sets `flaky` from the ledger and adds `extra.kronikolHistory`; the run-end pointer
+  and the CI job summary print `history: 1 broke, 2 flaky (against 12 earlier runs on main)` when there
+  is something to say; `kronikol query failures` prints the same line under each failure whenever a
+  ledger resolves on its own.
+- **`kronikol query history <report> [s3] [--flaky|--new|--failing|--regressed|--changed] [--branch]
+  [--compare-branch] [--suite] [--history FILE]`** - the run's verdicts, one scenario in full with its
+  last runs, `--json` with a run-level member; the `History.run.json` beside a report is preferred as
+  the run's line, and behaviour verdicts are declared off when it is absent.
+- **`kronikol history record | init | show | verify | prune | compact`** - fold a CI run's fragments
+  into the ledger (shards folded, duplicates skipped, partial resolved against the ledger rather than
+  per shard), create it with the merge attribute, list what it holds, check its structure, and the two
+  explicit rewrites.
+- **`HistoryRunId`** - the identity to record under on a CI provider Kronikol does not detect
+  (`gitlab:$CI_PIPELINE_ID:1`), beside the derived `gh:<run>:<attempt>`, `ado:<build>:1` and `local:` ids.
+- **`Scenario.ResultDefaulted`** - which scenarios took `ResultWhenUnknown`; the ledger records them as
+  `?`, never as the default, so a crashed worker cannot poison a trend.
+- `DiagnosticKind.HistoryUnavailable`, `HistoryPartialRun` and `HistoryLedgerDamaged`.
+- `tools/history-bench`: the harnesses behind the plan's measurements (contended appends across file
+  systems, ledger size and read cost, the base64 rule that templated route words) are now in the tree.
+
+### Changed
+- The in-process test projects run with `KRONIKOL_HISTORY=off` (`test.runsettings`), because every
+  report they generate would otherwise append a line to this repository's ledger; `.kronikol/` is
+  ignored here, and this repository's own history will live on a data branch (3.11.0).
+- The skill (`SKILL.md`, `references/commands.md`), the emitted `Reports/CLAUDE.md` and the
+  `init-agents` template all name `history`.
+
 ## [3.8.0] - 2026-09-14
 
 **Minor - an agent that never heard of Kronikol finds it.** New surface: a Claude Code plugin manifest

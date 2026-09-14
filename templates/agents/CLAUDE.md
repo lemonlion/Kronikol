@@ -24,6 +24,7 @@ For anything the digest does not answer, query the report rather than opening it
 dotnet tool install -g Kronikol.Tool     # once; needs the .NET 10 runtime
 kronikol query summary <reports-dir>     # the run, its failures, the slowest scenarios
 kronikol query failures <reports-dir>    # usually the whole answer on its own
+kronikol query history <reports-dir>     # what the last runs say: a regression, flaky, or failing since when
 dnx Kronikol.Tool query failures <reports-dir>   # no install: the .NET 10 SDK runs the last published version (needs the feed each call, slower)
 ```
 

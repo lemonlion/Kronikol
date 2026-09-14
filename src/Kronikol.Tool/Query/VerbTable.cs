@@ -88,7 +88,16 @@ internal static class VerbTable
         new("--both", null, "On values: read both halves of every call."),
         new("--number", null, "On grep: match numbers across formatting - 4,173.00, 4173 and 4.173,00 are one number."),
         new("--baseline", null, "On diff: compare the report against last-green, found at <reports>/baseline/TestRunReport.json or $KRONIKOL_BASELINE."),
-        new("--describe", null, "Print the verbs, their flags, the address forms and the exit codes as JSON; needs no report.")
+        new("--describe", null, "Print the verbs, their flags, the address forms and the exit codes as JSON; needs no report."),
+        new("--history", "FILE", "On history: the ledger to read, instead of $KRONIKOL_HISTORY or the .kronikol/history.jsonl above the report."),
+        new("--flaky", null, "On history: only scenarios the ledger calls flaky - failed, recovered and failed again at or above the flip rate, or passed on a retry."),
+        new("--new", null, "On history: only scenarios not seen in any earlier run of the stream."),
+        new("--failing", null, "On history: only scenarios failing now and in the previous run - failing since a run, or always failing."),
+        new("--regressed", null, "On history: only scenarios that passed in the previous run and fail now (broke)."),
+        new("--changed", null, "On history: only scenarios whose set of calls, call order or duration changed while the status did not."),
+        new("--branch", "NAME", "On history: read the run against this branch's stream instead of its own."),
+        new("--compare-branch", "NAME", "On history: a second reading of the same run against another branch's stream, printed after the first."),
+        new("--suite", "NAME", "On history: the suite to look the run up under, when the report does not say.")
     ];
 
     /// <summary>The headings the help groups verbs under, in order, with the caption printed beside each.</summary>
@@ -235,6 +244,17 @@ internal static class VerbTable
                 "  diff         <old.json> <new.json> [--body s3/i47]   two runs matched on stableId; --body diffs one call across them",
                 "  diff         <report> --baseline               the same, against last-green: <reports>/baseline/TestRunReport.json,",
                 "                                                 else $KRONIKOL_BASELINE (a report, or a directory holding one)"
+            ]),
+
+        new("history", "Search and comparison",
+            "What the last runs say about this one, from the cross-run ledger: what broke, what is flaky, what has been failing since when, what changed its calls - per scenario, with the evidence.",
+            ["<report>", "<report> s3", "<report> sid:<id>"],
+            ["--history", "--flaky", "--new", "--failing", "--regressed", "--changed", "--branch", "--compare-branch", "--suite", "--count", "--offset", "--limit", "--json"], Json: true,
+            [
+                "  history      <report> [s3] [--flaky|--new|--failing|--regressed|--changed]   the ledger's verdicts on this run: broke, fixed, flaky, failing since,",
+                "                                                 slower, behaviour-changed - with the evidence; s3 for one scenario's runs in full",
+                "                                                 the ledger is --history FILE, else $KRONIKOL_HISTORY, else .kronikol/history.jsonl above the report;",
+                "                                                 --branch NAME reads against another stream, --compare-branch NAME adds a second reading"
             ])
     ];
 
