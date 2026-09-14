@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.7.0] - 2026-09-14
+
+**Minor - one question, one command.** New public surface: the `kronikol query repro` verb,
+`kronikol query --describe`, `kronikol --version`, `FailureText.TestFilter` and
+`FailureText.RerunCommand`, and three new members on every failure record (`thrownAt`, `testName`,
+`rerun` in `kronikol query failures --json` and `Failures.jsonl`; a `Re-run:` line in `Failures.md`).
+The rest is one fix to how an unknown verb is refused. The highest-ranking change is the new surface,
+so the bump is minor.
+
+This is milestone M7 of `plans/LLM_FIRST_PLAN.md`: rows I2, I3, I4 and the query half of A9. I3 - the
+request/response addressing inconsistency - closes by round-trip tests rather than by changing what
+any verb prints: `http` on either half of a pair has named the other since 3.5.0, and the tests now
+hold that, that the address `values` prints fetches a body holding the value, and that the `b:` hash a
+listing row carries resolves to the response.
+
+Template pins move to **3.6.0**, the last release that shipped.
+
+### Added
+- **`kronikol query repro <report> [s3]`** - the `dotnet test --filter "FullyQualifiedName~Namespace.Class.Method"`
+  line that re-runs each failing test, and where its failure was thrown. The name was in
+  `errorStackTrace` for 26 of 26 failing scenarios of a real run, in the exact shape `--filter` takes,
+  and no agent-facing surface printed it, so the reader found the test by hand. It is read out of the
+  frame `Thrown at` already picks, with the compiler's scaffolding removed - async state machines,
+  lambdas, local functions, display classes, generic arity, type arguments - and `~` is a contains
+  match, so a parameterised test re-runs with every row. A passing scenario has no trace and says so.
+  Two limits are documented rather than hidden: a test in a nested class prints with `.` where the
+  runner's name has `+`, and the line is the VSTest filter grammar - a runner on Microsoft.Testing.Platform's
+  own `dotnet test` takes the same name through its own flag.
+- **Every failure surface carries the same re-run.** `kronikol query failures` prints `thrown at` and
+  `rerun:` under each failure and its JSON carries `thrownAt`, `testName` and `rerun`; `Failures.jsonl`
+  gains `testName` and `rerun`; `Failures.md` gets a `Re-run:` line after `Thrown at`. The digest and
+  the query answer no longer diverge on `thrownAt`, the one field the digest alone had; the remaining
+  differences are listed in `FailureRecord`'s docstring and the wiki.
+- **`FailureText.TestFilter` and `FailureText.RerunCommand`** are public, for anyone building the same
+  line from a stack frame.
+- **`kronikol query --describe`** - one JSON document naming every verb, the flags each one reads (with
+  argument, repeatability and a summary), the address forms with an example each, the envelope's
+  members and the exit codes, generated from the same table the CLI dispatches, validates and prints
+  its help from. It needs no report. The verb set used to live in four hand-kept places plus a
+  byte-identical dogfood copy of the skill, and the guard that kept them in step regexed the rendered
+  help - a regex that had already silently dropped a verb once. The guard now compares against the table,
+  and `DescribeTests` holds the document to the tool in both directions.
+- **`kronikol --version`** prints the tool's version and nothing else.
+
+### Fixed
+- **An unknown verb with no report after it was answered as a missing report**, and refused by name
+  only when a report followed. It is refused by name before a report is looked for, exit 2, either way.
+
 ## [3.6.0] - 2026-09-14
 
 **Minor - a merged report is a real run.** New public surface: `MergedRunOutputs`, two `kronikol merge`

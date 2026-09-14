@@ -2519,6 +2519,62 @@ session for the reason recorded there: every F-row is still `RUN(proxy)` over sy
 
 ---
 
+### 2026-09-14 (M7) — one question, one command, released as 3.7.0
+
+Rows I2, I3, I4 and the query half of A9, over two commits (`aa1323e0`, `4e61ef9c`).
+
+**I2 — `--describe` off one table.** `VerbTable` (`src/Kronikol.Tool/Query/VerbTable.cs`) is the single
+source now: `RunCore` dispatches from it, `QueryOptions` validates per-verb flag legality against it,
+`PrintUsage` renders from it, and `--describe` serialises it — each verb with its forms, flags (name,
+argument, repeatable, summary), `json` and `pagesWithOffset`; the seven address forms with an example
+each; the three exit codes; the envelope's members; `toolVersion` off the informational version
+attribute, which is also `kronikol --version`, one line, as §7.2 asked. The four hand-kept verb lists are
+gone from the code; the two in `commands.md`/`SKILL.md` remain prose and are held to the table by
+`SkillDriftTests`, whose `UsageVerbs()` asserts the help regex equals `VerbTable.Names` instead of a
+count. `DescribeTests` holds the document to the tool in both directions: every listed verb dispatches
+and every dispatched verb is listed; every flag the parser knows is described and none is invented;
+every address example parses to the kind it claims and every `AddressKind` has one; the help lists every
+verb once. **One deliberate deviation from §7.2's sketch: no `itemFields[]`.** `interactions` has three
+row shapes and `diff` two, so a per-verb field list would be a sixth hand-kept copy of the thing this row
+exists to remove; the checkable statement of a row's shape is its projector, and the wiki's
+"Verb-specific members" table is the human copy. Found on the way: an unknown verb with no report after
+it was answered as a *missing report*; it is refused by name first now.
+
+**I4 — `repro`, built as the tool-side parser C68 argued for.** `FailureText.TestFilter` reads the FQN
+out of the frame `ThrownAt` already picks, stripping `(args)`, `` `1 ``, `[T]`,
+`<>c`/`<>c__DisplayClassN_M`, `.MoveNext`, and — iterated innermost-first — `<Method>b__0`,
+`<Method>d__3`, `<Method>g__Local|0_0`, so an async lambda's `<<Method>b__0>d` unwraps too.
+`RerunCommand` emits `dotnet test --filter "FullyQualifiedName~Ns.Class.Method"`; `~` because NUnit's
+FQN carries a parameterised test's arguments. The same reader feeds `repro`, `failures` (text
+`thrown at`/`rerun:`, JSON `thrownAt`/`testName`/`rerun`), `Failures.md` (`Re-run:` after `Thrown at`)
+and `Failures.jsonl`, which closes the `thrownAt` half of the digest/query divergence `FailureRecord`'s
+docstring recorded in M2. Two limits are stated in every doc rather than papered over: a nested class
+prints `.` where the runner's own name has `+` (the frame cannot say which segments were classes), and
+the line is the VSTest grammar — a runner on Microsoft.Testing.Platform's own `dotnet test` takes the
+same name through its own flag. Not added to `scripts/query.py`, which is already a fourth
+address-grammar implementation; it stays the digest-only fallback.
+
+**I3 — closed by resolution, not by changing addresses.** The inconsistency was real (`values` prints the
+response ordinal, listings fold the pair onto the request's), but `http` has named the counterpart of
+either half since M5 (`response s1/i1` / `answers s1/i0`). `ReproTests` holds the round trip: `http` on
+each half names the other; the address `values` prints, handed back to `http --path` with the same path,
+yields the value; the `b:` hash a listing row carries resolves to the response. Changing what listings
+print would have moved every documented example and reached no body that was unreachable.
+
+**A9's query half.** `ReportScanner` indexes `errorStackTrace` since M5's G4, and `failures` now prints
+from it, so the agent lane carries the frame the HTML, `CiSummary.md` and the XML export always did.
+
+**One guard learned one exemption, by name.** `Every_flag_the_reference_documents_is_known_to_the_parser`
+read `--filter`, `--filter-method` and `--treenode-filter` out of the new prose as tool flags. A quoted
+`dotnet test …` line is another program's command line, so that one program's line is stripped before
+flags are extracted; a bare `--flag` anywhere else in a code context is still held to the parser, and
+the two runner options are named in prose without their dashes.
+
+Suite 4,790 → **4,815**. Minor: `repro`, `--describe`, `--version`, `FailureText.TestFilter` /
+`RerunCommand` and the three record members are new surface. Pins → 3.6.0, which published.
+
+---
+
 ## 18. How to continue this plan
 
 §14 is the work-list and §17 is its journal. The intended mechanic is an iterating session that drives
