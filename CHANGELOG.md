@@ -51,6 +51,10 @@ Template pins move to **3.6.0**, the last release that shipped.
 ### Fixed
 - **An unknown verb with no report after it was answered as a missing report**, and refused by name
   only when a report followed. It is refused by name before a report is looked for, exit 2, either way.
+- **`Thrown at` could pick the wrong frame when a report written on one OS was read on another.** The
+  declaring-file match compared whole paths where it meant file names, because `Path.GetFileName` does
+  not split the separator of the other OS, so a Windows-written report read on a Linux runner fell
+  through to the namespace skip. It splits on either separator now.
 
 ## [3.6.0] - 2026-09-14
 

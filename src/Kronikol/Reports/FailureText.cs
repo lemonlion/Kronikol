@@ -172,9 +172,9 @@ public static class FailureText
 
         if (preferFile is { Length: > 0 })
         {
-            var wanted = System.IO.Path.GetFileName(preferFile);
+            var wanted = FileNameOf(preferFile);
             foreach (var frame in frames)
-                if (string.Equals(System.IO.Path.GetFileName(frame.File), wanted, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(FileNameOf(frame.File), wanted, StringComparison.OrdinalIgnoreCase))
                     return frame;
         }
 
@@ -199,6 +199,15 @@ public static class FailureText
         "TechTalk.SpecFlow.", "TestStack.BDDfy.", "Kronikol.",
         "System.", "Microsoft.", "Castle.", "Moq.", "NSubstitute.",
     ];
+
+    /// <summary>
+    /// The last segment of a path whichever separator it uses. A path in a stack trace is text written
+    /// by the machine that ran the tests, not a path on this one: <c>Path.GetFileName</c> on Linux leaves
+    /// <c>C:\src\Tests.cs</c> whole, so a report written on Windows and read on a Linux runner matched
+    /// nothing and fell through to the namespace skip.
+    /// </summary>
+    private static string FileNameOf(string path) =>
+        path[(Math.Max(path.LastIndexOf('/'), path.LastIndexOf('\\')) + 1)..];
 
     private static bool IsFrameworkFrame(string method) =>
         FrameworkNamespaces.Any(prefix => method.StartsWith(prefix, StringComparison.Ordinal));

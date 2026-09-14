@@ -85,7 +85,8 @@ public class ReproTests : IDisposable
         var json = Query("failures", Report(), "--json").Output;
         var item = Assert.Single(JsonDocument.Parse(json).RootElement.GetProperty("items").EnumerateArray());
         Assert.Equal("Acme.Orders.Tests.CheckoutTests.Pays_by_card", item.GetProperty("testName").GetString());
-        Assert.Equal("CheckoutTests.cs", Path.GetFileName(item.GetProperty("thrownAt").GetProperty("file").GetString()));
+        // Not Path.GetFileName: a Windows path in a trace is text, and on Linux GetFileName does not split it.
+        Assert.EndsWith("CheckoutTests.cs", item.GetProperty("thrownAt").GetProperty("file").GetString());
     }
 
     // ─── Request/response addressing round trip ─────────────

@@ -86,6 +86,27 @@ public class ThrownAtTests
     }
 
     /// <summary>
+    /// A trace is text from the machine that ran the tests. Its paths keep that machine's separators, so
+    /// the declaring-file match must split on either separator or a Windows report read on a Linux runner
+    /// prefers the wrong frame. On Windows this passes with <c>Path.GetFileName</c> too; on Linux it does
+    /// not, which is what makes it a guard rather than a restatement.
+    /// </summary>
+    [Fact]
+    public void A_windows_path_in_the_trace_matches_the_declaring_file_on_every_os()
+    {
+        const string trace = """
+               at Acme.Helpers.Retry.Run(Action body) in C:\src\helpers\Retry.cs:line 9
+               at Checkout.Tests.PaymentTests.Pay_with_an_expired_card() in C:\src\tests\PaymentTests.cs:line 42
+            """;
+
+        var frame = FailureText.ThrownAt(trace, @"tests\PaymentTests.cs");
+
+        Assert.NotNull(frame);
+        Assert.Equal("Checkout.Tests.PaymentTests.Pay_with_an_expired_card()", frame.Value.Method);
+        Assert.Equal(42, frame.Value.Line);
+    }
+
+    /// <summary>
     /// The real trace from a CiPreview.Mixed run, copied rather than invented. xUnit v3 ships source-linked
     /// PDBs, so THREE assertion frames carry a file and a line before the test does — which is why "the
     /// first frame with source information" was the wrong rule and why this had to be measured on output
