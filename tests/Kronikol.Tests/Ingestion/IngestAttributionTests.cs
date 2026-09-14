@@ -267,10 +267,10 @@ public class IngestAttributionTests : IDisposable
         // The one inside the test window joined the test; the one at +30s fell into the fold bucket.
         Assert.Contains(scenarios, s => s.DisplayName == "Traffic outside any test");
 
-        // The step also injects its delimiter bar as an override pair, which is not an interaction.
-        var logs = RequestResponseLogger.RequestAndResponseLogs
-            .Where(l => l.TestId == "first" && !l.IsOverrideStart && !l.IsOverrideEnd).ToArray();
-        Assert.Equal(TestPhase.Setup, Assert.Single(logs).Phase);
+        // The step also injects its delimiter bar as an override pair, which the report does not list
+        // as an interaction.
+        var logs = InteractionsInReport(result).Where(i => i.ScenarioId == "first").ToArray();
+        Assert.Equal(nameof(TestPhase.Setup), Assert.Single(logs).Phase);
 
         Assert.Contains(result.Diagnostics, d => d.Kind == DiagnosticKind.UnattributedInteractions && d.Message.Contains("attributed to a test by time window"));
     }
@@ -304,15 +304,14 @@ public class IngestAttributionTests : IDisposable
             FoldUnknownTestsInto = new UnknownTestFold("Traffic outside any test"),
         });
 
-        // Scoped to this run's own ids: the store is process-wide, and a test elsewhere in the assembly
-        // may log into it while this one asserts (it did — the suite flaked on exactly this line).
-        var mine = RequestResponseLogger.RequestAndResponseLogs
-            .Where(l => l.TestId is "first" or "outside-any-test" && l.ServiceName is "redis" or "mongo")
-            .ToArray();
+        // From the written report, not the process-wide store: a test elsewhere in the assembly logs
+        // into that store and clears it while this one asserts (the suite flaked on exactly this line,
+        // twice - once scoped to this run's ids, which does not survive a clear).
+        var mine = InteractionsInReport(result).Where(i => i.Service is "redis" or "mongo").ToArray();
         Assert.Equal(2, mine.Length);
         // The redis line at +30s is gone; the one attributed to the test survived.
-        Assert.Single(mine, l => l.ServiceName == "redis" && l.TestId == "first");
-        Assert.Single(mine, l => l.ServiceName == "mongo" && l.TestId == "outside-any-test");
+        Assert.Single(mine, i => i.Service == "redis" && i.ScenarioId == "first");
+        Assert.Single(mine, i => i.Service == "mongo" && i.ScenarioId == "outside-any-test");
 
         var dropped = Assert.Single(result.Diagnostics, d => d.Kind == DiagnosticKind.DroppedUnattributed);
         Assert.Contains("1 unattributed interaction record(s) dropped", dropped.Message);
@@ -325,7 +324,7 @@ public class IngestAttributionTests : IDisposable
         options.ReportsFolderPath = Path.Combine(_dir, "Pairs");
         options.GenerateComponentDiagram = false;
 
-        IngestPipeline.Run(new IngestRequest
+        var result = IngestPipeline.Run(new IngestRequest
         {
             Interactions =
             [
@@ -341,7 +340,7 @@ public class IngestAttributionTests : IDisposable
             AllowEmpty = true,
         });
 
-        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.ServiceName == "redis");
+        Assert.DoesNotContain(InteractionsInReport(result), i => i.Service == "redis");
     }
 
     [Fact]
@@ -361,9 +360,29 @@ public class IngestAttributionTests : IDisposable
             FoldUnknownTestsInto = new UnknownTestFold("Traffic outside any test"),
         });
 
-        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs, l => l.ServiceName == "redis");
+        Assert.Contains(InteractionsInReport(result), i => i.Service == "redis");
         Assert.Contains(result.Diagnostics, d => d.Message.Contains("the host's predicate is broken"));
     }
+
+    /// <summary>
+    /// Every interaction the written report holds, with the scenario it sits under. Read from the report
+    /// and never from the process-global store: parallel test classes log into that store and clear it,
+    /// so an assertion over it reads whatever the scheduler left there - a `Contains(redis)` came back
+    /// false on a busy run, in a test whose own run had written the record.
+    /// </summary>
+    private static (string ScenarioId, string Service, string? Phase)[] InteractionsInReport(IngestResult result)
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+        return document.RootElement.GetProperty("features").EnumerateArray()
+            .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
+            .SelectMany(sc => sc.GetProperty("httpInteractions").EnumerateArray()
+                .Select(i => (
+                    sc.GetProperty("id").GetString() ?? "",
+                    i.GetProperty("serviceName").GetString() ?? "",
+                    i.TryGetProperty("phase", out var phase) ? phase.GetString() : null)))
+            .ToArray();
+    }
+
     /// <summary>Interactions of one scenario as the written report has them — not the process-global store, which parallel test classes clear.</summary>
     private static int InteractionsOf(IngestResult result, string scenarioId)
     {
