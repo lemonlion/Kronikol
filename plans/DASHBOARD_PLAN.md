@@ -80,6 +80,9 @@ in the source consulted, the row says so.
 | The report already inlines compressed payloads | `decompressGzipBase64` in `src/Kronikol/Reports/report-decompress-helper.js`, gzip + base64 through `DecompressionStream`; "the ONE definition … in a report" | source |
 | The report already has the history palette | `HistoryHtml.Colour`: passed `#228b22`, failed `#bf0000`, skipped `#949494`, absent `#e6e6e6`, unknown `#c8c8c8`, other `#b8a000`; classes `history-sparkline`, `history-bar-pass`, `history-bar-fail`, `history-bar-duration`, `history-bar-partial`, `history-verdict-*` | `src/Kronikol/History/HistoryHtml.cs` |
 | Analysis defaults the view must carry | `Window` 50, `MinRuns` 5, `FlakyRate` 0.1, `SlowerBy` 1.5 (`HistoryAnalysisOptions`); the tool's `DefaultWindow` 50 | `HistoryVerdicts.cs`, `HistoryCommand.cs` |
+| The standard chart libraries against the page's constraints (one vendored file, hash CSP, SVG for the tests, no `eval`), 2026-09-14/15 | gzipped bytes: Observable Plot 0.6 68,809 (needs D3), D3 7 92,367, the 17 D3 modules a chart needs 46,501 concatenated, Chart.js 4 70,391 (canvas, clean), uPlot 1 21,998 (canvas, clean), ECharts 5 simple 155,473 (HTML tooltips with inline styles), ApexCharts 4 152,599 (SVG built by 30 `innerHTML` writes), Frappe 1 18,256 (one injected style), Vega 5 177,522 plus Vega-Lite 5 79,147 (`new Function`, `eval`), Plotly 2 1,331,118 (injects styles, `new Function`). Plot appends one `<style>` per figure with a fixed template keyed on `className` | `curl` from jsdelivr, `gzip -9`; grep for `new Function(`, `eval(`, `createElement("style")`, `append("style")`, `setAttribute("style"`, `.innerHTML =`, `getContext("2d")` |
+| PlantUML charts in the pinned engine | `@startchart` since 1.2026.0 (bar, stacked bar, line, area, scatter, legend, axes); `ChartDiagramFactory` is among the 21 factories of the TeaVM build's `PSystemBuilder2`; Kronikol's pinned build rendered a four-bar chart as a 3,457-byte SVG of 5 rects, 12 lines, 12 texts, one group, no id, class, title or href; 110 ms cold, 6 to 8 ms warm; the engine is 3,946,817 bytes, 1,067,298 gzipped | plantuml.com chart-diagram; `PSystemBuilder2.java` on master; `tools/render-bench/render-svg.js` and `bench-real.js` with `core-1.2026.8beta1-0e4f452.js` in real Chromium |
+| Mermaid as a chart engine | `xychart`: "two fundamental chart types: the bar chart and the line chart"; "Named line and bar plots are automatically shown in a legend"; no tooltip, hover or click documented; point labels at a fixed 12px; `mermaid@11` `mermaid.min.js` 3,572,661 bytes, 975,701 gzipped | mermaid.js.org syntax page; `curl`, `gzip -9` |
 
 Competitors, read the same day (§3 draws on these rows):
 
@@ -256,11 +259,44 @@ Panels, in the order that puts the differentiators first:
 Header: source, suite, stream and window selectors; for every source, "snapshot from <time>" and, when
 live, "refreshed <time>" or "source unreachable, showing the snapshot".
 
-**Rendering is hand-rolled SVG and CSS.** The panels are bars, strips, polylines, markers and a table;
-none needs axis or zoom machinery; the report already draws its sparkline and bars this way. Every byte
-of script is Kronikol's, there is no licence text in the file and nothing to pin or audit, and the
-Java port can follow. Fallback, decided at M2 and not before: if brushing or a crosshair prove
-necessary, vendor uPlot (about 45 KB minified, MIT) as an embedded resource. Never a CDN.
+**Rendering: Observable Plot on vendored D3, decided 2026-09-15 (§9, question 4).** The panels are the
+standard chart shapes, and the standard library that draws them in SVG is Observable Plot, the
+declarative layer on D3 (ISC, maintained by Observable). Its marks map onto the panels one to one:
+`barY` with `stackY` for the runs strip, `rectX` ranges for cluster ageing, `line` and `dot` for calls
+and durations, `ruleX` as drift markers, `cell` for the dependency heat map once the ledger carries
+per-scenario dependencies, facets for small multiples, `tip`, `pointer` and `crosshair` for hover. Every
+mark carries an `aria-label`, which is what the E2E tests locate. Plot and D3 are embedded resources of
+the tool, pinned by version, inlined into the page with their licence notices; never a CDN. Measured
+(§2): 68.8 KB gzipped for Plot plus 92.4 KB for D3, against 22 KB for uPlot, which covers two panels and
+draws to canvas, where the tests cannot see.
+
+Plot's one policy wrinkle is measured, not guessed. It appends a `<style>` element to each figure whose
+text is a fixed template keyed on a class name; the class defaults to a random `plot-xxxxxx`, and the
+`className` option pins it, so the stylesheet text is deterministic and the build hashes it into
+`style-src` (§4.7). An M1 test proves it under the policy, and because the build recomputes the hash from
+the vendored bytes, a Plot bump cannot silently break the policy.
+
+**Fallback: D3 alone.** If Plot's abstractions fight a panel, the 17 D3 modules a chart needs
+(selection, array, color, interpolate, format, time, time-format, scale, axis, path, shape, dispatch,
+timer, ease, transition, drag, brush; 46.5 KB gzipped concatenated) give scales, axes, stacking, shapes,
+brush and zoom, and the marks are written here. That is what "hand-rolled" would have meant, and it is a
+fallback, not the plan.
+
+**Bespoke regardless:** the sparklines in the scenario table, which the report already draws as one node
+with gradient stops (two hundred chart instances in a table is the wrong tool), and the table itself.
+
+**Not PlantUML, not Mermaid, and why (asked 2026-09-15).** PlantUML 1.2026.0 added `@startchart` (bar,
+stacked bar, line, area, scatter), `ChartDiagramFactory` is in the TeaVM factory list, and the engine
+Kronikol pins renders it: a four-bar chart came back as a 3.4 KB SVG of 5 rects, 12 lines and 12 texts
+with no id, class, title or link on any element, in 110 ms cold and 6 to 8 ms warm in Chromium (§2).
+Those are static anonymous shapes; every interaction the report has on PlantUML output is Kronikol's own
+script on top, and the engine is 1.07 MB gzipped that this page otherwise does not need. Mermaid's
+`xychart` draws bar and line with a legend and documents no tooltip, hover or click; the bundle is
+976 KB gzipped and writes a stylesheet per diagram the policy cannot pre-approve. Both are diagram
+renderers; "interactive" in each means hyperlinks and click callbacks. Where PlantUML charts are free is
+the report, which already carries the engine: a duration chart per run, or a chart in the History section,
+would cost no payload, and the Java port would follow because the engine draws it. Recorded here for a
+later plan; not part of this one.
 
 **Theme and tokens.** Light and dark by `prefers-color-scheme`, overridable; the custom property names
 come from `TOOLBAR_REDESIGN_PLAN.md` (`--kron-*`: accent, accent-soft, surface and the rest) so the day
@@ -453,19 +489,26 @@ Tests written first:
 ### M1 — the page, snapshot mode, one repository
 
 Tool: `DashboardCommand`, `Commands.Table` entry, `src/Kronikol.Tool/Dashboard/dashboard.html`,
-`dashboard.css`, `dashboard.js` as embedded resources, the shared palette (`HistoryPalette` read by
-`HistoryHtml` and by the build). All seven panels, the differentiators (1 to 3) before the strips (4 to
-6), panel 7 at run level. CSP hashes. Theme.
+`dashboard.css`, `dashboard.js` as embedded resources beside the vendored `d3.min.js` and
+`plot.umd.min.js` with their licence files, pinned by version in the csproj; the shared palette
+(`HistoryPalette` read by `HistoryHtml` and by the build). All seven panels, the differentiators (1 to 3)
+before the strips (4 to 6), panel 7 at run level. CSP hashes, including Plot's stylesheet under the fixed
+`className`. Theme.
 
 Tests written first:
 
-- `DashboardBuildTests`: one file out; N sources inlined; both CSP hashes match the inline bytes; no
-  `http:` or `https:` reference in a `src` or `href` of a script, style, font or image (the report's
+- `DashboardBuildTests`: one file out; N sources inlined; the script and style CSP hashes match the
+  inline bytes, and `style-src` also carries the hash of Plot's stylesheet text for the fixed `className`,
+  recomputed from the vendored bytes; the vendored D3 and Plot bytes match the pinned versions' hashes
+  recorded in the test, so a bump is a deliberate change; both licence notices are present in the page;
+  no `http:` or `https:` reference in a `src` or `href` of a script, style, font or image (the report's
   self-contained guard, reused); a token-shaped string in a view aborts the build with exit 2 naming the
   source; identical output for identical inputs except the timestamp; `--title`; a missing source path
   exits 2 naming it; `--history FILE` builds the view then the page.
-- Playwright, `tests/Kronikol.Tests.EndToEnd/Dashboard*Tests.cs`, opened from disk like the report:
-  renders with zero requests beyond the document; the runs strip shows every run with pass and fail
+- Playwright, `tests/Kronikol.Tests.EndToEnd/Dashboard*Tests.cs`, opened from disk like the report,
+  locating marks by Plot's `aria-label`s and by the `data-*` attributes the page puts on each figure:
+  every figure renders under the policy with no CSP violation in the console (the hashed Plot stylesheet
+  proven in a browser); renders with zero requests beyond the document; the runs strip shows every run with pass and fail
   segments whose counts match the view; a partial run is hatched; the scenario table filters by verdict,
   suite and text and sorts by p95 and by name; a `behaviour-changed` event is a marker on the drift
   timeline and clicking it shows the evidence and a link whose `href` is the run URL; the calls panel
@@ -524,7 +567,8 @@ ledger) goes sparse in the same version.
   prefilled issue or pull request URL, which is a link and not state.
 - **No retention beyond the window.** A team wanting two years wants a warehouse; CTRF and OTLP export
   exist for that.
-- **No CDN, web font, external script or stylesheet**, and no chart library unless vendored (§4.3).
+- **No CDN, web font, external script or stylesheet.** Plot and D3 are embedded resources pinned by
+  version and inlined with their notices (§4.3); at run time the page fetches nothing but the views.
 - **No report content beyond the ledger.** The dashboard does not render diagrams or captures; the run
   URL is the hand-off to the report artifact.
 
@@ -573,7 +617,10 @@ things this section keeps out stay out of it."
    source and as the sender of the dispatch that rebuilds its snapshot; BreakfastProvider's own Pages
    site for demo and test purposes. No separate dashboard repository (§4.6c).
 3. **Default view window:** 200 runs per stream per suite?
-4. **Rendering:** hand-rolled SVG (recommended), or vendor uPlot from the start?
+4. ~~Rendering: hand-rolled SVG, or vendor uPlot from the start?~~ **Decided 2026-09-15: Observable Plot
+   on vendored D3**, its injected stylesheet hashed under a fixed `className`, the 17 D3 modules alone as
+   the fallback, the table and its strips bespoke (§4.3). PlantUML and Mermaid were checked and ruled out
+   there, with a report-side idea recorded for a later plan.
 5. **Names:** `history.view.json`, `kronikol history view`, `kronikol dashboard build`?
 6. **Panel 7 at scenario level** needs ledger Version 2 (M3). Defer until asked for?
 7. **Should `history record` write the view by default** once M2 lands, so a consumer adds nothing? Costs
