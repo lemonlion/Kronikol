@@ -1931,9 +1931,11 @@ M5, M6, M7. Two finished beat six open.
   and stayed green; `Without_history_nothing_about_history_reaches_the_html` pins the markup. The M5
   design moved: rendered on the generation side, one node per sparkline, no payload script, so the
   export needs no special case (the export proof is `HistoryExportTests`). Proofs 3b, 6, 9: the dogfood
-  workflow on the orphan branch `kronikol-history` is the executed recipe (§11.1); its first run is the
-  push of this release, and `history show` writes what the branch holds into the job summary. Proof 1
-  (the E2E remainder) and 10 run on CI.
+  workflow on the orphan branch `kronikol-history` is the executed recipe (§11.1). **Verified on the
+  push of this release:** CI Summary Preview run 34854297755 created the branch (commit `1572965e`,
+  README + `.gitattributes` + `history.jsonl`) and recorded one line per suite — four rosters, four
+  runs under `gh:34854297755:1`, nine lines in all — in 43 seconds, and `history show` wrote what the
+  branch holds into the job summary. Proof 1 (the E2E remainder) and 10 run on CI.
 
 ---
 
