@@ -54,9 +54,9 @@ drew that line and this plan does not move it.
 
 ---
 
-## 2. Checked, not assumed (2026-09-14)
+## 2. Checked, not assumed (2026-09-14 and 2026-09-15)
 
-Every platform fact this plan rests on was measured or read this day. Where a fact could not be found
+Every platform fact this plan rests on was measured or read on those two days. Where a fact could not be found
 in the source consulted, the row says so.
 
 | Claim | What was found | How |
@@ -83,6 +83,12 @@ in the source consulted, the row says so.
 | The standard chart libraries against the page's constraints (one vendored file, hash CSP, SVG for the tests, no `eval`), 2026-09-14/15 | gzipped bytes: Observable Plot 0.6 68,809 (needs D3), D3 7 92,367, the 17 D3 modules a chart needs 46,501 concatenated, Chart.js 4 70,391 (canvas, clean), uPlot 1 21,998 (canvas, clean), ECharts 5 simple 155,473 (HTML tooltips with inline styles), ApexCharts 4 152,599 (SVG built by 30 `innerHTML` writes), Frappe 1 18,256 (one injected style), Vega 5 177,522 plus Vega-Lite 5 79,147 (`new Function`, `eval`), Plotly 2 1,331,118 (injects styles, `new Function`). Plot appends one `<style>` per figure with a fixed template keyed on `className` | `curl` from jsdelivr, `gzip -9`; grep for `new Function(`, `eval(`, `createElement("style")`, `append("style")`, `setAttribute("style"`, `.innerHTML =`, `getContext("2d")` |
 | PlantUML charts in the pinned engine | `@startchart` since 1.2026.0 (bar, stacked bar, line, area, scatter, legend, axes); `ChartDiagramFactory` is among the 21 factories of the TeaVM build's `PSystemBuilder2`; Kronikol's pinned build rendered a four-bar chart as a 3,457-byte SVG of 5 rects, 12 lines, 12 texts, one group, no id, class, title or href; 110 ms cold, 6 to 8 ms warm; the engine is 3,946,817 bytes, 1,067,298 gzipped | plantuml.com chart-diagram; `PSystemBuilder2.java` on master; `tools/render-bench/render-svg.js` and `bench-real.js` with `core-1.2026.8beta1-0e4f452.js` in real Chromium |
 | Mermaid as a chart engine | `xychart`: "two fundamental chart types: the bar chart and the line chart"; "Named line and bar plots are automatically shown in a legend"; no tooltip, hover or click documented; point labels at a fixed 12px; `mermaid@11` `mermaid.min.js` 3,572,661 bytes, 975,701 gzipped | mermaid.js.org syntax page; `curl`, `gzip -9` |
+| Plot under the plan's policy, in Chromium (2026-09-15) | Two figures and a marker plot from synthetic data. Default window, 200 runs by 200 scenarios: stacked bars 15 ms, 200 facets of 200-point lines 36 ms, drift markers 5 ms, 4,742 nodes. Worst case, 1,000 by 200: 18, 102 and 10 ms, 14,342 nodes (3,203 rects, 1,445 paths); under the policy 27, 109 and 12 ms. Plot injected exactly two stylesheets, both keyed on the fixed `className` (the figure's and the legend swatches'); with their two hashes in `style-src` and the one script hash in `script-src`: **0 violations**. Every bar carried its `ariaLabel` (3,000 of 3,000); group labels `bar`, `line`, `rule`, `dot`, `tip`, `frame` and the axes. The `href` channel wrapped each bar in a link, with and without `stackY` | `scratchpad/plot_probe.js` and `plot_probe2.js`: Playwright Chromium from the E2E bin, a local server, `<meta http-equiv="Content-Security-Policy">` |
+| What a poll costs against the real branch from a page origin, per fetch cache mode | `default`, first time: the full body, 6,038 bytes on the wire. `no-cache`: the browser added `If-None-Match` and `Cache-Control: max-age=0`, raw answered `304`, **130 then 79 bytes on the wire**, and script still received a `200` with the cached body. `default` again within `max-age`: served from cache with no request, so stale for up to five minutes. `no-store`: the full body every time. Cross-origin script can read only `cache-control`, `content-length`, `content-type` and `expires` (raw sends no `Access-Control-Expose-Headers`, so no ETag), and a preflight asking to send `If-None-Match` by hand is refused with `403` | `plot_probe2.js` with `request.allHeaders()` and `request.sizes()`; `curl -X OPTIONS` with `Access-Control-Request-Headers: if-none-match` |
+| A page opened from disk cannot fetch beside itself | `fetch("data.json")` from `file:///…/index.html`: `TypeError: Failed to fetch` | `plot_probe.js`, part C |
+| Two lanes recording at once, with the view beside the ledger | Simulated with a bare origin and two clones: the second push lost the race; after `git fetch` and `git rebase origin/kronikol-history` the ledger had union-merged (header, A, B) and the only conflicted path was `history.view.json`; regenerating it from the merged ledger, `git add`, `GIT_EDITOR=true git rebase --continue` and a push left three commits, two runs and one view | shell: `git init --bare`, `.gitattributes` with `history.jsonl merge=union text eol=lf` |
+| The two repositories' Pages sites today | `lemonlion/Kronikol`: none (`404`). `lemonlion/BreakfastProvider`: **already published**, `build_type: workflow`, `https://lemonlion.github.io/BreakfastProvider/`, titled "Breakfast Provider — Kronikol". The `deploy-pages` job of `ci-main.yml` (`needs` the eighteen component lanes and the two unit-test lanes, not `history`) assembles `site/reports/<framework>`, `site/reports/docker/<framework>` and `site/reports/docker-sut/<framework>` from the run's report artifacts, `site/api/` (OpenAPI and AsyncAPI viewers fetched from CDNs at build time) and a generated landing page that already links the `kronikol-history` branch | `gh api repos/<r>/pages`; `curl` of the site; the local BreakfastProvider checkout |
+| Versions to pin | `@observablehq/plot` 0.6.17 (ISC; the UMD bundles `isoformat` and `interval-tree-1d` and expects a `d3` global), `d3` 7.9.0 (ISC) | the npm registry; the UMD header |
 
 Competitors, read the same day (§3 draws on these rows):
 
@@ -270,11 +276,13 @@ the tool, pinned by version, inlined into the page with their licence notices; n
 (§2): 68.8 KB gzipped for Plot plus 92.4 KB for D3, against 22 KB for uPlot, which covers two panels and
 draws to canvas, where the tests cannot see.
 
-Plot's one policy wrinkle is measured, not guessed. It appends a `<style>` element to each figure whose
-text is a fixed template keyed on a class name; the class defaults to a random `plot-xxxxxx`, and the
-`className` option pins it, so the stylesheet text is deterministic and the build hashes it into
-`style-src` (§4.7). An M1 test proves it under the policy, and because the build recomputes the hash from
-the vendored bytes, a Plot bump cannot silently break the policy.
+Plot's one policy wrinkle is measured, not guessed. It appends a `<style>` element to each figure, and
+another to a colour legend's swatches, whose texts are fixed templates keyed on a class name; the class
+defaults to a random `plot-xxxxxx`, and the `className` option pins it, so both texts are deterministic
+and the build hashes them into `style-src` (§4.7). Proved in Chromium on 2026-09-15 (§2): the worst-case
+page rendered under the plan's exact policy with zero violations. The M1 test pins it, and because the
+build recomputes the hashes from the vendored bytes, a Plot bump cannot silently break the policy. The
+`href` channel wraps a mark in a link (§2), which is how a run's bar opens its CI page.
 
 **Fallback: D3 alone.** If Plot's abstractions fight a panel, the 17 D3 modules a chart needs
 (selection, array, color, interpolate, format, time, time-format, scale, axis, path, shape, dispatch,
@@ -304,17 +312,23 @@ v4 lands on the report the two share one vocabulary. Relative units, no horizont
 table scrolls inside itself.
 
 **Budget.** A 1,000-run, 200-scenario view renders its first panel in under 300 ms on a CI runner,
-measured under contention the way the render-perf budgets are (`ContentionScale`).
+measured under contention the way the render-perf budgets are (`ContentionScale`). Before any
+optimisation the same case took 27, 109 and 12 ms for the three chart figures under the policy on a
+desktop (§2), so the budget has room, and the 14,342 SVG nodes of the worst case are not a concern.
 
 ### 4.4 Two delivery modes, one page
 
 - **Snapshot.** What is inlined at build time. Works from `file://`, from Pages, from any host, offline.
   Freshness is the last build plus up to ten minutes of Pages cache on `index.html` itself.
 - **Live refresh.** For each source with a `view` URL, the page fetches it on load and every 60 seconds
-  with `cache: "no-cache"`, which lets the browser revalidate with `If-None-Match`; raw answers `304`
-  (§2) and the DOM is left alone. A `200` replaces that source's data in place, no reload, no flicker. A
-  failed fetch (CORS on a private branch, `404`, offline) keeps the snapshot and marks the source.
-  Freshness is at most the five-minute raw cache.
+  with `cache: "no-cache"`. Measured (§2): the browser adds `If-None-Match`, raw answers `304`, the poll
+  costs about a hundred bytes on the wire, and script still receives a `200` with the cached body. The
+  page cannot see the ETag (raw exposes no header beyond the safelisted four, and a preflight for a
+  hand-made conditional header is refused), so it compares the body it received with the one it last
+  rendered and touches the DOM only when they differ: no reload, no flicker. `cache: "default"` would
+  be wrong (served from cache, stale for up to five minutes) and `no-store` would download the whole
+  view every minute. A failed fetch (CORS on a private branch, `404`, offline) keeps the snapshot and
+  marks the source. Freshness is at most the five-minute raw cache.
 - **Never `api.github.com`.** Sixty unauthenticated calls an hour is not a polling budget, and an
   authenticated call would put a token in the page.
 
@@ -361,8 +375,10 @@ Written to be executed at M2 and recorded in §10, as the history recipe was.
 The push loop already rebases when two lanes record at once, and the ledger union-merges; a rewritten
 view conflicts. **The rule: a view is regenerated from the ledger it sits beside, never merged.** On a
 conflict the loop runs `kronikol history view --history history.jsonl --out history.view.json`,
-`git add history.view.json`, `GIT_EDITOR=true git rebase --continue`, and pushes again. BreakfastProvider's
-eighteen lanes make this path run, not merely exist.
+`git add history.view.json`, `GIT_EDITOR=true git rebase --continue`, and pushes again. Simulated on
+2026-09-15 with two clones racing (§2): the ledger union-merged, the view was the only conflicted path,
+and the loop as written resolved it. BreakfastProvider's eighteen lanes make this path run daily, not
+merely exist.
 
 **(b) A dashboard repository for N sources.**
 
@@ -413,12 +429,17 @@ purposes; nothing is built that neither site runs.
   a snapshot rebuilt on dispatch, running continuously even though the source is public. The token is a
   fine-grained PAT with Contents write on `lemonlion/Kronikol`, or a GitHub App installed on both, held
   as a secret in BreakfastProvider (§2: a source's own `GITHUB_TOKEN` cannot do this).
-- **BreakfastProvider's site,** `https://lemonlion.github.io/BreakfastProvider/`: its eighteen lanes,
-  built by a job after its history job in the same workflow, live against its own branch. This is the
-  single-repository recipe end to end, and the demo a visitor is sent to.
+- **BreakfastProvider's site,** `https://lemonlion.github.io/BreakfastProvider/`, **already exists**
+  (§2): the `deploy-pages` job of `ci-main.yml` publishes the run's eighteen reports, the API viewers
+  and a landing page that links the history branch. The dashboard is one more file in that artifact,
+  `site/dashboard/index.html`, built in the same job from the branch's view as it stands when the job
+  runs, without waiting for the history job: the page refreshes live from the branch, so the run that is
+  recording while the site deploys appears within five minutes. The landing page gains a link, and the
+  latest run's rows can link to the reports the site publishes at stable paths rather than to the
+  Actions page. This is the single-repository recipe end to end, and the demo a visitor is sent to.
 
-Both need Pages enabled with the source set to GitHub Actions, a settings change only the owner can
-make (§9, question 1).
+Kronikol has no Pages site today (§2), so it needs Pages enabled with the source set to GitHub Actions,
+a settings change only the owner can make (§9, question 1). BreakfastProvider needs nothing enabled.
 
 **(d) Private sources.** Snapshot mode; the page says "snapshot from <time>" for them. Hosting the file
 privately is the team's choice of static host: Pages on Enterprise Cloud, Azure Static Web Apps with
@@ -612,6 +633,7 @@ things this section keeps out stay out of it."
 
 1. **Enable Pages on `lemonlion/Kronikol`** (source: GitHub Actions) for the dogfood in M2, and give
    BreakfastProvider's history job the `--view` flag so it is the second, live, public source?
+   BreakfastProvider's own site already exists and needs nothing enabled (§2, §4.6c).
 2. ~~Where the reference multi-repository dashboard lives~~ **Decided 2026-09-14: both, as with every
    other feature.** Kronikol's own Pages site for test purposes, with BreakfastProvider as its live second
    source and as the sender of the dispatch that rebuilds its snapshot; BreakfastProvider's own Pages
