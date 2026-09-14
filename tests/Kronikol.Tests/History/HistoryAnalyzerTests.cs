@@ -264,6 +264,47 @@ public class HistoryAnalyzerTests
         Assert.DoesNotContain(HistoryVerdictKind.Slower, scenario.Verdicts);
     }
 
+    [Fact]
+    public void Slower_is_not_read_from_a_run_that_is_slow_all_over()
+    {
+        // Measured on a consumer's CI: a lane read "18 slower" on a healthy run because the runner was
+        // slow that day and every scenario went with it. A scenario is slower when it got slower than
+        // its run did: durations are read against the run's median, so a slow runner lifts the bar
+        // with the readings.
+        var roster = Roster("a1", "a2", "a3", "a4", "a5");
+        int?[] Usual() => [1000, 1500, 2000, 2500, 3000];
+        int?[] AllDoubled() => [2000, 3000, 4000, 5000, 6000];
+        int?[] OneTripled() => [3000, 1500, 2000, 2500, 3000];
+        var baseline = Enumerable.Range(1, 6).Select(i => (roster, Run(roster, i, "PPPPP", durations: Usual()))).ToList();
+
+        var slowRunner = Analyse(Ledger(baseline.Append((roster, Run(roster, 7, "PPPPP", durations: AllDoubled())))), roster,
+            Run(roster, 8, "PPPPP", durations: AllDoubled()), new HistoryAnalysisOptions { MinRuns = 3 });
+        var oneScenario = Analyse(Ledger(baseline.Append((roster, Run(roster, 7, "PPPPP", durations: OneTripled())))), roster,
+            Run(roster, 8, "PPPPP", durations: OneTripled()), new HistoryAnalysisOptions { MinRuns = 3 });
+
+        Assert.All(slowRunner.Scenarios, s => Assert.DoesNotContain(HistoryVerdictKind.Slower, s.Verdicts));
+        Assert.Contains(HistoryVerdictKind.Slower, oneScenario.Scenarios[0].Verdicts);
+        Assert.All(oneScenario.Scenarios.Skip(1), s => Assert.DoesNotContain(HistoryVerdictKind.Slower, s.Verdicts));
+    }
+
+    [Fact]
+    public void Slower_needs_the_excess_over_the_bar_to_clear_a_floor()
+    {
+        // 8 ms that became 13 ms is above the bar by the factor and below anyone's notice: without a
+        // floor in milliseconds, a scenario measured in single digits reads slower on runner jitter.
+        var roster = Roster("x1", "x2", "x3");
+        var runs = Enumerable.Range(1, 6).Select(i => (roster, Run(roster, i, "PPP", durations: [8, 50, 50]))).ToList();
+        runs.Add((roster, Run(roster, 7, "PPP", durations: [13, 50, 50])));
+        var current = Run(roster, 8, "PPP", durations: [13, 50, 50]);
+
+        var floored = First(Analyse(Ledger(runs), roster, current, new HistoryAnalysisOptions { MinRuns = 3 }));
+        var unfloored = First(Analyse(Ledger(runs), roster, current, new HistoryAnalysisOptions { MinRuns = 3, SlowerMinMs = 0 }));
+
+        Assert.DoesNotContain(HistoryVerdictKind.Slower, floored.Verdicts);
+        Assert.Contains(HistoryVerdictKind.Slower, unfloored.Verdicts);
+        Assert.Equal(100, new HistoryAnalysisOptions().SlowerMinMs);
+    }
+
     // ─── Behaviour ─────────────────────────────────────────────
 
     [Fact]

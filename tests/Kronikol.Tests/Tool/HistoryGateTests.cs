@@ -213,6 +213,30 @@ public class HistoryGateTests : IDisposable
     }
 
     [Fact]
+    public void The_gate_takes_the_duration_floor()
+    {
+        var roster = Roster();
+        for (var i = 1; i <= 8; i++)
+            HistoryLedgerWriter.Append(Ledger, roster, new HistoryRun
+            {
+                Id = $"gh:{i}:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero).AddHours(i),
+                Branch = "main", Commit = "c", Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash,
+                Results = "PP", Attempts = "--", Durations = [i == 8 ? 900 : 100, 50]
+            }, "3.16.0");
+        var report = WriteReport(pay: "Passed", payDuration: 0.9);
+
+        // 900 ms against a bar of 200 ms is 700 ms over it: a floor of 5 s says that is not enough.
+        var floored = Run("gate", report, "--fail-on", "duration-regression", "--slower-by", "2", "--slower-min-ms", "5000");
+        var unfloored = Run("gate", report, "--fail-on", "duration-regression", "--slower-by", "2", "--slower-min-ms", "0");
+        var negative = Run("gate", report, "--slower-min-ms", "-1");
+
+        Assert.Equal(0, floored.Exit);
+        Assert.Equal(1, unfloored.Exit);
+        Assert.Equal(2, negative.Exit);
+        Assert.Contains("--slower-min-ms", negative.Err);
+    }
+
+    [Fact]
     public void No_ledger_and_bad_flags_are_usage_errors()
     {
         var report = WriteReport(pay: "Failed");

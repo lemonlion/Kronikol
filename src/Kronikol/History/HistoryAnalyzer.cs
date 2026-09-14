@@ -79,12 +79,13 @@ public static class HistoryAnalyzer
         var previousFull = LastFull(prior, priorRosters);
         var partial = current.Partial ?? IsPartial(roster, previousFull.Roster, options.PartialThreshold);
 
+        var speeds = new RunSpeeds(prior.Append(current));
         var scenarios = new List<ScenarioHistory>(roster.Count);
         var currentIds = new HashSet<(string, int)>();
         for (var i = 0; i < roster.Count; i++)
         {
             currentIds.Add((roster.Ids[i], roster.Slots[i]));
-            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, options, quarantine, aliases, today));
+            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, speeds, options, quarantine, aliases, today));
         }
 
         // Absent: in the previous full run of the stream, not in this one, and this one not partial. The
@@ -167,7 +168,7 @@ public static class HistoryAnalyzer
     }
 
     private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roster, HistoryRun current, List<HistoryRun> prior, HistoryRoster?[] priorRosters,
-        HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today)
+        RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today)
     {
         var id = roster.Ids[position];
         var slot = roster.Slots[position];
@@ -303,21 +304,34 @@ public static class HistoryAnalyzer
         }
 
         // ── Duration ────────────────────────────────────────
+        // A scenario is slower when it got slower than its run did. Every duration is read against the
+        // speed of its run — the median of the OTHER scenarios' durations in that run — so a slow runner
+        // lifts the bar with the readings. Measured on a consumer's CI before this: a lane read eighteen
+        // scenarios slower on a healthy day because the runner was. A roster of one has no others and
+        // is read raw.
         int? p95 = null;
-        var priorDurations = points.Where(p => p.DurationMs is not null).Select(p => p.DurationMs!.Value).ToList();
-        if (priorDurations.Count >= 2)
+        var timed = points.Where(p => p.DurationMs is not null)
+            .Select(p => (Ms: p.DurationMs!.Value, Relative: p.DurationMs!.Value / speeds.Of(p.RunId, p.DurationMs!.Value)))
+            .ToList();
+        if (timed.Count >= 2)
         {
             // The p95 is taken over the runs before the previous one, so the previous run's own spike
             // does not lift the bar it is measured against.
-            var baseline = priorDurations.Take(priorDurations.Count - 1).ToList();
-            p95 = Percentile95(baseline);
-            if (currentPoint.DurationMs is { } now && baseline.Count >= options.MinRuns && p95 is { } bar && bar > 0)
+            var baseline = timed.Take(timed.Count - 1).Select(t => t.Relative).ToList();
+            var bar = Percentile95(baseline);
+            var speed = currentPoint.DurationMs is { } ms ? speeds.Of(current.Id, ms) : 1.0;
+            // The bar in this run's milliseconds: what the reader compares the duration with.
+            p95 = (int)Math.Round(bar * speed);
+            if (currentPoint.DurationMs is { } now && baseline.Count >= options.MinRuns && bar > 0)
             {
-                var previous = priorDurations[^1];
-                if (now > bar * options.SlowerBy && previous > bar * options.SlowerBy)
+                var previous = timed[^1];
+                var over = bar * options.SlowerBy;
+                // Over the bar by the factor in both runs, and over it by enough milliseconds to notice: a
+                // scenario measured in single digits clears the factor on runner jitter alone.
+                if (now / speed > over && previous.Relative > over && now - over * speed >= options.SlowerMinMs)
                 {
                     verdicts.Add(HistoryVerdictKind.Slower);
-                    evidence.Add($"{now.ToString(CultureInfo.InvariantCulture)} ms now and {previous.ToString(CultureInfo.InvariantCulture)} ms last run, against a p95 of {bar.ToString(CultureInfo.InvariantCulture)} ms over {baseline.Count.ToString(CultureInfo.InvariantCulture)} runs");
+                    evidence.Add($"{now.ToString(CultureInfo.InvariantCulture)} ms now and {previous.Ms.ToString(CultureInfo.InvariantCulture)} ms last run, against a p95 of {p95.Value.ToString(CultureInfo.InvariantCulture)} ms over {baseline.Count.ToString(CultureInfo.InvariantCulture)} runs at this run's speed");
                 }
             }
         }
@@ -447,5 +461,49 @@ public static class HistoryAnalyzer
         var sorted = values.OrderBy(v => v).ToArray();
         var rank = (int)Math.Ceiling(0.95 * sorted.Length);
         return sorted[Math.Clamp(rank - 1, 0, sorted.Length - 1)];
+    }
+
+    internal static double Percentile95(IReadOnlyList<double> values)
+    {
+        if (values.Count == 0) return 0;
+        var sorted = values.OrderBy(v => v).ToArray();
+        var rank = (int)Math.Ceiling(0.95 * sorted.Length);
+        return sorted[Math.Clamp(rank - 1, 0, sorted.Length - 1)];
+    }
+
+    /// <summary>
+    /// The speed of each run in the window: the median duration of a run's scenarios, taken without the
+    /// scenario being read so that a scenario's own regression cannot move the bar it is read against —
+    /// on a roster of two, the run's median IS the other scenario. One sort per run; each reading is a
+    /// binary search and an index.
+    /// </summary>
+    private sealed class RunSpeeds
+    {
+        private readonly Dictionary<string, int[]> _sorted = new(StringComparer.Ordinal);
+
+        public RunSpeeds(IEnumerable<HistoryRun> runs)
+        {
+            foreach (var run in runs)
+            {
+                if (run.Durations is not { } durations) continue;
+                var sorted = durations.Where(d => d.HasValue).Select(d => d!.Value).ToArray();
+                Array.Sort(sorted);
+                _sorted[run.Id] = sorted;
+            }
+        }
+
+        /// <summary>The run's speed in milliseconds without one occurrence of <paramref name="ownMs"/>; 1 when nothing else was timed.</summary>
+        public double Of(string runId, int ownMs)
+        {
+            if (!_sorted.TryGetValue(runId, out var sorted) || sorted.Length < 2) return 1.0;
+            var self = Array.BinarySearch(sorted, ownMs);
+            if (self < 0) self = sorted.Length; // not this run's own reading: read against the whole run
+            var others = self < sorted.Length ? sorted.Length - 1 : sorted.Length;
+            int At(int index) => sorted[index < self ? index : index + 1];
+            var median = others % 2 == 1
+                ? At(others / 2)
+                : (At(others / 2 - 1) + At(others / 2)) / 2.0;
+            return median > 0 ? median : 1.0;
+        }
     }
 }

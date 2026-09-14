@@ -115,6 +115,7 @@ public sealed class HistoryRunContext
                         MinRuns = options.HistoryMinRuns,
                         FlakyRate = options.HistoryFlakyRate,
                         SlowerBy = options.HistorySlowerBy,
+                        SlowerMinMs = options.HistorySlowerMinMs,
                         PartialThreshold = options.HistoryPartialThreshold,
                         ReportReordered = options.HistoryReordered,
                         // A pull request's runs form their own stream, and the question a pull request asks is

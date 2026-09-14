@@ -1984,6 +1984,13 @@ M5, M6, M7. Two finished beat six open.
   `Create`. Fixed as a patch. The second changes the set of calls of every scenario that queries
   Cosmos DB, which history reads as `behaviour-changed` once on the first run after upgrading, the
   evidence naming the phantom `Create`.
+- **3.16.0 (2026-09-14).** The consumer's next run (34902729225) read 2 to 18 `slower` per lane on
+  healthy runs: 7 ms scenarios reading 11 ms on GitHub runners, and whole lanes slow together.
+  Durations are now read against the run's speed (the median of the other scenarios' durations in
+  that run) with a 100 ms floor (`HistorySlowerMinMs`, `gate --slower-min-ms`). Every
+  `behaviour-changed` in that run was an own-host class (`plans/BACKGROUND_ATTRIBUTION_PLAN.md`).
+  Follow-up idea: the evidence for a set change names counts, not calls; storing the templated
+  distinct-call list on the run line would let it name the calls that appeared or disappeared.
 
 ---
 

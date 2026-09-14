@@ -102,6 +102,9 @@ public sealed record HistoryAnalysisOptions
     /// <summary>The factor over the p95 that makes a run slower (<see cref="ReportConfigurationOptions.HistorySlowerBy"/>).</summary>
     public double SlowerBy { get; init; } = 1.5;
 
+    /// <summary>The least a scenario must be over the bar, in milliseconds, before it is slower (<see cref="ReportConfigurationOptions.HistorySlowerMinMs"/>).</summary>
+    public int SlowerMinMs { get; init; } = 100;
+
     /// <summary>The share of the previous roster a run may lack before it is partial (<see cref="ReportConfigurationOptions.HistoryPartialThreshold"/>).</summary>
     public double PartialThreshold { get; init; } = 0.10;
 
@@ -198,7 +201,7 @@ public sealed record ScenarioHistory
     /// <summary>The current duration, when recorded.</summary>
     public required int? DurationMs { get; init; }
 
-    /// <summary>The p95 of the prior durations, when enough were recorded.</summary>
+    /// <summary>The p95 of the prior durations, when enough were recorded, in this run's milliseconds: each prior duration is read against its run's speed and the p95 scaled to this run's.</summary>
     public required int? DurationP95 { get; init; }
 
     /// <summary>The set fingerprint in the previous run that recorded one.</summary>

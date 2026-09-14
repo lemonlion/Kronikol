@@ -563,9 +563,18 @@ public record ReportConfigurationOptions
 
     /// <summary>
     /// The factor over the window's 95th-percentile duration that makes a scenario slower, when both this
-    /// run and the previous one exceed it. Default: 1.5.
+    /// run and the previous one exceed it. Default: 1.5. Every duration is read against the speed of its
+    /// run — the median of the other scenarios' durations in that run — so a slow runner lifts the bar
+    /// with the readings, and a scenario is slower only when it got slower than its run did.
     /// </summary>
     public double HistorySlowerBy { get; set; } = 1.5;
+
+    /// <summary>
+    /// The least a scenario must be over the bar, in milliseconds, before it is slower. Default: 100.
+    /// A scenario measured in single digits clears the factor on runner jitter alone; the floor keeps a
+    /// verdict for a change somebody would notice.
+    /// </summary>
+    public int HistorySlowerMinMs { get; set; } = 100;
 
     /// <summary>
     /// The share of the previous run's scenarios a run may lack before it is recorded as partial — a

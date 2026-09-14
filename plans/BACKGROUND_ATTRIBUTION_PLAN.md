@@ -36,8 +36,15 @@ between the runs. Read by script from the two `TestRunReport.json` files:
   withdrawn: every non-HTTP capture gets a fresh `traceId` per call
   (`src/Kronikol.Extensions.CosmosDB/CosmosTrackingMessageHandler.cs:53`), so a trace id never ties a
   dependency call to a request either way.
-- The in-memory lanes show none of this: those hosts have no `CosmosClient` registered, and the
-  in-memory Kafka and Pub/Sub fakes run the handler synchronously inside the producing request.
+- The in-memory lanes show less of it, not none. They have no `CosmosClient`, and the in-memory
+  Kafka reporting fake runs its handler inside the producing request, but the other in-memory
+  consumers are `BackgroundService`s and the same classes carry their work: on the second run at
+  rule 3 (34902729225) the ReqNRoll in-memory lane flagged *A request with a correlation id…* (one
+  call, then three) and *Exceeding the rate limit…* (25, then 29), both own-host classes. The TUnit
+  in-memory lane shows the sharpest form: its fixture notes that `[Before(Assembly)]` may run late, so
+  the **static** host is created by whichever test reaches it first, and a bad-request scenario that
+  makes one call held 71 calls in one run and 73 in the next — the whole run's background work,
+  landing on a different parameterised case each run as scheduling varies.
 
 So the noise is not "a consumer draining earlier scenarios' messages" in general. It is one precise
 thing: **a host started inside a test inherits that test's identity, and everything the host's

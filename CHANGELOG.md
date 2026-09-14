@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.16.0] - 2026-09-14
+
+**Minor - a scenario is slower when it got slower than its run did.** One new option and one changed
+verdict rule on the cross-run history feature; nothing else moves. Template pins move to 3.15.1.
+
+### Added
+
+- **`HistorySlowerMinMs`** (default 100) and `kronikol history gate --slower-min-ms N`: the least a
+  scenario must be over the bar, in milliseconds, before it is `slower`. A scenario measured in single
+  digits clears the 1.5x factor on runner jitter alone; the floor keeps the verdict for a change
+  somebody would notice.
+
+### Changed
+
+- **Durations are read against the run's speed.** Measured on a consumer's CI, a lane read `18 slower`
+  on a healthy run because the runner was slow that day and every scenario went with it. Every duration
+  is now read against its run's speed - the median of the other scenarios' durations in that run - so a
+  slow runner lifts the bar with the readings, and a scenario is `slower` only when it got slower than
+  its run did. The evidence and `durationP95Ms` give the bar in this run's milliseconds ("at this run's
+  speed"). A roster of one has no others and is read raw.
+
 ## [3.15.1] - 2026-09-14
 
 **Patch - captures say when, and a query plan is not a create.** Two capture defects and one test
