@@ -10,6 +10,7 @@ re-verified fresh on 2026-08-30.
 
 | Plan | Status | Shipped in |
 |---|---|---|
+| `BACKGROUND_ATTRIBUTION_PLAN.md` *(new, 2026-09-14)* | ❌ Plan written, nothing implemented, **NOT green-lit**. Dependency calls made outside a scenario's own flow (message consumers draining earlier scenarios' messages, hosted services) are attributed to whichever scenario is running: measured on BreakfastProvider, a toppings test holding fourteen orders-container calls with trace ids no scenario owns. Recommends attribution by correlation with a `background` bucket, staged behind a provenance mark. | — |
 | `BACKGROUND_STEPS_INLINE_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.48 |
 | `LONG_LINE_SYNTAX_ERROR_PLAN.md` | 🟡 ~95% (Java mirror open) | 3.0.48 |
 | `REPORT_QUERY_PLAN.md` | 🟡 ~99% | 3.0.47, tail in 3.1.0 |

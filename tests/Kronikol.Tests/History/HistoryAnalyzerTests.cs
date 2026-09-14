@@ -289,6 +289,49 @@ public class HistoryAnalyzerTests
     }
 
     [Fact]
+    public void The_same_calls_made_more_often_is_behaviour_changed_once_the_count_has_been_stable()
+    {
+        // 3, 3, 3 then 5: an N+1 regression, which the set of calls cannot see because the calls are the
+        // same. The count is a verdict once the scenario has shown it constant over the minimum runs.
+        var roster = Roster(Ids);
+        var ledger = Ledger(Enumerable.Range(1, 3).Select(i => (roster, Run(roster, i, "PPP", shapes: ["s1", "s2", "s3"], calls: [3, 1, 1]))));
+
+        var scenario = First(Analyse(ledger, roster, Run(roster, 9, "PPP", shapes: ["s1", "s2", "s3"], calls: [5, 1, 1]), new HistoryAnalysisOptions { MinRuns = 3 }));
+
+        Assert.Equal(HistoryVerdictKind.BehaviourChanged, scenario.Primary);
+        Assert.Contains("calls 3", scenario.Evidence);
+        Assert.Contains("constant over the last 3 runs", scenario.Evidence);
+    }
+
+    [Fact]
+    public void A_count_that_wobbles_is_evidence_and_never_a_verdict()
+    {
+        // 7, 8, 7 then 9: a retry against a throttled emulator, or a consumer's work landing in whichever
+        // scenario is running. The scenario's own record says its count is not to be read as behaviour.
+        var roster = Roster(Ids);
+        int[] counts = [7, 8, 7];
+        var ledger = Ledger(Enumerable.Range(1, 3).Select(i => (roster, Run(roster, i, "PPP", shapes: ["s1", "s2", "s3"], calls: [counts[i - 1], 1, 1]))));
+
+        var scenario = First(Analyse(ledger, roster, Run(roster, 9, "PPP", shapes: ["s1", "s2", "s3"], calls: [9, 1, 1]), new HistoryAnalysisOptions { MinRuns = 3 }));
+
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, scenario.Verdicts);
+        Assert.DoesNotContain(HistoryVerdictKind.Reordered, scenario.Verdicts);
+        Assert.Contains("varies run to run", scenario.Evidence);
+    }
+
+    [Fact]
+    public void A_count_change_below_the_minimum_runs_is_advisory()
+    {
+        var roster = Roster(Ids);
+        var ledger = Ledger([(roster, Run(roster, 1, "PPP", shapes: ["s1", "s2", "s3"], calls: [3, 1, 1]))]);
+
+        var scenario = First(Analyse(ledger, roster, Run(roster, 9, "PPP", shapes: ["s1", "s2", "s3"], calls: [5, 1, 1]), new HistoryAnalysisOptions { MinRuns = 3 }));
+
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, scenario.Verdicts);
+        Assert.Contains("needs 3 runs", scenario.Evidence);
+    }
+
+    [Fact]
     public void A_changed_call_set_with_the_same_status_is_behaviour_changed()
     {
         var roster = Roster(Ids);

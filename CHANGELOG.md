@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.15.0] - 2026-09-14
+
+**Minor - the behaviour verdict earns its sensitivity.** A design change to a verdict rule on a feature
+nobody depends on yet; the fingerprint rule moves to 3, so runs recorded before are not compared.
+
+### Changed
+- **The set fingerprint is the set of distinct calls.** A retry against a throttled emulator, or a
+  consumer's work landing in whichever scenario is running, repeats a call without changing what the
+  scenario does; on BreakfastProvider's docker lanes that read as `behaviour-changed` on up to twenty
+  scenarios a run. The set now says *which* calls were made; the call count, recorded beside it, says how
+  many times.
+- **A change in the count alone is a verdict once the scenario has earned it.** "3, 3, 3, then 5" is an
+  N+1 regression and is `behaviour-changed` with the evidence `calls 3 in gh:… to 5 now, constant over
+  the last 3 runs`; "7, 8, 7, then 9" is a count that wobbles, read out in the evidence and never
+  tripped on. Below `HistoryMinRuns` runs with the count constant, a count change is advisory. A change
+  in the set of calls is a verdict from the first run, as before.
+
 ## [3.14.0] - 2026-09-14
 
 **Minor - `kronikol query history --min-runs`, and a fingerprint that stays put.** One new query flag

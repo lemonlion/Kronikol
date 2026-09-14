@@ -39,9 +39,11 @@ public static partial class InteractionShape
     /// behaviour verdict, and says so, rather than calling every scenario changed once. Move it when a
     /// rule changes. 1: 3.9.0 - ids, timestamps and numbers, the statement head cut before it was
     /// templated. 2: 3.14.0 - the head templated before it is cut, and what a statement carried as data
-    /// (the values of a document, the literals of a query) dropped.
+    /// (the values of a document, the literals of a query) dropped. 3: 3.15.0 - the set fingerprint is
+    /// the set of distinct calls, so a retry cannot move it; how many times is the call count, which the
+    /// analyzer judges on the scenario's own record.
     /// </summary>
-    public const int Version = 2;
+    public const int Version = 3;
 
     /// <summary>How much of a statement's first line is templated, and how much of the templated head is kept.</summary>
     private const int HeadRaw = 2000;
@@ -203,7 +205,9 @@ public static partial class InteractionShape
         ArgumentNullException.ThrowIfNull(calls);
         var lines = calls.Select(c => c.ToString()).ToArray();
         var ordered = string.Join("\n", lines);
-        var set = string.Join("\n", lines.OrderBy(l => l, StringComparer.Ordinal));
+        // Distinct: which calls were made. A retry against a throttled emulator, or a consumer's work
+        // landing in whichever scenario is running, repeats a call without changing what the scenario does.
+        var set = string.Join("\n", lines.Distinct(StringComparer.Ordinal).OrderBy(l => l, StringComparer.Ordinal));
         return (Hash8(set), Hash8(ordered), calls.Count);
     }
 

@@ -209,6 +209,19 @@ public class InteractionShapeTests
     {
         // Fingerprints are only comparable when the same rule made them; the version rides on the run line so
         // the analyzer can tell, and it moves when the rule does.
-        Assert.True(InteractionShape.Version >= 2);
+        Assert.True(InteractionShape.Version >= 3);
+    }
+
+    [Fact]
+    public void A_repeated_call_does_not_change_the_set_fingerprint()
+    {
+        // A retry against a throttled emulator is the same call again. The set says which calls were made;
+        // how many times is the call count, which the analyzer judges on the scenario's own record.
+        var once = new[] { new ShapeCall("Api", "CosmosDB", "Create", "/orders", "200") };
+        var thrice = new[] { once[0], once[0], once[0] };
+
+        Assert.Equal(InteractionShape.Fingerprint(once).ShapeSet, InteractionShape.Fingerprint(thrice).ShapeSet);
+        Assert.NotEqual(InteractionShape.Fingerprint(once).ShapeOrdered, InteractionShape.Fingerprint(thrice).ShapeOrdered);
+        Assert.Equal(3, InteractionShape.Fingerprint(thrice).Calls);
     }
 }

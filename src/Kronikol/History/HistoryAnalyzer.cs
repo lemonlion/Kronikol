@@ -355,6 +355,29 @@ public static class HistoryAnalyzer
                     evidence.Add($"same status, different calls: {callsText}");
                 }
             }
+            else if (currentPoint.Calls is { } now && previousShaped.Calls is { } before && now != before && currentResult == previousShaped.Result)
+            {
+                // The same calls, made a different number of times. "3, 3, 3, then 5" is an N+1 regression
+                // the set cannot see; "7, 8, 7, then 9" is a retry against a throttled emulator or a
+                // consumer's work landing in whichever scenario is running. The scenario's own record
+                // tells them apart: the count is a verdict once it has been constant over the minimum
+                // runs, and read out otherwise.
+                var counted = shaped.Where(p => p.Calls is not null).ToList();
+                var countText = $"calls {before.ToString(CultureInfo.InvariantCulture)} in {previousShaped.RunId} to {now.ToString(CultureInfo.InvariantCulture)} now";
+                if (counted.Count >= options.MinRuns && counted.All(p => p.Calls == before))
+                {
+                    verdicts.Add(HistoryVerdictKind.BehaviourChanged);
+                    evidence.Add($"the same calls made a different number of times: {countText}, constant over the last {counted.Count.ToString(CultureInfo.InvariantCulture)} runs");
+                }
+                else if (counted.Count < options.MinRuns)
+                {
+                    evidence.Add($"{countText}; a count verdict needs {options.MinRuns.ToString(CultureInfo.InvariantCulture)} runs with the count constant");
+                }
+                else
+                {
+                    evidence.Add($"{countText}; the count varies run to run for this scenario, so it is not read as behaviour");
+                }
+            }
             else if (options.ReportReordered && currentPoint.ShapeOrdered is { Length: > 0 } && previousShaped.ShapeOrdered is { Length: > 0 }
                      && !string.Equals(currentPoint.ShapeOrdered, previousShaped.ShapeOrdered, StringComparison.Ordinal))
             {
