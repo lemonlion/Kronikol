@@ -17,7 +17,7 @@ namespace Kronikol.Tool;
 /// <para>Exit codes follow the tool's convention: 0 done, 1 something could not be read or written, 2
 /// usage.</para>
 /// </summary>
-internal static class HistoryCommand
+internal static partial class HistoryCommand
 {
     private const int DefaultWindow = 50;
 
@@ -40,35 +40,72 @@ internal static class HistoryCommand
         }
 
         var verb = args[0];
-        string? ledger = null;
-        string? suite = null;
-        int? window = null;
-        var inputs = new List<string>();
+        var parsed = new Args();
 
         for (var i = 1; i < args.Count; i++)
         {
             var arg = args[i];
+            string? Next()
+            {
+                if (++i < args.Count) return args[i];
+                error.WriteLine("Missing value for " + arg);
+                return null;
+            }
+
             switch (arg)
             {
                 case "-h" or "--help":
                     PrintUsage(@out);
                     return 0;
-                case "--history":
-                    if (++i >= args.Count) { error.WriteLine("Missing value for --history"); return 2; }
-                    ledger = args[i];
-                    break;
-                case "--suite":
-                    if (++i >= args.Count) { error.WriteLine("Missing value for --suite"); return 2; }
-                    suite = args[i];
+                case "--history": if (Next() is not { } ledger) return 2; parsed.Ledger = ledger; break;
+                case "--suite": if (Next() is not { } suite) return 2; parsed.Suite = suite; break;
+                case "--reason": if (Next() is not { } reason) return 2; parsed.Reason = reason; break;
+                case "--by": if (Next() is not { } by) return 2; parsed.By = by; break;
+                case "--fail-on": if (Next() is not { } failOn) return 2; parsed.FailOn = failOn; break;
+                case "--branch": if (Next() is not { } branch) return 2; parsed.Branch = branch; break;
+                case "--run-id": if (Next() is not { } runId) return 2; parsed.RunId = runId; break;
+                case "--release": parsed.Release = true; break;
+                case "--list": parsed.List = true; break;
+                case "--from-ctrf": parsed.FromCtrf = true; break;
+                case "--from-allure": parsed.FromAllure = true; break;
+                case "--accept-renames": parsed.AcceptRenames = true; break;
+                case "--until":
+                    if (Next() is not { } until) return 2;
+                    if (!DateOnly.TryParseExact(until, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var untilDate))
+                    {
+                        error.WriteLine("--until takes a date like 2026-12-31.");
+                        return 2;
+                    }
+                    parsed.Until = untilDate;
                     break;
                 case "--window":
-                    if (++i >= args.Count) { error.WriteLine("Missing value for --window"); return 2; }
-                    if (!int.TryParse(args[i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) || parsed < 0)
+                    if (Next() is not { } window) return 2;
+                    if (!int.TryParse(window, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedWindow) || parsedWindow < 0)
                     {
                         error.WriteLine("--window takes a non-negative number of runs (0 keeps every run).");
                         return 2;
                     }
-                    window = parsed;
+                    parsed.Window = parsedWindow;
+                    break;
+                case "--max-new-failures":
+                    if (Next() is not { } max) return 2;
+                    if (!int.TryParse(max, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedMax) || parsedMax < 0)
+                    {
+                        error.WriteLine("--max-new-failures takes a non-negative count.");
+                        return 2;
+                    }
+                    parsed.MaxNewFailures = parsedMax;
+                    break;
+                case "--min-pass-rate" or "--flaky-threshold" or "--slower-by":
+                    if (Next() is not { } number) return 2;
+                    if (!double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) || value < 0)
+                    {
+                        error.WriteLine($"{arg} takes a number.");
+                        return 2;
+                    }
+                    if (arg == "--min-pass-rate") parsed.MinPassRate = value;
+                    else if (arg == "--flaky-threshold") parsed.FlakyThreshold = value;
+                    else parsed.SlowerBy = value;
                     break;
                 default:
                     if (arg.StartsWith('-'))
@@ -76,19 +113,24 @@ internal static class HistoryCommand
                         error.WriteLine($"Unknown option: {arg}");
                         return 2;
                     }
-                    inputs.Add(arg);
+                    parsed.Inputs.Add(arg);
                     break;
             }
         }
 
         return verb switch
         {
-            "record" => Record(inputs, ledger, getEnv, @out, error),
-            "init" => Init(ledger, getEnv, @out, error),
-            "show" => Show(inputs, ledger, suite, window ?? DefaultWindow, getEnv, @out, error),
-            "verify" => Verify(inputs, ledger, getEnv, @out, error),
-            "prune" => Rewrite(inputs, ledger, window ?? DefaultWindow, compact: false, getEnv, @out, error),
-            "compact" => Rewrite(inputs, ledger, window ?? DefaultWindow, compact: true, getEnv, @out, error),
+            "record" => Record(parsed.Inputs, parsed.Ledger, parsed.AcceptRenames, getEnv, @out, error),
+            "init" => Init(parsed.Ledger, getEnv, @out, error),
+            "show" => Show(parsed.Inputs, parsed.Ledger, parsed.Suite, parsed.Window ?? DefaultWindow, getEnv, @out, error),
+            "verify" => Verify(parsed.Inputs, parsed.Ledger, getEnv, @out, error),
+            "prune" => Rewrite(parsed.Inputs, parsed.Ledger, parsed.Window ?? DefaultWindow, compact: false, getEnv, @out, error),
+            "compact" => Rewrite(parsed.Inputs, parsed.Ledger, parsed.Window ?? DefaultWindow, compact: true, getEnv, @out, error),
+            "gate" => Gate(parsed, getEnv, @out, error),
+            "quarantine" => Quarantine(parsed, getEnv, @out, error),
+            "rename" => Rename(parsed, getEnv, @out, error),
+            "doctor" => Doctor(parsed, getEnv, @out, error),
+            "import" => Import(parsed, getEnv, @out, error),
             _ => Unknown(verb, error)
         };
     }
@@ -158,7 +200,7 @@ internal static class HistoryCommand
     /// of one run becoming one line, a run already recorded left alone. The fragments are read in path
     /// order so the fold is the same on every machine.
     /// </summary>
-    private static int Record(IReadOnlyList<string> inputs, string? explicitLedger, Func<string, string?> getEnv, TextWriter @out, TextWriter error)
+    private static int Record(IReadOnlyList<string> inputs, string? explicitLedger, bool acceptRenames, Func<string, string?> getEnv, TextWriter @out, TextWriter error)
     {
         if (inputs.Count == 0)
         {
@@ -206,11 +248,47 @@ internal static class HistoryCommand
         foreach (var (roster, run) in folded)
         {
             var line = run;
+            var previous = LastFullRoster(ledger, run.Suite);
+
+            // A scenario whose id changed but whose feature and name did not is a rename, not a deletion
+            // plus an addition; saying so is what keeps its history attached (§7.4). Suggested by
+            // default, written only when asked, because a guess written silently is the one kind of
+            // alias nobody would ever review.
+            if (previous is not null)
+            {
+                var renames = SuggestRenames(previous, roster);
+                if (renames.Count > 0)
+                {
+                    if (acceptRenames)
+                    {
+                        var aliasPath = HistoryAliases.PathBeside(ledger);
+                        var aliases = LoadAliasesOrNull(ledger) ?? new HistoryAliases();
+                        foreach (var (oldId, newId, name) in renames)
+                        {
+                            aliases.Add(oldId, newId);
+                            @out.WriteLine($"aliased {oldId} → {newId}  {name}");
+                        }
+                        aliases.Save(aliasPath);
+                        previous = WithAliases(previous, aliases);
+                    }
+                    else
+                    {
+                        @out.WriteLine($"{renames.Count} scenario(s) look renamed (same feature and name, different id):");
+                        foreach (var (oldId, newId, name) in renames)
+                            @out.WriteLine($"  {oldId} → {newId}  {name}");
+                        @out.WriteLine("Run again with --accept-renames to alias them, or kronikol history rename <old> <new> for one.");
+                    }
+                }
+                else if (LoadAliasesOrNull(ledger) is { } known && known.Mappings.Count > 0)
+                {
+                    previous = WithAliases(previous, known);
+                }
+            }
+
             if (line.Partial is null)
             {
                 // The heuristic runs here, against the ledger as it stands, so eight shards that each
                 // lacked seven eighths of the suite do not each declare themselves partial.
-                var previous = LastFullRoster(ledger, run.Suite);
                 line = line with { Partial = HistoryAnalyzer.IsPartial(roster, previous, 0.10) };
             }
 
@@ -268,6 +346,10 @@ internal static class HistoryCommand
         }
         return files;
     }
+
+    /// <summary>The previous roster with every aliased id replaced by its current one, so a rename is not a missing scenario.</summary>
+    private static HistoryRoster WithAliases(HistoryRoster previous, HistoryAliases aliases) =>
+        HistoryRoster.Create(previous.Suite, previous.Entries().Select(e => e with { StableId = aliases.Current(e.StableId) }).ToArray());
 
     private static HistoryRoster? LastFullRoster(string ledger, string? suite)
     {
@@ -493,8 +575,15 @@ internal static class HistoryCommand
         writer.WriteLine("  verify                                        check the file's structure; exit 1 with every finding when it is not sound");
         writer.WriteLine("  prune    [--window N]                         rewrite without the runs outside the window (default 50) - a read-cost control");
         writer.WriteLine("  compact  [--window N]                         rewrite in the current format, every run kept, error text kept for the window");
+        writer.WriteLine("  gate     <report|dir> [--fail-on LIST]         exit 1 on what the ledger says is new: --fail-on new-failures,flaky,duration-regression,behaviour-change");
+        writer.WriteLine("           [--max-new-failures N] [--min-pass-rate X] [--flaky-threshold X] [--slower-by X] [--branch NAME]   (default: new-failures)");
+        writer.WriteLine("  quarantine <sid> --reason TEXT [--by NAME] [--until DATE] | <sid> --release | --list   .kronikol/quarantine.json beside the ledger");
+        writer.WriteLine("  rename   <old-sid> <new-sid>                  alias an old stableId to its replacement (.kronikol/aliases.json); record suggests them");
+        writer.WriteLine("  doctor                                        the ledger, its companions, the merge attribute and what is expired or damaged");
+        writer.WriteLine("  import   <report|dir>... [--from-ctrf|--from-allure] [--suite NAME] [--branch NAME] [--run-id ID]   runs from reports the run did not write");
         writer.WriteLine();
         writer.WriteLine("  --history FILE   the ledger, instead of $KRONIKOL_HISTORY or the .kronikol/history.jsonl above the working directory");
+        writer.WriteLine("  record --accept-renames   write the rename aliases record suggests");
         writer.WriteLine();
         writer.WriteLine("  Reading the ledger against a report is `kronikol query history <report>`.");
         writer.WriteLine("  Exit codes: 0 done, 1 could not read or write, 2 usage.");

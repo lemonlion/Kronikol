@@ -475,6 +475,15 @@ The verdicts are the library's own — the same analysis the run performed when 
 against the ledger as it stands now. `failures` prints the same `history:` line under each failure
 whenever a ledger resolves on its own, and says nothing about history when none does.
 
+**The CI gate is not a query verb.** `kronikol history gate <report>` reads the same ledger and trips on
+what it says is *new* - a failure carrying the broke, new or unknown verdict that is neither flaky nor
+quarantined - and reads the rest out without tripping. Its fail-on list (new-failures, flaky,
+duration-regression, behaviour-change) widens it; below the minimum number of recorded runs the flaky,
+duration and behaviour categories are advisory. Exit 0 clean, 1 tripped, 2 usage. When a build is red
+and the gate said `gate: passed`, the failure is one the ledger already knew about, and `history
+<report>` shows which verdict it carries. `kronikol history quarantine` parks one with a reason on
+file; `kronikol history doctor` explains a ledger that behaves oddly.
+
 ## Exit codes
 
 | Code | Meaning |

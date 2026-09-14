@@ -69,6 +69,7 @@ On a real suite `TestRunReport.json` runs to megabytes; the `Kronikol.Tool` CLI 
 kronikol query summary  ./Reports              # the run, its failures, the slowest scenarios
 kronikol query failures ./Reports              # why each one failed, with assertion messages
 kronikol query history  ./Reports              # what the last runs say: a regression, flaky, or failing since when
+kronikol history gate   ./Reports              # CI: fail on what is new, not on the test that has flipped for a month
 kronikol query trace    ./Reports 4bf92f3577b34da6  # follow one W3C trace across scenarios, in order
 kronikol query grep     ./Reports "4173" --values   # where a wrong value entered the system
 kronikol query failures ./Reports --json            # the same answer as one envelope, for scripts

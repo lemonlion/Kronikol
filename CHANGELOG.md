@@ -4,6 +4,59 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.10.0] - 2026-09-14
+
+**Minor - the ledger gates the build, and knows what to leave alone.** New surface on `kronikol
+history`: `gate`, `quarantine`, `rename`, `doctor`, `import` and `record --accept-renames`. Five new
+verbs and a flag are new public surface, so this is a minor bump; the library is unchanged, and a
+report with no ledger is byte for byte what 3.9.0 wrote.
+
+This is milestones M4 and M7 of `plans/CROSS_RUN_HISTORY_PLAN.md` - the history-aware gate and the
+maintenance verbs for quarantine, renames and imports. The HTML rendering and the dogfood workflow (M5,
+M8) follow in 3.11.0.
+
+Template pins move to **3.9.0**, the last release that shipped.
+
+### Added
+- **`kronikol history gate <report|dir> [--fail-on LIST] [--max-new-failures N] [--min-pass-rate X]
+  [--flaky-threshold X] [--slower-by X] [--branch NAME] [--history FILE]`** - the CI gate that trips on
+  what the ledger says is *new*. A gate that fails on any red cannot tell a regression from the test
+  that has flipped for a month, and a team that cannot tell them apart learns to ignore red. By default
+  it fails only on `new-failures`: a failure the ledger calls `broke`, `new` or `unknown` that is neither
+  flaky nor quarantined. `--fail-on new-failures,flaky,duration-regression,behaviour-change` adds the
+  others; `--max-new-failures` and `--min-pass-rate` are thresholds. Below `HistoryMinRuns` recorded
+  runs the flaky, duration and behaviour categories are **advisory** - printed, never tripped on -
+  because the ledger does not have those verdicts yet; a regression and the pass rate are enforced from
+  the first run. Every category is listed with its scenarios, verdicts and evidence, then `gate: passed`
+  or `gate: FAILED (…)`. Exit 0 clean, 1 tripped, 2 usage (an unknown category is named).
+- **`kronikol history quarantine <sid> --reason TEXT [--by NAME] [--until DATE]`**, `--release`,
+  `--list` - `.kronikol/quarantine.json` beside the ledger. A quarantined scenario still runs and still
+  records; it carries the `quarantined` verdict and trips nothing. A reason is required, a stable id is
+  required (`sid:` prefix accepted), `--until` expires the entry and `doctor` names it once it has.
+- **`kronikol history rename <old-sid> <new-sid>`** - `.kronikol/aliases.json` beside the ledger, so a
+  scenario's history follows it through a rename instead of reading as one deletion and one `new`. The
+  ledger is never rewritten; the alias applies when reading. **`record` suggests renames** - an id
+  present only in the previous full roster whose feature and name match an id present only in the
+  new one - and **`record --accept-renames`** writes them. Suggested by default, written only when
+  asked: a guess written silently is the one kind of alias nobody would ever review.
+- **`kronikol history doctor`** - one page on the ledger: where it is and what the environment says,
+  format and generator, damaged lines, suites, runs and streams, runs recorded without a suite, the
+  `merge=union` attribute beside it, the quarantine list and its expired entries, the alias file. Exit
+  1 with `doctor: N problem(s)` when anything needs a hand.
+- **`kronikol history import <report|dir>... [--from-ctrf|--from-allure] [--suite NAME] [--branch NAME]
+  [--run-id ID]`** - runs the ledger did not see when they happened. A Kronikol report directory
+  imports from its `TestRunReport.json` (the run id from the CI metadata, durations, branch, commit).
+  `--from-ctrf` reads a CTRF document: `extra.stableId` when the writer set one, otherwise the id is
+  computed from the suite, the test's `suite` and its name the way Kronikol computes its own; `retries`
+  becomes attempts, `message` the error key, `environment.branchName` the stream, `summary.start` the run
+  id. `--from-allure` reads an `allure-results` directory: the latest attempt per `historyId` with the
+  attempt count, `broken` as failed, the feature or suite label as the feature. Imported runs carry
+  results, attempts and durations; behaviour verdicts need the `History.run.json` a Kronikol run writes.
+
+### Fixed
+- `record` now applies the rename aliases already on file when deciding whether a run is partial, so a
+  renamed scenario is no longer counted as missing from the roster.
+
 ## [3.9.0] - 2026-09-14
 
 **Minor - a report knows what the last runs said.** New surface: the cross-run history ledger. A run

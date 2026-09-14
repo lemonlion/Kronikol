@@ -180,6 +180,7 @@ Captured W3C trace ids are preserved, and pairs without one group into one trace
 kronikol query summary  ./Reports          # the run, its failures, the slowest scenarios
 kronikol query failures ./Reports          # why each one failed, with assertion messages and file:line
 kronikol query history  ./Reports          # what the last runs say: a regression, flaky, or failing since when
+kronikol history gate   ./Reports          # CI: fail on what is new, not on the test that has flipped for a month
 kronikol query repro    ./Reports          # the dotnet test --filter line that re-runs each failure
 kronikol query services ./Reports          # per service: calls, errors, timings — and what was never called
 kronikol query flow     ./Reports s3       # the sequence, in 2 KB instead of 663

@@ -2,7 +2,8 @@
 
 Status: **green-lit and in execution (2026-09-14).** 3.9.0 shipped M0, M1, M2, M3 and M6 — the ledger,
 the verdicts, the digest/CTRF/pointer surfaces, `kronikol query history` and the `kronikol history`
-maintenance verbs; M4 and M7 follow in 3.10.0, M5 and M8 in 3.11.0. Three decisions below moved under
+maintenance verbs; 3.10.0 shipped M4 and M7 — the gate, quarantine, rename aliases, the doctor and
+imports from CTRF and Allure; M5 and M8 follow in 3.11.0. Three decisions below moved under
 implementation (the roster key includes the suite; flaky needs two failing episodes, not two flips; a
 first failure with nothing earlier to compare against is `unknown`, not `broke`) and the code and the
 changelog record why. Before that: investigation complete (2026-09-12), nothing implemented. Revised across
@@ -1902,6 +1903,23 @@ M5, M6, M7. Two finished beat six open.
    counter-keyed roster is rejected (§3.1).
 9. Ledger committed into a scratch repo, three runs, `git diff` read by hand: is it reviewable?
 10. Real-data pass: M5's report against BreakfastProvider output, not a synthetic fixture.
+
+### 12.1 Log
+
+- **3.9.0 (2026-09-14).** `dotnet test tests/Kronikol.Tests` green (4,973). Proofs covered in-process by
+  the unit tests rather than run literally: 2 (`Fold_of_eight_shard_fragments_produces_one_run`,
+  `Record_folds_the_shards_of_one_run_into_one_line`), 3 (`Two_projects_sharing_a_stableId_do_not_share_history`),
+  4 piecewise (one analyzer test per classification; `Ledger_for_5000_scenarios_over_50_runs_stays_under_the_budget`
+  for the size), 7 as a torn tail (`Truncated_last_line_is_skipped_not_fatal`,
+  `An_append_after_a_torn_tail_starts_on_a_fresh_line`), 8 as a simulated union output
+  (`Ledger_written_by_a_union_merge_is_read_in_append_order_not_timestamp_order`,
+  `Two_rosters_sharing_a_key_with_different_contents_is_a_verify_failure`); 5 only as "history off"
+  (`Nothing_about_history_reaches_the_outputs_when_it_is_off`) - the no-ledger byte-identity pin of the
+  HTML is M5's. Not run: 1 (E2E remainder), 3b, 6, 9, 10 - all of them the dogfood in M8.
+- **3.10.0 (2026-09-14).** `dotnet test tests/Kronikol.Tests` green (4,992: +19 in `HistoryGateTests`
+  and `HistoryMaintenanceTests`). Library untouched, so the 3.9.0 coverage stands. The gate's advisory
+  rule, the quarantine trip, the rename suggestion and the CTRF/Allure imports are pinned by tests;
+  none of the numbered proofs moved.
 
 ---
 
