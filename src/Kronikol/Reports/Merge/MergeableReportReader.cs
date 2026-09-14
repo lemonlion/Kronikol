@@ -71,13 +71,14 @@ public static class MergeableReportReader
         var stepPaths = new Dictionary<string, List<string?>>(StringComparer.Ordinal);
         var annotations = new Dictionary<string, List<ReportGenerator.ScenarioAnnotation>>(StringComparer.Ordinal);
         var defaultedResults = new List<string>();
+        var notes = new ParseNotes();
 
         foreach (var fe in EnumerateArray(root, "features"))
         {
             var scenarios = new List<Scenario>();
             foreach (var se in EnumerateArray(fe, "scenarios"))
             {
-                var scenario = ReadScenario(se);
+                var scenario = ReadScenario(se, notes);
                 scenarios.Add(scenario);
 
                 if (!DeclaresAResult(se))
@@ -87,8 +88,8 @@ public static class MergeableReportReader
                     foreach (var d in diags.EnumerateArray())
                         diagrams.Add(new DiagramAsCode(scenario.Id, "", d.GetString() ?? ""));
 
-                ReadInteractions(se, scenario, interactions, stepPaths);
-                ReadAnnotations(se, scenario.Id, annotations);
+                ReadInteractions(se, scenario, interactions, stepPaths, notes);
+                ReadAnnotations(se, scenario.Id, annotations, notes);
             }
 
             features.Add(new Feature
@@ -119,8 +120,52 @@ public static class MergeableReportReader
             Interactions = interactions.ToArray(),
             StepPaths = stepPaths,
             Annotations = annotations,
-            Diagnostics = [.. ReadDiagnostics(root), .. DefaultedResultDiagnostics(defaultedResults)]
+            Diagnostics = [.. ReadDiagnostics(root), .. DefaultedResultDiagnostics(defaultedResults), .. notes.Diagnostics()]
         };
+    }
+
+    /// <summary>
+    /// The values a shard carried that this build could not read and had to replace with a default,
+    /// gathered so that each kind is reported once with the values that were seen.
+    /// </summary>
+    /// <remarks>
+    /// The scenario's <c>result</c> was the first of these to be said; a step's <c>status</c>, an
+    /// annotation's <c>kind</c> and an interaction's <c>type</c> degraded the same way in the same silence
+    /// - a step marked with a status a newer Kronikol writes showed as passed, an annotation of a kind this
+    /// build does not know became <see cref="DiagramMarkerKind.Custom"/>, and an interaction whose type
+    /// could not be read was counted as a request. The defaults stay, because a shard is not refused over
+    /// one field; what changes is that the merged report now carries a diagnostic for each, so a reader
+    /// can tell "this build's guess" from "what the run recorded".
+    /// </remarks>
+    private sealed class ParseNotes
+    {
+        public List<string> StepStatuses { get; } = [];
+        public List<string> AnnotationKinds { get; } = [];
+        public List<string> InteractionTypes { get; } = [];
+
+        public IEnumerable<DiagnosticEntry> Diagnostics()
+        {
+            if (StepStatuses.Count > 0)
+                yield return new DiagnosticEntry(
+                    DiagnosticKind.ResultDefaulted,
+                    $"{StepStatuses.Count} step(s) in a merged shard recorded a status this build does not understand and are shown "
+                    + $"without one. Seen: {Seen(StepStatuses)}.");
+
+            if (AnnotationKinds.Count > 0)
+                yield return new DiagnosticEntry(
+                    DiagnosticKind.Other,
+                    $"{AnnotationKinds.Count} annotation(s) in a merged shard carry a kind this build does not understand and were "
+                    + $"read as {DiagramMarkerKind.Custom}. Seen: {Seen(AnnotationKinds)}.");
+
+            if (InteractionTypes.Count > 0)
+                yield return new DiagnosticEntry(
+                    DiagnosticKind.Other,
+                    $"{InteractionTypes.Count} interaction(s) in a merged shard recorded a type this build does not understand and "
+                    + $"were read as {RequestResponseType.Request}. Seen: {Seen(InteractionTypes)}.");
+        }
+
+        private static string Seen(List<string> values) =>
+            string.Join(", ", values.Distinct(StringComparer.Ordinal).Take(3).Select(v => $"\"{v}\""));
     }
 
     /// <summary>
@@ -149,7 +194,7 @@ public static class MergeableReportReader
             + $"reported as {ExecutionResult.Passed}. First: {string.Join(", ", scenarios.Take(3))}.");
     }
 
-    private static Scenario ReadScenario(JsonElement se) => new()
+    private static Scenario ReadScenario(JsonElement se, ParseNotes notes) => new()
     {
         Id = GetString(se, "id") ?? "",
         DisplayName = GetString(se, "name") ?? "",
@@ -176,11 +221,24 @@ public static class MergeableReportReader
         ExampleFlatValues = ReadStringDictionary(se, "exampleFlatValues") ?? ReadStringDictionary(se, "exampleValues"),
         ExampleDisplayName = GetString(se, "exampleDisplayName"),
         Attachments = ReadAttachments(se, "attachments"),
-        BackgroundSteps = ReadSteps(se, "backgroundSteps"),
-        Steps = ReadSteps(se, "steps")
+        BackgroundSteps = ReadSteps(se, "backgroundSteps", notes),
+        Steps = ReadSteps(se, "steps", notes)
     };
 
-    private static ScenarioStep[]? ReadSteps(JsonElement parent, string name)
+    private static ExecutionResult? ReadStepStatus(JsonElement step, ParseNotes notes)
+    {
+        if (!step.TryGetProperty("status", out var status) || status.ValueKind != JsonValueKind.String)
+            return null;
+
+        var text = status.GetString();
+        if (text is not null && Enum.TryParse<ExecutionResult>(text, ignoreCase: true, out var parsed))
+            return parsed;
+
+        notes.StepStatuses.Add(text ?? "");
+        return null;
+    }
+
+    private static ScenarioStep[]? ReadSteps(JsonElement parent, string name, ParseNotes notes)
     {
         if (!parent.TryGetProperty(name, out var arr) || arr.ValueKind != JsonValueKind.Array)
             return null;
@@ -189,9 +247,9 @@ public static class MergeableReportReader
         {
             Keyword = GetString(s, "keyword"),
             Text = GetString(s, "text") ?? "",
-            Status = s.TryGetProperty("status", out var st) && st.ValueKind == JsonValueKind.String
-                ? ReadEnum(st.GetString(), ExecutionResult.Passed)
-                : null,
+            // Null, not Passed, when the status cannot be read: a step has an honest "not recorded"
+            // value where a scenario does not, and a status this build does not know is not a pass.
+            Status = ReadStepStatus(s, notes),
             Duration = s.TryGetProperty("durationSeconds", out var sd) && sd.ValueKind == JsonValueKind.Number
                 ? TimeSpan.FromSeconds(sd.GetDouble())
                 : null,
@@ -205,7 +263,7 @@ public static class MergeableReportReader
             DocString = GetString(s, "docString"),
             DocStringMediaType = GetString(s, "docStringMediaType"),
             Comments = ReadStringArray(s, "comments"),
-            SubSteps = ReadSteps(s, "subSteps"),
+            SubSteps = ReadSteps(s, "subSteps", notes),
             Attachments = ReadAttachments(s, "attachments"),
             Parameters = ReadParameters(s),
             TextSegments = ReadTextSegments(s)
@@ -407,7 +465,7 @@ public static class MergeableReportReader
     /// re-derived: the derivation walks the markers, which are gone.
     /// </summary>
     private static void ReadInteractions(JsonElement se, Scenario scenario, List<RequestResponseLog> into,
-        Dictionary<string, List<string?>> stepPaths)
+        Dictionary<string, List<string?>> stepPaths, ParseNotes notes)
     {
         if (!se.TryGetProperty("httpInteractions", out var array) || array.ValueKind != JsonValueKind.Array)
             return;
@@ -441,7 +499,7 @@ public static class MergeableReportReader
                 Headers: ReadHeaders(element),
                 ServiceName: GetString(element, "serviceName") ?? "",
                 CallerName: GetString(element, "callerName") ?? "",
-                Type: ReadEnum(GetString(element, "type"), RequestResponseType.Request),
+                Type: ReadInteractionType(element, notes),
                 TraceId: ReadGuid(element, "traceId"),
                 RequestResponseId: ReadGuid(element, "requestResponseId"),
                 TrackingIgnore: false,
@@ -467,8 +525,28 @@ public static class MergeableReportReader
             stepPaths[scenario.Id] = paths;
     }
 
+    private static RequestResponseType ReadInteractionType(JsonElement element, ParseNotes notes)
+    {
+        var text = GetString(element, "type");
+        if (text is not null && Enum.TryParse<RequestResponseType>(text, ignoreCase: true, out var parsed))
+            return parsed;
+
+        notes.InteractionTypes.Add(text ?? "");
+        return RequestResponseType.Request;
+    }
+
+    private static DiagramMarkerKind ReadAnnotationKind(JsonElement annotation, ParseNotes notes)
+    {
+        var text = GetString(annotation, "kind");
+        if (text is not null && Enum.TryParse<DiagramMarkerKind>(text, ignoreCase: true, out var parsed))
+            return parsed;
+
+        notes.AnnotationKinds.Add(text ?? "");
+        return DiagramMarkerKind.Custom;
+    }
+
     private static void ReadAnnotations(JsonElement se, string scenarioId,
-        Dictionary<string, List<ReportGenerator.ScenarioAnnotation>> into)
+        Dictionary<string, List<ReportGenerator.ScenarioAnnotation>> into, ParseNotes notes)
     {
         if (!se.TryGetProperty("annotations", out var array) || array.ValueKind != JsonValueKind.Array)
             return;
@@ -476,7 +554,7 @@ public static class MergeableReportReader
         var found = array.EnumerateArray()
             .Select(a => new ReportGenerator.ScenarioAnnotation(
                 ReadInt(a, "index") ?? 0,
-                ReadEnum(GetString(a, "kind"), default(DiagramMarkerKind)),
+                ReadAnnotationKind(a, notes),
                 GetString(a, "text") ?? ""))
             .ToList();
 

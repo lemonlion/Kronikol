@@ -1,3 +1,4 @@
+using Kronikol.Tracking;
 using Kronikol.Reports;
 using Kronikol.Reports.Merge;
 
@@ -116,6 +117,80 @@ public class MergeSaysWhatItLostTests
             """);
 
         Assert.DoesNotContain(report.Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted);
+    }
+
+    /// <summary>Same defect, one level down: a step whose status this build cannot read was shown as passed.</summary>
+    [Fact]
+    public void A_step_status_this_build_does_not_understand_is_read_as_unrecorded_and_said()
+    {
+        var report = MergeableReportReader.Parse("""
+            { "mergeableFormatVersion": 1, "kronikolVersion": "3.5.1",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [
+                { "id": "s1", "name": "Place order", "result": "Failed", "steps": [
+                    { "keyword": "Given", "text": "a cart", "status": "Passed" },
+                    { "keyword": "When", "text": "it is priced", "status": "Exploded" } ] } ] } ] }
+            """);
+
+        var steps = report.Features[0].Scenarios[0].Steps!;
+        Assert.Equal(ExecutionResult.Passed, steps[0].Status);
+        Assert.Null(steps[1].Status);
+        var entry = Assert.Single(report.Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted);
+        Assert.Contains("step", entry.Message, StringComparison.Ordinal);
+        Assert.Contains("Exploded", entry.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_step_with_no_status_is_unrecorded_and_nothing_is_said()
+    {
+        var report = MergeableReportReader.Parse("""
+            { "mergeableFormatVersion": 1, "kronikolVersion": "3.5.1",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [
+                { "id": "s1", "name": "Place order", "result": "Passed", "steps": [ { "keyword": "Given", "text": "a cart" } ] } ] } ] }
+            """);
+
+        Assert.Null(report.Features[0].Scenarios[0].Steps![0].Status);
+        Assert.Empty(report.Diagnostics);
+    }
+
+    /// <summary>Measured: an annotation written as <c>"Note"</c> became <c>Custom</c> with nothing said.</summary>
+    [Fact]
+    public void An_annotation_kind_this_build_does_not_understand_is_read_as_custom_and_said()
+    {
+        var report = MergeableReportReader.Parse("""
+            { "mergeableFormatVersion": 1, "kronikolVersion": "3.5.1",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [
+                { "id": "s1", "name": "Place order", "result": "Passed",
+                  "httpInteractions": [],
+                  "annotations": [ { "index": 0, "kind": "Note", "text": "hello" } ] } ] } ] }
+            """);
+
+        var annotation = Assert.Single(report.Annotations["s1"]);
+        Assert.Equal(DiagramMarkerKind.Custom, annotation.Kind);
+        var entry = Assert.Single(report.Diagnostics, d => d.Message.Contains("annotation", StringComparison.Ordinal));
+        Assert.Contains("\"Note\"", entry.Message, StringComparison.Ordinal);
+        Assert.Contains("Custom", entry.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>An interaction of a type this build cannot read is counted as a request, and that inflates every call count.</summary>
+    [Fact]
+    public void An_interaction_type_this_build_does_not_understand_is_said()
+    {
+        var report = MergeableReportReader.Parse("""
+            { "mergeableFormatVersion": 1, "kronikolVersion": "3.5.1",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [
+                { "id": "s1", "name": "Place order", "result": "Passed",
+                  "httpInteractions": [
+                    { "type": "Reqponse", "metaType": "Default", "method": "GET", "uri": "https://pricing.test/q",
+                      "serviceName": "Pricing", "callerName": "Tests", "requestResponseId": "1f3e0a4e-5d3c-4a5b-9c1d-2e3f4a5b6c7d" } ] } ] } ] }
+            """);
+
+        var entry = Assert.Single(report.Diagnostics, d => d.Message.Contains("interaction", StringComparison.Ordinal));
+        Assert.Contains("\"Reqponse\"", entry.Message, StringComparison.Ordinal);
+        Assert.Contains("Request", entry.Message, StringComparison.Ordinal);
     }
 
     private static MergeableReport Shard(string? suite = null, string id = "s1", string? commit = null,
