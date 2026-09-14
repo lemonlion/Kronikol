@@ -133,11 +133,14 @@ public class SourceLocationTests
     public void Merging_two_shards_keeps_the_path_even_when_one_shard_lacks_it()
     {
         // A feature split across parallel runners: whichever shard knows the path, the merged
-        // feature knows it.
+        // feature knows it. The second shard holds a DIFFERENT scenario of the feature - the same one
+        // twice with the same result and timing is the same runner's output supplied twice, which the
+        // merge counts once, second shard and all.
         var withPath = Located();
         var withoutPath = Located();
         withoutPath[0].SourceFile = null;
         withoutPath[0].Scenarios[0].Id = "t2";
+        withoutPath[0].Scenarios[0].DisplayName = "Pay by voucher";
         withoutPath[0].Scenarios[0].SourceFile = null;
         withoutPath[0].Scenarios[0].SourceLine = null;
 
