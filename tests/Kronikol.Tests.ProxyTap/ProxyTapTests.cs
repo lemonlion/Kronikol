@@ -462,7 +462,8 @@ public class ProxyTapTests
     public async Task Upstream_down_answers_502_from_the_tap()
     {
         var sink = new ListSink();
-        var deadPort = StubUpstream.FreePort();
+        using var dead = new ClosedPort();
+        var deadPort = dead.Port;
         await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(new ProxyTapOptions
         {
             ListenPort = StubUpstream.FreePort(), ForwardBaseUri = new Uri($"http://localhost:{deadPort}"), CallerName = "a", ServiceName = "b", Sink = sink,
@@ -572,7 +573,8 @@ public class ProxyTapTests
     public async Task A_failed_forward_is_counted_and_reported_as_capture_degraded()
     {
         var sink = new ListSink();
-        var deadPort = StubUpstream.FreePort();
+        using var dead = new ClosedPort();
+        var deadPort = dead.Port;
         await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(new ProxyTapOptions
         {
             ListenPort = StubUpstream.FreePort(), ForwardBaseUri = new Uri($"http://localhost:{deadPort}"), CallerName = "web", ServiceName = "api", Sink = sink, Name = "tap-web-api",
@@ -588,4 +590,26 @@ public class ProxyTapTests
         Assert.Equal(DiagnosticKind.CaptureDegraded, entry.Kind);
         Assert.StartsWith("tap-web-api: 1 request(s) could not be forwarded and were answered 502 Bad Gateway", entry.Message);
     }
+}
+
+/// <summary>
+/// A loopback port that stays closed for as long as this handle lives: bound but never listening, so a
+/// connection to it is refused, and reserved, so the OS cannot hand it to a stub server another test
+/// starts in the meantime. A port merely observed free and then released is neither: on CI a parallel
+/// stub collector was given the released port, and an export to an "unreachable" endpoint succeeded
+/// against it.
+/// </summary>
+public sealed class ClosedPort : IDisposable
+{
+    private readonly System.Net.Sockets.Socket _socket = new(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+
+    public int Port { get; }
+
+    public ClosedPort()
+    {
+        _socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+        Port = ((IPEndPoint)_socket.LocalEndPoint!).Port;
+    }
+
+    public void Dispose() => _socket.Dispose();
 }

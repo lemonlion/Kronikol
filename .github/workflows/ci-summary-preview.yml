@@ -101,9 +101,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           WT="$RUNNER_TEMP/history-branch"
+          # FETCH_HEAD is per-worktree, so it cannot be named from inside the new one; the fetch above
+          # also updated origin/kronikol-history, which can.
           if git fetch origin kronikol-history; then
-            git worktree add "$WT" FETCH_HEAD
-            git -C "$WT" checkout -q -B kronikol-history FETCH_HEAD
+            git worktree add -B kronikol-history "$WT" origin/kronikol-history
           else
             git worktree add --detach "$WT"
             git -C "$WT" checkout -q --orphan kronikol-history

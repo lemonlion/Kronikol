@@ -254,7 +254,8 @@ public class OtlpTapTests
     {
         var sink = new ListSink();
         var options = Options(sink);
-        options.ForwardBaseUri = new Uri($"http://localhost:{StubCollector.FreePort()}");
+        using var dead = new ClosedPort();
+        options.ForwardBaseUri = new Uri($"http://localhost:{dead.Port}");
         await using var tap = new OtlpTap(options);
         await tap.StartAsync();
 
@@ -525,7 +526,8 @@ public class OtlpTapTests
         var sink = new ListSink();
         var options = Options(sink);
         options.ExpectedHeaders["x-kronikol-tap"] = "s3cret";
-        options.ForwardBaseUri = new Uri($"http://localhost:{StubCollector.FreePort()}");
+        using var dead = new ClosedPort();
+        options.ForwardBaseUri = new Uri($"http://localhost:{dead.Port}");
         await using var tap = new OtlpTap(options);
         await tap.StartAsync();
 
@@ -554,4 +556,26 @@ public class OtlpTapTests
         Assert.StartsWith("otlp: ", dropped.Message);
         Assert.Contains("export payload(s) dropped because the mapping queue was full (QueueCapacity 1)", dropped.Message);
     }
+}
+
+/// <summary>
+/// A loopback port that stays closed for as long as this handle lives: bound but never listening, so a
+/// connection to it is refused, and reserved, so the OS cannot hand it to a stub server another test
+/// starts in the meantime. A port merely observed free and then released is neither: on CI a parallel
+/// stub collector was given the released port, and an export to an "unreachable" endpoint succeeded
+/// against it.
+/// </summary>
+public sealed class ClosedPort : IDisposable
+{
+    private readonly System.Net.Sockets.Socket _socket = new(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+
+    public int Port { get; }
+
+    public ClosedPort()
+    {
+        _socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+        Port = ((IPEndPoint)_socket.LocalEndPoint!).Port;
+    }
+
+    public void Dispose() => _socket.Dispose();
 }

@@ -183,7 +183,8 @@ public class OtlpExporterTests
     [Fact]
     public async Task An_unreachable_endpoint_is_counted_not_thrown()
     {
-        var options = new OtlpExportOptions { Endpoint = new Uri($"http://localhost:{StubCollector.FreePort()}/v1/traces") };
+        using var closed = new ClosedPort();
+        var options = new OtlpExportOptions { Endpoint = new Uri($"http://localhost:{closed.Port}/v1/traces") };
         using var exporter = new OtlpExporter(options);
         var (request, response) = HttpPair();
 

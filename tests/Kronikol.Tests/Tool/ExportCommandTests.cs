@@ -139,7 +139,8 @@ public class ExportCommandTests : IDisposable
         var capture = WriteCapture();
         var err = new StringWriter();
 
-        var exit = ExportCommand.Run([capture, "--otlp", $"http://localhost:{FreePort()}/v1/traces"], new StringWriter(), err);
+        using var closed = new ClosedPort();
+        var exit = ExportCommand.Run([capture, "--otlp", $"http://localhost:{closed.Port}/v1/traces"], new StringWriter(), err);
 
         Assert.Equal(1, exit);
         Assert.Contains("failed", err.ToString());
@@ -326,4 +327,26 @@ public class ExportCommandTests : IDisposable
         listener.Stop();
         return port;
     }
+}
+
+/// <summary>
+/// A loopback port that stays closed for as long as this handle lives: bound but never listening, so a
+/// connection to it is refused, and reserved, so the OS cannot hand it to a stub server another test
+/// starts in the meantime. A port merely observed free and then released is neither: on CI a parallel
+/// stub collector was given the released port, and an export to an "unreachable" endpoint succeeded
+/// against it.
+/// </summary>
+public sealed class ClosedPort : IDisposable
+{
+    private readonly System.Net.Sockets.Socket _socket = new(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+
+    public int Port { get; }
+
+    public ClosedPort()
+    {
+        _socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+        Port = ((IPEndPoint)_socket.LocalEndPoint!).Port;
+    }
+
+    public void Dispose() => _socket.Dispose();
 }
