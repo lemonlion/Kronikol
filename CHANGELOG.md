@@ -4,6 +4,99 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.6.0] - 2026-09-14
+
+**Minor - a merged report is a real run.** New public surface: `MergedRunOutputs`, two `kronikol merge`
+flags (`--ci-summary`, `--publish-artifacts`), `RunSummary.QueryTarget`, a `stepPaths` parameter on
+`FailuresDigestGenerator.Generate`, and a `New` section in `kronikol query diff`. The rest is bug fixes to
+what `kronikol merge` and `kronikol query diff` produce. The highest-ranking change is the new surface,
+so the bump is minor.
+
+This is milestone M6 of `plans/LLM_FIRST_PLAN.md`: rows F1-F5 and B2. The three worst defects it fixes
+were in none of the rows; the plan's own rows turned out to be consequences of them.
+
+Template pins move to **3.5.1**, the last release that shipped.
+
+### Added
+- **`kronikol merge` writes everything a run writes beside its report.** A run ends in a tail of
+  outputs that are not the report - `Failures.md` and `Failures.jsonl`, `CLAUDE.md` and `AGENTS.md`,
+  the schema, the CI job summary, the console pointer, the artifact publish - and a merge rendered the
+  HTML and the data file and stopped. So the one shape of run that is always on CI, a sharded suite,
+  had none of the things this library builds for CI. The merge now writes the digest (with each call
+  attributed to its step from the `stepPath` the shards carry), both instruction files (splicing into
+  one that already exists), the data file's schema (named after `-o`), and ends with the run-end
+  pointer; a failing merge on CI posts the "Debug this run" section to the job summary and the log, and
+  on GitHub Actions the `::notice`. `--ci-summary` and `--publish-artifacts` turn on the two outputs a
+  run keeps opt-in. `--no-json` still means the HTML only. `MergedRunOutputs.Write` is the same tail
+  for the programmatic API - a separate writer rather than the run's own tail extracted, because that
+  tail reads process-ambient state a merged report does not have.
+- **The run-end pointer hands `kronikol query` the file when the directory would not find it.**
+  `kronikol query <dir>` finds a `TestRunReport.json` and nothing else, and a merge names its data file
+  after `-o`, so the pointer, the `::notice` and the job-summary section all name `Combined.json`
+  itself. `RunSummary.QueryTarget` carries it; the "never open" line names the file that exists.
+- **`kronikol query diff` lists new scenarios under `New`.** They rendered under `Broken` - so a new
+  scenario that passed was listed as broken - while the JSON always said `new`. The text agrees with it
+  now, and the closing "no change" line knows about them.
+- **`FailuresDigestGenerator.Generate` takes carried step paths.** The derivation walks diagram markers
+  the tracked logs hold, and a merged report has none, so a digest built from a merge attributed every
+  call to `scenario`. Null still derives them, which is right for a live run.
+
+### Fixed
+- **`kronikol merge -o <a-shard>.json` destroyed the shard.** The self-ingest guard ran after the HTML
+  was written and compared only the `.json` name derived from `-o`, so the `.json` spelling of an input
+  was overwritten with half a megabyte of HTML - and the command then printed a message saying the shard
+  had been protected. `--no-json` skipped the guard altogether. The check now runs before a byte is
+  written, covers both destinations, and exits 2. A merge whose data file could not be written no longer
+  exits 0 either.
+- **`kronikol merge` crashed on any shard that captured a database call.** A tracker's `method` is a
+  label (`Query`, `Publish`, a stored-procedure name), and the reader fed it to `HttpMethod.Parse`:
+  `FormatException` for a spaced label, `ArgumentException` for an empty one, exit 127, from whichever
+  of fifteen artifacts it was, unnamed. Labels round-trip as labels now, only the nine standard verbs
+  become an `HttpMethod`, and the read names the file it failed on. **Behaviour change:** the data
+  writers upper-case only a real `HttpMethod`, so a BigQuery `Query` stays `Query` where it was written
+  `QUERY`.
+- **Two shards that ran different tests merged into one scenario.** Scenarios were deduplicated by
+  runtime id on the invariant that "a collision means the same runner's output was supplied twice".
+  NUnit's id is a per-process counter (`0-1002` in this repository's own report), so every shard mints
+  the same ids for different tests; whichever sorted second was deleted, its traffic re-attributed to
+  the survivor, and a shard whose test failed merged green. Identity is the scenario's content now,
+  colliding ids are renumbered (`0-1002#1`), and everything keyed to an id travels with the right
+  scenario.
+- **A shard given twice doubled everything but the scenario.** The same artifact downloaded into two
+  folders, yesterday's merged file left in the directory, the merge's own output fed back in: one
+  scenario, every interaction twice, two identical diagrams, and a component diagram reading
+  `16 calls across 6 tests` for a run that made 8 across 3. A copy - the same scenario with the same
+  result, timing and message - is counted once, shard and all, with a diagnostic; two runs of one
+  scenario (an overlapping partition, a failed shard re-run beside its first attempt) are both kept,
+  because first-wins would merge a failing run green; a retried scenario keeps both attempts.
+- **A merge said nothing when it could not reconcile.** Shards from different suites had the suite
+  dropped, which re-keys every `stableId` in the merged file so it matches neither the shards nor a
+  baseline; shards from different CI runs took the first commit; and one surviving scenario could take
+  its verdict from the first shard and its internal flow from the second. Each is now a diagnostic
+  naming what was seen, and every side table agrees on first-wins.
+- **A shard that never said how a scenario ended merged as Passed in silence**, and so did a step's
+  `status`, an annotation's `kind` (`Note` became `Custom`) and an interaction's `type` this build does
+  not understand. Each is now a `ResultDefaulted` or `Other` diagnostic with the values seen.
+  **Behaviour change:** a step status that cannot be read is shown as *not recorded* rather than as
+  passed.
+- **`kronikol query diff`'s Tracking section compared whole-file totals across unmatched scenario
+  sets**, so one added test hid a total capture loss and one removed test invented one - and a new run
+  that captured nothing was skipped as "absent", after which the diff printed `no change in results,
+  timings or tracked calls`. The wiki's own gold-standard guarantee, "reject a service falling to
+  zero", could not fire. Tracking is computed over the scenarios both runs hold, states what the
+  unmatched ones carried, reports a run that captured nothing as `total N -> 0 calls - nothing
+  tracked`, and reports a service one scenario stopped seeing while the total held. **Behaviour
+  change:** a run with no interactions where the other side had them is now a reported loss; the one
+  absence still not a loss is a mergeable file written before 3.1.0, which cannot carry traffic and is
+  noted and left out.
+- **`kronikol query diff` with `stableId`s on one side only "matched by position"** and reported every
+  scenario as both new and gone, at exit 0. So did two runs whose ids were computed under different
+  suites - a renamed `SuiteName`, a merge across suites, a Kronikol4J run (which scopes ids to no
+  suite) beside a .NET run of the same tests - which share no id and every name. **Behaviour change:**
+  both are refused with exit 2 before a line is printed, naming the side that lacks ids or the two
+  suites. Two runs that both predate 3.0.47 are still matched by position, and two unrelated suites
+  are still compared as everything gone and everything new.
+
 ## [3.5.1] - 2026-09-13
 
 **Patch - one platform-dependent contract, found by CI on the 3.5.0 tag.** No new public surface.

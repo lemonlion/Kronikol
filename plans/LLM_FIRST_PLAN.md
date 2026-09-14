@@ -2410,6 +2410,115 @@ still **0**. Both rows stay unverified-for-a-real-run, for the reason already re
 
 ---
 
+### 2026-09-13 (M5) — every address the tool prints, the tool accepts, released as 3.5.0 and 3.5.1
+
+Rows G1, G2, G4, G5, G6, G7, G8, G9, G10 and §3.1.
+
+**The plan was wrong about three rows, and the verifier lane caught it before anything was built.** G2,
+G5 and G6 were marked "verify-don't-rebuild" on the evidence that `--out` writes and the pager computes
+a total. Both true; neither closed the row. `--out` was a silent no-op on the fourteen listing verbs;
+the pager's footer-guided walk skipped rows because a `--limit` above the ceiling was clamped in
+silence while `next:` advanced by the limit asked for; and `--out` into a missing directory was an
+unhandled exception on all four payload verbs. A row that says *verify* is still a row to measure.
+
+**Four defects the rows did not name.** (1) The provenance banner corrupted `--count`: it was written
+before the verb ran, and `--count` is documented as one token, so every caller parsing stdout got two.
+Under `--count` the notes go to stderr. (2) Twelve of the thirteen `DiagnosticKind`s never reached the
+banner — only `ResultDefaulted` did. The rule that replaced the list: a kind banners when it means the
+report holds less than the run produced, so a count below it is a lower bound and an absence is not a
+negative; the two capitalisation kinds are excluded on purpose. (3) Six writes of a caller-supplied
+path, two guarded, both too narrowly — `--out ""` threw `ArgumentException`, in no catch clause. One
+write path now (`QueryWriter.TryWriteFile`). 3.5.1 followed because that guard *caught* the failure
+rather than checking for it, and Windows and POSIX disagree about a whitespace-only path — CI found it
+on the 3.5.0 tag, so **no 3.5.0 package was published**, exactly as with 3.4.0. (4) `CiSummary.md` was
+a live markdown breakout on captured text — three fixed-width fences and one un-HTML-escaped
+`errorMessage`, in a file rendered as HTML in the GitHub job summary.
+
+**Two address-grammar decisions, both load-bearing.** A step path covers that step and everything under
+it, everywhere, `--step` included — the addresses `failures` prints are frequently the parent of the
+assertion that failed. `sid:` is mandatory: `diff` decides whether its second positional is an address
+or a report *file* by asking the grammar, so a bare sixteen-hex form would capture hash-named artifact
+paths.
+
+**Three of the suite's own drift guards were green while drifting**, each keyed on the syntax of what it
+guarded: the banner scraper keyed on `Note($"! ` and missed a banner written as a `switch` arm; it
+enumerated `src/Kronikol.Tool/*.cs` non-recursively and never visited `Query/`; and nothing compared the
+two skill trees, so the shipped `query.py` lacked a line the repo's copy grew in 3.1.0. All three key on
+the property now, and `The_two_copies_of_the_skill_are_the_same_files` pins the trees file for file.
+`scripts/query.py` is a fourth implementation of the address grammar and had reimplemented the
+step-path defect on its own.
+
+Suite 4,643 → **4,709**. Minor: `sid:<stableId>` and two `grep` targets are new surface. Behaviour
+changes in the changelog: `grep` searches names and errors by default; `--step N` covers N's sub-steps;
+`summary <address>`, `annotations <s>/<step>` and `--body <not-an-address>` exit 2 where they exited 0.
+
+### 2026-09-14 (M6) — a merged report is a real run, released as 3.6.0
+
+Rows F1–F5 and B2, over eight commits (`f95ae4b5` … `9e064aec`). **The three worst defects were in
+none of the rows, and the rows turned out to be their consequences.**
+
+**Measured on the way in, before any row was touched.** (1) `merge -o <a-shard>.json` overwrote the
+shard with half a megabyte of HTML and then printed a message saying the shard had been protected: the
+guard compared only the derived `.json` name, ran after the render, and `--no-json` skipped it. F1 as
+written ("runs after the HTML is written") was the mild half. (2) `merge` crashed outright — exit 127,
+an unhandled `ArgumentException`, from whichever of the artifacts it was, unnamed — on any shard that
+captured a database call, because a tracker's `method` is a label and the reader fed it to
+`HttpMethod.Parse`. Every real sharded suite that tracks a database was un-mergeable. (3) Two shards
+that ran different tests merged into **one** scenario: dedup keyed on the runtime id, and NUnit's is a
+per-process counter (`"id": "0-1002"` in this repository's own report). A failing shard merged green.
+**The survey's proposed fix — a global seen-set on the runtime id — would have deleted distinct
+scenarios run-wide; the verifier lane refuted it before it was written.** F2's "interactions
+concatenate" was one consequence of (3); F1's "one label doubles" was the last piece of it.
+
+**What the dedup key had to be.** The scenario's content — what `ScenarioStableId` hashes — plus the
+shard's suite, the attempt, the result, the duration and the error message. A copy of a shard is
+byte-identical; two runs of one scenario differ, almost always in duration alone. So a shard given
+twice (an artifact downloaded into two folders, yesterday's merged file left in the directory, the
+merge's own output fed back in) is counted once, shard and all — which is what makes the relationship
+sum exact — while an overlapping partition or a failed shard re-run beside its first attempt keeps both
+runs, because first-wins merges a failing run green; a retry keeps both attempts. Each case is a
+diagnostic. Colliding runtime ids of different scenarios are renumbered `id#n`; `stableId` is untouched.
+
+**B2 was built as a new writer, on the measured obstacle the plan recorded.** `MergedRunOutputs.Write`
+lives in the Kronikol assembly (it needs `ScopeReportsDirectory`, which is internal) and takes
+everything as a parameter, including the environment, so the GitHub Actions branches are tested without
+GitHub Actions. `FinishRun` was not extracted: the run's tail reads process-ambient state a merged
+report lacks, and the memoised diagram cache would have regenerated a merged report's diagrams from an
+empty log. One prerequisite the plan named held — `FailuresDigestGenerator.Generate` needed a carried
+`stepPaths`, or every merged digest entry read `callsScope: "scenario"` — and one it did not:
+`kronikol query <dir>` finds only `TestRunReport.json`, so a merge named after `-o` needs the pointer
+to hand over the *file* (`RunSummary.QueryTarget`). The merged file validates against the schema
+written beside it, which settles that the schema covers the mergeable superset.
+
+**F4 and F5, as the verifier restated them.** Tracking aggregates over matched pairs and states what the
+unmatched scenarios carried; a run that captured nothing is the total loss it is, and the only non-loss
+absence is a mergeable file written before 3.1.0, told apart by version rather than by count. The
+verifier was right that identical scenario *sets* are not sufficient — five calls moving between two
+matched scenarios left the totals flat — so a service one scenario stopped seeing while the total held
+is reported per scenario with "still N elsewhere", and the reader tells a broken correlation from a
+refactor. F5's trigger was wider than the row said: Kronikol4J emits `stableId` without a suite, so a
+.NET 3.1.0+ run beside a Kronikol4J run of the same tests shares no id and every name. Both shapes exit
+2 before a line is printed, naming the side or the two suites; no positional fallback was built. `new`
+rows rendered under "Broken" in the text and have their own section.
+
+**Three of §6's acceptance names exist under other names.**
+`Merge_refuses_before_writing_the_html_when_the_output_is_an_input` is `MergeRefusesBeforeItWritesTests`
+(five facts); `Merging_the_same_shard_twice_does_not_double_its_interactions` exists as written;
+`Merging_preserves_the_runs_environment_not_the_mergers` shipped in M4 as E5;
+`Tracking_reports_a_loss_in_matched_scenarios_even_when_a_new_scenario_adds_the_same_calls` is
+`RunDiffTests.An_added_scenario_does_not_hide_a_tracking_loss`; "all four M1 files exist beside a
+merged report" is `MergeWritesTheRunOutputsTests`. Two existing tests pinned defects and were inverted
+(`SourceLocationTests`' merge fixture reused one scenario in both shards, which is the duplicate case;
+`BaselineDiffTests` pinned F4's skip), and a flaky test that asserted on the process-global request log
+another class clears was fixed along the way.
+
+Suite 4,709 → **4,778**. Minor: `MergedRunOutputs`, two `merge` flags, `RunSummary.QueryTarget`, the
+digest's `stepPaths` and the diff's `New` section are new surface. Behaviour changes are called out in
+the changelog. §14.2's "a real sharded run round-trips through `merge`" stays unpromotable by this
+session for the reason recorded there: every F-row is still `RUN(proxy)` over synthetic shards.
+
+---
+
 ## 18. How to continue this plan
 
 §14 is the work-list and §17 is its journal. The intended mechanic is an iterating session that drives
