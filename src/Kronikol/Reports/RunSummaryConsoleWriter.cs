@@ -21,12 +21,19 @@ public sealed record RunSummaryFailure(string StableId, string FeatureName, stri
 /// <param name="ScenarioCount">How many scenarios the run held.</param>
 /// <param name="Failures">The failing scenarios, in report order.</param>
 /// <param name="AgentInstructionsWritten">Whether <c>CLAUDE.md</c> / <c>AGENTS.md</c> sit in the directory.</param>
+/// <param name="QueryTarget">
+/// What to hand <c>kronikol query</c> when the directory alone would not do. A directory lookup finds a
+/// <c>TestRunReport.json</c> and nothing else, and a merge names its data file after its <c>-o</c> - so a
+/// pointer that printed the directory for <c>Combined.json</c> printed a command that fails. Null means
+/// the directory is enough.
+/// </param>
 public sealed record RunSummary(
     string Directory,
     IReadOnlyList<RunSummaryFile> Files,
     int ScenarioCount,
     IReadOnlyList<RunSummaryFailure> Failures,
-    bool AgentInstructionsWritten);
+    bool AgentInstructionsWritten,
+    string? QueryTarget = null);
 
 /// <summary>
 /// The last thing a run says: where the reports are, how big the data file is, what failed, and the one
@@ -63,7 +70,7 @@ public static class RunSummaryConsoleWriter
     /// Gathers the pointer's facts. <paramref name="candidateFiles"/> are the names it should mention;
     /// those absent from disk are dropped, so the pointer never claims a file an output failure prevented.
     /// </summary>
-    public static RunSummary Summarise(Feature[] features, string directory, IEnumerable<string> candidateFiles, bool agentInstructionsWritten, string? suite = null)
+    public static RunSummary Summarise(Feature[] features, string directory, IEnumerable<string> candidateFiles, bool agentInstructionsWritten, string? suite = null, string? queryTarget = null)
     {
         ArgumentNullException.ThrowIfNull(features);
         ArgumentNullException.ThrowIfNull(directory);
@@ -104,7 +111,7 @@ public static class RunSummaryConsoleWriter
             }
         }
 
-        return new RunSummary(directory, files, scenarioCount, failures, agentInstructionsWritten);
+        return new RunSummary(directory, files, scenarioCount, failures, agentInstructionsWritten, queryTarget);
     }
 
     /// <summary>Formats the pointer. Ends with a newline; a run with nothing failing is one line.</summary>
@@ -120,7 +127,8 @@ public static class RunSummaryConsoleWriter
 
         if (summary.Failures.Count > 0)
         {
-            text.Append($"  {summary.Failures.Count} failed — kronikol query failures {Quote(summary.Directory)}\n");
+            var target = QueryTarget(summary);
+            text.Append($"  {summary.Failures.Count} failed — kronikol query failures {target}\n");
             foreach (var failure in summary.Failures.Take(MaxFailureLines))
                 text.Append($"    {OneLine(failure.StableId)}  {OneLine(failure.FeatureName)} › {OneLine(failure.ScenarioName)}\n");
 
@@ -128,15 +136,15 @@ public static class RunSummaryConsoleWriter
             if (remaining > 0)
                 text.Append(HasDigest(summary)
                     ? $"    … and {remaining} more (see {DigestFileName})\n"
-                    : $"    … and {remaining} more (kronikol query failures {Quote(summary.Directory)})\n");
+                    : $"    … and {remaining} more (kronikol query failures {target})\n");
 
             // The bait for the nested instruction file: an agent that reads anything in this directory
             // loads the CLAUDE.md sitting beside it, and that file is what teaches it never to open the
             // JSON. Only printed when something failed — a green run has nothing to debug, and a pointer
             // that speaks on every run is a pointer people learn to skip.
             text.Append(summary.AgentInstructionsWritten
-                ? $"  agents: read {Quote(Path.Combine(summary.Directory, "CLAUDE.md"))} first; never open TestRunReport.json\n"
-                : "  agents: run kronikol query --help; never open TestRunReport.json\n");
+                ? $"  agents: read {Quote(Path.Combine(summary.Directory, "CLAUDE.md"))} first; never open {DataFileName(summary)}\n"
+                : $"  agents: run kronikol query --help; never open {DataFileName(summary)}\n");
         }
 
         return text.ToString();
@@ -154,7 +162,7 @@ public static class RunSummaryConsoleWriter
 
         var digest = HasDigest(summary) ? $" · {DigestFileName}" : "";
         return $"::notice title=Kronikol::{summary.Failures.Count} failed of {summary.ScenarioCount} scenarios "
-               + $"— kronikol query failures {Quote(summary.Directory)}{digest}";
+               + $"— kronikol query failures {QueryTarget(summary)}{digest}";
     }
 
     /// <summary>
@@ -201,14 +209,15 @@ public static class RunSummaryConsoleWriter
     {
         ArgumentNullException.ThrowIfNull(summary);
 
+        var target = QueryTarget(summary);
         var markdown = new StringBuilder();
         markdown.Append("## Debug this run\n\n");
-        markdown.Append("Do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, ");
+        markdown.Append($"Do not open `{DataFileName(summary)}` or `{HtmlFileName(summary)}` — a real report reaches megabytes, ");
         markdown.Append("and a single embedded diagram can be larger than a context window. Query it instead:\n\n");
         markdown.Append("```bash\ndotnet tool install -g Kronikol.Tool\n");
-        markdown.Append($"kronikol query summary {Quote(summary.Directory)}\n");
+        markdown.Append($"kronikol query summary {target}\n");
         if (summary.Failures.Count > 0)
-            markdown.Append($"kronikol query failures {Quote(summary.Directory)}\n");
+            markdown.Append($"kronikol query failures {target}\n");
         markdown.Append("```\n\n");
 
         if (HasDigest(summary))
@@ -256,6 +265,19 @@ public static class RunSummaryConsoleWriter
 
     private static bool HasDigest(RunSummary summary) =>
         summary.Files.Any(f => string.Equals(f.Name, DigestFileName, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>The argument every `kronikol query` line hands over: the directory, unless the run said that would not find its file.</summary>
+    private static string QueryTarget(RunSummary summary) => Quote(summary.QueryTarget ?? summary.Directory);
+
+    /// <summary>
+    /// The data file this run wrote, by name: <c>TestRunReport.json</c> unless the run named it otherwise,
+    /// as a merge does after its <c>-o</c>. The "never open" rule has to name the file that exists.
+    /// </summary>
+    private static string DataFileName(RunSummary summary) =>
+        summary.Files.FirstOrDefault(f => IsDataFile(f.Name))?.Name ?? "TestRunReport.json";
+
+    private static string HtmlFileName(RunSummary summary) =>
+        summary.Files.FirstOrDefault(f => f.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase))?.Name ?? "TestRunReport.html";
 
     /// <summary>
     /// A file name, plus its size when the size is the point: the data file is the one an agent is tempted

@@ -97,18 +97,27 @@ public static class FailuresDigestGenerator
     /// Builds both files. <paramref name="trackedLogs"/> may be null (no capture); the digest then reports
     /// the failures without their calls rather than nothing at all.
     /// </summary>
+    /// <remarks>
+    /// <paramref name="stepPaths"/> is which step each interaction happened under, per scenario id and
+    /// positionally aligned with that scenario's entries in <paramref name="trackedLogs"/>, for a caller
+    /// that already knows. The derivation walks the diagram markers in the logs, and a merged report has
+    /// none - they are dropped when a shard is written and <c>stepPath</c> is carried instead - so a
+    /// digest built from a merge attributed every call to <c>scenario</c> rather than to the step that
+    /// made it. Null derives them, which is right for a live run.
+    /// </remarks>
     public static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string? htmlFileName,
-        string kronikolVersion, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null)
+        string kronikolVersion, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null,
+        IReadOnlyDictionary<string, List<string?>>? stepPaths = null)
     {
         ArgumentNullException.ThrowIfNull(features);
 
         var scenarios = Enumerate(features).ToArray();
         var failures = scenarios.Where(s => s.Scenario.Result == ExecutionResult.Failed).ToArray();
-        var stepPaths = ReportGenerator.AttributeInteractionsToStepPaths(trackedLogs, features);
+        var attributed = stepPaths ?? ReportGenerator.AttributeInteractionsToStepPaths(trackedLogs, features);
         var interactions = IndexInteractions(trackedLogs);
 
         var entries = failures
-            .Select(f => Build(f, stepPaths, interactions, htmlFileName, suite))
+            .Select(f => Build(f, attributed, interactions, htmlFileName, suite))
             .ToArray();
 
         // Judged over every interaction of every failing scenario, not only the calls the digest lists:

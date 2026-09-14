@@ -30,6 +30,30 @@ public class RunEndPointerTests
         Assert.StartsWith($"Kronikol: reports written to {Dir}  (TestRunReport.html · TestRunReport.json 48.2 MB · Failures.md)", text);
     }
 
+    /// <summary>
+    /// <c>kronikol query &lt;dir&gt;</c> finds a <c>TestRunReport.json</c> and nothing else. A merge names
+    /// its data file after <c>-o</c>, so a pointer that printed the directory printed a command that fails.
+    /// </summary>
+    [Fact]
+    public void The_pointer_hands_query_the_file_when_a_directory_lookup_would_not_find_it()
+    {
+        var merged = Path.Combine(Dir, "Combined.json");
+        var summary = Summary(2) with
+        {
+            Files = [new RunSummaryFile("Combined.html", 1_200_000), new RunSummaryFile("Combined.json", 50_540_000), new RunSummaryFile("Failures.md", 12_000)],
+            QueryTarget = merged
+        };
+
+        var text = RunSummaryConsoleWriter.Build(summary);
+
+        Assert.Contains($"kronikol query failures {merged}", text);
+        Assert.Contains("never open Combined.json", text);
+        Assert.DoesNotContain("TestRunReport.json", text);
+        Assert.Contains($"kronikol query failures {merged}", RunSummaryConsoleWriter.BuildCiSummarySection(summary));
+        Assert.Contains("Do not open `Combined.json` or `Combined.html`", RunSummaryConsoleWriter.BuildCiSummarySection(summary));
+        Assert.Contains($"kronikol query failures {merged}", RunSummaryConsoleWriter.BuildGitHubNotice(summary)!);
+    }
+
     [Fact]
     public void Zero_failures_is_one_line()
     {

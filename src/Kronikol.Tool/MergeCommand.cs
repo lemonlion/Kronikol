@@ -1,21 +1,33 @@
+using Kronikol.Reports;
 using Kronikol.Reports.Merge;
 
 namespace Kronikol.Tool;
 
 /// <summary>
 /// Implements <c>kronikol merge</c>: combine several mergeable <c>TestRunReport.json</c> files into a
-/// single combined <c>TestRunReport.html</c> and, beside it, the merged data file - so a sharded run is
-/// something <c>kronikol query</c> can read and something a later run can diff against.
+/// single combined <c>TestRunReport.html</c> and, beside it, everything a run writes beside its report -
+/// the merged data file, so a sharded run is something <c>kronikol query</c> can read and something a
+/// later run can diff against; the failures digest, the instruction files and the schema, so it is
+/// something an agent can debug from; and the pointer, so the job log says where it all went.
 /// Returns a process exit code (0 = success).
 /// </summary>
 internal static class MergeCommand
 {
-    public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error)
+    public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error) =>
+        Run(args, @out, error, Environment.GetEnvironmentVariable);
+
+    /// <summary>
+    /// <paramref name="getEnvironmentVariable"/> is the environment the CI detection and the CI writers
+    /// read, so a test can drive the GitHub Actions branches without being on GitHub Actions.
+    /// </summary>
+    public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?> getEnvironmentVariable)
     {
         var inputs = new List<string>();
         string output = "TestRunReport.html";
         string? title = null;
         var writeJson = true;
+        var ciSummary = false;
+        var publishArtifacts = false;
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -32,6 +44,12 @@ internal static class MergeCommand
                     break;
                 case "--no-json":
                     writeJson = false;
+                    break;
+                case "--ci-summary":
+                    ciSummary = true;
+                    break;
+                case "--publish-artifacts":
+                    publishArtifacts = true;
                     break;
                 case "-h" or "--help":
                     PrintUsage(@out);
@@ -72,15 +90,13 @@ internal static class MergeCommand
         foreach (var f in files)
             @out.WriteLine("  " + f);
 
+        string written;
+        MergeableReport merged;
         try
         {
-            var merged = MergeableReportRenderer.MergeFiles(files);
-            var written = MergeableReportRenderer.Render(merged, output, title);
+            merged = MergeableReportRenderer.MergeFiles(files);
+            written = MergeableReportRenderer.Render(merged, output, title);
             @out.WriteLine($"Wrote combined report to {written}");
-
-            // Only after the render succeeded: a data file beside a report that was never written is
-            // worse than neither, because the next command finds it and believes the merge worked.
-            return writeJson && !WriteMergedData(merged, written, @out, error) ? 1 : 0;
         }
         catch (FormatException ex)
         {
@@ -95,6 +111,38 @@ internal static class MergeCommand
         catch (Exception ex) when (Query.QueryWriter.IsAWriteFailure(ex))
         {
             error.WriteLine($"Could not write {output}: {ex.Message}");
+            return 1;
+        }
+
+        // `--no-json` is documented as "the HTML only", and means it: no data file, and none of the files
+        // that exist to help somebody read the data file.
+        if (!writeJson)
+            return 0;
+
+        // Only after the render succeeded: a data file beside a report that was never written is worse
+        // than neither, because the next command finds it and believes the merge worked.
+        var dataFile = WriteMergedData(merged, written, @out, error);
+        if (dataFile is null)
+            return 1;
+
+        // The rest of what a run writes beside its report. A merge used to stop at the two files above,
+        // so the one shape of run that is always on CI had no Failures.md to read first, no CLAUDE.md to
+        // load, no schema, no pointer in the job log and nothing in the job summary.
+        try
+        {
+            var options = new ReportConfigurationOptions
+            {
+                WriteCiSummary = ciSummary,
+                PublishCiArtifacts = publishArtifacts
+            };
+            MergedRunOutputs.Write(merged, written, dataFile, options, @out, error, getEnvironmentVariable);
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            // The report and its data file are on disk and usable; what is missing is the tail. Say so and
+            // fail, rather than let a CI step that asked for a merged report believe it got everything.
+            error.WriteLine($"The merged report was written, but the files beside it were not: {ex.Message}");
             return 1;
         }
     }
@@ -114,6 +162,9 @@ internal static class MergeCommand
     /// produces no data file at all was also the one with no protection and nothing on stderr. It is now
     /// the reason the JSON destination is checked only when it will actually be written, and the reason
     /// the HTML destination is checked unconditionally.</para>
+    ///
+    /// <para>The files the tail writes - <c>Failures.md</c>, <c>CLAUDE.md</c>, the schema - need no
+    /// check: an input is a <c>*.json</c> that is not a <c>*.schema.json</c>, and none of them is one.</para>
     /// </remarks>
     private static bool RefuseAnOutputThatIsAnInput(string output, bool writeJson, List<string> inputs, TextWriter error)
     {
@@ -137,27 +188,23 @@ internal static class MergeCommand
 
     /// <summary>
     /// Writes the merged data file beside the merged HTML, taking its name from <c>-o</c> so the two
-    /// always travel together.
+    /// always travel together. Returns the path written, or null when it could not be.
     /// </summary>
     /// <remarks>
-    /// The destination is checked against the resolved inputs first. <c>kronikol merge ./artifacts -o
-    /// ./artifacts/runner1.html</c> would otherwise overwrite the very shard it just read, and because a
-    /// directory input is swept recursively for <c>*.json</c>, the next run of the same command would
-    /// then merge its own output back in and double-count everything.
+    /// Unguarded until 3.5.0, and masked only by the HTML render running first: an unwritable -o
+    /// reached this line as an unhandled throw after the merge had already succeeded. Since 3.6.0 the
+    /// caller acts on the answer rather than discarding it - a merge that wrote a report and failed to
+    /// write the data file beside it has not done what it was asked, and must not exit 0.
     /// </remarks>
-    private static bool WriteMergedData(MergeableReport merged, string writtenHtml, TextWriter @out, TextWriter error)
+    private static string? WriteMergedData(MergeableReport merged, string writtenHtml, TextWriter @out, TextWriter error)
     {
         var destination = Path.GetFullPath(Path.ChangeExtension(writtenHtml, ".json"));
 
-        // Unguarded until 3.5.0, and masked only by the HTML render running first: an unwritable -o
-        // reached this line as an unhandled throw after the merge had already succeeded. Since 3.6.0 the
-        // caller acts on the answer rather than discarding it - a merge that wrote a report and failed to
-        // write the data file beside it has not done what it was asked, and must not exit 0.
         if (!Query.QueryWriter.TryWriteFile(destination, MergeableReportRenderer.Serialize(merged), error, "-o"))
-            return false;
+            return null;
 
         @out.WriteLine($"Wrote merged data to {destination}");
-        return true;
+        return destination;
     }
 
     /// <summary>
@@ -224,21 +271,31 @@ internal static class MergeCommand
 
     public static void PrintUsage(TextWriter w)
     {
-        w.WriteLine("Usage: kronikol merge <inputs...> [-o <output.html>] [-t <title>] [--no-json]");
+        w.WriteLine("Usage: kronikol merge <inputs...> [-o <output.html>] [-t <title>] [--no-json] [--ci-summary] [--publish-artifacts]");
         w.WriteLine();
         w.WriteLine("  Combines several mergeable TestRunReport.json files (produced with");
-        w.WriteLine("  ReportConfigurationOptions.GenerateMergeableData = true) into one combined HTML report,");
-        w.WriteLine("  plus the merged data file beside it - readable with `kronikol query`, and usable as the");
-        w.WriteLine("  baseline a later run diffs against.");
+        w.WriteLine("  ReportConfigurationOptions.GenerateMergeableData = true) into one combined HTML report, and");
+        w.WriteLine("  writes beside it what a run writes beside its report: the merged data file - readable with");
+        w.WriteLine("  `kronikol query`, and usable as the baseline a later run diffs against - plus Failures.md and");
+        w.WriteLine("  Failures.jsonl, CLAUDE.md and AGENTS.md, and the data file's schema. Ends with the pointer");
+        w.WriteLine("  a run prints: where the files are, how big the data file is, what failed, and the command");
+        w.WriteLine("  that explains it. A shard given twice - the same artifact in two folders, a previous merge's");
+        w.WriteLine("  output left in the directory - is counted once.");
         w.WriteLine();
         w.WriteLine("Arguments:");
         w.WriteLine("  <inputs...>          Files, directories (searched recursively), or glob patterns.");
         w.WriteLine("                       A `baseline` folder is skipped: it is last-green, not a shard.");
         w.WriteLine("Options:");
-        w.WriteLine("  -o, --output <path>  Output HTML path (default: TestRunReport.html). The data file");
-        w.WriteLine("                       takes the same name with a .json extension.");
+        w.WriteLine("  -o, --output <path>  Output HTML path (default: TestRunReport.html). The data file and its");
+        w.WriteLine("                       schema take the same name with .json and .schema.json extensions.");
         w.WriteLine("  -t, --title <text>   Report title (default: \"Test Run Report\").");
-        w.WriteLine("      --no-json        Write the HTML only.");
+        w.WriteLine("      --no-json        Write the HTML only - no data file, and none of the files beside it.");
+        w.WriteLine("      --ci-summary     Also write CiSummary.md and post it to the CI job summary (GitHub Actions");
+        w.WriteLine("                       step summary, Azure DevOps upload). Off, a failing merge on CI still posts");
+        w.WriteLine("                       the short \"Debug this run\" section, as a failing run does.");
+        w.WriteLine("      --publish-artifacts");
+        w.WriteLine("                       Hand the output directory to the CI artifact upload (GitHub Actions");
+        w.WriteLine("                       `reports-path` output, Azure DevOps artifact.upload).");
         w.WriteLine("  -h, --help           Show this help.");
         w.WriteLine();
         w.WriteLine("Example:");
