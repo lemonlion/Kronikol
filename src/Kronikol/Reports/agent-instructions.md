@@ -69,6 +69,7 @@ person, hand them the `#sid-` link: it opens that scenario with its diagram, not
 | The question | The command |
 |---|---|
 | why did these fail? | `kronikol query failures .` — usually the whole answer |
+| how do I re-run just this test? | `kronikol query repro .` — the `dotnet test --filter` line per failure, from the frame it was thrown in |
 | what happened in one scenario? | `kronikol query steps . s3` — the step and assertion tree, with the calls attributed to each |
 | what did X return? | `kronikol query interactions . s3 --service X` then `kronikol query http . s3/i47 --keys` |
 | did it even call X? | `kronikol query services .` — absence is the answer, no payload needed |

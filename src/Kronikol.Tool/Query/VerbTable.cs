@@ -128,6 +128,12 @@ internal static class VerbTable
             ["--count", "--offset", "--limit", "--json"], Json: true,
             ["  failures     <report>                        why each failing test failed, in context"]),
 
+        new("repro", "Narrative",
+            "The command that re-runs each failing test, read from the frame its failure was thrown in, with where that frame is.",
+            ["<report>", "<report> s3"],
+            ["--count", "--offset", "--limit", "--json"], Json: true,
+            ["  repro        <report> [s3]                   the dotnet test --filter line that re-runs each failure, from its stack frame"]),
+
         new("steps", "Narrative",
             "One scenario's step and assertion tree, with the interaction range each step made.",
             ["<report> s3", "<report> s3/2"],

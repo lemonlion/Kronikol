@@ -125,6 +125,11 @@ public class SkillDriftTests
     /// </summary>
     private static IReadOnlyList<string> DocumentedFlags() =>
         CodeContexts(Reference)
+            // A `dotnet test --filter ...` line is another program's command line, quoted because the tool
+            // prints it (`repro`, `failures`); its flags are not something the document tells an agent to
+            // type to kronikol. Only that one program is exempt, by name - a bare `--flag` anywhere else
+            // in a code context is still held to the parser.
+            .Select(c => Regex.Replace(c, @"dotnet test\b[^\n`]*", ""))
             .SelectMany(c => Regex.Matches(c, @"--[a-z][a-z-]*").Select(m => m.Value))
             .Distinct(StringComparer.Ordinal)
             .OrderBy(f => f, StringComparer.Ordinal)

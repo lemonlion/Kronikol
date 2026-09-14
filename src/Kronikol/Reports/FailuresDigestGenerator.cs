@@ -590,7 +590,13 @@ public static class FailuresDigestGenerator
         // the digest showed none of it while the CLAUDE.md written beside it tells the reader not to open
         // the HTML, so the run's own instructions pointed at the only surface that had dropped the field.
         if (entry.ThrownAt is { } thrown)
+        {
             markdown.Append($"Thrown at {Code(thrown.Method)} — {Code(thrown.File + ":" + thrown.Line.ToString(CultureInfo.InvariantCulture))}\n\n");
+            // The one line that re-runs this test, read from the same frame. The fully qualified name was
+            // in every trace in the exact shape --filter takes, and no surface handed it over (3.7.0).
+            if (FailureText.RerunCommand(thrown.Method) is { } rerun)
+                markdown.Append($"Re-run: {Code(rerun)}\n\n");
+        }
 
         if (entry.ErrorMessage is { Length: > 0 } message)
         {
@@ -799,6 +805,8 @@ public static class FailuresDigestGenerator
                 ["thrownAt"] = entry.ThrownAt is { } frame
                     ? new { method = frame.Method, file = frame.File, line = frame.Line }
                     : null,
+                ["testName"] = FailureText.TestFilter(entry.ThrownAt?.Method),
+                ["rerun"] = FailureText.RerunCommand(entry.ThrownAt?.Method),
                 ["failingSteps"] = entry.Failing.Select(s => new
                 {
                     Path = $"{entry.Address}/{s.Path}",

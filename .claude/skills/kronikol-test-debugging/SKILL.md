@@ -81,6 +81,7 @@ matters.
 | The user says | Do this |
 |---|---|
 | "why did these tests fail?" | `failures` — usually sufficient on its own |
+| "how do I re-run just this test?" | `repro` — the `dotnet test --filter` line per failure, read from the frame it was thrown in; `failures` prints the same line under each failure |
 | "the number on screen is wrong" | `grep "<value>" --number` (matches `4,173.00` and `4173` alike, emits paths; `--tolerance 0.5` or `--tolerance 1%` widens the match) → `http <addr> --path $...` → `compare s<failing> s<passing>` |
 | "did it even call X?" | `services` — absence is the answer; no payload needed |
 | "which service/step had the most errors?" | `interactions --group-by service,status --sort errors` (dimensions incl. `step`, `path`, `capturedBy`): one bucket table, aggregation instead of paging |

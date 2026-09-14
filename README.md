@@ -177,6 +177,7 @@ Captured W3C trace ids are preserved, and pairs without one group into one trace
 ```bash
 kronikol query summary  ./Reports          # the run, its failures, the slowest scenarios
 kronikol query failures ./Reports          # why each one failed, with assertion messages and file:line
+kronikol query repro    ./Reports          # the dotnet test --filter line that re-runs each failure
 kronikol query services ./Reports          # per service: calls, errors, timings — and what was never called
 kronikol query flow     ./Reports s3       # the sequence, in 2 KB instead of 663
 kronikol query trace    ./Reports 4bf92f3577b34da6   # follow one W3C trace across scenarios, in order

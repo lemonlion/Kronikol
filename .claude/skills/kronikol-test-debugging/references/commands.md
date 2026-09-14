@@ -108,8 +108,22 @@ never called — no payload needed to establish that.
 ### `failures <report>`
 For every failing scenario: the error, the failing step in context, its assertions with their messages and
 `file:line`, the calls that happened inside that step, and any attachments. Usually the whole answer.
+Since 3.7.0 each failure also prints `thrown at <method> — <file>:<line>` (the frame that raised, read from
+`errorStackTrace`; not the line the scenario was declared on) and `rerun: dotnet test --filter …`; under
+`--json` the same are `thrownAt`, `testName` and `rerun`.
 
 Prints `nothing failed` on a green run rather than an empty response.
+
+### `repro <report> [s3]`
+One block per failing scenario: where the failure was **thrown** (method, file, line) and the
+`dotnet test --filter "FullyQualifiedName~Namespace.Class.Method"` that re-runs that test. The name is read
+out of the frame with the compiler's scaffolding removed (async state machines, lambdas, local functions,
+display classes, generic arity) and `~` is a contains match, so a parameterised test re-runs with every row.
+With `s3`, one scenario; a passing one has no trace and says so. `--json` rows carry `thrownAt`, `testName`
+and `rerun`. Two limits, stated rather than papered over: a test in a **nested class** is printed with `.`
+where the runner's name has `+`, so if the filter selects nothing shorten it to `Class.Method`; and the
+line is the VSTest filter grammar - a runner on Microsoft.Testing.Platform's own `dotnet test` takes the
+same name through its own flag (xUnit v3: the filter-method option, TUnit: the treenode-filter option).
 
 ### `steps <report> s3`
 The step and assertion tree with statuses, durations, parameters, doc strings, bypass reasons, attachments,

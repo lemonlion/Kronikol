@@ -57,6 +57,14 @@ internal static partial class QueryCommand
                 writer.Line("  example: " + string.Join(", ", scenario.ExampleValues.Select(e => $"{e.Key}={e.Value}")));
             if (scenario.SourceFile is { } source)
                 writer.Line($"  at {source}" + (scenario.SourceLine is { } line ? $":{line}" : ""));
+            // Where it was THROWN, which is not where it was written, and the command that re-runs it -
+            // both read out of errorStackTrace, which every other surface carried and this one dropped.
+            if (FailureText.ThrownAt(scenario.ErrorStackTrace, scenario.SourceFile) is { } thrown)
+            {
+                writer.Line($"  thrown at {thrown.Method} — {thrown.File}:{thrown.Line}");
+                if (FailureText.RerunCommand(thrown.Method) is { } rerun)
+                    writer.Line($"  rerun: {rerun}");
+            }
             if (deepLink is not null && scenario.StableId.Length > 0)
                 writer.Line($"  open: {deepLink}{scenario.StableId}");
             if (scenario.ErrorMessage is { } message)
@@ -103,17 +111,18 @@ internal static partial class QueryCommand
     /// shapes depending on whether it read the digest the run wrote or asked the tool for it afterwards.
     ///
     /// <para><b>They are not yet the same object, and this is the list.</b> The digest carries
-    /// <c>expected</c>, <c>actual</c>, <c>cluster</c>, <c>stepsBefore</c>, <c>thrownAt</c>,
-    /// <c>callsScope</c> and <c>truncated</c>; this does not. This nests <c>calls</c> under the failing
-    /// step that made them and caps them at six per step; the digest lists them once per failure, with a
-    /// <c>status</c>, capped at eight. Attachments are capped at four here and uncapped there. Closing
-    /// that gap needs <c>ReportScanner</c> to read <c>errorStackTrace</c>, which it does not, so it is
-    /// M7's work and not a line to add here — but the divergence is written down rather than left for a
-    /// consumer to discover by diffing two files that claim to describe the same failure.</para>
+    /// <c>expected</c>, <c>actual</c>, <c>cluster</c>, <c>stepsBefore</c>, <c>callsScope</c> and
+    /// <c>truncated</c>; this does not. Since 3.7.0 both carry <c>thrownAt</c>, <c>testName</c> and
+    /// <c>rerun</c>, read from <c>errorStackTrace</c> by the same reader. This nests <c>calls</c> under
+    /// the failing step that made them and caps them at six per step; the digest lists them once per
+    /// failure, with a <c>status</c>, capped at eight. Attachments are capped at four here and uncapped
+    /// there. The divergence is written down rather than left for a consumer to discover by diffing two
+    /// files that claim to describe the same failure.</para>
     /// </summary>
     private static object FailureRecord(ReportIndex index, ScenarioEntry scenario, string? deepLink)
     {
         var failingSteps = scenario.AllSteps().Where(s => s.Step.Failed).ToArray();
+        var thrown = FailureText.ThrownAt(scenario.ErrorStackTrace, scenario.SourceFile);
 
         return new
         {
@@ -127,6 +136,9 @@ internal static partial class QueryCommand
             deepLink = deepLink is not null && scenario.StableId.Length > 0 ? deepLink + scenario.StableId : null,
             sourceFile = scenario.SourceFile,
             sourceLine = scenario.SourceLine,
+            thrownAt = thrown is { } frame ? new { method = frame.Method, file = frame.File, line = frame.Line } : null,
+            testName = FailureText.TestFilter(thrown?.Method),
+            rerun = FailureText.RerunCommand(thrown?.Method),
             failingSteps = failingSteps.Select(s => new
             {
                 path = $"{scenario.Address}/{s.Path}",
@@ -147,6 +159,79 @@ internal static partial class QueryCommand
             }),
             attachments = scenario.Attachments.Take(4)
                 .Select(a => new { name = a.Name, path = a.Resolve(index.Directory) })
+        };
+    }
+
+    /// <summary>
+    /// <c>repro &lt;report&gt; [s3]</c>: the one line that re-runs each failing test, read from the frame
+    /// its failure was thrown in.
+    /// </summary>
+    /// <remarks>
+    /// The fully qualified name is in <c>errorStackTrace</c> for every failing scenario in the exact shape
+    /// <c>--filter</c> wants, and no agent-facing surface printed it: the agent read the failure and then
+    /// had to find the test by hand. A tool-side reader retro-fits every report ever written, where a
+    /// <c>testId</c> field would have needed every adapter to write it first. A passing scenario has no
+    /// trace, and says so rather than guessing a name.
+    /// </remarks>
+    private static int Repro(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
+    {
+        IReadOnlyList<ScenarioEntry> scope;
+        if (options.Positional.Count > 0)
+        {
+            if (!TryScenario(index, options, error, out var one))
+                return 2;
+            scope = [one];
+        }
+        else
+        {
+            scope = index.Scenarios.Where(s => s.Failed).ToList();
+        }
+
+        if (options.Count)
+        {
+            writer.Count(scope.Count);
+            return 0;
+        }
+
+        if (scope.Count == 0)
+        {
+            writer.Note("nothing failed");
+            writer.Footer($"{index.Scenarios.Count} scenarios · next: failures · scenarios");
+            return 0;
+        }
+
+        writer.Page(scope, options.Offset, options.PageSize(25, writer, "repro"), "failures", scenario =>
+        {
+            var thrown = FailureText.ThrownAt(scenario.ErrorStackTrace, scenario.SourceFile);
+            writer.Line($"{scenario.Address}  {scenario.FeatureName} › {QueryWriter.OneLine(scenario.Name, 80)}  [{scenario.Result}]");
+            if (thrown is { } frame)
+                writer.Line($"  thrown at {frame.Method} — {frame.File}:{frame.Line}");
+            if (FailureText.RerunCommand(thrown?.Method) is { } rerun)
+                writer.Line("  " + rerun);
+            else
+                writer.Line(scenario.ErrorStackTrace is null
+                    ? "  no stack trace recorded — nothing here names the test method"
+                    : "  no frame in the stack trace names a test method");
+            writer.Line();
+        }, options.RerunArgs(), ReproRecord,
+            "one --filter per failure · FullyQualifiedName~ is a contains match, so a parameterised test re-runs with every row");
+
+        return 0;
+    }
+
+    private static object ReproRecord(ScenarioEntry scenario)
+    {
+        var thrown = FailureText.ThrownAt(scenario.ErrorStackTrace, scenario.SourceFile);
+        return new
+        {
+            address = scenario.Address,
+            stableId = scenario.StableId,
+            feature = scenario.FeatureName,
+            scenario = scenario.Name,
+            result = scenario.Result,
+            thrownAt = thrown is { } frame ? new { method = frame.Method, file = frame.File, line = frame.Line } : null,
+            testName = FailureText.TestFilter(thrown?.Method),
+            rerun = FailureText.RerunCommand(thrown?.Method)
         };
     }
 

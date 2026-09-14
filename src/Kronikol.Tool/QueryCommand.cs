@@ -153,6 +153,7 @@ internal static partial class QueryCommand
             "summary" => Summary(index, options, writer, error),
             "scenarios" => Scenarios(index, options, writer, error),
             "failures" => Failures(index, options, writer, error),
+            "repro" => Repro(index, options, writer, error),
             "steps" => Steps(index, options, writer, error),
             "assertions" => Assertions(index, options, writer, error),
             "services" => Services(index, options, writer, error),
