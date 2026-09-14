@@ -97,6 +97,7 @@ internal static class VerbTable
         new("--changed", null, "On history: only scenarios whose set of calls, call order or duration changed while the status did not."),
         new("--branch", "NAME", "On history: read the run against this branch's stream instead of its own."),
         new("--compare-branch", "NAME", "On history: a second reading of the same run against another branch's stream, printed after the first."),
+        new("--min-runs", "N", "On history: the recorded runs the flaky and duration verdicts need - the report's HistoryMinRuns (default 5)."),
         new("--suite", "NAME", "On history: the suite to look the run up under, when the report does not say.")
     ];
 
@@ -249,12 +250,13 @@ internal static class VerbTable
         new("history", "Search and comparison",
             "What the last runs say about this one, from the cross-run ledger: what broke, what is flaky, what has been failing since when, what changed its calls - per scenario, with the evidence.",
             ["<report>", "<report> s3", "<report> sid:<id>"],
-            ["--history", "--flaky", "--new", "--failing", "--regressed", "--changed", "--branch", "--compare-branch", "--suite", "--count", "--offset", "--limit", "--json"], Json: true,
+            ["--history", "--flaky", "--new", "--failing", "--regressed", "--changed", "--branch", "--compare-branch", "--min-runs", "--suite", "--count", "--offset", "--limit", "--json"], Json: true,
             [
                 "  history      <report> [s3] [--flaky|--new|--failing|--regressed|--changed]   the ledger's verdicts on this run: broke, fixed, flaky, failing since,",
                 "                                                 slower, behaviour-changed - with the evidence; s3 for one scenario's runs in full",
                 "                                                 the ledger is --history FILE, else $KRONIKOL_HISTORY, else .kronikol/history.jsonl above the report;",
-                "                                                 --branch NAME reads against another stream, --compare-branch NAME adds a second reading"
+                "                                                 --branch NAME reads against another stream, --compare-branch NAME adds a second reading,",
+                "                                                 --min-runs N the bar the report used for its flaky and duration verdicts (default 5)"
             ])
     ];
 

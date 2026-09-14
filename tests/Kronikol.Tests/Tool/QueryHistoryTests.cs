@@ -316,4 +316,22 @@ public class QueryHistoryTests : IDisposable
         Assert.Contains("stream 42/merge", Query(null, "history", report).Output);
         Assert.Contains("stream feature/x", Query(PullRequest, "history", report, "--branch", "feature/x").Output);
     }
+
+    [Fact]
+    public void Min_runs_is_the_bar_the_report_used()
+    {
+        // The report takes HistoryMinRuns and the gate takes --min-runs; the query reads the same run the
+        // same way when given the same bar, instead of calling it a cold start.
+        Seed("PP", "FP", "PP");
+        var report = WriteReport(pay: "Failed");
+
+        var five = Query(null, "history", report);
+        var three = Query(null, "history", report, "--min-runs", "3");
+
+        Assert.Contains("flakiness and duration verdicts need 5", five.Output);
+        Assert.Contains("against 3 earlier runs on main", three.Output);
+        Assert.Contains("flaky", three.Output);
+        Assert.Equal(2, Query(null, "history", report, "--min-runs", "0").Exit);
+        Assert.Equal(2, Query(null, "history", report, "--min-runs", "three").Exit);
+    }
 }

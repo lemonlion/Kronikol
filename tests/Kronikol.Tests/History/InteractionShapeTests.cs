@@ -151,4 +151,64 @@ public class InteractionShapeTests
 
         Assert.Equal(["Test>orders", "orders>audit"], InteractionShape.Dependencies(logs));
     }
+
+    [Fact]
+    public void An_id_cut_by_the_head_limit_is_still_templated()
+    {
+        // The head is templated before it is cut to length. Cut first, a GUID straddling the limit left its
+        // first characters in the shape, and every run of a scenario that wrote a fresh id read as a change
+        // (BreakfastProvider, 2026-09-14: 1 to 24 scenarios per lane, run after run, nothing having changed).
+        var prefix = "SELECT * FROM orders WHERE " + new string('x', 84) + " = ";   // the id begins at column 114
+        var run1 = InteractionShape.Calls([Request("t1", "QUERY", "/", "db", "Api", Guid.NewGuid(), category: "database", content: prefix + "550e8400-e29b-41d4-a716-446655440000")]);
+        var run2 = InteractionShape.Calls([Request("t1", "QUERY", "/", "db", "Api", Guid.NewGuid(), category: "database", content: prefix + "6ba7b810-9dad-11d1-80b4-00c04fd430c8")]);
+
+        Assert.Contains("= {id}", run1[0].Uri);
+        Assert.Equal(InteractionShape.Fingerprint(run1).ShapeSet, InteractionShape.Fingerprint(run2).ShapeSet);
+    }
+
+    [Fact]
+    public void Values_in_a_statement_head_are_data_and_keys_are_behaviour()
+    {
+        // A document written to Cosmos DB, a row inserted into BigQuery, a literal in a WHERE clause: which
+        // fields and parameters were sent is behaviour, what they held is data - the rule the query string
+        // already follows.
+        static string Shape(string content) =>
+            Assert.Single(InteractionShape.Calls([Request("t1", "CREATE", "/orders", "db", "Api", Guid.NewGuid(), category: "database", content: content)])).Uri;
+
+        Assert.Equal(Shape(@"{""id"":""a1"",""Status"":""Pending"",""Note"":""Alice ordered""}"), Shape(@"{""id"":""b2"",""Status"":""Shipped"",""Note"":""Bob ordered""}"));
+        Assert.NotEqual(Shape(@"{""id"":""a1"",""Status"":""Pending""}"), Shape(@"{""id"":""a1"",""State"":""Pending""}"));
+        Assert.Contains(@"""Status"":""{v}""", Shape(@"{""id"":""a1"",""Status"":""Pending""}"));
+        Assert.Equal(Shape("INSERT INTO orders (name) VALUES ('Alice')"), Shape("INSERT INTO orders (name) VALUES ('Bob')"));
+        Assert.Contains("'{s}'", Shape("INSERT INTO orders (name) VALUES ('Alice')"));
+        Assert.NotEqual(Shape("SELECT * FROM orders WHERE name = 'x'"), Shape("SELECT * FROM customers WHERE name = 'x'"));
+    }
+
+    [Fact]
+    public void A_bracketed_identifier_is_not_a_value()
+    {
+        // Cosmos DB names a property as root["Name"]: the name is what the query does, the literal beside it
+        // is data.
+        static string Shape(string content) =>
+            Assert.Single(InteractionShape.Calls([Request("t1", "QUERY", "/orders", "db", "Api", Guid.NewGuid(), category: "database", content: content)])).Uri;
+
+        Assert.Equal(Shape(@"SELECT VALUE root FROM root WHERE root[""EntityId""] = ""abc"""), Shape(@"SELECT VALUE root FROM root WHERE root[""EntityId""] = ""xyz"""));
+        Assert.NotEqual(Shape(@"SELECT VALUE root FROM root WHERE root[""EntityId""] = ""abc"""), Shape(@"SELECT VALUE root FROM root WHERE root[""Status""] = ""abc"""));
+    }
+
+    [Fact]
+    public void A_placeholder_in_a_statement_is_not_a_query_string()
+    {
+        // A path's ? starts its query string; a statement's ? is a parameter, and the head keeps what follows.
+        var shaped = Assert.Single(InteractionShape.Calls([Request("t1", "QUERY", "/", "db", "Api", Guid.NewGuid(), category: "database", content: "SELECT * FROM t WHERE a = ? AND b = ?")]));
+
+        Assert.Contains("AND b = ?", shaped.Uri);
+    }
+
+    [Fact]
+    public void The_shape_rule_has_a_version_a_run_records()
+    {
+        // Fingerprints are only comparable when the same rule made them; the version rides on the run line so
+        // the analyzer can tell, and it moves when the rule does.
+        Assert.True(InteractionShape.Version >= 2);
+    }
 }

@@ -141,6 +141,7 @@ public static class HistoryJson
 
         if (run.ShapeSet is { } shapeSet) WriteStrings(writer, "shapeSet", shapeSet);
         if (run.ShapeOrdered is { } shapeOrdered) WriteStrings(writer, "shapeOrdered", shapeOrdered);
+        if (run.ShapeVersion is { } shapeVersion) writer.WriteNumber("shapeVersion", shapeVersion);
 
         if (run.Errors is { } errors)
         {
@@ -355,6 +356,7 @@ public static class HistoryJson
             && !DateTimeOffset.TryParse(at, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out parsedAt))
             throw new FormatException($"A run's \"at\" is not a timestamp: {at}");
 
+        var shapeSet = Strings(element, "shapeSet");
         return new HistoryRun
         {
             Id = RequiredString(element, "id"),
@@ -377,8 +379,12 @@ public static class HistoryJson
             Calls = element.TryGetProperty("calls", out var calls) && calls.ValueKind == JsonValueKind.Array
                 ? calls.EnumerateArray().Select(c => c.ValueKind == JsonValueKind.Number ? c.GetInt32() : 0).ToArray()
                 : null,
-            ShapeSet = Strings(element, "shapeSet"),
+            ShapeSet = shapeSet,
             ShapeOrdered = Strings(element, "shapeOrdered"),
+            // Lines from before the rule was recorded (3.9.0 to 3.13.0) were made by rule 1.
+            ShapeVersion = element.TryGetProperty("shapeVersion", out var shapeVersion) && shapeVersion.ValueKind == JsonValueKind.Number
+                ? shapeVersion.GetInt32()
+                : shapeSet is null ? null : 1,
             Errors = element.TryGetProperty("errors", out var errors) && errors.ValueKind == JsonValueKind.Array
                 ? errors.EnumerateArray().Select(e => e.ValueKind == JsonValueKind.String ? e.GetString() : null).ToArray()
                 : null,

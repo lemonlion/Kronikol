@@ -44,6 +44,7 @@ public class HistoryLedgerTests : IDisposable
         Calls = Enumerable.Repeat(3, results.Length).ToArray(),
         ShapeSet = Enumerable.Repeat("aaaaaaaa", results.Length).ToArray(),
         ShapeOrdered = Enumerable.Repeat("bbbbbbbb", results.Length).ToArray(),
+        ShapeVersion = InteractionShape.Version,
         Errors = results.Select(r => r == 'F' ? "e1" : null).ToArray(),
         ErrorText = results.Contains('F') ? new Dictionary<string, string> { ["e1"] = "Expected 200 but got 500" } : new Dictionary<string, string>(),
         Deps = ["Caller>Orders"]
@@ -124,6 +125,7 @@ public class HistoryLedgerTests : IDisposable
         Assert.Equal([3, 3], back.Calls);
         Assert.Equal(["aaaaaaaa", "aaaaaaaa"], back.ShapeSet);
         Assert.Equal(["bbbbbbbb", "bbbbbbbb"], back.ShapeOrdered);
+        Assert.Equal(InteractionShape.Version, back.ShapeVersion);
         Assert.Equal([null, "e1"], back.Errors);
         Assert.Equal("Expected 200 but got 500", back.ErrorText["e1"]);
         Assert.Equal(["Caller>Orders"], back.Deps);
@@ -133,6 +135,22 @@ public class HistoryLedgerTests : IDisposable
         Assert.Equal(roster.Ids, rosterBack.Ids);
         Assert.Equal(roster.Names, rosterBack.Names);
         Assert.Equal(roster.Features, rosterBack.Features);
+    }
+
+    [Fact]
+    public void A_line_from_before_the_shape_rule_was_versioned_reads_as_rule_one()
+    {
+        // 3.9.0 to 3.13.0 wrote fingerprints without saying which rule made them: rule 1. A line without
+        // fingerprints has no rule at all.
+        var roster = Roster("Suite", "a1b2");
+        var line = HistoryJson.RunLine(Run(roster, "gh:1:1", "P")).Replace(",\"shapeVersion\":" + InteractionShape.Version.ToString(System.Globalization.CultureInfo.InvariantCulture), "");
+        Assert.DoesNotContain("shapeVersion", line);
+
+        var back = HistoryJson.Parse(line).Run!;
+        Assert.Equal(1, back.ShapeVersion);
+
+        var bare = HistoryJson.Parse(HistoryJson.RunLine(Run(roster, "gh:2:1", "P") with { ShapeSet = null, ShapeOrdered = null, ShapeVersion = null })).Run!;
+        Assert.Null(bare.ShapeVersion);
     }
 
     [Fact]

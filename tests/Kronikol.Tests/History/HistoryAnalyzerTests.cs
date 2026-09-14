@@ -16,7 +16,8 @@ public class HistoryAnalyzerTests
         HistoryRoster.Create("Suite", ids.Select((id, i) => new HistoryRosterEntry(id, "Scenario " + id[^1], "Feature", null)).ToArray());
 
     private static HistoryRun Run(HistoryRoster roster, int n, string results, string? branch = "main", int?[]? durations = null,
-        string[]? shapes = null, string[]? ordered = null, int[]? calls = null, string? attempts = null, string[]? deps = null, bool? partial = false) => new()
+        string[]? shapes = null, string[]? ordered = null, int[]? calls = null, string? attempts = null, string[]? deps = null, bool? partial = false,
+        int? shapeVersion = null) => new()
     {
         Id = $"gh:{n}:1",
         Suite = roster.Suite,
@@ -34,6 +35,7 @@ public class HistoryAnalyzerTests
         Calls = calls,
         ShapeSet = shapes,
         ShapeOrdered = ordered ?? shapes,
+        ShapeVersion = shapes is null ? null : shapeVersion ?? InteractionShape.Version,
         Errors = results.Select(r => r == 'F' ? "e1" : null).ToArray(),
         ErrorText = results.Contains('F') ? new Dictionary<string, string> { ["e1"] = "Expected 200 but got 500" } : new Dictionary<string, string>(),
         Deps = deps ?? ["Test>orders"]
@@ -263,6 +265,28 @@ public class HistoryAnalyzerTests
     }
 
     // ─── Behaviour ─────────────────────────────────────────────
+
+    [Fact]
+    public void Shapes_made_by_an_earlier_rule_are_not_compared()
+    {
+        // A fingerprint is comparable only with one the same templating rule made. The first run after an
+        // upgrade that changed the rule reads no behaviour verdict against the runs before it, and says so,
+        // rather than calling every scenario changed once; the run after that compares again.
+        var roster = Roster(Ids);
+        var ledger = Ledger(Enumerable.Range(1, 3).Select(i => (roster, Run(roster, i, "PPP", shapes: ["s1", "s2", "s3"], calls: [3, 1, 1], shapeVersion: 1))));
+
+        var scenario = First(Analyse(ledger, roster, Run(roster, 9, "PPP", shapes: ["s9", "s2", "s3"], calls: [3, 1, 1], shapeVersion: 2)));
+
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, scenario.Verdicts);
+        Assert.Contains("earlier rule", scenario.Evidence);
+        Assert.Null(scenario.PreviousShapeSet);
+
+        // A run made by the current rule further back is still the one compared against.
+        var mixed = Ledger([(roster, Run(roster, 1, "PPP", shapes: ["s1", "s2", "s3"], calls: [3, 1, 1], shapeVersion: 2)), (roster, Run(roster, 2, "PPP", shapes: ["s7", "s2", "s3"], calls: [3, 1, 1], shapeVersion: 1))]);
+        var compared = First(Analyse(mixed, roster, Run(roster, 9, "PPP", shapes: ["s9", "s2", "s3"], calls: [3, 1, 1], shapeVersion: 2)));
+        Assert.Contains(HistoryVerdictKind.BehaviourChanged, compared.Verdicts);
+        Assert.Equal("s1", compared.PreviousShapeSet);
+    }
 
     [Fact]
     public void A_changed_call_set_with_the_same_status_is_behaviour_changed()

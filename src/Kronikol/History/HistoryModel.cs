@@ -179,6 +179,13 @@ public sealed record HistoryRun
     /// <summary>The ordered interaction fingerprint per position — the secondary, reorder-sensitive signal.</summary>
     public IReadOnlyList<string>? ShapeOrdered { get; init; }
 
+    /// <summary>
+    /// The rule the fingerprints were made by (<see cref="InteractionShape.Version"/>): null when none are
+    /// recorded, 1 for a line written before the rule was recorded. Fingerprints made by different rules
+    /// are not compared.
+    /// </summary>
+    public int? ShapeVersion { get; init; }
+
     /// <summary>Per position, a key into <see cref="ErrorText"/> for a failure, or null.</summary>
     public IReadOnlyList<string?>? Errors { get; init; }
 

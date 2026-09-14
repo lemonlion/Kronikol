@@ -33,6 +33,20 @@ public static partial class InteractionShape
 {
     private const RegexOptions Options = RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture;
 
+    /// <summary>
+    /// The version of the templating rules below. It rides on every run line, because a fingerprint is
+    /// comparable only with one the same rule made: across a change of rule the analyzer reads no
+    /// behaviour verdict, and says so, rather than calling every scenario changed once. Move it when a
+    /// rule changes. 1: 3.9.0 - ids, timestamps and numbers, the statement head cut before it was
+    /// templated. 2: 3.14.0 - the head templated before it is cut, and what a statement carried as data
+    /// (the values of a document, the literals of a query) dropped.
+    /// </summary>
+    public const int Version = 2;
+
+    /// <summary>How much of a statement's first line is templated, and how much of the templated head is kept.</summary>
+    private const int HeadRaw = 2000;
+    private const int HeadLength = 120;
+
     // Ids: GUIDs with or without hyphens, hex runs of sixteen or more, ULIDs. Bounded by non-alphanumerics
     // so an id embedded in a segment (prefix_{id}_suffix) is found without eating the prefix.
     [GeneratedRegex(@"(?<![0-9A-Za-z])(?:[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}|[0-9A-Fa-f]{16,}|[0-9A-HJKMNP-TV-Z]{26})(?![0-9A-Za-z])", Options)]
@@ -45,6 +59,18 @@ public static partial class InteractionShape
     // Bare numbers: digit runs not touching a letter, so v2 and abc123 stay and 4711 and cust-4711 do not.
     [GeneratedRegex(@"(?<![0-9A-Za-z])\d+(?![0-9A-Za-z])", Options)]
     private static partial Regex NumberPattern();
+
+    // A double-quoted string, escapes and all: a key or a value in a document, a name or a literal in a query.
+    [GeneratedRegex(@"""(?:[^""\\]|\\.)*""", Options)]
+    private static partial Regex DoubleQuotedPattern();
+
+    // A single-quoted literal, with the doubled-quote escape SQL uses.
+    [GeneratedRegex(@"'(?:[^']|'')*'", Options)]
+    private static partial Regex SingleQuotedPattern();
+
+    // What sits on the left of a literal in a query: a comparison, LIKE, or the opening of an IN list.
+    [GeneratedRegex(@"(?:=|<>|!=|<|>|\bLIKE|\bIN\s*\()\s*\z", Options | RegexOptions.IgnoreCase)]
+    private static partial Regex ComparisonBeforePattern();
 
     /// <summary>The templated form of a path (with an optional query) or a statement head.</summary>
     public static string Template(string text)
@@ -75,6 +101,52 @@ public static partial class InteractionShape
     /// The calls in a log stream, in request order, each paired with its response by
     /// <see cref="RequestResponseLog.RequestResponseId"/>. Markers and ignored records are not calls.
     /// </summary>
+    /// <summary>
+    /// A statement head templated: ids, timestamps and numbers as in a path, and what the statement carried
+    /// as data reduced to a marker - the values of a document (<c>{v}</c>), the literals of a query
+    /// (<c>'{s}'</c>, or <c>"{v}"</c> on the right of a comparison, which is where Cosmos DB puts a string
+    /// literal and a quoted identifier never sits alone). Which fields and parameters were sent is what
+    /// the fingerprint compares, not what they held: the rule the query string already follows. A
+    /// <c>?</c> here is a parameter, not the start of a query string.
+    /// </summary>
+    public static string TemplateStatement(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return "";
+
+        string valued;
+        var trimmed = text.TrimStart();
+        if (trimmed.StartsWith('{') || trimmed.StartsWith('['))
+        {
+            // A document: every string that is not a key is a value.
+            valued = DoubleQuotedPattern().Replace(text, match => IsKey(text, match) ? match.Value : "\"{v}\"");
+        }
+        else
+        {
+            // A query: single-quoted literals, and a double-quoted one compared against - not the quoted
+            // identifiers PostgreSQL and EF Core write everywhere else.
+            var statement = SingleQuotedPattern().Replace(text, "'{s}'");
+            valued = DoubleQuotedPattern().Replace(statement, match => IsComparedLiteral(statement, match) ? "\"{v}\"" : match.Value);
+        }
+
+        return NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(valued, "{id}"), "{ts}"), "{n}");
+    }
+
+    private static bool IsKey(string text, Match match)
+    {
+        var i = match.Index + match.Length;
+        while (i < text.Length && char.IsWhiteSpace(text[i])) i++;
+        return i < text.Length && text[i] == ':';
+    }
+
+    private static bool IsComparedLiteral(string text, Match match)
+    {
+        var after = match.Index + match.Length;
+        if (after < text.Length && text[after] == '.')
+            return false;   // "o"."Id": an identifier chain
+        return ComparisonBeforePattern().IsMatch(text[..match.Index]);
+    }
+
     public static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs)
     {
         ArgumentNullException.ThrowIfNull(logs);
@@ -119,8 +191,10 @@ public static partial class InteractionShape
         if (!DependencyCategories.IsStatementShaped(log.DependencyCategory) || string.IsNullOrWhiteSpace(log.Content))
             return templated;
 
-        var head = FailureText.Truncate(FailureText.FirstLine(log.Content), 120);
-        return templated + " " + Template(head);
+        // Templated before it is cut: cut first, an id straddling the limit kept its first characters, and
+        // a scenario writing a fresh id read as behaviour-changed on every run.
+        var head = FailureText.Truncate(TemplateStatement(FailureText.Truncate(FailureText.FirstLine(log.Content), HeadRaw)), HeadLength);
+        return templated + " " + head;
     }
 
     /// <summary>The two fingerprints and the call count for a scenario's calls.</summary>

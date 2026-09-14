@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.14.0] - 2026-09-14
+
+**Minor - `kronikol query history --min-runs`, and a fingerprint that stays put.** One new query flag
+and one new ledger field; the fix underneath is what matters.
+
+### Fixed
+- **`behaviour-changed` fired on every run for a scenario that wrote a fresh id.** The fingerprint of a
+  statement-shaped call (SQL, Cosmos DB, BigQuery, MongoDB and the rest) carries the first 120
+  characters of the statement, and that head was cut to length *before* its ids were templated: a GUID
+  straddling the limit kept its first characters in the shape, and BreakfastProvider read 1 to 24
+  scenarios per lane as behaviour-changed on every run with nothing having changed. The head is now
+  templated first and cut after, and what a statement carried as data is dropped as the query string's
+  values already were: the values of a document (`"Status":"{v}"`), the literals of a query (`'{s}'`,
+  and `"{v}"` on the right of a comparison, where Cosmos DB puts one), while keys and quoted identifiers
+  - which fields and parameters were sent - stay. A `?` in a statement is a parameter, not the start of
+  a query string, which it was being read as.
+
+### Added
+- **The fingerprint rule has a version, recorded on the run line as `shapeVersion`** (absent on lines
+  written before 3.14.0, which were made by rule 1). Fingerprints made by different rules are not
+  compared: the first run after this upgrade reads no behaviour verdict against the runs before it and
+  says so in the evidence, rather than calling every scenario changed once; the run after that compares
+  again. `kronikol history compact` writes the version onto old lines.
+- **`kronikol query history --min-runs N`** - the bar the flaky and duration verdicts need, as
+  `history gate --min-runs` (3.13.0) and the report's `HistoryMinRuns`; the three now read the same run
+  the same way.
+
 ## [3.13.0] - 2026-09-14
 
 **Minor - a pull request reads against the branch it targets without being told, and the gate takes the

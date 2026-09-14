@@ -120,6 +120,7 @@ public static class HistoryRunBuilder
             Calls = options.Shapes ? calls : null,
             ShapeSet = options.Shapes ? shapeSet : null,
             ShapeOrdered = options.Shapes ? shapeOrdered : null,
+            ShapeVersion = options.Shapes ? InteractionShape.Version : null,
             Errors = errors,
             ErrorText = errorText,
             Deps = InteractionShape.Dependencies(logs)

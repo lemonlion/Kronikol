@@ -540,9 +540,9 @@ public record ReportConfigurationOptions
     public bool HistoryDurations { get; set; } = true;
 
     /// <summary>
-    /// Whether the interaction fingerprint — the set of calls each scenario made, with ids and
-    /// timestamps templated away — and the call count are recorded. They are what the behaviour-changed
-    /// verdict compares. Default: <c>true</c>.
+    /// Whether the interaction fingerprint — the set of calls each scenario made, with ids, timestamps
+    /// and what a statement carried as data templated away — and the call count are recorded. They are
+    /// what the behaviour-changed verdict compares. Default: <c>true</c>.
     /// </summary>
     public bool HistoryShapes { get; set; } = true;
 

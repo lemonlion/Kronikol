@@ -187,11 +187,11 @@ public static class HistoryAnalyzer
                 if (at >= 0) break;
             }
             if (at < 0) continue;
-            points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at)));
+            points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at), run.ShapeVersion));
         }
 
         var currentPoint = new HistoryPoint(current.Id, current.At, current.Commit, current.ResultAt(position), current.DurationAt(position),
-            current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position));
+            current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position), current.ShapeVersion);
         var all = points.Append(currentPoint).ToList();
 
         var verdicts = new HashSet<HistoryVerdictKind>();
@@ -323,8 +323,14 @@ public static class HistoryAnalyzer
         }
 
         // ── Behaviour ───────────────────────────────────────
-        var shaped = points.Where(p => p.ShapeSet is { Length: > 0 }).ToList();
+        // A fingerprint is comparable only with one the same templating rule made: across a change of
+        // rule there is no verdict, and the reader is told, rather than every scenario changing once.
+        var rule = currentPoint.ShapeVersion ?? 1;
+        var shapedByAnyRule = points.Where(p => p.ShapeSet is { Length: > 0 }).ToList();
+        var shaped = shapedByAnyRule.Where(p => (p.ShapeVersion ?? 1) == rule).ToList();
         var previousShaped = shaped.Count > 0 ? shaped[^1] : null;
+        if (currentPoint.ShapeSet is { Length: > 0 } && shapedByAnyRule.Count > 0 && (shapedByAnyRule[^1].ShapeVersion ?? 1) != rule)
+            evidence.Add($"the calls in {shapedByAnyRule[^1].RunId} were fingerprinted by an earlier rule; behaviour is compared from the next run");
         if (currentPoint.ShapeSet is { Length: > 0 } && previousShaped is not null)
         {
             var changes = 0;

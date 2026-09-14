@@ -99,6 +99,9 @@ internal sealed class QueryOptions
     /// <summary><c>history --compare-branch NAME</c>: a second stream to read against.</summary>
     public string? CompareBranch { get; private set; }
 
+    /// <summary><c>history --min-runs N</c>: the recorded runs the flaky and duration verdicts need; null for the analyzer's default.</summary>
+    public int? MinRuns { get; private set; }
+
     /// <summary><c>history --suite NAME</c>: the suite, when the report does not carry one.</summary>
     public string? SuiteOverride { get; private set; }
 
@@ -130,7 +133,7 @@ internal sealed class QueryOptions
         "--where", "--group-by", "--tolerance", "--count", "--json", "--failed", "--errors-only",
         "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
         "--number", "--baseline", "--describe", "--history", "--flaky", "--new", "--failing", "--regressed",
-        "--changed", "--branch", "--compare-branch", "--suite"
+        "--changed", "--branch", "--compare-branch", "--min-runs", "--suite"
     ];
 
     /// <summary>
@@ -274,6 +277,15 @@ internal sealed class QueryOptions
                 case "--history": if (Next(arg) is not { } history) return null; options.HistoryPath = history; break;
                 case "--branch": if (Next(arg) is not { } branch) return null; options.Branch = branch; break;
                 case "--compare-branch": if (Next(arg) is not { } compareBranch) return null; options.CompareBranch = compareBranch; break;
+                case "--min-runs":
+                    if (Next(arg) is not { } minRuns) return null;
+                    if (!int.TryParse(minRuns, out var parsedMinRuns) || parsedMinRuns <= 0)
+                    {
+                        error.WriteLine("--min-runs takes a positive number of runs: the bar the flaky and duration verdicts need, the report's HistoryMinRuns (default 5).");
+                        return null;
+                    }
+                    options.MinRuns = parsedMinRuns;
+                    break;
                 case "--suite": if (Next(arg) is not { } suiteName) return null; options.SuiteOverride = suiteName; break;
                 case "--flaky": options.Flaky = true; break;
                 case "--new": options.New = true; break;
@@ -378,6 +390,7 @@ internal sealed class QueryOptions
         if (SuiteOverride is not null) Flag("--suite", SuiteOverride);
         if (Branch is not null) Flag("--branch", Branch);
         if (CompareBranch is not null) Flag("--compare-branch", CompareBranch);
+        if (MinRuns is not null) Flag("--min-runs", MinRuns.Value.ToString(CultureInfo.InvariantCulture));
         if (Flaky) Flag("--flaky");
         if (New) Flag("--new");
         if (Failing) Flag("--failing");

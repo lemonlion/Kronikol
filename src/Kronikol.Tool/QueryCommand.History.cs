@@ -41,13 +41,16 @@ internal static partial class QueryCommand
 
         var quarantine = ReportHistory.LoadQuarantine(ledgerPath, writer);
         var aliases = ReportHistory.LoadAliases(ledgerPath, writer);
-        var verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, new HistoryAnalysisOptions
+        var analysis = new HistoryAnalysisOptions
         {
             Window = options.HistoryWindowOrDefault,
             // A pull request build reads against the branch it targets, as the run itself did.
             Branch = options.Branch ?? CiMetadataDetector.PullRequestTarget(getEnv),
             CompareBranch = options.CompareBranch
-        }, quarantine, aliases);
+        };
+        if (options.MinRuns is { } minRuns)
+            analysis = analysis with { MinRuns = minRuns };
+        var verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, analysis, quarantine, aliases);
 
         // Under --count the text answer is one bare number, so the caveats go to stderr - the same rule
         // WriteProvenance applies to the provenance notes.

@@ -126,7 +126,7 @@ public sealed record HistoryAnalysisOptions
 /// <param name="Calls">The call count, when recorded.</param>
 /// <param name="Error">The error cluster text, on a failure.</param>
 /// <param name="Attempt">The attempt the result came from, when the runner said.</param>
-public sealed record HistoryPoint(string RunId, DateTimeOffset At, string? Commit, char Result, int? DurationMs, string? ShapeSet, string? ShapeOrdered, int? Calls, string? Error, int? Attempt);
+public sealed record HistoryPoint(string RunId, DateTimeOffset At, string? Commit, char Result, int? DurationMs, string? ShapeSet, string? ShapeOrdered, int? Calls, string? Error, int? Attempt, int? ShapeVersion = null);
 
 /// <summary>Where a failing streak began.</summary>
 /// <param name="RunId">The first failing run of the streak.</param>

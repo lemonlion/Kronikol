@@ -370,6 +370,7 @@ public static class HistoryFold
             Calls = anyCalls ? calls : null,
             ShapeSet = anyShapes ? shapeSet : null,
             ShapeOrdered = anyShapes ? shapeOrdered : null,
+            ShapeVersion = anyShapes ? shards.Select(s => s.Run.ShapeVersion).FirstOrDefault(v => v is not null) : null,
             Errors = anyErrors ? errors : null,
             ErrorText = errorText,
             Deps = deps.Count > 0 || shards.Any(s => s.Run.Deps is not null) ? deps.ToArray() : null

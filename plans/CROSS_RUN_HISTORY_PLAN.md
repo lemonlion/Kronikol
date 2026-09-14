@@ -1963,6 +1963,13 @@ M5, M6, M7. Two finished beat six open.
   read it (18 suites, 55 lines) and published reports with sparklines and verdicts against the earlier
   run. Two things learned: `gh run cancel` leaves an `if: always()` history job recording whatever lanes
   finished, and a first run on an empty stream reads as `stable`, not `new`, by the analyzer's rule.
+- **3.14.0 (2026-09-14).** The consumer's second run showed the fingerprint bug: `behaviour-changed`
+  on 1 to 24 scenarios per lane with nothing changed, because the statement head was cut before it was
+  templated and a GUID straddling the limit kept its first characters. Fixed (template first, then
+  cut; a statement's data - document values, query literals - dropped), and the rule versioned on the
+  run line (`shapeVersion`) so the analyzer never compares fingerprints two rules made. `query history
+  --min-runs` lines the third reader up with the gate and the report. `dotnet test tests/Kronikol.Tests`
+  green (+8: `InteractionShapeTests`, `HistoryAnalyzerTests`, `HistoryLedgerTests`, `QueryHistoryTests`).
 
 ---
 
