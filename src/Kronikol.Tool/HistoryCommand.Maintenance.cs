@@ -29,6 +29,7 @@ internal static partial class HistoryCommand
         public double? FlakyThreshold;
         public double? SlowerBy;
         public string? Branch;
+        public int? MinRuns;
         public bool FromCtrf;
         public bool FromAllure;
         public string? RunId;
@@ -82,12 +83,15 @@ internal static partial class HistoryCommand
 
         var quarantine = LoadQuarantineOrNull(ledgerPath);
         var aliases = LoadAliasesOrNull(ledgerPath);
+        var defaults = new HistoryAnalysisOptions();
         var verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, new HistoryAnalysisOptions
         {
             Window = args.Window ?? DefaultWindow,
-            FlakyRate = args.FlakyThreshold ?? 0.1,
-            SlowerBy = args.SlowerBy ?? 1.5,
-            Branch = args.Branch
+            MinRuns = args.MinRuns ?? defaults.MinRuns,
+            FlakyRate = args.FlakyThreshold ?? defaults.FlakyRate,
+            SlowerBy = args.SlowerBy ?? defaults.SlowerBy,
+            // A pull request build reads against the branch it targets, as the run itself did.
+            Branch = args.Branch ?? CiMetadataDetector.PullRequestTarget(getEnv)
         }, quarantine, aliases);
 
         var rows = index.Scenarios.Select(s => (Scenario: s, Entry: verdicts.At(s.Ordinal, s.StableId))).Where(p => p.Entry is not null).ToList();

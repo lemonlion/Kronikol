@@ -587,12 +587,14 @@ public record ReportConfigurationOptions
     public bool HistoryReordered { get; set; }
 
     /// <summary>
-    /// The branch stream to read the run against instead of its own. Default: <c>null</c>, the run's own
-    /// branch (<c>local</c> off CI). Verdicts are computed within a stream, so a pull request's run
-    /// would otherwise read against the pull request's own earlier runs — a cold start — when the
-    /// question is what changed against the branch it targets: on GitHub Actions,
-    /// <c>Environment.GetEnvironmentVariable("GITHUB_BASE_REF")</c> is that branch on a pull request
-    /// and null on a push. The run's own line still records under its own branch.
+    /// The branch stream to read the run against. Default: <c>null</c> — on a pull request build, the
+    /// branch the pull request targets (<c>GITHUB_BASE_REF</c> on GitHub Actions,
+    /// <c>SYSTEM_PULLREQUEST_TARGETBRANCH</c> on Azure DevOps, both set only on pull request builds);
+    /// otherwise the run's own branch (<c>local</c> off CI). Verdicts are computed within a stream, and
+    /// a pull request's runs form their own, so reading them against their own earlier runs would be a
+    /// cold start when the question is what changed against the branch they target. An empty string is
+    /// the run's own branch even on a pull request build; any other value names the stream to read
+    /// against. The run's own line still records under its own branch.
     /// </summary>
     public string? HistoryBranch { get; set; }
 

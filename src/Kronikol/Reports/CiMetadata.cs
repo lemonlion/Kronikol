@@ -75,4 +75,23 @@ public static class CiMetadataDetector
         // No RunAttempt: Azure DevOps exposes no equivalent variable, and a null is honest where a
         // guess would not be. Its own retry handling re-runs the pipeline under a new BUILD_BUILDID.
     }
+
+    /// <summary>
+    /// The branch a pull request targets, when this is a pull request build: <c>GITHUB_BASE_REF</c> on
+    /// GitHub Actions and <c>SYSTEM_PULLREQUEST_TARGETBRANCH</c> on Azure DevOps, both set only on pull
+    /// request builds. Null on a push, a schedule, a manual run and off CI. The value is left as the
+    /// provider gives it, because it has to name the stream the target's own runs record under, and
+    /// that is the raw ref too: <c>main</c> on GitHub Actions, <c>refs/heads/main</c> on Azure DevOps.
+    /// </summary>
+    public static string? PullRequestTarget(Func<string, string?> getEnvVar)
+    {
+        ArgumentNullException.ThrowIfNull(getEnvVar);
+        var target = CiEnvironmentDetector.Detect(getEnvVar) switch
+        {
+            CiEnvironment.GitHubActions => getEnvVar("GITHUB_BASE_REF"),
+            CiEnvironment.AzureDevOps => getEnvVar("SYSTEM_PULLREQUEST_TARGETBRANCH"),
+            _ => null
+        };
+        return string.IsNullOrWhiteSpace(target) ? null : target.Trim();
+    }
 }

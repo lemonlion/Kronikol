@@ -55,7 +55,7 @@ public class QueryHistoryTests : IDisposable
     }
 
     /// <summary>A current report in <c>reports/</c> under the temp root, so the ledger above it is found by the walk.</summary>
-    private string WriteReport(string pay, string refund = "Passed", string runId = "99")
+    private string WriteReport(string pay, string refund = "Passed", string runId = "99", string branch = "main")
     {
         var directory = Path.Combine(_dir, "reports");
         Directory.CreateDirectory(directory);
@@ -67,7 +67,7 @@ public class QueryHistoryTests : IDisposable
               "suite": "Suite",
               "startTime": "2026-09-12T10:00:00Z",
               "endTime": "2026-09-12T10:05:00Z",
-              "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "main", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "{{runId}}", "runAttempt": "1" },
+              "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "{{branch}}", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "{{runId}}", "runAttempt": "1" },
               "features": [
                 {
                   "name": "Checkout",
@@ -297,5 +297,23 @@ public class QueryHistoryTests : IDisposable
         var refused = Query(null, "failures", report, "--flaky");
         Assert.Equal(2, refused.Exit);
         Assert.Contains("--flaky", refused.Error);
+    }
+
+    [Fact]
+    public void A_pull_request_build_reads_against_the_branch_it_targets()
+    {
+        // On a pull request build the run read against GITHUB_BASE_REF; queried in the same job, the report
+        // reads the same way without --branch, which still names any other stream.
+        Seed("PP", "PP", "PP");
+        var report = WriteReport(pay: "Failed", branch: "42/merge");
+        string? PullRequest(string key) => key switch { "GITHUB_ACTIONS" => "true", "GITHUB_BASE_REF" => "main", _ => null };
+
+        var pullRequest = Query(PullRequest, "history", report);
+
+        Assert.True(pullRequest.Exit == 0, pullRequest.Error);
+        Assert.Contains("stream main", pullRequest.Output);
+        Assert.Contains("1 broke", pullRequest.Output);
+        Assert.Contains("stream 42/merge", Query(null, "history", report).Output);
+        Assert.Contains("stream feature/x", Query(PullRequest, "history", report, "--branch", "feature/x").Output);
     }
 }

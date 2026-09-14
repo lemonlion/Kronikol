@@ -67,8 +67,8 @@ public sealed class HistoryRunContext
 
         try
         {
-            var location = HistoryPathResolver.Resolve(options.HistoryFilePath, reportsDirectory,
-                getEnv ?? Environment.GetEnvironmentVariable, baseDirectory ?? AppContext.BaseDirectory);
+            var env = getEnv ?? Environment.GetEnvironmentVariable;
+            var location = HistoryPathResolver.Resolve(options.HistoryFilePath, reportsDirectory, env, baseDirectory ?? AppContext.BaseDirectory);
             if (location.Source == HistoryLocationSource.Disabled)
                 return null;
 
@@ -117,7 +117,11 @@ public sealed class HistoryRunContext
                         SlowerBy = options.HistorySlowerBy,
                         PartialThreshold = options.HistoryPartialThreshold,
                         ReportReordered = options.HistoryReordered,
-                        Branch = string.IsNullOrWhiteSpace(options.HistoryBranch) ? null : options.HistoryBranch.Trim(),
+                        // A pull request's runs form their own stream, and the question a pull request asks is
+                        // what changed against the branch it targets: that is the default stream on a pull
+                        // request build. A push, a schedule and a run off CI read their own.
+                        Branch = options.HistoryBranch is null ? CiMetadataDetector.PullRequestTarget(env)
+                            : string.IsNullOrWhiteSpace(options.HistoryBranch) ? null : options.HistoryBranch.Trim(),
                         CompareBranch = string.IsNullOrWhiteSpace(options.HistoryCompareBranch) ? null : options.HistoryCompareBranch.Trim()
                     }, quarantine, aliases);
 

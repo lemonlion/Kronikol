@@ -41,7 +41,10 @@ public class HistoryOutputsTests : IDisposable
         WriteRunSummaryToConsole = false,
         HistoryFilePath = Ledger,
         HistoryRunId = runId,
-        HistoryMinRuns = 2
+        HistoryMinRuns = 2,
+        // The run's own stream in every environment: on a pull request build the default reads against the
+        // branch it targets, which is what one test here is about and the rest are not.
+        HistoryBranch = ""
     };
 
     private static Feature[] Features(ExecutionResult pay, ExecutionResult refund = ExecutionResult.Passed) =>
@@ -255,8 +258,12 @@ public class HistoryOutputsTests : IDisposable
         Assert.Contains("test:3:1", File.ReadAllText(Ledger));
     }
 
-    /// <summary>Three earlier runs of the same roster recorded on the <c>main</c> stream, so a local run has another stream to read against.</summary>
-    private void SeedMain(params string[] results)
+    /// <summary>
+    /// Three earlier runs of the same roster recorded on a <c>trunk</c> stream, so the run under test has another
+    /// stream to read against. Not <c>main</c>: on CI the process is on GITHUB_REF_NAME, and a push to main would put
+    /// the run under test on the very stream it is meant to be reading across to.
+    /// </summary>
+    private void SeedTrunk(params string[] results)
     {
         var (roster, run) = HistoryRunBuilder.Build(Features(ExecutionResult.Passed), [], "HistorySuite", null,
             new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero), new HistoryBuildOptions(), "gh:0:1");
@@ -264,7 +271,7 @@ public class HistoryOutputsTests : IDisposable
         {
             var line = run with
             {
-                Id = $"gh:{i + 1}:1", Branch = "main", Commit = $"c{i + 1:D6}", At = run.At.AddHours(i),
+                Id = $"gh:{i + 1}:1", Branch = "trunk", Commit = $"c{i + 1:D6}", At = run.At.AddHours(i),
                 Results = results[i], Attempts = new string('-', results[i].Length),
                 Durations = Enumerable.Repeat<int?>(100, results[i].Length).ToArray(),
                 Errors = results[i].Select(r => r == 'F' ? "e1" : null).ToArray(),
@@ -278,35 +285,63 @@ public class HistoryOutputsTests : IDisposable
     public void A_run_reads_against_the_stream_it_is_told_to()
     {
         // A pull request's run forms its own stream and would read as a cold start; told to read against
-        // main, a failure that passed on main is the regression it is.
-        SeedMain("PP", "PP", "PP");
+        // trunk, a failure that passed on trunk is the regression it is.
+        SeedTrunk("PP", "PP", "PP");
 
         Run("own", "test:9:1", Features(ExecutionResult.Failed), o => o.GenerateTestRunReport = true);
-        Run("main", "test:9:2", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.HistoryBranch = "main"; });
+        Run("against", "test:9:2", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.HistoryBranch = "trunk"; });
 
         var own = File.ReadAllText(Path.Combine(Reports("own"), "Failures.md"));
         Assert.DoesNotContain("**broke**", own);
 
-        var against = File.ReadAllText(Path.Combine(Reports("main"), "Failures.md"));
+        var against = File.ReadAllText(Path.Combine(Reports("against"), "Failures.md"));
         Assert.Contains("**broke**", against);
-        Assert.Contains("against 3 earlier runs on main", against);
-        Assert.Contains(@"data-history-verdicts=""broke""", File.ReadAllText(Path.Combine(Reports("main"), "TestRunReport.html")));
+        Assert.Contains("against 3 earlier runs on trunk", against);
+        Assert.Contains(@"data-history-verdicts=""broke""", File.ReadAllText(Path.Combine(Reports("against"), "TestRunReport.html")));
         // The run's own line still records under its own stream, so main's history stays main's.
         var ownLine = File.ReadAllLines(Ledger).Single(l => l.Contains(@"""id"":""test:9:2""", StringComparison.Ordinal));
-        Assert.DoesNotContain(@"""branch"":""main""", ownLine);
+        Assert.DoesNotContain(@"""branch"":""trunk""", ownLine);
     }
 
     [Fact]
     public void A_compare_branch_is_read_out_beside_the_run_s_own_stream()
     {
-        SeedMain("PP", "PP", "PP");
+        SeedTrunk("PP", "PP", "PP");
 
-        Run("cmp", "test:9:3", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.HistoryCompareBranch = "main"; });
+        Run("cmp", "test:9:3", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.HistoryCompareBranch = "trunk"; });
 
         var digest = File.ReadAllText(Path.Combine(Reports("cmp"), "Failures.md"));
-        Assert.Contains("on main: 1 broke (against 3 earlier runs on main)", digest);
+        Assert.Contains("on trunk: 1 broke (against 3 earlier runs on trunk)", digest);
         var html = File.ReadAllText(Path.Combine(Reports("cmp"), "TestRunReport.html"));
         Assert.Contains(@"class=""history-compare""", html);
-        Assert.Contains("on <code>main</code>: 1 broke", html);
+        Assert.Contains("on <code>trunk</code>: 1 broke", html);
+    }
+
+    [Fact]
+    public void A_pull_request_reads_against_the_branch_it_targets_without_being_told()
+    {
+        // On a pull request build the environment names the branch the pull request targets, and that is
+        // the stream the run reads against; a push reads its own, and HistoryBranch set still wins. The
+        // context is driven directly because the environment is the process's.
+        SeedTrunk("PP", "PP", "PP");
+        var ci = new CiMetadata(CiEnvironment.GitHubActions, "7", "42/merge", "abc1234", null, "o/r", "77", "1");
+        string? PullRequest(string key) => key switch { "GITHUB_ACTIONS" => "true", "GITHUB_BASE_REF" => "trunk", _ => null };
+        string? Push(string key) => key == "GITHUB_ACTIONS" ? "true" : null;
+        HistoryRunContext Create(Func<string, string?> env, Action<ReportConfigurationOptions>? configure = null)
+        {
+            var options = Options("pr", "gh:77:1");
+            options.HistoryBranch = null;
+            configure?.Invoke(options);
+            return HistoryRunContext.Create(Features(ExecutionResult.Failed), [], "HistorySuite", ci, DateTimeOffset.UtcNow, options, Reports("pr"), "3.13.0", env)!;
+        }
+
+        var pullRequest = Create(PullRequest);
+        Assert.Equal("trunk", pullRequest.Verdicts!.Stream);
+        Assert.Equal(1, pullRequest.Verdicts.Count(HistoryVerdictKind.Broke));
+        Assert.Equal("42/merge", pullRequest.Run.Branch);
+
+        Assert.Equal("42/merge", Create(Push).Verdicts!.Stream);
+        Assert.Equal("release", Create(PullRequest, o => o.HistoryBranch = "release").Verdicts!.Stream);
+        Assert.Equal("42/merge", Create(PullRequest, o => o.HistoryBranch = "").Verdicts!.Stream);
     }
 }

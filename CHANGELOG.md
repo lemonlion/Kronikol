@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.13.0] - 2026-09-14
+
+**Minor - a pull request reads against the branch it targets without being told, and the gate takes the
+report's minimum-runs bar.** One new `kronikol history gate` flag and a smarter default for an option
+released earlier today; a push, a scheduled run and a run off CI read what 3.12.0 read.
+
+### Changed
+- **A pull request build reads against the branch it targets by default.** `HistoryBranch` shipped in
+  3.12.0 as opt-in, on the reasoning that a changed default is a breaking change; with nothing yet
+  depending on the cold-start reading it replaces, the default moved before anything could. Null now
+  means: on a pull request build, the branch the pull request targets - `GITHUB_BASE_REF` on GitHub
+  Actions, `SYSTEM_PULLREQUEST_TARGETBRANCH` on Azure DevOps, both set only on pull request builds -
+  and otherwise the run's own branch, as before. Set it to read against any other stream. The run's own
+  line still records under its own branch. An empty `HistoryBranch` is the run's own stream even on a
+  pull request build. `kronikol history gate`, `kronikol query history` and `kronikol merge --history`
+  follow the same rule when `--branch` is not given, so what runs in the same job reads what the run
+  read.
+
+### Fixed
+- The two 3.12.0 tests that seeded a `main` stream read it as another stream, which on this
+  repository's own CI it is not: the process is on `GITHUB_REF_NAME`, and a push to main put the run
+  under test on the stream it was meant to read across to. They seed a `trunk` stream now, and the
+  history tests that read the run's own stream say so, so a pull request build of this repository
+  reads them the same way a push does.
+
+### Added
+- **`kronikol history gate --min-runs N`** - the number of recorded runs the flaky and duration
+  verdicts need, which the report has always taken from `HistoryMinRuns` and the gate had no way to be
+  told. A suite reporting with three had a report calling a scenario flaky beside a gate calling the
+  same run a cold start; given the same bar, the two agree. Default five, as the report's.
+
 ## [3.12.0] - 2026-09-14
 
 **Minor - a pull request reads against the branch it targets.** Two new `ReportConfigurationOptions`

@@ -103,7 +103,7 @@ internal static class MergeCommand
             merged = MergeableReportRenderer.MergeFiles(files);
             if (historyPath is not null)
             {
-                history = ReadHistory(historyPath, merged, error, out var historyExit);
+                history = ReadHistory(historyPath, merged, error, getEnvironmentVariable, out var historyExit);
                 if (history is null)
                     return historyExit;
             }
@@ -166,7 +166,7 @@ internal static class MergeCommand
     /// because a merge is a render, and a render that also wrote to the ledger would record every
     /// re-render as a run.
     /// </summary>
-    private static History.HistoryVerdicts? ReadHistory(string path, MergeableReport merged, TextWriter error, out int exit)
+    private static History.HistoryVerdicts? ReadHistory(string path, MergeableReport merged, TextWriter error, Func<string, string?> getEnvironmentVariable, out int exit)
     {
         var full = Path.GetFullPath(path);
         if (!File.Exists(full))
@@ -199,7 +199,11 @@ internal static class MergeCommand
         }
 
         exit = 0;
-        return History.HistoryAnalyzer.Analyse(ledger, roster, run, new History.HistoryAnalysisOptions(), quarantine, aliases);
+        // A pull request build reads against the branch it targets, as the shards' own runs did.
+        return History.HistoryAnalyzer.Analyse(ledger, roster, run, new History.HistoryAnalysisOptions
+        {
+            Branch = CiMetadataDetector.PullRequestTarget(getEnvironmentVariable)
+        }, quarantine, aliases);
     }
 
     /// <summary>

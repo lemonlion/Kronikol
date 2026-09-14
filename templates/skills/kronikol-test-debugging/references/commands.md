@@ -461,7 +461,7 @@ history — `--branch` reads against another stream and `--compare-branch` adds 
 same run. A run that lacks more than a tenth of the previous run's scenarios (a filtered run, a
 crashed half) is **partial**: nothing is reported absent from it, and the next run is not compared
 against it. Below the minimum number of runs the status verdicts still apply, and the header says how
-many runs are recorded and how many flakiness needs.
+many runs are recorded and how many flakiness needs. On a pull request build, `history` without `--branch` reads against the branch the pull request targets, as the run itself did (3.13.0).
 
 `s3` answers for one scenario in full: every verdict, the flip and fail rates, since when it has been
 failing, its duration against the p95, its calls against the previous run, its quarantine entry, and
@@ -479,7 +479,9 @@ whenever a ledger resolves on its own, and says nothing about history when none 
 what it says is *new* - a failure carrying the broke, new or unknown verdict that is neither flaky nor
 quarantined - and reads the rest out without tripping. Its fail-on list (new-failures, flaky,
 duration-regression, behaviour-change) widens it; below the minimum number of recorded runs the flaky,
-duration and behaviour categories are advisory. Exit 0 clean, 1 tripped, 2 usage. When a build is red
+duration and behaviour categories are advisory, and its min-runs flag gives it the bar the suite reports
+with. On a pull request build it reads against the branch the pull request targets, as the run did.
+Exit 0 clean, 1 tripped, 2 usage. When a build is red
 and the gate said `gate: passed`, the failure is one the ledger already knew about, and `history
 <report>` shows which verdict it carries. `kronikol history quarantine` parks one with a reason on
 file; `kronikol history doctor` explains a ledger that behaves oddly.

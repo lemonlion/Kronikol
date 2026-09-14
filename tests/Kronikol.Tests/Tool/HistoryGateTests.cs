@@ -24,11 +24,13 @@ public class HistoryGateTests : IDisposable
 
     private string Ledger => Path.Combine(_dir, ".kronikol", "history.jsonl");
 
-    private static (string Out, string Err, int Exit) Run(params string[] args)
+    private static (string Out, string Err, int Exit) Run(params string[] args) => Run(_ => null, args);
+
+    private static (string Out, string Err, int Exit) Run(Func<string, string?> env, params string[] args)
     {
         var output = new StringWriter();
         var error = new StringWriter();
-        var exit = HistoryCommand.Run(args, output, error, _ => null);
+        var exit = HistoryCommand.Run(args, output, error, env);
         return (output.ToString(), error.ToString(), exit);
     }
 
@@ -49,7 +51,7 @@ public class HistoryGateTests : IDisposable
             }, "3.10.0");
     }
 
-    private string WriteReport(string pay, string refund = "Passed", double payDuration = 0.1)
+    private string WriteReport(string pay, string refund = "Passed", double payDuration = 0.1, string branch = "main")
     {
         var directory = Path.Combine(_dir, "reports");
         Directory.CreateDirectory(directory);
@@ -58,7 +60,7 @@ public class HistoryGateTests : IDisposable
             {
               "kronikolVersion": "3.10.0", "formatVersion": 1, "suite": "Suite",
               "startTime": "2026-09-12T10:00:00Z", "endTime": "2026-09-12T10:05:00Z",
-              "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "main", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "99", "runAttempt": "1" },
+              "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "{{branch}}", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "99", "runAttempt": "1" },
               "features": [ { "name": "Checkout", "labels": [], "scenarios": [
                 { "id": "t0", "stableId": "{{PayId}}", "name": "Pay by card", "result": "{{pay}}", "durationSeconds": {{payDuration.ToString(System.Globalization.CultureInfo.InvariantCulture)}}, "errorMessage": {{(pay == "Failed" ? "\"boom\"" : "null")}}, "labels": [], "categories": [], "steps": [], "httpInteractions": [] },
                 { "id": "t1", "stableId": "{{RefundId}}", "name": "Refund an order", "result": "{{refund}}", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }
@@ -166,6 +168,30 @@ public class HistoryGateTests : IDisposable
     }
 
     [Fact]
+    public void Min_runs_is_the_bar_the_report_used()
+    {
+        // A suite that reports with HistoryMinRuns = 3 has its flaky verdicts after three runs. The gate
+        // given the same bar reads the same run the same way - flaky, not a cold start with a regression
+        // in it - and refuses a bar that is not a positive number.
+        Seed("PP", "FP", "PP");
+        var report = WriteReport(pay: "Failed");
+
+        var five = Run("gate", report, "--fail-on", "new-failures,flaky");
+        var three = Run("gate", report, "--fail-on", "new-failures,flaky", "--min-runs", "3");
+
+        Assert.Contains("advisory", five.Out);
+        Assert.Contains("new-failures: 1", five.Out);
+        Assert.DoesNotContain("advisory", three.Out);
+        Assert.Contains("flaky: 1", three.Out);
+        Assert.Contains("new-failures: 0", three.Out);
+        Assert.Contains("gate: FAILED (flaky 1)", three.Out);
+        Assert.Equal(1, three.Exit);
+        Assert.Equal(2, Run("gate", report, "--min-runs", "0").Exit);
+        Assert.Equal(2, Run("gate", report, "--min-runs", "three").Exit);
+        Assert.Contains("--min-runs", Run("gate", report, "--min-runs", "three").Err);
+    }
+
+    [Fact]
     public void A_duration_regression_trips_when_asked_for()
     {
         var roster = Roster();
@@ -198,5 +224,26 @@ public class HistoryGateTests : IDisposable
         Assert.Equal(2, Run("gate", report, "--fail-on", "everything").Exit);
         Assert.Contains("everything", Run("gate", report, "--fail-on", "everything").Err);
         Assert.Equal(2, Run("gate", report, "--min-pass-rate", "two").Exit);
+    }
+
+    [Fact]
+    public void A_pull_request_build_reads_against_the_branch_it_targets()
+    {
+        // The run read against GITHUB_BASE_REF without being told; the gate, in the same job, reads the
+        // same way, and a push reads its own stream - where the failure is new rather than broke.
+        Seed("PP", "PP", "PP");
+        var report = WriteReport(pay: "Failed", branch: "42/merge");
+        string? PullRequest(string key) => key switch { "GITHUB_ACTIONS" => "true", "GITHUB_BASE_REF" => "main", _ => null };
+
+        var pullRequest = Run(PullRequest, "gate", report);
+        var push = Run(key => key == "GITHUB_ACTIONS" ? "true" : null, "gate", report);
+
+        Assert.Contains("stream main", pullRequest.Out);
+        Assert.Contains("1 broke (3 runs recorded in the main stream", pullRequest.Out);
+        Assert.Contains("new-failures: 1", pullRequest.Out);
+        Assert.Equal(1, pullRequest.Exit);
+        Assert.Contains("stream 42/merge", push.Out);
+        Assert.Contains("0 runs recorded in the 42/merge stream", push.Out);
+        Assert.Contains("stream release", Run(PullRequest, "gate", report, "--branch", "release").Out);
     }
 }

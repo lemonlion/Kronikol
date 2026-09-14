@@ -1943,6 +1943,17 @@ M5, M6, M7. Two finished beat six open.
   reading beside the run's own on the digest, the pointer and the report's History section; the run's
   own line still records under its own branch (`A_run_reads_against_the_stream_it_is_told_to`,
   `A_compare_branch_is_read_out_beside_the_run_s_own_stream`). No-ledger output untouched.
+- **3.13.0 (2026-09-14).** `dotnet test tests/Kronikol.Tests` green (+3: `CiMetadataDetectorTests`,
+  `HistoryOutputsTests`, `HistoryGateTests`). The 3.12.0 opt-in became the default the same day, on the
+  user's call that a feature hours old is the moment to move a default: a pull request build reads
+  against the branch it targets (`GITHUB_BASE_REF`, `SYSTEM_PULLREQUEST_TARGETBRANCH`) unless
+  `HistoryBranch` says otherwise, and the gate reads the same way. `gate --min-runs N` closes the
+  other gap the BreakfastProvider dogfood surfaced: the report took `HistoryMinRuns` and the gate could
+  not be told it, so the two disagreed below five runs. `query history` and `merge --history` take the
+  same default. The 3.12.0 push's CI was red on its own two new tests: they seeded `main` and the CI
+  process *is* on main, so the run under test sat on the stream it was reading across to; the tests
+  seed `trunk` now, and the suite's own-stream tests pin `HistoryBranch = ""` so a pull request build
+  of this repository reads them as a push does.
 
 ---
 

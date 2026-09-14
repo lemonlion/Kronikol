@@ -144,7 +144,8 @@ public class MergeCommandTests
             var output = Path.Combine(dir, "Combined.html");
             var outWriter = new StringWriter();
             var errWriter = new StringWriter();
-            var exit = MergeCommand.Run([Path.Combine(dir, "shards"), "-o", output, "--history", ledger], outWriter, errWriter);
+            // The environment is named, because on a pull request build a merge reads against the branch it targets.
+            var exit = MergeCommand.Run([Path.Combine(dir, "shards"), "-o", output, "--history", ledger], outWriter, errWriter, _ => null);
 
             Assert.True(exit == 0, errWriter.ToString());
             var html = File.ReadAllText(output);
@@ -160,6 +161,13 @@ public class MergeCommandTests
             var plain = Path.Combine(dir, "Plain.html");
             Assert.Equal(0, MergeCommand.Run([Path.Combine(dir, "shards"), "-o", plain], new StringWriter(), new StringWriter()));
             Assert.DoesNotContain("<details id=\"history-section\"", File.ReadAllText(plain));
+
+            // On a pull request build the merge reads against the branch the pull request targets, as the
+            // shards' runs did: a stream with nothing on it, here, so the reading is a cold start on it.
+            var pullRequestOut = new StringWriter();
+            string? PullRequestEnv(string key) => key switch { "GITHUB_ACTIONS" => "true", "GITHUB_BASE_REF" => "release", _ => null };
+            Assert.Equal(0, MergeCommand.Run([Path.Combine(dir, "shards"), "-o", Path.Combine(dir, "PullRequest.html"), "--history", ledger], pullRequestOut, new StringWriter(), PullRequestEnv));
+            Assert.Contains("0 runs recorded in the release stream", pullRequestOut.ToString());
 
             var missing = new StringWriter();
             Assert.Equal(2, MergeCommand.Run([Path.Combine(dir, "shards"), "-o", Path.Combine(dir, "Missing.html"), "--history", Path.Combine(dir, "nowhere.jsonl")], new StringWriter(), missing));

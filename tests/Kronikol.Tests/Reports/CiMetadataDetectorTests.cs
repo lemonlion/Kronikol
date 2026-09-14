@@ -102,4 +102,21 @@ public class CiMetadataDetectorTests
         Assert.Equal("MyRepo", result.Repository);
         Assert.Equal("999", result.RunId);
     }
+
+    [Fact]
+    public void A_pull_request_build_names_the_branch_it_targets()
+    {
+        // GITHUB_BASE_REF is set on pull_request events and empty otherwise; Azure DevOps names the target
+        // as the full ref its own runs record under. A push has no target, and neither does a machine off
+        // CI, whatever is in its environment.
+        string? PullRequest(string key) => key switch { "GITHUB_ACTIONS" => "true", "GITHUB_BASE_REF" => "main", _ => null };
+        string? Push(string key) => key switch { "GITHUB_ACTIONS" => "true", "GITHUB_BASE_REF" => "", _ => null };
+        string? Azure(string key) => key switch { "TF_BUILD" => "True", "SYSTEM_PULLREQUEST_TARGETBRANCH" => "refs/heads/main", _ => null };
+
+        Assert.Equal("main", CiMetadataDetector.PullRequestTarget(PullRequest));
+        Assert.Null(CiMetadataDetector.PullRequestTarget(Push));
+        Assert.Equal("refs/heads/main", CiMetadataDetector.PullRequestTarget(Azure));
+        Assert.Null(CiMetadataDetector.PullRequestTarget(_ => null));
+        Assert.Null(CiMetadataDetector.PullRequestTarget(key => key == "GITHUB_BASE_REF" ? "main" : null));
+    }
 }

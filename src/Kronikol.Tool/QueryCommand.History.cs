@@ -44,7 +44,8 @@ internal static partial class QueryCommand
         var verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, new HistoryAnalysisOptions
         {
             Window = options.HistoryWindowOrDefault,
-            Branch = options.Branch,
+            // A pull request build reads against the branch it targets, as the run itself did.
+            Branch = options.Branch ?? CiMetadataDetector.PullRequestTarget(getEnv),
             CompareBranch = options.CompareBranch
         }, quarantine, aliases);
 
