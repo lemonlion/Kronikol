@@ -46,6 +46,11 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        // A document a scenario wrote is the scenario's: an operation that names a document and resolved no
+        // scenario is attributed to the document's last attributed writer, for this one call. See
+        // DocumentOwnership and plans/DOCUMENT_OWNERSHIP_PLAN.md.
+        if (_options.AttributeByDocumentOwner && cosmosOp.DocumentId is { } ownedId)
+            testInfo = DocumentOwnership.Resolve(testInfo, CorrelationKey(ownedId)) ?? testInfo;
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -172,12 +177,14 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
         var documentId = cosmosOp.DocumentId ?? ExtractIdFromResponseContent(responseContent);
         if (documentId is null) return;
 
-        var key = _options.ChangeFeedKeyExtractor is not null
+        TestCorrelationStore.Correlate(CorrelationKey(documentId), testInfo.Name, testInfo.Id);
+    }
+
+    /// <summary>The store's key for a document: the consumer's extractor when it set one, else the default.</summary>
+    private string CorrelationKey(string documentId) =>
+        _options.ChangeFeedKeyExtractor is not null
             ? _options.ChangeFeedKeyExtractor(_options.ServiceName, documentId)
             : CorrelationKeys.Cosmos(_options.ServiceName, documentId);
-
-        TestCorrelationStore.Correlate(key, testInfo.Name, testInfo.Id);
-    }
 
     private static string? ExtractIdFromResponseContent(string? content)
     {

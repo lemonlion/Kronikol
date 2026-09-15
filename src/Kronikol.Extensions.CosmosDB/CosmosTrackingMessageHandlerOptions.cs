@@ -51,6 +51,16 @@ public record CosmosTrackingMessageHandlerOptions
     public bool AutoCorrelateWrites { get; set; } = true;
 
     /// <summary>
+    /// When <c>true</c>, a document operation (a read, replace, patch or delete by id) that resolved no
+    /// scenario is attributed to the scenario that last wrote the document, per call, with the provenance
+    /// <see cref="Kronikol.Tracking.AttributionSource.DocumentOwner"/>: a detached hosted service claiming,
+    /// retrying and failing an outbox row lands where the row was seeded. Reads the store
+    /// <see cref="AutoCorrelateWrites"/> fills, through <see cref="ChangeFeedKeyExtractor"/> when one is set.
+    /// Default: <c>true</c> (3.19.0).
+    /// </summary>
+    public bool AttributeByDocumentOwner { get; set; } = true;
+
+    /// <summary>
     /// Optional custom key extractor for Change Feed correlation.
     /// When <c>null</c>, the default key format is used: <c>cosmos:{ServiceName}:{documentId}</c>.
     /// </summary>

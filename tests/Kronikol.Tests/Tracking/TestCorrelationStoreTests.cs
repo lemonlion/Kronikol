@@ -12,6 +12,26 @@ public class TestCorrelationStoreTests
     }
 
     [Fact]
+    public void Lookup_is_a_probe_and_does_not_report_a_miss()
+    {
+        var misses = 0;
+        TestCorrelationStore.OnResolveMiss = _ => misses++;
+        try
+        {
+            Assert.Null(TestCorrelationStore.Lookup("cosmos:orders:nobody-wrote-this"));
+            Assert.Equal(0, misses);
+            Assert.Null(TestCorrelationStore.Resolve("cosmos:orders:nobody-wrote-this"));
+            Assert.Equal(1, misses);
+            TestCorrelationStore.Correlate("cosmos:orders:doc-7", "Test A", "test-a-id");
+            Assert.Equal(("Test A", "test-a-id"), TestCorrelationStore.Lookup("cosmos:orders:doc-7"));
+        }
+        finally
+        {
+            TestCorrelationStore.OnResolveMiss = null;
+        }
+    }
+
+    [Fact]
     public void Correlate_and_Resolve_returns_stored_identity()
     {
         TestCorrelationStore.Correlate("cosmos:orders:doc-1", "Test A", "test-a-id");

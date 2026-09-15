@@ -60,6 +60,14 @@ public record MongoDbTrackingOptions
     public bool AutoCorrelateWrites { get; set; } = true;
 
     /// <summary>
+    /// When <c>true</c>, a command that names a document (a filter or update on its <c>_id</c>) and resolved
+    /// no scenario is attributed to the scenario that last wrote the document, per call, with the provenance
+    /// <see cref="Kronikol.Tracking.AttributionSource.DocumentOwner"/>. Reads the store
+    /// <see cref="AutoCorrelateWrites"/> fills. Default: <c>true</c> (3.19.0).
+    /// </summary>
+    public bool AttributeByDocumentOwner { get; set; } = true;
+
+    /// <summary>
     /// Whether to include response content (documents from cursor.firstBatch) in diagrams.
     /// Response arrows show payload data (metadata, document previews) at all verbosity levels.
     /// At Raw, the full reply is always shown regardless.

@@ -71,6 +71,23 @@ public static class TestCorrelationStore
     }
 
     /// <summary>
+    /// <see cref="Resolve"/> as a probe: the identity a key maps to, or null, without reporting a miss to
+    /// <see cref="OnResolveMiss"/>. For a lookup that expected nothing in particular, such as a document
+    /// operation asking whether anyone wrote the document (<see cref="DocumentOwnership"/>).
+    /// </summary>
+    public static (string Name, string Id)? Lookup(string key)
+    {
+        if (!Correlations.TryGetValue(key, out var entry))
+            return null;
+        if (DateTimeOffset.UtcNow - entry.CreatedAt > _defaultTtl)
+        {
+            Correlations.TryRemove(key, out _);
+            return null;
+        }
+        return (entry.Name, entry.Id);
+    }
+
+    /// <summary>
     /// Removes a correlation entry by key.
     /// </summary>
     /// <param name="key">The correlation key to remove.</param>

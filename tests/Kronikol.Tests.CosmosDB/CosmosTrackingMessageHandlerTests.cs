@@ -853,4 +853,91 @@ public class CosmosTrackingMessageHandlerTests : IDisposable
         ms.Write(new byte[] { 0x00, 0x00, 0x00, 0x00 });
         return ms.ToArray();
     }
+
+    // ─── Document ownership (plans/DOCUMENT_OWNERSHIP_PLAN.md) ──
+
+    private static HttpRequestMessage MakeReplaceRequest(string id = "order-1") =>
+        new(HttpMethod.Put, "https://account.documents.azure.com/dbs/mydb/colls/orders/docs/" + id)
+        {
+            Content = new StringContent("""{"id":"order-1","status":"Processing"}""")
+        };
+
+    private static HttpResponseMessage Answer(HttpStatusCode status, string body) => new(status) { Content = new StringContent(body) };
+
+    [Fact]
+    public async Task A_document_operation_that_resolved_no_scenario_is_the_scenario_that_wrote_the_document()
+    {
+        // A detached host's outbox processor claims, retries and fails a row the scenario seeded: the claim
+        // names the document, and the document names the scenario that wrote it.
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.Created, """{"id":"order-1"}""");
+        using var invoker = CreateInvoker(MakeOptions());
+        await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
+
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.OK, """{"id":"order-1","status":"Processing"}""");
+        using (TestIdentityScope.Detach())
+            await invoker.SendAsync(MakeReplaceRequest(), CancellationToken.None);
+
+        var logs = GetLogsFromThisTest();
+        Assert.Equal(4, logs.Length);
+        Assert.Equal(AttributionSource.TestContext, logs[0].AttributionSource);
+        Assert.Equal(AttributionSource.DocumentOwner, logs[2].AttributionSource);
+        Assert.Equal(AttributionSource.DocumentOwner, logs[3].AttributionSource);
+        Assert.Equal("My Test", logs[2].TestName);
     }
+
+    [Fact]
+    public async Task A_query_or_an_unowned_document_in_a_detached_flow_stays_the_hosts()
+    {
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.Created, """{"id":"order-1"}""");
+        using var invoker = CreateInvoker(MakeOptions());
+        await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
+        var seeded = GetLogsFromThisTest().Length;
+
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.OK, "[]");
+        using (TestIdentityScope.Detach())
+        {
+            await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);           // names no document
+            await invoker.SendAsync(MakeReplaceRequest("order-9"), CancellationToken.None); // nobody wrote it
+        }
+
+        Assert.Equal(seeded, GetLogsFromThisTest().Length);
+    }
+
+    [Fact]
+    public async Task Ownership_never_takes_a_call_from_a_flow_that_has_a_scenario_and_the_last_writer_owns()
+    {
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.Created, """{"id":"order-1"}""");
+        using var invoker = CreateInvoker(MakeOptions());
+        await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
+
+        var otherId = Guid.NewGuid().ToString();
+        var otherOptions = MakeOptions();
+        otherOptions.CurrentTestInfoFetcher = () => ("Other", otherId);
+        using var other = new HttpMessageInvoker(new CosmosTrackingMessageHandler(otherOptions, _innerHandler));
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.OK, """{"id":"order-1"}""");
+        await other.SendAsync(MakeReplaceRequest(), CancellationToken.None);
+        using (TestIdentityScope.Detach())
+            await invoker.SendAsync(MakeReplaceRequest(), CancellationToken.None);
+
+        var otherLogs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == otherId && l.Type == RequestResponseType.Request).ToArray();
+        Assert.Equal(2, otherLogs.Length);
+        Assert.Equal(AttributionSource.TestContext, otherLogs[0].AttributionSource);
+        Assert.Equal(AttributionSource.DocumentOwner, otherLogs[1].AttributionSource);
+        Assert.DoesNotContain(GetLogsFromThisTest(), l => l.AttributionSource == AttributionSource.DocumentOwner);
+    }
+
+    [Fact]
+    public async Task Ownership_can_be_turned_off()
+    {
+        var options = MakeOptions();
+        options.AttributeByDocumentOwner = false;
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.Created, """{"id":"order-1"}""");
+        using var invoker = CreateInvoker(options);
+        await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
+
+        using (TestIdentityScope.Detach())
+            await invoker.SendAsync(MakeReplaceRequest(), CancellationToken.None);
+
+        Assert.Equal(2, GetLogsFromThisTest().Length);
+    }
+}

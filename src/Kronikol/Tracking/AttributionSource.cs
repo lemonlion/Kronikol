@@ -27,5 +27,12 @@ public enum AttributionSource
     None,
 
     /// <summary>Resolved from a test context after that scenario had ended: background, marked when the report is written.</summary>
-    Expired
+    Expired,
+
+    /// <summary>
+    /// Nothing named a scenario, but the call named a document a scenario had written earlier in the run:
+    /// attributed to that scenario, the document's last attributed writer, for this one call (3.19.0). A
+    /// detached hosted service claiming, retrying and failing an outbox row lands where the row was seeded.
+    /// </summary>
+    DocumentOwner
 }

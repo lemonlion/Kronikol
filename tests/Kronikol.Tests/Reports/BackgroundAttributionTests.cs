@@ -85,6 +85,16 @@ public class BackgroundAttributionTests
     }
 
     [Fact]
+    public void A_document_owner_attribution_is_inherited_too()
+    {
+        // The processor touched the scenario's row after the scenario ended: the row named the scenario,
+        // nothing the scenario did after its end did, so the call is the host's from then on.
+        var log = Log("s1", AttributionSource.DocumentOwner, Ended.AddSeconds(1));
+
+        Assert.Equal(AttributionSource.Expired, Assert.Single(BackgroundAttribution.Expire(Scenario(), [log])).AttributionSource);
+    }
+
+    [Fact]
     public void The_global_fallback_is_inherited_too()
     {
         var log = Log("s1", AttributionSource.GlobalFallback, Ended.AddSeconds(1));

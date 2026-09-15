@@ -187,6 +187,33 @@ public static class MongoDbOperationClassifier
                 return filter["_id"].ToString();
         }
 
+        // A single inserted document names itself and a single update names its target, so a document a
+        // scenario wrote can be found by the scenario later: the change stream, and an identity-less command
+        // on that document (DocumentOwnership). Neither reached the store before.
+        if (operation == MongoDbOperation.Insert &&
+            command.TryGetValue("documents", out var documents) && documents is BsonArray inserted &&
+            inserted.Count == 1 && inserted[0] is BsonDocument single && single.Contains("_id"))
+        {
+            return single["_id"].ToString();
+        }
+
+        if (operation == MongoDbOperation.Update &&
+            command.TryGetValue("updates", out var updates) && updates is BsonArray updatesArray &&
+            updatesArray.Count == 1 && updatesArray[0] is BsonDocument singleUpdate &&
+            singleUpdate.TryGetValue("q", out var updateQuery) && updateQuery is BsonDocument updateFilter &&
+            updateFilter.ElementCount == 1 && updateFilter.Contains("_id"))
+        {
+            return updateFilter["_id"].ToString();
+        }
+
+        // findAndModify selects with `query`, not `filter`: the claim of an outbox row by its id names the row.
+        if (operation == MongoDbOperation.FindAndModify &&
+            command.TryGetValue("query", out var query) && query is BsonDocument queryFilter &&
+            queryFilter.ElementCount == 1 && queryFilter.Contains("_id"))
+        {
+            return queryFilter["_id"].ToString();
+        }
+
         // Delete commands use "deletes" array with "q" sub-documents
         if (operation == MongoDbOperation.Delete &&
             command.TryGetValue("deletes", out var deletes) && deletes is BsonArray deletesArray &&

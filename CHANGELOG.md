@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.19.0] - 2026-09-15
+
+**Minor - a document a scenario wrote is the scenario's.** A new provenance value, an option on the
+Cosmos and Mongo trackers, a public probe on the correlation store, and a Mongo fix. Nothing already
+in use changes meaning without being touched. Template pins move to 3.18.0.
+
+3.17.0 detached hosted services from the test that built their host, and the one scenario whose point
+was the host's work lost it: the outbox retry exhaustion scenario seeds a row and waits for the
+processor to claim it, fail twice and mark it failed, and those replaces belonged to no scenario
+(`plans/DOCUMENT_OWNERSHIP_PLAN.md`).
+
+### Added
+
+- **`AttributionSource.DocumentOwner`.** A document operation that resolved no scenario (a detached
+  hosted service, a flow no context reached) and names a document a scenario wrote earlier in the run
+  is attributed to that scenario, the document's last attributed writer, for that one call. Nothing
+  ambient is established: the poll before the claim stays the host's, while the claim, the retry
+  updates and the failed-status update land where the seed did. A call that already has a scenario is
+  never re-attributed, a query names no document and is never a candidate, and a call attributed this
+  way after its owner ended expires like an inherited one, into the `background` block with
+  `expiredFrom`. The trackers read the `TestCorrelationStore` that `AutoCorrelateWrites` already fills
+  (through `ChangeFeedKeyExtractor` when one is set), so nothing new is registered.
+  `CosmosTrackingMessageHandlerOptions.AttributeByDocumentOwner` and
+  `MongoDbTrackingOptions.AttributeByDocumentOwner`, both `true`, switch it off. Spanner does not take
+  part: its capture exposes no key. The JSON schema lists the value; the XSD types the source as a
+  string and is unchanged.
+- **`TestCorrelationStore.Lookup(key)`**: `Resolve` as a probe, without reporting a miss to
+  `OnResolveMiss`. **`DocumentOwnership.Resolve(resolved, key)`** is public for any other capturer that
+  knows which document a call named.
+
+### Fixed
+
+- **Mongo `AutoCorrelateWrites` recorded nothing.** The classifier named a document only from a
+  top-level `filter`, which no write command carries: an `insert` names its document in `documents`,
+  an `update` in `updates[].q` and a `findAndModify` in `query`. None of them reached
+  `TestCorrelationStore`, so `ChangeStreamCorrelation` could not find a writer the tracker had seen,
+  although the option's documentation said it could. A single inserted document, a single update by
+  `_id` and a `findAndModify` by `_id` now name their document. The id is used for correlation only,
+  so no report output changes.
+
 ## [3.18.0] - 2026-09-15
 
 **Minor - a scenario with two states, and a call that threw.** A new history verdict with its option

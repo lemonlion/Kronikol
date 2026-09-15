@@ -10,6 +10,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.MongoDB;
 
+[Collection("TestCorrelationStore")]
 public class MongoDbTrackingSubscriberTests : IDisposable
 {
     private readonly string _testId = Guid.NewGuid().ToString();
@@ -821,5 +822,28 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         Assert.Contains("\"Tags\"", log.Content!);
         Assert.Contains("\"fluffy\"", log.Content!);
         Assert.Contains("\"$date\"", log.Content!);
+    }
+
+    // ─── Document ownership (plans/DOCUMENT_OWNERSHIP_PLAN.md) ──
+
+    [Fact]
+    public void A_command_on_a_document_the_scenario_wrote_is_the_scenarios_when_nothing_else_names_one()
+    {
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+        subscriber.OnCommandStarted(MakeStartedEvent("insert", new BsonDocument { { "insert", "orders" }, { "documents", new BsonArray { new BsonDocument("_id", "order-1") } } }));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent("insert"));
+
+        using (TestIdentityScope.Detach())
+        {
+            subscriber.OnCommandStarted(MakeStartedEvent("update", new BsonDocument { { "update", "orders" }, { "updates", new BsonArray { new BsonDocument { { "q", new BsonDocument("_id", "order-1") }, { "u", new BsonDocument("$set", new BsonDocument("status", "Processing")) } } } } }, requestId: 2));
+            subscriber.OnCommandSucceeded(MakeSucceededEvent("update", requestId: 2));
+            subscriber.OnCommandStarted(MakeStartedEvent("find", new BsonDocument { { "find", "orders" }, { "filter", new BsonDocument("status", "Pending") } }, requestId: 3));
+            subscriber.OnCommandSucceeded(MakeSucceededEvent("find", requestId: 3));
+        }
+
+        var logs = GetLogsFromThisTest();
+        Assert.Equal(4, logs.Length); // the insert pair, the update pair; the find named no document
+        Assert.Equal(AttributionSource.DocumentOwner, logs[2].AttributionSource);
+        Assert.Equal(AttributionSource.DocumentOwner, logs[3].AttributionSource);
     }
 }

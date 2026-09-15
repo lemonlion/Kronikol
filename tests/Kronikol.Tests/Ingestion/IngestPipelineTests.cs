@@ -170,12 +170,12 @@ public class IngestPipelineTests : IDisposable
         options.ReportsFolderPath = Path.Combine(_dir, "R1");
 
         IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], Options = options });
-        var paired = RequestResponseLogger.RequestAndResponseLogs.Select(l => $"{l.Type} {l.Uri}").ToArray();
+        var paired = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).Select(l => $"{l.Type} {l.Uri}").ToArray();
         Assert.Equal(["Request http://a/one", "Response http://a/one", "Request http://a/two", "Response http://a/two"], paired);
 
         options.ReportsFolderPath = Path.Combine(_dir, "R2");
         IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], Options = options, CallTreeOrdering = false });
-        var chronological = RequestResponseLogger.RequestAndResponseLogs.Select(l => $"{l.Type} {l.Uri}").ToArray();
+        var chronological = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).Select(l => $"{l.Type} {l.Uri}").ToArray();
         Assert.Equal(["Request http://a/one", "Request http://a/two", "Response http://a/two", "Response http://a/one"], chronological);
 
         // Orphans and id-less records keep their place.

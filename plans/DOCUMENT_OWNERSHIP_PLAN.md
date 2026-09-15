@@ -1,6 +1,6 @@
 # Attribution by document ownership
 
-**Status:** written 2026-09-15; green-lit the same day ("Ok, implement all of that"); planned as **3.19.0**. §5 is
+**Status:** written 2026-09-15; green-lit the same day ("Ok, implement all of that"); shipped as **3.19.0**. §5 is
 the execution log.
 
 ## 1. The measured need
@@ -59,4 +59,23 @@ per call as it is for every other source. No new section.
 
 ## 5. Execution log
 
-- 2026-09-15: written after 3.17.0; execution follows 3.18.0.
+- 2026-09-15: written after 3.17.0; executed the same day as 3.19.0, after 3.18.0:
+  1. The registry in §2 already existed: `TestCorrelationStore`, filled by `AutoCorrelateWrites` in the Cosmos
+     tracker (Create, Upsert, Replace; key `cosmos:{service}:{id}`, or `ChangeFeedKeyExtractor`) and the Mongo
+     tracker (Insert, Update, FindAndModify; key `mongo:{service}:{id}`), the store the change-feed and
+     change-stream decorators read. So the release is the read side inside the trackers: core
+     `DocumentOwnership.Resolve(resolved, key)` answers the owner with `AttributionSource.DocumentOwner` only
+     when the resolver answered nothing attributed and the store has the key; `TestCorrelationStore.Lookup`
+     is `Resolve` without the miss report; `BackgroundAttribution` expires `DocumentOwner` with the inherited
+     sources; Cosmos looks up after `ResolveWithSource` when the operation names a document, Mongo classifies
+     before it resolves and looks up when the command names an `_id`; `AttributeByDocumentOwner` (true) on
+     both option types. Nine tests across the three projects pin §4's unit acceptance.
+  2. Found on the way: no Mongo write had ever reached the store. The classifier named a document only from a
+     top-level `filter`, which no write command carries, so `AutoCorrelateWrites` recorded nothing and
+     `ChangeStreamCorrelation` could not find a writer the tracker had seen. A single insert
+     (`documents[0]._id`), a single update (`updates[0].q._id`) and a `findAndModify` (`query._id`) now name
+     their document.
+  3. Not shipped: Spanner. Its capture keeps a mutation's table and nothing of its key, so there is nothing to
+     look up and nothing to register; it stays as it was.
+  4. The consumer acceptance (§4) is measured in BreakfastProvider's own commit, on 3.19.0 with the AsyncAPI
+     package bumped to 1.0.2, over two consecutive CI runs; the numbers follow here.

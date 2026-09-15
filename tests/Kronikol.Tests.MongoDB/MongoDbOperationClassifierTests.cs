@@ -507,4 +507,40 @@ public class MongoDbOperationClassifierTests
 
         Assert.Equal("Insert", label);
     }
+
+    [Fact]
+    public void A_single_insert_and_a_single_update_name_their_document()
+    {
+        // Neither did before: an inserted document never reached the correlation store, so a change stream
+        // or a later identity-less command could not find the scenario that wrote it.
+        var insert = MongoDbOperationClassifier.Classify("insert", "db", new BsonDocument { { "insert", "orders" }, { "documents", new BsonArray { new BsonDocument("_id", "order-1") } } });
+        var update = MongoDbOperationClassifier.Classify("update", "db", new BsonDocument { { "update", "orders" }, { "updates", new BsonArray { new BsonDocument { { "q", new BsonDocument("_id", "order-1") }, { "u", new BsonDocument("$set", new BsonDocument("status", "x")) } } } } });
+        var many = MongoDbOperationClassifier.Classify("insert", "db", new BsonDocument { { "insert", "orders" }, { "documents", new BsonArray { new BsonDocument("_id", "a"), new BsonDocument("_id", "b") } } });
+
+        Assert.Equal("order-1", insert.DocumentId);
+        Assert.Equal("order-1", update.DocumentId);
+        Assert.Null(many.DocumentId);
+    }
+
+    [Fact]
+    public void A_findAndModify_names_its_document_by_its_query()
+    {
+        // The command's selector is `query`, not `filter`, so the writer of a document claimed this way never
+        // reached the correlation store either, although the option's documentation said it did.
+        var claim = MongoDbOperationClassifier.Classify("findAndModify", "db", new BsonDocument
+        {
+            { "findAndModify", "outbox" },
+            { "query", new BsonDocument("_id", "msg-1") },
+            { "update", new BsonDocument("$set", new BsonDocument("status", "claimed")) },
+        });
+        var wide = MongoDbOperationClassifier.Classify("findAndModify", "db", new BsonDocument
+        {
+            { "findAndModify", "outbox" },
+            { "query", new BsonDocument { { "status", "pending" }, { "attempts", new BsonDocument("$lt", 3) } } },
+            { "update", new BsonDocument("$set", new BsonDocument("status", "claimed")) },
+        });
+
+        Assert.Equal("msg-1", claim.DocumentId);
+        Assert.Null(wide.DocumentId);
+    }
 }

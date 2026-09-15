@@ -77,13 +77,18 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
         if (_options.IgnoredCommands.Contains(e.CommandName)) return;
         if (!_options.TrackGetMore && e.CommandName.Equals("getMore", StringComparison.OrdinalIgnoreCase)) return;
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
-        if (testInfo is null) return;
-
         var opInfo = MongoDbOperationClassifier.Classify(
             e.CommandName,
             e.DatabaseNamespace?.DatabaseName,
             e.Command);
+
+        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        // A document a scenario wrote is the scenario's: a command that names a document and resolved no
+        // scenario is attributed to the document's last attributed writer, for this one call. See
+        // DocumentOwnership and plans/DOCUMENT_OWNERSHIP_PLAN.md.
+        if (_options.AttributeByDocumentOwner && opInfo.DocumentId is { } ownedId)
+            testInfo = DocumentOwnership.Resolve(testInfo, CorrelationKeys.Mongo(_options.ServiceName, ownedId)) ?? testInfo;
+        if (testInfo is null) return;
 
         if (_options.ExcludedOperations.Contains(opInfo.Operation))
             return;
