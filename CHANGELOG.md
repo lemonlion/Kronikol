@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+**No version change - a GitHub Actions template in the repository.** No package contains it, so nothing a
+release ships changes.
+
+### Added
+
+- **`templates/github-actions/kronikol-pr-report-link/`** ([#72](https://github.com/lemonlion/Kronikol/issues/72)).
+  A composite action that keeps one pull-request comment linking the Kronikol report artifact each workflow run
+  uploads, with the time it was uploaded and when it expires. The comment is created on the first run and each
+  artifact owns a line of it, so several lanes can share one comment.
+  - An older run that finishes after a newer one never replaces the newer link.
+  - Only the action's own comment is edited, and a hand edit (CRLF line endings, trailing whitespace) still
+    parses.
+  - Inputs: `artifact-name`, `label`, `icon`, `heading`, `report-file` and `comment-key`.
+  - `PrReportLinkActionTests` runs the script out of `action.yml` under node against a GitHub held in memory,
+    and holds the README's example workflow to the inputs the action declares.
+
 ## [3.19.0] - 2026-09-15
 
 **Minor - a document a scenario wrote is the scenario's.** A new provenance value, an option on the
