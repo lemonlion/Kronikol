@@ -46,6 +46,16 @@ public static class HistoryJson
         return Encoding.UTF8.GetString(buffer.WrittenSpan);
     }
 
+    /// <summary>A shapes line, without a terminator.</summary>
+    public static string ShapesLine(HistoryShapes shapes)
+    {
+        ArgumentNullException.ThrowIfNull(shapes);
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer, LineOptions))
+            WriteShapes(writer, shapes);
+        return Encoding.UTF8.GetString(buffer.WrittenSpan);
+    }
+
     /// <summary>A run line, without a terminator.</summary>
     public static string RunLine(HistoryRun run)
     {
@@ -57,7 +67,7 @@ public static class HistoryJson
     }
 
     /// <summary>A fragment document, indented.</summary>
-    public static string Fragment(HistoryRoster roster, HistoryRun run, string generator)
+    public static string Fragment(HistoryRoster roster, HistoryRun run, string generator, HistoryShapes? shapes = null)
     {
         ArgumentNullException.ThrowIfNull(roster);
         ArgumentNullException.ThrowIfNull(run);
@@ -71,6 +81,11 @@ public static class HistoryJson
             WriteRoster(writer, roster);
             writer.WritePropertyName("run");
             WriteRun(writer, run);
+            if (shapes is not null)
+            {
+                writer.WritePropertyName("shapes");
+                WriteShapes(writer, shapes);
+            }
             writer.WriteEndObject();
         }
         return Encoding.UTF8.GetString(buffer.WrittenSpan).Replace("\r\n", "\n", StringComparison.Ordinal) + "\n";
@@ -97,6 +112,15 @@ public static class HistoryJson
             else writer.WriteStringValue(source);
         }
         writer.WriteEndArray();
+        writer.WriteEndObject();
+    }
+
+    private static void WriteShapes(Utf8JsonWriter writer, HistoryShapes shapes)
+    {
+        writer.WriteStartObject();
+        writer.WriteString("t", "shapes");
+        writer.WriteString("hash", shapes.Hash);
+        WriteStrings(writer, "calls", shapes.Calls);
         writer.WriteEndObject();
     }
 
@@ -142,6 +166,19 @@ public static class HistoryJson
         if (run.ShapeSet is { } shapeSet) WriteStrings(writer, "shapeSet", shapeSet);
         if (run.ShapeOrdered is { } shapeOrdered) WriteStrings(writer, "shapeOrdered", shapeOrdered);
         if (run.ShapeVersion is { } shapeVersion) writer.WriteNumber("shapeVersion", shapeVersion);
+        if (run.ShapesHash is { } shapesHash) writer.WriteString("shapes", shapesHash);
+        if (run.CallSets is { } callSets)
+        {
+            writer.WritePropertyName("callSets");
+            writer.WriteStartArray();
+            foreach (var set in callSets)
+            {
+                writer.WriteStartArray();
+                foreach (var index in set) writer.WriteNumberValue(index);
+                writer.WriteEndArray();
+            }
+            writer.WriteEndArray();
+        }
 
         if (run.Errors is { } errors)
         {
@@ -231,6 +268,7 @@ public static class HistoryJson
                             "header" => HistoryLineKind.Header,
                             "roster" => HistoryLineKind.Roster,
                             "run" => HistoryLineKind.Run,
+                            "shapes" => HistoryLineKind.Shapes,
                             _ => null
                         };
                         if (kind is null) return (null, null, null, false);
@@ -279,7 +317,10 @@ public static class HistoryJson
 
             var roster = ParseElement(rosterElement).Roster ?? throw new FormatException("The fragment's roster is not a roster.");
             var run = ParseElement(runElement).Run ?? throw new FormatException("The fragment's run is not a run.");
-            return new HistoryFragment(version, roster, run);
+            var shapes = root.TryGetProperty("shapes", out var shapesElement) && shapesElement.ValueKind == JsonValueKind.Object
+                ? ParseElement(shapesElement).Shapes ?? throw new FormatException("The fragment's shapes are not a shapes line.")
+                : null;
+            return new HistoryFragment(version, roster, run, shapes);
         }
         catch (JsonException exception)
         {
@@ -299,6 +340,7 @@ public static class HistoryJson
                 Generator: OptionalString(element, "generator")),
             "roster" => new HistoryLine(HistoryLineKind.Roster, Roster: ParseRoster(element)),
             "run" => new HistoryLine(HistoryLineKind.Run, Run: ParseRun(element)),
+            "shapes" => new HistoryLine(HistoryLineKind.Shapes, Shapes: new HistoryShapes { Hash = RequiredString(element, "hash"), Calls = Strings(element, "calls") ?? [] }),
             var other => throw new FormatException($"Unknown ledger line kind \"{other}\".")
         };
     }
@@ -389,7 +431,13 @@ public static class HistoryJson
                 ? errors.EnumerateArray().Select(e => e.ValueKind == JsonValueKind.String ? e.GetString() : null).ToArray()
                 : null,
             ErrorText = errorText,
-            Deps = Strings(element, "deps")
+            Deps = Strings(element, "deps"),
+            ShapesHash = OptionalString(element, "shapes"),
+            CallSets = element.TryGetProperty("callSets", out var callSets) && callSets.ValueKind == JsonValueKind.Array
+                ? callSets.EnumerateArray().Select(set => (IReadOnlyList<int>)(set.ValueKind == JsonValueKind.Array
+                    ? set.EnumerateArray().Where(i => i.ValueKind == JsonValueKind.Number).Select(i => i.GetInt32()).ToArray()
+                    : [])).ToArray()
+                : null
         };
     }
 

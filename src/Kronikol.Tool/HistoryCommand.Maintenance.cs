@@ -79,7 +79,7 @@ internal static partial class HistoryCommand
             return 1;
         }
 
-        if (!ReportHistory.TryBuild(index, args.Suite, error, out var roster, out var run, out var fromFragment))
+        if (!ReportHistory.TryBuild(index, args.Suite, error, out var roster, out var run, out var fromFragment, out var shapes))
             return 2;
 
         var quarantine = LoadQuarantineOrNull(ledgerPath);
@@ -94,7 +94,7 @@ internal static partial class HistoryCommand
             SlowerMinMs = args.SlowerMinMs ?? defaults.SlowerMinMs,
             // A pull request build reads against the branch it targets, as the run itself did.
             Branch = args.Branch ?? CiMetadataDetector.PullRequestTarget(getEnv)
-        }, quarantine, aliases);
+        }, quarantine, aliases, shapes: shapes);
 
         var rows = index.Scenarios.Select(s => (Scenario: s, Entry: verdicts.At(s.Ordinal, s.StableId))).Where(p => p.Entry is not null).ToList();
         bool Free(ScenarioHistory e) => !e.Has(HistoryVerdictKind.Quarantined);
@@ -403,14 +403,14 @@ internal static partial class HistoryCommand
         if (ledgerPath is null)
             return 2;
 
-        var runs = new List<(HistoryRoster Roster, HistoryRun Run)>();
+        var runs = new List<(HistoryRoster Roster, HistoryRun Run, HistoryShapes? Shapes)>();
         var failed = 0;
         foreach (var input in args.Inputs)
         {
             try
             {
-                if (args.FromCtrf) runs.AddRange(ImportCtrf(input, args, error));
-                else if (args.FromAllure) runs.AddRange(ImportAllure(input, args, error));
+                if (args.FromCtrf) runs.AddRange(ImportCtrf(input, args, error).Select(p => (p.Item1, p.Item2, (HistoryShapes?)null)));
+                else if (args.FromAllure) runs.AddRange(ImportAllure(input, args, error).Select(p => (p.Item1, p.Item2, (HistoryShapes?)null)));
                 else runs.AddRange(ImportKronikol(input, args, error));
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or FormatException)
@@ -430,10 +430,10 @@ internal static partial class HistoryCommand
 
         var imported = 0;
         var duplicates = 0;
-        foreach (var (roster, run) in runs.OrderBy(r => r.Run.At))
+        foreach (var (roster, run, shapes) in runs.OrderBy(r => r.Run.At))
         {
             var line = run.Partial is null ? run with { Partial = HistoryAnalyzer.IsPartial(roster, LastFullRoster(ledgerPath, run.Suite), 0.10) } : run;
-            var result = HistoryLedgerWriter.Append(ledgerPath, roster, line, Commands.Version);
+            var result = HistoryLedgerWriter.Append(ledgerPath, roster, line, Commands.Version, shapes: shapes);
             var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {roster.Count} scenarios  {run.At:yyyy-MM-dd'T'HH:mm:ss'Z'}";
             switch (result.Outcome)
             {
@@ -448,7 +448,7 @@ internal static partial class HistoryCommand
         return failed > 0 ? 1 : 0;
     }
 
-    private static IEnumerable<(HistoryRoster, HistoryRun)> ImportKronikol(string input, Args args, TextWriter error)
+    private static IEnumerable<(HistoryRoster, HistoryRun, HistoryShapes?)> ImportKronikol(string input, Args args, TextWriter error)
     {
         var full = Path.GetFullPath(input);
         var files = File.Exists(full)
@@ -461,9 +461,9 @@ internal static partial class HistoryCommand
         {
             if (LoadReport(file, error) is not { } index)
                 continue;
-            if (!ReportHistory.TryBuild(index, args.Suite, error, out var roster, out var run, out _))
+            if (!ReportHistory.TryBuild(index, args.Suite, error, out var roster, out var run, out _, out var shapes))
                 continue;
-            yield return (roster, run with { Branch = args.Branch ?? run.Branch, Id = args.RunId ?? run.Id });
+            yield return (roster, run with { Branch = args.Branch ?? run.Branch, Id = args.RunId ?? run.Id }, shapes);
         }
     }
 

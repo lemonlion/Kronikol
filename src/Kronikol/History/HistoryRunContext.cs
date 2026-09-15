@@ -10,9 +10,10 @@ namespace Kronikol.History;
 /// </summary>
 public sealed class HistoryRunContext
 {
-    private HistoryRunContext(HistoryLocation location, HistoryRoster roster, HistoryRun run, HistoryVerdicts? verdicts, HistoryLedger? ledger,
+    private HistoryRunContext(HistoryLocation location, HistoryRoster roster, HistoryRun run, HistoryShapes? shapes, HistoryVerdicts? verdicts, HistoryLedger? ledger,
         bool writeLedger, string generator, HistoryQuarantineList? quarantine, HistoryAliases? aliases)
     {
+        Shapes = shapes;
         Location = location;
         Roster = roster;
         Run = run;
@@ -33,6 +34,9 @@ public sealed class HistoryRunContext
     /// <summary>This run's line, with <see cref="HistoryRun.Partial"/> resolved once the verdicts are.</summary>
     public HistoryRun Run { get; private set; }
 
+    /// <summary>The distinct calls this run's line indexes into; null when shapes are switched off.</summary>
+    public HistoryShapes? Shapes { get; }
+
     /// <summary>The verdicts against the ledger; null when there was no ledger to read.</summary>
     public HistoryVerdicts? Verdicts { get; }
 
@@ -52,7 +56,7 @@ public sealed class HistoryRunContext
     public HistoryAliases? Aliases { get; }
 
     /// <summary>The fragment for this run — the shard unit <c>kronikol history record</c> folds.</summary>
-    public string Fragment() => HistoryFragment.Write(Roster, Run, Generator);
+    public string Fragment() => HistoryFragment.Write(Roster, Run, Generator, Shapes);
 
     /// <summary>
     /// Builds the context for a run: resolves the ledger, reads it, builds the run, analyses it, and
@@ -79,7 +83,7 @@ public sealed class HistoryRunContext
                 ErrorKeys = options.HistoryErrorKeys,
                 Partial = options.HistoryPartialRun
             };
-            var (roster, run) = HistoryRunBuilder.Build(features, logs, suite, ci, at, build,
+            var (roster, run, shapes) = HistoryRunBuilder.Build(features, logs, suite, ci, at, build,
                 string.IsNullOrWhiteSpace(options.HistoryRunId) ? null : options.HistoryRunId.Trim());
 
             HistoryLedger? ledger = null;
@@ -124,7 +128,7 @@ public sealed class HistoryRunContext
                         Branch = options.HistoryBranch is null ? CiMetadataDetector.PullRequestTarget(env)
                             : string.IsNullOrWhiteSpace(options.HistoryBranch) ? null : options.HistoryBranch.Trim(),
                         CompareBranch = string.IsNullOrWhiteSpace(options.HistoryCompareBranch) ? null : options.HistoryCompareBranch.Trim()
-                    }, quarantine, aliases);
+                    }, quarantine, aliases, shapes: shapes);
 
                     if (verdicts.Partial)
                     {
@@ -147,7 +151,7 @@ public sealed class HistoryRunContext
             // A ledger that could not be read is not appended to either: the writer would refuse or time
             // out for the same reason, and one diagnostic says it.
             var writeLedger = options.WriteHistoryLedger ?? (location.Source is HistoryLocationSource.Option or HistoryLocationSource.Environment || ci is null);
-            return new HistoryRunContext(location, roster, run, verdicts, ledger, writeLedger && location.Path is not null && ledger is not null, generator, quarantine, aliases);
+            return new HistoryRunContext(location, roster, run, shapes, verdicts, ledger, writeLedger && location.Path is not null && ledger is not null, generator, quarantine, aliases);
         }
         catch (Exception exception)
         {
@@ -181,7 +185,7 @@ public sealed class HistoryRunContext
 
         try
         {
-            var result = HistoryLedgerWriter.Append(path, Roster, Run, Generator);
+            var result = HistoryLedgerWriter.Append(path, Roster, Run, Generator, shapes: Shapes);
             switch (result.Outcome)
             {
                 case HistoryAppendOutcome.Appended:

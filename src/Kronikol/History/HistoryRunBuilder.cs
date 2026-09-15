@@ -37,7 +37,7 @@ public static class HistoryRunBuilder
     /// <param name="at">When the run finished.</param>
     /// <param name="options">What to record.</param>
     /// <param name="runId">An identity to use instead of the one derived from <paramref name="ci"/>.</param>
-    public static (HistoryRoster Roster, HistoryRun Run) Build(IReadOnlyList<Feature> features, IReadOnlyList<RequestResponseLog?> logs,
+    public static HistoryBuildResult Build(IReadOnlyList<Feature> features, IReadOnlyList<RequestResponseLog?> logs,
         string? suite, CiMetadata? ci, DateTimeOffset at, HistoryBuildOptions options, string? runId = null)
     {
         ArgumentNullException.ThrowIfNull(features);
@@ -62,6 +62,7 @@ public static class HistoryRunBuilder
         var calls = new int[scenarios.Length];
         var shapeSet = new string[scenarios.Length];
         var shapeOrdered = new string[scenarios.Length];
+        var callLines = new string[scenarios.Length][];
         var errors = new string?[scenarios.Length];
         var errorText = new Dictionary<string, string>(StringComparer.Ordinal);
         var errorKeys = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -80,10 +81,12 @@ public static class HistoryRunBuilder
             if (logsByTest is not null)
             {
                 var own = logsByTest.TryGetValue(scenario.Id, out var list) ? list : [];
-                var (set, ordered, count) = InteractionShape.Fingerprint(InteractionShape.Calls(own));
+                var scenarioCalls = InteractionShape.Calls(own);
+                var (set, ordered, count) = InteractionShape.Fingerprint(scenarioCalls);
                 shapeSet[i] = set;
                 shapeOrdered[i] = ordered;
                 calls[i] = count;
+                callLines[i] = scenarioCalls.Select(c => c.ToString()).Distinct(StringComparer.Ordinal).ToArray();
             }
 
             if (scenario.Result == ExecutionResult.Failed && !scenario.ResultDefaulted)
@@ -100,6 +103,17 @@ public static class HistoryRunBuilder
                 }
                 errors[i] = key;
             }
+        }
+
+        // The run's distinct calls, once, and each position's calls as indices into them: the set the
+        // fingerprint hashes, kept in the clear so a change can be named.
+        HistoryShapes? shapes = null;
+        IReadOnlyList<int>[]? callSets = null;
+        if (logsByTest is not null)
+        {
+            shapes = HistoryShapes.Create(callLines.SelectMany(lines => lines));
+            var index = shapes.Calls.Select((line, position) => (line, position)).ToDictionary(p => p.line, p => p.position, StringComparer.Ordinal);
+            callSets = callLines.Select(lines => (IReadOnlyList<int>)lines.Select(line => index[line]).OrderBy(i => i).ToArray()).ToArray();
         }
 
         var run = new HistoryRun
@@ -121,11 +135,13 @@ public static class HistoryRunBuilder
             ShapeSet = options.Shapes ? shapeSet : null,
             ShapeOrdered = options.Shapes ? shapeOrdered : null,
             ShapeVersion = options.Shapes ? InteractionShape.Version : null,
+            ShapesHash = shapes?.Hash,
+            CallSets = callSets,
             Errors = errors,
             ErrorText = errorText,
             Deps = InteractionShape.Dependencies(logs)
         };
-        return (roster, run);
+        return new HistoryBuildResult(roster, run, shapes);
     }
 
     private static string? Source(Scenario scenario) =>
@@ -166,5 +182,16 @@ public static class HistoryRunBuilder
         try { machine = Environment.MachineName; }
         catch (InvalidOperationException) { machine = ""; }
         return machine + "|" + AppContext.BaseDirectory;
+    }
+}
+
+/// <summary>What a run builds: its roster, its line, and the shapes list its call sets index into (null when shapes are switched off).</summary>
+public sealed record HistoryBuildResult(HistoryRoster Roster, HistoryRun Run, HistoryShapes? Shapes)
+{
+    /// <summary>The pair a caller that has no use for the shapes takes.</summary>
+    public void Deconstruct(out HistoryRoster roster, out HistoryRun run)
+    {
+        roster = Roster;
+        run = Run;
     }
 }

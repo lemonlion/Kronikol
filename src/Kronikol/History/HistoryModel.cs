@@ -116,6 +116,44 @@ public sealed record HistoryRoster
 }
 
 /// <summary>
+/// The distinct templated calls a run made, sorted, interned like a roster: the ledger writes the list
+/// once and every run line whose scenarios made the same calls references it by hash, each position
+/// carrying its calls as indices into the list (<see cref="HistoryRun.CallSets"/>). It is what lets a
+/// behaviour verdict name the call that appeared or disappeared rather than only count. Content-hashed
+/// for the reason a roster is (§3.1): the same calls yield the same key, so a union merge de-duplicates
+/// the line and never glues two lists under one key.
+/// </summary>
+public sealed record HistoryShapes
+{
+    /// <summary>The content hash: the first sixteen hex of SHA-256 over the calls joined with a newline.</summary>
+    public required string Hash { get; init; }
+
+    /// <summary>The distinct call lines (<c>caller&gt;service method uri status</c>), sorted ordinally.</summary>
+    public required IReadOnlyList<string> Calls { get; init; }
+
+    /// <summary>How many distinct calls the list holds.</summary>
+    public int Count => Calls.Count;
+
+    /// <summary>The list for a run's calls, de-duplicated and sorted, with the hash computed.</summary>
+    public static HistoryShapes Create(IEnumerable<string> calls)
+    {
+        ArgumentNullException.ThrowIfNull(calls);
+        var sorted = calls.Distinct(StringComparer.Ordinal).OrderBy(c => c, StringComparer.Ordinal).ToArray();
+        return new HistoryShapes { Hash = ComputeHash(sorted), Calls = sorted };
+    }
+
+    /// <summary>The hash a list of calls keys under.</summary>
+    public static string ComputeHash(IEnumerable<string> calls)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", calls)));
+        return Convert.ToHexString(hash)[..16].ToLowerInvariant();
+    }
+
+    /// <summary>The call line at an index, or null past the end.</summary>
+    public string? At(int index) => index >= 0 && index < Calls.Count ? Calls[index] : null;
+}
+
+/// <summary>
 /// One run of one suite: its identity, and one result per roster position. Everything positional is
 /// aligned with the roster the line references by hash. Fields that a milestone had not yet learned to
 /// fill are still written from v1 with a defined unknown encoding, so surfacing them later needs no
@@ -186,6 +224,16 @@ public sealed record HistoryRun
     /// </summary>
     public int? ShapeVersion { get; init; }
 
+    /// <summary>The hash of the <see cref="HistoryShapes"/> line <see cref="CallSets"/> index into; null when no call lists are recorded.</summary>
+    public string? ShapesHash { get; init; }
+
+    /// <summary>
+    /// Per position, the sorted indices into the shapes list of the distinct calls the scenario made: the
+    /// set the fingerprint hashes, spelled out. Absent on a line from before 3.17.0, when the fingerprint
+    /// alone was recorded and a change could be counted but not named.
+    /// </summary>
+    public IReadOnlyList<IReadOnlyList<int>>? CallSets { get; init; }
+
     /// <summary>Per position, a key into <see cref="ErrorText"/> for a failure, or null.</summary>
     public IReadOnlyList<string?>? Errors { get; init; }
 
@@ -219,6 +267,9 @@ public sealed record HistoryRun
     /// <summary>The ordered fingerprint at a roster position, or null.</summary>
     public string? ShapeOrderedAt(int position) => ShapeOrdered is not null && position >= 0 && position < ShapeOrdered.Count ? ShapeOrdered[position] : null;
 
+    /// <summary>The call-set indices at a roster position, or null.</summary>
+    public IReadOnlyList<int>? CallSetAt(int position) => CallSets is not null && position >= 0 && position < CallSets.Count ? CallSets[position] : null;
+
     /// <summary>The error cluster text at a roster position, or null.</summary>
     public string? ErrorAt(int position)
     {
@@ -238,7 +289,10 @@ public enum HistoryLineKind
     Roster,
 
     /// <summary>One run.</summary>
-    Run
+    Run,
+
+    /// <summary>A shapes declaration: the distinct calls a run's positions index into.</summary>
+    Shapes
 }
 
 /// <summary>One parsed ledger line.</summary>
@@ -247,7 +301,8 @@ public enum HistoryLineKind
 /// <param name="Generator">The writer's version, on a header.</param>
 /// <param name="Roster">The roster, on a roster line.</param>
 /// <param name="Run">The run, on a run line.</param>
-public sealed record HistoryLine(HistoryLineKind Kind, int? Version = null, string? Generator = null, HistoryRoster? Roster = null, HistoryRun? Run = null);
+/// <param name="Shapes">The shapes, on a shapes line.</param>
+public sealed record HistoryLine(HistoryLineKind Kind, int? Version = null, string? Generator = null, HistoryRoster? Roster = null, HistoryRun? Run = null, HistoryShapes? Shapes = null);
 
 /// <summary>
 /// The one-run fragment a run writes into its reports directory as <see cref="HistoryFormat.FragmentFileName"/>:
@@ -258,11 +313,12 @@ public sealed record HistoryLine(HistoryLineKind Kind, int? Version = null, stri
 /// <param name="Version">The format version the fragment was written under.</param>
 /// <param name="Roster">The run's roster.</param>
 /// <param name="Run">The run.</param>
-public sealed record HistoryFragment(int Version, HistoryRoster Roster, HistoryRun Run)
+/// <param name="Shapes">The run's distinct calls, when recorded; null on a fragment from before 3.17.0.</param>
+public sealed record HistoryFragment(int Version, HistoryRoster Roster, HistoryRun Run, HistoryShapes? Shapes = null)
 {
     /// <summary>The fragment as indented JSON — a person opens the artifact, so it is readable.</summary>
-    public static string Write(HistoryRoster roster, HistoryRun run, string generator) =>
-        HistoryJson.Fragment(roster, run, generator);
+    public static string Write(HistoryRoster roster, HistoryRun run, string generator, HistoryShapes? shapes = null) =>
+        HistoryJson.Fragment(roster, run, generator, shapes);
 
     /// <summary>Parses a fragment; throws <see cref="FormatException"/> when it is not one.</summary>
     public static HistoryFragment Parse(string json) => HistoryJson.ParseFragment(json);

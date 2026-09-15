@@ -129,7 +129,10 @@ public sealed record HistoryAnalysisOptions
 /// <param name="Calls">The call count, when recorded.</param>
 /// <param name="Error">The error cluster text, on a failure.</param>
 /// <param name="Attempt">The attempt the result came from, when the runner said.</param>
-public sealed record HistoryPoint(string RunId, DateTimeOffset At, string? Commit, char Result, int? DurationMs, string? ShapeSet, string? ShapeOrdered, int? Calls, string? Error, int? Attempt, int? ShapeVersion = null);
+/// <param name="ShapeVersion">The templating rule the fingerprints were made by.</param>
+/// <param name="CallSet">The distinct calls, spelled out, when the line recorded them (3.17.0).</param>
+public sealed record HistoryPoint(string RunId, DateTimeOffset At, string? Commit, char Result, int? DurationMs, string? ShapeSet, string? ShapeOrdered, int? Calls, string? Error, int? Attempt, int? ShapeVersion = null,
+    IReadOnlyList<string>? CallSet = null);
 
 /// <summary>Where a failing streak began.</summary>
 /// <param name="RunId">The first failing run of the streak.</param>
@@ -215,6 +218,16 @@ public sealed record ScenarioHistory
 
     /// <summary>The call count now.</summary>
     public required int? Calls { get; init; }
+
+    /// <summary>
+    /// The calls this run made that the previous shaped run did not, by their templated line: what a
+    /// <c>behaviour-changed</c> verdict names. Empty when the calls are the same, or when either run
+    /// predates the call lists (3.17.0) and the change could only be counted.
+    /// </summary>
+    public IReadOnlyList<string> NewCalls { get; init; } = [];
+
+    /// <summary>The calls the previous shaped run made that this run did not; see <see cref="NewCalls"/>.</summary>
+    public IReadOnlyList<string> GoneCalls { get; init; } = [];
 
     /// <summary>The quarantine entry, when there is one.</summary>
     public required HistoryQuarantineEntry? Quarantine { get; init; }

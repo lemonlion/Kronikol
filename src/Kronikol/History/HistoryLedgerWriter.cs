@@ -32,7 +32,8 @@ public sealed record HistoryAppendResult(HistoryAppendOutcome Outcome, string? M
 /// <param name="RunsDropped">Run lines outside the window that were removed.</param>
 /// <param name="RostersDropped">Rosters no surviving run referenced.</param>
 /// <param name="Version">The format version the file now declares.</param>
-public sealed record HistoryRewriteResult(int RunsKept, int RunsDropped, int RostersDropped, int Version);
+/// <param name="ShapesDropped">Shapes lists no surviving run referenced.</param>
+public sealed record HistoryRewriteResult(int RunsKept, int RunsDropped, int RostersDropped, int Version, int ShapesDropped = 0);
 
 /// <summary>
 /// Appends to a ledger under an exclusive lock.
@@ -52,7 +53,8 @@ public sealed record HistoryRewriteResult(int RunsKept, int RunsDropped, int Ros
 public static class HistoryLedgerWriter
 {
     /// <summary>Appends one run to the ledger at <paramref name="path"/>, creating the file and its directory when absent.</summary>
-    public static HistoryAppendResult Append(string path, HistoryRoster roster, HistoryRun run, string generator, HistoryLockBudget? budget = null)
+    public static HistoryAppendResult Append(string path, HistoryRoster roster, HistoryRun run, string generator, HistoryLockBudget? budget = null,
+        HistoryShapes? shapes = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentNullException.ThrowIfNull(roster);
@@ -61,6 +63,12 @@ public static class HistoryLedgerWriter
 
         if (!string.Equals(roster.Hash, run.RosterHash, StringComparison.Ordinal))
             throw new ArgumentException("The run does not reference the roster it was given.", nameof(run));
+        if (run.ShapesHash is { } shapesHash && shapes is not null && !string.Equals(shapes.Hash, shapesHash, StringComparison.Ordinal))
+            throw new ArgumentException("The run references a different shapes list from the one it was given.", nameof(shapes));
+        // A caller with no list to give (an older caller, a run rebuilt from a report) writes a line without
+        // the references: the hash and the call sets are only meaningful beside the list they index into.
+        if (shapes is null && (run.ShapesHash is not null || run.CallSets is not null))
+            run = run with { ShapesHash = null, CallSets = null };
 
         var attempts = 0;
         try
@@ -73,7 +81,7 @@ public static class HistoryLedgerWriter
             {
                 attempts++;
                 using var stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-                return AppendLocked(stream, path, roster, run, generator, attempts);
+                return AppendLocked(stream, path, roster, run, generator, attempts, shapes);
             });
         }
         catch (HistoryLockTimeoutException exception)
@@ -88,7 +96,8 @@ public static class HistoryLedgerWriter
         }
     }
 
-    private static HistoryAppendResult AppendLocked(FileStream stream, string path, HistoryRoster roster, HistoryRun run, string generator, int attempts)
+    private static HistoryAppendResult AppendLocked(FileStream stream, string path, HistoryRoster roster, HistoryRun run, string generator, int attempts,
+        HistoryShapes? shapes)
     {
         var text = ReadAll(stream);
         var builder = new StringBuilder();
@@ -112,6 +121,7 @@ public static class HistoryLedgerWriter
             }
 
             var rosterPresent = false;
+            var shapesPresent = shapes is null;
             foreach (var raw in lines)
             {
                 var line = raw.TrimEnd('\r');
@@ -119,6 +129,8 @@ public static class HistoryLedgerWriter
                 var (kind, id, suite, suiteIsNull) = HistoryJson.Peek(line);
                 if (kind == HistoryLineKind.Roster && string.Equals(id, roster.Hash, StringComparison.Ordinal))
                     rosterPresent = true;
+                if (kind == HistoryLineKind.Shapes && shapes is not null && string.Equals(id, shapes.Hash, StringComparison.Ordinal))
+                    shapesPresent = true;
                 if (kind == HistoryLineKind.Run && string.Equals(id, run.Id, StringComparison.Ordinal)
                     && SameSuite(suite, suiteIsNull, run.Suite))
                     return new HistoryAppendResult(HistoryAppendOutcome.Duplicate, $"run {run.Id} of suite {run.Suite ?? "(null)"} is already in the ledger", attempts);
@@ -131,12 +143,16 @@ public static class HistoryLedgerWriter
 
             if (!rosterPresent)
                 builder.Append(HistoryJson.RosterLine(roster)).Append('\n');
+            if (!shapesPresent)
+                builder.Append(HistoryJson.ShapesLine(shapes!)).Append('\n');
             builder.Append(HistoryJson.RunLine(run)).Append('\n');
             Write(stream, builder.ToString());
             return new HistoryAppendResult(HistoryAppendOutcome.Appended, null, attempts);
         }
 
         builder.Append(HistoryJson.RosterLine(roster)).Append('\n');
+        if (shapes is not null)
+            builder.Append(HistoryJson.ShapesLine(shapes)).Append('\n');
         builder.Append(HistoryJson.RunLine(run)).Append('\n');
         Write(stream, builder.ToString());
         return new HistoryAppendResult(HistoryAppendOutcome.Appended, null, attempts);
@@ -217,11 +233,16 @@ public static class HistoryLedgerWriter
             var referenced = kept.Select(k => k.Run.RosterHash).ToHashSet(StringComparer.Ordinal);
             var rosters = all.Ledger.Rosters.Where(r => referenced.Contains(r.Hash)).ToArray();
             var rostersDropped = all.Ledger.Rosters.Count - rosters.Length;
+            var referencedShapes = kept.Select(k => k.Run.ShapesHash).Where(h => h is not null).ToHashSet(StringComparer.Ordinal);
+            var shapesLines = all.Ledger.AllShapes.Where(s => referencedShapes.Contains(s.Hash)).OrderBy(s => s.Hash, StringComparer.Ordinal).ToArray();
+            var shapesDropped = all.Ledger.AllShapes.Count - shapesLines.Length;
 
             var builder = new StringBuilder();
             builder.Append(HistoryJson.HeaderLine(generator)).Append('\n');
             foreach (var roster in rosters.OrderBy(r => order.GetValueOrDefault((r.Suite, "roster:" + r.Hash), int.MaxValue)))
                 builder.Append(HistoryJson.RosterLine(roster)).Append('\n');
+            foreach (var shapesLine in shapesLines)
+                builder.Append(HistoryJson.ShapesLine(shapesLine)).Append('\n');
             foreach (var (run, inWindow) in kept)
             {
                 var line = dropOldErrorText && !inWindow
@@ -232,7 +253,7 @@ public static class HistoryLedgerWriter
 
             stream.SetLength(0);
             Write(stream, builder.ToString());
-            return new HistoryRewriteResult(kept.Count, dropped, rostersDropped, HistoryFormat.Version);
+            return new HistoryRewriteResult(kept.Count, dropped, rostersDropped, HistoryFormat.Version, shapesDropped);
         });
     }
 
@@ -261,8 +282,8 @@ public static class HistoryLedgerWriter
 /// </summary>
 public static class HistoryFold
 {
-    /// <summary>The runs the fragments describe, each with the roster it references.</summary>
-    public static IReadOnlyList<(HistoryRoster Roster, HistoryRun Run)> Fold(IEnumerable<HistoryFragment> fragments)
+    /// <summary>The runs the fragments describe, each with the roster it references and the shapes list its call sets index into.</summary>
+    public static IReadOnlyList<HistoryFoldedRun> Fold(IEnumerable<HistoryFragment> fragments)
     {
         ArgumentNullException.ThrowIfNull(fragments);
 
@@ -282,12 +303,12 @@ public static class HistoryFold
         return groups.Select(g => FoldGroup(g.Shards)).ToArray();
     }
 
-    private static (HistoryRoster, HistoryRun) FoldGroup(List<HistoryFragment> shards)
+    private static HistoryFoldedRun FoldGroup(List<HistoryFragment> shards)
     {
         if (shards.Count == 1)
         {
             var only = shards[0];
-            return (only.Roster, only.Run with { Shards = Math.Max(1, only.Run.Shards) });
+            return new HistoryFoldedRun(only.Roster, only.Run with { Shards = Math.Max(1, only.Run.Shards) }, only.Shapes);
         }
 
         var entries = new List<HistoryRosterEntry>();
@@ -297,6 +318,10 @@ public static class HistoryFold
         var calls = new List<int>();
         var shapeSet = new List<string>();
         var shapeOrdered = new List<string>();
+        // Each shard's call sets index its own shapes list; the folded run gets one list over all of
+        // them, so the calls are resolved to their lines here and re-indexed once the list is known.
+        var callLines = new List<IReadOnlyList<string>>();
+        var anyCallSets = false;
         var errors = new List<string?>();
         var errorText = new Dictionary<string, string>(StringComparer.Ordinal);
         var errorKeys = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -321,6 +346,9 @@ public static class HistoryFold
                 calls.Add(run.CallsAt(i) ?? 0);
                 shapeSet.Add(run.ShapeSetAt(i) ?? "");
                 shapeOrdered.Add(run.ShapeOrderedAt(i) ?? "");
+                callLines.Add(run.CallSetAt(i) is { } set && shard.Shapes is { } shardShapes
+                    ? set.Select(shardShapes.At).Where(line => line is not null).Select(line => line!).ToArray()
+                    : []);
 
                 var text = run.ErrorAt(i);
                 if (text is null)
@@ -342,6 +370,7 @@ public static class HistoryFold
             anyDurations |= run.Durations is not null;
             anyCalls |= run.Calls is not null;
             anyShapes |= run.ShapeSet is not null;
+            anyCallSets |= run.CallSets is not null;
             anyErrors |= run.Errors is not null;
             if (run.Deps is { } shardDeps)
                 foreach (var dep in shardDeps) deps.Add(dep);
@@ -352,6 +381,10 @@ public static class HistoryFold
 
         var first = shards[0].Run;
         var folded = HistoryRoster.Create(first.Suite, entries);
+        var foldedShapes = anyCallSets ? HistoryShapes.Create(callLines.SelectMany(lines => lines)) : null;
+        var index = foldedShapes is null ? null : foldedShapes.Calls.Select((line, i) => (line, i)).ToDictionary(p => p.line, p => p.i, StringComparer.Ordinal);
+        var callSets = index is null ? null
+            : callLines.Select(lines => (IReadOnlyList<int>)lines.Select(line => index[line]).OrderBy(i => i).ToArray()).ToArray();
         var run2 = new HistoryRun
         {
             Id = first.Id,
@@ -371,10 +404,23 @@ public static class HistoryFold
             ShapeSet = anyShapes ? shapeSet : null,
             ShapeOrdered = anyShapes ? shapeOrdered : null,
             ShapeVersion = anyShapes ? shards.Select(s => s.Run.ShapeVersion).FirstOrDefault(v => v is not null) : null,
+            ShapesHash = foldedShapes?.Hash,
+            CallSets = callSets,
             Errors = anyErrors ? errors : null,
             ErrorText = errorText,
             Deps = deps.Count > 0 || shards.Any(s => s.Run.Deps is not null) ? deps.ToArray() : null
         };
-        return (folded, run2);
+        return new HistoryFoldedRun(folded, run2, foldedShapes);
+    }
+}
+
+/// <summary>One folded run: its roster, its line, and the shapes list the line's call sets index into (null when no shard recorded one).</summary>
+public sealed record HistoryFoldedRun(HistoryRoster Roster, HistoryRun Run, HistoryShapes? Shapes)
+{
+    /// <summary>The pair a caller that has no use for the shapes takes.</summary>
+    public void Deconstruct(out HistoryRoster roster, out HistoryRun run)
+    {
+        roster = Roster;
+        run = Run;
     }
 }

@@ -49,8 +49,9 @@ public static class HistoryAnalyzer
     /// <param name="quarantine">The quarantine list, when there is one.</param>
     /// <param name="aliases">The rename aliases, when there are any.</param>
     /// <param name="today">The date quarantine expiry is judged on; the current run's date when null.</param>
+    /// <param name="shapes">The current run's distinct calls, which its line indexes into; null when not recorded.</param>
     public static HistoryVerdicts Analyse(HistoryLedger ledger, HistoryRoster roster, HistoryRun current, HistoryAnalysisOptions options,
-        HistoryQuarantineList? quarantine = null, HistoryAliases? aliases = null, DateOnly? today = null)
+        HistoryQuarantineList? quarantine = null, HistoryAliases? aliases = null, DateOnly? today = null, HistoryShapes? shapes = null)
     {
         ArgumentNullException.ThrowIfNull(ledger);
         ArgumentNullException.ThrowIfNull(roster);
@@ -58,14 +59,14 @@ public static class HistoryAnalyzer
         ArgumentNullException.ThrowIfNull(options);
 
         var stream = options.Branch ?? current.Stream;
-        var result = AnalyseStream(ledger, roster, current, options, stream, quarantine, aliases, today ?? DateOnly.FromDateTime(current.At.UtcDateTime));
+        var result = AnalyseStream(ledger, roster, current, options, stream, quarantine, aliases, today ?? DateOnly.FromDateTime(current.At.UtcDateTime), shapes);
         if (options.CompareBranch is { Length: > 0 } compare && !string.Equals(compare, stream, StringComparison.Ordinal))
-            result = result with { Compare = AnalyseStream(ledger, roster, current, options, compare, quarantine, aliases, today ?? DateOnly.FromDateTime(current.At.UtcDateTime)) };
+            result = result with { Compare = AnalyseStream(ledger, roster, current, options, compare, quarantine, aliases, today ?? DateOnly.FromDateTime(current.At.UtcDateTime), shapes) };
         return result;
     }
 
     private static HistoryVerdicts AnalyseStream(HistoryLedger ledger, HistoryRoster roster, HistoryRun current, HistoryAnalysisOptions options,
-        string stream, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today)
+        string stream, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today, HistoryShapes? shapes)
     {
         // The prior runs: the stream's, the current run excluded (it may already be appended), the last
         // `window` of them, oldest first.
@@ -76,6 +77,7 @@ public static class HistoryAnalyzer
             prior = prior.Skip(prior.Count - options.Window).ToList();
 
         var priorRosters = prior.Select(r => ledger.Roster(r.RosterHash)).ToArray();
+        var priorShapes = prior.Select(r => r.ShapesHash is { } hash ? ledger.Shapes(hash) : null).ToArray();
         var previousFull = LastFull(prior, priorRosters);
         var partial = current.Partial ?? IsPartial(roster, previousFull.Roster, options.PartialThreshold);
 
@@ -85,7 +87,7 @@ public static class HistoryAnalyzer
         for (var i = 0; i < roster.Count; i++)
         {
             currentIds.Add((roster.Ids[i], roster.Slots[i]));
-            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, speeds, options, quarantine, aliases, today));
+            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, priorShapes, shapes, speeds, options, quarantine, aliases, today));
         }
 
         // Absent: in the previous full run of the stream, not in this one, and this one not partial. The
@@ -168,7 +170,7 @@ public static class HistoryAnalyzer
     }
 
     private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roster, HistoryRun current, List<HistoryRun> prior, HistoryRoster?[] priorRosters,
-        RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today)
+        HistoryShapes?[] priorShapes, HistoryShapes? currentShapes, RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today)
     {
         var id = roster.Ids[position];
         var slot = roster.Slots[position];
@@ -188,15 +190,19 @@ public static class HistoryAnalyzer
                 if (at >= 0) break;
             }
             if (at < 0) continue;
-            points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at), run.ShapeVersion));
+            points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at), run.ShapeVersion,
+                Resolve(run.CallSetAt(at), priorShapes[r])));
         }
 
         var currentPoint = new HistoryPoint(current.Id, current.At, current.Commit, current.ResultAt(position), current.DurationAt(position),
-            current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position), current.ShapeVersion);
+            current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position), current.ShapeVersion,
+            Resolve(current.CallSetAt(position), currentShapes));
         var all = points.Append(currentPoint).ToList();
 
         var verdicts = new HashSet<HistoryVerdictKind>();
         var evidence = new List<string>();
+        IReadOnlyList<string> newCalls = [];
+        IReadOnlyList<string> goneCalls = [];
 
         // ── Status ──────────────────────────────────────────
         var real = all.Where(p => HistoryFormat.IsRealVerdict(p.Result)).ToList();
@@ -366,7 +372,14 @@ public static class HistoryAnalyzer
                     var callsText = currentPoint.Calls is { } c && previousShaped.Calls is { } pc && c != pc
                         ? $"calls {pc.ToString(CultureInfo.InvariantCulture)} in {previousShaped.RunId} to {c.ToString(CultureInfo.InvariantCulture)} now"
                         : $"the same number of calls as {previousShaped.RunId}{(currentPoint.Calls is { } n ? " (" + n.ToString(CultureInfo.InvariantCulture) + ")" : "")}, a different set";
-                    evidence.Add($"same status, different calls: {callsText}");
+                    // Named when both runs recorded their call lists: what appeared and what disappeared, by
+                    // its templated line. A count alone sends the reader to two reports to find the call.
+                    if (currentPoint.CallSet is { } now && previousShaped.CallSet is { } before)
+                    {
+                        newCalls = now.Except(before, StringComparer.Ordinal).ToArray();
+                        goneCalls = before.Except(now, StringComparer.Ordinal).ToArray();
+                    }
+                    evidence.Add($"same status, different calls: {callsText}{NamedCalls("new", newCalls)}{NamedCalls("gone", goneCalls)}");
                 }
             }
             else if (currentPoint.Calls is { } now && previousShaped.Calls is { } before && now != before && currentResult == previousShaped.Result)
@@ -446,8 +459,25 @@ public static class HistoryAnalyzer
             ShapeSet = currentPoint.ShapeSet,
             PreviousCalls = previousShaped?.Calls,
             Calls = currentPoint.Calls,
+            NewCalls = newCalls,
+            GoneCalls = goneCalls,
             Quarantine = entry
         };
+    }
+
+    /// <summary>The call lines a position's indices name, or null when either side is unrecorded.</summary>
+    private static IReadOnlyList<string>? Resolve(IReadOnlyList<int>? indices, HistoryShapes? shapes) =>
+        indices is null || shapes is null ? null : indices.Select(shapes.At).Where(line => line is not null).Select(line => line!).ToArray();
+
+    /// <summary>"; new: a, b and 2 more" for the evidence line; empty when there is nothing to name.</summary>
+    private static string NamedCalls(string label, IReadOnlyList<string> calls)
+    {
+        const int shown = 3;
+        if (calls.Count == 0)
+            return "";
+        var listed = string.Join(", ", calls.Take(shown));
+        var more = calls.Count > shown ? $" and {(calls.Count - shown).ToString(CultureInfo.InvariantCulture)} more" : "";
+        return $"; {label}: {listed}{more}";
     }
 
     private static string Commit(HistoryPoint point) => point.Commit is { Length: > 0 } commit ? $" ({Short(commit)})" : "";

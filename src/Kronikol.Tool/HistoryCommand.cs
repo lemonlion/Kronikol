@@ -263,7 +263,7 @@ internal static partial class HistoryCommand
         var duplicates = 0;
         var failed = 0;
 
-        foreach (var (roster, run) in folded)
+        foreach (var (roster, run, shapes) in folded)
         {
             var line = run;
             var previous = LastFullRoster(ledger, run.Suite);
@@ -310,7 +310,7 @@ internal static partial class HistoryCommand
                 line = line with { Partial = HistoryAnalyzer.IsPartial(roster, previous, 0.10) };
             }
 
-            var result = HistoryLedgerWriter.Append(ledger, roster, line, Commands.Version);
+            var result = HistoryLedgerWriter.Append(ledger, roster, line, Commands.Version, shapes: shapes);
             var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {roster.Count} scenarios"
                         + (run.Shards > 1 ? $" from {run.Shards} shards" : "")
                         + (line.Partial == true ? "  partial" : "");

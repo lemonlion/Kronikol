@@ -36,7 +36,7 @@ internal static partial class QueryCommand
             return 1;
         }
 
-        if (!ReportHistory.TryBuild(index, options.SuiteOverride, error, out var roster, out var run, out var fromFragment))
+        if (!ReportHistory.TryBuild(index, options.SuiteOverride, error, out var roster, out var run, out var fromFragment, out var shapes))
             return 2;
 
         var quarantine = ReportHistory.LoadQuarantine(ledgerPath, writer);
@@ -50,7 +50,7 @@ internal static partial class QueryCommand
         };
         if (options.MinRuns is { } minRuns)
             analysis = analysis with { MinRuns = minRuns };
-        var verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, analysis, quarantine, aliases);
+        var verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, analysis, quarantine, aliases, shapes: shapes);
 
         // Under --count the text answer is one bare number, so the caveats go to stderr - the same rule
         // WriteProvenance applies to the provenance notes.
@@ -258,10 +258,19 @@ internal static class ReportHistory
     /// and errors but no fingerprints, so behaviour verdicts are then off.
     /// </summary>
     public static bool TryBuild(ReportIndex index, string? suiteOverride, TextWriter error, out HistoryRoster roster, out HistoryRun run, out bool fromFragment)
+        => TryBuild(index, suiteOverride, error, out roster, out run, out fromFragment, out _);
+
+    /// <summary>
+    /// The run and roster for a report: from the fragment beside it when that is this run's, else rebuilt from
+    /// the report itself. <paramref name="shapes"/> is the run's distinct calls, when the fragment carried them;
+    /// null when the run was rebuilt from the report.
+    /// </summary>
+    public static bool TryBuild(ReportIndex index, string? suiteOverride, TextWriter error, out HistoryRoster roster, out HistoryRun run, out bool fromFragment, out HistoryShapes? shapes)
     {
         roster = null!;
         run = null!;
         fromFragment = false;
+        shapes = null;
 
         var ids = index.Scenarios.Select(s => s.StableId).ToArray();
         if (ids.Any(string.IsNullOrEmpty))
@@ -283,6 +292,7 @@ internal static class ReportHistory
                 {
                     roster = fragment.Roster;
                     run = fragment.Run;
+                    shapes = fragment.Shapes;
                     fromFragment = true;
                     return true;
                 }
@@ -415,6 +425,8 @@ internal static class ReportHistory
             ["primary"] = HistoryVerdictNames.Name(entry.Primary),
             ["verdicts"] = entry.Verdicts.OrderBy(HistoryAnalyzer.Precedence).Select(HistoryVerdictNames.Name).ToArray(),
             ["evidence"] = entry.Evidence,
+            ["newCalls"] = entry.NewCalls,
+            ["goneCalls"] = entry.GoneCalls,
             ["series"] = entry.Series,
             ["runsSeen"] = entry.RunsSeen,
             ["failRate"] = Math.Round(entry.FailRate, 3),

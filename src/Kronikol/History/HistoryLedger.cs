@@ -15,7 +15,8 @@ namespace Kronikol.History;
 /// <param name="RostersKept">The roster lines kept.</param>
 /// <param name="DamagedLines">Lines that could not be parsed and were skipped.</param>
 /// <param name="Elapsed">How long the read took.</param>
-public sealed record HistoryStats(int LinesScanned, int LinesParsed, int RunsKept, int RostersKept, int DamagedLines, TimeSpan Elapsed);
+/// <param name="ShapesKept">The shapes lines kept.</param>
+public sealed record HistoryStats(int LinesScanned, int LinesParsed, int RunsKept, int RostersKept, int DamagedLines, TimeSpan Elapsed, int ShapesKept = 0);
 
 /// <summary>
 /// A ledger in memory: every roster, and the last <c>window</c> runs of each suite in append order.
@@ -24,10 +25,12 @@ public sealed class HistoryLedger
 {
     private readonly Dictionary<string, HistoryRoster> _rosters;
     private readonly Dictionary<string, List<HistoryRun>> _runs;
+    private readonly Dictionary<string, HistoryShapes> _shapes;
 
     internal HistoryLedger(int? version, string? generator, Dictionary<string, HistoryRoster> rosters,
-        Dictionary<string, List<HistoryRun>> runs, HistoryStats stats)
+        Dictionary<string, List<HistoryRun>> runs, HistoryStats stats, Dictionary<string, HistoryShapes>? shapes = null)
     {
+        _shapes = shapes ?? new Dictionary<string, HistoryShapes>(StringComparer.Ordinal);
         Version = version;
         Generator = generator;
         _rosters = rosters;
@@ -61,6 +64,13 @@ public sealed class HistoryLedger
 
     /// <summary>Every roster the ledger holds.</summary>
     public IReadOnlyCollection<HistoryRoster> Rosters => _rosters.Values;
+
+    /// <summary>The shapes list with a hash, or null.</summary>
+    public HistoryShapes? Shapes(string hash) =>
+        _shapes.TryGetValue(hash, out var shapes) ? shapes : null;
+
+    /// <summary>Every shapes list the ledger holds.</summary>
+    public IReadOnlyCollection<HistoryShapes> AllShapes => _shapes.Values;
 
     /// <summary>The most recent run of a suite, or null.</summary>
     public HistoryRun? LatestRun(string? suite)
@@ -178,6 +188,7 @@ public static class HistoryLedgerReader
         int? version = null;
         string? generator = null;
         var rosters = new Dictionary<string, HistoryRoster>(StringComparer.Ordinal);
+        var shapes = new Dictionary<string, HistoryShapes>(StringComparer.Ordinal);
         var kept = new Dictionary<string, Queue<string>>(StringComparer.Ordinal);
         var scanned = 0;
         var parsed = 0;
@@ -212,6 +223,11 @@ public static class HistoryLedgerReader
                         rosters[roster.Hash] = roster;
                     break;
 
+                case HistoryLineKind.Shapes:
+                    if (TryParse(line, ref parsed, ref damaged)?.Shapes is { } shapesLine)
+                        shapes[shapesLine.Hash] = shapesLine;
+                    break;
+
                 case HistoryLineKind.Run:
                     // Bucketed by suite before it is parsed: the window is per suite, and only the lines
                     // that survive it pay for a full parse.
@@ -241,8 +257,8 @@ public static class HistoryLedgerReader
         }
 
         watch.Stop();
-        var stats = new HistoryStats(scanned, parsed, runs.Values.Sum(r => r.Count), rosters.Count, damaged, watch.Elapsed);
-        return new HistoryReadResult(new HistoryLedger(version, generator, rosters, runs, stats), HistoryReadOutcome.Read, null);
+        var stats = new HistoryStats(scanned, parsed, runs.Values.Sum(r => r.Count), rosters.Count, damaged, watch.Elapsed, shapes.Count);
+        return new HistoryReadResult(new HistoryLedger(version, generator, rosters, runs, stats, shapes), HistoryReadOutcome.Read, null);
     }
 
     private static HistoryLine? TryParse(string line, ref int parsed, ref int damaged)
@@ -276,6 +292,7 @@ public static class HistoryLedgerReader
         }
 
         var rosters = new Dictionary<string, HistoryRoster>(StringComparer.Ordinal);
+        var shapes = new Dictionary<string, HistoryShapes>(StringComparer.Ordinal);
         var runs = new List<(int Line, HistoryRun Run)>();
         var number = 0;
         var sawHeader = false;
@@ -326,6 +343,21 @@ public static class HistoryLedgerReader
                 case HistoryLineKind.Run:
                     runs.Add((number, parsed.Run!));
                     break;
+
+                case HistoryLineKind.Shapes:
+                    var shapesLine = parsed.Shapes!;
+                    if (!string.Equals(HistoryShapes.ComputeHash(shapesLine.Calls), shapesLine.Hash, StringComparison.Ordinal))
+                        findings.Add($"line {number}: shapes {shapesLine.Hash} does not hash its own calls (expected {HistoryShapes.ComputeHash(shapesLine.Calls)})");
+                    if (shapes.TryGetValue(shapesLine.Hash, out var existingShapes))
+                    {
+                        if (!existingShapes.Calls.SequenceEqual(shapesLine.Calls, StringComparer.Ordinal))
+                            findings.Add($"line {number}: shapes {shapesLine.Hash} appears twice with different contents");
+                    }
+                    else
+                    {
+                        shapes[shapesLine.Hash] = shapesLine;
+                    }
+                    break;
             }
         }
 
@@ -350,8 +382,24 @@ public static class HistoryLedgerReader
                 findings.Add($"line {line}: run {run.Id} has {run.Attempts.Length} attempts against a roster of {roster.Count}");
             if (run.Durations is { } durations && durations.Count != roster.Count)
                 findings.Add($"line {line}: run {run.Id} has {durations.Count} durations against a roster of {roster.Count}");
-            if (run.ShapeSet is { } shapes && shapes.Count != roster.Count)
-                findings.Add($"line {line}: run {run.Id} has {shapes.Count} shapes against a roster of {roster.Count}");
+            if (run.ShapeSet is { } shapeSet && shapeSet.Count != roster.Count)
+                findings.Add($"line {line}: run {run.Id} has {shapeSet.Count} shapes against a roster of {roster.Count}");
+            if (run.ShapesHash is { } shapesHash)
+            {
+                if (!shapes.TryGetValue(shapesHash, out var referencedShapes))
+                    findings.Add($"line {line}: run {run.Id} references shapes {shapesHash}, which is not in the file");
+                if (run.CallSets is { } callSets)
+                {
+                    if (callSets.Count != roster.Count)
+                        findings.Add($"line {line}: run {run.Id} has {callSets.Count} call sets against a roster of {roster.Count}");
+                    if (referencedShapes is not null && callSets.Any(set => set.Any(index => index < 0 || index >= referencedShapes.Count)))
+                        findings.Add($"line {line}: run {run.Id} indexes past the {referencedShapes.Count} calls of shapes {shapesHash}");
+                }
+            }
+            else if (run.CallSets is not null)
+            {
+                findings.Add($"line {line}: run {run.Id} carries call sets but names no shapes line");
+            }
             if (run.Errors is { } errors)
             {
                 if (errors.Count != roster.Count)
