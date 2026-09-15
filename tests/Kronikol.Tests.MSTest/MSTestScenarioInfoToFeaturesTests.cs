@@ -330,6 +330,27 @@ public class MSTestScenarioInfoToFeaturesTests
         Assert.IsNull(features[0].Scenarios[0].Steps);
     }
 
+    [TestMethod]
+    public void ShouldCarryWhenTheTestEnded()
+    {
+        var ended = new DateTimeOffset(2026, 1, 1, 10, 0, 3, 250, TimeSpan.Zero);
+        var infos = new[]
+        {
+            new MSTestScenarioInfo
+            {
+                TestClassSimpleName = "FeatureA",
+                TestMethodName = "Test1",
+                TestId = "FeatureA.Test1",
+                Outcome = UnitTestOutcome.Passed,
+                EndedAt = ended
+            }
+        };
+
+        var features = infos.ToFeatures();
+
+        Assert.AreEqual(ended, features[0].Scenarios[0].EndedAt);
+    }
+
     private static MSTestScenarioInfo CreateScenarioInfo(
         string className = "TestClass",
         string methodName = "TestMethod",

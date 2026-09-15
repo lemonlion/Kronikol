@@ -17,4 +17,5 @@ public class ScenarioInfo
     public string? ErrorMessage { get; set; }
     public string? ErrorStackTrace { get; set; }
     public TimeSpan? Duration { get; set; }
+    public DateTimeOffset? EndedAt { get; set; }
 }

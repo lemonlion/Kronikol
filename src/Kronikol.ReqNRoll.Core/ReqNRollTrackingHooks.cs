@@ -204,6 +204,7 @@ public class ReqNRollTrackingHooks
             TestError = _scenarioContext.TestError,
             ExecutionStatus = _scenarioContext.ScenarioExecutionStatus,
             Duration = _stopwatch?.Elapsed,
+            EndedAt = DateTimeOffset.UtcNow,
             Steps = steps,
             Rule = _scenarioContext.RuleInfo?.Title,
             OutlineId = exampleValues is not null ? _scenarioContext.ScenarioInfo.Title : null,

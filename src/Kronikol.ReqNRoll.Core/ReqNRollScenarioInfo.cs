@@ -17,6 +17,9 @@ public record ReqNRollScenarioInfo
     public Exception? TestError { get; init; }
     public ScenarioExecutionStatus ExecutionStatus { get; init; }
     public TimeSpan? Duration { get; init; }
+
+    /// <summary>When the scenario finished, stamped in the after-scenario hook that collects it.</summary>
+    public DateTimeOffset? EndedAt { get; init; }
     public List<ReqNRollStepInfo> Steps { get; init; } = [];
     public string? Rule { get; init; }
     public string? OutlineId { get; init; }

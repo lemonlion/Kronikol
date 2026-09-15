@@ -27,6 +27,27 @@ public class FeatureResultExtensionsTests
     }
 
     [Fact]
+    public void ToFeatures_carries_when_the_scenario_ended()
+    {
+        var result = new StubExecutionResult("s1", "Place order", duration: TimeSpan.FromSeconds(2));
+        var feature = new StubFeatureResult("OrderService").WithScenario(result);
+
+        var features = new[] { feature }.ToFeatures();
+
+        Assert.Equal(result.ExecutionTime!.End, features[0].Scenarios[0].EndedAt);
+    }
+
+    [Fact]
+    public void ToFeatures_leaves_the_end_null_when_the_scenario_never_ran()
+    {
+        var feature = new StubFeatureResult("OrderService").WithScenario(new StubExecutionResult("s1", "Place order"));
+
+        var features = new[] { feature }.ToFeatures();
+
+        Assert.Null(features[0].Scenarios[0].EndedAt);
+    }
+
+    [Fact]
     public void ToFeatures_maps_feature_labels()
     {
         var feature = new StubFeatureResult("Svc", labels: ["api", "v2"])

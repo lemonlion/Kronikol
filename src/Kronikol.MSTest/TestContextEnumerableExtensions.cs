@@ -37,6 +37,7 @@ internal static class TestContextEnumerableExtensions
                                 ErrorStackTrace = x.ErrorStackTrace,
                                 FailureCause = x.FailureCause,
                                 Duration = x.Duration,
+                                EndedAt = x.EndedAt,
                                 Steps = StepCollector.GetSteps(x.TestId) is { Length: > 0 } steps ? steps : null,
                                 Attachments = StepCollector.GetScenarioAttachments(x.TestId),
                                 OutlineId = parsed is { Count: > 0 } ? ParameterParser.ExtractBaseName(displayName) : null,

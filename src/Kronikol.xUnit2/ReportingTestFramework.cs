@@ -84,6 +84,7 @@ internal sealed class TestResultCapturingSink : IMessageSink
                     DisplayName = passed.Test.DisplayName,
                     Result = ExecutionResult.Passed,
                     ExecutionTime = passed.ExecutionTime,
+                    FinishedAt = DateTimeOffset.UtcNow,
                 });
                 break;
 
@@ -95,6 +96,7 @@ internal sealed class TestResultCapturingSink : IMessageSink
                     ErrorMessage = string.Join(Environment.NewLine, failed.Messages),
                     ErrorStackTrace = string.Join(Environment.NewLine, failed.StackTraces),
                     ExecutionTime = failed.ExecutionTime,
+                    FinishedAt = DateTimeOffset.UtcNow,
                 });
                 break;
 
@@ -103,6 +105,7 @@ internal sealed class TestResultCapturingSink : IMessageSink
                 {
                     DisplayName = skipped.Test.DisplayName,
                     Result = ExecutionResult.Skipped,
+                    FinishedAt = DateTimeOffset.UtcNow,
                 });
                 break;
         }
@@ -137,6 +140,8 @@ internal sealed class TestResultCapturingSink : IMessageSink
                         ? TimeSpan.FromSeconds((double)outcome.ExecutionTime)
                         : null;
 
+                    scenario.EndedAt = outcome.FinishedAt;
+
                     // Update scenario name from the full xUnit display name so that
                     // [InlineData] / [Theory] test cases include their parameters
                     // (e.g. "Loads successfully [type: \"Purchase\"]") instead of
@@ -158,6 +163,9 @@ internal record TestOutcome
     public string? ErrorMessage { get; init; }
     public string? ErrorStackTrace { get; init; }
     public decimal ExecutionTime { get; init; }
+
+    /// <summary>When the result message arrived, which is as close to the finish as xUnit v2 lets a sink get.</summary>
+    public DateTimeOffset? FinishedAt { get; init; }
 }
 
 /// <summary>

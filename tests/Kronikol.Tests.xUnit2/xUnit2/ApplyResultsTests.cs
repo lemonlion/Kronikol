@@ -67,6 +67,30 @@ public class ApplyResultsTests : IDisposable
     }
 
     [Fact]
+    public void The_scenario_takes_the_finish_stamp_of_its_result()
+    {
+        XUnit2TestTrackingContext.CollectedScenarios["id1"] = new ScenarioInfo
+        {
+            Id = "id1",
+            FeatureName = "Delta File",
+            ScenarioName = "Loads successfully",
+            MethodMatchKey = "Tests.DeltaFileTests.LoadsSuccessfully",
+        };
+        var finished = new DateTimeOffset(2026, 1, 1, 10, 0, 3, 250, TimeSpan.Zero);
+        var sink = new TestResultCapturingSink(new StubMessageSink());
+        sink.Outcomes.Add(new TestOutcome
+        {
+            DisplayName = "Tests.DeltaFileTests.LoadsSuccessfully",
+            Result = ExecutionResult.Passed,
+            FinishedAt = finished,
+        });
+
+        sink.ApplyResults();
+
+        Assert.Equal(finished, XUnit2TestTrackingContext.CollectedScenarios["id1"].EndedAt);
+    }
+
+    [Fact]
     public void Non_parameterised_scenario_keeps_original_name()
     {
         XUnit2TestTrackingContext.CollectedScenarios["id1"] = new ScenarioInfo

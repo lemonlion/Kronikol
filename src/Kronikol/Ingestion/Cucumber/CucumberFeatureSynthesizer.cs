@@ -513,6 +513,7 @@ public static class CucumberFeatureSynthesizer
             ErrorMessage = errorMessage,
             ErrorStackTrace = errorStack,
             Duration = scenarioStart is { } ss && scenarioEnd is { } se && se >= ss ? se - ss : null,
+            EndedAt = scenarioEnd,
             Steps = steps.Count > 0 || hookSteps.Count > 0 ? steps.Concat(hookSteps).ToArray() : null,
             BackgroundSteps = backgroundSteps.Count > 0 ? backgroundSteps.ToArray() : null,
             Attachments = scenarioAttachments.Count > 0 ? scenarioAttachments.ToArray() : null,

@@ -29,6 +29,9 @@ public abstract class DiagrammedComponentTest : IDisposable
 
     public void Dispose()
     {
-        DiagrammedTestRun.TestContexts.Enqueue(TestContext.Current);
+        var context = TestContext.Current;
+        if (context.Test?.UniqueID is { } id)
+            DiagrammedTestRun.TestEnds[id] = DateTimeOffset.UtcNow;
+        DiagrammedTestRun.TestContexts.Enqueue(context);
     }
 }

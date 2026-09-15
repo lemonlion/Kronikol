@@ -4011,6 +4011,7 @@ public static class ReportGenerator
                     ["description"] = s.Description,
                     ["result"] = s.Result.ToString(),
                     ["durationSeconds"] = s.Duration?.TotalSeconds ?? 0.0,
+                    ["endedAt"] = s.EndedAt is { } endedAt ? FormatInstant(endedAt) : null,
                     ["isHappyPath"] = s.IsHappyPath,
                     ["errorMessage"] = s.ErrorMessage,
                     ["errorStackTrace"] = s.ErrorStackTrace,
@@ -4437,6 +4438,7 @@ public static class ReportGenerator
                                         (s.Categories is { Length: > 0 }) ? new XElement("Categories", s.Categories.Select(c => new XElement("Category", c))) : null,
                                         s.Rule != null ? new XElement("Rule", s.Rule) : null,
                                         s.Attempt != null ? new XElement("Attempt", s.Attempt.Value.ToString(CultureInfo.InvariantCulture)) : null,
+                                        s.EndedAt is { } xmlEndedAt ? new XElement("EndedAt", FormatInstant(xmlEndedAt)) : null,
                                         s.SourceFile != null ? new XElement("SourceFile", s.SourceFile) : null,
                                         s.SourceLine != null ? new XElement("SourceLine", s.SourceLine.Value.ToString(CultureInfo.InvariantCulture)) : null,
                                         (s.BackgroundSteps is { Length: > 0 }) ? new XElement("BackgroundSteps", s.BackgroundSteps.Select(MapStepXml)) : null,
@@ -4701,6 +4703,8 @@ public static class ReportGenerator
                     yml.Append("        SourceLine: " + scenario.SourceLine.Value.ToString(CultureInfo.InvariantCulture) + "\n");
                 AppendYaml(yml, "        Result: ", scenario.Result.ToString());
                 yml.Append("        DurationSeconds: " + (scenario.Duration?.TotalSeconds ?? 0.0).ToString("F3") + "\n");
+                if (scenario.EndedAt is { } ymlEndedAt)
+                    AppendYaml(yml, "        EndedAt: ", FormatInstant(ymlEndedAt));
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
 
                 if (scenario.ErrorMessage is not null)
@@ -5522,6 +5526,7 @@ public static class ReportGenerator
                                         ["description"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The scenario's own free-text description (the prose under Scenario:)" },
                                         ["result"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = resultEnumValues, ["description"] = "The scenario's verdict" },
                                         ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["description"] = "Wall-clock seconds the scenario took; 0 when unknown" },
+                                        ["endedAt"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["format"] = "date-time", ["description"] = "When the scenario finished (UTC), as the framework recorded it; null when the adapter did not record one. A call that inherited this scenario's context after this moment is background (see httpInteractions[].attributionSource = Expired)" },
                                         ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Marked as the happy path (an @happy-path tag or the adapter's attribute); the report lists happy paths first" },
                                         ["errorMessage"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The failure message the framework reported, when the scenario failed" },
                                         ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The stack trace the framework reported, when the scenario failed" },
@@ -5998,6 +6003,7 @@ public static class ReportGenerator
                 ),
                 new XElement(xs + "element", new XAttribute("name", "Rule"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Attempt"), new XAttribute("type", "xs:int"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "EndedAt"), new XAttribute("type", "xs:dateTime"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "SourceFile"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "SourceLine"), new XAttribute("type", "xs:int"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "BackgroundSteps"), new XAttribute("minOccurs", "0"),

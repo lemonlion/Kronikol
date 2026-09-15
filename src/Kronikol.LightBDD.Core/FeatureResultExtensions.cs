@@ -85,6 +85,7 @@ internal static class FeatureResultExtensions
             ErrorMessage = result.Status == ExecutionStatus.Failed ? result.StatusDetails : null,
             ErrorStackTrace = failedException?.StackTrace,
             Duration = result.ExecutionTime?.Duration,
+            EndedAt = result.ExecutionTime?.End,
             Steps = MapSteps(result.GetSteps(), result.Status is ExecutionStatus.Ignored or ExecutionStatus.NotRun,
                 StepCollector.GetSteps(result.Info.RuntimeId.ToString())),
             IsHappyPath = labels.Contains("Happy Path"),

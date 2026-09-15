@@ -45,6 +45,7 @@ internal static class TestContextEnumerableExtensions
                                 ErrorMessage = x.Result.Message,
                                 ErrorStackTrace = x.Result.StackTrace,
                                 Duration = DiagrammedTestRun.TestDurations.TryGetValue(x.Test.ID, out var dur) ? dur : null,
+                                EndedAt = DiagrammedTestRun.TestEnds.TryGetValue(x.Test.ID, out var endedAt) ? endedAt : null,
                                 OutlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(displayName)) : null,
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null,
                                 ExampleRawValues = rawValues,

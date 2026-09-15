@@ -67,6 +67,7 @@ internal static class ScenarioInfoExtensions
                                 ErrorMessage = x.ErrorMessage,
                                 ErrorStackTrace = x.ErrorStackTrace,
                                 Duration = x.Duration != TimeSpan.Zero ? x.Duration : null,
+                                EndedAt = x.EndedAt,
                                 Steps = x.Steps.Count > 0
                                     ? MapSteps(x.Steps, StepCollector.GetSteps(x.TestId))
                                     : StepCollector.GetSteps(x.TestId) is { Length: > 0 } collectedSteps ? collectedSteps : null,

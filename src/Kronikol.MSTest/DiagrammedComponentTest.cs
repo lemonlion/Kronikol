@@ -63,6 +63,7 @@ public abstract class DiagrammedComponentTest
             Endpoint = endpoint,
             IsHappyPath = isHappyPath,
             Duration = _stopwatch?.Elapsed,
+            EndedAt = DateTimeOffset.UtcNow,
             ParameterNames = parameterNames
         });
     }

@@ -65,6 +65,13 @@ public record Scenario
     public int? Attempt { get; set; }
 
     /// <summary>
+    /// When the scenario finished, when the framework recorded it. A dependency call that inherited this
+    /// scenario's context after this moment is background, not the scenario's: a web host started inside
+    /// a test carries the test into every hosted service it runs for as long as it lives.
+    /// </summary>
+    public DateTimeOffset? EndedAt { get; set; }
+
+    /// <summary>
     /// True when <see cref="Result"/> was not reported by the runner but defaulted — a scenario that
     /// started and never ended, given <c>IngestRequest.ResultWhenUnknown</c>. The report's
     /// <c>ResultDefaulted</c> diagnostic says how many; this says which. The cross-run ledger records such

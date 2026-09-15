@@ -34,6 +34,17 @@ public class ReqNRollScenarioInfoExtensionsTests
     }
 
     [Fact]
+    public void ToFeatures_carries_when_the_scenario_ended()
+    {
+        var ended = new DateTimeOffset(2026, 1, 1, 10, 0, 3, 250, TimeSpan.Zero);
+        var info = MakeScenario() with { EndedAt = ended };
+
+        var features = new[] { info }.ToFeatures();
+
+        Assert.Equal(ended, features[0].Scenarios[0].EndedAt);
+    }
+
+    [Fact]
     public void ToFeatures_maps_steps_to_scenario_steps()
     {
         var info = MakeScenario(steps:

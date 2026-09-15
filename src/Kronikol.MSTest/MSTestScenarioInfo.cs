@@ -20,5 +20,8 @@ public record MSTestScenarioInfo
     public string? Endpoint { get; init; }
     public bool IsHappyPath { get; init; }
     public TimeSpan? Duration { get; init; }
+
+    /// <summary>When the test finished, stamped in the cleanup that collects it.</summary>
+    public DateTimeOffset? EndedAt { get; init; }
     public string?[]? ParameterNames { get; init; }
 }

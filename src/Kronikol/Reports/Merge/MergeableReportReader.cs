@@ -211,6 +211,7 @@ public static class MergeableReportReader
         Categories = ReadStringArray(se, "categories"),
         Rule = GetString(se, "rule"),
         Attempt = ReadInt(se, "attempt"),
+        EndedAt = ReadInstant(se, "endedAt"),
         SourceFile = GetString(se, "sourceFile"),
         SourceLine = ReadInt(se, "sourceLine"),
         OutlineId = GetString(se, "outlineId"),
@@ -581,8 +582,10 @@ public static class MergeableReportReader
     private static double? ReadDouble(JsonElement parent, string name) =>
         parent.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number ? value.GetDouble() : null;
 
-    private static DateTimeOffset? ReadTimestamp(JsonElement parent) =>
-        DateTimeOffset.TryParse(GetString(parent, "timestamp"), CultureInfo.InvariantCulture,
+    private static DateTimeOffset? ReadTimestamp(JsonElement parent) => ReadInstant(parent, "timestamp");
+
+    private static DateTimeOffset? ReadInstant(JsonElement parent, string name) =>
+        DateTimeOffset.TryParse(GetString(parent, name), CultureInfo.InvariantCulture,
             DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var value)
             ? value
             : null;

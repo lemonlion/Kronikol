@@ -171,6 +171,15 @@ public class CucumberFeatureSynthesizerTests
         Assert.Equal([["sku", "qty"], ["SUB-1", "2"]], marker.Table);
     }
 
+    [Fact]
+    public void The_scenario_records_when_its_test_case_finished()
+    {
+        var messages = CucumberMessagesReader.Read(new StringReader(SubstitutedArgumentStream()));
+        var scenario = CucumberFeatureSynthesizer.Build(messages).Features.Single().Scenarios.Single();
+
+        Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1787393375), scenario.EndedAt);
+    }
+
     /// <summary>
     /// A minimal messages stream: one scenario whose authored table cell is the placeholder
     /// <c>&lt;sku&gt;</c> while the pickle step's argument carries the substituted <c>SUB-1</c>.

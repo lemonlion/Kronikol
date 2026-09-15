@@ -25,6 +25,7 @@ public abstract class DiagrammedComponentTest
         _stopwatch?.Stop();
         if (_stopwatch is not null)
             DiagrammedTestRun.TestDurations[TestContext.CurrentContext.Test.ID] = _stopwatch.Elapsed;
+        DiagrammedTestRun.TestEnds[TestContext.CurrentContext.Test.ID] = DateTimeOffset.UtcNow;
         DiagrammedTestRun.TestContexts.Enqueue(TestContext.CurrentContext);
     }
 }

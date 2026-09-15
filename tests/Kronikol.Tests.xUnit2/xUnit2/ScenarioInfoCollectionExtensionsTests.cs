@@ -21,6 +21,18 @@ public class ScenarioInfoCollectionExtensionsTests
     }
 
     [Fact]
+    public void ToFeatures_carries_when_the_scenario_ended()
+    {
+        var ended = new DateTimeOffset(2026, 1, 1, 10, 0, 3, 250, TimeSpan.Zero);
+        var info = MakeScenario();
+        info.EndedAt = ended;
+
+        var features = new[] { info }.ToFeatures();
+
+        Assert.Equal(ended, features[0].Scenarios[0].EndedAt);
+    }
+
+    [Fact]
     public void ToFeatures_populates_steps_from_StepCollector()
     {
         var testId = "xunit2-steps-" + Guid.NewGuid();

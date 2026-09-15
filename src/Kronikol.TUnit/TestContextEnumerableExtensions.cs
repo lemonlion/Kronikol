@@ -47,6 +47,7 @@ internal static class TestContextEnumerableExtensions
                                 ErrorMessage = x.Execution.Result?.Exception?.Message,
                                 ErrorStackTrace = x.Execution.Result?.Exception?.StackTrace,
                                 Duration = x.Execution.Result?.Duration,
+                                EndedAt = x.Execution.Result?.End,
                                 OutlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(displayName)) : null,
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null,
                                 ExampleRawValues = rawValues,

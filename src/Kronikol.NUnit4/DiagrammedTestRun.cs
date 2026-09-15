@@ -11,6 +11,9 @@ public class DiagrammedTestRun
 {
     public static ConcurrentQueue<TestContext> TestContexts { get; } = new();
     public static ConcurrentDictionary<string, TimeSpan> TestDurations { get; } = new();
+
+    /// <summary>When each test finished, by NUnit test id, stamped in the tear-down that collects it.</summary>
+    public static ConcurrentDictionary<string, DateTimeOffset> TestEnds { get; } = new();
     protected static DateTime StartRunTime { get; private set; }
     protected static DateTime EndRunTime { get; set; }
 

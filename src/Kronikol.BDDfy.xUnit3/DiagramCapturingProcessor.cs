@@ -75,6 +75,7 @@ public class DiagramCapturingProcessor : IProcessor
                 Steps = steps,
                 Result = scenario.Result,
                 Duration = scenario.Duration,
+                EndedAt = DateTimeOffset.UtcNow,
                 ErrorMessage = failedException?.Message,
                 ErrorStackTrace = failedException?.StackTrace,
                 RawArguments = rawArgs,

@@ -60,6 +60,7 @@ internal static class ScenarioInfoEnumerableExtensions
                                 ErrorMessage = x.TestError?.Message,
                                 ErrorStackTrace = x.TestError?.StackTrace,
                                 Duration = x.Duration,
+                                EndedAt = x.EndedAt,
                                 Steps = x.Steps.Count > 0
                                     ? MapSteps(x.Steps, StepCollector.GetSteps(x.ScenarioId))
                                     : null,

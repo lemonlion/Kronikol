@@ -244,7 +244,7 @@ internal static class ReportScanner
                 "id", "stableId", "result", "isHappyPath", "errorMessage", "errorStackTrace", "rule",
                 "features", "scenarios", "httpInteractions", "annotations", "attachments", "diagnostics",
                 "steps", "backgroundSteps", "subSteps", "headers", "labels", "categories", "exampleValues",
-                "diagrams", "comments", "parameters", "attempt",
+                "diagrams", "comments", "parameters", "attempt", "endedAt",
                 // Run identity (3.1.0). Interned for the same reason as the rest: the scanner
                 // sees these on every report and an uninterned name allocates per document.
                 "ciMetadata", "environment", "provider", "buildNumber", "branch", "commitSha",

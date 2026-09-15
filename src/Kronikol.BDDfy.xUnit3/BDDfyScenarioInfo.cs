@@ -14,6 +14,9 @@ public record BDDfyScenarioInfo
     public required List<BDDfyStepInfo> Steps { get; init; }
     public required TestStack.BDDfy.Result Result { get; init; }
     public TimeSpan Duration { get; init; }
+
+    /// <summary>When the scenario finished, stamped by the processor that collects it once BDDfy has run it.</summary>
+    public DateTimeOffset? EndedAt { get; init; }
     public string? ErrorMessage { get; init; }
     public string? ErrorStackTrace { get; init; }
 
