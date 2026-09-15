@@ -1,0 +1,137 @@
+name: Kronikol PR report link
+description: >
+  Keeps one comment on the pull request linking the Kronikol report artifact this workflow run uploaded, with
+  when it was uploaded and when it expires. Each artifact owns one line of the comment, so several workflows or
+  jobs can share it. Run the calling job in a per-pull-request concurrency group: see README.md.
+
+inputs:
+  artifact-name:
+    description: The name this run uploaded the Kronikol reports under with actions/upload-artifact. Each line of the comment belongs to one artifact name.
+    required: true
+  label:
+    description: The name the line is shown under, e.g. "Component tests". Defaults to the artifact name.
+    required: false
+    default: ''
+  icon:
+    description: An emoji shown before the label.
+    required: false
+    default: '🧪'
+  heading:
+    description: The comment's heading.
+    required: false
+    default: '📊 Kronikol test reports'
+  report-file:
+    description: The file the comment tells a reader to open inside the downloaded zip.
+    required: false
+    default: 'TestRunReport.html'
+  comment-key:
+    description: Identifies the comment. Calls with the same key share one comment, and a different key keeps a separate one. Letters, digits, '.', '_' and '-' only.
+    required: false
+    default: 'kronikol-report-link'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/github-script@v9
+      # Inputs reach the script as environment variables rather than being written into it, so no input can
+      # inject code.
+      env:
+        ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        LABEL: ${{ inputs.label }}
+        ICON: ${{ inputs.icon }}
+        HEADING: ${{ inputs.heading }}
+        REPORT_FILE: ${{ inputs.report-file }}
+        COMMENT_KEY: ${{ inputs.comment-key }}
+      with:
+        script: |
+          const { ARTIFACT_NAME: artifactName, LABEL, ICON: icon, HEADING: heading, REPORT_FILE: reportFile, COMMENT_KEY: key } = process.env;
+          const label = LABEL || artifactName;
+          const { owner, repo } = context.repo;
+          const runId = context.runId;
+
+          // The key is written into the HTML comments that find this comment and its lines, so it must not be able
+          // to close one.
+          if (!/^[A-Za-z0-9._-]+$/.test(key)) {
+            core.setFailed(`comment-key "${key}" may only contain letters, digits, '.', '_' and '-'.`);
+            return;
+          }
+
+          // The calling job should run only on pull_request events, so reaching here without one means it lost that
+          // condition. Fail rather than skip, so that a comment which is never written does not go unnoticed.
+          const issueNumber = context.payload.pull_request?.number;
+          if (!issueNumber) {
+            core.setFailed(`There is no pull request to comment on in a ${context.eventName} event. Run this action only on pull_request events.`);
+            return;
+          }
+
+          // A re-run keeps its run id and uploads again, so take the newest artifact of that name.
+          const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+            owner, repo, run_id: runId, name: artifactName, per_page: 100,
+          });
+          const artifact = artifacts
+            .filter(a => !a.expired)
+            .sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0))[0];
+          if (!artifact) {
+            core.warning(`This run uploaded no "${artifactName}" artifact, so the PR comment is left as it was.`);
+            return;
+          }
+
+          const url = `${context.serverUrl}/${owner}/${repo}/actions/runs/${runId}/artifacts/${artifact.id}`;
+          // The API documents both artifact dates as nullable. A missing or unparseable one is left out of the line,
+          // rather than shown as 1970 (what `new Date(null)` gives) or thrown as a RangeError.
+          const utc = iso => Number.isNaN(Date.parse(iso)) ? null : new Date(iso).toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+          const updated = utc(artifact.created_at);
+          const expires = utc(artifact.expires_at);
+          // The trailing comment identifies the line's artifact and run. At the start of a line GitHub would render
+          // the rest of that line as raw HTML.
+          const marker = `<!-- ${key} -->`;
+          const tag = name => `<!-- ${key}:${name} run:`;
+          const line = [
+            '-',
+            icon,
+            `**${label}** — 📦 [${artifactName}](${url})`,
+            updated && `🕒 _(last updated ${updated})_`,
+            expires && `⏳ _(expires on ${expires})_`,
+            `${tag(artifactName)}${runId} -->`,
+          ].filter(Boolean).join(' ');
+
+          const comments = await github.paginate(github.rest.issues.listComments, {
+            owner, repo, issue_number: issueNumber, per_page: 100,
+          });
+          // Only this action's own comment: the workflow token comments as github-actions[bot], and the marker opens
+          // the body. Another bot quoting the marker, or a person pasting the comment, is never taken over. No key's
+          // marker is a prefix of another's, because each ends in " -->", so nothing needs to follow it; a comment
+          // re-saved in the web editor continues with "\r\n".
+          const existing = comments.find(c => c.user?.login === 'github-actions[bot]' && c.body?.startsWith(marker));
+          // Saving an edit in GitHub's web editor stores CRLF line endings, so split on either.
+          const lines = (existing?.body ?? '').split(/\r?\n/).filter(l => l.startsWith('- ') && l.includes(`<!-- ${key}:`));
+
+          const own = lines.find(l => l.includes(tag(artifactName)));
+          // Read the run id from the tag wherever it sits, so whitespace a hand edit leaves after it doesn't hide it.
+          const ownRun = Number(own?.match(/ run:(\d+) -->/)?.[1] ?? 0);
+          // Run ids only grow, so a larger one means a newer push's run already wrote this line.
+          if (ownRun > runId) {
+            core.info(`Run ${ownRun} is newer and already linked its report, so this run leaves the comment alone.`);
+            return;
+          }
+
+          const labelOf = l => l.match(/\*\*(.+?)\*\*/)?.[1] ?? l;
+          const artifactLines = [...lines.filter(l => l !== own), line].sort((a, b) => labelOf(a).localeCompare(labelOf(b)));
+          const body = [
+            marker,
+            `## ${heading}`,
+            '',
+            ...artifactLines,
+            '',
+            '> [!TIP]',
+            `> 💡 Each link downloads a zip of the latest reports. Open \`${reportFile}\` inside it.`,
+            '',
+            '<sub>🤖 CI rewrites this comment every time a linked workflow runs.</sub>',
+          ].join('\n');
+
+          if (existing) {
+            await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+          } else {
+            await github.rest.issues.createComment({ owner, repo, issue_number: issueNumber, body });
+          }
+          core.info(`Linked ${artifactName}: ${url}`);
