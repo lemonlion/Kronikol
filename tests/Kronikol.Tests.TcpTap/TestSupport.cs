@@ -355,7 +355,14 @@ internal sealed class StubServer : IAsyncDisposable
 internal static class Wait
 {
     /// <summary>Polls until the condition holds or the timeout elapses; returns whether it held.</summary>
-    public static async Task<bool> UntilAsync(Func<bool> condition, int timeoutMs = 5000)
+    /// <summary>
+    /// Polls until the condition holds. The deadline is generous on purpose: the tap decodes on thread-pool
+    /// tasks, and this project runs its container end-to-end tests in the same process, whose startup and
+    /// driver handshakes block pool threads for seconds at a time. Measured once on CI (the 3.19.0 run): a
+    /// request and its answer, both on the wire in milliseconds, took over five seconds to reach the sink
+    /// while a Mongo container test ran alongside. The happy path returns as soon as the condition holds.
+    /// </summary>
+    public static async Task<bool> UntilAsync(Func<bool> condition, int timeoutMs = 30_000)
     {
         var deadline = Environment.TickCount64 + timeoutMs;
         while (Environment.TickCount64 < deadline)

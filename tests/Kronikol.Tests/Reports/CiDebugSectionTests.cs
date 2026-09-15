@@ -97,16 +97,26 @@ public class CiDebugSectionTests : IDisposable
 
     private string StepSummary() => File.Exists(_summary) ? File.ReadAllText(_summary) : "";
 
+    /// <summary>
+    /// Both channels are process-wide. While this class points <c>GITHUB_STEP_SUMMARY</c> at its own file,
+    /// every failing report another class generates on CI appends its block there as well, and prints it
+    /// to the same captured console. Each block names its own run's directory in its query lines, so only
+    /// the blocks about this run count. Measured once on CI (the 3.19.0 release run): "one block, not two"
+    /// read two, the second from a parallel class.
+    /// </summary>
+    private int DebugBlocksAboutThisRun(string text) =>
+        text.Split("## Debug this run").Skip(1).Count(block => block.Contains(Path.GetFileName(_dir), StringComparison.Ordinal));
+
     [Fact]
     public void A_failing_ci_run_says_how_to_debug_itself_on_both_channels()
     {
         var console = Run(onCi: true, failing: true);
 
-        Assert.Contains("Debug this run", console, StringComparison.Ordinal);
+        Assert.Equal(1, DebugBlocksAboutThisRun(console));
         Assert.Contains("kronikol query failures", console, StringComparison.Ordinal);
 
         // ...and the same block in the job summary, which is where a person looks.
-        Assert.Contains("Debug this run", StepSummary(), StringComparison.Ordinal);
+        Assert.Equal(1, DebugBlocksAboutThisRun(StepSummary()));
     }
 
     [Fact]
@@ -115,8 +125,8 @@ public class CiDebugSectionTests : IDisposable
         // A block that speaks on every run is a block people learn to skip, and there is nothing to debug.
         var console = Run(onCi: true, failing: false);
 
-        Assert.DoesNotContain("Debug this run", console, StringComparison.Ordinal);
-        Assert.DoesNotContain("Debug this run", StepSummary(), StringComparison.Ordinal);
+        Assert.Equal(0, DebugBlocksAboutThisRun(console));
+        Assert.Equal(0, DebugBlocksAboutThisRun(StepSummary()));
     }
 
     [Fact]
@@ -125,7 +135,7 @@ public class CiDebugSectionTests : IDisposable
         // Off CI the run-end pointer is right there and reliable; a second block would be noise.
         var console = Run(onCi: false, failing: true);
 
-        Assert.DoesNotContain("Debug this run", console, StringComparison.Ordinal);
+        Assert.Equal(0, DebugBlocksAboutThisRun(console));
     }
 
     [Fact]
@@ -133,8 +143,8 @@ public class CiDebugSectionTests : IDisposable
     {
         var console = Run(onCi: true, failing: true, o => o.WriteCiDebugSection = false);
 
-        Assert.DoesNotContain("Debug this run", console, StringComparison.Ordinal);
-        Assert.DoesNotContain("Debug this run", StepSummary(), StringComparison.Ordinal);
+        Assert.Equal(0, DebugBlocksAboutThisRun(console));
+        Assert.Equal(0, DebugBlocksAboutThisRun(StepSummary()));
     }
 
     [Fact]
@@ -143,8 +153,7 @@ public class CiDebugSectionTests : IDisposable
         // WriteCiSummary already appends this same section to the same place. Both on must not double it.
         Run(onCi: true, failing: true, o => o.WriteCiSummary = true);
 
-        var occurrences = StepSummary().Split("## Debug this run").Length - 1;
-        Assert.Equal(1, occurrences);
+        Assert.Equal(1, DebugBlocksAboutThisRun(StepSummary()));
     }
 
     [Fact]
