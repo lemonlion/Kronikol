@@ -140,4 +140,25 @@ consumer filled by hand cannot produce one either.
 
 ## 6. Execution log
 
-- 2026-09-15: written and executed as 3.20.0, after 3.19.0's four-run acceptance and the noise audit.
+- 2026-09-15: written and executed as 3.20.0 (commit 7671175b, all four workflows green), after 3.19.0's
+  four-run acceptance and the noise audit:
+  1. Shipped as §2, §3 and §4 describe. Two things were settled on the way: the window's calls are held on the
+     flow rather than recorded (§3.2), because attribution at capture time cannot see what the flow does next;
+     and the `TestCorrelationStore` test collection was folded into the one that serialises the other
+     process-wide stores, because the window tests need the correlation store and the capture store to survive
+     each other.
+  2. Ledger replay at the consumer's bar (`--min-runs 3`): the 3.15.0 count rule had raised 13 verdicts (2
+     stayed, 10 reverted the next run, 1 with no next run); confirmed on the second run it raises 2, and both of
+     those reverted on the run after. At `--min-runs 5` the old rule had raised 6, all one-offs; confirmed, none.
+  3. Locally (xUnit, 203 scenarios, two runs on 3.20.0): 203 passed in both; against the last 3.19.0 run no call
+     set and no count differs; the two runs differ in no call set and in one count (the outbox retry exhaustion
+     scenario, 8 to 7, the processor's timing), which the history reads out. Run B's data file carries 914
+     `TestContext`, 1710 `RequestHeader` and 6 `DocumentOwner` interactions (the processor's three replaces of
+     that scenario's row), no `DocumentFlow` and no `Expired`: the consumer's dispatcher is not a tracked client,
+     so the window has nothing to attribute there, which is the expected reading.
+  4. The consumer (BreakfastProvider 7a0fb9b, pins to 3.20.0). Run 1, the push (34985490553): `behaviour-change:
+     0`, `gate: passed` and `nothing changed` on 17 lanes; the xUnit in-memory lane failed at restore (NU1102:
+     the packages published minutes earlier were not yet on that runner's feed edge) and recorded nothing. Run 2,
+     dispatched (34986228567, all 18 gates green): `behaviour-change: 0`, `gate: passed` and `nothing changed`
+     on all 18 lanes. The release changes nothing this consumer records, which is the criterion: the count rule
+     moves only when a count alert would be raised, and none was.
