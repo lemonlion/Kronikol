@@ -253,3 +253,32 @@ Found on the way, and fixed in the same release:
 Not done, deliberately: option C (the correlation store) and E as a consumer-facing helper beyond
 `Detach()` itself; both wait on a measured need. The acceptance measure is the consumer's next two
 runs reading `nothing changed` on every docker and in-memory lane (`CROSS_RUN_HISTORY_PLAN.md` §12.1).
+
+**Consumer acceptance, measured (BreakfastProvider `b8ab619`, 2026-09-15).** The consumer moved its pins to
+3.17.0 and added `services.DetachHostedServicesFromTestIdentity()` at the end of every fixture's
+`ConfigureTestServices` and again after a test's own registrations (it never called
+`AddTestTrackingContextPropagation`). Locally first, xUnit in memory, two runs before and three after the
+detach: the detach removed exactly one template from 21 scenarios (the outbox processor's poll,
+`CosmosDB Query /orders SELECT VALUE root FROM root WHERE (root["Status"] = "{v}") 200`) and the
+processor's `Replace /orders` from the outbox retry exhaustion scenario (9 calls to 4, which the LightBDD
+lane, whose host is built outside the test, already recorded), and nothing else moved between two detached
+runs. Then CI. Run 34939097672 (the push) read the one-time transition, every gate green: 21
+`behaviour-changed` on the xUnit, NUnit, TUnit and BDDfy in-memory lanes, 12 on LightBDD, 16 on ReqNRoll,
+3 to 20 on the docker lanes. Run 34939625141, dispatched after it, read `nothing changed` on ten of the
+twelve docker and in-memory lanes. The two residuals are not attribution, and the new evidence names them
+in one line each:
+
+- ReqNRoll in memory: the AsyncAPI scenario, `new: Caller>Breakfast Provider GET /asyncapi/v1.json -`. The
+  first attempt throws `HttpRequestException: Error while copying content to a stream` out of
+  `Bielu.AspNetCore.AsyncApi`'s `Utf8BufferTextWriter.Flush` (`Pipe.Advance` refuses the byte count), the
+  test's retry loop masks it, and the failed attempt stands in the report as a request without a response.
+  Locally it hits about half the runs on the xUnit suite; on CI the xUnit in-memory lane never showed it in
+  twelve runs. A third-party defect (the pin is a 1.0.0 beta; 1.0.2 is out), not a capture one.
+- ReqNRoll in docker: the correlation-id scenario, `gone: Breakfast Provider>Google Cloud Pub/Sub Publish
+  (Pub/Sub) /MenuAvailabilityChangedEvent` and the supplier availability call with it. Its own `GET /menu`
+  builds the menu from the supplier and publishes the change when the five-minute menu cache is cold, and
+  serves the cache otherwise: the SUT's behaviour under scenario ordering, attributed correctly both times.
+  The ledger shows it flipping between one and three calls since the lane began.
+
+The one external-SUT residual (LightBDD, the Event Hub ingestion scenario polled six times instead of
+five) is the earned count verdict reading a poll-until-ready loop; that lane is outside this plan's scope.
