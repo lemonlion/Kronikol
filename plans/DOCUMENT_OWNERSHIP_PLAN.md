@@ -77,5 +77,27 @@ per call as it is for every other source. No new section.
      their document.
   3. Not shipped: Spanner. Its capture keeps a mutation's table and nothing of its key, so there is nothing to
      look up and nothing to register; it stays as it was.
-  4. The consumer acceptance (§4) is measured in BreakfastProvider's own commit, on 3.19.0 with the AsyncAPI
-     package bumped to 1.0.2, over two consecutive CI runs; the numbers follow here.
+  4. The consumer acceptance (§4), measured on BreakfastProvider commit 1969822 (pins to 3.19.0, `Bielu.AspNetCore.AsyncApi`
+     1.0.2, the AsyncAPI document regenerated):
+     - Locally (xUnit, 203 scenarios, two runs): against the last 3.17.0 run exactly one scenario changed, the outbox
+       retry exhaustion scenario, 4 calls to 7 (`new: Breakfast Provider>CosmosDB Replace /orders 200`); the two 3.19.0
+       runs differ in no call set, and only that scenario's count moves by one (7 and 8, the processor's timing), which
+       the history reads out and never trips on.
+     - Run 1, the push (34952494483, all 18 gates green): every docker and in-memory lane read that scenario's one-time
+       change, and nothing else of ours; the lanes whose previous run had recorded the AsyncAPI first attempt read it
+       gone (`calls 2 to 1; gone: Caller>Breakfast Provider GET /asyncapi/v1.json -`), the package bump at work.
+     - Run 2, dispatched (34953266301): `behaviour-change: 0` on 17 of 18 lanes; the eighteenth is an external-SUT lane
+       whose reporting scenario polled once more (5 calls to 6), outside the criterion. Nine docker and in-memory lanes
+       read `nothing changed`, two read only `1 slower`, and xUnit in docker broke 11 scenarios: every one Mongo-backed
+       (chef notes, reviews, customer feedback), every call answered 500 after 30 s, the Mongo server-selection
+       timeout, and the job's container table shows `mongodb Exited (48)`, mongod's listener failure. xUnit external
+       SUT failed at compose-up on the same container (`container mongodb exited (48)`), before any test ran.
+     - Run 3, dispatched (34954851650): `behaviour-change: 0` on all 18 lanes; sixteen read `nothing changed` (xUnit
+       in docker: `11 fixed`); TUnit in docker broke the same 11 Mongo-backed scenarios with the same `Exited (48)`.
+     - Run 4, dispatched (34956216061, all 18 gates green): `behaviour-change: 0` on every docker and in-memory lane;
+       fifteen lanes read `nothing changed`, TUnit in docker `11 fixed` (the Mongo container came up this time), and
+       two external-SUT lanes read `1 slower` and one behaviour change of the deployed SUT's own, outside the criterion.
+     The Mongo container loss is the consumer's runner infrastructure: five docker lanes passed the same code against
+     the same image in each of those runs, the external-SUT case failed before the SUT started, and the `mongo:7` tag
+     had moved on Docker Hub the night before (2026-09-14 21:07Z). The attribution change itself did what §2 says on
+     every lane that ran, and no lane read a behaviour change from it after the first run.
