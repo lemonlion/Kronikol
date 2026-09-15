@@ -147,7 +147,7 @@ public static class DefaultDiagramsFetcher
                 "Building the diagrams in one pass failed; retrying scenario by scenario", Unwrap(ex));
 
             var result = new List<PlantUmlCreator.PlantUmlForTest>();
-            var logs = TrackedLogs();
+            var logs = TrackedLogs(options);
             foreach (var group in logs.GroupBy(l => l.TestId, StringComparer.Ordinal))
             {
                 var testLogs = group.ToArray();
@@ -174,9 +174,9 @@ public static class DefaultDiagramsFetcher
         }
     }
 
-    /// <summary>The tracked logs the diagrams are built from.</summary>
-    private static RequestResponseLog[] TrackedLogs() =>
-        RequestResponseLogger.RequestAndResponseLogs.Where(x => !(x?.TrackingIgnore ?? true)).ToArray();
+    /// <summary>The tracked logs the diagrams are built from: the caller's snapshot when it gave one, else the logger's store.</summary>
+    private static RequestResponseLog[] TrackedLogs(DiagramsFetcherOptions options) =>
+        (options.Logs ?? RequestResponseLogger.RequestAndResponseLogs).Where(x => !(x?.TrackingIgnore ?? true)).ToArray();
 
     private static DiagramAsCode[] GetServerRenderedDiagrams(DiagramsFetcherOptions options)
     {
@@ -240,7 +240,7 @@ public static class DefaultDiagramsFetcher
     private static PlantUmlCreator.PlantUmlForTest[] GetPlantUmlPerTestId(DiagramsFetcherOptions options, bool lazyLoadImages, int maxEncodedDiagramLength, int truncateNotesAfterLines = 0, bool excludeAllHeaders = false, bool clientSideSplitting = false, IEnumerable<RequestResponseLog>? logs = null)
     {
         return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
-            logs ?? TrackedLogs(),
+            logs ?? TrackedLogs(options),
             requestPostFormattingProcessor: options.RequestPostFormattingProcessor,
             responsePostFormattingProcessor: options.ResponsePostFormattingProcessor,
             requestPreFormattingProcessor: options.RequestPreFormattingProcessor,

@@ -78,6 +78,15 @@ public enum DiagnosticKind
 
     /// <summary>Lines of the history ledger could not be parsed and were skipped; <c>kronikol history verify</c> says which.</summary>
     HistoryLedgerDamaged,
+
+    /// <summary>
+    /// Interactions captured under a scenario's identity after that scenario had ended: the test host's
+    /// background work (a hosted service, a timer, a message consumer) still running with the identity
+    /// the test's execution context handed it. Re-attributed to no scenario by
+    /// <see cref="BackgroundAttribution"/> and listed in the report's background section; one entry per
+    /// scenario, saying how many.
+    /// </summary>
+    BackgroundCalls,
 }
 
 /// <summary>

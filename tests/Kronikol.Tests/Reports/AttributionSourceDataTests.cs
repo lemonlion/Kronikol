@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using System.Xml.Schema;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
@@ -60,5 +61,34 @@ public class AttributionSourceDataTests
 
         var interaction = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions")[0];
         Assert.Equal(JsonValueKind.Null, interaction.GetProperty("attributionSource").ValueKind);
+    }
+
+    [Fact]
+    public void The_xsd_admits_the_provenance_elements_the_xml_writes()
+    {
+        // The XML writer emitted AttributionSource and ExpiredFrom from the day the mark existed; the XSD
+        // beside it did not declare them, so every XML report with a provenance failed its own schema.
+        var features = new[] { new Feature { DisplayName = "Orders", Scenarios = [new Scenario { Id = "test-3", DisplayName = "Marked", Result = ExecutionResult.Passed }] } };
+        var traceId = Guid.NewGuid();
+        var reqId = Guid.NewGuid();
+        var logs = new[]
+        {
+            new RequestResponseLog("Marked", "test-3", HttpMethod.Get, null, new Uri("https://api.example.com/orders"), [],
+                "OrderService", "TestClient", RequestResponseType.Request, traceId, reqId, false)
+            { Timestamp = DateTimeOffset.UtcNow, AttributionSource = AttributionSource.TestContext },
+            new RequestResponseLog("Marked", "test-3", HttpMethod.Get, null, new Uri("https://api.example.com/orders"), [],
+                "OrderService", "TestClient", RequestResponseType.Response, traceId, reqId, false, HttpStatusCode.OK)
+            { Timestamp = DateTimeOffset.UtcNow, AttributionSource = AttributionSource.Expired, ExpiredFromTestId = "test-0" }
+        };
+
+        var dataPath = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, $"TestRunData_attribution_{Guid.NewGuid():N}.xml", DataFormat.Xml, trackedLogs: logs);
+        var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"TestRunData_attribution_{Guid.NewGuid():N}.xsd", DataFormat.Xml);
+
+        var schemaSet = new System.Xml.Schema.XmlSchemaSet();
+        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(File.ReadAllText(schemaPath))));
+        var errors = new List<string>();
+        System.Xml.Linq.XDocument.Load(dataPath).Validate(schemaSet, (_, e) => errors.Add(e.Message));
+
+        Assert.Empty(errors);
     }
 }

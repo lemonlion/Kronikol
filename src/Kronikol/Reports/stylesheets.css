@@ -1185,6 +1185,39 @@
             text-decoration: underline;
         }
 
+        /* Background calls (the host's work after a scenario ended) */
+        .background-calls {
+            margin: 1em 0;
+            border: 2px solid rgb(190, 205, 224);
+            border-radius: 0.8em;
+            background: rgb(246, 249, 253);
+            padding: 0;
+        }
+        .background-calls > summary {
+            padding: 0.6em 1em;
+            font-weight: bold;
+            color: rgb(40, 70, 110);
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+        .background-calls-note {
+            margin: 0 1em 0.6em 1em;
+            font-size: 0.9em;
+            color: rgb(70, 70, 70);
+        }
+        .background-calls-table {
+            width: calc(100% - 2em);
+            margin: 0 1em 0.8em 1em;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        .background-calls-table th, .background-calls-table td {
+            text-align: left;
+            padding: 0.3em 0.6em;
+            border-bottom: 1px solid rgb(220, 228, 240);
+            overflow-wrap: anywhere;
+        }
+
         /* Report diagnostics (capture health, skipped lines, render failures) */
         .report-diagnostics {
             margin: 1em 0;

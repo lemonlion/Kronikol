@@ -194,6 +194,17 @@ public static class ReportGenerator
         ReportLowercaseSteps(features);
         ReportLowercaseTitles(features);
 
+        // Every read of the run's interactions below goes through this one snapshot. A call that carried a
+        // scenario's identity after the scenario had ended is the host's background work, not the
+        // scenario's (plans/BACKGROUND_ATTRIBUTION_PLAN.md): it is re-attributed to no scenario here, once,
+        // so the diagrams, the data files, the history line and the digest all agree about whose it is.
+        var runLogs = BackgroundAttribution.Expire(features, RequestResponseLogger.RequestAndResponseLogs);
+        var background = BackgroundAttribution.Summarise(runLogs, features);
+        foreach (var group in background.AfterScenarioEnd)
+            ReportDiagnosticsScope.Record(DiagnosticKind.BackgroundCalls,
+                $"{group.Calls} call{(group.Calls == 1 ? "" : "s")} arrived after '{group.ScenarioName}' ended and are listed as background calls",
+                group.ScenarioId);
+
         if (options.ExpectedTestCount != null)
         {
             var scenarioCount = features.SelectMany(f => f.Scenarios).Count();
@@ -244,7 +255,8 @@ public static class ReportGenerator
             DiagramNoteWrapWidth = options.DiagramNoteWrapWidth,
             CollapseConsecutiveIdenticalCalls = options.CollapseConsecutiveIdenticalCalls,
             CollapseThreshold = options.CollapseThreshold,
-            MaxArrowsPerDiagram = options.MaxArrowsPerDiagram
+            MaxArrowsPerDiagram = options.MaxArrowsPerDiagram,
+            Logs = runLogs
         };
         var diagrams = DefaultDiagramsFetcher.GetDiagramsFetcher(fetcherOptions)();
 
@@ -255,7 +267,7 @@ public static class ReportGenerator
         RequestResponseLog[]? trackedLogs = null;
         if (options.InternalFlowTracking)
         {
-            trackedLogs = RequestResponseLogger.RequestAndResponseLogs
+            trackedLogs = runLogs
                 .Where(x => !(x?.TrackingIgnore ?? true))
                 .ToArray();
 
@@ -297,7 +309,7 @@ public static class ReportGenerator
         // The data file's httpInteractions block must not depend on internal-flow tracking being on:
         // externally captured traffic (proxy taps, ingested NDJSON) has no in-process spans but the
         // interactions are the whole point of the data export.
-        var dataLogs = trackedLogs ?? RequestResponseLogger.RequestAndResponseLogs
+        var dataLogs = trackedLogs ?? runLogs
             .Where(x => !(x?.TrackingIgnore ?? true))
             .ToArray();
 
@@ -317,7 +329,7 @@ public static class ReportGenerator
         {
             var componentOptions = options.ComponentDiagramOptions ?? new ComponentDiagramOptions();
             componentOptions.DependencyColors ??= options.DependencyColors;
-            var componentLogs = RequestResponseLogger.RequestAndResponseLogs.Where(x => !(x?.TrackingIgnore ?? true));
+            var componentLogs = runLogs.Where(x => !(x?.TrackingIgnore ?? true));
             var componentRelationships = ComponentDiagramGenerator.ExtractRelationships(componentLogs, componentOptions.ParticipantFilter);
             var useBrowserJs = options.PlantUmlRendering == PlantUmlRendering.BrowserJs;
             componentDiagramPlantUml = ComponentDiagramGenerator.GeneratePlantUml(componentRelationships, componentOptions, useC4: !useBrowserJs);
@@ -349,7 +361,7 @@ public static class ReportGenerator
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null));
         }
 
         if (options.GenerateSpecificationsData)
@@ -379,7 +391,7 @@ public static class ReportGenerator
         if (options.GenerateComponentDiagram)
         {
             Add("ComponentDiagram.html", () => ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
-                RequestResponseLogger.RequestAndResponseLogs.Where(x => !(x?.TrackingIgnore ?? true)),
+                runLogs.Where(x => !(x?.TrackingIgnore ?? true)),
                 options,
                 perBoundarySegments: perBoundarySegments,
                 wholeTestSegments: wholeTestSegments));
@@ -450,13 +462,13 @@ public static class ReportGenerator
         history?.Append();
 
         var diagnostics = ReportDiagnostics.Analyse(
-            RequestResponseLogger.RequestAndResponseLogs, features,
+            runLogs, features,
             includeSourceDiscovery: options.ActivitySourceDiscovery);
         foreach (var message in diagnostics)
             Console.WriteLine(message);
 
         if (options.DiagnosticMode)
-            DiagnosticReportGenerator.Generate(RequestResponseLogger.RequestAndResponseLogs, features, options);
+            DiagnosticReportGenerator.Generate(runLogs, features, options);
 
         // Gathered once, from what THIS RUN actually wrote: an output the isolated list could not write is
         // never named by the pointer or offered in the CI summary. Existence alone is not the test — a
@@ -753,6 +765,7 @@ public static class ReportGenerator
         Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
         bool showNoInteractionsMarker = false,
         IReadOnlyList<DiagnosticEntry>? diagnostics = null,
+        BackgroundCalls? background = null,
         int browserRenderWorkers = Constants.TrackingDefaults.BrowserRenderWorkers,
         int browserRenderCacheMegabytes = Constants.TrackingDefaults.BrowserRenderCacheMegabytes,
         int browserFragmentMaxHeight = Constants.TrackingDefaults.BrowserFragmentMaxHeight,
@@ -1413,6 +1426,9 @@ public static class ReportGenerator
 
         if (includeTestRunData && diagnostics is { Count: > 0 })
             body.Append(RenderReportDiagnostics(diagnostics, toggles.DiagnosticsOpen));
+
+        if (includeTestRunData && background is { Calls: > 0 })
+            body.Append(RenderBackgroundCalls(background));
 
         // Cross-run history (plans/CROSS_RUN_HISTORY_PLAN.md §8.1): the section sits beside the timeline,
         // and the per-scenario entries are looked up by stable id as the scenarios render below. Null
@@ -3719,6 +3735,54 @@ public static class ReportGenerator
     }
 
     /// <summary>
+    /// The <c>Background calls</c> section: interactions captured under a scenario's identity after the
+    /// scenario had ended (<see cref="BackgroundAttribution"/>), grouped by the scenario they were taken
+    /// from and the call they made. Renders nothing when the run had none, so a report without the section
+    /// is a report without background calls.
+    /// </summary>
+    internal static string RenderBackgroundCalls(BackgroundCalls background)
+    {
+        if (background.Calls == 0)
+            return string.Empty;
+
+        var names = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var group in background.AfterScenarioEnd)
+            names[group.ScenarioId] = group.ScenarioName;
+
+        var rows = background.Interactions
+            .Where(l => !l.IsDiagramMarker)
+            .GroupBy(l => (
+                Scenario: l.ExpiredFromTestId is { Length: > 0 } from ? names.GetValueOrDefault(from, from) : "(no scenario)",
+                l.ServiceName,
+                Method: MethodText(l.Method) ?? "",
+                Path: l.Uri is null ? "" : l.Uri.IsAbsoluteUri ? l.Uri.AbsolutePath : l.Uri.ToString()))
+            .Select(g => (g.Key, Calls: g.Select(l => l.RequestResponseId).Distinct().Count(), LastAt: g.Max(l => l.Timestamp)))
+            .OrderBy(r => r.Key.Scenario, StringComparer.Ordinal)
+            .ThenBy(r => r.Key.ServiceName, StringComparer.Ordinal)
+            .ThenBy(r => r.Key.Path, StringComparer.Ordinal)
+            .ThenBy(r => r.Key.Method, StringComparer.Ordinal);
+
+        var html = new StringBuilder();
+        html.Append("<details class=\"background-calls\">");
+        html.Append($"<summary>Background calls ({background.Calls.ToString(CultureInfo.InvariantCulture)} after scenario end)</summary>");
+        html.Append("<p class=\"background-calls-note\">Calls the test host made under a scenario's identity after that scenario had ended: a hosted service, a timer or a message consumer started inside the host and still running. They belong to the host, not to the scenario, and are listed here instead of under it.</p>");
+        html.Append("<table class=\"background-calls-table\"><thead><tr><th>Scenario</th><th>Service</th><th>Method</th><th>Path</th><th>Calls</th><th>Last seen (UTC)</th></tr></thead><tbody>");
+        foreach (var row in rows)
+        {
+            html.Append("<tr>");
+            html.Append($"<td>{System.Net.WebUtility.HtmlEncode(row.Key.Scenario)}</td>");
+            html.Append($"<td>{System.Net.WebUtility.HtmlEncode(row.Key.ServiceName)}</td>");
+            html.Append($"<td>{System.Net.WebUtility.HtmlEncode(row.Key.Method)}</td>");
+            html.Append($"<td>{System.Net.WebUtility.HtmlEncode(row.Key.Path)}</td>");
+            html.Append($"<td>{row.Calls.ToString(CultureInfo.InvariantCulture)}</td>");
+            html.Append($"<td>{(row.LastAt is { } at ? FormatInstant(at) : "")}</td>");
+            html.Append("</tr>");
+        }
+        html.Append("</tbody></table></details>");
+        return html.ToString();
+    }
+
+    /// <summary>
     /// The <c>ciMetadata</c> object, emitted whether or not the run was on CI. A shape that appears
     /// only sometimes is a shape nothing can key on, so off CI the same eight keys come back with
     /// <c>provider: "None"</c> and nulls beneath it — <see cref="CiMetadataDetector.Detect()"/> keeps
@@ -3756,6 +3820,23 @@ public static class ReportGenerator
     /// <summary>The <c>environment</c> object: what the run executed on, and nothing about who ran it.</summary>
     private static object? MapEnvironmentJson(RunEnvironment? environment) =>
         ResolveEnvironment(environment) is { } resolved ? new { resolved.Os, resolved.Runtime } : null;
+
+    /// <summary>
+    /// The <c>background</c> object of the data files: the count, the expired calls by the scenario they
+    /// were taken from, and the interactions themselves in the shape a scenario's <c>httpInteractions</c> use.
+    /// </summary>
+    private static object MapBackgroundJson(BackgroundCalls background, IReadOnlyDictionary<Guid, double>? durations) => new Dictionary<string, object?>
+    {
+        ["calls"] = background.Calls,
+        ["afterScenarioEnd"] = background.AfterScenarioEnd.Select(g => (object)new Dictionary<string, object?>
+        {
+            ["scenarioId"] = g.ScenarioId,
+            ["scenario"] = g.ScenarioName,
+            ["calls"] = g.Calls,
+            ["lastAt"] = g.LastAt is { } at ? FormatInstant(at) : null
+        }).ToArray(),
+        ["interactions"] = background.Interactions.Select(l => MapLogJson(l, durations)).ToArray()
+    };
 
     /// <summary>The <c>diagnostics</c> array of the data files: <c>{kind, message, scenarioId}</c> per entry.</summary>
     private static object[] MapDiagnosticsJson(IReadOnlyList<DiagnosticEntry>? diagnostics) =>
@@ -3981,6 +4062,7 @@ public static class ReportGenerator
             data["environment"] = environmentJson;
 
         data["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, resolvedSuite);
+        data["background"] = MapBackgroundJson(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations);
         data["diagnostics"] = MapDiagnosticsJson(diagnostics);
 
         return JsonSerializer.Serialize(data, options);
@@ -4207,6 +4289,7 @@ public static class ReportGenerator
                     kvp.Value.SpanCount
                 }),
             ["ciMetadata"] = MapCiMetadataJson(ciMetadata),
+            ["background"] = MapBackgroundJson(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations),
             ["diagnostics"] = MapDiagnosticsJson(diagnostics)
         };
 
@@ -4473,11 +4556,24 @@ public static class ReportGenerator
                         )
                     )
                 ),
+                MapBackgroundXml(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations),
                 MapDiagnosticsXml(diagnostics)
             )
         );
         return doc.ToString();
     }
+
+    /// <summary>The <c>Background</c> element: the XML spelling of what <see cref="MapBackgroundJson"/> writes.</summary>
+    private static XElement MapBackgroundXml(BackgroundCalls background, IReadOnlyDictionary<Guid, double>? durations) =>
+        new("Background",
+            new XElement("Calls", background.Calls.ToString(CultureInfo.InvariantCulture)),
+            background.AfterScenarioEnd.Count == 0 ? null : new XElement("AfterScenarioEnd", background.AfterScenarioEnd.Select(g =>
+                new XElement("Scenario",
+                    new XElement("ScenarioId", g.ScenarioId),
+                    new XElement("Name", g.ScenarioName),
+                    new XElement("Calls", g.Calls.ToString(CultureInfo.InvariantCulture)),
+                    g.LastAt is { } at ? new XElement("LastAt", FormatInstant(at)) : null))),
+            background.Interactions.Count == 0 ? null : new XElement("Interactions", background.Interactions.Select(l => MapLogXml(l, durations))));
 
     /// <summary>
     /// The <c>Diagnostics</c> element: the XML spelling of what <see cref="MapDiagnosticsJson"/> writes.
@@ -4789,6 +4885,39 @@ public static class ReportGenerator
 
         // Last, where the JSON has it, and written even when empty - a reader has to be able to tell a
         // run with nothing to report from a format that could not have told them either way.
+        // Before the diagnostics, where the JSON has it, and written even when empty for the same reason.
+        var backgroundCalls = BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features);
+        yml.Append("Background:\n");
+        yml.Append("  Calls: " + backgroundCalls.Calls.ToString(CultureInfo.InvariantCulture) + "\n");
+        yml.Append("  AfterScenarioEnd:");
+        if (backgroundCalls.AfterScenarioEnd.Count == 0)
+        {
+            yml.Append(" []\n");
+        }
+        else
+        {
+            yml.Append('\n');
+            foreach (var group in backgroundCalls.AfterScenarioEnd)
+            {
+                AppendYaml(yml, "    - ScenarioId: ", group.ScenarioId);
+                AppendYaml(yml, "      Scenario: ", group.ScenarioName);
+                yml.Append("      Calls: " + group.Calls.ToString(CultureInfo.InvariantCulture) + "\n");
+                if (group.LastAt is { } lastAt)
+                    AppendYaml(yml, "      LastAt: ", FormatInstant(lastAt));
+            }
+        }
+        yml.Append("  Interactions:");
+        if (backgroundCalls.Interactions.Count == 0)
+        {
+            yml.Append(" []\n");
+        }
+        else
+        {
+            yml.Append('\n');
+            foreach (var log in backgroundCalls.Interactions)
+                AppendTestRunYamlLog(yml, log, "    ", durations);
+        }
+
         yml.Append("Diagnostics:");
         if (diagnostics is not { Count: > 0 })
         {
@@ -5417,7 +5546,7 @@ public static class ReportGenerator
             ["type"] = "object",
             // formatVersion is required because a reader that cannot find it is reading a file written
             // before the contract was versioned, and should say so rather than guess.
-            ["required"] = new[] { "formatVersion", "startTime", "endTime", "features" },
+            ["required"] = new[] { "formatVersion", "startTime", "endTime", "features", "background" },
             ["properties"] = new Dictionary<string, object?>
             {
                 ["formatVersion"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Version of the report SHAPE, as distinct from the Kronikol build that wrote it. Bumped when a key changes meaning or type, not when one is added." },
@@ -5449,6 +5578,41 @@ public static class ReportGenerator
                     {
                         ["os"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Operating system description, as the runtime reports it - a description, not a parseable identifier", ["examples"] = new[] { "Microsoft Windows 10.0.26200" } },
                         ["runtime"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The .NET runtime the tests executed on", ["examples"] = new[] { ".NET 10.0.0" } }
+                    }
+                },
+                ["background"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["description"] = "Interactions that belong to no scenario: captured under a scenario's identity after that scenario had ended (the test host's hosted services, timers and consumers still running with the identity the test's execution context handed them), or captured with no identity at all when CaptureBackground is on. Always present; calls is 0 when there were none",
+                    ["required"] = new[] { "calls", "afterScenarioEnd", "interactions" },
+                    ["additionalProperties"] = false,
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["calls"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Distinct background calls; a request and its response count once" },
+                        ["afterScenarioEnd"] = new Dictionary<string, object?>
+                        {
+                            ["type"] = "array",
+                            ["description"] = "The calls that were re-attributed, by the scenario they were taken from",
+                            ["items"] = new Dictionary<string, object?>
+                            {
+                                ["type"] = "object",
+                                ["required"] = new[] { "scenarioId", "scenario", "calls" },
+                                ["additionalProperties"] = false,
+                                ["properties"] = new Dictionary<string, object?>
+                                {
+                                    ["scenarioId"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The scenario the calls were captured under (features[].scenarios[].id)" },
+                                    ["scenario"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Its display name" },
+                                    ["calls"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Distinct calls taken from it" },
+                                    ["lastAt"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["format"] = "date-time", ["description"] = "When the latest of them was captured (UTC)" }
+                                }
+                            }
+                        },
+                        ["interactions"] = new Dictionary<string, object?>
+                        {
+                            ["type"] = "array",
+                            ["description"] = "The background interactions themselves, in the same shape as a scenario's httpInteractions: attributionSource says why each is here and expiredFrom names the scenario it was taken from",
+                            ["items"] = new Dictionary<string, object?> { ["$ref"] = "#/$defs/httpInteraction" }
+                        }
                     }
                 },
                 ["diagnostics"] = new Dictionary<string, object?>
@@ -5966,6 +6130,8 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "DependencyCategory"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "CallerDependencyCategory"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Phase"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "AttributionSource"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "ExpiredFrom"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "IsUserAction"), new XAttribute("type", "xs:boolean"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "ActivityTraceId"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "ActivitySpanId"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
@@ -6151,6 +6317,38 @@ public static class ReportGenerator
                                 new XElement(xs + "complexType",
                                     new XElement(xs + "sequence",
                                         new XElement(xs + "element", new XAttribute("name", "Feature"), new XAttribute("type", "FeatureType"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
+                                    )
+                                )
+                            ),
+                            // The background block, before the diagnostics as in the JSON. minOccurs="0" for the
+                            // same reason as the element after it.
+                            new XElement(xs + "element", new XAttribute("name", "Background"), new XAttribute("minOccurs", "0"),
+                                new XElement(xs + "complexType",
+                                    new XElement(xs + "sequence",
+                                        new XElement(xs + "element", new XAttribute("name", "Calls"), new XAttribute("type", "xs:int")),
+                                        new XElement(xs + "element", new XAttribute("name", "AfterScenarioEnd"), new XAttribute("minOccurs", "0"),
+                                            new XElement(xs + "complexType",
+                                                new XElement(xs + "sequence",
+                                                    new XElement(xs + "element", new XAttribute("name", "Scenario"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"),
+                                                        new XElement(xs + "complexType",
+                                                            new XElement(xs + "sequence",
+                                                                new XElement(xs + "element", new XAttribute("name", "ScenarioId"), new XAttribute("type", "xs:string")),
+                                                                new XElement(xs + "element", new XAttribute("name", "Name"), new XAttribute("type", "xs:string")),
+                                                                new XElement(xs + "element", new XAttribute("name", "Calls"), new XAttribute("type", "xs:int")),
+                                                                new XElement(xs + "element", new XAttribute("name", "LastAt"), new XAttribute("type", "xs:dateTime"), new XAttribute("minOccurs", "0"))
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        ),
+                                        new XElement(xs + "element", new XAttribute("name", "Interactions"), new XAttribute("minOccurs", "0"),
+                                            new XElement(xs + "complexType",
+                                                new XElement(xs + "sequence",
+                                                    new XElement(xs + "element", new XAttribute("name", "HttpInteraction"), new XAttribute("type", "HttpInteractionType"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
+                                                )
+                                            )
+                                        )
                                     )
                                 )
                             ),

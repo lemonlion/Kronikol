@@ -29,6 +29,11 @@ public static class ReportDiagnostics
         if (unpairedCount > 0)
             warnings.Add($"Warning: {unpairedCount} unpaired request(s) detected (no matching response with same RequestResponseId).");
 
+        var background = logs.Count(l => l.AttributionSource == AttributionSource.Expired && !l.IsDiagramMarker);
+        if (background > 0)
+            warnings.Add($"Info: {background} interaction(s) carried a scenario's identity after that scenario had ended " +
+                "and are listed as background calls, not the scenario's (see the report's Background calls section).");
+
         if (features.Length > 0)
         {
             var scenarioIds = features
@@ -37,7 +42,8 @@ public static class ReportDiagnostics
                 .ToHashSet();
 
             var orphanedTestIds = distinctTestIds
-                .Where(id => !scenarioIds.Contains(id))
+                // The unknown identity is background by definition, not an orphan: the section above says so.
+                .Where(id => id != TestIdentityScope.UnknownTestId && !scenarioIds.Contains(id))
                 .ToArray();
 
             if (orphanedTestIds.Length > 0)

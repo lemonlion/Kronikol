@@ -47,6 +47,24 @@ public class ReportDiagnosticsTests : IDisposable
     }
 
     [Fact]
+    public void A_background_call_is_noted_and_is_not_an_orphan()
+    {
+        var testId = Guid.NewGuid().ToString();
+        var pairId = Guid.NewGuid();
+        var logs = new[]
+        {
+            MakeLog(testId, RequestResponseType.Request, Guid.NewGuid()),
+            MakeLog(TestIdentityScope.UnknownTestId, RequestResponseType.Request, pairId) with { AttributionSource = AttributionSource.Expired, ExpiredFromTestId = testId },
+            MakeLog(TestIdentityScope.UnknownTestId, RequestResponseType.Response, pairId) with { AttributionSource = AttributionSource.Expired, ExpiredFromTestId = testId }
+        };
+
+        var warnings = ReportDiagnostics.Analyse(logs, [MakeFeature(testId)]);
+
+        Assert.Contains(warnings, w => w.StartsWith("Info: 2 interaction(s) carried a scenario's identity after that scenario had ended", StringComparison.Ordinal));
+        Assert.DoesNotContain(warnings, w => w.Contains("orphaned", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Warns_when_log_test_ids_dont_match_any_feature()
     {
         var orphanTestId = Guid.NewGuid().ToString();

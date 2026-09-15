@@ -43,6 +43,13 @@ public record DiagramsFetcherOptions
     /// <summary>See <see cref="ReportConfigurationOptions.CollapseThreshold"/>.</summary>
     public int CollapseThreshold { get; set; } = 2;
 
+    /// <summary>
+    /// The interactions the diagrams are built from. Null reads the logger's store as it stands; the
+    /// report flow passes its own snapshot so the diagrams see the same re-attributed calls as every
+    /// other output (<see cref="Reports.BackgroundAttribution"/>).
+    /// </summary>
+    public Tracking.RequestResponseLog[]? Logs { get; set; }
+
     /// <summary>See <see cref="ReportConfigurationOptions.MaxArrowsPerDiagram"/>.</summary>
     public int? MaxArrowsPerDiagram { get; set; }
 }
