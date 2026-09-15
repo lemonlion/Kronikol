@@ -329,19 +329,88 @@ public class HistoryAnalyzerTests
         Assert.Equal("s1", compared.PreviousShapeSet);
     }
 
+    /// <summary>Prior passing runs whose first scenario made the same calls the given number of times, oldest first.</summary>
+    private static HistoryLedger Counts(HistoryRoster roster, params int[] counts) =>
+        Ledger(counts.Select((c, i) => (roster, Counted(roster, i + 1, c))));
+
+    private static HistoryRun Counted(HistoryRoster roster, int n, int count, string set = "s1") =>
+        Run(roster, n, "PPP", shapes: [set, "s2", "s3"], calls: [count, 1, 1]);
+
     [Fact]
-    public void The_same_calls_made_more_often_is_behaviour_changed_once_the_count_has_been_stable()
+    public void The_same_calls_made_more_often_is_read_out_first_and_behaviour_changed_when_the_next_run_holds_it()
     {
         // 3, 3, 3 then 5: an N+1 regression, which the set of calls cannot see because the calls are the
-        // same. The count is a verdict once the scenario has shown it constant over the minimum runs.
+        // same. A count moves on its own too often to trip on at first sight (ten of the thirteen count
+        // verdicts in a consumer's ledger reverted the next run), so the run that shows the new count reads
+        // it out, and the next run that still holds it is the verdict, naming the run the change appeared in.
         var roster = Roster(Ids);
-        var ledger = Ledger(Enumerable.Range(1, 3).Select(i => (roster, Run(roster, i, "PPP", shapes: ["s1", "s2", "s3"], calls: [3, 1, 1]))));
+        var options = new HistoryAnalysisOptions { MinRuns = 3 };
 
-        var scenario = First(Analyse(ledger, roster, Run(roster, 9, "PPP", shapes: ["s1", "s2", "s3"], calls: [5, 1, 1]), new HistoryAnalysisOptions { MinRuns = 3 }));
+        var first = First(Analyse(Counts(roster, 3, 3, 3), roster, Counted(roster, 4, 5), options));
 
-        Assert.Equal(HistoryVerdictKind.BehaviourChanged, scenario.Primary);
-        Assert.Contains("calls 3", scenario.Evidence);
-        Assert.Contains("constant over the last 3 runs", scenario.Evidence);
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, first.Verdicts);
+        Assert.Contains("calls 3 in gh:3:1 to 5 now", first.Evidence);
+        Assert.Contains("held for 2 runs", first.Evidence);
+
+        var second = First(Analyse(Counts(roster, 3, 3, 3, 5), roster, Counted(roster, 5, 5), options));
+
+        Assert.Equal(HistoryVerdictKind.BehaviourChanged, second.Primary);
+        Assert.Contains("calls 3 to 5 in gh:4:1 and now", second.Evidence);
+        Assert.Contains("constant over the 3 runs before", second.Evidence);
+
+        // Once reported, a count that stays is the count: nothing to say the run after.
+        var third = First(Analyse(Counts(roster, 3, 3, 3, 5, 5), roster, Counted(roster, 6, 5), options));
+
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, third.Verdicts);
+        Assert.DoesNotContain("to 5", third.Evidence);
+    }
+
+    [Fact]
+    public void A_count_that_reverts_the_next_run_is_never_a_verdict()
+    {
+        // 3, 3, 3, 5, then 3 again: the processor's timing, not the code. Neither the 5 nor the return trips,
+        // and the return says what it is rather than calling the count unstable.
+        var roster = Roster(Ids);
+
+        var scenario = First(Analyse(Counts(roster, 3, 3, 3, 5), roster, Counted(roster, 5, 3), new HistoryAnalysisOptions { MinRuns = 3 }));
+
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, scenario.Verdicts);
+        Assert.Contains("calls 5 in gh:4:1 to 3 now", scenario.Evidence);
+        Assert.Contains("back to the count", scenario.Evidence);
+    }
+
+    [Fact]
+    public void The_runs_a_new_count_must_hold_can_be_set()
+    {
+        // CountRuns = 1 is the 3.15.0 rule, the run that shows the new count trips; 3 needs it held twice.
+        var roster = Roster(Ids);
+
+        Assert.Equal(HistoryVerdictKind.BehaviourChanged,
+            First(Analyse(Counts(roster, 3, 3, 3), roster, Counted(roster, 4, 5), new HistoryAnalysisOptions { MinRuns = 3, CountRuns = 1 })).Primary);
+
+        var three = new HistoryAnalysisOptions { MinRuns = 3, CountRuns = 3 };
+        var once = First(Analyse(Counts(roster, 3, 3, 3, 5), roster, Counted(roster, 5, 5), three));
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, once.Verdicts);
+        Assert.Contains("calls 3 in gh:3:1 to 5 in gh:4:1 and now", once.Evidence);
+        Assert.Contains("held for 3 runs", once.Evidence);
+
+        var twice = First(Analyse(Counts(roster, 3, 3, 3, 5, 5), roster, Counted(roster, 6, 5), three));
+        Assert.Equal(HistoryVerdictKind.BehaviourChanged, twice.Primary);
+        Assert.Contains("calls 3 to 5 in gh:4:1, gh:5:1 and now", twice.Evidence);
+    }
+
+    [Fact]
+    public void A_count_that_changed_with_the_set_is_not_reported_again_when_it_holds()
+    {
+        // Run 4 changed the set and the count, and was reported then as a different set of calls. Run 5
+        // holds both; the count rule must not read it as a second change.
+        var roster = Roster(Ids);
+        var ledger = Ledger(Enumerable.Range(1, 3).Select(i => (roster, Counted(roster, i, 3))).Append((roster, Counted(roster, 4, 5, set: "s9"))));
+
+        var scenario = First(Analyse(ledger, roster, Counted(roster, 5, 5, set: "s9"), new HistoryAnalysisOptions { MinRuns = 3 }));
+
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, scenario.Verdicts);
+        Assert.DoesNotContain("different number", scenario.Evidence);
     }
 
     [Fact]

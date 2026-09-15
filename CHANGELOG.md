@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.20.0] - 2026-09-15
+
+**Minor - a count change confirmed, the flow that wrote a document, and the store guarded.** A new
+provenance value, a new history option with its flag, three new public members, and a fix. One default
+moves while the feature it belongs to is days old: a change in the number of calls is `behaviour-changed`
+on the second run that holds it, not the first; `HistoryCountRuns = 1` is the 3.15.0 rule. Template pins
+move to 3.19.0.
+
+After 3.19.0 the questions were whether any tracking had been lost along the way and whether consumers
+would get noise, "the primary reason why the history feature would fail". Both were measured on a
+consumer's ledger (`plans/OWNER_WINDOW_AND_COUNT_CONFIRMATION_PLAN.md`): nothing lost; one structural
+gap, the dispatch call between an outbox claim and its status update, which names no document; one
+defect; and thirteen count verdicts, ten of which reverted the next run.
+
+### Added
+
+- **A count change is confirmed on the second run.** The same set of calls made a different number of
+  times is `behaviour-changed` once the count had been constant over `HistoryMinRuns` runs *and* the new
+  count has held for `HistoryCountRuns` (default 2) consecutive runs. The run that shows the new count
+  reads it out: `calls 5 in gh:41:1 to 6 now; a count verdict needs the new count held for 2 runs`. The
+  next run that still holds it is the verdict, and names both: `the same calls made a different number
+  of times: calls 5 to 6 in gh:42:1 and now, constant over the 12 runs before`. A count that reverts the
+  next run never trips, and the return says what it is: `calls 6 in gh:42:1 to 5 now; back to the count
+  held over the 12 runs before it`. A count that changed together with the set was reported then and is
+  not reported again when it holds. Replayed over the consumer's ledger at its bar, thirteen count
+  verdicts become two, and both of those reverted on the run after. `HistoryAnalysisOptions.CountRuns`,
+  `kronikol history gate --count-runs N`, `kronikol query history --count-runs N`.
+- **The owner window: the flow that wrote a scenario's document is doing the scenario's work.** After a
+  write attributed by document ownership (3.19.0), a detached flow keeps that scenario for every call it
+  makes that names no document, the dispatch between the claim of an outbox row and its status update
+  through any tracked client, with the new provenance `AttributionSource.DocumentFlow`, until its next
+  operation on a document that is not the scenario's: another scenario's document, or a query, which names
+  none. Such calls are **held until confirmed**: `RequestResponseLogger` keeps them on the flow, the next
+  operation on the scenario's document releases them into the store in their original place and time, and
+  a foreign operation or a query drops them (kept under `(no scenario)` when `CaptureBackground` is on;
+  whatever is still held at report time is settled as nobody's). A call is therefore attributed only when
+  the same document closes it out with nothing else between, so two workers that interleave in one flow
+  never hand one scenario's call to another. A read confirms a window and never opens one, so a poller
+  reading a scenario's document does not make everything between its reads the scenario's; an operation on
+  a document nobody owns, or on one not yet known, leaves the window as it is. Only a detached flow holds a
+  window, and `TestIdentityScope.Detach` now keeps the flow's state on a holder object its callees share,
+  because an `AsyncLocal` value a tracker sets inside a database SDK's call is gone when the call returns;
+  every hosted service already runs detached (`DetachHostedServicesFromTestIdentity`). Expiry treats
+  `DocumentFlow` with the inherited sources. `TestIdentityScope.OwnerWindow`; `DocumentOperationKind`;
+  `DocumentOwnership.ForOperation(resolved, key, kind)` and `DocumentOwnership.AfterWrite(identity)` for
+  any other capturer that knows which document a call named (`Resolve` is unchanged);
+  `AttributeByDocumentOwner = false` on either tracker switches the window off with the rest. The JSON
+  schema lists the value, and its description now names `DocumentOwner` and `DocumentFlow`; the XSD types
+  the source as a string and is unchanged.
+- **A Mongo claim by filter is the scenario's.** `findAndModify({status: Pending} -> {status: Processing})`
+  names no document until the server answers with the one it took. The subscriber now defers such a
+  command's request half (when the flow had no scenario of its own) until the reply, attributes both
+  halves by the document the reply names, keeps the request's original time and phase, and opens the
+  window. A claim that took nothing is nobody's, as before. An operation in `ExcludedOperations` is now
+  skipped before identity resolution, so it neither opens nor closes a window.
+
+### Fixed
+
+- **An identity-less write could become a document's owner.** With `RequestResponseLogger.CaptureBackground`
+  on, an identity-less write reached `AutoCorrelateIfWrite` in the Cosmos and Mongo trackers and registered
+  the unknown identity as the document's last writer; the next identity-less operation on the document was
+  then attributed to nobody with the provenance of an owner, and a change-feed or change-stream lookup hit
+  where it should have missed. Only an attributed identity registers now, and `DocumentOwnership` ignores
+  an owner whose id is the unknown one, so a store a consumer filled by hand cannot produce one either.
+  `RequestResponseLogger.Clear()` also forgets what any window holds.
+
 ## [3.19.0] - 2026-09-15
 
 **Minor - a document a scenario wrote is the scenario's.** A new provenance value, an option on the

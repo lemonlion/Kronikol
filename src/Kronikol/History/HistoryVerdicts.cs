@@ -115,6 +115,9 @@ public sealed record HistoryAnalysisOptions
     /// <summary>How many runs back a set of calls the scenario held counts as a known state (<see cref="ReportConfigurationOptions.HistoryAlternatingRuns"/>).</summary>
     public int AlternatingRuns { get; init; } = 10;
 
+    /// <summary>How many consecutive runs a changed call count must hold before it is behaviour (<see cref="ReportConfigurationOptions.HistoryCountRuns"/>).</summary>
+    public int CountRuns { get; init; } = 2;
+
     /// <summary>The share of the previous roster a run may lack before it is partial (<see cref="ReportConfigurationOptions.HistoryPartialThreshold"/>).</summary>
     public double PartialThreshold { get; init; } = 0.10;
 

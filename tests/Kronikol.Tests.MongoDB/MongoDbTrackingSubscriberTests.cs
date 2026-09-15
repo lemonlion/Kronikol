@@ -846,4 +846,103 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         Assert.Equal(AttributionSource.DocumentOwner, logs[2].AttributionSource);
         Assert.Equal(AttributionSource.DocumentOwner, logs[3].AttributionSource);
     }
+
+    // ─── The owner window (plans/OWNER_WINDOW_AND_COUNT_CONFIRMATION_PLAN.md) ──
+
+    /// <summary>A tracked call that names no document, made by the flow: the outbox processor's dispatch.</summary>
+    private static void Dispatch(string what) =>
+        RequestResponseLogger.LogPair(HttpMethod.Post, new Uri("http://dispatcher/" + what), "Dispatcher", "Breakfast Provider");
+
+    private static BsonDocument InsertOne(string id) =>
+        new() { { "insert", "orders" }, { "documents", new BsonArray { new BsonDocument("_id", id) } } };
+
+    private static BsonDocument UpdateById(string id) =>
+        new() { { "update", "orders" }, { "updates", new BsonArray { new BsonDocument { { "q", new BsonDocument("_id", id) }, { "u", new BsonDocument("$set", new BsonDocument("status", "Processing")) } } } } };
+
+    private static BsonDocument Poll() =>
+        new() { { "find", "orders" }, { "filter", new BsonDocument("status", "Pending") } };
+
+    private static AttributionSource?[] Sources(IEnumerable<RequestResponseLog> logs) =>
+        logs.Where(l => l.Type == RequestResponseType.Request).Select(l => l.AttributionSource).ToArray();
+
+    [Fact]
+    public void The_flow_that_wrote_a_scenarios_document_keeps_the_scenario_until_it_touches_another()
+    {
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+        subscriber.OnCommandStarted(MakeStartedEvent("insert", InsertOne("order-1")));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent("insert"));
+
+        using (TestIdentityScope.Detach())
+        {
+            subscriber.OnCommandStarted(MakeStartedEvent("update", UpdateById("order-1"), requestId: 2)); // the claim
+            subscriber.OnCommandSucceeded(MakeSucceededEvent("update", requestId: 2));
+            Dispatch("first");
+            subscriber.OnCommandStarted(MakeStartedEvent("update", UpdateById("order-1"), requestId: 3)); // the status update
+            subscriber.OnCommandSucceeded(MakeSucceededEvent("update", requestId: 3));
+            Dispatch("after");
+            subscriber.OnCommandStarted(MakeStartedEvent("find", Poll(), requestId: 4));                  // the next poll
+            subscriber.OnCommandSucceeded(MakeSucceededEvent("find", requestId: 4));
+            Dispatch("orphan");
+        }
+
+        var logs = GetLogsFromThisTest();
+        Assert.Equal([AttributionSource.TestContext, AttributionSource.DocumentOwner, AttributionSource.DocumentFlow, AttributionSource.DocumentOwner], Sources(logs));
+        Assert.Equal("http://dispatcher/first", logs.Where(l => l.Type == RequestResponseType.Request).ElementAt(2).Uri.ToString());
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.Uri.ToString() is "http://dispatcher/after" or "http://dispatcher/orphan");
+    }
+
+    [Fact]
+    public void A_claim_by_filter_is_the_scenarios_when_the_reply_names_its_document()
+    {
+        // findAndModify({status: Pending} -> {status: Processing}) is the idiomatic Mongo claim: it names no
+        // document until the server answers with the one it took. The claim, and the window, wait for the
+        // reply; a claim that took nothing is nobody's.
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+        subscriber.OnCommandStarted(MakeStartedEvent("insert", InsertOne("order-1")));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent("insert"));
+
+        using (TestIdentityScope.Detach())
+        {
+            var claim = new BsonDocument { { "findAndModify", "orders" }, { "query", new BsonDocument("status", "Pending") }, { "update", new BsonDocument("$set", new BsonDocument("status", "Processing")) } };
+            subscriber.OnCommandStarted(MakeStartedEvent("findAndModify", claim, requestId: 2));
+            subscriber.OnCommandSucceeded(MakeSucceededEvent("findAndModify", requestId: 2,
+                reply: new BsonDocument { { "ok", 1 }, { "value", new BsonDocument { { "_id", "order-1" }, { "status", "Pending" } } } }));
+            Dispatch("first");
+            subscriber.OnCommandStarted(MakeStartedEvent("update", UpdateById("order-1"), requestId: 3));
+            subscriber.OnCommandSucceeded(MakeSucceededEvent("update", requestId: 3));
+
+            subscriber.OnCommandStarted(MakeStartedEvent("findAndModify", claim, requestId: 4));
+            subscriber.OnCommandSucceeded(MakeSucceededEvent("findAndModify", requestId: 4, reply: new BsonDocument { { "ok", 1 }, { "value", BsonNull.Value } }));
+        }
+
+        var logs = GetLogsFromThisTest();
+        Assert.Equal([AttributionSource.TestContext, AttributionSource.DocumentOwner, AttributionSource.DocumentFlow, AttributionSource.DocumentOwner], Sources(logs));
+        Assert.Equal("http://dispatcher/first", logs.Where(l => l.Type == RequestResponseType.Request).ElementAt(2).Uri.ToString());
+        Assert.True(logs[2].Timestamp <= logs[3].Timestamp, "the claim's request keeps the time it started");
+    }
+
+    [Fact]
+    public void An_identity_less_write_never_becomes_the_documents_owner()
+    {
+        var id = "bg-" + Guid.NewGuid().ToString("N");
+        var options = MakeOptions();
+        RequestResponseLogger.CaptureBackground = true;
+        try
+        {
+            var subscriber = new MongoDbTrackingSubscriber(options);
+            using (TestIdentityScope.Detach())
+            {
+                subscriber.OnCommandStarted(MakeStartedEvent("update", UpdateById(id), requestId: 2));
+                subscriber.OnCommandSucceeded(MakeSucceededEvent("update", requestId: 2));
+                subscriber.OnCommandStarted(MakeStartedEvent("update", UpdateById(id), requestId: 3));
+                subscriber.OnCommandSucceeded(MakeSucceededEvent("update", requestId: 3));
+            }
+        }
+        finally
+        {
+            RequestResponseLogger.CaptureBackground = false;
+        }
+
+        Assert.Null(TestCorrelationStore.Lookup(CorrelationKeys.Mongo(options.ServiceName, id)));
+    }
 }

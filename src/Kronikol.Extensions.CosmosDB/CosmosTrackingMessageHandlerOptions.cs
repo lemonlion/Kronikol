@@ -56,6 +56,9 @@ public record CosmosTrackingMessageHandlerOptions
     /// <see cref="Kronikol.Tracking.AttributionSource.DocumentOwner"/>: a detached hosted service claiming,
     /// retrying and failing an outbox row lands where the row was seeded. Reads the store
     /// <see cref="AutoCorrelateWrites"/> fills, through <see cref="ChangeFeedKeyExtractor"/> when one is set.
+    /// From 3.20.0 a detached flow that wrote such a document also keeps the scenario for what it does until
+    /// its next operation on a document that is not the scenario's (the dispatch between the claim and the
+    /// status update), held until that operation confirms it; see <see cref="Kronikol.Tracking.DocumentOwnership"/>.
     /// Default: <c>true</c> (3.19.0).
     /// </summary>
     public bool AttributeByDocumentOwner { get; set; } = true;

@@ -2,7 +2,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
-[Collection("TestCorrelationStore")]
+[Collection("DiagramsFetcher")]
 public class TestCorrelationStoreTests
 {
     public TestCorrelationStoreTests()
@@ -197,9 +197,6 @@ public class TestCorrelationStoreTests
         TestCorrelationStore.OnResolveMiss = null;
     }
 }
-
-[CollectionDefinition("TestCorrelationStore")]
-public class TestCorrelationStoreCollection : ICollectionFixture<TestCorrelationStoreFixture>;
 
 public class TestCorrelationStoreFixture : IDisposable
 {

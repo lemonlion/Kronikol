@@ -61,6 +61,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--branch NAME`, `--compare-branch NAME` | the branch stream `history` reads against, and a second one to read the same run against. `history` only |
 | `--min-runs N` | the recorded runs the flaky and duration verdicts need, the report's HistoryMinRuns (default 5). `history` only |
 | `--alternating-runs N` | how far back a set of calls the scenario held counts as a known state, the report's HistoryAlternatingRuns (default 10). `history` only |
+| `--count-runs N` | how many runs a changed call count must hold before it is behaviour, the report's HistoryCountRuns (default 2). `history` only |
 | `--suite NAME` | the suite `history` looks the run up under, when the report does not carry one. `history` only |
 | `--describe` | one JSON document naming every verb, the flags each one reads (with what each takes), the address forms with a parsing example of each, the exit codes and the envelope's members: `kronikol query --describe`. Needs no report. Generated from the table the tool dispatches and validates from, so it cannot name a verb the tool will not run. For tooling — a wrapper validating arguments, an MCP server building a tool list — not for reading; this document is the prose form of the same table (3.7.0) |
 
@@ -418,7 +419,7 @@ holding one), else exit 2 naming both. The argument order inverts on purpose —
 old report first, `diff <report> --baseline` names the current one — but the output is oriented the same
 way either way: `-` is the older run, `+` the newer, `BROKE` means it passed then and fails now.
 
-### `history <report> [s3 | sid:<id>] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--min-runs N] [--alternating-runs N] [--suite NAME] [--history FILE]`
+### `history <report> [s3 | sid:<id>] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--min-runs N] [--alternating-runs N] [--count-runs N] [--suite NAME] [--history FILE]`
 
 ```
 kronikol query history <report>                  # every scenario with a verdict, regressions first

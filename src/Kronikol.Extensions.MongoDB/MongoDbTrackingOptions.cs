@@ -63,7 +63,11 @@ public record MongoDbTrackingOptions
     /// When <c>true</c>, a command that names a document (a filter or update on its <c>_id</c>) and resolved
     /// no scenario is attributed to the scenario that last wrote the document, per call, with the provenance
     /// <see cref="Kronikol.Tracking.AttributionSource.DocumentOwner"/>. Reads the store
-    /// <see cref="AutoCorrelateWrites"/> fills. Default: <c>true</c> (3.19.0).
+    /// <see cref="AutoCorrelateWrites"/> fills. From 3.20.0 a claim by filter (a <c>findAndModify</c> that
+    /// names no <c>_id</c>) is attributed by the document the reply names, and a detached flow that wrote
+    /// such a document keeps the scenario for what it does until its next command on a document that is not
+    /// the scenario's (the dispatch between the claim and the status update), held until that command
+    /// confirms it; see <see cref="Kronikol.Tracking.DocumentOwnership"/>. Default: <c>true</c> (3.19.0).
     /// </summary>
     public bool AttributeByDocumentOwner { get; set; } = true;
 

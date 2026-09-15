@@ -45,6 +45,23 @@ public class TestInfoResolverTests
     }
 
     [Fact]
+    public void A_detached_flow_working_on_a_scenarios_document_resolves_to_that_scenario_as_document_flow()
+    {
+        // Between the claim of a scenario's outbox row and the status update, the dispatch call names no
+        // document; the flow's open window names the scenario. A scope a message carried still wins.
+        using (TestIdentityScope.Detach())
+        {
+            DocumentOwnership.AfterWrite(new TestIdentity("Pay", "s-1", AttributionSource.DocumentOwner));
+
+            var who = TestInfoResolver.ResolveWithSource(null, () => ("Inherited", "inherited-1"))!.Value;
+            Assert.Equal(("s-1", AttributionSource.DocumentFlow, true), (who.Id, who.Source, who.IsAttributed));
+
+            using (TestIdentityScope.Begin("Correlated", "c-1"))
+                Assert.Equal(AttributionSource.Scope, TestInfoResolver.ResolveWithSource(null, (Func<(string, string)>?)null)!.Value.Source);
+        }
+    }
+
+    [Fact]
     public void Background_capture_hands_back_the_unknown_identity_with_its_reason()
     {
         RequestResponseLogger.CaptureBackground = true;

@@ -34,5 +34,13 @@ public enum AttributionSource
     /// attributed to that scenario, the document's last attributed writer, for this one call (3.19.0). A
     /// detached hosted service claiming, retrying and failing an outbox row lands where the row was seeded.
     /// </summary>
-    DocumentOwner
+    DocumentOwner,
+
+    /// <summary>
+    /// Nothing named a scenario, but the detached flow had just written a document a scenario owns, and this
+    /// call came between that write and the flow's next operation on the document (3.20.0): the dispatch
+    /// between the claim of an outbox row and its status update. Held until that operation confirmed it; see
+    /// <see cref="DocumentOwnership"/>.
+    /// </summary>
+    DocumentFlow
 }

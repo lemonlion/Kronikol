@@ -940,4 +940,128 @@ public class CosmosTrackingMessageHandlerTests : IDisposable
 
         Assert.Equal(2, GetLogsFromThisTest().Length);
     }
+
+    // ─── The owner window (plans/OWNER_WINDOW_AND_COUNT_CONFIRMATION_PLAN.md) ──
+
+    /// <summary>A tracked call that names no document, made by the flow: the outbox processor's dispatch.</summary>
+    private static void Dispatch(string what) =>
+        RequestResponseLogger.LogPair(HttpMethod.Post, new Uri("http://dispatcher/" + what), "Dispatcher", "Breakfast Provider");
+
+    private static AttributionSource?[] Sources(IEnumerable<RequestResponseLog> logs) =>
+        logs.Where(l => l.Type == RequestResponseType.Request).Select(l => l.AttributionSource).ToArray();
+
+    [Fact]
+    public async Task The_flow_that_wrote_a_scenarios_document_keeps_the_scenario_until_it_touches_another()
+    {
+        // Claim X, dispatch, update X: the dispatch names no document, but the flow was working on X between
+        // two operations on it, and X is the scenario's. The poll that follows names no document and ends it,
+        // so what came after the update and before the poll is nobody's, and so is what came after the poll.
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.Created, """{"id":"order-1"}""");
+        using var invoker = CreateInvoker(MakeOptions());
+        await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
+
+        using (TestIdentityScope.Detach())
+        {
+            _innerHandler.ResponseToReturn = Answer(HttpStatusCode.OK, """{"id":"order-1","status":"Processing"}""");
+            await invoker.SendAsync(MakeReplaceRequest(), CancellationToken.None); // the claim
+            Dispatch("first");
+            await invoker.SendAsync(MakeReplaceRequest(), CancellationToken.None); // the status update
+            Dispatch("after");
+            _innerHandler.ResponseToReturn = Answer(HttpStatusCode.OK, "[]");
+            await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);   // the next poll
+            Dispatch("orphan");
+        }
+
+        var logs = GetLogsFromThisTest();
+        Assert.Equal([AttributionSource.TestContext, AttributionSource.DocumentOwner, AttributionSource.DocumentFlow, AttributionSource.DocumentOwner], Sources(logs));
+        Assert.Equal("http://dispatcher/first", logs.Where(l => l.Type == RequestResponseType.Request).ElementAt(2).Uri.ToString());
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.Uri.ToString() is "http://dispatcher/after" or "http://dispatcher/orphan");
+    }
+
+    [Fact]
+    public async Task A_read_does_not_open_the_window_but_the_owners_document_confirms_it()
+    {
+        // A poller reading the scenario's document every few hundred milliseconds must not make everything
+        // between its reads the scenario's: only a write opens the window. Any operation on the owner's
+        // document, a read included, confirms what the flow did since the write.
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.Created, """{"id":"order-1"}""");
+        using var invoker = CreateInvoker(MakeOptions());
+        await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
+
+        using (TestIdentityScope.Detach())
+        {
+            _innerHandler.ResponseToReturn = Answer(HttpStatusCode.OK, """{"id":"order-1"}""");
+            await invoker.SendAsync(MakeReadRequest(), CancellationToken.None);    // per call; opens nothing
+            Dispatch("after-read");
+            await invoker.SendAsync(MakeReplaceRequest(), CancellationToken.None); // opens
+            Dispatch("after-write");
+            await invoker.SendAsync(MakeReadRequest(), CancellationToken.None);    // the owner's: confirms
+        }
+
+        var logs = GetLogsFromThisTest();
+        Assert.Equal([AttributionSource.TestContext, AttributionSource.DocumentOwner, AttributionSource.DocumentOwner, AttributionSource.DocumentFlow, AttributionSource.DocumentOwner], Sources(logs));
+        Assert.Equal("http://dispatcher/after-write", logs.Where(l => l.Type == RequestResponseType.Request).ElementAt(3).Uri.ToString());
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.Uri.ToString() == "http://dispatcher/after-read");
+    }
+
+    [Fact]
+    public async Task Work_between_two_scenarios_documents_is_nobodys()
+    {
+        // Two rows of two scenarios claimed by one loop, or two workers sharing one flow: a call between the
+        // claim of one and an operation on the other cannot be placed, and is dropped rather than guessed.
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.Created, """{"id":"order-1"}""");
+        using var invoker = CreateInvoker(MakeOptions());
+        await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
+        var otherId = Guid.NewGuid().ToString();
+        var otherOptions = MakeOptions();
+        otherOptions.CurrentTestInfoFetcher = () => ("Other", otherId);
+        using var other = new HttpMessageInvoker(new CosmosTrackingMessageHandler(otherOptions, _innerHandler));
+        _innerHandler.ResponseToReturn = Answer(HttpStatusCode.Created, """{"id":"order-2"}""");
+        await other.SendAsync(MakeCreateRequest(), CancellationToken.None);
+
+        using (TestIdentityScope.Detach())
+        {
+            _innerHandler.ResponseToReturn = Answer(HttpStatusCode.OK, """{"id":"order-1"}""");
+            await invoker.SendAsync(MakeReplaceRequest("order-1"), CancellationToken.None); // this scenario's row
+            Dispatch("between");
+            _innerHandler.ResponseToReturn = Answer(HttpStatusCode.OK, """{"id":"order-2"}""");
+            await invoker.SendAsync(MakeReplaceRequest("order-2"), CancellationToken.None); // the other scenario's
+            Dispatch("theirs");
+            await invoker.SendAsync(MakeReplaceRequest("order-2"), CancellationToken.None);
+        }
+
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.Uri.ToString() == "http://dispatcher/between");
+        var theirs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == otherId && l.Uri.ToString() == "http://dispatcher/theirs").ToArray();
+        Assert.Equal(2, theirs.Length);
+        Assert.All(theirs, l => Assert.Equal(AttributionSource.DocumentFlow, l.AttributionSource));
+    }
+
+    [Fact]
+    public async Task An_identity_less_write_never_becomes_the_documents_owner()
+    {
+        // With background capture on, an identity-less write is logged under the unknown identity. It must
+        // not register that identity as the document's owner, or the next identity-less operation on the
+        // document would be attributed to nobody with the provenance of an owner.
+        var id = "bg-" + Guid.NewGuid().ToString("N");
+        RequestResponseLogger.CaptureBackground = true;
+        try
+        {
+            using var invoker = CreateInvoker(MakeOptions());
+            using (TestIdentityScope.Detach())
+            {
+                _innerHandler.ResponseToReturn = Answer(HttpStatusCode.OK, "{\"id\":\"" + id + "\"}");
+                await invoker.SendAsync(MakeReplaceRequest(id), CancellationToken.None);
+                await invoker.SendAsync(MakeReplaceRequest(id), CancellationToken.None);
+            }
+        }
+        finally
+        {
+            RequestResponseLogger.CaptureBackground = false;
+        }
+
+        Assert.Null(TestCorrelationStore.Lookup(CorrelationKeys.Cosmos("CosmosDB", id)));
+        var background = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.Uri.ToString().Contains(id)).ToArray();
+        Assert.Equal(4, background.Length);
+        Assert.All(background, l => Assert.Equal((TestIdentityScope.UnknownTestId, AttributionSource.Detached), (l.TestId, l.AttributionSource)));
+    }
 }

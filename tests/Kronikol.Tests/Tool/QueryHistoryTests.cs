@@ -345,4 +345,15 @@ public class QueryHistoryTests : IDisposable
         Assert.Equal(2, Query(null, "history", report, "--alternating-runs", "0").Exit);
         Assert.Equal(2, Query(null, "history", report, "--alternating-runs", "ten").Exit);
     }
+
+    [Fact]
+    public void Count_runs_is_taken_and_checked()
+    {
+        Seed("PP", "PP", "PP");
+        var report = WriteReport(pay: "Passed");
+
+        Assert.Equal(0, Query(null, "history", report, "--count-runs", "3").Exit);
+        Assert.Equal(2, Query(null, "history", report, "--count-runs", "0").Exit);
+        Assert.Equal(2, Query(null, "history", report, "--count-runs", "ten").Exit);
+    }
 }

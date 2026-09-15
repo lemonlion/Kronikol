@@ -95,6 +95,16 @@ public class BackgroundAttributionTests
     }
 
     [Fact]
+    public void A_document_flow_attribution_is_inherited_too()
+    {
+        // The flow was working on the scenario's row after the scenario ended: the row named the scenario,
+        // the window carried it to the dispatch, and neither is anything the scenario did after its end.
+        var log = Log("s1", AttributionSource.DocumentFlow, Ended.AddSeconds(1));
+
+        Assert.Equal(AttributionSource.Expired, Assert.Single(BackgroundAttribution.Expire(Scenario(), [log])).AttributionSource);
+    }
+
+    [Fact]
     public void The_global_fallback_is_inherited_too()
     {
         var log = Log("s1", AttributionSource.GlobalFallback, Ended.AddSeconds(1));

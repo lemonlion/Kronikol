@@ -37,8 +37,9 @@ public sealed record BackgroundCalls(int Calls, IReadOnlyList<BackgroundCallGrou
 /// had long since finished, and the scenario's call set changed from run to run with the timing of
 /// background loops. The scenario's recorded end (<see cref="Scenario.EndedAt"/>) is the boundary: a call
 /// whose identity was <em>inherited</em> (<see cref="AttributionSource.TestContext"/>,
-/// <see cref="AttributionSource.GlobalFallback"/>, or <see cref="AttributionSource.DocumentOwner"/>, a
-/// document the scenario wrote and the host touched later) and that started after the scenario ended is the host's
+/// <see cref="AttributionSource.GlobalFallback"/>, <see cref="AttributionSource.DocumentOwner"/>, a
+/// document the scenario wrote and the host touched later, or <see cref="AttributionSource.DocumentFlow"/>,
+/// what the host did between two such touches) and that started after the scenario ended is the host's
 /// background work, and is re-attributed to no scenario, with <see cref="RequestResponseLog.ExpiredFromTestId"/>
 /// saying which scenario it was taken from.</para>
 /// <para>An identity that was <em>stated</em> (a request header, an explicit scope) is trusted whatever
@@ -148,7 +149,8 @@ public static class BackgroundAttribution
             background);
     }
 
-    /// <summary>The two sources that are inherited from an execution context rather than stated by the caller.</summary>
+    /// <summary>The sources that are inherited from a context or a document rather than stated by the caller.</summary>
     private static bool Inherited(RequestResponseLog log) =>
-        log.AttributionSource is Tracking.AttributionSource.TestContext or Tracking.AttributionSource.GlobalFallback or Tracking.AttributionSource.DocumentOwner;
+        log.AttributionSource is Tracking.AttributionSource.TestContext or Tracking.AttributionSource.GlobalFallback
+            or Tracking.AttributionSource.DocumentOwner or Tracking.AttributionSource.DocumentFlow;
 }

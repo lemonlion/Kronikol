@@ -14,4 +14,6 @@ namespace Kronikol.Tests;
 [CollectionDefinition("DiagramsFetcher")]
 // One collection for every global the tests share — the capture store (PendingLogsFixture) AND the
 // tracking-component registry: two collections ran in parallel and each cleared the other's state.
-public class DiagramsFetcherCollection : ICollectionFixture<PendingLogsFixture>, ICollectionFixture<TrackingComponentRegistryFixture>, ICollectionFixture<Kronikol.Tests.Tracking.TestIdentityScopeFixture>;
+// The correlation store is process-wide too, and the owner window ties it to the capture store: a test
+// that clears the store while another looks a document up in it reads no owner.
+public class DiagramsFetcherCollection : ICollectionFixture<PendingLogsFixture>, ICollectionFixture<TrackingComponentRegistryFixture>, ICollectionFixture<Kronikol.Tests.Tracking.TestIdentityScopeFixture>, ICollectionFixture<TestCorrelationStoreFixture>;

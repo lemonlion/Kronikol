@@ -121,6 +121,7 @@ public sealed class HistoryRunContext
                         SlowerBy = options.HistorySlowerBy,
                         SlowerMinMs = options.HistorySlowerMinMs,
                         AlternatingRuns = options.HistoryAlternatingRuns,
+                        CountRuns = options.HistoryCountRuns,
                         PartialThreshold = options.HistoryPartialThreshold,
                         ReportReordered = options.HistoryReordered,
                         // A pull request's runs form their own stream, and the question a pull request asks is

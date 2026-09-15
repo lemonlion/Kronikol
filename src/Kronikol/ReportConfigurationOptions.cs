@@ -586,6 +586,17 @@ public record ReportConfigurationOptions
     public int HistoryAlternatingRuns { get; set; } = 10;
 
     /// <summary>
+    /// How many consecutive runs a changed call count must hold before the change is behaviour. Default: 2.
+    /// The same set of calls made a different number of times is an N+1 regression when it stays and the
+    /// processor's timing when it does not, and it does not stay more often than it does (measured on a
+    /// consumer's ledger: ten of thirteen such changes reverted the next run). The run that shows the new
+    /// count reads it out in the evidence; the run that still holds it is the verdict, and names both. 1 is
+    /// the 3.15.0 rule, a verdict on the run the count changes. Whatever this is set to, the count must
+    /// have been constant over <see cref="HistoryMinRuns"/> runs before the change.
+    /// </summary>
+    public int HistoryCountRuns { get; set; } = 2;
+
+    /// <summary>
     /// The share of the previous run's scenarios a run may lack before it is recorded as partial — a
     /// filtered run, a crashed half — so its missing scenarios are not reported absent and it is not the
     /// run the next one is compared against. Default: 0.10.

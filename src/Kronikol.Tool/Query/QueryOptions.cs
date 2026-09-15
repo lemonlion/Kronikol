@@ -105,6 +105,9 @@ internal sealed class QueryOptions
     /// <summary>How far back a set of calls the scenario held counts as a known state (history only); null leaves the report's bar.</summary>
     public int? AlternatingRuns { get; private set; }
 
+    /// <summary>On history: how many runs a changed call count must hold before it is behaviour (the report's HistoryCountRuns).</summary>
+    public int? CountRuns { get; private set; }
+
     /// <summary><c>history --suite NAME</c>: the suite, when the report does not carry one.</summary>
     public string? SuiteOverride { get; private set; }
 
@@ -136,7 +139,7 @@ internal sealed class QueryOptions
         "--where", "--group-by", "--tolerance", "--count", "--json", "--failed", "--errors-only",
         "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
         "--number", "--baseline", "--describe", "--history", "--flaky", "--new", "--failing", "--regressed",
-        "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--suite"
+        "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--suite"
     ];
 
     /// <summary>
@@ -298,6 +301,15 @@ internal sealed class QueryOptions
                     }
                     options.AlternatingRuns = parsedAlternating;
                     break;
+                case "--count-runs":
+                    if (Next(arg) is not { } countRuns) return null;
+                    if (!int.TryParse(countRuns, out var parsedCountRuns) || parsedCountRuns <= 0)
+                    {
+                        error.WriteLine("--count-runs takes a positive number of runs: how many runs a changed call count must hold before it is behaviour, the report's HistoryCountRuns (default 2).");
+                        return null;
+                    }
+                    options.CountRuns = parsedCountRuns;
+                    break;
                 case "--suite": if (Next(arg) is not { } suiteName) return null; options.SuiteOverride = suiteName; break;
                 case "--flaky": options.Flaky = true; break;
                 case "--new": options.New = true; break;
@@ -404,6 +416,7 @@ internal sealed class QueryOptions
         if (CompareBranch is not null) Flag("--compare-branch", CompareBranch);
         if (MinRuns is not null) Flag("--min-runs", MinRuns.Value.ToString(CultureInfo.InvariantCulture));
         if (AlternatingRuns is not null) Flag("--alternating-runs", AlternatingRuns.Value.ToString(CultureInfo.InvariantCulture));
+        if (CountRuns is not null) Flag("--count-runs", CountRuns.Value.ToString(CultureInfo.InvariantCulture));
         if (Flaky) Flag("--flaky");
         if (New) Flag("--new");
         if (Failing) Flag("--failing");

@@ -11,6 +11,7 @@ namespace Kronikol.Tracking;
 ///   <item><c>CurrentTestInfoFetcher</c> delegate (test framework AsyncLocal)</item>
 ///   <item><see cref="TestIdentityScope.Current"/> (this class, AsyncLocal)</item>
 ///   <item><see cref="TestIdentityScope.GlobalFallback"/> (static, for pre-existing threads)</item>
+///   <item><see cref="TestIdentityScope.OwnerWindow"/> (a detached flow working on a scenario's document)</item>
 /// </list>
 /// </para>
 /// <example>
@@ -46,13 +47,25 @@ public static class TestIdentityScope
     public static readonly (string Name, string Id) UnknownIdentity = (UnknownTestName, UnknownTestId);
 
     private static readonly AsyncLocal<(string Name, string Id)?> CurrentIdentity = new();
-    private static readonly AsyncLocal<bool> DetachedFlow = new();
+    // The flow's state is an object the slot refers to, not a value in the slot: a tracker deep inside a
+    // database SDK's async call can then leave something (the owner window) for the flow that called it.
+    private static readonly AsyncLocal<DetachedFlow?> Flow = new();
 
     /// <summary>
     /// Whether the current flow is detached from any test identity: inside <see cref="Detach"/>, or work
     /// started there. A detached flow resolves to no scenario unless a <see cref="Begin"/> scope names one.
     /// </summary>
-    public static bool IsDetached => DetachedFlow.Value;
+    public static bool IsDetached => Flow.Value is not null;
+
+    /// <summary>
+    /// The owner window of the current detached flow: the scenario whose document the flow last wrote while
+    /// it had no scenario of its own, kept until the flow's next operation on a document that is not that
+    /// scenario's (<see cref="DocumentOwnership"/>). Null outside a detached flow, and while no window is open.
+    /// </summary>
+    public static (string Name, string Id)? OwnerWindow => Flow.Value?.Window;
+
+    /// <summary>The current detached flow's state, or null when the flow is not detached.</summary>
+    internal static DetachedFlow? CurrentFlow => Flow.Value;
 
     /// <summary>
     /// Detaches the current flow from the test identity it would otherwise inherit, until the returned
@@ -64,10 +77,10 @@ public static class TestIdentityScope
     /// </summary>
     public static IDisposable Detach()
     {
-        var previous = DetachedFlow.Value;
+        var previous = Flow.Value;
         var previousIdentity = CurrentIdentity.Value;
         var previousFromMessage = FromMessage.Value;
-        DetachedFlow.Value = true;
+        Flow.Value = new DetachedFlow();
         // The identity the flow inherited goes with the attachment: only a scope begun inside the detached
         // flow names a scenario there. Restored on dispose, so the caller's own flow keeps it.
         CurrentIdentity.Value = null;
@@ -75,11 +88,11 @@ public static class TestIdentityScope
         return new DetachScope(previous, previousIdentity, previousFromMessage);
     }
 
-    private sealed class DetachScope(bool previous, (string Name, string Id)? previousIdentity, bool previousFromMessage) : IDisposable
+    private sealed class DetachScope(DetachedFlow? previous, (string Name, string Id)? previousIdentity, bool previousFromMessage) : IDisposable
     {
         public void Dispose()
         {
-            DetachedFlow.Value = previous;
+            Flow.Value = previous;
             CurrentIdentity.Value = previousIdentity;
             FromMessage.Value = previousFromMessage;
         }

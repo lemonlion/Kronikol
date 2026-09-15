@@ -25,7 +25,9 @@ public readonly record struct TestIdentity(string Name, string Id, AttributionSo
 ///   <item><see cref="TestIdentityScope.GlobalFallback"/> (for pre-existing threads that can't inherit AsyncLocal)</item>
 /// </list>
 /// A detached flow (<see cref="TestIdentityScope.Detach"/>) skips the delegate and the global fallback:
-/// a host started inside a test would otherwise carry that test into every background call it makes.
+/// a host started inside a test would otherwise carry that test into every background call it makes. In a
+/// detached flow with no scope, the flow's owner window (<see cref="TestIdentityScope.OwnerWindow"/>, a
+/// scenario whose document the flow just wrote) answers with <see cref="AttributionSource.DocumentFlow"/>.
 /// <see cref="ResolveWithSource(IHttpContextAccessor?, Func{ValueTuple{string, string}}?)"/> says which
 /// level answered, and that mark travels with the call so the report can tell a scenario's own work from
 /// work that merely inherited its context.
@@ -88,9 +90,13 @@ public static class TestInfoResolver
         // inherited is exactly what it must not use.
         if (TestIdentityScope.IsDetached)
         {
-            return TestIdentityScope.Current is { } scoped
-                ? new TestIdentity(scoped.Name, scoped.Id, AttributionSource.Scope)
-                : Unattributed(AttributionSource.Detached);
+            if (TestIdentityScope.Current is { } scoped)
+                return new TestIdentity(scoped.Name, scoped.Id, AttributionSource.Scope);
+            // The flow is working on a scenario's document (DocumentOwnership): what it does until its next
+            // operation on a document that is not the scenario's is the scenario's, held until confirmed.
+            if (TestIdentityScope.OwnerWindow is { } owner)
+                return new TestIdentity(owner.Name, owner.Id, AttributionSource.DocumentFlow);
+            return Background(AttributionSource.Detached);
         }
 
         try
@@ -110,10 +116,14 @@ public static class TestInfoResolver
         if (TestIdentityScope.GlobalFallback is { } fallback)
             return new TestIdentity(fallback.Name, fallback.Id, AttributionSource.GlobalFallback);
 
-        return Unattributed(AttributionSource.None);
+        return Background(AttributionSource.None);
     }
 
-    private static TestIdentity? Unattributed(AttributionSource source) =>
+    /// <summary>
+    /// What a call that resolved nothing is: null, or the background identity with the reason when
+    /// <see cref="RequestResponseLogger.CaptureBackground"/> is on.
+    /// </summary>
+    internal static TestIdentity? Background(AttributionSource source) =>
         RequestResponseLogger.CaptureBackground
             ? new TestIdentity(TestIdentityScope.UnknownTestName, TestIdentityScope.UnknownTestId, source)
             : null;

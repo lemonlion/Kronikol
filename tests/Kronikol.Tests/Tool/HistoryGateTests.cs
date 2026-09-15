@@ -250,6 +250,19 @@ public class HistoryGateTests : IDisposable
     }
 
     [Fact]
+    public void The_gate_takes_the_runs_a_new_count_must_hold()
+    {
+        // The report takes HistoryCountRuns; the gate takes --count-runs and refuses one that is not a
+        // positive number. The rule itself is pinned by the analyzer tests.
+        Seed("PP", "PP", "PP");
+        var report = WriteReport(pay: "Passed");
+
+        Assert.Equal(0, Run("gate", report, "--count-runs", "3").Exit);
+        Assert.Equal(2, Run("gate", report, "--count-runs", "0").Exit);
+        Assert.Contains("--count-runs", Run("gate", report, "--count-runs", "ten").Err);
+    }
+
+    [Fact]
     public void No_ledger_and_bad_flags_are_usage_errors()
     {
         var report = WriteReport(pay: "Failed");

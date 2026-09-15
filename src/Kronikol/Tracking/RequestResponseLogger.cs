@@ -53,11 +53,36 @@ public static class RequestResponseLogger
         if (log.Timestamp is null)
             log = log with { Timestamp = DateTimeOffset.UtcNow };
 
+        // A call the owner window answered for (DocumentOwnership) is held by its flow until an operation on
+        // the owner's document confirms it; a foreign operation or a query drops it instead.
+        if (log.AttributionSource == AttributionSource.DocumentFlow && TestIdentityScope.CurrentFlow is { } flow)
+        {
+            if (flow.TryHold(log))
+                return;
+            // The window closed between the call's resolution and its capture: the call is nobody's.
+            if (!CaptureBackground)
+                return;
+            log = log with
+            {
+                TestId = TestIdentityScope.UnknownTestId,
+                TestName = TestIdentityScope.UnknownTestName,
+                AttributionSource = AttributionSource.Detached
+            };
+        }
+
         RequestsAndResponses.Enqueue(log);
     }
 
+    /// <summary>Stores an entry that has been through <see cref="Log"/> once already: a held call, confirmed or dropped.</summary>
+    internal static void Enqueue(RequestResponseLog log) => RequestsAndResponses.Enqueue(log);
+
     public static RequestResponseLog[] RequestAndResponseLogs => RequestsAndResponses.ToArray();
-    public static void Clear() => RequestsAndResponses.Clear();
+
+    public static void Clear()
+    {
+        RequestsAndResponses.Clear();
+        DetachedFlow.ForgetAll();
+    }
 
     /// <summary>
     /// Logs a matched request/response pair sharing the same TraceId and RequestResponseId.

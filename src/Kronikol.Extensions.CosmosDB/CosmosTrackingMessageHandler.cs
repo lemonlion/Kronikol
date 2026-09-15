@@ -47,10 +47,14 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
 
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         // A document a scenario wrote is the scenario's: an operation that names a document and resolved no
-        // scenario is attributed to the document's last attributed writer, for this one call. See
-        // DocumentOwnership and plans/DOCUMENT_OWNERSHIP_PLAN.md.
-        if (_options.AttributeByDocumentOwner && cosmosOp.DocumentId is { } ownedId)
-            testInfo = DocumentOwnership.Resolve(testInfo, CorrelationKey(ownedId)) ?? testInfo;
+        // scenario is attributed to the document's last attributed writer, for this one call, and the flow
+        // that wrote it is doing the scenario's work until its next operation on a document that is not the
+        // scenario's. See DocumentOwnership and plans/DOCUMENT_OWNERSHIP_PLAN.md.
+        if (_options.AttributeByDocumentOwner)
+        {
+            var (ownedKey, kind) = ForOwnership(cosmosOp);
+            testInfo = DocumentOwnership.ForOperation(testInfo, ownedKey, kind);
+        }
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -166,8 +170,15 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
 
     private void AutoCorrelateIfWrite(CosmosOperationInfo cosmosOp, TestIdentity testInfo, HttpResponseMessage response, string? responseContent)
     {
-        if (!_options.AutoCorrelateWrites) return;
         if (!response.IsSuccessStatusCode) return;
+
+        if (_options.AttributeByDocumentOwner && ForOwnership(cosmosOp).Kind == DocumentOperationKind.Write)
+            DocumentOwnership.AfterWrite(testInfo);
+
+        if (!_options.AutoCorrelateWrites) return;
+        // Only a scenario can own a document: the background identity registered as a writer would answer
+        // the next identity-less operation on the document with the provenance of an owner.
+        if (!testInfo.IsAttributed) return;
 
         var isWrite = cosmosOp.Operation is CosmosOperation.Create
             or CosmosOperation.Upsert
@@ -178,6 +189,24 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
         if (documentId is null) return;
 
         TestCorrelationStore.Correlate(CorrelationKey(documentId), testInfo.Name, testInfo.Id);
+    }
+
+    /// <summary>
+    /// What the operation is to document ownership: the store's key for the document it names, when it names
+    /// one, and whether it reads, writes or queries. A stored procedure, a batch and a metadata call are
+    /// neither anyone's document nor the poll, and leave a window as it is.
+    /// </summary>
+    private (string? Key, DocumentOperationKind Kind) ForOwnership(CosmosOperationInfo cosmosOp)
+    {
+        var key = cosmosOp.DocumentId is { } id ? CorrelationKey(id) : null;
+        return cosmosOp.Operation switch
+        {
+            CosmosOperation.Read => (key, DocumentOperationKind.Read),
+            CosmosOperation.Create or CosmosOperation.Upsert or CosmosOperation.Replace or CosmosOperation.Patch or CosmosOperation.Delete
+                => (key, DocumentOperationKind.Write),
+            CosmosOperation.Query or CosmosOperation.List => (null, DocumentOperationKind.Query),
+            _ => (null, DocumentOperationKind.Read)
+        };
     }
 
     /// <summary>The store's key for a document: the consumer's extractor when it set one, else the default.</summary>

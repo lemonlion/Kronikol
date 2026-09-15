@@ -411,27 +411,63 @@ public static class HistoryAnalyzer
                     evidence.Add($"same status, different calls: {callsText}{NamedCalls("new", newCalls)}{NamedCalls("gone", goneCalls)}");
                 }
             }
-            else if (currentPoint.Calls is { } now && previousShaped.Calls is { } before && now != before && currentResult == previousShaped.Result)
+            else if (currentPoint.Calls is { } now && previousShaped.Calls is not null && currentResult == previousShaped.Result)
             {
                 // The same calls, made a different number of times. "3, 3, 3, then 5" is an N+1 regression
                 // the set cannot see; "7, 8, 7, then 9" is a retry against a throttled emulator or a
                 // consumer's work landing in whichever scenario is running. The scenario's own record
-                // tells them apart: the count is a verdict once it has been constant over the minimum
-                // runs, and read out otherwise.
+                // tells them apart: the count is a verdict once it had been constant over the minimum
+                // runs, and read out otherwise. And a count that moved once reverts more often than it
+                // holds (measured on a consumer's ledger: ten of thirteen), so the new count must be held
+                // for CountRuns runs before it is behaviour: the run that shows it reads it out, the run
+                // that confirms it is the verdict, and the evidence names both.
                 var counted = shaped.Where(p => p.Calls is not null).ToList();
-                var countText = $"calls {before.ToString(CultureInfo.InvariantCulture)} in {previousShaped.RunId} to {now.ToString(CultureInfo.InvariantCulture)} now";
-                if (counted.Count >= options.MinRuns && counted.All(p => p.Calls == before))
+                // The latest prior runs that already hold this run's count with this run's set: the change
+                // being confirmed, at most CountRuns - 1 of them. What comes before them is the stretch the
+                // count must have been constant over.
+                var held = 0;
+                while (held < options.CountRuns - 1 && held < counted.Count
+                       && counted[^(held + 1)].Calls == now
+                       && string.Equals(counted[^(held + 1)].ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal))
+                    held++;
+                var stretch = counted.Take(counted.Count - held).ToList();
+                if (stretch.Count > 0 && stretch[^1].Calls is { } before && before != now)
                 {
-                    verdicts.Add(HistoryVerdictKind.BehaviourChanged);
-                    evidence.Add($"the same calls made a different number of times: {countText}, constant over the last {counted.Count.ToString(CultureInfo.InvariantCulture)} runs");
-                }
-                else if (counted.Count < options.MinRuns)
-                {
-                    evidence.Add($"{countText}; a count verdict needs {options.MinRuns.ToString(CultureInfo.InvariantCulture)} runs with the count constant");
-                }
-                else
-                {
-                    evidence.Add($"{countText}; the count varies run to run for this scenario, so it is not read as behaviour");
+                    var heldRuns = string.Join(", ", counted.Skip(counted.Count - held).Select(p => p.RunId));
+                    var nowText = now.ToString(CultureInfo.InvariantCulture);
+                    var beforeText = before.ToString(CultureInfo.InvariantCulture);
+                    var from = $"calls {beforeText} in {stretch[^1].RunId}";
+                    var to = held == 0 ? $"to {nowText} now" : $"to {nowText} in {heldRuns} and now";
+                    var constant = stretch.Count >= options.MinRuns && stretch.All(p => p.Calls == before);
+                    // A count that changed with the set was reported then, as a different set of calls.
+                    var countOnly = string.Equals(stretch[^1].ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal);
+                    if (!countOnly)
+                    {
+                        // Nothing to add: the set change said it.
+                    }
+                    else if (constant && held == options.CountRuns - 1)
+                    {
+                        verdicts.Add(HistoryVerdictKind.BehaviourChanged);
+                        evidence.Add(held == 0
+                            ? $"the same calls made a different number of times: {from} {to}, constant over the last {stretch.Count.ToString(CultureInfo.InvariantCulture)} runs"
+                            : $"the same calls made a different number of times: calls {beforeText} {to}, constant over the {stretch.Count.ToString(CultureInfo.InvariantCulture)} runs before");
+                    }
+                    else if (constant)
+                    {
+                        evidence.Add($"{from} {to}; a count verdict needs the new count held for {options.CountRuns.ToString(CultureInfo.InvariantCulture)} runs");
+                    }
+                    else if (stretch.Count < options.MinRuns)
+                    {
+                        evidence.Add($"{from} {to}; a count verdict needs {options.MinRuns.ToString(CultureInfo.InvariantCulture)} runs with the count constant");
+                    }
+                    else if (held == 0 && stretch.Count > 1 && stretch.Take(stretch.Count - 1).All(p => p.Calls == now))
+                    {
+                        evidence.Add($"{from} {to}; back to the count held over the {(stretch.Count - 1).ToString(CultureInfo.InvariantCulture)} runs before it");
+                    }
+                    else
+                    {
+                        evidence.Add($"{from} {to}; the count varies run to run for this scenario, so it is not read as behaviour");
+                    }
                 }
             }
             else if (options.ReportReordered && currentPoint.ShapeOrdered is { Length: > 0 } && previousShaped.ShapeOrdered is { Length: > 0 }

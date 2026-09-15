@@ -35,6 +35,38 @@ public class TestIdentityScopeTests
     }
 
     [Fact]
+    public async Task A_detached_flow_carries_an_owner_window_that_a_callee_opens_for_its_caller()
+    {
+        // The tracker that learns a document's owner runs inside the SDK's async call, so an AsyncLocal it
+        // set would be gone when the call returned to the processor. The window lives on the flow's holder:
+        // what a callee opens, the caller and everything after it see, until the flow is left.
+        Assert.Null(TestIdentityScope.OwnerWindow);
+        using (TestIdentityScope.Detach())
+        {
+            Assert.Null(TestIdentityScope.OwnerWindow);
+            await Task.Run(async () =>
+            {
+                await Task.Yield();
+                DocumentOwnership.AfterWrite(new TestIdentity("Pay", "s-1", AttributionSource.DocumentOwner));
+            });
+            Assert.Equal(("Pay", "s-1"), TestIdentityScope.OwnerWindow);
+            using (TestIdentityScope.Detach())
+                Assert.Null(TestIdentityScope.OwnerWindow); // a nested detachment is a flow of its own
+            Assert.Equal(("Pay", "s-1"), TestIdentityScope.OwnerWindow);
+        }
+        Assert.Null(TestIdentityScope.OwnerWindow);
+    }
+
+    [Fact]
+    public void Outside_a_detached_flow_there_is_no_window_to_open()
+    {
+        // Ownership stays per call there (3.19.0): nothing holds a window for a flow that was never detached.
+        DocumentOwnership.AfterWrite(new TestIdentity("Pay", "s-1", AttributionSource.DocumentOwner));
+
+        Assert.Null(TestIdentityScope.OwnerWindow);
+    }
+
+    [Fact]
     public void Current_is_null_when_no_scope_active()
     {
         TestIdentityScope.Reset();

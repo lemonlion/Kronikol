@@ -2,7 +2,7 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
-[Collection("TestCorrelationStore")]
+[Collection("DiagramsFetcher")]
 public class CorrelatedProcessingScopeTests
 {
     public CorrelatedProcessingScopeTests()
