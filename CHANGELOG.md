@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.17.0] - 2026-09-15
+
+**Minor - a scenario's calls are the scenario's.** New tracking surface (a provenance mark on every
+capture, hosted services that run detached from the test that built their host, message identities
+that end with the message), a `background` block in every report format, and a ledger line that lets
+a history verdict name a call. Nothing already in use changes meaning without being touched. Template
+pins move to 3.16.0.
+
+The cause, traced on a consumer's runs (`plans/BACKGROUND_ATTRIBUTION_PLAN.md`): a web host built
+inside a test inherits the test's execution context, and every hosted service the host starts inherits
+it in turn, so an outbox processor's polls and its claims of other scenarios' messages were recorded
+against whichever test built the host, for as long as the host lived, and that scenario's set of calls
+changed with the timing of the loop.
+
+### Added
+
+- **Every capture says how it got its scenario.** `RequestResponseLog.AttributionSource`
+  (`RequestHeader`, `TestContext`, `Scope`, `GlobalFallback`, `Detached`, `None`, `Expired`) and
+  `ExpiredFromTestId`, written to every interaction of the JSON, YAML and XML files as
+  `attributionSource` and `expiredFrom` (the XSD declares them). `TestInfoResolver.ResolveWithSource`
+  returns a `TestIdentity` that carries the source; `TestIdentityScope.Detach()` marks a flow whose
+  inherited identity is not to be used, clears the identity it inherited, and `IsDetached` says so.
+- **A scenario says when it ended.** `Scenario.EndedAt`, recorded by every adapter (xUnit v2 and v3,
+  NUnit, MSTest, TUnit, LightBDD, Reqnroll, BDDfy, Cucumber Messages) and written as `endedAt` /
+  `EndedAt`, millisecond UTC, beside `durationSeconds`; read back by the merge reader.
+- **Background calls, in every format.** At report time a call that inherited a scenario's identity
+  (`TestContext` or `GlobalFallback`) and started after that scenario ended is re-attributed to no
+  scenario (`BackgroundAttribution.Expire`): `attributionSource` becomes `Expired` and `expiredFrom`
+  names the scenario it was taken from. A pair follows its request; a stated identity (a header, a
+  scope) is trusted whatever the clock says. The data files gain a root `background` block (`calls`,
+  `afterScenarioEnd` by scenario, `interactions`; required by the schema, empty containers omitted in
+  XML), the HTML a **Background calls** section, the report diagnostics a `BackgroundCalls` entry per
+  scenario, and the console footer an Info line. The history line, the component diagram and the
+  digest all read the same re-attributed snapshot. `RequestResponseLogger.CaptureBackground` (default
+  off) keeps a call the resolver could not attribute, under the unknown identity with its source,
+  instead of dropping it.
+- **Hosted services run detached from the test that built their host.**
+  `services.DetachHostedServicesFromTestIdentity()` wraps every `IHostedService` registration so it
+  starts, runs and stops inside a detached flow; `AddTestTrackingContextPropagation()` calls it, so
+  a consumer that already propagates context gets it without a change. A message that names its
+  scenario (`SetFromMessage`, `Begin`) still reaches it. Calling it twice wraps once; keyed
+  registrations are left alone.
+- **A message's identity ends with the message.** `TestIdentityScope.ClearMessageIdentity()` clears
+  an identity `SetFromMessage` established and leaves one `Begin` established alone. The Kafka,
+  Service Bus and Event Hubs wrappers clear the previous message's identity before establishing the
+  next one, the MassTransit observer clears it after the consumer ran, and the Pub/Sub subscriber
+  scopes the identity to the handler it owns.
+- **The behaviour verdict names the call.** The ledger gains a `shapes` line (the run's distinct
+  templated calls, interned by content hash like a roster) and the run line `shapes` and `callSets`
+  (per position, indices into it). `behaviour-changed` evidence for a different set now reads
+  `...; new: <call>; gone: <call>` (three each, then a count), and `ScenarioHistory.NewCalls` /
+  `GoneCalls` carry the full lists, also on `kronikol query history --json` (`newCalls`, `goneCalls`).
+  `HistoryFragment`, `HistoryFold` and `HistoryRunBuilder` carry the list, `kronikol history verify`
+  checks it, `prune` and `compact` drop unreferenced ones. The format version stays 1: a line from
+  before 3.17.0 reads as before, and a change against one is counted rather than named. A line
+  appended without its list is written without the references rather than refused.
+
+### Changed
+
+- The JSON schema requires the root `background` key, and the XSD sequence gains `Background` before
+  `Diagnostics`; both describe the file written beside them. A report written before 3.17.0 validates
+  against its own schema, not against this one.
+- The console diagnostics no longer count the unknown identity as an orphaned test id; background
+  calls are reported by their own Info line.
+
 ## [3.16.0] - 2026-09-14
 
 **Minor - a scenario is slower when it got slower than its run did.** One new option and one changed

@@ -1,9 +1,11 @@
 # BACKGROUND_ATTRIBUTION_PLAN.md — dependency calls a scenario did not cause
 
 **Status:** written 2026-09-14 and revised the same evening after tracing the mechanism against the
-source and two consumer reports; **NOT green-lit**, nothing implemented. The cross-run history dogfood
-on BreakfastProvider surfaced it (`CROSS_RUN_HISTORY_PLAN.md` §12.1, 3.14.0 and 3.15.0 entries). Two
-defects found while tracing are logged in §7 and are fixed as bugs regardless of this plan.
+source and two consumer reports; green-lit 2026-09-15 ("Ok do all that") and **EXECUTED as 3.17.0**
+the same day: options B, D, F, G and E shipped in that order, A as the consumer wrappers' scoping, plus
+the named-call evidence the history plan's §12.1 asked for. §8 is the execution log. The cross-run
+history dogfood on BreakfastProvider surfaced it (`CROSS_RUN_HISTORY_PLAN.md` §12.1, 3.14.0 and 3.15.0
+entries). Two defects found while tracing are logged in §7 and were fixed as bugs (3.15.1).
 
 ## 1. What the consumer showed
 
@@ -214,3 +216,40 @@ minor release:
    header as internal (`Other`): skipped in `Summarised`, shown as `Other` in `Detailed`, the raw
    `POST` in `Raw`. Cross-run history reads the phantom `Create` leaving a scenario's set of calls as
    `behaviour-changed` once, on the first run after upgrading; the evidence names it.
+
+## 8. Execution log (3.17.0, 2026-09-15)
+
+Shipped in one release, one commit per milestone, every step TDD:
+
+1. **B, provenance.** `AttributionSource` on every `RequestResponseLog`, set by all 33 capture sites
+   through `TestInfoResolver.ResolveWithSource`; `TestIdentityScope.Detach()`/`IsDetached`;
+   `RequestResponseLogger.CaptureBackground`; `attributionSource`/`expiredFrom` in JSON, YAML, XML.
+2. **D, the scenario's end.** `Scenario.EndedAt` from every adapter (xunit.v3 keeps the finish time on
+   its result messages, not on the context the report is built from, so the xUnit v3 and NUnit adapters
+   stamp `DiagrammedTestRun.TestEnds` themselves); `endedAt` in every format, the merge reader, Cucumber.
+3. **D + F, expiry and the bucket.** `Reports/BackgroundAttribution.cs`: `Expire` (inherited sources
+   only, the pair follows its request, markers and unstamped captures untouched, idempotent) applied once
+   at the top of `CreateStandardReportsWithDiagramsCore` and threaded to the diagrams fetcher
+   (`DiagramsFetcherOptions.Logs`), the component diagram, history, the digest and the diagnostics;
+   `Summarise` feeds the root `background` block, the HTML section and the `BackgroundCalls` diagnostic.
+4. **G, self-detaching hosted services.** `DetachedHostedService` (an `IHostedLifecycleService`
+   wrapper) and `DetachHostedServicesFromTestIdentity()`, called by `AddTestTrackingContextPropagation()`.
+5. **A, the wrappers.** `TestIdentityScope.ClearMessageIdentity()`; Kafka, Service Bus, Event Hubs clear
+   before the next message, MassTransit after the consumer, Pub/Sub scopes the handler it owns.
+6. **Named calls.** The `shapes` ledger line and `callSets`; `new:`/`gone:` in the evidence.
+
+Found on the way, and fixed in the same release:
+
+- `TestIdentityScope.Detach()` as first written did not clear the identity the flow had already
+  inherited, so a `Begin` scope outside the host still named the loop's calls (the hosted-service test
+  caught it). Detach now clears it and restores it on dispose.
+- The XSD never declared `AttributionSource`/`ExpiredFrom` while the XML writer emitted them (caught by
+  the background block's XSD test before the release).
+- The console diagnostics counted the unknown identity as an orphaned test id.
+- `HistoryLedgerWriter.Append` given a run that names a shapes list without the list writes the line
+  without the references rather than refusing: an older caller, or a run rebuilt from a report, can only
+  vouch for what it has.
+
+Not done, deliberately: option C (the correlation store) and E as a consumer-facing helper beyond
+`Detach()` itself; both wait on a measured need. The acceptance measure is the consumer's next two
+runs reading `nothing changed` on every docker and in-memory lane (`CROSS_RUN_HISTORY_PLAN.md` §12.1).

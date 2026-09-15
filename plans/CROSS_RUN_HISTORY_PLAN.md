@@ -1991,6 +1991,12 @@ M5, M6, M7. Two finished beat six open.
   `behaviour-changed` in that run was an own-host class (`plans/BACKGROUND_ATTRIBUTION_PLAN.md`).
   Follow-up idea: the evidence for a set change names counts, not calls; storing the templated
   distinct-call list on the run line would let it name the calls that appeared or disappeared.
+- **3.17.0 (2026-09-15).** `plans/BACKGROUND_ATTRIBUTION_PLAN.md` executed: the own-host class is
+  closed at the source (hosted services run detached; a message's identity ends with the message) and
+  at report time (a call that inherited a scenario's identity after `endedAt` is `background`, not the
+  scenario's), so the history line is built from a snapshot without them. The follow-up above shipped
+  too: the run's distinct calls are interned on a `shapes` ledger line, each position carries its
+  `callSets`, and `behaviour-changed` evidence names `new:` and `gone:` calls; format version stays 1.
 
 ---
 
