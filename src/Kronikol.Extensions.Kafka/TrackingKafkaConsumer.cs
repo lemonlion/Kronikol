@@ -83,6 +83,8 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     private void EstablishTestIdentityFromHeaders(Message<TKey, TValue>? message)
     {
         if (!_options.PropagateTestIdentity) return;
+        // The previous message's identity ends here: a message that carries none is nobody's.
+        TestIdentityScope.ClearMessageIdentity();
         if (message?.Headers is null) return;
 
         string? testName = null;

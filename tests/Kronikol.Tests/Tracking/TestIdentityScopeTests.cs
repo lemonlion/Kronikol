@@ -284,6 +284,33 @@ public class TestIdentityScopeTests
     }
 
     [Fact]
+    public void A_message_identity_lasts_until_the_next_message_and_a_scoped_one_stays()
+    {
+        TestIdentityScope.Reset();
+
+        TestIdentityScope.SetFromMessage("First message", "msg-1");
+        TestIdentityScope.ClearMessageIdentity();
+        Assert.Null(TestIdentityScope.Current);
+
+        using (TestIdentityScope.Begin("The test", "test-1"))
+        {
+            TestIdentityScope.ClearMessageIdentity();
+            Assert.Equal("test-1", TestIdentityScope.Current?.Id);
+
+            // A message on top of a scoped test: clearing it hands the flow back to the test.
+            TestIdentityScope.SetFromMessage("Second message", "msg-2");
+            Assert.Equal("msg-2", TestIdentityScope.Current?.Id);
+            TestIdentityScope.ClearMessageIdentity();
+            Assert.Null(TestIdentityScope.Current);
+        }
+
+        // Clearing when nothing was set from a message changes nothing.
+        TestIdentityScope.ClearMessageIdentity();
+        Assert.Null(TestIdentityScope.Current);
+        TestIdentityScope.Reset();
+    }
+
+    [Fact]
     public void SetFromMessage_overwrites_previous_identity()
     {
         TestIdentityScope.Reset();

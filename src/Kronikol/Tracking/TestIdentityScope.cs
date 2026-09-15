@@ -65,13 +65,24 @@ public static class TestIdentityScope
     public static IDisposable Detach()
     {
         var previous = DetachedFlow.Value;
+        var previousIdentity = CurrentIdentity.Value;
+        var previousFromMessage = FromMessage.Value;
         DetachedFlow.Value = true;
-        return new DetachScope(previous);
+        // The identity the flow inherited goes with the attachment: only a scope begun inside the detached
+        // flow names a scenario there. Restored on dispose, so the caller's own flow keeps it.
+        CurrentIdentity.Value = null;
+        FromMessage.Value = false;
+        return new DetachScope(previous, previousIdentity, previousFromMessage);
     }
 
-    private sealed class DetachScope(bool previous) : IDisposable
+    private sealed class DetachScope(bool previous, (string Name, string Id)? previousIdentity, bool previousFromMessage) : IDisposable
     {
-        public void Dispose() => DetachedFlow.Value = previous;
+        public void Dispose()
+        {
+            DetachedFlow.Value = previous;
+            CurrentIdentity.Value = previousIdentity;
+            FromMessage.Value = previousFromMessage;
+        }
     }
 
     private static readonly object GlobalFallbackLock = new();
@@ -131,8 +142,10 @@ public static class TestIdentityScope
     public static IDisposable Begin(string testName, string testId)
     {
         var previous = CurrentIdentity.Value;
+        var previousFromMessage = FromMessage.Value;
         CurrentIdentity.Value = (testName, testId);
-        return new IdentityScope(previous);
+        FromMessage.Value = false;
+        return new IdentityScope(previous, previousFromMessage);
     }
 
     /// <summary>
@@ -146,15 +159,41 @@ public static class TestIdentityScope
     public static void SetFromMessage(string testName, string testId)
     {
         CurrentIdentity.Value = (testName, testId);
+        FromMessage.Value = true;
+    }
+
+    /// <summary>
+    /// Clears an identity that <see cref="SetFromMessage"/> established and leaves one that
+    /// <see cref="Begin"/> established alone. A consumer calls it before it looks at the next message,
+    /// so a message that carries no identity is not processed under the previous message's, while a
+    /// test that scoped itself around the consumer keeps its own.
+    /// </summary>
+    public static void ClearMessageIdentity()
+    {
+        if (!FromMessage.Value)
+            return;
+        CurrentIdentity.Value = null;
+        FromMessage.Value = false;
     }
 
     /// <summary>
     /// Clears the ambient test identity for the current async context.
     /// </summary>
-    public static void Reset() => CurrentIdentity.Value = null;
-
-    private sealed class IdentityScope((string Name, string Id)? previous) : IDisposable
+    public static void Reset()
     {
-        public void Dispose() => CurrentIdentity.Value = previous;
+        CurrentIdentity.Value = null;
+        FromMessage.Value = false;
+    }
+
+    /// <summary>True while <see cref="Current"/> was set by <see cref="SetFromMessage"/>.</summary>
+    private static readonly AsyncLocal<bool> FromMessage = new();
+
+    private sealed class IdentityScope((string Name, string Id)? previous, bool previousFromMessage) : IDisposable
+    {
+        public void Dispose()
+        {
+            CurrentIdentity.Value = previous;
+            FromMessage.Value = previousFromMessage;
+        }
     }
 }

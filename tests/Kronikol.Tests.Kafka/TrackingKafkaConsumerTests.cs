@@ -259,6 +259,38 @@ public class TrackingKafkaConsumerTests
     }
 
     [Fact]
+    public void A_message_without_headers_is_not_consumed_under_the_previous_message_identity()
+    {
+        var options = MakeOptions();
+        options.PropagateTestIdentity = true;
+        var tracker = new KafkaTracker(options);
+        var inner = new FakeConsumer<string, string>();
+        var headers = new Headers();
+        headers.Add("kronikol-test-name", System.Text.Encoding.UTF8.GetBytes("Originating Test"));
+        headers.Add("kronikol-test-id", System.Text.Encoding.UTF8.GetBytes("test-abc-123"));
+        var consumer = new TrackingKafkaConsumer<string, string>(inner, tracker, options);
+        TestIdentityScope.Reset();
+
+        inner.NextConsumeResult = new ConsumeResult<string, string>
+        {
+            Topic = "orders-topic", Partition = new Partition(0), Offset = new Offset(1),
+            Message = new Message<string, string> { Key = "k", Value = "v", Headers = headers }
+        };
+        consumer.Consume(TimeSpan.FromSeconds(1));
+        Assert.Equal("test-abc-123", TestIdentityScope.Current?.Id);
+
+        inner.NextConsumeResult = new ConsumeResult<string, string>
+        {
+            Topic = "orders-topic", Partition = new Partition(0), Offset = new Offset(2),
+            Message = new Message<string, string> { Key = "k", Value = "v" }
+        };
+        consumer.Consume(TimeSpan.FromSeconds(1));
+
+        Assert.Null(TestIdentityScope.Current);
+        TestIdentityScope.Reset();
+    }
+
+    [Fact]
     public void Consume_does_not_establish_scope_when_PropagateTestIdentity_false()
     {
         var options = MakeOptions();

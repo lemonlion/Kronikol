@@ -33,7 +33,9 @@ public class TrackingSubscriberClient : SubscriberClient
     {
         async Task<Reply> wrappedHandler(PubsubMessage msg, CancellationToken ct)
         {
-            EstablishTestIdentityFromAttributes(msg);
+            // A scope, not a sticky set: the wrapper owns the handler, so the identity lasts exactly as
+            // long as the message is being handled and the subscriber's own loop never carries it.
+            using var identity = EstablishTestIdentityFromAttributes(msg);
 
             var op = PubSubOperationClassifier.Classify(
                 "Receive", null, _inner.SubscriptionName?.ToString(), 1);
@@ -56,17 +58,19 @@ public class TrackingSubscriberClient : SubscriberClient
     public override Task StopAsync(CancellationToken cancellationToken) => _inner.StopAsync(cancellationToken);
     public override ValueTask DisposeAsync() => _inner.DisposeAsync();
 
-    private void EstablishTestIdentityFromAttributes(PubsubMessage message)
+    private IDisposable? EstablishTestIdentityFromAttributes(PubsubMessage message)
     {
-        if (!_options.PropagateTestIdentity) return;
+        if (!_options.PropagateTestIdentity) return null;
 
         if (message.Attributes.TryGetValue(TestTrackingMessageHeaders.TestName, out var testName) &&
             message.Attributes.TryGetValue(TestTrackingMessageHeaders.TestId, out var testId) &&
             !string.IsNullOrEmpty(testName) && !string.IsNullOrEmpty(testId))
         {
-            TestIdentityScope.SetFromMessage(testName, testId);
             AutoCorrelateOnConsume(message.MessageId, testName, testId);
+            return TestIdentityScope.Begin(testName, testId);
         }
+
+        return null;
     }
 
     private void AutoCorrelateOnConsume(string? messageId, string testName, string testId)

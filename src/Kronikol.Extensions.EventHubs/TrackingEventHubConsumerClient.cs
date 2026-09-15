@@ -130,6 +130,7 @@ public class TrackingEventHubConsumerClient : EventHubConsumerClient
     private void EstablishTestIdentityFromProperties(EventData? eventData)
     {
         if (!_options.PropagateTestIdentity) return;
+        TestIdentityScope.ClearMessageIdentity();
         if (eventData?.Properties is null) return;
 
         if (eventData.Properties.TryGetValue(TestTrackingMessageHeaders.TestName, out var nameObj) &&

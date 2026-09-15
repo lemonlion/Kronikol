@@ -212,6 +212,7 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
     private void EstablishTestIdentityFromProperties(ServiceBusReceivedMessage message)
     {
         if (!_options.PropagateTestIdentity) return;
+        TestIdentityScope.ClearMessageIdentity();
 
         if (message.ApplicationProperties.TryGetValue(TestTrackingMessageHeaders.TestName, out var nameObj) &&
             message.ApplicationProperties.TryGetValue(TestTrackingMessageHeaders.TestId, out var idObj) &&
