@@ -33,6 +33,12 @@ public class TestTrackingMessageHandlerTests : IDisposable
         }
     }
 
+    /// <summary>An inner handler that throws, as a refused connection or a broken response body does.</summary>
+    private class ThrowingInnerHandler(Exception exception) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => throw exception;
+    }
+
     private readonly StubInnerHandler _innerHandler = new();
     private readonly string _testId = Guid.NewGuid().ToString();
 
@@ -84,6 +90,40 @@ public class TestTrackingMessageHandlerTests : IDisposable
         Assert.Equal(2, logs.Length);
         Assert.Equal(RequestResponseType.Request, logs[0].Type);
         Assert.Equal(RequestResponseType.Response, logs[1].Type);
+    }
+
+    [Fact]
+    public async Task A_send_that_throws_leaves_a_response_naming_the_exception_and_rethrows()
+    {
+        // Before: the request stood alone, the template read "-" for its status and nothing said why.
+        // Finding a first-attempt failure hidden behind a retry loop took a probe patch and a rerun.
+        var exception = new HttpRequestException("Error while copying content to a stream.", new IOException("The pipe was advanced too far."));
+        using var invoker = new HttpMessageInvoker(new TestTrackingMessageHandler(DefaultOptions()) { InnerHandler = new ThrowingInnerHandler(exception) });
+
+        var thrown = await Assert.ThrowsAsync<HttpRequestException>(() => invoker.SendAsync(MakeGetRequest(), CancellationToken.None));
+
+        Assert.Same(exception, thrown);
+        var logs = GetLogsFromThisTest();
+        Assert.Equal(2, logs.Length);
+        var response = Assert.Single(logs, l => l.Type == RequestResponseType.Response);
+        Assert.Equal(logs[0].RequestResponseId, response.RequestResponseId);
+        Assert.Equal("!HttpRequestException", response.StatusCode?.Value);
+        Assert.Equal("Error while copying content to a stream. Caused by: The pipe was advanced too far.", response.Error);
+        Assert.Null(response.Content);
+        Assert.NotNull(response.Timestamp);
+    }
+
+    [Fact]
+    public async Task A_send_that_is_cancelled_names_the_cancellation_too()
+    {
+        // HttpClient's timeout surfaces as a TaskCanceledException: the same path, the same record.
+        using var invoker = new HttpMessageInvoker(new TestTrackingMessageHandler(DefaultOptions()) { InnerHandler = new ThrowingInnerHandler(new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout of 100 seconds elapsing.")) });
+
+        await Assert.ThrowsAsync<TaskCanceledException>(() => invoker.SendAsync(MakeGetRequest(), CancellationToken.None));
+
+        var response = Assert.Single(GetLogsFromThisTest(), l => l.Type == RequestResponseType.Response);
+        Assert.Equal("!TaskCanceledException", response.StatusCode?.Value);
+        Assert.StartsWith("The request was canceled", response.Error);
     }
 
     [Fact]

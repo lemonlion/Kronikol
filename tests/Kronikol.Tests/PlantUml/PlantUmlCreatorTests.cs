@@ -378,6 +378,17 @@ public class PlantUmlCreatorTests
     }
 
     [Fact]
+    public void A_thrown_status_is_drawn_as_it_was_recorded()
+    {
+        // A failed send records "!HttpRequestException" where the status would be (FailedSend); title-casing
+        // would split it into words and lose the type name the fingerprint and the data files carry.
+        var threw = MakeResponse() with { StatusCode = "!HttpRequestException", Error = "Error while copying content to a stream." };
+        var plantUml = GetPlantUml([MakeRequest(), threw]);
+
+        Assert.Contains($"orderService -[#438DD5]-> webApp: !HttpRequestException{Nl}", plantUml);
+    }
+
+    [Fact]
     public void Http_404_response_shows_not_found()
     {
         var logs = new[]

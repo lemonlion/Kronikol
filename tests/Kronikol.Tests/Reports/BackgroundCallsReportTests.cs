@@ -195,10 +195,54 @@ public class BackgroundCallsReportTests : IDisposable
             $"Background_{Guid.NewGuid():N}.html", "Run", true, background: BackgroundCalls.None));
 
         Assert.Contains("<details class=\"background-calls\">", with, StringComparison.Ordinal);
-        Assert.Contains("Background calls (1 after scenario end)", with, StringComparison.Ordinal);
+        Assert.Contains("Background calls (1 after a scenario ended)", with, StringComparison.Ordinal);
         Assert.Contains("<td>Pay by card</td><td>orders</td><td>GET</td><td>/api/orders/sweep</td><td>1</td><td>2026-01-01T10:00:30.020Z</td>", with, StringComparison.Ordinal);
         // The stylesheet names the class whether or not the section renders; only the element says it did.
         Assert.DoesNotContain("<details class=\"background-calls\">", without, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_html_heading_counts_the_calls_no_scenario_made_when_they_are_kept()
+    {
+        // With CaptureBackground on, a detached hosted service's calls sit in the same table under
+        // "(no scenario)"; the heading and the note say so, or a reader takes the whole table for expiry.
+        var (features, logs) = ExpiredRun("bg-8");
+        var pair = Guid.NewGuid();
+        var trace = Guid.NewGuid();
+        var kept = new[]
+        {
+            new RequestResponseLog(TestIdentityScope.UnknownTestName, TestIdentityScope.UnknownTestId, "Query", null, new Uri("http://cosmos/dbs/db/colls/outbox/docs"), [], "CosmosDB", "Breakfast Provider",
+                RequestResponseType.Request, trace, pair, false) { Timestamp = Ended.AddSeconds(-5), AttributionSource = AttributionSource.Detached },
+            new RequestResponseLog(TestIdentityScope.UnknownTestName, TestIdentityScope.UnknownTestId, "Query", "[]", new Uri("http://cosmos/dbs/db/colls/outbox/docs"), [], "CosmosDB", "Breakfast Provider",
+                RequestResponseType.Response, trace, pair, false, HttpStatusCode.OK) { Timestamp = Ended.AddSeconds(-5).AddMilliseconds(3), AttributionSource = AttributionSource.Detached }
+        };
+        var summary = BackgroundAttribution.Summarise([.. logs, .. kept], features);
+
+        var html = File.ReadAllText(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+            $"Background_{Guid.NewGuid():N}.html", "Run", true, background: summary));
+
+        Assert.Equal(2, summary.Calls);
+        Assert.Contains("Background calls (2: 1 after a scenario ended, 1 with no scenario)", html, StringComparison.Ordinal);
+        Assert.Contains("<td>(no scenario)</td><td>CosmosDB</td><td>Query</td><td>/dbs/db/colls/outbox/docs</td><td>1</td>", html, StringComparison.Ordinal);
+        Assert.Contains("no scenario at all", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_html_heading_names_only_the_kind_of_call_the_table_holds()
+    {
+        var features = Features("bg-9", Ended);
+        var pair = Guid.NewGuid();
+        var trace = Guid.NewGuid();
+        var kept = new[]
+        {
+            new RequestResponseLog(TestIdentityScope.UnknownTestName, TestIdentityScope.UnknownTestId, HttpMethod.Get, null, new Uri("http://orders/api/poll"), [], "orders", "host",
+                RequestResponseType.Request, trace, pair, false) { Timestamp = Ended, AttributionSource = AttributionSource.Detached }
+        };
+
+        var html = File.ReadAllText(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+            $"Background_{Guid.NewGuid():N}.html", "Run", true, background: BackgroundAttribution.Summarise(kept, features)));
+
+        Assert.Contains("Background calls (1 with no scenario)", html, StringComparison.Ordinal);
     }
 
     [Fact]

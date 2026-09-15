@@ -75,7 +75,7 @@ public class BackgroundCallsSectionTests : PlaywrightTestBase
         await section.WaitForAsync();
 
         Assert.False(await section.EvaluateAsync<bool>("el => el.open"));
-        Assert.Contains("Background calls (1 after scenario end)", await section.Locator("summary").InnerTextAsync());
+        Assert.Contains("Background calls (1 after a scenario ended)", await section.Locator("summary").InnerTextAsync());
         Assert.False(await section.Locator("table.background-calls-table").IsVisibleAsync());
 
         await section.Locator("summary").ClickAsync();

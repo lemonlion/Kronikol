@@ -217,6 +217,9 @@ internal sealed class InteractionEntry
     /// <c>InteractionStatus.Read</c> rather than reading either field directly.
     /// </summary>
     public string? StatusText { get; set; }
+
+    /// <summary>When the call threw instead of answering: the message chain (3.18.0); the type is the status text behind a bang.</summary>
+    public string? Error { get; set; }
     public string? Timestamp { get; set; }
 
     /// <summary>

@@ -237,7 +237,7 @@ internal static class ReportScanner
             [
                 "kronikolVersion", "startTime", "endTime", "mergeableFormatVersion", "formatVersion", "suite", "kind", "message",
                 "scenarioId", "name", "relativePath", "mediaType", "index", "text", "key", "value", "type",
-                "method", "uri", "serviceName", "callerName", "statusCode", "statusText", "timestamp", "requestResponseId",
+                "method", "uri", "serviceName", "callerName", "statusCode", "statusText", "error", "timestamp", "requestResponseId",
                 "traceId", "stepPath", "phase", "metaType", "dependencyCategory", "activityTraceId",
                 "activitySpanId", "capturedBy", "isUserAction", "durationMs", "content", "keyword", "status",
                 "durationSeconds", "failureMessage", "sourceFile", "sourceLine", "bypassReason", "docString",
@@ -598,6 +598,7 @@ internal static class ReportScanner
                         : reader.GetString();
                     break;
                 case "statusText": interaction.StatusText = reader.GetString(); break;
+                case "error": interaction.Error = reader.GetString(); break;
                 case "timestamp": interaction.Timestamp = reader.GetString(); break;
                 case "requestResponseId": interaction.RequestResponseId = NonEmptyId(reader.GetString()); break;
                 case "traceId": interaction.TraceId = NonEmptyId(reader.GetString()); break;

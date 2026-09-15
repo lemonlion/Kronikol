@@ -58,6 +58,14 @@ public record RequestResponseLog(
     /// whose context the call inherited after that scenario had ended.
     /// </summary>
     public string? ExpiredFromTestId { get; set; }
+
+    /// <summary>
+    /// When the call threw instead of answering: the exception's message chain (the outer message, then
+    /// each inner one after "Caused by:"). The exception's type stands where the status would, behind a
+    /// bang (<c>!HttpRequestException</c>), so the fingerprint and the diagram name it. Null on a request
+    /// and on a call that answered. See <see cref="FailedSend"/>.
+    /// </summary>
+    public string? Error { get; set; }
     public string? ActivitySpanId { get; set; }
     public string? ActivityTraceId { get; set; }
     public TestPhase Phase { get; set; }

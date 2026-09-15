@@ -29,6 +29,7 @@ internal static partial class HistoryCommand
         public double? FlakyThreshold;
         public double? SlowerBy;
         public int? SlowerMinMs;
+        public int? AlternatingRuns;
         public string? Branch;
         public int? MinRuns;
         public bool FromCtrf;
@@ -92,6 +93,7 @@ internal static partial class HistoryCommand
             FlakyRate = args.FlakyThreshold ?? defaults.FlakyRate,
             SlowerBy = args.SlowerBy ?? defaults.SlowerBy,
             SlowerMinMs = args.SlowerMinMs ?? defaults.SlowerMinMs,
+            AlternatingRuns = args.AlternatingRuns ?? defaults.AlternatingRuns,
             // A pull request build reads against the branch it targets, as the run itself did.
             Branch = args.Branch ?? CiMetadataDetector.PullRequestTarget(getEnv)
         }, quarantine, aliases, shapes: shapes);

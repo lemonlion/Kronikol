@@ -294,6 +294,8 @@ internal static partial class QueryCommand
             writer.Line("status " + (statusCode is { } c && statusText is { } t ? $"{c} {t}"
                 : statusCode?.ToString(CultureInfo.InvariantCulture) ?? statusText));
         }
+        if (interaction.Error is { Length: > 0 } thrown)
+            writer.Line("error " + QueryWriter.OneLine(thrown, 400));
         if (interaction.DurationMs is { } ms)
             writer.Line("took " + QueryWriter.Duration(ms));
         if (interaction.StepPath is { } step)

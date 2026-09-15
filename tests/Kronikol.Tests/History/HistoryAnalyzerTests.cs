@@ -414,6 +414,118 @@ public class HistoryAnalyzerTests
         Assert.Equal(HistoryVerdictKind.UnstableShape, scenario.Primary);
     }
 
+    // ── Alternating (plans/ALTERNATING_AND_FAILED_SENDS_PLAN.md §2) ────────
+
+    /// <summary>Prior passing runs whose first scenario held the given sets of calls, oldest first.</summary>
+    private static HistoryLedger Shapes(HistoryRoster roster, params string[] sets) =>
+        Ledger(sets.Select((s, i) => (roster, Run(roster, i + 1, "PPP", shapes: [s, "s2", "s3"]))));
+
+    private static ScenarioHistory Alternation(HistoryRoster roster, HistoryLedger ledger, string current, HistoryAnalysisOptions? options = null) =>
+        First(Analyse(ledger, roster, Run(roster, 50, "PPP", shapes: [current, "s2", "s3"]), options));
+
+    [Fact]
+    public void A_return_to_a_set_of_calls_the_scenario_held_recently_is_alternating_not_behaviour_changed()
+    {
+        // The menu endpoint answers from a warm cache or builds the menu: two sets of calls, both the
+        // scenario's own, and which one a run sees depends on ordering. The first sighting of the second
+        // set is behaviour-changed (the reader learns of the state once); a return to a set held within
+        // the window is the same fact again, read as a standing state.
+        var roster = Roster(Ids);
+        var scenario = Alternation(roster, Shapes(roster, "A", "A", "B"), "A");
+
+        Assert.Contains(HistoryVerdictKind.Alternating, scenario.Verdicts);
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, scenario.Verdicts);
+        Assert.Equal(HistoryVerdictKind.Alternating, scenario.Primary);
+        Assert.Contains("alternating between 2 sets of calls over the last 3 runs: this set in 2 of them", scenario.Evidence);
+    }
+
+    [Fact]
+    public void Alternating_stands_while_both_sets_are_within_the_window()
+    {
+        var roster = Roster(Ids);
+        var scenario = Alternation(roster, Shapes(roster, "A", "B", "A"), "A");
+
+        Assert.Equal(HistoryVerdictKind.Alternating, scenario.Primary);
+        Assert.Contains("this set in 2 of them", scenario.Evidence);
+    }
+
+    [Fact]
+    public void A_set_the_scenario_never_held_is_still_behaviour_changed()
+    {
+        var roster = Roster(Ids);
+        var scenario = Alternation(roster, Shapes(roster, "A", "A", "A"), "B");
+
+        Assert.Contains(HistoryVerdictKind.BehaviourChanged, scenario.Verdicts);
+        Assert.DoesNotContain(HistoryVerdictKind.Alternating, scenario.Verdicts);
+    }
+
+    [Fact]
+    public void A_change_that_stayed_is_not_alternating()
+    {
+        // A A B, then B again: the earlier B is contiguous with now, nothing different came between.
+        var roster = Roster(Ids);
+        var scenario = Alternation(roster, Shapes(roster, "A", "A", "B"), "B");
+
+        Assert.DoesNotContain(HistoryVerdictKind.Alternating, scenario.Verdicts);
+        Assert.DoesNotContain(HistoryVerdictKind.BehaviourChanged, scenario.Verdicts);
+        Assert.Equal(HistoryVerdictKind.Stable, scenario.Primary);
+    }
+
+    [Fact]
+    public void A_set_held_only_beyond_the_alternating_window_is_a_change_again()
+    {
+        // The memory is short on purpose: a regression back to how the scenario behaved long ago must
+        // read as a change, not as a known state.
+        var roster = Roster(Ids);
+        var ledger = Shapes(roster, "B", "A", "A", "A");
+
+        var within = Alternation(roster, ledger, "B", new HistoryAnalysisOptions { AlternatingRuns = 4 });
+        var beyond = Alternation(roster, ledger, "B", new HistoryAnalysisOptions { AlternatingRuns = 3 });
+
+        Assert.Equal(HistoryVerdictKind.Alternating, within.Primary);
+        Assert.Equal(HistoryVerdictKind.BehaviourChanged, beyond.Primary);
+    }
+
+    [Fact]
+    public void A_scenario_flipping_between_two_sets_every_run_is_alternating_not_unstable()
+    {
+        // Unstable-shape is for the set that is new on most runs; a scenario with two states that keep
+        // returning is alternating, and the evidence says between how many.
+        var roster = Roster(Ids);
+        var scenario = Alternation(roster, Shapes(roster, "A", "B", "A", "B", "A", "B", "A", "B"), "A");
+
+        Assert.Equal(HistoryVerdictKind.Alternating, scenario.Primary);
+        Assert.DoesNotContain(HistoryVerdictKind.UnstableShape, scenario.Verdicts);
+        Assert.Contains("alternating between 2 sets of calls over the last 8 runs: this set in 4 of them", scenario.Evidence);
+    }
+
+    [Fact]
+    public void A_failing_run_has_no_alternating_verdict_and_failed_runs_are_not_its_memory()
+    {
+        var roster = Roster(Ids);
+        var ledger = Ledger([(roster, Run(roster, 1, "PPP", shapes: ["A", "s2", "s3"])), (roster, Run(roster, 2, "FPP", shapes: ["B", "s2", "s3"])),
+            (roster, Run(roster, 3, "PPP", shapes: ["A", "s2", "s3"]))]);
+
+        // B was only ever seen on a failing run: a failure's set is what the failure left, not a state.
+        var passing = Alternation(roster, ledger, "A");
+        Assert.DoesNotContain(HistoryVerdictKind.Alternating, passing.Verdicts);
+
+        var failing = First(Analyse(ledger, roster, Run(roster, 50, "FPP", shapes: ["A", "s2", "s3"])));
+        Assert.DoesNotContain(HistoryVerdictKind.Alternating, failing.Verdicts);
+    }
+
+    [Fact]
+    public void Alternating_is_named_and_is_not_a_summary_count()
+    {
+        var roster = Roster(Ids);
+        var verdicts = Analyse(Shapes(roster, "A", "A", "B"), roster, Run(roster, 50, "PPP", shapes: ["A", "s2", "s3"]));
+
+        Assert.Equal("alternating", HistoryVerdictNames.Name(HistoryVerdictKind.Alternating));
+        Assert.Equal(HistoryVerdictKind.Alternating, HistoryVerdictNames.Parse("alternating"));
+        Assert.Equal(1, verdicts.Count(HistoryVerdictKind.Alternating));
+        Assert.StartsWith("nothing changed", HistorySummary.Line(verdicts));
+    }
+
     [Fact]
     public void Reordered_calls_are_reported_only_when_asked_for()
     {

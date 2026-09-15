@@ -50,6 +50,8 @@ internal static partial class QueryCommand
         };
         if (options.MinRuns is { } minRuns)
             analysis = analysis with { MinRuns = minRuns };
+        if (options.AlternatingRuns is { } alternatingRuns)
+            analysis = analysis with { AlternatingRuns = alternatingRuns };
         var verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, analysis, quarantine, aliases, shapes: shapes);
 
         // Under --count the text answer is one bare number, so the caveats go to stderr - the same rule

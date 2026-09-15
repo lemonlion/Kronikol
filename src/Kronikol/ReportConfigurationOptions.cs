@@ -577,6 +577,15 @@ public record ReportConfigurationOptions
     public int HistorySlowerMinMs { get; set; } = 100;
 
     /// <summary>
+    /// How many runs back a set of calls the scenario held counts as a known state. Default: 10. A
+    /// scenario back on a set it held within this many passing runs, with a different set in between,
+    /// reads <c>alternating</c> rather than <c>behaviour-changed</c>: two states, both its own, and which
+    /// one a run sees depends on ordering. The memory is short so that a regression back to how the
+    /// scenario behaved long ago still reads as a change.
+    /// </summary>
+    public int HistoryAlternatingRuns { get; set; } = 10;
+
+    /// <summary>
     /// The share of the previous run's scenarios a run may lack before it is recorded as partial — a
     /// filtered run, a crashed half — so its missing scenarios are not reported absent and it is not the
     /// run the next one is compared against. Default: 0.10.

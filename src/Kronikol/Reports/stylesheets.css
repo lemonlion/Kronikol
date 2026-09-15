@@ -1315,7 +1315,7 @@
             background: rgb(240, 225, 250);
             color: rgb(100, 40, 140);
         }
-        .history-verdict-behaviour-changed, .history-verdict-reordered, .history-verdict-unstable-shape {
+        .history-verdict-behaviour-changed, .history-verdict-reordered, .history-verdict-unstable-shape, .history-verdict-alternating {
             background: rgb(215, 240, 240);
             color: rgb(0, 100, 100);
         }

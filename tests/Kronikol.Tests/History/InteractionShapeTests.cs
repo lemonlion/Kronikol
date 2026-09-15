@@ -82,6 +82,22 @@ public class InteractionShapeTests
     }
 
     [Fact]
+    public void A_call_that_threw_carries_the_exception_type_where_its_status_would_be()
+    {
+        // A failed send logs a response whose status is the exception's type behind a bang, so the
+        // fingerprint tells "the call threw" from "the call never answered" and the evidence can name it.
+        var pair = Guid.NewGuid();
+        var request = Request("t1", "GET", "/asyncapi/v1.json", "orders", "Test", pair);
+        var threw = new RequestResponseLog("Scenario", "t1", HttpMethod.Get, null, new Uri("http://orders/"), [], "orders", "Test",
+            RequestResponseType.Response, Guid.NewGuid(), pair, TrackingIgnore: false, StatusCode: "!HttpRequestException") { Error = "Error while copying content to a stream." };
+
+        var call = Assert.Single(InteractionShape.Calls([request, threw]));
+
+        Assert.Equal(new ShapeCall("Test", "orders", "GET", "/asyncapi/v1.json", "!HttpRequestException"), call);
+        Assert.EndsWith(" GET /asyncapi/v1.json !HttpRequestException", call.ToString());
+    }
+
+    [Fact]
     public void Diagram_markers_and_ignored_records_are_not_calls()
     {
         var marker = Request("t1", "GET", "/", "orders", "Test", Guid.NewGuid()) with { IsOverrideStart = true };

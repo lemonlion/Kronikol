@@ -36,6 +36,12 @@ public enum HistoryVerdictKind
     /// <summary>The same set of calls in a different order; reported only when asked for.</summary>
     Reordered,
 
+    /// <summary>
+    /// Back on a set of calls it held within the recent window, with a different set held in between: a
+    /// scenario with more than one state. A standing state like <see cref="Flaky"/>, never a change.
+    /// </summary>
+    Alternating,
+
     /// <summary>The set of calls changes most runs; behaviour verdicts are suppressed.</summary>
     UnstableShape,
 
@@ -64,6 +70,7 @@ public static class HistoryVerdictNames
         [HistoryVerdictKind.Slower] = "slower",
         [HistoryVerdictKind.BehaviourChanged] = "behaviour-changed",
         [HistoryVerdictKind.Reordered] = "reordered",
+        [HistoryVerdictKind.Alternating] = "alternating",
         [HistoryVerdictKind.UnstableShape] = "unstable-shape",
         [HistoryVerdictKind.Quarantined] = "quarantined",
         [HistoryVerdictKind.Unknown] = "unknown"
@@ -104,6 +111,9 @@ public sealed record HistoryAnalysisOptions
 
     /// <summary>The least a scenario must be over the bar, in milliseconds, before it is slower (<see cref="ReportConfigurationOptions.HistorySlowerMinMs"/>).</summary>
     public int SlowerMinMs { get; init; } = 100;
+
+    /// <summary>How many runs back a set of calls the scenario held counts as a known state (<see cref="ReportConfigurationOptions.HistoryAlternatingRuns"/>).</summary>
+    public int AlternatingRuns { get; init; } = 10;
 
     /// <summary>The share of the previous roster a run may lack before it is partial (<see cref="ReportConfigurationOptions.HistoryPartialThreshold"/>).</summary>
     public double PartialThreshold { get; init; } = 0.10;

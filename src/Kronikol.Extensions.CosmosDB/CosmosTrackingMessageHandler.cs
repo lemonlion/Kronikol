@@ -92,9 +92,39 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
                 GetFilteredHeaders(request, v),
                 v == CosmosTrackingVerbosity.Summarised && cosmosOp.Operation == CosmosOperation.Other)));
 
-        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-        var responseContent = await GetResponseContent(response, effectiveVerbosity, cancellationToken);
+        HttpResponseMessage response;
+        string? responseContent;
+        try
+        {
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            responseContent = await GetResponseContent(response, effectiveVerbosity, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // A call that threw (an emulator refusing the connection, a timeout) is still an answer: the
+            // exception's type where the status would be and its message chain in Error. See FailedSend.
+            RequestResponseLogger.Log(new RequestResponseLog(
+                testInfo.Value.Name,
+                testInfo.Value.Id,
+                method,
+                null,
+                requestUri,
+                [],
+                _options.ServiceName,
+                _options.CallerName,
+                RequestResponseType.Response,
+                traceId,
+                requestResponseId,
+                false,
+                FailedSend.Status(ex),
+                DependencyCategory: DependencyCategories.CosmosDB)
+            {
+                Error = FailedSend.Describe(ex),
+                AttributionSource = testInfo.Value.Source,
+                Phase = TestPhaseContext.Current
+            });
+            throw;
+        }
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(

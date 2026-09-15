@@ -600,7 +600,10 @@ public static partial class PlantUmlCreator
         }
         else
         {
-            var status = trace.StatusCode?.Value?.ToString()?.Titleize();
+            // A thrown status ("!HttpRequestException", a failed send) is drawn as recorded: title-casing would
+            // split the type name into words. See FailedSend.
+            var rawStatus = trace.StatusCode?.Value?.ToString();
+            var status = rawStatus is { Length: > 1 } && rawStatus[0] == '!' ? rawStatus : rawStatus?.Titleize();
             if (trace?.StatusCode?.Value as HttpStatusCode? == (HttpStatusCode)302)
                 status += " (Redirect)"; // The name of 302 'Found' is a bit ambiguous, so we make it clearer for the reader
 

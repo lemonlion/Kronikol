@@ -3764,8 +3764,17 @@ public static class ReportGenerator
 
         var html = new StringBuilder();
         html.Append("<details class=\"background-calls\">");
-        html.Append($"<summary>Background calls ({background.Calls.ToString(CultureInfo.InvariantCulture)} after scenario end)</summary>");
-        html.Append("<p class=\"background-calls-note\">Calls the test host made under a scenario's identity after that scenario had ended: a hosted service, a timer or a message consumer started inside the host and still running. They belong to the host, not to the scenario, and are listed here instead of under it.</p>");
+        // The heading counts what the table holds: expired calls sit under the scenario they expired from,
+        // and calls kept with no identity at all (CaptureBackground) under "(no scenario)".
+        var afterEnd = background.AfterScenarioEnd.Sum(g => g.Calls);
+        var noScenario = Math.Max(0, background.Calls - afterEnd);
+        var heading = afterEnd > 0 && noScenario > 0
+            ? $"{background.Calls.ToString(CultureInfo.InvariantCulture)}: {afterEnd.ToString(CultureInfo.InvariantCulture)} after a scenario ended, {noScenario.ToString(CultureInfo.InvariantCulture)} with no scenario"
+            : afterEnd > 0
+                ? $"{afterEnd.ToString(CultureInfo.InvariantCulture)} after a scenario ended"
+                : $"{noScenario.ToString(CultureInfo.InvariantCulture)} with no scenario";
+        html.Append($"<summary>Background calls ({heading})</summary>");
+        html.Append("<p class=\"background-calls-note\">Calls that belong to no scenario. A row under a scenario arrived under its identity after it had ended: a hosted service, a timer or a message consumer started inside the host and still running, whose work belongs to the host and is listed here instead of under the scenario. A row under (no scenario) was captured with no scenario at all and kept because CaptureBackground is on.</p>");
         html.Append("<table class=\"background-calls-table\"><thead><tr><th>Scenario</th><th>Service</th><th>Method</th><th>Path</th><th>Calls</th><th>Last seen (UTC)</th></tr></thead><tbody>");
         foreach (var row in rows)
         {
@@ -4361,6 +4370,7 @@ public static class ReportGenerator
         Phase = log.Phase.ToString(),
         AttributionSource = log.AttributionSource?.ToString(),
         ExpiredFrom = log.ExpiredFromTestId,
+        log.Error,
         log.IsUserAction,
         log.ActivityTraceId,
         log.ActivitySpanId,
@@ -4609,6 +4619,7 @@ public static class ReportGenerator
                 h.Value is { Length: > 0 } headerValue ? new XElement("Value", headerValue) : null))) : null,
             InteractionStatus.Split(log.StatusCode).Code is { } xmlStatusCode ? new XElement("StatusCode", xmlStatusCode) : null,
             InteractionStatus.Split(log.StatusCode).Text is { } xmlStatusText ? new XElement("StatusText", xmlStatusText) : null,
+            log.Error is { } xmlError ? new XElement("Error", xmlError) : null,
             new XElement("TraceId", log.TraceId.ToString()),
             new XElement("RequestResponseId", log.RequestResponseId.ToString()),
             log.Timestamp is { } xmlAt ? new XElement("Timestamp", FormatInstant(xmlAt)) : null,
@@ -4987,6 +4998,8 @@ public static class ReportGenerator
             yml.Append(indent + "  StatusCode: " + ymlStatusCode.Value.ToString(CultureInfo.InvariantCulture) + "\n");
         if (ymlStatusText is not null)
             AppendYaml(yml, indent + "  StatusText: ", ymlStatusText);
+        if (log.Error is not null)
+            AppendYaml(yml, indent + "  Error: ", log.Error);
         AppendYaml(yml, indent + "  TraceId: ", log.TraceId.ToString());
         AppendYaml(yml, indent + "  RequestResponseId: ", log.RequestResponseId.ToString());
         if (log.Timestamp is not null)
@@ -5944,6 +5957,7 @@ public static class ReportGenerator
                         },
                         ["statusCode"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "The numeric status. Null on the request half, and null for a tracker whose outcome has no number (a broker Ack, a cache Hit) - those carry statusText only." },
                         ["statusText"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The label for the status: the .NET name for an HTTP code (OK, BadRequest) or the word a non-HTTP tracker recorded (Ack, Responded, Hit). Null on the request half." },
+                        ["error"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "When the call threw instead of answering: the exception's message chain (the outer message, then each inner one after Caused by:). The exception's type is the statusText behind a bang, !HttpRequestException. Null on the request half and on a call that answered." },
                         ["traceId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Kronikol's own id for the request/response pair. Not the W3C trace id — that is activityTraceId." },
                         ["requestResponseId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Pairs a request with its response: both halves carry the same value" },
                         ["timestamp"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["format"] = "date-time", ["description"] = "When this half was captured (UTC); null when the capture path recorded none" },
@@ -6123,6 +6137,7 @@ public static class ReportGenerator
                 ),
                 new XElement(xs + "element", new XAttribute("name", "StatusCode"), new XAttribute("type", "xs:int"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "StatusText"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "Error"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "TraceId"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "RequestResponseId"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "Timestamp"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),

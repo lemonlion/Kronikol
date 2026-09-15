@@ -27,6 +27,7 @@ public static class HistoryAnalyzer
         HistoryVerdictKind.BehaviourChanged,
         HistoryVerdictKind.Slower,
         HistoryVerdictKind.Reordered,
+        HistoryVerdictKind.Alternating,
         HistoryVerdictKind.UnstableShape,
         HistoryVerdictKind.New,
         HistoryVerdictKind.Unknown,
@@ -357,13 +358,41 @@ public static class HistoryAnalyzer
             for (var i = 1; i < shaped.Count; i++)
                 if (!string.Equals(shaped[i].ShapeSet, shaped[i - 1].ShapeSet, StringComparison.Ordinal)) changes++;
             var unstable = shaped.Count >= options.MinRuns && changes > (shaped.Count - 1) / 2.0;
+            var changed = !string.Equals(currentPoint.ShapeSet, previousShaped.ShapeSet, StringComparison.Ordinal);
 
-            if (unstable)
+            // Alternating: the scenario is back on a set it held within the last AlternatingRuns passing
+            // runs, and a different set was held in between. Two states, both its own (a warm cache or a
+            // cold one), and which one a run sees depends on ordering: the first sighting of each was a
+            // change, every return is the same fact again. A set that stayed is not alternating (nothing
+            // came between), and a set held only beyond the memory is a change again, so a regression to
+            // how the scenario behaved long ago still reads as one. Failed runs are not the memory: what a
+            // failure left is not a state.
+            var memory = shaped.Where(p => p.Result == HistoryFormat.Passed).TakeLast(options.AlternatingRuns).ToList();
+            var earliest = currentResult == HistoryFormat.Passed
+                ? memory.FindIndex(p => string.Equals(p.ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal))
+                : -1;
+            var alternating = earliest >= 0 && memory.Skip(earliest + 1).Any(p => !string.Equals(p.ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal));
+
+            if (alternating)
+            {
+                verdicts.Add(HistoryVerdictKind.Alternating);
+                var distinct = memory.Select(p => p.ShapeSet).Distinct(StringComparer.Ordinal).Count();
+                var held = memory.Count(p => string.Equals(p.ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal));
+                var named = "";
+                if (changed && currentPoint.CallSet is { } nowSet && previousShaped.CallSet is { } beforeSet)
+                {
+                    newCalls = nowSet.Except(beforeSet, StringComparer.Ordinal).ToArray();
+                    goneCalls = beforeSet.Except(nowSet, StringComparer.Ordinal).ToArray();
+                    named = NamedCalls("new", newCalls) + NamedCalls("gone", goneCalls);
+                }
+                evidence.Add($"alternating between {distinct.ToString(CultureInfo.InvariantCulture)} sets of calls over the last {memory.Count.ToString(CultureInfo.InvariantCulture)} runs: this set in {held.ToString(CultureInfo.InvariantCulture)} of them{named}");
+            }
+            else if (unstable)
             {
                 verdicts.Add(HistoryVerdictKind.UnstableShape);
                 evidence.Add($"the set of calls changed in {changes.ToString(CultureInfo.InvariantCulture)} of the last {(shaped.Count - 1).ToString(CultureInfo.InvariantCulture)} run pairs; behaviour verdicts are suppressed");
             }
-            else if (!string.Equals(currentPoint.ShapeSet, previousShaped.ShapeSet, StringComparison.Ordinal))
+            else if (changed)
             {
                 var previousResult = previousShaped.Result;
                 if (currentResult == previousResult)

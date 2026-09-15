@@ -257,9 +257,42 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             AttributionSource = currentTestInfo.Source
         });
 
-        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-        var responseContentString = await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
+        HttpResponseMessage response;
+        string? responseContentString;
+        try
+        {
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            responseContentString = await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // A send that throws is still an answer: the exception's type where the status would be, its
+            // message chain in Error, and the exception on its way. See FailedSend.
+            RequestResponseLogger.Log(new RequestResponseLog(
+                currentTestInfo.Name,
+                currentTestInfo.Id,
+                request.Method,
+                null,
+                request.RequestUri!,
+                [],
+                serviceName,
+                _callerName!,
+                RequestResponseType.Response,
+                traceId,
+                requestResponseId,
+                trackingIgnore,
+                FailedSend.Status(ex))
+            {
+                Error = FailedSend.Describe(ex),
+                FocusFields = responseFocusFields,
+                Timestamp = DateTimeOffset.UtcNow,
+                ActivitySpanId = activitySpanId,
+                ActivityTraceId = activityTraceId,
+                Phase = currentPhase,
+                AttributionSource = currentTestInfo.Source
+            });
+            throw;
+        }
         var responseHeaders = response.Headers.SelectMany(x => x.Value.Select(value => (x.Key, (string?)value))).ToArray();
 
         RequestResponseLogger.Log(new RequestResponseLog(

@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.18.0] - 2026-09-15
+
+**Minor - a scenario with two states, and a call that threw.** A new history verdict with its option
+and flag, a new field on every interaction, and a heading that says what its table holds. Nothing
+already in use changes meaning without being touched. Template pins move to 3.17.0.
+
+Both come from reading a consumer's runs after 3.17.0 (`plans/ALTERNATING_AND_FAILED_SENDS_PLAN.md`):
+ten of twelve lanes read `nothing changed`, and the two verdicts left were a scenario whose own
+request answers from a warm cache or builds the menu, and a first attempt that threw behind a retry
+loop and stood in the report as a request with no response and no reason.
+
+### Added
+
+- **`alternating`.** A scenario back on a set of calls it held within the last `HistoryAlternatingRuns`
+  (default 10) passing runs, with a different set held in between, reads `alternating`: a standing
+  state like `flaky`, never `behaviour-changed`, and not a summary count, so `nothing changed` stays
+  true of a lane whose only news is a known second state. The first sighting of each set is still
+  `behaviour-changed`; a set held only beyond the memory is a change again, so a regression back to
+  how the scenario behaved long ago still reads as one; a failed run's set is not a state. The
+  evidence names it: `alternating between 2 sets of calls over the last 7 runs: this set in 4 of them`,
+  with `new:` and `gone:` against the previous run when both runs recorded their call lists.
+  `HistoryAnalysisOptions.AlternatingRuns`, `kronikol history gate --alternating-runs N` and
+  `kronikol query history --alternating-runs N`; the pill and `$alternating` in the search box.
+- **A call that threw is a call with an answer.** When a send throws (a refused connection, a broken
+  response body, a client timeout), `TestTrackingMessageHandler` and `CosmosTrackingMessageHandler`
+  log the response half with the exception's type where the status would be, behind a bang
+  (`!HttpRequestException`), and the message chain in the new `RequestResponseLog.Error` (outer
+  message, then each inner one after `Caused by:`), then rethrow untouched. The fingerprint reads
+  `GET /asyncapi/v1.json !HttpRequestException` instead of `-`, the diagram draws the return, the
+  data files carry `error` (`Error` in XML and YAML; schema and XSD updated), and `kronikol query
+  http` prints it under the status. `FailedSend.Status` and `FailedSend.Describe` are public for
+  any other capturer.
+
+### Changed
+
+- **`unstable-shape`** now covers only the scenario whose set of calls is new on most runs; a scenario
+  flipping between sets that keep returning is `alternating`.
+- The **Background calls** heading counts what its table holds: `N: M after a scenario ended, K with
+  no scenario`, and the note says that a `(no scenario)` row was kept because
+  `RequestResponseLogger.CaptureBackground` is on.
+
 ## [3.17.0] - 2026-09-15
 
 **Minor - a scenario's calls are the scenario's.** New tracking surface (a provenance mark on every
