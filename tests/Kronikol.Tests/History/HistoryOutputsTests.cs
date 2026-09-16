@@ -242,20 +242,45 @@ public class HistoryOutputsTests : IDisposable
     [Fact]
     public void The_html_report_embeds_history_unless_told_not_to()
     {
-        Run("h1", "test:1:1", Features(ExecutionResult.Passed), o => o.GenerateTestRunReport = true);
-        Run("h2", "test:2:1", Features(ExecutionResult.Failed), o => o.GenerateTestRunReport = true);
-        Run("h3", "test:3:1", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.EmbedHistoryInReport = false; });
+        void Section(ReportConfigurationOptions o) { o.GenerateTestRunReport = true; o.ShowHistorySection = true; }
+        Run("h1", "test:1:1", Features(ExecutionResult.Passed), Section);
+        Run("h2", "test:2:1", Features(ExecutionResult.Failed), Section);
+        Run("h3", "test:3:1", Features(ExecutionResult.Failed), o => { Section(o); o.EmbedHistoryInReport = false; });
 
         var second = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.html"));
         Assert.Contains("<details id=\"history-section\"", second);
         Assert.Contains("data-history-verdicts=\"broke\"", second);
-        Assert.Contains("history-sparkline", second);
+        Assert.Contains("<span class=\"history-sparkline\"", second);
 
+        // EmbedHistoryInReport is the master switch: nothing about history reaches the file, section asked for or not.
+        // Every assertion here names emitted markup: the stylesheet carries the class names either way.
         var third = File.ReadAllText(Path.Combine(Reports("h3"), "TestRunReport.html"));
         Assert.DoesNotContain("<details id=\"history-section\"", third);
         Assert.DoesNotContain("data-history-verdicts=\"", third);
+        Assert.DoesNotContain("<span class=\"history-sparkline\"", third);
         // The ledger still saw the run: embedding is about the file, not about recording.
         Assert.Contains("test:3:1", File.ReadAllText(Ledger));
+    }
+
+    [Fact]
+    public void The_history_section_is_left_out_of_the_report_unless_it_is_asked_for()
+    {
+        Run("h1", "test:1:1", Features(ExecutionResult.Passed), o => o.GenerateTestRunReport = true);
+        Run("h2", "test:2:1", Features(ExecutionResult.Failed), o => o.GenerateTestRunReport = true);
+        Run("h3", "test:3:1", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.ShowHistorySection = true; });
+
+        // A run that broke a scenario has as much to say as history ever has, and the section is still not there.
+        // The assertions name emitted markup, not class names: the stylesheet carries those either way.
+        var byDefault = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.html"));
+        Assert.DoesNotContain("<details id=\"history-section\"", byDefault);
+        Assert.DoesNotContain("<summary class=\"h2\">History ", byDefault);
+        // Only the section goes. What the run read is still beside the scenario it is about.
+        Assert.Contains("data-history-verdicts=\"broke\"", byDefault);
+        Assert.Contains("<span class=\"history-sparkline\"", byDefault);
+
+        var asked = File.ReadAllText(Path.Combine(Reports("h3"), "TestRunReport.html"));
+        Assert.Contains("<details id=\"history-section\"", asked);
+        Assert.Contains("<summary class=\"h2\">History ", asked);
     }
 
     /// <summary>
@@ -308,7 +333,8 @@ public class HistoryOutputsTests : IDisposable
     {
         SeedTrunk("PP", "PP", "PP");
 
-        Run("cmp", "test:9:3", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.HistoryCompareBranch = "trunk"; });
+        // The compare reading is a line of the History section, so this run asks for the section.
+        Run("cmp", "test:9:3", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.ShowHistorySection = true; o.HistoryCompareBranch = "trunk"; });
 
         var digest = File.ReadAllText(Path.Combine(Reports("cmp"), "Failures.md"));
         Assert.Contains("on trunk: 1 broke (against 3 earlier runs on trunk)", digest);

@@ -208,16 +208,28 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("Other: free text without a kind", printed);
         Assert.Contains("Other: NoSuchKind: still free text", printed);
 
+        // The HTML section is off unless the run asks for it; the data file carries the diagnostic either way.
         var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
-        Assert.Contains("Report diagnostics (", html);
-        Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", html);
+        Assert.DoesNotContain("<summary>Report diagnostics (", html);
+        Assert.DoesNotContain("tap-di-redis: decoding disabled on 1 connection(s)", html);
         using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
         Assert.Contains(json.RootElement.GetProperty("diagnostics").EnumerateArray(),
             d => d.GetProperty("kind").GetString() == "CaptureDegraded");
 
+        var shown = Path.Combine(_dir, "shown");
+        Assert.Equal(0, IngestCommand.Run(
+        [
+            captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", shown, "--diagnostics-section",
+            "--diagnostic", "CaptureDegraded:tap-di-redis: decoding disabled on 1 connection(s)",
+        ], new StringWriter(), new StringWriter()));
+        var shownHtml = File.ReadAllText(Path.Combine(shown, "TestRunReport.html"));
+        Assert.Contains("<summary>Report diagnostics (", shownHtml);
+        Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", shownHtml);
+
         var usage = new StringWriter();
         IngestCommand.PrintUsage(usage);
         Assert.Contains("--diagnostic <kind>:<msg>", usage.ToString());
+        Assert.Contains("--diagnostics-section", usage.ToString());
     }
 
     [Fact]

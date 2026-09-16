@@ -107,7 +107,11 @@ internal static class MergeCommand
                 if (history is null)
                     return historyExit;
             }
-            written = MergeableReportRenderer.Render(merged, output, title, history: history);
+            // --history is a request for history in this report, so the History section comes with it; a
+            // report nobody asked history for is the one that leaves the section out.
+            written = MergeableReportRenderer.Render(merged, output, title,
+                options: new ReportConfigurationOptions { ShowHistorySection = history is not null },
+                history: history);
             @out.WriteLine($"Wrote combined report to {written}");
         }
         catch (FormatException ex)

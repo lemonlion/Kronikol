@@ -254,6 +254,8 @@ public class ToggleDefaultsBaselineTests
             wholeTestSegments: segments,
             wholeTestVisualization: WholeTestFlowVisualization.Both,
             diagnostics: [new DiagnosticEntry(DiagnosticKind.OutputFailure, "example diagnostic", null)],
+            // The fixture is the one that exercises the diagnostics section, so it asks for it.
+            showReportDiagnostics: true,
             toggleDefaults: toggleDefaults);
         return path;
     }

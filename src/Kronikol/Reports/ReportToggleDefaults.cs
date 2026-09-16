@@ -90,7 +90,9 @@ public record ReportToggleDefaults
     /// <summary>Each scenario's diagrams disclosure starts open. Default: <c>true</c>.</summary>
     public bool? DiagramsSectionOpen { get; set; }
 
-    /// <summary>The report diagnostics disclosure starts open (test run report only). Default: <c>false</c>.</summary>
+    /// <summary>The report diagnostics disclosure starts open (test run report only). Default: <c>false</c>.
+    /// Inert unless <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> renders the section,
+    /// which it does not by default.</summary>
     public bool? DiagnosticsOpen { get; set; }
 
     /// <summary>Rule sections start open. Default: <c>true</c>.</summary>

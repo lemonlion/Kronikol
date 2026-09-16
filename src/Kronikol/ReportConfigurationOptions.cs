@@ -354,6 +354,17 @@ public record ReportConfigurationOptions
     /// <summary>When <c>true</c>, enables diagnostic logging for troubleshooting report generation.</summary>
     public bool DiagnosticMode { get; set; }
 
+    /// <summary>
+    /// Whether <c>TestRunReport.html</c> carries the "Report diagnostics" section: the collapsed list of
+    /// what the run recorded about itself — a tap whose decoder gave up, a skipped capture line, a render
+    /// that failed. Default: <c>false</c>, because on a healthy run it is a line of noise above the
+    /// features. Nothing else moves with it: every diagnostic still reaches
+    /// <see cref="Kronikol.Ingestion.IngestResult.Diagnostics"/>, the <c>diagnostics</c> array of
+    /// <c>TestRunReport.json</c>, and the console. <see cref="ReportToggleDefaults.DiagnosticsOpen"/>
+    /// decides whether the section starts open, and is inert while this is <c>false</c>.
+    /// </summary>
+    public bool ShowReportDiagnosticsSection { get; set; }
+
     /// <summary>When <c>true</c>, background steps are rendered inline with the scenario steps instead of in a separate collapsible section.</summary>
     [Obsolete("Background steps are inlined by default. Set SeparateBackgroundSteps = true for the old separate section.")]
     public bool InlineBackgroundSteps { get; set; }
@@ -652,8 +663,19 @@ public record ReportConfigurationOptions
 
     /// <summary>
     /// Whether the test run report embeds the history it read — a sparkline and verdict beside each
-    /// scenario, a History section beside the timeline. Default: <c>true</c>. With no ledger the report
-    /// is byte-for-byte what it was without history.
+    /// scenario, and the History section when <see cref="ShowHistorySection"/> asks for it. Default:
+    /// <c>true</c>. With no ledger the report is byte-for-byte what it was without history.
     /// </summary>
     public bool EmbedHistoryInReport { get; set; } = true;
+
+    /// <summary>
+    /// Whether <c>TestRunReport.html</c> carries the History section beside the timeline: the run's
+    /// summary line, the trend of the last runs, and the lists of what changed. Default: <c>false</c> —
+    /// a run where nothing changed still has the section to say so, and above the features that reads as
+    /// noise. Off, the history a run read is still beside the scenario it is about (the sparkline and the
+    /// verdict pill, which <see cref="EmbedHistoryInReport"/> governs), still in <c>Failures.md</c>, the
+    /// CTRF document and the ledger, and still what <c>kronikol query history</c> answers from.
+    /// <c>kronikol merge --history</c> turns it on for the merged report it was asked to render.
+    /// </summary>
+    public bool ShowHistorySection { get; set; }
 }

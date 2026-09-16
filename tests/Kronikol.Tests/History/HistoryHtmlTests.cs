@@ -76,7 +76,8 @@ public class HistoryHtmlTests : IDisposable
     {
         var diagrams = features.SelectMany(f => f.Scenarios).Select(s => new DiagramAsCode(s.Id, "", "@startuml\nA->B\n@enduml")).ToArray();
         var path = ReportGenerator.GenerateHtmlReport(diagrams, features, At.UtcDateTime.AddMinutes(-1), At.UtcDateTime, null,
-            Path.Combine(_dir, name), "History HTML", true, suite: Suite, history: history);
+            // The tests here are about what history renders, so they ask for the section a plain report leaves out.
+            Path.Combine(_dir, name), "History HTML", true, suite: Suite, history: history, showHistorySection: true);
         return File.ReadAllText(path);
     }
 

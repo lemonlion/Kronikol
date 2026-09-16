@@ -82,7 +82,9 @@ internal static class HistoryReportHelper
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             suite: Suite,
-            history: verdicts);
+            history: verdicts,
+            // These reports are about the section, so they ask for it: it is off in a report that did not.
+            showHistorySection: true);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;

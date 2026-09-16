@@ -211,10 +211,11 @@ public sealed class IngestRequest
     /// taps (<see cref="DiagnosticKind.CaptureDegraded"/>: a decoder that gave up on a connection, oversize
     /// payloads skipped, export payloads dropped), but any <see cref="DiagnosticEntry"/> is accepted. They
     /// are carried verbatim into <see cref="IngestResult.Diagnostics"/> (first, ahead of what the ingest
-    /// itself records) and into the report: the "Report diagnostics" section of <c>TestRunReport.html</c>
-    /// and the top-level <c>diagnostics</c> array of <c>TestRunReport.json</c>. Default empty — nothing
-    /// changes when a host hands in nothing. <c>kronikol ingest --diagnostic "&lt;kind&gt;:&lt;message&gt;"</c>
-    /// is the CLI form.
+    /// itself records) and into the top-level <c>diagnostics</c> array of <c>TestRunReport.json</c>, and
+    /// into the "Report diagnostics" section of <c>TestRunReport.html</c> when
+    /// <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> asks for that section.
+    /// Default empty — nothing changes when a host hands in nothing.
+    /// <c>kronikol ingest --diagnostic "&lt;kind&gt;:&lt;message&gt;" --diagnostics-section</c> is the CLI form.
     /// </summary>
     public IReadOnlyList<DiagnosticEntry> HostDiagnostics { get; init; } = [];
 }

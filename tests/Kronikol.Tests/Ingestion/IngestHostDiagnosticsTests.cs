@@ -36,11 +36,14 @@ public class IngestHostDiagnosticsTests : IDisposable
 
     private static readonly DiagnosticEntry HostNote = new(DiagnosticKind.Other, "host note <with markup> & symbols", TestId);
 
-    private IngestRequest Request(string folder, IReadOnlyList<DiagnosticEntry> hostDiagnostics, bool withTraffic = true)
+    private IngestRequest Request(string folder, IReadOnlyList<DiagnosticEntry> hostDiagnostics, bool withTraffic = true,
+        bool showSection = true)
     {
         var options = IngestPipeline.DefaultOptions();
         options.ReportsFolderPath = Path.Combine(_dir, folder);
         options.GenerateComponentDiagram = false;
+        // The HTML section is off by default; the tests about what it renders ask for it.
+        options.ShowReportDiagnosticsSection = showSection;
 
         var (req, resp) = InteractionRecord.Pair(TestId, "The overview renders", "GET", "http://data-insights/api/overview", "data-insights", "web",
             statusCode: "200", requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(2));
@@ -129,6 +132,28 @@ public class IngestHostDiagnosticsTests : IDisposable
 
         Assert.False(result.Generated);
         Assert.Contains(DeadTap, result.Diagnostics);
+    }
+
+    [Fact]
+    public void The_html_section_is_left_out_unless_it_is_asked_for_and_the_data_file_carries_it_either_way()
+    {
+        var quiet = IngestPipeline.Run(Request("SectionOff", [DeadTap, HostNote], showSection: false));
+
+        // Emitted markup, not the class name: the stylesheet names the section either way.
+        var html = File.ReadAllText(quiet.TestRunReportHtml);
+        Assert.DoesNotContain("<details class=\"report-diagnostics\"", html);
+        Assert.DoesNotContain("<summary>Report diagnostics (", html);
+
+        // Only the HTML section goes: the result and TestRunReport.json say everything they said before.
+        Assert.Equal(DeadTap, quiet.Diagnostics[0]);
+        using var json = ReadJson(quiet);
+        var written = json.RootElement.GetProperty("diagnostics").EnumerateArray().ToArray();
+        Assert.Equal("CaptureDegraded", written[0].GetProperty("kind").GetString());
+        Assert.Equal(DeadTap.Message, written[0].GetProperty("message").GetString());
+        Assert.Equal(HostNote.Message, written[1].GetProperty("message").GetString());
+
+        var asked = IngestPipeline.Run(Request("SectionOn", [DeadTap, HostNote]));
+        Assert.Contains("class=\"report-diagnostics\"", File.ReadAllText(asked.TestRunReportHtml));
     }
 
     [Fact]

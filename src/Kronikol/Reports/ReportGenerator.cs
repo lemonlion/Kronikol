@@ -364,7 +364,7 @@ public static class ReportGenerator
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection));
         }
 
         if (options.GenerateSpecificationsData)
@@ -779,7 +779,9 @@ public static class ReportGenerator
         SearchIndex.SearchIndexBuildCache? searchIndexCache = null,
         ResolvedToggleDefaults? toggleDefaults = null,
         string? suite = null,
-        HistoryVerdicts? history = null)
+        HistoryVerdicts? history = null,
+        bool showHistorySection = false,
+        bool showReportDiagnostics = false)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -1427,7 +1429,10 @@ public static class ReportGenerator
             body.Append("</details>");
         }
 
-        if (includeTestRunData && diagnostics is { Count: > 0 })
+        // Off unless asked for (ReportConfigurationOptions.ShowReportDiagnosticsSection): on a healthy run
+        // the section is a line of noise above the features, and nothing is lost by leaving it out — every
+        // diagnostic is in TestRunReport.json's diagnostics array and in the run's own result either way.
+        if (includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 })
             body.Append(RenderReportDiagnostics(diagnostics, toggles.DiagnosticsOpen));
 
         if (includeTestRunData && background is { Calls: > 0 })
@@ -1436,8 +1441,11 @@ public static class ReportGenerator
         // Cross-run history (plans/CROSS_RUN_HISTORY_PLAN.md §8.1): the section sits beside the timeline,
         // and the per-scenario entries are looked up by stable id as the scenarios render below. Null
         // when the run had no ledger, and then nothing about history reaches the file.
+        // The section itself is off unless asked for (ReportConfigurationOptions.ShowHistorySection): a run
+        // where nothing changed still has a section to say so. The per-scenario sparklines and pills below
+        // are not part of that — they sit beside the scenario they are about and stay.
         var historySlots = history is null ? null : new Dictionary<string, int>(StringComparer.Ordinal);
-        if (history is not null)
+        if (history is not null && showHistorySection)
             body.Append(HistoryHtml.Section(history));
 
         // Scenario timeline / Gantt (hidden by default)

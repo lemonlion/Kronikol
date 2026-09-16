@@ -27,6 +27,7 @@ internal static class IngestCommand
         int? browserRenderWorkers = null;
         var notePayloadFormat = Kronikol.Reports.NotePayloadFormat.Json;
         var componentDiagram = true;
+        var diagnosticsSection = false;
         var redact = true;
         var redactHeaders = new List<string>();
         var featureName = "Ingested";
@@ -119,6 +120,9 @@ internal static class IngestCommand
                     break;
                 case "--no-component-diagram":
                     componentDiagram = false;
+                    break;
+                case "--diagnostics-section":
+                    diagnosticsSection = true;
                     break;
                 case "--no-redact":
                     redact = false;
@@ -268,6 +272,7 @@ internal static class IngestCommand
             options.BrowserRenderWorkers = browserRenderWorkers.Value;
         options.NotePayloadFormat = notePayloadFormat;
         options.GenerateComponentDiagram = componentDiagram;
+        options.ShowReportDiagnosticsSection = diagnosticsSection;
         options.CapitaliseStepText = capitalise;
         options.CapitaliseTitles = capitalise;
         if (title is not null)
@@ -480,8 +485,11 @@ internal static class IngestCommand
         w.WriteLine("  --clean-attachments      Empty the report's attachments/ folder first, so it holds this run only.");
         w.WriteLine("  --diagnostic <kind>:<msg> Carry a host diagnostic into the report (repeatable) — e.g. a tap's capture");
         w.WriteLine("                           health: \"CaptureDegraded:tap-di-redis: decoding disabled on 1 connection\".");
-        w.WriteLine("                           kind = a DiagnosticKind name (unknown → Other); it lands in IngestResult.Diagnostics,");
-        w.WriteLine("                           the report's \"Report diagnostics\" section and TestRunReport.json's diagnostics array.");
+        w.WriteLine("                           kind = a DiagnosticKind name (unknown → Other); it lands in IngestResult.Diagnostics");
+        w.WriteLine("                           and TestRunReport.json's diagnostics array, and in the HTML report's \"Report");
+        w.WriteLine("                           diagnostics\" section when --diagnostics-section asks for it.");
+        w.WriteLine("  --diagnostics-section    Render the \"Report diagnostics\" section in the HTML report. Off by default:");
+        w.WriteLine("                           every diagnostic is in TestRunReport.json and printed here either way.");
         w.WriteLine("  -h, --help               Show this help.");
         w.WriteLine();
         w.WriteLine("Example:");

@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.21.0] - 2026-09-16
+
+**Minor - the History and Report diagnostics sections leave the HTML report unless it asks for them.**
+Two new options and a new `ingest` flag, each defaulting to the new behaviour, so `TestRunReport.html`
+loses two blocks it used to open with. Nothing else moves: both sections were a view of data that is
+still written in full everywhere else it was written, the data files included. Template pins move to
+3.20.1.
+
+### Added
+
+- **`ShowHistorySection`** (`bool`, default `false`) renders the History section beside the timeline:
+  the run's summary line, the trend of the last runs, and the lists of what changed. `kronikol merge
+  --history` sets it for the report it was asked to render, because naming a ledger is asking for
+  history.
+- **`ShowReportDiagnosticsSection`** (`bool`, default `false`) renders the "Report diagnostics" section:
+  the collapsed list of what the run recorded about itself, a tap whose decoder gave up, a skipped
+  capture line, a render that failed.
+- **`kronikol ingest --diagnostics-section`** does the same for a report the CLI writes, so
+  `--diagnostic` can still put a host's own entry in front of a reader.
+
+### Changed
+
+- **The two sections are out of `TestRunReport.html` by default.** On a healthy run where nothing
+  changed, each was a line of noise above the features: history still has a section to say that nothing
+  changed, and diagnostics still has one to say the run recorded three log entries. Both are one line of
+  configuration away, and neither takes anything with it:
+  - History keeps the sparkline and the verdict pill beside the scenario they are about (those belong to
+    `EmbedHistoryInReport`, unchanged at `true`), and keeps `Failures.md`, the CTRF document, the
+    console pointer, `History.run.json`, the ledger and every answer `kronikol query history` gives.
+  - Diagnostics keep `IngestResult.Diagnostics`, the `diagnostics` array of `TestRunReport.json` with
+    its schema, and the console. A report that is quiet about a dead tap is a report whose data file is
+    not.
+  - `ReportToggleDefaults.DiagnosticsOpen` decides whether the diagnostics section starts open, and is
+    inert while the section is not rendered.
+- Reports generated through `ReportGenerator.GenerateHtmlReport` and `MergeableReportRenderer.Render`
+  follow the same rule: the two new `showHistorySection` and `showReportDiagnostics` parameters default
+  to off, so a caller that passed history or diagnostics and wants the section now says so.
+
+### Fixed
+
+- **The history ledger's read budget no longer false-fails under a loaded test run.**
+  `Ledger_for_5000_scenarios_over_50_runs_stays_under_the_budget` took one wall-clock sample of a read
+  whose measured work is about 100 ms, in a suite that runs in parallel, so it was also measuring the
+  rest of what the machine was doing: it failed at 3.4 s and at 6 s in three consecutive full runs, on this release's
+  tree and on 3.20.1's alike, while passing in isolation. It now takes the fastest of three reads
+  against the same budget, unchanged at 1500 ms, alongside the unchanged structural guard that the read
+  parses 51 lines rather than the whole ledger. A reader that regressed to parsing everything is slow in
+  every sample, so the regression this exists to catch still fails it; one stalled sample no longer can.
+
 ## [3.20.1] - 2026-09-16
 
 **Patch - a proxy tap gives its port up without asking for it back.** One extension defect (#74), one

@@ -607,12 +607,23 @@ public class HistoryLedgerTests : IDisposable
         File.WriteAllText(LedgerPath, builder.ToString());
 
         HistoryLedgerReader.Read(LedgerPath, 50); // warm
-        var watch = System.Diagnostics.Stopwatch.StartNew();
-        var read = HistoryLedgerReader.Read(LedgerPath, 50);
-        watch.Stop();
+        // The fastest of three reads, not one read. The budget is here to catch a regression to "parse the
+        // whole ledger", which is a property of the reader and shows in every read; a single wall-clock
+        // sample in a parallel suite also measures whatever else this machine was doing, and measured
+        // stalls of 3.4 s and 6 s failed a reader that was doing 100 ms of work. Three samples cannot make
+        // a slow reader look fast, and one stalled sample can no longer make a fast one look slow.
+        var elapsed = long.MaxValue;
+        HistoryReadResult read = null!;
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            read = HistoryLedgerReader.Read(LedgerPath, 50);
+            watch.Stop();
+            elapsed = Math.Min(elapsed, watch.ElapsedMilliseconds);
+        }
 
         Assert.Equal(50, read.Ledger!.Runs("Suite").Count);
         Assert.True(read.Ledger.Stats.LinesParsed <= 51, $"parsed {read.Ledger.Stats.LinesParsed}");
-        Assert.True(watch.ElapsedMilliseconds < 1500, $"reading took {watch.ElapsedMilliseconds} ms (budget is generous here; the measured figure is ~100 ms)");
+        Assert.True(elapsed < 1500, $"the fastest of three reads took {elapsed} ms (budget is generous here; the measured figure is ~100 ms)");
     }
 }
