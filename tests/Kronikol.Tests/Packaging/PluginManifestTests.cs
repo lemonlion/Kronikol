@@ -98,6 +98,52 @@ public class PluginManifestTests
         Assert.Equal(expected, Load(MarketplacePath).GetProperty("plugins")[0].GetProperty("version").GetString());
     }
 
+    /// <summary>
+    /// The template pins move together, and they move behind. A template is restored by a consumer
+    /// against packages that are already on NuGet, so it can never name the version being written here;
+    /// and a release that moves them has to move all of them. 3.20.0 moved ten of the twelve and left
+    /// <c>kronikol-xunit2</c> and <c>kronikol-xunit3</c> a further release back, which nothing noticed:
+    /// the manifest version has this guard, the pins beside it did not.
+    /// </summary>
+    [Fact]
+    public void Every_template_pins_the_same_Kronikol_version_and_it_is_behind_this_one()
+    {
+        var pins = TemplatePins();
+        Assert.NotEmpty(pins);
+
+        var pinned = pins.Select(p => p.Version).Distinct(StringComparer.Ordinal).ToList();
+        Assert.True(pinned.Count == 1,
+            $"the templates pin {pinned.Count} different Kronikol versions, so a release moved some and not others:{Environment.NewLine}" +
+            string.Join(Environment.NewLine, pins.Select(p => $"  {p.Template} pins {p.Package} {p.Version}")));
+
+        var repository = RepositoryVersion();
+        Assert.True(Version.Parse(pinned[0]) < Version.Parse(repository),
+            $"the templates pin {pinned[0]}, which is not behind this repository's {repository}; a template is restored against a package that is already published");
+    }
+
+    private static List<(string Template, string Package, string Version)> TemplatePins()
+    {
+        var pins = new List<(string Template, string Package, string Version)>();
+        var built = $"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}";
+        var output = $"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}";
+
+        foreach (var project in Directory.EnumerateFiles(Path.Combine(RepoRoot, "templates"), "*.csproj", SearchOption.AllDirectories)
+                     .Where(p => !p.Contains(built, StringComparison.Ordinal) && !p.Contains(output, StringComparison.Ordinal))
+                     .OrderBy(p => p, StringComparer.Ordinal))
+        {
+            foreach (var reference in XDocument.Load(project).Descendants("PackageReference"))
+            {
+                var package = reference.Attribute("Include")?.Value;
+                if (package is null || !package.StartsWith("Kronikol", StringComparison.Ordinal))
+                    continue;
+
+                pins.Add((Path.GetRelativePath(RepoRoot, project).Replace('\\', '/'), package, reference.Attribute("Version")?.Value ?? "(none)"));
+            }
+        }
+
+        return pins;
+    }
+
     [Fact]
     public void Every_skills_path_starts_with_dot_slash_stays_inside_the_plugin_and_holds_a_skill()
     {

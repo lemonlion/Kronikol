@@ -138,7 +138,9 @@ public class PlaywrightBrowserTests : IAsyncLifetime
 
         public ValueTask DisposeAsync()
         {
-            try { _listener.Stop(); _listener.Close(); } catch (ObjectDisposedException) { }
+            // Close() alone: Stop() releases the port first and the second removal re-binds it, which throws if
+            // anything claimed it in between (the mechanism is written out in ProxyTap.DisposeAsync).
+            try { _listener.Close(); } catch (Exception ex) when (ex is ObjectDisposedException or HttpListenerException) { }
             return ValueTask.CompletedTask;
         }
     }

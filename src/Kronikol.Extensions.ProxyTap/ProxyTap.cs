@@ -587,7 +587,11 @@ public sealed class ProxyTap : IAsyncDisposable
         }
     }
 
-    /// <summary>Stops listening, drains in-flight exchanges briefly (≤ 2 s) so their captures land, and releases the upstream client.</summary>
+    /// <summary>
+    /// Stops listening, drains in-flight exchanges briefly (≤ 2 s) so their captures land, and releases the
+    /// upstream client. Safe to await more than once, and on a tap that never started. It gives the port
+    /// back without asking for it again, so another listener taking that port cannot fail the disposal.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) == 1)
@@ -598,13 +602,18 @@ public sealed class ProxyTap : IAsyncDisposable
 
         try
         {
-            if (_listener.IsListening)
-                _listener.Stop();
+            // Close() alone, never Stop() first. On the managed HttpListener (the implementation .NET
+            // uses off Windows) both calls remove the listener from HttpEndPointManager: Stop() frees
+            // the port, and Close()'s second removal goes through GetEPListener, which *binds* a fresh
+            // endpoint listener because the map no longer holds one for that host and port — throwing
+            // "Address already in use" if anything claimed the port in between. Giving a port up must
+            // not depend on being able to get it back. Close() stops listening on its own, and the
+            // accept loop is already unblocked by the cancellation above.
             _listener.Close();
         }
-        catch (ObjectDisposedException)
+        catch (Exception ex) when (ex is ObjectDisposedException or HttpListenerException)
         {
-            // Already closed.
+            // Already closed, or the port has moved on. Nothing left to release.
         }
 
         if (_loop is not null)

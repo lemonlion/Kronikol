@@ -77,7 +77,9 @@ internal sealed class StubUpstream : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
-        try { _listener.Stop(); _listener.Close(); } catch (ObjectDisposedException) { }
+        // Close() alone: Stop() releases the port first and the second removal re-binds it, which throws if
+        // anything claimed it in between (the mechanism is written out in ProxyTap.DisposeAsync).
+        try { _listener.Close(); } catch (Exception ex) when (ex is ObjectDisposedException or HttpListenerException) { }
         return ValueTask.CompletedTask;
     }
 }
@@ -589,6 +591,136 @@ public class ProxyTapTests
         var entry = Assert.Single(tap.Diagnostics());
         Assert.Equal(DiagnosticKind.CaptureDegraded, entry.Kind);
         Assert.StartsWith("tap-web-api: 1 request(s) could not be forwarded and were answered 502 Bad Gateway", entry.Message);
+    }
+
+    [Fact]
+    public async Task Disposing_hands_the_port_back_and_can_be_awaited_more_than_once()
+    {
+        await using var upstream = new StubUpstream(JsonOk);
+        var sink = new ListSink();
+        var port = StubUpstream.FreePort();
+        var address = ListenerLoopback();
+        var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, sink, o => o.ListenPort = port));
+        await tap.StartAsync();
+        using (var client = new HttpClient())
+            (await client.GetAsync(new Uri(tap.ListenUri, "/x"))).Dispose();
+        Assert.True(tap.IsListening);
+
+        await tap.DisposeAsync();
+        await tap.DisposeAsync();
+
+        Assert.False(tap.IsListening);
+        using var reclaimed = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        reclaimed.Bind(new IPEndPoint(address, port));
+        reclaimed.Listen(1);
+    }
+
+    [Fact]
+    public async Task Disposing_does_not_throw_when_something_claims_the_port_the_moment_it_is_freed()
+    {
+        await using var upstream = new StubUpstream(JsonOk);
+        var sink = new ListSink();
+        var address = ListenerLoopback();
+        var threw = new List<string>();
+        const int attempts = 10;
+
+        for (var attempt = 1; attempt <= attempts; attempt++)
+        {
+            var port = StubUpstream.FreePort();
+            var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, sink, o => o.ListenPort = port));
+            await tap.StartAsync();
+            using (var client = new HttpClient())
+                (await client.GetAsync(new Uri(tap.ListenUri, "/x"))).Dispose();
+
+            // A competitor for the port, as a parallel test's listener or an outbound connection's
+            // ephemeral source port would be: it takes the port the instant the tap lets go of it.
+            // Giving a port up must not depend on being able to get it back.
+            using var race = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var squatting = Task.Run(() =>
+            {
+                while (!race.IsCancellationRequested)
+                {
+                    var squatter = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    squatter.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    try
+                    {
+                        squatter.Bind(new IPEndPoint(address, port));
+                        squatter.Listen(1);
+                        return squatter;
+                    }
+                    catch (SocketException)
+                    {
+                        squatter.Dispose();   // still the tap's
+                    }
+                }
+
+                return null;
+            });
+
+            try
+            {
+                await tap.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                threw.Add($"attempt {attempt}: {ex.GetType().Name}: {ex.Message}");
+            }
+
+            race.Cancel();
+            (await squatting)?.Dispose();
+        }
+
+        Assert.True(threw.Count == 0, $"DisposeAsync threw in {threw.Count} of {attempts} attempts:{Environment.NewLine}{string.Join(Environment.NewLine, threw)}");
+    }
+
+    [Fact]
+    public async Task A_tap_whose_port_was_already_taken_can_still_be_disposed()
+    {
+        await using var upstream = new StubUpstream(JsonOk);
+        var sink = new ListSink();
+        var port = StubUpstream.FreePort();
+        await using var holder = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, sink, o => o.ListenPort = port));
+        await holder.StartAsync();
+
+        // The same port, so the bind fails; the half-built tap still has to let go of what it took, and
+        // it must not take anything from the tap that does own the port.
+        var clash = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, sink, o => o.ListenPort = port));
+        await Assert.ThrowsAsync<HttpListenerException>(() => clash.StartAsync());
+
+        await clash.DisposeAsync();
+
+        Assert.True(holder.IsListening);
+        using var client = new HttpClient();
+        using var response = await client.GetAsync(new Uri(holder.ListenUri, "/x"));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_tap_that_was_never_started_can_be_disposed()
+    {
+        await using var upstream = new StubUpstream(JsonOk);
+        var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, new ListSink()));
+
+        await tap.DisposeAsync();
+
+        Assert.False(tap.IsListening);
+    }
+
+    /// <summary>
+    /// The address a <c>localhost</c> prefix is actually bound on. The managed <see cref="HttpListener"/>,
+    /// which is the implementation .NET uses off Windows, takes the first address the name resolves to
+    /// rather than both loopbacks, so a competitor for the port has to aim at that one.
+    /// </summary>
+    private static IPAddress ListenerLoopback()
+    {
+        try
+        {
+            return Dns.GetHostEntry("localhost").AddressList[0];
+        }
+        catch (SocketException)
+        {
+            return IPAddress.Loopback;
+        }
     }
 }
 

@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.20.1] - 2026-09-16
+
+**Patch - a proxy tap gives its port up without asking for it back.** One extension defect (#74), one
+release-time drift in the templates, and a guard for each; nothing new to call. Template pins move to
+3.20.0.
+
+### Fixed
+
+- **`ProxyTap.DisposeAsync` could throw `HttpListenerException: Address already in use`.** Disposal
+  released the listener with `Stop()` followed by `Close()`. On the managed `HttpListener`, which is the
+  implementation .NET uses off Windows (Windows is HTTP.sys-backed and never takes this path), both
+  calls remove the listener from `HttpEndPointManager`: `Stop()` frees the port, and `Close()`'s second
+  removal goes through `GetEPListener`, which *binds* a fresh endpoint listener because the map no
+  longer holds one for that host and port, then tears it down again. Anything that claimed the port in
+  between - a parallel test's listener, an outbound connection's ephemeral source port - made that
+  re-bind fail, out of a `DisposeAsync` whose work was already done, which reads as an unrelated flake
+  in whichever test happened to be tidying up. Measured on Linux: nine disposals in ten threw with a
+  competitor for the port, none without one. The tap now calls `Close()` alone, which stops listening in
+  a single removal with no window to lose, and tolerates `HttpListenerException` as well as
+  `ObjectDisposedException`, because giving a port up must not depend on being able to get it back.
+  In-flight exchanges face what they faced before: `DisposeAsync` cancels the tap's token first, and
+  `Close()` followed `Stop()` immediately anyway. Four test stubs that released their listeners the same
+  way are corrected with it. Reported with a standalone repro in #74.
+- **Two templates were a release further behind than the other ten.** 3.20.0 moved the template pins to
+  3.19.0 but left `kronikol-xunit2` and `kronikol-xunit3` on 3.18.0. Nothing noticed, because only the
+  plugin manifest's version was held to the repository's. All twelve now pin 3.20.0, and a test holds
+  every template to one Kronikol version and to a version behind the one being written.
+
 ## [3.20.0] - 2026-09-15
 
 **Minor - a count change confirmed, the flow that wrote a document, and the store guarded.** A new
