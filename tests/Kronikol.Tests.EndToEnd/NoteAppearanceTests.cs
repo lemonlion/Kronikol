@@ -12,9 +12,9 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
 {
     public NoteAppearanceTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    private async Task NavigateToSqlNote(string fileName)
+    private async Task NavigateToSqlNote(string fileName, bool showNoteFontControls = false)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, fileName));
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, fileName, showNoteFontControls));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -189,10 +189,31 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
         Assert.Equal(original, await DiagramSource());
     }
 
+    // ── Monospace is opt-in (ShowNoteFontControls) ────────────────────────
+
+    [Fact]
+    public async Task The_monospace_glyph_is_absent_by_default()
+    {
+        await NavigateToSqlNote("NoteMonoGlyphAbsent.html");
+
+        Assert.Equal("NOT_VISIBLE", await ClickNoteButton("mono"));
+        // The width glyph takes the slot the monospace glyph would have had, and still works.
+        Assert.Equal("CLICKED", await ClickNoteButton("width"));
+    }
+
+    [Fact]
+    public async Task The_font_select_is_absent_by_default()
+    {
+        await NavigateToSqlNote("NoteFontSelectAbsent.html");
+
+        Assert.Equal(0, await Page.Locator(".note-font-select").CountAsync());
+        Assert.True(await Page.Locator(".note-width-select").CountAsync() > 0);
+    }
+
     [Fact]
     public async Task Monospace_paints_the_note_text_in_courier_new()
     {
-        await NavigateToSqlNote("NoteMonoPaint.html");
+        await NavigateToSqlNote("NoteMonoPaint.html", showNoteFontControls: true);
 
         Assert.DoesNotContain(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
 
@@ -215,7 +236,7 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Monospace_lines_up_text_that_the_proportional_font_scatters()
     {
-        await NavigateToSqlNote("NoteMonoAlign.html");
+        await NavigateToSqlNote("NoteMonoAlign.html", showNoteFontControls: true);
 
         var spreadBefore = await AlignedTokenSpread("AS");
         Assert.True(spreadBefore > 20,
@@ -287,7 +308,7 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task The_report_level_font_select_switches_every_note()
     {
-        await NavigateToSqlNote("NoteMonoBulk.html");
+        await NavigateToSqlNote("NoteMonoBulk.html", showNoteFontControls: true);
 
         await Page.Locator(".note-font-select").First.SelectOptionAsync("mono");
         await WaitForRenderIdle();
@@ -297,6 +318,47 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
         await WaitForNoteElements();
 
         Assert.Contains(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// 3.0.85 shipped the width and font selects with no CSS rule, so they drew as bare browser
+    /// selects against a styled JSON/YAML one. Measured in ONE toolbar that holds all three, so the
+    /// comparison is between siblings and not between two contexts with different inherited fonts.
+    /// </summary>
+    [Fact]
+    public async Task The_width_and_font_selects_are_drawn_like_the_format_select()
+    {
+        await NavigateToSqlNote("NoteSelectStyling.html", showNoteFontControls: true);
+
+        var metrics = await Page.EvaluateAsync<string[]>("""
+            () => {
+                var format = document.querySelector('.note-format-select');
+                if (!format) return ['NO_FORMAT_SELECT'];
+                var bar = format.parentElement;
+                return ['.note-format-select', '.note-width-select', '.note-font-select'].map(function(sel) {
+                    var el = bar.querySelector(sel);
+                    if (!el) return 'MISSING ' + sel;
+                    var cs = getComputedStyle(el);
+                    return [el.getBoundingClientRect().height, cs.borderRadius, cs.fontSize, cs.borderTopColor,
+                        cs.borderTopWidth, cs.marginLeft, cs.paddingLeft, cs.paddingTop].join('|');
+                });
+            }
+            """);
+
+        Assert.Equal(3, metrics.Length);
+        Assert.Equal(metrics[0], metrics[1]);
+        Assert.Equal(metrics[0], metrics[2]);
+    }
+
+    [Fact]
+    public async Task The_width_select_names_its_states_under_a_heading()
+    {
+        await NavigateToSqlNote("NoteWidthLabels.html");
+
+        var select = Page.Locator(".note-width-select").First;
+        Assert.Equal("Note width", await select.Locator("optgroup").First.GetAttributeAsync("label"));
+        Assert.Equal(["Wrap", "Wide"], await select.Locator("option").AllTextContentsAsync());
+        Assert.Equal("default", await select.InputValueAsync());
     }
 
     [Fact]

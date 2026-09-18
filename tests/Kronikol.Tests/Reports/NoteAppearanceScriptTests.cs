@@ -184,6 +184,41 @@ public class NoteAppearanceScriptTests
     }
 
     /// <summary>
+    /// The monospace glyph is opt-in (<c>ShowNoteFontControls</c>): the script is seeded with whether
+    /// the control exists, from the same resolved record the toolbar markup reads, and the glyph's
+    /// gate reads that seed. The handlers stay defined either way; the script is not forked by flag.
+    /// </summary>
+    [Fact]
+    public void The_monospace_glyph_is_gated_on_the_seeded_controls_flag()
+    {
+        Assert.DoesNotContain("__NOTE_FONT_CONTROLS__", _script);
+        Assert.Contains("window._noteFontControls = false;", _script);
+
+        var shown = DiagramContextMenu.GetCollapsibleNotesScript(
+            ResolvedToggleDefaults.BuiltIn with { ShowNoteFontControls = true });
+        Assert.DoesNotContain("__NOTE_FONT_CONTROLS__", shown);
+        Assert.Contains("window._noteFontControls = true;", shown);
+
+        Assert.Contains("monoUseful: window._noteFontControls && ", _script);
+    }
+
+    /// <summary>
+    /// 3.0.85 shipped the font and width selects with no CSS rule at all, so both drew as bare browser
+    /// selects beside a styled JSON/YAML one, and a bulk re-render throbbed on nothing because the
+    /// pending rule did not name them either. One rule and one pending rule cover every note select.
+    /// </summary>
+    [Fact]
+    public void Every_toolbar_select_shares_one_style_and_one_pending_rule()
+    {
+        var css = DiagramContextMenu.GetCollapsibleNotesStyles().ReplaceLineEndings("\n");
+
+        Assert.Contains(".note-format-select,\n.note-font-select,\n.note-width-select {\n    padding: 0.2em 0.3em;", css);
+        Assert.Contains(
+            ".note-format-select.details-pending,\n.note-font-select.details-pending,\n.note-width-select.details-pending {\n    position: relative;",
+            css);
+    }
+
+    /// <summary>
     /// A container decompressed after a bulk command, or under a configured default, must render
     /// straight into that appearance rather than flashing the default first.
     /// </summary>

@@ -3526,8 +3526,12 @@ public static class ReportTestHelper
         GROUP BY t.transaction_period, t.location_identifier ORDER BY t.transaction_period DESC, t.location_identifier ASC LIMIT 500
         """;
 
-    /// <summary>A report whose one request note carries <see cref="WideClickHouseQuery"/>.</summary>
-    public static string GenerateReportWithWideSqlNote(string tempDir, string outputDir, string fileName)
+    /// <summary>
+    /// A report whose one request note carries <see cref="WideClickHouseQuery"/>. The monospace
+    /// controls are opt-in (<c>ShowNoteFontControls</c>), so a fact that drives them asks for them.
+    /// </summary>
+    public static string GenerateReportWithWideSqlNote(string tempDir, string outputDir, string fileName,
+        bool showNoteFontControls = false)
     {
         var (features, _) = CreateTestData();
         var traceId = Guid.NewGuid();
@@ -3552,7 +3556,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { ShowNoteFontControls = showNoteFontControls });
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;

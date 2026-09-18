@@ -457,6 +457,16 @@ public record ReportConfigurationOptions
     public int DiagramNoteWrapWidth { get; set; } = PlantUml.PlantUmlCreator.DefaultNoteWrapWidth;
 
     /// <summary>
+    /// <c>BrowserJs</c> only. When <c>true</c>, the report offers the monospace note controls: the
+    /// <c>M</c>/<c>A</c> glyph in a note's hover cluster and the note-font dropdowns at report and
+    /// scenario level. Default: <c>false</c>, so no monospace control appears anywhere in the report.
+    /// A configured <see cref="ReportToggleDefaults.NoteFont"/> of <see cref="NoteFontFamily.Monospace"/>
+    /// is honoured either way; with the controls hidden it makes every note monospace with no way to
+    /// switch in the report, which is a legitimate configuration.
+    /// </summary>
+    public bool ShowNoteFontControls { get; set; }
+
+    /// <summary>
     /// Default start states for the interactive report controls (Details radio, truncate lines,
     /// headers/assertions/steps/databases toggles, note format, expand states, diagram tab, panels,
     /// filter modes, disclosure sections). Applies to the HTML test run report AND, unless a

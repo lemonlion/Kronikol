@@ -31,6 +31,13 @@ public class ReportConfigurationOptionsDefaultsTests
     }
 
     [Fact]
+    public void ShowNoteFontControls_defaults_to_false()
+    {
+        var options = new ReportConfigurationOptions();
+        Assert.False(options.ShowNoteFontControls);
+    }
+
+    [Fact]
     public void Toggle_default_groups_are_non_null_with_every_property_unset()
     {
         var options = new ReportConfigurationOptions();

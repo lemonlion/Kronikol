@@ -904,8 +904,9 @@
                     width: noteWidthOf(owner, globalIdx),
                     font: noteFontOf(owner, globalIdx),
                     // Monospace is a display preference any multi-line payload can use; a one-line
-                    // note gains nothing from it and does not need the extra glyph.
-                    monoUseful: (noteBlocks[localIdx] ? noteBlocks[localIdx].contentLines.length : 0) > 1,
+                    // note gains nothing from it and does not need the extra glyph. The glyph is
+                    // opt-in (ShowNoteFontControls); without it the width glyph takes this slot.
+                    monoUseful: window._noteFontControls && (noteBlocks[localIdx] ? noteBlocks[localIdx].contentLines.length : 0) > 1,
                     canWiden: function() {
                         // An already-widened note always keeps its button: that is the only way back.
                         if (noteWidthOf(owner, globalIdx) === 'full') return true;
@@ -2079,6 +2080,9 @@
     window._databasesVisible = __DATABASES_VISIBLE_DEFAULT__;
     window._noteFormatDefault = '__NOTE_FORMAT_DEFAULT__';
     window._noteFontDefault = '__NOTE_FONT_DEFAULT__';
+    // Whether the monospace controls exist at all (ShowNoteFontControls). Not a start state: a
+    // configured mono default still paints with the controls hidden.
+    window._noteFontControls = __NOTE_FONT_CONTROLS__;
     window._noteWidthDefault = '__NOTE_WIDTH_DEFAULT__';
 
     function stripAssertionNotes(source) {

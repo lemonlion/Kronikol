@@ -19,8 +19,11 @@
     margin-left: 0;
 }
 .truncate-lines-label { font-size: 0.85em; color: rgb(100, 100, 100); margin-left: 0; margin-right: 0.3em; }
-/* JSON ⇄ YAML note payload format dropdown (collapsible-notes-script.js _setNoteFormat) */
-.note-format-select {
+/* The note dropdowns: JSON ⇄ YAML payload format, note font, note width
+   (collapsible-notes-script.js _setNoteFormat, _setNoteFont, _setNoteWidth) */
+.note-format-select,
+.note-font-select,
+.note-width-select {
     padding: 0.2em 0.3em;
     border: 1px solid rgb(180, 180, 180);
     border-radius: 0.4em;
@@ -42,7 +45,9 @@
    re-render is imperceptible and a slow one is clearly "loading" from the button itself. */
 .details-radio-btn.details-pending,
 .truncate-lines-select.details-pending,
-.note-format-select.details-pending {
+.note-format-select.details-pending,
+.note-font-select.details-pending,
+.note-width-select.details-pending {
     position: relative;
     cursor: progress;
     animation: details-pending-throb 1.1s ease-in-out 0.2s infinite;

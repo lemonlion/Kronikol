@@ -20,6 +20,15 @@ public record ResolvedToggleDefaults
     public NotePayloadFormat NotePayloadFormat { get; init; } = NotePayloadFormat.Json;
     public NoteFontFamily NoteFont { get; init; } = NoteFontFamily.Default;
     public NoteWidthMode NoteWidth { get; init; } = NoteWidthMode.Default;
+
+    /// <summary>
+    /// Not a start state: whether the monospace note controls exist at all. It rides this record so
+    /// the toolbar markup and the script seed that gates the glyph read one value. It comes from the
+    /// flat <see cref="ReportConfigurationOptions.ShowNoteFontControls"/> option alone; neither
+    /// <see cref="ReportToggleDefaults"/> group can change it.
+    /// </summary>
+    public bool ShowNoteFontControls { get; init; }
+
     public bool FeaturesExpanded { get; init; }
     public bool ScenariosExpanded { get; init; }
     public DiagramTabKind DiagramTab { get; init; } = DiagramTabKind.Sequence;
@@ -51,7 +60,11 @@ public static class ReportToggleDefaultsResolver
 {
     public static ResolvedToggleDefaults Resolve(ReportConfigurationOptions options, bool specifications)
     {
-        var resolved = ResolvedToggleDefaults.BuiltIn with { NotePayloadFormat = options.NotePayloadFormat };
+        var resolved = ResolvedToggleDefaults.BuiltIn with
+        {
+            NotePayloadFormat = options.NotePayloadFormat,
+            ShowNoteFontControls = options.ShowNoteFontControls
+        };
         resolved = Overlay(resolved, options.TestRunReportToggleDefaults);
         if (specifications)
             resolved = Overlay(resolved, options.SpecificationsToggleDefaults);
@@ -69,6 +82,7 @@ public static class ReportToggleDefaultsResolver
         NotePayloadFormat = Defined(overrides.NotePayloadFormat) ?? baseline.NotePayloadFormat,
         NoteFont = Defined(overrides.NoteFont) ?? baseline.NoteFont,
         NoteWidth = Defined(overrides.NoteWidth) ?? baseline.NoteWidth,
+        ShowNoteFontControls = baseline.ShowNoteFontControls,
         FeaturesExpanded = overrides.FeaturesExpanded ?? baseline.FeaturesExpanded,
         ScenariosExpanded = overrides.ScenariosExpanded ?? baseline.ScenariosExpanded,
         DiagramTab = Defined(overrides.DiagramTab) ?? baseline.DiagramTab,

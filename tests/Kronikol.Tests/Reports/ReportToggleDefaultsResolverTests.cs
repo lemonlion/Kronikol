@@ -143,6 +143,44 @@ public class ReportToggleDefaultsResolverTests
             ReportToggleDefaultsResolver.Resolve(specDiverges, specifications: true).NotePayloadFormat);
     }
 
+    /// <summary>
+    /// <c>ShowNoteFontControls</c> says whether a control EXISTS, which is not a start state: it
+    /// rides the resolved record so the toolbar markup and the script seed read one value, and it
+    /// comes from the flat option alone.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void The_note_font_controls_flag_is_copied_from_the_flat_option(bool specifications)
+    {
+        Assert.False(ResolvedToggleDefaults.BuiltIn.ShowNoteFontControls);
+
+        var shown = new ReportConfigurationOptions { ShowNoteFontControls = true };
+        Assert.True(ReportToggleDefaultsResolver.Resolve(shown, specifications).ShowNoteFontControls);
+    }
+
+    [Fact]
+    public void The_note_font_controls_flag_survives_both_overlays()
+    {
+        var options = new ReportConfigurationOptions
+        {
+            ShowNoteFontControls = true,
+            TestRunReportToggleDefaults = { NoteFont = NoteFontFamily.Monospace },
+            SpecificationsToggleDefaults = { NoteWidth = NoteWidthMode.Full }
+        };
+
+        var specs = ReportToggleDefaultsResolver.Resolve(options, specifications: true);
+        Assert.True(specs.ShowNoteFontControls);
+        Assert.Equal(NoteFontFamily.Monospace, specs.NoteFont);
+        Assert.Equal(NoteWidthMode.Full, specs.NoteWidth);
+    }
+
+    [Fact]
+    public void Neither_toggle_default_group_can_name_the_note_font_controls_flag()
+    {
+        Assert.Null(typeof(ReportToggleDefaults).GetProperty(nameof(ReportConfigurationOptions.ShowNoteFontControls)));
+    }
+
     [Fact]
     public void Undefined_truncate_line_count_cast_fails_naming_the_valid_members()
     {

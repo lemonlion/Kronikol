@@ -730,13 +730,20 @@ public static class ReportGenerator
     /// at report and scenario level and built once so the toolbar variants cannot drift — the same
     /// contract as the JSON/YAML select. Both are <see cref="PlantUmlRendering.BrowserJs"/>-only:
     /// they re-render the diagram client-side, which no other rendering mode can do.
+    /// <para>
+    /// The controls are label-free to stay compact, so the options sit under an
+    /// <c>&lt;optgroup&gt;</c> whose heading names the control once it is open (and to a screen
+    /// reader); <paramref name="title"/> spells out both states. The heading is not free: Chromium
+    /// indents grouped options and the closed select measured 15px wider (Firefox: 0).
+    /// </para>
     /// </summary>
-    private static string BuildNoteAppearanceSelect(string cssClass, string label, string handler,
+    private static string BuildNoteAppearanceSelect(string cssClass, string label, string title, string handler,
         (string Value, string Text)[] options, string selected) =>
-        $"<select class=\"{cssClass}\" autocomplete=\"off\" aria-label=\"{label}\" title=\"{label}\" onchange=\"window.{handler}(this)\">"
+        $"<select class=\"{cssClass}\" autocomplete=\"off\" aria-label=\"{label}\" title=\"{title}\" onchange=\"window.{handler}(this)\">"
+        + $"<optgroup label=\"{label}\">"
         + string.Concat(options.Select(o =>
             $"<option value=\"{o.Value}\"{(o.Value == selected ? " selected" : "")}>{o.Text}</option>"))
-        + "</select>";
+        + "</optgroup></select>";
 
     public static string GenerateHtmlReport(DefaultDiagramsFetcher.DiagramAsCode[] diagrams,
         Feature[] features,
@@ -945,7 +952,10 @@ public static class ReportGenerator
         // toggles at report and scenario level. Built once — the five scenario
         // toolbar variants all use the same string, so they cannot drift. The
         // control is label-free (kept compact deliberately); aria-label/title
-        // carry its meaning instead.
+        // carry its meaning instead. It takes no <optgroup> heading, unlike the
+        // appearance selects: its options are the names of formats and say what
+        // they do, and Chromium indents grouped options, which measured 15px of
+        // closed-state width per select on a toolbar that has none to spare.
         var yamlDefaultSelected = toggles.NotePayloadFormat == NotePayloadFormat.Yaml;
         var noteFormatOptions = $"<option value=\"json\"{(yamlDefaultSelected ? "" : " selected")}>JSON</option><option value=\"yaml\"{(yamlDefaultSelected ? " selected" : "")}>YAML</option>";
         var reportNoteFormatSelect = hasJsonNotePayloads
@@ -959,21 +969,28 @@ public static class ReportGenerator
         var hasDiagramNotes = isPlantUmlBrowser && (
             (trackedLogs is not null && trackedLogs.Any(l => l.PlantUml is not null && l.PlantUml.Contains("\nnote "))) ||
             diagrams.Any(d => d.CodeBehind.Contains("\nnote left") || d.CodeBehind.Contains("\nnote right")));
+        // The monospace controls are opt-in (ShowNoteFontControls). A configured NoteFont still
+        // seeds the script either way, so "every note monospace, no toggle" is reachable.
+        var hasNoteFontControls = hasDiagramNotes && toggles.ShowNoteFontControls;
         (string, string)[] noteFontOptions = [("default", "Aa"), ("mono", "Mono")];
-        (string, string)[] noteWidthOptions = [("default", "Fit"), ("full", "Full")];
+        // "Wrap" is the start state (notes wrap at DiagramNoteWrapWidth); "Wide" lifts the ceiling to
+        // the diagram's width. The option VALUES are what the handlers and NoteWidthMode key on.
+        (string, string)[] noteWidthOptions = [("default", "Wrap"), ("full", "Wide")];
+        const string noteFontTitle = "Note font. Aa: the diagram's own font. Mono: payloads in a monospace font.";
+        const string noteWidthTitle = "Note width. Wrap: notes wrap at the report's note width. Wide: notes widen to fill the diagram.";
         var fontSelected = toggles.NoteFont == NoteFontFamily.Monospace ? "mono" : "default";
         var widthSelected = toggles.NoteWidth == NoteWidthMode.Full ? "full" : "default";
-        var reportNoteFontSelect = hasDiagramNotes
-            ? BuildNoteAppearanceSelect("note-font-select", "Note payload font", "_setNoteFont", noteFontOptions, fontSelected)
+        var reportNoteFontSelect = hasNoteFontControls
+            ? BuildNoteAppearanceSelect("note-font-select", "Note font", noteFontTitle, "_setNoteFont", noteFontOptions, fontSelected)
             : "";
-        var scenarioNoteFontSelect = hasDiagramNotes
-            ? BuildNoteAppearanceSelect("note-font-select", "Note payload font", "_setScenarioNoteFont", noteFontOptions, fontSelected)
+        var scenarioNoteFontSelect = hasNoteFontControls
+            ? BuildNoteAppearanceSelect("note-font-select", "Note font", noteFontTitle, "_setScenarioNoteFont", noteFontOptions, fontSelected)
             : "";
         var reportNoteWidthSelect = hasDiagramNotes
-            ? BuildNoteAppearanceSelect("note-width-select", "Note width", "_setNoteWidth", noteWidthOptions, widthSelected)
+            ? BuildNoteAppearanceSelect("note-width-select", "Note width", noteWidthTitle, "_setNoteWidth", noteWidthOptions, widthSelected)
             : "";
         var scenarioNoteWidthSelect = hasDiagramNotes
-            ? BuildNoteAppearanceSelect("note-width-select", "Note width", "_setScenarioNoteWidth", noteWidthOptions, widthSelected)
+            ? BuildNoteAppearanceSelect("note-width-select", "Note width", noteWidthTitle, "_setScenarioNoteWidth", noteWidthOptions, widthSelected)
             : "";
         // The full scenario-level control run, built once (see BuildScenarioDiagramToolbar). The
         // no-filters variant serves the flow-only branch, which has no sequence content to filter.

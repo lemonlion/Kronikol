@@ -9,6 +9,9 @@ a SQL query can be read.
 a sibling of the width control and the note button's first glyph, because it is the larger measured
 readability win and needs none of the container arithmetic.
 
+**Postscript, 2026-09-18:** the monospace control was withdrawn from the default UI in 3.22.0 and is now
+opt-in behind `ShowNoteFontControls`; the width dropdown reads `Wrap` / `Wide`. See `NOTE_APPEARANCE_CONTROLS_PLAN.md`.
+
 **Executed, with the decisions the measurements forced:**
 
 | Plan item | What shipped |

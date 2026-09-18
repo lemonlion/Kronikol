@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.22.0] - 2026-09-18
+
+**Minor - the monospace note control is opt-in, and the note-width dropdown says what it does.** The
+minor part moved because `ShowNoteFontControls` is a new option, and a new option is new public surface
+whatever its default. Its default takes a control out of the report that 3.0.85 to 3.21.0 showed, so a
+report generated with untouched configuration changes; every type and option a consumer could name is
+still there and still works. The label and stylesheet changes are patch-class on their own. Template
+pins move to 3.21.0.
+
+### Added
+
+- **`ShowNoteFontControls`** (`bool`, default `false`, `BrowserJs` only) offers the monospace note
+  controls: the `M`/`A` glyph in a note's hover cluster and the `Aa` / `Mono` dropdowns at report and
+  scenario level. Set it to `true` to get back exactly what 3.0.85 showed.
+
+### Changed
+
+- **The monospace note control is out of the report by default.** It shipped default-visible in 3.0.85
+  on a plan recommendation that nobody had asked for, and on a real report it read as clutter. With the
+  option off there is no glyph and no dropdown; the width glyph takes the slot the monospace glyph had.
+  `TestRunReportToggleDefaults.NoteFont = NoteFontFamily.Monospace` is independent of the option and is
+  honoured either way: with the controls hidden it draws every note in `Courier New` with nothing in the
+  report to switch it back, which is a legitimate configuration.
+- **The note-width dropdown reads `Wrap` / `Wide`** where it read `Fit` / `Full`. The old pair were near
+  synonyms and neither said which was the starting state. `Wrap` is the start (notes wrap at
+  `DiagramNoteWrapWidth`), `Wide` widens notes to fill the diagram. The options sit under a `Note width`
+  heading that shows when the dropdown is open, and the tooltip spells out both states. The option values
+  (`default`, `full`) and the `NoteWidthMode` members are unchanged. The font dropdown, when shown, gets a
+  `Note font` heading the same way, and its `aria-label` now reads `Note font`.
+- `Wide` changes only notes that wrap, so on a scenario of short payloads the dropdown appears to do
+  nothing. That is unchanged and now documented: the dropdown cannot be gated the way the per-note glyph
+  is, because diagrams render lazily and a scenario's notes are not all drawn when its toolbar is.
+
+### Fixed
+
+- **The note-width and note-font dropdowns had no CSS rule at all.** Since 3.0.85 both drew as the
+  browser's bare `<select>` beside a styled JSON/YAML dropdown: larger text, square corners, a different
+  height, no left margin. They now share the JSON/YAML dropdown's rule. A Playwright fact compares the
+  painted metrics of all three inside one toolbar.
+- **A bulk note-width or note-font change gave no pending feedback.** The script marked the dropdown as
+  pending during the re-render, and no CSS answered the class, so the one moment the control could show
+  it was working (about 40 ms per diagram, about 20 s on a 488-diagram report) it showed nothing. Both
+  dropdowns are in the pending rule now.
+- The test guard that fails when a `__TOKEN__` placeholder leaks into a generated report never listed the
+  note font and note width tokens. It lists them now, with the new `__NOTE_FONT_CONTROLS__`.
+
+### Notes
+
+- Report output changes for any `BrowserJs` report that draws notes: the font dropdowns are gone, the
+  width dropdown's markup differs, and the script carries one more seeded global
+  (`window._noteFontControls`). Recorded in the Kronikol4J divergence ledger; the port never had either
+  control, so a default report is now closer to it, not further.
+- The JSON/YAML dropdown deliberately gets no heading. Measured, Chromium draws a dropdown with a heading
+  15px wider when closed (Firefox does not), and its options already name themselves. With the heading on
+  the width dropdown only, the default toolbar's dropdowns take 158.9px in Chromium against 174.0px in
+  3.21.0.
+- Design record: `plans/NOTE_APPEARANCE_CONTROLS_PLAN.md`. Wiki: `Report-Configuration.md` gains the
+  option row and `PlantUML-Browser-Rendering.md` splits *Note Appearance* into the width control and the
+  opt-in monospace control.
+
 ## [3.21.0] - 2026-09-16
 
 **Minor - the History and Report diagnostics sections leave the HTML report unless it asks for them.**

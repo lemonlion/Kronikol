@@ -60,9 +60,9 @@ public class ToggleDefaultsMarkupTests
     ];
 
     private static string Generate(Action<ReportToggleDefaults>? configure = null, string? diagramSource = null,
-        Feature[]? features = null)
+        Feature[]? features = null, bool showNoteFontControls = false)
     {
-        var options = new ReportConfigurationOptions();
+        var options = new ReportConfigurationOptions { ShowNoteFontControls = showNoteFontControls };
         configure?.Invoke(options.TestRunReportToggleDefaults);
         var diagrams = new[] { new DefaultDiagramsFetcher.DiagramAsCode("s1", "", diagramSource ?? AllGatesDiagramSource) };
         var path = ReportGenerator.GenerateHtmlReport(
@@ -82,7 +82,8 @@ public class ToggleDefaultsMarkupTests
     [
         "__NOTE_FORMAT_DEFAULT__", "__HEADERS_HIDDEN_DEFAULT__", "__TRUNCATE_LINES_DEFAULT__",
         "__DETAILS_DEFAULT__", "__ASSERTIONS_VISIBLE_DEFAULT__", "__STEPS_VISIBLE_DEFAULT__",
-        "__DATABASES_VISIBLE_DEFAULT__"
+        "__DATABASES_VISIBLE_DEFAULT__", "__NOTE_FONT_DEFAULT__", "__NOTE_WIDTH_DEFAULT__",
+        "__NOTE_FONT_CONTROLS__"
     ];
 
     [Fact]
@@ -259,8 +260,8 @@ public class ToggleDefaultsMarkupTests
     [Fact]
     public void Note_font_default_seeds_selects_and_script()
     {
-        var content = Generate(t => t.NoteFont = NoteFontFamily.Monospace);
-        Assert.Contains("<option value=\"default\">Aa</option><option value=\"mono\" selected>Mono</option>", content);
+        var content = Generate(t => t.NoteFont = NoteFontFamily.Monospace, showNoteFontControls: true);
+        Assert.Contains("<optgroup label=\"Note font\"><option value=\"default\">Aa</option><option value=\"mono\" selected>Mono</option></optgroup>", content);
         Assert.Contains("window._noteFontDefault = 'mono'", content);
     }
 
@@ -268,18 +269,66 @@ public class ToggleDefaultsMarkupTests
     public void Note_width_default_seeds_selects_and_script()
     {
         var content = Generate(t => t.NoteWidth = NoteWidthMode.Full);
-        Assert.Contains("<option value=\"default\">Fit</option><option value=\"full\" selected>Full</option>", content);
+        Assert.Contains("<option value=\"default\">Wrap</option><option value=\"full\" selected>Wide</option>", content);
         Assert.Contains("window._noteWidthDefault = 'full'", content);
     }
 
+    /// <summary>
+    /// "Fit" and "Full" read as synonyms and neither said which one was the start state. The options
+    /// name what each does, and the optgroup heading says what the control is once it is open.
+    /// </summary>
     [Fact]
-    public void Note_appearance_selects_are_emitted_at_report_and_scenario_level()
+    public void Note_width_select_names_its_states()
     {
         var content = Generate();
+        Assert.Contains("<optgroup label=\"Note width\"><option value=\"default\" selected>Wrap</option><option value=\"full\">Wide</option></optgroup>", content);
+        Assert.Contains("title=\"Note width. Wrap: notes wrap at the report's note width. Wide: notes widen to fill the diagram.\" onchange=\"window._setNoteWidth(this)\"", content);
+        Assert.Contains("aria-label=\"Note width\"", content);
+    }
+
+    // The embedded script names both the class (in a selector) and the handler (in its own
+    // definition), so every fact below anchors on an emitted ATTRIBUTE, never a bare name.
+
+    [Fact]
+    public void Note_font_select_is_absent_by_default()
+    {
+        var content = Generate();
+        Assert.DoesNotContain("class=\"note-font-select\"", content);
+        Assert.DoesNotContain("onchange=\"window._setNoteFont(this)\"", content);
+        Assert.DoesNotContain("onchange=\"window._setScenarioNoteFont(this)\"", content);
+        Assert.Contains("class=\"note-width-select\"", content);
+        Assert.Contains("window._noteFontControls = false;", content);
+    }
+
+    [Fact]
+    public void Note_font_select_is_emitted_when_the_controls_are_shown()
+    {
+        var content = Generate(showNoteFontControls: true);
+        Assert.Contains("class=\"note-font-select\"", content);
         Assert.Contains("onchange=\"window._setNoteFont(this)\"", content);
         Assert.Contains("onchange=\"window._setScenarioNoteFont(this)\"", content);
+        Assert.Contains("window._noteFontControls = true;", content);
+    }
+
+    [Fact]
+    public void Note_width_select_is_emitted_at_report_and_scenario_level()
+    {
+        var content = Generate();
         Assert.Contains("onchange=\"window._setNoteWidth(this)\"", content);
         Assert.Contains("onchange=\"window._setScenarioNoteWidth(this)\"", content);
+    }
+
+    /// <summary>
+    /// A consumer who names <c>Monospace</c> asked for it. With the controls hidden every note draws
+    /// monospace and nothing in the report switches it back, which is a legitimate configuration;
+    /// silently ignoring a configured value would be the surprising branch.
+    /// </summary>
+    [Fact]
+    public void A_configured_monospace_default_is_honoured_with_the_controls_hidden()
+    {
+        var content = Generate(t => t.NoteFont = NoteFontFamily.Monospace);
+        Assert.Contains("window._noteFontDefault = 'mono'", content);
+        Assert.DoesNotContain("class=\"note-font-select\"", content);
     }
 
     /// <summary>
