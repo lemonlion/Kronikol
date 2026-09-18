@@ -364,3 +364,35 @@ so it matches its optgroup heading, and it gained a two-state `title` like the w
 
 The computed-style E2E fact compares all three selects inside ONE toolbar and was run red against the
 3.0.85 stylesheet before the CSS change was trusted.
+
+## Audit (2026-09-19, 3.22.1)
+
+The user asked for the execution to be checked against this plan. Every item in §2 to §7 and the appendix
+was present and correct. What the plan itself had not listed, and the execution therefore missed:
+
+| Missed | Why it mattered | Fixed in 3.22.1 |
+|---|---|---|
+| The `NoteFontFamily` summary said "readers can switch any note, or all of them, in the report" whatever the default | False by default since 3.22.0, and it ships in the package's XML docs | Summary rewritten; `ReportToggleDefaults.NoteFont` says a configured value applies with the controls hidden; `NoteWidthMode` names the `Wrap` / `Wide` labels |
+| No Playwright fact for any *configured* note start state | Q2 ("honour") was pinned on markup and the script seed only, never on what is painted | Three facts: configured `Monospace` with the controls hidden (first paint, no glyph, survives a width change), configured `Monospace` with them shown (the select reads it, the glyph takes it back), configured `Full` (starts wide, the select reads it, `Wrap` returns to the starting width). All passed first time: no product bug |
+| `Note_appearance_selects_are_absent_outside_browser_rendering` ran with the flag off | It no longer proved the font select is gated on the rendering mode | It now asks for the controls; a new fact does the same for a report without notes |
+| Wiki `Generated-Reports.md` feature list and `_Sidebar.md` never mentioned the controls (a 3.0.85 gap) | The §4 list named two wiki pages and these were not among them | Bullet and sidebar entry added |
+| Changelog 3.22.0 said the option restores "exactly what 3.0.85 showed" | It restores the controls, restyled and relabelled | Reworded |
+
+**One consequence the plan did not state.** §0 says the control stays "available to anyone who opts in".
+That is true in code only. `kronikol merge` renders with a fixed options object and `kronikol ingest` has a
+curated flag set (`--note-format`, `--diagnostics-section`), so a CLI-written report lost the monospace
+control in 3.22.0 with no way to ask for it back. That is where every toggle default already stood with
+the CLI. No flag was added: it would be new public surface for a feature the user doubts, which is the
+lesson of §0. It is stated in the 3.22.1 changelog and the wiki option row, and left as a question for the
+user (`--note-font-controls` on `ingest` would be a minor bump).
+
+Checked and found sound, so not changed: nothing else in the shipped CSS or scripts treats the JSON/YAML
+select specially, so there was no further sibling rule to extend; `DiagramContextMenu` is the only loader
+of the script, so the new bare token cannot break another consumer; no persisted state (hash, storage)
+carries the note font, so a hidden control cannot be driven from a link; the parameterised-group renderer
+takes the pre-built toolbar string, so there is one emission site, not two; CI for the release SHA ran the
+Playwright project from a clean checkout, which stands in for the clean-worktree check.
+
+Found on the way and fixed: two `cref`s to `LightBDD.Core.Extensibility.Execution.IScenarioDecorator`
+never resolved, because inside `namespace Kronikol.LightBDD` the name binds to `Kronikol.LightBDD.…`. Both
+now use `global::`.

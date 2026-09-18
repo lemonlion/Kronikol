@@ -43,6 +43,10 @@ public record ReportToggleDefaults
     /// The font note payloads start in. Default: <see cref="NoteFontFamily.Default"/> (the engine's
     /// proportional note font). <see cref="NoteFontFamily.Monospace"/> starts every note in a
     /// monospace font, so padded SQL columns and indented blocks line up as they were written.
+    /// The in-report controls that switch the font are hidden unless
+    /// <see cref="ReportConfigurationOptions.ShowNoteFontControls"/> is set; a value configured here
+    /// applies either way, so <see cref="NoteFontFamily.Monospace"/> without the controls draws every
+    /// note monospace with nothing in the report to switch it back.
     /// </summary>
     public NoteFontFamily? NoteFont { get; set; }
 

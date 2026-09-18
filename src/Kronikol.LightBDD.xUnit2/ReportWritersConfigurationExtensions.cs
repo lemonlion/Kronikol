@@ -29,7 +29,7 @@ public static class ReportWritersConfigurationExtensions
 
     /// <summary>
     /// Configures LightBDD to generate test tracking diagrams and reports with automatic raw argument capture.
-    /// This overload registers an <see cref="LightBDD.Core.Extensibility.Execution.IScenarioDecorator"/> that captures
+    /// This overload registers an <see cref="global::LightBDD.Core.Extensibility.Execution.IScenarioDecorator"/> that captures
     /// raw test method arguments during scenario execution, enabling rich sub-table and expandable rendering
     /// for complex objects (records, lists, nested types) passed via framework-level attributes (MemberData,
     /// ClassData, InlineData, etc.) — using the same processing pipeline as the non-LightBDD xUnit2 adapter.

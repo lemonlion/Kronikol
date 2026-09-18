@@ -2,7 +2,10 @@ namespace Kronikol.Reports;
 
 /// <summary>
 /// The font a sequence-diagram note's text starts in (<see cref="PlantUmlRendering.BrowserJs"/>
-/// only). Whatever the default, readers can switch any note — or all of them — in the report.
+/// only). The controls that switch it in the report are opt-in
+/// (<see cref="ReportConfigurationOptions.ShowNoteFontControls"/>): with them a reader can switch any
+/// note, or all of them; without them, which is the default, the configured font is the font every
+/// note is drawn in.
 /// <para>
 /// PlantUML draws note text in a proportional font, and the payloads that most need reading are
 /// written in columns: analytics SQL pads its <c>AS</c> clauses, nested <c>CASE</c>/<c>WHEN</c>
@@ -28,17 +31,23 @@ public enum NoteFontFamily
 
 /// <summary>
 /// How wide a sequence-diagram note starts (<see cref="PlantUmlRendering.BrowserJs"/> only).
-/// Whatever the default, readers can widen or narrow any note in the report.
+/// Whatever the default, readers can widen or narrow any note in the report. The report's note-width
+/// dropdown calls the two states <c>Wrap</c> and <c>Wide</c>.
 /// </summary>
 public enum NoteWidthMode
 {
-    /// <summary>Notes wrap at the diagram's own wrap width (the default).</summary>
+    /// <summary>
+    /// Notes wrap at the diagram's own wrap width,
+    /// <see cref="ReportConfigurationOptions.DiagramNoteWrapWidth"/> (the default). <c>Wrap</c> in the
+    /// report's dropdown.
+    /// </summary>
     Default,
 
     /// <summary>
     /// Notes start widened to fill the diagram's container, so a wide payload wraps as few times as
     /// it can. The target is measured from the drawn diagram's slack when the report is first
-    /// rendered, and recomputed whenever the control is used again.
+    /// rendered, and recomputed whenever the control is used again. <c>Wide</c> in the report's
+    /// dropdown. Only a note that wraps changes size; one that already fits stays as it is.
     /// </summary>
     Full
 }

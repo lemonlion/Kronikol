@@ -333,7 +333,8 @@ public class ToggleDefaultsMarkupTests
 
     /// <summary>
     /// Both controls re-render the diagram in the browser, which no other rendering mode can do.
-    /// The gate is the rendering mode, not the presence of interactive diagrams.
+    /// The gate is the rendering mode, not the presence of interactive diagrams, and asking for the
+    /// font controls does not lift it.
     /// </summary>
     [Fact]
     public void Note_appearance_selects_are_absent_outside_browser_rendering()
@@ -342,11 +343,24 @@ public class ToggleDefaultsMarkupTests
         var path = ReportGenerator.GenerateHtmlReport(
             diagrams, SimpleFeatures, DateTime.UtcNow, DateTime.UtcNow,
             null, $"ToggleMarkupNoBrowser_{Guid.NewGuid():N}.html", "Test", true,
-            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Server);
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Server,
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { ShowNoteFontControls = true });
         var content = File.ReadAllText(path);
 
         Assert.DoesNotContain("note-font-select", content);
         Assert.DoesNotContain("note-width-select", content);
+    }
+
+    /// <summary>
+    /// The appearance controls need notes to act on. Asking for the font controls shows them where
+    /// the width control shows, and nowhere else.
+    /// </summary>
+    [Fact]
+    public void Note_appearance_selects_stay_absent_without_notes_even_when_the_font_controls_are_shown()
+    {
+        var content = Generate(diagramSource: NoGatesDiagramSource, showNoteFontControls: true);
+        Assert.DoesNotContain("class=\"note-font-select\"", content);
+        Assert.DoesNotContain("class=\"note-width-select\"", content);
     }
 
     // ═══════════════════════════════════════════════════════════

@@ -3528,10 +3528,12 @@ public static class ReportTestHelper
 
     /// <summary>
     /// A report whose one request note carries <see cref="WideClickHouseQuery"/>. The monospace
-    /// controls are opt-in (<c>ShowNoteFontControls</c>), so a fact that drives them asks for them.
+    /// controls are opt-in (<c>ShowNoteFontControls</c>), so a fact that drives them asks for them;
+    /// <paramref name="noteFont"/> and <paramref name="noteWidth"/> are the configured start states.
     /// </summary>
     public static string GenerateReportWithWideSqlNote(string tempDir, string outputDir, string fileName,
-        bool showNoteFontControls = false)
+        bool showNoteFontControls = false, NoteFontFamily noteFont = NoteFontFamily.Default,
+        NoteWidthMode noteWidth = NoteWidthMode.Default)
     {
         var (features, _) = CreateTestData();
         var traceId = Guid.NewGuid();
@@ -3557,7 +3559,12 @@ public static class ReportTestHelper
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { ShowNoteFontControls = showNoteFontControls });
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn with
+            {
+                ShowNoteFontControls = showNoteFontControls,
+                NoteFont = noteFont,
+                NoteWidth = noteWidth
+            });
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;

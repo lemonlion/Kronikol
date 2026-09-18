@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.22.1] - 2026-09-19
+
+**Patch - what 3.22.0 left saying something that was no longer true, found by auditing it against its
+plan.** The patch part moved because nothing here is new to call: the package changes only in its XML
+documentation. Template pins move to 3.22.0.
+
+### Fixed
+
+- **The documentation of `NoteFontFamily` still said readers can switch any note's font in the report
+  whatever the default.** Since 3.22.0 that holds only under `ShowNoteFontControls`. The summary now says
+  so, and `ReportToggleDefaults.NoteFont` says that a configured value applies with the controls hidden.
+- `NoteWidthMode` names the labels the report uses for its two members, `Wrap` for `Default` and `Wide`
+  for `Full`, so a reader of the report can find the member, and says that `Full` changes only notes
+  that wrap.
+- Two documentation links to LightBDD's `IScenarioDecorator` never resolved (`Kronikol.LightBDD.Core` and
+  `Kronikol.LightBDD.xUnit2`): inside `namespace Kronikol.LightBDD` the name `LightBDD.…` binds to
+  `Kronikol.LightBDD.…`. Both are `global::`-qualified now, which also clears the build's CS1574 warning.
+- The 3.22.0 entry below said the option brings back "exactly what 3.0.85 showed". It brings the glyph
+  and the dropdowns back; they are restyled and relabelled like the rest of 3.22.0.
+
+### Notes
+
+- **`ShowNoteFontControls` is set in code only.** `kronikol ingest` and `kronikol merge` have no flag for
+  it, so a report either of them writes stopped offering the monospace control in 3.22.0 and has no way
+  to ask for it back. That is where every toggle default already stood with the CLI, and no flag is added
+  here.
+- Facts added. Playwright: a configured `Monospace` paints on first load with the controls hidden, offers
+  no glyph, and survives a width change; with the controls shown the dropdown reads the configured state
+  and the glyph takes it back; a configured `Full` starts wide, the dropdown reads it, and `Wrap` returns
+  the note to the width it would have started at. No configured note start state had a Playwright fact
+  before. Unit: asking for the font controls shows them neither outside `BrowserJs` nor in a report
+  without notes.
+- Wiki: the report feature list in `Generated-Reports.md` had never mentioned the note width control,
+  and the sidebar had never linked the *Note Appearance* section. Both do now.
+
 ## [3.22.0] - 2026-09-18
 
 **Minor - the monospace note control is opt-in, and the note-width dropdown says what it does.** The
@@ -17,7 +52,7 @@ pins move to 3.21.0.
 
 - **`ShowNoteFontControls`** (`bool`, default `false`, `BrowserJs` only) offers the monospace note
   controls: the `M`/`A` glyph in a note's hover cluster and the `Aa` / `Mono` dropdowns at report and
-  scenario level. Set it to `true` to get back exactly what 3.0.85 showed.
+  scenario level. Set it to `true` to get the glyph and the dropdowns back.
 
 ### Changed
 

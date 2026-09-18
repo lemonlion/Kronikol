@@ -1,3 +1,5 @@
+using Kronikol.Reports;
+
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
@@ -12,9 +14,11 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
 {
     public NoteAppearanceTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    private async Task NavigateToSqlNote(string fileName, bool showNoteFontControls = false)
+    private async Task NavigateToSqlNote(string fileName, bool showNoteFontControls = false,
+        NoteFontFamily noteFont = NoteFontFamily.Default, NoteWidthMode noteWidth = NoteWidthMode.Default)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, fileName, showNoteFontControls));
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, fileName,
+            showNoteFontControls, noteFont, noteWidth));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -210,6 +214,48 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
         Assert.True(await Page.Locator(".note-width-select").CountAsync() > 0);
     }
 
+    /// <summary>
+    /// A consumer who names <c>Monospace</c> asked for it, whether or not the report offers a way to
+    /// switch it. With the controls hidden the first paint is monospace with no click, nothing in the
+    /// report switches it back, and the width control still works on top of it: widening re-renders
+    /// the note, and the note has to come back both wide AND monospace.
+    /// </summary>
+    [Fact]
+    public async Task A_configured_monospace_default_paints_every_note_with_the_controls_hidden()
+    {
+        await NavigateToSqlNote("NoteMonoConfiguredHidden.html", noteFont: NoteFontFamily.Monospace);
+
+        Assert.Contains(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("<<kronNoteMono>>", await DiagramSource());
+        Assert.Equal(0, await Page.Locator(".note-font-select").CountAsync());
+        Assert.Equal("NOT_VISIBLE", await ClickNoteButton("mono"));
+
+        Assert.Equal("CLICKED", await ClickNoteButton("width"));
+        await WaitForRenderIdle();
+        await WaitForNoteElements();
+
+        var widened = await DiagramSource();
+        Assert.Contains("kronNoteWide", widened);
+        Assert.Contains("kronNoteMono", widened);
+        Assert.Contains(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>With the controls shown, a configured start state is also what the dropdown reads.</summary>
+    [Fact]
+    public async Task A_configured_monospace_default_seeds_the_font_select_when_it_is_shown()
+    {
+        await NavigateToSqlNote("NoteMonoConfiguredShown.html", showNoteFontControls: true,
+            noteFont: NoteFontFamily.Monospace);
+
+        Assert.Contains(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("mono", await Page.Locator(".note-font-select").First.InputValueAsync());
+        // The glyph offers the way BACK, which is the only thing it can usefully do from here.
+        Assert.Equal("CLICKED", await ClickNoteButton("mono"));
+        await WaitForRenderIdle();
+        await WaitForNoteElements();
+        Assert.DoesNotContain(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
+    }
+
     [Fact]
     public async Task Monospace_paints_the_note_text_in_courier_new()
     {
@@ -359,6 +405,35 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
         Assert.Equal("Note width", await select.Locator("optgroup").First.GetAttributeAsync("label"));
         Assert.Equal(["Wrap", "Wide"], await select.Locator("option").AllTextContentsAsync());
         Assert.Equal("default", await select.InputValueAsync());
+    }
+
+    /// <summary>
+    /// The configured <c>Full</c> start state is the dropdown's <c>Wide</c>: the first paint is
+    /// already widened with no click, the dropdown reads it, and choosing <c>Wrap</c> takes the note
+    /// back to the width it would have started at.
+    /// </summary>
+    [Fact]
+    public async Task A_configured_full_width_default_starts_wide_and_the_select_reads_it()
+    {
+        await NavigateToSqlNote("NoteWidthDefaultBaseline.html");
+        var wrappedWidth = await NoteWidth();
+
+        await NavigateToSqlNote("NoteWidthConfiguredFull.html", noteWidth: NoteWidthMode.Full);
+
+        Assert.Contains("<<kronNoteWide>>", await DiagramSource());
+        Assert.True(await NoteWidth() > wrappedWidth,
+            $"a report configured Full should start wider than {wrappedWidth}px");
+        var select = Page.Locator(".note-width-select").First;
+        Assert.Equal("full", await select.InputValueAsync());
+
+        await select.SelectOptionAsync("default");
+        await WaitForRenderIdle();
+        await Page.WaitForFunctionAsync(
+            "() => (document.querySelector('[data-diagram-type=\"plantuml\"]').getAttribute('data-plantuml') || '').indexOf('kronNoteWide') < 0",
+            null, new() { PollingInterval = 200, Timeout = 30000 });
+        await WaitForNoteElements();
+
+        Assert.InRange(await NoteWidth(), wrappedWidth - 1, wrappedWidth + 1);
     }
 
     [Fact]
