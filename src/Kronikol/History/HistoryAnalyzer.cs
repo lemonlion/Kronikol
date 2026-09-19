@@ -78,6 +78,7 @@ public static class HistoryAnalyzer
             prior = prior.Skip(prior.Count - options.Window).ToList();
 
         var priorRosters = prior.Select(r => ledger.Roster(r.RosterHash)).ToArray();
+        var priorPositions = PositionsOf(priorRosters);
         var priorShapes = prior.Select(r => r.ShapesHash is { } hash ? ledger.Shapes(hash) : null).ToArray();
         var previousFull = LastFull(prior, priorRosters);
         var partial = current.Partial ?? IsPartial(roster, previousFull.Roster, options.PartialThreshold);
@@ -88,7 +89,7 @@ public static class HistoryAnalyzer
         for (var i = 0; i < roster.Count; i++)
         {
             currentIds.Add((roster.Ids[i], roster.Slots[i]));
-            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, priorShapes, shapes, speeds, options, quarantine, aliases, today));
+            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorPositions, priorShapes, shapes, speeds, options, quarantine, aliases, today));
         }
 
         // Absent: in the previous full run of the stream, not in this one, and this one not partial. The
@@ -138,6 +139,30 @@ public static class HistoryAnalyzer
         };
     }
 
+    /// <summary>
+    /// Where each scenario sits in each prior roster, built once per distinct roster: a window of fifty
+    /// runs usually shares one or two. Looking a scenario up by scanning the roster made the analysis
+    /// quadratic in the scenario count. The first holder of an (id, slot) wins, as the scan had it.
+    /// </summary>
+    private static Dictionary<(string Id, int Slot), int>?[] PositionsOf(HistoryRoster?[] rosters)
+    {
+        var built = new Dictionary<HistoryRoster, Dictionary<(string Id, int Slot), int>>(ReferenceEqualityComparer.Instance);
+        var result = new Dictionary<(string Id, int Slot), int>?[rosters.Length];
+        for (var r = 0; r < rosters.Length; r++)
+        {
+            if (rosters[r] is not { } roster) continue;
+            if (!built.TryGetValue(roster, out var positions))
+            {
+                positions = new Dictionary<(string Id, int Slot), int>(roster.Count);
+                for (var i = 0; i < roster.Count; i++)
+                    positions.TryAdd((roster.Ids[i], roster.Slots[i]), i);
+                built[roster] = positions;
+            }
+            result[r] = positions;
+        }
+        return result;
+    }
+
     /// <summary>The last prior run that was not partial, with its roster; the pair is null when there is none.</summary>
     private static (HistoryRun? Run, HistoryRoster? Roster) LastFull(List<HistoryRun> prior, HistoryRoster?[] rosters)
     {
@@ -170,7 +195,7 @@ public static class HistoryAnalyzer
         return new RunPoint(run.Id, run.At, run.Commit, passed, failed, run.Results.Length, duration, run.Partial == true);
     }
 
-    private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roster, HistoryRun current, List<HistoryRun> prior, HistoryRoster?[] priorRosters,
+    private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roster, HistoryRun current, List<HistoryRun> prior, Dictionary<(string Id, int Slot), int>?[] priorPositions,
         HistoryShapes?[] priorShapes, HistoryShapes? currentShapes, RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today)
     {
         var id = roster.Ids[position];
@@ -179,25 +204,40 @@ public static class HistoryAnalyzer
 
         // Every prior reading of this scenario, oldest first.
         var points = new List<HistoryPoint>();
+        var sources = new List<(int Run, int At)>();
         for (var r = 0; r < prior.Count; r++)
         {
             var run = prior[r];
-            var priorRoster = priorRosters[r];
-            if (priorRoster is null) continue;
+            var positions = priorPositions[r];
+            if (positions is null) continue;
             var at = -1;
             foreach (var candidate in lookFor)
             {
-                at = priorRoster.IndexOf(candidate, slot);
-                if (at >= 0) break;
+                if (positions.TryGetValue((candidate, slot), out var held))
+                {
+                    at = held;
+                    break;
+                }
             }
             if (at < 0) continue;
-            points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at), run.ShapeVersion,
-                Resolve(run.CallSetAt(at), priorShapes[r])));
+            points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at), run.ShapeVersion));
+            sources.Add((r, at));
         }
 
         var currentPoint = new HistoryPoint(current.Id, current.At, current.Commit, current.ResultAt(position), current.DurationAt(position),
-            current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position), current.ShapeVersion,
-            Resolve(current.CallSetAt(position), currentShapes));
+            current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position), current.ShapeVersion);
+
+        // The calls a point made, spelled out: asked for the two points a changed set is named from,
+        // and no others. Spelling out every point of every scenario was a third of the analysis.
+        IReadOnlyList<string>? CallSetOf(HistoryPoint point)
+        {
+            if (ReferenceEquals(point, currentPoint))
+                return Resolve(current.CallSetAt(position), currentShapes);
+            var index = points.FindIndex(p => ReferenceEquals(p, point));
+            if (index < 0) return null;
+            var (r, at) = sources[index];
+            return Resolve(prior[r].CallSetAt(at), priorShapes[r]);
+        }
         var all = points.Append(currentPoint).ToList();
 
         var verdicts = new HashSet<HistoryVerdictKind>();
@@ -379,7 +419,7 @@ public static class HistoryAnalyzer
                 var distinct = memory.Select(p => p.ShapeSet).Distinct(StringComparer.Ordinal).Count();
                 var held = memory.Count(p => string.Equals(p.ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal));
                 var named = "";
-                if (changed && currentPoint.CallSet is { } nowSet && previousShaped.CallSet is { } beforeSet)
+                if (changed && CallSetOf(currentPoint) is { } nowSet && CallSetOf(previousShaped) is { } beforeSet)
                 {
                     newCalls = nowSet.Except(beforeSet, StringComparer.Ordinal).ToArray();
                     goneCalls = beforeSet.Except(nowSet, StringComparer.Ordinal).ToArray();
@@ -403,7 +443,7 @@ public static class HistoryAnalyzer
                         : $"the same number of calls as {previousShaped.RunId}{(currentPoint.Calls is { } n ? " (" + n.ToString(CultureInfo.InvariantCulture) + ")" : "")}, a different set";
                     // Named when both runs recorded their call lists: what appeared and what disappeared, by
                     // its templated line. A count alone sends the reader to two reports to find the call.
-                    if (currentPoint.CallSet is { } now && previousShaped.CallSet is { } before)
+                    if (CallSetOf(currentPoint) is { } now && CallSetOf(previousShaped) is { } before)
                     {
                         newCalls = now.Except(before, StringComparer.Ordinal).ToArray();
                         goneCalls = before.Except(now, StringComparer.Ordinal).ToArray();
