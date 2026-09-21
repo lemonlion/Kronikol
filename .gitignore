@@ -379,3 +379,12 @@ tools/query-bench/TestRunReport*.json
 
 # Cross-run history for this repository lives on the kronikol-history branch, not in the working tree
 .kronikol/
+
+# render-bench engine builds: ~315 MB of PlantUML JS bundles, each rebuilt or downloaded on demand (tools/render-bench/README.md)
+tools/render-bench/core-*.js
+tools/render-bench/old-plantuml.js
+tools/render-bench/viz-global*.js
+tools/render-bench/baseline-*-smoketest.js
+
+# Claude Code session lock: rewritten by every session, never content
+.claude/scheduled_tasks.lock
