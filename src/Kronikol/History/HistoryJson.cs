@@ -242,6 +242,20 @@ public static class HistoryJson
     /// </summary>
     public static (HistoryLineKind? Kind, string? Id, string? Suite, bool SuiteIsNull) Peek(string line)
     {
+        var (kind, id, suite, suiteNull, _) = Peek(line, throughBranch: false);
+        return (kind, id, suite, suiteNull);
+    }
+
+    /// <summary>
+    /// <see cref="Peek(string)"/>, reading on to a run line's branch. A run is read against the runs of one
+    /// stream that were appended before it, so the reader indexes every run line by id and by stream, and
+    /// both sit ahead of the positional arrays that are the bulk of the line.
+    /// </summary>
+    internal static (HistoryLineKind? Kind, string? Id, string? Suite, bool SuiteIsNull, string? Branch) PeekRun(string line) =>
+        Peek(line, throughBranch: true);
+
+    private static (HistoryLineKind? Kind, string? Id, string? Suite, bool SuiteIsNull, string? Branch) Peek(string line, bool throughBranch)
+    {
         ArgumentNullException.ThrowIfNull(line);
         try
         {
@@ -249,7 +263,10 @@ public static class HistoryJson
             HistoryLineKind? kind = null;
             string? id = null;
             string? suite = null;
+            string? branch = null;
             var suiteNull = false;
+            var suiteSeen = false;
+            var branchSeen = false;
             var depth = 0;
 
             while (reader.Read())
@@ -272,7 +289,7 @@ public static class HistoryJson
                             "shapes" => HistoryLineKind.Shapes,
                             _ => null
                         };
-                        if (kind is null) return (null, null, null, false);
+                        if (kind is null) return (null, null, null, false, null);
                         break;
                     case "id":
                         id = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
@@ -283,19 +300,30 @@ public static class HistoryJson
                     case "suite":
                         suiteNull = reader.TokenType == JsonTokenType.Null;
                         suite = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                        // Everything the reader needs to bucket the line has been seen.
-                        return (kind, id, suite, suiteNull);
+                        suiteSeen = true;
+                        // Everything the reader needs to bucket the line has been seen, unless it is a run
+                        // being indexed by stream as well and its branch is still ahead.
+                        if (!throughBranch || kind != HistoryLineKind.Run || branchSeen)
+                            return (kind, id, suite, suiteNull, branch);
+                        break;
+                    case "branch" when throughBranch:
+                        if (reader.TokenType == JsonTokenType.String) branch = reader.GetString();
+                        else reader.TrySkip();
+                        branchSeen = true;
+                        if (suiteSeen)
+                            return (kind, id, suite, suiteNull, branch);
+                        break;
                     default:
                         reader.TrySkip();
                         break;
                 }
             }
 
-            return (kind, id, suite, suiteNull);
+            return (kind, id, suite, suiteNull, branch);
         }
         catch (JsonException)
         {
-            return (null, null, null, false);
+            return (null, null, null, false, null);
         }
     }
 

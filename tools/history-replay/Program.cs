@@ -3,8 +3,9 @@
 // commit and at the change, replay the same ledger with both, diff the two files.
 //
 // Each run is analysed against the ledger AS IT STOOD when the run was appended: the file is cut at
-// the run's own line, because the analyzer takes as "prior" every run of the stream but the current
-// one and does not cut there itself.
+// the run's own line. Since 3.25.1 the analyzer cuts there itself (#95); the cut stays here so the same
+// replay can be built at a base commit from before it, where every run of the stream but the current
+// one was "prior", later ones included.
 //
 //   dotnet run -c Release --project tools/history-replay -- <ledger.jsonl> <out.csv> [--min-runs N] [--last N] [--detail]
 //   dotnet run -c Release --project tools/history-replay -- --bench [scenarios] [runs]

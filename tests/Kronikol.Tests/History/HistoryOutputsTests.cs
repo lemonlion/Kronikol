@@ -310,7 +310,9 @@ public class HistoryOutputsTests : IDisposable
     /// stream to read against. Not <c>main</c>: on CI the process is on GITHUB_REF_NAME, and a push to main would put
     /// the run under test on the very stream it is meant to be reading across to.
     /// </summary>
-    private void SeedTrunk(params string[] results)
+    private void SeedTrunk(params string[] results) => Seed("trunk", 1, results);
+
+    private void Seed(string branch, int firstId, params string[] results)
     {
         var (roster, run) = HistoryRunBuilder.Build(Features(ExecutionResult.Passed), [], "HistorySuite", null,
             new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero), new HistoryBuildOptions(), "gh:0:1");
@@ -318,7 +320,7 @@ public class HistoryOutputsTests : IDisposable
         {
             var line = run with
             {
-                Id = $"gh:{i + 1}:1", Branch = "trunk", Commit = $"c{i + 1:D6}", At = run.At.AddHours(i),
+                Id = $"gh:{firstId + i}:1", Branch = branch, Commit = $"c{firstId + i:D6}", At = run.At.AddHours(firstId + i),
                 Results = results[i], Attempts = new string('-', results[i].Length),
                 Durations = Enumerable.Repeat<int?>(100, results[i].Length).ToArray(),
                 Errors = results[i].Select(r => r == 'F' ? "e1" : null).ToArray(),
@@ -363,6 +365,41 @@ public class HistoryOutputsTests : IDisposable
         var html = File.ReadAllText(Path.Combine(Reports("cmp"), "TestRunReport.html"));
         Assert.Contains(@"class=""history-compare""", html);
         Assert.Contains("on <code>trunk</code>: 1 broke", html);
+    }
+
+    [Fact]
+    public void A_pull_request_reads_its_target_however_many_pull_request_runs_came_since()
+    {
+        // #95: the window was the suite's last lines whatever their branch. Three runs of trunk and then
+        // three of a pull request, read with a window of two: trunk had no run left in it, and a failure
+        // that passed on trunk read as new instead of as the regression it is.
+        SeedTrunk("PP", "PP", "PP");
+        Seed("42/merge", 4, "PP", "PP", "PP");
+        var ci = new CiMetadata(CiEnvironment.GitHubActions, "7", "42/merge", "abc1234", null, "o/r", "77", "1");
+        var options = Options("pr-window", "gh:77:1");
+        options.HistoryBranch = "trunk";
+        options.HistoryWindow = 2;
+
+        var context = HistoryRunContext.Create(Features(ExecutionResult.Failed), [], "HistorySuite", ci, DateTimeOffset.UtcNow, options, Reports("pr-window"), "3.25.1", _ => null)!;
+
+        Assert.Equal("trunk", context.Verdicts!.Stream);
+        Assert.Equal(2, context.Verdicts.RunsRecorded);
+        Assert.Equal(1, context.Verdicts.Count(HistoryVerdictKind.Broke));
+    }
+
+    [Fact]
+    public void A_window_of_zero_is_not_an_invitation_to_read_the_whole_ledger_back()
+    {
+        // The read at the end of a run has always been given at least a window of one; the analysis is held
+        // to the same, or "0" would now mean every run the stream ever had, parsed at the end of every run.
+        SeedTrunk("PP", "PP", "PP");
+        var options = Options("zero-window", "gh:78:1");
+        options.HistoryBranch = "trunk";
+        options.HistoryWindow = 0;
+
+        var context = HistoryRunContext.Create(Features(ExecutionResult.Failed), [], "HistorySuite", null, DateTimeOffset.UtcNow, options, Reports("zero-window"), "3.25.1", _ => null)!;
+
+        Assert.Equal(1, context.Verdicts!.RunsRecorded);
     }
 
     [Fact]

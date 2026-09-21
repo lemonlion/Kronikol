@@ -51,7 +51,7 @@ public class HistoryGateTests : IDisposable
             }, "3.10.0");
     }
 
-    private string WriteReport(string pay, string refund = "Passed", double payDuration = 0.1, string branch = "main")
+    private string WriteReport(string pay, string refund = "Passed", double payDuration = 0.1, string branch = "main", string runId = "99")
     {
         var directory = Path.Combine(_dir, "reports");
         Directory.CreateDirectory(directory);
@@ -60,7 +60,7 @@ public class HistoryGateTests : IDisposable
             {
               "kronikolVersion": "3.10.0", "formatVersion": 1, "suite": "Suite",
               "startTime": "2026-09-12T10:00:00Z", "endTime": "2026-09-12T10:05:00Z",
-              "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "{{branch}}", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "99", "runAttempt": "1" },
+              "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "{{branch}}", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "{{runId}}", "runAttempt": "1" },
               "features": [ { "name": "Checkout", "labels": [], "scenarios": [
                 { "id": "t0", "stableId": "{{PayId}}", "name": "Pay by card", "result": "{{pay}}", "durationSeconds": {{payDuration.ToString(System.Globalization.CultureInfo.InvariantCulture)}}, "errorMessage": {{(pay == "Failed" ? "\"boom\"" : "null")}}, "labels": [], "categories": [], "steps": [], "httpInteractions": [] },
                 { "id": "t1", "stableId": "{{RefundId}}", "name": "Refund an order", "result": "{{refund}}", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }
@@ -84,6 +84,21 @@ public class HistoryGateTests : IDisposable
         Assert.Contains("broke", output);
         Assert.Contains("gate: FAILED", output);
         Assert.Equal("", error);
+    }
+
+    [Fact]
+    public void An_older_report_is_gated_on_the_runs_before_it_and_not_the_ones_after()
+    {
+        // #95: run 7 failed as the six before it had, and the three runs recorded since then passed. Gated
+        // again now it is the failure it always was, not one that broke against passes that came later.
+        Seed("FP", "FP", "FP", "FP", "FP", "FP", "FP", "PP", "PP", "PP");
+        var report = WriteReport(pay: "Failed", runId: "7");
+
+        var (output, _, exit) = Run("gate", report);
+
+        Assert.Equal(0, exit);
+        Assert.Contains("new-failures: 0", output);
+        Assert.DoesNotContain("broke", output);
     }
 
     [Fact]

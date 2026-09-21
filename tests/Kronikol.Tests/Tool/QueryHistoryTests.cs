@@ -7,7 +7,8 @@ namespace Kronikol.Tests.Tool;
 /// <summary>
 /// <c>kronikol query history</c> (plans/CROSS_RUN_HISTORY_PLAN.md §6.4): a report read against the ledger
 /// as it stands now — so a downloaded artifact answers "has this been flaky?" without the run that wrote
-/// it — plus the <c>history:</c> line <c>failures</c> gains when a ledger is there to be read.
+/// it — and against the runs recorded before it, not the ones since (#95), plus the <c>history:</c> line
+/// <c>failures</c> gains when a ledger is there to be read.
 /// </summary>
 public class QueryHistoryTests : IDisposable
 {
@@ -100,6 +101,37 @@ public class QueryHistoryTests : IDisposable
         Assert.Contains("passed in gh:5:1", output);
         Assert.DoesNotContain("s1  Checkout › Refund", output);
         Assert.Contains("1 scenario(s) with a verdict", output);
+    }
+
+    [Fact]
+    public void A_report_that_is_not_the_newest_run_reads_against_the_runs_recorded_before_it()
+    {
+        // #95: run 3 passed, and runs 4 and 5, recorded after it, failed. Read again now, run 3 is not
+        // "fixed" from two failures that had not happened yet.
+        Seed("PP", "PP", "PP", "FP", "FP");
+        var report = WriteReport(pay: "Passed", runId: "3");
+
+        var (output, error, exit) = Query(null, "history", report);
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("2 scenarios read against 2 earlier run(s)", output);
+        Assert.DoesNotContain("fixed", output);
+    }
+
+    [Fact]
+    public void A_report_older_than_the_window_still_reads_its_own_past()
+    {
+        // #95: sixty runs and a window of fifty. Run 5's own line is outside the last fifty, and it used to
+        // read against runs 11 to 60, every one of them later than itself. This is the path that reads the
+        // ledger file a second time, for the lines the window let go.
+        Seed(Enumerable.Range(1, 60).Select(n => n <= 5 ? "PP" : "FP").ToArray());
+        var report = WriteReport(pay: "Passed", runId: "5");
+
+        var (output, error, exit) = Query(null, "history", report);
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("2 scenarios read against 4 earlier run(s)", output);
+        Assert.DoesNotContain("fixed", output);
     }
 
     [Fact]

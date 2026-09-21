@@ -19,18 +19,26 @@ namespace Kronikol.History;
 public sealed record HistoryStats(int LinesScanned, int LinesParsed, int RunsKept, int RostersKept, int DamagedLines, TimeSpan Elapsed, int ShapesKept = 0);
 
 /// <summary>
-/// A ledger in memory: every roster, and the last <c>window</c> runs of each suite in append order.
+/// A ledger in memory: every roster, the last <c>window</c> runs of each suite in append order, and the
+/// id and stream of every run line, which is what lets a run be read against its own stream's runs from
+/// before its own line however far back that is.
 /// </summary>
 public sealed class HistoryLedger
 {
     private readonly Dictionary<string, HistoryRoster> _rosters;
     private readonly Dictionary<string, List<HistoryRun>> _runs;
     private readonly Dictionary<string, HistoryShapes> _shapes;
+    private readonly Dictionary<string, HistorySuiteLines> _lines;
+    private readonly Func<string[]?>? _reload;
+    private readonly object _gate = new();
 
     internal HistoryLedger(int? version, string? generator, Dictionary<string, HistoryRoster> rosters,
-        Dictionary<string, List<HistoryRun>> runs, HistoryStats stats, Dictionary<string, HistoryShapes>? shapes = null)
+        Dictionary<string, List<HistoryRun>> runs, HistoryStats stats, Dictionary<string, HistoryShapes>? shapes = null,
+        Dictionary<string, HistorySuiteLines>? lines = null, Func<string[]?>? reload = null)
     {
         _shapes = shapes ?? new Dictionary<string, HistoryShapes>(StringComparer.Ordinal);
+        _lines = lines ?? new Dictionary<string, HistorySuiteLines>(StringComparer.Ordinal);
+        _reload = reload;
         Version = version;
         Generator = generator;
         _rosters = rosters;
@@ -50,6 +58,12 @@ public sealed class HistoryLedger
 
     /// <summary>What the read cost.</summary>
     public HistoryStats Stats { get; }
+
+    /// <summary>
+    /// Run lines parsed after the read, because an analysis asked for runs the window had not kept. The
+    /// observable beside <see cref="HistoryStats.LinesParsed"/>: a test run reading its own stream leaves it at 0.
+    /// </summary>
+    internal int LinesParsedOnDemand { get; private set; }
 
     /// <summary>The suites with at least one run in the window. A null suite is keyed as the empty string.</summary>
     public IReadOnlyList<string?> Suites => _runs.Keys.Select(k => k.Length == 0 ? null : k).ToArray();
@@ -83,11 +97,125 @@ public sealed class HistoryLedger
     public IReadOnlyList<HistoryRun> Runs(string? suite, string stream) =>
         Runs(suite).Where(r => string.Equals(r.Stream, stream, StringComparison.Ordinal)).ToArray();
 
+    /// <summary>
+    /// The history a run is read against: the last <paramref name="window"/> runs (0 for all) of one
+    /// stream of its suite that were appended before the run's own line, oldest first. A run that is not
+    /// in the ledger yet, which is every run while it is being generated, reads against all of it.
+    /// </summary>
+    /// <remarks>
+    /// Not <see cref="Runs(string?)"/> filtered: that is the last lines of the suite whatever their stream
+    /// and wherever the run sits, so a report read again later saw the runs that came after it, a report
+    /// older than the window saw nothing else, and pull request runs crowded a quiet target branch out
+    /// (#95). The index of every run line is what answers instead, and a line the read did not keep is
+    /// parsed when it is asked for, from the source read again: that costs a second scan, and only for a
+    /// request the window cannot answer, where keeping every line would cost memory on every run.
+    /// </remarks>
+    internal IReadOnlyList<HistoryRun> PriorRuns(string? suite, string stream, string currentRunId, int window)
+    {
+        if (!_lines.TryGetValue(SuiteKey(suite), out var lines))
+            return [];
+
+        lock (_gate)
+        {
+            var entries = lines.Entries;
+            // The run's own line ends its history, and the first of them when merge=union left it twice:
+            // that is when it was recorded.
+            var end = entries.FindIndex(e => string.Equals(e.Id, currentRunId, StringComparison.Ordinal));
+            if (end < 0)
+                end = entries.Count;
+
+            var prior = new List<HistoryRun>();
+            string?[]? source = null;
+            var reloaded = false;
+            for (var ordinal = end - 1; ordinal >= 0 && (window <= 0 || prior.Count < window); ordinal--)
+            {
+                var entry = entries[ordinal];
+                if (!string.Equals(entry.Stream, stream, StringComparison.Ordinal) || lines.Unreadable.Contains(ordinal))
+                    continue;
+
+                if (!lines.Parsed.TryGetValue(ordinal, out var run))
+                {
+                    if (!reloaded)
+                    {
+                        source = Reload(SuiteKey(suite));
+                        reloaded = true;
+                    }
+                    run = ParseOnDemand(lines, ordinal, source);
+                    if (run is null)
+                        continue;
+                }
+
+                prior.Add(run);
+            }
+
+            prior.Reverse();
+            return prior;
+        }
+    }
+
+    /// <summary>A suite's run lines by their place among its runs, from the source read again; null when it cannot be.</summary>
+    private string?[]? Reload(string suiteKey)
+    {
+        if (_reload?.Invoke() is not { } raw)
+            return null;
+
+        var found = new List<string?>();
+        foreach (var text in raw)
+        {
+            var line = text.TrimEnd('\r');
+            if (line.Length == 0)
+                continue;
+            var (kind, _, suite, _, _) = HistoryJson.PeekRun(line);
+            if (kind == HistoryLineKind.Run && string.Equals(SuiteKey(suite), suiteKey, StringComparison.Ordinal))
+                found.Add(line);
+        }
+        return found.ToArray();
+    }
+
+    private HistoryRun? ParseOnDemand(HistorySuiteLines lines, int ordinal, string?[]? source)
+    {
+        // The source may have been pruned or compacted since the read, and then a place among the runs no
+        // longer names the same line: the id says whether it does, and a line that does not is left out.
+        if (source is null || ordinal >= source.Length || source[ordinal] is not { } line
+            || !string.Equals(HistoryJson.PeekRun(line).Id, lines.Entries[ordinal].Id, StringComparison.Ordinal))
+            return null;
+
+        try
+        {
+            LinesParsedOnDemand++;
+            if (HistoryJson.Parse(line).Run is { } run)
+                return lines.Parsed[ordinal] = run;
+        }
+        catch (FormatException)
+        {
+        }
+
+        lines.Unreadable.Add(ordinal);
+        return null;
+    }
+
     /// <summary>The key a suite is stored under.</summary>
     public static string SuiteKey(string? suite) => suite ?? "";
 
     /// <summary>Whether any suite has a run.</summary>
     public bool IsEmpty => _runs.Count == 0;
+}
+
+/// <summary>
+/// Every run line of one suite as the reader scanned it, in append order: its id and its stream, which
+/// cost a peek, and the run itself once the line has been parsed. Small beside the lines themselves, so
+/// it is kept for every line where the window keeps only the last of them.
+/// </summary>
+internal sealed class HistorySuiteLines
+{
+    /// <summary>The id and stream of each run line, by its place among the suite's runs.</summary>
+    public List<(string? Id, string Stream)> Entries { get; } = [];
+
+    /// <summary>The runs parsed so far, by the same place.</summary>
+    public Dictionary<int, HistoryRun> Parsed { get; } = [];
+
+    /// <summary>The places whose line was tried and could not be parsed.</summary>
+    public HashSet<int> Unreadable { get; } = [];
 }
 
 /// <summary>How a read ended.</summary>
@@ -150,17 +278,7 @@ public static class HistoryLedgerReader
         string[] lines;
         try
         {
-            lines = HistoryLock.Retry(budget, () =>
-            {
-                // Permissive sharing, so a reader is denied only while a writer holds the exclusive lock
-                // for the length of one append; the retry covers exactly that window.
-                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using var reader = new StreamReader(stream, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-                var read = new List<string>();
-                while (reader.ReadLine() is { } line)
-                    read.Add(line);
-                return read.ToArray();
-            });
+            lines = ReadLines(path, budget);
         }
         catch (HistoryLockTimeoutException exception)
         {
@@ -172,24 +290,50 @@ public static class HistoryLedgerReader
             return new HistoryReadResult(null, HistoryReadOutcome.Unreadable, $"could not read the ledger at {path}: {exception.Message}");
         }
 
-        return Build(lines, window, watch, path);
+        // The lines are let go once the window is built. A run read against a stream the window did not
+        // keep (HistoryLedger.PriorRuns) has them read again, under the same budget, rather than held.
+        return Build(lines, window, watch, path, () =>
+        {
+            try
+            {
+                return File.Exists(path) ? ReadLines(path, budget) : null;
+            }
+            catch (Exception exception) when (exception is HistoryLockTimeoutException or IOException or UnauthorizedAccessException)
+            {
+                return null;
+            }
+        });
     }
+
+    private static string[] ReadLines(string path, HistoryLockBudget budget) =>
+        HistoryLock.Retry(budget, () =>
+        {
+            // Permissive sharing, so a reader is denied only while a writer holds the exclusive lock
+            // for the length of one append; the retry covers exactly that window.
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+            var read = new List<string>();
+            while (reader.ReadLine() is { } line)
+                read.Add(line);
+            return read.ToArray();
+        });
 
     /// <summary>Reads a ledger already in memory — the same rules over text, for tests and for verification.</summary>
     public static HistoryReadResult Parse(string text, int window)
     {
         ArgumentNullException.ThrowIfNull(text);
-        var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
-        return Build(lines, window, Stopwatch.StartNew(), "<text>");
+        string[] Lines() => text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        return Build(Lines(), window, Stopwatch.StartNew(), "<text>", Lines);
     }
 
-    private static HistoryReadResult Build(string[] lines, int window, Stopwatch watch, string path)
+    private static HistoryReadResult Build(string[] lines, int window, Stopwatch watch, string path, Func<string[]?> reload)
     {
         int? version = null;
         string? generator = null;
         var rosters = new Dictionary<string, HistoryRoster>(StringComparer.Ordinal);
         var shapes = new Dictionary<string, HistoryShapes>(StringComparer.Ordinal);
-        var kept = new Dictionary<string, Queue<string>>(StringComparer.Ordinal);
+        var kept = new Dictionary<string, Queue<(int Ordinal, string Line)>>(StringComparer.Ordinal);
+        var index = new Dictionary<string, HistorySuiteLines>(StringComparer.Ordinal);
         var scanned = 0;
         var parsed = 0;
         var damaged = 0;
@@ -201,7 +345,7 @@ public static class HistoryLedgerReader
                 continue;
             scanned++;
 
-            var (kind, _, suite, _) = HistoryJson.Peek(line);
+            var (kind, id, suite, _, branch) = HistoryJson.PeekRun(line);
             switch (kind)
             {
                 case HistoryLineKind.Header:
@@ -233,8 +377,15 @@ public static class HistoryLedgerReader
                     // that survive it pay for a full parse.
                     var key = HistoryLedger.SuiteKey(suite);
                     if (!kept.TryGetValue(key, out var queue))
-                        kept[key] = queue = new Queue<string>();
-                    queue.Enqueue(line);
+                    {
+                        kept[key] = queue = new Queue<(int, string)>();
+                        index[key] = new HistorySuiteLines();
+                    }
+                    // Every run line is indexed by id and stream, which the peek already paid for: what a
+                    // run is read against is a stream's runs before its own line, not the suite's last ones.
+                    var entries = index[key].Entries;
+                    queue.Enqueue((entries.Count, line));
+                    entries.Add((id, branch is { Length: > 0 } ? branch : HistoryRun.LocalStream));
                     if (window > 0 && queue.Count > window)
                         queue.Dequeue();
                     break;
@@ -249,16 +400,25 @@ public static class HistoryLedgerReader
         foreach (var (key, queue) in kept)
         {
             var list = new List<HistoryRun>(queue.Count);
-            foreach (var line in queue)
+            foreach (var (ordinal, line) in queue)
+            {
                 if (TryParse(line, ref parsed, ref damaged)?.Run is { } run)
+                {
                     list.Add(run);
+                    index[key].Parsed[ordinal] = run;
+                }
+                else
+                {
+                    index[key].Unreadable.Add(ordinal);
+                }
+            }
             if (list.Count > 0)
                 runs[key] = list;
         }
 
         watch.Stop();
         var stats = new HistoryStats(scanned, parsed, runs.Values.Sum(r => r.Count), rosters.Count, damaged, watch.Elapsed, shapes.Count);
-        return new HistoryReadResult(new HistoryLedger(version, generator, rosters, runs, stats, shapes), HistoryReadOutcome.Read, null);
+        return new HistoryReadResult(new HistoryLedger(version, generator, rosters, runs, stats, shapes, index, reload), HistoryReadOutcome.Read, null);
     }
 
     private static HistoryLine? TryParse(string line, ref int parsed, ref int damaged)

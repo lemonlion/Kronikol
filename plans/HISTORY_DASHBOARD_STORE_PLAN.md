@@ -12,7 +12,9 @@ everything in `OPEN_ISSUES_TRIAGE_2026-09-18.md`, how cost-effective is it on st
 fundamentally better than the competition?*
 
 **The answer in one line.** Feasible. Storage is off by two orders of magnitude from being the
-constraint — **3.2 GB a year, full fidelity, for a repository running 90 runs a day** — and the costs
+constraint — **4.6 GB a year, full fidelity, for a repository running 90 runs a day** (this line read
+3.2 GB until 2026-09-21: the first draft's lossy 95,598 figure, which F3 corrected everywhere but
+here) — and the costs
 that actually bite are analyzer compute, ingest bandwidth and custody of captured payloads. The
 triage work is on the critical path rather than competing with it.
 
@@ -45,7 +47,7 @@ triage work is on the critical path rather than competing with it.
 
 ## 0. Summary
 
-Nine findings, six of which change the design rather than confirming it, **numbered in the order
+Ten findings, seven of which change the design rather than confirming it, **numbered in the order
 they were found, not in order of importance**. F3 and F7 were both found on 2026-09-20, after the
 first draft, and each corrects an overclaim in it; **F9 is a pattern that had been recorded three
 times in three places without being added up**.
@@ -61,8 +63,21 @@ times in three places without being added up**.
 | **F7** | **Replay ships; the projection does not, and the one writer loses data.** `kronikol ingest` genuinely rebuilds a report from records, but nothing turns a finished run back into records: `InteractionRecord.FromLog` drops `RequestResponseLog.PlantUml` (the record has no such field), drops `DurationMs`, and never emits step or assertion markers. Two of the three are live defects today, filed as #93 and #94. **This plan's first draft claimed the round trip from the existence of `FromLog`/`ToLog` and was wrong** | §3.1 |
 | **F8** | **Two layers, two stores.** Payloads are never queried analytically: they are fetched whole, by run id, and they are 84% of the bytes. That is a blob workload. The stable layer is read as "this column across thousands of runs", which is a columnar workload. Putting payloads in a database is what makes this look like it needs a warehouse budget | §3.4 |
 | **F9** | **The likely buyer is the least served, and it took three separate findings to notice.** Kronikol is a .NET product with a .NET-only differentiator, so the probable customer runs Azure DevOps, on Azure, with Entra ID — the profile with no Tier 0 recipe, no onboarding artifact, no possible Tier 1, and no store path. **But Azure is also the easiest provider for browser auth and ships the §6.2 proxy for free**, which makes it the *shortest* path to a complete stack rather than a grudging port | §6.3 |
+| **F10** | **There is no atomicity story, and the ledger had one.** Eighteen lanes finish at once; the ledger handled that with `merge=union` plus a fetch-and-rebase retry. Object storage has no merge, and §3.5's mandatory compactor rewrites files while writers append and readers scan. **This is the one design gap on the list rather than an omission**, and retrofitting it onto a format already holding years of data is close to a rewrite | §3.4 |
 
-Five slices. None is breaking; none needs v4.
+**Read §13 beside this table.** A critical review on 2026-09-21 left F1 standing and challenges
+several of the rest: M1's premise that a verdict never changes once written is false (R1), F3's
+renumbering should be dropped rather than tuned (R3), F6's retention argument does not hold for
+immutable objects (R5), F7 undercounts what `FromLog` loses (R4), F10 over-scopes the contention (R7),
+and the slices build the one product nobody has asked for first (R16). No decision below was changed
+by it; §11 questions 14 to 20 put the choices to the owner.
+
+**The order of work was decided on 2026-09-21 (§8.0):** years of verdict-level trends first, any past
+run's evidence second, and the facts layer, which is what the six slices below build, third and only
+when somebody asks for it.
+
+Six slices. None is breaking; none needs v4; every one is a MINOR bump except M0's two writer
+defects, which are PATCH (§8.6).
 
 | Slice | What | Depends on |
 |---|---|---|
@@ -71,6 +86,7 @@ Five slices. None is breaking; none needs v4.
 | **M2** | The store: columnar, bring-your-own-bucket, per-column retention, ids renumbered on write | M0 |
 | **M3** | Fingerprints derived, not stored; the backfill a rule bump triggers | M2 |
 | **M4** | The dashboard reads the store — `DASHBOARD_PLAN.md`'s page, pointed at a warehouse | M1, M2 |
+| **M5** | Migration from an existing ledger, and what it cannot carry (§4.3) | M2 |
 
 ---
 
@@ -231,7 +247,11 @@ month, and a dashboard pulling on the order of 120 GB/month:
 | **Cloudflare R2** ($0.015/GB, egress free, 10 GB free tier) | **$0** | **$0** | **$0** |
 | Backblaze B2 ($0.00695/GB, egress free to 3x stored) | $0.03 | $1.07 | ~$1.10 |
 | AWS S3 Standard ($0.023/GB, 100 GB/month egress free, then $0.09) | $0.10 | $1.80 | ~$2.06 |
-| Azure Blob Hot ($0.018/GB, egress $0.087) | $0.08 | ~$10 | ~$10 |
+| Azure Blob Hot ($0.018/GB, egress $0.087 after the first 100 GB/month, which is free) | $0.08 | $1.74 | ~$1.82 |
+
+**Azure row corrected 2026-09-21.** It read "~$10 / ~$10": the 100 GB free allowance had been applied
+to S3 and not to Azure, which has the same one (§13 R17). The 120 GB/month under all four rows has no
+derivation and is about a hundred times a realistic figure (same finding).
 
 Two things follow, and the second matters more. **Storage is at most 5% of the bill**, so the per-GB
 rate is very nearly irrelevant and this plan should stop quoting it as though it were the number.
@@ -478,6 +498,35 @@ requests**, which DuckDB-WASM needs in order not to download whole files. If it 
 static-page query story needs a different host (R2 and S3 both range fine). A one-hour spike, and it
 belongs before this approach is green-lit.
 
+#### Concurrency: the part the ledger solved and this had not
+
+**Added 2026-09-20, after the owner asked what the plan was missing. It is F10, and it is the one
+item that is a design gap rather than a gap in the writing.**
+
+The ledger's concurrency story was deliberate and dogfooded: an orphan branch with `merge=union` in
+`.gitattributes`, a fetch-and-rebase retry around the push, and eighteen lanes exercising it on every
+CI run. **Object storage has no merge**, and nothing in §3.4 as first written replaces it.
+
+Two races, both live:
+
+- **Two lanes writing the same logical partition.** Last-writer-wins silently loses a run.
+- **Compaction against live traffic.** §3.5 makes compaction mandatory; a compactor rewriting a
+  month's file while a writer appends, or while a reader is part-way through a scan, can produce a
+  torn or vanished read. The reader here is a dashboard, so the failure is visible and confusing
+  rather than loud.
+
+**The standard answer is a table format with atomic commits** — Iceberg or Delta Lake — or, far
+simpler and probably right at this scale, **a manifest with an atomic pointer swap**: writers only
+ever add immutable files, a small manifest lists the current set, and publishing a new version is one
+conditional write of the manifest. Readers resolve the manifest first and then read a fixed file set,
+so compaction never disturbs them. Object stores support the conditional write this needs
+(S3 `If-None-Match` / `If-Match`, and R2 and Azure have equivalents), **though that is REFERENCE and
+not verified here**.
+
+Deciding this is **M2's first task, ahead of the layout**, because a format already holding years of
+data cannot have atomicity retrofitted cheaply. §11 asks the owner to confirm the manifest approach
+over a full table format.
+
 #### The fork this creates, which nothing has resolved
 
 `DASHBOARD_PLAN.md` §4.3 is explicit that **the data is inlined**: "One `index.html` … The data is
@@ -564,7 +613,10 @@ analytics across an organisation.
 Kronikol decides whether a scenario's behaviour changed by reducing each call to a shape:
 `GET /orders/7f3a9c…` becomes `GET /orders/{id}`. Ids, timestamps and numbers are replaced so that
 two runs doing the same thing hash the same. Those rules live in `InteractionShape` and **have already
-changed three times** — `Version` is 3, and the XML doc comment records why each moved.
+changed three times** — `Version` is 3, and the XML doc comment records why each moved. (**2026-09-21:
+make that four.** 3.22.2 (`4afe38a4`) shipped `Version = 4`, #75's id and `{bin}` rules, the day after
+this was written: four rule sets inside the feature's first month. That strengthens this section, and
+it has shifted the `InteractionShape.cs` line numbers this plan cites, so read them as of `82abeb7f`.)
 
 Fingerprints made under different rules are not comparable, and the analyzer knows it. It filters
 prior points to the current rule and, where the previous point used another, emits *"the calls in
@@ -608,7 +660,26 @@ Nothing else. Measured:
 Re-templating it is a linear regex pass over ~460 KB of raw text per run; a year of history is ~15 GB
 of text, minutes of CPU, for an event that has happened three times in the feature's life.
 
-### 4.3 It is cheaper than what the ledger does today
+### 4.3 It does not reach backwards, and that is permanent
+
+**Added 2026-09-20.** §4.2 says a rule change becomes a backfill. That is true only of runs captured
+**after** the store exists, and the reason is the same one that makes §4.1 a problem in the first
+place: **the ledger keeps already-templated text.** A migration from an existing `kronikol-history`
+branch can carry results, durations, verdicts and history, but not the re-templatable core and not
+the payloads, because neither was ever written.
+
+So **history migrated from a ledger is permanently stuck at the rule version that made it**, and can
+never be re-fingerprinted. Anyone reading §4.2 would assume otherwise, which is why it is stated here
+rather than discovered later. The practical consequences:
+
+- The store's re-fingerprintable history begins on the day it is switched on. Migrated runs are
+  readable and comparable among themselves, never across a future rule change.
+- That is an argument for switching the store on **early** rather than after a long ledger has
+  accumulated, and for saying so in the migration documentation.
+- The migration itself is a slice nobody has written: every existing user has a ledger, and §8 has no
+  path from one into the store. §8.6.
+
+### 4.4 It is cheaper than what the ledger does today
 
 On the consumer's most recent run line, `callSets` + `shapeSet` + `shapeOrdered` are **8,893 of
 12,514 bytes — 71% of the line.** A store that derives fingerprints keeps none of that. So the
@@ -672,6 +743,13 @@ survive it:
   redactions — remains the control; deletion is the backstop.
 - **Deleting from compressed columnar files is a rewrite**, not a `DELETE`. Fine when designed in,
   awkward when discovered later. It belongs in M2's acceptance, not in a later slice.
+- **Subject-level erasure is a different and harder ask than per-repository deletion**, and this plan
+  had only covered the latter. "Remove everything containing this person's data" means searching
+  captured request and response bodies, which is what the payload layer is. Bounded retention limits
+  the window but does not answer the request inside it. **An enterprise buyer under GDPR will ask**,
+  and the honest answers are the payload layer's expiry, capture-time redaction, and, if it must be
+  exact, a rewrite of the affected partitions. Recorded here rather than left to be discovered in a
+  procurement questionnaire.
 
 ---
 
@@ -1031,7 +1109,7 @@ for this plan, and the profile the plan is worst at.
 | **Tier 1 dashboard** | **impossible as designed** — no Pages, no anonymous raw |
 | **Store** | **missing** — Azure Blob has no S3 API |
 | Browser auth | **easiest of any provider** — Blob takes an Entra bearer token natively (§6.2) |
-| The §6.2 auth proxy | **free** — App Service Auth and Static Web Apps ship it |
+| The §6.2 auth proxy | ~~free — App Service Auth and Static Web Apps ship it~~ **Does not exist without compute** (corrected 2026-09-21, §13 R19): Static Web Apps guards only what it serves and holds 2 GB at most, Blob static websites are anonymous-only, Easy Auth guards only its own app. The Azure route is the bearer token in the row above |
 | Data residency | free; the customer picks the region |
 
 **The reframe, and why this is a finding rather than a complaint.** The last three rows say the
@@ -1107,6 +1185,44 @@ that two other plans rewrite the loop it fixes.
 ---
 
 ## 8. Slices
+
+### 8.0 The order of work, decided 2026-09-21
+
+**Owner's decision on §11 question 19 ("go ahead", 2026-09-21): three products, in this order.** It
+decides the *order*; it green-lights nothing, and this plan and `DASHBOARD_PLAN.md` both stay NOT
+green-lit for implementation. §13 R16 is the argument. M0 to M5 below are unchanged as text and are now
+the slices of the **third** product.
+
+| | Product | What it needs | What it does not need |
+|---|---|---|---|
+| **P1** | **Years of trends, at verdict level** | `DASHBOARD_PLAN.md`'s page and view, with its §6 "no retention beyond the window" lifted: the view written as **monthly files on the existing history branch**, where `merge=union` already works; the page inlines the recent window and fetches older months whole (no range requests, no preflight, §13 R18). On Azure DevOps, which has no raw file access, the workflow copies the same files beside the page | a bucket, a credential, the projection, Parquet, a compactor, a manifest |
+| **P2** | **Any past run's evidence** | The report CI already emits, uploaded to the team's own bucket **under a key that carries the branch class and the run id** (lifecycle rules select by key prefix and keys are immutable, §13 R14), and its address on the run line so the page and `query history` can link it. 981,768 B gzipped for the HTML on the measured lane: about 8 GB steady at 90 days, 32 GB per year kept. Gzip at rest, which every browser reads (§13 R20) | the projection, Parquet, a compactor, a manifest, DuckDB |
+| **P3** | **The facts layer**: call-level analytics, and re-fingerprinting that outlives the stored reports | M0 to M3 and M5 below, with §13's corrections applied first: verdicts as a stamped cache (R1), ids stored verbatim (R3), immutable per-run bundles as the record and Parquet as a rebuildable index (R6), a single manifest writer (R7), and a page that fetches shaped files instead of querying (R9) | to start before somebody asks for it |
+
+**What this changes.**
+
+- **M0 stops being the gate for time travel.** P2 keeps the artifact itself, so "any point in time" no
+  longer waits on a lossless projection. The projection stays worth building early for its own reasons
+  (#93, #94, the further losses in §13 R4, and `PLATFORM_FOUNDATIONS_PLAN.md` F2), and it becomes the
+  gate for P3 only.
+- **F5's fix does not need P3 to start.** Re-fingerprinting reads the stable facts, and a stored
+  `TestRunReport.json` holds them: `measure.py` derives the re-templatable core from exactly that file.
+  P2 therefore covers a rule bump for as long as the reports are kept. P3's forever-layer is what
+  covers it after they expire, which makes payload expiry a decision about custody and not about cost
+  (§11 question 20, still open).
+- **P1 and P2 each ship something a reader can see**, are small, and put §6.1's own test to the store:
+  one dogfood consumer is the whole evidence base, so build the cheap thing and see who asks for more.
+- **Prerequisites are unchanged and one is done.** #91's S1 and the noise plan (executed 2026-09-21 as
+  3.22.2 to 3.25.0) still come before anything that displays verdicts. **#95, the as-of defect §13 R2
+  found, shipped as 3.25.1**, and P2 depends on it: a linked past run is read again later, which is
+  exactly the read that was wrong.
+
+**Still open and now first in line:** where P1's slice lives. It is an amendment to
+`DASHBOARD_PLAN.md` (its §4 view, its §6 retention line, its M-slices) rather than a slice of this
+plan, and that plan's owner questions (§9 there) have not all been answered. Recommendation: write P1
+as a short addendum to `DASHBOARD_PLAN.md` and leave this plan holding P2 and P3.
+
+### The third product's slices (M0 to M5)
 
 None is breaking; none needs v4; each is a minor bump unless noted.
 
@@ -1203,6 +1319,60 @@ Applied when this plan is green-lit and not before, amending the second bullet:
 > that warehouse and not a hosted dashboard in the sense of the bullet above: Kronikol still opens no
 > socket, holds no token and needs no account.
 
+### 8.6 Operations, versioning and docs: what this plan had not covered
+
+**Added 2026-09-20, when the owner asked what was missing.** Twelve probes found twelve absences.
+F10 (§3.4), the migration consequence (§4.3) and subject-level erasure (§5.4) are recorded in their
+own homes. The rest are collected here, because each is real work and none had a slice.
+
+**M5 — migration from an existing ledger.** Every current user has a `kronikol-history` branch and
+§8 had no path from one into the store. It must carry results, durations, verdicts and history, and
+it must say plainly what it cannot carry (§4.3: the re-templatable core and the payloads were never
+written, so migrated history is permanently stuck at its rule version). **Done when** the consumer's
+412-run ledger is in the store, every verdict matches what the ledger's own analyzer produces, and
+the documentation states the rule-version limit rather than leaving it to be discovered.
+
+**The store is the system of record, which is a step up in criticality nobody named.** A ledger on a
+git branch is replicated to every clone and to the forge; a bucket is one copy, and the runs behind it
+no longer exist. Losing it loses the history irrecoverably. The plan needs a stated position on object
+versioning, cross-region replication, or an explicit "this is the customer's backup responsibility,
+here is what to turn on". **Unstated is the wrong answer whichever way it goes.**
+
+**The store needs its own format version.** `HistoryFormat.Version` and `InteractionShape.Version`
+both exist because this was learned once already. New columns are certain (#90's coverage, new capture
+fields), and there is no policy for reading old files under a new schema. Parquet tolerates added
+columns; that is not the same as having decided what happens.
+
+**Observability of the pipeline.** The ledger was *visible*: a branch anyone could open. A bucket is
+opaque, and ingest failing silently for a week is a plausible failure with no detector. Related and
+equally unstated: **what the gate does when the store is unreachable.** Failing a build on a storage
+outage would be unacceptable; the answer is presumably to degrade to advisory and say so, but
+presumably is not a decision.
+
+**Multi-platform writes.** §6 records that *capture* is .NET-only. It says nothing about the store
+*writer*. If `PLATFORM_FOUNDATIONS_PLAN.md` lands, do Java and Node capture paths write to the store
+directly, or does ingest stay .NET tooling they shell out to? That is a boundary question its F2
+contract should answer, and neither plan does.
+
+**Versioning, per `CLAUDE.md`.** This plan carries no semver statement, which the house style
+requires and `HISTORY_ANALYZER_COST_PLAN.md` demonstrates with a per-slice Bump column. The reading:
+every slice here is **MINOR** — new verbs, new options, new public surface, nothing removed and no
+default changed. **M0's two writer fixes (#93, #94) are PATCH**, being defects in shipped behaviour.
+Nothing here is MAJOR, and nothing may become MAJOR without asking first.
+
+**Documentation, per `CLAUDE.md`.** The wiki is the primary target and this plan names no page. At
+minimum: a new store page, edits to `Cross-Run-History` where the ledger stops being the only home
+for history, and the migration limits from §4.3. The README's history section and the agent skill's
+`commands.md` copies move with any new verb, and `SkillDriftTests` holds those two copies identical.
+
+**Testing, per `CLAUDE.md`'s TDD rule — and this is the largest of the omissions here.** The plan has
+acceptance criteria per slice and no statement of how any of it is tested. A store means a fake or a
+container: Azurite for Blob, MinIO or LocalStack for S3-compatible, or a filesystem-backed
+implementation behind the same interface. **The choice matters because it decides whether store tests
+can run in the normal unit suite or need containers**, and `ci-flake-classes` records what container
+tests already cost this repository's port pool. It should be decided in M0, with the rest of the
+storage design, not when the first test is written.
+
 ---
 
 ## 9. Risks
@@ -1231,6 +1401,15 @@ Applied when this plan is green-lit and not before, amending the second bullet:
   forces a rewrite of everything stored before the decision. This is why M2 names retention in its
   acceptance rather than deferring it.
 - **The dashboard ships before the noise is fixed** and teaches its readers to ignore it. §7.2.
+- **Concurrency is designed late or not at all (F10).** The ledger's `merge=union` and rebase retry
+  have no equivalent here, and §3.5's compactor runs against live writers and readers. Retrofitting
+  atomicity onto a format already holding years of data is close to a rewrite, which is why §3.4
+  makes it **M2's first task, ahead of the layout**.
+- **The bucket is lost and the history is gone.** The store is the system of record and the runs
+  behind it no longer exist (§8.6). A git branch was implicitly replicated; a bucket is not.
+- **Migration is assumed to be complete and is not.** §4.3: ledger-sourced history can never be
+  re-fingerprinted. If that is not documented, the first rule-version bump after a migration will
+  look like a bug.
 - **Scope gravity.** A store invites accounts, alerting and hosting — the three things §5.3 and
   `DASHBOARD_PLAN.md` §3 both decline. The bring-your-own-bucket constraint is what holds the line.
 
@@ -1251,7 +1430,9 @@ harness in one pass, §1.1.
 - `InteractionShape.Target` / `.Calls` read exactly the eight fields of §4.2 — the basis of the whole
   versioning fix.
 - `HistoryAnalyzer.cs:349-354` filters prior points by rule and emits the "earlier rule" evidence.
-- `IngestCommand` replays NDJSON into a report; `InteractionRecord` round-trips `RequestResponseLog`.
+- `IngestCommand` replays NDJSON into a report. **`InteractionRecord` does NOT round-trip
+  `RequestResponseLog`**: this bullet still claimed it did until 2026-09-21, a day after F7 retracted
+  the claim everywhere else. §13 R4 lists what `FromLog` drops, which is more than F7's three.
 - `CROSS_RUN_HISTORY_PLAN.md` §14, `DASHBOARD_PLAN.md` §3 and §6, `MCP_PLAN.md` §10,
   `PLATFORM_FOUNDATIONS_PLAN.md` F2 and §4.4 — quoted, not paraphrased, where they constrain this plan.
 - Issues #85, #86, #89, #90 — their own measurements, not re-measured.
@@ -1272,11 +1453,14 @@ harness in one pass, §1.1.
 | Whether `api.github.com` permits browser-origin authenticated calls under CORS | **Not verified.** §6.1's option B depends on it. A small spike, needed only if B is ever planned |
 | How well a forge's prefill handles a multi-line JSON edit rather than a new file | **Not verified.** §6.1's option C depends on it, and C is the recommended near-term route |
 | That `AssumeRoleWithWebIdentity` is callable from a browser origin | **Not verified**, believed. §6.2's federated route on AWS depends on it |
-| That Azure Blob and GCS accept an OAuth bearer token from a browser origin | **Not verified**, believed. It is the basis for calling them the easiest providers for browser auth (§6.2) |
+| That Azure Blob and GCS accept an OAuth bearer token from a browser origin | **Azure verified 2026-09-21** against Microsoft's REST and JS SDK documentation (§13 R19: Entra token, `x-ms-version`, Storage Blob Data Reader, and a CORS rule allowing `authorization`, `x-ms-version` and `range`). GCS still not verified |
 | That R2 has no OIDC federation | **Verified 2026-09-20** against Cloudflare's own documentation: temporary credentials are derived from an API token, so something must hold the parent |
 | Lifecycle expiry, storage-class minimums, CORS range headers | **Checked 2026-09-20** (§2.4): R2 and B2 lifecycle docs, S3 Standard-IA minimums, Azure tier minimums from a 2026 pricing guide rather than Azure's own table |
+| That object stores support the conditional write a manifest needs | **Checked 2026-09-21, and one does not** (§13 R7): S3, R2, Azure and MinIO do; GCS does under its own header, `x-goog-if-generation-match`; **Backblaze B2 does not at all** (501). A design that needs the conditional write excludes B2; one with a single manifest writer does not |
+| Whether Parquet schema evolution covers what this needs | **Not checked.** §8.6: added columns are tolerated, which is not the same as a decided policy |
+| How the store is tested | **Not decided.** §8.6: Azurite, MinIO, LocalStack or a filesystem fake, and the choice decides whether store tests need containers |
 | Durability, max object size, consistency, request rate limits | **Not checked, deliberately.** None plausibly differentiates at this scale, and §2.4 says so rather than leaving the omission silent |
-| Whether Azure Blob needs its own code path | **Not verified**, only reasoned from the API difference. §11 question 2 |
+| Whether Azure Blob needs its own code path | **Yes, as far as can be read** (2026-09-21): no S3 API appears anywhere in Microsoft's documentation and a Microsoft Q&A answer says it is unsupported, which is a secondary source |
 | Whether all 18 lanes cost what the one measured lane costs | **No, and the spread is known to be large**: issue #86 measured two lanes running the same 263 scenarios at 12.6 MB and 31.8 MB, 2.5x apart. §2.4's annual figures apply one lane's cost to all 18 and are optimistic by an unmeasured factor |
 | The competitor survey | Cited to `DASHBOARD_PLAN.md` §3 with its date; not restated as fresh |
 | Whether anyone joins `activityTraceId` to an external backend | §11 asks; the exempt-and-pay escape costs 8,691 B/run |
@@ -1315,10 +1499,9 @@ harness in one pass, §1.1.
    it with the two other places the same pattern had been recorded. The question is no longer whether
    Azure Blob needs a path but **whether §6.3's reframe is accepted**: that the Microsoft stack is the
    shortest route to a complete offering rather than a port, that its items 3 and 4 belong inside M2,
-   and that Azure plumbing outranks a second language in §6.2's ordering. **Blocked on the half-day of
-   vendor verification §6.3 names as its first task.** Kronikol is a .NET product, so a large share of likely customers are
-   already on Azure. This is a real line item and it is in no plan today. (The claim that Azure has
-   no native S3 API is REFERENCE, not verified here; verify before costing it.)
+   and that Azure plumbing outranks a second language in §6.2's ordering. **The half-day of vendor
+   verification §6.3 names as its first task was done on 2026-09-21 (§13 R19)**: no native S3 API,
+   the bearer-token route works from a browser, and the "free proxy" row was wrong.
 3. **Time travel: re-render with the version that ran, or today's?** The report carries
    `kronikolVersion`, so both are possible. Today's renderer means old runs gain new report features;
    the original means fidelity to what was seen.
@@ -1354,8 +1537,49 @@ harness in one pass, §1.1.
     Tier 1 ports unchanged. Jenkins, Bitbucket, CircleCI and TeamCity need detection plus docs only,
     because they reach the dashboard through Tier 2 regardless. The question is whether GitLab is in
     scope now or later, and whether the rest are supported or merely not obstructed.
-11. **Is bring-your-own-bucket the final answer on hosting**, or is it the answer until someone asks
+11. **Atomicity: a manifest with an atomic pointer swap, or a full table format (§3.4)?**
+    Recommendation is the manifest — writers only add immutable files, one conditional write
+    publishes a new version, readers resolve it first — because Iceberg or Delta is a large
+    dependency for a store this size. **This is M2's first task and it cannot be deferred**, since a
+    format already holding years of data cannot have atomicity added cheaply.
+12. **Backup: Kronikol's problem or the customer's (§8.6)?** Bring-your-own-bucket argues the
+    customer's, but the store is the system of record and losing it is irrecoverable, so silence is
+    the wrong answer either way.
+13. **Is bring-your-own-bucket the final answer on hosting**, or is it the answer until someone asks
    for a hosted version? §5.3 treats it as final, consistent with `MCP_PLAN.md` §10.
+
+**Added 2026-09-21 by the critical review (§13). Each carries the review's recommendation; none is
+decided.**
+
+14. **Is a stored verdict a fact or a cache (R1)?** §5.1 treats it as a fact. The code says it is a
+    function of eleven options, the baseline stream, two editable companion files and append order,
+    under rules that carry no version. **Recommendation: a cache**, stamped with a rules version (to
+    be invented), the options, the baseline and the as-of position, and recomputed by M3's backfill.
+    The alternative is a trend chart with a step at every analyzer release.
+15. **Drop the id renumbering (R3)?** **Recommendation: yes.** Kronikol's own OTLP export publishes
+    both "safe" keys, sequential integers collide across runs after `ToGuid`, and the saving is two
+    cents a month. 181,953 becomes the engineered figure.
+16. **What is the system of record (R6)?** **Recommendation: immutable per-run bundles** (`facts/`
+    kept, `payloads/` expiring), with every Parquet file a rebuildable index over them. It turns a
+    compactor bug, a schema change and most of F10 from data loss into a rebuild.
+17. **Who talks to the bucket (R8)?** The workflow, in per-provider shell that Kronikol cannot test,
+    or an opt-in `Kronikol.Extensions.Store.*` package on the precedent of `OtlpExporter`. This
+    decides where the commit protocol lives and whether store tests need containers at all, so it
+    comes before the manifest.
+18. **Does the page query, or fetch files the compactor shaped for it (R9)?** **Recommendation:
+    fetch.** DuckDB is 110 MB in the tool and a SQL engine in a page whose rules were written to keep
+    one out; as the customer's own tool against an open format it is a feature.
+19. ~~**Which product first (R16)?**~~ **Answered 2026-09-21: the owner said go ahead with the
+    recommendation.** Years of verdict-level trends on the existing branch (P1), then durable reports
+    by run id (P2), then the facts layer only if someone asks for call-level analytics (P3). §8.0
+    records it and what it changes. What it opens: where P1's slice lives (an addendum to
+    `DASHBOARD_PLAN.md` is recommended), and P2's key layout, which has to carry the branch class
+    from the first write.
+20. **What survives day 91, and why does anything expire (R12, R13, and question 5)?** It cannot be
+    cost: keeping everything for ever is cents. If the reason is custody, then the statement head,
+    the attachments and the URIs in the keep-for-ever layer need the same treatment as the bodies,
+    and the owner's "any point in time" is knowingly traded for it. If there is no custody reason,
+    the default should be to keep everything.
 
 ---
 
@@ -1479,3 +1703,438 @@ in §6.2's ordering, because it serves a buyer who exists rather than one who mi
 half a day of vendor verification, since every Azure platform claim is REFERENCE. The same pass
 renumbered §0's findings table, which successive insertions had left reading F1-F5, F7, F9, F8, F6.
 
+**2026-09-20, twelfth round.** The plan was committed (`f01f8f19`), and the owner asked what it had
+missed. Twelve probes found twelve absences, and the important one is a **design gap rather than a
+gap in the writing**: **F10, there is no atomicity story**, where the ledger had a deliberate one
+(`merge=union` plus a fetch-and-rebase retry, exercised by eighteen lanes every run). Object storage
+has no merge and §3.5's compactor runs against live writers and readers. §3.4 now proposes a manifest
+with an atomic pointer swap over a full table format, and makes it **M2's first task, ahead of the
+layout**, because a format already holding years of data cannot have atomicity retrofitted cheaply.
+
+Two more went to their own homes. **§4.3: the backfill does not reach backwards** — a ledger keeps
+already-templated text, so history migrated from one is **permanently stuck at its rule version**,
+which anyone reading §4.2 would have assumed otherwise. **§5.4: subject-level erasure** is a different
+and harder ask than the per-repository deletion the plan had covered.
+
+The remainder became **§8.6**, including the three the house style requires and this plan lacked:
+a semver statement (every slice MINOR, the two writer defects PATCH), the wiki pages that move, and
+**a testing strategy — the largest omission, because whether store tests need containers is decided
+by the fake and that decision belongs in M0**. Also there: **M5, migration**, which no slice covered
+though every existing user has a ledger; the store as **system of record** with no backup position;
+a **format version** for the store; **pipeline observability** and what the gate does when the store
+is unreachable; and whether non-.NET platforms write to the store directly.
+
+The pattern worth recording: after eleven rounds this plan was heavily verified on **storage** and
+thin on **operations**. Every axis the owner chose found something; every axis chosen here was about
+bytes.
+
+**2026-09-21, thirteenth round.** The owner asked for a critical assessment: anything missed,
+anything to improve, any decision that is wrong. **§13 records twenty findings, R1 to R20**, checked
+by reading the code and the harness, by two measurements, and by two verification agents. The ones
+that change the design: **verdicts are not write-once** (R1: eleven options, the baseline stream, two
+editable files and append order decide them, and the rules carry no version, so §5.1's premise is
+false and M1 needs F5's treatment); **the analyzer has no "as of"** (R2: a shipped defect, a re-read
+counts later runs as prior, and it is the very operation M1, M5 and time travel perform); **the id
+renumbering should go** (R3: `OtlpSpanMapper` publishes both "safe" keys, the harness checked one,
+and sequential integers collide across runs after `ToGuid`, all for two cents a month);
+**`FromLog` loses at least four more things** than F7 found (R4: `Error`, the attribution fields,
+`FocusFields` / `NoteOnRight`, the phase variants); **columnar does not buy per-column retention**
+on immutable objects, the blob split does (R5); and **the compactor rewrites the only copy** (R6),
+answered by making immutable per-run bundles the record and Parquet a rebuildable index. The ones
+about what is absent: nobody renders the point-in-time report (R10), attachments are uncounted files
+(R11), the re-templatable core is a bet on future rules and 64% of it is payload kept for ever (R12),
+the layers are not defined (R13), there is no branch dimension (R14), and **Parquet was never
+measured** — every figure is long-window zstd-19 over JSON, and the "79 MB verdict layer" is the
+ledger (R15). **R16 is the one about order**: three products are being built as one, and the two the
+owner asked for (years of verdict-level trends; any past run's evidence) need neither the projection
+nor a columnar store, while the slices build the third product's machinery first. Closed on the way:
+the range-request question, measured (R18: 206 and a correct `Content-Range`, preflight refused with
+403, and never load-bearing for a store that lives in a bucket); the 120 GB/month egress, which has
+no derivation and drives §2.4's table (R17); **the vendor check §6.3 named as its first task, done**
+(Azure's first 100 GB of egress is free, so §2.4's Azure row is $1.74 and not ~$10; Azure has **no**
+zero-compute auth proxy, so §6.3's "free" row was wrong and the Azure route is a bearer token in
+JavaScript, R19; Backblaze B2 has **no conditional write**, so a manifest swap excludes it, R7;
+DuckDB-WASM cannot send an `Authorization` header, reads whole files by default and fetches its
+Parquet reader from a third origin, R9; and no browser decompresses zstd natively, R20); and three
+stale facts corrected in place (the 3.2 GB
+headline, §10.2's round-trip bullet, §4.1's rule count, which 3.22.2 made four while this round was
+being written). §11 gains questions 14 to 20. **No decision was changed**, and no source file was
+touched: another session was releasing from the same working tree throughout (3.22.2 in
+`src/Kronikol/History`, then uncommitted work in `src/Kronikol/Ingestion`), so R2's defect is recorded
+for filing rather than fixed here.
+
+The pattern this time: **the plan concluded that storage should stop driving the design, and four of
+its decisions were still driven by storage.** And it made fingerprints derived because rules change
+while making verdicts permanent, although the verdict rules have changed more often.
+
+**2026-09-21, fourteenth round.** The owner answered both things §13 put to them: file and fix R2, and
+settle §11 question 19 as recommended. **R2 is #95 and shipped as 3.25.1** (PATCH: no public member
+moves). The fix went further than the three lines the finding named, because the analyzer's cut alone
+leaves the worse case standing: a report older than the reader's window is not in memory at all, so
+the *reader* had to learn which run and which stream a read is for. It now indexes every run line by
+id and stream, reads a stream back from before the run's own line, and parses a line the window let
+go only when asked, from the ledger read a second time, so nothing is held in memory that was not
+before. That also fixed the stream-crowding defect R2 recorded "beside it". Measured on the consumer's
+448-run ledger: 265 runs and 2,413 scenario verdicts read differently today than when they ran, and
+none after. **Question 19 is answered and §8.0 records the order**: P1 years of verdict-level trends
+on the branch, P2 durable reports by run id, P3 the facts layer, with M0 to M5 now P3's slices and M0
+no longer the gate for time travel. The noise plan was executed in full the same morning (3.22.2 to
+3.25.0), which closes one of this plan's two prerequisites and, through 3.23.0, 3.24.0 and 3.25.0,
+added three more data points to R1 (recorded there), including the one that matters to M3: part of
+the fingerprint rule is now the consumer's own, so a backfill needs their rules and not only their
+hash.
+
+
+---
+
+## 13. Critical review (2026-09-21)
+
+**The owner asked for a critical assessment: what is missing, what could be better, which decisions
+are wrong.** Checked rather than argued, which is what §12's rounds taught: direct reads of the code
+and the harness, two measurements, and two verification agents (one running probes against the built
+`Kronikol.dll`, one reading vendor documentation). Levels as in §1. **Nothing here changes a decision
+on its own authority**: §11 gains the questions (14 to 20), and three factual slips found on the way
+are corrected in place with dated notes (the 3.2 GB headline, §10.2's round-trip bullet, §4.1's rule
+count).
+
+**Two patterns account for most of it.**
+
+1. **§2.4 concludes that storage should stop driving the design, and storage still drives four
+   decisions**: renumbering ids (§3.2), payload expiry argued from bytes (§3.3), columnar chosen "for
+   retention" (F6), and the projection treated as the gate because reports are a third derived (F4).
+   At $0 to $0.30 a month none of them earns the risk it carries.
+2. **Fingerprints are made derived because rules change (F5), and verdicts are made permanent in the
+   same breath (§5.1), although the verdict rules have changed more often than the fingerprint rules.**
+
+| # | Finding | Level |
+|---|---|---|
+| **R1** | Verdicts are not write-once; §5.1's premise is false and M1 is built on it | READ + RUN |
+| **R2** | The analyzer has no "as of": a shipped defect, and this plan's core operation | READ + RUN |
+| **R3** | Id renumbering (§3.2) should be dropped: OTLP export publishes both "safe" keys, the harness checked one of them, and sequential integers collide across runs after replay | READ |
+| **R4** | `FromLog` drops at least four more things than F7 found | READ |
+| **R5** | Columnar does not buy per-column retention on object storage; the file split does | reasoning + vendor docs |
+| **R6** | The compactor rewrites the only copy; make immutable per-run bundles the record and Parquet an index | design |
+| **R7** | F10 over-scopes the contention: the shipped recipe folds in ONE job | READ |
+| **R8** | The socket rule moves the commit protocol into untested shell, and the rule already has a shipped exception | READ |
+| **R9** | DuckDB is named in three places and costed in none; in the page it cannot send a bearer token, reads whole files by default and needs a third origin | RUN |
+| **R10** | Nobody renders the point-in-time report | READ |
+| **R11** | Attachments are files; no figure, layer or rule covers them | READ |
+| **R12** | The re-templatable core is a bet on future rules, and 64% of it is payload kept for ever | READ |
+| **R13** | The layers are not defined consistently, so what survives day 91 is unknown | READ |
+| **R14** | The store has no branch dimension, and lifecycle rules are prefix-based | READ + vendor docs |
+| **R15** | Every byte figure is long-window zstd-19 over JSON text; Parquet was never measured, and the "79 MB verdict layer" is the ledger | READ |
+| **R16** | Three products are being built as one, in the order that shows nothing until the end | strategy |
+| **R17** | §2.4's 120 GB/month egress is underived and drives the provider table; the Azure row is wrong on its own terms ($1.74, not ~$10) | COMPUTED + vendor page |
+| **R18** | The range-request question is answered, and was never load-bearing for this plan | RUN |
+| **R19** | §6.3's "free auth proxy" on Azure does not exist: nothing fronts Blob without compute | vendor docs |
+| **R20** | No browser decompresses zstd natively, and every figure in §2 is zstd-19 | RUN + vendor data |
+
+### 13.1 Decisions that do not survive checking
+
+**R1. Verdicts are not write-once.** §5.1: *"A verdict for a run depends only on the runs before it,
+so it never changes once written."* Read and probed, a verdict is a function of: the prior runs **in
+append order**; eleven options (`Window` 50, `MinRuns` 5, `FlakyRate` 0.1, `SlowerBy` 1.5,
+`SlowerMinMs` 100, `AlternatingRuns` 10, `CountRuns` 2, `PartialThreshold` 0.10, `ReportReordered`,
+`Branch`, `CompareBranch`; `HistoryVerdicts.cs:101-131`); the baseline stream, which for a pull request
+comes from `GITHUB_BASE_REF` / `SYSTEM_PULLREQUEST_TARGETBRANCH` **at analysis time**
+(`CiMetadata.cs:80-92`); and `quarantine.json` and `aliases.json`, both applied at read, so a
+rename alias added later changes an old run's `new` verdict. Probes: `CountRuns` 2 reads `stable`
+where 1 reads `behaviour-changed`; one run reads `always-failing` against its own stream and `broke`
+against main; the same prior runs appended pass-then-fail read `failing`, fail-then-pass `broke`.
+
+**There is no version for the verdict rules anywhere.** `InteractionShape.Version` versions the
+templater and `HistoryFormat.Version` the file. No verdict is stored today; every surface recomputes.
+The rules have moved in at least four releases, by the changelog's own words: 3.15.0 "a design
+change to a verdict rule", 3.16.0 "one changed verdict rule", 3.18.0 added `alternating`, and 3.20.0
+made a count change a verdict "on the second run that holds it, not the first". And `gate`,
+`query history` (a fixed window of 50, `QueryOptions.cs:115`, and no slower or flaky flags) and
+`merge --history` (every default) already disagree with each other about the knobs.
+
+**Consequence.** A verdict stored at ingest and never recomputed turns every analyzer release into a
+step in the trend chart. 3.20.0's count confirmation took 13 verdicts to 2 (§6); a years-deep chart
+would draw that as an 85% improvement on the day of the upgrade. **The fix is F5's, applied to
+verdicts: a verdict is a cache, not a fact** — stamped with a rules version (to be invented), the
+options, the baseline stream and the as-of position, and recomputable by the backfill M3 already
+builds. M1's acceptance ("byte for byte identical to what the CLI analyzer produces") has to say which
+CLI surface, since three disagree; and M1 has nowhere to put its rows until M2 exists, which §0's
+dependency table does not show.
+
+**The same day supplied three more data points.** 3.23.0 ("a partial run no longer sets the bar a full
+run is read against") and 3.24.0 ("no slower verdict is read in one or against one") each changed a
+verdict rule, and 3.24.0 added a twelfth option, `DegradedBy`. That is six releases that moved the
+verdict rules inside the feature's first month. And **3.25.0 put part of the fingerprint rule in the
+consumer's hands**: `HistoryShapeTemplates`, whose hash rides on the run line as `shapeRules`, so
+fingerprints are comparable only when the pair (`InteractionShape.Version`, rules hash) matches. For
+this plan that widens F5 and M3: a backfill is triggered by the consumer editing a rule as well as by
+a Kronikol release, and it needs the consumer's rules as an input, which live in their test
+configuration and not in the store. The store has to record the rules themselves, not only their
+hash, or a backfill cannot reproduce a fingerprint it made last month.
+
+**R2. The analyzer has no "as of".** `HistoryAnalyzer.AnalyseStream` (`:72-78`) takes every run of the
+stream whose id differs from the current run's and keeps the last `Window`. It never cuts the ledger
+at the current run's position. At run time that is harmless, because a run is analysed before its line
+is appended. On any later re-read it is wrong. Probe: run 3 read `stable`; after runs 4 and 5 were
+appended the same report read `fixed — failed the previous 2 runs`, and those two runs are later ones.
+It affects `query history`, `history gate` and `merge --history` over any report that is not the
+newest, the only test of the path pins the case where the current run is the last line
+(`HistoryAnalyzerTests.cs:759-771`), and **it is exactly the operation M1's and M5's acceptance
+criteria and a time-travelled report perform.** Beside it: the ledger reader's window is per *suite*
+across all streams while the analysis is per stream (`HistoryLedger.cs:231-239`), so pull-request runs
+can crowd a quiet `main` out of its own window (probe: four PR runs after six main runs left main one
+usable run, under `MinRuns`). **Not fixed in this round**: another session was releasing from the same
+working tree throughout (3.22.2 in `src/Kronikol/History`, then uncommitted work in
+`src/Kronikol/Ingestion`). **Filed as #95 and fixed the same day as 3.25.1**, once that session was idle:
+the reader indexes every run line by id and stream, `HistoryLedger.PriorRuns` reads a stream back from
+before the run's own line, and a line the window let go is parsed on demand from the ledger read
+again. **Measured on BreakfastProvider's CI ledger before the fix: read again today, 265 of its 448
+runs had at least one verdict that differed from what the run read when it ran, 2,413 scenario
+verdicts of 88,396. After it: none.** Replayed with each run cut at its own line, the two builds are
+byte-identical, so nothing a run read when it ran moved. `tools/history-replay`'s header had said all
+along that the analyzer "does not cut there itself": the workaround was written and the defect was
+never filed.
+
+**R3. Drop the id renumbering rather than tune it.** Three independent problems.
+
+- **Kronikol's own OTLP export publishes both "safe" keys.** §3.2's rule is "renumber only if the
+  literal value is meaningless outside the run". `OtlpSpanMapper` exports the span id as the first 16
+  hex of `RequestResponseId` whenever no `ActivitySpanId` was captured, and under
+  `TraceIdStrategy.PerPair` exports `TraceId` as the trace id (`:280-295`). Those literals live on in
+  the customer's tracing backend: the concern §3.2 raises for the W3C ids and misses for its own.
+- **The harness checked one of the two.** `s3b_lossless` counts `requestResponseId` occurrences in
+  payloads and never looks at `traceId`, which §1 nevertheless lists as RUN.
+- **Sequential integers are the cross-run reuse §3.2's last paragraph forbids.** Every run's first
+  pair becomes `"0"`, and `InteractionRecord.ToGuid` is `MD5(text)` (`:451-457`), so after replay pair
+  17 of every run ever stored carries the *same* `RequestResponseId`. That is manufactured cross-run
+  identity, handed to `merge`, `diff` and any re-export. Salting with the run id at replay would fix
+  it and is nowhere designed.
+
+The saving is 43,612 bytes a run: 1.4 GB a year, **two cents a month**. Store the ids verbatim.
+181,953 becomes the engineered figure (6.0 GB a year), and every conclusion in §2.4 survives it.
+
+**R5. Columnar does not buy per-column retention; the file split does.** §3.3: *"That policy is only
+expressible if the storage format lets a field be dropped without rewriting the run, which is what
+columnar buys."* A Parquet file is immutable and so is an object: dropping a column **is** rewriting
+the file. What delivers "bodies expire, facts stay" is §3.4's decision to put them in different
+objects with a lifecycle rule on one prefix. After F8, F6's rationale is vestigial, and M2's
+"per-column retention" and §9's "per-column retention is decided too late" describe a problem the blob
+split already solved. The honest case for Parquet is projection and row-group pruning for call-level
+analytics, which is R16's product (c), the one with no demonstrated demand.
+
+**R6. The compactor rewrites the only copy.** §8.6 names the bucket as a single copy. It does not
+name the likelier loss, a compactor bug, and §9 has no such risk. The design also splits one run
+across two stores that must agree (a payload blob without its rows, or rows without their blob, is a
+two-store atomicity problem the manifest does not obviously cover). **Proposed: the immutable per-run
+bundle is the record, and everything columnar is a rebuildable index over it.** Per run, objects
+under a unique key, never rewritten: `facts/` (everything except `content` and `headers`) and
+`payloads/` (those two; the only prefix with a lifecycle rule). Point-in-time is two GETs and no join;
+the compactor can be wrong and rerun; a schema change is a rebuild rather than a migration, so §8.6's
+format-version question mostly dissolves; and F10 shrinks to R7. Cost: the 22 KB core exists twice,
+3.7 GB at five years, about five cents a month. "The log is the truth, tables are views" is the rule
+the ledger already follows.
+
+**R7. F10 over-scopes the contention.** The wiki's recommended shape is *"One job after every shard,
+with `contents: write`: fold and push."* Eighteen lanes do not write concurrently: each uploads a
+fragment artifact and **one job folds**. The rebase retry exists for concurrent *workflow runs*. The
+same fan-in carries over: one ingest job per workflow run, which a CI `concurrency:` group serialises.
+With R6's unique immutable keys, writers never touch shared state, and the manifest has exactly one
+writer, the scheduled compactor. The conditional write becomes insurance rather than the protocol
+(and it has to be, because **Backblaze B2 has no conditional write at all**: its Put Object documents no conditional header and `If-None-Match: *` returns 501, while GCS spells its own as `x-goog-if-generation-match`, so "one S3 code path" does not cover the manifest swap even among the S3-compatible four. S3 since 2024-08-20 and 2024-11-25, R2 since 2022, Azure and MinIO all have it; vendor docs read 2026-09-21). What F10 omits and any version of this needs: **idempotent ingest** (a retried
+job re-uploading the same run; `If-None-Match: *` on the run key) and an **orphan sweep** for objects
+uploaded before a failed publish.
+
+**R8. The socket rule moves the hardest logic into the least tested place.** "Kronikol writes files;
+the workflow moves them" puts the commit protocol (conditional PUT, retry, orphan sweep, compaction
+upload) into per-provider shell, per CI system, in each consumer's repository: §6.1's "45 lines of
+worktree bash" again, for four clouds and two forges. §14 says "no HTTP client … in the library or
+the tool", and that is true of both. But `Kronikol.Extensions.Otlp/OtlpExporter.cs` is, in its own
+words, "a standalone `HttpClient` POSTing to a URL": an opt-in extension package talking to an
+endpoint the customer configures with credentials the customer supplies. A `Kronikol.Extensions.Store.*`
+family on the ClickHouse-pairing pattern (adapter interface in core, one package per provider) would
+keep the protocol in tested .NET and leave the core and the tool socket-free. **This is the real
+first question of M2, ahead of the manifest**, and §8.6's testing question is downstream of it: under
+"the workflow moves them" Kronikol's code only ever touches a directory and needs no Azurite or MinIO
+at all, while the shell recipes need exactly that.
+
+**R9. DuckDB is named in three places and costed in none.** Measured on the NuGet flat container,
+2026-09-21: `DuckDB.NET.Bindings.Full` 1.5.5 is **109,800,495 bytes**, against `Kronikol.Tool` 3.22.1
+at 7,295,050 and `Parquet.Net` 6.1.0 at 634,432. Embedding DuckDB would grow the tool fifteenfold for
+a 4.5 GB store; the managed library reads and writes Parquet, with projection and statistics, for
+nothing. **In the browser it is worse, measured 2026-09-21 against `@duckdb/duckdb-wasm` 1.33.1-dev57.0 in Chrome 153:** `duckdb-eh.wasm` is 35,913,747 bytes, 6,163,011 brotli (jsDelivr serves 7,124,338), plus a 773 KB worker; **Parquet is not in the core**, so a further 522 KB is fetched at run time from `extensions.duckdb.org`, a third origin, and blocking it crashes the engine; it needs a Web Worker (its range reads are synchronous XHR), `'wasm-unsafe-eval'`, `worker-src blob:` and a `connect-src` naming that third origin; **its default configuration GETs the whole file with no `Range`** (ranges need `forceFullHTTPReads: false` and `allowFullHTTPReads: false`, after which a `count(*)` over a 515 MB file cost 12 KB); it opens with a `HEAD` carrying `Range: bytes=0-` and demands a 206, which Azure Blob answers with 200; and **it cannot send an `Authorization` header at all** (duckdb-wasm #1967, open; only S3 SigV4 settings exist). Set that last one beside R19: on Azure, where nothing can front Blob without compute, a bearer token is the *only* route to the data, and DuckDB-WASM cannot carry one. In the page it collides with the `DASHBOARD_PLAN.md` rules this plan says it
+adopts unchanged (one `index.html`, hash CSP, libraries inlined, nothing fetched but data). That plan
+weighed 161 KB of Plot and D3 with care; this one adds a SQL engine in a line. **Proposed: the page
+never queries.** The compactor is a build step, so let it emit query-shaped files (the monthly view,
+and one small file per scenario: 9,190 rows over five years is a few hundred KB) that the page fetches
+whole. That keeps "no verdict computed in JavaScript" honest (SQL aggregation in the page is the same
+erosion under another name), works with any auth scheme because the page sets its own headers, needs
+no range requests, and keeps today's E2E approach. DuckDB stays what it should be: a tool a *customer*
+may point at an open format in their own bucket, which is a feature to advertise and not a dependency
+to ship.
+
+### 13.2 What is missing
+
+**R4. `FromLog` drops more than three things.** `RequestResponseLog.cs:10-116` against the 29 members
+of `InteractionRecord` and `FromLog` (`:164-193`). Beyond F7's `PlantUml`, `DurationMs` and the marker
+fields, the record has **no member at all** for: **`Error`** (3.18.0's failed-send message chain,
+which is evidence, and what a reader opening a failed run came for); **`AttributionSource`** and
+**`ExpiredFromTestId`** (3.17.0 to 3.20.0 provenance: how the call got its scenario, background bucket
+included); **`FocusFields`** and **`NoteOnRight`** (author-supplied rendering intent, not derivable);
+and **`SetupVariant`** / **`ActionVariant`** (phase verbosity computed by the capturing extension,
+not re-derivable at replay without it). §9 says "the risk is a fourth found later"; it took one read
+of two files. #93 and #94 undercount. M0 should start from a mechanical member-by-member diff of the
+two types, **held by a test**, so a new `RequestResponseLog` member cannot ship without a decision
+about the record.
+
+**R10. Nobody renders the point-in-time report.** §3.1: *"'Any point in time' is `kronikol ingest`
+over the rows for one run."* `kronikol ingest` is a .NET tool; §3.4's page is static and there is no
+server. The plan never says who runs it, where, or what the reader clicks. Cheapest first: keep the
+rendered report for the payload window as a third per-run object and link it (zero compute, and it is
+what `DASHBOARD_PLAN.md` §6 already calls "the hand-off to the report artifact", made durable); a CLI
+verb the reader runs against a downloaded bundle; a dispatched CI job. §11 Q3 asks *which renderer*;
+the prior question is *which process*.
+
+**R11. Attachments are files.** `TestRunRecord.cs:22-24,144-146`: an attachment is "a screenshot, a
+trace archive", carried as a path and copied into the report directory. M0's acceptance says "every …
+attachment identical"; every byte in §2 comes from `TestRunReport.json`, which holds the reference
+and not the file. A Playwright suite (`Kronikol.Playwright` ships) with a screenshot per step or a
+trace archive per failure is megabytes per scenario. **This is the one realistic way F1's "no scale
+makes storage the constraint" is false**, and the layout, the lifecycle rules and §5.4 never mention
+it. Screenshots of a UI are also the likeliest place for personal data in the whole store.
+
+**R12. The re-templatable core is a bet, and most of it is payload.** Three things, read from
+`InteractionShape.cs` as of 3.22.2. (a) §4.2's "exactly" is incomplete even for today's rules:
+`Calls` also reads `Type`, `TrackingIgnore` and marker-ness to decide what is a call, needs a scenario
+key to group by, and needs record order for `shapeOrdered`. None is in the measured 22,069; all are
+cheap. (b) The core exists for **future** rules and holds only what **today's** read. A v5 that tells
+GraphQL operations apart (every call is `POST /graphql`; the operation is in the body), or gRPC, SOAP
+or message types by a header, cannot be backfilled past the payload window. The list is cheap to
+widen now and impossible to widen later. (c) **`stmtHead` is payload content in the keep-for-ever
+layer**: up to 2,000 characters of every SQL, Cosmos or Mongo statement, literals included, 64% of
+the core. §5.4 flags a token in a URL and misses `WHERE email = 'a@b.c'`, which outlives the payload
+expiry §5.4 offers as the exposure bound. (b) wants more kept and (c) wants less. That is the real
+trade, and it deserves a question rather than a default.
+
+**R13. What survives day 91 is unknown.** §3.3 defines the stable layer as URI, method, service,
+caller, status, category, statement head, *"the scenario roster, results and durations"*, "about
+22 KB". But 22,069 is `s7_retemplatable`'s eight columns and nothing else: no steps (11.5% of the
+compact report), no tests stream, no timestamps, no per-call durations, no errors. "Payloads 116 KB"
+is the remainder by subtraction, so it silently includes step text, stack traces and both W3C id
+columns. Whether a two-year-old run still shows its steps, its error and how long each call took is a
+product decision the byte tables currently make by accident. Per-call latency over years, the obvious
+trend after pass and fail, needs a duration column the stable layer does not have.
+
+**R14. No branch dimension.** The word does not occur in §3. Runs come from `main` and from pull
+requests, the analyzer is per stream, and retention by branch class (main for years, a PR branch for
+weeks) is a larger and more natural lever than retention by layer. Lifecycle rules select objects by key prefix: S3 also by tag and size, R2 by prefix only (1,000 rules), B2 by `fileNamePrefix` only (100 rules), and B2 rejects `x-amz-tagging`, so **the key prefix is the only portable lever** (vendor docs, read 2026-09-21). So the class has to
+be in the object key from the first write, and keys are immutable: a day-one layout decision of the
+same kind as F10.
+
+**R15. The recommended format was never measured.** `measure.py:29-34, 222-244`: every figure is
+zstd-19 with long-distance matching and a 2 GB window over JSON text. "Columnar" in F6 is
+newline-joined JSON strings per key, one stream each. It is not Parquet, which compresses per column
+chunk per page, typically at level 3 with no long window, plus a footer of several KB per file that
+matters at 22 KB a run before compaction. **The "79 MB verdict layer" is the ledger** (`s9_ledger`):
+raw points, including the fingerprints M3 removes, compressed as one 4.7 MB stream, at 2.3 bytes per
+scenario-execution because `results` is one character per scenario. M1's rows (one per
+scenario-execution with evidence text, 32.6 million over five years) are a different object and
+nobody has sized them. None of this threatens F1. It does mean §3.4's per-layer sizes and §3.5's
+"79 MB, fetch it whole" are estimates carrying RUN labels. F2 has the same shape: `s5_reruns`
+regenerates *every* id and draws every duration from a uniform distribution, so "the ids defeat
+dedup" is partly the simulation's premise. §10.4 already lists the real check; F2 should read
+SIMULATED until it is run. (Smaller, same file: `STATEMENT_HINTS` is a substring list that includes
+`storage` and `queue`, which `DependencyCategories.StatementShaped` does not, and omits Redis,
+DynamoDB, Elasticsearch, Oracle, Spanner, Bigtable and AtlasDataApi, which it does. 14,172 is
+approximate.)
+
+### 13.3 The order of work
+
+**R16. Three products are being built as one.** The owner's ask has two halves and the plan adds a
+third.
+
+- **(a) Trends over years, at verdict level.** `DASHBOARD_PLAN.md`'s window exists because the view is
+  *inlined* (its §7: 1.2 MB gzipped at window 200), not because history is big: 337 B gzipped a run
+  is about 11 MB a year. Monthly view files on the existing history branch, where `merge=union`
+  already works, with the page inlining the recent window and fetching older months whole, is years
+  of trends with **no bucket, no credential and no new atomicity problem**. R18 measured the host.
+- **(b) Point-in-time evidence.** A dumb blob store holding what CI already emits, keyed by run id and
+  linked from the run line, which already carries `url`. Measured 2026-09-21 on the same lane: the
+  HTML report is 3,898,460 B, **981,768 gzipped**; with §2.1's 604,152 for the JSON that is 1.59 MB a
+  run, 13 GB steady at 90 days or 52 GB per year kept: about $0.80 a month on R2 for each year of
+  history, and nothing at all inside a 90-day window on its free tier if only the HTML is kept. **No
+  projection, no Parquet, no compactor, no manifest.** Re-fingerprinting (F5) can read those reports
+  too, for as long as they are kept: `measure.py` derives the core from exactly that file.
+- **(c) Call-level analytics and a compact facts layer.** The only part that needs M0's projection as
+  a gate, a columnar index and compaction, and the only part with no demonstrated demand.
+
+The slices build (c)'s machinery first (M0 to M3) and show a reader something at M4. Inverted, each
+step ships something visible, the first two are small, and §6.1's own warning ("one dogfood consumer
+is the whole evidence base") is applied to the store and not only to SSO. M0's projection stays worth
+doing early for its own reasons (#93, #94, R4, and `PLATFORM_FOUNDATIONS_PLAN.md` F2); it stops being
+the gate for time travel.
+
+**And the document is four documents.** A storage investigation (§2 to §4), a positioning memo (§6),
+an auth architecture (§6.2) and a forge-portability and onboarding audit (§6.1, §6.3). By the plan's
+own argument the highest-value near-term work (#72's action, the Azure Pipelines recipe, #93/#94,
+#91) sits *outside* its slices. Splitting it lets each be green-lit on its own.
+
+### 13.4 Facts corrected or closed
+
+**R17. The 120 GB/month.** It appears once in §2.4 with no arithmetic, and is the whole 4.5 GB store
+read 27 times a month, against §3.5's "a trend query reads kilobytes" and "opened a few times a day by
+a handful of people". A 1.5 MB page loaded 20 times a day plus 50 payload drill-downs is about 1 GB a
+month. "Storage is at most 5% of the bill, the rest is egress" is an artefact of the 120.
+**And the Azure row is wrong on its own terms.** The S3 row subtracts a 100 GB free allowance and the
+Azure row does not, but Azure's bandwidth page reads "First 100 GB/Month: Free" and then $0.087 for
+the next 10 TB, "to all customers in all Azure regions" (read 2026-09-21). 120 GB is 20 × $0.087 =
+**$1.74, not ~$10**; §2.4's row is corrected in place. Recomputed at a few GB a month, all four
+providers come in under about $0.25 and price stops discriminating between them at all. That matters,
+because the table made Azure look five to ten times the others, and §6.3 says Azure is where the buyer
+is.
+
+**R18. Range requests, measured.** curl, 2026-09-21, against
+`raw.githubusercontent.com/lemonlion/BreakfastProvider/kronikol-history/history.jsonl`: `HEAD` is 200
+with `Accept-Ranges: bytes` and a `Content-Length`; `Range: bytes=0-99` is **206** with
+`Content-Range: bytes 0-99/4927833` and `Access-Control-Allow-Origin: *`; with `Accept-Encoding: gzip`
+the range indexes the *gzipped* representation (`/701228`), harmless in a browser because the Fetch
+standard appends `Accept-Encoding: identity` to a range request; **the CORS preflight is refused,
+403**, with no `Access-Control-Allow-Headers`. So ranges work only because a single byte range of the
+form `bytes=N-` or `bytes=N-M` is CORS-safelisted and sends no preflight (the Fetch standard and MDN,
+read 2026-09-21; per-browser behaviour not checked). A **suffix range** (`bytes=-N`, the natural way
+to read a Parquet footer) is not safelisted and would be refused, as would any request carrying
+another header. **But it was never
+load-bearing here**: this plan's store is the customer's bucket, where range and CORS are
+configuration, and 4.6 GB a year with expiring objects cannot live on a git branch anyway. The host
+matters only to R16 (a), which fetches whole files. §3.4's "unverified and load-bearing" paragraph
+and §11 Q1.2 can close.
+
+**R19. Azure's "free auth proxy" does not exist.** §6.3's table says *"The §6.2 auth proxy: free — App
+Service Auth and Static Web Apps ship it"*, and its reframe leans on that row. Microsoft's own
+documentation, read 2026-09-21: **Static Web Apps** holds 250 MB per environment on Free and 500 MB
+(2 GB in total) on Standard, and its "routing rules can only secure HTTP requests to routes that are
+served from Static Web Apps", so it cannot guard a separate storage account without an `/api`
+backend, which is compute with a 45-second request limit; **Blob static-website hosting** answers
+"Do static websites support Microsoft Entra ID? No", and does not support storage CORS either;
+**App Service Authentication** is middleware "on the same virtual machine as your application", so it
+guards blobs only if an app proxies every read. **There is no zero-compute Azure equivalent of
+Cloudflare Access in front of R2.** What does hold, and was verified in the same pass: a browser can
+read a private blob directly with an Entra token from MSAL.js (resource `https://storage.azure.com/`,
+`x-ms-version` 2017-11-09 or later, the Storage Blob Data Reader role, and a CORS rule allowing
+`authorization`, `x-ms-version` and `range`, which forces a preflight), and Azure Blob has no native
+S3 API. So the Azure route is §6.2's *federated* architecture, not its proxy: the page on Static Web
+Apps, the data read straight from Blob with a token in JavaScript. **§6.3's conclusion survives**
+(still the shortest path, still the easiest browser auth); **"zero tokens in JavaScript" does not**,
+and with R9 it rules DuckDB-WASM out of the Azure page. §6.3's table is corrected in place.
+
+**R20. No browser decompresses zstd, and every figure in §2 is zstd-19.** `DecompressionStream` takes
+gzip and deflate; Chrome 153 and Edge 153 throw a `TypeError` for `"zstd"` (measured), Firefox has it
+behind a preference, Safari not at all, and it is not in the WHATWG specification. `Content-Encoding:
+zstd` is a separate thing (Chrome 123, Firefox 126, Safari 26.3) and depends on the bucket serving
+object metadata as a header. So a page that opens a payload blob needs either `fzstd` (MIT, 8,394
+bytes minified, about 3.8 KB gzipped) inlined beside Plot, or gzip at rest, which the report's own
+`decompressGzipBase64` already reads: §2.1's 604,152 against 225,196, 2.7 times the bytes and still
+cents. Either is fine. Neither is in the plan, whose §3.4 stack goes from zstd objects to a page
+with nothing in between.
+
+**Small ones.** §8.6 lists MinIO among the candidate test fakes; `minio/minio` was archived in April
+2026 (last push 2026-04-24), which belongs in that decision. §2.4 gives the stable layer as 3.5 GB at five years and §3.4 as 3.7 (22,069 × 90.6 ×
+365 × 5 = 3.65); the tiered total is 4.7, not 4.5, by the same sum. `PLANS_STATUS.md` said "six open
+questions"; there were thirteen. §11 Q2 kept three sentences from before it was folded into §6.3.

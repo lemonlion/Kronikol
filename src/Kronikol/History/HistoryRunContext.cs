@@ -122,7 +122,10 @@ public sealed class HistoryRunContext
                     aliases = TryLoad(() => HistoryAliases.Load(HistoryAliases.PathBeside(path)), "alias file");
                     verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, new HistoryAnalysisOptions
                     {
-                        Window = options.HistoryWindow,
+                        // Held to the read's own floor: a window of 0 means "all" to the analysis, and since a
+                        // stream is read back on demand (#95) that would be every run it ever had, parsed at the
+                        // end of every test run.
+                        Window = Math.Max(options.HistoryWindow, 1),
                         MinRuns = options.HistoryMinRuns,
                         FlakyRate = options.HistoryFlakyRate,
                         SlowerBy = options.HistorySlowerBy,

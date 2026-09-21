@@ -4,6 +4,65 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.25.1] - 2026-09-21
+
+**Patch - a run is read against the runs recorded before it, in its own stream (#95).** The patch part
+moved because this is a defect in shipped behaviour and there is nothing new to call: the change is
+inside `HistoryAnalyzer`, `HistoryLedger` and the reader, and no public member moves. **Verdicts change
+where they were wrong**, and the three entries below say where.
+
+### Fixed
+
+- **A report that was not the newest run of its suite counted the later runs as its history.** The
+  analyzer excluded the current run by id and never cut the ledger at the run's own line. While a run
+  is being generated that is harmless, because its line is appended afterwards. `kronikol query
+  history`, `kronikol history gate`, `kronikol merge --history` and the `history:` line of
+  `query failures` read a report again later, and there the runs recorded since were counted as earlier
+  ones: a scenario that passed in run 3 read `fixed` from the failures of runs 4 and 5. **Measured on
+  BreakfastProvider's CI ledger, 448 runs: read again today, 265 of them had at least one verdict that
+  differed from what the run read when it ran, 2,413 scenario verdicts of 88,396.** With this release,
+  none.
+- **A report older than the window saw nothing but later runs.** The reader kept the last
+  `HistoryWindow` lines of a suite, so a run outside them was not in memory at all, and every run the
+  analyzer saw was later than it. Sixty runs and a window of fifty: run 5 read against runs 11 to 60.
+- **Pull request runs crowded the branch they target out of its own window.** The window was the
+  suite's last 50 lines whatever their branch, and the analysis then filtered to one stream. Since
+  3.13.0 a pull request build reads against its target, so where pull request runs outnumber the
+  target's, the target had few runs in the window or none, and its scenarios read as new. Ten runs of
+  `main` followed by sixty pull request runs: a new run of `main` saw 0 earlier runs. The window now
+  belongs to the stream: the last 50 runs *of that stream* before the run's own line.
+
+### How
+
+- The reader indexes every run line by id and by stream, which its peek was one member short of
+  already: `branch` is the sixth member of a run line and sits ahead of the arrays that are its bulk.
+  `HistoryLedger.PriorRuns` answers from that index. `HistoryLedger.Runs(suite)`, which
+  `kronikol history show` and the writer read, is still the last lines of the suite.
+- A line the window did not keep is parsed when an analysis asks for it, from the ledger read a second
+  time under the same lock budget, rather than every line being held in memory on every run. The
+  observable is `LinesParsedOnDemand`, pinned beside `LinesParsed`: **a test run reading its own stream
+  leaves it at 0**, and reading a stream back never parses more than the analysis window.
+- A ledger pruned or compacted between the read and the analysis is not trusted by position: each line
+  read again is checked against the id the index holds, and one that does not match is left out. A
+  ledger that has gone costs the lines the window let go and nothing else. Neither can fail a run.
+- A run whose line is in the ledger twice, which `merge=union` can leave, ends its history at the first.
+- `HistoryWindow = 0` reads one earlier run at the end of a test run, as it always has. The read was
+  already given a floor of one; the analysis is held to the same floor, because to the analysis 0 means
+  "all", and with a stream read back on demand that would have become every run the stream ever had,
+  parsed at the end of every run.
+
+### Notes
+
+- Replayed over the 448 runs of BreakfastProvider's CI ledger with `tools/history-replay`, which cuts
+  the file at each run's own line: byte-identical to 3.25.0. That ledger is one stream and no suite has
+  reached the window, so nothing a run read *when it ran* moves. What moves is what an older report
+  reads *today*.
+- A run the ledger does not hold reads against all of it, as before: that is every run while it is
+  being generated.
+- Found while reviewing `plans/HISTORY_DASHBOARD_STORE_PLAN.md` (§13 R2): rendering a past run from
+  stored history is exactly this read. `tools/history-replay` had worked around it (its header said the
+  analyzer "does not cut there itself") without it ever being filed.
+
 ## [3.25.0] - 2026-09-21
 
 **Minor - your own templating rules for the history fingerprint, and two ways to see that one is

@@ -43,7 +43,7 @@ public static partial class HistoryAnalyzer
     public static int Precedence(HistoryVerdictKind kind) => Array.IndexOf(PrecedenceOrder, kind);
 
     /// <summary>Analyses the current run against its stream in the ledger.</summary>
-    /// <param name="ledger">The ledger, read with at least the window.</param>
+    /// <param name="ledger">The ledger. Its read window does not bound the analysis: a stream's runs are read back as far as <see cref="HistoryAnalysisOptions.Window"/> asks.</param>
     /// <param name="roster">The current run's roster.</param>
     /// <param name="current">The current run.</param>
     /// <param name="options">Thresholds and streams.</param>
@@ -69,13 +69,10 @@ public static partial class HistoryAnalyzer
     private static HistoryVerdicts AnalyseStream(HistoryLedger ledger, HistoryRoster roster, HistoryRun current, HistoryAnalysisOptions options,
         string stream, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today, HistoryShapes? shapes)
     {
-        // The prior runs: the stream's, the current run excluded (it may already be appended), the last
-        // `window` of them, oldest first.
-        var prior = ledger.Runs(current.Suite)
-            .Where(r => string.Equals(r.Stream, stream, StringComparison.Ordinal) && !string.Equals(r.Id, current.Id, StringComparison.Ordinal))
-            .ToList();
-        if (options.Window > 0 && prior.Count > options.Window)
-            prior = prior.Skip(prior.Count - options.Window).ToList();
+        // The prior runs: the last `window` of the stream that were appended before the current run's own
+        // line, oldest first. The line may already be there, and on a later read of the same report there
+        // are runs after it: those are not its history (#95).
+        var prior = ledger.PriorRuns(current.Suite, stream, current.Id, options.Window).ToList();
 
         var priorRosters = prior.Select(r => ledger.Roster(r.RosterHash)).ToArray();
         var priorShapes = prior.Select(r => r.ShapesHash is { } hash ? ledger.Shapes(hash) : null).ToArray();

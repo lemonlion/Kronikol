@@ -544,9 +544,10 @@ public record ReportConfigurationOptions
     public string? HistoryRunId { get; set; }
 
     /// <summary>
-    /// How many earlier runs of the suite the verdicts look back over. Default: 50. The ledger is scanned
-    /// end to end whatever the window; only the windowed runs are parsed, so this bounds the cost of
-    /// reading history at the end of a run. <c>kronikol history prune</c> drops runs outside it.
+    /// How many earlier runs the verdicts look back over: runs of the suite in the branch stream the run is
+    /// read against, recorded before the run's own line. Default: 50. The ledger is scanned end to end
+    /// whatever the window; only the windowed runs are parsed, so this bounds the cost of reading history
+    /// at the end of a run. <c>kronikol history prune</c> drops runs outside it.
     /// </summary>
     public int HistoryWindow { get; set; } = 50;
 
