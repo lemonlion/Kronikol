@@ -1,0 +1,41 @@
+@startuml
+!pragma teoz true
+skinparam noteBackgroundColor #FEFFDD
+skinparam noteBorderColor #999999
+<style>
+ .eventNote { FontColor #101010
+     FontSize 11
+     RoundCorner 10
+ }
+ .assertionNote { FontColor #101010
+     FontSize 11
+     RoundCorner 5
+ }
+</style>
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+entity "Breakfast Provider" as breakfastProvider
+database "CosmosDB" as cosmosDB
+queue "ServiceBus" as bus
+
+hnote across #2E3440:<color:#ECEFF4>StepBarProbe
+caller -[#438DD5]> breakfastProvider: GetBreakfast
+note right
+<color:#5A5A5A>HeaderProbe
+NoteBodyProbe
+end note
+breakfastProvider -[#E74C3C]> cosmosDB: query
+note right
+NoteBodyTwo
+end note
+breakfastProvider -[#9B59B6]> bus: publish
+note<<eventNote>> right #cfecf7
+EventBodyProbe
+end note
+hnote across <<assertionNote>> #d4edda
+✓ AssertProbe
+end note
+breakfastProvider --> caller: [[https://example.com/x LinkProbe]]
+@enduml

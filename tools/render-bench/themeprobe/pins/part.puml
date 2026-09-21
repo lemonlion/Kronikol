@@ -1,0 +1,11 @@
+@startuml
+!pragma teoz true
+actor "Caller" as caller
+participant "svc" as svc
+
+partition #F6F6F6 Setup
+  caller -> svc : POST
+end
+
+caller -> svc : GO
+@enduml

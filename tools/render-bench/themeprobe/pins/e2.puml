@@ -1,0 +1,31 @@
+@startuml
+!theme hacker
+<style>
+ .assertionNote {
+     FontColor #101010
+     FontSize 11
+     RoundCorner 5
+ }
+ .eventNote {
+     FontColor #101010
+     FontSize 11
+     RoundCorner 10
+ }
+</style>
+!pragma teoz true
+actor a
+entity b
+a -> b: x
+note<<eventNote>> right #cfecf7
+event body
+end note
+hnote across <<assertionNote>> #d4edda
+OK assert
+end note
+a -> b: <color:#2F4F4F>hex creole test
+note right
+<color:#556B2F>dark olive header
+<color:gray>legacy gray
+end note
+hnote across #2E3440:<color:#ECEFF4>Test T1 parameterised
+@enduml

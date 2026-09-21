@@ -1,0 +1,17 @@
+@startuml
+!pragma teoz true
+skinparam wrapWidth 800
+autonumber 1
+actor "Caller" as caller
+entity "Breakfast Provider" as breakfastProvider
+queue "ServiceBus" as bus
+caller -> breakfastProvider: GetBreakfast
+note right
+NoteBodyProbe
+end note
+breakfastProvider -> bus: publish
+note right
+NoteBodyTwo
+end note
+breakfastProvider --> caller: [[https://example.com/x LinkProbe]]
+@enduml

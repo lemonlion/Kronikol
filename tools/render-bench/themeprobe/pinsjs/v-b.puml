@@ -1,0 +1,10 @@
+@startuml
+skinparam backgroundColor #1E1E1E
+!pragma teoz true
+actor "Caller" as caller
+entity "BP" as bp
+caller -> bp: GET
+note right
+n
+end note
+@enduml

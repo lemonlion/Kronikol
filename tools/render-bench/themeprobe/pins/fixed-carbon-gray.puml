@@ -1,0 +1,34 @@
+@startuml
+!theme carbon-gray
+skinparam backgroundColor #161616
+skinparam noteBackgroundColor #FEFFDD
+!pragma teoz true
+<style>
+ .eventNote {
+     FontSize 11
+     RoundCorner 10
+ }
+</style>
+skinparam wrapWidth 800
+autonumber 1
+actor "Caller" as caller
+entity "BP" as bp
+database "DB" as db
+queue "Q" as q
+caller -[#438DD5]> bp: GET /breakfast
+note right
+<color:gray>[Full path]
+{"id":1}
+end note
+bp -[#E74C3C]> db: query
+note right
+some payload
+end note
+bp -[#9B59B6]> q: publish
+note<<eventNote>> right #cfecf7
+event body
+end note
+hnote across <<assertionNote>> #d4edda
+OK assert
+end note
+@enduml

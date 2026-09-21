@@ -1,0 +1,474 @@
+From 0c3fab81ea78df636921454533e05ebb98f6563f Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Mon, 31 Aug 2026 11:18:21 +0100
+Subject: [PATCH 1/4] =?UTF-8?q?=E2=9C=85=20RED:=20browser=20background=20p?=
+ =?UTF-8?q?arity=20checks,=20failing=20against=20the=20current=20engine?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The browser (TeaVM) engine never paints the diagram background. The Java build
+honours the merged root.document BackGroundColor, which is where both skinparam
+backgroundColor and a theme's background land, by writing a background style on
+the svg element plus a rectangle covering the whole drawing. The browser build
+emits neither, so white-on-blue themes like amiga render white text on the host
+page's own background.
+
+check-background.js pins the whole contract: skinparam backgroundColor, the
+<style> document form and two themes must paint (style plus full-viewBox rect,
+asserted against the viewBox dimensions), while the deliberate skips must keep
+painting nothing: the white default, transparent, and the dark mode control.
+
+Against the current engine the four painting checks fail and the four skip and
+render checks pass:
+
+  FAIL  skinparam backgroundColor paints the background
+          expected background #0B58A8, got style=null rect=null
+  FAIL  <style> document BackGroundColor paints the background
+  FAIL  !theme amiga paints its blue background
+  FAIL  !theme blueprint paints its background
+
+The fix follows in the next commit.
+---
+ browser-test/check-background.js | 157 +++++++++++++++++++++++++++++++
+ 1 file changed, 157 insertions(+)
+ create mode 100644 browser-test/check-background.js
+
+diff --git a/browser-test/check-background.js b/browser-test/check-background.js
+new file mode 100644
+index 0000000..550e064
+--- /dev/null
++++ b/browser-test/check-background.js
+@@ -0,0 +1,157 @@
++'use strict';
++// Functional check that the diagram background is painted in the PlantUML browser (TeaVM)
++// engine, the way the Java build paints it.
++//
++// usage: node check-background.js target=<dir-or-js>
++//   target   a directory containing plantuml.js (viz-global.js and themes.js are served from
++//            there too when present), or a path to the engine .js file itself
++//
++// The Java build honours the merged root.document BackGroundColor (which is where both
++// skinparam backgroundColor and a theme's background land) by writing a background style on
++// the svg element plus a rectangle covering the whole drawing. These checks assert the same
++// contract on the browser engine, including the deliberate skips: null, transparent, pure
++// black and pure white paint nothing (see SvgGraphics.paintBackcolor and the
++// SvgGraphicsTeaVM constructor). Every check runs; the exit code is non-zero if any failed.
++const path = require('path'), http = require('http'), fs = require('fs');
++const pw = require(process.env.BENCH_PW || 'playwright');
++
++let dir = null, file = 'plantuml.js';
++for (let i = 2; i < process.argv.length; i++) {
++  const m = process.argv[i].match(/^target=(.+)$/);
++  if (!m) { console.error('bad arg: ' + process.argv[i]); process.exit(2); }
++  dir = m[1];
++  if (dir.endsWith('.js')) { file = path.basename(dir); dir = path.dirname(dir); }
++}
++if (!dir) { console.error('usage: node check-background.js target=<dir-or-js>'); process.exit(2); }
++dir = path.resolve(dir);
++
++const pageHtml = `<!doctype html><html><head></head><body><div id="out"></div>
++${fs.existsSync(path.join(dir, 'viz-global.js')) ? '<script src="/viz-global.js"></script>' : ''}
++<script type="module">
++import {render} from '/${file}';
++window.__render=(lines,id,opts)=>render(lines,id,Object.assign({maxSvgSize:98304},opts||{}));
++window.__ready=1;
++</script></body></html>`;
++
++const server = http.createServer((req, res) => {
++  const u = decodeURIComponent(req.url.split('?')[0]);
++  if (u === '/index.html') { res.setHeader('content-type', 'text/html'); return res.end(pageHtml); }
++  const p = path.join(dir, u);
++  if (p.startsWith(dir) && fs.existsSync(p) && fs.statSync(p).isFile()) {
++    res.setHeader('content-type', 'application/javascript');
++    res.setHeader('cache-control', 'no-store');
++    return fs.createReadStream(p).pipe(res);
++  }
++  res.statusCode = 404; res.end();
++});
++
++const isErrorImage = svg => svg.includes('#33FF02') && svg.includes('#FF0000');
++
++// The background contract, as one predicate: a rect at 0,0 covering the whole viewBox in
++// the expected fill, plus a background-color style on the svg element itself.
++function backgroundOf(svg) {
++  const vb = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
++  if (!vb) return { error: 'no viewBox' };
++  const w = parseFloat(vb[1]), h = parseFloat(vb[2]);
++  const style = (svg.match(/<svg[^>]*style="([^"]*)"/) || [])[1] || '';
++  const styleColor = (style.match(/background-color:\s*([^;"]+)/) || [])[1] || null;
++  // the background rect is the one at the origin covering the full viewBox
++  let rectColor = null;
++  const rectRe = /<rect ([^>]*)>/g;
++  for (let m; (m = rectRe.exec(svg));) {
++    const a = m[1];
++    const num = k => parseFloat((a.match(new RegExp(k + '="([\\d.]+)"')) || [])[1]);
++    if (num('x') === 0 && num('y') === 0 && Math.abs(num('width') - w) < 1 && Math.abs(num('height') - h) < 1) {
++      rectColor = (a.match(/fill="([^"]+)"/) || [])[1] || null;
++      break;
++    }
++  }
++  return { styleColor, rectColor };
++}
++
++let failures = 0;
++function check(label, ok, detail) {
++  console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${ok || !detail ? '' : '\n        ' + detail}`);
++  if (!ok) failures++;
++}
++function expectBackground(label, svg, color) {
++  const bg = backgroundOf(svg);
++  check(label, bg.styleColor === color && bg.rectColor === color,
++    `expected background ${color}, got style=${bg.styleColor} rect=${bg.rectColor}`);
++}
++function expectNoBackground(label, svg) {
++  const bg = backgroundOf(svg);
++  check(label, !bg.styleColor && !bg.rectColor,
++    `expected no background, got style=${bg.styleColor} rect=${bg.rectColor}`);
++}
++
++const body = ['Alice -> Bob: hello', 'Bob --> Alice: hi'];
++const diagram = (...head) => ['@startuml', ...head, ...body, '@enduml'];
++
++(async () => {
++  await new Promise(r => server.listen(0, '127.0.0.1', r));
++  const port = server.address().port;
++  const browser = await pw.chromium.launch({ headless: true });
++  const page = await browser.newPage();
++  await page.goto(`http://127.0.0.1:${port}/index.html`, { waitUntil: 'load' });
++  await page.waitForFunction('window.__ready && window.__render', null, { timeout: 120000 });
++
++  const render = async (lines, opts) => {
++    const r = await page.evaluate(async ({ lines, opts }) => {
++      const out = document.getElementById('out'); out.innerHTML = '';
++      const done = new Promise(res => {
++        const mo = new MutationObserver(() => {
++          if (out.querySelector('svg') || out.textContent) { mo.disconnect(); res(); }
++        });
++        mo.observe(out, { childList: true, subtree: true });
++      });
++      let err = null;
++      try { window.__render(lines, 'out', opts); } catch (e) { err = String((e && e.message) || e); }
++      if (!err) await Promise.race([done, new Promise(r => setTimeout(r, 60000))]);
++      const svg = out.querySelector('svg');
++      return { err, svg: svg ? svg.outerHTML : null };
++    }, { lines, opts: opts || {} });
++    if (r.err || !r.svg) throw new Error('render produced no svg: ' + r.err);
++    return r.svg;
++  };
++
++  console.log(`engine : ${path.join(dir, file)}\n`);
++
++  // 1. The default background is white, which both drivers deliberately skip, so the
++  //    unthemed diagram must stay exactly as it is today: no background at all.
++  const control = await render(diagram());
++  check('control renders', !isErrorImage(control));
++  expectNoBackground('control paints no background (white is skipped)', control);
++
++  // 2. skinparam backgroundColor is the plainest way to set the document background.
++  expectBackground('skinparam backgroundColor paints the background',
++    await render(diagram('skinparam backgroundColor #0B58A8')), '#0B58A8');
++
++  // 3. The style form of the same setting.
++  expectBackground('<style> document BackGroundColor paints the background',
++    await render(diagram('<style>document{BackGroundColor #114411}</style>')), '#114411');
++
++  // 4. Themes set the document background the same way; amiga is white on blue and is
++  //    unreadable without it.
++  expectBackground('!theme amiga paints its blue background',
++    await render(diagram('!theme amiga')), '#0B58A8');
++
++  // 5. Another dark theme, to show it is not a single hard-coded colour.
++  expectBackground('!theme blueprint paints its background',
++    await render(diagram('!theme blueprint')), '#003153');
++
++  // 6. transparent must keep painting nothing: the host page shows through.
++  expectNoBackground('skinparam backgroundColor transparent paints nothing',
++    await render(diagram('skinparam backgroundColor transparent')));
++
++  // 7. Dark mode maps the default white background away; it must not start painting one.
++  const dark = await render(diagram(), { dark: true });
++  check('dark mode control renders', !isErrorImage(dark));
++  expectNoBackground('dark mode control paints no background', dark);
++
++  await browser.close();
++  server.close();
++
++  console.log(`\n${failures === 0 ? 'all checks passed' : failures + ' check(s) failed'}`);
++  process.exit(failures === 0 ? 0 : 1);
++})().catch(e => { console.error(e); process.exit(1); });
+-- 
+2.53.0.windows.3
+
+
+From 3cda208f30cc6a8715bc10619ace4a668e0154e9 Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Mon, 31 Aug 2026 11:24:20 +0100
+Subject: [PATCH 2/4] =?UTF-8?q?=F0=9F=8D=B5=20GREEN:=20paint=20the=20docum?=
+ =?UTF-8?q?ent=20background=20in=20the=20browser=20build?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Everything downstream already existed: SvgGraphicsTeaVM takes a background
+color and paints a style plus a full viewBox rectangle, mirroring the skip
+rules of SvgGraphics.paintBackcolor. It just never received the color, because
+buildSvg only asked the TextBlock, and the document background set by
+skinparam backgroundColor or by a theme never surfaces there.
+
+Read it from the merged root.document style via calculateBackColor(), exactly
+where ImageBuilder.styled() gets it for the Java build.
+
+The diversion only happens for a background that should actually be painted,
+judged on the plain (light mapped) color so the decision is mode independent:
+transparent and the skin default of white keep painting nothing, in dark mode
+too, where the skin pairs white with a dark value but the page has always
+supplied its own backdrop. Falling through also keeps the historic WHITE and
+BLACK fallback as the contrast reference for automatic colors. Two earlier
+shapes of this change were caught by the RED checks: diverting
+unconditionally, and judging the mode mapped color, both of which made the
+dark mode control start painting a background it never painted before.
+
+check-background.js is now fully green, check-themes.js stays green, and the
+22 corpus diagrams (which use the default background) are byte-identical to
+the previous build.
+---
+ .../teavm/browser/PlantUMLBrowser.java        | 22 +++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/src/main/java/net/sourceforge/plantuml/teavm/browser/PlantUMLBrowser.java b/src/main/java/net/sourceforge/plantuml/teavm/browser/PlantUMLBrowser.java
+index 8668bff..8a54007 100644
+--- a/src/main/java/net/sourceforge/plantuml/teavm/browser/PlantUMLBrowser.java
++++ b/src/main/java/net/sourceforge/plantuml/teavm/browser/PlantUMLBrowser.java
+@@ -440,6 +440,28 @@ public class PlantUMLBrowser {
+ 		TextBlock tb = ugDiagram.getTextBlock(0, fileFormat);
+ 
+ 		HColor tbBackcolor = tb.getBackcolor();
++		if (tbBackcolor == null && diagram instanceof TitledDiagram) {
++			// The document background (where skinparam backgroundColor and a theme
++			// background land) does not surface on the TextBlock; read it from the
++			// merged root.document style, exactly like ImageBuilder.styled() does
++			// for the Java build.
++			//
++			// Only divert for a background that should actually be painted.
++			// The color is judged in its plain (light mapped) form so the decision
++			// is the same in both modes: transparent never paints, and the skin
++			// default of white must keep painting nothing, in dark mode too, where
++			// the skin pairs white with a dark value but the page has always
++			// supplied its own backdrop. Falling through also keeps the historic
++			// WHITE/BLACK fallback below as the contrast reference for automatic
++			// colors.
++			final HColor documentBackground = ((TitledDiagram) diagram).calculateBackColor();
++			if (documentBackground != null) {
++				final String plainColor = documentBackground.toSvg(ColorMapper.TEAVM_LIGHT);
++				if ("#00000000".equals(plainColor) == false && "#FFFFFF".equals(plainColor) == false)
++					tbBackcolor = documentBackground;
++			}
++		}
++
+ 		final SvgGraphicsTeaVM svg;
+ 
+ 		if (tbBackcolor == null) {
+-- 
+2.53.0.windows.3
+
+
+From ad1207321b5b19291e0bbb14bfe3ed9b05c58e33 Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Mon, 31 Aug 2026 11:26:50 +0100
+Subject: [PATCH 3/4] =?UTF-8?q?=E2=99=BB=EF=B8=8F=20REFACTOR:=20extract=20?=
+ =?UTF-8?q?getPaintableDocumentBackground,=20run=20check-background=20in?=
+ =?UTF-8?q?=20CI?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+No behaviour change: the inline resolution in buildSvg becomes a named method
+whose javadoc carries the reasoning (where the document background comes from,
+why the color is judged in its plain form, why transparent and the default
+white return null). check-background.js joins check-themes.js in the
+browser-test workflow and README.
+
+Verified unchanged: gradlew test green, check-background 9 of 9,
+check-themes 12 of 12 on the rebuilt engine.
+---
+ .github/workflows/browser-test.yml            |  3 ++
+ browser-test/README.md                        |  8 +++
+ .../teavm/browser/PlantUMLBrowser.java        | 51 +++++++++++--------
+ 3 files changed, 41 insertions(+), 21 deletions(-)
+
+diff --git a/.github/workflows/browser-test.yml b/.github/workflows/browser-test.yml
+index a3874f5..be26ebe 100644
+--- a/.github/workflows/browser-test.yml
++++ b/.github/workflows/browser-test.yml
+@@ -66,3 +66,6 @@ jobs:
+ 
+       - name: Check themes
+         run: node browser-test/check-themes.js target=plantuml-mit/build/npm-plantuml
++
++      - name: Check background
++        run: node browser-test/check-background.js target=plantuml-mit/build/npm-plantuml
+diff --git a/browser-test/README.md b/browser-test/README.md
+index 33ac5ce..5d6dc33 100644
+--- a/browser-test/README.md
++++ b/browser-test/README.md
+@@ -31,6 +31,14 @@ There are no golden files. The expected rendering for a theme is derived from th
+ text, read out of the `themes.js` being tested, so adding or editing a theme needs no fixture
+ update.
+ 
++## check-background.js
++
++Checks that the document background is painted the way the Java build paints it: a
++background style on the svg element plus a rectangle covering the whole viewBox, for
++`skinparam backgroundColor`, the `<style>` document form, and themes. The deliberate
++skips are pinned too: transparent and the default white paint nothing, in dark mode as
++well. Run the same way with `node check-background.js target=...`.
++
+ ## Running it
+ 
+ ```
+diff --git a/src/main/java/net/sourceforge/plantuml/teavm/browser/PlantUMLBrowser.java b/src/main/java/net/sourceforge/plantuml/teavm/browser/PlantUMLBrowser.java
+index 8a54007..f04232e 100644
+--- a/src/main/java/net/sourceforge/plantuml/teavm/browser/PlantUMLBrowser.java
++++ b/src/main/java/net/sourceforge/plantuml/teavm/browser/PlantUMLBrowser.java
+@@ -440,27 +440,8 @@ public class PlantUMLBrowser {
+ 		TextBlock tb = ugDiagram.getTextBlock(0, fileFormat);
+ 
+ 		HColor tbBackcolor = tb.getBackcolor();
+-		if (tbBackcolor == null && diagram instanceof TitledDiagram) {
+-			// The document background (where skinparam backgroundColor and a theme
+-			// background land) does not surface on the TextBlock; read it from the
+-			// merged root.document style, exactly like ImageBuilder.styled() does
+-			// for the Java build.
+-			//
+-			// Only divert for a background that should actually be painted.
+-			// The color is judged in its plain (light mapped) form so the decision
+-			// is the same in both modes: transparent never paints, and the skin
+-			// default of white must keep painting nothing, in dark mode too, where
+-			// the skin pairs white with a dark value but the page has always
+-			// supplied its own backdrop. Falling through also keeps the historic
+-			// WHITE/BLACK fallback below as the contrast reference for automatic
+-			// colors.
+-			final HColor documentBackground = ((TitledDiagram) diagram).calculateBackColor();
+-			if (documentBackground != null) {
+-				final String plainColor = documentBackground.toSvg(ColorMapper.TEAVM_LIGHT);
+-				if ("#00000000".equals(plainColor) == false && "#FFFFFF".equals(plainColor) == false)
+-					tbBackcolor = documentBackground;
+-			}
+-		}
++		if (tbBackcolor == null && diagram instanceof TitledDiagram)
++			tbBackcolor = getPaintableDocumentBackground((TitledDiagram) diagram);
+ 
+ 		final SvgGraphicsTeaVM svg;
+ 
+@@ -500,6 +481,34 @@ public class PlantUMLBrowser {
+ 		return svg;
+ 	}
+ 
++	/**
++	 * Returns the document background of the diagram when it should be painted,
++	 * or null to keep the historic behaviour of painting nothing.
++	 * <p>
++	 * The document background is where both {@code skinparam backgroundColor} and
++	 * a theme background land; it never surfaces on the TextBlock, so it is read
++	 * from the merged root.document style, exactly like {@code ImageBuilder.styled()}
++	 * does for the Java build.
++	 * <p>
++	 * The color is judged in its plain (light mapped) form so the decision is the
++	 * same in both modes: transparent never paints, and the skin default of white
++	 * must keep painting nothing, in dark mode too, where the skin pairs white
++	 * with a dark value but the page has always supplied its own backdrop.
++	 * Returning null also keeps the historic WHITE/BLACK fallback in
++	 * {@code buildSvg} as the contrast reference for automatic colors.
++	 */
++	private static HColor getPaintableDocumentBackground(TitledDiagram diagram) {
++		final HColor documentBackground = diagram.calculateBackColor();
++		if (documentBackground == null)
++			return null;
++
++		final String plainColor = documentBackground.toSvg(ColorMapper.TEAVM_LIGHT);
++		if ("#00000000".equals(plainColor) || "#FFFFFF".equals(plainColor))
++			return null;
++
++		return documentBackground;
++	}
++
+ 	private static void doRender(String[] lines, String elementId, boolean darkMode, int maxSvgSize) {
+ 		final HTMLElement out = HTMLDocument.current().getElementById(elementId);
+ 		if (out == null)
+-- 
+2.53.0.windows.3
+
+
+From 6af72ab475813f3e44ed442d37cb35642b20a8ef Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Mon, 31 Aug 2026 11:39:15 +0100
+Subject: [PATCH 4/4] =?UTF-8?q?=E2=9C=85=20pin=20the=20background=20edge?=
+ =?UTF-8?q?=20cases:=20dark=20explicit,=20scale,=20other=20diagram=20types?=
+ =?UTF-8?q?,=20override,=20gradient?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Test only; a review pass probed the edges of the fix and found no bug, so these
+commit the probes as regression pins:
+
+- dark mode only suppresses the default background: an author's explicit color
+  has no paired dark value and paints unchanged;
+- scale 2 keeps the background rectangle covering the viewBox;
+- the fix lives in the shared buildSvg path: an activity diagram (own layouter)
+  and a class diagram (graphviz path) paint too;
+- a skinparam after !theme overrides the theme background, matching the Java
+  build (verified against the jar: background:#114411);
+- a gradient background degrades to its first color (HColorGradient resolves
+  to color1 under TeaVM) and must never degrade further into an error.
+
+check-background.js: 16 of 16.
+---
+ browser-test/check-background.js | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/browser-test/check-background.js b/browser-test/check-background.js
+index 550e064..fbe7bc2 100644
+--- a/browser-test/check-background.js
++++ b/browser-test/check-background.js
+@@ -149,6 +149,36 @@ const diagram = (...head) => ['@startuml', ...head, ...body, '@enduml'];
+   check('dark mode control renders', !isErrorImage(dark));
+   expectNoBackground('dark mode control paints no background', dark);
+ 
++  // 8. Dark mode only suppresses the default: an author's explicit color has no paired
++  //    dark value and must paint unchanged.
++  expectBackground('dark mode keeps an explicit background',
++    await render(diagram('skinparam backgroundColor #0B58A8'), { dark: true }), '#0B58A8');
++
++  // 9. scale changes the root size but not the viewBox convention; the background must
++  //    still cover the whole viewBox (expectBackground asserts exactly that).
++  expectBackground('scale 2 keeps the background covering the viewBox',
++    await render(diagram('scale 2', 'skinparam backgroundColor #0B58A8')), '#0B58A8');
++
++  // 10. The fix lives in the shared buildSvg path, not in the sequence renderer;
++  //     pin one diagram type with its own layouter and one that goes through graphviz.
++  expectBackground('activity diagram paints a theme background',
++    await render(['@startuml', '!theme amiga', 'start', ':do the thing;', 'stop', '@enduml']), '#0B58A8');
++  expectBackground('class diagram paints the background',
++    await render(['@startuml', 'skinparam backgroundColor #0B58A8', 'class Foo', 'class Bar', 'Foo -> Bar', '@enduml']),
++    '#0B58A8');
++
++  // 11. A skinparam after !theme overrides the theme background, like the Java build
++  //     (verified against the jar: background:#114411).
++  expectBackground('skinparam after !theme overrides the theme background',
++    await render(diagram('!theme amiga', 'skinparam backgroundColor #114411')), '#114411');
++
++  // 12. A gradient background degrades to its first color under TeaVM (HColorGradient
++  //     resolves to color1 there; the Java build renders a real gradient). Pinned so the
++  //     degradation stays a degradation and never becomes an error.
++  const gradient = await render(diagram('skinparam backgroundColor #0B58A8-#004488'));
++  check('gradient background renders', !isErrorImage(gradient));
++  expectBackground('gradient background degrades to its first color', gradient, '#0B58A8');
++
+   await browser.close();
+   server.close();
+ 
+-- 
+2.53.0.windows.3
+

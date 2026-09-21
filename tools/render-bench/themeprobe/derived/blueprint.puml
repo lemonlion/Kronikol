@@ -1,0 +1,205 @@
+@startuml
+''
+'' A white on blue theme based on the Blueprint reproduction process
+'' https://en.wikipedia.org/wiki/Blueprint
+''
+'' Original Author: Matthew Leather
+''
+
+!$THEME = "blueprint"
+
+!$BGCOLOR = "#003153"
+!$FGCOLOR = "#D9D3D0"
+
+!ifndef $FONT_NAME
+  !$FONT_NAME = "Verdana"
+!endif
+
+!ifndef $FONT_NAME_MONOSPACED
+  !$FONT_NAME_MONOSPACED = "Courier"
+!endif
+
+<style>
+  root {
+    BackgroundColor $BGCOLOR
+    FontColor $FGCOLOR
+    FontName $FONT_NAME
+    HyperLinkColor $FGCOLOR
+    LineColor $FGCOLOR
+    LineThickness 1
+    Margin 5
+  }
+  document {
+    caption {
+      LineThickness 0
+    }
+    footer {
+      LineThickness 0
+    }
+    header {
+      LineThickness 0
+    }
+    title {
+      FontSize 22
+      LineThickness 0
+    }
+  }
+  node {
+    MaximumWidth 300
+  }
+</style>
+
+skinparam ArrowLollipopColor $FGCOLOR
+skinparam BackgroundColor $BGCOLOR
+skinparam DefaultFontName $FONT_NAME
+skinparam DefaultMonospacedFontName $FONT_NAME_MONOSPACED
+skinparam LifelineStrategy nosolid
+skinparam SequenceLifeLineBorderColor $FGCOLOR
+skinparam Shadowing false
+skinparam UseBetaStyle true
+
+skinparam Activity {
+  BackgroundColor $BGCOLOR
+  BarColor $FGCOLOR
+  BorderColor $FGCOLOR
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Boundary {
+  FontColor $FGCOLOR
+}
+skinparam Box {
+  Padding 5
+}
+skinparam CircledCharacter {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME_MONOSPACED
+  Radius 9
+}
+skinparam Class {
+  BackgroundColor $BGCOLOR
+  BorderColor $FGCOLOR
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam ClassAttribute {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam ClassStereotype {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Footer {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Header {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Hyperlink {
+  Color $FGCOLOR
+}
+skinparam IconPackage {
+  Color $FGCOLOR
+  BackgroundColor $BGCOLOR
+}
+skinparam IconPrivate {
+  Color $FGCOLOR
+  BackgroundColor $BGCOLOR
+}
+skinparam IconProtected {
+  Color $FGCOLOR
+  BackgroundColor $BGCOLOR
+}
+skinparam IconPublic {
+  Color $FGCOLOR
+  BackgroundColor $BGCOLOR
+}
+skinparam Note {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Object {
+  BorderColor $FGCOLOR
+}
+skinparam Package {
+  BorderColor $FGCOLOR
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam State {
+  BackgroundColor $BGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeA {
+  BackgroundColor $BGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeC {
+  BackgroundColor $BGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeE {
+  BackgroundColor $BGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeI {
+  BackgroundColor $BGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeN {
+  BackgroundColor $BGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam UseCaseStereoType {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+
+
+!pragma teoz true
+skinparam noteBackgroundColor #003153
+skinparam noteBorderColor #D9D3D0
+skinparam noteFontColor #D9D3D0
+skinparam hyperlinkColor #D9D3D0
+<style>
+ .eventNote { BackgroundColor #0C4A61
+     FontColor #D9D3D0
+     FontSize 11
+     RoundCorner 10
+ }
+ .assertionNote { BackgroundColor #094A16
+     FontColor #D9D3D0
+     FontSize 11
+     RoundCorner 5
+ }
+</style>
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+entity "Breakfast Provider" as breakfastProvider
+database "CosmosDB" as cosmosDB
+queue "ServiceBus" as bus
+
+hnote across #003153:<color:#D9D3D0>StepBarProbe
+caller -[#438DD5]> breakfastProvider: GetBreakfast
+note right
+<color:#82929E>HeaderProbe
+NoteBodyProbe
+end note
+breakfastProvider -[#E74C3C]> cosmosDB: query
+note right
+NoteBodyTwo
+end note
+breakfastProvider -[#9B59B6]> bus: publish
+note<<eventNote>> right
+EventBodyProbe
+end note
+hnote across <<assertionNote>>
+✓ AssertProbe
+end note
+breakfastProvider --> caller: [[https://example.com/x LinkProbe]]
+@enduml

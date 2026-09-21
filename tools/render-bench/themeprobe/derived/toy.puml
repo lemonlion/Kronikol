@@ -1,0 +1,128 @@
+@startuml
+''
+'' The toy theme from future-architect/puml-themes
+'' 
+'' Original Author: [future-architect](https://github.com/future-architect)
+'' Source: [future-architect/puml-themes](https://github.com/future-architect/puml-themes/tree/master/themes)
+'' License: [Apache License, Version 2.0](https://github.com/future-architect/puml-themes/blob/master/LICENSE) 
+''
+skinparam BackgroundColor DDDDDD
+skinparam shadowing false
+skinparam RoundCorner 7
+skinparam ArrowColor 454645
+skinparam FontColor 454645
+skinparam SequenceLifeLineBorderColor 454645
+skinparam SequenceGroupHeaderFontColor 454645
+skinparam SequenceGroupFontColor 454645
+skinparam SequenceGroupBorderColor 454645
+skinparam SequenceGroupBorderThickness 1
+
+skinparam sequenceDivider {
+    BorderColor 454645
+    BorderThickness 1
+    FontColor 454645
+}
+
+skinparam participant {
+    BackgroundColor FF6F61
+    BorderColor 454645
+    FontColor White
+    BorderThickness 1.5
+}
+
+skinparam database {
+    BackgroundColor 98DDDE
+    BorderColor 454645
+    FontColor 454645
+}
+
+skinparam entity {
+    BackgroundColor FFDA29
+    BorderColor 454645
+    FontColor 454645
+}
+
+skinparam note {
+    BackgroundColor LightGreen
+    BorderColor 454645
+    FontColor 454645
+    BorderThickness 1
+}
+
+skinparam actor {
+    BackgroundColor 454645
+    BorderColor 454645
+    FontColor 454645
+}
+
+skinparam boundary {
+    BackgroundColor FFDA29
+    BorderColor 454645
+    FontColor 454645
+}
+
+skinparam control {
+    BackgroundColor FFDA29
+    BorderColor 454645
+    FontColor 454645
+}
+
+skinparam collections {
+    BackgroundColor FF6F61
+    BorderColor 454645
+    FontColor 454645
+    BorderThickness 1.5
+}
+
+skinparam queue {
+    BackgroundColor FF6F61
+    BorderColor 454645
+    FontColor FFF
+    BorderThickness 1.5
+}
+
+
+!pragma teoz true
+skinparam noteBackgroundColor #90EE90
+skinparam noteBorderColor #454645
+skinparam noteFontColor #454645
+skinparam hyperlinkColor #0000FF
+<style>
+ .eventNote { BackgroundColor #90D5EE
+     FontColor #454645
+     FontSize 11
+     RoundCorner 10
+ }
+ .assertionNote { BackgroundColor #A6F1B5
+     FontColor #454645
+     FontSize 11
+     RoundCorner 5
+ }
+</style>
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+entity "Breakfast Provider" as breakfastProvider
+database "CosmosDB" as cosmosDB
+queue "ServiceBus" as bus
+
+hnote across #454645:<color:#DDDDDD>StepBarProbe
+caller -[#438DD5]> breakfastProvider: GetBreakfast
+note right
+<color:#546854>HeaderProbe
+NoteBodyProbe
+end note
+breakfastProvider -[#E74C3C]> cosmosDB: query
+note right
+NoteBodyTwo
+end note
+breakfastProvider -[#9B59B6]> bus: publish
+note<<eventNote>> right
+EventBodyProbe
+end note
+hnote across <<assertionNote>>
+✓ AssertProbe
+end note
+breakfastProvider --> caller: [[https://example.com/x LinkProbe]]
+@enduml

@@ -1,0 +1,100 @@
+diff --git a/src/main/java/net/sourceforge/plantuml/klimt/creole/legacy/CreoleStripeSimpleParser.java b/src/main/java/net/sourceforge/plantuml/klimt/creole/legacy/CreoleStripeSimpleParser.java
+index b7a9032..0421967 100644
+--- a/src/main/java/net/sourceforge/plantuml/klimt/creole/legacy/CreoleStripeSimpleParser.java
++++ b/src/main/java/net/sourceforge/plantuml/klimt/creole/legacy/CreoleStripeSimpleParser.java
+@@ -161,7 +161,7 @@ public class CreoleStripeSimpleParser {
+ 
+ 	public List<Stripe> createStripes(CreoleContext context, HorizontalAlignment align) {
+ 		final List<Stripe> result = new ArrayList<>();
+-		for (String singleLine : line.split("" + Jaws.BLOCK_E1_NEWLINE)) {
++		for (String singleLine : splitOnBlockNewline(line)) {
+ 			final StripeSimple stripe = new StripeSimple(fontConfiguration, style, context, skinParam, modeSimpleLine);
+ 			stripe.setCellAlignment(align);
+ 			stripe.analyzeAndAdd(singleLine);
+@@ -170,4 +170,15 @@ public class CreoleStripeSimpleParser {
+ 		return Collections.unmodifiableList(result);
+ 	}
+ 
++
++	private static final java.util.regex.Pattern BLOCK_NEWLINE = java.util.regex.Pattern
++			.compile("" + Jaws.BLOCK_E1_NEWLINE);
++
++	private static String[] splitOnBlockNewline(String line) {
++		if (line.length() > 0 && line.indexOf(Jaws.BLOCK_E1_NEWLINE) == -1)
++			return new String[] { line };
++
++		return BLOCK_NEWLINE.split(line);
++	}
++
+ }
+diff --git a/src/main/java/net/sourceforge/plantuml/sequencediagram/command/CommandArrow.java b/src/main/java/net/sourceforge/plantuml/sequencediagram/command/CommandArrow.java
+index 3d410a1..d4b7115 100644
+--- a/src/main/java/net/sourceforge/plantuml/sequencediagram/command/CommandArrow.java
++++ b/src/main/java/net/sourceforge/plantuml/sequencediagram/command/CommandArrow.java
+@@ -75,6 +75,8 @@ import net.sourceforge.plantuml.utils.LineLocation;
+ 
+ public class CommandArrow extends SingleLineCommand2<SequenceDiagram> {
+ 
++	private static final java.util.regex.Pattern AMPERSAND = java.util.regex.Pattern.compile("&");
++
+ 	static final String ANCHOR = "(\\{([%pLN_]+)\\}[%s]+)?";
+ 
+ 	public CommandArrow() {
+@@ -137,7 +139,7 @@ public class CommandArrow extends SingleLineCommand2<SequenceDiagram> {
+ 		final String multicast = arg2.get("MULTICAST", 0);
+ 		if (multicast != null) {
+ 			final List<Participant> result = new ArrayList<>();
+-			for (String s : multicast.split("&")) {
++			for (String s : AMPERSAND.split(multicast)) {
+ 				s = s.trim();
+ 				if (s.length() == 0)
+ 					continue;
+diff --git a/src/main/java/net/sourceforge/plantuml/style/ClockwiseTopRightBottomLeft.java b/src/main/java/net/sourceforge/plantuml/style/ClockwiseTopRightBottomLeft.java
+index f6460dc..48a628e 100644
+--- a/src/main/java/net/sourceforge/plantuml/style/ClockwiseTopRightBottomLeft.java
++++ b/src/main/java/net/sourceforge/plantuml/style/ClockwiseTopRightBottomLeft.java
+@@ -42,6 +42,8 @@ import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+ 
+ public class ClockwiseTopRightBottomLeft {
+ 
++	private static final java.util.regex.Pattern SPACES = java.util.regex.Pattern.compile(" +");
++
+ 	private static final ClockwiseTopRightBottomLeft NONE = new ClockwiseTopRightBottomLeft(0, 0, 0, 0);
+ 
+ 	private final double top;
+@@ -67,7 +69,7 @@ public class ClockwiseTopRightBottomLeft {
+ 		if (isOnlyNumbersAndSpaces(value) == false)
+ 			return none();
+ 
+-		final String[] split = value.trim().split(" +");
++		final String[] split = SPACES.split(value.trim());
+ 
+ 		try {
+ 			switch (split.length) {
+diff --git a/src/main/java/net/sourceforge/plantuml/tim/TContext.java b/src/main/java/net/sourceforge/plantuml/tim/TContext.java
+index 0f74ada..c6f60e9 100644
+--- a/src/main/java/net/sourceforge/plantuml/tim/TContext.java
++++ b/src/main/java/net/sourceforge/plantuml/tim/TContext.java
+@@ -176,6 +176,8 @@ import net.sourceforge.plantuml.utils.LineLocation;
+ 
+ public class TContext {
+ 
++	private static final java.util.regex.Pattern NEWLINE = java.util.regex.Pattern.compile("\n");
++
+ 	private final List<StringLocated> resultList = new ArrayList<>();
+ 	private final List<StringLocated> debug = new ArrayList<>();
+ 
+@@ -510,7 +512,12 @@ public class TContext {
+ 			return null;
+ 
+ 		if (Pragma.legacyReplaceBackslashNByNewline()) {
+-			final String[] splited = result.split("\n");
++			// String.split() compiles its regex on every call once compiled to JavaScript
++			// by TeaVM (no single-char fast path there), and most lines hold no newline.
++			if (result.length() > 0 && result.indexOf('\n') == -1)
++				return new StringLocated[] { new StringLocated(result, located.getLocation()) };
++
++			final String[] splited = NEWLINE.split(result);
+ 			final StringLocated[] tab = new StringLocated[splited.length];
+ 			for (int i = 0; i < splited.length; i++)
+ 				tab[i] = new StringLocated(splited[i], located.getLocation());

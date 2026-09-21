@@ -1,0 +1,88 @@
+{"engine":"core-head-p12345-noobf.js","pragma":false,"reps":3,"totalSamples":12278}
+┌─────────┬────────────────┬────────┬───────────────┬──────┐
+│ (index) │ file           │ warmMs │ avgProfiledMs │ err  │
+├─────────┼────────────────┼────────┼───────────────┼──────┤
+│ 0       │ 'gen-500.puml' │ 2210   │ 1993          │ null │
+│ 1       │ 'puml-19.puml' │ 276    │ 419           │ null │
+└─────────┴────────────────┴────────┴───────────────┴──────┘
+  5.4%     131ms  jl_Object
+  4.5%     109ms  (program)
+  2.7%      64ms  (anonymous)
+  2.7%      64ms  nspr_RegexLeaf_createPartialMatch
+  2.2%      54ms  jl_Class_getEnumConstants
+  2.2%      53ms  jur_Pattern_matcher
+  1.9%      45ms  setAttribute
+  1.7%      41ms  ju_HashMap_putImpl
+  1.7%      40ms  jl_String__init_
+  1.7%      40ms  nspt_SvgGraphicsTeaVM_format
+  1.6%      39ms  jl_String_replace
+  1.5%      37ms  jl_AbstractStringBuilder_toString
+  1.5%      37ms  (garbage collector)
+  1.5%      36ms  $rt_charArrayToString
+  1.3%      31ms  nspt_UGraphicTeaVM__init_0
+  1.3%      31ms  nspr_RealDelta__init_
+  1.2%      29ms  nsps_SkinParam_getValue
+  1.1%      28ms  jl_System_currentTimeMillis
+  1.1%      28ms  nspkd_LimitFinder_apply
+  1.1%      27ms  nspr_RegexConcat_match
+  1.0%      24ms  otcit_DoubleAnalyzer_findLowerDistance
+  0.9%      23ms  jur_AltGroupQuantifierSet_matches
+  0.9%      22ms  otcit_DoubleAnalyzer_mulAndShiftRight
+  0.9%      22ms  JavaArray
+  0.9%      21ms  otcit_DoubleAnalyzer_analyze
+  0.9%      21ms  nspst_LiveBoxes_getLevelAtInternal
+  0.9%      21ms  ju_AbstractMap_get
+  0.9%      21ms  ju_MapEntry
+  0.8%      20ms  ju_HashMap__init_
+  0.8%      20ms  Long_create
+  0.8%      20ms  jl_AbstractStringBuilder_insert3
+  0.8%      19ms  ju_AbstractSet_hashCode
+  0.8%      19ms  jl_AbstractStringBuilder_insert1
+  0.7%      18ms  jur_AbstractSet__init_
+  0.7%      17ms  $rt_createArray
+  0.7%      16ms  nspc_PSystemCommandFactory_getCandidate
+  0.7%      16ms  (idle)
+  0.6%      15ms  ju_AbstractList$1_next
+  0.6%      14ms  jur_AbstractSet_find
+  0.6%      13ms  createElementNS
+--- top by INCLUSIVE (total) time:
+100.0%  (root)
+ 93.2%  (anonymous)
+ 92.9%  jl_Object$NotifyListenerImpl_run
+ 92.9%  otp_Platform_launchThread
+ 92.9%  jl_Thread_run
+ 92.9%  jl_Thread$start$lambda$_4_0_run
+ 92.9%  TeaVMThread.run
+ 92.9%  TeaVMThread.resume
+ 92.9%  callback.$complete
+ 92.9%  otpp_AsyncCallbackWrapper_complete
+ 92.9%  jl_Object_monitorEnterWait
+ 92.8%  nsptb_PlantUMLBrowser_buildSvg
+ 31.6%  nspst_SequenceDiagramFileMakerTeoz$1_drawU
+ 30.4%  nspst_PlayingSpace_drawUInternal
+ 28.9%  nspt_PSystemBuilder2_createDiagramFromPreprocessed
+ 26.3%  nsps_SequenceDiagram_getTextBlock
+ 26.1%  nspst_CommunicationTile_drawU
+ 23.6%  nsps_AbstractComponent_drawU
+ 20.4%  nspsr_ComponentRoseArrow_drawInternalU
+ 19.9%  nspst_TileBuilder_buildOne
+ 19.8%  nspc_PSystemCommandFactory_createSystem
+ 19.4%  nspst_PlayingSpace_drawForeground
+ 19.3%  nspc_AbstractDiagram_executeCommand
+ 19.2%  nspc_ProtectedCommand_execute
+ 18.3%  nspc_SingleLineCommand2_execute
+ 14.9%  nspst_PlayingSpace__init_
+ 11.2%  nspst_UGraphicInterceptorTile_draw
+ 11.1%  nspst_CommunicationTile_getComponent
+ 10.8%  nspkc_SheetBlock2_drawU
+ 10.6%  nspkc_SheetBlock1_drawU
+ 10.5%  nspkd_AbstractUGraphic_draw
+  9.9%  nspsc_CommandArrow_executeArg0
+  9.8%  nspsc_CommandArrow_executeArg
+  9.8%  nspkcl_AtomText_drawU
+  9.3%  nspc_PSystemCommandFactory_getCandidate
+  9.2%  nspst_PlayingSpace_getPreferredHeight
+  8.7%  nspsr_Rose_createComponentArrow
+  8.5%  nspr_RegexComposed_matcher
+  7.0%  nspr_RegexComposed_createPartialMatch
+  7.0%  nspr_RegexConcat_match

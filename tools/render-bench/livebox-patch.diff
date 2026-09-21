@@ -1,0 +1,105 @@
+diff --git a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/LiveBoxes.java b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/LiveBoxes.java
+index 48ef8d2..6b4ee58 100644
+--- a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/LiveBoxes.java
++++ b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/LiveBoxes.java
+@@ -36,6 +36,7 @@
+ package net.sourceforge.plantuml.sequencediagram.teoz;
+ 
+ import java.util.HashMap;
++import java.util.IdentityHashMap;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
+@@ -93,11 +94,28 @@ public class LiveBoxes {
+ 		return getLevelAtInternal(event, mode);
+ 	}
+ 
+-	private int getLevelAtInternal(Event event, EventsHistoryMode mode) {
+-		int level = 0; // p.getInitialLife();
+-		// System.err.println("--->EventsHistory for " + p + " " + event);
+-		for (Iterator<Event> it = events.iterator(); it.hasNext();) {
+-			final Event current = it.next();
++	// The level at an event is a prefix computation over the event list: computing
++	// it from scratch for every event made layout quadratic in the number of
++	// events. One linear pass fills these caches; the per-event lookahead below
++	// stays as it was, starting from the event's own position.
++	private Map<Event, Integer> eventIndex;
++	private Map<Event, Integer> levelAfterEvent;
++	// nextLife[i] = index of the first LifeEvent at position >= i that the
++	// message lookahead can reach: Notes and AbstractMessages are passed through
++	// (exactly like the original iterator walk), any other event type is a
++	// boundary that stops the walk (-1).
++	private int[] nextLife;
++	private int levelCacheSize = -1;
++
++	private void ensureLevelCache() {
++		if (eventIndex != null && levelCacheSize == events.size())
++			return;
++		eventIndex = new IdentityHashMap<Event, Integer>();
++		levelAfterEvent = new IdentityHashMap<Event, Integer>();
++		levelCacheSize = events.size();
++		int level = 0;
++		for (int i = 0; i < events.size(); i++) {
++			final Event current = events.get(i);
+ 			if (current instanceof LifeEvent) {
+ 				final LifeEvent le = (LifeEvent) current;
+ 				if (le.getParticipant() == p && le.isActivate())
+@@ -107,18 +125,40 @@ public class LiveBoxes {
+ 					level = Math.max(0, level - 1);
+ 
+ 			}
+-			if (event == current) {
++			if (eventIndex.containsKey(current) == false) {
++				eventIndex.put(current, i);
++				levelAfterEvent.put(current, level);
++			}
++		}
++		nextLife = new int[events.size() + 1];
++		nextLife[events.size()] = -1;
++		for (int i = events.size() - 1; i >= 0; i--) {
++			final Event e = events.get(i);
++			if (e instanceof LifeEvent)
++				nextLife[i] = i;
++			else if (e instanceof Note || e instanceof AbstractMessage)
++				nextLife[i] = nextLife[i + 1];
++			else
++				nextLife[i] = -1;
++		}
++	}
++
++	private int getLevelAtInternal(Event event, EventsHistoryMode mode) {
++		ensureLevelCache();
++		final Integer index = eventIndex.get(event);
++		if (index == null)
++			throw new IllegalArgumentException();
++
++		int level = levelAfterEvent.get(event);
++		final Iterator<Event> it = events.listIterator(index + 1);
++		{
++			final Event current = event;
++			{
+ 				if (current instanceof AbstractMessage) {
+ 					boolean seenActivate = false;
+ 					boolean seenDeactivate = false;
+-					while (it.hasNext()) {
+-						final Event next = nextButSkippingNotes(it);
+-						if (!(next instanceof LifeEvent || next instanceof AbstractMessage))
+-							break;
+-						if (!(next instanceof LifeEvent))
+-							continue;
+-
+-						final LifeEvent le = (LifeEvent) next;
++					for (int k = nextLife[index + 1]; k != -1; k = nextLife[k + 1]) {
++						final LifeEvent le = (LifeEvent) events.get(k);
+ 						final AbstractMessage msg = (AbstractMessage) current;
+ 
+ 						final boolean sameMessage = msg == le.getMessage()
+@@ -173,8 +213,6 @@ public class LiveBoxes {
+ 				return level;
+ 			}
+ 		}
+-		throw new IllegalArgumentException();
+-		// return level;
+ 	}
+ 
+ 	private boolean isNextEventADestroy(Event event) {

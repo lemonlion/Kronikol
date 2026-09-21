@@ -1,0 +1,336 @@
+=== PUMA 1.2026.6 (no pragma) ===
+{"engine":"core-1.2026.6-patched.js","pragma":false}
+┌─────────┬────────────────────────────┬─────┬──────┬──────┬───────┬─────────────┬──────┐
+│ (index) │ file                       │ rep │ ms   │ err  │ svgKB │ measureText │ sha  │
+├─────────┼────────────────────────────┼─────┼──────┼──────┼───────┼─────────────┼──────┤
+│ 0       │ 'gen-50.puml'              │ 0   │ 1973 │ null │ 138   │ 716         │ null │
+│ 1       │ 'gen-50.puml'              │ 1   │ 838  │ null │ 138   │ 490         │ null │
+│ 2       │ 'gen-50.puml'              │ 2   │ 718  │ null │ 138   │ 490         │ null │
+│ 3       │ 'gen-200.puml'             │ 0   │ 2338 │ null │ 543   │ 2440        │ null │
+│ 4       │ 'gen-200.puml'             │ 1   │ 2296 │ null │ 543   │ 1910        │ null │
+│ 5       │ 'gen-200.puml'             │ 2   │ 2184 │ null │ 543   │ 1910        │ null │
+│ 6       │ 'gen-500.puml'             │ 0   │ 4786 │ null │ 1359  │ 5810        │ null │
+│ 7       │ 'gen-500.puml'             │ 1   │ 4636 │ null │ 1359  │ 4750        │ null │
+│ 8       │ 'gen-500.puml'             │ 2   │ 4462 │ null │ 1359  │ 4750        │ null │
+│ 9       │ 'puml-0.puml'              │ 0   │ 405  │ null │ 165   │ 584         │ null │
+│ 10      │ 'puml-0.puml'              │ 1   │ 382  │ null │ 165   │ 584         │ null │
+│ 11      │ 'puml-0.puml'              │ 2   │ 272  │ null │ 165   │ 584         │ null │
+│ 12      │ 'puml-1.puml'              │ 0   │ 214  │ null │ 111   │ 396         │ null │
+│ 13      │ 'puml-1.puml'              │ 1   │ 256  │ null │ 111   │ 396         │ null │
+│ 14      │ 'puml-1.puml'              │ 2   │ 191  │ null │ 111   │ 396         │ null │
+│ 15      │ 'puml-19.puml'             │ 0   │ 345  │ null │ 218   │ 774         │ null │
+│ 16      │ 'puml-19.puml'             │ 1   │ 455  │ null │ 218   │ 774         │ null │
+│ 17      │ 'puml-19.puml'             │ 2   │ 340  │ null │ 218   │ 774         │ null │
+│ 18      │ 'shape-groups.puml'        │ 0   │ 246  │ null │ 109   │ 662         │ null │
+│ 19      │ 'shape-groups.puml'        │ 1   │ 247  │ null │ 109   │ 516         │ null │
+│ 20      │ 'shape-groups.puml'        │ 2   │ 268  │ null │ 109   │ 516         │ null │
+│ 21      │ 'shape-parallel.puml'      │ 0   │ 431  │ null │ 182   │ 900         │ null │
+│ 22      │ 'shape-parallel.puml'      │ 1   │ 258  │ null │ 182   │ 656         │ null │
+│ 23      │ 'shape-parallel.puml'      │ 2   │ 312  │ null │ 182   │ 656         │ null │
+│ 24      │ 'shape-wide.puml'          │ 0   │ 325  │ null │ 132   │ 684         │ null │
+│ 25      │ 'shape-wide.puml'          │ 1   │ 254  │ null │ 132   │ 472         │ null │
+│ 26      │ 'shape-wide.puml'          │ 2   │ 303  │ null │ 132   │ 472         │ null │
+│ 27      │ 'shape-activation.puml'    │ 0   │ 729  │ null │ 295   │ 1273        │ null │
+│ 28      │ 'shape-activation.puml'    │ 1   │ 605  │ null │ 295   │ 852         │ null │
+│ 29      │ 'shape-activation.puml'    │ 2   │ 558  │ null │ 295   │ 852         │ null │
+│ 30      │ 'shape-self.puml'          │ 0   │ 240  │ null │ 139   │ 608         │ null │
+│ 31      │ 'shape-self.puml'          │ 1   │ 200  │ null │ 139   │ 408         │ null │
+│ 32      │ 'shape-self.puml'          │ 2   │ 187  │ null │ 139   │ 408         │ null │
+│ 33      │ 'shape-createdestroy.puml' │ 0   │ 284  │ null │ 140   │ 685         │ null │
+│ 34      │ 'shape-createdestroy.puml' │ 1   │ 249  │ null │ 140   │ 484         │ null │
+│ 35      │ 'shape-createdestroy.puml' │ 2   │ 351  │ null │ 140   │ 484         │ null │
+└─────────┴────────────────────────────┴─────┴──────┴──────┴───────┴─────────────┴──────┘
+=== TEOZ 1.2026.6 (pragma) ===
+{"engine":"core-1.2026.6-patched.js","pragma":true}
+┌─────────┬────────────────────────────┬─────┬───────┬──────┬───────┬─────────────┬──────┐
+│ (index) │ file                       │ rep │ ms    │ err  │ svgKB │ measureText │ sha  │
+├─────────┼────────────────────────────┼─────┼───────┼──────┼───────┼─────────────┼──────┤
+│ 0       │ 'gen-50.puml'              │ 0   │ 1899  │ null │ 94    │ 1190        │ null │
+│ 1       │ 'gen-50.puml'              │ 1   │ 1393  │ null │ 94    │ 964         │ null │
+│ 2       │ 'gen-50.puml'              │ 2   │ 1248  │ null │ 94    │ 964         │ null │
+│ 3       │ 'gen-200.puml'             │ 0   │ 7129  │ null │ 368   │ 4334        │ null │
+│ 4       │ 'gen-200.puml'             │ 1   │ 6060  │ null │ 368   │ 3804        │ null │
+│ 5       │ 'gen-200.puml'             │ 2   │ 5892  │ null │ 368   │ 3804        │ null │
+│ 6       │ 'gen-500.puml'             │ 0   │ 11570 │ null │ 920   │ 10544       │ null │
+│ 7       │ 'gen-500.puml'             │ 1   │ 10114 │ null │ 920   │ 9484        │ null │
+│ 8       │ 'gen-500.puml'             │ 2   │ 10301 │ null │ 920   │ 9484        │ null │
+│ 9       │ 'puml-0.puml'              │ 0   │ 993   │ null │ 111   │ 1152        │ null │
+│ 10      │ 'puml-0.puml'              │ 1   │ 1066  │ null │ 111   │ 1152        │ null │
+│ 11      │ 'puml-0.puml'              │ 2   │ 926   │ null │ 111   │ 1152        │ null │
+│ 12      │ 'puml-1.puml'              │ 0   │ 509   │ null │ 76    │ 776         │ null │
+│ 13      │ 'puml-1.puml'              │ 1   │ 662   │ null │ 76    │ 776         │ null │
+│ 14      │ 'puml-1.puml'              │ 2   │ 1049  │ null │ 76    │ 776         │ null │
+│ 15      │ 'puml-19.puml'             │ 0   │ 2517  │ null │ 148   │ 1532        │ null │
+│ 16      │ 'puml-19.puml'             │ 1   │ 2420  │ null │ 148   │ 1532        │ null │
+│ 17      │ 'puml-19.puml'             │ 2   │ 1754  │ null │ 148   │ 1532        │ null │
+│ 18      │ 'shape-groups.puml'        │ 0   │ 1318  │ null │ 80    │ 1166        │ null │
+│ 19      │ 'shape-groups.puml'        │ 1   │ 1297  │ null │ 80    │ 1020        │ null │
+│ 20      │ 'shape-groups.puml'        │ 2   │ 974   │ null │ 80    │ 1020        │ null │
+│ 21      │ 'shape-parallel.puml'      │ 0   │ 1778  │ null │ 117   │ 1540        │ null │
+│ 22      │ 'shape-parallel.puml'      │ 1   │ 1689  │ null │ 117   │ 1296        │ null │
+│ 23      │ 'shape-parallel.puml'      │ 2   │ 1709  │ null │ 117   │ 1296        │ null │
+│ 24      │ 'shape-wide.puml'          │ 0   │ 1322  │ null │ 85    │ 1060        │ null │
+│ 25      │ 'shape-wide.puml'          │ 1   │ 850   │ null │ 85    │ 848         │ null │
+│ 26      │ 'shape-wide.puml'          │ 2   │ 992   │ null │ 85    │ 848         │ null │
+│ 27      │ 'shape-activation.puml'    │ 0   │ 1949  │ null │ 184   │ 2113        │ null │
+│ 28      │ 'shape-activation.puml'    │ 1   │ 1952  │ null │ 184   │ 1692        │ null │
+│ 29      │ 'shape-activation.puml'    │ 2   │ 2101  │ null │ 184   │ 1692        │ null │
+│ 30      │ 'shape-self.puml'          │ 0   │ 893   │ null │ 99    │ 1008        │ null │
+│ 31      │ 'shape-self.puml'          │ 1   │ 777   │ null │ 99    │ 808         │ null │
+│ 32      │ 'shape-self.puml'          │ 2   │ 869   │ null │ 99    │ 808         │ null │
+│ 33      │ 'shape-createdestroy.puml' │ 0   │ 1284  │ null │ 97    │ 1085        │ null │
+│ 34      │ 'shape-createdestroy.puml' │ 1   │ 1395  │ null │ 97    │ 884         │ null │
+│ 35      │ 'shape-createdestroy.puml' │ 2   │ 1460  │ null │ 97    │ 884         │ null │
+└─────────┴────────────────────────────┴─────┴───────┴──────┴───────┴─────────────┴──────┘
+=== HEAD stock ===
+{"engine":"core-head4ce99a4.js","pragma":false}
+┌─────────┬────────────────────────────┬─────┬──────┬──────┬───────┬─────────────┬──────┐
+│ (index) │ file                       │ rep │ ms   │ err  │ svgKB │ measureText │ sha  │
+├─────────┼────────────────────────────┼─────┼──────┼──────┼───────┼─────────────┼──────┤
+│ 0       │ 'gen-50.puml'              │ 0   │ 1886 │ null │ 95    │ 693         │ null │
+│ 1       │ 'gen-50.puml'              │ 1   │ 946  │ null │ 95    │ 245         │ null │
+│ 2       │ 'gen-50.puml'              │ 2   │ 870  │ null │ 95    │ 245         │ null │
+│ 3       │ 'gen-200.puml'             │ 0   │ 3249 │ null │ 373   │ 2015        │ null │
+│ 4       │ 'gen-200.puml'             │ 1   │ 2110 │ null │ 373   │ 955         │ null │
+│ 5       │ 'gen-200.puml'             │ 2   │ 1765 │ null │ 373   │ 955         │ null │
+│ 6       │ 'gen-500.puml'             │ 0   │ 5716 │ null │ 930   │ 4495        │ null │
+│ 7       │ 'gen-500.puml'             │ 1   │ 5671 │ null │ 930   │ 2375        │ null │
+│ 8       │ 'gen-500.puml'             │ 2   │ 3099 │ null │ 930   │ 2375        │ null │
+│ 9       │ 'puml-0.puml'              │ 0   │ 316  │ null │ 113   │ 292         │ null │
+│ 10      │ 'puml-0.puml'              │ 1   │ 382  │ null │ 113   │ 292         │ null │
+│ 11      │ 'puml-0.puml'              │ 2   │ 355  │ null │ 113   │ 292         │ null │
+│ 12      │ 'puml-1.puml'              │ 0   │ 233  │ null │ 77    │ 198         │ null │
+│ 13      │ 'puml-1.puml'              │ 1   │ 245  │ null │ 77    │ 198         │ null │
+│ 14      │ 'puml-1.puml'              │ 2   │ 206  │ null │ 77    │ 198         │ null │
+│ 15      │ 'puml-19.puml'             │ 0   │ 403  │ null │ 150   │ 387         │ null │
+│ 16      │ 'puml-19.puml'             │ 1   │ 590  │ null │ 150   │ 387         │ null │
+│ 17      │ 'puml-19.puml'             │ 2   │ 520  │ null │ 150   │ 387         │ null │
+│ 18      │ 'shape-groups.puml'        │ 0   │ 296  │ null │ 87    │ 546         │ null │
+│ 19      │ 'shape-groups.puml'        │ 1   │ 312  │ null │ 87    │ 258         │ null │
+│ 20      │ 'shape-groups.puml'        │ 2   │ 293  │ null │ 87    │ 258         │ null │
+│ 21      │ 'shape-parallel.puml'      │ 0   │ 499  │ null │ 118   │ 816         │ null │
+│ 22      │ 'shape-parallel.puml'      │ 1   │ 374  │ null │ 118   │ 328         │ null │
+│ 23      │ 'shape-parallel.puml'      │ 2   │ 373  │ null │ 118   │ 328         │ null │
+│ 24      │ 'shape-wide.puml'          │ 0   │ 350  │ null │ 86    │ 660         │ null │
+│ 25      │ 'shape-wide.puml'          │ 1   │ 411  │ null │ 86    │ 236         │ null │
+│ 26      │ 'shape-wide.puml'          │ 2   │ 359  │ null │ 86    │ 236         │ null │
+│ 27      │ 'shape-activation.puml'    │ 0   │ 797  │ null │ 186   │ 1268        │ null │
+│ 28      │ 'shape-activation.puml'    │ 1   │ 581  │ null │ 186   │ 426         │ null │
+│ 29      │ 'shape-activation.puml'    │ 2   │ 656  │ null │ 186   │ 426         │ null │
+│ 30      │ 'shape-self.puml'          │ 0   │ 227  │ null │ 100   │ 604         │ null │
+│ 31      │ 'shape-self.puml'          │ 1   │ 180  │ null │ 100   │ 204         │ null │
+│ 32      │ 'shape-self.puml'          │ 2   │ 208  │ null │ 100   │ 204         │ null │
+│ 33      │ 'shape-createdestroy.puml' │ 0   │ 416  │ null │ 98    │ 644         │ null │
+│ 34      │ 'shape-createdestroy.puml' │ 1   │ 299  │ null │ 98    │ 242         │ null │
+│ 35      │ 'shape-createdestroy.puml' │ 2   │ 338  │ null │ 98    │ 242         │ null │
+└─────────┴────────────────────────────┴─────┴──────┴──────┴───────┴─────────────┴──────┘
+=== p1 ===
+{"engine":"core-head-p1.js","pragma":false}
+┌─────────┬────────────────────────────┬─────┬──────┬──────┬───────┬─────────────┬──────┐
+│ (index) │ file                       │ rep │ ms   │ err  │ svgKB │ measureText │ sha  │
+├─────────┼────────────────────────────┼─────┼──────┼──────┼───────┼─────────────┼──────┤
+│ 0       │ 'gen-50.puml'              │ 0   │ 887  │ null │ 95    │ 693         │ null │
+│ 1       │ 'gen-50.puml'              │ 1   │ 491  │ null │ 95    │ 245         │ null │
+│ 2       │ 'gen-50.puml'              │ 2   │ 518  │ null │ 95    │ 245         │ null │
+│ 3       │ 'gen-200.puml'             │ 0   │ 1744 │ null │ 373   │ 2015        │ null │
+│ 4       │ 'gen-200.puml'             │ 1   │ 1948 │ null │ 373   │ 955         │ null │
+│ 5       │ 'gen-200.puml'             │ 2   │ 2211 │ null │ 373   │ 955         │ null │
+│ 6       │ 'gen-500.puml'             │ 0   │ 6294 │ null │ 930   │ 4495        │ null │
+│ 7       │ 'gen-500.puml'             │ 1   │ 5550 │ null │ 930   │ 2375        │ null │
+│ 8       │ 'gen-500.puml'             │ 2   │ 5372 │ null │ 930   │ 2375        │ null │
+│ 9       │ 'puml-0.puml'              │ 0   │ 752  │ null │ 113   │ 292         │ null │
+│ 10      │ 'puml-0.puml'              │ 1   │ 673  │ null │ 113   │ 292         │ null │
+│ 11      │ 'puml-0.puml'              │ 2   │ 685  │ null │ 113   │ 292         │ null │
+│ 12      │ 'puml-1.puml'              │ 0   │ 482  │ null │ 77    │ 198         │ null │
+│ 13      │ 'puml-1.puml'              │ 1   │ 481  │ null │ 77    │ 198         │ null │
+│ 14      │ 'puml-1.puml'              │ 2   │ 464  │ null │ 77    │ 198         │ null │
+│ 15      │ 'puml-19.puml'             │ 0   │ 693  │ null │ 150   │ 387         │ null │
+│ 16      │ 'puml-19.puml'             │ 1   │ 548  │ null │ 150   │ 387         │ null │
+│ 17      │ 'puml-19.puml'             │ 2   │ 686  │ null │ 150   │ 387         │ null │
+│ 18      │ 'shape-groups.puml'        │ 0   │ 526  │ null │ 87    │ 546         │ null │
+│ 19      │ 'shape-groups.puml'        │ 1   │ 307  │ null │ 87    │ 258         │ null │
+│ 20      │ 'shape-groups.puml'        │ 2   │ 333  │ null │ 87    │ 258         │ null │
+│ 21      │ 'shape-parallel.puml'      │ 0   │ 463  │ null │ 118   │ 816         │ null │
+│ 22      │ 'shape-parallel.puml'      │ 1   │ 405  │ null │ 118   │ 328         │ null │
+│ 23      │ 'shape-parallel.puml'      │ 2   │ 423  │ null │ 118   │ 328         │ null │
+│ 24      │ 'shape-wide.puml'          │ 0   │ 446  │ null │ 86    │ 660         │ null │
+│ 25      │ 'shape-wide.puml'          │ 1   │ 391  │ null │ 86    │ 236         │ null │
+│ 26      │ 'shape-wide.puml'          │ 2   │ 368  │ null │ 86    │ 236         │ null │
+│ 27      │ 'shape-activation.puml'    │ 0   │ 950  │ null │ 186   │ 1268        │ null │
+│ 28      │ 'shape-activation.puml'    │ 1   │ 801  │ null │ 186   │ 426         │ null │
+│ 29      │ 'shape-activation.puml'    │ 2   │ 684  │ null │ 186   │ 426         │ null │
+│ 30      │ 'shape-self.puml'          │ 0   │ 352  │ null │ 100   │ 604         │ null │
+│ 31      │ 'shape-self.puml'          │ 1   │ 312  │ null │ 100   │ 204         │ null │
+│ 32      │ 'shape-self.puml'          │ 2   │ 301  │ null │ 100   │ 204         │ null │
+│ 33      │ 'shape-createdestroy.puml' │ 0   │ 464  │ null │ 98    │ 644         │ null │
+│ 34      │ 'shape-createdestroy.puml' │ 1   │ 407  │ null │ 98    │ 242         │ null │
+│ 35      │ 'shape-createdestroy.puml' │ 2   │ 371  │ null │ 98    │ 242         │ null │
+└─────────┴────────────────────────────┴─────┴──────┴──────┴───────┴─────────────┴──────┘
+=== p12 ===
+{"engine":"core-head-p12.js","pragma":false}
+┌─────────┬────────────────────────────┬─────┬──────┬──────┬───────┬─────────────┬──────┐
+│ (index) │ file                       │ rep │ ms   │ err  │ svgKB │ measureText │ sha  │
+├─────────┼────────────────────────────┼─────┼──────┼──────┼───────┼─────────────┼──────┤
+│ 0       │ 'gen-50.puml'              │ 0   │ 743  │ null │ 95    │ 693         │ null │
+│ 1       │ 'gen-50.puml'              │ 1   │ 225  │ null │ 95    │ 245         │ null │
+│ 2       │ 'gen-50.puml'              │ 2   │ 203  │ null │ 95    │ 245         │ null │
+│ 3       │ 'gen-200.puml'             │ 0   │ 848  │ null │ 373   │ 2015        │ null │
+│ 4       │ 'gen-200.puml'             │ 1   │ 661  │ null │ 373   │ 955         │ null │
+│ 5       │ 'gen-200.puml'             │ 2   │ 966  │ null │ 373   │ 955         │ null │
+│ 6       │ 'gen-500.puml'             │ 0   │ 3528 │ null │ 930   │ 4495        │ null │
+│ 7       │ 'gen-500.puml'             │ 1   │ 3235 │ null │ 930   │ 2375        │ null │
+│ 8       │ 'gen-500.puml'             │ 2   │ 3450 │ null │ 930   │ 2375        │ null │
+│ 9       │ 'puml-0.puml'              │ 0   │ 430  │ null │ 113   │ 292         │ null │
+│ 10      │ 'puml-0.puml'              │ 1   │ 398  │ null │ 113   │ 292         │ null │
+│ 11      │ 'puml-0.puml'              │ 2   │ 398  │ null │ 113   │ 292         │ null │
+│ 12      │ 'puml-1.puml'              │ 0   │ 268  │ null │ 77    │ 198         │ null │
+│ 13      │ 'puml-1.puml'              │ 1   │ 262  │ null │ 77    │ 198         │ null │
+│ 14      │ 'puml-1.puml'              │ 2   │ 276  │ null │ 77    │ 198         │ null │
+│ 15      │ 'puml-19.puml'             │ 0   │ 517  │ null │ 150   │ 387         │ null │
+│ 16      │ 'puml-19.puml'             │ 1   │ 473  │ null │ 150   │ 387         │ null │
+│ 17      │ 'puml-19.puml'             │ 2   │ 533  │ null │ 150   │ 387         │ null │
+│ 18      │ 'shape-groups.puml'        │ 0   │ 516  │ null │ 87    │ 546         │ null │
+│ 19      │ 'shape-groups.puml'        │ 1   │ 359  │ null │ 87    │ 258         │ null │
+│ 20      │ 'shape-groups.puml'        │ 2   │ 327  │ null │ 87    │ 258         │ null │
+│ 21      │ 'shape-parallel.puml'      │ 0   │ 544  │ null │ 118   │ 816         │ null │
+│ 22      │ 'shape-parallel.puml'      │ 1   │ 428  │ null │ 118   │ 328         │ null │
+│ 23      │ 'shape-parallel.puml'      │ 2   │ 415  │ null │ 118   │ 328         │ null │
+│ 24      │ 'shape-wide.puml'          │ 0   │ 400  │ null │ 86    │ 660         │ null │
+│ 25      │ 'shape-wide.puml'          │ 1   │ 286  │ null │ 86    │ 236         │ null │
+│ 26      │ 'shape-wide.puml'          │ 2   │ 232  │ null │ 86    │ 236         │ null │
+│ 27      │ 'shape-activation.puml'    │ 0   │ 716  │ null │ 186   │ 1268        │ null │
+│ 28      │ 'shape-activation.puml'    │ 1   │ 584  │ null │ 186   │ 426         │ null │
+│ 29      │ 'shape-activation.puml'    │ 2   │ 674  │ null │ 186   │ 426         │ null │
+│ 30      │ 'shape-self.puml'          │ 0   │ 449  │ null │ 100   │ 604         │ null │
+│ 31      │ 'shape-self.puml'          │ 1   │ 293  │ null │ 100   │ 204         │ null │
+│ 32      │ 'shape-self.puml'          │ 2   │ 284  │ null │ 100   │ 204         │ null │
+│ 33      │ 'shape-createdestroy.puml' │ 0   │ 357  │ null │ 98    │ 644         │ null │
+│ 34      │ 'shape-createdestroy.puml' │ 1   │ 324  │ null │ 98    │ 242         │ null │
+│ 35      │ 'shape-createdestroy.puml' │ 2   │ 324  │ null │ 98    │ 242         │ null │
+└─────────┴────────────────────────────┴─────┴──────┴──────┴───────┴─────────────┴──────┘
+=== p123 ===
+{"engine":"core-head-p123.js","pragma":false}
+┌─────────┬────────────────────────────┬─────┬──────┬──────┬───────┬─────────────┬──────┐
+│ (index) │ file                       │ rep │ ms   │ err  │ svgKB │ measureText │ sha  │
+├─────────┼────────────────────────────┼─────┼──────┼──────┼───────┼─────────────┼──────┤
+│ 0       │ 'gen-50.puml'              │ 0   │ 713  │ null │ 95    │ 693         │ null │
+│ 1       │ 'gen-50.puml'              │ 1   │ 257  │ null │ 95    │ 245         │ null │
+│ 2       │ 'gen-50.puml'              │ 2   │ 200  │ null │ 95    │ 245         │ null │
+│ 3       │ 'gen-200.puml'             │ 0   │ 702  │ null │ 373   │ 2015        │ null │
+│ 4       │ 'gen-200.puml'             │ 1   │ 457  │ null │ 373   │ 955         │ null │
+│ 5       │ 'gen-200.puml'             │ 2   │ 506  │ null │ 373   │ 955         │ null │
+│ 6       │ 'gen-500.puml'             │ 0   │ 2399 │ null │ 930   │ 4495        │ null │
+│ 7       │ 'gen-500.puml'             │ 1   │ 2268 │ null │ 930   │ 2375        │ null │
+│ 8       │ 'gen-500.puml'             │ 2   │ 2965 │ null │ 930   │ 2375        │ null │
+│ 9       │ 'puml-0.puml'              │ 0   │ 365  │ null │ 113   │ 292         │ null │
+│ 10      │ 'puml-0.puml'              │ 1   │ 319  │ null │ 113   │ 292         │ null │
+│ 11      │ 'puml-0.puml'              │ 2   │ 344  │ null │ 113   │ 292         │ null │
+│ 12      │ 'puml-1.puml'              │ 0   │ 250  │ null │ 77    │ 198         │ null │
+│ 13      │ 'puml-1.puml'              │ 1   │ 206  │ null │ 77    │ 198         │ null │
+│ 14      │ 'puml-1.puml'              │ 2   │ 216  │ null │ 77    │ 198         │ null │
+│ 15      │ 'puml-19.puml'             │ 0   │ 396  │ null │ 150   │ 387         │ null │
+│ 16      │ 'puml-19.puml'             │ 1   │ 488  │ null │ 150   │ 387         │ null │
+│ 17      │ 'puml-19.puml'             │ 2   │ 435  │ null │ 150   │ 387         │ null │
+│ 18      │ 'shape-groups.puml'        │ 0   │ 404  │ null │ 87    │ 546         │ null │
+│ 19      │ 'shape-groups.puml'        │ 1   │ 252  │ null │ 87    │ 258         │ null │
+│ 20      │ 'shape-groups.puml'        │ 2   │ 271  │ null │ 87    │ 258         │ null │
+│ 21      │ 'shape-parallel.puml'      │ 0   │ 368  │ null │ 118   │ 816         │ null │
+│ 22      │ 'shape-parallel.puml'      │ 1   │ 245  │ null │ 118   │ 328         │ null │
+│ 23      │ 'shape-parallel.puml'      │ 2   │ 249  │ null │ 118   │ 328         │ null │
+│ 24      │ 'shape-wide.puml'          │ 0   │ 274  │ null │ 86    │ 660         │ null │
+│ 25      │ 'shape-wide.puml'          │ 1   │ 319  │ null │ 86    │ 236         │ null │
+│ 26      │ 'shape-wide.puml'          │ 2   │ 370  │ null │ 86    │ 236         │ null │
+│ 27      │ 'shape-activation.puml'    │ 0   │ 961  │ null │ 186   │ 1268        │ null │
+│ 28      │ 'shape-activation.puml'    │ 1   │ 720  │ null │ 186   │ 426         │ null │
+│ 29      │ 'shape-activation.puml'    │ 2   │ 621  │ null │ 186   │ 426         │ null │
+│ 30      │ 'shape-self.puml'          │ 0   │ 365  │ null │ 100   │ 604         │ null │
+│ 31      │ 'shape-self.puml'          │ 1   │ 373  │ null │ 100   │ 204         │ null │
+│ 32      │ 'shape-self.puml'          │ 2   │ 395  │ null │ 100   │ 204         │ null │
+│ 33      │ 'shape-createdestroy.puml' │ 0   │ 479  │ null │ 98    │ 644         │ null │
+│ 34      │ 'shape-createdestroy.puml' │ 1   │ 392  │ null │ 98    │ 242         │ null │
+│ 35      │ 'shape-createdestroy.puml' │ 2   │ 366  │ null │ 98    │ 242         │ null │
+└─────────┴────────────────────────────┴─────┴──────┴──────┴───────┴─────────────┴──────┘
+=== p1234 ===
+{"engine":"core-head-p1234.js","pragma":false}
+┌─────────┬────────────────────────────┬─────┬──────┬──────┬───────┬─────────────┬──────┐
+│ (index) │ file                       │ rep │ ms   │ err  │ svgKB │ measureText │ sha  │
+├─────────┼────────────────────────────┼─────┼──────┼──────┼───────┼─────────────┼──────┤
+│ 0       │ 'gen-50.puml'              │ 0   │ 698  │ null │ 95    │ 693         │ null │
+│ 1       │ 'gen-50.puml'              │ 1   │ 232  │ null │ 95    │ 245         │ null │
+│ 2       │ 'gen-50.puml'              │ 2   │ 150  │ null │ 95    │ 245         │ null │
+│ 3       │ 'gen-200.puml'             │ 0   │ 658  │ null │ 373   │ 2015        │ null │
+│ 4       │ 'gen-200.puml'             │ 1   │ 506  │ null │ 373   │ 955         │ null │
+│ 5       │ 'gen-200.puml'             │ 2   │ 581  │ null │ 373   │ 955         │ null │
+│ 6       │ 'gen-500.puml'             │ 0   │ 2046 │ null │ 930   │ 4495        │ null │
+│ 7       │ 'gen-500.puml'             │ 1   │ 2138 │ null │ 930   │ 2375        │ null │
+│ 8       │ 'gen-500.puml'             │ 2   │ 2768 │ null │ 930   │ 2375        │ null │
+│ 9       │ 'puml-0.puml'              │ 0   │ 378  │ null │ 113   │ 292         │ null │
+│ 10      │ 'puml-0.puml'              │ 1   │ 399  │ null │ 113   │ 292         │ null │
+│ 11      │ 'puml-0.puml'              │ 2   │ 341  │ null │ 113   │ 292         │ null │
+│ 12      │ 'puml-1.puml'              │ 0   │ 277  │ null │ 77    │ 198         │ null │
+│ 13      │ 'puml-1.puml'              │ 1   │ 265  │ null │ 77    │ 198         │ null │
+│ 14      │ 'puml-1.puml'              │ 2   │ 239  │ null │ 77    │ 198         │ null │
+│ 15      │ 'puml-19.puml'             │ 0   │ 404  │ null │ 150   │ 387         │ null │
+│ 16      │ 'puml-19.puml'             │ 1   │ 389  │ null │ 150   │ 387         │ null │
+│ 17      │ 'puml-19.puml'             │ 2   │ 301  │ null │ 150   │ 387         │ null │
+│ 18      │ 'shape-groups.puml'        │ 0   │ 252  │ null │ 87    │ 546         │ null │
+│ 19      │ 'shape-groups.puml'        │ 1   │ 233  │ null │ 87    │ 258         │ null │
+│ 20      │ 'shape-groups.puml'        │ 2   │ 202  │ null │ 87    │ 258         │ null │
+│ 21      │ 'shape-parallel.puml'      │ 0   │ 256  │ null │ 118   │ 816         │ null │
+│ 22      │ 'shape-parallel.puml'      │ 1   │ 228  │ null │ 118   │ 328         │ null │
+│ 23      │ 'shape-parallel.puml'      │ 2   │ 375  │ null │ 118   │ 328         │ null │
+│ 24      │ 'shape-wide.puml'          │ 0   │ 419  │ null │ 86    │ 660         │ null │
+│ 25      │ 'shape-wide.puml'          │ 1   │ 375  │ null │ 86    │ 236         │ null │
+│ 26      │ 'shape-wide.puml'          │ 2   │ 373  │ null │ 86    │ 236         │ null │
+│ 27      │ 'shape-activation.puml'    │ 0   │ 893  │ null │ 186   │ 1268        │ null │
+│ 28      │ 'shape-activation.puml'    │ 1   │ 661  │ null │ 186   │ 426         │ null │
+│ 29      │ 'shape-activation.puml'    │ 2   │ 639  │ null │ 186   │ 426         │ null │
+│ 30      │ 'shape-self.puml'          │ 0   │ 489  │ null │ 100   │ 604         │ null │
+│ 31      │ 'shape-self.puml'          │ 1   │ 391  │ null │ 100   │ 204         │ null │
+│ 32      │ 'shape-self.puml'          │ 2   │ 356  │ null │ 100   │ 204         │ null │
+│ 33      │ 'shape-createdestroy.puml' │ 0   │ 457  │ null │ 98    │ 644         │ null │
+│ 34      │ 'shape-createdestroy.puml' │ 1   │ 315  │ null │ 98    │ 242         │ null │
+│ 35      │ 'shape-createdestroy.puml' │ 2   │ 328  │ null │ 98    │ 242         │ null │
+└─────────┴────────────────────────────┴─────┴──────┴──────┴───────┴─────────────┴──────┘
+=== p12345 ===
+{"engine":"core-head-p12345.js","pragma":false}
+┌─────────┬────────────────────────────┬─────┬──────┬──────┬───────┬─────────────┬──────┐
+│ (index) │ file                       │ rep │ ms   │ err  │ svgKB │ measureText │ sha  │
+├─────────┼────────────────────────────┼─────┼──────┼──────┼───────┼─────────────┼──────┤
+│ 0       │ 'gen-50.puml'              │ 0   │ 621  │ null │ 95    │ 693         │ null │
+│ 1       │ 'gen-50.puml'              │ 1   │ 192  │ null │ 95    │ 245         │ null │
+│ 2       │ 'gen-50.puml'              │ 2   │ 171  │ null │ 95    │ 245         │ null │
+│ 3       │ 'gen-200.puml'             │ 0   │ 742  │ null │ 373   │ 2015        │ null │
+│ 4       │ 'gen-200.puml'             │ 1   │ 601  │ null │ 373   │ 955         │ null │
+│ 5       │ 'gen-200.puml'             │ 2   │ 522  │ null │ 373   │ 955         │ null │
+│ 6       │ 'gen-500.puml'             │ 0   │ 2525 │ null │ 930   │ 4495        │ null │
+│ 7       │ 'gen-500.puml'             │ 1   │ 2372 │ null │ 930   │ 2375        │ null │
+│ 8       │ 'gen-500.puml'             │ 2   │ 2372 │ null │ 930   │ 2375        │ null │
+│ 9       │ 'puml-0.puml'              │ 0   │ 347  │ null │ 113   │ 292         │ null │
+│ 10      │ 'puml-0.puml'              │ 1   │ 300  │ null │ 113   │ 292         │ null │
+│ 11      │ 'puml-0.puml'              │ 2   │ 294  │ null │ 113   │ 292         │ null │
+│ 12      │ 'puml-1.puml'              │ 0   │ 207  │ null │ 77    │ 198         │ null │
+│ 13      │ 'puml-1.puml'              │ 1   │ 183  │ null │ 77    │ 198         │ null │
+│ 14      │ 'puml-1.puml'              │ 2   │ 214  │ null │ 77    │ 198         │ null │
+│ 15      │ 'puml-19.puml'             │ 0   │ 296  │ null │ 150   │ 387         │ null │
+│ 16      │ 'puml-19.puml'             │ 1   │ 248  │ null │ 150   │ 387         │ null │
+│ 17      │ 'puml-19.puml'             │ 2   │ 240  │ null │ 150   │ 387         │ null │
+│ 18      │ 'shape-groups.puml'        │ 0   │ 391  │ null │ 87    │ 546         │ null │
+│ 19      │ 'shape-groups.puml'        │ 1   │ 389  │ null │ 87    │ 258         │ null │
+│ 20      │ 'shape-groups.puml'        │ 2   │ 370  │ null │ 87    │ 258         │ null │
+│ 21      │ 'shape-parallel.puml'      │ 0   │ 398  │ null │ 118   │ 816         │ null │
+│ 22      │ 'shape-parallel.puml'      │ 1   │ 295  │ null │ 118   │ 328         │ null │
+│ 23      │ 'shape-parallel.puml'      │ 2   │ 286  │ null │ 118   │ 328         │ null │
+│ 24      │ 'shape-wide.puml'          │ 0   │ 374  │ null │ 86    │ 660         │ null │
+│ 25      │ 'shape-wide.puml'          │ 1   │ 356  │ null │ 86    │ 236         │ null │
+│ 26      │ 'shape-wide.puml'          │ 2   │ 327  │ null │ 86    │ 236         │ null │
+│ 27      │ 'shape-activation.puml'    │ 0   │ 930  │ null │ 186   │ 1268        │ null │
+│ 28      │ 'shape-activation.puml'    │ 1   │ 587  │ null │ 186   │ 426         │ null │
+│ 29      │ 'shape-activation.puml'    │ 2   │ 421  │ null │ 186   │ 426         │ null │
+│ 30      │ 'shape-self.puml'          │ 0   │ 243  │ null │ 100   │ 604         │ null │
+│ 31      │ 'shape-self.puml'          │ 1   │ 218  │ null │ 100   │ 204         │ null │
+│ 32      │ 'shape-self.puml'          │ 2   │ 224  │ null │ 100   │ 204         │ null │
+│ 33      │ 'shape-createdestroy.puml' │ 0   │ 488  │ null │ 98    │ 644         │ null │
+│ 34      │ 'shape-createdestroy.puml' │ 1   │ 379  │ null │ 98    │ 242         │ null │
+│ 35      │ 'shape-createdestroy.puml' │ 2   │ 432  │ null │ 98    │ 242         │ null │
+└─────────┴────────────────────────────┴─────┴──────┴──────┴───────┴─────────────┴──────┘

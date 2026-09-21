@@ -1,0 +1,7 @@
+@startuml
+!$BGCOLOR = "#1E1E1E"
+!theme hacker
+actor a
+entity b
+a -> b: GetBreakfast
+@enduml

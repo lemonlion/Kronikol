@@ -1,0 +1,26 @@
+diff --git a/src/main/java/net/sourceforge/plantuml/utils/CharInspectorImpl.java b/src/main/java/net/sourceforge/plantuml/utils/CharInspectorImpl.java
+index 5534dcc..a2487cc 100644
+--- a/src/main/java/net/sourceforge/plantuml/utils/CharInspectorImpl.java
++++ b/src/main/java/net/sourceforge/plantuml/utils/CharInspectorImpl.java
+@@ -57,10 +57,18 @@ public class CharInspectorImpl implements CharInspector {
+ 		return currentLine.charAt(pos + ahead);
+ 	}
+ 
++	// peek() and jump() ask for the current line once per character: trimming it and
++	// appending the newline every time made parsing a style sheet quadratic per line.
++	private int cachedLineIndex = -1;
++	private String cachedLine;
++
+ 	private String getCurrentLine() {
+-		if (insertNewlines)
+-			return data.getAt(line).getTrimmed().getString() + "\n";
+-		return data.getAt(line).getTrimmed().getString();
++		if (cachedLineIndex != line) {
++			final String trimmed = data.getAt(line).getTrimmed().getString();
++			cachedLine = insertNewlines ? trimmed + "\n" : trimmed;
++			cachedLineIndex = line;
++		}
++		return cachedLine;
+ 	}
+ 
+ 	@Override

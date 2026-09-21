@@ -1,0 +1,8 @@
+@startuml
+!theme carbon-gray
+actor a
+a -> a: x
+hnote across
+ok
+end note
+@enduml

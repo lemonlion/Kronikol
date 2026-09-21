@@ -1,0 +1,442 @@
+{
+ "_baseline": {
+  "noteFill": "#FEFFDD",
+  "noteStroke": "#181818",
+  "noteText": "#000000",
+  "participantFill": "#E2E2F0",
+  "participantText": "#000000",
+  "domText": "#000000",
+  "link": "#0000FF",
+  "arrow": "#181818"
+ },
+ "amiga": {
+  "noteFill": "#0B58A8",
+  "noteStroke": "#FFFFFF",
+  "noteText": "#FFFFFF",
+  "participantFill": "#0B58A8",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#FDA325",
+  "arrow": "#FFFFFF"
+ },
+ "aws-orange": {
+  "noteFill": "#0073BB",
+  "noteStroke": "#0073BB",
+  "noteText": "#FFFFFF",
+  "participantFill": "#EC7211",
+  "participantText": "#FFFFFF",
+  "domText": "#4E5D6C",
+  "link": "#0000FF",
+  "arrow": "#EC7211"
+ },
+ "black-knight": {
+  "noteFill": "#0060A8",
+  "noteStroke": "#0060A8",
+  "noteText": "#FFFFFF",
+  "participantFill": "#303030",
+  "participantText": "#FFF200",
+  "domText": "#FFFFFF",
+  "link": "#FFFFFF",
+  "arrow": "#303030"
+ },
+ "bluegray": {
+  "noteFill": "#3786BE",
+  "noteStroke": "#0568AE",
+  "noteText": "#FFFFFF",
+  "participantFill": "#33B2E2",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#FFFFFF",
+  "arrow": "#009FDB"
+ },
+ "blueprint": {
+  "noteFill": "#003153",
+  "noteStroke": "#D9D3D0",
+  "noteText": "#D9D3D0",
+  "participantFill": "#003153",
+  "participantText": "#D9D3D0",
+  "domText": "#D9D3D0",
+  "link": "#D9D3D0",
+  "arrow": "#D9D3D0"
+ },
+ "carbon-gray": {
+  "noteFill": "#FFFFFF",
+  "noteStroke": "#262626",
+  "noteText": "#262626",
+  "participantFill": "#F4F4F4",
+  "participantText": "#262626",
+  "domText": "#262626",
+  "link": "#0000FF",
+  "arrow": "#C6C6C6"
+ },
+ "cerulean-outline": {
+  "noteFill": "#00000000",
+  "noteStroke": "#033C73",
+  "noteText": "#033C73",
+  "participantFill": "#00000000",
+  "participantText": "#2FA4E7",
+  "domText": "#2FA4E7",
+  "link": "#FD7E14",
+  "arrow": "#2FA4E7"
+ },
+ "cerulean": {
+  "noteFill": "#35638F",
+  "noteStroke": "#033C73",
+  "noteText": "#FFFFFF",
+  "participantFill": "#59B6EC",
+  "participantText": "#FFFFFF",
+  "domText": "#343A40",
+  "link": "#FD7E14",
+  "arrow": "#2FA4E7"
+ },
+ "cloudscape-design": {
+  "noteFill": "#0972D3",
+  "noteStroke": "#0972D3",
+  "noteText": "#FFFFFF",
+  "participantFill": "#0972D3",
+  "participantText": "#D1D5DB",
+  "domText": "#000716",
+  "link": "#0000FF",
+  "arrow": "#868E96"
+ },
+ "crt-amber": {
+  "noteFill": "#282828",
+  "noteStroke": "#FFB000",
+  "noteText": "#FFB000",
+  "participantFill": "#282828",
+  "participantText": "#FFB000",
+  "domText": "#FFB000",
+  "link": "#FFCC00",
+  "arrow": "#FFB000"
+ },
+ "crt-green": {
+  "noteFill": "#282828",
+  "noteStroke": "#33FF33",
+  "noteText": "#33FF33",
+  "participantFill": "#282828",
+  "participantText": "#33FF33",
+  "domText": "#33FF33",
+  "link": "#33FF33",
+  "arrow": "#33FF33"
+ },
+ "cyborg-outline": {
+  "noteFill": "#00000000",
+  "noteStroke": "#AD5CD6",
+  "noteText": "#AD5CD6",
+  "participantFill": "#00000000",
+  "participantText": "#2A9FD6",
+  "domText": "#2A9FD6",
+  "link": "#FD7E14",
+  "arrow": "#2A9FD6"
+ },
+ "cyborg": {
+  "noteFill": "#9933CC",
+  "noteStroke": "#AD5CD6",
+  "noteText": "#FFFFFF",
+  "participantFill": "#2A9FD6",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#FD7E14",
+  "arrow": "#2A9FD6"
+ },
+ "hacker": {
+  "noteFill": "#BB91B2",
+  "noteStroke": "#885E7F",
+  "noteText": "#FFFFFF",
+  "participantFill": "#D3F198",
+  "participantText": "#151515",
+  "domText": "#FFFFFF",
+  "link": "#FFFFFF",
+  "arrow": "#B5E853"
+ },
+ "lightgray": {
+  "noteFill": "#5C85AD",
+  "noteStroke": "#336699",
+  "noteText": "#FFFFFF",
+  "participantFill": "#F3F3F3",
+  "participantText": "#336699",
+  "domText": "#336699",
+  "link": "#FFFFFF",
+  "arrow": "#E2E2E2"
+ },
+ "mars": {
+  "noteFill": "#E5E5E5",
+  "noteStroke": "#191919",
+  "noteText": "#191919",
+  "participantFill": "#E55756",
+  "participantText": "#FFFFFF",
+  "domText": "#191919",
+  "link": "#0000FF",
+  "arrow": "#191919"
+ },
+ "materia-outline": {
+  "noteFill": "#00000000",
+  "noteStroke": "#9C27B0",
+  "noteText": "#9C27B0",
+  "participantFill": "#00000000",
+  "participantText": "#2196F3",
+  "domText": "#2196F3",
+  "link": "#FD7E14",
+  "arrow": "#2196F3"
+ },
+ "materia": {
+  "noteFill": "#B052C0",
+  "noteStroke": "#9C27B0",
+  "noteText": "#FFFFFF",
+  "participantFill": "#4DABF5",
+  "participantText": "#FFFFFF",
+  "domText": "#222222",
+  "link": "#FD7E14",
+  "arrow": "#2196F3"
+ },
+ "metal": {
+  "noteFill": "#C0D0E5",
+  "noteStroke": "#8D9DB2",
+  "noteText": "#FDFDFD",
+  "participantFill": "#E5E4E2",
+  "participantText": "#4682B4",
+  "domText": "#4D4D4D",
+  "link": "#FFFFFF",
+  "arrow": "#E5E4E2"
+ },
+ "mimeograph": {
+  "noteFill": "#D9D3D0",
+  "noteStroke": "#9275B6",
+  "noteText": "#9275B6",
+  "participantFill": "#D9D3D0",
+  "participantText": "#9275B6",
+  "domText": "#9275B6",
+  "link": "#9275B6",
+  "arrow": "#9275B6"
+ },
+ "minty": {
+  "noteFill": "#6CC3D5",
+  "noteStroke": "#61B0C0",
+  "noteText": "#FFFFFF",
+  "participantFill": "#86C8B5",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#FD7E14",
+  "arrow": "#78C2AD"
+ },
+ "mono": {
+  "noteFill": "#FFFFFF",
+  "noteStroke": "#000000",
+  "noteText": "#000000",
+  "participantFill": "#FFFFFF",
+  "participantText": "#000000",
+  "domText": "#000000",
+  "link": "#333333",
+  "arrow": "#000000"
+ },
+ "plain": {
+  "noteFill": "#FFFFFF",
+  "noteStroke": "#000000",
+  "noteText": "#000000",
+  "participantFill": "#FFFFFF",
+  "participantText": "#000000",
+  "domText": "#000000",
+  "link": "#0000FF",
+  "arrow": "#000000"
+ },
+ "reddress-darkblue": {
+  "noteFill": "#1A66C2",
+  "noteStroke": "#002642",
+  "noteText": "#FFFFFF",
+  "participantFill": "#2E2E2E",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#0000FF",
+  "arrow": "#FFFFFF"
+ },
+ "reddress-darkgreen": {
+  "noteFill": "#228811",
+  "noteStroke": "#113300",
+  "noteText": "#FFFFFF",
+  "participantFill": "#2E2E2E",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#0000FF",
+  "arrow": "#FFFFFF"
+ },
+ "reddress-darkorange": {
+  "noteFill": "#BB6600",
+  "noteStroke": "#662200",
+  "noteText": "#FFFFFF",
+  "participantFill": "#2E2E2E",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#0000FF",
+  "arrow": "#FFFFFF"
+ },
+ "reddress-darkred": {
+  "noteFill": "#880000",
+  "noteStroke": "#330000",
+  "noteText": "#FFFFFF",
+  "participantFill": "#2E2E2E",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#0000FF",
+  "arrow": "#FFFFFF"
+ },
+ "reddress-lightblue": {
+  "noteFill": "#2A86E2",
+  "noteStroke": "#1A66C2",
+  "noteText": "#000000",
+  "participantFill": "#CCCCCC",
+  "participantText": "#000000",
+  "domText": "#000000",
+  "link": "#0000FF",
+  "arrow": "#000000"
+ },
+ "reddress-lightgreen": {
+  "noteFill": "#55BB33",
+  "noteStroke": "#338822",
+  "noteText": "#000000",
+  "participantFill": "#CCCCCC",
+  "participantText": "#000000",
+  "domText": "#000000",
+  "link": "#0000FF",
+  "arrow": "#000000"
+ },
+ "reddress-lightorange": {
+  "noteFill": "#FF8800",
+  "noteStroke": "#BB6600",
+  "noteText": "#000000",
+  "participantFill": "#CCCCCC",
+  "participantText": "#000000",
+  "domText": "#000000",
+  "link": "#0000FF",
+  "arrow": "#000000"
+ },
+ "reddress-lightred": {
+  "noteFill": "#CC0033",
+  "noteStroke": "#AA0033",
+  "noteText": "#000000",
+  "participantFill": "#CCCCCC",
+  "participantText": "#000000",
+  "domText": "#000000",
+  "link": "#0000FF",
+  "arrow": "#000000"
+ },
+ "sandstone": {
+  "noteFill": "#29ABE0",
+  "noteStroke": "#259ACA",
+  "noteText": "#FFFFFF",
+  "participantFill": "#325D88",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#F47C3C",
+  "arrow": "#325D88"
+ },
+ "silver": {
+  "noteFill": "#5C85AD",
+  "noteStroke": "#336699",
+  "noteText": "#FFFFFF",
+  "participantFill": "#EEEEEE",
+  "participantText": "#336699",
+  "domText": "#303030",
+  "link": "#FFFFFF",
+  "arrow": "#EEEEEE"
+ },
+ "sketchy-outline": {
+  "noteFill": "#17A2B8",
+  "noteStroke": "#1592A6",
+  "noteText": "#FFFFFF",
+  "participantFill": "#00000000",
+  "participantText": "#2E2E2E",
+  "domText": "#2E2E2E",
+  "link": "#FD7E14",
+  "arrow": "#333333"
+ },
+ "sketchy": {
+  "noteFill": "#17A2B8",
+  "noteStroke": "#1592A6",
+  "noteText": "#FFFFFF",
+  "participantFill": "#474747",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#FD7E14",
+  "arrow": "#333333"
+ },
+ "spacelab-white": {
+  "noteFill": "#70B8F7",
+  "noteStroke": "#246BAA",
+  "noteText": "#FFFFFF",
+  "participantFill": "#7C9AB9",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#FD7E14",
+  "arrow": "#446E9B"
+ },
+ "spacelab": {
+  "noteFill": "#70B8F7",
+  "noteStroke": "#246BAA",
+  "noteText": "#FFFFFF",
+  "participantFill": "#7C9AB9",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#FD7E14",
+  "arrow": "#446E9B"
+ },
+ "sunlust": {
+  "noteFill": "#FFFFCC",
+  "noteStroke": "#B58900",
+  "noteText": "#000000",
+  "participantFill": "#CCCCFF",
+  "participantText": "#000000",
+  "domText": "#000000",
+  "link": "#0000FF",
+  "arrow": "#657B83"
+ },
+ "superhero-outline": {
+  "noteFill": "#00000000",
+  "noteStroke": "#7CCDE5",
+  "noteText": "#7CCDE5",
+  "participantFill": "#00000000",
+  "participantText": "#DF691A",
+  "domText": "#DF691A",
+  "link": "#F0AD4E",
+  "arrow": "#DF691A"
+ },
+ "superhero": {
+  "noteFill": "#5BC0DE",
+  "noteStroke": "#7CCDE5",
+  "noteText": "#FFFFFF",
+  "participantFill": "#DF691A",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#F0AD4E",
+  "arrow": "#DF691A"
+ },
+ "toy": {
+  "noteFill": "#90EE90",
+  "noteStroke": "#454645",
+  "noteText": "#454645",
+  "participantFill": "#FF6F61",
+  "participantText": "#FFFFFF",
+  "domText": "#454645",
+  "link": "#0000FF",
+  "arrow": "#454645"
+ },
+ "united": {
+  "noteFill": "#17A2B8",
+  "noteStroke": "#1592A6",
+  "noteText": "#FFFFFF",
+  "participantFill": "#E95420",
+  "participantText": "#FFFFFF",
+  "domText": "#FFFFFF",
+  "link": "#E95420",
+  "arrow": "#E95420"
+ },
+ "vibrant": {
+  "noteFill": "#7FFFD4",
+  "noteStroke": "#454645",
+  "noteText": "#454645",
+  "participantFill": "#FF6347",
+  "participantText": "#FFFFFF",
+  "domText": "#454645",
+  "link": "#0000FF",
+  "arrow": "#454645"
+ }
+}

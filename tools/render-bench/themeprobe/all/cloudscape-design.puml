@@ -1,0 +1,48 @@
+@startuml
+!theme cloudscape-design
+!pragma teoz true
+<style>
+ .eventNote {
+     BackgroundColor #cfecf7
+     FontSize 11
+     RoundCorner 10
+ }
+</style>
+<style>
+ .assertionNote {
+     FontSize 11
+     RoundCorner 5
+ }
+</style>
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+entity "Breakfast Provider" as breakfastProvider
+database "CosmosDB" as cosmosDB
+queue "ServiceBus" as bus
+
+hnote across #black:<color:white>Test T1
+caller -[#438DD5]> breakfastProvider: GET /breakfast
+note right
+<color:gray>[Full path]
+<color:gray>http://localhost/breakfast
+{"id":1}
+end note
+breakfastProvider -[#E74C3C]> cosmosDB: query
+note right
+some payload
+end note
+cosmosDB --> breakfastProvider: 1 doc
+breakfastProvider -[#9B59B6]> bus: publish
+note<<eventNote>> right
+event body
+end note
+hnote across <<assertionNote>> #d4edda
+✓ the mock answers 200
+end note
+hnote across <<assertionNote>> #f8d7da
+✗ failed assert
+end note
+breakfastProvider --> caller: [[https://example.com/x 200 OK]]
+@enduml

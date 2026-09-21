@@ -388,3 +388,7 @@ tools/render-bench/baseline-*-smoketest.js
 
 # Claude Code session lock: rewritten by every session, never content
 .claude/scheduled_tasks.lock
+
+# Drafts of replies and issues posted upstream: correspondence, not repo content
+tools/render-bench/reply*.md
+tools/render-bench/teavm-issue-draft.md

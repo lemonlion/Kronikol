@@ -1,0 +1,70 @@
+diff --git a/src/main/java/net/sourceforge/plantuml/StringUtils.java b/src/main/java/net/sourceforge/plantuml/StringUtils.java
+index 5d497f5..e9ed5e1 100644
+--- a/src/main/java/net/sourceforge/plantuml/StringUtils.java
++++ b/src/main/java/net/sourceforge/plantuml/StringUtils.java
+@@ -548,36 +548,42 @@ public class StringUtils {
+ 		if (rounded == 0)
+ 			return "0";
+ 
+-		final String digits = Integer.toString(rounded);
+-		final int len = digits.length();
+-
+-		final StringBuilder sb = new StringBuilder(len + 2);
+-		if (negative)
+-			sb.append('-');
++		// Written right to left into one char[] and turned into a String once: once compiled
++		// to JavaScript by TeaVM, every StringBuilder.toString() / Integer.toString() copies a
++		// char array into a native string, and this runs for every coordinate of the SVG.
++		// 10 digits for an int, the leading "0.", the dot, the sign, the zero padding.
++		final char[] buf = new char[14 + decimal];
++		int pos = buf.length;
++		int remaining = rounded;
++		int fracDigits = decimal;
++
++		// useless trailing fractional zeros are never written
++		while (fracDigits > 0 && remaining % 10 == 0) {
++			remaining /= 10;
++			fracDigits--;
++		}
+ 
+-		if (decimal == 0) {
+-			sb.append(digits);
+-			return sb.toString();
++		if (fracDigits > 0) {
++			for (int i = 0; i < fracDigits; i++) {
++				buf[--pos] = (char) ('0' + remaining % 10);
++				remaining /= 10;
++			}
++			buf[--pos] = '.';
+ 		}
+ 
+-		if (len <= decimal) {
+-			sb.append('0').append('.');
+-			for (int i = len; i < decimal; i++)
+-				sb.append('0');
+-			sb.append(digits);
++		if (remaining == 0) {
++			buf[--pos] = '0';
+ 		} else {
+-			sb.append(digits, 0, len - decimal).append('.').append(digits, len - decimal, len);
++			while (remaining > 0) {
++				buf[--pos] = (char) ('0' + remaining % 10);
++				remaining /= 10;
++			}
+ 		}
+ 
+-		int end = sb.length() - 1;
+-		while (sb.charAt(end) == '0')
+-			end--;
+-
+-		if (sb.charAt(end) == '.')
+-			end--;
++		if (negative)
++			buf[--pos] = '-';
+ 
+-		sb.setLength(end + 1);
+-		return sb.toString();
++		return new String(buf, pos, buf.length - pos);
+ 	}
+ 
+ 	// Removes useless trailing zeros (and the dot if it becomes orphan)

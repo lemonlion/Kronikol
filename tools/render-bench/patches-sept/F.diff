@@ -1,0 +1,20 @@
+diff --git a/src/main/java/net/sourceforge/plantuml/klimt/shape/UText.java b/src/main/java/net/sourceforge/plantuml/klimt/shape/UText.java
+index 4db1fe7..0001f0b 100644
+--- a/src/main/java/net/sourceforge/plantuml/klimt/shape/UText.java
++++ b/src/main/java/net/sourceforge/plantuml/klimt/shape/UText.java
+@@ -59,7 +59,14 @@ public class UText implements UShape {
+ 	private UText(String text, FontConfiguration font, int orientation) {
+ 		if (TeaVM.a())
+ 			assert text.indexOf('\t') == -1;
+-		this.text = text.replace(Jaws.BLOCK_E1_NEWLINE, '\u21b5').replace(Jaws.BLOCK_E1_BREAKLINE, '\u23ce');
++		// Once compiled to JavaScript by TeaVM, String.replace(char, char) copies the whole
++		// string even when the char is absent, and nearly no text holds these two markers.
++		String tmp = text;
++		if (tmp.indexOf(Jaws.BLOCK_E1_NEWLINE) != -1)
++			tmp = tmp.replace(Jaws.BLOCK_E1_NEWLINE, '\u21b5');
++		if (tmp.indexOf(Jaws.BLOCK_E1_BREAKLINE) != -1)
++			tmp = tmp.replace(Jaws.BLOCK_E1_BREAKLINE, '\u23ce');
++		this.text = tmp;
+ 		this.font = font;
+ 		this.orientation = orientation;
+ 	}

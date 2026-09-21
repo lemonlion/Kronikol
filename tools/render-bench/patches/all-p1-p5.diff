@@ -1,0 +1,329 @@
+diff --git a/src/main/java/net/sourceforge/plantuml/klimt/awt/XColor.java b/src/main/java/net/sourceforge/plantuml/klimt/awt/XColor.java
+index c894a87..92bd2eb 100644
+--- a/src/main/java/net/sourceforge/plantuml/klimt/awt/XColor.java
++++ b/src/main/java/net/sourceforge/plantuml/klimt/awt/XColor.java
+@@ -102,14 +102,26 @@ public class XColor {
+ 		return "[r=" + red + ",g=" + green + ",b=" + blue + ",a=" + alpha + "]";
+ 	}
+ 
++	private static final char[] HEX = "0123456789ABCDEF".toCharArray();
++
++	private static void appendHex2(StringBuilder sb, int v) {
++		sb.append(HEX[(v >> 4) & 0xF]).append(HEX[v & 0xF]);
++	}
++
+ 	public String toSvg() {
+ 		if (alpha == 0)
+ 			return "#00000000";
+ 
+-		if (alpha == 255)
+-			return String.format("#%02X%02X%02X", red, green, blue);
+-
+-		return String.format("#%02X%02X%02X%02X", red, green, blue, alpha);
++		// Same output as String.format("#%02X..") without the Formatter
++		// machinery, which shows up in profiles when called per drawn element
++		final StringBuilder sb = new StringBuilder(9);
++		sb.append('#');
++		appendHex2(sb, red);
++		appendHex2(sb, green);
++		appendHex2(sb, blue);
++		if (alpha != 255)
++			appendHex2(sb, alpha);
++		return sb.toString();
+ 	}
+ 
+ 	public static String toHexRGBColor(int rgb) {
+diff --git a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationExoTile.java b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationExoTile.java
+index 06265de..0720dee 100644
+--- a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationExoTile.java
++++ b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationExoTile.java
+@@ -94,14 +94,20 @@ public class CommunicationExoTile extends AbstractTile {
+ 		return getComponent(getStringBounder()).getYPoint(getStringBounder());
+ 	}
+ 
++	// The component only depends on the tile's fixed data, not on the string
++	// bounder, but it was rebuilt on every call from every layout phase
++	private ArrowComponent cachedComponent;
++
+ 	private ArrowComponent getComponent(StringBounder stringBounder) {
+-		ArrowConfiguration arrowConfiguration = message.getArrowConfiguration();
+-		if (message.getType().getDirection() == -1)
+-			arrowConfiguration = arrowConfiguration.reverse();
++		if (cachedComponent == null) {
++			ArrowConfiguration arrowConfiguration = message.getArrowConfiguration();
++			if (message.getType().getDirection() == -1)
++				arrowConfiguration = arrowConfiguration.reverse();
+ 
+-		final ArrowComponent comp = skin.createComponentArrow(message.getUsedStyles(), arrowConfiguration, skinParam,
+-				message.getLabelNumbered());
+-		return comp;
++			cachedComponent = skin.createComponentArrow(message.getUsedStyles(), arrowConfiguration, skinParam,
++					message.getLabelNumbered());
++		}
++		return cachedComponent;
+ 	}
+ 
+ 	public void drawU(UGraphic ug) {
+diff --git a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationTile.java b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationTile.java
+index ea53831..7a21d51 100644
+--- a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationTile.java
++++ b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationTile.java
+@@ -143,15 +143,27 @@ public class CommunicationTile extends AbstractCommunicationTile {
+ 		return result.getThickness();
+ 	}
+ 
++	// The component only depends on the tile's fixed data and on isReverse(),
++	// but it was rebuilt on every call, from every layout phase (buildOne,
++	// addConstraints, getPreferredHeight, onGaugeResolved, drawU, getMaxX).
++	// isReverse() reads the Real solver's current values so it may change
++	// between phases: memoize one component per orientation.
++	private final ArrowComponent[] cachedComponent = new ArrowComponent[2];
++
+ 	private ArrowComponent getComponent(StringBounder stringBounder) {
+-		ArrowConfiguration arrowConfiguration = message.getArrowConfiguration();
+-		if (isReverse(stringBounder))
+-			arrowConfiguration = arrowConfiguration.reverse();
++		final boolean reverse = isReverse(stringBounder);
++		final int idx = reverse ? 1 : 0;
++		if (cachedComponent[idx] == null) {
++			ArrowConfiguration arrowConfiguration = message.getArrowConfiguration();
++			if (reverse)
++				arrowConfiguration = arrowConfiguration.reverse();
+ 
+-		arrowConfiguration = arrowConfiguration.withThickness(getArrowThickness());
++			arrowConfiguration = arrowConfiguration.withThickness(getArrowThickness());
+ 
+-		return skin.createComponentArrow(message.getUsedStyles(), arrowConfiguration, skinParam,
+-				message.getLabelNumbered());
++			cachedComponent[idx] = skin.createComponentArrow(message.getUsedStyles(), arrowConfiguration, skinParam,
++					message.getLabelNumbered());
++		}
++		return cachedComponent[idx];
+ 	}
+ 
+ 	private ArrowComponent getComponentMulticast(StringBounder stringBounder, boolean reverse) {
+diff --git a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationTileSelf.java b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationTileSelf.java
+index a771788..b1057ec 100644
+--- a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationTileSelf.java
++++ b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/CommunicationTileSelf.java
+@@ -95,12 +95,18 @@ public class CommunicationTileSelf extends AbstractCommunicationTile {
+ 		return yGauge;
+ 	}
+ 
++	// The component only depends on the tile's fixed data, not on the string
++	// bounder, but it was rebuilt on every call from every layout phase
++	private ArrowComponent cachedComponent;
++
+ 	private ArrowComponent getComponent(StringBounder stringBounder) {
+-		ArrowConfiguration arrowConfiguration = message.getArrowConfiguration();
+-		arrowConfiguration = arrowConfiguration.self();
+-		final ArrowComponent comp = skin.createComponentArrow(message.getUsedStyles(), arrowConfiguration, skinParam,
+-				message.getLabelNumbered());
+-		return comp;
++		if (cachedComponent == null) {
++			ArrowConfiguration arrowConfiguration = message.getArrowConfiguration();
++			arrowConfiguration = arrowConfiguration.self();
++			cachedComponent = skin.createComponentArrow(message.getUsedStyles(), arrowConfiguration, skinParam,
++					message.getLabelNumbered());
++		}
++		return cachedComponent;
+ 	}
+ 
+ 	@Override
+diff --git a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/LiveBoxes.java b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/LiveBoxes.java
+index 88a48d2..8ea272a 100644
+--- a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/LiveBoxes.java
++++ b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/LiveBoxes.java
+@@ -210,25 +210,25 @@ public class LiveBoxes {
+ 	}
+ 
+ 	private boolean isNextEventADestroy(Event event) {
+-		for (Iterator<Event> it = events.iterator(); it.hasNext();) {
+-			final Event current = it.next();
+-			if (event != current)
+-				continue;
+-
+-			if (current instanceof Message) {
+-				// Several life events may follow the message (for example a
+-				// deactivate then a destroy): the destroy is not always the
+-				// first one
+-				Event next = nextButSkippingNotes(it);
+-				while (next instanceof LifeEvent) {
+-					final LifeEvent le = (LifeEvent) next;
+-					if (le.isDestroy(p))
+-						return true;
+-
+-					next = nextButSkippingNotes(it);
+-				}
+-			}
++		// Scanning the list from the start to locate the event made getStairs
++		// quadratic in the number of events; the eventInfo index finds it in O(1)
++		// and the short local walk below is unchanged.
++		ensureLevelCache();
++		final int[] info = eventInfo.get(event);
++		if (info == null || event instanceof Message == false)
+ 			return false;
++
++		// Several life events may follow the message (for example a
++		// deactivate then a destroy): the destroy is not always the
++		// first one
++		for (int k = info[0] + 1; k < events.size(); k++) {
++			final Event next = events.get(k);
++			if (next instanceof Note)
++				continue;
++			if (next instanceof LifeEvent == false)
++				return false;
++			if (((LifeEvent) next).isDestroy(p))
++				return true;
+ 		}
+ 		return false;
+ 	}
+@@ -240,22 +240,21 @@ public class LiveBoxes {
+ 				return le.getSpecificColors();
+ 
+ 		}
+-		for (Iterator<Event> it = events.iterator(); it.hasNext();) {
+-			final Event current = it.next();
+-			if (event != current)
+-				continue;
+-
+-			if (current instanceof Message || current instanceof MessageExo) {
+-				Event next = nextButSkippingNotes(it);
+-				while (next instanceof LifeEvent && ((LifeEvent) next).getMessage() == current) {
+-					final LifeEvent le = (LifeEvent) next;
+-					if (le.isActivate() && le.getParticipant() == p)
+-						return le.getSpecificColors();
+-
+-					next = nextButSkippingNotes(it);
+-				}
+-			}
++		// Same O(1) lookup as isNextEventADestroy instead of a full list scan.
++		ensureLevelCache();
++		final int[] info = eventInfo.get(event);
++		if (info == null || (event instanceof Message == false && event instanceof MessageExo == false))
+ 			return null;
++
++		for (int k = info[0] + 1; k < events.size(); k++) {
++			final Event next = events.get(k);
++			if (next instanceof Note)
++				continue;
++			if (next instanceof LifeEvent == false || ((LifeEvent) next).getMessage() != event)
++				return null;
++			final LifeEvent le = (LifeEvent) next;
++			if (le.isActivate() && le.getParticipant() == p)
++				return le.getSpecificColors();
+ 		}
+ 		return null;
+ 	}
+diff --git a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/NoteTile.java b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/NoteTile.java
+index c9cc138..c021120 100644
+--- a/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/NoteTile.java
++++ b/src/main/java/net/sourceforge/plantuml/sequencediagram/teoz/NoteTile.java
+@@ -102,10 +102,16 @@ public class NoteTile extends AbstractTile implements Tile {
+ 		return yGauge;
+ 	}
+ 
++	// The component only depends on the tile's fixed data, not on the string
++	// bounder, but it was rebuilt on every call from every layout phase
++	private Component cachedComponent;
++
+ 	private Component getComponent(StringBounder stringBounder) {
+-		final Component comp = skin.createComponentNote(note.getUsedStyles(), getNoteComponentType(note.getNoteStyle()),
+-				note.getSkinParamBackcolored(skinParam), note.getDisplay(), note.getColors(), note.getPosition());
+-		return comp;
++		if (cachedComponent == null)
++			cachedComponent = skin.createComponentNote(note.getUsedStyles(),
++					getNoteComponentType(note.getNoteStyle()), note.getSkinParamBackcolored(skinParam),
++					note.getDisplay(), note.getColors(), note.getPosition());
++		return cachedComponent;
+ 	}
+ 
+ 	protected static ComponentType getNoteComponentType(NoteStyle noteStyle) {
+diff --git a/src/main/java/net/sourceforge/plantuml/skin/SkinParam.java b/src/main/java/net/sourceforge/plantuml/skin/SkinParam.java
+index 256fc87..0178423 100644
+--- a/src/main/java/net/sourceforge/plantuml/skin/SkinParam.java
++++ b/src/main/java/net/sourceforge/plantuml/skin/SkinParam.java
+@@ -915,8 +915,22 @@ public class SkinParam implements ISkinParam {
+ 		return null;
+ 	}
+ 
++	private final Map<String, UStroke> cacheThickness = new HashMap<>();
++
+ 	@Override
+ 	public UStroke getThickness(LineParam param, Stereotype stereotype) {
++		// Called for every drawn element; the key building, parsing and
++		// LinkStyle churn below showed up in profiles, same idea as cacheKeyValue
++		final String key = stereotype == null ? param.name()
++				: param.name() + '\0' + stereotype.getLabel(Guillemet.DOUBLE_COMPARATOR);
++		if (cacheThickness.containsKey(key))
++			return cacheThickness.get(key);
++		final UStroke result = getThicknessSlow(param, stereotype);
++		cacheThickness.put(key, result);
++		return result;
++	}
++
++	private UStroke getThicknessSlow(LineParam param, Stereotype stereotype) {
+ 		LinkStyle style = null;
+ 		if (stereotype != null) {
+ 			checkStereotype(stereotype);
+diff --git a/src/main/java/net/sourceforge/plantuml/teavm/DriverPathTeaVM.java b/src/main/java/net/sourceforge/plantuml/teavm/DriverPathTeaVM.java
+index 8b3b71e..d3b210a 100644
+--- a/src/main/java/net/sourceforge/plantuml/teavm/DriverPathTeaVM.java
++++ b/src/main/java/net/sourceforge/plantuml/teavm/DriverPathTeaVM.java
+@@ -98,6 +98,23 @@ public class DriverPathTeaVM implements UDriver<UPath, SvgGraphicsTeaVM> {
+ 		if (value == (int) value)
+ 			return String.valueOf((int) value);
+ 
++		// Same fast path as SvgGraphicsTeaVM.format, see the comment there
++		final double abs = Math.abs(value);
++		final double scaled = abs * 100.0;
++		if (scaled < 1e11) {
++			final double floor = Math.floor(scaled);
++			final double frac = scaled - floor;
++			if (frac < 0.4999 || frac > 0.5001) {
++				final long cents = (long) floor + (frac > 0.5 ? 1 : 0);
++				final StringBuilder sb = new StringBuilder(16);
++				if (value < 0)
++					sb.append('-');
++				sb.append(cents / 100).append('.');
++				final int c = (int) (cents % 100);
++				sb.append((char) ('0' + c / 10)).append((char) ('0' + c % 10));
++				return sb.toString();
++			}
++		}
+ 		return String.format("%.2f", value).replace(',', '.');
+ 	}
+ }
+diff --git a/src/main/java/net/sourceforge/plantuml/teavm/SvgGraphicsTeaVM.java b/src/main/java/net/sourceforge/plantuml/teavm/SvgGraphicsTeaVM.java
+index c4e4710..0ba89a2 100644
+--- a/src/main/java/net/sourceforge/plantuml/teavm/SvgGraphicsTeaVM.java
++++ b/src/main/java/net/sourceforge/plantuml/teavm/SvgGraphicsTeaVM.java
+@@ -410,6 +410,28 @@ public class SvgGraphicsTeaVM {
+ 	private String format(double value) {
+ 		if (value == (int) value)
+ 			return String.valueOf((int) value);
++		// Same output as String.format("%.2f", value) without the Formatter
++		// machinery (locale lookup, DecimalFormatSymbols clone, digit analysis),
++		// which is expensive when called for every coordinate. %.2f rounds the
++		// value half up at two decimals; scaling by 100 reproduces that exactly
++		// unless the scaled value lands within floating point error of a .5
++		// rounding boundary, where we fall back to the original code path.
++		final double abs = Math.abs(value);
++		final double scaled = abs * 100.0;
++		if (scaled < 1e11) {
++			final double floor = Math.floor(scaled);
++			final double frac = scaled - floor;
++			if (frac < 0.4999 || frac > 0.5001) {
++				final long cents = (long) floor + (frac > 0.5 ? 1 : 0);
++				final StringBuilder sb = new StringBuilder(16);
++				if (value < 0)
++					sb.append('-');
++				sb.append(cents / 100).append('.');
++				final int c = (int) (cents % 100);
++				sb.append((char) ('0' + c / 10)).append((char) ('0' + c % 10));
++				return sb.toString();
++			}
++		}
+ 		return String.format("%.2f", value).replace(',', '.');
+ 	}
+ 

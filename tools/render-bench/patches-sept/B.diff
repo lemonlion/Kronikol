@@ -1,0 +1,84 @@
+diff --git a/src/main/java/net/sourceforge/plantuml/real/RealDelta.java b/src/main/java/net/sourceforge/plantuml/real/RealDelta.java
+index a90e995..e2a4139 100644
+--- a/src/main/java/net/sourceforge/plantuml/real/RealDelta.java
++++ b/src/main/java/net/sourceforge/plantuml/real/RealDelta.java
+@@ -52,7 +52,7 @@ class RealDelta extends RealMoveable {
+ 		// The identity/uniqueness of a Real for debugging comes from
+ 		// RealMoveable's own atomic counter ("#123_..."), not from this name,
+ 		// so dropping the ancestry from the string is purely cosmetic.
+-		super(((AbstractReal) delegated).getLine(), "[Delegated d=" + diff + "]");
++		super(((AbstractReal) delegated).getLine(), "[Delegated d=", diff, "]");
+ 		this.delegated = delegated;
+ 		this.diff = diff;
+ 	}
+diff --git a/src/main/java/net/sourceforge/plantuml/real/RealImpl.java b/src/main/java/net/sourceforge/plantuml/real/RealImpl.java
+index 29a93aa..155d6c6 100644
+--- a/src/main/java/net/sourceforge/plantuml/real/RealImpl.java
++++ b/src/main/java/net/sourceforge/plantuml/real/RealImpl.java
+@@ -44,6 +44,11 @@ class RealImpl extends RealMoveable implements RealOrigin {
+ 		this.currentValue = currentValue;
+ 	}
+ 
++	private RealImpl(String namePrefix, double nameValue, RealLine line, double currentValue) {
++		super(line, namePrefix, nameValue, "");
++		this.currentValue = currentValue;
++	}
++
+ 	void move(double delta) {
+ 		this.currentValue += delta;
+ 	}
+@@ -57,7 +62,7 @@ class RealImpl extends RealMoveable implements RealOrigin {
+ 		// See RealDelta's constructor comment: the name is kept O(1) (no
+ 		// getName() ancestry embedding) to avoid O(n^2) retained string data
+ 		// on long Real chains (Y gauge chain across a whole document).
+-		final RealImpl result = new RealImpl("addAtLeast" + delta, getLine(), this.currentValue + delta);
++		final RealImpl result = new RealImpl("addAtLeast", delta, getLine(), this.currentValue + delta);
+ 		getLine().addForce(new PositiveForce(this, result, delta));
+ 		return result;
+ 	}
+diff --git a/src/main/java/net/sourceforge/plantuml/real/RealMoveable.java b/src/main/java/net/sourceforge/plantuml/real/RealMoveable.java
+index aca55f1..a4243ec 100644
+--- a/src/main/java/net/sourceforge/plantuml/real/RealMoveable.java
++++ b/src/main/java/net/sourceforge/plantuml/real/RealMoveable.java
+@@ -41,12 +41,24 @@ abstract class RealMoveable extends AbstractReal implements Real {
+ 
+ 	public static final AtomicInteger CPT = new AtomicInteger();
+ 	private final int cpt = CPT.getAndIncrement();
++	// The debug name is only read by toString()/getName() when something goes
++	// wrong, but a Real is created per tile: building "prefix" + double + "suffix"
++	// eagerly costs a double-to-string conversion each time (slow once compiled
++	// to JavaScript by TeaVM). So the parts are kept and joined on demand.
+ 	private final String name;
++	private final double nameValue;
++	private final String nameSuffix;
+ 	private final RealDebug creationPoint;
+ 
+ 	RealMoveable(RealLine line, String name) {
++		this(line, name, 0, null);
++	}
++
++	RealMoveable(RealLine line, String namePrefix, double nameValue, String nameSuffix) {
+ 		super(line);
+-		this.name = name;
++		this.name = namePrefix;
++		this.nameValue = nameValue;
++		this.nameSuffix = nameSuffix;
+ 		// See RealDebug: this constructor runs once per tile along the Y gauge
+ 		// chain, potentially thousands of times for a large diagram, so the
+ 		// stack trace capture used only for debugging is opt-in.
+@@ -65,10 +77,13 @@ abstract class RealMoveable extends AbstractReal implements Real {
+ 
+ 	@Override
+ 	public final String toString() {
+-		return "#" + cpt + "_" + name;
++		return "#" + cpt + "_" + getName();
+ 	}
+ 
+ 	final public String getName() {
+-		return name;
++		if (nameSuffix == null)
++			return name;
++
++		return name + nameValue + nameSuffix;
+ 	}
+ }

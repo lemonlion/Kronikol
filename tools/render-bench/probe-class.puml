@@ -1,0 +1,8 @@
+@startuml
+class Foo {
++int x
++bar()
+}
+class Baz
+Foo --> Baz : uses
+@enduml

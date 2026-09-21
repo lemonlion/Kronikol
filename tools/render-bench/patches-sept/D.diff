@@ -1,0 +1,17 @@
+diff --git a/src/main/java/net/sourceforge/plantuml/regex/RegexResult.java b/src/main/java/net/sourceforge/plantuml/regex/RegexResult.java
+index 982e762..91a3793 100644
+--- a/src/main/java/net/sourceforge/plantuml/regex/RegexResult.java
++++ b/src/main/java/net/sourceforge/plantuml/regex/RegexResult.java
+@@ -51,7 +51,11 @@ public class RegexResult {
+ 	}
+ 
+ 	public RegexResult(Map<String, RegexPartialMatch> data) {
+-		this.data = Collections.unmodifiableMap(data);
++		// The map never leaves this class, so it needs no read-only view. It matters once
++		// compiled to JavaScript: TeaVM's Collections.unmodifiableMap() is a plain AbstractMap
++		// over a wrapped entry set, so every get() is a linear scan allocating one entry per
++		// step, and a command reads its RegexResult dozens of times per line.
++		this.data = data;
+ 		this.matcher = null;
+ 	}
+ 

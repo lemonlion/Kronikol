@@ -1,0 +1,226 @@
+@startuml
+''
+'' An orange on black theme based on monochrome CRT monitors
+''
+'' (The colors came from https://superuser.com/a/1206781)
+''
+'' Original Author: Matthew Leather
+''
+
+!$THEME = "crt-amber"
+
+!$DARK_AMBER  = "#FFB000"
+!$LIGHT_AMBER = "#FFCC00"
+
+!$BGCOLOR = "#282828"
+!$FGCOLOR = $DARK_AMBER
+
+!ifndef $FONT_NAME
+  !$FONT_NAME = "Verdana"
+!endif
+
+!ifndef $FONT_NAME_MONOSPACED
+  !$FONT_NAME_MONOSPACED = "Courier"
+!endif
+
+<style>
+  root {
+    BackgroundColor $BGCOLOR
+    FontColor $FGCOLOR
+    FontName $FONT_NAME
+    HyperLinkColor $LIGHT_AMBER
+    LineColor $FGCOLOR
+    LineThickness 1
+    Margin 5
+  }
+  box {
+    LineStyle 12-18
+    LineThickness 3
+  }
+  document {
+    caption {
+      LineThickness 0
+    }
+    footer {
+      LineThickness 0
+    }
+    header {
+      LineThickness 0
+    }
+    title {
+      FontSize 22
+      LineThickness 0
+    }
+  }
+  groupHeader {
+    BackgroundColor $FGCOLOR
+    FontColor $BGCOLOR
+    FontStyle bold
+  }
+  node {
+    MaximumWidth 300
+  }
+  referenceHeader {
+    BackgroundColor $FGCOLOR
+    FontColor $BGCOLOR
+    FontStyle bold
+  }
+  separator {
+    BackgroundColor $FGCOLOR
+    FontColor $BGCOLOR
+    FontStyle bold
+  }
+</style>
+
+skinparam ArrowLollipopColor $FGCOLOR
+skinparam BackgroundColor $BGCOLOR
+skinparam DefaultFontName $FONT_NAME
+skinparam DefaultMonospacedFontName $FONT_NAME_MONOSPACED
+skinparam LifelineStrategy solid
+skinparam SequenceLifeLineBorderColor $FGCOLOR
+skinparam Shadowing false
+skinparam UseBetaStyle true
+
+skinparam Activity {
+  BackgroundColor $BGCOLOR
+  BarColor $FGCOLOR
+  BorderColor $FGCOLOR
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Boundary {
+  FontColor $FGCOLOR
+}
+skinparam Box {
+  Padding 5
+}
+skinparam CircledCharacter {
+  FontColor $BGCOLOR
+  FontName $FONT_NAME_MONOSPACED
+  Radius 9
+}
+skinparam Class {
+  BackgroundColor $BGCOLOR
+  BorderColor $FGCOLOR
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam ClassAttribute {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam ClassStereotype {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Footer {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Header {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Hyperlink {
+  Color $LIGHT_AMBER
+}
+skinparam IconPackage {
+  Color $FGCOLOR
+  BackgroundColor $BGCOLOR
+}
+skinparam IconPrivate {
+  Color $FGCOLOR
+  BackgroundColor $BGCOLOR
+}
+skinparam IconProtected {
+  Color $FGCOLOR
+  BackgroundColor $BGCOLOR
+}
+skinparam IconPublic {
+  Color $FGCOLOR
+  BackgroundColor $BGCOLOR
+}
+skinparam Note {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam Object {
+  BorderColor $FGCOLOR
+}
+skinparam Package {
+  BorderColor $FGCOLOR
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+skinparam State {
+  BackgroundColor $BGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeA {
+  BackgroundColor $FGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeC {
+  BackgroundColor $FGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeE {
+  BackgroundColor $FGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeI {
+  BackgroundColor $FGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam StereotypeN {
+  BackgroundColor $FGCOLOR
+  BorderColor $FGCOLOR
+}
+skinparam UseCaseStereoType {
+  FontColor $FGCOLOR
+  FontName $FONT_NAME
+}
+
+
+!pragma teoz true
+skinparam noteBackgroundColor #2E2E2E
+skinparam noteBorderColor #6E6E6E
+skinparam noteFontColor #ECECEC
+skinparam hyperlinkColor #7FB2FF
+<style>
+ .eventNote { FontColor #ECECEC
+     FontSize 11
+     RoundCorner 10
+ }
+ .assertionNote { FontColor #ECECEC
+     FontSize 11
+     RoundCorner 5
+ }
+</style>
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+entity "Breakfast Provider" as breakfastProvider
+database "CosmosDB" as cosmosDB
+queue "ServiceBus" as bus
+
+hnote across #E8E8E8:<color:#1A1A1A>StepBarProbe
+caller -[#438DD5]> breakfastProvider: GetBreakfast
+note right
+<color:#A8A8A8>HeaderProbe
+NoteBodyProbe
+end note
+breakfastProvider -[#E74C3C]> cosmosDB: query
+note right
+NoteBodyTwo
+end note
+breakfastProvider -[#9B59B6]> bus: publish
+note<<eventNote>> right #14323C
+EventBodyProbe
+end note
+hnote across <<assertionNote>> #16321F
+✓ AssertProbe
+end note
+breakfastProvider --> caller: [[https://example.com/x LinkProbe]]
+@enduml

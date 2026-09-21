@@ -1,0 +1,20 @@
+@startuml
+!theme plain
+!pragma teoz true
+actor "Caller" as caller
+entity "BP" as bp
+database "DB" as db
+queue "Q" as q
+caller -> bp: a
+note right
+n1 line
+end note
+bp -> db: b
+note right
+n2 line
+end note
+bp -> q: c
+note right
+n3 line
+end note
+@enduml

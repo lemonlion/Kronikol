@@ -1,0 +1,12 @@
+@startuml
+!theme vibrant
+actor a
+entity b
+a -> b: x
+note<<eventNote>> right
+event body
+end note
+hnote across <<assertionNote>> #d4edda
+ok
+end note
+@enduml

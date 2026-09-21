@@ -1,0 +1,6 @@
+@startuml
+!theme hacker
+actor a
+entity b
+a -> b: GetBreakfast
+@enduml

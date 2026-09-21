@@ -1,0 +1,9 @@
+@startuml
+!theme carbon-gray
+actor a
+entity b
+a -> b: x
+note<<eventNote>> right #cfecf7
+ev
+end note
+@enduml

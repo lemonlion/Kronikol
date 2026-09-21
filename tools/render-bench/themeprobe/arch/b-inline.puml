@@ -1,0 +1,21 @@
+@startuml
+<style>
+ .assertionNote {
+     BackgroundColor #16321F
+     FontColor #ECECEC
+     FontSize 11
+ }
+</style>
+!pragma teoz true
+skinparam noteBackgroundColor #2E2E2E
+skinparam noteFontColor #ECECEC
+actor a
+entity b
+a -> b: x
+note<<eventNote>> right #cfecf7
+EventBodyProbe
+end note
+hnote across <<assertionNote>> #d4edda
+✓ AssertProbe
+end note
+@enduml
