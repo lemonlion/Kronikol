@@ -4,6 +4,79 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.25.2] - 2026-09-21
+
+**Patch - history analysis was quadratic in the number of scenarios (#91).** The patch part moved
+because this is performance work and a defect, and there is nothing new to call. **One public member is
+removed, `HistoryPoint.CallSet`, and it is named under Removed below**: by the letter that is a breaking
+change, and it ships in a patch because the member is recent (3.17.0), nothing but the analyzer and one
+tool flag ever read it, and the alternative was a member that is null except on the points of a changed
+scenario. No verdict, evidence line or number changes.
+
+### Fixed
+
+- **The analysis took about 2 s at 5,000 scenarios over a 50-run window, on every run with history
+  on, and about 7 s through the tool.** Each scenario was found in each prior run's roster by scanning
+  the roster, so 5,000 scenarios against 50 runs was some 625 million string comparisons, and doubling
+  the suite quadrupled the cost. A roster is now indexed once per analysis, however many runs share
+  it. Measured on lines that carry what a real run writes, Release, .NET 10:
+
+  | Scenarios | 3.25.1 | 3.25.2 |
+  |---|---|---|
+  | 1,250 | 183-208 ms | 84-107 ms |
+  | 2,500 | 531-659 ms | 120-296 ms |
+  | 5,000 | 1,914-2,051 ms | 179-246 ms |
+  | 10,000 | 7,167-7,417 ms | 379-490 ms |
+
+  Through the tool, fastest of five process runs at 5,000 scenarios: `kronikol query history` 6,825 to
+  1,142 ms, `kronikol history gate` 6,905 to 1,116 ms, the `history:` line of `query failures` 7,094
+  to 1,137 ms, against 195 ms for a command that does not analyse. The tool paid three and a half
+  times what a test run did: it compiles a loop fully the first time it is called, which is right for
+  a process that lives for one command and was wrong for this one loop (3.5 s with that setting
+  flipped). With the scan gone the setting wins again, 1.16 s against 1.26 s. On a real suite of a few
+  hundred scenarios the quadratic term was small: BreakfastProvider's 430 CI runs analyse in 1.2 s
+  where they took 1.9 s.
+- **Every point of every scenario had its call list spelled out, and almost none were read.** That is
+  255,000 arrays at 5,000 scenarios, read only for the points a changed set is named from. They are
+  spelled out when asked for. 36,910 to 21,354 bytes allocated per scenario, a third of what was left.
+- **`kronikol query history sN --calls` answered "no call list for this run: it needs the
+  History.run.json" for the scenario that collects the traffic no test could be given, with the file
+  beside the report.** It is not a test, so no verdict is read for it, but its calls went through the
+  templater like any other scenario's, and that is what `--calls` shows.
+
+### Removed
+
+- **`HistoryPoint.CallSet`.** The names it produced are on `ScenarioHistory.NewCalls` and `GoneCalls`,
+  which is what the report, the tool and the HTML read, and `--calls` now reads the run's own line.
+  Code that read it has the same list from `HistoryRun.CallSetAt(position)` and `HistoryShapes.At`.
+
+### How it is kept
+
+- **By two counts, not by a timing.** The first guard tried was a ratio of two timings, 5,000
+  scenarios against 1,250. Alone in a process it read 10.8 before the fix and 2.0 after. Inside the
+  parallel suite it lives in, pinned to two CPUs, it read 5.90 to 13.05 before and 4.02 to 7.65 after:
+  the ranges overlap, and the fixed analyzer failed once where the broken one passed twice. What does
+  not move is the cost itself, counted. A test hands the ledger a roster whose ids count their reads:
+  1,604,800 before for 400 scenarios over 20 runs, 1,200 after, bound 4 x scenarios, and it does not
+  grow with the window. A second holds the bytes allocated per scenario under 28 KB. Both are the same
+  number on every run.
+- **Nothing the analyzer returns moved.** Every run of BreakfastProvider's CI ledger (430 runs) and of
+  a synthetic ledger built to ask what that one cannot (70 rosters in 70 runs, repeated ids, 60
+  renames, partial runs) was replayed through 3.25.1 and this release with everything the analysis
+  returns written out: 426 MB and 213 MB, byte for byte the same. Two controls show the comparison can
+  fail: the renames change the output, and letting the last holder of a repeated id win instead of the
+  first changes it too.
+- `tools/history-replay` gains `--full` (everything the analysis returned, one JSON line per run, for a
+  change that must move nothing), `--aliases`, and `--time` (read, analyse and bytes allocated for a
+  ledger file).
+
+### Notes
+
+- The 150 ms budget in `plans/CROSS_RUN_HISTORY_PLAN.md` was set on a prototype harness and on lines
+  with a fifth of the bytes a real run writes; reading the ledger alone takes about 200 ms at this
+  size. It is restated there from measurement: under 600 ms for read, parse and analyse at 5,000
+  scenarios over 50 runs (about 400 ms measured), the analysis linear in scenarios x window.
+
 ## [3.25.1] - 2026-09-21
 
 **Patch - a run is read against the runs recorded before it, in its own stream (#95).** The patch part

@@ -154,7 +154,6 @@ public sealed record HistoryAnalysisOptions
 /// <param name="Error">The error cluster text, on a failure.</param>
 /// <param name="Attempt">The attempt the result came from, when the runner said.</param>
 /// <param name="ShapeVersion">The templating rule the fingerprints were made by.</param>
-/// <param name="CallSet">The distinct calls, spelled out, when the line recorded them (3.17.0).</param>
 /// <param name="Partial">
 /// Whether the run was partial (3.23.0). Its pass or fail is a fact about the scenario and is read like any
 /// other; its duration and its set of calls are facts about a filtered run's conditions, and a full run is
@@ -173,7 +172,7 @@ public sealed record HistoryAnalysisOptions
 /// takes 6 ms, 3 ms read as 9 is "3x usual" and means nothing.
 /// </param>
 public sealed record HistoryPoint(string RunId, DateTimeOffset At, string? Commit, char Result, int? DurationMs, string? ShapeSet, string? ShapeOrdered, int? Calls, string? Error, int? Attempt, int? ShapeVersion = null,
-    IReadOnlyList<string>? CallSet = null, bool Partial = false, double? TimesUsual = null, bool RunDegraded = false, bool OverUsual = false, string? ShapeRules = null);
+    bool Partial = false, double? TimesUsual = null, bool RunDegraded = false, bool OverUsual = false, string? ShapeRules = null);
 
 /// <summary>Where a failing streak began.</summary>
 /// <param name="RunId">The first failing run of the streak.</param>

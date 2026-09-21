@@ -529,7 +529,7 @@ reads a *healthy partial* run at **2.14**, from the mix alone.
 |---|---|---|---|---|
 | 394 healthy CI runs, 18 streams | — | p95 1.29 · p99 1.48 · **max 1.56** | none | — |
 | 13 healthy local runs | 159–175 s (the three timed) | 0.93–1.22 | none | 0 |
-| Pinned to 8 / 4 logical processors | 160 / 193 s | 1.00 / 1.00 | none | 0 |
+| Pinned to 8 / 4 logical processors | 160 / 193 s | 1.00 / 1.00 (the shipped analyzer reads 1.07 / 1.05, replayed 2026-09-21) | none | 0 |
 | Pinned to 2 / 1 logical processors, nothing competing | 196 / 192 s | **1.47 / 1.68** | none — and rightly: +20% wall, no false verdict | 0 |
 | Pinned to 2 processors shared with 6 busy loops (A) | 292 s | **7.38** | degraded | 5 |
 | The same again, straight after (B) | 276 s | **6.85** | degraded | **20** |
@@ -558,6 +558,13 @@ readings. That is half as much again on top of the fixed analyzer, so the slice 
 prototype's shape: S4 lands **after** the cost plan, keys its usuals by that plan's per-roster
 position map instead of a dictionary of `(id, slot)` tuples, reads `TimesUsual` only for the points a
 surface prints, and goes under the cost plan's ratio guard like everything else in that loop.
+
+*As it happened (2026-09-21):* the order was the other way round. S4 shipped first (3.24.0) with its
+own position map per distinct roster, and the cost plan landed after it as 3.25.2, on top of this
+plan's loop. The ratio guard did not survive being run beside other tests and is a count now: the
+reads of a prior roster's ids, and the test's runs carry durations so that the pass that paces them is
+under the count as well (1,200 reads for 400 scenarios over 20 runs: one pass to index, one to pace,
+one for the absent scenarios). Measured at 5,000 x 50 with pace in: 180-250 ms for the whole analysis.
 
 ### 6.3 What changes on the surfaces
 
@@ -881,7 +888,7 @@ that the value reaches anything.**
 | S1 + S2 (redesigned) + S3 together break nothing in the unit suite | **RUN** | **5,158 tests, 0 failed, 1 skipped** (5,156 in the first round, before the two new pins) |
 | A run's pace over 394 healthy CI runs never exceeds 1.56 (1.63 without the 10 ms floor); none is labelled | **RUN** | the C# prototype's `RunPaces`, every stream's every run read leave-one-out. It replaces the first round's `pace.ps1` figure (1.44 over 304 runs, priors only), and agrees with that script to the digit on the four local ledgers where both ran |
 | A real partial run moves no verdict under S3, moves 5 of 203 bars by ≤ 7 ms, ran 1.32× slower per scenario, and its own bars stood at 1.88× the full run's | **RUN** | the replay probe on a full · partial · full ledger made on BreakfastProvider, `main` against prototype (§1.2) |
-| Contended runs read pace 7.38, 6.85 and 20.93; pinned-only runs 1.00, 1.00, 1.47, 1.68; healthy local runs 0.93–1.22 | **RUN** | seven runs made for the purpose (§1.2), read by the prototype |
+| Contended runs read pace 7.38, 6.85 and 20.93; pinned-only runs 1.00, 1.00, 1.47, 1.68 (1.07, 1.05, 1.47, 1.68 as shipped); healthy local runs 0.93–1.22 | **RUN** | seven runs made for the purpose (§1.2), read by the prototype |
 | On `main` those contended runs hand out 5, 20 and 7 false `slower`; with the degraded rule 0, 0, 0 and nothing else moves; without it 47 of 198 bars in the next healthy run are > 1.5× too high | **RUN** | the probe built from unmodified `main` and from the prototype over the same ledgers; both directions also as unit tests over a prototype-only switch |
 | The median over scenarios with a usual ≥ 10 ms separates healthy from degraded by 4.4×; the plain median by 1.6×, the share at ≥ 2× by 1.3× | **RUN** | seven statistics × (394 + 13 + 7) runs, `stats.*.csv` in the evidence archive |
 | A sustained 3× shift after fifty healthy runs is degraded up to the 25th run and not from the 26th | **RUN** | a theory in `NoisePlanDegradedTests.cs` |

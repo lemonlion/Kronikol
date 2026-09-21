@@ -505,6 +505,15 @@ Four things follow:
   seconds or minutes. §7.7 gets a real budget rather than a hopeful one.
 - **Parsing dominates** (60 of 65 ms); the verdict arithmetic is 0.8 ms. If it ever needs optimising
   the lever is not parsing `durations` unless a duration verdict was asked for — not the analysis.
+
+> **Correction, 2026-09-21 (#91, `HISTORY_ANALYZER_COST_PLAN.md`).** Every figure in this table is the
+> prototype harness's (`tools/history-bench`), on lines that carry results alone. The analyzer that
+> shipped was never timed until the issue timed it: **about 2,000 ms** at 5,000 × 50, quadratic in the
+> scenario count (each scenario was found in each prior roster by scanning it), and 6.9 s through the
+> tool. Fixed in 3.25.2: about 200 ms, linear. And a real run's lines are four times these bytes
+> (15.6 MB against 3.34 MB for the same window: durations, fingerprints, counts, call sets), so the read
+> is about 200 ms and not 65. "Parsing dominates, the arithmetic is 0.8 ms" was true of the prototype
+> only. Measured figures and the restated budget are in §7.7.
 - **The previous draft's observable was subtly wrong.** It said "lines **read** is bounded by the
   window". The last row disproves it: an unpruned 250-line file is scanned end to end (read 4.2 →
   21.5 ms) even though only the last 50 lines are parsed. **Parsing** is window-bounded; scanning is
@@ -1409,6 +1418,28 @@ file size and is `history prune`'s job to contain. Budget: **under 150 ms for 5,
 fixture, so a regression to "parse the whole ledger" fails a test rather than slowly ruining
 everyone's test runs.
 
+> **Restated, 2026-09-21 (#91, `HISTORY_ANALYZER_COST_PLAN.md` §4).** The 65 ms and the 150 ms were
+> both the prototype harness on results-only lines, and the fixture test times `Read` alone. Measured on
+> the shipped code, 5,000 scenarios × 50 runs, lines that carry what a run writes (15.6 MB):
+>
+> | | §2.6 said | 3.25.1 | 3.25.2 |
+> |---|---|---|---|
+> | Read + parse | 64.5 ms | 190–220 ms | 190–220 ms |
+> | Analyse | 0.8 ms | 1,910–2,050 ms | 180–250 ms |
+> | Total | 65.3 ms | about 2.2 s | **about 400 ms** |
+>
+> **The budget: under 600 ms for read, parse and analyse at 5,000 × 50 on lines that carry what a run
+> writes, and the analysis linear in scenarios × window** (95 → 130 → 200 → 420 ms at 1,250 → 2,500 →
+> 5,000 → 10,000 scenarios; it was 190 → 570 → 1,950 → 7,300). A real run line is more than four times
+> the results-only line the first budget was set on, reading follows the bytes, and half a second at
+> the end of a 5,000-scenario run is still nothing. **No wall-clock assertion guards it**: two timings
+> of the same analysis inside a parallel suite were measured further apart than the quadratic analyzer
+> and the linear one are. What keeps it true are three counts: `LinesParsed ≤ window` (the reader), the
+> reads of a prior roster's ids (1,604,800 before the fix, 1,200 after, bound 4 × scenarios) and the
+> bytes allocated per scenario (36,910 before, 21,354 after, bound 28 KB), the last two in
+> `HistoryAnalyzerTests`. And `HistoryStats` shipped as `{ LinesScanned, LinesParsed, RunsKept,
+> RostersKept, DamagedLines, Elapsed, ShapesKept }`: it has no `ScenariosAnalysed`.
+
 ---
 
 ## 8. Surfaces
@@ -2248,7 +2279,8 @@ statements are measured is a plan that will be wrong somewhere and not know wher
 
 Fifteen of this plan's own conclusions have now been reversed by checking them. They are **not
 fifteen different mistakes — they are one mistake, fifteen times**, and naming it is worth more than any
-individual correction:
+individual correction. (A sixteenth came after the feature shipped, and it is the same mistake: the
+analyzer's cost, the table's last row, #91.)
 
 > **A claim about *existence or shape* was verified, and allowed to transfer to a claim about
 > *behaviour* that was not.**
@@ -2270,6 +2302,7 @@ individual correction:
 | `merge=union` resolved two appends cleanly | the committed ledger never conflicts | attributes come from the **worktree**; a bare (server-side) merge ignores them entirely |
 | teams might not accept a machine-written file | so the committed ingress is risky and was demoted | tens of thousands accept it — **on a side branch**, which removes the objection instead of weighing it |
 | Allure 3's history file is `.jsonl` and its config key is `historyPath` | Allure appends, so it is precedent for crash-safety | `appendHistory` writes from **byte 0** and truncates — it rewrites the whole file every run |
+| a C# harness analysed 5,000 × 50 in 0.8 ms (`tools/history-bench`, §2.6 — true) | "Analyzer cost is 65 ms at 5,000 × 50 — **RUN**" (§17.1b), and a 150 ms budget "asserted on a generated fixture" | the harness was the prototype; the shipped analyzer was never timed, and the fixture test times `Read` alone on lines with a sixth of the bytes. Shipped: **about 2,000 ms**, quadratic, 6.9 s through the tool (#91; fixed in 3.25.2). A RUN mark on a claim about a thing that did not exist yet |
 
 This is why re-reading the plan never caught them. Each pass asked *"is this claim supported?"*, found
 a real citation beside it, and moved on. **The citation was always real.** The defect lives in the
@@ -2345,7 +2378,7 @@ value reaches anything** — that is the §17.0 rule, applied as bookkeeping.
 | Ledger 228 KB / 36 KB gz at window 50 (§2.2) | **RUN** | Built from the real 203-id roster |
 | Capture is bit-stable across consecutive runs of one suite (§2.5) | **RUN** | `Example.Api.Tests.Component.xUnit3` run three times; 5/5 identical, raw and templated |
 | The six BreakfastProvider reports are six independent runs minutes apart (§2.4) | **RUN** | `startTime` + id-provenance analysis across the six files |
-| Analyzer cost is 65 ms at 5,000 scenarios × 50 runs (§2.6) | **RUN** | C# harness, warm pass, Release build |
+| ~~Analyzer cost is 65 ms at 5,000 scenarios × 50 runs (§2.6)~~ | **RUN — of the prototype harness, not the analyzer** | C# harness, warm pass, Release build. The shipped analyzer, first timed by #91: about 2,000 ms, quadratic in scenarios. 3.25.2: about 200 ms and linear, about 400 ms with the read (§7.7); held by counts, not by a timing |
 | Parsing is window-bounded, scanning is not (§2.6) | **RUN** | Same harness with 200 extra lines: 50 parsed, 252 scanned |
 | An absolute flip threshold mislabels most of a suite on a long window (§7.2) | **RUN** | Harness: 4,265 of 5,000 flagged flaky at ≥2 flips |
 | **Two appends conflict without `merge=union` and auto-merge with it; identical lines de-duplicate; LF survives `autocrlf=true`; rebase behaves as merge** (§5.10) | **RUN** | Five-scenario throwaway repo |

@@ -98,7 +98,10 @@ public sealed record HistoryRoster
         return Convert.ToHexString(hash)[..16].ToLowerInvariant();
     }
 
-    /// <summary>The position of a scenario in this roster, or -1.</summary>
+    /// <summary>
+    /// The position of a scenario in this roster, or -1. A scan of the roster: right for one lookup, and
+    /// quadratic when asked once per scenario, which is why the analyzer indexes a roster instead (#91).
+    /// </summary>
     public int IndexOf(string stableId, int slot = 0)
     {
         for (var i = 0; i < Ids.Count; i++)

@@ -289,6 +289,37 @@ public class QueryHistoryTests : IDisposable
         Assert.Contains("no call list for this run", bare.Output);
     }
 
+    [Fact]
+    public void Calls_are_printed_for_the_scenario_that_collects_the_traffic_no_test_was_given()
+    {
+        // It is not a test, so no verdict is read for it, but its calls went through the templater like
+        // any other and that is what --calls shows. It answered "no call list for this run: it needs the
+        // History.run.json" with the file sitting beside the report.
+        Seed("PP", "PP");
+        var report = WriteReport(pay: "Passed");
+        var roster = Roster();
+        var shapes = HistoryShapes.Create(["Test>orders POST /orders/{n}/pay 201", "orders>ledger GET /entries/{id} 200"]);
+        var run = new HistoryRun
+        {
+            Id = "gh:99:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 9, 12, 10, 5, 0, TimeSpan.Zero),
+            Branch = "main", Commit = "abc1234", Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash,
+            Results = "PN", Attempts = "--", Durations = [100, null], Calls = [1, 1], ShapeSet = ["aaaaaaaa", "bbbbbbbb"], ShapeOrdered = ["aaaaaaaa", "bbbbbbbb"],
+            ShapeVersion = InteractionShape.Version, ShapesHash = shapes.Hash, CallSets = [[0], [1]],
+            Errors = new string?[2], ErrorText = new Dictionary<string, string>(), Deps = ["Test>orders"]
+        };
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(report)!, HistoryFormat.FragmentFileName), HistoryFragment.Write(roster, run, "3.25.0", shapes));
+
+        var (output, error, exit) = Query(null, "history", report, "s1", "--calls");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("distinct calls, as templated (1):", output);
+        Assert.Contains("  orders>ledger GET /entries/{id} 200", output);
+        Assert.DoesNotContain("Test>orders POST", output[output.IndexOf("as templated", StringComparison.Ordinal)..]);
+
+        using var document = System.Text.Json.JsonDocument.Parse(Query(null, "history", report, "s1", "--calls", "--json").Output);
+        Assert.Equal("orders>ledger GET /entries/{id} 200", document.RootElement.GetProperty("items")[0].GetProperty("calls")[0].GetString());
+    }
+
     // ─── Degraded runs (#83) ───────────────────────────────────
 
     private static readonly string[] WideIds = [PayId, RefundId, .. Enumerable.Range(1, 8).Select(i => $"7777{i:D12}")];

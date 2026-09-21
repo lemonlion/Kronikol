@@ -7,20 +7,32 @@
 // replay can be built at a base commit from before it, where every run of the stream but the current
 // one was "prior", later ones included.
 //
-//   dotnet run -c Release --project tools/history-replay -- <ledger.jsonl> <out.csv> [--min-runs N] [--last N] [--detail]
+//   dotnet run -c Release --project tools/history-replay -- <ledger.jsonl> <out.csv> [--min-runs N] [--last N] [--detail] [--full] [--aliases <file>]
 //   dotnet run -c Release --project tools/history-replay -- --bench [scenarios] [runs]
+//   dotnet run -c Release --project tools/history-replay -- --time <ledger.jsonl>...
 //
 // --bench     no ledger: a synthetic stream (default 5,000 scenarios over 50 earlier runs, durations
 //             within 20% of each scenario's own usual), one analysis of the latest run timed seven times.
 //             Wall-clock: compare two builds in the same session on an idle machine, never across sessions.
 //
+// --time      no replay: each ledger is read with a 50-run window and the last run of its first suite is
+//             analysed against the rest, five times. Prints the read, the analyses, and the bytes a warm
+//             analysis allocates, which unlike the timings is the same number on every run. For a ledger
+//             whose lines carry what a real run writes (shapes, call sets), which --bench's do not.
+//
 // --min-runs  the consumer's HistoryMinRuns (default: the analyzer's)
 // --last      replay only the last N run lines of the file
 // --detail    a second file beside the CSV, <out>.detail.txt: every verdict that is not stable, with
 //             its evidence, and every scenario's duration over its bar
+// --full      a third file, <out>.full.jsonl: everything the analysis returned, one JSON line per run. For
+//             a change that must move nothing at all (performance work): compare the two files' hashes.
+//             Hundreds of megabytes on a real ledger. HistoryPoint.CallSet is left out: builds from before
+//             3.25.2 have it and later ones do not.
+// --aliases   the rename aliases to analyse with (history.aliases.json)
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Kronikol.History;
 
 if (args.Length >= 1 && args[0] == "--bench")
@@ -57,23 +69,72 @@ if (args.Length >= 1 && args[0] == "--bench")
     return 0;
 }
 
+if (args.Length >= 2 && args[0] == "--time")
+{
+    foreach (var path in args.Skip(1))
+    {
+        var readWatch = System.Diagnostics.Stopwatch.StartNew();
+        var timed = HistoryLedgerReader.Read(path, 50).Ledger!;
+        readWatch.Stop();
+        var latest = timed.Runs(timed.Suites[0])[^1];
+        var latestRoster = timed.Roster(latest.RosterHash)!;
+        var latestShapes = latest.ShapesHash is { } shapesHash ? timed.Shapes(shapesHash) : null;
+        var analyses = new List<long>();
+        long allocated = 0;
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var before = GC.GetAllocatedBytesForCurrentThread();
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var result = HistoryAnalyzer.Analyse(timed, latestRoster, latest, new HistoryAnalysisOptions(), shapes: latestShapes);
+            watch.Stop();
+            allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+            analyses.Add(watch.ElapsedMilliseconds);
+            GC.KeepAlive(result);
+        }
+        Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
+            $"{Path.GetFileName(path)}: {latestRoster.Count} scenarios, read {readWatch.ElapsedMilliseconds} ms, analyse [{string.Join(", ", analyses)}] ms, {allocated / 1024.0 / 1024.0:0.0} MB allocated by a warm analysis ({allocated / latestRoster.Count} B per scenario)"));
+    }
+    return 0;
+}
+
 if (args.Length < 2)
 {
-    Console.Error.WriteLine("usage: history-replay <ledger.jsonl> <out.csv> [--min-runs N] [--last N] [--detail]");
+    Console.Error.WriteLine("usage: history-replay <ledger.jsonl> <out.csv> [--min-runs N] [--last N] [--detail] [--full] [--aliases <file>]");
     return 2;
 }
 
 int? minRuns = null;
 var last = int.MaxValue;
 var detail = false;
+var full = false;
+HistoryAliases? aliases = null;
 for (var i = 2; i < args.Length; i++)
     switch (args[i])
     {
         case "--min-runs": minRuns = int.Parse(args[++i], CultureInfo.InvariantCulture); break;
         case "--last": last = int.Parse(args[++i], CultureInfo.InvariantCulture); break;
         case "--detail": detail = true; break;
+        case "--full": full = true; break;
+        case "--aliases": aliases = HistoryAliases.Load(args[++i]); break;
         default: Console.Error.WriteLine($"unknown argument {args[i]}"); return 2;
     }
+
+var everything = new JsonSerializerOptions
+{
+    TypeInfoResolver = new DefaultJsonTypeInfoResolver
+    {
+        Modifiers =
+        {
+            info =>
+            {
+                for (var i = info.Properties.Count - 1; i >= 0; i--)
+                    if (info.Properties[i].Name == "CallSet") info.Properties.RemoveAt(i);
+            }
+        }
+    }
+};
+using var fullOutput = full ? new StreamWriter(args[1] + ".full.jsonl", false, new UTF8Encoding(false)) : null;
+var analyse = TimeSpan.Zero;
 
 var options = new HistoryAnalysisOptions { ReportReordered = true };
 if (minRuns is { } m) options = options with { MinRuns = m };
@@ -105,8 +166,11 @@ foreach (var (line, index) in runLines)
     if (ledger.Roster(current.RosterHash) is not { } roster) continue;
     var shapes = current.ShapesHash is { } hash ? ledger.Shapes(hash) : null;
 
-    var verdicts = HistoryAnalyzer.Analyse(ledger, roster, current, options, shapes: shapes);
+    var watch = System.Diagnostics.Stopwatch.StartNew();
+    var verdicts = HistoryAnalyzer.Analyse(ledger, roster, current, options, aliases: aliases, shapes: shapes);
+    analyse += watch.Elapsed;
     replayed++;
+    fullOutput?.WriteLine(JsonSerializer.Serialize(verdicts, everything));
 
     // The bars as one number: a p95 that moves without a verdict moving is still seen in the diff.
     var bars = verdicts.Scenarios.Sum(x => (long)(x.DurationP95 ?? 0));
@@ -132,7 +196,7 @@ foreach (var (line, index) in runLines)
 
 File.WriteAllText(args[1], csv.ToString());
 if (detail) File.WriteAllText(args[1] + ".detail.txt", text.ToString());
-Console.WriteLine($"{replayed} run(s) replayed of {runLines.Length} in {args[0]}");
+Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"{replayed} run(s) replayed of {runLines.Length} in {args[0]}, {analyse.TotalMilliseconds:0} ms in the analyzer"));
 return 0;
 
 static string Csv(string? value) => value is null ? "" : value.Contains(',') || value.Contains('"') ? "\"" + value.Replace("\"", "\"\"") + "\"" : value;

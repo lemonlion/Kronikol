@@ -90,15 +90,16 @@ internal static partial class QueryCommand
             }
 
             WriteScenario(writer, verdicts, scenario, entry);
+            var callLines = options.Calls ? ReportHistory.CallsOf(verdicts, entry, run, shapes) : null;
             if (options.Calls)
-                WriteCalls(writer, entry);
+                WriteCalls(writer, callLines);
             if (verdicts.Compare is { } compared && compared.At(scenario.Ordinal, scenario.StableId) is { } other)
             {
                 writer.Line();
                 writer.Line($"on {compared.Stream}: {HistoryVerdictNames.Name(other.Primary)} — {QueryWriter.OneLine(other.Evidence, 200)} · {other.Series}");
             }
             writer.Data("history", ReportHistory.RunLevel(verdicts, ledgerPath, location.Source, fromFragment));
-            writer.Item(ReportHistory.Row(scenario, entry, detailed: true, calls: options.Calls));
+            writer.Item(ReportHistory.Row(scenario, entry, detailed: true, calls: options.Calls, callLines: callLines));
             writer.Footer($"{scenario.Address} · {verdicts.RunsRecorded} earlier run(s) on {verdicts.Stream} · next: history · failures");
             return 0;
         }
@@ -168,10 +169,10 @@ internal static partial class QueryCommand
     /// What the templater made of the scenario's calls in this run. A wrong <c>{id}</c> is silent - two
     /// routes collapse into one line and a real change disappears - so the lines are there to be read.
     /// </summary>
-    private static void WriteCalls(QueryWriter writer, ScenarioHistory entry)
+    private static void WriteCalls(QueryWriter writer, IReadOnlyList<string>? calls)
     {
         writer.Line();
-        if (entry.Points[^1].CallSet is not { } calls)
+        if (calls is null)
         {
             writer.Line($"no call list for this run: it needs the {HistoryFormat.FragmentFileName} the run wrote beside the report (3.17.0 or later, HistoryShapes on)");
             return;
@@ -450,8 +451,25 @@ internal static class ReportHistory
         return rows.OrderBy(r => HistorySummary.Rank(r.Item2)).ThenBy(r => r.Item1.Ordinal).ToArray();
     }
 
+    /// <summary>
+    /// The scenario's distinct calls in the run being read, as the templater wrote them; null when the
+    /// run's line did not record them. Read from the run itself: the analysis spells out only the call
+    /// lists a verdict is named from (#91), and this one is wanted whether or not anything changed.
+    /// </summary>
+    public static IReadOnlyList<string>? CallsOf(HistoryVerdicts verdicts, ScenarioHistory entry, HistoryRun run, HistoryShapes? shapes)
+    {
+        // The entry's place in the analysis is its place in the roster, and so in the run's columns.
+        var position = -1;
+        for (var i = 0; i < verdicts.Scenarios.Count && position < 0; i++)
+            if (ReferenceEquals(verdicts.Scenarios[i], entry))
+                position = i;
+        return run.CallSetAt(position) is { } indices && shapes is not null
+            ? indices.Select(shapes.At).Where(line => line is not null).Select(line => line!).ToArray()
+            : null;
+    }
+
     /// <summary>One scenario's row of the <c>--json</c> envelope.</summary>
-    public static object Row(ScenarioEntry scenario, ScenarioHistory entry, bool detailed, bool calls = false)
+    public static object Row(ScenarioEntry scenario, ScenarioHistory entry, bool detailed, bool calls = false, IReadOnlyList<string>? callLines = null)
     {
         var row = new Dictionary<string, object?>
         {
@@ -478,7 +496,7 @@ internal static class ReportHistory
             ["quarantine"] = entry.Quarantine is { } q ? new { reason = q.Reason, addedBy = q.AddedBy, addedOn = q.AddedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), until = q.Until?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) } : null
         };
         if (calls)
-            row["calls"] = entry.Points[^1].CallSet;
+            row["calls"] = callLines;
         if (detailed)
             row["runs"] = entry.Points.Select(p => new { runId = p.RunId, at = p.At, commit = p.Commit, result = p.Result.ToString(), durationMs = p.DurationMs, timesUsual = p.TimesUsual is { } t ? Math.Round(t, 2) : (double?)null, overUsual = p.OverUsual, partial = p.Partial, runDegraded = p.RunDegraded, attempt = p.Attempt, error = p.Error }).ToArray();
         return row;

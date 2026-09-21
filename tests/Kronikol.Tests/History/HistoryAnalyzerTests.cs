@@ -822,4 +822,119 @@ public class HistoryAnalyzerTests
         Assert.Equal(HistoryVerdictKind.AlwaysFailing, scenario.Primary);
         Assert.Equal(2, scenario.RunsSeen);
     }
+
+    // ─── Cost (#91) ────────────────────────────────────────────
+
+    /// <summary>A list that counts how often it is read, by index or by enumeration.</summary>
+    private sealed class CountingList(IReadOnlyList<string> inner) : IReadOnlyList<string>
+    {
+        public long Reads { get; private set; }
+        public string this[int index] { get { Reads++; return inner[index]; } }
+        public int Count => inner.Count;
+        public IEnumerator<string> GetEnumerator() { foreach (var item in inner) { Reads++; yield return item; } }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    /// <summary>A ledger made in memory rather than parsed, so that the roster it holds can be an instrumented one.</summary>
+    private static HistoryLedger InMemory(HistoryRoster recorded, IReadOnlyList<HistoryRun> prior)
+    {
+        var lines = new HistorySuiteLines();
+        for (var i = 0; i < prior.Count; i++)
+        {
+            lines.Entries.Add((prior[i].Id, prior[i].Stream));
+            lines.Parsed[i] = prior[i];
+        }
+        return new HistoryLedger(HistoryFormat.Version, "test",
+            new Dictionary<string, HistoryRoster>(StringComparer.Ordinal) { [recorded.Hash] = recorded },
+            new Dictionary<string, List<HistoryRun>>(StringComparer.Ordinal) { ["Suite"] = [.. prior] },
+            new HistoryStats(0, 0, prior.Count, 1, 0, TimeSpan.Zero),
+            lines: new Dictionary<string, HistorySuiteLines>(StringComparer.Ordinal) { ["Suite"] = lines });
+    }
+
+    [Fact]
+    public void A_prior_roster_is_read_a_few_times_per_analysis_not_once_per_scenario()
+    {
+        // #91: every scenario was looked up in every prior roster by scanning it, so the analysis was
+        // quadratic in the scenario count: 2 s at 5,000 x 50 on every run, 7 s through the tool. Counted,
+        // not timed: two timings of the same analysis in a parallel suite were measured further apart
+        // than the quadratic analyzer and the linear one are. The runs carry durations so that the pass
+        // that paces them is under the count as well.
+        const int scenarios = 400, runs = 20;
+        var roster = Roster(Enumerable.Range(0, scenarios).Select(i => i.ToString("x16")).ToArray());
+        var ids = new CountingList(roster.Ids);
+        var recorded = roster with { Ids = ids };
+        var durations = Enumerable.Range(0, scenarios).Select(i => (int?)(20 + i % 50)).ToArray();
+        var prior = Enumerable.Range(1, runs).Select(n => Run(roster, n, new string('P', scenarios), durations: durations)).ToList();
+        var ledger = InMemory(recorded, prior);
+
+        var verdicts = HistoryAnalyzer.Analyse(ledger, roster, Run(roster, runs + 1, new string('P', scenarios), durations: durations), new HistoryAnalysisOptions());
+
+        // An analysis that read nothing because it found nothing is not what is being counted.
+        Assert.Equal(runs, verdicts.RunsRecorded);
+        Assert.All(verdicts.Scenarios, s => Assert.Equal(runs, s.RunsSeen));
+        Assert.NotNull(verdicts.Runs[^1].Pace);
+        // One read per position to index the roster, one to pace its runs, one for the absent pass, and
+        // room for one more pass of that kind. It does not grow with the window: a second prior run on
+        // the same roster costs nothing.
+        Assert.True(ids.Reads <= scenarios * 4, $"the prior roster's {scenarios} ids were read {ids.Reads} times over {runs} runs");
+    }
+
+    [Fact]
+    public void The_first_holder_of_a_repeated_id_and_slot_is_the_one_a_scenario_is_read_from()
+    {
+        // A well-formed roster holds each (id, slot) once, but a roster line comes from a file, and union
+        // merges are the reason the format exists. The scan took the first position holding the pair; so
+        // does the index that replaced it.
+        var twice = Roster(Ids[0], Ids[0]) with { Slots = [0, 0] };
+        var ledger = Ledger(Enumerable.Range(1, 3).Select(n => (twice, Run(twice, n, "FP"))));
+        var roster = Roster(Ids[0]);
+
+        var scenario = First(Analyse(ledger, roster, Run(roster, 9, "F")));
+
+        Assert.Equal(3, scenario.RunsSeen);
+        Assert.Equal("FFFF", scenario.Series);
+        Assert.Equal(HistoryVerdictKind.AlwaysFailing, scenario.Primary);
+    }
+
+    /// <summary>A ledger of one roster over 51 runs whose lines carry what a real run writes: durations, calls, shapes, call sets, errors.</summary>
+    private static (HistoryLedger Ledger, HistoryRoster Roster, HistoryRun Current, HistoryShapes Shapes) RealisticLedger(int scenarios)
+    {
+        var random = new Random(3);
+        var roster = Roster(Enumerable.Range(0, scenarios).Select(i => i.ToString("x16")).ToArray());
+        var shapes = HistoryShapes.Create(Enumerable.Range(0, 40).Select(i => $"Caller>Svc GET /thing{i:D2} 200"));
+        var fingerprints = Enumerable.Range(0, scenarios).Select(_ => random.Next().ToString("x8")).ToArray();
+        var callSets = Enumerable.Range(0, scenarios)
+            .Select(_ => (IReadOnlyList<int>)Enumerable.Range(0, 5).Select(_ => random.Next(40)).Distinct().OrderBy(i => i).ToArray()).ToArray();
+        var text = new System.Text.StringBuilder();
+        text.Append(HistoryJson.HeaderLine("test")).Append('\n').Append(HistoryJson.RosterLine(roster)).Append('\n').Append(HistoryJson.ShapesLine(shapes)).Append('\n');
+        HistoryRun current = null!;
+        for (var n = 1; n <= 51; n++)
+        {
+            var results = new string(Enumerable.Range(0, scenarios).Select(_ => random.NextDouble() < 0.004 ? 'F' : 'P').ToArray());
+            current = Run(roster, n, results, durations: Enumerable.Range(0, scenarios).Select(_ => (int?)random.Next(5, 900)).ToArray(),
+                shapes: fingerprints, calls: Enumerable.Repeat(5, scenarios).ToArray()) with { ShapesHash = shapes.Hash, CallSets = callSets };
+            text.Append(HistoryJson.RunLine(current)).Append('\n');
+        }
+        return (HistoryLedgerReader.Parse(text.ToString(), window: 51).Ledger!, roster, current, shapes);
+    }
+
+    [Fact]
+    public void An_analysis_does_not_spell_out_the_calls_of_every_point()
+    {
+        // #91: every point of every scenario had its call set resolved into a new array, and only the
+        // points a changed set is named from were ever read. Allocation on this thread is exact, where a
+        // timing in a parallel suite is not: 36,910 bytes per scenario before, 21,354 after, the same to
+        // the byte on every run. It is a bound on a 50-run window and on what a HistoryPoint holds: a
+        // change that adds a field to the point re-pins it, knowingly.
+        const int scenarios = 300;
+        var (ledger, roster, current, shapes) = RealisticLedger(scenarios);
+        HistoryAnalyzer.Analyse(ledger, roster, current, new HistoryAnalysisOptions(), shapes: shapes); // warm
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var verdicts = HistoryAnalyzer.Analyse(ledger, roster, current, new HistoryAnalysisOptions(), shapes: shapes);
+        var perScenario = (GC.GetAllocatedBytesForCurrentThread() - before) / scenarios;
+
+        Assert.Equal(50, verdicts.RunsRecorded);
+        Assert.True(perScenario < 28 * 1024, $"{perScenario} bytes allocated per scenario over a 50-run window");
+    }
 }

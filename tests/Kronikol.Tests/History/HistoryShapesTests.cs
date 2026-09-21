@@ -301,6 +301,53 @@ public class HistoryShapesTests : IDisposable
     }
 
     [Fact]
+    public void The_calls_are_named_from_the_run_the_change_is_read_against_which_need_not_be_the_previous_one()
+    {
+        // The run between them failed before it had a fingerprint, so the set is compared with the run
+        // before that one, and the names come from there too: what the failed run called is not what
+        // disappeared. The call lists are spelled out on demand (#91), so which run is asked matters.
+        const string Health = "Test>orders GET /api/health 500";
+        var roster = Roster("a1");
+        var shapes = HistoryShapes.Create([Orders, OrderById, Lines, Health]);
+        var failed = Run(roster, "gh:2:1", shapes, [Health]) with
+        {
+            Results = "F", ShapeSet = [""], ShapeOrdered = [""], Errors = ["e1"], ErrorText = new Dictionary<string, string> { ["e1"] = "Expected 200 but got 500" }
+        };
+        var ledger = Ledger(shapes, Run(roster, "gh:1:1", shapes, [Orders, OrderById]), failed);
+
+        var scenario = HistoryAnalyzer.Analyse(ledger, roster, Run(roster, "gh:3:1", shapes, [Orders, Lines]), new HistoryAnalysisOptions(), shapes: shapes).Scenarios[0];
+
+        Assert.Contains(HistoryVerdictKind.BehaviourChanged, scenario.Verdicts);
+        Assert.Equal([Lines], scenario.NewCalls);
+        Assert.Equal([OrderById], scenario.GoneCalls);
+    }
+
+    [Fact]
+    public void The_calls_are_named_from_where_the_scenario_sat_in_the_earlier_roster()
+    {
+        // Second in the roster of the run it is compared with, first in this one, and not in the run
+        // between them at all: neither this run's position nor the run's place in the window finds it.
+        var earlier = Roster("b2", "a1");
+        var between = Roster("b2");
+        var roster = Roster("a1", "b2");
+        var shapes = HistoryShapes.Create([Orders, OrderById, Lines]);
+        var text = HistoryJson.HeaderLine("test") + "\n" + HistoryJson.RosterLine(earlier) + "\n" + HistoryJson.RosterLine(between) + "\n" + HistoryJson.ShapesLine(shapes) + "\n"
+                   + HistoryJson.RunLine(Run(earlier, "gh:1:1", shapes, [Orders], [Orders, OrderById])) + "\n"
+                   + HistoryJson.RunLine(Run(between, "gh:2:1", shapes, [Orders])) + "\n";
+        var ledger = HistoryLedgerReader.Parse(text, window: 50).Ledger!;
+
+        var verdicts = HistoryAnalyzer.Analyse(ledger, roster, Run(roster, "gh:3:1", shapes, [Orders, Lines], [Orders]), new HistoryAnalysisOptions(), shapes: shapes);
+
+        var moved = verdicts.Scenarios[0];
+        Assert.Equal(1, moved.RunsSeen);
+        Assert.Contains(HistoryVerdictKind.BehaviourChanged, moved.Verdicts);
+        Assert.Equal([Lines], moved.NewCalls);
+        Assert.Equal([OrderById], moved.GoneCalls);
+        Assert.Empty(verdicts.Scenarios[1].NewCalls);
+        Assert.Empty(verdicts.Scenarios[1].GoneCalls);
+    }
+
+    [Fact]
     public void The_run_context_writes_the_shapes_into_the_fragment_and_the_ledger()
     {
         RequestResponseLog[] logs = [.. Pair("t1", "/api/orders/4711"), .. Pair("t2", "/api/orders")];

@@ -590,8 +590,11 @@ public class HistoryLedgerTests : IDisposable
     [Fact]
     public void Ledger_for_5000_scenarios_over_50_runs_stays_under_the_budget()
     {
-        // §7.7: measured at 65 ms; budgeted at 150 ms on a generated fixture so a regression to "parse
-        // the whole ledger" fails a test rather than slowly ruining everyone's test runs.
+        // What this times is the READ, on lines that carry results alone: a regression to "parse the
+        // whole ledger" fails a test rather than slowly ruining everyone's test runs. It never calls the
+        // analyzer, and the 65 ms and 150 ms of the history plan's §7.7 were a prototype harness's (#91):
+        // the analysis is held by a count of roster reads and an allocation bound in HistoryAnalyzerTests,
+        // and a real run's lines are four times these bytes (about 200 ms to read at this size).
         var ids = Enumerable.Range(0, 5000).Select(i => i.ToString("x16")).ToArray();
         var roster = Roster("Suite", ids);
         var builder = new StringBuilder();
