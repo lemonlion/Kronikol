@@ -28,6 +28,10 @@ scenario. No verdict, evidence line or number changes.
   | 5,000 | 1,914-2,051 ms | 179-246 ms |
   | 10,000 | 7,167-7,417 ms | 379-490 ms |
 
+  Those are warm figures, five analyses in one process. A test run analyses once, in code not yet
+  compiled: the first analysis in a fresh process was 2.8 to 3.0 s at 5,000 scenarios and is 0.46 to
+  0.49 s.
+
   Through the tool, fastest of five process runs at 5,000 scenarios: `kronikol query history` 6,825 to
   1,142 ms, `kronikol history gate` 6,905 to 1,116 ms, the `history:` line of `query failures` 7,094
   to 1,137 ms, against 195 ms for a command that does not analyse. The tool paid three and a half

@@ -16,9 +16,10 @@
 //             Wall-clock: compare two builds in the same session on an idle machine, never across sessions.
 //
 // --time      no replay: each ledger is read with a 50-run window and the last run of its first suite is
-//             analysed against the rest, five times. Prints the read, the analyses, and the bytes a warm
-//             analysis allocates, which unlike the timings is the same number on every run. For a ledger
-//             whose lines carry what a real run writes (shapes, call sets), which --bench's do not.
+//             analysed against the rest, five times. Prints the read, the analyses, the bytes a warm
+//             analysis allocates, which unlike the timings is the same number on every run, and how long
+//             the collector paused the five. For a ledger whose lines carry what a real run writes
+//             (shapes, call sets), which --bench's do not.
 //
 // --min-runs  the consumer's HistoryMinRuns (default: the analyzer's)
 // --last      replay only the last N run lines of the file
@@ -81,6 +82,8 @@ if (args.Length >= 2 && args[0] == "--time")
         var latestShapes = latest.ShapesHash is { } shapesHash ? timed.Shapes(shapesHash) : null;
         var analyses = new List<long>();
         long allocated = 0;
+        var pausedBefore = GC.GetTotalPauseDuration();
+        var collectionsBefore = Enumerable.Range(0, 3).Select(GC.CollectionCount).ToArray();
         for (var attempt = 0; attempt < 5; attempt++)
         {
             var before = GC.GetAllocatedBytesForCurrentThread();
@@ -91,8 +94,10 @@ if (args.Length >= 2 && args[0] == "--time")
             analyses.Add(watch.ElapsedMilliseconds);
             GC.KeepAlive(result);
         }
+        var paused = (GC.GetTotalPauseDuration() - pausedBefore).TotalMilliseconds;
+        var collections = string.Join("/", Enumerable.Range(0, 3).Select(generation => GC.CollectionCount(generation) - collectionsBefore[generation]));
         Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
-            $"{Path.GetFileName(path)}: {latestRoster.Count} scenarios, read {readWatch.ElapsedMilliseconds} ms, analyse [{string.Join(", ", analyses)}] ms, {allocated / 1024.0 / 1024.0:0.0} MB allocated by a warm analysis ({allocated / latestRoster.Count} B per scenario)"));
+            $"{Path.GetFileName(path)}: {latestRoster.Count} scenarios, read {readWatch.ElapsedMilliseconds} ms, analyse [{string.Join(", ", analyses)}] ms, {allocated / 1024.0 / 1024.0:0.0} MB allocated by a warm analysis ({allocated / latestRoster.Count} B per scenario), the collector paused the five for {paused:0} ms (gen 0/1/2: {collections})"));
     }
     return 0;
 }

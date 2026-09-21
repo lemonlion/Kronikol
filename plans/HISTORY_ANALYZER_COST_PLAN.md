@@ -640,3 +640,55 @@ sixteenth came after shipping) and §17.1b (the row struck and re-marked), and t
 `Ledger_for_5000_scenarios_over_50_runs_stays_under_the_budget`. The budget as restated: **under 600 ms
 for read, parse and analyse at 5,000 x 50 on lines that carry what a run writes; about 400 ms
 measured.**
+
+### 8.4 What came out of it (the open items of §7.2 and §7.3, 2026-09-21)
+
+**What a run pays is the COLD call, and the tables above are warm (§7.2's "not measured through a real
+run").** A test run analyses once, at its end, in code that has not been compiled yet; the tool is a
+fresh process every time. `--time big5000.jsonl` alone in a process, three process runs a side, the
+first analysis and the read:
+
+| | 3.25.1 | 3.25.2 |
+|---|---|---|
+| First analysis in the process | 2,810-3,037 ms | **457-485 ms** |
+| The four after it | 1,942-2,282 ms | 182-433 ms (tiering up) |
+| `Read` in a fresh process | 648-802 ms | 690-701 ms |
+
+So a run at this size paid about 3.6 s for its history and pays about 1.2 s; a test host has usually
+compiled `System.Text.Json` and LINQ already, so the true figure lies between that and the warm 0.4 s.
+Still not measured inside a real test host. The changelog, the wiki and the history plan's §7.7 say
+which figure is which.
+
+**§7.3 item 2, the residual, profiled** (`dotnet-trace`, sampled, five analyses at 10,000 x 50; and
+`--time` now prints the collector's pauses). The guess was right: it is allocation. 202 MB per analysis
+at 10,000 scenarios (21 KB per scenario) costs 86 gen-0, 46 gen-1 and 2 gen-2 collections over five
+analyses and **490 ms of pauses in 2,050 ms of analysis, a quarter**. Inclusive samples under `Analyse`:
+`AnalyseScenario` 75%, of which `ToList` copies 48% (the per-scenario lists: `all`, `real`,
+`realPrior`, `comparable`, `timed`, `shaped`, `memory`), `RunPaces`' constructor 16%, sorting 8%,
+`RunSpeeds` 5%. The index this plan added does not show. The next lever is
+what §7.3 said it would be, fewer per-scenario lists or analysing from the run columns and making
+`Points` for the scenarios a surface asks about, and it is still its own plan and still only worth it
+for a suite of ten thousand.
+
+**§7.3 item 4, the `Read` issue: filed as #96**, with the bytes by member on the synthetic and
+on the real CI ledger and the read split by phase. What it found that §4 had not measured:
+
+- `shapeOrdered` equals `shapeSet` at **47.5%** of the fingerprinted positions of BreakfastProvider's CI
+  ledger (40,337 of 84,844), not at all of them as in the generator. The two fingerprints are 46% of its
+  run lines, so eliding the equal ones is worth about 11% of them.
+- `errors` is a tenth of the run lines on both ledgers and is almost entirely the word `null`.
+- The read at 5,000 x 50, warm: the file 16 ms, the peek of every line 5 ms, `JsonDocument` of the 50
+  kept lines 54 ms, the run objects built from them another 54 ms, 186 ms in all. **Those objects
+  allocate 94 MB for 13 MB of lines**, because every array is a LINQ chain and the call sets are a chain
+  per position (250,000 of them). The same members built with sized loops over the same documents: 132
+  to 69 ms and 94 to 44 MB. That is a lever with no format change behind it, and it is in the issue,
+  not in this release: §4 said a cheaper read is its own question, and nothing here depends on it.
+
+**§7.3 item 3's leftover, `merge --history`: still not timed.** It needs mergeable shard reports, and
+`ReportGenerator.GenerateMergeableReportJson` is internal, so a 5,000-scenario shard cannot be made
+from outside the test project without more scaffolding than one reading is worth. It is one call to
+the same `Analyse` (`MergeCommand.cs`, READ) in a fresh process, so the cold row above is its figure.
+
+**Housekeeping.** Draft PR #92 closed (it was a probe for a Linux reading and said so); #91 closed
+with the measurements. The noise plan's §6.2 now says the order the two plans actually landed in, and
+the evidence plan's §11.4 note says the baseline it measures against is settled.

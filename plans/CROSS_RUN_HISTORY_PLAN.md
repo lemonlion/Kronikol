@@ -1439,6 +1439,11 @@ everyone's test runs.
 > bytes allocated per scenario (36,910 before, 21,354 after, bound 28 KB), the last two in
 > `HistoryAnalyzerTests`. And `HistoryStats` shipped as `{ LinesScanned, LinesParsed, RunsKept,
 > RostersKept, DamagedLines, Elapsed, ShapesKept }`: it has no `ScenariosAnalysed`.
+>
+> These are warm figures, as §2.6's were ("warm third pass"). A run pays one cold call: in a fresh
+> process the first analysis is 0.46–0.49 s (it was 2.8–3.0 s) and the read 0.65–0.8 s, so about 1.2 s
+> where it was about 3.6 s; a test host that has already compiled `System.Text.Json` and LINQ sits
+> between that and 0.4 s. Not measured inside a real test host.
 
 ---
 
