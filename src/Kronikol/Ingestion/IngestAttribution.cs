@@ -234,9 +234,27 @@ public static class IngestAttribution
     /// (a Redis tee): when concurrent tests touch <em>disjoint</em> data — each worker its own seeded
     /// customer — a cache key names its owner, and the owner's window plus the key is a unique match.
     /// A test that roams over shared data should claim everything it touches, which turns its shared
-    /// records ambiguous (honest) instead of exclusively someone else's (wrong).
+    /// records ambiguous (honest) instead of exclusively someone else's (wrong). The cost is the other
+    /// tests': for as long as such a test runs, every record of every test sharing data with it is
+    /// contested, so it belongs in a serial pass rather than beside the workers.
     /// </remarks>
     public static (List<InteractionRecord> Records, int Attributed, int Ambiguous) AttributeByClaims(
+        IReadOnlyList<InteractionRecord> records,
+        IReadOnlyList<ClaimWindow> claimWindows,
+        string? fallbackTestId = null)
+    {
+        var (result, attributed, ambiguous, _) = AttributeByClaimsNamingContests(records, claimWindows, fallbackTestId);
+        return (result, attributed, ambiguous);
+    }
+
+    /// <summary>
+    /// <see cref="AttributeByClaims"/>, also saying who contested what: for every record two or more
+    /// in-flight tests claimed, the claimants (sorted) and the first claim of theirs the record held,
+    /// counted, most contested first. Finding a contest by hand means correlating test windows with
+    /// cache keys; one test that claims every seeded customer contests every record of every other
+    /// test for as long as it runs, and this names it.
+    /// </summary>
+    internal static (List<InteractionRecord> Records, int Attributed, int Ambiguous, IReadOnlyList<(string Contest, int Records)> Contests) AttributeByClaimsNamingContests(
         IReadOnlyList<InteractionRecord> records,
         IReadOnlyList<ClaimWindow> claimWindows,
         string? fallbackTestId = null)
@@ -245,8 +263,9 @@ public static class IngestAttribution
         ArgumentNullException.ThrowIfNull(claimWindows);
 
         if (claimWindows.Count == 0)
-            return (records.ToList(), 0, 0);
+            return (records.ToList(), 0, 0, []);
 
+        var contests = new Dictionary<string, int>(StringComparer.Ordinal);
         var result = new List<InteractionRecord>(records.Count);
         var byRequestResponseId = new Dictionary<string, string>(StringComparer.Ordinal);
         var attributed = 0;
@@ -269,15 +288,20 @@ public static class IngestAttribution
             if (testId is null && record.Timestamp is { } when)
             {
                 string? match = null;
+                string? matchedClaim = null;
                 var claimants = 0;
+                List<string>? contestants = null;
                 foreach (var window in claimWindows)
                 {
-                    if (when < window.Start || when > window.End || !ClaimMatches(window.Claims, record))
+                    if (when < window.Start || when > window.End || MatchingClaim(window.Claims, record) is not { } claim)
                         continue;
                     if (match != window.TestId)
                     {
                         claimants++;
+                        if (claimants > 1)
+                            (contestants ??= [match!]).Add(window.TestId);
                         match = window.TestId;
+                        matchedClaim ??= claim;
                     }
                 }
 
@@ -288,6 +312,8 @@ public static class IngestAttribution
                 else if (claimants > 1)
                 {
                     ambiguous++;
+                    var contest = string.Join(" × ", contestants!.Distinct(StringComparer.Ordinal).OrderBy(t => t, StringComparer.Ordinal)) + $" on \"{matchedClaim}\"";
+                    contests[contest] = contests.GetValueOrDefault(contest) + 1;
                 }
             }
 
@@ -304,20 +330,25 @@ public static class IngestAttribution
             result.Add(record with { TestId = testId });
         }
 
-        return (result, attributed, ambiguous);
+        var named = contests
+            .OrderByDescending(c => c.Value)
+            .ThenBy(c => c.Key, StringComparer.Ordinal)
+            .Select(c => (c.Key, c.Value))
+            .ToList();
+        return (result, attributed, ambiguous, named);
     }
 
-    /// <summary>Whether any claim literally appears in the record's URI or captured body. Case-sensitive: claims are ids and key fragments, not prose.</summary>
-    private static bool ClaimMatches(IReadOnlyList<string> claims, InteractionRecord record)
+    /// <summary>The first claim that literally appears in the record's URI or captured body, or null. Case-sensitive: claims are ids and key fragments, not prose.</summary>
+    private static string? MatchingClaim(IReadOnlyList<string> claims, InteractionRecord record)
     {
         foreach (var claim in claims)
         {
             if (record.Uri.Contains(claim, StringComparison.Ordinal)
                 || (record.Content?.Contains(claim, StringComparison.Ordinal) ?? false))
-                return true;
+                return claim;
         }
 
-        return false;
+        return null;
     }
 
     /// <summary>Whether a record still has to be attributed: no test id at all, or the capturer's fallback marker.</summary>

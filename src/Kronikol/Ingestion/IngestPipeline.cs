@@ -549,22 +549,36 @@ public static class IngestPipeline
     }
 
     /// <summary>
-    /// Applies the two ingest-time attribution passes — window attribution and phase-from-steps — and
-    /// then the <see cref="IngestRequest.DropUnattributed"/> filter, in that order: a record only reaches
-    /// the filter once every chance to identify it has been taken.
+    /// Applies the ingest-time attribution passes — content claims, window attribution and
+    /// phase-from-steps — then folds wire and span duplicates (<see cref="IngestRequest.MergeDuplicateInteractions"/>),
+    /// and only then the <see cref="IngestRequest.DropUnattributed"/> filter: a record only reaches the
+    /// filter once every chance to identify it has been taken, and a span twin is such a chance.
     /// </summary>
+    /// <remarks>
+    /// The merge sits between the passes and the filter deliberately. After the filter, a wire record
+    /// whose claim was contested is gone before its twin could name its test. Before the passes, a
+    /// record the filter would have removed competes for a span it has no right to: the passes are what
+    /// say which twin is whose, and the merger pairs records that agree on their test first.
+    /// </remarks>
     private static List<InteractionRecord> Attribute(
         List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
     {
         if (request.AttributeByClaims)
         {
             var claimWindows = IngestAttribution.BuildClaimWindows(testRecords);
-            var (claimedRecords, claimed, contested) = IngestAttribution.AttributeByClaims(records, claimWindows, request.WindowAttributionFallbackId);
+            var (claimedRecords, claimed, contested, contests) = IngestAttribution.AttributeByClaimsNamingContests(records, claimWindows, request.WindowAttributionFallbackId);
             records = claimedRecords;
             if (claimed > 0)
                 diagnostics.Add(DiagnosticKind.UnattributedInteractions, $"{claimed} interaction record(s) attributed to a test by content claims.");
             if (contested > 0)
-                diagnostics.Add(DiagnosticKind.Other, $"{contested} interaction record(s) matched the claims of more than one in-flight test and were left for window attribution.");
+            {
+                // Named, because the cause is nearly always one test: a sweep that claims every seeded
+                // customer contests every record of every other test for as long as it runs.
+                const int shown = 3;
+                var most = string.Join(", ", contests.Take(shown).Select(c => $"{c.Contest} ({c.Records})"));
+                var more = contests.Count > shown ? $" and {contests.Count - shown} more" : "";
+                diagnostics.Add(DiagnosticKind.Other, $"{contested} interaction record(s) matched the claims of more than one in-flight test and were left for window attribution; most contested: {most}{more}.");
+            }
         }
 
         if (request.AttributeByTestWindow)
@@ -592,6 +606,9 @@ public static class IngestPipeline
             if (tagged > 0)
                 diagnostics.Add(DiagnosticKind.Other, $"{tagged} interaction record(s) took their phase from the step they happened during.");
         }
+
+        if (request.MergeDuplicateInteractions)
+            records = InteractionMerger.Merge(ByTimestamp(records), request.MergeOverlapThreshold, request.WindowAttributionFallbackId);
 
         records = DropUnattributed(records, testRecords, request, diagnostics);
 
@@ -700,20 +717,22 @@ public static class IngestPipeline
         }
     }
 
-    /// <summary>Sorts by timestamp, folds unknown tests, then (optionally) rewrites the order as a call tree.</summary>
-    private static List<InteractionRecord> Order(List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request)
-    {
-        // Stable sort by timestamp: entries without a timestamp keep their file order relative to
-        // each other and sort first.
-        var ordered = records
+    /// <summary>
+    /// Stable sort by timestamp: entries without a timestamp keep their file order relative to each
+    /// other and sort first. The merger breaks ties by index, so what it is given is sorted this way too.
+    /// </summary>
+    private static List<InteractionRecord> ByTimestamp(List<InteractionRecord> records) =>
+        records
             .Select((record, index) => (record, index))
             .OrderBy(x => x.record.Timestamp ?? DateTimeOffset.MinValue)
             .ThenBy(x => x.index)
             .Select(x => x.record)
             .ToList();
 
-        if (request.MergeDuplicateInteractions)
-            ordered = InteractionMerger.Merge(ordered, request.MergeOverlapThreshold);
+    /// <summary>Sorts by timestamp, folds unknown tests, then (optionally) rewrites the order as a call tree.</summary>
+    private static List<InteractionRecord> Order(List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request)
+    {
+        var ordered = ByTimestamp(records);
 
         if (request.FoldUnknownTestsInto is { } fold)
         {

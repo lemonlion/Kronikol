@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.22.3] - 2026-09-21
+
+**Patch - an ingest dropped wire records that their span twins could have identified (#75 section 2).**
+The patch part moved because nothing here is new to call: the order of two ingest steps is corrected and
+a merge bug is fixed. Second slice of `plans/HISTORY_VERDICT_NOISE_PLAN.md`. Template pins stay at 3.22.1.
+
+### Fixed
+
+- **A wire record whose content claim was contested was dropped before the merger could give it its span
+  twin's test.** `DropUnattributed` ran inside the attribution step and `MergeDuplicateInteractions`
+  only afterwards, so on a parallel suite where one long scenario claims every seeded customer, every
+  MongoDB wire record of a worker sharing a customer with it was unattributed and removed: 784 records
+  in one run on the reporting suite, and whole scenarios whose MongoDB calls came and went with
+  scheduling. The merge now runs after the attribution passes and **before** the drop.
+  **Behaviour change:** a report that lost those records now keeps them, attributed to the span's test,
+  and the "dropped by DropUnattributed" and "could not be attributed" counts fall accordingly.
+- **Not before the attribution passes, which is what the issue proposed.** Built and run: merge first
+  and a record the filter would have removed (a seeder's, another worker's) competes for a span that is
+  not its own, and one that overlaps it as well as the true twin and starts closer takes it: two
+  MongoDB calls in the scenario where there was one, the second carrying another customer's payload.
+  The merger now pairs records that are already known to belong to the same test before any others,
+  and a test pins the stranger case so the order is not "simplified" back.
+- **A merge could throw attribution away.** The merged record took the span's test unconditionally, so
+  a wire record that knew its test (a proxy tap that read it from a header) lost it to a span twin
+  carrying only the capturer's fallback id. The wire record's test, and its name, now stand when the
+  span has none. Independent of #75; found by reading `Adopt` and shown by a failing test first.
+
+### Changed
+
+- **The contested-claims diagnostic names the contest**: `... were left for window attribution; most
+  contested: sweep × worker-a on "cust-111" (512), ...`, the top three by records. Finding the cause took
+  the reporter a hand correlation of test windows against cache keys.
+
+### Notes
+
+- **What this does not fix:** a contested record with no span twin. Redis has no OpenTelemetry twin in
+  most stacks, so a contested Redis wire record is still dropped; of the lines the issue files under
+  this section only the MongoDB half comes back. A test pins the limit as a limit. The consumer-side
+  answer is to run a test that claims everything in the suite's serial pass, and the wiki now says so.
+- Where no claim is contested nothing changes: a test holds the pipeline's merge equal to merging the
+  sorted input by hand, which is what the pipeline did before the move. None of the 195 existing
+  Ingestion tests needed re-pinning.
+- `InteractionMerger.Merge` keeps its public signature. The identity-aware form is internal.
+- Wiki: `Ingesting-External-Captures.md` documents `AttributeByClaims` and
+  `WindowAttributionMode.ExclusiveOnly` for the first time, the contested diagnostic, where the merge
+  sits and why, and the sweep advice. Kronikol4J has no ingest merger; one divergence-ledger line
+  records the `TestRunReport.json` content change on the ingest lane.
+
 ## [3.22.2] - 2026-09-21
 
 **Patch - three kinds of id the history templater missed (#75 section 1).** The patch part moved because

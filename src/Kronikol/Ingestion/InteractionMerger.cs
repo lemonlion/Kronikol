@@ -47,7 +47,20 @@ public static class InteractionMerger
     /// </summary>
     /// <param name="records">The records to merge, in any order.</param>
     /// <param name="overlapThreshold">Fraction (0–1] of the shorter interval the two calls must share. Default 0.8.</param>
-    public static List<InteractionRecord> Merge(IReadOnlyList<InteractionRecord> records, double overlapThreshold = DefaultOverlapThreshold)
+    public static List<InteractionRecord> Merge(IReadOnlyList<InteractionRecord> records, double overlapThreshold = DefaultOverlapThreshold) =>
+        Merge(records, overlapThreshold, fallbackTestId: null);
+
+    /// <summary>
+    /// <see cref="Merge(IReadOnlyList{InteractionRecord}, double)"/> for a caller that knows the capturer's
+    /// fallback test id, and so which records have no test yet. Two things follow from knowing it. Pairs
+    /// whose records are already known to belong to the same test are matched before any other, so a
+    /// record nobody could identify cannot take the twin of one somebody did. And a wire record that
+    /// knows its test keeps it when its span twin does not know its own.
+    /// </summary>
+    /// <param name="records">The records to merge, in any order.</param>
+    /// <param name="overlapThreshold">Fraction (0–1] of the shorter interval the two calls must share.</param>
+    /// <param name="fallbackTestId">The id a capturer writes when it does not know the test; a record carrying it is unattributed.</param>
+    internal static List<InteractionRecord> Merge(IReadOnlyList<InteractionRecord> records, double overlapThreshold, string? fallbackTestId)
     {
         ArgumentNullException.ThrowIfNull(records);
         if (records.Count == 0)
@@ -58,7 +71,7 @@ public static class InteractionMerger
         if (calls.Count < 2)
             return [.. records];
 
-        var pairs = MatchPairs(calls, threshold);
+        var pairs = MatchPairs(calls, threshold, fallbackTestId);
         if (pairs.Count == 0)
             return [.. records];
 
@@ -66,13 +79,13 @@ public static class InteractionMerger
         var removed = new HashSet<int>();
         foreach (var (wire, span) in pairs)
         {
-            replacements[wire.RequestIndex] = MergeRequest(wire.Request, span.Request);
+            replacements[wire.RequestIndex] = MergeRequest(wire.Request, span.Request, fallbackTestId);
             removed.Add(span.RequestIndex);
 
             if (span.ResponseIndex >= 0)
                 removed.Add(span.ResponseIndex);
             if (wire.ResponseIndex >= 0)
-                replacements[wire.ResponseIndex] = MergeResponse(wire.Response!, span.Response ?? span.Request);
+                replacements[wire.ResponseIndex] = MergeResponse(wire.Response!, span.Response ?? span.Request, fallbackTestId);
         }
 
         var result = new List<InteractionRecord>(records.Count);
@@ -207,8 +220,17 @@ public static class InteractionMerger
 
     // ------------------------------------------------------------------ matching
 
-    private static List<(Call Wire, Call Span)> MatchPairs(List<Call> calls, double threshold)
+    private static List<(Call Wire, Call Span)> MatchPairs(List<Call> calls, double threshold, string? fallbackTestId)
     {
+        // Two records already known to belong to the same test pair before any that are not. The matcher
+        // reads no test id otherwise, so without this a record nobody could identify (a seeder's, another
+        // worker's) that overlaps a span as well as the span's true twin does, and starts closer, takes
+        // the twin and with it the test: a stranger's payload under the scenario's name.
+        bool Agree(Call wire, Call span) =>
+            !IngestAttribution.NeedsAttribution(wire.Request, fallbackTestId)
+            && !IngestAttribution.NeedsAttribution(span.Request, fallbackTestId)
+            && string.Equals(wire.Request.TestId, span.Request.TestId, StringComparison.Ordinal);
+
         var candidates = new List<(double Overlap, double Distance, Call Wire, Call Span)>();
         var wires = calls.Where(c => c.Source == Source.Wire).ToList();
         var spans = calls.Where(c => c.Source == Source.Span).ToList();
@@ -229,7 +251,8 @@ public static class InteractionMerger
         }
 
         var ordered = candidates
-            .OrderByDescending(c => c.Overlap)
+            .OrderByDescending(c => Agree(c.Wire, c.Span))
+            .ThenByDescending(c => c.Overlap)
             .ThenBy(c => c.Distance)
             .ThenBy(c => c.Wire.RequestIndex)
             .ThenBy(c => c.Span.RequestIndex);
@@ -270,19 +293,26 @@ public static class InteractionMerger
 
     // ------------------------------------------------------------------ merging
 
-    private static InteractionRecord MergeRequest(InteractionRecord wire, InteractionRecord span) =>
-        Adopt(wire, span) with
+    private static InteractionRecord MergeRequest(InteractionRecord wire, InteractionRecord span, string? fallbackTestId) =>
+        Adopt(wire, span, fallbackTestId) with
         {
             Headers = WithCapturedByHeader(wire.Headers),
         };
 
-    private static InteractionRecord MergeResponse(InteractionRecord wire, InteractionRecord span) => Adopt(wire, span);
+    private static InteractionRecord MergeResponse(InteractionRecord wire, InteractionRecord span, string? fallbackTestId) => Adopt(wire, span, fallbackTestId);
 
-    /// <summary>The wire record with the span's identity: exact attribution, wire fidelity.</summary>
-    private static InteractionRecord Adopt(InteractionRecord wire, InteractionRecord span) => wire with
+    /// <summary>
+    /// The wire record with the span's identity: exact attribution, wire fidelity. Unless the span has no
+    /// identity and the wire record has one (a proxy tap that read the test from a header, a span that
+    /// carried no baggage): then the wire record's test stands, with its name.
+    /// </summary>
+    private static InteractionRecord Adopt(InteractionRecord wire, InteractionRecord span, string? fallbackTestId) =>
+        Adopt(wire, span, wireKnows: IngestAttribution.NeedsAttribution(span, fallbackTestId) && !IngestAttribution.NeedsAttribution(wire, fallbackTestId));
+
+    private static InteractionRecord Adopt(InteractionRecord wire, InteractionRecord span, bool wireKnows) => wire with
     {
-        TestId = span.TestId,
-        TestName = span.TestName ?? wire.TestName,
+        TestId = wireKnows ? wire.TestId : span.TestId,
+        TestName = wireKnows ? wire.TestName ?? span.TestName : span.TestName ?? wire.TestName,
         TraceId = span.TraceId ?? wire.TraceId,
         ActivityTraceId = span.ActivityTraceId ?? wire.ActivityTraceId,
         ActivitySpanId = span.ActivitySpanId ?? wire.ActivitySpanId,
