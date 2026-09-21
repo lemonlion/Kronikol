@@ -76,6 +76,9 @@ internal static partial class QueryCommand
     /// <summary>Where the invocation runs from, for the verbs that look around it; null means the process's own.</summary>
     [ThreadStatic] private static string? _workingDirectory;
 
+    /// <summary>Called with the report's path once it has been scanned, so a test can stand in for the run that replaces it then.</summary>
+    [ThreadStatic] internal static Action<string>? AfterScan;
+
     private static int RunCore(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?> getEnv)
     {
         _lastResolvedReport = null;
@@ -110,6 +113,11 @@ internal static partial class QueryCommand
         {
             index = ReportScanner.Scan(resolved);
         }
+        catch (ReportChangedException exception)
+        {
+            error.WriteLine(exception.Message);
+            return 1;
+        }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             error.WriteLine($"Could not read {resolved}: {exception.Message}");
@@ -122,6 +130,7 @@ internal static partial class QueryCommand
         }
 
         _lastKronikolVersion = index.KronikolVersion;
+        AfterScan?.Invoke(resolved);
 
         if (ReportGate.Refuse(index, resolved, error) is { } notAReport)
             return notAReport;
@@ -155,7 +164,28 @@ internal static partial class QueryCommand
         var writer = new QueryWriter(@out, options.MaxBytes, envelope, outPath);
         WriteProvenance(writer, index, command, options, error);
 
-        var exit = command switch
+        int exit;
+        try
+        {
+            exit = Dispatch(command, index, options, writer, error, getEnv);
+        }
+        catch (IOException exception)
+        {
+            // Payloads are read after the scan, through a fresh open of the same path. A report that was
+            // replaced in between says so (ReportChangedException); anything else the file system refused
+            // is the same kind of failure, and used to leave the tool as an unhandled exception.
+            error.WriteLine(exception is ReportChangedException ? exception.Message : $"Could not read {resolved}: {exception.Message}");
+            return 1;
+        }
+
+        if (exit == 0 && !writer.Flush(error))
+            return 1;
+
+        return exit;
+    }
+
+    private static int Dispatch(string command, ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error, Func<string, string?> getEnv) =>
+        command switch
         {
             "summary" => Summary(index, options, writer, error),
             "scenarios" => Scenarios(index, options, writer, error),
@@ -179,12 +209,6 @@ internal static partial class QueryCommand
             "history" => History(index, options, writer, error, getEnv),
             _ => Unknown(command, error)
         };
-
-        if (exit == 0 && !writer.Flush(error))
-            return 1;
-
-        return exit;
-    }
 
     /// <summary>
     /// The verbs <c>--json</c> answers: the ones whose output is a list of like things, plus

@@ -417,6 +417,34 @@ public class SkillDriftTests
                 .ToList();
     }
 
+    /// <summary>
+    /// The same again for the managed block: <c>templates/agents/CLAUDE.md</c> is what
+    /// <c>kronikol init-agents</c> splices into a consumer's <c>CLAUDE.md</c> and <c>AGENTS.md</c>, and this
+    /// repository carries that block in its own two. Nothing held them to it, and they had drifted: the
+    /// repo's copies lacked the <c>kronikol query history</c> line the template grew.
+    /// </summary>
+    [Theory]
+    [InlineData("CLAUDE.md")]
+    [InlineData("AGENTS.md")]
+    public void The_managed_block_in_this_repository_s_agent_files_is_the_template_s(string file)
+    {
+        static string Block(string path)
+        {
+            var text = File.ReadAllText(path).ReplaceLineEndings("\n");
+            var begin = text.IndexOf("<!-- kronikol:begin -->", StringComparison.Ordinal);
+            var end = text.IndexOf("<!-- kronikol:end -->", StringComparison.Ordinal);
+            Assert.True(begin >= 0 && end > begin, $"no managed block in {path}");
+            return text[begin..end];
+        }
+
+        // AGENTS.md is git-ignored here: a checkout that never ran `kronikol init-agents` has none, and
+        // there is nothing to have drifted.
+        if (!File.Exists(Path.Combine(RepoRoot, file)))
+            return;
+
+        Assert.Equal(Block(Path.Combine(RepoRoot, "templates", "agents", "CLAUDE.md")), Block(Path.Combine(RepoRoot, file)));
+    }
+
     [Fact]
     public void Every_banner_the_tool_can_print_is_explained_in_the_skill()
     {

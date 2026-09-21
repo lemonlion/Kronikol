@@ -9,7 +9,7 @@ namespace Kronikol.Reports;
 
 /// <summary>The two files <see cref="FailuresDigestGenerator"/> produces, as text.</summary>
 /// <param name="Markdown">The contents of <c>Failures.md</c>.</param>
-/// <param name="Jsonl">The contents of <c>Failures.jsonl</c>: one JSON object per line, empty when nothing failed.</param>
+/// <param name="Jsonl">The contents of <c>Failures.jsonl</c>: one JSON object per line. Never empty: a run in which nothing failed still writes the header line, with <c>failures: 0</c>, so that "nothing failed" and "never written" do not read alike - which also means the file's size says nothing about whether the run failed.</param>
 public sealed record FailuresDigest(string Markdown, string Jsonl);
 
 /// <summary>

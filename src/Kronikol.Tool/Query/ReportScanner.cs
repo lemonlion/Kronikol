@@ -70,8 +70,8 @@ internal static class ReportScanner
 
     public static ReportIndex Scan(string path)
     {
-        using var stream = File.OpenRead(path);
-        var index = new ReportIndex { Path = path, FileLength = stream.Length };
+        using var stream = OpenShared(path);
+        var index = new ReportIndex { Path = path, FileLength = stream.Length, LastWriteUtc = File.GetLastWriteTimeUtc(stream.SafeFileHandle) };
         var walker = new Walker(index);
 
         var buffer = ArrayPool<byte>.Shared.Rent(InitialWindow);
@@ -123,8 +123,28 @@ internal static class ReportScanner
             ArrayPool<byte>.Shared.Return(buffer);
         }
 
+        // One streaming pass over one handle, and the sharing below lets a run overwrite the file under
+        // it - on Linux nothing ever stopped that. The same handle then reads the new bytes, so an index
+        // built across an overwrite is half of one report and half of another.
+        ThrowIfChanged(stream, index);
+
         walker.Finish();
         return index;
+    }
+
+    /// <summary>
+    /// How the tool opens a report: sharing everything, deletion included. With read-sharing only, a query
+    /// in flight when a run finished cost that run its report on Windows - the overwrite failed, and so
+    /// would a move. What makes it safe is <see cref="ThrowIfChanged"/> at every point the index is trusted.
+    /// </summary>
+    internal static FileStream OpenShared(string path) =>
+        new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+
+    /// <summary>Throws when the open file is not the one <paramref name="index"/> was built from - by length, or by when it was last written.</summary>
+    internal static void ThrowIfChanged(FileStream stream, ReportIndex index)
+    {
+        if (stream.Length != index.FileLength || File.GetLastWriteTimeUtc(stream.SafeFileHandle) != index.LastWriteUtc)
+            throw new ReportChangedException(index.Path);
     }
 
     /// <summary>

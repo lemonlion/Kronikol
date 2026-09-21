@@ -279,6 +279,8 @@ internal static class MergeCommand
     {
         var result = new List<string>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var besideAReport = new SortedSet<string>(StringComparer.Ordinal);
+        var skipped = 0;
 
         void Add(string path)
         {
@@ -298,7 +300,21 @@ internal static class MergeCommand
                 foreach (var f in Directory.EnumerateFiles(input, "*.json", SearchOption.AllDirectories)
                              .Where(f => !IsUnderBaselineFolder(input, f))
                              .OrderBy(x => x, StringComparer.Ordinal))
+                {
+                    // What Kronikol itself writes beside a report, by name: none of them is a report, and
+                    // the reader fails the whole merge on the first one (every history-enabled run has
+                    // written History.run.json since 3.9.0). By NAME, and only when FOUND: a rule that
+                    // skipped anything without `features` would drop a truncated shard without a word,
+                    // and a file named on the command line is still read and refused for what it is.
+                    if (WrittenBesideAReport.Contains(Path.GetFileName(f), StringComparer.OrdinalIgnoreCase))
+                    {
+                        skipped++;
+                        besideAReport.Add(Path.GetFileName(f));
+                        continue;
+                    }
+
                     Add(f);
+                }
             }
             else if (File.Exists(input))
             {
@@ -324,8 +340,14 @@ internal static class MergeCommand
             }
         }
 
+        if (skipped > 0)
+            error.WriteLine($"skipped {skipped} file{(skipped == 1 ? "" : "s")} Kronikol writes beside a report ({string.Join(", ", besideAReport)}) — name one explicitly to have it read");
+
         return result;
     }
+
+    /// <summary>The JSON files a run writes into its reports directory that are not reports.</summary>
+    private static readonly string[] WrittenBesideAReport = [Kronikol.History.HistoryFormat.FragmentFileName, CtrfReportGenerator.FileName];
 
     private static bool IsUnderBaselineFolder(string root, string file) =>
         Path.GetRelativePath(root, file)

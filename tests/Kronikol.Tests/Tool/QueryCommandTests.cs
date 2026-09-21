@@ -1575,7 +1575,7 @@ public class QueryCommandTests : IDisposable
         var path = Path.Combine(_directory, "tiny.json");
         File.WriteAllText(path, raw);
 
-        var index = new ReportIndex { Path = path, FileLength = raw.Length };
+        var index = new ReportIndex { Path = path, FileLength = raw.Length, LastWriteUtc = File.GetLastWriteTimeUtc(path) };
         index.Bodies["b:missing"] = new BodyEntry { Hash = "b:missing", First = default };
         index.Bodies["b:notastring"] = new BodyEntry { Hash = "b:notastring", First = new Slice(raw.IndexOf("123", StringComparison.Ordinal), 3) };
 
@@ -1781,6 +1781,81 @@ public class QueryCommandTests : IDisposable
             .First(l => l.Contains(" body ", StringComparison.Ordinal) && l.Contains("b:", StringComparison.Ordinal));
         var tokens = row.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return (tokens[0], tokens.First(t => t.StartsWith("b:", StringComparison.Ordinal)));
+    }
+
+    // ─── A report replaced under a query ───────────────────────
+    // The index is one scan; payloads are fetched later by byte offset through a fresh open of the same
+    // path. Nothing compared the file with the one that was scanned, so a run finishing in between had
+    // its report read at the old offsets and a slice of some other payload returned as the answer.
+
+    private (string Report, ReportIndex Index, Slice LastBody) AScannedReportAndItsLastBody(string fileName)
+    {
+        var report = Report(fileName: fileName);
+        var index = ReportScanner.Scan(report);
+        var last = index.Scenarios.SelectMany(s => s.Interactions).Last(i => i.Body.Exists).Body;
+        return (report, index, last);
+    }
+
+    [Fact]
+    public void A_payload_is_not_read_out_of_a_longer_report_that_replaced_the_one_scanned()
+    {
+        var (report, index, body) = AScannedReportAndItsLastBody("Longer.TestRunReport.json");
+        // A late body: the first sits at the same offset in both files and would "pass" by luck.
+        File.WriteAllText(report, new string(' ', 4096) + File.ReadAllText(report));
+
+        var thrown = Assert.Throws<ReportChangedException>(() => PayloadReader.Read(index, body));
+
+        Assert.Contains("changed while it was being read", thrown.Message);
+    }
+
+    [Fact]
+    public void Nor_out_of_a_shorter_one()
+    {
+        var (report, index, body) = AScannedReportAndItsLastBody("Shorter.TestRunReport.json");
+        File.WriteAllText(report, """{"kronikolVersion":"3.1.0","features":[]}""");
+
+        Assert.Throws<ReportChangedException>(() => PayloadReader.Read(index, body));
+    }
+
+    [Fact]
+    public void A_report_replaced_between_the_scan_and_the_answer_is_exit_1_and_says_to_run_it_again()
+    {
+        var report = Report(fileName: "Swapped.TestRunReport.json");
+        var address = RequestBodyRow(report).Address;
+        var output = new StringWriter();
+        var error = new StringWriter();
+
+        QueryCommand.AfterScan = path => File.WriteAllText(path, new string(' ', 4096) + File.ReadAllText(path));
+        int exit;
+        try
+        {
+            exit = QueryCommand.Run(["body", report, address], output, error);
+        }
+        finally
+        {
+            QueryCommand.AfterScan = null;
+        }
+
+        Assert.Equal(1, exit);
+        Assert.Contains("changed while it was being read; run the command again", error.ToString());
+    }
+
+    [Fact]
+    public void A_query_holding_the_report_does_not_stop_a_finishing_run_from_replacing_it()
+    {
+        // The run's side of the same collision: with read-sharing only, a query in flight cost the run
+        // its TestRunReport.json on Windows - overwriting it in place and moving it aside were both an
+        // IOException.
+        var (report, index, _) = AScannedReportAndItsLastBody("Held.TestRunReport.json");
+        var aside = Path.Combine(_directory, "Held.aside.json");
+
+        using (PayloadReader.Open(index))
+        {
+            File.WriteAllText(report, """{"kronikolVersion":"3.1.0","features":[]}""");
+            File.Move(report, aside);
+        }
+
+        Assert.StartsWith("""{"kronikolVersion":"3.1.0",""", File.ReadAllText(aside));
     }
 
     // ─── Harness ───────────────────────────────────────────────

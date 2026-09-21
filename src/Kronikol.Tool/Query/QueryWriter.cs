@@ -437,7 +437,9 @@ internal sealed class QueryWriter
                 .Append(" bytes · raise with --max-bytes, or filter harder\n");
 
         if (_footer is not null)
-            text.Append(_footer).Append('\n');
+            text.Append(_footer).Append(HasCut && _cutNotice is not null ? " · " + _cutNotice : "").Append('\n');
+        else if (HasCut && _cutNotice is not null)
+            text.Append(_cutNotice).Append('\n');
 
         return text.ToString();
     }
@@ -506,14 +508,62 @@ internal sealed class QueryWriter
     public static string Duration(double? ms) =>
         ms is null ? "" : ms < 1000 ? $"{ms:0} ms" : $"{ms / 1000:0.##} s";
 
-    /// <summary>One line of text with its newlines flattened, so a listing stays one row per item.</summary>
-    public static string OneLine(string? text, int max = 160)
+    /// <summary>Whether <see cref="Cut"/> has shortened anything in this answer.</summary>
+    public bool HasCut { get; private set; }
+
+    /// <summary>
+    /// What the footer gains when <see cref="Cut"/> shortened something: an ellipsis always has an address,
+    /// so a list view that cuts names the view that does not.
+    /// </summary>
+    public void CutNotice(string text) => _cutNotice = text;
+
+    private string? _cutNotice;
+
+    /// <summary>
+    /// One line of text cut for a list view, keeping both ends around <c> … </c>: an exception string is
+    /// <c>&lt;Wrapper&gt;. &lt;Status&gt;. &lt;underlying message&gt;</c>, and an assertion is "expected X but found
+    /// Y" - the signal is last, and a cut that keeps only the head removes it (#82). Never longer than
+    /// <paramref name="max"/>, never between the halves of a surrogate pair, the identity under the limit;
+    /// and it remembers that it cut, for <see cref="CutNotice"/>.
+    /// </summary>
+    public string Cut(string? text, int max)
+    {
+        var flat = Flat(text);
+        const string gap = " … ";
+        if (flat.Length <= max)
+            return flat;
+
+        HasCut = true;
+        if (max <= gap.Length + 2)
+            return Kronikol.Reports.FailureText.Truncate(flat, Math.Max(0, max - 1));
+
+        var keep = max - gap.Length;
+        var head = keep * 6 / 10;
+        var tailStart = flat.Length - (keep - head);
+        if (char.IsHighSurrogate(flat[head - 1]))
+            head--;
+        if (char.IsLowSurrogate(flat[tailStart]))
+            tailStart++;
+        return flat[..head].TrimEnd() + gap + flat[tailStart..].TrimStart();
+    }
+
+    /// <summary>The text on one line, whole: newlines and runs of spaces flattened, nothing cut.</summary>
+    public static string Flat(string? text)
     {
         if (string.IsNullOrEmpty(text))
             return "";
         var flat = text.ReplaceLineEndings(" ").Trim();
         while (flat.Contains("  ", StringComparison.Ordinal))
             flat = flat.Replace("  ", " ", StringComparison.Ordinal);
+        return flat;
+    }
+
+    /// <summary>One line of text with its newlines flattened, so a listing stays one row per item.</summary>
+    public static string OneLine(string? text, int max = 160)
+    {
+        if (string.IsNullOrEmpty(text))
+            return "";
+        var flat = Flat(text);
         // Shared with the digest's Truncate, and for the same reason: `flat[..max]` can land between the
         // halves of a surrogate pair. Here the result goes to a terminal and into the --json envelope
         // rather than to a file, so it mangles instead of throwing — which is the worse failure, because

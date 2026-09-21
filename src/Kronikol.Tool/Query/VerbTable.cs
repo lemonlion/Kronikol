@@ -302,7 +302,7 @@ internal static class VerbTable
     public static readonly (int Code, string Meaning)[] ExitCodes =
     [
         (0, "Answered."),
-        (1, "The report could not be read: not a file, not valid JSON, not a Kronikol report, or a format this build does not understand."),
+        (1, "The report could not be read: not a file, not valid JSON, not a Kronikol report, a format this build does not understand, or replaced by a finishing run while it was being read (run the command again)."),
         (2, "Bad usage: an unknown verb, a malformed or out-of-range address, a flag the verb does not read, a directory holding several reports.")
     ];
 }

@@ -1239,4 +1239,41 @@ None blocks S0, S1 or S2.
 
 ## 12. Execution log
 
-*(empty — nothing implemented. The prototype patch beside this file is evidence, not an execution.)*
+Green-lit 2026-09-21 ("implement in full"). Three releases, carved by what CLAUDE.md's versioning rule
+makes of each slice rather than by §8's table: S2 adds public types to the library
+(`HistoryFlakyShortfall`, `FailingOutside`, two members of `ScenarioHistory`), which is a minor, so it
+ships with S3 and not with the patch.
+
+**What had moved under the plan before execution.** The noise plan (3.22.2 to 3.25.0), the as-of fix
+(3.25.1, #95) and the analyzer cost plan (3.25.2) all landed first. 3.25.1 **is F4 and both halves of
+F5**: `HistoryLedger.PriorRuns` cuts at the run's own line for every stream, the comparison stream
+included, the window is per stream, and a run outside the window is parsed on demand. So S3 carries no
+analyzer cut, §3.5's tests 2, 10, 11 and 14 are green before it as pins, and F5's twin ("49 for 50") no
+longer reproduces. The fuller prototypes of §11.6 (S2, S3, the tool side of S4, the rotation) were found
+alive in two scratch worktrees of 3.22.1 and ported by hand; §11.6 itself was never written into this
+file.
+
+### 3.25.3 (patch) - S0 and S1
+
+- **F11** `MergeCommand.ResolveInputFiles` skips `History.run.json` and `ctrf-report.json` by name in a
+  sweep and says so; named explicitly they are still refused. Tests generate both files with the
+  writers a run uses. `Run.json` joins the list in S4.
+- **F14** `ReportHistory.AdoptOwnLine` / `OwnLine`, used by the `history` verb and by the `history:`
+  line of `failures` (`TryVerdictsSilently`), with the same-roster rule for an id match (the shard
+  case) and the window-0 re-read for a report older than the window.
+- **F12** `ReportIndex.LastWriteUtc`; `ReportScanner.ThrowIfChanged` at the end of the scan and in
+  `PayloadReader.Open`; `ReportChangedException`; every open through `ReportScanner.OpenShared`
+  (`FileShare.ReadWrite | Delete`); `RunCore` turns an `IOException` out of a verb into exit 1. Four
+  tests, red first: a longer replacement (a wrong string on 3.25.2), a shorter one
+  (`EndOfStreamException`), the CLI path through a `QueryCommand.AfterScan` seam, and the holder that
+  no longer blocks an overwrite or a move. *Departure:* the plan's "the move succeeds under an open
+  reader" is true of moving the held file AWAY, which is what rotation does; replacing a held file BY
+  a move onto it is still refused by Windows, delete sharing or not (RUN: `UnauthorizedAccessException`).
+- **S1** as §4.2, with `QueryWriter.Cut` (60/40 head and tail, surrogate-safe at both ends, never
+  longer than the limit), `QueryWriter.Flat`, `CutNotice`. The "first line only" pointer is printed
+  once under the run list, not per row. The parity test covers evidence, every `runs[].error`, the
+  quarantine reason and both call lists, on a fixture with four new and four gone calls.
+  `A_failure_in_a_degraded_run_says_so_on_its_row_and_in_the_statistics` moved with the error: the
+  labels now end the row, which is what §2 moved it for.
+- In passing: the managed block in `CLAUDE.md` (and the git-ignored `AGENTS.md`) and its new guard in
+  `SkillDriftTests`; the `FailuresDigest.Jsonl` doc comment (F10).

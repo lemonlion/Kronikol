@@ -17,6 +17,12 @@ internal sealed class ReportIndex
 {
     public required string Path { get; init; }
     public long FileLength { get; init; }
+
+    /// <summary>
+    /// When the file was last written, as the scan's own handle saw it. With <see cref="FileLength"/> it is
+    /// how a later payload read knows the file is still the one these offsets index.
+    /// </summary>
+    public DateTime LastWriteUtc { get; init; }
     public string? KronikolVersion { get; set; }
     public string? StartTime { get; set; }
     public string? EndTime { get; set; }

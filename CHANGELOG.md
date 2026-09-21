@@ -4,6 +4,67 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.25.3] - 2026-09-21
+
+**Patch - three live defects in the tool, and `history` stops cutting the error it exists to show
+(#82).** The patch part moved because every item is a bug fix: no flag, option or public type is new.
+Two fixes change what the tool prints, and both are called out below. This is the first of three
+releases from `plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md` (S0 and S1).
+
+### Fixed
+
+- **`kronikol merge <reports-dir>` was exit 1 for any directory a history-enabled run wrote.** The
+  directory sweep took every `*.json` but the schema, and the reader fails the whole merge on the first
+  file that is not a report. Every run with history on has written `History.run.json` beside its report
+  since 3.9.0, and `ctrf-report.json` is there whenever CTRF is on, so the merge ended with `Not a
+  recognised Kronikol test-run report`. A sweep now skips those two by name and says so (`skipped 2
+  files Kronikol writes beside a report (History.run.json, ctrf-report.json)`). By name, and only when
+  found: a file named on the command line is still read and refused for what it is, and nothing
+  "without `features`" is dropped, because that rule would lose a truncated shard without a word. The
+  wiki's own recipe was unaffected only because it uploads the reports and the fragments as separate
+  artifacts.
+- **A local report read without its `History.run.json` was compared with its own ledger line.**
+  Without the fragment the tool mints the run id itself, and a local id is salted with the minting
+  process's directory, so the tool could never mint the id the test process recorded. The run's own
+  line then counted as an earlier run: a scenario that **broke** read `failing  PPPFF  failing since
+  <its own run>, 2 runs`, the header counted one run too many, and `--regressed` missed it. The tool
+  now adopts the ledger's own line for the run (same suite, same scenarios in the same order, and for a
+  local id the same second and results), looking past the reader's window when the report is older
+  than it. The ledger's line carries the fingerprints a rebuilt run lacks, so behaviour verdicts come
+  back too. A CI shard is never handed the folded run's results: a line with the same id and a
+  different roster is left alone. The `history:` line of `query failures` takes the same path.
+  **Behaviour change:** such a report now reads `broke  PPPF` where it read `failing  PPPFF`.
+- **A report replaced while a query was reading it was answered from the old offsets.** The index is
+  one scan, and payloads are fetched later by byte offset through a fresh open of the same path;
+  nothing compared the file with the one that was scanned. A run finishing in between gave `body`,
+  `http`, `note`, `grep` and the rest a slice of some other payload as the answer, and a shorter
+  replacement an unhandled `EndOfStreamException`. The scan now checks its own handle when it ends, and
+  every payload open checks the file's length and last write time against the index: a changed report
+  is exit 1, `… changed while it was being read; run the command again`. Any other `IOException` out of
+  a verb is exit 1 too, where it used to leave the tool as an unhandled exception.
+- **A query in flight no longer costs a finishing run its report (Windows).** The tool held the report
+  with read sharing only, so a run that finished while a query was open could neither overwrite its own
+  `TestRunReport.json` nor move it. Both opens now share write and delete, which the check above makes
+  safe.
+- **`kronikol query history s3` cut every stored error at 80 characters (#82).** For an assertion that
+  is "expected X" without "but found Y"; for a wrapped exception it is the wrapper without the cause.
+  Measured on a real CI ledger, 5 of the 8 distinct error texts were longer than 80 and every one lost
+  its actual value; none reached the ledger's own cap, so printing what is stored fixes every measured
+  case. The scenario view now cuts nothing: the error is on its own line under the row, whole; the
+  evidence and the quarantine reason are whole; and every new and gone call is listed (`new:` /
+  `gone:`) where the evidence names three and says `and N more` - those lists existed only in `--json`.
+  A test now holds every free-text member of the `--json` row to the text of the same query.
+  **Behaviour change:** the error moved from the end of the run row to the line under it.
+- **An ellipsis now has an address.** When the stored error is itself the ledger's cut (the first line
+  of the message, 199 characters), the view says `… first line only — the whole message is in that
+  run's Failures.md`. The run view, a list, still cuts its evidence column, but keeps both ends around
+  ` … ` (the end is where the signal is) and, when it cut anything, its footer names the view that does
+  not: `… marks cut text — history s3 prints it whole`.
+- The managed block in this repository's own `CLAUDE.md` had drifted from `templates/agents/CLAUDE.md`
+  (it lacked the `kronikol query history` line); a test now holds it to the template. The doc comment on
+  `FailuresDigest.Jsonl` said the file is "empty when nothing failed"; a green run writes a header line
+  with `failures: 0`, and the comment now says so.
+
 ## [3.25.2] - 2026-09-21
 
 **Patch - history analysis was quadratic in the number of scenarios (#91).** The patch part moved

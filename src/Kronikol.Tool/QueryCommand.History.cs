@@ -39,6 +39,9 @@ internal static partial class QueryCommand
         if (!ReportHistory.TryBuild(index, options.SuiteOverride, error, out var roster, out var run, out var fromFragment, out var shapes))
             return 2;
 
+        if (!fromFragment)
+            ReportHistory.AdoptOwnLine(ref ledger, ledgerPath, options.HistoryWindowOrDefault, roster, ref run, ref shapes, ref fromFragment);
+
         var quarantine = ReportHistory.LoadQuarantine(ledgerPath, writer);
         var aliases = ReportHistory.LoadAliases(ledgerPath, writer);
         var analysis = new HistoryAnalysisOptions
@@ -96,7 +99,7 @@ internal static partial class QueryCommand
             if (verdicts.Compare is { } compared && compared.At(scenario.Ordinal, scenario.StableId) is { } other)
             {
                 writer.Line();
-                writer.Line($"on {compared.Stream}: {HistoryVerdictNames.Name(other.Primary)} — {QueryWriter.OneLine(other.Evidence, 200)} · {other.Series}");
+                writer.Line($"on {compared.Stream}: {HistoryVerdictNames.Name(other.Primary)} — {QueryWriter.Flat(other.Evidence)} · {other.Series}");
             }
             writer.Data("history", ReportHistory.RunLevel(verdicts, ledgerPath, location.Source, fromFragment));
             writer.Item(ReportHistory.Row(scenario, entry, detailed: true, calls: options.Calls, callLines: callLines));
@@ -135,7 +138,11 @@ internal static partial class QueryCommand
         {
             var (scenario, entry) = pair;
             writer.Line($"{scenario.Address}  {scenario.FeatureName} › {scenario.Name}");
-            writer.Line($"  {HistoryVerdictNames.Name(entry.Primary),-18} {entry.Series,-10} {QueryWriter.OneLine(entry.Evidence, 180)}");
+            // A list cuts, and says so: the footer names the view that prints this row's evidence whole.
+            var cutBefore = writer.HasCut;
+            writer.Line($"  {HistoryVerdictNames.Name(entry.Primary),-18} {entry.Series,-10} {writer.Cut(entry.Evidence, 180)}");
+            if (!cutBefore && writer.HasCut)
+                writer.CutNotice($"… marks cut text — history {scenario.Address} prints it whole");
             if (entry.Verdicts.Count > 1)
                 writer.Line($"  also: {string.Join(", ", entry.Verdicts.Where(v => v != entry.Primary).OrderBy(HistoryAnalyzer.Precedence).Select(HistoryVerdictNames.Name))}");
         }, options.RerunArgs(), pair => ReportHistory.Row(pair.Scenario, pair.Entry, detailed: false),
@@ -187,7 +194,9 @@ internal static partial class QueryCommand
     {
         writer.Line($"{scenario.Address}  {scenario.FeatureName} › {scenario.Name}  sid:{scenario.StableId}");
         writer.Line($"verdict: {entry.VerdictNames}");
-        writer.Line($"evidence: {QueryWriter.OneLine(entry.Evidence, 400)}");
+        // Nothing in this view is cut (#82): it is at most fifteen rows of strings the ledger has already
+        // capped, and the characters a cut removes are the ones that say what failed.
+        writer.Line($"evidence: {QueryWriter.Flat(entry.Evidence)}");
         writer.Line($"runs seen: {entry.RunsSeen} · verdicts: {entry.RealVerdicts} · failed {entry.Failures}{(entry.FailuresInDegradedRuns > 0 ? $" ({entry.FailuresInDegradedRuns} in a degraded run)" : "")} · flips {entry.Flips} · flip rate {entry.FlipRate.ToString("0.00", CultureInfo.InvariantCulture)} · fail rate {entry.FailRate.ToString("0.00", CultureInfo.InvariantCulture)}"
                     + (entry.LastFailedRunsAgo is { } ago ? $" · last failed {ago} run(s) ago" : ""));
         if (entry.FailingSince is { } since)
@@ -201,15 +210,22 @@ internal static partial class QueryCommand
         if (entry.Calls is { } calls)
             writer.Line($"calls: {calls}" + (entry.PreviousCalls is { } previous && previous != calls ? $" (was {previous})" : "")
                         + (entry.PreviousShapeSet is { } shape && entry.ShapeSet is { } now && !string.Equals(shape, now, StringComparison.Ordinal) ? " · set of calls changed since the previous run" : ""));
+        // The evidence names three of each and says "and N more"; the rest were only in --json.
+        foreach (var call in entry.NewCalls)
+            writer.Line($"  new:  {call}");
+        foreach (var call in entry.GoneCalls)
+            writer.Line($"  gone: {call}");
         if (entry.Quarantine is { } quarantine)
-            writer.Line($"quarantined: {QueryWriter.OneLine(quarantine.Reason, 160)}"
+            writer.Line($"quarantined: {QueryWriter.Flat(quarantine.Reason)}"
                         + (quarantine.AddedBy is { } by ? $" · by {by}" : "")
                         + $" · since {quarantine.AddedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}"
                         + (quarantine.Until is { } until ? $" · until {until.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}" : ""));
         writer.Line($"stream: {verdicts.Stream} · {verdicts.RunsRecorded} earlier run(s) in the window");
         writer.Line("last runs, oldest first (this run last):");
         var runs = verdicts.Runs.ToDictionary(r => r.RunId, StringComparer.Ordinal);
+        var firstLineOnly = false;
         foreach (var point in entry.Points.TakeLast(15))
+        {
             writer.Line($"  {point.Result}  {point.RunId,-24} {point.At.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)}"
                         + (point.Commit is { } c ? $"  {(c.Length > 7 ? c[..7] : c)}" : "")
                         // The reading over the scenario's usual is a fact, not a cause: a failing test is usually
@@ -217,8 +233,19 @@ internal static partial class QueryCommand
                         + (point.DurationMs is { } ms ? $"  {ms} ms" + (point.OverUsual ? $" ({HistorySummary.Times(point.TimesUsual!.Value)} usual)" : "") : "")
                         + (point.Partial ? "  (partial)" : "")
                         + (point.RunDegraded && runs.TryGetValue(point.RunId, out var degradedRun) && HistorySummary.Degraded(degradedRun) is { } label ? $"  [run {label}]" : "")
-                        + (point.Attempt is { } attempt && attempt > 1 ? $"  attempt {attempt}" : "")
-                        + (point.Error is { } e ? $"  {QueryWriter.OneLine(e, 80)}" : ""));
+                        + (point.Attempt is { } attempt && attempt > 1 ? $"  attempt {attempt}" : ""));
+            // Under the row and whole. At the end of the row it was cut at 80 characters, which for an
+            // assertion is "expected X" without "but found Y".
+            if (point.Error is not { } e)
+                continue;
+            writer.Line($"       {QueryWriter.Flat(e)}");
+            firstLineOnly |= e.Length >= HistoryFormat.ErrorKeyLimit - 1 && e.EndsWith('…');
+        }
+
+        // The ledger keeps the first line of a message, up to 199 characters: text that ends in ITS
+        // ellipsis is not cut by this view, and the rest is not in the ledger at all.
+        if (firstLineOnly)
+            writer.Line("       … first line only — the whole message is in that run's Failures.md");
     }
 }
 
@@ -247,8 +274,10 @@ internal static class ReportHistory
             var read = HistoryLedgerReader.Read(path, 50, new HistoryLockBudget(Attempts: 20, MaxDelayMilliseconds: 10));
             if (read.Outcome != HistoryReadOutcome.Read || read.Ledger is not { } ledger || ledger.IsEmpty)
                 return null;
-            if (!TryBuild(index, null, TextWriter.Null, out var roster, out var run, out _))
+            if (!TryBuild(index, null, TextWriter.Null, out var roster, out var run, out var fromFragment, out var shapes))
                 return null;
+            if (!fromFragment)
+                AdoptOwnLine(ref ledger, path, 50, roster, ref run, ref shapes, ref fromFragment);
             HistoryQuarantineList? quarantine = null;
             HistoryAliases? aliases = null;
             try { quarantine = HistoryQuarantineList.Load(HistoryQuarantineList.PathBeside(path)); } catch (Exception e) when (IsBenign(e)) { }
@@ -403,6 +432,63 @@ internal static class ReportHistory
             Deps = deps.ToArray()
         };
         return true;
+    }
+
+    /// <summary>
+    /// A report read without its fragment gets a run id minted HERE, and a local id is salted by the
+    /// minting process's own directory - so it never equals the id the run recorded itself under, and the
+    /// run would be read against its own ledger line: a scenario that broke reads `failing since` its own
+    /// run. When the ledger holds that line it is the better reading anyway: it is the run's own,
+    /// fingerprints included, so behaviour verdicts come back with it.
+    /// </summary>
+    public static void AdoptOwnLine(ref HistoryLedger ledger, string ledgerPath, int window, HistoryRoster roster, ref HistoryRun run, ref HistoryShapes? shapes, ref bool fromFragment)
+    {
+        var own = OwnLine(ledger, roster, run);
+        // The reader's window: a report older than the oldest run it was given is looked for in the whole
+        // ledger before it is read as a run nobody recorded.
+        if (own is null && window > 0 && ledger.Runs(run.Suite) is { Count: > 0 } kept && run.At < kept[0].At
+            && HistoryLedgerReader.Read(ledgerPath, 0).Ledger is { } whole && OwnLine(whole, roster, run) is { } older)
+        {
+            ledger = whole;
+            own = older;
+        }
+
+        if (own is null)
+            return;
+        run = own;
+        shapes = own.ShapesHash is { } shapesHash ? ledger.Shapes(shapesHash) : null;
+        fromFragment = own.ShapeSet is not null;
+    }
+
+    /// <summary>
+    /// The ledger's own line for a run rebuilt from a report: same suite, same scenarios in the same
+    /// order, and - for a local id - the same second and the same results, whatever the salt. Null when
+    /// the ledger does not hold it.
+    /// </summary>
+    public static HistoryRun? OwnLine(HistoryLedger ledger, HistoryRoster roster, HistoryRun rebuilt)
+    {
+        var runs = ledger.Runs(rebuilt.Suite);
+        for (var i = runs.Count - 1; i >= 0; i--)
+        {
+            var candidate = runs[i];
+            // The same id is not enough: on CI the ledger's line for an id is the FOLD of every shard, and
+            // a shard's report read against it would take each position from somebody else's results. The
+            // rebuilt run keeps the id, so the analyzer still finds where it stands.
+            if (string.Equals(candidate.Id, rebuilt.Id, StringComparison.Ordinal))
+                return ledger.Roster(candidate.RosterHash) is { } folded && folded.Ids.SequenceEqual(roster.Ids, StringComparer.Ordinal)
+                    ? candidate
+                    : null;
+            var stampEnd = rebuilt.Id.LastIndexOf(':');
+            var sameSecond = rebuilt.Id.StartsWith("local:", StringComparison.Ordinal)
+                             && candidate.Id.Length > stampEnd
+                             && string.CompareOrdinal(candidate.Id, 0, rebuilt.Id, 0, stampEnd + 1) == 0;
+            if (sameSecond
+                && string.Equals(candidate.Results, rebuilt.Results, StringComparison.Ordinal)
+                && ledger.Roster(candidate.RosterHash) is { } theirs
+                && theirs.Ids.SequenceEqual(roster.Ids, StringComparer.Ordinal))
+                return candidate;
+        }
+        return null;
     }
 
     private static CiMetadata? CiOf(ReportIndex index)

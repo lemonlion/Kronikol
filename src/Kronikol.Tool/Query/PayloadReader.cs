@@ -4,6 +4,16 @@ using System.Text.Json;
 namespace Kronikol.Tool.Query;
 
 /// <summary>
+/// The report is not the file that was scanned any more: a run finished and replaced it while the query
+/// was reading it. Offsets from the index mean nothing in the new file, so the read stops here rather
+/// than answer with whatever bytes sit at them.
+/// </summary>
+internal sealed class ReportChangedException(string path)
+    : IOException($"{path} changed while it was being read; run the command again")
+{
+}
+
+/// <summary>
 /// Fetches the parts of the file the index deliberately left behind — bodies, header blocks, diagrams —
 /// by seeking to the byte range recorded for them. Nothing here is called unless a command was explicitly
 /// asked for a payload.
@@ -47,7 +57,27 @@ internal static class PayloadReader
     public static FileStream Open(ReportIndex index)
     {
         index.PayloadOpens++;
-        return File.OpenRead(index.Path);
+        FileStream stream;
+        try
+        {
+            stream = ReportScanner.OpenShared(index.Path);
+        }
+        catch (FileNotFoundException)
+        {
+            // Moved away by the run that replaced it, and the new one not written yet.
+            throw new ReportChangedException(index.Path);
+        }
+
+        try
+        {
+            ReportScanner.ThrowIfChanged(stream, index);
+        }
+        catch
+        {
+            stream.Dispose();
+            throw;
+        }
+        return stream;
     }
 
     /// <summary>The header block of one interaction, as key/value pairs.</summary>

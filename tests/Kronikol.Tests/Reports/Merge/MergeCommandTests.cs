@@ -112,6 +112,74 @@ public class MergeCommandTests
         }
     }
 
+    // Every history-enabled run has written History.run.json beside its report since 3.9.0, and
+    // ctrf-report.json is there whenever CTRF is on. Neither is a report, and the reader fails the whole
+    // merge on the first one - so `kronikol merge <reports-dir>` was exit 1 for any such directory.
+
+    private static (string Dir, Feature[] Features, DateTime Start, DateTime End) AReportsDirectoryWithWhatARunWritesBesideIt()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "kronikol-cli-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        Feature[] features = [ new Feature { DisplayName = "Orders", Scenarios = [ new Scenario { Id = "r1s1", DisplayName = "Place order", Result = ExecutionResult.Passed } ] } ];
+        var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var end = new DateTime(2026, 1, 1, 10, 2, 0, DateTimeKind.Utc);
+        WriteMergeableJson(dir, "TestRunReport.json", features, [], start, end);
+
+        // Real ones, written by the code a run writes them with - not stand-ins.
+        var roster = Kronikol.History.HistoryRoster.Create("Suite", [ new Kronikol.History.HistoryRosterEntry("id1", "Place order", "Orders", null) ]);
+        var run = new Kronikol.History.HistoryRun
+        {
+            Id = "gh:7:1", Suite = "Suite", Partial = null, At = new DateTimeOffset(end, TimeSpan.Zero), Branch = "main", Commit = null, Provider = null, Url = null, Shards = 1,
+            RosterHash = roster.Hash, Results = "P", Attempts = "-", ErrorText = new Dictionary<string, string>()
+        };
+        File.WriteAllText(Path.Combine(dir, Kronikol.History.HistoryFormat.FragmentFileName), Kronikol.History.HistoryFragment.Write(roster, run, "3.9.0"));
+        File.WriteAllText(Path.Combine(dir, CtrfReportGenerator.FileName), CtrfReportGenerator.Generate(features, start, end, null, "3.9.0"));
+        return (dir, features, start, end);
+    }
+
+    [Fact]
+    public void Merge_of_a_reports_directory_skips_the_files_a_run_writes_beside_its_report_and_says_so()
+    {
+        var (dir, _, _, _) = AReportsDirectoryWithWhatARunWritesBesideIt();
+        try
+        {
+            var output = Path.Combine(dir, "out", "Combined.html");
+            var outWriter = new StringWriter();
+            var errWriter = new StringWriter();
+
+            var exit = MergeCommand.Run([dir, "-o", output, "--no-json"], outWriter, errWriter);
+
+            Assert.True(exit == 0, errWriter.ToString());
+            Assert.Contains("Place order", File.ReadAllText(output));
+            Assert.Contains("skipped 2 files Kronikol writes beside a report (History.run.json, ctrf-report.json)", errWriter.ToString());
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Merge_still_refuses_such_a_file_when_it_is_named_rather_than_found()
+    {
+        // Found versus given: a sweep skips it, a file named on the command line is read and refused for
+        // what it is - skipping "anything without features" would drop a truncated shard without a word.
+        var (dir, _, _, _) = AReportsDirectoryWithWhatARunWritesBesideIt();
+        try
+        {
+            var errWriter = new StringWriter();
+
+            var exit = MergeCommand.Run([Path.Combine(dir, Kronikol.History.HistoryFormat.FragmentFileName), "-o", Path.Combine(dir, "out", "Combined.html"), "--no-json"], new StringWriter(), errWriter);
+
+            Assert.Equal(1, exit);
+            Assert.Contains(Kronikol.History.HistoryFormat.FragmentFileName, errWriter.ToString());
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
     [Fact]
     public void Merge_with_a_ledger_renders_history_and_never_writes_to_it()
     {

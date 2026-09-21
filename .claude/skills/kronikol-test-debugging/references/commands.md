@@ -478,6 +478,15 @@ its last runs one per line with commit and duration. `--json` carries the same r
 member with the run-level summary, the counts per verdict, the absent scenarios and any new
 `caller>service` dependency pairs.
 
+**Nothing in the `s3` view is cut (3.25.3).** A failed run's stored error is printed whole on its own
+line under the row, the evidence is whole, and every new and gone call is listed (`new:` / `gone:`, one
+per line) where the evidence names three and says `and N more`. No free-text field is complete only
+in `--json`. The one limit left is the ledger's own: it keeps the **first line** of a message, up to
+199 characters, and text that ends in its `…` is followed by `… first line only — the whole message is
+in that run's Failures.md`. The run view is a list and does cut its evidence column, keeping both ends
+around ` … ` (the end of an error is where "but found Y" is); when it has cut anything the footer says
+`… marks cut text — history s3 prints it whole`, naming the first row it cut.
+
 **When `behaviour-changed` looks like noise.** The fingerprint is made from templated call lines, and a
 variable part the templater does not know (an application's own cache-key format) changes it on every
 run. The evidence says so when it can: `…; the calls differ only in what looks like an id (sess_ab1… →
@@ -526,7 +535,7 @@ file; `kronikol history doctor` explains a ledger that behaves oddly.
 | Code | Meaning |
 |---|---|
 | 0 | answered |
-| 1 | the report could not be read, or is not valid JSON |
+| 1 | the report could not be read, is not valid JSON, or was replaced by a finishing run while it was being read (`… changed while it was being read; run the command again`, 3.25.3) |
 | 2 | bad usage — unknown command, malformed address, out-of-range ordinal, ambiguous directory |
 
 The message says what the valid range or spelling is; it is worth reading rather than guessing again.

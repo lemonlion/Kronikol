@@ -103,6 +103,95 @@ public class QueryHistoryTests : IDisposable
         Assert.Contains("1 scenario(s) with a verdict", output);
     }
 
+    // EVIDENCE_SURVIVES_A_RERUN_PLAN.md F14: a local run id is salted by the directory of the process
+    // that mints it, so the tool - installed somewhere else - mints a different id for the same run
+    // whenever the History.run.json beside the report is missing, and then reads the run's own ledger
+    // line as an earlier run.
+    [Fact]
+    public void A_local_report_without_its_fragment_is_not_read_against_its_own_ledger_line()
+    {
+        var roster = Roster();
+        HistoryRun Local(string id, DateTimeOffset at, string results) => new()
+        {
+            Id = id, Suite = "Suite", Partial = false, At = at, Branch = null, Commit = null, Provider = null, Url = null, Shards = 1,
+            RosterHash = roster.Hash, Results = results, Attempts = "--", Durations = [100, 50], Calls = null, ShapeSet = null, ShapeOrdered = null,
+            Errors = results.Select(r => r == 'F' ? "e1" : null).ToArray(),
+            ErrorText = results.Contains('F') ? new Dictionary<string, string> { ["e1"] = "Expected 200 but got 500" } : new Dictionary<string, string>(),
+            Deps = ["Test>orders"]
+        };
+        var start = new DateTimeOffset(2026, 9, 12, 7, 0, 0, TimeSpan.Zero);
+        for (var i = 0; i < 3; i++)
+            HistoryLedgerWriter.Append(Ledger, roster, Local(HistoryRunBuilder.RunId(null, start.AddHours(i), "DEV-BOX|/work/tests/bin/"), start.AddHours(i), "PP"), "3.9.0");
+        // The run the report describes, as its own process recorded it: it ended at the report's endTime.
+        var ended = new DateTimeOffset(2026, 9, 12, 10, 5, 0, TimeSpan.Zero);
+        HistoryLedgerWriter.Append(Ledger, roster, Local(HistoryRunBuilder.RunId(null, ended, "DEV-BOX|/work/tests/bin/"), ended, "FP"), "3.9.0");
+
+        var directory = Path.Combine(_dir, "reports");
+        Directory.CreateDirectory(directory);
+        var report = Path.Combine(directory, "TestRunReport.json");
+        File.WriteAllText(report, $$"""
+            {
+              "kronikolVersion": "3.9.0", "formatVersion": 1, "suite": "Suite",
+              "startTime": "2026-09-12T10:00:00Z", "endTime": "2026-09-12T10:05:00Z",
+              "features": [ { "name": "Checkout", "labels": [], "scenarios": [
+                { "id": "t0", "stableId": "{{PayId}}", "name": "Pay by card", "result": "Failed", "durationSeconds": 0.1, "errorMessage": "Expected 200 but got 500", "labels": [], "categories": [], "steps": [], "httpInteractions": [] },
+                { "id": "t1", "stableId": "{{RefundId}}", "name": "Refund an order", "result": "Passed", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] } ] } ]
+            }
+            """);
+
+        var (output, error, exit) = Query(null, "history", report);
+
+        Assert.True(exit == 0, error);
+        Assert.True(output.Contains("3 runs recorded in the local stream"), output);
+        Assert.Contains("PPPF ", output);
+        Assert.Contains("broke", output);
+        Assert.DoesNotContain("failing since", output);
+    }
+
+    // The other side of F14's fix: on CI the ledger's line for a run id is the FOLD of every shard, so it
+    // has the id of a shard's report and not its scenarios. Adopting it for a shard read without its
+    // fragment would read each of the shard's positions out of somebody else's results.
+    [Fact]
+    public void A_shard_read_without_its_fragment_is_not_given_the_folded_run_s_results()
+    {
+        Seed("PP", "PP");
+        var folded = HistoryRoster.Create("Suite", [new HistoryRosterEntry("9999000011112222", "Another shard's scenario", "Basket", null),
+            new HistoryRosterEntry(PayId, "Pay by card", "Checkout", null), new HistoryRosterEntry(RefundId, "Refund an order", "Checkout", null)]);
+        HistoryLedgerWriter.Append(Ledger, folded, new HistoryRun
+        {
+            Id = "gh:99:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 9, 12, 10, 5, 0, TimeSpan.Zero), Branch = "main", Commit = "abc1234",
+            Provider = "GitHubActions", Url = null, Shards = 2, RosterHash = folded.Hash, Results = "FPP", Attempts = "---", Errors = ["e1", null, null],
+            ErrorText = new Dictionary<string, string> { ["e1"] = "the other shard's failure" }
+        }, "3.9.0");
+        var report = WriteReport(pay: "Passed");
+
+        var (output, error, exit) = Query(null, "history", report);
+
+        Assert.True(exit == 0, error);
+        Assert.True(!output.Contains("broke"), output);
+        Assert.Contains("2 runs recorded in the main stream", output);
+    }
+
+    // The reader keeps the last N runs of a suite, and a recorded run is one of them: read back, it saw
+    // N - 1 earlier runs where the run itself - analysed before it appended its line - saw N.
+    [Fact]
+    public void A_recorded_run_is_read_against_as_many_earlier_runs_as_it_saw_itself()
+    {
+        Seed(Enumerable.Repeat("PP", 50).ToArray());
+        var report = WriteReport(pay: "Passed");
+        var roster = Roster();
+        HistoryLedgerWriter.Append(Ledger, roster, new HistoryRun
+        {
+            Id = "gh:99:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 9, 12, 10, 5, 0, TimeSpan.Zero), Branch = "main", Commit = "abc1234",
+            Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash, Results = "PP", Attempts = "--", Durations = [100, 50], Errors = [null, null]
+        }, "3.9.0");
+
+        var (output, error, exit) = Query(null, "history", report, "--json");
+
+        Assert.True(exit == 0, error);
+        Assert.Equal(50, JsonDocument.Parse(output).RootElement.GetProperty("history").GetProperty("runsRecorded").GetInt32());
+    }
+
     [Fact]
     public void A_report_that_is_not_the_newest_run_reads_against_the_runs_recorded_before_it()
     {
@@ -379,8 +468,11 @@ public class QueryHistoryTests : IDisposable
 
         Assert.True(exit == 0, error);
         Assert.Contains("failed 1 (1 in a degraded run)", output);
-        var row = output.Split('\n').Single(line => line.Contains("gh:7:1"));
-        Assert.Contains("82215 ms (6.4× usual)  [run degraded: passing scenarios took 2.3× their usual]  The service bigquery has thrown", row);
+        var lines = output.ReplaceLineEndings("\n").Split('\n');
+        var row = lines.Single(line => line.Contains("gh:7:1"));
+        // The labels have the row to themselves; the error is under it, whole (#82).
+        Assert.EndsWith("82215 ms (6.4× usual)  [run degraded: passing scenarios took 2.3× their usual]", row);
+        Assert.StartsWith("       The service bigquery has thrown", lines[Array.IndexOf(lines, row) + 1]);
         // A row that is neither over its usual nor in a degraded run says nothing.
         var healthy = output.Split('\n').Single(line => line.Contains("gh:6:1"));
         Assert.DoesNotContain("usual", healthy);
