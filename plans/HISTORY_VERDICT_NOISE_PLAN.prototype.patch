@@ -1,0 +1,1105 @@
+diff --git a/src/Kronikol/History/HistoryAnalyzer.cs b/src/Kronikol/History/HistoryAnalyzer.cs
+index cabd3178..bfca42a6 100644
+--- a/src/Kronikol/History/HistoryAnalyzer.cs
++++ b/src/Kronikol/History/HistoryAnalyzer.cs
+@@ -82,13 +82,14 @@ private static HistoryVerdicts AnalyseStream(HistoryLedger ledger, HistoryRoster
+         var previousFull = LastFull(prior, priorRosters);
+         var partial = current.Partial ?? IsPartial(roster, previousFull.Roster, options.PartialThreshold);
+ 
+-        var speeds = new RunSpeeds(prior.Append(current));
++        var speeds = new RunSpeeds((partial ? prior : prior.Where(r => r.Partial != true)).Append(current));
++        var paces = new RunPaces(prior.Append(current).ToList(), priorRosters.Append(roster).ToList(), aliases, options, currentIsPartial: partial);
+         var scenarios = new List<ScenarioHistory>(roster.Count);
+         var currentIds = new HashSet<(string, int)>();
+         for (var i = 0; i < roster.Count; i++)
+         {
+             currentIds.Add((roster.Ids[i], roster.Slots[i]));
+-            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, priorShapes, shapes, speeds, options, quarantine, aliases, today));
++            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, priorShapes, shapes, speeds, options, quarantine, aliases, today, partial, paces));
+         }
+ 
+         // Absent: in the previous full run of the stream, not in this one, and this one not partial. The
+@@ -109,8 +110,8 @@ private static HistoryVerdicts AnalyseStream(HistoryLedger ledger, HistoryRoster
+             foreach (var kind in scenario.Verdicts)
+                 counts[kind] = counts.GetValueOrDefault(kind) + 1;
+ 
+-        var runs = prior.Select(r => RunPointOf(r)).ToList();
+-        runs.Add(RunPointOf(current) with { Partial = partial });
++        var runs = prior.Select(r => RunPointOf(r) with { Pace = paces.Of(r.Id), Degraded = paces.Degraded(r.Id) }).ToList();
++        runs.Add(RunPointOf(current) with { Partial = partial, Pace = paces.Of(current.Id), Degraded = paces.Degraded(current.Id) });
+ 
+         var priorDeps = new HashSet<string>(prior.SelectMany(r => r.Deps ?? []), StringComparer.Ordinal);
+         var newDeps = prior.Count == 0 ? [] : (current.Deps ?? []).Where(d => !priorDeps.Contains(d)).OrderBy(d => d, StringComparer.Ordinal).ToArray();
+@@ -171,7 +172,7 @@ private static RunPoint RunPointOf(HistoryRun run)
+     }
+ 
+     private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roster, HistoryRun current, List<HistoryRun> prior, HistoryRoster?[] priorRosters,
+-        HistoryShapes?[] priorShapes, HistoryShapes? currentShapes, RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today)
++        HistoryShapes?[] priorShapes, HistoryShapes? currentShapes, RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today, bool currentIsPartial, RunPaces paces)
+     {
+         var id = roster.Ids[position];
+         var slot = roster.Slots[position];
+@@ -192,12 +193,12 @@ private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roste
+             }
+             if (at < 0) continue;
+             points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at), run.ShapeVersion,
+-                Resolve(run.CallSetAt(at), priorShapes[r])));
++                Resolve(run.CallSetAt(at), priorShapes[r]), run.Partial == true, paces.TimesUsual(run.Id, id, slot, run.DurationAt(at), run.ResultAt(at)), paces.Degraded(run.Id)));
+         }
+ 
+         var currentPoint = new HistoryPoint(current.Id, current.At, current.Commit, current.ResultAt(position), current.DurationAt(position),
+             current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position), current.ShapeVersion,
+-            Resolve(current.CallSetAt(position), currentShapes));
++            Resolve(current.CallSetAt(position), currentShapes), currentIsPartial, paces.TimesUsual(current.Id, id, slot, current.DurationAt(position), current.ResultAt(position)), paces.Degraded(current.Id));
+         var all = points.Append(currentPoint).ToList();
+ 
+         var verdicts = new HashSet<HistoryVerdictKind>();
+@@ -307,9 +308,15 @@ private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roste
+                 text += $", last failed {ago.ToString(CultureInfo.InvariantCulture)} run{(ago == 1 ? "" : "s")} ago";
+             if (passedOnRetry)
+                 text += $", passed on retry {currentPoint.Attempt!.Value.ToString(CultureInfo.InvariantCulture)} in this run";
++            if (failures > 0 && real.Where(p => p.Result == HistoryFormat.Failed).All(p => p.RunDegraded))
++                text = "every failure was in a degraded run; " + text;
+             evidence.Insert(0, text);
+         }
+ 
++        // A failure inside a run where everything was slow is weak evidence against the test (#83): say so.
++        if (currentResult == HistoryFormat.Failed && paces.Of(current.Id) is { } pace && paces.Degraded(current.Id))
++            evidence.Add($"this run was degraded: its passing scenarios took {pace.ToString("0.0", CultureInfo.InvariantCulture)}× their usual");
++
+         // ── Duration ────────────────────────────────────────
+         // A scenario is slower when it got slower than its run did. Every duration is read against the
+         // speed of its run — the median of the OTHER scenarios' durations in that run — so a slow runner
+@@ -317,7 +324,11 @@ private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roste
+         // scenarios slower on a healthy day because the runner was. A roster of one has no others and
+         // is read raw.
+         int? p95 = null;
+-        var timed = points.Where(p => p.DurationMs is not null)
++        var comparable = currentIsPartial ? points : points.Where(p => !p.Partial).ToList();
++        // A degraded run's durations are facts about the machine, as a partial run's are about the filter.
++        var currentIsDegraded = options.DegradedLeavesDurations && paces.Degraded(current.Id);
++        var timedFrom = options.DegradedLeavesDurations && !currentIsDegraded ? comparable.Where(p => !p.RunDegraded).ToList() : comparable;
++        var timed = timedFrom.Where(p => p.DurationMs is not null)
+             .Select(p => (Ms: p.DurationMs!.Value, Relative: p.DurationMs!.Value / speeds.Of(p.RunId, p.DurationMs!.Value)))
+             .ToList();
+         if (timed.Count >= 2)
+@@ -329,7 +340,7 @@ private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roste
+             var speed = currentPoint.DurationMs is { } ms ? speeds.Of(current.Id, ms) : 1.0;
+             // The bar in this run's milliseconds: what the reader compares the duration with.
+             p95 = (int)Math.Round(bar * speed);
+-            if (currentPoint.DurationMs is { } now && baseline.Count >= options.MinRuns && bar > 0)
++            if (!currentIsPartial && !currentIsDegraded && currentPoint.DurationMs is { } now && baseline.Count >= options.MinRuns && bar > 0)
+             {
+                 var previous = timed[^1];
+                 var over = bar * options.SlowerBy;
+@@ -347,7 +358,7 @@ private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roste
+         // A fingerprint is comparable only with one the same templating rule made: across a change of
+         // rule there is no verdict, and the reader is told, rather than every scenario changing once.
+         var rule = currentPoint.ShapeVersion ?? 1;
+-        var shapedByAnyRule = points.Where(p => p.ShapeSet is { Length: > 0 }).ToList();
++        var shapedByAnyRule = comparable.Where(p => p.ShapeSet is { Length: > 0 }).ToList();
+         var shaped = shapedByAnyRule.Where(p => (p.ShapeVersion ?? 1) == rule).ToList();
+         var previousShaped = shaped.Count > 0 ? shaped[^1] : null;
+         if (currentPoint.ShapeSet is { Length: > 0 } && shapedByAnyRule.Count > 0 && (shapedByAnyRule[^1].ShapeVersion ?? 1) != rule)
+@@ -526,7 +537,8 @@ private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roste
+             Calls = currentPoint.Calls,
+             NewCalls = newCalls,
+             GoneCalls = goneCalls,
+-            Quarantine = entry
++            Quarantine = entry,
++            FailuresInDegradedRuns = real.Count(p => p.Result == HistoryFormat.Failed && p.RunDegraded)
+         };
+     }
+ 
+@@ -566,6 +578,111 @@ internal static double Percentile95(IReadOnlyList<double> values)
+         return sorted[Math.Clamp(rank - 1, 0, sorted.Length - 1)];
+     }
+ 
++    /// <summary>
++    /// The pace of each full run in the window (S4): the median, over the scenarios that passed in it, of
++    /// the reading over the scenario's usual — its median passing duration over the OTHER full runs. Each
++    /// scenario is measured against itself, so a roster that gained fifty slow scenarios has the pace it
++    /// had. A partial run is in no baseline and has no pace: its conditions differ in either direction.
++    /// </summary>
++    internal sealed class RunPaces
++    {
++        /// <summary>The fewest scenarios with a baseline a run needs before it has a pace.</summary>
++        internal const int MinScenarios = 5;
++
++        /// <summary>
++        /// A scenario counts towards a run's pace when its usual is at least this many milliseconds. Measured
++        /// (BreakfastProvider, 2026-09-19): under real contention scenarios that usually take under 10 ms barely
++        /// register the load, and with them in the median a run that handed out twenty false slower verdicts
++        /// read 2.6 against a worst healthy run of 1.63; without them, 6.9 against 1.56.
++        /// </summary>
++        internal const int UsualFloorMs = 10;
++
++        private readonly Dictionary<(string Id, int Slot), int[]> _usual = new();
++        private readonly Dictionary<string, double> _pace = new(StringComparer.Ordinal);
++        private readonly HashSet<string> _full = new(StringComparer.Ordinal);
++        private readonly Dictionary<string, List<(double Ratio, double Usual)>> _ratios = new(StringComparer.Ordinal);
++        private readonly HistoryAliases? _aliases;
++        private readonly int _minRuns;
++        private readonly double _degradedBy;
++
++        public RunPaces(IReadOnlyList<HistoryRun> runs, IReadOnlyList<HistoryRoster?> rosters, HistoryAliases? aliases, HistoryAnalysisOptions options, bool currentIsPartial, int floorMs = UsualFloorMs)
++        {
++            _aliases = aliases;
++            _minRuns = Math.Max(1, options.MinRuns);
++            _degradedBy = options.DegradedBy;
++
++            var readings = new Dictionary<(string, int), List<int>>();
++            for (var r = 0; r < runs.Count; r++)
++            {
++                var partial = r == runs.Count - 1 ? currentIsPartial : runs[r].Partial == true;
++                if (partial || rosters[r] is not { } roster || runs[r].Durations is null) continue;
++                _full.Add(runs[r].Id);
++                for (var i = 0; i < roster.Count; i++)
++                    if (runs[r].ResultAt(i) == HistoryFormat.Passed && runs[r].DurationAt(i) is { } ms)
++                    {
++                        var key = Key(roster.Ids[i], roster.Slots[i]);
++                        if (!readings.TryGetValue(key, out var list)) readings[key] = list = [];
++                        list.Add(ms);
++                    }
++            }
++            foreach (var (key, list) in readings)
++            {
++                var sorted = list.ToArray();
++                Array.Sort(sorted);
++                _usual[key] = sorted;
++            }
++
++            for (var r = 0; r < runs.Count; r++)
++            {
++                if (!_full.Contains(runs[r].Id) || rosters[r] is not { } roster) continue;
++                var ratios = new List<double>();
++                var detail = new List<(double, double)>();
++                for (var i = 0; i < roster.Count; i++)
++                    if (runs[r].ResultAt(i) == HistoryFormat.Passed && runs[r].DurationAt(i) is { } ms
++                        && Usual(Key(roster.Ids[i], roster.Slots[i]), ms) is { } usual && usual >= floorMs)
++                    {
++                        ratios.Add(ms / usual);
++                        detail.Add((ms / usual, usual));
++                    }
++                _ratios[runs[r].Id] = detail;
++                if (ratios.Count < MinScenarios) continue;
++                ratios.Sort();
++                _pace[runs[r].Id] = ratios.Count % 2 == 1 ? ratios[ratios.Count / 2] : (ratios[ratios.Count / 2 - 1] + ratios[ratios.Count / 2]) / 2.0;
++            }
++        }
++
++        /// <summary>Probe only: every passing scenario's reading over its usual, with the usual.</summary>
++        internal IReadOnlyList<(double Ratio, double Usual)> Ratios(string runId) => _ratios.TryGetValue(runId, out var list) ? list : [];
++
++        /// <summary>The run's pace, or null when it is partial or too little is known.</summary>
++        public double? Of(string runId) => _pace.TryGetValue(runId, out var pace) ? pace : null;
++
++        /// <summary>Whether the run's passing scenarios took the degraded factor over their usual.</summary>
++        public bool Degraded(string runId) => _pace.TryGetValue(runId, out var pace) && pace >= _degradedBy;
++
++        /// <summary>A reading over the scenario's usual; null in a partial run, without a duration, or under the minimum runs.</summary>
++        public double? TimesUsual(string runId, string id, int slot, int? durationMs, char result)
++        {
++            if (durationMs is not { } ms || !_full.Contains(runId)) return null;
++            return Usual(Key(id, slot), result == HistoryFormat.Passed ? ms : null) is { } usual ? ms / usual : null;
++        }
++
++        private (string, int) Key(string id, int slot) => (_aliases?.Current(id) ?? id, slot);
++
++        /// <summary>The median of the scenario's passing full-run durations, without one occurrence of <paramref name="ownMs"/>.</summary>
++        private double? Usual((string, int) key, int? ownMs)
++        {
++            if (!_usual.TryGetValue(key, out var sorted)) return null;
++            var self = ownMs is { } own ? Array.BinarySearch(sorted, own) : -1;
++            if (self < 0) self = sorted.Length;
++            var others = self < sorted.Length ? sorted.Length - 1 : sorted.Length;
++            if (others < _minRuns) return null;
++            int At(int index) => sorted[index < self ? index : index + 1];
++            var median = others % 2 == 1 ? At(others / 2) : (At(others / 2 - 1) + At(others / 2)) / 2.0;
++            return median > 0 ? median : null;
++        }
++    }
++
+     /// <summary>
+     /// The speed of each run in the window: the median duration of a run's scenarios, taken without the
+     /// scenario being read so that a scenario's own regression cannot move the bar it is read against —
+diff --git a/src/Kronikol/History/HistoryVerdicts.cs b/src/Kronikol/History/HistoryVerdicts.cs
+index 7ad695e2..5ad9337f 100644
+--- a/src/Kronikol/History/HistoryVerdicts.cs
++++ b/src/Kronikol/History/HistoryVerdicts.cs
+@@ -129,6 +129,12 @@ public sealed record HistoryAnalysisOptions
+ 
+     /// <summary>A second stream to read the same run against, reported as <see cref="HistoryVerdicts.Compare"/>.</summary>
+     public string? CompareBranch { get; init; }
++
++    /// <summary>The pace at or above which a run is degraded: its passing scenarios took this many times their usual.</summary>
++    public double DegradedBy { get; init; } = 2.0;
++
++    /// <summary>Prototype switch: a degraded run is not judged slower and its readings leave the duration baseline, as a partial run's do.</summary>
++    public bool DegradedLeavesDurations { get; init; } = true;
+ }
+ 
+ /// <summary>One prior run's reading of one scenario.</summary>
+@@ -145,7 +151,7 @@ public sealed record HistoryAnalysisOptions
+ /// <param name="ShapeVersion">The templating rule the fingerprints were made by.</param>
+ /// <param name="CallSet">The distinct calls, spelled out, when the line recorded them (3.17.0).</param>
+ public sealed record HistoryPoint(string RunId, DateTimeOffset At, string? Commit, char Result, int? DurationMs, string? ShapeSet, string? ShapeOrdered, int? Calls, string? Error, int? Attempt, int? ShapeVersion = null,
+-    IReadOnlyList<string>? CallSet = null);
++    IReadOnlyList<string>? CallSet = null, bool Partial = false, double? TimesUsual = null, bool RunDegraded = false);
+ 
+ /// <summary>Where a failing streak began.</summary>
+ /// <param name="RunId">The first failing run of the streak.</param>
+@@ -245,6 +251,9 @@ public sealed record ScenarioHistory
+     /// <summary>The quarantine entry, when there is one.</summary>
+     public required HistoryQuarantineEntry? Quarantine { get; init; }
+ 
++    /// <summary>Failures in the window that happened in a degraded run.</summary>
++    public int FailuresInDegradedRuns { get; init; }
++
+     /// <summary>Whether the verdict set has this kind.</summary>
+     public bool Has(HistoryVerdictKind kind) => Verdicts.Contains(kind);
+ 
+@@ -268,7 +277,7 @@ public sealed record AbsentScenario(string StableId, string Name, string Feature
+ /// <param name="Total">Scenarios in the run.</param>
+ /// <param name="DurationMs">The sum of recorded durations, or null when none were.</param>
+ /// <param name="Partial">Whether the run was partial.</param>
+-public sealed record RunPoint(string RunId, DateTimeOffset At, string? Commit, int Passed, int Failed, int Total, long? DurationMs, bool Partial);
++public sealed record RunPoint(string RunId, DateTimeOffset At, string? Commit, int Passed, int Failed, int Total, long? DurationMs, bool Partial, double? Pace = null, bool Degraded = false);
+ 
+ /// <summary>The analysis of one run against its stream.</summary>
+ public sealed record HistoryVerdicts
+diff --git a/src/Kronikol/History/InteractionShape.cs b/src/Kronikol/History/InteractionShape.cs
+index fe703d9b..9ebadf0f 100644
+--- a/src/Kronikol/History/InteractionShape.cs
++++ b/src/Kronikol/History/InteractionShape.cs
+@@ -51,9 +51,14 @@ public static partial class InteractionShape
+ 
+     // Ids: GUIDs with or without hyphens, hex runs of sixteen or more, ULIDs. Bounded by non-alphanumerics
+     // so an id embedded in a segment (prefix_{id}_suffix) is found without eating the prefix.
+-    [GeneratedRegex(@"(?<![0-9A-Za-z])(?:[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}|[0-9A-Fa-f]{16,}|[0-9A-HJKMNP-TV-Z]{26})(?![0-9A-Za-z])", Options)]
++    [GeneratedRegex(@"(?<![0-9A-Za-z])(?:[0-9A-Fa-f]{8}(?<sep>[-_])[0-9A-Fa-f]{4}\k<sep>[0-9A-Fa-f]{4}\k<sep>[0-9A-Fa-f]{4}\k<sep>[0-9A-Fa-f]{12}|[0-9A-Fa-f]{16,}|[0-9A-HJKMNP-TV-Z]{26}|(?=[0-9A-Fa-f]*\d)(?=[0-9A-Fa-f]*[A-Fa-f])[0-9A-Fa-f]{8,15})(?![0-9A-Za-z])", Options)]
+     private static partial Regex IdPattern();
+ 
++    // A binary segment: bytes captured as text. From the delimiter before the first U+FFFD or C0 escape to
++    // the end of the path segment.
++    [GeneratedRegex(@"(?<=^|[/\-_:.])[^/\-_:.]*(?:%EF%BF%BD|%[01][0-9A-Fa-f])[^/]*", Options)]
++    private static partial Regex BinaryPattern();
++
+     // Timestamps: an ISO-8601 date, optionally with a time, fraction and zone.
+     [GeneratedRegex(@"(?<![0-9A-Za-z])\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?(?![0-9A-Za-z])", Options)]
+     private static partial Regex TimestampPattern();
+@@ -82,7 +87,7 @@ public static string Template(string text)
+ 
+         var query = text.IndexOf('?');
+         var path = query < 0 ? text : text[..query];
+-        var templated = NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(path, "{id}"), "{ts}"), "{n}");
++        var templated = NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(BinaryPattern().Replace(path, "{bin}"), "{id}"), "{ts}"), "{n}");
+ 
+         if (query < 0)
+             return templated;
+diff --git a/src/Kronikol/Ingestion/IngestPipeline.cs b/src/Kronikol/Ingestion/IngestPipeline.cs
+index 746d6ce8..07609484 100644
+--- a/src/Kronikol/Ingestion/IngestPipeline.cs
++++ b/src/Kronikol/Ingestion/IngestPipeline.cs
+@@ -593,6 +593,15 @@ private static List<InteractionRecord> Attribute(
+                 diagnostics.Add(DiagnosticKind.Other, $"{tagged} interaction record(s) took their phase from the step they happened during.");
+         }
+ 
++        // Merged after the attribution passes and before the filter: the span twin is the last chance to
++        // identify a wire record, and the passes before it say which twin is whose. Sorted as Order sorts.
++        if (request.MergeDuplicateInteractions)
++            records = InteractionMerger.Merge(
++                records.Select((record, index) => (record, index))
++                    .OrderBy(x => x.record.Timestamp ?? DateTimeOffset.MinValue).ThenBy(x => x.index)
++                    .Select(x => x.record).ToList(),
++                request.MergeOverlapThreshold, request.WindowAttributionFallbackId);
++
+         records = DropUnattributed(records, testRecords, request, diagnostics);
+ 
+         var stillUnattributed = records.Count(r => IngestAttribution.NeedsAttribution(r, request.WindowAttributionFallbackId));
+diff --git a/src/Kronikol/Ingestion/InteractionMerger.cs b/src/Kronikol/Ingestion/InteractionMerger.cs
+index e5b79d3e..9b53764a 100644
+--- a/src/Kronikol/Ingestion/InteractionMerger.cs
++++ b/src/Kronikol/Ingestion/InteractionMerger.cs
+@@ -47,7 +47,7 @@ public static class InteractionMerger
+     /// </summary>
+     /// <param name="records">The records to merge, in any order.</param>
+     /// <param name="overlapThreshold">Fraction (0–1] of the shorter interval the two calls must share. Default 0.8.</param>
+-    public static List<InteractionRecord> Merge(IReadOnlyList<InteractionRecord> records, double overlapThreshold = DefaultOverlapThreshold)
++    public static List<InteractionRecord> Merge(IReadOnlyList<InteractionRecord> records, double overlapThreshold = DefaultOverlapThreshold, string? fallbackTestId = null)
+     {
+         ArgumentNullException.ThrowIfNull(records);
+         if (records.Count == 0)
+@@ -58,7 +58,7 @@ public static List<InteractionRecord> Merge(IReadOnlyList<InteractionRecord> rec
+         if (calls.Count < 2)
+             return [.. records];
+ 
+-        var pairs = MatchPairs(calls, threshold);
++        var pairs = MatchPairs(calls, threshold, fallbackTestId);
+         if (pairs.Count == 0)
+             return [.. records];
+ 
+@@ -66,13 +66,13 @@ public static List<InteractionRecord> Merge(IReadOnlyList<InteractionRecord> rec
+         var removed = new HashSet<int>();
+         foreach (var (wire, span) in pairs)
+         {
+-            replacements[wire.RequestIndex] = MergeRequest(wire.Request, span.Request);
++            replacements[wire.RequestIndex] = MergeRequest(wire.Request, span.Request, fallbackTestId);
+             removed.Add(span.RequestIndex);
+ 
+             if (span.ResponseIndex >= 0)
+                 removed.Add(span.ResponseIndex);
+             if (wire.ResponseIndex >= 0)
+-                replacements[wire.ResponseIndex] = MergeResponse(wire.Response!, span.Response ?? span.Request);
++                replacements[wire.ResponseIndex] = MergeResponse(wire.Response!, span.Response ?? span.Request, fallbackTestId);
+         }
+ 
+         var result = new List<InteractionRecord>(records.Count);
+@@ -207,8 +207,15 @@ internal static string LastSegment(string? uri)
+ 
+     // ------------------------------------------------------------------ matching
+ 
+-    private static List<(Call Wire, Call Span)> MatchPairs(List<Call> calls, double threshold)
++    private static List<(Call Wire, Call Span)> MatchPairs(List<Call> calls, double threshold, string? fallbackTestId)
+     {
++        // Two records already known to belong to the same test pair before any that are not: a record
++        // nobody could identify must not take the twin of one somebody did.
++        bool Agree(Call wire, Call span) =>
++            !IngestAttribution.NeedsAttribution(wire.Request, fallbackTestId)
++            && !IngestAttribution.NeedsAttribution(span.Request, fallbackTestId)
++            && string.Equals(wire.Request.TestId, span.Request.TestId, StringComparison.Ordinal);
++
+         var candidates = new List<(double Overlap, double Distance, Call Wire, Call Span)>();
+         var wires = calls.Where(c => c.Source == Source.Wire).ToList();
+         var spans = calls.Where(c => c.Source == Source.Span).ToList();
+@@ -229,7 +236,8 @@ internal static string LastSegment(string? uri)
+         }
+ 
+         var ordered = candidates
+-            .OrderByDescending(c => c.Overlap)
++            .OrderByDescending(c => Agree(c.Wire, c.Span))
++            .ThenByDescending(c => c.Overlap)
+             .ThenBy(c => c.Distance)
+             .ThenBy(c => c.Wire.RequestIndex)
+             .ThenBy(c => c.Span.RequestIndex);
+@@ -270,18 +278,19 @@ internal static double OverlapRatio(DateTimeOffset startA, DateTimeOffset endA,
+ 
+     // ------------------------------------------------------------------ merging
+ 
+-    private static InteractionRecord MergeRequest(InteractionRecord wire, InteractionRecord span) =>
+-        Adopt(wire, span) with
++    private static InteractionRecord MergeRequest(InteractionRecord wire, InteractionRecord span, string? fallbackTestId) =>
++        Adopt(wire, span, fallbackTestId) with
+         {
+             Headers = WithCapturedByHeader(wire.Headers),
+         };
+ 
+-    private static InteractionRecord MergeResponse(InteractionRecord wire, InteractionRecord span) => Adopt(wire, span);
++    private static InteractionRecord MergeResponse(InteractionRecord wire, InteractionRecord span, string? fallbackTestId) => Adopt(wire, span, fallbackTestId);
+ 
+     /// <summary>The wire record with the span's identity: exact attribution, wire fidelity.</summary>
+-    private static InteractionRecord Adopt(InteractionRecord wire, InteractionRecord span) => wire with
++    private static InteractionRecord Adopt(InteractionRecord wire, InteractionRecord span, string? fallbackTestId) => wire with
+     {
+-        TestId = span.TestId,
++        // The span's identity, unless the span has none and the wire record does.
++        TestId = IngestAttribution.NeedsAttribution(span, fallbackTestId) && !IngestAttribution.NeedsAttribution(wire, fallbackTestId) ? wire.TestId : span.TestId,
+         TestName = span.TestName ?? wire.TestName,
+         TraceId = span.TraceId ?? wire.TraceId,
+         ActivityTraceId = span.ActivityTraceId ?? wire.ActivityTraceId,
+diff --git a/tests/Kronikol.Tests/History/LedgerReplayProbe.cs b/tests/Kronikol.Tests/History/LedgerReplayProbe.cs
+new file mode 100644
+index 00000000..6ce899b3
+--- /dev/null
++++ b/tests/Kronikol.Tests/History/LedgerReplayProbe.cs
+@@ -0,0 +1,162 @@
++using System.Globalization;
++using System.Text;
++using Kronikol.History;
++
++namespace Kronikol.Tests.History;
++
++/// <summary>
++/// Throwaway probe (M0 in miniature): replays a real ledger, cutting it at each run, and dumps every
++/// non-stable verdict. REPLAY_LEDGER = the ledger, REPLAY_OUT = where to write, REPLAY_LAST = how many
++/// runs from the end to replay (default 3), REPLAY_MINRUNS = the consumer's HistoryMinRuns (default 3).
++/// </summary>
++public class LedgerReplayProbe
++{
++    /// <summary>What S4's pace adds at the history plan's size, 5,000 scenarios over 50 runs: REPLAY_COST=1, REPLAY_OUT.</summary>
++    [Fact]
++    public void Cost_of_pace()
++    {
++        var outPath = Environment.GetEnvironmentVariable("REPLAY_OUT");
++        if (Environment.GetEnvironmentVariable("REPLAY_COST") != "1" || string.IsNullOrEmpty(outPath))
++            return;
++
++        const int scenarios = 5000, window = 50;
++        var random = new Random(75);
++        var roster = HistoryRoster.Create("Suite", Enumerable.Range(0, scenarios).Select(i => new HistoryRosterEntry($"id{i:D8}", "Scenario " + i, "Feature", null)).ToArray());
++        var usual = Enumerable.Range(0, scenarios).Select(_ => random.Next(1, 2000)).ToArray();
++        var runs = Enumerable.Range(0, window + 1).Select(n => new HistoryRun
++        {
++            Id = $"local:{n}", Suite = roster.Suite, Partial = false,
++            At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero).AddHours(n),
++            Branch = null, Commit = null, Provider = null, Url = null, Shards = 1, RosterHash = roster.Hash,
++            Results = new string('P', scenarios), Attempts = new string('1', scenarios),
++            Durations = usual.Select(u => (int?)Math.Max(0, (int)(u * (0.8 + random.NextDouble() * 0.4)))).ToArray(),
++            Errors = new string?[scenarios], ShapeSet = null, ShapeOrdered = null, Calls = null, ShapeVersion = null,
++            ErrorText = new Dictionary<string, string>(), Deps = []
++        }).ToList();
++        var rosters = runs.Select(_ => (HistoryRoster?)roster).ToList();
++
++        var output = new StringBuilder();
++        for (var attempt = 0; attempt < 5; attempt++)
++        {
++            var build = System.Diagnostics.Stopwatch.StartNew();
++            var paces = new HistoryAnalyzer.RunPaces(runs, rosters, null, new HistoryAnalysisOptions(), currentIsPartial: false);
++            build.Stop();
++            var read = System.Diagnostics.Stopwatch.StartNew();
++            double sum = 0;
++            foreach (var run in runs)
++                for (var i = 0; i < scenarios; i++)
++                    sum += paces.TimesUsual(run.Id, roster.Ids[i], 0, run.DurationAt(i), 'P') ?? 0;
++            read.Stop();
++            output.AppendLine(CultureInfo.InvariantCulture, $"attempt {attempt}: build {build.Elapsed.TotalMilliseconds:0.0} ms, {runs.Count * scenarios} TimesUsual reads {read.Elapsed.TotalMilliseconds:0.0} ms, pace of the last run {paces.Of(runs[^1].Id):0.00} (checksum {sum:0})");
++        }
++        File.WriteAllText(outPath, output.ToString());
++    }
++
++    [Fact]
++    public void Replay()
++    {
++        var path = Environment.GetEnvironmentVariable("REPLAY_LEDGER");
++        var outPath = Environment.GetEnvironmentVariable("REPLAY_OUT");
++        if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(outPath))
++            return;
++
++        var last = int.TryParse(Environment.GetEnvironmentVariable("REPLAY_LAST"), out var l) ? l : 3;
++        var minRuns = int.TryParse(Environment.GetEnvironmentVariable("REPLAY_MINRUNS"), out var m) ? m : 3;
++        var lines = File.ReadAllLines(path).Where(x => x.Length > 0).ToArray();
++        var runLines = lines.Select((text, index) => (text, index)).Where(x => x.text.StartsWith("{\"t\":\"run\"", StringComparison.Ordinal)).ToArray();
++
++        var output = new StringBuilder();
++        if (Environment.GetEnvironmentVariable("REPLAY_STATS") == "1")
++        {
++            // Every full run of every suite: candidate statistics for "degraded", one CSV row per run.
++            var whole = HistoryLedgerReader.Read(path, 0).Ledger!;
++            output.AppendLine("suite,run,n,p50,p75,p90,share2,n10,p50f10,p75f10,share2f10,n20,p75f20,share2f20");
++            foreach (var name in whole.Suites)
++            {
++                var ordered = whole.Runs(name).ToList();
++                var rosters = ordered.Select(r => whole.Roster(r.RosterHash)).ToList();
++                var paces = new HistoryAnalyzer.RunPaces(ordered, rosters, null, new HistoryAnalysisOptions { MinRuns = minRuns }, ordered[^1].Partial == true);
++                foreach (var run in ordered)
++                {
++                    var detail = paces.Ratios(run.Id);
++                    if (detail.Count < 5) continue;
++                    static double Q(List<double> sorted, double q) => sorted.Count == 0 ? 0 : sorted[Math.Min(sorted.Count - 1, (int)(sorted.Count * q))];
++                    var f0 = detail.Select(d => d.Ratio).OrderBy(v => v).ToList();
++                    var f10 = detail.Where(d => d.Usual >= 10).Select(d => d.Ratio).OrderBy(v => v).ToList();
++                    var f20 = detail.Where(d => d.Usual >= 20).Select(d => d.Ratio).OrderBy(v => v).ToList();
++                    static double Share(List<double> sorted) => sorted.Count == 0 ? 0 : sorted.Count(v => v >= 2.0) / (double)sorted.Count;
++                    output.AppendLine(string.Create(CultureInfo.InvariantCulture,
++                        $"{name},{run.Id},{f0.Count},{Q(f0, 0.5):0.00},{Q(f0, 0.75):0.00},{Q(f0, 0.9):0.00},{Share(f0):0.000},{f10.Count},{Q(f10, 0.5):0.00},{Q(f10, 0.75):0.00},{Share(f10):0.000},{f20.Count},{Q(f20, 0.75):0.00},{Share(f20):0.000}"));
++                }
++            }
++            File.WriteAllText(outPath, output.ToString());
++            return;
++        }
++
++        if (Environment.GetEnvironmentVariable("REPLAY_ALL_SUITES") == "1")
++        {
++            // Every suite's latest run, the whole stream as the window: the pace of every full run in it.
++            var whole = HistoryLedgerReader.Read(path, 0).Ledger!;
++            var all = new List<double>();
++            foreach (var name in whole.Suites)
++            {
++                var latest = whole.LatestRun(name)!;
++                var result = HistoryAnalyzer.Analyse(whole, whole.Roster(latest.RosterHash)!, latest, new HistoryAnalysisOptions { MinRuns = minRuns, Window = 0 });
++                var paced = result.Runs.Where(r => r.Pace is not null).Select(r => r.Pace!.Value).ToList();
++                all.AddRange(paced);
++                output.AppendLine(CultureInfo.InvariantCulture, $"{name} [{result.Stream}]: runs={result.Runs.Count} paced={paced.Count} max={(paced.Count > 0 ? paced.Max() : 0):0.00} degraded={result.Runs.Count(r => r.Degraded)}");
++            }
++            all.Sort();
++            if (all.Count > 0)
++                output.AppendLine(CultureInfo.InvariantCulture, $"ALL: n={all.Count} p05={all[(int)(all.Count * 0.05)]:0.00} p50={all[all.Count / 2]:0.00} p95={all[(int)(all.Count * 0.95)]:0.00} p99={all[(int)(all.Count * 0.99)]:0.00} max={all[^1]:0.00} >=1.5:{all.Count(v => v >= 1.5)} >=2:{all.Count(v => v >= 2)}");
++            File.WriteAllText(outPath, output.ToString());
++            return;
++        }
++
++        foreach (var (_, index) in runLines.Skip(Math.Max(0, runLines.Length - last)))
++        {
++            var cut = string.Join("\n", lines.Take(index + 1));
++            var ledger = HistoryLedgerReader.Parse(cut, 0).Ledger!;
++            var suite = ledger.Suites.Single();
++            var current = ledger.LatestRun(suite)!;
++            var roster = ledger.Roster(current.RosterHash)!;
++            var shapes = current.ShapesHash is { } hash ? ledger.Shapes(hash) : null;
++            var verdicts = HistoryAnalyzer.Analyse(ledger, roster, current, new HistoryAnalysisOptions { MinRuns = minRuns, DegradedLeavesDurations = Environment.GetEnvironmentVariable("REPLAY_DEGRADED_FILTER") != "0" }, shapes: shapes);
++
++            output.AppendLine(CultureInfo.InvariantCulture, $"=== {current.Id} partial={verdicts.Partial} scenarios={roster.Count} prior={verdicts.RunsRecorded}");
++            output.AppendLine("counts: " + string.Join(", ", verdicts.Counts.OrderBy(c => c.Key.ToString(), StringComparer.Ordinal).Select(c => $"{c.Key}={c.Value}")));
++            foreach (var scenario in verdicts.Scenarios.Where(s => s.Primary != HistoryVerdictKind.Stable).OrderBy(s => s.StableId, StringComparer.Ordinal))
++            {
++                output.AppendLine(CultureInfo.InvariantCulture, $"  [{scenario.VerdictNames}] {scenario.Feature} / {scenario.Name}");
++                output.AppendLine(CultureInfo.InvariantCulture, $"      {scenario.Evidence}");
++                output.AppendLine(CultureInfo.InvariantCulture, $"      duration={scenario.DurationMs} p95={scenario.DurationP95} calls={scenario.PreviousCalls}->{scenario.Calls} set={scenario.PreviousShapeSet}->{scenario.ShapeSet}");
++                foreach (var call in scenario.NewCalls)
++                    output.AppendLine("      + " + call);
++                foreach (var call in scenario.GoneCalls)
++                    output.AppendLine("      - " + call);
++            }
++
++            // S4: the pace of every run in the window, and what the notes would say about this run.
++            output.AppendLine("pace: " + string.Join(" ", verdicts.Runs.Select(r => (r.Partial ? "p" : "") + (r.Pace?.ToString("0.00", CultureInfo.InvariantCulture) ?? "-") + (r.Degraded ? "!" : ""))));
++            var ordered = ledger.Runs(suite).ToList();
++            var orderedRosters = ordered.Select(r => ledger.Roster(r.RosterHash)).ToList();
++            foreach (var floor in new[] { 0, 5, 20, 100 })
++            {
++                var floored = new HistoryAnalyzer.RunPaces(ordered, orderedRosters, null, new HistoryAnalysisOptions { MinRuns = minRuns }, verdicts.Partial, floor);
++                output.AppendLine(CultureInfo.InvariantCulture, $"pace of this run with a {floor} ms floor on the usual: {floored.Of(current.Id)?.ToString("0.00", CultureInfo.InvariantCulture) ?? "-"}");
++            }
++            var ratios = verdicts.Scenarios.Select(s => s.Points[^1]).Where(p => p.TimesUsual is not null && p.Result == 'P').Select(p => p.TimesUsual!.Value).OrderBy(v => v).ToList();
++            if (ratios.Count > 0)
++                output.AppendLine(CultureInfo.InvariantCulture, $"times usual, passing scenarios: n={ratios.Count} p10={ratios[(int)(ratios.Count * 0.10)]:0.00} p25={ratios[(int)(ratios.Count * 0.25)]:0.00} p50={ratios[ratios.Count / 2]:0.00} p75={ratios[(int)(ratios.Count * 0.75)]:0.00} p90={ratios[(int)(ratios.Count * 0.90)]:0.00} max={ratios[^1]:0.00}");
++            var noted = verdicts.Scenarios.Where(s => s.Points[^1] is { TimesUsual: >= 2.0, DurationMs: { } ms } p && ms - ms / p.TimesUsual >= 100).ToList();
++            output.AppendLine(CultureInfo.InvariantCulture, $"rows that would print (N× usual) with the 100 ms floor: {noted.Count}; failures in degraded runs, summed: {verdicts.Scenarios.Sum(s => s.FailuresInDegradedRuns)}");
++            foreach (var scenario in verdicts.Scenarios.Where(s => s.Current == 'F'))
++                output.AppendLine(CultureInfo.InvariantCulture, $"  FAILED [{scenario.VerdictNames}] {scenario.Name} :: {scenario.DurationMs} ms ({scenario.Points[^1].TimesUsual:0.0}× usual) :: {scenario.Evidence}");
++
++            // Every scenario's bar, so a p95 that moves without a verdict is still seen.
++            output.AppendLine("bars: " + string.Join(" ", verdicts.Scenarios.Select(s => $"{s.DurationMs?.ToString(CultureInfo.InvariantCulture) ?? "-"}/{s.DurationP95?.ToString(CultureInfo.InvariantCulture) ?? "-"}")));
++        }
++
++        File.WriteAllText(outPath, output.ToString());
++    }
++}
+diff --git a/tests/Kronikol.Tests/History/NoisePlanDegradedTests.cs b/tests/Kronikol.Tests/History/NoisePlanDegradedTests.cs
+new file mode 100644
+index 00000000..a47083f9
+--- /dev/null
++++ b/tests/Kronikol.Tests/History/NoisePlanDegradedTests.cs
+@@ -0,0 +1,201 @@
++using Kronikol.History;
++
++namespace Kronikol.Tests.History;
++
++/// <summary>plans/HISTORY_VERDICT_NOISE_PLAN.md §6 (S4, #83): a run's pace, and what a degraded run may and may not say.</summary>
++public class NoisePlanDegradedTests
++{
++    private static readonly string[] Ids = Enumerable.Range(1, 20).Select(i => $"dddd{i:D12}").ToArray();
++
++    private static HistoryRoster Roster(string[] ids) =>
++        HistoryRoster.Create("Suite", ids.Select(id => new HistoryRosterEntry(id, "Scenario " + id, "Feature", null)).ToArray());
++
++    private static HistoryRun Run(HistoryRoster roster, int n, int?[] durations, string? results = null, bool partial = false) => new()
++    {
++        Id = $"local:{n}", Suite = roster.Suite, Partial = partial,
++        At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero).AddHours(n),
++        Branch = null, Commit = null, Provider = null, Url = null, Shards = 1,
++        RosterHash = roster.Hash,
++        Results = results ?? new string('P', roster.Count), Attempts = new string('1', roster.Count),
++        Durations = durations, Errors = new string?[roster.Count],
++        ShapeSet = null, ShapeOrdered = null, Calls = null, ShapeVersion = null,
++        ErrorText = new Dictionary<string, string>(), Deps = []
++    };
++
++    private static HistoryLedger Ledger(IEnumerable<(HistoryRoster Roster, HistoryRun Run)> runs)
++    {
++        var text = HistoryJson.HeaderLine("test") + "\n";
++        var seen = new HashSet<string>();
++        foreach (var (roster, run) in runs)
++        {
++            if (seen.Add(roster.Hash)) text += HistoryJson.RosterLine(roster) + "\n";
++            text += HistoryJson.RunLine(run) + "\n";
++        }
++        return HistoryLedgerReader.Parse(text, window: 50).Ledger!;
++    }
++
++    /// <summary>Every scenario at <paramref name="others"/> milliseconds, the first at <paramref name="first"/>.</summary>
++    private static int?[] Durations(int first, int others = 1000) => [first, .. Enumerable.Repeat<int?>(others, 19)];
++
++    /// <summary>A machine under load: nine scenarios twice their usual, ten six times, and the first as given. Not uniform — measured, it never is.</summary>
++    private static int?[] Contended(int first) => [first, .. Enumerable.Repeat<int?>(2000, 9), .. Enumerable.Repeat<int?>(6000, 10)];
++
++    private static List<(HistoryRoster, HistoryRun)> Healthy(HistoryRoster roster, int runs) =>
++        Enumerable.Range(1, runs).Select(i => (roster, Run(roster, i, Durations(1000)))).ToList();
++
++    [Fact]
++    public void A_run_whose_passing_scenarios_took_three_times_their_usual_is_degraded()
++    {
++        var roster = Roster(Ids);
++        var verdicts = HistoryAnalyzer.Analyse(Ledger(Healthy(roster, 6)), roster, Run(roster, 7, Durations(3000, 3000)), new HistoryAnalysisOptions());
++
++        Assert.Equal(3.0, verdicts.Runs[^1].Pace!.Value, 2);
++        Assert.True(verdicts.Runs[^1].Degraded);
++        Assert.All(verdicts.Runs.Take(6), run => Assert.False(run.Degraded));
++    }
++
++    [Fact]
++    public void One_scenario_thirty_times_slower_does_not_make_the_run_degraded()
++    {
++        var roster = Roster(Ids);
++        var verdicts = HistoryAnalyzer.Analyse(Ledger(Healthy(roster, 6)), roster, Run(roster, 7, Durations(30_000)), new HistoryAnalysisOptions());
++
++        Assert.Equal(1.0, verdicts.Runs[^1].Pace!.Value, 2);
++        Assert.False(verdicts.Runs[^1].Degraded);
++        Assert.Equal(30.0, verdicts.Scenarios[0].Points[^1].TimesUsual!.Value, 2);
++    }
++
++    [Fact]
++    public void A_failure_in_a_degraded_run_says_so_and_the_same_failure_in_a_normal_run_does_not()
++    {
++        var roster = Roster(Ids);
++        var failed = "F" + new string('P', 19);
++        var degraded = HistoryAnalyzer.Analyse(Ledger(Healthy(roster, 6)), roster, Run(roster, 7, Contended(60_000), failed), new HistoryAnalysisOptions()).Scenarios[0];
++        var normal = HistoryAnalyzer.Analyse(Ledger(Healthy(roster, 6)), roster, Run(roster, 7, Durations(60_000), failed), new HistoryAnalysisOptions()).Scenarios[0];
++
++        Assert.Contains(HistoryVerdictKind.Broke, degraded.Verdicts);
++        Assert.Contains("this run was degraded: its passing scenarios took 6.0× their usual", degraded.Evidence);
++        Assert.Equal(1, degraded.FailuresInDegradedRuns);
++        Assert.Contains(HistoryVerdictKind.Broke, normal.Verdicts);
++        Assert.DoesNotContain("degraded", normal.Evidence);
++        Assert.Equal(0, normal.FailuresInDegradedRuns);
++    }
++
++    [Fact]
++    public void Failing_scenarios_do_not_move_the_pace()
++    {
++        var roster = Roster(Ids);
++        int?[] durations = [.. Enumerable.Repeat<int?>(60_000, 8), .. Enumerable.Repeat<int?>(1000, 12)];
++        var verdicts = HistoryAnalyzer.Analyse(Ledger(Healthy(roster, 6)), roster, Run(roster, 7, durations, new string('F', 8) + new string('P', 12)), new HistoryAnalysisOptions());
++
++        Assert.Equal(1.0, verdicts.Runs[^1].Pace!.Value, 2);
++        Assert.False(verdicts.Runs[^1].Degraded);
++    }
++
++    [Fact]
++    public void A_partial_run_has_no_pace_and_is_in_no_scenarios_usual()
++    {
++        var roster = Roster(Ids);
++        var subset = Roster(Ids.Take(6).ToArray());
++        var runs = Healthy(roster, 3);
++        for (var i = 4; i <= 8; i++)
++            runs.Add((subset, Run(subset, i, Enumerable.Repeat<int?>(10_000, 6).ToArray(), partial: true)));
++        var verdicts = HistoryAnalyzer.Analyse(Ledger(runs), roster, Run(roster, 9, Durations(1000)), new HistoryAnalysisOptions { MinRuns = 3 });
++
++        Assert.All(verdicts.Runs.Where(run => run.Partial), run => Assert.Null(run.Pace));
++        Assert.Equal(1.0, verdicts.Runs[^1].Pace!.Value, 2);
++        Assert.Null(verdicts.Scenarios[0].Points[3].TimesUsual);
++    }
++
++    [Fact]
++    public void Issue_83_the_failing_reading_was_six_point_four_times_the_scenarios_usual()
++    {
++        var roster = Roster(Ids);
++        var verdicts = HistoryAnalyzer.Analyse(
++            Ledger([(roster, Run(roster, 1, Durations(12_502))), (roster, Run(roster, 2, Durations(13_034)))]),
++            roster, Run(roster, 3, Durations(82_215), "F" + new string('P', 19)), new HistoryAnalysisOptions { MinRuns = 2 });
++
++        Assert.Equal(6.44, verdicts.Scenarios[0].Points[^1].TimesUsual!.Value, 2);
++        Assert.False(verdicts.Runs[^1].Degraded);
++    }
++
++    // Measured: under contention a scenario that usually takes a few milliseconds barely registers the
++    // load, and the reverse — 3 ms read as 9 — is a timer tick. Neither is evidence about the machine.
++    [Fact]
++    public void Scenarios_that_usually_take_under_ten_milliseconds_do_not_vote()
++    {
++        var roster = Roster(Ids);
++        int?[] Mixed(int fast, int slow) => [.. Enumerable.Repeat<int?>(fast, 12), .. Enumerable.Repeat<int?>(slow, 8)];
++        var runs = Enumerable.Range(1, 6).Select(i => (roster, Run(roster, i, Mixed(3, 1000)))).ToList();
++
++        var onlyTheFastSlowed = HistoryAnalyzer.Analyse(Ledger(runs), roster, Run(roster, 7, Mixed(9, 1000)), new HistoryAnalysisOptions());
++        var onlyTheSlowSlowed = HistoryAnalyzer.Analyse(Ledger(runs), roster, Run(roster, 7, Mixed(3, 3000)), new HistoryAnalysisOptions());
++
++        Assert.Equal(1.0, onlyTheFastSlowed.Runs[^1].Pace!.Value, 2);
++        Assert.False(onlyTheFastSlowed.Runs[^1].Degraded);
++        Assert.Equal(3.0, onlyTheSlowSlowed.Runs[^1].Pace!.Value, 2);
++        Assert.True(onlyTheSlowSlowed.Runs[^1].Degraded);
++    }
++
++    [Fact]
++    public void A_suite_of_nothing_but_millisecond_scenarios_has_no_pace()
++    {
++        var roster = Roster(Ids);
++        var runs = Enumerable.Range(1, 6).Select(i => (roster, Run(roster, i, Durations(3, 3)))).ToList();
++        var verdicts = HistoryAnalyzer.Analyse(Ledger(runs), roster, Run(roster, 7, Durations(9, 9)), new HistoryAnalysisOptions());
++
++        Assert.Null(verdicts.Runs[^1].Pace);
++        Assert.False(verdicts.Runs[^1].Degraded);
++    }
++
++    // The limit the plan states rather than fixes: pace cannot tell a slow machine from a suite that
++    // really did get three times slower everywhere. It reads as degraded until the usual catches up,
++    // which is when the shifted runs are half the window, and then it stops by itself.
++    [Theory]
++    [InlineData(1, true)]
++    [InlineData(25, true)]
++    [InlineData(26, false)]
++    [InlineData(40, false)]
++    public void A_sustained_shift_reads_as_degraded_until_it_is_half_the_window(int shiftedRun, bool degraded)
++    {
++        var roster = Roster(Ids);
++        var runs = Enumerable.Range(1, 50).Select(i => (roster, Run(roster, i, Durations(1000)))).ToList();
++        for (var i = 1; i < shiftedRun; i++)
++            runs.Add((roster, Run(roster, 50 + i, Durations(3000, 3000))));
++        var verdicts = HistoryAnalyzer.Analyse(Ledger(runs), roster, Run(roster, 50 + shiftedRun, Durations(3000, 3000)), new HistoryAnalysisOptions());
++
++        Assert.Equal(degraded, verdicts.Runs[^1].Degraded);
++    }
++
++    // F8, found on the first real degraded run (BreakfastProvider, 2026-09-19): under contention the
++    // slowdown is not uniform, the run's median cannot absorb it, and every scenario whose previous
++    // reading happened to sit over its bar is handed a `slower` it did not earn.
++    [Theory]
++    [InlineData(false, true)]
++    [InlineData(true, false)]
++    public void A_degraded_run_does_not_hand_out_slower_verdicts(bool degradedLeavesDurations, bool slower)
++    {
++        var roster = Roster(Ids);
++        var runs = Healthy(roster, 7);
++        runs.Add((roster, Run(roster, 8, Durations(4000))));
++        var scenario = HistoryAnalyzer.Analyse(Ledger(runs), roster, Run(roster, 9, Contended(30_000)),
++            new HistoryAnalysisOptions { DegradedLeavesDurations = degradedLeavesDurations }).Scenarios[0];
++
++        Assert.Equal(slower, scenario.Verdicts.Contains(HistoryVerdictKind.Slower));
++    }
++
++    [Theory]
++    [InlineData(false, false)]
++    [InlineData(true, true)]
++    public void A_degraded_run_in_the_window_does_not_hide_a_real_slowdown(bool degradedLeavesDurations, bool slower)
++    {
++        var roster = Roster(Ids);
++        var runs = Healthy(roster, 7);
++        runs.Add((roster, Run(roster, 8, Contended(30_000))));
++        runs.Add((roster, Run(roster, 9, Durations(2500))));
++        var scenario = HistoryAnalyzer.Analyse(Ledger(runs), roster, Run(roster, 10, Durations(2500)),
++            new HistoryAnalysisOptions { DegradedLeavesDurations = degradedLeavesDurations }).Scenarios[0];
++
++        Assert.Equal(slower, scenario.Verdicts.Contains(HistoryVerdictKind.Slower));
++    }
++}
+diff --git a/tests/Kronikol.Tests/History/NoisePlanReproTests.cs b/tests/Kronikol.Tests/History/NoisePlanReproTests.cs
+new file mode 100644
+index 00000000..ba853e32
+--- /dev/null
++++ b/tests/Kronikol.Tests/History/NoisePlanReproTests.cs
+@@ -0,0 +1,126 @@
++using Kronikol.History;
++
++namespace Kronikol.Tests.History;
++
++/// <summary>plans/HISTORY_VERDICT_NOISE_PLAN.md: the issues' repro tests, and the plan's own.</summary>
++public class NoisePlanReproTests
++{
++    // ─── #75 §1 ─────────────────────────────────────────────
++    [Theory]
++    [InlineData("/projects/p/queries/job_09c68d49_adcf_47be_bf9e_fc041cdc4a8e", "/projects/p/queries/job_{id}")]
++    [InlineData("/projects/p/queries/job_0094e738_b6a9_4411_ba74_9379763e3183", "/projects/p/queries/job_{id}")]
++    [InlineData("/app:_v2:charts-agg-100000000000001-D692278CF6C9-Weekly", "/app:_v2:charts-agg-{n}-{id}-Weekly")]
++    [InlineData("/app:_customerDates_100000000000001-%1D(%EF%BF%BD4%EF%BF%BD%EF%BF%BD:", "/app:_customerDates_{n}-{bin}")]
++    public void Ids_the_templater_misses(string path, string expected) =>
++        Assert.Equal(expected, InteractionShape.Template(path));
++
++    [Theory]
++    [InlineData("/customers/abc123")]
++    [InlineData("/v2/orders")]
++    [InlineData("/colours/ff00aa")]
++    [InlineData("/facade/deadbeef/decade/feedface")]
++    [InlineData("/api/v1/accede1/b2b")]
++    [InlineData("/files/report%20final.pdf")]
++    public void What_is_not_an_id_stays(string path) =>
++        Assert.Equal(path, InteractionShape.Template(path));
++
++    // ─── #75 §3 ─────────────────────────────────────────────
++    private static readonly string[] Full = Enumerable.Range(1, 20).Select(i => $"bbbb{i:D12}").ToArray();
++    private static readonly string[] Subset = Full.Take(5).ToArray();
++
++    private static HistoryRoster Roster(string[] ids) =>
++        HistoryRoster.Create("Suite", ids.Select(id => new HistoryRosterEntry(id, "Scenario " + id, "Feature", null)).ToArray());
++
++    private static HistoryRun Run(HistoryRoster roster, int n, int?[]? durations, bool partial = false, string[]? shapes = null, int[]? calls = null) => new()
++    {
++        Id = $"local:{n}", Suite = roster.Suite, Partial = partial,
++        At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero).AddHours(n),
++        Branch = null, Commit = null, Provider = null, Url = null, Shards = 1,
++        RosterHash = roster.Hash,
++        Results = new string('P', roster.Count), Attempts = new string('1', roster.Count),
++        Durations = durations, Errors = new string?[roster.Count],
++        ShapeSet = shapes, ShapeOrdered = shapes, Calls = calls,
++        ShapeVersion = shapes is null ? null : InteractionShape.Version,
++        ErrorText = new Dictionary<string, string>(), Deps = []
++    };
++
++    private static HistoryLedger Ledger(IEnumerable<(HistoryRoster Roster, HistoryRun Run)> runs)
++    {
++        var text = HistoryJson.HeaderLine("test") + "\n";
++        var seen = new HashSet<string>();
++        foreach (var (roster, run) in runs)
++        {
++            if (seen.Add(roster.Hash)) text += HistoryJson.RosterLine(roster) + "\n";
++            text += HistoryJson.RunLine(run) + "\n";
++        }
++        return HistoryLedgerReader.Parse(text, window: 50).Ledger!;
++    }
++
++    private static int?[] FullDurations(int first) => [first, .. Enumerable.Repeat<int?>(5700, 19)];
++    private static readonly int?[] SubsetDurations = [9079, 11110, 2482, 97, 739];
++
++    [Fact]
++    public void A_partial_run_does_not_inflate_the_p95_of_earlier_runs()
++    {
++        var full = Roster(Full);
++        var subset = Roster(Subset);
++        var ledger = Ledger([
++            (full, Run(full, 1, FullDurations(5913))),
++            (full, Run(full, 2, FullDurations(5759))),
++            (full, Run(full, 3, FullDurations(5824))),
++            (subset, Run(subset, 4, SubsetDurations, partial: true)),
++            (full, Run(full, 5, FullDurations(5812))),
++        ]);
++        var scenario = HistoryAnalyzer.Analyse(ledger, full, Run(full, 6, FullDurations(5760)), new HistoryAnalysisOptions()).Scenarios[0];
++
++        Assert.InRange(scenario.DurationP95!.Value, 0, 9079);
++    }
++
++    [Fact]
++    public void A_partial_run_in_the_window_does_not_hide_a_real_slowdown()
++    {
++        var full = Roster(Full);
++        var subset = Roster(Subset);
++        var runs = new List<(HistoryRoster, HistoryRun)>();
++        for (var i = 1; i <= 6; i++) runs.Add((full, Run(full, i, FullDurations(5800))));
++        runs.Add((subset, Run(subset, 7, SubsetDurations, partial: true)));
++        runs.Add((full, Run(full, 8, FullDurations(20_000))));
++        var scenario = HistoryAnalyzer.Analyse(Ledger(runs), full, Run(full, 9, FullDurations(20_000)), new HistoryAnalysisOptions()).Scenarios[0];
++
++        Assert.Contains(HistoryVerdictKind.Slower, scenario.Verdicts);
++    }
++
++    [Fact]
++    public void Control_the_same_slowdown_without_the_partial_run_is_slower()
++    {
++        var full = Roster(Full);
++        var runs = new List<(HistoryRoster, HistoryRun)>();
++        for (var i = 1; i <= 6; i++) runs.Add((full, Run(full, i, FullDurations(5800))));
++        runs.Add((full, Run(full, 8, FullDurations(20_000))));
++        var scenario = HistoryAnalyzer.Analyse(Ledger(runs), full, Run(full, 9, FullDurations(20_000)), new HistoryAnalysisOptions()).Scenarios[0];
++
++        Assert.Contains(HistoryVerdictKind.Slower, scenario.Verdicts);
++    }
++
++    // ─── #75 §4, and the plan's F2 ──────────────────────────
++    private static string[] Shapes(HistoryRoster roster, string first) => [first, .. Enumerable.Repeat("cccccccc", roster.Count - 1)];
++    private static int[] Counts(HistoryRoster roster, int first) => [first, .. Enumerable.Repeat(3, roster.Count - 1)];
++
++    /// <summary>22 x3, 74 in a partial run, then full runs on 22 again: what does each following full run read?</summary>
++    [Theory]
++    [InlineData(1)]   // the first full run after the partial one
++    [InlineData(2)]   // the second
++    public void A_partial_run_with_a_different_set_of_calls_is_not_a_state_of_the_full_suite(int after)
++    {
++        var full = Roster(Full);
++        var subset = Roster(Subset);
++        var runs = new List<(HistoryRoster, HistoryRun)>();
++        for (var i = 1; i <= 3; i++) runs.Add((full, Run(full, i, null, shapes: Shapes(full, "aaaaaaaa"), calls: Counts(full, 22))));
++        runs.Add((subset, Run(subset, 4, null, partial: true, shapes: Shapes(subset, "bbbbbbbb"), calls: Counts(subset, 74))));
++        for (var i = 1; i < after; i++) runs.Add((full, Run(full, 4 + i, null, shapes: Shapes(full, "aaaaaaaa"), calls: Counts(full, 22))));
++
++        var scenario = HistoryAnalyzer.Analyse(Ledger(runs), full, Run(full, 9, null, shapes: Shapes(full, "aaaaaaaa"), calls: Counts(full, 22)), new HistoryAnalysisOptions()).Scenarios[0];
++
++        Assert.Equal("stable", scenario.VerdictNames);
++    }
++}
+diff --git a/tests/Kronikol.Tests/Ingestion/NoisePlanIngestReproTests.cs b/tests/Kronikol.Tests/Ingestion/NoisePlanIngestReproTests.cs
+new file mode 100644
+index 00000000..65e5099f
+--- /dev/null
++++ b/tests/Kronikol.Tests/Ingestion/NoisePlanIngestReproTests.cs
+@@ -0,0 +1,183 @@
++using Kronikol.Ingestion;
++using Kronikol.Tracking;
++
++namespace Kronikol.Tests.Ingestion;
++
++/// <summary>plans/HISTORY_VERDICT_NOISE_PLAN.md S2: the issue's repro, and the plan's Adopt finding.</summary>
++[Collection("DiagramsFetcher")]
++public class NoisePlanIngestReproTests : IDisposable
++{
++    private readonly string _dir = Path.Combine(Path.GetTempPath(), "kronikol-mergedrop-" + Guid.NewGuid().ToString("N"));
++    private static readonly DateTimeOffset T0 = new(2026, 8, 22, 10, 0, 0, TimeSpan.Zero);
++
++    public NoisePlanIngestReproTests() { Directory.CreateDirectory(_dir); RequestResponseLogger.Redaction = null; }
++    public void Dispose()
++    {
++        RequestResponseLogger.Redaction = null;
++        DefaultDiagramsFetcher.Reset();
++        try { Directory.Delete(_dir, true); } catch { }
++    }
++
++    private static InteractionRecord Mongo(string type, string pairId, string testId, string capturedBy, double atMs, string? content = null) => new()
++    {
++        Type = type,
++        Method = capturedBy == "span" ? "Find" : "Find ← Trial",
++        Uri = "mongodb:///app-db/Trial",
++        ServiceName = "mongo",
++        CallerName = "api",
++        TestId = testId,
++        RequestResponseId = pairId,
++        CapturedBy = capturedBy,
++        ActivitySpanId = capturedBy == "span" ? "00f067aa0ba902b7" : null,
++        Content = content,
++        StatusCode = type == "Response" ? "OK" : null,
++        Timestamp = T0.AddSeconds(10).AddMilliseconds(atMs),
++    };
++
++    [Theory]
++    [InlineData(true)]
++    [InlineData(false)]
++    public void A_wire_record_whose_span_twin_is_attributed_survives_a_contested_claim(bool sweepOverlaps)
++    {
++        var options = IngestPipeline.DefaultOptions();
++        options.ReportsFolderPath = Path.Combine(_dir, "Report");
++        options.GenerateComponentDiagram = false;
++
++        var result = IngestPipeline.Run(new IngestRequest
++        {
++            Interactions =
++            [
++                Mongo("Request", "span-1", "worker-a", "span", 0),
++                Mongo("Response", "span-1", "worker-a", "span", 2),
++                Mongo("Request", "wire-1", "session", "wire", 0, """{ "CustomerId" : "cust-111" }"""),
++                Mongo("Response", "wire-1", "session", "wire", 2, """{ "CustomerId" : "cust-111", "Status" : "Active" }"""),
++            ],
++            TestRecords =
++            [
++                new TestRunRecord { Event = "start", TestId = "worker-a", TestName = "worker-a", Timestamp = T0, Claims = ["cust-111"] },
++                new TestRunRecord { Event = "end", TestId = "worker-a", Status = "passed", Timestamp = T0.AddSeconds(20) },
++                new TestRunRecord { Event = "start", TestId = "sweep", TestName = "sweep", Timestamp = T0.AddSeconds(sweepOverlaps ? 1 : 30), Claims = ["cust-111", "cust-222"] },
++                new TestRunRecord { Event = "end", TestId = "sweep", Status = "passed", Timestamp = T0.AddSeconds(60) },
++            ],
++            Options = options,
++            AttributeByClaims = true,
++            AttributeByTestWindow = true,
++            WindowAttribution = WindowAttributionMode.ExclusiveOnly,
++            WindowAttributionFallbackId = "session",
++            MergeDuplicateInteractions = true,
++            DropUnattributed = record => record.ServiceName == "mongo",
++        });
++
++        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
++        var workerA = document.RootElement.GetProperty("features").EnumerateArray()
++            .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
++            .Single(s => s.GetProperty("id").GetString() == "worker-a");
++        var request = workerA.GetProperty("httpInteractions").EnumerateArray()
++            .Single(i => i.GetProperty("serviceName").GetString() == "mongo" && i.GetProperty("type").GetString() == "Request");
++
++        Assert.Contains("cust-111", request.GetRawText());
++    }
++
++    /// <summary>The plan's READ claim: a wire record that knows its test loses it to a span twin that does not.</summary>
++    [Fact]
++    public void A_merge_does_not_trade_a_known_test_for_the_fallback()
++    {
++        var merged = InteractionMerger.Merge(
++        [
++            Mongo("Request", "span-1", "session", "span", 0),
++            Mongo("Response", "span-1", "session", "span", 2),
++            Mongo("Request", "wire-1", "worker-a", "wire", 0, """{ "CustomerId" : "cust-111" }"""),
++            Mongo("Response", "wire-1", "worker-a", "wire", 2, """{ "Status" : "Active" }"""),
++        ], fallbackTestId: "session");
++
++        Assert.All(merged, record => Assert.Equal("worker-a", record.TestId));
++    }
++
++    /// <summary>F1, pinned as what it is: a contested wire record with no span twin has nothing to be rescued by.</summary>
++    [Fact]
++    public void A_contested_wire_record_with_no_span_twin_is_still_dropped()
++    {
++        var options = IngestPipeline.DefaultOptions();
++        options.ReportsFolderPath = Path.Combine(_dir, "Report");
++        options.GenerateComponentDiagram = false;
++        InteractionRecord Redis(string type, double atMs) => new()
++        {
++            Type = type, Method = "GET", Uri = "redis:///app:_Report-Dates_cust-111", ServiceName = "redis", CallerName = "api",
++            TestId = "session", RequestResponseId = "redis-1", CapturedBy = "wire", Content = type == "Request" ? "GET app:_Report-Dates_cust-111" : "(hit)",
++            StatusCode = type == "Response" ? "OK" : null, Timestamp = T0.AddSeconds(10).AddMilliseconds(atMs),
++        };
++
++        var result = IngestPipeline.Run(new IngestRequest
++        {
++            Interactions =
++            [
++                Mongo("Request", "span-1", "worker-a", "span", 0), Mongo("Response", "span-1", "worker-a", "span", 2),
++                Redis("Request", 3), Redis("Response", 4),
++            ],
++            TestRecords =
++            [
++                new TestRunRecord { Event = "start", TestId = "worker-a", TestName = "worker-a", Timestamp = T0, Claims = ["cust-111"] },
++                new TestRunRecord { Event = "end", TestId = "worker-a", Status = "passed", Timestamp = T0.AddSeconds(20) },
++                new TestRunRecord { Event = "start", TestId = "sweep", TestName = "sweep", Timestamp = T0.AddSeconds(1), Claims = ["cust-111", "cust-222"] },
++                new TestRunRecord { Event = "end", TestId = "sweep", Status = "passed", Timestamp = T0.AddSeconds(60) },
++            ],
++            Options = options, AttributeByClaims = true, AttributeByTestWindow = true,
++            WindowAttribution = WindowAttributionMode.ExclusiveOnly, WindowAttributionFallbackId = "session",
++            MergeDuplicateInteractions = true, DropUnattributed = record => record.ServiceName is "mongo" or "redis",
++        });
++
++        Assert.DoesNotContain("\"redis\"", File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
++    }
++
++    /// <summary>
++    /// The plan's own claim under test: merging earlier "changes which records survive, not which pair".
++    /// A stranger's wire record - no claim of worker-a's, inside two test windows, so dropped today before
++    /// the merger ever sees it - overlaps worker-a's span as well as the true twin does, and starts closer.
++    /// </summary>
++    [Fact]
++    public void A_record_that_would_have_been_dropped_does_not_take_another_records_span_twin()
++    {
++        var options = IngestPipeline.DefaultOptions();
++        options.ReportsFolderPath = Path.Combine(_dir, "Report");
++        options.GenerateComponentDiagram = false;
++
++        var result = IngestPipeline.Run(new IngestRequest
++        {
++            Interactions =
++            [
++                Mongo("Request", "span-1", "worker-a", "span", 0),
++                Mongo("Response", "span-1", "worker-a", "span", 10),
++                Mongo("Request", "twin", "session", "wire", 1, """{ "CustomerId" : "cust-111" }"""),
++                Mongo("Response", "twin", "session", "wire", 9, """{ "CustomerId" : "cust-111", "Status" : "Active" }"""),
++                Mongo("Request", "stranger", "session", "wire", 0, """{ "CustomerId" : "cust-999" }"""),
++                Mongo("Response", "stranger", "session", "wire", 10, """{ "CustomerId" : "cust-999", "Status" : "Seeded" }"""),
++            ],
++            TestRecords =
++            [
++                new TestRunRecord { Event = "start", TestId = "worker-a", TestName = "worker-a", Timestamp = T0, Claims = ["cust-111"] },
++                new TestRunRecord { Event = "end", TestId = "worker-a", Status = "passed", Timestamp = T0.AddSeconds(20) },
++                new TestRunRecord { Event = "start", TestId = "worker-b", TestName = "worker-b", Timestamp = T0.AddSeconds(1), Claims = ["cust-222"] },
++                new TestRunRecord { Event = "end", TestId = "worker-b", Status = "passed", Timestamp = T0.AddSeconds(30) },
++            ],
++            Options = options,
++            AttributeByClaims = true,
++            AttributeByTestWindow = true,
++            WindowAttribution = WindowAttributionMode.ExclusiveOnly,
++            WindowAttributionFallbackId = "session",
++            MergeDuplicateInteractions = true,
++            DropUnattributed = record => record.ServiceName == "mongo",
++        });
++
++        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
++        var requests = document.RootElement.GetProperty("features").EnumerateArray()
++            .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
++            .Single(s => s.GetProperty("id").GetString() == "worker-a")
++            .GetProperty("httpInteractions").EnumerateArray()
++            .Where(i => i.GetProperty("serviceName").GetString() == "mongo" && i.GetProperty("type").GetString() == "Request")
++            .Select(i => i.GetRawText()).ToArray();
++
++        Assert.Single(requests);
++        Assert.Contains("cust-111", requests[0]);
++        Assert.DoesNotContain("cust-999", requests[0]);
++    }
++}

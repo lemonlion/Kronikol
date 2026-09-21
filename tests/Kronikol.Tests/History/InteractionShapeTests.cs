@@ -35,6 +35,76 @@ public class InteractionShapeTests
         Assert.Equal(expected, InteractionShape.Template(path));
     }
 
+    // #75 §1a-c: what a real parallel suite wrote on every run and the rule missed. A GUID whose
+    // separators are underscores (Google.Cloud.BigQuery names every job so), a twelve-hex digest
+    // (Convert.ToHexString(hash, 0, 6)), and hash bytes captured as text in a cache key.
+    [Theory]
+    [InlineData("/projects/p/queries/job_09c68d49_adcf_47be_bf9e_fc041cdc4a8e", "/projects/p/queries/job_{id}")]
+    [InlineData("/projects/p/queries/job_0094e738_b6a9_4411_ba74_9379763e3183", "/projects/p/queries/job_{id}")]
+    [InlineData("/app:_v2:charts-agg-100000000000001-D692278CF6C9-Weekly", "/app:_v2:charts-agg-{n}-{id}-Weekly")]
+    [InlineData("/app:_customerDates_100000000000001-%1D(%EF%BF%BD4%EF%BF%BD%EF%BF%BD:", "/app:_customerDates_{n}-{bin}")]
+    [InlineData("/commits/3787de7c2f2e", "/commits/{id}")]
+    [InlineData("/containers/0a1b2c3d4e5f/logs", "/containers/{id}/logs")]
+    [InlineData("/assets/app.3f9a1c2b.js", "/assets/app.{id}.js")]
+    [InlineData("/cache/%1D(%EF%BF%BD4/next", "/cache/{bin}/next")]
+    [InlineData("/cache/key-ab%0Ccd/next", "/cache/key-{bin}/next")]
+    public void Ids_the_templater_missed(string path, string expected)
+    {
+        Assert.Equal(expected, InteractionShape.Template(path));
+    }
+
+    // The short-hex rule is the nearest thing to the base64 rule that was measured and thrown out, so
+    // what it must leave alone is pinned: a route word made of hex letters has no digit, a version
+    // segment and a colour are under eight characters, and a number was never an id.
+    [Theory]
+    [InlineData("/customers/abc123")]
+    [InlineData("/v2/orders")]
+    [InlineData("/colours/ff00aa")]
+    [InlineData("/facade/deadbeef/decade/feedface")]
+    [InlineData("/api/v1/accede1/b2b")]
+    [InlineData("/files/report%20final.pdf")]
+    [InlineData("/files/caf%C3%A9.pdf")]
+    [InlineData("/customers/download")]
+    [InlineData("/files/SGVsbG8gV29ybGQ")]
+    [InlineData("/orders/accessed/effaced/defaced")]
+    public void What_is_not_an_id_stays(string path)
+    {
+        Assert.Equal(path, InteractionShape.Template(path));
+    }
+
+    [Fact]
+    public void A_number_is_still_a_number_and_a_mixed_separator_guid_is_not_a_guid()
+    {
+        Assert.Equal("/builds/{n}/{n}", InteractionShape.Template("/builds/20260918/12345678"));
+        // Nothing writes these; its first group falls to the short rule, its all-digit last to the number rule.
+        Assert.Equal("/x/{id}-e29b_41d4-a716-{n}", InteractionShape.Template("/x/550e8400-e29b_41d4-a716-446655440000"));
+    }
+
+    // Statement heads share the id rule. What it may take is data (a bare hex value compared against,
+    // the hash suffix of a table name); what it must not take is an identifier, a parameter or a keyword.
+    [Theory]
+    [InlineData("SELECT [o].[Id], [o].[CustomerId] FROM [Orders] AS [o] WHERE [o].[Id] = @__id_0")]
+    [InlineData("SELECT \"o\".\"Id\" FROM \"Orders\" AS \"o\" WHERE \"o\".\"Id\" = @p0")]
+    [InlineData("SELECT e0.added1d, c.name FROM events AS e0 JOIN customers AS c ON c.id = e0.customer_id")]
+    [InlineData("SELECT * FROM c WHERE c.partitionKey = @pk AND c.added1d = @p1")]
+    [InlineData("{ \"find\" : \"Trial\", \"filter\" : { \"CustomerId\" : \"cust-111\" }, \"limit\" : 1 }")]
+    [InlineData("SELECT count() FROM events WHERE ts > now() SETTINGS max_threads = 4")]
+    [InlineData("SELECT * FROM t WHERE flags = 0xDEADBEEF12")]
+    public void The_short_hex_rule_takes_nothing_from_a_statement_head(string head)
+    {
+        Assert.DoesNotContain("{id}", InteractionShape.TemplateStatement(head));
+    }
+
+    [Fact]
+    public void In_a_statement_head_the_short_hex_rule_takes_data_and_a_hash_suffix()
+    {
+        Assert.Equal("UPDATE leases SET lease = {id} WHERE owner = {id}", InteractionShape.TemplateStatement("UPDATE leases SET lease = abcdef12 WHERE owner = a1b2c3d4e5"));
+        Assert.Equal("SELECT * FROM sales_{id}", InteractionShape.TemplateStatement("SELECT * FROM sales_a1b2c3d4e5"));
+        // The limit, pinned as one: a name of eight or more characters spelt wholly in hex, with a digit,
+        // cannot be told from a digest. Consistently templated, so it never reads as a change.
+        Assert.Equal("SELECT c.{id} FROM c", InteractionShape.TemplateStatement("SELECT c.deadbeef1 FROM c"));
+    }
+
     [Fact]
     public void There_is_no_base64_rule_because_it_templated_real_words()
     {
@@ -225,7 +295,7 @@ public class InteractionShapeTests
     {
         // Fingerprints are only comparable when the same rule made them; the version rides on the run line so
         // the analyzer can tell, and it moves when the rule does.
-        Assert.True(InteractionShape.Version >= 3);
+        Assert.Equal(4, InteractionShape.Version);
     }
 
     [Fact]

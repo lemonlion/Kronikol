@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "kronikol",
   "displayName": "Kronikol",
-  "version": "3.22.1",
+  "version": "3.22.2",
   "description": "Debug a dotnet test run from its Kronikol report without opening it: why the tests failed (the failures digest), what a service actually returned, where a wrong value came from, what changed between runs, what was slow. Reads the report an xUnit, NUnit, MSTest, TUnit, Reqnroll or LightBDD run wrote, through the kronikol query CLI, so a 10 MB TestRunReport.json costs an agent a few hundred tokens instead of its whole context.",
   "author": {
     "name": "Aryeh Citron",

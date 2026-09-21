@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.22.2] - 2026-09-21
+
+**Patch - three kinds of id the history templater missed (#75 section 1).** The patch part moved because
+nothing here is new to call: the fingerprint rule is corrected, no option or member is added. It is the
+first of five slices of `plans/HISTORY_VERDICT_NOISE_PLAN.md`. Template pins move to 3.22.1.
+
+### Fixed
+
+- **A GUID whose groups are joined by underscores was not an id.** `Google.Cloud.BigQuery.V2` names
+  every job `job_<guid with underscores>` and polls `/queries/<that>`, so the path changed on every run
+  and the scenario read `behaviour-changed` on every run: 839 of the 1,494 new and gone call lines on
+  the reporting suite. `/queries/job_09c68d49_adcf_47be_bf9e_fc041cdc4a8e` is now `/queries/job_{id}`.
+  A GUID with mixed separators is still not a GUID.
+- **A short hex digest was not an id.** A hex run of 8 to 15 characters that holds both a digit and a
+  letter is templated: `charts-agg-{n}-D692278CF6C9-Weekly` becomes `charts-agg-{n}-{id}-Weekly`, and so
+  do a short commit sha, a container id and the hash in `app.3f9a1c2b.js`. A plain number was already
+  `{n}`; a word spelt in hex letters (`facade`, `deadbeef`) has no digit and stays; `abc123`, `v2` and
+  `ff00aa` are under eight characters and stay. Measured before shipping: over every URL and path
+  string in this repository and in BreakfastProvider (1,745 files, 628 distinct strings) the rule took
+  nothing but groups of whole GUIDs, and over three real ledgers it moved 0 of 212, 0 of 200 and 0 of 7
+  distinct call lines. **Known limit:** an identifier of eight or more characters spelt wholly in hex
+  with a digit in it cannot be told from a digest. It is templated the same way on every run, so it
+  never reads as a change.
+- **Bytes captured as text were not templated.** A cache key holding raw hash bytes is captured as
+  `%1D(%EF%BF%BD4...`, different on every run. From the delimiter before the first U+FFFD or C0 escape
+  to the end of the path segment is now `{bin}`. Ordinary percent-escapes (`%20`, `%C3%A9`) are not
+  touched.
+
+### Changed
+
+- **`InteractionShape.Version` is 4.** A fingerprint is comparable only with one the same rule made, so
+  the first run recorded by this version reads no behaviour verdict against the runs before it and says
+  so ("fingerprinted by an earlier rule; behaviour is compared from the next run"), and
+  `unstable-shape` and the count stretch need `HistoryMinRuns` runs again. One quiet run per stream, by
+  design, and unconditional: it happens even where no call line changes.
+- The same id rule templates statement heads. Probed on eight constructed heads (EF Core bracketed and
+  quoted identifiers, `@__id_0` and `@p0` parameters, aliases, a Cosmos DB query, a MongoDB command
+  document, a ClickHouse query, a `0x` literal): it takes nothing from an identifier, a parameter or a
+  keyword. What it takes is data: a bare hex value compared against, and the hash suffix of a table
+  name like `sales_a1b2c3d4e5`.
+
+### Notes
+
+- New dev-only harness, `tools/history-replay`: replays a ledger run by run, each run analysed against
+  the ledger as it stood when the run was appended, and writes the verdict counts per run as CSV. Build
+  it at two commits, replay the same ledger with both, diff. It is how the remaining slices of the plan
+  are checked against the 430 runs of BreakfastProvider's CI ledger.
+- Kronikol4J has no history, so there is no port work.
+
 ## [3.22.1] - 2026-09-19
 
 **Patch - what 3.22.0 left saying something that was no longer true, found by auditing it against its

@@ -41,18 +41,31 @@ public static partial class InteractionShape
     /// templated. 2: 3.14.0 - the head templated before it is cut, and what a statement carried as data
     /// (the values of a document, the literals of a query) dropped. 3: 3.15.0 - the set fingerprint is
     /// the set of distinct calls, so a retry cannot move it; how many times is the call count, which the
-    /// analyzer judges on the scenario's own record.
+    /// analyzer judges on the scenario's own record. 4: 3.22.2 - a GUID is a GUID whatever separates its
+    /// groups (<c>job_09c68d49_adcf_47be_...</c>), a hex run of eight to fifteen holding a digit and a letter is
+    /// an id, and bytes captured as text are <c>{bin}</c> (#75).
     /// </summary>
-    public const int Version = 3;
+    public const int Version = 4;
 
     /// <summary>How much of a statement's first line is templated, and how much of the templated head is kept.</summary>
     private const int HeadRaw = 2000;
     private const int HeadLength = 120;
 
-    // Ids: GUIDs with or without hyphens, hex runs of sixteen or more, ULIDs. Bounded by non-alphanumerics
-    // so an id embedded in a segment (prefix_{id}_suffix) is found without eating the prefix.
-    [GeneratedRegex(@"(?<![0-9A-Za-z])(?:[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}|[0-9A-Fa-f]{16,}|[0-9A-HJKMNP-TV-Z]{26})(?![0-9A-Za-z])", Options)]
+    // Ids: GUIDs whose groups are joined by hyphens, by underscores or by nothing, hex runs of sixteen or
+    // more, ULIDs, and short hex digests. Bounded by non-alphanumerics so an id embedded in a segment
+    // (prefix_{id}_suffix) is found without eating the prefix. The order is the rule: the GUID is tried
+    // before the short run, or its first group would match alone. The short run needs a digit AND a
+    // letter - a plain number is already {n}, and a route word spelt in hex letters (facade, deadbeef)
+    // has no digit. Measured over both repositories' sources, 628 distinct paths: it took nothing but
+    // groups of whole GUIDs.
+    [GeneratedRegex(@"(?<![0-9A-Za-z])(?:[0-9A-Fa-f]{8}(?<sep>[-_])[0-9A-Fa-f]{4}\k<sep>[0-9A-Fa-f]{4}\k<sep>[0-9A-Fa-f]{4}\k<sep>[0-9A-Fa-f]{12}|[0-9A-Fa-f]{16,}|[0-9A-HJKMNP-TV-Z]{26}|(?=[0-9A-Fa-f]*\d)(?=[0-9A-Fa-f]*[A-Fa-f])[0-9A-Fa-f]{8,15})(?![0-9A-Za-z])", Options)]
     private static partial Regex IdPattern();
+
+    // A binary segment: bytes captured as text, which is what a hash in a cache key becomes. From the
+    // delimiter before the first U+FFFD or C0 escape to the end of the path segment - walking back,
+    // because a hash's leading bytes are printable about a third of the time and vary as the rest do.
+    [GeneratedRegex(@"(?<=^|[/\-_:.])[^/\-_:.]*(?:%EF%BF%BD|%[01][0-9A-Fa-f])[^/]*", Options)]
+    private static partial Regex BinaryPattern();
 
     // Timestamps: an ISO-8601 date, optionally with a time, fraction and zone.
     [GeneratedRegex(@"(?<![0-9A-Za-z])\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?(?![0-9A-Za-z])", Options)]
@@ -82,7 +95,7 @@ public static partial class InteractionShape
 
         var query = text.IndexOf('?');
         var path = query < 0 ? text : text[..query];
-        var templated = NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(path, "{id}"), "{ts}"), "{n}");
+        var templated = NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(BinaryPattern().Replace(path, "{bin}"), "{id}"), "{ts}"), "{n}");
 
         if (query < 0)
             return templated;
