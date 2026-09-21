@@ -125,6 +125,21 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         Assert.Equal(["Combined.html"], Directory.GetFiles(_out).Select(Path.GetFileName).ToArray());
     }
 
+    [Fact]
+    public void A_merge_is_not_a_run_it_keeps_nothing_and_writes_no_manifest()
+    {
+        // A merged report is derived: the shards are the evidence, and they are kept where they were
+        // written. Merging twice into one directory overwrites, as it always did.
+        WriteShard("runner1.json", "0-1002", "Cart is priced", "Failed", error: "boom");
+        Assert.Equal(0, Merge().Exit);
+
+        var (exit, _, error) = Merge();
+
+        Assert.True(exit == 0, error);
+        Assert.False(Directory.Exists(Out(ReportFolders.RunsFolderName)), "a merge rotated the previous merge away");
+        Assert.False(File.Exists(Out(RunManifest.FileName)), "a merge wrote a run manifest");
+    }
+
     // ─── The pointer ───────────────────────────────────────────
 
     [Fact]

@@ -144,7 +144,8 @@ public class DescribeTests : IDisposable
     {
         var universal = Document().GetProperty("universalFlags").EnumerateArray().Select(f => f.GetProperty("name").GetString()).ToArray();
 
-        Assert.Equal(["--max-bytes", "--out", "--describe"], universal);
+        // --run since retained runs (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md S4): any verb opens the run kept under runs/.
+        Assert.Equal(["--max-bytes", "--out", "--describe", "--run"], universal);
         Assert.Equal(QueryCommand.UniversalFlags, universal);
     }
 

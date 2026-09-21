@@ -720,4 +720,24 @@ public record ReportConfigurationOptions
     /// <c>kronikol merge --history</c> turns it on for the merged report it was asked to render.
     /// </summary>
     public bool ShowHistorySection { get; set; }
+
+    /// <summary>
+    /// How many earlier runs are kept under <c>&lt;reports&gt;/runs/&lt;run&gt;/</c>. Before a run writes,
+    /// the run before it — exactly the files its <c>Run.json</c> lists — is moved there, so a failure
+    /// followed by the instinctive re-run is still on disk; the top level of the reports directory stays
+    /// the newest run, byte for byte what it always was, plus <c>Run.json</c>.
+    ///
+    /// <para>Default: <c>null</c>, which reads the <c>KRONIKOL_KEEP_RUNS</c> environment variable (a
+    /// number, or <c>off</c>) and otherwise keeps <b>3 off CI and 0 on CI</b>. Locally is where the re-run
+    /// happens; a CI pipeline that uploads or publishes the whole reports directory would otherwise
+    /// multiply every artifact and publish old runs without anything saying so. This option wins over the
+    /// variable. <c>0</c> rotates nothing.</para>
+    ///
+    /// <para>Two things hold whatever the number. The newest retained run that <b>failed</b> is never the
+    /// one pruned, so the directory holds at most <c>KeepRuns + 1</c> runs and the last failure survives
+    /// any number of green re-runs. And on CI, at <c>0</c> too, the earlier attempts <em>of this same
+    /// run</em> are kept — a test runner's retry extension, a second workflow step — because a retry that
+    /// passes would otherwise overwrite the failure it retried two seconds after it was written.</para>
+    /// </summary>
+    public int? KeepRuns { get; set; }
 }

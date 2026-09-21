@@ -191,6 +191,17 @@ public sealed class HistoryRunContext
     /// disk, so a run whose report failed to write still has its fragment for the fold, and a lock that
     /// cannot be won costs a diagnostic rather than the run.
     /// </summary>
+    /// <summary>
+    /// The lines this process appended, by ledger, suite and run id. A line with this run's id that is NOT
+    /// here was written by another process - an earlier attempt of the same CI run, which a retry
+    /// extension or a second workflow step starts - and is amended; one that is here is this same run
+    /// writing twice (LightBDD's formatter and the adapter both reach the generator), and stays a duplicate.
+    /// </summary>
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(string Path, string? Suite, string Id), bool> AppendedHere = new();
+
+    /// <summary>Forgets what this process appended, so a test can stand in for a new process.</summary>
+    internal static void ForgetAppendsForTests() => AppendedHere.Clear();
+
     public HistoryAppendResult? Append()
     {
         if (!WriteLedger || Location.Path is not { } path)
@@ -198,10 +209,18 @@ public sealed class HistoryRunContext
 
         try
         {
+            var key = (Path.GetFullPath(path), Run.Suite, Run.Id);
             var result = HistoryLedgerWriter.Append(path, Roster, Run, Generator, shapes: Shapes);
+            // Somebody else's line under this run's id: an earlier attempt of this run, and this one goes
+            // over it. The writer still refuses when that line is not older than this run.
+            if (result.Outcome == HistoryAppendOutcome.Duplicate && !AppendedHere.ContainsKey(key))
+                result = HistoryLedgerWriter.Amend(path, Roster, Run, Generator, shapes: Shapes);
             switch (result.Outcome)
             {
                 case HistoryAppendOutcome.Appended:
+                case HistoryAppendOutcome.Amended:
+                    AppendedHere[key] = true;
+                    break;
                 case HistoryAppendOutcome.Duplicate:
                     break;
                 default:

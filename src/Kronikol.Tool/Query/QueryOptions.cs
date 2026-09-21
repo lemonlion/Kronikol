@@ -124,11 +124,15 @@ internal sealed class QueryOptions
     public int HistoryWindowOrDefault => Window ?? 50;
 
     /// <summary>
-    /// <c>history --run ID</c>: the run to read instead of the one the report describes - a run id, a
-    /// substring only one id has, <c>last-failed</c> or <c>previous</c>. Read from the ledger as it stood
-    /// then, so it needs no report at all.
+    /// <c>--run ID</c>: the run to read instead of the newest - a run id, a substring only one id has,
+    /// <c>last-failed</c> or <c>previous</c>. On every verb it opens a run retained under
+    /// <c>&lt;reports&gt;/runs/</c>; on <c>history</c> a run that is not retained is read from the ledger,
+    /// and needs no report at all.
     /// </summary>
     public string? Run { get; private set; }
+
+    /// <summary>Set once <see cref="Run"/> has been resolved to a retained report: the report in hand IS the run asked for, and <c>history</c> does not look for it again in the ledger.</summary>
+    public bool RunIsResolved { get; internal set; }
 
     /// <summary>
     /// Replaces an alias or a partial id with what it resolved to, so that a <c>next:</c> pointer resumes the

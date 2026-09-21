@@ -94,6 +94,8 @@ matters.
 | "what values did X ever return?" | `values --path '$.field' --service X` — distinct values, counted, with addresses |
 | "which calls returned a bad value?" | `interactions --where '$.success = false'` — run-wide; `req:$.x` targets the request |
 | "which example row broke?" | `steps s3` (its parameters) + `annotations s3` |
+| "it failed, I re-ran it, and now the report is green" | The reports directory holds the NEWEST run; the ones before it are kept under `runs/`. `history <reports-dir> --failing` names what failed earlier and in which run → `failures <reports-dir> --run last-failed` opens that run, and every verb takes `--run` from there (`interactions`, `http`, …). Not kept any more: `history --run last-failed` still answers from the ledger, first line of each error included |
+| "what differs between the failing run and the green re-run?" | `diff <reports-dir>/runs/<name> <reports-dir>` - two directories, the kept run first. `<name>` is the folder `failures --run last-failed` reported, or list them with `kronikol history doctor <reports-dir>` |
 | "what broke since yesterday?" | `diff <report> --baseline` — finds last-green itself; or name both: `diff old.json new.json`. Matched on `stableId`, and it also reports services that stopped being tracked |
 | "these two runs/scenarios differ — how?" | `compare s3 s7` (it names the first differing body) → `diff s3/i47 s7/i47` — only the differing paths, never two payloads |
 | "why is this slow?" | `summary` → `services --sort duration` → `flow s3` |

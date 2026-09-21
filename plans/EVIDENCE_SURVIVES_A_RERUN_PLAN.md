@@ -3,7 +3,8 @@
 **Date:** 2026-09-18, investigated further 2026-09-19 (§11.5) · **Repo version:** written against
 3.21.0 (`2491185e`), re-checked against 3.22.1 (`82abeb7f`) — 3.22.0 and 3.22.1 touch no history,
 query, merge or ledger code, and the one citation that moved is `ReportGenerator.WriteFile`, now
-`:5420` · **Status:** plan written, **the analyzer cut (F4), the missing-fragment fix (F14) and the
+`:5420` · **Status: EXECUTED 2026-09-21 as 3.25.3 (S0, S1), 3.26.0 (S2, S3) and 3.27.0 (S4); §12 is
+the log and says where execution departed from the plan.** As written before that: plan written, **the analyzer cut (F4), the missing-fragment fix (F14) and the
 retry overlay (F15) prototyped in a throwaway worktree** — `EVIDENCE_SURVIVES_A_RERUN_PLAN.prototype.patch`,
 8 files, +456 −4, every new test red on `main` first, the unit suite 5,160 / 0 failed with it — nothing
 implemented in the repository, **NOT green-lit**.
@@ -1305,5 +1306,53 @@ file.
   changed`, and notes carry no bullet).
 - `--run` on the other verbs, the retained report tried first, and `RunIsResolved` wait for S4, as do
   the HTML tooltip's attempt label and `--run` among the universal flags.
+- Verified by the whole solution: 51 test assemblies, 0 failed (Kronikol.Tests 5,330); CI and the
+  Release workflow green for 3.25.3 before it was pushed.
 - Cost: `tools/history-replay --time` over the whole CI ledger, warm analysis 5 ms and 12.5 KB a
   scenario, inside the 28 KB bound the cost plan set. `FailingOutside` runs on partial runs only.
+
+### 3.27.0 (minor) - S4
+
+**The owner's two decisions (2026-09-21):** a pass on retry keeps the failed attempt's error text,
+labelled; and `HistoryLedgerWriter.Amend` ships.
+
+- The rotation prototype (`RunRotation`, `RunManifest`, `RunFileCollector`, `ReportFolders`,
+  `HistoryRunId`, 40 + 15 tests) applied to 3.26.0 with one conflict, an enum member beside the noise
+  plan's. The tool side (`RetainedRunResolver`, `record`'s attempts, `Amend`, `doctor`, with their tests)
+  applied with one, the tooltip's attempt label beside the partial and degraded labels. `--run` on
+  every verb, the three sweeps on `ReportFolders.IsReserved`, `Run.json` in merge's skip list and
+  `RunIsResolved` were ported by hand onto 3.26.0's `RunCore` and `History`.
+- **§6.5, test by test:** 1 to 6, 9 to 17 and the CI rules are `RunRotationTests` and
+  `RunManifestTests`; 7, 8 and 11's refusal are `RetainedRunsTests`; 19 to 21 are `HistoryCommandTests`;
+  22 and the amend lane are `HistoryLedgerTests` and `HistoryOutputsTests`; 23 is new
+  (`A_merge_is_not_a_run_it_keeps_nothing_and_writes_no_manifest`, green before and after: a pin).
+  **18 is covered at unit level only** (CI variables, two processes simulated by the once-per-process
+  guard's test reset). The real `--retry-failed-tests` run of §11.4 was not repeated: it needs a
+  fail-once test in an example project, and a test that fails on purpose does not belong in the repo.
+- **New, in no prototype:**
+  - Azure DevOps artifact upload of the kept runs, each file under the folder it has on disk
+    (`CiArtifactPublisher.RetainedFiles`); GitHub Actions is handed the directory. §6.3's last
+    paragraph asked for it.
+  - **"The run before this one failed".** Found by doing #80 for real on
+    `Example.Api.Tests.CiPreview.Mixed`: 15 of 20 failing, then a filtered green re-run. Everything
+    worked (`runs/` held the failing run, `failures --run last-failed` walked the ladder,
+    `interactions --run previous s0`, `diff runs/<name> .`, the unretained refusal). But `dotnet test`
+    swallows the console line, and the new `Failures.md` said `# No failures` and nothing else. The
+    prototype said so only for a same-run retry. `FailuresDigestEarlierAttempt.SameRun` is false for
+    the run just moved aside, and the digest says it once, by the run that replaced it. Red first.
+  - `history doctor <reports-dir>` answered only `KRONIKOL_HISTORY=off` for a suite with history off.
+    Kept runs do not depend on the ledger: it now answers for the directory whatever the ledger's
+    state.
+- **Not taken, on purpose:** `--baseline-run` (open question 6). The recommendation was a recommendation;
+  the skill's recipe table and the wiki carry the two-directory `diff`, which needs no flag and was RUN
+  on the real directory.
+- **Statements the new default weakens, found and qualified:** "nothing rewrites the ledger during a
+  test run" (the `Prune` and `Compact` doc comments and `Cross-Run-History.md`), `# No failures` means
+  nothing failed (the agent file, the managed block, `Generated-Reports.md`), "a subfolder is never
+  uploaded" (`CI-Artifact-Upload.md`).
+- Docs: wiki `Generated-Reports` (a section of its own), `Report-Configuration`, `Querying-Reports`,
+  `Cross-Run-History` ("A retry is an attempt, not a shard"), `Merging-Parallel-Reports`,
+  `CI-Artifact-Upload`, `Diagnostics-and-Debugging`; README; both skill copies; the per-directory agent
+  file; Kronikol4J's divergence ledger (the harness must set `KRONIKOL_KEEP_RUNS=off`).
+- Nothing was posted on #80, #81, #82 or #84. #81's exit-code claim does not reproduce (F1) and the
+  reply with the `PIPESTATUS` transcript is the owner's to send.

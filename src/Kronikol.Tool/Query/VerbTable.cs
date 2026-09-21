@@ -49,7 +49,7 @@ internal sealed record VerbSpec(
 internal static class VerbTable
 {
     /// <summary>The flags that mean the same thing on every verb, applied by <c>QueryWriter</c> around whatever the verb produced.</summary>
-    public static readonly string[] UniversalFlags = ["--max-bytes", "--out", "--describe"];
+    public static readonly string[] UniversalFlags = ["--max-bytes", "--out", "--describe", "--run"];
 
     /// <summary>Every flag the parser has a case for, with what it takes and what it means.</summary>
     public static readonly FlagSpec[] Flags =
@@ -103,7 +103,7 @@ internal static class VerbTable
         new("--degraded-by", "X", "On history: the pace at or above which a run is degraded, its passing scenarios having taken this many times their usual - the report's HistoryDegradedBy (default 2.0; 0 switches it off)."),
         new("--calls", null, "On history, with a scenario: print the scenario's distinct calls as the templater wrote them, so a wrong {id} or a missing rule can be seen."),
         new("--suite", "NAME", "On history: the suite to look the run up under, when the report does not say - or, with no report, which of the ledger's suites to read."),
-        new("--run", "ID", "On history: read this run instead of the report's - a run id, a substring only one id has, last-failed or previous. Read from the ledger as it stood then, so history needs no report at all."),
+        new("--run", "ID", "Read this run instead of the newest: a run id, a substring only one id has, its folder name, last-failed or previous. On every verb it opens the run retained under <reports>/runs/; on history a run that is not retained is read from the ledger, which needs no report."),
         new("--sid", "ID", "On history: one scenario by its stable id - what a row is addressed by when there is no report to number it."),
         new("--window", "N", "On history: how many runs back the run is read against - the report's HistoryWindow (default 50).")
     ];
@@ -257,7 +257,7 @@ internal static class VerbTable
         new("history", "Search and comparison",
             "What the last runs say about this one, from the cross-run ledger: what broke, what is flaky, what has been failing since when, what changed its calls - per scenario, with the evidence.",
             ["<report>", "<report> s3", "<report> sid:<id>", "[--run ID] [--sid ID]"],
-            ["--history", "--flaky", "--new", "--failing", "--regressed", "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--calls", "--suite", "--run", "--sid", "--window", "--count", "--offset", "--limit", "--json"], Json: true,
+            ["--history", "--flaky", "--new", "--failing", "--regressed", "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--calls", "--suite", "--sid", "--window", "--count", "--offset", "--limit", "--json"], Json: true,
             [
                 "  history      <report> [s3] [--flaky|--new|--failing|--regressed|--changed]   the ledger's verdicts on this run: broke, fixed, flaky, failing since,",
                 "                                                 slower, behaviour-changed - with the evidence; s3 for one scenario's runs in full",

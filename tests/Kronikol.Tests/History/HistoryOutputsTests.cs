@@ -174,7 +174,30 @@ public class HistoryOutputsTests : IDisposable
         Run("r1", "test:1:1", Features(ExecutionResult.Passed));
         Run("r2", "test:1:1", Features(ExecutionResult.Failed));
 
-        Assert.Single(HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("HistorySuite"));
+        var line = Assert.Single(HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("HistorySuite"));
+        // One process writing the same run twice is not a retry: the first line stands as it was.
+        Assert.Equal("PP", line.Results);
+        Assert.Equal("--", line.Attempts);
+    }
+
+    // plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md §6.3, the direct-append case: a retry extension re-runs the
+    // failed tests in a NEW process with the same CI run id. Its line was a Duplicate, and the ledger kept
+    // attempt 1's failure for a job that went green.
+    [Fact]
+    public void A_later_attempt_of_the_same_run_from_another_process_is_overlaid_on_its_line()
+    {
+        Run("r1", "test:1:1", Features(ExecutionResult.Failed));
+        HistoryRunContext.ForgetAppendsForTests();
+        // The retry: only the scenario that failed, and it passes.
+        Run("r1", "test:1:1", Features(ExecutionResult.Passed)[..1]);
+
+        var ledger = HistoryLedgerReader.Read(Ledger, 50).Ledger!;
+        var line = Assert.Single(ledger.Runs("HistorySuite"));
+        Assert.Equal("PP", line.Results);
+        Assert.Equal("2-", line.Attempts);
+        Assert.Equal("Expected 200 but got 500", line.ErrorAt(0));
+        Assert.Equal(2, ledger.Roster(line.RosterHash)!.Count);
+        Assert.False(line.Partial);
     }
 
     [Fact]

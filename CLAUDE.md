@@ -76,7 +76,9 @@ that particular run, and:
 - **`Failures.md`** — every failure in context: the error, the parsed expected and actual, the failing
   step with its source location, the calls made inside that step, and the address of each. Failures
   sharing a message are clustered, so twenty scenarios broken by one cause read as one cause. Read this
-  first. `# No failures` means nothing failed; if the file is absent the run did not finish.
+  first. `# No failures` means nothing failed in the newest run (earlier runs are kept under
+  `runs/`, and `--run last-failed` opens the last one that failed); if the file is absent the run
+  did not finish.
 - `Failures.jsonl` — the same failures, one JSON object per line, for scripts.
 
 For anything the digest does not answer, query the report rather than opening it:

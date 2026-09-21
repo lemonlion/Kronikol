@@ -4,6 +4,92 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.27.0] - 2026-09-21
+
+**Minor - a green re-run no longer destroys the failing run's report (#80).** The minor part moved
+because there is new surface: the `KeepRuns` option and `KRONIKOL_KEEP_RUNS`, a `Run.json` manifest
+beside every report, `--run` on every `kronikol query` verb, `kronikol history doctor <reports-dir>`,
+and new public types in the library (`RunManifest`, `ReportFolders`, `RetainedRun`, `HistoryRunId`,
+`HistoryFold.Attempts`, `HistoryLedgerWriter.Amend`, `HistoryAppendOutcome.Amended`,
+`DiagnosticKind.ReportRotationFailed`, `FailuresDigestEarlierAttempt`). The top level of the reports
+directory is what it was plus one small file, and nothing is kept on CI by default. Third and last
+release from `plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md` (S4). Two decisions in it were the owner's and
+are recorded there: a pass on retry keeps the failed attempt's error text, labelled; and a retry that
+appends to the ledger itself amends its own run's line.
+
+### Added
+
+- **The last runs are kept under `<reports>/runs/<run>/`.** Before a run writes, the previous run's
+  files are moved aside, whole: report, digest, fragment, attachments. A move inside a volume is a
+  rename, so it costs the same for an 80 MB report as for a small one and no second copy is written.
+  `ReportConfigurationOptions.KeepRuns` (or `KRONIKOL_KEEP_RUNS`: a number, or `off`; the option beats
+  the environment) says how many: **3 off CI, 0 on CI**. **The newest kept run that failed is never the
+  one pruned**, so the last failure survives any number of green re-runs and the directory holds at
+  most `KeepRuns + 1` runs. CI defaults to 0 because the consumer pipeline this was checked against
+  uploads and publishes the whole reports directory: kept runs there would quietly multiply every
+  artifact and publish old runs.
+- **On CI the earlier attempts of the same run are kept even at 0.** A test runner's retry extension
+  (`--retry-failed-tests`) re-runs the failed tests in a new process, which overwrote the failing run
+  two seconds after it was written and left `# No failures`. Runs with another id are overwritten as
+  before, so nothing accumulates on a persistent runner.
+- **`Run.json`**, written last by every run: the run id (minted the same way when history is off, so a
+  run always has a name), when it ended, the suite, scenario and failure counts, and the files and
+  attachments that **reached disk**, collected where the bytes are written rather than from what was
+  planned. A directory without one is a run that did not finish. It is what the rotation moves by, what
+  pruning reads, and what `--run` resolves against; no report or digest is opened for any of it.
+- **`--run` on every `kronikol query` verb**: a run id, any part of one that only one kept run has,
+  the folder name, `last-failed` or `previous`. The kept run's fragment, attachments and HTML are beside
+  its report, so the whole ladder works on it (`failures`, `interactions`, `http`, `history`, the
+  `#sid-` deep link). Two steps of one CI workflow run share an id and are kept as `gh_1_1` and
+  `gh_1_1-2`; `--run gh:1:1` is refused with both, and the folder name picks one. A run that is not
+  kept is exit 2 naming the ones that are, and `history --run` still answers from the ledger: **the
+  same `--run last-failed` works whether the report survived or only the ledger did.**
+- **The new run says what it replaced.** On the console when the run moved aside had failures, and,
+  because `dotnet test` swallows the console, directly under the heading of `Failures.md`: `> The run
+  before this one failed — 15 of its 20 scenarios failed, and that run is kept, whole, in runs/<name>`;
+  for a retry of the same run, `> An earlier attempt of this run failed`. The per-directory agent file
+  gains an "Earlier runs" section, and `# No failures` is documented everywhere as "in the newest run".
+- **A retry is recorded as an attempt, not as a shard.** `kronikol history record` groups what it
+  finds by reports directory: the fragment on top and the kept fragments with its run id are overlaid,
+  oldest first by the run's own clock, a scenario run again keeping its one position, taking the later
+  result and counting the attempts. The retried run reads `flaky` (`passed on retry 2 in this run`),
+  which the analyzer has made of `attempts` since 3.9.0 and no native lane had ever filled. Folding
+  the two as shards, which is what finding both fragments would otherwise do, reads a phantom `new`
+  scenario and then an `absent` one. Fragments in different directories are shards and fold as before.
+- **A run that appends to the ledger itself amends its own line on a retry**
+  (`HistoryLedgerWriter.Amend`). The retry's append used to be swallowed as a `Duplicate`, leaving
+  attempt 1's failure on record for a job that went green, and a `fixed` that never happened in the
+  next run. The line is replaced in place under the writer's lock, every other line keeping its bytes
+  and its order; a line that is not older than the run stays a duplicate. This is the one rewrite a
+  test run performs. **Known limit:** two matrix legs with the same suite name appending to one shared
+  file are read as a retry and the later leg wins (before, the second leg was dropped); a suite name
+  per leg, the documented setup, avoids both.
+- **A pass on retry keeps the failed attempt's error text**, and every surface says whose it is:
+  `attempt 2` with `an earlier attempt failed: …` under the row in `query history`, and `passed on
+  attempt 2 · … · an earlier attempt failed: …` in the report's history tooltip.
+- **`kronikol history doctor <reports-dir>`**: how many runs are kept, which is the newest failing one,
+  and what an interrupted rotation left; exit 1 when it left anything. It answers for a reports
+  directory even when history is switched off, since kept runs do not depend on the ledger.
+- **Azure DevOps artifact upload includes the kept runs**, each file under the folder it has on disk,
+  so a downloaded artifact opens with `--run` as the directory does. GitHub Actions is handed the
+  directory and uploads them with it.
+
+### Changed
+
+- **Every recursive sweep skips `runs/`**, as it skips `baseline/`: `kronikol merge <dir>`, `kronikol
+  query <parent-dir>` and `kronikol history record <dir>` (which takes only the kept fragments of the
+  run on top). Unfixed, a green report with one kept failing run beside it merged to 12 scenarios, 1
+  failed, and a lookup from a parent directory became ambiguous. A kept run **named** on the command
+  line is still read: the exemption is for what a sweep finds, not what it is given. `merge` also skips
+  `Run.json` by name, and neither rotates nor writes one: its output is derived.
+- **It never fails the run.** A report held open by a reader or a read-only file abandons the rotation
+  whole (the data file is moved first, so nothing has moved), anything staged is put back, a
+  `ReportRotationFailed` diagnostic names the file, and the run overwrites as it always did. A kept run
+  is staged under `runs/.incoming-<name>/` and published by one directory rename: whole or absent,
+  never half there, and a rotation killed midway is resumed by the next run.
+- Kronikol's own five test projects with a `test.runsettings` set `KRONIKOL_KEEP_RUNS=off` beside
+  `KRONIKOL_HISTORY=off`.
+
 ## [3.26.0] - 2026-09-21
 
 **Minor - `kronikol query history` answers without a report (#81), and an empty answer stops reading

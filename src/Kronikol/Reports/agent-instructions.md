@@ -25,7 +25,24 @@ a strong hint that one cause is behind all of them, not a finding that one is.
 is `kind: "failure"`. A record whose `truncated` is true had a long field cut; the full text is in the data
 file at that record's `address`.
 
-If `Failures.md` says `# No failures`, nothing failed. If it is absent, the run did not finish.
+If `Failures.md` says `# No failures`, nothing failed **in the newest run**. If it is absent, the run did
+not finish.
+
+### Earlier runs
+
+This directory holds the **newest** run. The runs before it are kept under `runs/<run>/` (the last
+three by default, and the newest one that failed is never the one pruned), each whole: its report, its
+`Failures.md`, its attachments, and a `Run.json` saying which run it is and how many scenarios failed. If
+the failure you were sent for is not in `Failures.md`, somebody re-ran and it went green:
+
+```bash
+kronikol query history . --failing          # says what failed earlier, and names the run
+kronikol query failures . --run last-failed # opens that run: every verb takes --run
+kronikol query history --run last-failed    # the ledger still has it when the report was not kept
+```
+
+Do not read a retained run by opening its folder and its files by hand; `--run` takes an id, a unique
+part of one, the folder name, `last-failed` or `previous`.
 
 ## 2. `kronikol query` — everything else
 

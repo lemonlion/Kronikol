@@ -1,5 +1,6 @@
 using System.Globalization;
 using Kronikol.History;
+using Kronikol.Reports;
 
 namespace Kronikol.Tool;
 
@@ -285,7 +286,13 @@ internal static partial class HistoryCommand
             return 1;
         }
 
-        var folded = HistoryFold.Fold(fragments.Select(f => f.Fragment));
+        // Attempts before shards: fragments in ONE reports directory that share a run id - the newest on
+        // top, earlier ones retained under runs/ - are the same scenarios run again, and become one
+        // fragment. What is left is one fragment per directory, and those fold as shards as before.
+        var attempted = Attempts(fragments, out var attemptCounts, out var retainedSkipped);
+        if (retainedSkipped > 0)
+            @out.WriteLine($"{retainedSkipped} retained fragment(s) of other runs left alone (under {RunsFolderName}/)");
+        var folded = HistoryFold.Fold(attempted);
         var appended = 0;
         var duplicates = 0;
         var failed = 0;
@@ -341,6 +348,7 @@ internal static partial class HistoryCommand
             var result = HistoryLedgerWriter.Append(ledger, roster, line, Commands.Version, shapes: shapes);
             var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {roster.Count} scenarios"
                         + (run.Shards > 1 ? $" from {run.Shards} shards" : "")
+                        + (attemptCounts.GetValueOrDefault((run.Suite, run.Id)) is var tries and > 1 ? $", {tries} attempts" : "")
                         + (line.Partial == true ? "  partial" : "");
             switch (result.Outcome)
             {
@@ -364,6 +372,64 @@ internal static partial class HistoryCommand
 
         @out.WriteLine($"{appended} run(s) recorded, {duplicates} already there, {failed} failed, from {fragments.Count} fragment(s) → {ledger}");
         return failed > 0 || unreadable > 0 ? 1 : 0;
+    }
+
+    /// <summary>The folder a reports directory keeps its earlier runs in (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md S4).</summary>
+    private const string RunsFolderName = ReportFolders.RunsFolderName;
+
+    /// <summary>The reports directory a fragment belongs to: its own, or - for one retained under runs/&lt;name&gt;/ - the directory above runs/.</summary>
+    private static (string Directory, bool Retained) ReportsDirectoryOf(string fragmentPath)
+    {
+        var directory = Path.GetDirectoryName(fragmentPath) ?? "";
+        var parent = Path.GetDirectoryName(directory);
+        return parent is not null && string.Equals(Path.GetFileName(parent), RunsFolderName, StringComparison.OrdinalIgnoreCase) && Path.GetDirectoryName(parent) is { } above
+            ? (above, true)
+            : (directory, false);
+    }
+
+    /// <summary>
+    /// One fragment per reports directory and run. A retained fragment with the id of the fragment on top
+    /// of it is an earlier attempt of that run and is overlaid, oldest first by the run's own clock - path
+    /// order would put the newest first. A retained fragment of any other run is left alone: it was
+    /// recorded, or not, by the run that wrote it, and appending it now would put it out of order.
+    /// </summary>
+    private static List<HistoryFragment> Attempts(List<(string Path, HistoryFragment Fragment)> fragments,
+        out Dictionary<(string? Suite, string Id), int> attemptCounts, out int retainedSkipped)
+    {
+        attemptCounts = [];
+        retainedSkipped = 0;
+        var result = new List<HistoryFragment>();
+        foreach (var group in fragments.GroupBy(f => ReportsDirectoryOf(f.Path).Directory, StringComparer.Ordinal))
+        {
+            var tops = group.Where(f => !ReportsDirectoryOf(f.Path).Retained).ToList();
+            var retained = group.Where(f => ReportsDirectoryOf(f.Path).Retained).ToList();
+            if (tops.Count == 0)
+            {
+                // Retained runs given by name, with nothing on top of them: read as they are.
+                result.AddRange(retained.Select(f => f.Fragment));
+                continue;
+            }
+
+            foreach (var top in tops)
+            {
+                var earlier = retained.Where(f => string.Equals(f.Fragment.Run.Id, top.Fragment.Run.Id, StringComparison.Ordinal)
+                                                  && string.Equals(f.Fragment.Run.Suite, top.Fragment.Run.Suite, StringComparison.Ordinal))
+                    .OrderBy(f => f.Fragment.Run.At).Select(f => f.Fragment).ToList();
+                if (earlier.Count == 0)
+                {
+                    result.Add(top.Fragment);
+                    continue;
+                }
+                earlier.Add(top.Fragment);
+                result.Add(HistoryFold.Attempts(earlier));
+                var key = (top.Fragment.Run.Suite, top.Fragment.Run.Id);
+                attemptCounts[key] = Math.Max(attemptCounts.GetValueOrDefault(key), earlier.Count);
+            }
+
+            retainedSkipped += retained.Count(f => !tops.Any(t => string.Equals(t.Fragment.Run.Id, f.Fragment.Run.Id, StringComparison.Ordinal)
+                                                                  && string.Equals(t.Fragment.Run.Suite, f.Fragment.Run.Suite, StringComparison.Ordinal)));
+        }
+        return result;
     }
 
     private static IEnumerable<string> FragmentFiles(IReadOnlyList<string> inputs, TextWriter error)
@@ -628,7 +694,8 @@ internal static partial class HistoryCommand
         writer.WriteLine("           [--max-new-failures N] [--min-pass-rate X] [--flaky-threshold X] [--slower-by X] [--slower-min-ms N] [--alternating-runs N] [--count-runs N] [--degraded-by X] [--min-runs N] [--branch NAME]   (default: new-failures; --branch: a pull request's target)");
         writer.WriteLine("  quarantine <sid> --reason TEXT [--by NAME] [--until DATE] | <sid> --release | --list   .kronikol/quarantine.json beside the ledger");
         writer.WriteLine("  rename   <old-sid> <new-sid>                  alias an old stableId to its replacement (.kronikol/aliases.json); record suggests them");
-        writer.WriteLine("  doctor                                        the ledger, its companions, the merge attribute and what is expired or damaged");
+        writer.WriteLine("  doctor [<reports-dir>...]                     the ledger, its companions, the merge attribute and what is expired or damaged;");
+        writer.WriteLine("                                                with a reports directory, the runs kept under runs/ and what a killed rotation left");
         writer.WriteLine("  import   <report|dir>... [--from-ctrf|--from-allure] [--suite NAME] [--branch NAME] [--run-id ID]   runs from reports the run did not write");
         writer.WriteLine();
         writer.WriteLine("  --history FILE   the ledger, instead of $KRONIKOL_HISTORY or the .kronikol/history.jsonl above the working directory");

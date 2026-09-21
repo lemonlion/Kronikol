@@ -252,14 +252,17 @@ internal static class HistoryHtml
             if (p.Commit is { } commit)
                 sb.Append(" · ").Append(commit.Length > 7 ? commit[..7] : commit);
             sb.Append(" · ").Append(ResultWord(p.Result));
+            if (p.Attempt is > 1)
+                sb.Append(" on attempt ").Append(p.Attempt.Value.ToString(CultureInfo.InvariantCulture));
             if (p.Partial)
                 sb.Append(" · partial run");
             if (p.RunDegraded)
                 sb.Append(" · degraded run");
             if (p.DurationMs is { } ms)
                 sb.Append(" · ").Append(FormatMs(ms));
+            // An error on a pass is the earlier attempt's, and is said to be: a retry overlaid on its run.
             if (p.Error is { } error)
-                sb.Append(" · ").Append(error.Length > 80 ? error[..80] + "…" : error);
+                sb.Append(" · ").Append(p.Result == HistoryFormat.Passed ? "an earlier attempt failed: " : "").Append(error.Length > 80 ? error[..80] + "…" : error);
         }
         return sb.ToString();
     }

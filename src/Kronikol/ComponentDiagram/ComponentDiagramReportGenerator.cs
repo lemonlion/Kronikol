@@ -59,6 +59,9 @@ public static class ComponentDiagramReportGenerator
         var html = GenerateHtml(plantUml, options.Title, imgSrc, imageFormat, useBrowserJs, reportOptions);
         var htmlPath = Path.Combine(directory, $"{options.FileName}.html");
         File.WriteAllText(htmlPath, html);
+        // This writer resolves its own directory and never passes through ReportGenerator.WriteFile, so
+        // it tells the run's manifest what it wrote itself (a no-op outside a run).
+        RunFileCollector.Record(htmlPath);
 
         return new ComponentDiagramResult(htmlPath, plantUml);
     }
@@ -91,6 +94,8 @@ public static class ComponentDiagramReportGenerator
             var extension = renderFormat == PlantUmlImageFormat.Png ? ".png" : ".svg";
             var imageFileName = $"{fileName}{extension}";
             File.WriteAllBytes(Path.Combine(directory, imageFileName), imageBytes);
+            // The HTML above links to this file by name: it is the run's, and moves with it.
+            RunFileCollector.Record(Path.Combine(directory, imageFileName));
             return imageFileName;
         }
 

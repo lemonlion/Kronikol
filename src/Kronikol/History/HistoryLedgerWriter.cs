@@ -11,6 +11,12 @@ public enum HistoryAppendOutcome
     /// <summary>A run with the same suite and id is already in the file; nothing was written (§6.5).</summary>
     Duplicate,
 
+    /// <summary>
+    /// A run with the same suite and id was already in the file from an EARLIER attempt of the same run,
+    /// and this attempt was overlaid on its line (<see cref="HistoryLedgerWriter.Amend"/>).
+    /// </summary>
+    Amended,
+
     /// <summary>The file declares a version this build does not write; nothing was written (§3.5).</summary>
     UnsupportedVersion,
 
@@ -93,6 +99,99 @@ public static class HistoryLedgerWriter
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             return new HistoryAppendResult(HistoryAppendOutcome.Failed, $"could not append to the ledger at {path}: {exception.Message}", attempts);
+        }
+    }
+
+    /// <summary>
+    /// Appends a run, or - when the ledger already holds a line for its suite and id, written EARLIER than
+    /// this run ended - overlays this run on that line as a later attempt of the same run and replaces the
+    /// line (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md §6.3). For the job that appends to the ledger itself
+    /// under a retry extension: the retry is a new process with the same CI run id, <see cref="Append"/>
+    /// calls its line a <see cref="HistoryAppendOutcome.Duplicate"/>, and the ledger keeps attempt 1's
+    /// failure for a job that went green.
+    ///
+    /// <para>The one rewrite a test run performs, and a narrow one: only the run's OWN line changes, in
+    /// place, under the writer's lock, and every other line keeps its bytes and its order - so the file is
+    /// still append-only to everybody but the run amending itself. A line whose <c>at</c> is not earlier
+    /// than the run's is the same attempt written twice, and stays a duplicate.</para>
+    /// </summary>
+    public static HistoryAppendResult Amend(string path, HistoryRoster roster, HistoryRun run, string generator, HistoryLockBudget? budget = null, HistoryShapes? shapes = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(roster);
+        ArgumentNullException.ThrowIfNull(run);
+        budget ??= HistoryLockBudget.Default;
+        if (!File.Exists(path))
+            return Append(path, roster, run, generator, budget, shapes);
+
+        var attempts = 0;
+        try
+        {
+            return HistoryLock.Retry(budget, () =>
+            {
+                attempts++;
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                var text = ReadAll(stream);
+                var lines = text.Split('\n');
+                var at = -1;
+                for (var i = 0; i < lines.Length && at < 0; i++)
+                {
+                    var line = lines[i].TrimEnd('\r');
+                    if (line.Length == 0) continue;
+                    var (kind, id, suite, suiteIsNull) = HistoryJson.Peek(line);
+                    if (kind == HistoryLineKind.Run && string.Equals(id, run.Id, StringComparison.Ordinal) && SameSuite(suite, suiteIsNull, run.Suite))
+                        at = i;
+                }
+
+                if (at < 0)
+                    return AppendLocked(stream, path, roster, run, generator, attempts, shapes);
+
+                var ledger = HistoryLedgerReader.Parse(text, window: 0).Ledger;
+                var existing = ledger?.Runs(run.Suite).LastOrDefault(r => string.Equals(r.Id, run.Id, StringComparison.Ordinal));
+                if (ledger is null || existing is null || ledger.Roster(existing.RosterHash) is not { } existingRoster || existing.At >= run.At)
+                    return new HistoryAppendResult(HistoryAppendOutcome.Duplicate, $"run {run.Id} of suite {run.Suite ?? "(null)"} is already in the ledger", attempts);
+
+                var combined = HistoryFold.Attempts([
+                    new HistoryFragment(HistoryFormat.Version, existingRoster, existing, existing.ShapesHash is { } hash ? ledger.Shapes(hash) : null),
+                    new HistoryFragment(HistoryFormat.Version, roster, run, shapes)
+                ]);
+                // The earlier attempt judged whether the run was partial against the ledger; the retry is a
+                // handful of scenarios and would be "partial" by any measure. The run is what attempt 1 was.
+                var amended = combined.Run with { Partial = existing.Partial };
+
+                var builder = new StringBuilder();
+                for (var i = 0; i < lines.Length; i++)
+                {
+                    if (i == at)
+                    {
+                        // The roster and the calls the new line references go in front of it, when the file
+                        // does not have them yet: a reader meets a run's roster before the run.
+                        if (ledger.Roster(combined.Roster.Hash) is null)
+                            builder.Append(HistoryJson.RosterLine(combined.Roster)).Append('\n');
+                        if (combined.Shapes is { } combinedShapes && ledger.Shapes(combinedShapes.Hash) is null)
+                            builder.Append(HistoryJson.ShapesLine(combinedShapes)).Append('\n');
+                        builder.Append(HistoryJson.RunLine(combined.Shapes is null ? amended with { ShapesHash = null, CallSets = null } : amended)).Append('\n');
+                        continue;
+                    }
+
+                    if (i == lines.Length - 1 && lines[i].Length == 0) continue;
+                    builder.Append(lines[i].TrimEnd('\r')).Append('\n');
+                }
+
+                stream.SetLength(0);
+                Write(stream, builder.ToString());
+                return new HistoryAppendResult(HistoryAppendOutcome.Amended, $"run {run.Id} was already in the ledger from an earlier attempt; this attempt was overlaid on its line", attempts);
+            });
+        }
+        catch (HistoryLockTimeoutException exception)
+        {
+            return new HistoryAppendResult(HistoryAppendOutcome.LockTimeout,
+                $"the ledger at {path} stayed locked by another writer for {exception.Attempts} attempts; the run's fragment is kept and the next run folds it",
+                exception.Attempts);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return new HistoryAppendResult(HistoryAppendOutcome.Failed, $"could not amend the ledger at {path}: {exception.Message}", attempts);
         }
     }
 
@@ -180,7 +279,8 @@ public static class HistoryLedgerWriter
 
     /// <summary>
     /// Rewrites the ledger without the runs outside <paramref name="window"/> per suite, and without the
-    /// rosters those runs alone referenced. The one rewrite the design allows, and an explicit one: it is
+    /// rosters those runs alone referenced. With <see cref="Compact"/>, the one wholesale rewrite the design
+    /// allows (<see cref="Amend"/> replaces a single line, the amending run's own), and an explicit one: it is
     /// what keeps the scan cheap (§2.6), and it makes the repository <i>larger</i>, not smaller, because
     /// dropping the oldest line breaks git's delta chains (§5.10) — so it is a read-cost control, never a
     /// storage one.
@@ -192,7 +292,7 @@ public static class HistoryLedgerWriter
     /// Rewrites the ledger to the current format version, folds every roster and drops the error text of
     /// runs outside <paramref name="window"/>. Explicit only: nothing migrates during a test run, because a
     /// silent rewrite would destroy the append-only shape git deltas cheaply and <c>merge=union</c> relies
-    /// on (§3.5).
+    /// on (§3.5). The one thing a test run does change is its own line, on a retry: <see cref="Amend"/>.
     /// </summary>
     public static HistoryRewriteResult Compact(string path, int window, string generator, HistoryLockBudget? budget = null) =>
         Rewrite(path, window, generator, dropOldErrorText: true, budget);
@@ -301,6 +401,114 @@ public static class HistoryFold
         }
 
         return groups.Select(g => FoldGroup(g.Shards)).ToArray();
+    }
+
+    /// <summary>
+    /// The attempts of one run as one fragment (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md F13/F15): a runner's
+    /// retry extension, or a second step of one CI job, runs again in a new process under the SAME run id
+    /// and in the SAME reports directory. Those are not shards - shards hold different scenarios - and
+    /// folding them as shards gives the retried scenario a second slot: a phantom scenario that reads as
+    /// new in this run and absent in the next. Here a scenario run again keeps its one position, takes the
+    /// later attempt's result, and counts the attempts, which is what <c>attempts</c> has meant since v1
+    /// and what the analyzer already reads as "passed on retry". A scenario only one attempt ran is kept
+    /// as it is.
+    /// </summary>
+    /// <param name="oldestFirst">The attempts, oldest first - by the run's <c>at</c>, never by path.</param>
+    public static HistoryFragment Attempts(IReadOnlyList<HistoryFragment> oldestFirst)
+    {
+        ArgumentNullException.ThrowIfNull(oldestFirst);
+        if (oldestFirst.Count == 0) throw new ArgumentException("at least one attempt is needed", nameof(oldestFirst));
+        if (oldestFirst.Count == 1) return oldestFirst[0];
+
+        var positions = new Dictionary<(string Id, int Slot), int>();
+        var entries = new List<HistoryRosterEntry>();
+        var cells = new List<(char Result, int? Attempt, int? Duration, int? Calls, string? ShapeSet, string? ShapeOrdered, IReadOnlyList<string>? CallLines, string? Error)>();
+        var deps = new SortedSet<string>(StringComparer.Ordinal);
+        var anyDeps = false;
+
+        foreach (var attempt in oldestFirst)
+        {
+            var roster = attempt.Roster;
+            var run = attempt.Run;
+            var i = 0;
+            foreach (var entry in roster.Entries())
+            {
+                var lines = run.CallSetAt(i) is { } set && attempt.Shapes is { } shapes
+                    ? set.Select(shapes.At).Where(line => line is not null).Select(line => line!).ToArray()
+                    : null;
+                var cell = (run.ResultAt(i), run.AttemptAt(i), run.DurationAt(i), run.CallsAt(i), run.ShapeSetAt(i), run.ShapeOrderedAt(i), (IReadOnlyList<string>?)lines, run.ErrorAt(i));
+                if (positions.TryGetValue((roster.Ids[i], roster.Slots[i]), out var at))
+                {
+                    // Run again: the later attempt is the verdict, the count says it took more than one, and
+                    // a pass on retry keeps the failure it recovered from - the evidence is the point.
+                    var earlier = cells[at];
+                    cells[at] = cell with
+                    {
+                        Item2 = (earlier.Attempt ?? 1) + (cell.Item2 ?? 1),
+                        Item8 = cell.Item8 ?? earlier.Error
+                    };
+                }
+                else
+                {
+                    positions[(roster.Ids[i], roster.Slots[i])] = entries.Count;
+                    entries.Add(entry);
+                    cells.Add(cell);
+                }
+                i++;
+            }
+            if (run.Deps is { } attemptDeps)
+            {
+                anyDeps = true;
+                foreach (var dep in attemptDeps) deps.Add(dep);
+            }
+        }
+
+        var first = oldestFirst[0].Run;
+        var last = oldestFirst[^1].Run;
+        var combined = HistoryRoster.Create(first.Suite, entries);
+        var anyCallSets = cells.Any(c => c.CallLines is not null);
+        var combinedShapes = anyCallSets ? HistoryShapes.Create(cells.SelectMany(c => c.CallLines ?? [])) : null;
+        var index = combinedShapes?.Calls.Select((line, n) => (line, n)).ToDictionary(p => p.line, p => p.n, StringComparer.Ordinal);
+        var errorKeys = new Dictionary<string, string>(StringComparer.Ordinal);
+        var errorText = new Dictionary<string, string>(StringComparer.Ordinal);
+        string? KeyOf(string? text)
+        {
+            if (text is null) return null;
+            if (!errorKeys.TryGetValue(text, out var key))
+            {
+                key = "e" + (errorKeys.Count + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                errorKeys[text] = key;
+                errorText[key] = text;
+            }
+            return key;
+        }
+
+        var line = new HistoryRun
+        {
+            Id = first.Id,
+            Suite = first.Suite,
+            Partial = first.Partial,
+            At = oldestFirst.Max(a => a.Run.At),
+            Branch = first.Branch,
+            Commit = first.Commit,
+            Provider = first.Provider,
+            Url = first.Url ?? last.Url,
+            Shards = Math.Max(1, first.Shards),
+            RosterHash = combined.Hash,
+            Results = new string(cells.Select(c => c.Result).ToArray()),
+            Attempts = new string(cells.Select(c => HistoryFormat.AttemptChar(c.Attempt)).ToArray()),
+            Durations = oldestFirst.Any(a => a.Run.Durations is not null) ? cells.Select(c => c.Duration).ToArray() : null,
+            Calls = oldestFirst.Any(a => a.Run.Calls is not null) ? cells.Select(c => c.Calls ?? 0).ToArray() : null,
+            ShapeSet = oldestFirst.Any(a => a.Run.ShapeSet is not null) ? cells.Select(c => c.ShapeSet ?? "").ToArray() : null,
+            ShapeOrdered = oldestFirst.Any(a => a.Run.ShapeSet is not null) ? cells.Select(c => c.ShapeOrdered ?? "").ToArray() : null,
+            ShapeVersion = oldestFirst.Select(a => a.Run.ShapeVersion).FirstOrDefault(v => v is not null),
+            ShapesHash = combinedShapes?.Hash,
+            CallSets = index is null ? null : cells.Select(c => (IReadOnlyList<int>)(c.CallLines ?? []).Select(l => index[l]).OrderBy(n => n).ToArray()).ToArray(),
+            Errors = oldestFirst.Any(a => a.Run.Errors is not null) ? cells.Select(c => KeyOf(c.Error)).ToArray() : null,
+            ErrorText = errorText,
+            Deps = anyDeps ? deps.ToArray() : null
+        };
+        return new HistoryFragment(oldestFirst.Max(a => a.Version), combined, line, combinedShapes);
     }
 
     private static HistoryFoldedRun FoldGroup(List<HistoryFragment> shards)

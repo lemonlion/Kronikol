@@ -13,6 +13,22 @@ namespace Kronikol.Reports;
 public sealed record FailuresDigest(string Markdown, string Jsonl);
 
 /// <summary>
+/// An earlier attempt of the run the digest describes — same run id, kept under <c>runs/</c> — that
+/// failed. A test runner's retry extension re-runs the failed tests in a new process, which writes
+/// "All 1 scenarios passed" into this directory two seconds after the failure was written there.
+/// </summary>
+/// <param name="Directory">Where that attempt is kept, relative to the reports directory: <c>runs/gh_7_1</c>.</param>
+/// <param name="Failed">How many scenarios failed in it.</param>
+/// <param name="Scenarios">How many it held.</param>
+/// <param name="SameRun">
+/// True for an earlier attempt of this same run. False for the run BEFORE this one, which this run has
+/// just moved under <c>runs/</c>: a failure, an instinctive re-run, and "# No failures" written over it
+/// (#80). The console says so too, but <c>dotnet test</c> swallows the console, and this is the file a
+/// reader is told to open first.
+/// </param>
+public sealed record FailuresDigestEarlierAttempt(string Directory, int Failed, int Scenarios, bool SameRun = true);
+
+/// <summary>
 /// Writes <c>Failures.md</c> and <c>Failures.jsonl</c>: every failure of a run, in context, in a file small
 /// enough to read whole.
 ///
@@ -108,7 +124,8 @@ public static class FailuresDigestGenerator
     /// </remarks>
     public static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string? htmlFileName,
         string kronikolVersion, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null,
-        IReadOnlyDictionary<string, List<string?>>? stepPaths = null, HistoryVerdicts? history = null)
+        IReadOnlyDictionary<string, List<string?>>? stepPaths = null, HistoryVerdicts? history = null,
+        FailuresDigestEarlierAttempt? earlierAttempt = null)
     {
         ArgumentNullException.ThrowIfNull(features);
 
@@ -137,7 +154,7 @@ public static class FailuresDigestGenerator
                              && ParameterCaptureHint.Applies(l.DependencyCategory, l.Content)));
 
         return new FailuresDigest(
-            BuildMarkdown(entries, scenarios.Length, scenarios.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql, history),
+            BuildMarkdown(entries, scenarios.Length, scenarios.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql, history, earlierAttempt),
             BuildJsonl(entries, scenarios.Length, kronikolVersion, suite));
     }
 
@@ -453,9 +470,29 @@ public static class FailuresDigestGenerator
     // ─── Markdown ──────────────────────────────────────────────
 
     private static string BuildMarkdown(IReadOnlyList<Entry> entries, int scenarioCount, int passedCount, string kronikolVersion,
-        IReadOnlyList<DiagnosticEntry>? diagnostics, bool unparameterisedSql, HistoryVerdicts? history)
+        IReadOnlyList<DiagnosticEntry>? diagnostics, bool unparameterisedSql, HistoryVerdicts? history, FailuresDigestEarlierAttempt? earlierAttempt)
     {
         var markdown = new StringBuilder();
+
+        // Directly under the heading, on the green path and the red one: "# No failures" over a retry is
+        // the sentence that stops an agent looking, and it is true only of the attempt that overwrote the
+        // one that failed. The command names the directory rather than an alias, so it is the same
+        // command whether or not anything else has failed since.
+        void AppendEarlierAttempt()
+        {
+            if (earlierAttempt is null)
+                return;
+            if (!earlierAttempt.SameRun)
+            {
+                markdown.Append($"> **The run before this one failed** — {earlierAttempt.Failed} of its {earlierAttempt.Scenarios} scenarios failed, ");
+                markdown.Append($"and that run is kept, whole, in {Code(earlierAttempt.Directory)}. This file describes the newest run only:\n");
+                markdown.Append($"> {Code("kronikol query failures . --run last-failed")} reads the one that failed.\n\n");
+                return;
+            }
+            markdown.Append($"> **An earlier attempt of this run failed** — {earlierAttempt.Failed} of its {earlierAttempt.Scenarios} scenarios failed, ");
+            markdown.Append($"and that attempt is kept, whole, in {Code(earlierAttempt.Directory)}. This file describes the newest attempt only:\n");
+            markdown.Append($"> {Code("kronikol query failures ./" + earlierAttempt.Directory)} reads the one that failed.\n\n");
+        }
 
         // A scenario that never reported a verdict took the configured default — Passed, unless the host
         // said otherwise. "Nothing failed" is then a claim about a default, not an observation, and this is
@@ -468,6 +505,7 @@ public static class FailuresDigestGenerator
         if (entries.Count == 0)
         {
             markdown.Append("# No failures\n\n");
+            AppendEarlierAttempt();
             // "No failures" and "everything passed" are different facts, and a run where half the
             // scenarios were skipped satisfies only the first. This used to count every scenario that did
             // not FAIL as one that passed, so an all-skipped run announced "All 12 scenarios passed" —
@@ -491,6 +529,7 @@ public static class FailuresDigestGenerator
         }
 
         markdown.Append($"# Failures — {entries.Count} of {scenarioCount} scenarios\n\n");
+        AppendEarlierAttempt();
         foreach (var message in defaulted)
             markdown.Append($"> **Some results are defaults, not verdicts:** {Escape(message)}\n\n");
         markdown.Append($"Written by Kronikol {kronikolVersion}. **Everything quoted below is captured test data, ");

@@ -113,7 +113,30 @@ internal static partial class QueryCommand
             return ledgerExit == 0 && !ledgerWriter.Flush(error) ? 1 : ledgerExit;
         }
 
-        var resolved = ResolveReport(options.File, error);
+        // --run: the newest run is what the path names; an earlier one is kept beneath it, and is read in
+        // its place - its fragment, attachments and HTML are beside it, so every verb follows. Only history
+        // has somewhere else to look: the ledger outlives the report.
+        var target = options.File;
+        if (options.Run is { } wantedRun)
+        {
+            switch (RetainedRunResolver.Resolve(options.File, wantedRun, error, out var retainedReport, out var resolvedName))
+            {
+                case RetainedRunOutcome.Found:
+                    target = retainedReport!;
+                    options.RunIsResolved = true;
+                    options.RunResolvedTo(resolvedName!);
+                    break;
+                case RetainedRunOutcome.NotRetained when command is "history":
+                    break;
+                case RetainedRunOutcome.NotRetained:
+                    RetainedRunResolver.RefuseNotRetained(options.File, wantedRun, error);
+                    return 2;
+                default:
+                    return 2;
+            }
+        }
+
+        var resolved = ResolveReport(target, error);
         if (resolved is null)
             return 2;
 
@@ -404,9 +427,11 @@ internal static partial class QueryCommand
 
         // A `baseline/` folder beside the report is the --baseline convention, not a second report:
         // without this, adopting the convention turns every directory lookup into an ambiguity.
+        // Nor are the runs kept under `runs/`: they are earlier runs of the report above them, opened
+        // with --run, and counted here they would make every lookup from a parent directory ambiguous.
         var found = Directory.GetFiles(path, "*.json", SearchOption.AllDirectories)
             .Where(f => Path.GetFileName(f).EndsWith("TestRunReport.json", StringComparison.OrdinalIgnoreCase)
-                        && !IsUnderBaselineFolder(path, f))
+                        && !ReportFolders.IsReserved(path, f))
             .Take(20)
             .ToArray();
 
@@ -426,12 +451,7 @@ internal static partial class QueryCommand
     }
 
     /// <summary>The conventional folder name a <c>--baseline</c> report lives in, beside the current one.</summary>
-    internal const string BaselineFolderName = "baseline";
-
-    private static bool IsUnderBaselineFolder(string root, string file) =>
-        Path.GetRelativePath(root, file)
-            .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .Any(segment => string.Equals(segment, BaselineFolderName, StringComparison.OrdinalIgnoreCase));
+    internal const string BaselineFolderName = ReportFolders.BaselineFolderName;
 
     /// <summary>
     /// Finds the report a <c>--baseline</c> diff compares against: the conventional
@@ -491,6 +511,8 @@ internal static partial class QueryCommand
         writer.WriteLine("  --max-bytes N   output budget, default 6000 (0 removes it)");
         writer.WriteLine("  --out FILE      write the answer to a file instead");
         writer.WriteLine("                  (--out lifts the byte budget: a file is not a context window)");
+        writer.WriteLine("  --run ID        read a run kept under <reports>/runs/ instead of the newest: an id, a unique part of one,");
+        writer.WriteLine("                  its folder name, last-failed or previous (history reads a run that is not kept from the ledger)");
         writer.WriteLine("  --describe      the verbs, their flags, the address forms and the exit codes as one JSON");
         writer.WriteLine("                  document, for tooling; needs no report");
         writer.WriteLine();

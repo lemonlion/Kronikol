@@ -97,6 +97,71 @@ public class HistoryCommandTests : IDisposable
         _ = (shard1, shard2);
     }
 
+    // ── Attempts (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md F13/F15) ──
+    // A retry extension re-runs the failed tests in a new process, in the same reports directory, under
+    // the same CI run id. Once earlier attempts are kept under runs/, record finds both fragments: they
+    // are attempts of each other, not shards, and the retried scenario must not become two.
+
+    [Fact]
+    public void Record_reads_a_retained_attempt_of_the_same_run_as_an_attempt_not_as_a_shard()
+    {
+        var full = Roster("Suite", "id1", "id2", "id3");
+        var retried = Roster("Suite", "id2");
+        // The reports directory: the retry's fragment on top, the first attempt retained beneath it.
+        WriteFragment("Reports", retried, RunLine(retried, "gh:7:1", "P") with { At = new DateTimeOffset(2026, 9, 12, 10, 0, 30, TimeSpan.Zero) });
+        WriteFragment(Path.Combine("Reports", "runs", "gh_7_1"), full, RunLine(full, "gh:7:1", "PFP"));
+
+        var (output, error, exit) = Run(null, "record", Path.Combine(_dir, "Reports"), "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("1 run(s) recorded", output);
+        Assert.Contains("2 attempts", output);
+        var ledger = HistoryLedgerReader.Read(Ledger, 50).Ledger!;
+        var run = Assert.Single(ledger.Runs("Suite"));
+        Assert.Equal("PPP", run.Results);
+        Assert.Equal("-2-", run.Attempts);
+        Assert.Equal(1, run.Shards);
+        Assert.Equal([0, 0, 0], ledger.Roster(run.RosterHash)!.Slots);
+        Assert.Equal("boom", run.ErrorAt(1));
+    }
+
+    [Fact]
+    public void Record_leaves_a_retained_run_of_another_id_alone()
+    {
+        var roster = Roster("Suite", "id1", "id2");
+        WriteFragment("Reports", roster, RunLine(roster, "gh:8:1", "PP"));
+        WriteFragment(Path.Combine("Reports", "runs", "gh_7_1"), roster, RunLine(roster, "gh:7:1", "PF"));
+
+        var (output, error, exit) = Run(null, "record", Path.Combine(_dir, "Reports"), "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        var ledger = HistoryLedgerReader.Read(Ledger, 50).Ledger!;
+        var run = Assert.Single(ledger.Runs("Suite"));
+        Assert.Equal("gh:8:1", run.Id);
+    }
+
+    [Fact]
+    public void Record_still_folds_shards_that_each_kept_an_attempt()
+    {
+        // Two shards of one run, in two directories; the second shard's failing scenario was retried.
+        var shardOne = Roster("Suite", "id1", "id2");
+        var shardTwo = Roster("Suite", "id3", "id4");
+        var retried = Roster("Suite", "id4");
+        WriteFragment(Path.Combine("a", "Reports"), shardOne, RunLine(shardOne, "gh:7:1", "PP"));
+        WriteFragment(Path.Combine("b", "Reports"), retried, RunLine(retried, "gh:7:1", "P") with { At = new DateTimeOffset(2026, 9, 12, 10, 0, 30, TimeSpan.Zero) });
+        WriteFragment(Path.Combine("b", "Reports", "runs", "gh_7_1"), shardTwo, RunLine(shardTwo, "gh:7:1", "PF"));
+
+        var (output, error, exit) = Run(null, "record", _dir, "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        var ledger = HistoryLedgerReader.Read(Ledger, 50).Ledger!;
+        var run = Assert.Single(ledger.Runs("Suite"));
+        Assert.Equal(2, run.Shards);
+        Assert.Equal("PPPP", run.Results);
+        Assert.Equal("---2", run.Attempts);
+        Assert.Equal([0, 0, 0, 0], ledger.Roster(run.RosterHash)!.Slots);
+    }
+
     [Fact]
     public void Record_is_idempotent_and_says_which_runs_were_already_there()
     {

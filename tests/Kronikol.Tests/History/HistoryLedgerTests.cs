@@ -504,6 +504,132 @@ public class HistoryLedgerTests : IDisposable
         Assert.Equal([0, 1], roster.Slots);
     }
 
+    // ── Attempts (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md F13/F15): a retry is not a shard ──
+
+    [Fact]
+    public void Attempts_of_one_run_keep_one_position_per_scenario_and_count_the_retry()
+    {
+        var full = Roster("Suite", "a", "b", "c");
+        var retried = Roster("Suite", "b");
+        var first = new HistoryFragment(1, full, Run(full, "gh:777:1", "PFP", partial: null));
+        var second = new HistoryFragment(1, retried, Run(retried, "gh:777:1", "P", partial: null, at: new DateTimeOffset(2026, 9, 12, 10, 4, 40, TimeSpan.Zero)));
+
+        var combined = HistoryFold.Attempts([first, second]);
+
+        Assert.Equal(["a", "b", "c"], combined.Roster.Ids);
+        Assert.Equal([0, 0, 0], combined.Roster.Slots);
+        Assert.Equal("PPP", combined.Run.Results);
+        Assert.Equal("-2-", combined.Run.Attempts);
+        Assert.Equal("Expected 200 but got 500", combined.Run.ErrorAt(1));
+        Assert.Equal(second.Run.At, combined.Run.At);
+        Assert.Null(combined.Run.Partial);
+        Assert.Equal(1, combined.Run.Shards);
+        Assert.Equal(combined.Roster.Hash, combined.Run.RosterHash);
+    }
+
+    [Fact]
+    public void A_retry_that_fails_again_is_a_failure_on_its_second_attempt()
+    {
+        var full = Roster("Suite", "a", "b");
+        var retried = Roster("Suite", "b");
+        var combined = HistoryFold.Attempts([
+            new HistoryFragment(1, full, Run(full, "gh:1:1", "PF", partial: null)),
+            new HistoryFragment(1, retried, Run(retried, "gh:1:1", "F", partial: null))
+        ]);
+
+        Assert.Equal("PF", combined.Run.Results);
+        Assert.Equal("-2", combined.Run.Attempts);
+    }
+
+    [Fact]
+    public void A_second_step_that_ran_other_scenarios_adds_them_without_touching_the_first()
+    {
+        var stepOne = Roster("Suite", "a", "b");
+        var stepTwo = Roster("Suite", "c");
+        var combined = HistoryFold.Attempts([
+            new HistoryFragment(1, stepOne, Run(stepOne, "gh:1:1", "PF", partial: null)),
+            new HistoryFragment(1, stepTwo, Run(stepTwo, "gh:1:1", "P", partial: null))
+        ]);
+
+        Assert.Equal(["a", "b", "c"], combined.Roster.Ids);
+        Assert.Equal("PFP", combined.Run.Results);
+        Assert.Equal("---", combined.Run.Attempts);
+    }
+
+    // The direct-append case: a job that appends to the ledger itself meets its own earlier attempt there.
+
+    [Fact]
+    public void Amend_overlays_a_later_attempt_on_the_run_s_own_line_and_leaves_every_other_line_alone()
+    {
+        var full = Roster("Suite", "a", "b", "c");
+        var other = Roster("Other", "x");
+        HistoryLedgerWriter.Append(LedgerPath, full, Run(full, "gh:1:1", "PPP"), "3.9.0");
+        HistoryLedgerWriter.Append(LedgerPath, full, Run(full, "gh:7:1", "PFP"), "3.9.0");
+        HistoryLedgerWriter.Append(LedgerPath, other, Run(other, "gh:7:1", "P"), "3.9.0");
+        var before = File.ReadAllLines(LedgerPath);
+        var retried = Roster("Suite", "b");
+        var later = new DateTimeOffset(2026, 9, 12, 10, 4, 40, TimeSpan.Zero);
+
+        var result = HistoryLedgerWriter.Amend(LedgerPath, retried, Run(retried, "gh:7:1", "P", at: later, partial: null), "3.9.0");
+
+        Assert.Equal(HistoryAppendOutcome.Amended, result.Outcome);
+        var ledger = HistoryLedgerReader.Read(LedgerPath, 0).Ledger!;
+        var line = Assert.Single(ledger.Runs("Suite"), r => r.Id == "gh:7:1");
+        Assert.Equal("PPP", line.Results);
+        Assert.Equal("-2-", line.Attempts);
+        Assert.Equal("Expected 200 but got 500", line.ErrorAt(1));
+        Assert.Equal(later, line.At);
+        Assert.False(line.Partial);
+        Assert.Equal(["a", "b", "c"], ledger.Roster(line.RosterHash)!.Ids);
+        Assert.Equal(2, ledger.Runs("Suite").Count);
+        // Everybody else's bytes, in everybody else's order.
+        var after = File.ReadAllLines(LedgerPath);
+        Assert.Equal(before.Length, after.Length);
+        for (var i = 0; i < before.Length; i++)
+            if (!before[i].Contains("\"id\":\"gh:7:1\"", StringComparison.Ordinal) || before[i].Contains("\"Other\"", StringComparison.Ordinal))
+                Assert.Equal(before[i], after[i]);
+        Assert.Empty(HistoryLedgerReader.Verify(LedgerPath));
+    }
+
+    [Fact]
+    public void Amend_appends_a_run_the_ledger_does_not_hold_and_refuses_the_same_attempt_twice()
+    {
+        var roster = Roster("Suite", "a", "b");
+        HistoryLedgerWriter.Append(LedgerPath, roster, Run(roster, "gh:1:1", "PP"), "3.9.0");
+
+        var appended = HistoryLedgerWriter.Amend(LedgerPath, roster, Run(roster, "gh:2:1", "PF"), "3.9.0");
+        var again = HistoryLedgerWriter.Amend(LedgerPath, roster, Run(roster, "gh:2:1", "PF"), "3.9.0");
+
+        Assert.Equal(HistoryAppendOutcome.Appended, appended.Outcome);
+        // The same `at`: the same attempt written a second time (LightBDD's formatter and the adapter both
+        // reach the generator), not a retry. Overlaying it would count every scenario as retried.
+        Assert.Equal(HistoryAppendOutcome.Duplicate, again.Outcome);
+        Assert.Equal("--", HistoryLedgerReader.Read(LedgerPath, 0).Ledger!.Runs("Suite")[^1].Attempts);
+    }
+
+    [Fact]
+    public void A_retried_run_reads_as_passed_on_retry_and_leaves_no_phantom_scenario_behind()
+    {
+        var full = Roster("Suite", "a", "b", "c");
+        var retried = Roster("Suite", "b");
+        var text = HistoryJson.HeaderLine("test") + "\n" + HistoryJson.RosterLine(full) + "\n";
+        for (var n = 1; n <= 6; n++)
+            text += HistoryJson.RunLine(Run(full, $"gh:{n}:1", "PPP")) + "\n";
+        var combined = HistoryFold.Attempts([
+            new HistoryFragment(1, full, Run(full, "gh:7:1", "PFP", partial: null)),
+            new HistoryFragment(1, retried, Run(retried, "gh:7:1", "P", partial: null))
+        ]);
+        var ledger = HistoryLedgerReader.Parse(text, 0).Ledger!;
+
+        var verdicts = HistoryAnalyzer.Analyse(ledger, combined.Roster, combined.Run with { Partial = false }, new HistoryAnalysisOptions());
+
+        var b = verdicts.Find("b")!;
+        Assert.Equal(HistoryVerdictKind.Flaky, b.Primary);
+        Assert.Contains("passed on retry 2 in this run", b.Evidence);
+        Assert.DoesNotContain(verdicts.Scenarios, s => s.Has(HistoryVerdictKind.New));
+        Assert.Equal(3, verdicts.Scenarios.Count);
+    }
+
     [Fact]
     public void Fragments_of_different_runs_or_suites_stay_separate()
     {

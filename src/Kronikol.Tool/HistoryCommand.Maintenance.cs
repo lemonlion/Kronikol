@@ -319,9 +319,19 @@ internal static partial class HistoryCommand
         var env = getEnv(HistoryFormat.EnvironmentVariable);
         @out.WriteLine($"env      {HistoryFormat.EnvironmentVariable}={(string.IsNullOrEmpty(env) ? "(unset)" : env)}");
 
-        var ledgerPath = Locate(args.Ledger, null, getEnv, error, mustExist: false);
+        // Asked about a reports directory, the kept runs are answered for whatever the ledger's state:
+        // they do not depend on it, and KeepRuns works with history switched off.
+        var askedAboutReports = args.Inputs.Any(Directory.Exists);
+        var ledgerPath = Locate(args.Ledger, null, getEnv, askedAboutReports ? TextWriter.Null : error, mustExist: false);
         if (ledgerPath is null)
-            return 2;
+        {
+            if (!askedAboutReports)
+                return 2;
+            @out.WriteLine("         no ledger to check: history is switched off here, or nothing names one");
+            ReportsDirectories();
+            @out.WriteLine(problems == 0 ? "doctor: healthy" : $"doctor: {problems} problem(s)");
+            return problems == 0 ? 0 : 1;
+        }
         if (!File.Exists(ledgerPath))
         {
             Line(false, $"ledger {ledgerPath} does not exist yet - run kronikol history init, or record a run");
@@ -389,8 +399,26 @@ internal static partial class HistoryCommand
             Line(false, $"alias file {aliasPath} could not be read: {exception.Message}");
         }
 
+        // A reports directory, when one is named: the runs it keeps, and what a killed rotation left. The
+        // rotation resumes on the next run (a staging folder holding Run.json is complete and is published;
+        // one matching the newest run is carried on with), so what is named here is what neither rule
+        // explains - and nothing prunes it or offers it to --run until a person has looked.
+        ReportsDirectories();
+
         @out.WriteLine(problems == 0 ? "doctor: healthy" : $"doctor: {problems} problem(s)");
         return problems == 0 ? 0 : 1;
+
+        void ReportsDirectories()
+        {
+            foreach (var reports in args.Inputs.Where(Directory.Exists))
+            {
+                var retained = Kronikol.Reports.ReportFolders.RetainedRuns(reports);
+                var unfinished = Kronikol.Reports.ReportFolders.Unfinished(reports);
+                Line(unfinished.Count == 0, $"{reports}: {retained.Count} run{(retained.Count == 1 ? "" : "s")} retained"
+                    + (retained.FirstOrDefault(r => r.Manifest.Failed > 0) is { } failed ? $", the newest failing one {Path.GetFileName(failed.Directory)} ({failed.Manifest.Failed} failed)" : "")
+                    + (unfinished.Count == 0 ? "" : $"; {unfinished.Count} left by an interrupted rotation, never pruned and never offered to --run: {string.Join(", ", unfinished.Select(Path.GetFileName))} - the next run resumes what it can, delete the rest"));
+            }
+        }
     }
 
     // ─── import ────────────────────────────────────────────────

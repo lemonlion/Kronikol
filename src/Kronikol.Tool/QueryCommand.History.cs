@@ -50,7 +50,7 @@ internal static partial class QueryCommand
 
         // --run with a report: the report names the ledger and the suite, the flag names the run. Its own
         // run is the ordinary reading; any other is read from the ledger, which is all that is left of it.
-        if (options.Run is { } wanted && !ReportHistory.Names(run, wanted))
+        if (options.Run is { } wanted && !options.RunIsResolved && !ReportHistory.Names(run, wanted))
         {
             if (ReportHistory.ResolveRun(ledger, run.Suite, options.Branch, wanted, error) is not { } other)
                 return 2;
@@ -227,7 +227,7 @@ internal static partial class QueryCommand
     {
         var verdicts = reading.Verdicts;
         var ledgerOnly = reading.Source == HistoryReading.FromLedger;
-        var ledgerOnlyLine = "ledger only — no report read; steps, calls and payloads need one";
+        var ledgerOnlyLine = $"ledger only — no report read; steps, calls and payloads need one (kronikol query failures <reports-dir> --run {verdicts.RunId}, when the run is retained)";
 
         // ── One scenario ───────────────────────────────────
         if (one is not null)
@@ -428,7 +428,7 @@ internal static partial class QueryCommand
         // The ledger keeps the first line of a message, up to 199 characters: text that ends in ITS
         // ellipsis is not cut by this view, and the rest is not in the ledger at all.
         if (firstLineOnly)
-            writer.Line("       … first line only — the whole message is in that run's Failures.md");
+            writer.Line("       … first line only — the whole message is in that run's Failures.md (kronikol query failures <reports-dir> --run <id> opens it while the run is retained)");
     }
 }
 

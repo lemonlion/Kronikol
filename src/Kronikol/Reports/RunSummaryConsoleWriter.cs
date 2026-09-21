@@ -38,7 +38,20 @@ public sealed record RunSummary(
     IReadOnlyList<RunSummaryFailure> Failures,
     bool AgentInstructionsWritten,
     string? QueryTarget = null,
-    string? History = null);
+    string? History = null)
+{
+    /// <summary>
+    /// The run that was on top before this one, when it had failures and was moved to
+    /// <c>runs/&lt;run&gt;/</c> rather than overwritten; null otherwise. A property rather than one more
+    /// positional parameter, so the constructor every caller already compiles against does not change.
+    /// </summary>
+    public RunSummaryPreviousRun? PreviousRun { get; init; }
+}
+
+/// <summary>The previous run, kept: where it went and how many of its scenarios had failed.</summary>
+/// <param name="Directory">The retained run's directory, as a full path.</param>
+/// <param name="Failed">How many scenarios failed in it.</param>
+public sealed record RunSummaryPreviousRun(string Directory, int Failed);
 
 /// <summary>
 /// The last thing a run says: where the reports are, how big the data file is, what failed, and the one
@@ -134,6 +147,12 @@ public static class RunSummaryConsoleWriter
         // wants "1 broke, 2 flaky" before the list of names.
         if (summary.History is { Length: > 0 } history)
             text.Append("  ").Append(OneLine(history)).Append('\n');
+
+        // "Nothing warned me" (#80): the failing report that was on top a moment ago is no longer the one
+        // `kronikol query failures <dir>` opens, so the run that replaced it says where it went. Paths and
+        // a count, like everything else here — never anything the previous run captured.
+        if (summary.PreviousRun is { } previousRun)
+            text.Append($"  previous run ({previousRun.Failed} failed) kept: {Quote(previousRun.Directory)} — kronikol query failures {QueryTarget(summary)} --run last-failed\n");
 
         if (summary.Failures.Count > 0)
         {
@@ -232,6 +251,11 @@ public static class RunSummaryConsoleWriter
 
         if (summary.History is { Length: > 0 } history)
             markdown.Append(OneLine(history)).Append("\n\n");
+
+        // The console is the channel most runners swallow, and on CI the run this is about is a retry's
+        // first attempt: the job summary is where it has to be said to be read.
+        if (summary.PreviousRun is { } previousRun)
+            markdown.Append($"The previous run ({previousRun.Failed} failed) is kept in `{OneLine(previousRun.Directory)}` — `kronikol query failures {target} --run last-failed`.\n\n");
 
         if (HasDigest(summary))
             markdown.Append($"The artifact also carries `{DigestFileName}` — every failure in context, ready to read.\n\n");

@@ -175,6 +175,48 @@ public class HistoryMaintenanceTests : IDisposable
         Assert.Contains("expired", output);
     }
 
+    [Fact]
+    public void Doctor_names_what_an_interrupted_rotation_left_under_a_reports_directory()
+    {
+        Seed(Roster("Suite", ("aaaabbbbccccdddd", "Pay")), "P");
+        File.WriteAllText(Path.Combine(_dir, ".gitattributes"), HistoryFormat.GitAttributesLine + "\n");
+        var reports = Path.Combine(_dir, "Reports");
+        var kept = Path.Combine(reports, "runs", "gh_1_1");
+        Directory.CreateDirectory(kept);
+        new Kronikol.Reports.RunManifest { Run = "gh:1:1", At = DateTimeOffset.UnixEpoch, Suite = "Suite", Scenarios = 3, Failed = 1 }.Write(kept);
+        Directory.CreateDirectory(Path.Combine(reports, "runs", ".incoming-gh_2_1"));
+        Directory.CreateDirectory(Path.Combine(reports, "runs", "no-manifest"));
+
+        var healthy = Run("doctor", "--history", Ledger, _dir);
+        var (output, _, exit) = Run("doctor", "--history", Ledger, reports);
+
+        Assert.True(healthy.Exit == 0, healthy.Out);
+        Assert.Equal(1, exit);
+        Assert.Contains("1 run retained, the newest failing one gh_1_1 (1 failed)", output);
+        Assert.Contains(".incoming-gh_2_1", output);
+        Assert.Contains("no-manifest", output);
+    }
+
+    [Fact]
+    public void Doctor_still_answers_for_a_reports_directory_when_history_is_switched_off()
+    {
+        // Kept runs have nothing to do with the ledger: KeepRuns works with history off, and a suite that
+        // switched history off was told only that, with its reports directory never looked at (found by
+        // asking it about a real one).
+        var reports = Path.Combine(_dir, "Reports");
+        var kept = Path.Combine(reports, "runs", "local_1");
+        Directory.CreateDirectory(kept);
+        new Kronikol.Reports.RunManifest { Run = "local:1", At = DateTimeOffset.UnixEpoch, Suite = "Suite", Scenarios = 3, Failed = 1 }.Write(kept);
+        var output = new StringWriter();
+        var error = new StringWriter();
+
+        var exit = HistoryCommand.Run(["doctor", reports], output, error, name => name == HistoryFormat.EnvironmentVariable ? HistoryFormat.EnvironmentOff : null);
+
+        Assert.True(exit == 0, output + error.ToString());
+        Assert.Contains("1 run retained, the newest failing one local_1 (1 failed)", output.ToString());
+        Assert.Contains("doctor: healthy", output.ToString());
+    }
+
     // ─── import ────────────────────────────────────────────────
 
     [Fact]

@@ -10,6 +10,7 @@
   <RunConfiguration>
     <EnvironmentVariables>
       <KRONIKOL_HISTORY>off</KRONIKOL_HISTORY>
+      <KRONIKOL_KEEP_RUNS>off</KRONIKOL_KEEP_RUNS>
     </EnvironmentVariables>
   </RunConfiguration>
 </RunSettings>

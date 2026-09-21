@@ -96,6 +96,15 @@ public enum DiagnosticKind
     /// them may read <c>behaviour-changed</c> until the rule is fixed.
     /// </summary>
     HistoryShapeTemplate,
+
+    /// <summary>
+    /// The previous run's files could not be moved to <c>runs/&lt;run&gt;/</c> before this run wrote — a
+    /// report a reader holds open, a read-only file, a <c>runs</c> that is not a directory — or a retained
+    /// run past <see cref="ReportConfigurationOptions.KeepRuns"/> could not be removed. The message names
+    /// the file. The run itself is unaffected: it overwrites the previous run's files exactly as it did
+    /// before retained runs existed, and anything already staged was moved back.
+    /// </summary>
+    ReportRotationFailed,
 }
 
 /// <summary>

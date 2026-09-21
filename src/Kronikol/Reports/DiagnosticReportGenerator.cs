@@ -18,7 +18,11 @@ public static class DiagnosticReportGenerator
         var html = BuildHtml(logs, features, options);
         var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, options.ReportsFolderPath);
         Directory.CreateDirectory(directory);
-        File.WriteAllText(Path.Combine(directory, "DiagnosticReport.html"), html);
+        var path = Path.Combine(directory, "DiagnosticReport.html");
+        File.WriteAllText(path, html);
+        // Resolved here rather than from the run's ambient directory, so the run's manifest is told where
+        // the file actually went (a no-op outside a run, and for a file that landed somewhere else).
+        RunFileCollector.Record(path);
     }
 
     internal static string BuildHtml(

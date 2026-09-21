@@ -25,6 +25,41 @@ public class CiArtifactPublisherTests
     }
 
     [Fact]
+    public void Publish_AzureDevOps_uploads_a_kept_run_under_the_folder_it_has_on_disk()
+    {
+        // A retried job keeps its failing attempt under runs/. Left out of the artifact, the evidence
+        // stays on a runner nobody can reach.
+        var directory = Directory.CreateTempSubdirectory("kronikol-ado-retained").FullName;
+        try
+        {
+            var kept = Path.Combine(directory, "runs", "gh_7_1");
+            Directory.CreateDirectory(Path.Combine(kept, "attachments"));
+            File.WriteAllText(Path.Combine(kept, RunManifest.FileName),
+                """{"runManifestVersion":1,"run":"gh:7:1","at":"2026-09-18T10:16:11Z","suite":"Suite","scenarios":3,"failed":1,"files":["Failures.md"],"attachments":["attachments/shot.png"]}""");
+            File.WriteAllText(Path.Combine(kept, "Failures.md"), "# Failures");
+            File.WriteAllText(Path.Combine(kept, "attachments", "shot.png"), "png");
+            Directory.CreateDirectory(Path.Combine(directory, "runs", ".incoming-gh_8_1"));
+            File.WriteAllText(Path.Combine(directory, "runs", ".incoming-gh_8_1", "Failures.md"), "half a rotation");
+            var lines = new List<string>();
+
+            CiArtifactPublisher.Publish(
+                [Path.Combine(directory, "TestRunReport.html")],
+                CiEnvironment.AzureDevOps, "TestReports", 1, _ => null, (_, _) => { }, lines.Add, _ => true,
+                CiArtifactPublisher.RetainedFiles(directory));
+
+            Assert.Equal(4, lines.Count);
+            Assert.StartsWith("##vso[artifact.upload containerfolder=TestReports;artifactname=TestReports]", lines[0]);
+            Assert.Contains(lines, l => l.StartsWith("##vso[artifact.upload containerfolder=TestReports/runs/gh_7_1;artifactname=TestReports]", StringComparison.Ordinal) && l.EndsWith("Failures.md", StringComparison.Ordinal));
+            Assert.Contains(lines, l => l.StartsWith("##vso[artifact.upload containerfolder=TestReports/runs/gh_7_1/attachments;artifactname=TestReports]", StringComparison.Ordinal) && l.EndsWith("shot.png", StringComparison.Ordinal));
+            Assert.DoesNotContain(lines, l => l.Contains(".incoming-", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Publish_AzureDevOps_uses_custom_artifact_name()
     {
         var lines = new List<string>();

@@ -391,7 +391,11 @@ public static class IngestPipeline
                 Diagnostics = diagnostics.Entries,
             };
 
-        if (request.CleanAttachments)
+        // Cleaned by the generator's beforeFirstWrite hook below, not here: a run with scenarios first
+        // moves the previous run to runs/<run>/, attachments included, and emptying the folder before that
+        // deleted the screenshots of the very run that was about to be kept. A pass with no scenarios
+        // rotates nothing and never reaches the hook, so it is cleaned as it always was.
+        if (request.CleanAttachments && scenarioCount == 0)
             CleanAttachmentsFolder(reportsDirectory, diagnostics);
 
         DefaultDiagramsFetcher.Reset();
@@ -401,7 +405,9 @@ public static class IngestPipeline
             // tool reading files a suite in another language may have produced - the Cucumber fixture in
             // this repo is playwright-bdd on node.js - so writing RunEnvironment.Current here named the
             // machine doing the reading and called it the machine that ran the tests.
-            ReportGenerator.CreateStandardReportsWithDiagrams(synthesised.Features, synthesised.Start, synthesised.End, options, cucumber?.Environment ?? RunEnvironment.Unrecorded);
+            ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(synthesised.Features, synthesised.Start, synthesised.End, options, cucumber?.Environment ?? RunEnvironment.Unrecorded,
+                Environment.GetEnvironmentVariable,
+                beforeFirstWrite: request.CleanAttachments ? directory => CleanAttachmentsFolder(directory, diagnostics) : null);
         }
 
         DefaultDiagramsFetcher.Reset();

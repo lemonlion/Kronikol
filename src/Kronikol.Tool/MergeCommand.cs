@@ -295,10 +295,12 @@ internal static class MergeCommand
         {
             if (Directory.Exists(input))
             {
-                // A `baseline/` folder is last-green, kept beside a run for `query diff --baseline`.
-                // Sweeping it in as a shard would merge yesterday's results into today's.
+                // A `baseline/` folder is last-green, kept beside a run for `query diff --baseline`, and
+                // `runs/` holds the runs before this one. Sweeping either in as a shard would merge
+                // yesterday's results into today's: a green report gained a retained run's failure.
+                // What a sweep FINDS, not what it is GIVEN: `merge Reports/runs/gh_1_1` is still read.
                 foreach (var f in Directory.EnumerateFiles(input, "*.json", SearchOption.AllDirectories)
-                             .Where(f => !IsUnderBaselineFolder(input, f))
+                             .Where(f => !ReportFolders.IsReserved(input, f))
                              .OrderBy(x => x, StringComparer.Ordinal))
                 {
                     // What Kronikol itself writes beside a report, by name: none of them is a report, and
@@ -347,12 +349,7 @@ internal static class MergeCommand
     }
 
     /// <summary>The JSON files a run writes into its reports directory that are not reports.</summary>
-    private static readonly string[] WrittenBesideAReport = [Kronikol.History.HistoryFormat.FragmentFileName, CtrfReportGenerator.FileName];
-
-    private static bool IsUnderBaselineFolder(string root, string file) =>
-        Path.GetRelativePath(root, file)
-            .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .Any(segment => string.Equals(segment, "baseline", StringComparison.OrdinalIgnoreCase));
+    private static readonly string[] WrittenBesideAReport = [Kronikol.History.HistoryFormat.FragmentFileName, CtrfReportGenerator.FileName, RunManifest.FileName];
 
     public static void PrintUsage(TextWriter w)
     {

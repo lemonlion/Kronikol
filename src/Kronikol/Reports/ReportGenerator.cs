@@ -135,7 +135,28 @@ public static class ReportGenerator
     /// run ran on - the tool's own operating system and .NET version describe the machine doing the
     /// reading, not the run.
     /// </remarks>
-    public static void CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment = null)
+    public static void CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment = null) =>
+        CreateStandardReportsWithDiagramsInEnvironment(features, startRunTime, endRunTime, options, environment, Environment.GetEnvironmentVariable);
+
+    /// <summary>
+    /// The same, with the process environment injected — for tests, the way
+    /// <see cref="HistoryRunContext.Create"/> and <see cref="CiMetadataDetector"/> take theirs. What a run
+    /// does about its predecessor depends on whether it is on CI and on <c>KRONIKOL_KEEP_RUNS</c>, and
+    /// the test process's real environment is neither stable (its own pipeline is CI) nor its own (one
+    /// class sets <c>GITHUB_ACTIONS</c> for every test running beside it).
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="getEnv"/> answers for CI detection, history resolution and run retention — the
+    /// three that decide what is on disk afterwards. The CI <em>channels</em> further down (the step
+    /// summary, the artifact publisher, the pointer's annotation) still read the real environment: they
+    /// write outside the reports directory, and a test that injects "on CI" does not mean "append to the
+    /// real job summary".
+    ///
+    /// <para><paramref name="beforeFirstWrite"/> is handed the reports directory after the previous run has
+    /// been rotated out of it and before this run writes its first byte into it — the one moment a host
+    /// may safely delete from it. Not called for a pass with no scenarios, which writes nothing.</para>
+    /// </remarks>
+    internal static void CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite = null)
     {
         var previous = ActiveReportsDirectory.Value;
         ActiveReportsDirectory.Value = ResolveReportsDirectory(options);
@@ -145,18 +166,22 @@ public static class ReportGenerator
         // attribution mismatches, output failures — was a silent no-op and the JSON's diagnostics array was
         // always empty. The AsyncLocal keeps concurrent generations apart.
         var ownScope = ReportDiagnosticsScope.Current is null ? ReportDiagnosticsScope.Begin(new ReportDiagnosticsCollector()) : null;
+        // What this run writes, recorded where it is written, for the Run.json it ends with. Scoped like
+        // the directory above and for the same reason: it has to reach the Parallel.Invoke workers.
+        var runFiles = RunFileCollector.Begin(ActiveReportsDirectory.Value);
         try
         {
-            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options, environment);
+            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options, environment, getEnv, beforeFirstWrite);
         }
         finally
         {
+            runFiles.Dispose();
             ownScope?.Dispose();
             ActiveReportsDirectory.Value = previous;
         }
     }
 
-    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment)
+    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite)
     {
         // Guard: skip report generation entirely when there are zero scenarios.
         // This prevents the xUnit v3 test-discovery pass (which triggers
@@ -307,7 +332,7 @@ public static class ReportGenerator
             }
         }
 
-        var ciMetadata = CiMetadataDetector.Detect();
+        var ciMetadata = CiMetadataDetector.Detect(getEnv);
 
         // The data file's httpInteractions block must not depend on internal-flow tracking being on:
         // externally captured traffic (proxy taps, ingested NDJSON) has no in-process spans but the
@@ -320,11 +345,38 @@ public static class ReportGenerator
         // digest, the CTRF document, the pointer and the report all say the same thing about this run
         // (plans/CROSS_RUN_HISTORY_PLAN.md §6.6). It never throws — anything that stops it is a diagnostic —
         // and it is null only when history is switched off.
-        var history = HistoryRunContext.Create(features, dataLogs, suite, ciMetadata, new DateTimeOffset(endRunTime.ToUniversalTime()),
-            options, CurrentReportsDirectory, KronikolVersion);
+        var runEndedAt = new DateTimeOffset(endRunTime.ToUniversalTime());
+        var history = HistoryRunContext.Create(features, dataLogs, suite, ciMetadata, runEndedAt,
+            options, CurrentReportsDirectory, KronikolVersion, getEnv);
 
         var specsDataExtension = GetDataFormatExtension(options.SpecificationsDataFormat);
         var testRunDataExtension = GetDataFormatExtension(options.TestRunReportDataFormat);
+
+        // A run always has a name, because the directory a run is retained under is made from it: the id
+        // on its line of history when history is on, and the same minting — the host's HistoryRunId, else
+        // the CI run, else a timestamp — when it is off.
+        var runId = history?.Run.Id
+                    ?? (string.IsNullOrWhiteSpace(options.HistoryRunId) ? HistoryRunBuilder.RunId(ciMetadata, runEndedAt) : options.HistoryRunId.Trim());
+
+        // The last N runs are kept (RunRotation): the previous run's files move to runs/<run>/ before this
+        // run writes any of its own. Here and nowhere earlier or later — after the zero-scenario guard, so
+        // a discovery pass never rotates a real run away; after history, which is where the id comes from;
+        // and before the first byte this run writes, which is the attachment copies just below. It never
+        // throws: whatever stops it is a ReportRotationFailed diagnostic, recorded before the snapshot the
+        // report's own diagnostics are taken from, and the run overwrites as it always has.
+        var rotation = RunRotation.Prepare(new RunRotation.Request(
+            CurrentReportsDirectory,
+            runId,
+            OnCi: ciMetadata is not null,
+            RunRotation.ResolveKeepRuns(options.KeepRuns, getEnv, onCi: ciMetadata is not null),
+            options.HtmlTestRunReportFileName,
+            testRunDataExtension,
+            PlannedFiles(options, history, specsDataExtension, testRunDataExtension)));
+
+        // Whatever a host does to the directory before a run writes into it happens here, after the
+        // previous run has been moved out of it and not before: `kronikol ingest --clean-attachments`
+        // empties attachments/, and emptied it while the run about to be kept still owned what was in it.
+        beforeFirstWrite?.Invoke(CurrentReportsDirectory);
 
         // Pre-compute component diagram PlantUML for embedding
         string? componentDiagramPlantUml = null;
@@ -417,7 +469,19 @@ public static class ReportGenerator
                     // sibling action in this same parallel list, so File.Exists here would answer whatever
                     // the scheduler happened to have done.
                     options.GenerateTestRunReport ? options.HtmlTestRunReportFileName : null,
-                    KronikolVersion, reportDiagnostics, suite, history: history?.Verdicts));
+                    KronikolVersion, reportDiagnostics, suite, history: history?.Verdicts,
+                    // A retry that passes writes "All N scenarios passed" two seconds after the failure it
+                    // retried. The attempt that failed is kept under runs/, and this is the file an agent
+                    // reads first, so it says so.
+                    earlierAttempt: rotation.FailedAttemptOfThisRun is { } attempt
+                        ? new FailuresDigestEarlierAttempt(
+                            Path.GetRelativePath(reportsDir, attempt.Directory).Replace('\\', '/'), attempt.Manifest.Failed, attempt.Manifest.Scenarios)
+                        // Not a retry: the run this one has just moved aside, when it failed. Said by the
+                        // run that replaced it and by no later one.
+                        : rotation is { KeptDirectory: { } keptRun, Kept: { Failed: > 0 } keptManifest }
+                            ? new FailuresDigestEarlierAttempt(
+                                Path.GetRelativePath(reportsDir, keptRun).Replace('\\', '/'), keptManifest.Failed, keptManifest.Scenarios, SameRun: false)
+                            : null));
 
             Add(FailuresDigestFileName, () => WriteFile(digest.Value.Markdown, FailuresDigestFileName));
             Add(FailuresDigestJsonlFileName, () => WriteFile(digest.Value.Jsonl, FailuresDigestJsonlFileName));
@@ -493,7 +557,16 @@ public static class ReportGenerator
             // green run is a line people learn to skip.
             history: history is not null && (history.Verdicts?.HasAnything == true || features.Any(f => (f.Scenarios ?? []).Any(s => s.Result == ExecutionResult.Failed)))
                 ? history.Summary()
-                : null);
+                : null)
+            with
+            {
+                // Only when the run that was moved out of the way had failures: "nothing warned me" (#80),
+                // answered at the moment the failing report stops being the one on top. A line about every
+                // green run rotated is a line people learn to skip.
+                PreviousRun = rotation is { KeptDirectory: { } keptDirectory, Kept.Failed: > 0 }
+                    ? new RunSummaryPreviousRun(keptDirectory, rotation.Kept.Failed)
+                    : null
+            };
 
         if (options.WriteCiSummary)
         {
@@ -508,10 +581,26 @@ public static class ReportGenerator
             var directory = CurrentReportsDirectory;
             Directory.CreateDirectory(directory);
             File.WriteAllText(Path.Combine(directory, "CiSummary.md"), markdown);
+            RunFileCollector.Record(Path.Combine(directory, "CiSummary.md"));
 
             var ciEnvironment = CiEnvironmentDetector.Detect();
             CiSummaryWriter.Write(markdown, ciEnvironment);
         }
+
+        // The last file the run writes, after every other one: Run.json, naming the run and listing what
+        // reached disk. Its presence therefore means "every output named here is in this directory", and
+        // its absence — the previous one was removed before this run's first write — means the run did not
+        // finish. Before the artifact publisher, which globs the directory and should find it.
+        WriteRunManifest(reportsDir, new RunManifest
+        {
+            Run = runId,
+            At = runEndedAt,
+            Suite = suite,
+            Scenarios = features.Sum(f => f.Scenarios?.Length ?? 0),
+            Failed = features.Sum(f => (f.Scenarios ?? []).Count(s => s.Result == ExecutionResult.Failed)),
+            Partial = history?.Run.Partial,
+            KronikolVersion = KronikolVersion
+        });
 
         if (options.PublishCiArtifacts)
         {
@@ -522,7 +611,9 @@ public static class ReportGenerator
                 var reportFiles = Directory.GetFiles(ciReportsDir)
                     .Where(f => f.EndsWith(".html") || f.EndsWith(".yml") || f.EndsWith(".md") || f.EndsWith(".json") || f.EndsWith(".jsonl") || f.EndsWith(".xml"))
                     .ToArray();
-                CiArtifactPublisher.Publish(reportFiles, ciEnv, options.CiArtifactName, options.CiArtifactRetentionDays);
+                CiArtifactPublisher.Publish(reportFiles, ciEnv, options.CiArtifactName, options.CiArtifactRetentionDays,
+                    Environment.GetEnvironmentVariable, File.AppendAllText, Console.WriteLine, File.Exists,
+                    CiArtifactPublisher.RetainedFiles(ciReportsDir));
             }
         }
 
@@ -548,6 +639,74 @@ public static class ReportGenerator
         // Last, so it is the final thing the run says.
         if (options.WriteRunSummaryToConsole)
             RunSummaryConsoleWriter.Write(runSummary, CiEnvironmentDetector.Detect(), Console.WriteLine);
+    }
+
+    /// <summary>
+    /// The top-level files this run is about to write, by name — asked once, by the rotation, about a
+    /// directory that has no <c>Run.json</c> to say which files the run in it wrote (one written before
+    /// manifests existed, or by a run killed before its own). Those are the files this run would overwrite,
+    /// so they are what is moved out of the way. Never <c>CLAUDE.md</c> or <c>AGENTS.md</c>, which are
+    /// spliced in place and describe the directory rather than the run.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately not what the manifest is built from: a plan names the file an output failure then
+    /// prevents. The manifest lists what <see cref="RunFileCollector"/> saw reach disk.
+    /// </remarks>
+    private static List<string> PlannedFiles(ReportConfigurationOptions options, HistoryRunContext? history, string specsDataExtension, string testRunDataExtension)
+    {
+        var planned = new List<string>();
+        if (options.GenerateTestRunReportData)
+            planned.Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}");
+        if (options.GenerateTestRunReport)
+            planned.Add($"{options.HtmlTestRunReportFileName}.html");
+        if (options.GenerateTestRunReportSchema)
+            planned.Add($"{options.HtmlTestRunReportFileName}.schema.{GetSchemaExtension(options.TestRunReportDataFormat)}");
+        if (options.GenerateSpecificationsReport)
+            planned.Add($"{options.HtmlSpecificationsFileName}.html");
+        if (options.GenerateSpecificationsData)
+            planned.Add($"{options.YamlSpecificationsFileName}.{specsDataExtension}");
+        if (options.GenerateSpecificationsMarkdown)
+            planned.Add($"{options.YamlSpecificationsFileName}.md");
+        if (options.GenerateFailuresDigest)
+        {
+            planned.Add(FailuresDigestFileName);
+            planned.Add(FailuresDigestJsonlFileName);
+        }
+        if (options.GenerateCtrfReport)
+            planned.Add(CtrfReportGenerator.FileName);
+        if (options.GenerateHistoryFragment && history is not null)
+            planned.Add(HistoryFormat.FragmentFileName);
+        if (options.GenerateComponentDiagram)
+        {
+            var componentFileName = (options.ComponentDiagramOptions ?? new ComponentDiagramOptions()).FileName;
+            planned.Add($"{componentFileName}.html");
+            planned.Add($"{componentFileName}.png");
+            planned.Add($"{componentFileName}.svg");
+        }
+        if (options.DiagnosticMode)
+            planned.Add("DiagnosticReport.html");
+        if (options.WriteCiSummary)
+            planned.Add("CiSummary.md");
+        return planned;
+    }
+
+    /// <summary>
+    /// Writes <c>Run.json</c> with the files the run's <see cref="RunFileCollector"/> saw reach disk. Like
+    /// every other output it costs a diagnostic when it cannot be written, never the run — and a run whose
+    /// manifest is missing reads, correctly, as one that did not finish writing.
+    /// </summary>
+    private static void WriteRunManifest(string reportsDirectory, RunManifest manifest)
+    {
+        try
+        {
+            var (files, attachments) = RunFileCollector.Current?.Snapshot() ?? ([], []);
+            (manifest with { Files = files, Attachments = attachments }).Write(reportsDirectory);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            ReportDiagnosticsScope.Record(DiagnosticKind.OutputFailure, $"Could not write {RunManifest.FileName}", exception);
+            Console.WriteLine($"⚠ WARNING: could not write {RunManifest.FileName}: {exception.GetType().Name}: {exception.Message}");
+        }
     }
 
     /// <summary>The failure digest's two file names — the markdown an agent reads and its machine-readable twin.</summary>
@@ -5292,6 +5451,17 @@ public static class ReportGenerator
             if (sourcePath.StartsWith("attachments/", StringComparison.OrdinalIgnoreCase) ||
                 sourcePath.StartsWith("attachments\\", StringComparison.OrdinalIgnoreCase))
             {
+                // Still this run's, though nothing is copied: the path was rewritten by an earlier call
+                // over the same model in this process (LightBDD's formatter, then the host's own), and the
+                // report written now links to it. Left out of this call's manifest, the file would stay
+                // behind when the run is moved to runs/<run>/ and the retained report's link would dangle.
+                if (Path.GetDirectoryName(attachmentsDir) is { } reportsDirectory)
+                {
+                    var alreadyThere = Path.Combine(reportsDirectory, sourcePath);
+                    if (File.Exists(alreadyThere))
+                        RunFileCollector.Record(alreadyThere);
+                }
+
                 result[i] = att;
                 continue;
             }
@@ -5344,6 +5514,9 @@ public static class ReportGenerator
                 result[i] = att;
                 continue;
             }
+
+            // The destination, not the source: the copy is what the report links to and what the run owns.
+            RunFileCollector.Record(destPath);
 
             var relativePath = $"attachments/{destName}";
             copiedFiles[normalizedSource] = relativePath;
@@ -5401,15 +5574,19 @@ public static class ReportGenerator
             }
         }
 
+        // Never the run's: these two describe the DIRECTORY — "you are in a Kronikol reports directory… if
+        // Failures.md is absent, the run did not finish" — and a nested CLAUDE.md loads when an agent reads
+        // any file beside it. Listed in Run.json they would move into runs/<run>/ with the run, and five
+        // retained runs would be five files each claiming to be the newest.
         if (existing is null)
         {
-            WriteFile(block + "\n", fileName);
+            WriteFile(block + "\n", fileName, partOfTheRun: false);
             return;
         }
 
         if (AgentInstructionsBlock.Merge(existing, block, out var problem) is { } merged)
         {
-            WriteFile(merged, fileName);
+            WriteFile(merged, fileName, partOfTheRun: false);
             return;
         }
 
@@ -5417,7 +5594,7 @@ public static class ReportGenerator
         Console.WriteLine($"⚠ WARNING: left {fileName} alone — it {problem}");
     }
 
-    private static string WriteFile(string text, string fileName)
+    private static string WriteFile(string text, string fileName, bool partOfTheRun = true)
     {
         var directory = CurrentReportsDirectory;
         Directory.CreateDirectory(directory);
@@ -5425,6 +5602,8 @@ public static class ReportGenerator
         try
         {
             File.WriteAllText(filePath, text);
+            if (partOfTheRun)
+                RunFileCollector.Record(filePath);
         }
         catch (IOException exception)
         {
@@ -5439,6 +5618,10 @@ public static class ReportGenerator
             try
             {
                 File.WriteAllText(fallback, text);
+                // Under the name that was written: the manifest lists what reached disk, and the
+                // canonical name on disk is still an earlier run's.
+                if (partOfTheRun)
+                    RunFileCollector.Record(fallback);
                 Console.WriteLine($"⚠ WARNING: {fileName} was not writable — this run's copy is in {Path.GetFileName(fallback)}; "
                                   + $"{fileName} on disk is from an earlier run.");
             }
