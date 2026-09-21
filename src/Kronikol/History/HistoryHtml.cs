@@ -108,6 +108,10 @@ internal static class HistoryHtml
         sb.Append($"<p class=\"history-meta\">stream <code>{HtmlEncode(history.Stream)}</code> · run <code>{HtmlEncode(history.RunId)}</code> · {history.RunsRecorded.ToString(CultureInfo.InvariantCulture)} earlier run{(history.RunsRecorded == 1 ? "" : "s")} in the window");
         if (history.Partial)
             sb.Append(" · this run is partial, so nothing is reported absent from it");
+        // Said once, here, and not on every scenario: measured in a contended run, a third of the rows
+        // cleared any test a per-row note could be given.
+        if (history.Runs.Count > 0 && history.Runs[^1] is { Degraded: true, Pace: { } pace })
+            sb.Append(HtmlEncode($" · this run is degraded: its passing scenarios took {HistorySummary.Times(pace)} their usual, so no scenario is read slower in it"));
         sb.Append("</p>");
         if (history.ColdStart && history.ColdStartMessage is { } cold)
             sb.Append($"<p class=\"history-note\">{HtmlEncode(cold)}</p>");
@@ -187,7 +191,7 @@ internal static class HistoryHtml
             r => r.Passed + r.Failed == 0 ? 0 : (double)r.Passed / (r.Passed + r.Failed),
             1.0,
             r => r.Failed == 0 ? "history-bar-pass" : "history-bar-fail",
-            r => $"{r.RunId} · {r.At.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)}{(r.Commit is { } c ? " · " + (c.Length > 7 ? c[..7] : c) : "")} · {r.Passed.ToString(CultureInfo.InvariantCulture)} passed, {r.Failed.ToString(CultureInfo.InvariantCulture)} failed of {r.Total.ToString(CultureInfo.InvariantCulture)}{(r.Partial ? " · partial" : "")}");
+            r => $"{r.RunId} · {r.At.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)}{(r.Commit is { } c ? " · " + (c.Length > 7 ? c[..7] : c) : "")} · {r.Passed.ToString(CultureInfo.InvariantCulture)} passed, {r.Failed.ToString(CultureInfo.InvariantCulture)} failed of {r.Total.ToString(CultureInfo.InvariantCulture)}{(r.Partial ? " · partial" : "")}{DegradedTail(r)}");
 
     private static string DurationChart(IReadOnlyList<RunPoint> runs)
     {
@@ -196,8 +200,10 @@ internal static class HistoryHtml
             r => r.DurationMs ?? 0,
             max == 0 ? 1 : max,
             _ => "history-bar-duration",
-            r => $"{r.RunId} · {r.At.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)} · {FormatMs(r.DurationMs)}{(r.Partial ? " · partial" : "")}");
+            r => $"{r.RunId} · {r.At.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)} · {FormatMs(r.DurationMs)}{(r.Partial ? " · partial" : "")}{DegradedTail(r)}");
     }
+
+    private static string DegradedTail(RunPoint run) => run is { Degraded: true, Pace: { } pace } ? $" · degraded {HistorySummary.Times(pace)}" : "";
 
     /// <summary>A bar per run in one small SVG: a handful of nodes for the whole report, sized by CSS.</summary>
     private static string Chart(string title, IReadOnlyList<RunPoint> runs, Func<RunPoint, double> value, double max,
@@ -248,6 +254,8 @@ internal static class HistoryHtml
             sb.Append(" · ").Append(ResultWord(p.Result));
             if (p.Partial)
                 sb.Append(" · partial run");
+            if (p.RunDegraded)
+                sb.Append(" · degraded run");
             if (p.DurationMs is { } ms)
                 sb.Append(" · ").Append(FormatMs(ms));
             if (p.Error is { } error)

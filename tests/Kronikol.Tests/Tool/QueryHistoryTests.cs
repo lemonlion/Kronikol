@@ -220,6 +220,127 @@ public class QueryHistoryTests : IDisposable
         Assert.Contains("duration: 100 ms · p95 of earlier full runs 123 ms (this run is partial, so nothing is scaled to its speed)", output);
     }
 
+    // ─── Degraded runs (#83) ───────────────────────────────────
+
+    private static readonly string[] WideIds = [PayId, RefundId, .. Enumerable.Range(1, 8).Select(i => $"7777{i:D12}")];
+
+    private static HistoryRoster WideRoster() =>
+        HistoryRoster.Create("Suite", WideIds.Select((id, i) => new HistoryRosterEntry(id, i == 0 ? "Pay by card" : i == 1 ? "Refund an order" : "Other " + (i - 1), "Checkout", null)).ToArray());
+
+    private void SeedWide(int n, int payMs, int othersMs, bool payFailed = false)
+    {
+        var roster = WideRoster();
+        var results = (payFailed ? "F" : "P") + new string('P', 9);
+        HistoryLedgerWriter.Append(Ledger, roster, new HistoryRun
+        {
+            Id = $"gh:{n}:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero).AddHours(n),
+            Branch = "main", Commit = $"c{n:D6}", Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash,
+            Results = results, Attempts = new string('-', 10), Durations = [payMs, .. Enumerable.Repeat<int?>(othersMs, 9)], Calls = null, ShapeSet = null, ShapeOrdered = null,
+            Errors = results.Select(r => r == 'F' ? "e1" : null).ToArray(),
+            ErrorText = payFailed ? new Dictionary<string, string> { ["e1"] = "The service bigquery has thrown" } : new Dictionary<string, string>(),
+            Deps = ["Test>orders"]
+        }, "3.9.0");
+    }
+
+    /// <summary>A current report listing all ten scenarios of the wide roster, every one passing in <paramref name="ms"/>.</summary>
+    private string WriteWideReport(int ms)
+    {
+        var directory = Path.Combine(_dir, "reports");
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "TestRunReport.json");
+        var roster = WideRoster();
+        var scenarios = string.Join(",\n", Enumerable.Range(0, roster.Count).Select(i =>
+            $$"""{ "id": "t{{i}}", "stableId": "{{roster.Ids[i]}}", "name": "{{roster.Names[i]}}", "result": "Passed", "durationSeconds": {{(ms / 1000.0).ToString(System.Globalization.CultureInfo.InvariantCulture)}}, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }"""));
+        File.WriteAllText(path, $$"""
+            {
+              "kronikolVersion": "3.9.0",
+              "formatVersion": 1,
+              "suite": "Suite",
+              "startTime": "2026-09-12T10:00:00Z",
+              "endTime": "2026-09-12T10:05:00Z",
+              "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "main", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "99", "runAttempt": "1" },
+              "features": [ { "name": "Checkout", "labels": [], "scenarios": [ {{scenarios}} ] } ]
+            }
+            """);
+        return path;
+    }
+
+    [Fact]
+    public void A_failure_in_a_degraded_run_says_so_on_its_row_and_in_the_statistics()
+    {
+        // #83: what read as "unreliable test" was the statistics line, flip rate 0.50 and fail rate 0.20, with
+        // nothing to say that the one failure happened in a run where everything was slow.
+        for (var n = 1; n <= 6; n++) SeedWide(n, payMs: 12_768, othersMs: 1000);
+        SeedWide(7, payMs: 82_215, othersMs: 2300, payFailed: true);
+        SeedWide(8, payMs: 12_768, othersMs: 1000);
+        var report = WriteWideReport(1000);
+
+        var (output, error, exit) = Query(null, "history", report, "s0");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("failed 1 (1 in a degraded run)", output);
+        var row = output.Split('\n').Single(line => line.Contains("gh:7:1"));
+        Assert.Contains("82215 ms (6.4× usual)  [run degraded: passing scenarios took 2.3× their usual]  The service bigquery has thrown", row);
+        // A row that is neither over its usual nor in a degraded run says nothing.
+        var healthy = output.Split('\n').Single(line => line.Contains("gh:6:1"));
+        Assert.DoesNotContain("usual", healthy);
+        Assert.DoesNotContain("degraded", healthy);
+
+        var json = Query(null, "history", report, "s0", "--json");
+        Assert.True(json.Exit == 0, json.Error);
+        using var document = System.Text.Json.JsonDocument.Parse(json.Output);
+        var item = document.RootElement.GetProperty("items")[0];
+        Assert.Equal(1, item.GetProperty("failuresInDegradedRuns").GetInt32());
+        var failed = item.GetProperty("runs").EnumerateArray().Single(r => r.GetProperty("runId").GetString() == "gh:7:1");
+        Assert.Equal(6.44, failed.GetProperty("timesUsual").GetDouble(), 2);
+        Assert.True(failed.GetProperty("overUsual").GetBoolean());
+        Assert.True(failed.GetProperty("runDegraded").GetBoolean());
+        Assert.False(item.GetProperty("runs").EnumerateArray().First().GetProperty("runDegraded").GetBoolean());
+    }
+
+    [Fact]
+    public void A_degraded_run_is_labelled_once_at_run_level_and_the_threshold_is_a_flag()
+    {
+        // On a surface that lists a whole run the run's label speaks, not the rows: measured, 72 to 88 of 203
+        // rows cleared the row note's test in a contended run.
+        for (var n = 1; n <= 6; n++) SeedWide(n, payMs: 1000, othersMs: 1000);
+        var report = WriteWideReport(3000);
+
+        var (output, error, exit) = Query(null, "history", report);
+        Assert.True(exit == 0, error);
+        Assert.Contains("degraded: passing scenarios took 3.0× their usual, so no scenario is read slower in this run", output);
+
+        var json = Query(null, "history", report, "--json");
+        using (var document = System.Text.Json.JsonDocument.Parse(json.Output))
+        {
+            var history = document.RootElement.GetProperty("history");
+            Assert.Equal(3.0, history.GetProperty("pace").GetDouble(), 2);
+            Assert.True(history.GetProperty("degraded").GetBoolean());
+        }
+
+        var lenient = Query(null, "history", report, "--degraded-by", "4");
+        Assert.True(lenient.Exit == 0, lenient.Error);
+        Assert.DoesNotContain("degraded", lenient.Output);
+
+        var bad = Query(null, "history", report, "--degraded-by", "fast");
+        Assert.Equal(2, bad.Exit);
+        Assert.Contains("--degraded-by takes a factor", bad.Error);
+    }
+
+    [Fact]
+    public void A_healthy_run_says_nothing_about_pace_in_text_and_carries_it_in_json()
+    {
+        for (var n = 1; n <= 6; n++) SeedWide(n, payMs: 1000, othersMs: 1000);
+        var report = WriteWideReport(1100);
+
+        var (output, _, _) = Query(null, "history", report);
+        Assert.DoesNotContain("degraded", output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(Query(null, "history", report, "--json").Output);
+        Assert.Equal(1.1, document.RootElement.GetProperty("history").GetProperty("pace").GetDouble(), 2);
+        Assert.False(document.RootElement.GetProperty("history").GetProperty("degraded").GetBoolean());
+    }
+
     [Fact]
     public void Json_carries_the_rows_and_the_run_level_member()
     {

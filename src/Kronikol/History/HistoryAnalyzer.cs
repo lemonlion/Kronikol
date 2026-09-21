@@ -86,12 +86,13 @@ public static class HistoryAnalyzer
         // read against it: measured, the same scenarios' bars stood at 1.88x in a filtered run from the mix
         // alone.
         var speeds = new RunSpeeds((partial ? prior : prior.Where(r => r.Partial != true)).Append(current));
+        var paces = new RunPaces(prior, priorRosters, current, roster, partial, aliases, options);
         var scenarios = new List<ScenarioHistory>(roster.Count);
         var currentIds = new HashSet<(string, int)>();
         for (var i = 0; i < roster.Count; i++)
         {
             currentIds.Add((roster.Ids[i], roster.Slots[i]));
-            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, priorShapes, shapes, speeds, options, quarantine, aliases, today, partial));
+            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, priorShapes, shapes, speeds, options, quarantine, aliases, today, partial, paces));
         }
 
         // Absent: in the previous full run of the stream, not in this one, and this one not partial. The
@@ -114,8 +115,8 @@ public static class HistoryAnalyzer
             foreach (var kind in scenario.Verdicts)
                 counts[kind] = counts.GetValueOrDefault(kind) + 1;
 
-        var runs = prior.Select(r => RunPointOf(r)).ToList();
-        runs.Add(RunPointOf(current) with { Partial = partial });
+        var runs = prior.Select((r, i) => RunPointOf(r) with { Pace = paces.Of(i), Degraded = paces.Degraded(i) }).ToList();
+        runs.Add(RunPointOf(current) with { Partial = partial, Pace = paces.Of(prior.Count), Degraded = paces.Degraded(prior.Count) });
 
         var priorDeps = new HashSet<string>(prior.SelectMany(r => r.Deps ?? []), StringComparer.Ordinal);
         var newDeps = prior.Count == 0 ? [] : (current.Deps ?? []).Where(d => !priorDeps.Contains(d)).OrderBy(d => d, StringComparer.Ordinal).ToArray();
@@ -177,7 +178,7 @@ public static class HistoryAnalyzer
 
     private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roster, HistoryRun current, List<HistoryRun> prior, HistoryRoster?[] priorRosters,
         HistoryShapes?[] priorShapes, HistoryShapes? currentShapes, RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today,
-        bool currentIsPartial)
+        bool currentIsPartial, RunPaces paces)
     {
         var id = roster.Ids[position];
         var slot = roster.Slots[position];
@@ -187,6 +188,7 @@ public static class HistoryAnalyzer
             return NotATest(position, roster, current, currentIsPartial);
 
         // Every prior reading of this scenario, oldest first.
+        var usual = paces.UsualOf(id, slot);
         var points = new List<HistoryPoint>();
         for (var r = 0; r < prior.Count; r++)
         {
@@ -201,12 +203,14 @@ public static class HistoryAnalyzer
             }
             if (at < 0) continue;
             points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at), run.ShapeVersion,
-                Resolve(run.CallSetAt(at), priorShapes[r]), run.Partial == true));
+                Resolve(run.CallSetAt(at), priorShapes[r]), run.Partial == true,
+                paces.TimesUsual(usual, r, run.DurationAt(at), run.ResultAt(at)), paces.Degraded(r)).WithOverUsual(options));
         }
 
         var currentPoint = new HistoryPoint(current.Id, current.At, current.Commit, current.ResultAt(position), current.DurationAt(position),
             current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position), current.ShapeVersion,
-            Resolve(current.CallSetAt(position), currentShapes), currentIsPartial);
+            Resolve(current.CallSetAt(position), currentShapes), currentIsPartial,
+            paces.TimesUsual(usual, prior.Count, current.DurationAt(position), current.ResultAt(position)), paces.Degraded(prior.Count)).WithOverUsual(options);
         var all = points.Append(currentPoint).ToList();
 
         var verdicts = new HashSet<HistoryVerdictKind>();
@@ -316,8 +320,18 @@ public static class HistoryAnalyzer
                 text += $", last failed {ago.ToString(CultureInfo.InvariantCulture)} run{(ago == 1 ? "" : "s")} ago";
             if (passedOnRetry)
                 text += $", passed on retry {currentPoint.Attempt!.Value.ToString(CultureInfo.InvariantCulture)} in this run";
+            // Still flaky: a failure in a degraded run is a failure. But a reader deciding whether to chase
+            // it should hear first that the record was made on bad days.
+            if (failures > 0 && real.Where(p => p.Result == HistoryFormat.Failed).All(p => p.RunDegraded))
+                text = "every failure was in a degraded run; " + text;
             evidence.Insert(0, text);
         }
+
+        // A failure inside a run where everything was slow is weak evidence against the test (#83). What
+        // is said is a fact about the run, and only the run-level signal earns a causal word: a failing
+        // test is usually slow because it failed, so its own reading over its usual explains nothing.
+        if (currentResult == HistoryFormat.Failed && currentPoint.RunDegraded && paces.Of(prior.Count) is { } pace)
+            evidence.Add($"this run was degraded: its passing scenarios took {pace.ToString("0.0", CultureInfo.InvariantCulture)}× their usual");
 
         // ── Duration ────────────────────────────────────────
         // A scenario is slower when it got slower than its run did. Every duration is read against the
@@ -334,7 +348,16 @@ public static class HistoryAnalyzer
         int? p95 = null;
         var p95IsRaw = false;
         var comparable = currentIsPartial ? points : points.Where(p => !p.Partial).ToList();
-        var timed = comparable.Where(p => p.DurationMs is not null)
+        // A degraded run's durations are facts about the machine, as a partial run's are about the filter.
+        // Under contention the slowdown is nowhere near uniform (measured in one run: p25 2x, p90 54x), so
+        // reading each scenario against its run's median cannot absorb it, and every scenario whose
+        // previous reading happened to sit over its bar was handed a slower it did not earn. Left in the
+        // baseline it costs again: a nearest-rank p95 of a dozen readings is their maximum, so one degraded
+        // run lifts the bar, and hides a real slowdown, for as long as it stays in the window. So no slower
+        // is read in a degraded run, and a run that is not degraded is not read against one. Pass and fail
+        // are never discounted: a failure in a degraded run is still a fact about the test.
+        var currentIsDegraded = currentPoint.RunDegraded;
+        var timed = (currentIsDegraded ? comparable : comparable.Where(p => !p.RunDegraded)).Where(p => p.DurationMs is not null)
             .Select(p => (Ms: p.DurationMs!.Value, Relative: p.DurationMs!.Value / speeds.Of(p.RunId, p.DurationMs!.Value)))
             .ToList();
         if (currentIsPartial)
@@ -359,7 +382,7 @@ public static class HistoryAnalyzer
             var speed = currentPoint.DurationMs is { } ms ? speeds.Of(current.Id, ms) : 1.0;
             // The bar in this run's milliseconds: what the reader compares the duration with.
             p95 = (int)Math.Round(bar * speed);
-            if (currentPoint.DurationMs is { } now && baseline.Count >= options.MinRuns && bar > 0)
+            if (!currentIsDegraded && currentPoint.DurationMs is { } now && baseline.Count >= options.MinRuns && bar > 0)
             {
                 var previous = timed[^1];
                 var over = bar * options.SlowerBy;
@@ -571,7 +594,8 @@ public static class HistoryAnalyzer
             Calls = currentPoint.Calls,
             NewCalls = newCalls,
             GoneCalls = goneCalls,
-            Quarantine = entry
+            Quarantine = entry,
+            FailuresInDegradedRuns = real.Count(p => p.Result == HistoryFormat.Failed && p.RunDegraded)
         };
     }
 
@@ -617,6 +641,15 @@ public static class HistoryAnalyzer
         };
     }
 
+    /// <summary>
+    /// The two-part test a reading over its usual must clear before a surface prints it, the same one a
+    /// slower verdict clears and for the same reason: the factor, and enough milliseconds to notice.
+    /// </summary>
+    private static HistoryPoint WithOverUsual(this HistoryPoint point, HistoryAnalysisOptions options) =>
+        point is { TimesUsual: { } times, DurationMs: { } ms } && options.DegradedBy > 0 && times >= options.DegradedBy && ms - ms / times >= options.SlowerMinMs
+            ? point with { OverUsual = true }
+            : point;
+
     /// <summary>The call lines a position's indices name, or null when either side is unrecorded.</summary>
     private static IReadOnlyList<string>? Resolve(IReadOnlyList<int>? indices, HistoryShapes? shapes) =>
         indices is null || shapes is null ? null : indices.Select(shapes.At).Where(line => line is not null).Select(line => line!).ToArray();
@@ -651,6 +684,153 @@ public static class HistoryAnalyzer
         var sorted = values.OrderBy(v => v).ToArray();
         var rank = (int)Math.Ceiling(0.95 * sorted.Length);
         return sorted[Math.Clamp(rank - 1, 0, sorted.Length - 1)];
+    }
+
+    /// <summary>
+    /// The pace of each full run in the window (#83): the median, over the scenarios that passed in it, of
+    /// the reading over the scenario's usual - its median passing duration over the OTHER full runs. Each
+    /// scenario is measured against itself, so a roster that gained fifty slow scenarios has the pace it
+    /// had; passing scenarios only, so timeouts do not inflate it. A partial run is in no usual and has no
+    /// pace: its conditions differ in either direction.
+    ///
+    /// <para>Two readings wait for different things. A ROW is read against its usual from two other
+    /// readings, which is when a duration bar first appears beside it: it is a reading, not a verdict. A
+    /// RUN is paced only from scenarios with the minimum runs of other readings each, because the label
+    /// gates a verdict: measured over 394 healthy CI runs, a run paced against two to four others read 2.0
+    /// or more one to three times in a thousand, and against five, never.</para>
+    ///
+    /// <para>A degraded run stays in the usual. A median shrugs off a minority of bad runs, and if degraded
+    /// runs left it a genuine, sustained slowdown of the whole suite would read as degraded for ever
+    /// instead of for half a window.</para>
+    ///
+    /// <para>Cost: one dictionary lookup per scenario of each DISTINCT roster (a stream normally has one
+    /// or two), then arrays. Every run's scenarios are read twice, once to gather and once to pace.</para>
+    /// </summary>
+    internal sealed class RunPaces
+    {
+        /// <summary>The fewest qualifying scenarios a run needs before it has a pace.</summary>
+        internal const int MinScenarios = 5;
+
+        /// <summary>The fewest other full-run passing readings a row is read against.</summary>
+        internal const int MinReadingsForARow = 2;
+
+        /// <summary>
+        /// A scenario counts towards a run's pace when its usual is at least this many milliseconds.
+        /// Measured under real contention: scenarios that usually take under 10 ms barely register the
+        /// load (and 3 ms read as 9 is a timer tick), and they were half the votes. With them, a run that
+        /// handed out twenty false slower verdicts read 2.25 against a worst healthy run of 1.63; without
+        /// them, 6.85 against 1.56. A larger floor throws the signal away instead (100 ms: 4.98 for 7.38).
+        /// </summary>
+        internal const int UsualFloorMs = 10;
+
+        private readonly Dictionary<(string Id, int Slot), int> _index = new();
+        private readonly List<int[]> _usual = [];
+        private readonly double?[] _pace;
+        private readonly bool[] _full;
+        private readonly HistoryAliases? _aliases;
+        private readonly double _degradedBy;
+
+        /// <summary>Paces every run of the window: the prior runs at their indices, the current run last.</summary>
+        public RunPaces(IReadOnlyList<HistoryRun> prior, IReadOnlyList<HistoryRoster?> priorRosters, HistoryRun current, HistoryRoster roster,
+            bool currentIsPartial, HistoryAliases? aliases, HistoryAnalysisOptions options)
+        {
+            _aliases = aliases;
+            // Zero or less switches the label off: nothing is degraded, and slower reads as it did before.
+            _degradedBy = options.DegradedBy > 0 ? options.DegradedBy : double.PositiveInfinity;
+            var minRuns = Math.Max(1, options.MinRuns);
+            var count = prior.Count + 1;
+            _pace = new double?[count];
+            _full = new bool[count];
+
+            HistoryRun RunAt(int r) => r < prior.Count ? prior[r] : current;
+            HistoryRoster? RosterAt(int r) => r < prior.Count ? priorRosters[r] : roster;
+
+            // Each distinct roster's positions as indices into one list of scenarios, resolved once.
+            var positions = new Dictionary<HistoryRoster, int[]>(ReferenceEqualityComparer.Instance);
+            var readings = new List<List<int>>();
+            int[] PositionsOf(HistoryRoster of)
+            {
+                if (positions.TryGetValue(of, out var map)) return map;
+                map = new int[of.Count];
+                for (var i = 0; i < of.Count; i++)
+                {
+                    var key = Key(of.Ids[i], of.Slots[i]);
+                    if (!_index.TryGetValue(key, out var at))
+                    {
+                        _index[key] = at = readings.Count;
+                        readings.Add([]);
+                    }
+                    map[i] = at;
+                }
+                return positions[of] = map;
+            }
+
+            for (var r = 0; r < count; r++)
+            {
+                var run = RunAt(r);
+                var partial = r == prior.Count ? currentIsPartial : run.Partial == true;
+                if (partial || RosterAt(r) is not { } of || run.Durations is null) continue;
+                _full[r] = true;
+                var map = PositionsOf(of);
+                for (var i = 0; i < of.Count; i++)
+                    if (run.ResultAt(i) == HistoryFormat.Passed && run.DurationAt(i) is { } ms)
+                        readings[map[i]].Add(ms);
+            }
+
+            foreach (var list in readings)
+            {
+                var sorted = list.ToArray();
+                Array.Sort(sorted);
+                _usual.Add(sorted);
+            }
+
+            var ratios = new List<double>();
+            for (var r = 0; r < count; r++)
+            {
+                if (!_full[r] || RosterAt(r) is not { } of) continue;
+                var run = RunAt(r);
+                var map = positions[of];
+                ratios.Clear();
+                for (var i = 0; i < of.Count; i++)
+                    if (run.ResultAt(i) == HistoryFormat.Passed && run.DurationAt(i) is { } ms
+                        && Usual(_usual[map[i]], ms, minRuns) is { } usual && usual >= UsualFloorMs)
+                        ratios.Add(ms / usual);
+                if (ratios.Count < MinScenarios) continue;
+                ratios.Sort();
+                _pace[r] = ratios.Count % 2 == 1 ? ratios[ratios.Count / 2] : (ratios[ratios.Count / 2 - 1] + ratios[ratios.Count / 2]) / 2.0;
+            }
+        }
+
+        /// <summary>The pace of the run at <paramref name="index"/> (the current run is last), or null when it is partial or too little is known.</summary>
+        public double? Of(int index) => _pace[index];
+
+        /// <summary>Whether the run's passing scenarios took the degraded factor over their usual.</summary>
+        public bool Degraded(int index) => _pace[index] is { } pace && pace >= _degradedBy;
+
+        /// <summary>The scenario's passing full-run durations, sorted; null when it has none.</summary>
+        public int[]? UsualOf(string id, int slot) => _index.TryGetValue(Key(id, slot), out var at) ? _usual[at] : null;
+
+        /// <summary>A reading over the scenario's usual; null in a partial run, without a duration, or with fewer than two other readings.</summary>
+        public double? TimesUsual(int[]? usualReadings, int index, int? durationMs, char result)
+        {
+            if (usualReadings is null || durationMs is not { } ms || !_full[index]) return null;
+            // A passing reading is one of the readings, and is left out of its own usual.
+            return Usual(usualReadings, result == HistoryFormat.Passed ? ms : null, MinReadingsForARow) is { } usual ? ms / usual : null;
+        }
+
+        private (string, int) Key(string id, int slot) => (_aliases?.Current(id) ?? id, slot);
+
+        /// <summary>The median of the sorted readings without one occurrence of <paramref name="ownMs"/>; null under <paramref name="minOthers"/> others.</summary>
+        private static double? Usual(int[] sorted, int? ownMs, int minOthers)
+        {
+            var self = ownMs is { } own ? Array.BinarySearch(sorted, own) : -1;
+            if (self < 0) self = sorted.Length;
+            var others = self < sorted.Length ? sorted.Length - 1 : sorted.Length;
+            if (others < minOthers) return null;
+            int At(int index) => sorted[index < self ? index : index + 1];
+            var median = others % 2 == 1 ? At(others / 2) : (At(others / 2 - 1) + At(others / 2)) / 2.0;
+            return median > 0 ? median : null;
+        }
     }
 
     /// <summary>

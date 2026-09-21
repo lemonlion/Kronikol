@@ -7,6 +7,11 @@
 // one and does not cut there itself.
 //
 //   dotnet run -c Release --project tools/history-replay -- <ledger.jsonl> <out.csv> [--min-runs N] [--last N] [--detail]
+//   dotnet run -c Release --project tools/history-replay -- --bench [scenarios] [runs]
+//
+// --bench     no ledger: a synthetic stream (default 5,000 scenarios over 50 earlier runs, durations
+//             within 20% of each scenario's own usual), one analysis of the latest run timed seven times.
+//             Wall-clock: compare two builds in the same session on an idle machine, never across sessions.
 //
 // --min-runs  the consumer's HistoryMinRuns (default: the analyzer's)
 // --last      replay only the last N run lines of the file
@@ -16,6 +21,40 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Kronikol.History;
+
+if (args.Length >= 1 && args[0] == "--bench")
+{
+    var scenarioCount = args.Length > 1 ? int.Parse(args[1], CultureInfo.InvariantCulture) : 5000;
+    var runCount = args.Length > 2 ? int.Parse(args[2], CultureInfo.InvariantCulture) : 50;
+    var random = new Random(75);
+    var benchRoster = HistoryRoster.Create("Bench", Enumerable.Range(0, scenarioCount).Select(i => new HistoryRosterEntry($"{i:x16}", "Scenario " + i, "Feature " + (i % 50), null)).ToArray());
+    var usual = Enumerable.Range(0, scenarioCount).Select(_ => random.Next(1, 2000)).ToArray();
+    HistoryRun Synthetic(int n) => new()
+    {
+        Id = $"local:{n}", Suite = "Bench", Partial = false, At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero).AddHours(n),
+        Branch = null, Commit = null, Provider = null, Url = null, Shards = 1, RosterHash = benchRoster.Hash,
+        Results = new string('P', scenarioCount), Attempts = new string('1', scenarioCount),
+        Durations = usual.Select(u => (int?)Math.Max(0, (int)(u * (0.8 + random.NextDouble() * 0.4)))).ToArray(),
+        Errors = new string?[scenarioCount], ShapeSet = null, ShapeOrdered = null, Calls = null, ShapeVersion = null,
+        ErrorText = new Dictionary<string, string>(), Deps = []
+    };
+    var file = new StringBuilder(HistoryJson.HeaderLine("bench") + "\n" + HistoryJson.RosterLine(benchRoster) + "\n");
+    for (var n = 1; n <= runCount; n++) file.Append(HistoryJson.RunLine(Synthetic(n))).Append('\n');
+    var benchLedger = HistoryLedgerReader.Parse(file.ToString(), window: 0).Ledger!;
+    var latest = Synthetic(runCount + 1);
+    var timings = new List<double>();
+    for (var attempt = 0; attempt < 7; attempt++)
+    {
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var result = HistoryAnalyzer.Analyse(benchLedger, benchRoster, latest, new HistoryAnalysisOptions());
+        watch.Stop();
+        timings.Add(watch.Elapsed.TotalMilliseconds);
+        if (attempt == 0) Console.WriteLine($"{result.Scenarios.Count} scenarios against {result.RunsRecorded} runs, pace of the latest {Pace(result.Runs[^1])}");
+    }
+    timings.Sort();
+    Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"analyse: median {timings[3]:0} ms, min {timings[0]:0} ms, max {timings[^1]:0} ms (first attempt included)"));
+    return 0;
+}
 
 if (args.Length < 2)
 {

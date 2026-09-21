@@ -98,6 +98,7 @@ matters.
 | "these two runs/scenarios differ — how?" | `compare s3 s7` (it names the first differing body) → `diff s3/i47 s7/i47` — only the differing paths, never two payloads |
 | "why is this slow?" | `summary` → `services --sort duration` → `flow s3` |
 | "is this flaky?" / "has this failed before?" / "is this failure new?" | `history <report> s3` — the ledger's verdict with the evidence: `broke` (a regression), `failing` since which run, `flaky` (flip rate, not fail rate), `new`. `history <report> --flaky` lists every flaky scenario; `failures` already prints the same `history:` line under each failure when a ledger is there. `trace <id>` flags a trace id leaking across scenarios, the classic flaky smell |
+| "did it fail because the machine was slow?" | `history <report> s3` — a failing row in a run where everything was slow reads `[run degraded: passing scenarios took 2.3× their usual]`, and the statistics line says `failed 1 (1 in a degraded run)`. That is weak evidence against the test, not an acquittal: the failure still counts. `(6.4× usual)` on a row is a reading, not a cause — a failing test is usually slow *because* it failed |
 | "is this one request or a chain?" | `trace s3/i47` — every call sharing that W3C trace id, chronologically |
 | "the report shows X but I can't find it" | `note s3/d0` — see **Notes are a rendering** below |
 | "show me the flow" | `flow s3` — never the diagram |

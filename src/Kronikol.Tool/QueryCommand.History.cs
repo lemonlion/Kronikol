@@ -54,6 +54,8 @@ internal static partial class QueryCommand
             analysis = analysis with { AlternatingRuns = alternatingRuns };
         if (options.CountRuns is { } countRuns)
             analysis = analysis with { CountRuns = countRuns };
+        if (options.DegradedBy is { } degradedBy)
+            analysis = analysis with { DegradedBy = degradedBy };
         var verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, analysis, quarantine, aliases, shapes: shapes);
 
         // Under --count the text answer is one bare number, so the caveats go to stderr - the same rule
@@ -110,6 +112,9 @@ internal static partial class QueryCommand
         writer.Line($"history: {HistorySummary.Line(verdicts)}");
         writer.Line($"ledger: {ledgerPath} · stream {verdicts.Stream} · run {verdicts.RunId}"
                     + (verdicts.Partial ? " · partial" : ""));
+        // The run's label speaks once, here: in a contended run a third of the rows would carry a note.
+        if (HistorySummary.Degraded(verdicts.Runs[^1]) is { } degraded)
+            writer.Line($"{degraded}, so no scenario is read slower in this run");
         if (verdicts.ColdStart)
             writer.Line(verdicts.ColdStartMessage!);
         if (verdicts.Compare is { } compare)
@@ -162,7 +167,7 @@ internal static partial class QueryCommand
         writer.Line($"{scenario.Address}  {scenario.FeatureName} › {scenario.Name}  sid:{scenario.StableId}");
         writer.Line($"verdict: {entry.VerdictNames}");
         writer.Line($"evidence: {QueryWriter.OneLine(entry.Evidence, 400)}");
-        writer.Line($"runs seen: {entry.RunsSeen} · verdicts: {entry.RealVerdicts} · failed {entry.Failures} · flips {entry.Flips} · flip rate {entry.FlipRate.ToString("0.00", CultureInfo.InvariantCulture)} · fail rate {entry.FailRate.ToString("0.00", CultureInfo.InvariantCulture)}"
+        writer.Line($"runs seen: {entry.RunsSeen} · verdicts: {entry.RealVerdicts} · failed {entry.Failures}{(entry.FailuresInDegradedRuns > 0 ? $" ({entry.FailuresInDegradedRuns} in a degraded run)" : "")} · flips {entry.Flips} · flip rate {entry.FlipRate.ToString("0.00", CultureInfo.InvariantCulture)} · fail rate {entry.FailRate.ToString("0.00", CultureInfo.InvariantCulture)}"
                     + (entry.LastFailedRunsAgo is { } ago ? $" · last failed {ago} run(s) ago" : ""));
         if (entry.FailingSince is { } since)
             writer.Line($"failing since: {since.RunId}{(since.Commit is { } commit ? $" ({(commit.Length > 7 ? commit[..7] : commit)})" : "")} · {since.Runs} run(s)");
@@ -182,11 +187,15 @@ internal static partial class QueryCommand
                         + (quarantine.Until is { } until ? $" · until {until.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}" : ""));
         writer.Line($"stream: {verdicts.Stream} · {verdicts.RunsRecorded} earlier run(s) in the window");
         writer.Line("last runs, oldest first (this run last):");
+        var runs = verdicts.Runs.ToDictionary(r => r.RunId, StringComparer.Ordinal);
         foreach (var point in entry.Points.TakeLast(15))
             writer.Line($"  {point.Result}  {point.RunId,-24} {point.At.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)}"
                         + (point.Commit is { } c ? $"  {(c.Length > 7 ? c[..7] : c)}" : "")
-                        + (point.DurationMs is { } ms ? $"  {ms} ms" : "")
+                        // The reading over the scenario's usual is a fact, not a cause: a failing test is usually
+                        // slow because it failed. Only the run's own label says anything about the machine.
+                        + (point.DurationMs is { } ms ? $"  {ms} ms" + (point.OverUsual ? $" ({HistorySummary.Times(point.TimesUsual!.Value)} usual)" : "") : "")
                         + (point.Partial ? "  (partial)" : "")
+                        + (point.RunDegraded && runs.TryGetValue(point.RunId, out var degradedRun) && HistorySummary.Degraded(degradedRun) is { } label ? $"  [run {label}]" : "")
                         + (point.Attempt is { } attempt && attempt > 1 ? $"  attempt {attempt}" : "")
                         + (point.Error is { } e ? $"  {QueryWriter.OneLine(e, 80)}" : ""));
     }
@@ -445,10 +454,11 @@ internal static class ReportHistory
             ["durationMs"] = entry.DurationMs,
             ["durationP95Ms"] = entry.DurationP95,
             ["durationP95IsRaw"] = entry.DurationP95IsRaw,
+            ["failuresInDegradedRuns"] = entry.FailuresInDegradedRuns,
             ["quarantine"] = entry.Quarantine is { } q ? new { reason = q.Reason, addedBy = q.AddedBy, addedOn = q.AddedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), until = q.Until?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) } : null
         };
         if (detailed)
-            row["runs"] = entry.Points.Select(p => new { runId = p.RunId, at = p.At, commit = p.Commit, result = p.Result.ToString(), durationMs = p.DurationMs, partial = p.Partial, attempt = p.Attempt, error = p.Error }).ToArray();
+            row["runs"] = entry.Points.Select(p => new { runId = p.RunId, at = p.At, commit = p.Commit, result = p.Result.ToString(), durationMs = p.DurationMs, timesUsual = p.TimesUsual is { } t ? Math.Round(t, 2) : (double?)null, overUsual = p.OverUsual, partial = p.Partial, runDegraded = p.RunDegraded, attempt = p.Attempt, error = p.Error }).ToArray();
         return row;
     }
 
@@ -464,6 +474,8 @@ internal static class ReportHistory
         minRuns = verdicts.MinRuns,
         coldStart = verdicts.ColdStart,
         partial = verdicts.Partial,
+        pace = verdicts.Runs.Count > 0 && verdicts.Runs[^1].Pace is { } pace ? Math.Round(pace, 2) : (double?)null,
+        degraded = verdicts.Runs.Count > 0 && verdicts.Runs[^1].Degraded,
         behaviourVerdicts = fromFragment,
         counts = verdicts.Counts.OrderBy(p => HistoryAnalyzer.Precedence(p.Key)).ToDictionary(p => HistoryVerdictNames.Name(p.Key), p => p.Value),
         absent = verdicts.Absent.Select(a => new { stableId = a.StableId, feature = a.Feature, scenario = a.Name, lastRunId = a.LastRunId }).ToArray(),

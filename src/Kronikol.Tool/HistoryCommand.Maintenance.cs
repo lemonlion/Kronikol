@@ -31,6 +31,7 @@ internal static partial class HistoryCommand
         public int? SlowerMinMs;
         public int? AlternatingRuns;
         public int? CountRuns;
+        public double? DegradedBy;
         public string? Branch;
         public int? MinRuns;
         public bool FromCtrf;
@@ -96,6 +97,7 @@ internal static partial class HistoryCommand
             SlowerMinMs = args.SlowerMinMs ?? defaults.SlowerMinMs,
             AlternatingRuns = args.AlternatingRuns ?? defaults.AlternatingRuns,
             CountRuns = args.CountRuns ?? defaults.CountRuns,
+            DegradedBy = args.DegradedBy ?? defaults.DegradedBy,
             // A pull request build reads against the branch it targets, as the run itself did.
             Branch = args.Branch ?? CiMetadataDetector.PullRequestTarget(getEnv)
         }, quarantine, aliases, shapes: shapes);
@@ -116,6 +118,9 @@ internal static partial class HistoryCommand
         @out.WriteLine($"ledger: {ledgerPath} · stream {verdicts.Stream} · run {verdicts.RunId}" + (fromFragment ? "" : " · no History.run.json beside the report, behaviour verdicts off"));
         if (verdicts.ColdStart)
             @out.WriteLine($"advisory: {verdicts.ColdStartMessage}; flaky, duration-regression and behaviour-change do not trip the gate yet");
+        // A build must not fail for the machine's bad day, and must be told that the gate looked.
+        if (HistorySummary.Degraded(verdicts.Runs[^1]) is { } degraded)
+            @out.WriteLine($"advisory: this run is {degraded}; no duration-regression is read in a degraded run (--degraded-by 0 switches that off)");
 
         void Section(string name, List<(ScenarioEntry Scenario, ScenarioHistory? Entry)> list)
         {

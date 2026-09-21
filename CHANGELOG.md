@@ -4,6 +4,77 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.24.0] - 2026-09-21
+
+**Minor - a degraded run is labelled, a failure inside one says so, and no `slower` verdict is read in
+one or against one (#83).** The minor part moved because there is a new option,
+`ReportConfigurationOptions.HistoryDegradedBy` (`--degraded-by` on `kronikol query history` and
+`kronikol history gate`), and new public members: `RunPoint.Pace` and `Degraded`,
+`HistoryPoint.TimesUsual`, `OverUsual` and `RunDegraded`, `ScenarioHistory.FailuresInDegradedRuns`,
+`HistoryAnalysisOptions.DegradedBy`, `HistorySummary.Degraded` and `Times`. It also changes when
+`slower` fires, called out below. Fourth slice of `plans/HISTORY_VERDICT_NOISE_PLAN.md`.
+
+### Added
+
+- **A run's pace**: the median, over the scenarios that passed in it and usually take at least 10 ms,
+  of the duration over the scenario's usual, its median passing duration over the other full runs in
+  the window. At or over `HistoryDegradedBy` (2.0) the run is **degraded**. Measured before shipping,
+  on BreakfastProvider's suite: 407 healthy runs read at most 1.56, three runs sharing their processors
+  with six busy loops read 7.38, 6.85 and 20.93, and runs merely pinned to two and to one processor
+  read 1.47 and 1.68 and were, rightly, not labelled. Replayed here over the same ledgers with
+  `tools/history-replay`, the figures agree to the digit, and none of the 430 runs of the CI ledger is
+  labelled (its highest pace is 1.50).
+- **A failure in a degraded run says so, and is never discounted.** The evidence of a failing scenario
+  gains `this run was degraded: its passing scenarios took 2.3× their usual`; a `flaky` verdict whose
+  failures all sit in degraded runs leads with `every failure was in a degraded run`; `history sN`
+  prints `failed 1 (1 in a degraded run)` and the row carries `[run degraded: passing scenarios took
+  2.3× their usual]`. The flip and fail rates are untouched: a failure in a degraded run is still a
+  fact about the test.
+- **`(6.4× usual)` on a `history sN` row**, failing or not, when the reading is at or over the factor
+  and at least `HistorySlowerMinMs` over its usual. A fact about the reading, never a cause: a failing
+  test is usually slow because it failed. The issue's "5.6× its p95" divided a raw reading by a bar
+  scaled to a different, partial run's speed; against the scenario's own usual it was 6.4×.
+- The run view of `kronikol query history` names a degraded run once, under the ledger line; the HTML
+  History section says it once above the charts and on the run's bar in both charts (`· degraded
+  2.3×`), and a sparkline tooltip row says `degraded run`. `--json`: `history.pace`,
+  `history.degraded`, `failuresInDegradedRuns`, `runs[].timesUsual`, `overUsual`, `runDegraded`.
+- `kronikol history gate` prints an advisory when the run it is gating is degraded.
+
+### Changed
+
+- **No `slower` is read in a degraded run, and a run that is not degraded is not read against one.**
+  The issue asked for a label; the first real degraded runs said a label is not enough. Under
+  contention the slowdown is nowhere near uniform (one run: p25 2.0×, p50 7.1×, p90 53.9×), so reading
+  each scenario against its run's speed cannot absorb it, and every scenario whose previous reading sat
+  over its bar was handed a `slower`: **5, 20 and 7 of 203 scenarios in three contended runs, all
+  false, and 0, 0 and 0 with the rule.** A degraded run left in the baseline costs again, because a
+  nearest-rank p95 of a dozen readings is their maximum. **Behaviour change:** a genuine regression
+  that lands during a degraded run is called `slower` one run later than it was, on the second healthy
+  run after it. `duration-regression` in `history gate` follows.
+- `HistoryDegradedBy = 0` (`--degraded-by 0`) switches all of it off.
+
+### Notes
+
+- **Two readings wait for different things.** A row is read against its usual from two other full-run
+  readings, which is when a duration bar first appears beside it. A run is paced only once at least
+  five scenarios each have `HistoryMinRuns` other readings, because its label gates a verdict: measured
+  over 394 healthy runs, a run paced against two to four others read 2.0 or more one to three times in
+  a thousand, and against five never. On a young ledger the degraded run is labelled after the fact.
+- **The limit, stated rather than fixed:** pace cannot tell a slow machine from a suite that really did
+  get twice as slow everywhere. Such a shift reads as degraded until the shifted runs are half the
+  window (the first 25 at the default) and then stops by itself. A test pins it.
+- **Not taken:** discounting failures in degraded runs from the flip and fail rates (#83, ask 3). No
+  run made here produced a failure to discount, so what it would do to a real flip rate is unseen.
+- Cost, measured with the new `history-replay --bench` at 5,000 scenarios over 50 runs, two same-session
+  pairs: 2,041 and 1,948 ms before, 2,131 and 1,928 ms after. Not distinguishable from the analyzer's
+  own noise; the usual is keyed by one lookup per scenario of each distinct roster and arrays after.
+- What is not measured: a failure inside a degraded run (every scenario passed in every starved run),
+  I/O or memory pressure, and a second suite's load profile. The failing-row note rests on unit tests.
+- The skill's command reference gains the flag, the degraded-run lines and a recipe row, and had three
+  things wrong that are fixed with it: the `alternating` verdict was missing from its vocabulary table,
+  the series legend had no `N`, and it still said the next run "is not compared against" a partial one.
+- Playwright: a degraded run says so on its bar in both charts, and a healthy run says nothing.
+
 ## [3.23.0] - 2026-09-21
 
 **Minor - a partial run no longer sets the bar a full run is read against, and the scenario that is not

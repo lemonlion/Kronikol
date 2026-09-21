@@ -27,7 +27,11 @@ public enum HistoryVerdictKind
     /// <summary>Flipping between pass and fail at or above the flaky rate, or passed on a retry.</summary>
     Flaky,
 
-    /// <summary>Slower than the window's p95 by the factor, in this run and the previous one.</summary>
+    /// <summary>
+    /// Slower than the p95 of its earlier full-run durations by the factor, in this run and the previous
+    /// one. Never read in a partial or a degraded run, and never against one: their durations are facts
+    /// about the filter and the machine.
+    /// </summary>
     Slower,
 
     /// <summary>The same status with a different set of calls than the previous run.</summary>
@@ -129,6 +133,13 @@ public sealed record HistoryAnalysisOptions
 
     /// <summary>A second stream to read the same run against, reported as <see cref="HistoryVerdicts.Compare"/>.</summary>
     public string? CompareBranch { get; init; }
+
+    /// <summary>
+    /// The pace at or above which a run is degraded: its passing scenarios took this many times their
+    /// usual (<see cref="ReportConfigurationOptions.HistoryDegradedBy"/>). Measured on one suite: 407 healthy
+    /// runs never read above 1.56, three runs under real CPU contention never below 6.85.
+    /// </summary>
+    public double DegradedBy { get; init; } = 2.0;
 }
 
 /// <summary>One prior run's reading of one scenario.</summary>
@@ -149,8 +160,19 @@ public sealed record HistoryAnalysisOptions
 /// other; its duration and its set of calls are facts about a filtered run's conditions, and a full run is
 /// not read against them.
 /// </param>
+/// <param name="TimesUsual">
+/// The duration over the scenario's usual (3.24.0): its median passing duration over the other full runs in
+/// the window. Null with fewer than two such readings, without a duration, and in a partial run. A fact
+/// about the reading and never a cause: a failing test is usually slow because it failed.
+/// </param>
+/// <param name="RunDegraded">Whether the run was degraded (3.24.0): its passing scenarios took the degraded factor over their usual.</param>
+/// <param name="OverUsual">
+/// Whether <paramref name="TimesUsual"/> is worth printing (3.24.0): at or over the degraded factor, and
+/// over the usual by at least the milliseconds a slower verdict needs. On a suite whose median scenario
+/// takes 6 ms, 3 ms read as 9 is "3x usual" and means nothing.
+/// </param>
 public sealed record HistoryPoint(string RunId, DateTimeOffset At, string? Commit, char Result, int? DurationMs, string? ShapeSet, string? ShapeOrdered, int? Calls, string? Error, int? Attempt, int? ShapeVersion = null,
-    IReadOnlyList<string>? CallSet = null, bool Partial = false);
+    IReadOnlyList<string>? CallSet = null, bool Partial = false, double? TimesUsual = null, bool RunDegraded = false, bool OverUsual = false);
 
 /// <summary>Where a failing streak began.</summary>
 /// <param name="RunId">The first failing run of the streak.</param>
@@ -262,6 +284,12 @@ public sealed record ScenarioHistory
     /// <summary>The quarantine entry, when there is one.</summary>
     public required HistoryQuarantineEntry? Quarantine { get; init; }
 
+    /// <summary>
+    /// How many of <see cref="Failures"/> happened in a degraded run (3.24.0). They are still failures and
+    /// still count towards the flip and fail rates; this says how much of the record was made on a bad day.
+    /// </summary>
+    public int FailuresInDegradedRuns { get; init; }
+
     /// <summary>Whether the verdict set has this kind.</summary>
     public bool Has(HistoryVerdictKind kind) => Verdicts.Contains(kind);
 
@@ -285,7 +313,13 @@ public sealed record AbsentScenario(string StableId, string Name, string Feature
 /// <param name="Total">Scenarios in the run.</param>
 /// <param name="DurationMs">The sum of recorded durations, or null when none were.</param>
 /// <param name="Partial">Whether the run was partial.</param>
-public sealed record RunPoint(string RunId, DateTimeOffset At, string? Commit, int Passed, int Failed, int Total, long? DurationMs, bool Partial);
+/// <param name="Pace">
+/// The run's pace (3.24.0): the median, over the scenarios that passed in it and usually take at least ten
+/// milliseconds, of the duration over the scenario's usual. Null for a partial run, and until at least five
+/// scenarios each have the minimum runs of other full-run readings behind their usual.
+/// </param>
+/// <param name="Degraded">Whether <paramref name="Pace"/> is at or over the degraded factor.</param>
+public sealed record RunPoint(string RunId, DateTimeOffset At, string? Commit, int Passed, int Failed, int Total, long? DurationMs, bool Partial, double? Pace = null, bool Degraded = false);
 
 /// <summary>The analysis of one run against its stream.</summary>
 public sealed record HistoryVerdicts

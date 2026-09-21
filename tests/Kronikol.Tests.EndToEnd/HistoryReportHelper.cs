@@ -47,9 +47,20 @@ internal static class HistoryReportHelper
 
     /// <summary>Writes the report into <paramref name="tempDir"/>, copies it to <paramref name="outputDir"/>, and returns its file URL.</summary>
     /// <param name="tweak">Changes an earlier run before it is recorded: its 0-based index and the run as seeded.</param>
-    public static string Generate(string tempDir, string outputDir, string fileName, Func<int, HistoryRun, HistoryRun>? tweak = null)
+    /// <param name="wide">Adds a third feature of four passing scenarios, so the run has the five scenarios a pace is taken over.</param>
+    public static string Generate(string tempDir, string outputDir, string fileName, Func<int, HistoryRun, HistoryRun>? tweak = null, bool wide = false)
     {
         var features = Features();
+        if (wide)
+            features =
+            [
+                .. features,
+                new Feature
+                {
+                    DisplayName = "Wishlist",
+                    Scenarios = [.. Enumerable.Range(1, 4).Select(i => new Scenario { Id = "h-wish" + i, DisplayName = "Wish " + i, Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(60) })]
+                }
+            ];
         var at = new DateTimeOffset(2026, 9, 14, 12, 0, 0, TimeSpan.Zero);
         var ledger = Path.Combine(tempDir, "ledger-" + Guid.NewGuid().ToString("N")[..8], "history.jsonl");
         var (roster, run) = HistoryRunBuilder.Build(features, [], Suite, null, at, new HistoryBuildOptions(), "e2e:99:1");
@@ -58,12 +69,12 @@ internal static class HistoryReportHelper
         // alternates fail/pass across the six earlier runs; everything else passed every time.
         for (var i = 0; i < 6; i++)
         {
-            var results = i % 2 == 0 ? "PPFP" : "PPPP";
+            var results = (i % 2 == 0 ? "PPFP" : "PPPP") + (wide ? "PPPP" : "");
             var prior = run with
             {
                 Id = $"e2e:{i + 1}:1", At = at.AddHours(i - 6), Commit = $"c{i + 1:D6}",
-                Results = results, Attempts = "----",
-                Durations = [100, 40, 80, 70],
+                Results = results, Attempts = new string('-', results.Length),
+                Durations = wide ? [100, 40, 80, 70, 60, 60, 60, 60] : [100, 40, 80, 70],
                 Errors = results.Select(r => r == 'F' ? "e1" : null).ToArray(),
                 ErrorText = results.Contains('F') ? new Dictionary<string, string> { ["e1"] = "gateway timed out" } : new Dictionary<string, string>()
             };

@@ -129,6 +129,32 @@ public class HistoryHtmlTests : IDisposable
     }
 
     [Fact]
+    public void A_degraded_run_is_named_in_the_run_tooltips_and_once_above_them()
+    {
+        // #83: six scenarios, six healthy runs, and a current run in which everything took three times as long.
+        var ids = Enumerable.Range(1, 6).Select(i => $"cccc{i:D12}").ToArray();
+        var roster = HistoryRoster.Create(Suite, ids.Select(id => new HistoryRosterEntry(id, "Scenario " + id, "Feature", null)).ToArray());
+        HistoryRun Run(int n, int ms) => new()
+        {
+            Id = $"test:{n}:1", Suite = Suite, Partial = false, At = At.AddHours(n - 20), Branch = null, Commit = null, Provider = null, Url = null, Shards = 1,
+            RosterHash = roster.Hash, Results = "PPPPPP", Attempts = "------", Durations = [.. Enumerable.Repeat<int?>(ms, 6)], Errors = new string?[6],
+            ShapeSet = null, ShapeOrdered = null, Calls = null, ErrorText = new Dictionary<string, string>(), Deps = []
+        };
+        var ledger = Path.Combine(_dir, "degraded.jsonl");
+        for (var n = 1; n <= 6; n++)
+            Assert.Equal(HistoryAppendOutcome.Appended, HistoryLedgerWriter.Append(ledger, roster, Run(n, 1000), "3.24.0").Outcome);
+        var verdicts = HistoryAnalyzer.Analyse(HistoryLedgerReader.Read(ledger, 50).Ledger!, roster, Run(9, 3000), new HistoryAnalysisOptions());
+
+        // The section encodes everything outside ASCII, so it is read as a browser reads it.
+        var section = System.Net.WebUtility.HtmlDecode(HistoryHtml.Section(verdicts));
+
+        Assert.Contains("this run is degraded: its passing scenarios took 3.0× their usual, so no scenario is read slower in it", section);
+        // Both charts' bars for the run say so; no healthy run's does.
+        Assert.Equal(2, Regex.Matches(section, "<title>test:9:1 [^<]* · degraded 3\\.0×</title>").Count);
+        Assert.Equal(2, Regex.Matches(section, "degraded \\d").Count);
+    }
+
+    [Fact]
     public void The_history_section_lists_the_regression_and_links_it_by_stable_id()
     {
         var features = Features(pay: ExecutionResult.Failed);

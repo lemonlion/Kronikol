@@ -122,6 +122,7 @@ public sealed class HistoryRunContext
                         SlowerMinMs = options.HistorySlowerMinMs,
                         AlternatingRuns = options.HistoryAlternatingRuns,
                         CountRuns = options.HistoryCountRuns,
+                        DegradedBy = options.HistoryDegradedBy,
                         PartialThreshold = options.HistoryPartialThreshold,
                         ReportReordered = options.HistoryReordered,
                         // A pull request's runs form their own stream, and the question a pull request asks is
@@ -255,6 +256,17 @@ public static class HistorySummary
             : $" (against {verdicts.RunsRecorded} earlier run{(verdicts.RunsRecorded == 1 ? "" : "s")} on {verdicts.Stream})";
         return head + tail;
     }
+
+    /// <summary>
+    /// What a surface says about a degraded run: <c>degraded: passing scenarios took 2.3× their usual</c>,
+    /// or null when the run is not degraded. A fact about the run, which is what earns the causal word;
+    /// a single reading over its usual never does.
+    /// </summary>
+    public static string? Degraded(RunPoint? run) =>
+        run is { Degraded: true, Pace: { } pace } ? $"degraded: passing scenarios took {Times(pace)} their usual" : null;
+
+    /// <summary><c>2.3×</c>: a factor to one decimal place, the way every history surface prints one.</summary>
+    public static string Times(double factor) => factor.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "×";
 
     /// <summary>
     /// The second reading, when the run was read against another stream too: <c> · on main: 1 broke

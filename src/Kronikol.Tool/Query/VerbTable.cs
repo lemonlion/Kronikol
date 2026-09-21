@@ -100,6 +100,7 @@ internal static class VerbTable
         new("--min-runs", "N", "On history: the recorded runs the flaky and duration verdicts need - the report's HistoryMinRuns (default 5)."),
         new("--alternating-runs", "N", "On history: how far back a set of calls the scenario held counts as a known state - the report's HistoryAlternatingRuns (default 10)."),
         new("--count-runs", "N", "On history: how many runs a changed call count must hold before it is behaviour - the report's HistoryCountRuns (default 2)."),
+        new("--degraded-by", "X", "On history: the pace at or above which a run is degraded, its passing scenarios having taken this many times their usual - the report's HistoryDegradedBy (default 2.0; 0 switches it off)."),
         new("--suite", "NAME", "On history: the suite to look the run up under, when the report does not say.")
     ];
 
@@ -252,7 +253,7 @@ internal static class VerbTable
         new("history", "Search and comparison",
             "What the last runs say about this one, from the cross-run ledger: what broke, what is flaky, what has been failing since when, what changed its calls - per scenario, with the evidence.",
             ["<report>", "<report> s3", "<report> sid:<id>"],
-            ["--history", "--flaky", "--new", "--failing", "--regressed", "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--suite", "--count", "--offset", "--limit", "--json"], Json: true,
+            ["--history", "--flaky", "--new", "--failing", "--regressed", "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--suite", "--count", "--offset", "--limit", "--json"], Json: true,
             [
                 "  history      <report> [s3] [--flaky|--new|--failing|--regressed|--changed]   the ledger's verdicts on this run: broke, fixed, flaky, failing since,",
                 "                                                 slower, behaviour-changed - with the evidence; s3 for one scenario's runs in full",

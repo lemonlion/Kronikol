@@ -237,6 +237,50 @@ public class HistoryGateTests : IDisposable
     }
 
     [Fact]
+    public void A_degraded_run_trips_no_duration_regression_and_the_gate_says_why()
+    {
+        // #83, F8 of the plan: under contention the slowdown is not uniform, so a scenario whose previous
+        // reading was a spike is handed a slower it did not earn. The gate must not fail a build for the
+        // machine's bad day - and must say that it looked.
+        string[] ids = [PayId, RefundId, .. Enumerable.Range(1, 6).Select(i => $"5555{i:D12}")];
+        var roster = HistoryRoster.Create("Suite", ids.Select((id, i) => new HistoryRosterEntry(id, i == 0 ? "Pay by card" : i == 1 ? "Refund an order" : "Other " + i, "Checkout", null)).ToArray());
+        for (var i = 1; i <= 8; i++)
+            HistoryLedgerWriter.Append(Ledger, roster, new HistoryRun
+            {
+                Id = $"gh:{i}:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero).AddHours(i),
+                Branch = "main", Commit = "c", Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash,
+                Results = new string('P', 8), Attempts = new string('-', 8), Durations = [i == 8 ? 4000 : 1000, .. Enumerable.Repeat<int?>(1000, 7)]
+            }, "3.24.0");
+
+        var directory = Path.Combine(_dir, "reports");
+        Directory.CreateDirectory(directory);
+        var report = Path.Combine(directory, "TestRunReport.json");
+        double[] seconds = [30, 2, 2, 2, 2, 6, 6, 6];
+        var scenarios = string.Join(",", ids.Select((id, i) =>
+            $$"""{ "id": "t{{i}}", "stableId": "{{id}}", "name": "{{roster.Names[i]}}", "result": "Passed", "durationSeconds": {{seconds[i].ToString(System.Globalization.CultureInfo.InvariantCulture)}}, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }"""));
+        File.WriteAllText(report, $$"""
+            {
+              "kronikolVersion": "3.24.0", "formatVersion": 1, "suite": "Suite",
+              "startTime": "2026-09-12T10:00:00Z", "endTime": "2026-09-12T10:05:00Z",
+              "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "main", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "99", "runAttempt": "1" },
+              "features": [ { "name": "Checkout", "labels": [], "scenarios": [ {{scenarios}} ] } ]
+            }
+            """);
+
+        var degraded = Run("gate", report, "--fail-on", "duration-regression");
+        var switchedOff = Run("gate", report, "--fail-on", "duration-regression", "--degraded-by", "0");
+        var bad = Run("gate", report, "--degraded-by", "-1");
+
+        Assert.Equal(0, degraded.Exit);
+        Assert.Contains("advisory: this run is degraded: passing scenarios took 4.0× their usual; no duration-regression is read in a degraded run", degraded.Out);
+        Assert.Contains("duration-regression: 0", degraded.Out);
+        Assert.Equal(1, switchedOff.Exit);
+        Assert.DoesNotContain("degraded", switchedOff.Out);
+        Assert.Equal(2, bad.Exit);
+        Assert.Contains("--degraded-by", bad.Err);
+    }
+
+    [Fact]
     public void The_gate_takes_the_alternating_memory()
     {
         // The report takes HistoryAlternatingRuns; the gate takes --alternating-runs and refuses one that

@@ -62,6 +62,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--min-runs N` | the recorded runs the flaky and duration verdicts need, the report's HistoryMinRuns (default 5). `history` only |
 | `--alternating-runs N` | how far back a set of calls the scenario held counts as a known state, the report's HistoryAlternatingRuns (default 10). `history` only |
 | `--count-runs N` | how many runs a changed call count must hold before it is behaviour, the report's HistoryCountRuns (default 2). `history` only |
+| `--degraded-by X` | the pace at or above which a run is degraded, its passing scenarios having taken this many times their usual, the report's HistoryDegradedBy (default 2.0; 0 switches it off). `history` only |
 | `--suite NAME` | the suite `history` looks the run up under, when the report does not carry one. `history` only |
 | `--describe` | one JSON document naming every verb, the flags each one reads (with what each takes), the address forms with a parsing example of each, the exit codes and the envelope's members: `kronikol query --describe`. Needs no report. Generated from the table the tool dispatches and validates from, so it cannot name a verb the tool will not run. For tooling — a wrapper validating arguments, an MCP server building a tool list — not for reading; this document is the prose form of the same table (3.7.0) |
 
@@ -419,7 +420,7 @@ holding one), else exit 2 naming both. The argument order inverts on purpose —
 old report first, `diff <report> --baseline` names the current one — but the output is oriented the same
 way either way: `-` is the older run, `+` the newer, `BROKE` means it passed then and fails now.
 
-### `history <report> [s3 | sid:<id>] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--min-runs N] [--alternating-runs N] [--count-runs N] [--suite NAME] [--history FILE]`
+### `history <report> [s3 | sid:<id>] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--min-runs N] [--alternating-runs N] [--count-runs N] [--degraded-by X] [--suite NAME] [--history FILE]`
 
 ```
 kronikol query history <report>                  # every scenario with a verdict, regressions first
@@ -450,20 +451,24 @@ The vocabulary, and what each word is measured from:
 | `fixed` | passing now, failing in the previous run |
 | `flaky` | it has failed, recovered and failed again, at or above the flip rate — or it passed on a retry. **Flip rate, not fail rate**: five failures in a row is one break and one fix; five alternating is flakiness |
 | `new` | not in any earlier run of this stream |
-| `slower` | above the window's p95 duration by the factor, in this run and the previous one |
+| `slower` | above the p95 of its durations in earlier full runs by the factor, in this run and the previous one. Never read in a degraded run, or against one |
 | `behaviour-changed` | the same status with a different set of calls than the previous run; the evidence gives the call counts |
 | `reordered` | the same calls in a different order — only reported when the run asked for it |
+| `alternating` | back on a set of calls it held within the last ten passing runs, with a different set in between: a scenario with two states (a warm cache and a cold one), not a change. The evidence names the other state |
 | `unstable-shape` | the calls change most runs, so behaviour verdicts are suppressed for it |
 | `quarantined` | on `.kronikol/quarantine.json`; additive, with the reason |
 | `unknown` | no verdict — a defaulted result, or a failure with nothing earlier to compare against |
 
 The series (`PPPPPF`) is the last results oldest first, this run last: `P` passed, `F` failed, `S`
-skipped, `?` no verdict, `.` not in that run. Verdicts are computed **within a branch stream** (the
+skipped, `?` no verdict, `.` not in that run, `N` not a test (the scenario an ingest folds unattributed
+traffic into: it reads no verdict and is never new or absent). Verdicts are computed **within a branch stream** (the
 run's own branch; runs off CI form the `local` stream), so a feature branch's failure is not main's
 history — `--branch` reads against another stream and `--compare-branch` adds a second reading of the
 same run. A run that lacks more than a tenth of the previous run's scenarios (a filtered run, a
-crashed half) is **partial**: nothing is reported absent from it, and the next run is not compared
-against it. Below the minimum number of runs the status verdicts still apply, and the header says how
+crashed half) is **partial**: nothing is reported absent from it, and its durations and calls are not
+what a full run is compared against (a filtered run is alone on the machine, or pays the cold start with
+fewer scenarios to spread it over). Its passes and failures are read like any other run's, and its rows
+are marked `(partial)`. Below the minimum number of runs the status verdicts still apply, and the header says how
 many runs are recorded and how many flakiness needs. On a pull request build, `history` without `--branch` reads against the branch the pull request targets, as the run itself did (3.13.0).
 
 `s3` answers for one scenario in full: every verdict, the flip and fail rates, since when it has been
@@ -471,6 +476,24 @@ failing, its duration against the p95, its calls against the previous run, its q
 its last runs one per line with commit and duration. `--json` carries the same rows plus a `history`
 member with the run-level summary, the counts per verdict, the absent scenarios and any new
 `caller>service` dependency pairs.
+
+**A degraded run** is one whose passing scenarios took `--degraded-by` (2.0) times their usual, the usual
+being a scenario's median passing duration over the other full runs. A failure inside one is weak
+evidence against the test, so it is labelled, never discounted:
+
+```
+runs seen: 8 · verdicts: 9 · failed 1 (1 in a degraded run) · flips 2 · flip rate 0.25 · fail rate 0.11 · last failed 2 run(s) ago
+  F  gh:7:1  2026-09-01T07:00:00Z  c000007  82215 ms (6.4× usual)  [run degraded: passing scenarios took 2.3× their usual]  The service bigquery has thrown…
+```
+
+`[run degraded: …]` is a fact about the run, and the only note that says anything about the machine.
+`(6.4× usual)` is a fact about the reading and **not a cause**: a failing test is usually slow because it
+failed (a polling assertion ran to its timeout). It prints on any row at or over the factor and at least
+100 ms over its usual. The run view says `degraded: passing scenarios took 7.4× their usual, so no
+scenario is read slower in this run` once, under the ledger line; `--json` carries `history.pace`,
+`history.degraded`, `failuresInDegradedRuns`, and per run `timesUsual`, `overUsual`, `runDegraded`,
+`partial`. The duration line reads `p95 of earlier full runs, at this run's speed`: the bar is scaled to
+the run being read, so it can stand above every raw reading under it.
 
 The verdicts are the library's own — the same analysis the run performed when it wrote `Failures.md`
 (which carries a `History:` line per failure and works through regressions first) and

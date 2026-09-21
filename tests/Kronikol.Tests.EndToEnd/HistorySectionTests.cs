@@ -58,6 +58,24 @@ public class HistorySectionTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task A_degraded_run_says_so_on_its_bars_and_a_healthy_one_does_not()
+    {
+        // 3.24.0 (#83): the fourth earlier run took three times as long in every scenario. Its bar in each
+        // chart names it; the run being reported is healthy, so nothing is said above the charts.
+        await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistorySection_Degraded.html",
+            (i, run) => i == 3 ? run with { Durations = [.. run.Durations!.Select(d => d * 3)] } : run, wide: true));
+        var section = Page.Locator("#history-section");
+        await section.WaitForAsync();
+
+        var titles = await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('#history-section .history-chart rect.history-bar title')).map(t => t.textContent)");
+        var degraded = titles.Where(t => t.Contains("degraded")).ToArray();
+        Assert.Equal(2, degraded.Length);
+        Assert.All(degraded, title => Assert.StartsWith("e2e:4:1 ", title));
+        Assert.All(degraded, title => Assert.EndsWith(" · degraded 3.0×", title));
+        await Expect(section.Locator(".history-meta")).Not.ToContainTextAsync("degraded");
+    }
+
+    [Fact]
     public async Task The_flaky_entry_carries_its_evidence_and_series()
     {
         await Open("HistorySection_Flaky.html");

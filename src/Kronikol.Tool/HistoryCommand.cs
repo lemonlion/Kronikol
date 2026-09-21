@@ -123,6 +123,15 @@ internal static partial class HistoryCommand
                     }
                     parsed.CountRuns = parsedCountRuns;
                     break;
+                case "--degraded-by":
+                    if (Next() is not { } degradedBy) return 2;
+                    if (!double.TryParse(degradedBy, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDegradedBy) || parsedDegradedBy < 0)
+                    {
+                        error.WriteLine("--degraded-by takes a factor: a run whose passing scenarios took this many times their usual is degraded, the report's HistoryDegradedBy (default 2.0; 0 switches it off).");
+                        return 2;
+                    }
+                    parsed.DegradedBy = parsedDegradedBy;
+                    break;
                 case "--max-new-failures":
                     if (Next() is not { } max) return 2;
                     if (!int.TryParse(max, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedMax) || parsedMax < 0)
@@ -612,7 +621,7 @@ internal static partial class HistoryCommand
         writer.WriteLine("  prune    [--window N]                         rewrite without the runs outside the window (default 50) - a read-cost control");
         writer.WriteLine("  compact  [--window N]                         rewrite in the current format, every run kept, error text kept for the window");
         writer.WriteLine("  gate     <report|dir> [--fail-on LIST]         exit 1 on what the ledger says is new: --fail-on new-failures,flaky,duration-regression,behaviour-change");
-        writer.WriteLine("           [--max-new-failures N] [--min-pass-rate X] [--flaky-threshold X] [--slower-by X] [--slower-min-ms N] [--alternating-runs N] [--count-runs N] [--min-runs N] [--branch NAME]   (default: new-failures; --branch: a pull request's target)");
+        writer.WriteLine("           [--max-new-failures N] [--min-pass-rate X] [--flaky-threshold X] [--slower-by X] [--slower-min-ms N] [--alternating-runs N] [--count-runs N] [--degraded-by X] [--min-runs N] [--branch NAME]   (default: new-failures; --branch: a pull request's target)");
         writer.WriteLine("  quarantine <sid> --reason TEXT [--by NAME] [--until DATE] | <sid> --release | --list   .kronikol/quarantine.json beside the ledger");
         writer.WriteLine("  rename   <old-sid> <new-sid>                  alias an old stableId to its replacement (.kronikol/aliases.json); record suggests them");
         writer.WriteLine("  doctor                                        the ledger, its companions, the merge attribute and what is expired or damaged");

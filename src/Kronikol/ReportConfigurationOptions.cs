@@ -618,6 +618,18 @@ public record ReportConfigurationOptions
     public int HistoryCountRuns { get; set; } = 2;
 
     /// <summary>
+    /// The pace at or above which a run is <b>degraded</b>: its passing scenarios took this many times their
+    /// usual, the usual being a scenario's median passing duration over the other full runs in the window.
+    /// A degraded run is labelled on every history surface, a failure inside one says so, and no
+    /// <c>slower</c> verdict is read in it or against it: under contention the slowdown is nowhere near
+    /// uniform, so the run-speed normalisation cannot absorb it (measured: 5, 20 and 7 false <c>slower</c>
+    /// verdicts of 203 scenarios in three contended runs, none with the rule). Pass and fail are never
+    /// discounted. Default: 2.0 - measured on one suite, 407 healthy runs never read above 1.56 and three
+    /// runs under real CPU contention never below 6.85.
+    /// </summary>
+    public double HistoryDegradedBy { get; set; } = 2.0;
+
+    /// <summary>
     /// The share of the previous run's scenarios a run may lack before it is recorded as partial — a
     /// filtered run, a crashed half — so its missing scenarios are not reported absent, and its durations
     /// and calls are not what a full run is compared against. Its passes and failures are read like any
