@@ -113,6 +113,28 @@ public static partial class HistoryAnalyzer
             foreach (var kind in scenario.Verdicts)
                 counts[kind] = counts.GetValueOrDefault(kind) + 1;
 
+        // Outside a partial run: what was failing when it last ran and is not in this roster. Newest run
+        // first, so the first verdict met for a holder is its latest; a later pass clears it. Only on a
+        // partial run - on a full one the same scenarios are `absent`, and said so.
+        var outside = new List<FailingOutside>();
+        if (partial)
+        {
+            var settled = new HashSet<(string, int)>();
+            for (var r = prior.Count - 1; r >= 0; r--)
+            {
+                if (priorRosters[r] is not { } priorRoster) continue;
+                var results = prior[r].Results;
+                for (var i = 0; i < priorRoster.Count && i < results.Length; i++)
+                {
+                    if (!HistoryFormat.IsRealVerdict(results[i])) continue;
+                    var id = aliases?.Current(priorRoster.Ids[i]) ?? priorRoster.Ids[i];
+                    if (!settled.Add((id, priorRoster.Slots[i]))) continue;
+                    if (results[i] == HistoryFormat.Failed && !currentIds.Contains((id, priorRoster.Slots[i])) && !currentIds.Contains((priorRoster.Ids[i], priorRoster.Slots[i])))
+                        outside.Add(new FailingOutside(priorRoster.Ids[i], priorRoster.Slots[i], priorRoster.Names[i], priorRoster.Features[i], prior[r].Id, prior.Count - r));
+                }
+            }
+        }
+
         var runs = prior.Select((r, i) => RunPointOf(r) with { Pace = paces.Of(i), Degraded = paces.Degraded(i) }).ToList();
         runs.Add(RunPointOf(current) with { Partial = partial, Pace = paces.Of(prior.Count), Degraded = paces.Degraded(prior.Count) });
 
@@ -132,6 +154,8 @@ public static partial class HistoryAnalyzer
                 ? $"{prior.Count.ToString(CultureInfo.InvariantCulture)} run{(prior.Count == 1 ? "" : "s")} recorded in the {stream} stream; flakiness and duration verdicts need {options.MinRuns.ToString(CultureInfo.InvariantCulture)}"
                 : null,
             Partial = partial,
+            PreviousFullCount = previousFull.Roster?.Count,
+            FailingOutside = outside,
             Scenarios = scenarios,
             Absent = absent,
             Counts = counts,
@@ -354,6 +378,13 @@ public static partial class HistoryAnalyzer
             if (real[i].Result == HistoryFormat.Failed && (i == 0 || real[i - 1].Result != HistoryFormat.Failed)) episodes++;
         var passedOnRetry = currentResult == HistoryFormat.Passed && currentPoint.Attempt is > 1;
         var flakyByRate = real.Count >= options.MinRuns && episodes >= 2 && flipRate >= options.FlakyRate;
+        // Every condition missed, not the first one tested: `P F P` under the bar is one episode AND too
+        // few verdicts, and a reader told only about the bar lowers it and is no nearer.
+        var shortfall = flakyByRate || passedOnRetry || flips == 0
+            ? HistoryFlakyShortfall.None
+            : (episodes < 2 ? HistoryFlakyShortfall.OneEpisode : 0)
+              | (real.Count < options.MinRuns ? HistoryFlakyShortfall.TooFewVerdicts : 0)
+              | (flipRate < options.FlakyRate ? HistoryFlakyShortfall.BelowRate : 0);
         if (flakyByRate || passedOnRetry)
         {
             verdicts.Add(HistoryVerdictKind.Flaky);
@@ -625,6 +656,8 @@ public static partial class HistoryAnalyzer
             FailRate = failRate,
             Flips = flips,
             FlipRate = flipRate,
+            FailingEpisodes = episodes,
+            FlakyShortfall = shortfall,
             RunsSinceLastFlip = runsSinceLastFlip,
             LastFailedRunsAgo = lastFailedRunsAgo,
             FailingSince = failingSince,

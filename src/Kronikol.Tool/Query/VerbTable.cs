@@ -102,7 +102,10 @@ internal static class VerbTable
         new("--count-runs", "N", "On history: how many runs a changed call count must hold before it is behaviour - the report's HistoryCountRuns (default 2)."),
         new("--degraded-by", "X", "On history: the pace at or above which a run is degraded, its passing scenarios having taken this many times their usual - the report's HistoryDegradedBy (default 2.0; 0 switches it off)."),
         new("--calls", null, "On history, with a scenario: print the scenario's distinct calls as the templater wrote them, so a wrong {id} or a missing rule can be seen."),
-        new("--suite", "NAME", "On history: the suite to look the run up under, when the report does not say.")
+        new("--suite", "NAME", "On history: the suite to look the run up under, when the report does not say - or, with no report, which of the ledger's suites to read."),
+        new("--run", "ID", "On history: read this run instead of the report's - a run id, a substring only one id has, last-failed or previous. Read from the ledger as it stood then, so history needs no report at all."),
+        new("--sid", "ID", "On history: one scenario by its stable id - what a row is addressed by when there is no report to number it."),
+        new("--window", "N", "On history: how many runs back the run is read against - the report's HistoryWindow (default 50).")
     ];
 
     /// <summary>The headings the help groups verbs under, in order, with the caption printed beside each.</summary>
@@ -253,14 +256,16 @@ internal static class VerbTable
 
         new("history", "Search and comparison",
             "What the last runs say about this one, from the cross-run ledger: what broke, what is flaky, what has been failing since when, what changed its calls - per scenario, with the evidence.",
-            ["<report>", "<report> s3", "<report> sid:<id>"],
-            ["--history", "--flaky", "--new", "--failing", "--regressed", "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--calls", "--suite", "--count", "--offset", "--limit", "--json"], Json: true,
+            ["<report>", "<report> s3", "<report> sid:<id>", "[--run ID] [--sid ID]"],
+            ["--history", "--flaky", "--new", "--failing", "--regressed", "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--calls", "--suite", "--run", "--sid", "--window", "--count", "--offset", "--limit", "--json"], Json: true,
             [
                 "  history      <report> [s3] [--flaky|--new|--failing|--regressed|--changed]   the ledger's verdicts on this run: broke, fixed, flaky, failing since,",
                 "                                                 slower, behaviour-changed - with the evidence; s3 for one scenario's runs in full",
                 "                                                 the ledger is --history FILE, else $KRONIKOL_HISTORY, else .kronikol/history.jsonl above the report;",
                 "                                                 --branch NAME reads against another stream, --compare-branch NAME adds a second reading,",
-                "                                                 --min-runs N the bar the report used for its flaky and duration verdicts (default 5)"
+                "                                                 --min-runs N the bar the report used for its flaky and duration verdicts (default 5)",
+                "  history      [--run ID] [--sid ID] [--window N]   no report: the ledger's newest run, or --run ID - an id, a unique part of one,",
+                "                                                 last-failed or previous - read as it stood then; --sid for one scenario"
             ])
     ];
 

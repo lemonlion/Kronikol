@@ -251,7 +251,7 @@ public class QueryHistoryTests : IDisposable
         Assert.Contains("flaky", flaky.Output);
         // Flaky leads; broke is still there as the secondary verdict, so --regressed finds it too.
         Assert.Contains("s0", regressed.Output);
-        Assert.Contains("no scenario with a verdict (new)", newOnes.Output);
+        Assert.Contains("no scenario is new in this run", newOnes.Output);
         Assert.Equal("1", count.Output.Trim());
     }
 

@@ -117,8 +117,27 @@ internal sealed class QueryOptions
     /// <summary><c>history --suite NAME</c>: the suite, when the report does not carry one.</summary>
     public string? SuiteOverride { get; private set; }
 
-    /// <summary>The window the history verb reads; the library's default, because the verb has no flag for it yet.</summary>
-    public int HistoryWindowOrDefault => 50;
+    /// <summary><c>history --window N</c>: how many runs back the run is read against; null for the library's default.</summary>
+    public int? Window { get; private set; }
+
+    /// <summary>The window the history verb reads: <c>--window</c>, or the library's default - the report option <c>HistoryWindow</c>'s.</summary>
+    public int HistoryWindowOrDefault => Window ?? 50;
+
+    /// <summary>
+    /// <c>history --run ID</c>: the run to read instead of the one the report describes - a run id, a
+    /// substring only one id has, <c>last-failed</c> or <c>previous</c>. Read from the ledger as it stood
+    /// then, so it needs no report at all.
+    /// </summary>
+    public string? Run { get; private set; }
+
+    /// <summary>
+    /// Replaces an alias or a partial id with what it resolved to, so that a <c>next:</c> pointer resumes the
+    /// SAME run: <c>last-failed</c> names a different run the moment another failure is recorded.
+    /// </summary>
+    internal void RunResolvedTo(string name) => Run = name;
+
+    /// <summary><c>history --sid ID</c>: one scenario by its stable id - the only address a reading with no report has.</summary>
+    public string? Sid { get; private set; }
 
     /// <summary>
     /// The flags actually written on the command line, as their argv tokens. A value alone cannot answer
@@ -145,7 +164,8 @@ internal sealed class QueryOptions
         "--where", "--group-by", "--tolerance", "--count", "--json", "--failed", "--errors-only",
         "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
         "--number", "--baseline", "--describe", "--history", "--flaky", "--new", "--failing", "--regressed",
-        "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--calls", "--suite"
+        "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--calls", "--suite",
+        "--run", "--sid", "--window"
     ];
 
     /// <summary>
@@ -327,6 +347,21 @@ internal sealed class QueryOptions
                     options.DegradedBy = parsedDegradedBy;
                     break;
                 case "--suite": if (Next(arg) is not { } suiteName) return null; options.SuiteOverride = suiteName; break;
+                case "--run": if (Next(arg) is not { } runName) return null; options.Run = runName; break;
+                case "--sid":
+                    if (Next(arg) is not { } sid) return null;
+                    // The flag takes the id; the address form is accepted because it is what every listing prints.
+                    options.Sid = sid.StartsWith("sid:", StringComparison.OrdinalIgnoreCase) ? sid[4..] : sid;
+                    break;
+                case "--window":
+                    if (Next(arg) is not { } window) return null;
+                    if (!int.TryParse(window, out var parsedWindow) || parsedWindow <= 0)
+                    {
+                        error.WriteLine("--window takes a positive number of runs: how far back the run is read against, the report's HistoryWindow (default 50).");
+                        return null;
+                    }
+                    options.Window = parsedWindow;
+                    break;
                 case "--flaky": options.Flaky = true; break;
                 case "--new": options.New = true; break;
                 case "--failing": options.Failing = true; break;
@@ -428,6 +463,10 @@ internal sealed class QueryOptions
         // a different ledger or stream is a different listing.
         if (HistoryPath is not null) Flag("--history", HistoryPath);
         if (SuiteOverride is not null) Flag("--suite", SuiteOverride);
+        // Which run, which scenario of it, and how far back: each changes the rows a page is counted over.
+        if (Run is not null) Flag("--run", Run);
+        if (Sid is not null) Flag("--sid", Sid);
+        if (Window is not null) Flag("--window", Window.Value.ToString(CultureInfo.InvariantCulture));
         if (Branch is not null) Flag("--branch", Branch);
         if (CompareBranch is not null) Flag("--compare-branch", CompareBranch);
         if (MinRuns is not null) Flag("--min-runs", MinRuns.Value.ToString(CultureInfo.InvariantCulture));

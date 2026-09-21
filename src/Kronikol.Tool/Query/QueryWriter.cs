@@ -13,7 +13,7 @@ namespace Kronikol.Tool.Query;
 /// the two ends of a diff - because a resume pointer that drops them silently widens the question it was
 /// resuming.</para>
 /// </summary>
-internal sealed record QueryEnvelope(string Command, string Report, string? KronikolVersion,
+internal sealed record QueryEnvelope(string Command, string? Report, string? KronikolVersion,
     IReadOnlyList<string> Addresses);
 
 /// <summary>
@@ -382,7 +382,8 @@ internal sealed class QueryWriter
             // It carries the page size too - a pointer that resumes at a different width has not resumed.
             _next = complete || stuck
                 ? null
-                : ["query", _envelope!.Command, _envelope.Report, .. _envelope.Addresses, .. rerunArgs ?? [],
+                // No report on `history` read from the ledger alone: the pointer is then the flags.
+                : ["query", _envelope!.Command, .. (string[])(_envelope.Report is { } report ? [report] : []), .. _envelope.Addresses, .. rerunArgs ?? [],
                    "--limit", limit.ToString(CultureInfo.InvariantCulture),
                    "--offset", last.ToString(CultureInfo.InvariantCulture)];
             if (stuck)

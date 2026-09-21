@@ -1277,3 +1277,33 @@ file.
   labels now end the row, which is what §2 moved it for.
 - In passing: the managed block in `CLAUDE.md` (and the git-ignored `AGENTS.md`) and its new guard in
   `SkillDriftTests`; the `FailuresDigest.Jsonl` doc comment (F10).
+- Verified by the whole solution: 51 test assemblies, 0 failed (Kronikol.Tests 5,296).
+
+### 3.26.0 (minor) - S2 and S3
+
+- **S2** as §5.2 with every correction of the 2026-09-19 round: `HistoryFlakyShortfall` is a `[Flags]`
+  set, `FailingEpisodes`, `PreviousFullCount`, `FailingOutside` (latest verdict a failure, partial runs
+  only), the per-filter empty note that depends on whether the run holds a failure, the five-runs-back
+  and five-addresses bounds, an address on every counted failure. `QueryHistoryHintsTests` (14) ported
+  unchanged.
+- **§5.3 test 9, the replay guard, was not in any prototype and is new:**
+  `QueryHistoryShortfallReplayTests` over `TestData/History/ci-ledger.xunit-in-docker.jsonl`, one suite
+  of BreakfastProvider's CI ledger (25 runs, 3 of them failing) trimmed to what the status verdicts
+  read, 76 KB. It holds the analyzer's shortfall to an independent count of each scenario's own points,
+  and drives the real CLI over every run to check no hint names `--min-runs` or an episode the analyzer
+  did not give.
+- **S3** as §3.2 and its "Built" note, minus what 3.25.1 had already done. `HistorySubject` /
+  `HistoryReading` carry one renderer for both sources; `--calls` works in ledger mode too, because the
+  reading carries the run line and its shapes. `RunCore`'s three report-less refusals are one method,
+  so a flag `history` cannot read is refused with no report as with one. An `s3` positional with a
+  ledger reading is exit 2 naming `--sid`. `QueryHistoryLedgerOnlyTests` (15) ported; one pin moved with
+  S1's error line.
+- **Found by driving the built CLI over the real ledger, not by a test:** a hint printed under `--run
+  gh:3:1` said `next: history --sid <id>`, which read the NEWEST run when followed. Every pointer of a
+  ledger reading now names its run (`HistoryReading.Next`), the newest included; red test first. The
+  wiki's example block was also corrected against real output (the summary line reads `nothing
+  changed`, and notes carry no bullet).
+- `--run` on the other verbs, the retained report tried first, and `RunIsResolved` wait for S4, as do
+  the HTML tooltip's attempt label and `--run` among the universal flags.
+- Cost: `tools/history-replay --time` over the whole CI ledger, warm analysis 5 ms and 12.5 KB a
+  scenario, inside the 28 KB bound the cost plan set. `FailingOutside` runs on partial runs only.

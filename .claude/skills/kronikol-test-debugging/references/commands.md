@@ -64,7 +64,10 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--count-runs N` | how many runs a changed call count must hold before it is behaviour, the report's HistoryCountRuns (default 2). `history` only |
 | `--degraded-by X` | the pace at or above which a run is degraded, its passing scenarios having taken this many times their usual, the report's HistoryDegradedBy (default 2.0; 0 switches it off). `history` only |
 | `--calls` | with a scenario: print its distinct calls as the templater wrote them (`/assets/app.{id}.js`), so a wrong `{id}` or a missing `HistoryShapeTemplates` rule can be seen. `history` only |
-| `--suite NAME` | the suite `history` looks the run up under, when the report does not carry one. `history` only |
+| `--suite NAME` | the suite `history` looks the run up under, when the report does not carry one - or, with no report, which of the ledger's suites to read. `history` only |
+| `--run ID` | the run to read instead of the report's: a run id, a substring only one id has, `last-failed` (the newest run with a failure) or `previous`. Read from the ledger as it stood then, so `history` needs no report at all. `history` only (3.26.0) |
+| `--sid ID` | one scenario by its stable id - what a row is addressed by when no report numbers it. `history` only (3.26.0) |
+| `--window N` | how many runs back the run is read against, the report's HistoryWindow (default 50). `history` only (3.26.0) |
 | `--describe` | one JSON document naming every verb, the flags each one reads (with what each takes), the address forms with a parsing example of each, the exit codes and the envelope's members: `kronikol query --describe`. Needs no report. Generated from the table the tool dispatches and validates from, so it cannot name a verb the tool will not run. For tooling — a wrapper validating arguments, an MCP server building a tool list — not for reading; this document is the prose form of the same table (3.7.0) |
 
 ### The `--json` envelope
@@ -421,9 +424,11 @@ holding one), else exit 2 naming both. The argument order inverts on purpose —
 old report first, `diff <report> --baseline` names the current one — but the output is oriented the same
 way either way: `-` is the older run, `+` the newer, `BROKE` means it passed then and fails now.
 
-### `history <report> [s3 | sid:<id>] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--min-runs N] [--alternating-runs N] [--count-runs N] [--degraded-by X] [--calls] [--suite NAME] [--history FILE]`
+### `history [<report>] [s3 | sid:<id>] [--run ID] [--sid ID] [--window N] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--min-runs N] [--alternating-runs N] [--count-runs N] [--degraded-by X] [--calls] [--suite NAME] [--history FILE]`
 
 ```
+kronikol query history --run last-failed         # no report: the failing run a re-run overwrote, from the ledger
+kronikol query history --run T101611Z --sid 3fa9c0d1e2b47a65   # one scenario of one run, by a unique part of its id
 kronikol query history <report>                  # every scenario with a verdict, regressions first
 kronikol query history <report> --flaky          # only the ones the ledger calls flaky
 kronikol query history <report> s3               # one scenario: its verdicts, the numbers, its last runs
@@ -477,6 +482,37 @@ failing, its duration against the p95, its calls against the previous run, its q
 its last runs one per line with commit and duration. `--json` carries the same rows plus a `history`
 member with the run-level summary, the counts per verdict, the absent scenarios and any new
 `caller>service` dependency pairs.
+
+**The report is not the run you want (3.26.0).** A re-run overwrites the report; the ledger still has the
+run it replaced. `history` is the one verb that answers with **no report**: the ledger is found the usual
+way (`--history`, `$KRONIKOL_HISTORY`, the `.kronikol/history.jsonl` above the working directory), the
+run read is the newest of the suite or the one `--run` names, and it is read against the runs recorded
+**before** it, behaviour verdicts included. Rows are addressed `sid:<id>` (a report's `s3` is an ordinal
+nobody else has) and `--sid <id>` asks for one; the header says `ledger only — no report read; steps,
+calls and payloads need one`. `--run` takes a whole id, any part of one that only one id has,
+`last-failed` or `previous`; a name that fits no run or several is exit 2 **listing the last ten runs
+with their pass and fail counts**, so the refusal is the index. Several suites in the ledger and no
+`--suite` is exit 2 naming them. With a report **and** `--run`, the report names the ledger and the
+suite and the flag names the run; a run other than the report's own is read from the ledger under a
+`! <report> describes <run> — reading <other run> from the ledger instead` banner. A `next:` pointer
+always carries the run an alias resolved to, never the alias.
+
+**An empty filter says what it is empty of (3.26.0).** `--failing` on a green re-run used to print `no
+scenario with a verdict (failing)`, which reads as "nothing failed". It now reads `no scenario is
+failing in this run`, and then points at what the window holds: `1 scenario here failed earlier in the
+window: s8 (2 runs ago, local:…T101611Z) · next: history s8` (failures up to five runs back are named,
+at most five, older ones are counted with the address of the newest). `failing` is a verdict - failing
+now **and** before - so a run in which something **broke** is told `no scenario has been failing since
+an earlier run (what fails in this one broke in it)` with the scenarios named. `--flaky` names the
+scenarios that have flipped without being flaky and gives the analyzer's own reason: `s8 — 2 flips, one
+failing episode; flaky needs two` (one break and one fix is two flips and ONE episode; `--min-runs` is
+named only when the bar is the sole obstacle). A **partial** run says so on its own line - `this run is
+partial: 34 scenarios, the last full run had 396 — a filter answers for these 34 only` - and adds
+`also: 3 scenarios outside this partial run were failing when they last ran (most recently in <run>) ·
+next: history --run <run>`. The scenario view gains `failing episodes N` beside the flips. `--json`:
+`history.source` (`report` or `ledger`), `history.previousFullCount`, `history.nearMisses` (`kind`
+`failed-earlier` / `failed-now` / `flips-not-flaky`, `reason`, `runId`, `runsAgo`),
+`history.failingOutside`, and `failingEpisodes` on each row; `report` is `null` with no report.
 
 **Nothing in the `s3` view is cut (3.25.3).** A failed run's stored error is printed whole on its own
 line under the row, the evidence is whole, and every new and gone call is listed (`new:` / `gone:`, one

@@ -98,8 +98,19 @@ internal static partial class QueryCommand
 
         if (options.File is null)
         {
-            error.WriteLine("No report given. Pass a TestRunReport.json, or a directory holding one.");
-            return 2;
+            // One verb answers without a report: the ledger holds the run a re-run overwrote (#81).
+            if (command is not "history")
+            {
+                error.WriteLine("No report given. Pass a TestRunReport.json, or a directory holding one.");
+                return 2;
+            }
+
+            if (RefuseWhatNeedsNoReport(command, options, error) is { } refusedWithoutReport)
+                return refusedWithoutReport;
+
+            var ledgerWriter = new QueryWriter(@out, options.MaxBytes, options.Json ? new QueryEnvelope(command, null, null, []) : null, options.Out);
+            var ledgerExit = HistoryFromLedger(options, ledgerWriter, error, getEnv);
+            return ledgerExit == 0 && !ledgerWriter.Flush(error) ? 1 : ledgerExit;
         }
 
         var resolved = ResolveReport(options.File, error);
@@ -135,26 +146,7 @@ internal static partial class QueryCommand
         if (ReportGate.Refuse(index, resolved, error) is { } notAReport)
             return notAReport;
 
-        // Only `services` and `interactions --group-by` order their rows; everywhere else the order is the
-        // report's and cannot be changed. Accepting --sort and discarding it is the same silence the
-        // per-verb validators were added to remove - an agent reads row one as the slowest or the worst
-        // when it is merely the first, and nothing said otherwise. `interactions` answers for itself,
-        // because there the flag is legal with --group-by and refused without it.
-        if (options.Sort is not null && command is not ("services" or "interactions"))
-        {
-            error.WriteLine($"{command} lists rows in the report's own order and cannot sort them.");
-            error.WriteLine("Only `services --sort calls|duration|bytes|errors` and `interactions --group-by … --sort calls|duration|errors` order their rows.");
-            return 2;
-        }
-
-        if (options.Json && !JsonCommands.Contains(command, StringComparer.Ordinal))
-        {
-            error.WriteLine($"--json is not available on '{command}'. It answers: " + string.Join(", ", JsonCommands) + ".");
-            error.WriteLine("The rest print prose - a step tree, a payload, a trace - that has no honest object form.");
-            return 2;
-        }
-
-        if (RefuseFlagsTheVerbCannotRead(command, options, error) is { } refused)
+        if (RefuseWhatNeedsNoReport(command, options, error) is { } refused)
             return refused;
 
         // http, body, note and diagram write the payload to --out themselves, and a second writer aiming
@@ -182,6 +174,31 @@ internal static partial class QueryCommand
             return 1;
 
         return exit;
+    }
+
+    /// <summary>The three refusals that need no report: a sort the verb cannot do, a <c>--json</c> it cannot give, a flag it does not read.</summary>
+    private static int? RefuseWhatNeedsNoReport(string command, QueryOptions options, TextWriter error)
+    {
+        // Only `services` and `interactions --group-by` order their rows; everywhere else the order is the
+        // report's and cannot be changed. Accepting --sort and discarding it is the same silence the
+        // per-verb validators were added to remove - an agent reads row one as the slowest or the worst
+        // when it is merely the first, and nothing said otherwise. `interactions` answers for itself,
+        // because there the flag is legal with --group-by and refused without it.
+        if (options.Sort is not null && command is not ("services" or "interactions"))
+        {
+            error.WriteLine($"{command} lists rows in the report's own order and cannot sort them.");
+            error.WriteLine("Only `services --sort calls|duration|bytes|errors` and `interactions --group-by … --sort calls|duration|errors` order their rows.");
+            return 2;
+        }
+
+        if (options.Json && !JsonCommands.Contains(command, StringComparer.Ordinal))
+        {
+            error.WriteLine($"--json is not available on '{command}'. It answers: " + string.Join(", ", JsonCommands) + ".");
+            error.WriteLine("The rest print prose - a step tree, a payload, a trace - that has no honest object form.");
+            return 2;
+        }
+
+        return RefuseFlagsTheVerbCannotRead(command, options, error);
     }
 
     private static int Dispatch(string command, ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error, Func<string, string?> getEnv) =>

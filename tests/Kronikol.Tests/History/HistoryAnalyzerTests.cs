@@ -63,6 +63,57 @@ public class HistoryAnalyzerTests
 
     private static ScenarioHistory First(HistoryVerdicts verdicts) => verdicts.Scenarios[0];
 
+    // ── F4 (EVIDENCE_SURVIVES_A_RERUN_PLAN.md §3.2): a reading of an older run stops at that run ──
+
+    [Fact]
+    public void A_run_read_from_the_middle_of_the_ledger_does_not_count_later_runs_as_earlier_ones()
+    {
+        var roster = Roster(Ids[0]);
+        // Five runs; the scenario fails only in the last. The third is the one asked about.
+        var ledger = Series(roster, "P", "P", "P", "P", "F");
+        var third = Run(roster, 3, "P");
+
+        var verdicts = Analyse(ledger, roster, third);
+
+        Assert.Equal(2, verdicts.RunsRecorded);
+        Assert.DoesNotContain(First(verdicts).Points, p => p.RunId is "gh:4:1" or "gh:5:1");
+        Assert.Equal(0, First(verdicts).Failures);
+        Assert.Equal(HistoryVerdictKind.Stable, First(verdicts).Primary);
+    }
+
+    [Fact]
+    public void A_run_read_from_the_middle_of_the_ledger_is_compared_with_the_other_stream_as_it_stood_then()
+    {
+        var roster = Roster(Ids[0]);
+        // Append order: two runs of main, the feature-branch run being read, then a run of main that fails.
+        var ledger = Ledger(new[]
+        {
+            (roster, Run(roster, 1, "P")),
+            (roster, Run(roster, 2, "P")),
+            (roster, Run(roster, 3, "P", branch: "feature")),
+            (roster, Run(roster, 4, "F"))
+        });
+        var asked = Run(roster, 3, "P", branch: "feature");
+
+        var verdicts = Analyse(ledger, roster, asked, new HistoryAnalysisOptions { CompareBranch = "main" });
+
+        Assert.NotNull(verdicts.Compare);
+        Assert.Equal(2, verdicts.Compare!.RunsRecorded);
+        Assert.DoesNotContain(First(verdicts.Compare).Points, p => p.RunId == "gh:4:1");
+    }
+
+    [Fact]
+    public void A_run_the_ledger_does_not_hold_is_read_against_every_run_as_before()
+    {
+        var roster = Roster(Ids[0]);
+        var ledger = Series(roster, "P", "P", "F");
+
+        var verdicts = Analyse(ledger, roster, Run(roster, 9, "P"));
+
+        Assert.Equal(3, verdicts.RunsRecorded);
+        Assert.Equal(HistoryVerdictKind.Fixed, First(verdicts).Primary);
+    }
+
     // ─── Status verdicts ───────────────────────────────────────
 
     [Fact]

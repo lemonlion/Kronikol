@@ -4,6 +4,74 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.26.0] - 2026-09-21
+
+**Minor - `kronikol query history` answers without a report (#81), and an empty answer stops reading
+as "nothing failed" (#84).** The minor part moved because there is new surface: three flags on the
+`history` verb (`--run`, `--sid`, `--window`), a mode of the verb that needs no report, and four
+additive public members of the library (`HistoryFlakyShortfall`, `FailingOutside`,
+`ScenarioHistory.FailingEpisodes` and `.FlakyShortfall`, `HistoryVerdicts.PreviousFullCount` and
+`.FailingOutside`). Nothing existing is renamed or removed. Several lines of the verb's text output are
+reworded, called out below. Second of three releases from `plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md`
+(S2 and S3).
+
+### Added
+
+- **`kronikol query history` with no report.** A re-run overwrites the report; the ledger still holds
+  the run it replaced, and until now `history` could only read whichever report happened to be on
+  disk. With no `<report>` the verb reads a run from its own ledger line: the newest of the suite, or
+  the one `--run` names. The ledger is found the usual way (`--history`, `$KRONIKOL_HISTORY`, the
+  `.kronikol/history.jsonl` above the working directory). The run is read against the runs recorded
+  before it, behaviour verdicts included, since the ledger's line carries the fingerprints. Rows are
+  addressed `sid:<id>`, and the header says `ledger only — no report read; steps, calls and payloads
+  need one`. Every other verb still needs a report.
+- **`--run ID`** on `history`: a whole run id, any part of one that only one id in the ledger has
+  (`T101611Z`), `last-failed` (the newest run holding a failure) or `previous`. A name that fits no
+  run, or several, is exit 2 listing the last ten runs with their pass and fail counts, so the refusal
+  is the index. With a report **and** `--run`, the report names the ledger and the suite and the flag
+  names the run; a run other than the report's own is read from the ledger under the banner `!
+  <report> describes <run> — reading <other run> from the ledger instead`. A `next:` pointer carries
+  the run an alias resolved to, never the alias.
+- **`--sid ID`** on `history`: one scenario by its stable id, the only address a reading without a
+  report has (`--sid sid:<id>` is accepted too, because that is what a listing prints). **`--window
+  N`**: how many runs back the run is read against, the report's `HistoryWindow`, which had no
+  command-line twin on this verb.
+- **`--json`**: `report` is `null` with no report; the `history` member gains `source` (`report` or
+  `ledger`), `previousFullCount`, `nearMisses` and `failingOutside`; each row gains `failingEpisodes`.
+- **Library:** `ScenarioHistory.FailingEpisodes` and `ScenarioHistory.FlakyShortfall` (a `[Flags]`
+  `HistoryFlakyShortfall`: `OneEpisode`, `TooFewVerdicts`, `BelowRate` - every condition of the flaky
+  rule a scenario that has flipped does not meet); `HistoryVerdicts.PreviousFullCount` (what a partial
+  run is partial of) and `HistoryVerdicts.FailingOutside` (on a partial run, the scenarios outside it
+  whose latest verdict in the window was a failure).
+
+### Changed
+
+- **An empty filter says what it is empty of (#84).** `no scenario with a verdict (failing)` was a
+  statement about the run the report describes, written as if about the scenario, and after a green
+  re-run it read as "nothing failed". It is now `no scenario is failing in this run` (and `…broke in
+  this run`, `…is flaky as of this run`, `…is new in this run`, `…changed its calls or its duration in
+  this run`), followed by what the window still holds: `1 scenario here failed earlier in the window:
+  s8 (2 runs ago, <run>) · next: history s8`. Failures up to five runs back are named, five addresses
+  at most; older ones are counted, and the count still carries the address of the newest, because a
+  scenario that failed eight runs ago and has passed since is `stable` and appears in no listing.
+- **A run in which something broke is never told nothing is failing.** `failing` is a verdict
+  (failing now and in the previous run), so a scenario that broke in this run is not in the `--failing`
+  answer. The note then reads `no scenario has been failing since an earlier run (what fails in this
+  one broke in it)` and a hint names the scenarios with the verdict they do have. On the CI ledger this
+  was measured against, every failing run was such a run.
+- **`--flaky` gives the real reason a near-miss missed.** #84 proposed blaming `--min-runs`; its own
+  scenario had met that bar, and was not flaky because `P P F P P` is two flips and **one** failing
+  episode, where flaky needs two. The hint prints the analyzer's own record: `s8 — 2 flips, one
+  failing episode; flaky needs two`, and names `--min-runs` only when the bar is the sole obstacle. The
+  scenario view prints `failing episodes N` beside the flips. A replay of a real CI ledger, committed
+  as a test, holds the recorded reason to an independent count of each scenario's own points.
+- **A partial run says so on its own line**, with both counts: `this run is partial: 34 scenarios, the
+  last full run had 396 — a filter answers for these 34 only` (it was `· partial` at the end of the
+  ledger line). And it names what it hides: `also: 3 scenarios outside this partial run were failing
+  when they last ran (most recently in <run>) · next: history --run <run>`.
+- Under `--count` the answer is still one bare number; the hints go to stderr. Exit codes are
+  unchanged.
+
 ## [3.25.3] - 2026-09-21
 
 **Patch - three live defects in the tool, and `history` stops cutting the error it exists to show

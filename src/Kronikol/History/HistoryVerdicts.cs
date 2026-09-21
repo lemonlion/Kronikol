@@ -142,6 +142,27 @@ public sealed record HistoryAnalysisOptions
     public double DegradedBy { get; init; } = 2.0;
 }
 
+/// <summary>
+/// Why a scenario that has flipped is not flaky: every condition of the flaky rule it does not meet. More
+/// than one can hold, and a surface that names only one must lead with the episode count - lowering
+/// <c>--min-runs</c> makes nothing flaky that broke once and recovered.
+/// </summary>
+[Flags]
+public enum HistoryFlakyShortfall
+{
+    /// <summary>The scenario is flaky, or has never flipped: there is nothing to explain.</summary>
+    None = 0,
+
+    /// <summary>Fewer than two failing episodes: it broke once and recovered, which is a break and a fix.</summary>
+    OneEpisode = 1,
+
+    /// <summary>Fewer verdicts in the window than <see cref="HistoryAnalysisOptions.MinRuns"/>.</summary>
+    TooFewVerdicts = 2,
+
+    /// <summary>The flip rate is under <see cref="HistoryAnalysisOptions.FlakyRate"/>.</summary>
+    BelowRate = 4
+}
+
 /// <summary>One prior run's reading of one scenario.</summary>
 /// <param name="RunId">The run.</param>
 /// <param name="At">When it finished.</param>
@@ -226,6 +247,12 @@ public sealed record ScenarioHistory
     /// <summary>Flips over the transitions between verdicts.</summary>
     public required double FlipRate { get; init; }
 
+    /// <summary>Runs of consecutive failures among the verdicts: what flaky needs two of. One break and one fix is two flips and one episode.</summary>
+    public int FailingEpisodes { get; init; }
+
+    /// <summary>When the scenario has flipped and is not flaky, which conditions of the rule it missed; <see cref="HistoryFlakyShortfall.None"/> otherwise.</summary>
+    public HistoryFlakyShortfall FlakyShortfall { get; init; }
+
     /// <summary>Runs since the last flip; the length of the current streak minus one.</summary>
     public required int RunsSinceLastFlip { get; init; }
 
@@ -304,6 +331,15 @@ public sealed record ScenarioHistory
 /// <param name="LastRunId">The run that last had it.</param>
 public sealed record AbsentScenario(string StableId, string Name, string Feature, string LastRunId);
 
+/// <summary>A scenario this run did not include whose latest verdict in the window was a failure.</summary>
+/// <param name="StableId">Its id.</param>
+/// <param name="Slot">Which holder of the id.</param>
+/// <param name="Name">Its name, as the run that failed it knew it.</param>
+/// <param name="Feature">Its feature, likewise.</param>
+/// <param name="RunId">The run that failed it - the last one it was in.</param>
+/// <param name="RunsAgo">How many runs of the stream back that was, the current run being 0.</param>
+public sealed record FailingOutside(string StableId, int Slot, string Name, string Feature, string RunId, int RunsAgo);
+
 /// <summary>One run's totals, for the run-level trend.</summary>
 /// <param name="RunId">The run.</param>
 /// <param name="At">When it finished.</param>
@@ -347,6 +383,15 @@ public sealed record HistoryVerdicts
 
     /// <summary>Whether the current run was judged partial.</summary>
     public required bool Partial { get; init; }
+
+    /// <summary>How many scenarios the last full run of the stream had - what a partial run is partial OF; null when the window holds no full run.</summary>
+    public int? PreviousFullCount { get; init; }
+
+    /// <summary>
+    /// On a partial run only: the scenarios outside it whose latest verdict in the window was a failure.
+    /// A filtered re-run answers for its own roster, and "nothing is failing" there says nothing about these.
+    /// </summary>
+    public IReadOnlyList<FailingOutside> FailingOutside { get; init; } = [];
 
     /// <summary>One entry per roster position of the current run.</summary>
     public required IReadOnlyList<ScenarioHistory> Scenarios { get; init; }

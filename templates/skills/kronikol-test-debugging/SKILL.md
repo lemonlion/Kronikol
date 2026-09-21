@@ -191,6 +191,10 @@ matters.
   - `! no History.run.json beside the report` (`history`) — the run's own line of history is not next
     to the report, so the ledger is read against the report's results alone: status, attempt and
     duration verdicts still hold, behaviour verdicts (`behaviour-changed`, `reordered`) are off.
+  - `! <report> describes <run> — reading <other run> from the ledger instead` (`history --run`) — the
+    report on disk is a different run from the one `--run` named (usually the green re-run that
+    overwrote the failing one). Verdicts, series and the stored first line of each error are the
+    named run's, read from the ledger; steps, calls and payloads exist only in a report.
   - `! no ledger at … yet — every scenario reads as its first run; the next recorded run starts the history`
     (`history`) — the ledger resolves to a file nobody has written yet. Not an error: record a run.
   - `! N line(s) of the ledger could not be parsed and were skipped — kronikol history verify says which`
