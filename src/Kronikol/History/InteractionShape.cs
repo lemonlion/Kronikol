@@ -88,13 +88,22 @@ public static partial class InteractionShape
     private static partial Regex ComparisonBeforePattern();
 
     /// <summary>The templated form of a path (with an optional query) or a statement head.</summary>
-    public static string Template(string text)
+    public static string Template(string text) => Template(text, null);
+
+    /// <summary>
+    /// The templated form of a path, the consumer's rules applied to it first
+    /// (<see cref="ReportConfigurationOptions.HistoryShapeTemplates"/>): the built-in rules then see what
+    /// those left. The query string is not offered to them; its values are dropped whatever they hold.
+    /// </summary>
+    public static string Template(string text, HistoryShapeRules? rules)
     {
         if (string.IsNullOrEmpty(text))
             return "";
 
         var query = text.IndexOf('?');
         var path = query < 0 ? text : text[..query];
+        if (rules is not null)
+            path = rules.Apply(path);
         var templated = NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(BinaryPattern().Replace(path, "{bin}"), "{id}"), "{ts}"), "{n}");
 
         if (query < 0)
@@ -124,10 +133,15 @@ public static partial class InteractionShape
     /// the fingerprint compares, not what they held: the rule the query string already follows. A
     /// <c>?</c> here is a parameter, not the start of a query string.
     /// </summary>
-    public static string TemplateStatement(string text)
+    public static string TemplateStatement(string text) => TemplateStatement(text, null);
+
+    /// <summary><see cref="TemplateStatement(string)"/> with the consumer's rules applied to the head first.</summary>
+    public static string TemplateStatement(string text, HistoryShapeRules? rules)
     {
         if (string.IsNullOrEmpty(text))
             return "";
+        if (rules is not null)
+            text = rules.Apply(text);
 
         string valued;
         var trimmed = text.TrimStart();
@@ -162,7 +176,10 @@ public static partial class InteractionShape
         return ComparisonBeforePattern().IsMatch(text[..match.Index]);
     }
 
-    public static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs)
+    public static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs) => Calls(logs, null);
+
+    /// <summary><see cref="Calls(IEnumerable{RequestResponseLog})"/> with the consumer's templating rules applied before the built-in ones.</summary>
+    public static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs, HistoryShapeRules? rules)
     {
         ArgumentNullException.ThrowIfNull(logs);
 
@@ -184,7 +201,7 @@ public static partial class InteractionShape
             responses.TryGetValue(request.RequestResponseId, out var response);
             var (code, text) = InteractionStatus.Split(response?.StatusCode);
             var status = code?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? text;
-            calls.Add(new ShapeCall(request.CallerName, request.ServiceName, MethodOf(request), Target(request), status));
+            calls.Add(new ShapeCall(request.CallerName, request.ServiceName, MethodOf(request), Target(request, rules), status));
         }
         return calls;
     }
@@ -199,16 +216,16 @@ public static partial class InteractionShape
     /// What identifies the call: the templated path and query, plus — for a statement-shaped dependency,
     /// whose URI is the same connection for every statement — the templated first line of the statement.
     /// </summary>
-    private static string Target(RequestResponseLog log)
+    private static string Target(RequestResponseLog log, HistoryShapeRules? rules)
     {
         var path = log.Uri.IsAbsoluteUri ? log.Uri.PathAndQuery : log.Uri.OriginalString;
-        var templated = Template(path);
+        var templated = Template(path, rules);
         if (!DependencyCategories.IsStatementShaped(log.DependencyCategory) || string.IsNullOrWhiteSpace(log.Content))
             return templated;
 
         // Templated before it is cut: cut first, an id straddling the limit kept its first characters, and
         // a scenario writing a fresh id read as behaviour-changed on every run.
-        var head = FailureText.Truncate(TemplateStatement(FailureText.Truncate(FailureText.FirstLine(log.Content), HeadRaw)), HeadLength);
+        var head = FailureText.Truncate(TemplateStatement(FailureText.Truncate(FailureText.FirstLine(log.Content), HeadRaw), rules), HeadLength);
         return templated + " " + head;
     }
 

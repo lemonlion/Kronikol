@@ -166,6 +166,7 @@ public static class HistoryJson
         if (run.ShapeSet is { } shapeSet) WriteStrings(writer, "shapeSet", shapeSet);
         if (run.ShapeOrdered is { } shapeOrdered) WriteStrings(writer, "shapeOrdered", shapeOrdered);
         if (run.ShapeVersion is { } shapeVersion) writer.WriteNumber("shapeVersion", shapeVersion);
+        if (run.ShapeRules is { Length: > 0 } shapeRules) writer.WriteString("shapeRules", shapeRules);
         if (run.ShapesHash is { } shapesHash) writer.WriteString("shapes", shapesHash);
         if (run.CallSets is { } callSets)
         {
@@ -427,6 +428,7 @@ public static class HistoryJson
             ShapeVersion = element.TryGetProperty("shapeVersion", out var shapeVersion) && shapeVersion.ValueKind == JsonValueKind.Number
                 ? shapeVersion.GetInt32()
                 : shapeSet is null ? null : 1,
+            ShapeRules = element.TryGetProperty("shapeRules", out var shapeRules) && shapeRules.ValueKind == JsonValueKind.String ? shapeRules.GetString() : null,
             Errors = element.TryGetProperty("errors", out var errors) && errors.ValueKind == JsonValueKind.Array
                 ? errors.EnumerateArray().Select(e => e.ValueKind == JsonValueKind.String ? e.GetString() : null).ToArray()
                 : null,

@@ -15,7 +15,7 @@ namespace Kronikol.History;
 /// <para><b>Only a pass or a fail is a verdict.</b> Skipping a test for a week neither creates nor hides
 /// flakiness; a defaulted result is not a verdict at all.</para>
 /// </summary>
-public static class HistoryAnalyzer
+public static partial class HistoryAnalyzer
 {
     private static readonly HistoryVerdictKind[] PrecedenceOrder =
     [
@@ -204,13 +204,13 @@ public static class HistoryAnalyzer
             if (at < 0) continue;
             points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at), run.ShapeVersion,
                 Resolve(run.CallSetAt(at), priorShapes[r]), run.Partial == true,
-                paces.TimesUsual(usual, r, run.DurationAt(at), run.ResultAt(at)), paces.Degraded(r)).WithOverUsual(options));
+                paces.TimesUsual(usual, r, run.DurationAt(at), run.ResultAt(at)), paces.Degraded(r), ShapeRules: run.ShapeRules).WithOverUsual(options));
         }
 
         var currentPoint = new HistoryPoint(current.Id, current.At, current.Commit, current.ResultAt(position), current.DurationAt(position),
             current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position), current.ShapeVersion,
             Resolve(current.CallSetAt(position), currentShapes), currentIsPartial,
-            paces.TimesUsual(usual, prior.Count, current.DurationAt(position), current.ResultAt(position)), paces.Degraded(prior.Count)).WithOverUsual(options);
+            paces.TimesUsual(usual, prior.Count, current.DurationAt(position), current.ResultAt(position)), paces.Degraded(prior.Count), ShapeRules: current.ShapeRules).WithOverUsual(options);
         var all = points.Append(currentPoint).ToList();
 
         var verdicts = new HashSet<HistoryVerdictKind>();
@@ -399,15 +399,17 @@ public static class HistoryAnalyzer
         // ── Behaviour ───────────────────────────────────────
         // A fingerprint is comparable only with one the same templating rule made: across a change of
         // rule there is no verdict, and the reader is told, rather than every scenario changing once.
-        var rule = currentPoint.ShapeVersion ?? 1;
+        // The rule is the pair: the version of the built-in rules and the hash of the consumer's
+        // (HistoryShapeTemplates). An edit to either costs one quiet run.
+        bool SameRule(HistoryPoint p) => (p.ShapeVersion ?? 1) == (currentPoint.ShapeVersion ?? 1) && string.Equals(p.ShapeRules, currentPoint.ShapeRules, StringComparison.Ordinal);
         // Filtered once, upstream of everything that reads it: the previous shaped point, the unstable
         // count, the alternating memory and the count stretch. Taking partial runs out of the memory alone
         // leaves the previous shaped point partial, and the first full run after a partial one then reads
         // behaviour-changed against a run the partial diagnostic says it is not compared against.
         var shapedByAnyRule = comparable.Where(p => p.ShapeSet is { Length: > 0 }).ToList();
-        var shaped = shapedByAnyRule.Where(p => (p.ShapeVersion ?? 1) == rule).ToList();
+        var shaped = shapedByAnyRule.Where(SameRule).ToList();
         var previousShaped = shaped.Count > 0 ? shaped[^1] : null;
-        if (currentPoint.ShapeSet is { Length: > 0 } && shapedByAnyRule.Count > 0 && (shapedByAnyRule[^1].ShapeVersion ?? 1) != rule)
+        if (currentPoint.ShapeSet is { Length: > 0 } && shapedByAnyRule.Count > 0 && !SameRule(shapedByAnyRule[^1]))
             evidence.Add($"the calls in {shapedByAnyRule[^1].RunId} were fingerprinted by an earlier rule; behaviour is compared from the next run");
         if (currentPoint.ShapeSet is { Length: > 0 } && previousShaped is not null)
         {
@@ -475,7 +477,7 @@ public static class HistoryAnalyzer
                         newCalls = now.Except(before, StringComparer.Ordinal).ToArray();
                         goneCalls = before.Except(now, StringComparer.Ordinal).ToArray();
                     }
-                    evidence.Add($"same status, different calls: {callsText}{NamedCalls("new", newCalls)}{NamedCalls("gone", goneCalls)}");
+                    evidence.Add($"same status, different calls: {callsText}{NamedCalls("new", newCalls)}{NamedCalls("gone", goneCalls)}{OnlyIdsDiffer(newCalls, goneCalls)}");
                 }
             }
             else if (currentPoint.Calls is { } now && previousShaped.Calls is not null && currentResult == previousShaped.Result)
@@ -664,6 +666,54 @@ public static class HistoryAnalyzer
         var more = calls.Count > shown ? $" and {(calls.Count - shown).ToString(CultureInfo.InvariantCulture)} more" : "";
         return $"; {label}: {listed}{more}";
     }
+
+    /// <summary>
+    /// The hint that a templating rule is missing: the new and the gone lines pair one to one once every
+    /// run of letters, digits, hyphens and underscores that holds a digit is masked. It is a hint and
+    /// never a verdict - the mask cannot tell a missed id from /v2/ becoming /v3/, which pairs one to one
+    /// too and is exactly the change the verdict exists for. The status, the last word of a call line,
+    /// is never masked: 200 becoming 404 is not an id.
+    /// </summary>
+    private static string OnlyIdsDiffer(IReadOnlyList<string> newCalls, IReadOnlyList<string> goneCalls)
+    {
+        if (newCalls.Count == 0 || newCalls.Count != goneCalls.Count)
+            return "";
+
+        static (string Head, string Status) Split(string line)
+        {
+            var at = line.LastIndexOf(' ');
+            return at < 0 ? (line, "") : (line[..at], line[at..]);
+        }
+        static string Mask(string line)
+        {
+            var (head, status) = Split(line);
+            return IdLikePattern().Replace(head, "\u0001") + status;
+        }
+
+        var maskedNew = newCalls.Select(Mask).OrderBy(l => l, StringComparer.Ordinal).ToArray();
+        var maskedGone = goneCalls.Select(Mask).OrderBy(l => l, StringComparer.Ordinal).ToArray();
+        if (!maskedNew.SequenceEqual(maskedGone, StringComparer.Ordinal))
+            return "";
+
+        // One example, from the first gone line and the new line it pairs with: the first token that differs.
+        var gone = goneCalls.OrderBy(Mask, StringComparer.Ordinal).First();
+        var now = newCalls.OrderBy(Mask, StringComparer.Ordinal).First();
+        var before = IdLikePattern().Matches(Split(gone).Head).Select(m => m.Value).ToArray();
+        var after = IdLikePattern().Matches(Split(now).Head).Select(m => m.Value).ToArray();
+        var example = "";
+        for (var i = 0; i < Math.Min(before.Length, after.Length); i++)
+            if (!string.Equals(before[i], after[i], StringComparison.Ordinal))
+            {
+                example = $" ({Short8(before[i])} → {Short8(after[i])})";
+                break;
+            }
+        return $"; the calls differ only in what looks like an id{example}: a HistoryShapeTemplates rule would make them compare equal";
+    }
+
+    private static string Short8(string token) => token.Length > 8 ? token[..8] + "…" : token;
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"[0-9A-Za-z_\-]*\d[0-9A-Za-z_\-]*", System.Text.RegularExpressions.RegexOptions.CultureInvariant)]
+    private static partial System.Text.RegularExpressions.Regex IdLikePattern();
 
     private static string Commit(HistoryPoint point) => point.Commit is { Length: > 0 } commit ? $" ({Short(commit)})" : "";
 

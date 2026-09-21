@@ -618,6 +618,24 @@ public record ReportConfigurationOptions
     public int HistoryCountRuns { get; set; } = 2;
 
     /// <summary>
+    /// What is variable in THIS application's paths and statement heads, for the interaction fingerprint:
+    /// an ordered list of regular expressions and what to write in place of each match, applied before the
+    /// built-in rules (GUIDs, hex ids, ULIDs, timestamps, numbers, bytes captured as text). Cache-key
+    /// formats are the application's own and no built-in rule covers them all; a key that holds a tenant,
+    /// a hash and a period makes its scenario read <c>behaviour-changed</c> on every run until somebody
+    /// who knows the format says which part varies:
+    /// <code>options.HistoryShapeTemplates.Add(new(@"(?&lt;=app:_report_)\d+-\w+", "{tenant-period}"));</code>
+    /// The evidence of a <c>behaviour-changed</c> verdict says when the calls differ only in what looks like
+    /// an id, which is the sign that a rule is missing, and <c>kronikol query history s3 --calls</c> prints
+    /// what the templater made of a scenario's calls. The rules have a hash, recorded on the run line as
+    /// <c>shapeRules</c>, and fingerprints made under different rules are never compared: editing a rule
+    /// costs one quiet run. A pattern that does not compile, or that runs past 250 ms on some text, is
+    /// skipped and reported as a <see cref="Reports.DiagnosticKind.HistoryShapeTemplate"/> diagnostic; it
+    /// never fails the run. Every shard of a sharded run must be given the same rules. Default: none.
+    /// </summary>
+    public IList<History.HistoryShapeTemplate> HistoryShapeTemplates { get; set; } = [];
+
+    /// <summary>
     /// The pace at or above which a run is <b>degraded</b>: its passing scenarios took this many times their
     /// usual, the usual being a scenario's median passing duration over the other full runs in the window.
     /// A degraded run is labelled on every history surface, a failure inside one says so, and no

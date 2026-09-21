@@ -108,6 +108,9 @@ internal sealed class QueryOptions
     /// <summary>On history: how many runs a changed call count must hold before it is behaviour (the report's HistoryCountRuns).</summary>
     public int? CountRuns { get; private set; }
 
+    /// <summary>On history, with a scenario: print the scenario's distinct calls as the templater wrote them.</summary>
+    public bool Calls { get; private set; }
+
     /// <summary>On history: the pace at or above which a run is degraded (the report's HistoryDegradedBy); null takes the analyzer's default.</summary>
     public double? DegradedBy { get; private set; }
 
@@ -142,7 +145,7 @@ internal sealed class QueryOptions
         "--where", "--group-by", "--tolerance", "--count", "--json", "--failed", "--errors-only",
         "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
         "--number", "--baseline", "--describe", "--history", "--flaky", "--new", "--failing", "--regressed",
-        "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--suite"
+        "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--calls", "--suite"
     ];
 
     /// <summary>
@@ -313,6 +316,7 @@ internal sealed class QueryOptions
                     }
                     options.CountRuns = parsedCountRuns;
                     break;
+                case "--calls": options.Calls = true; break;
                 case "--degraded-by":
                     if (Next(arg) is not { } degradedBy) return null;
                     if (!double.TryParse(degradedBy, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDegradedBy) || parsedDegradedBy < 0)
@@ -430,6 +434,7 @@ internal sealed class QueryOptions
         if (AlternatingRuns is not null) Flag("--alternating-runs", AlternatingRuns.Value.ToString(CultureInfo.InvariantCulture));
         if (CountRuns is not null) Flag("--count-runs", CountRuns.Value.ToString(CultureInfo.InvariantCulture));
         if (DegradedBy is not null) Flag("--degraded-by", DegradedBy.Value.ToString(CultureInfo.InvariantCulture));
+        if (Calls) Flag("--calls");
         if (Flaky) Flag("--flaky");
         if (New) Flag("--new");
         if (Failing) Flag("--failing");

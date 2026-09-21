@@ -63,6 +63,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--alternating-runs N` | how far back a set of calls the scenario held counts as a known state, the report's HistoryAlternatingRuns (default 10). `history` only |
 | `--count-runs N` | how many runs a changed call count must hold before it is behaviour, the report's HistoryCountRuns (default 2). `history` only |
 | `--degraded-by X` | the pace at or above which a run is degraded, its passing scenarios having taken this many times their usual, the report's HistoryDegradedBy (default 2.0; 0 switches it off). `history` only |
+| `--calls` | with a scenario: print its distinct calls as the templater wrote them (`/assets/app.{id}.js`), so a wrong `{id}` or a missing `HistoryShapeTemplates` rule can be seen. `history` only |
 | `--suite NAME` | the suite `history` looks the run up under, when the report does not carry one. `history` only |
 | `--describe` | one JSON document naming every verb, the flags each one reads (with what each takes), the address forms with a parsing example of each, the exit codes and the envelope's members: `kronikol query --describe`. Needs no report. Generated from the table the tool dispatches and validates from, so it cannot name a verb the tool will not run. For tooling — a wrapper validating arguments, an MCP server building a tool list — not for reading; this document is the prose form of the same table (3.7.0) |
 
@@ -420,7 +421,7 @@ holding one), else exit 2 naming both. The argument order inverts on purpose —
 old report first, `diff <report> --baseline` names the current one — but the output is oriented the same
 way either way: `-` is the older run, `+` the newer, `BROKE` means it passed then and fails now.
 
-### `history <report> [s3 | sid:<id>] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--min-runs N] [--alternating-runs N] [--count-runs N] [--degraded-by X] [--suite NAME] [--history FILE]`
+### `history <report> [s3 | sid:<id>] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--min-runs N] [--alternating-runs N] [--count-runs N] [--degraded-by X] [--calls] [--suite NAME] [--history FILE]`
 
 ```
 kronikol query history <report>                  # every scenario with a verdict, regressions first
@@ -476,6 +477,14 @@ failing, its duration against the p95, its calls against the previous run, its q
 its last runs one per line with commit and duration. `--json` carries the same rows plus a `history`
 member with the run-level summary, the counts per verdict, the absent scenarios and any new
 `caller>service` dependency pairs.
+
+**When `behaviour-changed` looks like noise.** The fingerprint is made from templated call lines, and a
+variable part the templater does not know (an application's own cache-key format) changes it on every
+run. The evidence says so when it can: `…; the calls differ only in what looks like an id (sess_ab1… →
+sess_zz9…): a HistoryShapeTemplates rule would make them compare equal`. It is a hint and the verdict
+stands, because `/v2/` becoming `/v3/` looks the same. `history <report> s3 --calls` prints what the
+templater made of the scenario's calls; the fix is a rule in the suite's
+`ReportConfigurationOptions.HistoryShapeTemplates`, which costs one quiet run.
 
 **A degraded run** is one whose passing scenarios took `--degraded-by` (2.0) times their usual, the usual
 being a scenario's median passing duration over the other full runs. A failure inside one is weak

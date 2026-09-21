@@ -195,6 +195,28 @@ public class HistoryOutputsTests : IDisposable
     }
 
     [Fact]
+    public void A_consumers_templating_rules_reach_the_run_and_a_bad_one_is_a_diagnostic_not_a_failed_run()
+    {
+        var collector = new ReportDiagnosticsCollector();
+
+        using (ReportDiagnosticsScope.Begin(collector))
+            Run("r1", "test:1:1", Features(ExecutionResult.Passed), options =>
+            {
+                options.HistoryShapeTemplates.Add(new HistoryShapeTemplate("(unclosed", "{x}"));
+                options.HistoryShapeTemplates.Add(new HistoryShapeTemplate(@"rep_[a-z]+", "rep_{key}"));
+            });
+
+        var entry = Assert.Single(collector.Entries, d => d.Kind == DiagnosticKind.HistoryShapeTemplate);
+        Assert.Contains("(unclosed", entry.Message);
+        var run = HistoryLedgerReader.Read(Ledger, 50).Ledger!.LatestRun("HistorySuite")!;
+        Assert.Matches("^[0-9a-f]{8}$", run.ShapeRules);
+
+        // And a run configured with none records none.
+        Run("r2", "test:2:1", Features(ExecutionResult.Passed));
+        Assert.Null(HistoryLedgerReader.Read(Ledger, 50).Ledger!.LatestRun("HistorySuite")!.ShapeRules);
+    }
+
+    [Fact]
     public void A_filtered_run_is_recorded_as_partial_with_a_diagnostic()
     {
         Run("r1", "test:1:1", Features(ExecutionResult.Passed));

@@ -4,6 +4,57 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.25.0] - 2026-09-21
+
+**Minor - your own templating rules for the history fingerprint, and two ways to see that one is
+missing or wrong (#75 sections 1d and 1f).** The minor part moved because there is a new option,
+`ReportConfigurationOptions.HistoryShapeTemplates`, new public types (`HistoryShapeTemplate`,
+`HistoryShapeRules`), a new run-line member (`shapeRules`), a new diagnostic kind and a new tool flag
+(`--calls`). Fifth and last slice of `plans/HISTORY_VERDICT_NOISE_PLAN.md`.
+
+### Added
+
+- **`HistoryShapeTemplates`**: an ordered list of `(regex, placeholder)` applied to a call's path and to
+  a statement head before the built-in rules. Cache-key formats are the application's own and no
+  built-in rule covers them all; a key holding a tenant, a hash and a period made its scenario read
+  `behaviour-changed` on every run and then `unstable-shape`, which suppresses every behaviour verdict
+  for it. The placeholder is a replacement pattern, so `$1` keeps a group.
+- **The rules have a hash, recorded on the run line as `shapeRules`**, and the analyzer compares
+  fingerprints only when the pair of rule version and rules hash is the same. Editing a rule costs one
+  quiet run ("fingerprinted by an earlier rule; behaviour is compared from the next run") instead of
+  calling every scenario changed once.
+- **A bad expression cannot fail a run.** A pattern that does not compile, or that runs past 250 ms on
+  some text, is skipped and reported as the new `DiagnosticKind.HistoryShapeTemplate`.
+- **"The calls differ only in what looks like an id".** When the new and the gone lines of a
+  `behaviour-changed` verdict pair one to one once every run of letters, digits, hyphens and underscores
+  holding a digit is masked, the evidence gains `the calls differ only in what looks like an id
+  (sess_ab1… → sess_zz9…): a HistoryShapeTemplates rule would make them compare equal`. **The verdict
+  stands:** the mask cannot tell a missed id from `/v2/` becoming `/v3/`. A changed status is never
+  masked. Every future gap in the templater now announces itself.
+- **`kronikol query history <report> s3 --calls`** prints the scenario's distinct calls as the templater
+  wrote them (`calls` under `--json`). The 3.22.2 short-hex rule can be wrong in a URL scheme nobody
+  here has seen, and a wrong `{id}` is silent: two routes collapse into one line and a real change
+  disappears. Now it can be read.
+
+### Fixed
+
+- **`kronikol history record` folded shards that disagreed about their rule into one line claiming
+  one.** The fold rebuilds the run line field by field and took `shapeVersion` from the first shard
+  that had one, so a run whose shards were on two Kronikol versions (and, from this release, under two
+  sets of rules) was recorded as comparable when its fingerprints were not. Such a run is now recorded
+  without fingerprints, which costs it its behaviour verdicts and nothing else, and `record` says so.
+  The fold carries `shapeRules`, which it would otherwise have dropped silently for every sharded run.
+
+### Notes
+
+- `kronikol merge` and `kronikol ingest` build a run's history with fixed options and take no rules.
+  No flag is added here.
+- Replayed over the 430 runs of BreakfastProvider's CI ledger and the evidence ledgers: nothing moves
+  against 3.24.0. No stored line carries `shapeRules`, and a line without one compares with a run
+  configured with none, exactly as before.
+- Not taken from the issue: claims-aware templating (section 1e). The reporter's customer ids are
+  numeric and already `{n}`; what is left is 12 lines in 1,494, and a rule delivers it.
+
 ## [3.24.0] - 2026-09-21
 
 **Minor - a degraded run is labelled, a failure inside one says so, and no `slower` verdict is read in

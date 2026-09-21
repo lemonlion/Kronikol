@@ -88,6 +88,14 @@ public enum DiagnosticKind
     /// scenario, saying how many.
     /// </summary>
     BackgroundCalls,
+
+    /// <summary>
+    /// A consumer templating rule (<see cref="ReportConfigurationOptions.HistoryShapeTemplates"/>) did not
+    /// compile, or timed out on some text, and was skipped. The run and its history are unaffected
+    /// otherwise; calls the rule was meant to template keep their variable part, so the scenarios making
+    /// them may read <c>behaviour-changed</c> until the rule is fixed.
+    /// </summary>
+    HistoryShapeTemplate,
 }
 
 /// <summary>

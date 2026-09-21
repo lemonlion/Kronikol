@@ -290,8 +290,9 @@ internal static partial class HistoryCommand
         var duplicates = 0;
         var failed = 0;
 
-        foreach (var (roster, run, shapes) in folded)
+        foreach (var foldedRun in folded)
         {
+            var (roster, run, shapes) = foldedRun;
             var line = run;
             var previous = LastFullRoster(ledger, run.Suite);
 
@@ -346,6 +347,9 @@ internal static partial class HistoryCommand
                 case HistoryAppendOutcome.Appended:
                     appended++;
                     @out.WriteLine($"recorded   {label}");
+                    // What the fold had to give up: shards fingerprinted under different templating rules.
+                    if (foldedRun.Note is { } note)
+                        @out.WriteLine($"  ! {note}");
                     break;
                 case HistoryAppendOutcome.Duplicate:
                     duplicates++;

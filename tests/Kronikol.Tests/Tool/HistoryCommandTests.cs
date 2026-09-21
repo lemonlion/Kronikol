@@ -54,6 +54,27 @@ public class HistoryCommandTests : IDisposable
     // ─── record ────────────────────────────────────────────────
 
     [Fact]
+    public void Record_says_when_the_shards_of_a_run_were_fingerprinted_under_different_rules()
+    {
+        // The fold rebuilds the run line field by field, and took the rule from the first shard that had
+        // one. For a version that is harmless; for a hash of consumer rules, eight shards configured
+        // differently would have folded into one line claiming one rule.
+        var a = Roster("Suite", "id1");
+        var b = Roster("Suite", "id2");
+        WriteFragment("shard1", a, RunLine(a, "gh:7:1", "P") with { ShapeVersion = InteractionShape.Version, ShapeRules = "11112222" });
+        WriteFragment("shard2", b, RunLine(b, "gh:7:1", "P") with { ShapeVersion = InteractionShape.Version });
+
+        var (output, error, exit) = Run(null, "record", _dir, "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("fingerprinted under different templating rules", output);
+        var folded = HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("Suite").Single();
+        Assert.Equal("PP", folded.Results);
+        Assert.Null(folded.ShapeSet);
+        Assert.Null(folded.ShapeRules);
+    }
+
+    [Fact]
     public void Record_folds_the_shards_of_one_run_into_one_line()
     {
         var shard1 = WriteFragment("shard1", Roster("Suite", "id1", "id2"), RunLine(Roster("Suite", "id1", "id2"), "gh:7:1", "PP"));

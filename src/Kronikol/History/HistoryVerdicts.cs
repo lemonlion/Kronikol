@@ -166,13 +166,14 @@ public sealed record HistoryAnalysisOptions
 /// about the reading and never a cause: a failing test is usually slow because it failed.
 /// </param>
 /// <param name="RunDegraded">Whether the run was degraded (3.24.0): its passing scenarios took the degraded factor over their usual.</param>
+/// <param name="ShapeRules">The hash of the consumer templating rules the fingerprints were made under (3.25.0); null for none.</param>
 /// <param name="OverUsual">
 /// Whether <paramref name="TimesUsual"/> is worth printing (3.24.0): at or over the degraded factor, and
 /// over the usual by at least the milliseconds a slower verdict needs. On a suite whose median scenario
 /// takes 6 ms, 3 ms read as 9 is "3x usual" and means nothing.
 /// </param>
 public sealed record HistoryPoint(string RunId, DateTimeOffset At, string? Commit, char Result, int? DurationMs, string? ShapeSet, string? ShapeOrdered, int? Calls, string? Error, int? Attempt, int? ShapeVersion = null,
-    IReadOnlyList<string>? CallSet = null, bool Partial = false, double? TimesUsual = null, bool RunDegraded = false, bool OverUsual = false);
+    IReadOnlyList<string>? CallSet = null, bool Partial = false, double? TimesUsual = null, bool RunDegraded = false, bool OverUsual = false, string? ShapeRules = null);
 
 /// <summary>Where a failing streak began.</summary>
 /// <param name="RunId">The first failing run of the streak.</param>

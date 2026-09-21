@@ -21,6 +21,9 @@ public sealed record HistoryBuildOptions
 
     /// <summary>The caller's word on whether the run is partial; null leaves it to the heuristic at append time.</summary>
     public bool? Partial { get; init; }
+
+    /// <summary>The consumer's templating rules, applied before the built-in ones (<see cref="ReportConfigurationOptions.HistoryShapeTemplates"/>); null for none.</summary>
+    public HistoryShapeRules? ShapeRules { get; init; }
 }
 
 /// <summary>
@@ -83,7 +86,7 @@ public static class HistoryRunBuilder
             if (logsByTest is not null)
             {
                 var own = logsByTest.TryGetValue(scenario.Id, out var list) ? list : [];
-                var scenarioCalls = InteractionShape.Calls(own);
+                var scenarioCalls = InteractionShape.Calls(own, options.ShapeRules);
                 var (set, ordered, count) = InteractionShape.Fingerprint(scenarioCalls);
                 shapeSet[i] = set;
                 shapeOrdered[i] = ordered;
@@ -137,6 +140,7 @@ public static class HistoryRunBuilder
             ShapeSet = options.Shapes ? shapeSet : null,
             ShapeOrdered = options.Shapes ? shapeOrdered : null,
             ShapeVersion = options.Shapes ? InteractionShape.Version : null,
+            ShapeRules = options.Shapes ? options.ShapeRules?.Hash : null,
             ShapesHash = shapes?.Hash,
             CallSets = callSets,
             Errors = errors,

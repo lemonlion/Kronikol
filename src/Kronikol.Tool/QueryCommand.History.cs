@@ -90,13 +90,15 @@ internal static partial class QueryCommand
             }
 
             WriteScenario(writer, verdicts, scenario, entry);
+            if (options.Calls)
+                WriteCalls(writer, entry);
             if (verdicts.Compare is { } compared && compared.At(scenario.Ordinal, scenario.StableId) is { } other)
             {
                 writer.Line();
                 writer.Line($"on {compared.Stream}: {HistoryVerdictNames.Name(other.Primary)} — {QueryWriter.OneLine(other.Evidence, 200)} · {other.Series}");
             }
             writer.Data("history", ReportHistory.RunLevel(verdicts, ledgerPath, location.Source, fromFragment));
-            writer.Item(ReportHistory.Row(scenario, entry, detailed: true));
+            writer.Item(ReportHistory.Row(scenario, entry, detailed: true, calls: options.Calls));
             writer.Footer($"{scenario.Address} · {verdicts.RunsRecorded} earlier run(s) on {verdicts.Stream} · next: history · failures");
             return 0;
         }
@@ -160,6 +162,24 @@ internal static partial class QueryCommand
 
         writer.Data("history", ReportHistory.RunLevel(verdicts, ledgerPath, location.Source, fromFragment));
         return 0;
+    }
+
+    /// <summary>
+    /// What the templater made of the scenario's calls in this run. A wrong <c>{id}</c> is silent - two
+    /// routes collapse into one line and a real change disappears - so the lines are there to be read.
+    /// </summary>
+    private static void WriteCalls(QueryWriter writer, ScenarioHistory entry)
+    {
+        writer.Line();
+        if (entry.Points[^1].CallSet is not { } calls)
+        {
+            writer.Line($"no call list for this run: it needs the {HistoryFormat.FragmentFileName} the run wrote beside the report (3.17.0 or later, HistoryShapes on)");
+            return;
+        }
+
+        writer.Line($"distinct calls, as templated ({calls.Count}):");
+        foreach (var call in calls)
+            writer.Line($"  {call}");
     }
 
     private static void WriteScenario(QueryWriter writer, HistoryVerdicts verdicts, ScenarioEntry scenario, ScenarioHistory entry)
@@ -431,7 +451,7 @@ internal static class ReportHistory
     }
 
     /// <summary>One scenario's row of the <c>--json</c> envelope.</summary>
-    public static object Row(ScenarioEntry scenario, ScenarioHistory entry, bool detailed)
+    public static object Row(ScenarioEntry scenario, ScenarioHistory entry, bool detailed, bool calls = false)
     {
         var row = new Dictionary<string, object?>
         {
@@ -457,6 +477,8 @@ internal static class ReportHistory
             ["failuresInDegradedRuns"] = entry.FailuresInDegradedRuns,
             ["quarantine"] = entry.Quarantine is { } q ? new { reason = q.Reason, addedBy = q.AddedBy, addedOn = q.AddedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), until = q.Until?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) } : null
         };
+        if (calls)
+            row["calls"] = entry.Points[^1].CallSet;
         if (detailed)
             row["runs"] = entry.Points.Select(p => new { runId = p.RunId, at = p.At, commit = p.Commit, result = p.Result.ToString(), durationMs = p.DurationMs, timesUsual = p.TimesUsual is { } t ? Math.Round(t, 2) : (double?)null, overUsual = p.OverUsual, partial = p.Partial, runDegraded = p.RunDegraded, attempt = p.Attempt, error = p.Error }).ToArray();
         return row;

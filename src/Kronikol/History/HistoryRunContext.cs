@@ -76,15 +76,22 @@ public sealed class HistoryRunContext
             if (location.Source == HistoryLocationSource.Disabled)
                 return null;
 
+            var shapeRules = options.HistoryShapes ? HistoryShapeRules.Create(options.HistoryShapeTemplates) : null;
             var build = new HistoryBuildOptions
             {
                 Durations = options.HistoryDurations,
                 Shapes = options.HistoryShapes,
                 ErrorKeys = options.HistoryErrorKeys,
-                Partial = options.HistoryPartialRun
+                Partial = options.HistoryPartialRun,
+                ShapeRules = shapeRules
             };
             var (roster, run, shapes) = HistoryRunBuilder.Build(features, logs, suite, ci, at, build,
                 string.IsNullOrWhiteSpace(options.HistoryRunId) ? null : options.HistoryRunId.Trim());
+
+            // The expressions are the consumer's: one that does not compile or that timed out was skipped,
+            // and is said here rather than thrown.
+            foreach (var problem in shapeRules?.Problems ?? [])
+                ReportDiagnosticsScope.Record(DiagnosticKind.HistoryShapeTemplate, problem);
 
             HistoryLedger? ledger = null;
             HistoryVerdicts? verdicts = null;

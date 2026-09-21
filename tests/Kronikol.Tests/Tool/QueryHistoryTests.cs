@@ -220,6 +220,43 @@ public class QueryHistoryTests : IDisposable
         Assert.Contains("duration: 100 ms · p95 of earlier full runs 123 ms (this run is partial, so nothing is scaled to its speed)", output);
     }
 
+    [Fact]
+    public void Calls_prints_what_the_templater_made_of_a_scenarios_calls()
+    {
+        // A wrong {id} is silent: two routes collapse into one line and a real change disappears. --calls
+        // shows the reader what the templater took, so /assets/app.{id}.js can be seen and objected to.
+        Seed("PP", "PP");
+        var report = WriteReport(pay: "Passed");
+        var roster = Roster();
+        var shapes = HistoryShapes.Create(["Test>orders GET /assets/app.{id}.js 200", "Test>orders POST /orders/{n}/pay 201"]);
+        var run = new HistoryRun
+        {
+            Id = "gh:99:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 9, 12, 10, 5, 0, TimeSpan.Zero),
+            Branch = "main", Commit = "abc1234", Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash,
+            Results = "PP", Attempts = "--", Durations = [100, 50], Calls = [2, 0], ShapeSet = ["aaaaaaaa", "bbbbbbbb"], ShapeOrdered = ["aaaaaaaa", "bbbbbbbb"],
+            ShapeVersion = InteractionShape.Version, ShapesHash = shapes.Hash, CallSets = [[0, 1], []],
+            Errors = new string?[2], ErrorText = new Dictionary<string, string>(), Deps = ["Test>orders"]
+        };
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(report)!, HistoryFormat.FragmentFileName), HistoryFragment.Write(roster, run, "3.25.0", shapes));
+
+        var (output, error, exit) = Query(null, "history", report, "s0", "--calls");
+        Assert.True(exit == 0, error);
+        Assert.Contains("distinct calls, as templated (2):", output);
+        Assert.Contains("  Test>orders GET /assets/app.{id}.js 200", output);
+        Assert.Contains("  Test>orders POST /orders/{n}/pay 201", output);
+
+        var without = Query(null, "history", report, "s0");
+        Assert.DoesNotContain("as templated", without.Output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(Query(null, "history", report, "s0", "--calls", "--json").Output);
+        Assert.Equal(2, document.RootElement.GetProperty("items")[0].GetProperty("calls").GetArrayLength());
+
+        // No call list to print: the report was read without the run's own line.
+        File.Delete(Path.Combine(Path.GetDirectoryName(report)!, HistoryFormat.FragmentFileName));
+        var bare = Query(null, "history", report, "s0", "--calls");
+        Assert.Contains("no call list for this run", bare.Output);
+    }
+
     // ─── Degraded runs (#83) ───────────────────────────────────
 
     private static readonly string[] WideIds = [PayId, RefundId, .. Enumerable.Range(1, 8).Select(i => $"7777{i:D12}")];

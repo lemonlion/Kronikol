@@ -379,6 +379,20 @@ public static class HistoryFold
             if (run.Partial == true) partial = true;
         }
 
+        // A fingerprint is comparable only with one the same rule made, and the rule is the pair of the
+        // built-in version and the consumer's rules. Shards that disagree (one job configured differently,
+        // one on an older package) cannot fold into a line that claims one rule: the fingerprints are
+        // blanked, which costs the run its behaviour verdicts and nothing else, and the fold says so.
+        string? note = null;
+        var shapedShards = shards.Where(s => s.Run.ShapeSet is not null).ToList();
+        if (shapedShards.Select(s => (s.Run.ShapeVersion ?? 1, s.Run.ShapeRules)).Distinct().Count() > 1)
+        {
+            note = $"the shards of {shards[0].Run.Id} were fingerprinted under different templating rules ({string.Join(", ", shapedShards.Select(s => $"v{s.Run.ShapeVersion ?? 1}{(s.Run.ShapeRules is { } h ? "+" + h : "")}").Distinct())}); their fingerprints are not comparable, so none are recorded for this run and it reads no behaviour verdict. Give every shard the same HistoryShapeTemplates and the same Kronikol version.";
+            anyShapes = false;
+            anyCalls = false;
+            anyCallSets = false;
+        }
+
         var first = shards[0].Run;
         var folded = HistoryRoster.Create(first.Suite, entries);
         var foldedShapes = anyCallSets ? HistoryShapes.Create(callLines.SelectMany(lines => lines)) : null;
@@ -404,19 +418,23 @@ public static class HistoryFold
             ShapeSet = anyShapes ? shapeSet : null,
             ShapeOrdered = anyShapes ? shapeOrdered : null,
             ShapeVersion = anyShapes ? shards.Select(s => s.Run.ShapeVersion).FirstOrDefault(v => v is not null) : null,
+            ShapeRules = anyShapes ? shapedShards.Select(s => s.Run.ShapeRules).FirstOrDefault() : null,
             ShapesHash = foldedShapes?.Hash,
             CallSets = callSets,
             Errors = anyErrors ? errors : null,
             ErrorText = errorText,
             Deps = deps.Count > 0 || shards.Any(s => s.Run.Deps is not null) ? deps.ToArray() : null
         };
-        return new HistoryFoldedRun(folded, run2, foldedShapes);
+        return new HistoryFoldedRun(folded, run2, foldedShapes) { Note = note };
     }
 }
 
 /// <summary>One folded run: its roster, its line, and the shapes list the line's call sets index into (null when no shard recorded one).</summary>
 public sealed record HistoryFoldedRun(HistoryRoster Roster, HistoryRun Run, HistoryShapes? Shapes)
 {
+    /// <summary>Something the fold had to give up, in words; null when it gave up nothing. Shards fingerprinted under different templating rules lose their fingerprints (3.25.0).</summary>
+    public string? Note { get; init; }
+
     /// <summary>The pair a caller that has no use for the shapes takes.</summary>
     public void Deconstruct(out HistoryRoster roster, out HistoryRun run)
     {

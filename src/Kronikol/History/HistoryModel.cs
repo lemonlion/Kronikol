@@ -224,6 +224,14 @@ public sealed record HistoryRun
     /// </summary>
     public int? ShapeVersion { get; init; }
 
+    /// <summary>
+    /// The hash of the consumer templating rules the fingerprints were made under
+    /// (<see cref="HistoryShapeRules.Hash"/>, 3.25.0); null when there were none. With
+    /// <see cref="ShapeVersion"/> it is the rule a fingerprint was made by: fingerprints made under
+    /// different rules are not compared, so editing a rule costs one quiet run.
+    /// </summary>
+    public string? ShapeRules { get; init; }
+
     /// <summary>The hash of the <see cref="HistoryShapes"/> line <see cref="CallSets"/> index into; null when no call lists are recorded.</summary>
     public string? ShapesHash { get; init; }
 
