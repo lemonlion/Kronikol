@@ -1,5 +1,14 @@
 # Kronikol4J — Java Port Plan
 
+> **Scope superseded 2026-09-14 by `PLATFORM_FOUNDATIONS_PLAN.md` §5.** The capture-side
+> decomposition, Appendix A and the proxy/weaving/context deep dives stand. **"Full feature parity"
+> as the end state does not**: the rendering half (`-report`, `-diagram`, 14,305 lines) is replaced by
+> a shared renderer invoked from `ReportFinalizer`, core's duplicated pure functions move
+> renderer-side (F3), and the 30 tail modules sit behind an OTel bridge. Kronikol4J 1.0 = subtraction,
+> gated on F6. `JAVA_PLATFORM_PLAN.md` (per that plan's §9 template) will replace this document's
+> forward-looking sections.
+
+
 **Project name:** **Kronikol4J** — the Java-native reimplementation of Kronikol, with *full feature parity* as the end state, delivered core-first. The core is engineered from day one as a foundation extensions plug into, so the parity build-out is incremental breadth rather than re-architecture.
 
 **Guiding principle:** Idiomatic Java throughout. We treat the C# code as an executable *specification of behavior*, not a blueprint to translate line-by-line. Where C# and Java diverge (proxies, interceptors, bytecode weaving, async context, test-run lifecycle), we build the idiomatic Java mechanism that produces the same observable result.

@@ -1,0 +1,569 @@
+diff --git a/src/Kronikol.Tool/HistoryCommand.cs b/src/Kronikol.Tool/HistoryCommand.cs
+index 30a53f8f..e9184d39 100644
+--- a/src/Kronikol.Tool/HistoryCommand.cs
++++ b/src/Kronikol.Tool/HistoryCommand.cs
+@@ -276,7 +276,13 @@ private static int Record(IReadOnlyList<string> inputs, string? explicitLedger,
+             return 1;
+         }
+ 
+-        var folded = HistoryFold.Fold(fragments.Select(f => f.Fragment));
++        // Attempts before shards: fragments in ONE reports directory that share a run id - the newest on
++        // top, earlier ones retained under runs/ - are the same scenarios run again, and become one
++        // fragment. What is left is one fragment per directory, and those fold as shards as before.
++        var attempted = Attempts(fragments, out var attemptCounts, out var retainedSkipped);
++        if (retainedSkipped > 0)
++            @out.WriteLine($"{retainedSkipped} retained fragment(s) of other runs left alone (under {RunsFolderName}/)");
++        var folded = HistoryFold.Fold(attempted);
+         var appended = 0;
+         var duplicates = 0;
+         var failed = 0;
+@@ -331,6 +337,7 @@ private static int Record(IReadOnlyList<string> inputs, string? explicitLedger,
+             var result = HistoryLedgerWriter.Append(ledger, roster, line, Commands.Version, shapes: shapes);
+             var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {roster.Count} scenarios"
+                         + (run.Shards > 1 ? $" from {run.Shards} shards" : "")
++                        + (attemptCounts.GetValueOrDefault((run.Suite, run.Id)) is var tries and > 1 ? $", {tries} attempts" : "")
+                         + (line.Partial == true ? "  partial" : "");
+             switch (result.Outcome)
+             {
+@@ -353,6 +360,64 @@ private static int Record(IReadOnlyList<string> inputs, string? explicitLedger,
+         return failed > 0 || unreadable > 0 ? 1 : 0;
+     }
+ 
++    /// <summary>The folder a reports directory keeps its earlier runs in (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md S4).</summary>
++    private const string RunsFolderName = "runs";
++
++    /// <summary>The reports directory a fragment belongs to: its own, or - for one retained under runs/&lt;name&gt;/ - the directory above runs/.</summary>
++    private static (string Directory, bool Retained) ReportsDirectoryOf(string fragmentPath)
++    {
++        var directory = Path.GetDirectoryName(fragmentPath) ?? "";
++        var parent = Path.GetDirectoryName(directory);
++        return parent is not null && string.Equals(Path.GetFileName(parent), RunsFolderName, StringComparison.OrdinalIgnoreCase) && Path.GetDirectoryName(parent) is { } above
++            ? (above, true)
++            : (directory, false);
++    }
++
++    /// <summary>
++    /// One fragment per reports directory and run. A retained fragment with the id of the fragment on top
++    /// of it is an earlier attempt of that run and is overlaid, oldest first by the run's own clock - path
++    /// order would put the newest first. A retained fragment of any other run is left alone: it was
++    /// recorded, or not, by the run that wrote it, and appending it now would put it out of order.
++    /// </summary>
++    private static List<HistoryFragment> Attempts(List<(string Path, HistoryFragment Fragment)> fragments,
++        out Dictionary<(string? Suite, string Id), int> attemptCounts, out int retainedSkipped)
++    {
++        attemptCounts = [];
++        retainedSkipped = 0;
++        var result = new List<HistoryFragment>();
++        foreach (var group in fragments.GroupBy(f => ReportsDirectoryOf(f.Path).Directory, StringComparer.Ordinal))
++        {
++            var tops = group.Where(f => !ReportsDirectoryOf(f.Path).Retained).ToList();
++            var retained = group.Where(f => ReportsDirectoryOf(f.Path).Retained).ToList();
++            if (tops.Count == 0)
++            {
++                // Retained runs given by name, with nothing on top of them: read as they are.
++                result.AddRange(retained.Select(f => f.Fragment));
++                continue;
++            }
++
++            foreach (var top in tops)
++            {
++                var earlier = retained.Where(f => string.Equals(f.Fragment.Run.Id, top.Fragment.Run.Id, StringComparison.Ordinal)
++                                                  && string.Equals(f.Fragment.Run.Suite, top.Fragment.Run.Suite, StringComparison.Ordinal))
++                    .OrderBy(f => f.Fragment.Run.At).Select(f => f.Fragment).ToList();
++                if (earlier.Count == 0)
++                {
++                    result.Add(top.Fragment);
++                    continue;
++                }
++                earlier.Add(top.Fragment);
++                result.Add(HistoryFold.Attempts(earlier));
++                var key = (top.Fragment.Run.Suite, top.Fragment.Run.Id);
++                attemptCounts[key] = Math.Max(attemptCounts.GetValueOrDefault(key), earlier.Count);
++            }
++
++            retainedSkipped += retained.Count(f => !tops.Any(t => string.Equals(t.Fragment.Run.Id, f.Fragment.Run.Id, StringComparison.Ordinal)
++                                                                  && string.Equals(t.Fragment.Run.Suite, f.Fragment.Run.Suite, StringComparison.Ordinal)));
++        }
++        return result;
++    }
++
+     private static IEnumerable<string> FragmentFiles(IReadOnlyList<string> inputs, TextWriter error)
+     {
+         var files = new SortedSet<string>(StringComparer.Ordinal);
+diff --git a/src/Kronikol.Tool/QueryCommand.History.cs b/src/Kronikol.Tool/QueryCommand.History.cs
+index 837c214c..1389b9ac 100644
+--- a/src/Kronikol.Tool/QueryCommand.History.cs
++++ b/src/Kronikol.Tool/QueryCommand.History.cs
+@@ -39,6 +39,17 @@ private static int History(ReportIndex index, QueryOptions options, QueryWriter
+         if (!ReportHistory.TryBuild(index, options.SuiteOverride, error, out var roster, out var run, out var fromFragment, out var shapes))
+             return 2;
+ 
++        // A report read without its fragment gets a run id minted HERE, and a local id is salted by the
++        // minting process's own directory - so it never equals the id the run recorded itself under, and
++        // the run would be read against its own ledger line. When the ledger holds that line it is the
++        // better reading anyway: it is the run's own, fingerprints included.
++        if (!fromFragment && ReportHistory.OwnLine(ledger, roster, run) is { } own)
++        {
++            run = own;
++            shapes = own.ShapesHash is { } shapesHash ? ledger.Shapes(shapesHash) : null;
++            fromFragment = own.ShapeSet is not null;
++        }
++
+         var quarantine = ReportHistory.LoadQuarantine(ledgerPath, writer);
+         var aliases = ReportHistory.LoadAliases(ledgerPath, writer);
+         var analysis = new HistoryAnalysisOptions
+@@ -370,6 +381,31 @@ public static bool TryBuild(ReportIndex index, string? suiteOverride, TextWriter
+         return true;
+     }
+ 
++    /// <summary>
++    /// The ledger's own line for a run rebuilt from a report: same suite, same scenarios in the same
++    /// order, same results, and - for a local id - the same second, whatever the salt. Null when the
++    /// ledger does not hold it.
++    /// </summary>
++    public static HistoryRun? OwnLine(HistoryLedger ledger, HistoryRoster roster, HistoryRun rebuilt)
++    {
++        var runs = ledger.Runs(rebuilt.Suite);
++        for (var i = runs.Count - 1; i >= 0; i--)
++        {
++            var candidate = runs[i];
++            if (string.Equals(candidate.Id, rebuilt.Id, StringComparison.Ordinal))
++                return candidate;
++            var sameSecond = rebuilt.Id.StartsWith("local:", StringComparison.Ordinal)
++                             && candidate.Id.Length > rebuilt.Id.LastIndexOf(':')
++                             && string.CompareOrdinal(candidate.Id, 0, rebuilt.Id, 0, rebuilt.Id.LastIndexOf(':') + 1) == 0;
++            if (sameSecond
++                && string.Equals(candidate.Results, rebuilt.Results, StringComparison.Ordinal)
++                && ledger.Roster(candidate.RosterHash) is { } theirs
++                && theirs.Ids.SequenceEqual(roster.Ids, StringComparer.Ordinal))
++                return candidate;
++        }
++        return null;
++    }
++
+     private static CiMetadata? CiOf(ReportIndex index)
+     {
+         if (!index.OnCi || !Enum.TryParse<CiEnvironment>(index.CiProvider, ignoreCase: true, out var provider) || provider == CiEnvironment.None)
+diff --git a/src/Kronikol/History/HistoryAnalyzer.cs b/src/Kronikol/History/HistoryAnalyzer.cs
+index cabd3178..b151c428 100644
+--- a/src/Kronikol/History/HistoryAnalyzer.cs
++++ b/src/Kronikol/History/HistoryAnalyzer.cs
+@@ -69,9 +69,16 @@ public static HistoryVerdicts Analyse(HistoryLedger ledger, HistoryRoster roster
+     private static HistoryVerdicts AnalyseStream(HistoryLedger ledger, HistoryRoster roster, HistoryRun current, HistoryAnalysisOptions options,
+         string stream, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today, HistoryShapes? shapes)
+     {
+-        // The prior runs: the stream's, the current run excluded (it may already be appended), the last
+-        // `window` of them, oldest first.
+-        var prior = ledger.Runs(current.Suite)
++        // The prior runs: the stream's, the last `window` of them, oldest first - and only those BEFORE the
++        // run being read, in append order, when the ledger holds it. The run is looked for among the
++        // suite's runs, not the stream's: the comparison stream never holds it and must stop at the same
++        // place. A run the ledger does not hold (not recorded yet) is read against all of it, as before.
++        // Append order, not `At`: CI clocks skew, and it is the order `history verify` vouches for.
++        var suiteRuns = ledger.Runs(current.Suite);
++        var currentAt = -1;
++        for (var i = suiteRuns.Count - 1; i >= 0 && currentAt < 0; i--)
++            if (string.Equals(suiteRuns[i].Id, current.Id, StringComparison.Ordinal)) currentAt = i;
++        var prior = (currentAt >= 0 ? suiteRuns.Take(currentAt) : suiteRuns)
+             .Where(r => string.Equals(r.Stream, stream, StringComparison.Ordinal) && !string.Equals(r.Id, current.Id, StringComparison.Ordinal))
+             .ToList();
+         if (options.Window > 0 && prior.Count > options.Window)
+diff --git a/src/Kronikol/History/HistoryLedgerWriter.cs b/src/Kronikol/History/HistoryLedgerWriter.cs
+index d74d1913..626296ed 100644
+--- a/src/Kronikol/History/HistoryLedgerWriter.cs
++++ b/src/Kronikol/History/HistoryLedgerWriter.cs
+@@ -303,6 +303,114 @@ public static IReadOnlyList<HistoryFoldedRun> Fold(IEnumerable<HistoryFragment>
+         return groups.Select(g => FoldGroup(g.Shards)).ToArray();
+     }
+ 
++    /// <summary>
++    /// The attempts of one run as one fragment (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md F13/F15): a runner's
++    /// retry extension, or a second step of one CI job, runs again in a new process under the SAME run id
++    /// and in the SAME reports directory. Those are not shards - shards hold different scenarios - and
++    /// folding them as shards gives the retried scenario a second slot: a phantom scenario that reads as
++    /// new in this run and absent in the next. Here a scenario run again keeps its one position, takes the
++    /// later attempt's result, and counts the attempts, which is what <c>attempts</c> has meant since v1
++    /// and what the analyzer already reads as "passed on retry". A scenario only one attempt ran is kept
++    /// as it is.
++    /// </summary>
++    /// <param name="oldestFirst">The attempts, oldest first - by the run's <c>at</c>, never by path.</param>
++    public static HistoryFragment Attempts(IReadOnlyList<HistoryFragment> oldestFirst)
++    {
++        ArgumentNullException.ThrowIfNull(oldestFirst);
++        if (oldestFirst.Count == 0) throw new ArgumentException("at least one attempt is needed", nameof(oldestFirst));
++        if (oldestFirst.Count == 1) return oldestFirst[0];
++
++        var positions = new Dictionary<(string Id, int Slot), int>();
++        var entries = new List<HistoryRosterEntry>();
++        var cells = new List<(char Result, int? Attempt, int? Duration, int? Calls, string? ShapeSet, string? ShapeOrdered, IReadOnlyList<string>? CallLines, string? Error)>();
++        var deps = new SortedSet<string>(StringComparer.Ordinal);
++        var anyDeps = false;
++
++        foreach (var attempt in oldestFirst)
++        {
++            var roster = attempt.Roster;
++            var run = attempt.Run;
++            var i = 0;
++            foreach (var entry in roster.Entries())
++            {
++                var lines = run.CallSetAt(i) is { } set && attempt.Shapes is { } shapes
++                    ? set.Select(shapes.At).Where(line => line is not null).Select(line => line!).ToArray()
++                    : null;
++                var cell = (run.ResultAt(i), run.AttemptAt(i), run.DurationAt(i), run.CallsAt(i), run.ShapeSetAt(i), run.ShapeOrderedAt(i), (IReadOnlyList<string>?)lines, run.ErrorAt(i));
++                if (positions.TryGetValue((roster.Ids[i], roster.Slots[i]), out var at))
++                {
++                    // Run again: the later attempt is the verdict, the count says it took more than one, and
++                    // a pass on retry keeps the failure it recovered from - the evidence is the point.
++                    var earlier = cells[at];
++                    cells[at] = cell with
++                    {
++                        Item2 = (earlier.Attempt ?? 1) + (cell.Item2 ?? 1),
++                        Item8 = cell.Item8 ?? earlier.Error
++                    };
++                }
++                else
++                {
++                    positions[(roster.Ids[i], roster.Slots[i])] = entries.Count;
++                    entries.Add(entry);
++                    cells.Add(cell);
++                }
++                i++;
++            }
++            if (run.Deps is { } attemptDeps)
++            {
++                anyDeps = true;
++                foreach (var dep in attemptDeps) deps.Add(dep);
++            }
++        }
++
++        var first = oldestFirst[0].Run;
++        var last = oldestFirst[^1].Run;
++        var combined = HistoryRoster.Create(first.Suite, entries);
++        var anyCallSets = cells.Any(c => c.CallLines is not null);
++        var combinedShapes = anyCallSets ? HistoryShapes.Create(cells.SelectMany(c => c.CallLines ?? [])) : null;
++        var index = combinedShapes?.Calls.Select((line, n) => (line, n)).ToDictionary(p => p.line, p => p.n, StringComparer.Ordinal);
++        var errorKeys = new Dictionary<string, string>(StringComparer.Ordinal);
++        var errorText = new Dictionary<string, string>(StringComparer.Ordinal);
++        string? KeyOf(string? text)
++        {
++            if (text is null) return null;
++            if (!errorKeys.TryGetValue(text, out var key))
++            {
++                key = "e" + (errorKeys.Count + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
++                errorKeys[text] = key;
++                errorText[key] = text;
++            }
++            return key;
++        }
++
++        var line = new HistoryRun
++        {
++            Id = first.Id,
++            Suite = first.Suite,
++            Partial = first.Partial,
++            At = oldestFirst.Max(a => a.Run.At),
++            Branch = first.Branch,
++            Commit = first.Commit,
++            Provider = first.Provider,
++            Url = first.Url ?? last.Url,
++            Shards = Math.Max(1, first.Shards),
++            RosterHash = combined.Hash,
++            Results = new string(cells.Select(c => c.Result).ToArray()),
++            Attempts = new string(cells.Select(c => HistoryFormat.AttemptChar(c.Attempt)).ToArray()),
++            Durations = oldestFirst.Any(a => a.Run.Durations is not null) ? cells.Select(c => c.Duration).ToArray() : null,
++            Calls = oldestFirst.Any(a => a.Run.Calls is not null) ? cells.Select(c => c.Calls ?? 0).ToArray() : null,
++            ShapeSet = oldestFirst.Any(a => a.Run.ShapeSet is not null) ? cells.Select(c => c.ShapeSet ?? "").ToArray() : null,
++            ShapeOrdered = oldestFirst.Any(a => a.Run.ShapeSet is not null) ? cells.Select(c => c.ShapeOrdered ?? "").ToArray() : null,
++            ShapeVersion = oldestFirst.Select(a => a.Run.ShapeVersion).FirstOrDefault(v => v is not null),
++            ShapesHash = combinedShapes?.Hash,
++            CallSets = index is null ? null : cells.Select(c => (IReadOnlyList<int>)(c.CallLines ?? []).Select(l => index[l]).OrderBy(n => n).ToArray()).ToArray(),
++            Errors = oldestFirst.Any(a => a.Run.Errors is not null) ? cells.Select(c => KeyOf(c.Error)).ToArray() : null,
++            ErrorText = errorText,
++            Deps = anyDeps ? deps.ToArray() : null
++        };
++        return new HistoryFragment(oldestFirst.Max(a => a.Version), combined, line, combinedShapes);
++    }
++
+     private static HistoryFoldedRun FoldGroup(List<HistoryFragment> shards)
+     {
+         if (shards.Count == 1)
+diff --git a/tests/Kronikol.Tests/History/HistoryAnalyzerTests.cs b/tests/Kronikol.Tests/History/HistoryAnalyzerTests.cs
+index fdd243be..205abe99 100644
+--- a/tests/Kronikol.Tests/History/HistoryAnalyzerTests.cs
++++ b/tests/Kronikol.Tests/History/HistoryAnalyzerTests.cs
+@@ -63,6 +63,57 @@ private static HistoryVerdicts Analyse(HistoryLedger ledger, HistoryRoster roste
+ 
+     private static ScenarioHistory First(HistoryVerdicts verdicts) => verdicts.Scenarios[0];
+ 
++    // ── F4 (EVIDENCE_SURVIVES_A_RERUN_PLAN.md §3.2): a reading of an older run stops at that run ──
++
++    [Fact]
++    public void A_run_read_from_the_middle_of_the_ledger_does_not_count_later_runs_as_earlier_ones()
++    {
++        var roster = Roster(Ids[0]);
++        // Five runs; the scenario fails only in the last. The third is the one asked about.
++        var ledger = Series(roster, "P", "P", "P", "P", "F");
++        var third = Run(roster, 3, "P");
++
++        var verdicts = Analyse(ledger, roster, third);
++
++        Assert.Equal(2, verdicts.RunsRecorded);
++        Assert.DoesNotContain(First(verdicts).Points, p => p.RunId is "gh:4:1" or "gh:5:1");
++        Assert.Equal(0, First(verdicts).Failures);
++        Assert.Equal(HistoryVerdictKind.Stable, First(verdicts).Primary);
++    }
++
++    [Fact]
++    public void A_run_read_from_the_middle_of_the_ledger_is_compared_with_the_other_stream_as_it_stood_then()
++    {
++        var roster = Roster(Ids[0]);
++        // Append order: two runs of main, the feature-branch run being read, then a run of main that fails.
++        var ledger = Ledger(new[]
++        {
++            (roster, Run(roster, 1, "P")),
++            (roster, Run(roster, 2, "P")),
++            (roster, Run(roster, 3, "P", branch: "feature")),
++            (roster, Run(roster, 4, "F"))
++        });
++        var asked = Run(roster, 3, "P", branch: "feature");
++
++        var verdicts = Analyse(ledger, roster, asked, new HistoryAnalysisOptions { CompareBranch = "main" });
++
++        Assert.NotNull(verdicts.Compare);
++        Assert.Equal(2, verdicts.Compare!.RunsRecorded);
++        Assert.DoesNotContain(First(verdicts.Compare).Points, p => p.RunId == "gh:4:1");
++    }
++
++    [Fact]
++    public void A_run_the_ledger_does_not_hold_is_read_against_every_run_as_before()
++    {
++        var roster = Roster(Ids[0]);
++        var ledger = Series(roster, "P", "P", "F");
++
++        var verdicts = Analyse(ledger, roster, Run(roster, 9, "P"));
++
++        Assert.Equal(3, verdicts.RunsRecorded);
++        Assert.Equal(HistoryVerdictKind.Fixed, First(verdicts).Primary);
++    }
++
+     // ─── Status verdicts ───────────────────────────────────────
+ 
+     [Fact]
+diff --git a/tests/Kronikol.Tests/History/HistoryLedgerTests.cs b/tests/Kronikol.Tests/History/HistoryLedgerTests.cs
+index 39dd6f75..363f5808 100644
+--- a/tests/Kronikol.Tests/History/HistoryLedgerTests.cs
++++ b/tests/Kronikol.Tests/History/HistoryLedgerTests.cs
+@@ -504,6 +504,81 @@ public void Fold_renumbers_slots_when_two_shards_carry_the_same_stableId()
+         Assert.Equal([0, 1], roster.Slots);
+     }
+ 
++    // ── Attempts (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md F13/F15): a retry is not a shard ──
++
++    [Fact]
++    public void Attempts_of_one_run_keep_one_position_per_scenario_and_count_the_retry()
++    {
++        var full = Roster("Suite", "a", "b", "c");
++        var retried = Roster("Suite", "b");
++        var first = new HistoryFragment(1, full, Run(full, "gh:777:1", "PFP", partial: null));
++        var second = new HistoryFragment(1, retried, Run(retried, "gh:777:1", "P", partial: null, at: new DateTimeOffset(2026, 9, 12, 10, 4, 40, TimeSpan.Zero)));
++
++        var combined = HistoryFold.Attempts([first, second]);
++
++        Assert.Equal(["a", "b", "c"], combined.Roster.Ids);
++        Assert.Equal([0, 0, 0], combined.Roster.Slots);
++        Assert.Equal("PPP", combined.Run.Results);
++        Assert.Equal("-2-", combined.Run.Attempts);
++        Assert.Equal("Expected 200 but got 500", combined.Run.ErrorAt(1));
++        Assert.Equal(second.Run.At, combined.Run.At);
++        Assert.Null(combined.Run.Partial);
++        Assert.Equal(1, combined.Run.Shards);
++        Assert.Equal(combined.Roster.Hash, combined.Run.RosterHash);
++    }
++
++    [Fact]
++    public void A_retry_that_fails_again_is_a_failure_on_its_second_attempt()
++    {
++        var full = Roster("Suite", "a", "b");
++        var retried = Roster("Suite", "b");
++        var combined = HistoryFold.Attempts([
++            new HistoryFragment(1, full, Run(full, "gh:1:1", "PF", partial: null)),
++            new HistoryFragment(1, retried, Run(retried, "gh:1:1", "F", partial: null))
++        ]);
++
++        Assert.Equal("PF", combined.Run.Results);
++        Assert.Equal("-2", combined.Run.Attempts);
++    }
++
++    [Fact]
++    public void A_second_step_that_ran_other_scenarios_adds_them_without_touching_the_first()
++    {
++        var stepOne = Roster("Suite", "a", "b");
++        var stepTwo = Roster("Suite", "c");
++        var combined = HistoryFold.Attempts([
++            new HistoryFragment(1, stepOne, Run(stepOne, "gh:1:1", "PF", partial: null)),
++            new HistoryFragment(1, stepTwo, Run(stepTwo, "gh:1:1", "P", partial: null))
++        ]);
++
++        Assert.Equal(["a", "b", "c"], combined.Roster.Ids);
++        Assert.Equal("PFP", combined.Run.Results);
++        Assert.Equal("---", combined.Run.Attempts);
++    }
++
++    [Fact]
++    public void A_retried_run_reads_as_passed_on_retry_and_leaves_no_phantom_scenario_behind()
++    {
++        var full = Roster("Suite", "a", "b", "c");
++        var retried = Roster("Suite", "b");
++        var text = HistoryJson.HeaderLine("test") + "\n" + HistoryJson.RosterLine(full) + "\n";
++        for (var n = 1; n <= 6; n++)
++            text += HistoryJson.RunLine(Run(full, $"gh:{n}:1", "PPP")) + "\n";
++        var combined = HistoryFold.Attempts([
++            new HistoryFragment(1, full, Run(full, "gh:7:1", "PFP", partial: null)),
++            new HistoryFragment(1, retried, Run(retried, "gh:7:1", "P", partial: null))
++        ]);
++        var ledger = HistoryLedgerReader.Parse(text, 0).Ledger!;
++
++        var verdicts = HistoryAnalyzer.Analyse(ledger, combined.Roster, combined.Run with { Partial = false }, new HistoryAnalysisOptions());
++
++        var b = verdicts.Find("b")!;
++        Assert.Equal(HistoryVerdictKind.Flaky, b.Primary);
++        Assert.Contains("passed on retry 2 in this run", b.Evidence);
++        Assert.DoesNotContain(verdicts.Scenarios, s => s.Has(HistoryVerdictKind.New));
++        Assert.Equal(3, verdicts.Scenarios.Count);
++    }
++
+     [Fact]
+     public void Fragments_of_different_runs_or_suites_stay_separate()
+     {
+diff --git a/tests/Kronikol.Tests/Tool/HistoryCommandTests.cs b/tests/Kronikol.Tests/Tool/HistoryCommandTests.cs
+index 55e9d92a..621111c5 100644
+--- a/tests/Kronikol.Tests/Tool/HistoryCommandTests.cs
++++ b/tests/Kronikol.Tests/Tool/HistoryCommandTests.cs
+@@ -76,6 +76,71 @@ public void Record_folds_the_shards_of_one_run_into_one_line()
+         _ = (shard1, shard2);
+     }
+ 
++    // ── Attempts (plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md F13/F15) ──
++    // A retry extension re-runs the failed tests in a new process, in the same reports directory, under
++    // the same CI run id. Once earlier attempts are kept under runs/, record finds both fragments: they
++    // are attempts of each other, not shards, and the retried scenario must not become two.
++
++    [Fact]
++    public void Record_reads_a_retained_attempt_of_the_same_run_as_an_attempt_not_as_a_shard()
++    {
++        var full = Roster("Suite", "id1", "id2", "id3");
++        var retried = Roster("Suite", "id2");
++        // The reports directory: the retry's fragment on top, the first attempt retained beneath it.
++        WriteFragment("Reports", retried, RunLine(retried, "gh:7:1", "P") with { At = new DateTimeOffset(2026, 9, 12, 10, 0, 30, TimeSpan.Zero) });
++        WriteFragment(Path.Combine("Reports", "runs", "gh_7_1"), full, RunLine(full, "gh:7:1", "PFP"));
++
++        var (output, error, exit) = Run(null, "record", Path.Combine(_dir, "Reports"), "--history", Ledger);
++
++        Assert.True(exit == 0, error);
++        Assert.Contains("1 run(s) recorded", output);
++        Assert.Contains("2 attempts", output);
++        var ledger = HistoryLedgerReader.Read(Ledger, 50).Ledger!;
++        var run = Assert.Single(ledger.Runs("Suite"));
++        Assert.Equal("PPP", run.Results);
++        Assert.Equal("-2-", run.Attempts);
++        Assert.Equal(1, run.Shards);
++        Assert.Equal([0, 0, 0], ledger.Roster(run.RosterHash)!.Slots);
++        Assert.Equal("boom", run.ErrorAt(1));
++    }
++
++    [Fact]
++    public void Record_leaves_a_retained_run_of_another_id_alone()
++    {
++        var roster = Roster("Suite", "id1", "id2");
++        WriteFragment("Reports", roster, RunLine(roster, "gh:8:1", "PP"));
++        WriteFragment(Path.Combine("Reports", "runs", "gh_7_1"), roster, RunLine(roster, "gh:7:1", "PF"));
++
++        var (output, error, exit) = Run(null, "record", Path.Combine(_dir, "Reports"), "--history", Ledger);
++
++        Assert.True(exit == 0, error);
++        var ledger = HistoryLedgerReader.Read(Ledger, 50).Ledger!;
++        var run = Assert.Single(ledger.Runs("Suite"));
++        Assert.Equal("gh:8:1", run.Id);
++    }
++
++    [Fact]
++    public void Record_still_folds_shards_that_each_kept_an_attempt()
++    {
++        // Two shards of one run, in two directories; the second shard's failing scenario was retried.
++        var shardOne = Roster("Suite", "id1", "id2");
++        var shardTwo = Roster("Suite", "id3", "id4");
++        var retried = Roster("Suite", "id4");
++        WriteFragment(Path.Combine("a", "Reports"), shardOne, RunLine(shardOne, "gh:7:1", "PP"));
++        WriteFragment(Path.Combine("b", "Reports"), retried, RunLine(retried, "gh:7:1", "P") with { At = new DateTimeOffset(2026, 9, 12, 10, 0, 30, TimeSpan.Zero) });
++        WriteFragment(Path.Combine("b", "Reports", "runs", "gh_7_1"), shardTwo, RunLine(shardTwo, "gh:7:1", "PF"));
++
++        var (output, error, exit) = Run(null, "record", _dir, "--history", Ledger);
++
++        Assert.True(exit == 0, error);
++        var ledger = HistoryLedgerReader.Read(Ledger, 50).Ledger!;
++        var run = Assert.Single(ledger.Runs("Suite"));
++        Assert.Equal(2, run.Shards);
++        Assert.Equal("PPPP", run.Results);
++        Assert.Equal("---2", run.Attempts);
++        Assert.Equal([0, 0, 0, 0], ledger.Roster(run.RosterHash)!.Slots);
++    }
++
+     [Fact]
+     public void Record_is_idempotent_and_says_which_runs_were_already_there()
+     {
+diff --git a/tests/Kronikol.Tests/Tool/QueryHistoryTests.cs b/tests/Kronikol.Tests/Tool/QueryHistoryTests.cs
+index da490520..c18e007a 100644
+--- a/tests/Kronikol.Tests/Tool/QueryHistoryTests.cs
++++ b/tests/Kronikol.Tests/Tool/QueryHistoryTests.cs
+@@ -102,6 +102,51 @@ public void The_run_view_leads_with_the_summary_and_lists_the_scenarios_with_a_v
+         Assert.Contains("1 scenario(s) with a verdict", output);
+     }
+ 
++    // EVIDENCE_SURVIVES_A_RERUN_PLAN.md F14: a local run id is salted by the directory of the process
++    // that mints it, so the tool - installed somewhere else - mints a different id for the same run
++    // whenever the History.run.json beside the report is missing, and then reads the run's own ledger
++    // line as an earlier run.
++    [Fact]
++    public void A_local_report_without_its_fragment_is_not_read_against_its_own_ledger_line()
++    {
++        var roster = Roster();
++        HistoryRun Local(string id, DateTimeOffset at, string results) => new()
++        {
++            Id = id, Suite = "Suite", Partial = false, At = at, Branch = null, Commit = null, Provider = null, Url = null, Shards = 1,
++            RosterHash = roster.Hash, Results = results, Attempts = "--", Durations = [100, 50], Calls = null, ShapeSet = null, ShapeOrdered = null,
++            Errors = results.Select(r => r == 'F' ? "e1" : null).ToArray(),
++            ErrorText = results.Contains('F') ? new Dictionary<string, string> { ["e1"] = "Expected 200 but got 500" } : new Dictionary<string, string>(),
++            Deps = ["Test>orders"]
++        };
++        var start = new DateTimeOffset(2026, 9, 12, 7, 0, 0, TimeSpan.Zero);
++        for (var i = 0; i < 3; i++)
++            HistoryLedgerWriter.Append(Ledger, roster, Local(HistoryRunBuilder.RunId(null, start.AddHours(i), "DEV-BOX|/work/tests/bin/"), start.AddHours(i), "PP"), "3.9.0");
++        // The run the report describes, as its own process recorded it: it ended at the report's endTime.
++        var ended = new DateTimeOffset(2026, 9, 12, 10, 5, 0, TimeSpan.Zero);
++        HistoryLedgerWriter.Append(Ledger, roster, Local(HistoryRunBuilder.RunId(null, ended, "DEV-BOX|/work/tests/bin/"), ended, "FP"), "3.9.0");
++
++        var directory = Path.Combine(_dir, "reports");
++        Directory.CreateDirectory(directory);
++        var report = Path.Combine(directory, "TestRunReport.json");
++        File.WriteAllText(report, $$"""
++            {
++              "kronikolVersion": "3.9.0", "formatVersion": 1, "suite": "Suite",
++              "startTime": "2026-09-12T10:00:00Z", "endTime": "2026-09-12T10:05:00Z",
++              "features": [ { "name": "Checkout", "labels": [], "scenarios": [
++                { "id": "t0", "stableId": "{{PayId}}", "name": "Pay by card", "result": "Failed", "durationSeconds": 0.1, "errorMessage": "Expected 200 but got 500", "labels": [], "categories": [], "steps": [], "httpInteractions": [] },
++                { "id": "t1", "stableId": "{{RefundId}}", "name": "Refund an order", "result": "Passed", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] } ] } ]
++            }
++            """);
++
++        var (output, error, exit) = Query(null, "history", report);
++
++        Assert.True(exit == 0, error);
++        Assert.True(output.Contains("3 runs recorded in the local stream"), output);
++        Assert.Contains("PPPF ", output);
++        Assert.Contains("broke", output);
++        Assert.DoesNotContain("failing since", output);
++    }
++
+     [Fact]
+     public void The_ledger_above_the_report_is_found_without_being_named()
+     {

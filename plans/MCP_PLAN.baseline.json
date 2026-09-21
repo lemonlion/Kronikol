@@ -1,0 +1,254 @@
+{
+ "captured": "2026-09-12T22:05:24.366079+00:00",
+ "total": 560550,
+ "packages": {
+  "Kronikol": {
+   "downloads": 83876,
+   "latest": "3.1.0"
+  },
+  "Kronikol.ReqNRoll.Core": {
+   "downloads": 13469,
+   "latest": "3.1.0"
+  },
+  "Kronikol.LightBDD.Core": {
+   "downloads": 12680,
+   "latest": "3.1.0"
+  },
+  "Kronikol.xUnit3": {
+   "downloads": 11427,
+   "latest": "3.1.0"
+  },
+  "Kronikol.PlantUml.Ikvm": {
+   "downloads": 10840,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Kafka": {
+   "downloads": 10485,
+   "latest": "3.1.0"
+  },
+  "Kronikol.TUnit": {
+   "downloads": 9892,
+   "latest": "3.1.0"
+  },
+  "Kronikol.AssertionTracking": {
+   "downloads": 9749,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.BigQuery": {
+   "downloads": 9702,
+   "latest": "3.1.0"
+  },
+  "Kronikol.xUnit2": {
+   "downloads": 9634,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Redis": {
+   "downloads": 9185,
+   "latest": "3.1.0"
+  },
+  "Kronikol.ReqNRoll.xUnit2": {
+   "downloads": 9083,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.CosmosDB": {
+   "downloads": 8979,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Spanner": {
+   "downloads": 8963,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.MongoDB": {
+   "downloads": 8954,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.PubSub": {
+   "downloads": 8880,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Grpc": {
+   "downloads": 8828,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.EfCore.Relational": {
+   "downloads": 8764,
+   "latest": "3.1.0"
+  },
+  "Kronikol.StepTracking": {
+   "downloads": 8607,
+   "latest": "3.1.0"
+  },
+  "Kronikol.ReqNRoll.xUnit3": {
+   "downloads": 8418,
+   "latest": "3.1.0"
+  },
+  "Kronikol.BDDfy.xUnit3": {
+   "downloads": 8409,
+   "latest": "3.1.0"
+  },
+  "Kronikol.LightBDD.xUnit3": {
+   "downloads": 8404,
+   "latest": "3.1.0"
+  },
+  "Kronikol.NUnit4": {
+   "downloads": 8398,
+   "latest": "3.1.0"
+  },
+  "Kronikol.LightBDD.xUnit2": {
+   "downloads": 8367,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Bigtable": {
+   "downloads": 8364,
+   "latest": "3.1.0"
+  },
+  "Kronikol.ReqNRoll.TUnit": {
+   "downloads": 8324,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.MySqlConnector": {
+   "downloads": 8316,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.MediatR": {
+   "downloads": 8305,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.OpenTelemetry": {
+   "downloads": 8300,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.DispatchProxy": {
+   "downloads": 8287,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.SQS": {
+   "downloads": 8286,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Kafka.BuildInterception": {
+   "downloads": 8279,
+   "latest": "3.1.0"
+  },
+  "Kronikol.LightBDD.TUnit": {
+   "downloads": 8270,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Elasticsearch": {
+   "downloads": 8230,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.BlobStorage": {
+   "downloads": 8223,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Npgsql": {
+   "downloads": 8190,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.DynamoDB": {
+   "downloads": 8180,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.CloudStorage": {
+   "downloads": 8155,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.EventHubs": {
+   "downloads": 8146,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.EventBridge": {
+   "downloads": 8138,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Dapper": {
+   "downloads": 8137,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.AtlasDataApi": {
+   "downloads": 8117,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.StorageQueues": {
+   "downloads": 8108,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.SqlClient": {
+   "downloads": 8102,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.SNS": {
+   "downloads": 8088,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.S3": {
+   "downloads": 8078,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Oracle": {
+   "downloads": 8075,
+   "latest": "3.1.0"
+  },
+  "Kronikol.MSTest": {
+   "downloads": 8068,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.MassTransit": {
+   "downloads": 8000,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.ServiceBus": {
+   "downloads": 7972,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Sqlite": {
+   "downloads": 7940,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.MongoDB.V2": {
+   "downloads": 7076,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.ClickHouse": {
+   "downloads": 4151,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Tool": {
+   "downloads": 4084,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Templates": {
+   "downloads": 3886,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.Otlp": {
+   "downloads": 3535,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.ProxyTap": {
+   "downloads": 3505,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.TcpTap": {
+   "downloads": 3411,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Playwright": {
+   "downloads": 3335,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.ClickHouse.Driver": {
+   "downloads": 974,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.ClickHouse.Client": {
+   "downloads": 974,
+   "latest": "3.1.0"
+  },
+  "Kronikol.Extensions.ClickHouse.Octonica": {
+   "downloads": 948,
+   "latest": "3.1.0"
+  }
+ }
+}

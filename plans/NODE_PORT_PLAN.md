@@ -1,5 +1,14 @@
 # Kronikol.js — Node / TypeScript Port Plan
 
+> **Scope superseded 2026-09-14 by `PLATFORM_FOUNDATIONS_PLAN.md` §5.** Seams A/B, §3.10–§3.12,
+> §5's six-row adapter SPI (promoted to F9) and §6.1's deterministic clock stand. **"Full feature
+> parity" does not**: `@kronikol/report`, `@kronikol/diagram` and §4's HTML-assembly port are not
+> built (F6 — one shared renderer); §6.3–§6.7's PlantUML/HTML/serialiser parity machinery becomes the
+> renderer's own .NET regression suite; §5's merger becomes concatenation (§4.2 there).
+> `NODE_PLATFORM_PLAN.md` (per that plan's §9 template) will replace this document's forward-looking
+> sections. Its §3.12 remains the authority on OTel-as-tail.
+
+
 **Project name:** **Kronikol.js** — the TypeScript-native reimplementation of Kronikol for the Node.js ecosystem, with *full feature parity* as the end state, delivered core-first. Like the Java port (Kronikol4J), the core is engineered from day one as a foundation extensions plug into, so the parity build-out is incremental breadth rather than re-architecture.
 
 **Guiding principle:** Idiomatic TypeScript throughout. We treat the C# code as an executable *specification of behavior*, not a blueprint to translate line-by-line. Where C# and Node diverge (async context, interception, the test-run lifecycle, cross-process aggregation), we build the idiomatic Node mechanism that produces the same observable result.
