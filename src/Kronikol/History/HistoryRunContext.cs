@@ -137,7 +137,7 @@ public sealed class HistoryRunContext
                         run = run with { Partial = true };
                         if (options.HistoryPartialRun is null)
                             ReportDiagnosticsScope.Record(DiagnosticKind.HistoryPartialRun,
-                                $"this run has fewer than {100 - (int)(options.HistoryPartialThreshold * 100)}% of the previous run's scenarios and is recorded as partial: nothing is reported absent, and it is not the run the next one is compared against. Set ReportConfigurationOptions.HistoryPartialRun to say otherwise.");
+                                $"this run has fewer than {100 - (int)(options.HistoryPartialThreshold * 100)}% of the previous run's scenarios and is recorded as partial: nothing is reported absent, and its durations and calls are not what the next full run is compared against (its passes and failures are read like any other run's). Set ReportConfigurationOptions.HistoryPartialRun to say otherwise.");
                     }
                     else if (run.Partial is null)
                     {

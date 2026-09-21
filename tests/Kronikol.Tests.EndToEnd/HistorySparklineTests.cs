@@ -76,6 +76,37 @@ public class HistorySparklineTests : PlaywrightTestBase
         Assert.Equal(6, CountOf(flaky, "rgb(191, 0, 0)"));
     }
 
+    [Fact]
+    public async Task A_run_that_was_partial_and_a_position_that_was_not_a_test_are_painted_and_named()
+    {
+        // 3.23.0: a position an ingest folded unattributed traffic into is written N, and used to fall to
+        // the default arm - an unnamed bar in the "bypassed" colour. A partial run's row now says it was one.
+        await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistorySparkline_NotATest.html",
+            (i, run) => i == 2 ? run with { Results = "PNPP" } : i == 4 ? run with { Partial = true } : run));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await Page.EvaluateAsync("() => document.querySelectorAll('details.feature').forEach(d => d.setAttribute('open', ''))");
+
+        var refund = Page.Locator($"details.scenario[data-stable-id='{HistoryReportHelper.RefundId}']");
+        var sparkline = refund.Locator("summary .history-sparkline");
+        await Expect(sparkline).ToBeVisibleAsync();
+        var title = await sparkline.GetAttributeAsync("title");
+        Assert.NotNull(title);
+        Assert.Contains("PPNPPPP", title);
+        Assert.Contains("e2e:3:1", title.Split('\n').Single(line => line.Contains("not a test")));
+        Assert.Contains("e2e:5:1", title.Split('\n').Single(line => line.Contains("partial run")));
+        Assert.DoesNotContain("bypassed", title);
+
+        var painted = await Page.EvaluateAsync<string>($$"""
+            () => getComputedStyle(document.querySelector("details.scenario[data-stable-id='{{HistoryReportHelper.RefundId}}'] .history-sparkline")).backgroundImage
+        """);
+        // One hard-stop pair in the not-a-test grey, six passes, and nothing in the bypassed yellow.
+        Assert.Equal(2, CountOf(painted, "rgb(220, 220, 220)"));
+        Assert.Equal(12, CountOf(painted, "rgb(34, 139, 34)"));
+        Assert.Equal(0, CountOf(painted, "rgb(184, 160, 0)"));
+        // An N is no verdict: the scenario is as stable as it was.
+        await Expect(refund).ToHaveAttributeAsync("data-history-verdicts", "stable");
+    }
+
     private static int CountOf(string text, string needle)
     {
         var count = 0;

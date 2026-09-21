@@ -144,8 +144,13 @@ public sealed record HistoryAnalysisOptions
 /// <param name="Attempt">The attempt the result came from, when the runner said.</param>
 /// <param name="ShapeVersion">The templating rule the fingerprints were made by.</param>
 /// <param name="CallSet">The distinct calls, spelled out, when the line recorded them (3.17.0).</param>
+/// <param name="Partial">
+/// Whether the run was partial (3.23.0). Its pass or fail is a fact about the scenario and is read like any
+/// other; its duration and its set of calls are facts about a filtered run's conditions, and a full run is
+/// not read against them.
+/// </param>
 public sealed record HistoryPoint(string RunId, DateTimeOffset At, string? Commit, char Result, int? DurationMs, string? ShapeSet, string? ShapeOrdered, int? Calls, string? Error, int? Attempt, int? ShapeVersion = null,
-    IReadOnlyList<string>? CallSet = null);
+    IReadOnlyList<string>? CallSet = null, bool Partial = false);
 
 /// <summary>Where a failing streak began.</summary>
 /// <param name="RunId">The first failing run of the streak.</param>
@@ -217,8 +222,20 @@ public sealed record ScenarioHistory
     /// <summary>The current duration, when recorded.</summary>
     public required int? DurationMs { get; init; }
 
-    /// <summary>The p95 of the prior durations, when enough were recorded, in this run's milliseconds: each prior duration is read against its run's speed and the p95 scaled to this run's.</summary>
+    /// <summary>
+    /// The p95 of the scenario's durations in earlier full runs, when enough were recorded, in this run's
+    /// milliseconds: each is read against its run's speed and the p95 scaled to this run's. A partial
+    /// run's durations are in no bar (3.23.0): its speed is the median of whichever scenarios the filter
+    /// left. When the current run is itself partial nothing is scaled, see <see cref="DurationP95IsRaw"/>.
+    /// </summary>
     public required int? DurationP95 { get; init; }
+
+    /// <summary>
+    /// Whether <see cref="DurationP95"/> is the plain p95 of the earlier full runs' milliseconds, unscaled.
+    /// True when the current run is partial: there is no run speed worth scaling to, and no
+    /// <see cref="HistoryVerdictKind.Slower"/> is read.
+    /// </summary>
+    public bool DurationP95IsRaw { get; init; }
 
     /// <summary>The set fingerprint in the previous run that recorded one.</summary>
     public required string? PreviousShapeSet { get; init; }

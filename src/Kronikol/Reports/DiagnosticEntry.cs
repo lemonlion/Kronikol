@@ -72,7 +72,8 @@ public enum DiagnosticKind
     /// <summary>
     /// The run lacks more than <see cref="ReportConfigurationOptions.HistoryPartialThreshold"/> of the
     /// previous run's scenarios — a filtered run, a crashed half — and was recorded as partial: nothing
-    /// is reported absent, and it is not the run the next one is compared against.
+    /// is reported absent, and its durations and calls are not what the next full run is compared
+    /// against. Its passes and failures are read like any other run's.
     /// </summary>
     HistoryPartialRun,
 

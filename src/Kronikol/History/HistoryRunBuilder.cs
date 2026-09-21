@@ -74,7 +74,9 @@ public static class HistoryRunBuilder
         for (var i = 0; i < scenarios.Length; i++)
         {
             var scenario = scenarios[i].Scenario;
-            results[i] = scenario.ResultDefaulted ? HistoryFormat.Unknown : HistoryFormat.ResultChar(scenario.Result);
+            results[i] = scenario.NotATest ? HistoryFormat.NotATest
+                : scenario.ResultDefaulted ? HistoryFormat.Unknown
+                : HistoryFormat.ResultChar(scenario.Result);
             attempts[i] = HistoryFormat.AttemptChar(scenario.Attempt);
             durations[i] = scenario.Duration is { } duration ? (int)Math.Round(duration.TotalMilliseconds, MidpointRounding.AwayFromZero) : null;
 
@@ -89,7 +91,7 @@ public static class HistoryRunBuilder
                 callLines[i] = scenarioCalls.Select(c => c.ToString()).Distinct(StringComparer.Ordinal).ToArray();
             }
 
-            if (scenario.Result == ExecutionResult.Failed && !scenario.ResultDefaulted)
+            if (scenario.Result == ExecutionResult.Failed && !scenario.ResultDefaulted && !scenario.NotATest)
             {
                 // Truncate marks the cut with an ellipsis, so the cap leaves room for it: the key is never
                 // longer than the limit.

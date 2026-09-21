@@ -81,6 +81,14 @@ public record Scenario
     public bool ResultDefaulted { get; set; }
 
     /// <summary>
+    /// True for a scenario that is not a test: the one an ingest folds the traffic of unknown tests into
+    /// (<c>IngestRequest.FoldUnknownTestsInto</c>). Nothing ran and nothing ended; it exists only in the
+    /// runs where unattributed traffic survived. The report draws it like any scenario. The cross-run
+    /// ledger records it as <c>N</c>, so it reads no verdict and is never reported new or absent.
+    /// </summary>
+    public bool NotATest { get; set; }
+
+    /// <summary>
     /// Where the scenario is written - a project-relative path with forward slashes, matching
     /// <see cref="Feature.SourceFile"/>. Null on the lanes that cannot supply one. Deliberately NOT the
     /// bare-file-name contract of <see cref="ScenarioStep.SourceFile"/>: a step's path comes from

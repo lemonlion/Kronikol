@@ -81,6 +81,15 @@ public static class HistoryFormat
     /// <summary>A roster position this run had no result for at all.</summary>
     public const char Absent = '.';
 
+    /// <summary>
+    /// A roster position that is not a test: the scenario an ingest folds unattributed traffic into
+    /// (<c>FoldUnknownTestsInto</c>). Nothing ran and nothing ended, and the position exists only in the
+    /// runs where such traffic survived, so it is never a verdict, never new and never absent. It keeps
+    /// its position because a roster position is the scenario's <c>sN</c> address. A reader from before
+    /// 3.23.0 takes it as it takes a skip: only a pass or a fail was ever a verdict.
+    /// </summary>
+    public const char NotATest = 'N';
+
     /// <summary>The attempt digit written when the runner reported nothing about attempts.</summary>
     public const char AttemptUnknown = '-';
 

@@ -266,6 +266,9 @@ public class IngestAttributionTests : IDisposable
         Assert.Equal("First", attributed.DisplayName); // CapitaliseTitles (default on) re-cases the heading
         // The one inside the test window joined the test; the one at +30s fell into the fold bucket.
         Assert.Contains(scenarios, s => s.DisplayName == "Traffic outside any test");
+        // The fold scenario is not a test, and says so to whatever records the run (#75 section 5).
+        Assert.True(Assert.Single(scenarios, s => s.DisplayName == "Traffic outside any test").NotATest);
+        Assert.False(attributed.NotATest);
 
         // The step also injects its delimiter bar as an override pair, which the report does not list
         // as an interaction.

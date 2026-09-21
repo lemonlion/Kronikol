@@ -156,6 +156,70 @@ public class QueryHistoryTests : IDisposable
         Assert.Contains("verdict: failing", byId.Output);
     }
 
+    private void SeedPartial(int n, HistoryRoster roster, string results, int?[] durations)
+    {
+        HistoryLedgerWriter.Append(Ledger, roster, new HistoryRun
+        {
+            Id = $"gh:{n}:1", Suite = "Suite", Partial = true, At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero).AddHours(n),
+            Branch = "main", Commit = $"c{n:D6}", Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash,
+            Results = results, Attempts = new string('-', results.Length), Durations = durations, Calls = null, ShapeSet = null, ShapeOrdered = null,
+            Errors = new string?[results.Length], ErrorText = new Dictionary<string, string>(), Deps = ["Test>orders"]
+        }, "3.9.0");
+    }
+
+    [Fact]
+    public void The_bar_says_what_it_is_and_a_partial_row_says_so()
+    {
+        // #75 section 3c: the bar is scaled to this run's speed, so it can stand over every raw reading
+        // under it, and "p95 of earlier runs" read as a bug. A partial run is in no bar, and its row says
+        // which one it is.
+        Seed("PP", "PP", "PP");
+        SeedPartial(9, HistoryRoster.Create("Suite", [new HistoryRosterEntry(PayId, "Pay by card", "Checkout", null)]), "P", [900]);
+        var report = WriteReport(pay: "Passed");
+
+        var (output, error, exit) = Query(null, "history", report, "s0");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("p95 of earlier full runs, at this run's speed", output);
+        Assert.DoesNotContain("p95 of earlier runs", output);
+        Assert.Contains("(partial)", output.Split('\n').Single(line => line.Contains("gh:9:1")));
+        Assert.DoesNotContain("(partial)", output.Split('\n').Single(line => line.Contains("gh:3:1")));
+
+        var json = Query(null, "history", report, "s0", "--json");
+        Assert.True(json.Exit == 0, json.Error);
+        using var document = System.Text.Json.JsonDocument.Parse(json.Output);
+        var runs = document.RootElement.GetProperty("items")[0].GetProperty("runs").EnumerateArray().ToArray();
+        Assert.True(runs.Single(r => r.GetProperty("runId").GetString() == "gh:9:1").GetProperty("partial").GetBoolean());
+        Assert.False(runs.Single(r => r.GetProperty("runId").GetString() == "gh:3:1").GetProperty("partial").GetBoolean());
+        Assert.False(document.RootElement.GetProperty("items")[0].GetProperty("durationP95IsRaw").GetBoolean());
+    }
+
+    [Fact]
+    public void A_partial_run_reads_its_duration_against_the_raw_bar_of_full_runs()
+    {
+        // The report's two scenarios against a ledger of ten: partial by the heuristic, so nothing is scaled
+        // to its speed and the label does not say that anything was.
+        var wide = HistoryRoster.Create("Suite",
+        [
+            new HistoryRosterEntry(PayId, "Pay by card", "Checkout", null), new HistoryRosterEntry(RefundId, "Refund an order", "Checkout", null),
+            .. Enumerable.Range(1, 8).Select(i => new HistoryRosterEntry($"9999{i:D12}", "Other " + i, "Other", null)),
+        ]);
+        for (var n = 1; n <= 3; n++)
+            HistoryLedgerWriter.Append(Ledger, wide, new HistoryRun
+            {
+                Id = $"gh:{n}:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero).AddHours(n),
+                Branch = "main", Commit = $"c{n:D6}", Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = wide.Hash,
+                Results = new string('P', 10), Attempts = new string('-', 10), Durations = [.. Enumerable.Repeat<int?>(120 + n, 10)], Calls = null, ShapeSet = null, ShapeOrdered = null,
+                Errors = new string?[10], ErrorText = new Dictionary<string, string>(), Deps = ["Test>orders"]
+            }, "3.9.0");
+        var report = WriteReport(pay: "Passed");
+
+        var (output, error, exit) = Query(null, "history", report, "s0");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("duration: 100 ms · p95 of earlier full runs 123 ms (this run is partial, so nothing is scaled to its speed)", output);
+    }
+
     [Fact]
     public void Json_carries_the_rows_and_the_run_level_member()
     {

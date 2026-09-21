@@ -365,7 +365,12 @@ public static class IngestPipeline
             foreach (var scenario in synthesised.Features.SelectMany(f => f.Scenarios))
             {
                 if (scenario.Id == foldedInto.ScenarioId)
+                {
                     scenario.Result = ExecutionResult.Passed;
+                    // And history must not read it as one: it comes and goes with whether unattributed
+                    // traffic survived, which made it "absent" in one run and "new" in the next.
+                    scenario.NotATest = true;
+                }
             }
         }
 

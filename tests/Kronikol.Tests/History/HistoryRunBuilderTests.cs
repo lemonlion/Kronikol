@@ -132,6 +132,23 @@ public class HistoryRunBuilderTests
     }
 
     [Fact]
+    public void A_scenario_that_is_not_a_test_is_recorded_as_one()
+    {
+        // #75 section 5: the scenario an ingest folds unattributed traffic into exists only when such traffic
+        // survived. It keeps its roster position (that is its sN address) and is written N, which no reader
+        // counts as a verdict. Even a failed one: nothing ran, so nothing failed.
+        var features = Features();
+        features[0].Scenarios[0].NotATest = true;
+        features[0].Scenarios[1].NotATest = true;
+
+        var (roster, run) = HistoryRunBuilder.Build(features, [], "Suite", GitHub(), At, new HistoryBuildOptions());
+
+        Assert.Equal("NNS", run.Results);
+        Assert.Equal(3, roster.Count);
+        Assert.All(run.Errors!, Assert.Null);
+    }
+
+    [Fact]
     public void A_defaulted_result_is_recorded_as_unknown_never_as_a_pass()
     {
         // §5.11: a scenario whose process died mid-run took ResultWhenUnknown (Passed by default). Written

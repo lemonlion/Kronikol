@@ -246,6 +246,8 @@ internal static class HistoryHtml
             if (p.Commit is { } commit)
                 sb.Append(" · ").Append(commit.Length > 7 ? commit[..7] : commit);
             sb.Append(" · ").Append(ResultWord(p.Result));
+            if (p.Partial)
+                sb.Append(" · partial run");
             if (p.DurationMs is { } ms)
                 sb.Append(" · ").Append(FormatMs(ms));
             if (p.Error is { } error)
@@ -265,6 +267,7 @@ internal static class HistoryHtml
         HistoryFormat.SkippedAfterFailure => "skipped after failure",
         HistoryFormat.Absent => "absent",
         HistoryFormat.Unknown => "no verdict",
+        HistoryFormat.NotATest => "not a test",
         _ => "bypassed"
     };
 
@@ -276,6 +279,7 @@ internal static class HistoryHtml
         HistoryFormat.Skipped or HistoryFormat.SkippedAfterFailure => "#949494",
         HistoryFormat.Absent => "#e6e6e6",
         HistoryFormat.Unknown => "#c8c8c8",
+        HistoryFormat.NotATest => "#dcdcdc",
         _ => "#b8a000"
     };
 }

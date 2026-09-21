@@ -167,7 +167,11 @@ internal static partial class QueryCommand
         if (entry.FailingSince is { } since)
             writer.Line($"failing since: {since.RunId}{(since.Commit is { } commit ? $" ({(commit.Length > 7 ? commit[..7] : commit)})" : "")} · {since.Runs} run(s)");
         if (entry.DurationMs is { } duration)
-            writer.Line($"duration: {duration} ms" + (entry.DurationP95 is { } p95 ? $" · p95 of earlier runs {p95} ms" : ""));
+            // The bar is scaled to this run's speed, so it can stand over every raw reading under it: the
+            // label says so. For a partial run nothing is scaled, and the label says that instead.
+            writer.Line($"duration: {duration} ms" + (entry.DurationP95 is not { } p95 ? ""
+                : entry.DurationP95IsRaw ? $" · p95 of earlier full runs {p95} ms (this run is partial, so nothing is scaled to its speed)"
+                : $" · p95 of earlier full runs, at this run's speed {p95} ms"));
         if (entry.Calls is { } calls)
             writer.Line($"calls: {calls}" + (entry.PreviousCalls is { } previous && previous != calls ? $" (was {previous})" : "")
                         + (entry.PreviousShapeSet is { } shape && entry.ShapeSet is { } now && !string.Equals(shape, now, StringComparison.Ordinal) ? " · set of calls changed since the previous run" : ""));
@@ -182,6 +186,7 @@ internal static partial class QueryCommand
             writer.Line($"  {point.Result}  {point.RunId,-24} {point.At.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)}"
                         + (point.Commit is { } c ? $"  {(c.Length > 7 ? c[..7] : c)}" : "")
                         + (point.DurationMs is { } ms ? $"  {ms} ms" : "")
+                        + (point.Partial ? "  (partial)" : "")
                         + (point.Attempt is { } attempt && attempt > 1 ? $"  attempt {attempt}" : "")
                         + (point.Error is { } e ? $"  {QueryWriter.OneLine(e, 80)}" : ""));
     }
@@ -439,10 +444,11 @@ internal static class ReportHistory
             ["failingSince"] = entry.FailingSince is { } since ? new { runId = since.RunId, at = since.At, commit = since.Commit, runs = since.Runs } : null,
             ["durationMs"] = entry.DurationMs,
             ["durationP95Ms"] = entry.DurationP95,
+            ["durationP95IsRaw"] = entry.DurationP95IsRaw,
             ["quarantine"] = entry.Quarantine is { } q ? new { reason = q.Reason, addedBy = q.AddedBy, addedOn = q.AddedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), until = q.Until?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) } : null
         };
         if (detailed)
-            row["runs"] = entry.Points.Select(p => new { runId = p.RunId, at = p.At, commit = p.Commit, result = p.Result.ToString(), durationMs = p.DurationMs, attempt = p.Attempt, error = p.Error }).ToArray();
+            row["runs"] = entry.Points.Select(p => new { runId = p.RunId, at = p.At, commit = p.Commit, result = p.Result.ToString(), durationMs = p.DurationMs, partial = p.Partial, attempt = p.Attempt, error = p.Error }).ToArray();
         return row;
     }
 

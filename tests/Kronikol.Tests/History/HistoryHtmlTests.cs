@@ -114,6 +114,21 @@ public class HistoryHtmlTests : IDisposable
     }
 
     [Fact]
+    public void A_position_that_was_not_a_test_is_named_in_the_sparkline_tooltip()
+    {
+        // An N in an earlier run fell through to the default arm and drew as an unnamed "bypassed" bar.
+        var ledger = Path.Combine(_dir, "history.jsonl");
+        var verdicts = VerdictsInto(ledger, Features(pay: ExecutionResult.Passed), "NP", "PP");
+
+        var html = Html(Features(pay: ExecutionResult.Passed), verdicts);
+
+        var head = ScenarioHead(html, PayId);
+        Assert.Contains("not a test", head);
+        Assert.DoesNotContain("bypassed", head);
+        Assert.Contains("#dcdcdc", head);
+    }
+
+    [Fact]
     public void The_history_section_lists_the_regression_and_links_it_by_stable_id()
     {
         var features = Features(pay: ExecutionResult.Failed);

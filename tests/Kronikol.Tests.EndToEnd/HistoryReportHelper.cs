@@ -46,7 +46,8 @@ internal static class HistoryReportHelper
     ];
 
     /// <summary>Writes the report into <paramref name="tempDir"/>, copies it to <paramref name="outputDir"/>, and returns its file URL.</summary>
-    public static string Generate(string tempDir, string outputDir, string fileName)
+    /// <param name="tweak">Changes an earlier run before it is recorded: its 0-based index and the run as seeded.</param>
+    public static string Generate(string tempDir, string outputDir, string fileName, Func<int, HistoryRun, HistoryRun>? tweak = null)
     {
         var features = Features();
         var at = new DateTimeOffset(2026, 9, 14, 12, 0, 0, TimeSpan.Zero);
@@ -66,6 +67,8 @@ internal static class HistoryReportHelper
                 Errors = results.Select(r => r == 'F' ? "e1" : null).ToArray(),
                 ErrorText = results.Contains('F') ? new Dictionary<string, string> { ["e1"] = "gateway timed out" } : new Dictionary<string, string>()
             };
+            if (tweak is not null)
+                prior = tweak(i, prior);
             var appended = HistoryLedgerWriter.Append(ledger, roster, prior, "3.11.0");
             if (appended.Outcome != HistoryAppendOutcome.Appended)
                 throw new InvalidOperationException($"seeding the ledger failed: {appended.Message}");

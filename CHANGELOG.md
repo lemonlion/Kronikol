@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.23.0] - 2026-09-21
+
+**Minor - a partial run no longer sets the bar a full run is read against, and the scenario that is not
+a test stops reading as one (#75 sections 3 to 5).** The minor part moved because there is new public
+surface: the result character `N` (`HistoryFormat.NotATest`), `Scenario.NotATest`,
+`HistoryPoint.Partial` and `ScenarioHistory.DurationP95IsRaw`. It also changes what existing verdicts
+read, which is called out below. Third slice of `plans/HISTORY_VERDICT_NOISE_PLAN.md`.
+
+### Changed
+
+- **A full run's durations and behaviour are read against full runs only.** A partial run's pass or
+  fail is a fact about the scenario and status reads it as before. Its duration relative to the run
+  and its set of captured calls are facts about a filtered run's conditions, so partial runs leave the
+  run speeds, the p95 bar, the previous run a full run's calls are compared with, the `alternating`
+  memory, the `unstable-shape` count and the call-count stretch. **Behaviour change,** in both
+  directions: a p95 bar that a filtered run had lifted several times over comes down (the issue's
+  repro read 32,133 ms over readings of about 5,800; it now reads 5,913), so a real slowdown it hid is
+  found; and a scenario a filtered run had made `alternating` or `behaviour-changed` reads `stable`.
+- **The issue's narrower fix was built first and is not what ships.** Taking partial runs out of the
+  alternating memory alone makes the first full run after a partial one read `behaviour-changed`: the
+  previous shaped run is still the partial one. The filter is applied once, upstream of all four
+  readers. The partial-run diagnostic already said the run "is not the run the next one is compared
+  against"; that is now true, and its wording says what is and is not compared.
+- **A partial run reads no `slower`,** and its bar is the plain p95 of what the scenario took in full
+  runs. Its own speed is the median of whichever scenarios the filter left (measured on a real
+  filtered run: every bar 1.5 to 2.2 times the full run's, from the mix alone). It still compares its
+  calls with the run before it.
+- **`kronikol query history sN`: `p95 of earlier runs` is now `p95 of earlier full runs, at this run's
+  speed`.** The bar is scaled to the run being read, so it can stand above every raw reading under it,
+  and the old label read as a bug. A partial run's line says nothing is scaled. Rows of partial runs
+  are marked `(partial)`. `--json`: `runs[].partial`, `durationP95IsRaw`.
+
+### Added
+
+- **The other alternating state is named.** When a scenario is `alternating` and the previous run held
+  the same set as this one, the diff against the previous run is empty and the evidence named no call.
+  It now reads `...; other set last held in <run>; new there: ...; gone there: ...`.
+- **`N`, not a test.** The scenario `FoldUnknownTestsInto` collects unattributed traffic into exists only
+  in the runs where such traffic survived, so it flickered between `absent` and `new`. The ingest marks
+  it (`Scenario.NotATest`), the run line writes `N` for it, and the analyzer reads no verdict for an `N`
+  position and never reports one absent. It keeps its roster position, because that is its `sN` address.
+  No format version: only a pass or a fail was ever a verdict, so an older reader takes `N` as it takes
+  a skip. The HTML sparkline names and colours it (it fell to the "bypassed" arm), and a sparkline
+  tooltip row of a partial run says `partial run`.
+
+### Notes
+
+- Replayed over real ledgers with `tools/history-replay`, before and after: the 430 runs of
+  BreakfastProvider's CI ledger are byte-identical (it holds no partial run, so there the filter is the
+  identity); on the ledger with a real filtered run no verdict moves, the following full runs' bars
+  move by milliseconds, and the filtered run's own bars fall from 11,437 ms summed to 5,458.
+- A run rebuilt from `TestRunReport.json` alone (no `History.run.json` beside it) cannot know which
+  scenario was the fold, and reads it as a pass, as before.
+- One Playwright fact: an `N` position paints its own grey and is named in the tooltip, and a partial
+  run's row says so.
+
 ## [3.22.3] - 2026-09-21
 
 **Patch - an ingest dropped wire records that their span twins could have identified (#75 section 2).**

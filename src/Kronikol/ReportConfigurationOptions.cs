@@ -619,8 +619,9 @@ public record ReportConfigurationOptions
 
     /// <summary>
     /// The share of the previous run's scenarios a run may lack before it is recorded as partial — a
-    /// filtered run, a crashed half — so its missing scenarios are not reported absent and it is not the
-    /// run the next one is compared against. Default: 0.10.
+    /// filtered run, a crashed half — so its missing scenarios are not reported absent, and its durations
+    /// and calls are not what a full run is compared against. Its passes and failures are read like any
+    /// other run's. Default: 0.10.
     /// </summary>
     public double HistoryPartialThreshold { get; set; } = 0.10;
 

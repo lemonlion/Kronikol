@@ -82,13 +82,16 @@ public static class HistoryAnalyzer
         var previousFull = LastFull(prior, priorRosters);
         var partial = current.Partial ?? IsPartial(roster, previousFull.Roster, options.PartialThreshold);
 
-        var speeds = new RunSpeeds(prior.Append(current));
+        // A partial run's speed is the median of whichever scenarios its filter left, so a full run is not
+        // read against it: measured, the same scenarios' bars stood at 1.88x in a filtered run from the mix
+        // alone.
+        var speeds = new RunSpeeds((partial ? prior : prior.Where(r => r.Partial != true)).Append(current));
         var scenarios = new List<ScenarioHistory>(roster.Count);
         var currentIds = new HashSet<(string, int)>();
         for (var i = 0; i < roster.Count; i++)
         {
             currentIds.Add((roster.Ids[i], roster.Slots[i]));
-            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, priorShapes, shapes, speeds, options, quarantine, aliases, today));
+            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorRosters, priorShapes, shapes, speeds, options, quarantine, aliases, today, partial));
         }
 
         // Absent: in the previous full run of the stream, not in this one, and this one not partial. The
@@ -98,6 +101,8 @@ public static class HistoryAnalyzer
         {
             for (var i = 0; i < previousRoster.Count; i++)
             {
+                // The fold scenario exists only in the runs where unattributed traffic survived.
+                if (previousRun.ResultAt(i) == HistoryFormat.NotATest) continue;
                 var id = aliases?.Current(previousRoster.Ids[i]) ?? previousRoster.Ids[i];
                 if (!currentIds.Contains((id, previousRoster.Slots[i])) && !currentIds.Contains((previousRoster.Ids[i], previousRoster.Slots[i])))
                     absent.Add(new AbsentScenario(previousRoster.Ids[i], previousRoster.Names[i], previousRoster.Features[i], previousRun.Id));
@@ -171,11 +176,15 @@ public static class HistoryAnalyzer
     }
 
     private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roster, HistoryRun current, List<HistoryRun> prior, HistoryRoster?[] priorRosters,
-        HistoryShapes?[] priorShapes, HistoryShapes? currentShapes, RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today)
+        HistoryShapes?[] priorShapes, HistoryShapes? currentShapes, RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today,
+        bool currentIsPartial)
     {
         var id = roster.Ids[position];
         var slot = roster.Slots[position];
         var lookFor = aliases?.AllIdsOf(id) ?? [id];
+
+        if (current.ResultAt(position) == HistoryFormat.NotATest)
+            return NotATest(position, roster, current, currentIsPartial);
 
         // Every prior reading of this scenario, oldest first.
         var points = new List<HistoryPoint>();
@@ -192,12 +201,12 @@ public static class HistoryAnalyzer
             }
             if (at < 0) continue;
             points.Add(new HistoryPoint(run.Id, run.At, run.Commit, run.ResultAt(at), run.DurationAt(at), run.ShapeSetAt(at), run.ShapeOrderedAt(at), run.CallsAt(at), run.ErrorAt(at), run.AttemptAt(at), run.ShapeVersion,
-                Resolve(run.CallSetAt(at), priorShapes[r])));
+                Resolve(run.CallSetAt(at), priorShapes[r]), run.Partial == true));
         }
 
         var currentPoint = new HistoryPoint(current.Id, current.At, current.Commit, current.ResultAt(position), current.DurationAt(position),
             current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), current.ErrorAt(position), current.AttemptAt(position), current.ShapeVersion,
-            Resolve(current.CallSetAt(position), currentShapes));
+            Resolve(current.CallSetAt(position), currentShapes), currentIsPartial);
         var all = points.Append(currentPoint).ToList();
 
         var verdicts = new HashSet<HistoryVerdictKind>();
@@ -316,11 +325,32 @@ public static class HistoryAnalyzer
         // lifts the bar with the readings. Measured on a consumer's CI before this: a lane read eighteen
         // scenarios slower on a healthy day because the runner was. A roster of one has no others and
         // is read raw.
+        //
+        // A partial run's pass or fail is a fact about the scenario; its duration relative to the run and
+        // its set of captured calls are facts about the run's conditions (a filtered run is alone on the
+        // machine, or pays the cold start with fewer scenarios to spread it over; with one worker running,
+        // window attribution is suddenly exclusive for everything). So a full run is read against full
+        // runs, here and under Behaviour below, and status above reads every run.
         int? p95 = null;
-        var timed = points.Where(p => p.DurationMs is not null)
+        var p95IsRaw = false;
+        var comparable = currentIsPartial ? points : points.Where(p => !p.Partial).ToList();
+        var timed = comparable.Where(p => p.DurationMs is not null)
             .Select(p => (Ms: p.DurationMs!.Value, Relative: p.DurationMs!.Value / speeds.Of(p.RunId, p.DurationMs!.Value)))
             .ToList();
-        if (timed.Count >= 2)
+        if (currentIsPartial)
+        {
+            // This run's speed is the median of an arbitrary subset: nothing is scaled to it and no slower
+            // verdict is read. The bar is the plain p95 of what the scenario took in full runs - all of
+            // them: the previous reading is held out of a scaled bar so that its own spike cannot lift the
+            // bar it is judged against, and nothing is judged here.
+            var raw = points.Where(p => !p.Partial && p.DurationMs is not null).Select(p => p.DurationMs!.Value).ToList();
+            if (raw.Count >= 2)
+            {
+                p95 = Percentile95(raw);
+                p95IsRaw = true;
+            }
+        }
+        else if (timed.Count >= 2)
         {
             // The p95 is taken over the runs before the previous one, so the previous run's own spike
             // does not lift the bar it is measured against.
@@ -347,7 +377,11 @@ public static class HistoryAnalyzer
         // A fingerprint is comparable only with one the same templating rule made: across a change of
         // rule there is no verdict, and the reader is told, rather than every scenario changing once.
         var rule = currentPoint.ShapeVersion ?? 1;
-        var shapedByAnyRule = points.Where(p => p.ShapeSet is { Length: > 0 }).ToList();
+        // Filtered once, upstream of everything that reads it: the previous shaped point, the unstable
+        // count, the alternating memory and the count stretch. Taking partial runs out of the memory alone
+        // leaves the previous shaped point partial, and the first full run after a partial one then reads
+        // behaviour-changed against a run the partial diagnostic says it is not compared against.
+        var shapedByAnyRule = comparable.Where(p => p.ShapeSet is { Length: > 0 }).ToList();
         var shaped = shapedByAnyRule.Where(p => (p.ShapeVersion ?? 1) == rule).ToList();
         var previousShaped = shaped.Count > 0 ? shaped[^1] : null;
         if (currentPoint.ShapeSet is { Length: > 0 } && shapedByAnyRule.Count > 0 && (shapedByAnyRule[^1].ShapeVersion ?? 1) != rule)
@@ -384,6 +418,16 @@ public static class HistoryAnalyzer
                     newCalls = nowSet.Except(beforeSet, StringComparer.Ordinal).ToArray();
                     goneCalls = beforeSet.Except(nowSet, StringComparer.Ordinal).ToArray();
                     named = NamedCalls("new", newCalls) + NamedCalls("gone", goneCalls);
+                }
+                else if (!changed && currentPoint.CallSet is { } sameSet
+                         && memory.LastOrDefault(p => !string.Equals(p.ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal)) is { CallSet: { } otherSet } other)
+                {
+                    // The previous run held this set too, so the diff against it is empty and the evidence
+                    // named no call. The state it alternates WITH is what the reader is after: the most
+                    // recent run in the memory that held a different set, and what differs there.
+                    named = $"; other set last held in {other.RunId}"
+                            + NamedCalls("new there", otherSet.Except(sameSet, StringComparer.Ordinal).ToArray())
+                            + NamedCalls("gone there", sameSet.Except(otherSet, StringComparer.Ordinal).ToArray());
                 }
                 evidence.Add($"alternating between {distinct.ToString(CultureInfo.InvariantCulture)} sets of calls over the last {memory.Count.ToString(CultureInfo.InvariantCulture)} runs: this set in {held.ToString(CultureInfo.InvariantCulture)} of them{named}");
             }
@@ -520,6 +564,7 @@ public static class HistoryAnalyzer
             Points = all,
             DurationMs = currentPoint.DurationMs,
             DurationP95 = p95,
+            DurationP95IsRaw = p95IsRaw,
             PreviousShapeSet = previousShaped?.ShapeSet,
             ShapeSet = currentPoint.ShapeSet,
             PreviousCalls = previousShaped?.Calls,
@@ -527,6 +572,48 @@ public static class HistoryAnalyzer
             NewCalls = newCalls,
             GoneCalls = goneCalls,
             Quarantine = entry
+        };
+    }
+
+    /// <summary>
+    /// The fold scenario: not a test, so no verdict of any kind is read for it. It is "stable" because the
+    /// vocabulary has no word for "nothing to say about this position" other than that one, and it is never
+    /// new: it appears whenever unattributed traffic survived an ingest, which is not news.
+    /// </summary>
+    private static ScenarioHistory NotATest(int position, HistoryRoster roster, HistoryRun current, bool currentIsPartial)
+    {
+        var point = new HistoryPoint(current.Id, current.At, current.Commit, HistoryFormat.NotATest, current.DurationAt(position),
+            current.ShapeSetAt(position), current.ShapeOrderedAt(position), current.CallsAt(position), null, null, current.ShapeVersion, null, currentIsPartial);
+        return new ScenarioHistory
+        {
+            StableId = roster.Ids[position],
+            Slot = roster.Slots[position],
+            Name = roster.Names[position],
+            Feature = roster.Features[position],
+            Current = HistoryFormat.NotATest,
+            Primary = HistoryVerdictKind.Stable,
+            Verdicts = new HashSet<HistoryVerdictKind> { HistoryVerdictKind.Stable },
+            Evidence = "not a test: it collects the traffic no test could be given",
+            RunsSeen = 0,
+            RealVerdicts = 0,
+            Failures = 0,
+            FailRate = 0,
+            Flips = 0,
+            FlipRate = 0,
+            RunsSinceLastFlip = 0,
+            LastFailedRunsAgo = null,
+            FailingSince = null,
+            Series = HistoryFormat.NotATest.ToString(),
+            Points = [point],
+            DurationMs = point.DurationMs,
+            DurationP95 = null,
+            PreviousShapeSet = null,
+            ShapeSet = point.ShapeSet,
+            PreviousCalls = null,
+            Calls = point.Calls,
+            NewCalls = [],
+            GoneCalls = [],
+            Quarantine = null
         };
     }
 
