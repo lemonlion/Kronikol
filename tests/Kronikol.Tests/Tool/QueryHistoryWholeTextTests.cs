@@ -79,17 +79,49 @@ public class QueryHistoryWholeTextTests : IDisposable
         var current = RunLine(roster, "gh:99:1", 100, "FP", storedError, now, Now);
         File.WriteAllText(Path.Combine(directory, HistoryFormat.FragmentFileName), HistoryFragment.Write(roster, current, "3.9.0", now));
         var report = Path.Combine(directory, "TestRunReport.json");
-        File.WriteAllText(report, $$"""
-            {
-              "kronikolVersion": "3.9.0", "formatVersion": 1, "suite": "Suite",
-              "startTime": "2026-09-12T10:00:00Z", "endTime": "2026-09-12T10:05:00Z",
-              "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "main", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "99", "runAttempt": "1" },
-              "features": [ { "name": "Checkout", "labels": [], "scenarios": [
-                { "id": "t0", "stableId": "{{PayId}}", "name": "Pay by card", "result": "Failed", "durationSeconds": 0.1, "errorMessage": {{JsonSerializer.Serialize(storedError)}}, "labels": [], "categories": [], "steps": [], "httpInteractions": [] },
-                { "id": "t1", "stableId": "{{RefundId}}", "name": "Refund an order", "result": "Passed", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] } ] } ]
-            }
-            """);
+        File.WriteAllText(report, ReportJson(storedError));
         return report;
+    }
+
+    /// <summary>A report of the two scenarios, the first failed with <paramref name="storedError"/>, on CI run 99.</summary>
+    private static string ReportJson(string storedError) => $$"""
+        {
+          "kronikolVersion": "3.9.0", "formatVersion": 1, "suite": "Suite",
+          "startTime": "2026-09-12T10:00:00Z", "endTime": "2026-09-12T10:05:00Z",
+          "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "main", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "99", "runAttempt": "1" },
+          "features": [ { "name": "Checkout", "labels": [], "scenarios": [
+            { "id": "t0", "stableId": "{{PayId}}", "name": "Pay by card", "result": "Failed", "durationSeconds": 0.1, "errorMessage": {{JsonSerializer.Serialize(storedError)}}, "labels": [], "categories": [], "steps": [], "httpInteractions": [] },
+            { "id": "t1", "stableId": "{{RefundId}}", "name": "Refund an order", "result": "Passed", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] } ] } ]
+        }
+        """;
+
+    [Fact]
+    public void The_failures_verb_says_when_it_cut_the_history_evidence_and_names_the_view_that_does_not()
+    {
+        // Seen on a consumer (plan §9): a scenario that broke across a change of fingerprint rule carries
+        // 178 characters of evidence, and the failures verb - a list - cut it at 160 with an ellipsis and
+        // no address. The run view's rule applies: a list that cuts says so and names the view that does not.
+        var roster = Roster();
+        var before = HistoryShapes.Create(Before);
+        const string earlier = "local:20260915T145915Z:14e947b5";
+        HistoryLedgerWriter.Append(Ledger, roster, RunLine(roster, "local:20260915T145604Z:14e947b5", 0, "PP", LongError, before, Before) with { ShapeVersion = InteractionShape.Version - 1 }, "3.9.0", shapes: before);
+        HistoryLedgerWriter.Append(Ledger, roster, RunLine(roster, earlier, 1, "PP", LongError, before, Before) with { ShapeVersion = InteractionShape.Version - 1 }, "3.9.0", shapes: before);
+        var directory = Path.Combine(_dir, "reports");
+        Directory.CreateDirectory(directory);
+        var now = HistoryShapes.Create(Now);
+        File.WriteAllText(Path.Combine(directory, HistoryFormat.FragmentFileName), HistoryFragment.Write(roster, RunLine(roster, "local:20260922T080715Z:14e947b5", 100, "FP", LongError, now, Now), "3.9.0", now));
+        var report = Path.Combine(directory, "TestRunReport.json");
+        File.WriteAllText(report, ReportJson(LongError));
+
+        var (output, error, exit) = Query("failures", report);
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("history: broke — passed in " + earlier, output);
+        Assert.Contains(" … ", output);
+        Assert.Contains("… marks cut text — history s0 prints it whole", output);
+        var whole = Query("history", report, "s0");
+        Assert.True(whole.Exit == 0, whole.Error);
+        Assert.Contains("behaviour is compared from the next run", whole.Output);
     }
 
     [Fact]

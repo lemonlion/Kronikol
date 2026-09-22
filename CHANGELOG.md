@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.27.2] - 2026-09-22
+
+**Patch - two defects found by running the plan's consumer acceptance (`plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md`
+§9) on BreakfastProvider.** The patch part moved because both are fixes to what 3.27.0 already promised.
+
+### Fixed
+
+- **`--run` opens a kept run while the run on top is still being written.** A run in progress has moved
+  the previous run to `runs/` and has not written its own report yet, and for as long as the suite
+  runs - the reporter's took 17 minutes - `kronikol query failures <reports-dir> --run last-failed`
+  answered `No TestRunReport.json under <reports-dir>`. That is the one moment the run before is most
+  wanted. A directory with no report on top but runs kept beneath it now resolves `--run` against
+  them; without `--run` the refusal is what it was.
+- **The `history:` line of `failures` cuts its evidence with an address.** The evidence of a scenario
+  that broke across a change of fingerprint rule is 178 characters on a real consumer, and the verb cut
+  it at 160 with a bare ellipsis, where the run view of `history` says `… marks cut text — history s3
+  prints it whole`. It now cuts the same way (both ends kept) and its footer says the same, naming the
+  first row it cut.
+
 ## [3.27.1] - 2026-09-22
 
 **Patch - the audit of `plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md` against what shipped: two lines the

@@ -32,10 +32,25 @@ internal static class RetainedRunResolver
         report = null;
         resolvedName = null;
         // The directory the newest run is in: the argument, or - for a file, or a directory that holds the
-        // reports directory somewhere beneath it - wherever the ordinary lookup lands.
-        if (QueryCommand.ResolveReport(reportArgument, error) is not { } topReport)
+        // reports directory somewhere beneath it - wherever the ordinary lookup lands. A directory with no
+        // report on top but runs kept beneath it is a run in progress: the previous run has been moved to
+        // runs/ and this one has not written yet, which is exactly when the run before is asked for.
+        var lookup = new StringWriter();
+        string directory;
+        string? topReport = QueryCommand.ResolveReport(reportArgument, lookup);
+        if (topReport is not null)
+        {
+            directory = Path.GetDirectoryName(Path.GetFullPath(topReport))!;
+        }
+        else if (Directory.Exists(reportArgument) && ReportFolders.RetainedRuns(Path.GetFullPath(reportArgument)).Count > 0)
+        {
+            directory = Path.GetFullPath(reportArgument);
+        }
+        else
+        {
+            error.Write(lookup.ToString());
             return RetainedRunOutcome.Refused;
-        var directory = Path.GetDirectoryName(Path.GetFullPath(topReport))!;
+        }
 
         var candidates = new List<Candidate>();
         if (RunManifest.TryRead(Path.Combine(directory, RunManifest.FileName)) is { } top)
@@ -59,7 +74,7 @@ internal static class RetainedRunResolver
             var found = matches[0];
             // The folder for a kept run - two of them can share an id (F9) - and the id for the run on top.
             resolvedName = found.OnTop ? found.Manifest.Run : found.Name;
-            report = found.OnTop ? topReport : QueryCommand.ResolveReport(found.Directory, error);
+            report = found.OnTop ? topReport! : QueryCommand.ResolveReport(found.Directory, error);
             return report is null ? RetainedRunOutcome.Refused : RetainedRunOutcome.Found;
         }
 

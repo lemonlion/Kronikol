@@ -112,6 +112,33 @@ public class RetainedRunsTests : IDisposable
     }
 
     [Fact]
+    public void Run_opens_a_retained_run_while_the_run_on_top_is_still_being_written()
+    {
+        // A run in progress has moved the previous report to runs/ and not yet written its own: for as
+        // long as the suite runs there is no report and no Run.json on top (plan §9 step 4 deletes the
+        // report and asks the same). The failing run kept beneath is exactly what a person waiting on a
+        // long suite asks for, and it is there to be read.
+        TheIssue();
+        File.Delete(Path.Combine(Reports, "TestRunReport.json"));
+        File.Delete(Path.Combine(Reports, "TestRunReport.html"));
+        File.Delete(Path.Combine(Reports, RunManifest.FileName));
+
+        var failures = Query("failures", Reports, "--run", "last-failed");
+        var previous = Query("summary", Reports, "--run", "previous");
+        var unknown = Query("failures", Reports, "--run", "gh:99:1");
+        var plain = Query("failures", Reports);
+
+        Assert.True(failures.Exit == 0, failures.Error);
+        Assert.Contains("Expected 200 but got 500", failures.Output);
+        Assert.True(previous.Exit == 0, previous.Error);
+        Assert.Contains("0 failed", previous.Output, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(2, unknown.Exit);
+        Assert.Contains("not retained", unknown.Error);
+        // Without --run the directory is what it was: no report yet.
+        Assert.Equal(2, plain.Exit);
+    }
+
+    [Fact]
     public void Previous_is_the_newest_retained_run_and_the_top_level_run_answers_to_its_own_id()
     {
         TheIssue();

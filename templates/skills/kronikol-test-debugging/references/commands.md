@@ -65,7 +65,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--degraded-by X` | the pace at or above which a run is degraded, its passing scenarios having taken this many times their usual, the report's HistoryDegradedBy (default 2.0; 0 switches it off). `history` only |
 | `--calls` | with a scenario: print its distinct calls as the templater wrote them (`/assets/app.{id}.js`), so a wrong `{id}` or a missing `HistoryShapeTemplates` rule can be seen. `history` only |
 | `--suite NAME` | the suite `history` looks the run up under, when the report does not carry one - or, with no report, which of the ledger's suites to read. `history` only |
-| `--run ID` | **every verb** (3.27.0): read a run kept under `<reports-dir>/runs/` instead of the newest - a run id, a substring only one id has, the folder name, `last-failed` (the newest run with a failure) or `previous`. The kept run's fragment, attachments and HTML are beside its report, so the whole ladder works on it. A run that is not kept is exit 2 naming the ones that are, and `history --run` - which falls back to the ledger, and needs no report at all (3.26.0) |
+| `--run ID` | **every verb** (3.27.0): read a run kept under `<reports-dir>/runs/` instead of the newest - a run id, a substring only one id has, the folder name, `last-failed` (the newest run with a failure) or `previous`. The kept run's fragment, attachments and HTML are beside its report, so the whole ladder works on it. A run that is not kept is exit 2 naming the ones that are, and `history --run` - which falls back to the ledger, and needs no report at all (3.26.0). A directory with no report on top yet (a run in progress has moved the previous one to `runs/`) still opens its kept runs (3.27.2) |
 | `--sid ID` | one scenario by its stable id - what a row is addressed by when no report numbers it. `history` only (3.26.0) |
 | `--window N` | how many runs back the run is read against, the report's HistoryWindow (default 50). `history` only (3.26.0) |
 | `--describe` | one JSON document naming every verb, the flags each one reads (with what each takes), the address forms with a parsing example of each, the exit codes and the envelope's members: `kronikol query --describe`. Needs no report. Generated from the table the tool dispatches and validates from, so it cannot name a verb the tool will not run. For tooling — a wrapper validating arguments, an MCP server building a tool list — not for reading; this document is the prose form of the same table (3.7.0) |
@@ -526,7 +526,8 @@ in that run's Failures.md: kronikol query failures <reports-dir> --run <id>` whe
 it is not; and `… when the run is retained` when no report was given, so there is no directory to look
 in). The run view is a list and does cut its evidence column, keeping both ends
 around ` … ` (the end of an error is where "but found Y" is); when it has cut anything the footer says
-`… marks cut text — history s3 prints it whole`, naming the first row it cut.
+`… marks cut text — history s3 prints it whole`, naming the first row it cut. The `history:` line of
+`failures` is cut the same way and its footer says the same (3.27.2).
 
 **When `behaviour-changed` looks like noise.** The fingerprint is made from templated call lines, and a
 variable part the templater does not know (an application's own cache-key format) changes it on every

@@ -73,7 +73,15 @@ internal static partial class QueryCommand
             if (deepLink is not null && scenario.StableId.Length > 0)
                 writer.Line($"  open: {deepLink}{scenario.StableId}");
             if (history?.At(scenario.Ordinal, scenario.StableId) is { } verdict)
-                writer.Line($"  history: {Kronikol.History.HistoryVerdictNames.Name(verdict.Primary)} — {QueryWriter.OneLine(verdict.Evidence, 160)} · {verdict.Series}");
+            {
+                // A list view that cuts says so and names the view that does not (#82's rule): the
+                // evidence of a scenario that broke across a fingerprint-rule change is longer than this.
+                var hadCut = writer.HasCut;
+                var evidence = writer.Cut(verdict.Evidence, 160);
+                if (!hadCut && writer.HasCut)
+                    writer.CutNotice($"… marks cut text — history {scenario.Address} prints it whole");
+                writer.Line($"  history: {Kronikol.History.HistoryVerdictNames.Name(verdict.Primary)} — {evidence} · {verdict.Series}");
+            }
             if (scenario.ErrorMessage is { } message)
                 writer.Line("  " + QueryWriter.OneLine(message, 240));
 

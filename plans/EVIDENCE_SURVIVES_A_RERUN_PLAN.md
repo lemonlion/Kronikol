@@ -3,8 +3,9 @@
 **Date:** 2026-09-18, investigated further 2026-09-19 (§11.5) · **Repo version:** written against
 3.21.0 (`2491185e`), re-checked against 3.22.1 (`82abeb7f`) — 3.22.0 and 3.22.1 touch no history,
 query, merge or ledger code, and the one citation that moved is `ReportGenerator.WriteFile`, now
-`:5420` · **Status: EXECUTED 2026-09-21 as 3.25.3 (S0, S1), 3.26.0 (S2, S3) and 3.27.0 (S4); §12 is
-the log and says where execution departed from the plan.** As written before that: plan written, **the analyzer cut (F4), the missing-fragment fix (F14) and the
+`:5420` · **Status: EXECUTED 2026-09-21 as 3.25.3 (S0, S1), 3.26.0 (S2, S3) and 3.27.0 (S4), then
+audited item by item on 2026-09-22 with the four gaps found fixed as 3.27.1 and §9 run; §12 is the log
+and says where execution departed from the plan.** As written before that: plan written, **the analyzer cut (F4), the missing-fragment fix (F14) and the
 retry overlay (F15) prototyped in a throwaway worktree** — `EVIDENCE_SURVIVES_A_RERUN_PLAN.prototype.patch`,
 8 files, +456 −4, every new test red on `main` first, the unit suite 5,160 / 0 failed with it — nothing
 implemented in the repository, **NOT green-lit**.
@@ -1356,3 +1357,97 @@ labelled; and `HistoryLedgerWriter.Amend` ships.
   file; Kronikol4J's divergence ledger (the harness must set `KRONIKOL_KEEP_RUNS=off`).
 - Nothing was posted on #80, #81, #82 or #84. #81's exit-code claim does not reproduce (F1) and the
   reply with the `PIPESTATUS` transcript is the owner's to send.
+
+### 3.27.1 (patch) - the audit of 2026-09-22
+
+Every deliverable of §3 to §8 was held against the shipped code, its tests and the docs, and the built
+tool was run: over the trimmed CI ledger (every S2 and S3 answer, the exit-2 listing, the usage errors,
+the `--json` envelope), over the example directory that kept three runs, and over BreakfastProvider's
+own report and ledger. Everything held except four things, fixed here:
+
+- **§3.2, "after S4 the tool checks and says whether it is [retained]" - not done.** The ledger-only
+  header said `when the run is retained` in every case, including `history <reports-dir> --run <other
+  run>`, where the run had just been looked for under `runs/` and not found. `HistoryReading` now
+  carries the report's directory when there was one, and the line says `run <id> is not kept under
+  <dir>` and what is kept there. Red first; RUN on BreakfastProvider's report against its ledger.
+- **§4.2, "the row says where the rest is" - printed as placeholders.** The pointer under a stored
+  message that ends in the ledger's own ellipsis read `kronikol query failures <reports-dir> --run
+  <id>` with the brackets as they stand, once under the list. It is now under each such row, with the
+  run's id and the reports directory, and says whether that run is kept there
+  (`ReportHistory.WholeMessagePointer`, which reads manifests only): the report on top for the run being
+  read, `--run <id>` when it is kept, `is not kept under <dir>` when it is not, and the condition only
+  when no report was given. Three tests red first.
+- **§8's eight places of "`# No failures` means nothing failed" - three still said it.** The
+  `GenerateFailuresDigest` doc comment (it ships), `Report-Configuration.md`'s row and
+  `Generated-Reports.md`'s prose ("its contents say which of the two happened") each still equated a
+  green run with the file. Qualified: nothing failed *in the newest run*.
+- **`plans/PLANS_STATUS.md`'s working copy** held the mid-execution row while HEAD held the final one
+  (the row had been staged as a blob so the owner's uncommitted paragraph stayed out of the commit).
+  Restored in the working copy; nothing to commit.
+
+**§9 had not been run.** The #80 session of 3.27.0 was done on Kronikol's own example project, not on
+the consumer, and no CI run of BreakfastProvider on the release existed. Run on 2026-09-22 - the
+transcript follows. Bumping the consumer found one thing first: `Kronikol.Extensions.Grpc` pins
+`Grpc.Net.Client` as `2.*`, so every release's package takes the newest at pack time, and a consumer
+pinned to 2.83.0 restores 3.27.0 with `NU1605` (a downgrade is an error); the consumer bump moves it to
+2.84.0, as the earlier bumps moved the earlier floors. Not this plan's, recorded for the pin's owner.
+
+### 3.27.2 (patch) - §9 run on BreakfastProvider, and the two defects it found
+
+**The session, on the xUnit lane in memory** (packages 3.27.0, the tool built from 3.27.1; the report
+side is the same in every 3.27.x). The lane's last local run, of 2026-09-19 on 3.20.0, had 34 failures
+of its own (a 500 on `POST /orders` in that environment) and, being 3.20.0's, no manifest. The lane's
+`global.json` selects the Microsoft testing platform runner, so `dotnet test` forwards what it does
+not know to the test host: no `--nologo`, and a filter is `-- --filter-class <type>`.
+
+1. One scenario broken on purpose (`RecipeCost_Analysis_Tests`: a FluentAssertions line of 172
+   characters whose `but found 4.99M` sits past the 80th), full run: 203 scenarios, **1 failed**. The
+   3.20.0 directory on top was rotated by the manifest-less fallback to
+   `runs/local_20260919T040511Z_14e947b5` (its id read from `History.run.json`), and the new
+   `Failures.md` opened with `> The run before this one failed — 34 of its 203 scenarios failed, and
+   that run is kept, whole, in runs/local_20260919T040511Z_14e947b5`; the console pointer said the
+   same. `Run.json`: 11 files, 2 attachments, `failed: 1`.
+2. The break reverted; the class re-run twice, filtered: green, 1 scenario, partial. Three runs kept
+   (the 34-failure run, the 1-failure run, the first green re-run). `Failures.md`: `# No failures`
+   and, under it, `The run before this one failed — 1 of its 203 scenarios failed, and that run is
+   kept, whole, in runs/local_20260922T080715Z_14e947b5`; the second re-run's says only `# No
+   failures`, the run before it having been green.
+3. **S2:** `history <dir> --failing` on the green partial run: `this run is partial: 1 scenario, the
+   last full run had 203 — a filter answers for this one only`, `no scenario is failing in this run`,
+   `1 scenario here failed earlier in the window: s0 (2 runs ago, local:20260922T080715Z:14e947b5) ·
+   next: history s0`. On the failing run itself `--failing` was the broke case: `no scenario has been
+   failing since an earlier run (what fails in this one broke in it) · 1 scenario failed in this run
+   under another verdict: s144 (broke) · next: history s144`. **S1:** `history <dir> s144` on the
+   failing run, and `s0` on the green one, print the 172 characters whole under the `F` row.
+4. **S3:** with `TestRunReport.json` deleted, `kronikol query history --run last-failed --failing`
+   from the repository root - no report, the ledger found above the working directory - answered from
+   the ledger: the failing run, `ledger only — no report read`, the broke hint with its `sid:` and
+   `next: history --run <id> --sid <id>`. `failures <dir> --run last-failed` in the same state was
+   refused, `No TestRunReport.json under <dir>`: **the first defect, below.**
+5. **S4:** `failures <dir> --run last-failed` (the run's digest, error whole) → `interactions <dir>
+   --run last-failed s144` (3 calls; `--service BigQuery` leaves `Insert
+   /breakfast_analytics/table/recipe_costs` at `s144/i2`) → `http <dir> --run last-failed s144/i2`
+   (the 294 B body by hash, `--body` for all of it): the ladder the issue could not walk, against the
+   kept run. `diff runs/<failing> .` from the reports directory (open question 6's two-directory
+   form): `Fixed (1): fixed s0 …`, `Gone (202)` - the re-run is partial. `history doctor <dir>`: `3
+   runs retained, the newest failing one local_20260922T080715Z_14e947b5 (1 failed)`; its one
+   `problem` is the consumer's `.gitattributes`, not the runs.
+6a. **F14:** the failing run's report copied out without `History.run.json`, `history <copy>
+   --regressed` → `s144 broke PPPPPPPPPF passed in local:20260915T145915Z:14e947b5, failing now`, the
+   run under its true id `local:20260922T080715Z:14e947b5`, adopted from the ledger's own line.
+7. CI: see below, once the consumer's run on the release has completed.
+
+**Two defects, fixed here, red first:**
+
+- **`--run` while the run on top is being written.** Step 4's state - no report on top, runs kept
+  beneath - is also every minute of a long suite after the rotation and before the new report lands,
+  which is the one moment the run before is most wanted. `RetainedRunResolver` needed the report on
+  top to find the directory. A directory with kept runs beneath it now resolves `--run` against them;
+  without `--run` the refusal is what it was.
+- **`failures` cut the `history:` evidence with a bare ellipsis** (`behaviour is compare…` on the real
+  run: 178 characters across a fingerprint-rule change, cut at 160). §4.2's rule had been applied to
+  the history run view only. `failures` now cuts both ends and its footer names `history sN`.
+
+**Left as found:** the `failures` verb still cuts a scenario's error message at 240 with no address;
+the whole is in `Failures.md`, and no real message was cut by it. §4.2's rule was written for
+history's views. The 34 failures of the consumer's earlier local run are the consumer's own.
