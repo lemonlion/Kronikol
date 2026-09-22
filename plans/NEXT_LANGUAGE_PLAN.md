@@ -7,6 +7,9 @@
 > Its §5 keeps §1 (OTel cannot carry bodies), §2.1 (the cost model) and §3 (the ranking); §2's
 > "scope to core+HTTP+SQL" is now that plan's §1 left column — a definition, not a recommendation.
 
+> **Amended 2026-09-22 by `MOBILE_PLAN.md`:** §3's table gains three mobile rows (Android, Swift/iOS,
+> Dart/Flutter) and a paragraph, and §5 gains B19 to B21. Nothing else changed.
+
 
 **Fourth of four plans from the 2026-09-13 investigation.** `QUERY_FALLBACK_PLAN.md` (the .NET
 fallback), `QUERY_PORTABILITY_PLAN.md` (shipping `kronikol query` beyond .NET),
@@ -253,6 +256,9 @@ answered by the table, not by its absence.
 | **Go** | Mid, high growth | **1** — stdlib `testing` | **the blocker** — see below | Best fit, worst mechanics |
 | Ruby | Small | RSpec + Cucumber | monkeypatching trivial | Strong BDD culture, small pool |
 | PHP | Mid | PHPUnit | OTel zero-code exists | Weak test-reporting culture |
+| **Android (Kotlin, Java)** | Top tier: the larger mobile platform | JUnit 4 under `AndroidJUnitRunner` for instrumented tests, JUnit 5 for JVM unit tests, Kotest | OkHttp interceptor exists in Kronikol4J; no JDBC, so Room's query callback is the SQL seam; ART lacks `java.net.http` and runs no agents; the port has no NDJSON writer | **The Java port's problem, after F1 and F9.** `MOBILE_PLAN.md` M3 |
+| **Swift / iOS** | Top tier: the other mobile platform | XCTest (observation and activities), Swift Testing (traits) | `URLProtocol` on `URLSession` captures bodies; `sqlite3_trace_v2` and GRDB for SQL; Core Data and SwiftData have no statement seam; `@TaskLocal` for identity | **A fifth platform, after the shared renderer.** `MOBILE_PLAN.md` M4 |
+| **Dart / Flutter** | Mid, growing | `flutter_test`, `integration_test` | `HttpOverrides` and `dio` interceptors; its networking does not ride the native stacks, so M3 and M4 do not cover it | **Not planned.** Served at the edge by `MOBILE_PLAN.md` M1 only |
 | *C/C++* | *Top tier by size* | *GoogleTest, loosely* | *no runtime instrumentation; no OTel zero-code* | *not a candidate — §3.2* |
 | *Rust* | *Small but growing fast* | *stdlib `#[test]`* | *no runtime instrumentation; no OTel zero-code* | *not a candidate — §3.2* |
 
@@ -283,6 +289,16 @@ runtime to instrument Go applications."* Capture means explicit wrapping (`http.
 different product. The eBPF route needs Linux and elevated privileges, awkward inside a test process,
 and reportedly shows *"generic DB operations rather than detailed statements"* — §1's no-body failure
 in its sharpest form. **Defer until the instrumentation story changes.**
+
+**Mobile (added 2026-09-22).** The three rows above were missing, so the table could not answer why
+iOS and Android were absent. The answer is in `MOBILE_PLAN.md`: every mobile platform is served first
+*at the edge*, with no code in the app, by the taps, a HAR importer and converters for the files the
+mobile runners already write (its M1, before the launch); Android in-app capture is then the Java
+port's work, because its adapters are JVM-level and its OkHttp interceptor already exists (M3); iOS is
+a new Swift capturer and the first port outside the four platforms the foundations plan names (M4);
+Flutter is a Dart capturer nobody has asked for. React Native needs no row: its networking rides
+OkHttp and `NSURLSession`, so M3 and M4 cover it. The ranking's rule holds for all three: no port
+before the shared renderer, so that none writes a rendering half.
 
 ### 3.2 Why C/C++ and Rust are not candidates despite the size
 
@@ -380,6 +396,9 @@ Python is the right language after Node; neither is the right next task.
 | B16 | Node's scoped port is materially larger than Java's or Python's | **sourced from `NODE_PORT_PLAN.md`** (no JDBC equivalent, no universal HTTP seam, Prisma exception, six adapters). The *direction* is well evidenced; **the magnitude is not estimated anywhere** |
 | B17 | §2.1's "6–9k lines-equivalent per platform" | **an estimate, not a measurement.** Built from B15 plus B16's direction. Python is the defensible end; the Node figure is a guess with a reason behind it. **Do not plan capacity from this number** — plan from it that Node > Python, and re-estimate when Kronikol.js has real code. |
 | B18 | Capture maintenance stays at N platforms while rendering goes to 1 | **reasoned, and the reasoning is short:** capture tracks third-party library releases, which no shared artifact can absorb. High confidence, no measurement possible until more than one port is live. |
+| B19 | Android's HTTP seam is OkHttp, which Kronikol4J's interceptor already covers, and its SQL seam is Room's query callback, not JDBC | **measured** for the interceptor (the class exists); **assumed** for Room's callback (`MOBILE_PLAN.md` A11) |
+| B20 | iOS bodies are capturable through `URLProtocol` on `URLSession`; Core Data and SwiftData expose no statement seam | **asserted from general knowledge**, not checked against current Apple documentation |
+| B21 | React Native's networking rides OkHttp and `NSURLSession`, so the native capturers cover it; Flutter's does not | **assumed** (`MOBILE_PLAN.md` A12) |
 
 **B7 is the one to attack**, because the entire scoping argument rests on it and it is the only
 headline claim here with no evidence behind it.
