@@ -116,7 +116,28 @@ public class QueryHistoryWholeTextTests : IDisposable
 
         Assert.True(exit == 0, error);
         Assert.Contains(stored, output);
-        Assert.Contains("first line only — the whole message is in that run's Failures.md", output);
+        // Every cut row says where ITS message is (an ellipsis always has an address): the report on top for
+        // this run, and for the earlier run whether it is kept under runs/ - here nothing is.
+        var directory = Path.GetDirectoryName(report)!;
+        Assert.Contains($"… first line only — the whole message is in this run's Failures.md: kronikol query failures {directory}", output);
+        Assert.Contains($"… first line only — the whole message was in that run's Failures.md, and run gh:3:1 is not kept under {directory}", output);
+        Assert.DoesNotContain("<reports-dir>", output);
+    }
+
+    [Fact]
+    public void The_pointer_under_a_cut_error_opens_the_run_when_it_is_kept()
+    {
+        var stored = new string('x', HistoryFormat.ErrorKeyLimit - 1) + "…";
+        var report = AFailingRunWithHistory(stored);
+        var directory = Path.GetDirectoryName(report)!;
+        // gh:3:1 kept under runs/ as the rotation keeps it: its manifest is all --run reads.
+        new Kronikol.Reports.RunManifest { Run = "gh:3:1", At = new DateTimeOffset(2026, 9, 1, 2, 0, 0, TimeSpan.Zero), Suite = "Suite", Scenarios = 2, Failed = 1 }
+            .Write(Path.Combine(directory, "runs", "gh_3_1"));
+
+        var (output, error, exit) = Query("history", report, "s0");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains($"… first line only — the whole message is in that run's Failures.md: kronikol query failures {directory} --run gh:3:1", output);
     }
 
     [Fact]

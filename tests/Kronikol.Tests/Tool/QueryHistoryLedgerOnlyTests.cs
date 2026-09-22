@@ -38,7 +38,7 @@ public class QueryHistoryLedgerOnlyTests : IDisposable
     private static HistoryRoster Roster(string suite = "Suite") =>
         HistoryRoster.Create(suite, [new HistoryRosterEntry(PayId, "Pay by card", "Checkout", null), new HistoryRosterEntry(RefundId, "Refund an order", "Checkout", null)]);
 
-    private void Record(string id, string results, int hour, string suite = "Suite", string? branch = "main")
+    private void Record(string id, string results, int hour, string suite = "Suite", string? branch = "main", string error = "Expected 200 but got 500")
     {
         var roster = Roster(suite);
         HistoryLedgerWriter.Append(Ledger, roster, new HistoryRun
@@ -47,7 +47,7 @@ public class QueryHistoryLedgerOnlyTests : IDisposable
             Branch = branch, Commit = $"c{hour:D6}", Provider = branch is null ? null : "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash,
             Results = results, Attempts = "--", Durations = [100, 50], Calls = null, ShapeSet = null, ShapeOrdered = null,
             Errors = results.Select(r => r == 'F' ? "e1" : null).ToArray(),
-            ErrorText = results.Contains('F') ? new Dictionary<string, string> { ["e1"] = "Expected 200 but got 500" } : new Dictionary<string, string>()
+            ErrorText = results.Contains('F') ? new Dictionary<string, string> { ["e1"] = error } : new Dictionary<string, string>()
         }, "3.9.0");
     }
 
@@ -317,12 +317,30 @@ public class QueryHistoryLedgerOnlyTests : IDisposable
         Assert.True(output.Contains("run gh:2:1"), output);
         Assert.Contains("1 broke", output);
         Assert.Contains("describes gh:99:1", output);
+        // The run was looked for under runs/ before the ledger was read, and the header says it is not there
+        // (§3.2: after S4 the tool checks and says whether the run is retained).
+        Assert.Contains($"run gh:2:1 is not kept under {directory}", output);
+        Assert.DoesNotContain("when the run is retained", output);
 
         // Its own run, named, is the ordinary reading.
         var own = Query("history", report, "--run", "gh:99:1");
         Assert.True(own.Exit == 0, own.Error);
         Assert.Contains("s0", own.Output);
         Assert.DoesNotContain("ledger only", own.Output);
+    }
+
+    [Fact]
+    public void With_no_report_a_cut_error_s_pointer_names_the_run_and_the_condition_it_needs()
+    {
+        var stored = new string('x', HistoryFormat.ErrorKeyLimit - 1) + "…";
+        Record("gh:1:1", "PP", 0);
+        Record("gh:2:1", "FP", 1, error: stored);
+
+        var (output, error, exit) = Query("history", "--history", Ledger, "--run", "gh:2:1", "--sid", PayId);
+
+        Assert.True(exit == 0, error);
+        // No report was given, so there is no directory to look in: the pointer names the run and the condition.
+        Assert.Contains("… first line only — the whole message is in that run's Failures.md (kronikol query failures <reports-dir> --run gh:2:1, when the run is retained)", output);
     }
 
     // §3.4, F1: nothing pinned the exit code #81 reported as 0.

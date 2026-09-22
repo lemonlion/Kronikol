@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.27.1] - 2026-09-22
+
+**Patch - the audit of `plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md` against what shipped: two lines the
+plan specified that 3.27.0 printed with placeholders, and a doc comment.** The patch part moved because
+nothing is new for a consumer to call: two lines of `kronikol query history` output and one comment.
+
+### Fixed
+
+- **`history s3` says where the rest of a cut message is, run by run.** The ledger keeps the first
+  line of an error, up to 199 characters. Under a stored message that ends in the ledger's own ellipsis
+  the view used to print, once beneath the list, `kronikol query failures <reports-dir> --run <id>`
+  with the placeholders as they stand. It now prints, under each such row, the run's own id and the
+  reports directory: `kronikol query failures <dir>` for the run being read, `… <dir> --run <id>` when
+  that run is kept under `runs/`, and `run <id> is not kept under <dir>` when it is not. Only a reading
+  with no report at all, which has no directory to look in, still says `when the run is retained`. The
+  plan's rule (§4.2): an ellipsis always has an address.
+- **`history <reports-dir> --run <other run>` says the run is not kept.** The run is looked for under
+  `runs/` before the ledger is read (3.27.0), and read from the ledger when it is not there - but the
+  header then said `when the run is retained`, as if nobody had looked. It now says `run <id> is not
+  kept under <dir>` and what is kept there (plan §3.2).
+- The `GenerateFailuresDigest` doc comment, and the two wiki pages that said the same, now say that
+  `# No failures` means nothing failed **in the newest run**: all eight places the plan listed (§8) are
+  qualified.
+
 ## [3.27.0] - 2026-09-21
 
 **Minor - a green re-run no longer destroys the failing run's report (#80).** The minor part moved

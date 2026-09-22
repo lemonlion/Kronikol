@@ -489,7 +489,9 @@ way (`--history`, `$KRONIKOL_HISTORY`, the `.kronikol/history.jsonl` above the w
 run read is the newest of the suite or the one `--run` names, and it is read against the runs recorded
 **before** it, behaviour verdicts included. Rows are addressed `sid:<id>` (a report's `s3` is an ordinal
 nobody else has) and `--sid <id>` asks for one; the header says `ledger only — no report read; steps,
-calls and payloads need one`. `--run` takes a whole id, any part of one that only one id has,
+calls and payloads need one` - and, when a report was given and `--run` named another run, `… and run
+<id> is not kept under <dir>` (3.27.1), because the run was looked for under `runs/` before the ledger
+was read. `--run` takes a whole id, any part of one that only one id has,
 `last-failed` or `previous`; a name that fits no run or several is exit 2 **listing the last ten runs
 with their pass and fail counts**, so the refusal is the index. Several suites in the ledger and no
 `--suite` is exit 2 naming them. With a report **and** `--run`, the report names the ledger and the
@@ -519,7 +521,10 @@ line under the row, the evidence is whole, and every new and gone call is listed
 per line) where the evidence names three and says `and N more`. No free-text field is complete only
 in `--json`. The one limit left is the ledger's own: it keeps the **first line** of a message, up to
 199 characters, and text that ends in its `…` is followed by `… first line only — the whole message is
-in that run's Failures.md`. The run view is a list and does cut its evidence column, keeping both ends
+in that run's Failures.md: kronikol query failures <reports-dir> --run <id>` when that run is kept under
+`runs/` (3.27.1: the report on top for the run being read; `… and run <id> is not kept under <dir>` when
+it is not; and `… when the run is retained` when no report was given, so there is no directory to look
+in). The run view is a list and does cut its evidence column, keeping both ends
 around ` … ` (the end of an error is where "but found Y" is); when it has cut anything the footer says
 `… marks cut text — history s3 prints it whole`, naming the first row it cut.
 

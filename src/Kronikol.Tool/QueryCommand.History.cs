@@ -58,7 +58,7 @@ internal static partial class QueryCommand
             if (!string.Equals(other.Id, run.Id, StringComparison.Ordinal))
             {
                 note($"! {Path.GetFileName(index.Path)} describes {run.Id} — reading {other.Id} from the ledger instead");
-                return HistoryOfLedgerRun(ledger, other, ledgerPath, location.Source, options, writer, error, note, getEnv);
+                return HistoryOfLedgerRun(ledger, other, ledgerPath, location.Source, options, writer, error, note, getEnv, index.Directory);
             }
         }
 
@@ -75,7 +75,7 @@ internal static partial class QueryCommand
             note($"! no {HistoryFormat.FragmentFileName} beside the report — behaviour verdicts are off; results, attempts and durations still compare");
 
         var subjects = index.Scenarios.Select(HistorySubject.Of).ToArray();
-        var reading = new HistoryReading(verdicts, subjects, ledgerPath, location.Source, fromFragment, HistoryReading.FromReport, analysis, run, shapes);
+        var reading = new HistoryReading(verdicts, subjects, ledgerPath, location.Source, fromFragment, HistoryReading.FromReport, analysis, run, shapes, index.Directory);
 
         HistorySubject? one = null;
         if (options.Positional.Count > 0)
@@ -182,7 +182,7 @@ internal static partial class QueryCommand
 
     /// <summary>One run read from its own ledger line: the roster and the calls it indexes are in the ledger beside it.</summary>
     private static int HistoryOfLedgerRun(HistoryLedger ledger, HistoryRun run, string ledgerPath, HistoryLocationSource source,
-        QueryOptions options, QueryWriter writer, TextWriter error, Action<string> note, Func<string, string?> getEnv)
+        QueryOptions options, QueryWriter writer, TextWriter error, Action<string> note, Func<string, string?> getEnv, string? reportsDirectory = null)
     {
         if (ledger.Roster(run.RosterHash) is not { } roster)
         {
@@ -200,7 +200,7 @@ internal static partial class QueryCommand
             note($"! {ledger.Stats.DamagedLines} line(s) of the ledger could not be parsed and were skipped — kronikol history verify says which");
 
         var subjects = Enumerable.Range(0, roster.Count).Select(i => HistorySubject.Of(roster, run, i)).ToArray();
-        var reading = new HistoryReading(verdicts, subjects, ledgerPath, source, run.ShapeSet is not null, HistoryReading.FromLedger, analysis, run, shapes);
+        var reading = new HistoryReading(verdicts, subjects, ledgerPath, source, run.ShapeSet is not null, HistoryReading.FromLedger, analysis, run, shapes, reportsDirectory);
 
         HistorySubject? one = null;
         if (options.Sid is { } sid)
@@ -227,7 +227,11 @@ internal static partial class QueryCommand
     {
         var verdicts = reading.Verdicts;
         var ledgerOnly = reading.Source == HistoryReading.FromLedger;
-        var ledgerOnlyLine = $"ledger only — no report read; steps, calls and payloads need one (kronikol query failures <reports-dir> --run {verdicts.RunId}, when the run is retained)";
+        // With a report beside it the run was looked for under runs/ before the ledger was read, so the line
+        // says it is not there; with no report there is no directory to look in, and the line says the condition.
+        var ledgerOnlyLine = reading.ReportsDirectory is { } beside
+            ? $"ledger only — no report read; steps, calls and payloads need one, and run {verdicts.RunId} is not kept under {beside} ({ReportHistory.KeptRuns(beside)})"
+            : $"ledger only — no report read; steps, calls and payloads need one (kronikol query failures <reports-dir> --run {verdicts.RunId}, when the run is retained)";
 
         // ── One scenario ───────────────────────────────────
         if (one is not null)
@@ -245,7 +249,7 @@ internal static partial class QueryCommand
                 return 0;
             }
 
-            WriteScenario(writer, verdicts, one, entry);
+            WriteScenario(writer, reading, one, entry);
             var callLines = options.Calls ? ReportHistory.CallsOf(verdicts, entry, reading.Run, reading.Shapes) : null;
             if (options.Calls)
                 WriteCalls(writer, callLines);
@@ -367,8 +371,9 @@ internal static partial class QueryCommand
             writer.Line($"  {call}");
     }
 
-    private static void WriteScenario(QueryWriter writer, HistoryVerdicts verdicts, HistorySubject scenario, ScenarioHistory entry)
+    private static void WriteScenario(QueryWriter writer, HistoryReading reading, HistorySubject scenario, ScenarioHistory entry)
     {
+        var verdicts = reading.Verdicts;
         writer.Line(scenario.Address.StartsWith("sid:", StringComparison.Ordinal)
             ? $"{scenario.Address}  {scenario.FeatureName} › {scenario.Name}"
             : $"{scenario.Address}  {scenario.FeatureName} › {scenario.Name}  sid:{scenario.StableId}");
@@ -404,7 +409,6 @@ internal static partial class QueryCommand
         writer.Line($"stream: {verdicts.Stream} · {verdicts.RunsRecorded} earlier run(s) in the window");
         writer.Line("last runs, oldest first (this run last):");
         var runs = verdicts.Runs.ToDictionary(r => r.RunId, StringComparer.Ordinal);
-        var firstLineOnly = false;
         foreach (var point in entry.Points.TakeLast(15))
         {
             writer.Line($"  {point.Result}  {point.RunId,-24} {point.At.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)}"
@@ -422,13 +426,12 @@ internal static partial class QueryCommand
             // An error on a pass is an earlier attempt's (a retry overlaid on its run): said so, because a
             // message under a `P` row reads as a pass that failed.
             writer.Line($"       {(point.Result == HistoryFormat.Passed ? "an earlier attempt failed: " : "")}{QueryWriter.Flat(e)}");
-            firstLineOnly |= e.Length >= HistoryFormat.ErrorKeyLimit - 1 && e.EndsWith('…');
+            // The ledger keeps the first line of a message, up to 199 characters: text that ends in ITS
+            // ellipsis is not cut by this view, and the rest is not in the ledger at all. An ellipsis always
+            // has an address, so the row says where the rest of THIS run's message is - or that it is gone.
+            if (e.Length >= HistoryFormat.ErrorKeyLimit - 1 && e.EndsWith('…'))
+                writer.Line("       … first line only — " + ReportHistory.WholeMessagePointer(reading, point.RunId));
         }
-
-        // The ledger keeps the first line of a message, up to 199 characters: text that ends in ITS
-        // ellipsis is not cut by this view, and the rest is not in the ledger at all.
-        if (firstLineOnly)
-            writer.Line("       … first line only — the whole message is in that run's Failures.md (kronikol query failures <reports-dir> --run <id> opens it while the run is retained)");
     }
 }
 
@@ -672,6 +675,34 @@ internal static class ReportHistory
                 return candidate;
         }
         return null;
+    }
+
+    /// <summary>
+    /// Where the whole of a message the ledger cut is: the report on top for the run being read from it, the
+    /// kept run under <c>runs/</c> when the run is kept there, "not kept" when the directory is known and it
+    /// is not, and the condition when no report was given and there is no directory to look in.
+    /// </summary>
+    public static string WholeMessagePointer(HistoryReading reading, string runId)
+    {
+        if (reading.ReportsDirectory is not { } directory)
+            return $"the whole message is in that run's Failures.md (kronikol query failures <reports-dir> --run {runId}, when the run is retained)";
+        if (reading.Source == HistoryReading.FromReport && string.Equals(runId, reading.Verdicts.RunId, StringComparison.Ordinal))
+            return $"the whole message is in this run's Failures.md: kronikol query failures {directory}";
+        return KeptUnder(directory, runId)
+            ? $"the whole message is in that run's Failures.md: kronikol query failures {directory} --run {runId}"
+            : $"the whole message was in that run's Failures.md, and run {runId} is not kept under {directory}";
+    }
+
+    /// <summary>Whether <paramref name="runId"/> is kept under <paramref name="directory"/>: the run on top (its <c>Run.json</c>) or one under <c>runs/</c>. Manifests are all this reads.</summary>
+    public static bool KeptUnder(string directory, string runId) =>
+        RunManifest.TryRead(Path.Combine(directory, RunManifest.FileName)) is { } top && string.Equals(top.Run, runId, StringComparison.Ordinal)
+        || ReportFolders.RetainedRuns(directory).Any(r => string.Equals(r.Manifest.Run, runId, StringComparison.Ordinal));
+
+    /// <summary>What is kept under <paramref name="directory"/>, for a line that says a run is not: the ids under <c>runs/</c>, or that there are none.</summary>
+    public static string KeptRuns(string directory)
+    {
+        var kept = ReportFolders.RetainedRuns(directory);
+        return kept.Count == 0 ? "nothing is kept under runs/" : "kept: " + string.Join(", ", kept.Select(r => r.Manifest.Run));
     }
 
     private static CiMetadata? CiOf(ReportIndex index)
@@ -1056,8 +1087,9 @@ internal sealed record HistorySubject(string Address, int Ordinal, string Stable
 /// <summary>One reading of one run, however the run was come by.</summary>
 /// <param name="Source"><see cref="FromReport"/> or <see cref="FromLedger"/>.</param>
 /// <param name="Run">The run that was analysed, for what is read off its own line (<c>--calls</c>).</param>
+/// <param name="ReportsDirectory">The directory of the report the command was given, when one was: where a run is kept under <c>runs/</c>, or is not. Null for a reading with no report at all.</param>
 internal sealed record HistoryReading(HistoryVerdicts Verdicts, IReadOnlyList<HistorySubject> Subjects, string LedgerPath, HistoryLocationSource LedgerSource,
-    bool BehaviourVerdicts, string Source, HistoryAnalysisOptions Analysis, HistoryRun Run, HistoryShapes? Shapes)
+    bool BehaviourVerdicts, string Source, HistoryAnalysisOptions Analysis, HistoryRun Run, HistoryShapes? Shapes, string? ReportsDirectory = null)
 {
     public const string FromReport = "report", FromLedger = "ledger";
 

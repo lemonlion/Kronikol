@@ -247,8 +247,9 @@ public record ReportConfigurationOptions
     /// When <c>true</c>, writes <c>Failures.md</c> and <c>Failures.jsonl</c> next to the report: every
     /// failure in context — error, parsed expected/actual, the failing step and its source location, the
     /// calls made inside it, attachments, and the query address of each — grouped by the first line of the error so that
-    /// twenty scenarios stopped by one cause are worked through once rather than twenty times. Written on a green run too (as <c>No failures</c>),
-    /// so its absence always means the run did not finish. Never contains a payload, a header or a diagram.
+    /// twenty scenarios stopped by one cause are worked through once rather than twenty times. Written on a green run too (as <c>No failures</c>,
+    /// meaning nothing failed in the newest run: when the run it replaced had failures, the line under the heading says so and where that
+    /// run is kept, see <see cref="KeepRuns"/>), so its absence always means the run did not finish. Never contains a payload, a header or a diagram.
     /// Default: <c>true</c>.
     /// </summary>
     public bool GenerateFailuresDigest { get; set; } = true;
