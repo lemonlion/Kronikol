@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.27.3] - 2026-09-22
+
+**Patch - the query tool's failure messages: `steps sN` prints them whole, and the list views that cut
+them say where the whole is.** The patch part moved because nothing is new to call.
+
+### Fixed
+
+- **`kronikol query steps sN` prints a failed step's message whole.** It cut the message head-only at
+  180 characters, and `failures` cut the scenario's at 240 and the failing step's at 200, with a bare
+  `…` and no address - since the tool's first release (3.0.47), in no design record. The whole message
+  was in `Failures.md` and `--json` only, which is #82's shape on the verbs the plan's rule
+  (`plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md` §4.2: an ellipsis always has an address) had not been
+  applied to. `steps sN` is the detail view and cuts nothing of a message now, as `history sN` cuts
+  nothing of its error since 3.25.3.
+- **`failures` and `assertions` cut both ends and name the view that does not.** An assertion's
+  verdict is at the end of its message (`… but found 5.99M`), so a head-only cut removed what the reader
+  came for; the lists now keep both ends around ` … `, and the footer says `… marks cut text — steps s3
+  prints the message whole` (and `history s3 prints the evidence whole`, for the `history:` line 3.27.2
+  taught to cut this way), naming the first row of each kind it cut.
+
 ## [3.27.2] - 2026-09-22
 
 **Patch - two defects found by running the plan's consumer acceptance (`plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md`

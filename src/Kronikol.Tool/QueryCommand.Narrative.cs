@@ -52,6 +52,29 @@ internal static partial class QueryCommand
         // resolves - this verb never mentioned history and must not start failing over it.
         var history = ReportHistory.TryVerdictsSilently(index, getEnv, _workingDirectory);
 
+        // A list view cuts, keeps both ends (an assertion's verdict is at the end), and its footer names
+        // the view that prints the text whole: `steps sN` for a message, `history sN` for evidence. The
+        // notice names the first row of each kind that was cut. Head-only at 240 with no address, since
+        // 3.0.47, was #82's shape on this verb.
+        string? cutMessage = null, cutEvidence = null;
+        void Notice() => writer.CutNotice("… marks cut text — " + string.Join(" · ", new[]
+        {
+            cutMessage is { } m ? $"steps {m} prints the message whole" : null,
+            cutEvidence is { } e ? $"history {e} prints the evidence whole" : null
+        }.Where(part => part is not null)));
+        string CutMessage(string? text, int max, string address)
+        {
+            var cut = writer.Cut(text, max);
+            if (cutMessage is null && cut.Length != QueryWriter.Flat(text).Length) { cutMessage = address; Notice(); }
+            return cut;
+        }
+        string CutEvidence(string? text, int max, string address)
+        {
+            var cut = writer.Cut(text, max);
+            if (cutEvidence is null && cut.Length != QueryWriter.Flat(text).Length) { cutEvidence = address; Notice(); }
+            return cut;
+        }
+
         // Paged through the one pager rather than a hand-rolled Skip/Take with a hand-rolled footer. That
         // footer hard-coded the 25 cap and ignored --limit, so `--limit 2` on three failures printed two
         // and then said "3 failed" with no resume - the one shape the footer contract exists to prevent.
@@ -76,21 +99,18 @@ internal static partial class QueryCommand
             {
                 // A list view that cuts says so and names the view that does not (#82's rule): the
                 // evidence of a scenario that broke across a fingerprint-rule change is longer than this.
-                var hadCut = writer.HasCut;
-                var evidence = writer.Cut(verdict.Evidence, 160);
-                if (!hadCut && writer.HasCut)
-                    writer.CutNotice($"… marks cut text — history {scenario.Address} prints it whole");
+                var evidence = CutEvidence(verdict.Evidence, 160, scenario.Address);
                 writer.Line($"  history: {Kronikol.History.HistoryVerdictNames.Name(verdict.Primary)} — {evidence} · {verdict.Series}");
             }
             if (scenario.ErrorMessage is { } message)
-                writer.Line("  " + QueryWriter.OneLine(message, 240));
+                writer.Line("  " + CutMessage(message, 240, scenario.Address));
 
             var failingSteps = scenario.AllSteps().Where(s => s.Step.Failed).ToArray();
             foreach (var (path, depth, step) in failingSteps)
             {
                 writer.Line($"  {new string(' ', depth * 2)}✗ {scenario.Address}/{path}  {QueryWriter.OneLine(step.Display, 100)}");
                 if (step.FailureMessage is { } stepMessage)
-                    writer.Line($"  {new string(' ', depth * 2)}  {QueryWriter.OneLine(stepMessage, 200)}");
+                    writer.Line($"  {new string(' ', depth * 2)}  {CutMessage(stepMessage, 200, scenario.Address)}");
                 if (step.SourceFile is { } file)
                     writer.Line($"  {new string(' ', depth * 2)}  at {file}:{step.SourceLine}");
 
@@ -293,7 +313,8 @@ internal static partial class QueryCommand
             writer.Line($"{indent}{mark} {path,-5} {QueryWriter.OneLine(step.Display, 90)}{duration}{range}");
 
             if (step.FailureMessage is { } message)
-                writer.Line($"{indent}      {QueryWriter.OneLine(message, 180)}"
+                // The detail view: the message whole, as history sN prints its error (#82's rule).
+                writer.Line($"{indent}      {QueryWriter.Flat(message)}"
                             + (step.SourceFile is { } file ? $"   at {file}:{step.SourceLine}" : ""));
             if (step.BypassReason is { } bypass)
                 writer.Line($"{indent}      bypassed: {QueryWriter.OneLine(bypass, 120)}");
@@ -377,12 +398,22 @@ internal static partial class QueryCommand
             return 0;
         }
 
+        var noticed = false;
         writer.Page(rows, options.Offset, options.PageSize(200, writer, "assertions"), "assertions", row =>
         {
             var mark = row.Step.Failed ? "✗" : "✓";
             writer.Line($"{mark} {row.Scenario.Address}/{row.Path,-5} {QueryWriter.OneLine(row.Step.Text, 100)}");
             if (row.Step.FailureMessage is { } message)
-                writer.Line($"     {QueryWriter.OneLine(message, 180)}");
+            {
+                // A list: both ends kept, and the footer names the view that prints the message whole.
+                var cut = writer.Cut(message, 180);
+                if (!noticed && cut.Length != QueryWriter.Flat(message).Length)
+                {
+                    noticed = true;
+                    writer.CutNotice($"… marks cut text — steps {row.Scenario.Address} prints the message whole");
+                }
+                writer.Line($"     {cut}");
+            }
             if (row.Step.SourceFile is { } file)
                 writer.Line($"     at {file}:{row.Step.SourceLine}");
         }, options.RerunArgs(), row => new

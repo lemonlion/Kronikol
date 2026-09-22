@@ -1457,9 +1457,14 @@ not know to the test host: no `--nologo`, and a filter is `-- --filter-class <ty
   run: 178 characters across a fingerprint-rule change, cut at 160). §4.2's rule had been applied to
   the history run view only. `failures` now cuts both ends and its footer names `history sN`.
 
-**Left as found:** the `failures` verb still cuts a scenario's error message at 240 with no address;
-the whole is in `Failures.md`, and no real message was cut by it. §4.2's rule was written for
-history's views. The 34 failures of the consumer's earlier local run are the consumer's own.
+**Left as found, then not (3.27.3).** The `failures` verb cut a scenario's error message at 240 with
+no address, `steps sN` a failed step's at 180 and `assertions` at 180 - head-only, since 3.0.47, in no
+design record; the whole was in `Failures.md` and `--json` only, which is #82's shape on the verbs §4.2
+was not applied to. Asked whether that was by design, the owner had it fixed: `steps sN` is the detail
+view and prints the message whole; `failures` and `assertions` cut both ends and their footer names
+`steps sN` (and `history sN` for evidence). On the consumer's real failures 0 of 6 distinct messages
+exceeded 240 and 1 exceeded 180; equivalency messages with a diff inside run to several hundred. The
+34 failures of the consumer's earlier local run are the consumer's own.
 
 **Seen on the way, not this plan's, fixed the same day (`b5cff009`, test code only):** the 3.27.2 CI run
 failed once in `Kronikol.Tests.MongoDB` - a subscriber test read `[TestContext]` where it expected the

@@ -169,6 +169,65 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("✗", output);
     }
 
+    /// <summary>A FluentAssertions equivalency message with a diff inside: several hundred characters, the verdict at the end.</summary>
+    private static readonly string LongMessage =
+        "Expected order to be equivalent to the expected order, but the two differ at Items[2].Price: expected 4.99M, but found 5.99M; "
+        + "at Items[2].Quantity: expected 2, but found 3; at Customer.Address.PostCode: expected \"SW1A 1AA\", but found \"SW1A 2AA\"; "
+        + "at Totals.Grand: expected 18.47M, but found 21.46M. With configuration: use declared types and members, compare enums by value, "
+        + "match member by name (or throw), be strict about the order of items in byte arrays. The difference of 2.99M is the raspberry topping.";
+
+    /// <summary>One failed scenario whose message and failing assertion step carry <see cref="LongMessage"/>.</summary>
+    private string LongMessagesReport()
+    {
+        var path = Path.Combine(_directory, "LongMessages.json");
+        File.WriteAllText(path, $$"""
+            {
+              "kronikolVersion": "3.27.3", "formatVersion": 1, "suite": "Widgets.Tests",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:05:00Z",
+              "features": [ { "name": "Orders", "labels": [], "scenarios": [
+                { "id": "t0", "stableId": "aaaabbbbccccdddd", "name": "Checkout", "result": "Failed", "durationSeconds": 1.0, "errorMessage": {{System.Text.Json.JsonSerializer.Serialize(LongMessage)}}, "labels": [], "categories": [],
+                  "steps": [
+                    { "keyword": "Given", "text": "a basket", "status": "Passed", "durationSeconds": 0.1, "sourceFile": "Steps/BasketSteps.cs", "sourceLine": 42, "subSteps": [], "attachments": [] },
+                    { "keyword": null, "text": "order should be equivalent", "status": "Failed", "durationSeconds": 0.1, "failureMessage": {{System.Text.Json.JsonSerializer.Serialize(LongMessage)}}, "sourceFile": "Tests/CheckoutTests.cs", "sourceLine": 77, "subSteps": [], "attachments": [] }
+                  ],
+                  "httpInteractions": [], "attachments": [] } ] } ]
+            }
+            """);
+        return path;
+    }
+
+    [Fact]
+    public void Steps_prints_a_failed_steps_message_whole()
+    {
+        // The single-scenario view is the detail view: nothing in it is cut (the rule history s3 got in 3.25.3).
+        var output = Run("steps", LongMessagesReport(), "s0");
+
+        Assert.Contains(LongMessage, output);
+    }
+
+    [Fact]
+    public void Failures_cuts_a_long_message_at_both_ends_and_names_the_view_that_prints_it_whole()
+    {
+        // A list view cuts, keeps both ends (the verdict of an assertion is at the end), and its footer
+        // names the view that does not cut. Head-only, "…" and no address was what #82 was about.
+        var output = Run("failures", LongMessagesReport());
+
+        Assert.DoesNotContain(LongMessage, output);
+        Assert.Contains("The difference of 2.99M is the raspberry topping.", output);
+        Assert.Contains(" … ", output);
+        Assert.Contains("… marks cut text — steps s0 prints the message whole", output);
+    }
+
+    [Fact]
+    public void Assertions_cuts_a_long_message_and_names_steps_for_the_whole()
+    {
+        var output = Run("assertions", LongMessagesReport(), "--failed");
+
+        Assert.Contains("order should be equivalent", output);
+        Assert.Contains("raspberry topping.", output);
+        Assert.Contains("… marks cut text — steps s0 prints the message whole", output);
+    }
+
     [Fact]
     public void Assertions_lists_them_flat_with_their_source()
     {

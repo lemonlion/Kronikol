@@ -118,7 +118,7 @@ public class QueryHistoryWholeTextTests : IDisposable
         Assert.True(exit == 0, error);
         Assert.Contains("history: broke — passed in " + earlier, output);
         Assert.Contains(" … ", output);
-        Assert.Contains("… marks cut text — history s0 prints it whole", output);
+        Assert.Contains("… marks cut text — history s0 prints the evidence whole", output);
         var whole = Query("history", report, "s0");
         Assert.True(whole.Exit == 0, whole.Error);
         Assert.Contains("behaviour is compared from the next run", whole.Output);

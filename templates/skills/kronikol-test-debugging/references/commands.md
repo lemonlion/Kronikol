@@ -526,8 +526,11 @@ in that run's Failures.md: kronikol query failures <reports-dir> --run <id>` whe
 it is not; and `… when the run is retained` when no report was given, so there is no directory to look
 in). The run view is a list and does cut its evidence column, keeping both ends
 around ` … ` (the end of an error is where "but found Y" is); when it has cut anything the footer says
-`… marks cut text — history s3 prints it whole`, naming the first row it cut. The `history:` line of
-`failures` is cut the same way and its footer says the same (3.27.2).
+`… marks cut text — history s3 prints it whole`, naming the first row it cut. `failures` cuts its
+`history:` line, the scenario's message and the failing step's message the same way, and `assertions`
+its messages; their footer names the view that prints each whole - `steps s3 prints the message whole`,
+`history s3 prints the evidence whole` (3.27.2, 3.27.3). `steps sN` is the detail view and cuts nothing
+of a message (3.27.3).
 
 **When `behaviour-changed` looks like noise.** The fingerprint is made from templated call lines, and a
 variable part the templater does not know (an application's own cache-key format) changes it on every
