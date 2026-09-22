@@ -1435,7 +1435,15 @@ not know to the test host: no `--nologo`, and a filter is `-- --filter-class <ty
 6a. **F14:** the failing run's report copied out without `History.run.json`, `history <copy>
    --regressed` → `s144 broke PPPPPPPPPF passed in local:20260915T145915Z:14e947b5, failing now`, the
    run under its true id `local:20260922T080715Z:14e947b5`, adopted from the ledger's own line.
-7. CI: see below, once the consumer's run on the release has completed.
+7. **CI, on the release, no configuration change** (BreakfastProvider `d87efa38`, packages and tool
+   3.27.1; run 35704113870): 17 of the 18 lanes green on the first attempt, `TUnit in memory` red on
+   `NU1102: Unable to find package Kronikol.TUnit (>= 3.27.1) … Nearest version: 3.27.0` - NuGet's
+   registration lag, the package having been published minutes before - and green on the rerun; the
+   ledger recorded, the Pages site deployed, the whole run `success`. The `xunit-in-memory-report`
+   artifact downloaded and listed: **the top level exactly as before plus `Run.json`** (`gh:35704113870:1`,
+   `xunit-in-memory`, 203 scenarios, 0 failed, `3.27.1+f65e4239`) **and no `runs/` folder** - the
+   assertion §9 asks for. `Grpc.Net.Client` 2.83.0 → 2.84.0 was the one change the bump needed (the
+   floor above).
 
 **Two defects, fixed here, red first:**
 
@@ -1451,3 +1459,11 @@ not know to the test host: no `--nologo`, and a filter is `-- --filter-class <ty
 **Left as found:** the `failures` verb still cuts a scenario's error message at 240 with no address;
 the whole is in `Failures.md`, and no real message was cut by it. §4.2's rule was written for
 history's views. The 34 failures of the consumer's earlier local run are the consumer's own.
+
+**Seen on the way, not this plan's, fixed the same day (`b5cff009`, test code only):** the 3.27.2 CI run
+failed once in `Kronikol.Tests.MongoDB` - a subscriber test read `[TestContext]` where it expected the
+document owner and the flow - and passed on the rerun. Not timing: `ChangeStreamCorrelationTests` clears
+the process-wide `TestCorrelationStore` in its constructor and was in no xUnit collection, so it ran in
+parallel with the subscriber tests' collection. One collection per assembly for every class that clears
+the store or resets the identity scope, held by `ProcessWideTrackingStateTests`, red on three assemblies
+first.
