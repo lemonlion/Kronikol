@@ -4,8 +4,9 @@
 3.21.0 (`2491185e`), re-checked against 3.22.1 (`82abeb7f`) — 3.22.0 and 3.22.1 touch no history,
 query, merge or ledger code, and the one citation that moved is `ReportGenerator.WriteFile`, now
 `:5420` · **Status: EXECUTED 2026-09-21 as 3.25.3 (S0, S1), 3.26.0 (S2, S3) and 3.27.0 (S4), then
-audited item by item on 2026-09-22 with the four gaps found fixed as 3.27.1 and §9 run; §12 is the log
-and says where execution departed from the plan.** As written before that: plan written, **the analyzer cut (F4), the missing-fragment fix (F14) and the
+audited item by item on 2026-09-22 - the four gaps found fixed as 3.27.1, §9 run on BreakfastProvider
+and the two defects it found fixed as 3.27.2; §12 is the log and says where execution departed from
+the plan.** As written before that: plan written, **the analyzer cut (F4), the missing-fragment fix (F14) and the
 retry overlay (F15) prototyped in a throwaway worktree** — `EVIDENCE_SURVIVES_A_RERUN_PLAN.prototype.patch`,
 8 files, +456 −4, every new test red on `main` first, the unit suite 5,160 / 0 failed with it — nothing
 implemented in the repository, **NOT green-lit**.
