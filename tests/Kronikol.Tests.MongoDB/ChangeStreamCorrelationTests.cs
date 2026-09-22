@@ -3,6 +3,11 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.MongoDB;
 
+// Clears the process-wide correlation store and identity scope in its constructor and Dispose: in the same
+// collection as MongoDbTrackingSubscriberTests, which relies on both, or xUnit runs the two in parallel and
+// a Clear here lands between that class's insert and its claim (seen on CI: the owner and flow attributions
+// gone, [TestContext] alone).
+[Collection("TestCorrelationStore")]
 public class ChangeStreamCorrelationTests : IDisposable
 {
     public ChangeStreamCorrelationTests()

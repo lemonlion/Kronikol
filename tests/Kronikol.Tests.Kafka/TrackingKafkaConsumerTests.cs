@@ -4,6 +4,8 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Kafka;
 
+// Clears process-wide tracking state: the assembly's one collection for classes that do (ProcessWideTrackingStateTests).
+[Collection("TestCorrelationStore")]
 public class TrackingKafkaConsumerTests
 {
     private readonly string _testId = Guid.NewGuid().ToString();

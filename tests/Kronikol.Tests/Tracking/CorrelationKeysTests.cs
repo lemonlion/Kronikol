@@ -2,7 +2,9 @@ using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
 
-[Collection("TestCorrelationStore")]
+// The collection every class in this assembly that clears the process-wide tracking state is in
+// (TestIdentityScopeCollection.cs says why): two collections run in parallel and clear each other's state.
+[Collection("DiagramsFetcher")]
 public class CorrelationKeysTests
 {
     [Fact]
