@@ -12,9 +12,17 @@ upstream fact below was re-verified on 2026-09-10 against plantuml/plantuml mast
 the TeaVM build on 2026-09-07, and the merged stdlib loader PR #2873) by a recon-plus-adversarial-
 verify pass. Where the report and master disagree, master wins and the correction is noted.
 
+> **This file is a fragment (marked 2026-09-22, `ROADMAP.md` 0.3).** It stops at §3.6. §4 (the
+> issues), §5 and §6 (the PR waves), §7 (the prose drafts) and appendix B, which §0 and §1
+> describe and which the text below cites, were never committed: `f3f7318d` holds the only
+> version of this file, 233 lines, and no other source has them, the engineering report in
+> artifact `6a67776f` included (read in full on 2026-09-21: no issue list, no waves, no drafts).
+> "Recover" is not an option; writing them again is decision D14 in `ROADMAP.md`, and the plan
+> cannot be green-lit before that.
+
 Companion documents: `SMETANA_PERF_PLAN.md` (the campaign that made Smetana viable in the
-browser), `PERF_CI_PLAN.md` (perf-bench methodology), `TEOZ_PERF_PLAN.md`,
-`THEME_PLAN.md`. Prose rules for everything posted upstream are in section 3.5 and were
+browser) and `PERF_CI_PLAN.md` (perf-bench methodology), both done and deleted on 2026-09-22
+(`git show 158d62e5:plans/<name>`), `TEOZ_PERF_PLAN.md`, `THEME_PLAN.md`. Prose rules for everything posted upstream are in section 3.5 and were
 derived from the memory `no-llm-tells-in-public-text` and the accepted bodies of #2861, #2867
 and #2873.
 

@@ -1400,8 +1400,9 @@ Prose lint before posting any body:
   `C:/Code/Kronikol/tools/render-bench/core-1.2026.8beta1-0e4f452.js`;
   `viz-global.js` = Viz.js 3.24.0 / Graphviz 14.1.1.
 - Related Kronikol plans: `plans/SMETANA_PERF_PLAN.md` (the exception-cost story
-  behind D6, the bench-ladder methodology), `plans/PERF_CI_PLAN.md` (upstream CI
-  house style, perf-bench), memory notes `plantuml-smetana-browser`,
+  behind D6, the bench-ladder methodology) and `plans/PERF_CI_PLAN.md` (upstream CI
+  house style, perf-bench), both done and deleted 2026-09-22
+  (`git show 158d62e5:plans/<name>`); memory notes `plantuml-smetana-browser`,
   `plantuml-upstream-collab`, `no-llm-tells-in-public-text`.
 
 **Durable copy (2026-09-14):** the session scratchpad lives under `%TEMP%` and may not

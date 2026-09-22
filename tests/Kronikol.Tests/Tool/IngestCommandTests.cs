@@ -91,6 +91,49 @@ public class IngestCommandTests : IDisposable
     }
 
     [Fact]
+    public void Note_format_option_is_validated_and_reaches_the_report()
+    {
+        var err = new StringWriter();
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--note-format", "toml"], new StringWriter(), err));
+        Assert.Contains("--note-format needs json or yaml", err.ToString());
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--note-format"], new StringWriter(), new StringWriter()));
+
+        const string testId = "1b2c3d4e5f60718293a4b5c6d7e8f90a";
+        var captures = Path.Combine(_dir, "captures-note-format");
+        Directory.CreateDirectory(captures);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/health", "web", "web",
+            requestContent: "", responseContent: "{\"ok\":true}", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › note format", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+
+        // The flag seeds the browser's starting format: the collapsible-notes script inlined into the report
+        // carries the chosen value where its __NOTE_FORMAT_DEFAULT__ token stood.
+        var yaml = Path.Combine(_dir, "out-yaml");
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", yaml, "--note-format", "yaml"], new StringWriter(), err));
+        var yamlHtml = File.ReadAllText(Path.Combine(yaml, "TestRunReport.html"));
+        Assert.Contains("window._noteFormatDefault = 'yaml'", yamlHtml);
+        Assert.DoesNotContain("window._noteFormatDefault = 'json'", yamlHtml);
+
+        var json = Path.Combine(_dir, "out-json");
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", json, "--note-format", "json"], new StringWriter(), err));
+        Assert.Contains("window._noteFormatDefault = 'json'", File.ReadAllText(Path.Combine(json, "TestRunReport.html")));
+
+        var unset = Path.Combine(_dir, "out-default");
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", unset], new StringWriter(), err));
+        Assert.Contains("window._noteFormatDefault = 'json'", File.ReadAllText(Path.Combine(unset, "TestRunReport.html")));
+
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("--note-format <json|yaml>", usage.ToString());
+    }
+
+    [Fact]
     public void Ingest_command_usage_errors()
     {
         var err = new StringWriter();

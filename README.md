@@ -174,7 +174,7 @@ Captured W3C trace ids are preserved, and pairs without one group into one trace
 
 ### Debugging a run — including with an AI agent
 
-`TestRunReport.json` holds everything about a run, which on a real suite means 10 MB, with single embedded diagrams past 600 KB. That is roughly 2.7 million tokens: an agent asked to debug a failing test spends its entire context reading the file and never gets to the question. `kronikol query` answers questions about the report without loading it, from run summaries through aggregation, structural diffs and trace following:
+`TestRunReport.json` holds everything about a run. On real suites that has measured 10.7 MB on one and 82.7 MB on another, with single embedded diagrams past 600 KB. Even the smaller file is roughly 2.7 million tokens: an agent asked to debug a failing test spends its entire context reading the file and never gets to the question. `kronikol query` answers questions about the report without loading it, from run summaries through aggregation, structural diffs and trace following:
 
 ```bash
 kronikol query summary  ./Reports          # the run, its failures, the slowest scenarios

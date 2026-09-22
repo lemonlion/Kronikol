@@ -2,6 +2,12 @@ using Kronikol.Reports;
 
 namespace Kronikol.Tests.Reports;
 
+// Every assertion here anchors on markup the generator emits (`<table class="param-test-table`,
+// `<tr class="row-failed`, `<details class="failure-result"`), never on a bare class name. The
+// stylesheet and scripts inlined into every report still carry rules for `examples-table`,
+// `examples-detail-row` and `examples-row-*`, classes the generator has not emitted since the outline
+// table became the parameter table, so a bare `Contains("examples-table")` matched the CSS and could
+// never fail.
 public class ExamplesTableReportTests
 {
     private static string GenerateReport(Feature[] features)
@@ -47,7 +53,7 @@ public class ExamplesTableReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("examples-table", content);
+        Assert.Contains("<table class=\"param-test-table", content);
     }
 
     [Fact]
@@ -97,7 +103,7 @@ public class ExamplesTableReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.DoesNotContain("<table class=\"examples-table\">", content);
+        Assert.DoesNotContain("<table class=\"param-test-table", content);
     }
 
     [Fact]
@@ -159,7 +165,7 @@ public class ExamplesTableReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("examples-table", content);
+        Assert.Contains("<table class=\"param-test-table", content);
         Assert.Contains("Regular", content);
     }
 
@@ -256,7 +262,8 @@ public class ExamplesTableReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("examples-detail-row", content);
+        Assert.Contains("<div class=\"param-detail-panel\"", content);
+        Assert.Contains("<details class=\"failure-result\" open>", content);
         Assert.Contains("Expected 5 but got 3", content);
         Assert.Contains("at MyTest.cs:42", content);
     }
@@ -294,13 +301,14 @@ public class ExamplesTableReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("examples-detail-row", content);
+        Assert.Contains("<div class=\"param-detail-panel\"", content);
+        Assert.Contains("<details class=\"failure-result\" open>", content);
         Assert.Contains("I have a balance", content);
         Assert.Contains("I withdraw cash", content);
     }
 
     [Fact]
-    public void Passed_outline_rows_do_not_have_detail_rows()
+    public void Passed_outline_rows_have_no_failure_block()
     {
         var features = new[]
         {
@@ -330,7 +338,9 @@ public class ExamplesTableReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.DoesNotContain("<tr class=\"examples-detail-row\"", content);
+        // A row with steps gets its detail panel; the failure block is what a passed row never gets.
+        Assert.Contains("<div class=\"param-detail-panel\"", content);
+        Assert.DoesNotContain("<details class=\"failure-result\"", content);
     }
 
     [Fact]
@@ -455,8 +465,8 @@ public class ExamplesTableReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("examples-row-passed", content);
-        Assert.Contains("examples-row-failed", content);
+        Assert.Contains("<tr class=\"row-passed", content);
+        Assert.Contains("<tr class=\"row-failed", content);
     }
 
     [Fact]

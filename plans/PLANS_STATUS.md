@@ -1,12 +1,14 @@
 # Plan File Status
 
-**Date:** 2026-08-30 (updated for 3.0.69) · **Repo version:** 3.0.69
+**Date:** 2026-08-30 (rows corrected through 2026-09-22, `ROADMAP.md` stage 0) · **Repo version:** 3.27.2
 
 Living status of every `*_PLAN.md` in `plans/`, verified item-by-item against
 code, tests, changelog, git history, the wiki (`../Kronikol.wiki`), and the Java port
 (`../Kronikol4J`). This supersedes the 2026-08-29 audit (in git history at `2270445`
 if the full item-by-item record of that snapshot is needed); everything below was
-re-verified fresh on 2026-08-30.
+re-verified fresh on 2026-08-30, and rows have been corrected as work landed since. The last
+sweep was `ROADMAP.md` stage 0 on 2026-09-22: the rows its 0.2 named, the `MCP_PLAN.md` row,
+two finished plans deleted (D15), and the cross-cutting list below.
 
 **The order of work is in [`ROADMAP.md`](ROADMAP.md)** (2026-09-21): every open issue, every
 unfinished plan below and the published artifact reports in one staged order, with the reason for
@@ -35,14 +37,15 @@ date. Its stage 0.2 lists the rows here that are out of date. This file stays th
 | `OTLP_EXPORT_PLAN.md` | ✅ Done, **deleted 2026-08-30** | 3.0.60 |
 | `EXAMPLES_BLOCKS_PLAN.md` | ✅ Done (1 ledger nit), **deleted 2026-08-30** | 3.0.64 |
 | `REQNROLL_DUPLICATE_STEPS_PLAN.md` | ✅ Done (#71), **deleted 2026-08-30** | 3.0.64 |
-| `TEOZ_PERF_PLAN.md` *(new)* | 🟡 In-house work done; upstream-gated | 6 PRs + 1 issue open upstream |
-| `PERF_CI_PLAN.md` *(new)* | 🟡 ~95%; R5 blocked on upstream merge | PR plantuml#2840 open |
-| `SMETANA_PERF_PLAN.md` *(2026-09-01; first indexed 2026-09-21)* | ✅ Goal met, upstream-facing (plantuml/plantuml). Browser Smetana against the viz.js bridge went from 2.8x-7.7x to 0.37x-1.0x: it wins or ties every benchmark row, SVG byte-identical on both layout paths. PRs #2858-#2861 and issues #2866/#2867 merged upstream 2026-09-03 | upstream 1.2026.8 |
-| `THEME_PLAN.md` *(2026-08-30, revised 2026-08-31; first indexed 2026-09-21)* | ❌ Not started (plan only). Make `ReportConfigurationOptions.PlantUmlTheme` work for all 43 bundled themes with note styling derived from the theme and an acceptance harness. Upstream #2848 and #2849 merged 2026-08-31; the harness prototypes are `tools/render-bench/theme-*.js` and `themeprobe/` | — |
+| `TEOZ_PERF_PLAN.md` | 🟡 In-house work done and every patch merged upstream (#2835–#2839, 2026-08-30/31). Left: the engine pin move from fork tag `v1.2026.8beta1-0e4f452` to npm `@plantuml/core` 1.2026.8 (published 2026-09-05; `ROADMAP.md` 1.8, decision D6), and the maintainer's answer on #2834 to the 2026-09-21 offer of seven hotspot patches (none opened). In-plan: W0.4 and the speedscope export, both optional | 3.0.76 (pin); patches in PlantUML 1.2026.8 |
+| `PERF_CI_PLAN.md` | ✅ Done, **deleted 2026-09-22** (D15; `git show 158d62e5:plans/PERF_CI_PLAN.md`). `perf-bench/` harness, workflow with three compare modes, 13 corpus fixtures, runner-calibrated bands; **#2840 merged 2026-08-30**, #2862 (bands recentred on the measured ratios) merged 2026-09-04. This row had said ~95% with R5 blocked on #2840; the block lifted the day the row was written. Minor deviation kept: a static artifact name | upstream (plantuml/plantuml) |
+| `SMETANA_PERF_PLAN.md` *(2026-09-01; first indexed 2026-09-21)* | ✅ Done, **deleted 2026-09-22** (D15; `git show 158d62e5:plans/SMETANA_PERF_PLAN.md`). Goal met, upstream-facing (plantuml/plantuml). Browser Smetana against the viz.js bridge went from 2.8x-7.7x to 0.37x-1.0x: it wins or ties every benchmark row, SVG byte-identical on both layout paths. PRs #2858-#2861 and issues #2866/#2867 merged upstream 2026-09-03 | upstream 1.2026.8 |
+| `THEME_PLAN.md` *(2026-08-30, revised 2026-08-31; first indexed 2026-09-21)* | ❌ Not started (plan only). Make `ReportConfigurationOptions.PlantUmlTheme` work for all 43 bundled themes with note styling derived from the theme and an acceptance harness. Upstream #2848 and #2849 merged 2026-08-31; the harness prototypes are `tools/render-bench/theme-*.js` and `themeprobe/`. **The upstream gate is lifted** (2026-09-22): both PRs are in the pinned engine (a stock build of master `0e4f452e`, 3.0.76) and in npm 1.2026.8 (2026-09-05); the plan now waits on the pin move (`ROADMAP.md` 1.8) and its own green light (1.6, 6.1). Today `PlantUmlTheme` has no effect under `BrowserJs`: the theme text never reaches the worker (§2.1). The wiki says so since 2026-09-22 | — |
 | `TOOLBAR_REDESIGN_PLAN.md` *(2026-08-31; first indexed 2026-09-21)* | ❌ DRAFT, nothing implemented, **NOT green-lit**. Option B (segmented, contained toolbar) in the v3.x line, Option C (quiet bar, `--kron-*` token layer) at v4.0.0, tri-state filtering for tags, dependencies and categories. All design decisions closed; §5 holds six open questions | — |
-| `V4_PLAN.md` *(2026-08-30; first indexed 2026-09-21)* | ❌ Not started beyond the Phase 0 spikes (Mermaid step-summary probe run, awaiting eyeball; branch `v4-mermaid-spike`). Four breaking changes for 4.0.0: Mermaid CI summaries, all server-side rendering removed, headers hidden by default, YAML notes by default | — |
-| `PLANTUML_JS_PARITY_PLAN.md` *(2026-09-10; first indexed 2026-09-21)* | ❌ DRAFT, **NOT green-lit**, nothing executed. Upstream-facing (plantuml/plantuml): a ladder of pull requests taking the TeaVM browser build towards server parity, from the engineering report in artifact `6a67776f` | — |
+| `V4_PLAN.md` *(2026-08-30; first indexed 2026-09-21)* | ❌ Not started beyond the Phase 0 spikes (Mermaid step-summary probe run, awaiting eyeball; branch `v4-mermaid-spike`). Four breaking changes for 4.0.0: Mermaid CI summaries, all server-side rendering removed, headers hidden by default, YAML notes by default. **4a's premise is stale** (2026-09-22): the plan says no option exists for hiding headers; `ReportToggleDefaults.HeadersShown` shipped in 3.0.80, so 4a is a default flip plus a `--headers` CLI flag (`ROADMAP.md` §2) | — |
+| `PLANTUML_JS_PARITY_PLAN.md` *(2026-09-10; first indexed 2026-09-21)* | ❌ DRAFT, **NOT green-lit**, nothing executed. Upstream-facing (plantuml/plantuml): a ladder of pull requests taking the TeaVM browser build towards server parity, from the engineering report in artifact `6a67776f`. **A fragment** (marked in the file 2026-09-22): it stops at §3.6; §4 to §7 and appendix B, which §0 and §1 describe, were never committed (`f3f7318d` holds the only version, 233 lines) and exist in no other source, the artifact included. Writing them again is D14 (`ROADMAP.md` §5) | — |
 | `VERIFICATION_MECHANISMS_PLAN.md` *(2026-09-12; first indexed 2026-09-21)* | ❌ Investigation complete, nothing implemented, **NOT green-lit**. Successor to `LLM_FIRST_PLAN.md`: invariants that check two artifacts against each other, the class of defect a single-artifact audit cannot find (the comparer of `338231b`) | — |
+| `MCP_PLAN.md` *(2026-09-12; first indexed 2026-09-22)* | ❌ Investigation complete, nothing implemented, **NOT green-lit** (`ROADMAP.md` D13; stages 10.1 and 13.4). A `kronikol mcp` subcommand on the existing tool, published under NuGet's `McpServer` package type, the MCP registry secondary; hosting ruled out on the credential-sink argument (§3.2). §14 is the assumption ledger: 22 of 36 load-bearing rows did not survive as written over fourteen passes and one recommendation reversed; checked against a real host, roots are deprecated (SEP-2577) and `structuredContent` plus `outputSchema` are one SDK switch. The three shipped-product bugs it found are fixed (flag legality 3.1.0, address round trip 3.5.0 and 3.7.0) and its gate, the LLM-first envelope work, has passed, so it is blocked on the green light alone. Download baseline in `MCP_PLAN.baseline.json` (`Kronikol.Tool` at 4,084). A working prototype existed in a session scratchpad only | — |
 | `QUERY_PERF_PLAN.md` | **Deleted 2026-09-19.** ✅ Done (§3.1–§3.4 all landed) | 3.0.69 |
 | `SEARCH_INDEX_PLAN.md` | **Deleted 2026-09-19.** ✅ Done (executed in full, §15 order; Phase 2 §10 deferred by design; post-release audit fixes in 3.0.71; user-requested scope extension in 3.0.72: descriptions/endpoints instant, stack traces deep-only) | 3.0.70–3.0.72 |
 | `NOTE_YAML_TRAILING_WS_PLAN.md` | **Deleted 2026-09-19.** ✅ Done (executed in full; committed with the release as a design record) | 3.0.79 |
@@ -56,12 +59,42 @@ date. Its stage 0.2 lists the rows here that are out of date. This file stays th
 | `JAVA_PORT_PLAN.md` | 🟡 Partially done | Kronikol4J v0.1.24 |
 | `NODE_PORT_PLAN.md` | ❌ Not started (design record) | — |
 | `MONOREPO_MIGRATION_PLAN.md` | ❌ Not started (design record) | — |
-| `QUERY_FALLBACK_PLAN.md` *(new, 2026-09-13)* | ❌ Investigation complete, nothing implemented, **NOT green-lit**. Replace the skill's `scripts/query.py` fallback with a .NET 10 file-based app (`dotnet run query.cs`) emitted beside the report, calling the real `QueryCommand.Run` — parity by construction rather than by maintenance. **Measured:** `#:package` resolves from the NuGet cache with every source cleared (offline), cold 2.9 s / warm 0.25 s, works inside `bin/Debug/<tfm>/Reports/`, and the cache holds every TFM asset so a **net8.0 test project still gets a working net10.0 fallback**. Needs SDK 10 (verified: fails under a `global.json` pin to 9). **Found a real bug on the way:** the `templates/` and `.claude/` copies of `query.py` have drifted — the 3.2.0 `failureCause` line is in one and not the other, and no test compares them (M0 fixes it independently). A9/A10 unverified: the engine compiling inside `Kronikol` under `#if NET10_0_OR_GREATER`, and byte-identical output (stdout encoding is the likely divergence) | — |
+| `QUERY_FALLBACK_PLAN.md` *(new, 2026-09-13)* | ❌ M0 done (verified 2026-09-21: the two `query.py` copies are byte-identical and `SkillDriftTests` holds them); M1 onward nothing implemented, **NOT green-lit** (`ROADMAP.md` 14.10). Replace the skill's `scripts/query.py` fallback with a .NET 10 file-based app (`dotnet run query.cs`) emitted beside the report, calling the real `QueryCommand.Run` — parity by construction rather than by maintenance. **Measured:** `#:package` resolves from the NuGet cache with every source cleared (offline), cold 2.9 s / warm 0.25 s, works inside `bin/Debug/<tfm>/Reports/`, and the cache holds every TFM asset so a **net8.0 test project still gets a working net10.0 fallback**. Needs SDK 10 (verified: fails under a `global.json` pin to 9). **Found a real bug on the way:** the `templates/` and `.claude/` copies of `query.py` have drifted — the 3.2.0 `failureCause` line is in one and not the other, and no test compares them (M0 fixes it independently). A9/A10 unverified: the engine compiling inside `Kronikol` under `#if NET10_0_OR_GREATER`, and byte-identical output (stdout encoding is the likely divergence) | — |
 | `QUERY_PORTABILITY_PLAN.md` *(new, 2026-09-13)* | ❌ Investigation complete, nothing implemented, **NOT green-lit**. Ship `kronikol query` to Java and Node as a NativeAOT binary behind thin wrappers (esbuild pattern for npm, protoc-jar pattern for Maven behind the existing jbang alias) rather than reimplementing it. **TeaVM does not help** — it consumes JVM bytecode, not .NET IL; §5 costs and rejects the Java-canonical inversion despite this repo already running IKVM and consuming TeaVM output. **Measured:** the AOT/trim analyzers pass with **17 warning sites under exactly two codes**, all `JsonSerializer` without source-gen — no reflection anywhere in 6,568 lines. **A2 is the gate and is unverified**: no `PublishAot` was attempted (no MSVC linker on the investigating machine). §3.4 amended by `KRONIKOL4J_PORTABILITY_PLAN.md` | — |
 | `KRONIKOL4J_PORTABILITY_PLAN.md` *(new, 2026-09-13)* | ❌ Investigation complete, nothing implemented, **NOT green-lit**. Whether a shared wasm renderer built from .NET can retire the Java port's rendering half. **Measured:** Kronikol4J is 32,100 lines splitting **45% rendering / 38% capture tail / 17% irreducible capture core**; of 13 divergence-ledger entries **7 created re-port work and 5 of those 7 are rendering detail**; the host side is healthier than the producer side (`node:wasi` needs **no flag** on Node 25.9.0, `wasmtime-py` works, `jco new --wasi-command` adapts P1→P2 so **mixing hosts is a packaging step, not a fork**). **Recommendation REVISED once Kronikol4J was understood as pre-1.0**: run E1 *before* 1.0 and let it choose the release architecture — adopting the shared renderer now *deletes* 14,305 lines, after 1.0 it *replaces a shipped renderer*. Two earlier claims withdrawn in place: the frozen-P1 warning (§4.2) and "the 55% is irreducibly Java" (header, §1.1–§1.2). **A9 is the gate: no WASI build was attempted.** §8.1 records the one design constraint — keep the module's syscall surface at P1's floor | — |
 | `PLATFORM_FOUNDATIONS_PLAN.md` *(new, 2026-09-14)* | ❌ Investigation complete, nothing implemented, **NOT green-lit**. **The definitive plan for four platforms in one repo; where it contradicts another plan, it wins (§5 lists every supersession).** Architecture in one sentence: every platform is a capturer writing two NDJSON streams + an options file; one shared renderer built from .NET turns them into every report; one shared query engine reads it. Foundations F0–F9: F0 monorepo (adopts `MONOREPO_MIGRATION_PLAN` whole), **F1 .NET dogfoods its own boundary** — the missing `NdjsonTestRunWriter`, a `CaptureMode` option, and a byte-for-byte in-process-vs-ingest round-trip test that is the gate for everything, F2 the versioned contract + `kronikol validate`, **F3 raw facts in / interpretation inside** (moves the six pure-function classes Java duplicates — classifier, naming, casing, serialiser — renderer-side), F4 the options file (95 options vs 27 flags), F5 close what F1 finds (internal-flow spans are known: `IngestPipeline.cs:284`), F6 the shared renderer (E1/E2 against the post-F5 ingest pipeline; NativeAOT fallback), F7 query as a second entry point, F8 the corpus reshaped so the 94 render fixtures become .NET-internal and the 15 capture fixtures become the cross-language contract, F9 the platform template + `kronikol new-platform`. **Eleven measured gaps (G1–G11)**; **P10 (WASI can run ingest) is the gate and is unverified**; P8 (how many gaps F1 finds) is the honest unknown. Java 1.0 = subtraction, gated on F6. **§11 verification 2026-09-14:** Decision 5 already built (`SpanToInteractionMapper`+`OtlpTraceReader`, dependency-free); P8 = ≥11 concrete gaps incl. new **G12 suite→stableId**; E0: renderer compiles against the BCL alone, native-trimmed output byte-identical to `kronikol ingest`; E1: WASI publish succeeds but emits a **Preview 2 component** (no P1 in .NET 10 — Chicory cannot host it), wasmtime 48 boots Mono and runs the ingest pipeline until **`SystemSecurityCryptography_PlatformNotSupported`** at two call sites (`ScenarioStableId.cs:51`, `InteractionRecord.cs`) — byte-identity still unproven. **§12 (2026-09-15): sharing levers beyond the renderer settled.** Nine examined for fundamental disadvantages, then workarounds. Taken: the taps as a shared end-to-end artifact (**new F10**, a complement to in-process capture, never a replacement); baggage as its companion carrier; HAR and CTRF importers (CTRF = the no-adapter fallback, test-level attribution only); structured frames / allow-listed env / source snippet gathered at capture under the rule "the capturer never interprets, the renderer never reads outside its input"; generated record and options types with schema-owned defaults; mid/post processors → a `noteRules` list; one in-process rendering path on .NET via `IngestRequest.Interactions` (no process boundary, no serialisation). Rejected: OTel instrumentation hooks as the seam, host callbacks from the renderer. **Fidelity: nothing lost on .NET** (F5 green + live options in-process); **one Java regression** for the ledger: `NoteProcessors` lambdas become rules, only arbitrary logic such as JWT-claims extraction is lost unless it becomes a rule kind. | — |
 | `NEXT_LANGUAGE_PLAN.md` *(new, 2026-09-13)* | ❌ Investigation complete, nothing implemented, **NOT green-lit**. **Read §0 first:** written without reading `JAVA_PORT_PLAN`/`NODE_PORT_PLAN`/`MONOREPO_MIGRATION_PLAN`, and its §1 is a **rediscovery** of `NODE_PORT_PLAN` §3.11–§3.12, which states it better. Genuinely new: **the audience ranking** (§3 — Python best *after* Node, on pytest's near-monopoly: one adapter where Node needs six and .NET needed fourteen; Go deferred because it cannot be instrumented at runtime and eBPF shows *"generic DB operations rather than detailed statements"*; C/C++ and Rust excluded, §3.2) and the three-way split that corrected the Kronikol4J plan's header. **The correction that matters:** OTel **cannot** carry request/response bodies — semconv captures *sizes*, spec issues #857/#1219 open for years — and bodies are ~90% of a report, so OTel is a **shallow long-tail catch-all beside deep native adapters**, never a replacement for them. Open disagreement with a locked decision: whether *"full feature parity"* should stay the end-state commitment for the ports. **B7 (HTTP+SQL is the 80/20) has no evidence — falsifier named in §5**. §2.1 costs four platforms and corrects the obvious arithmetic: "17%" is a fraction of the wrong denominator (a scoped port is **~5,600 lines**, and `core` does not shrink when the renderer is shared), Node is materially above that (`NODE_PORT_PLAN`: no JDBC equivalent, no universal HTTP seam, Prisma exception, six adapters), and **a shared renderer takes *rendering* maintenance from N to 1 while *capture* maintenance stays at N** | — |
 | `SMETANA_PARITY_PLAN.md` *(new, 2026-09-14)* | ❌ Plan complete, nothing implemented, **NOT green-lit**, nothing posted upstream. Upstream-facing (plantuml/plantuml): one umbrella issue plus nine PRs to bring Smetana level with the Graphviz path for everything PlantUML emits. `skinparam linetype ortho` needs a ~4,800-line hand port of Graphviz 2.38 `lib/ortho` (section 6, design study in the scratchpad); everything else is maker-side omission (nodesep/ranksep alone explain the #1703 density complaint, canvas ratio 0.79). 49 attribute + 31 port findings, 52-probe corpus with 2x2 montages, issue and PR drafts in Appendices A/B, seven open questions in section 12. | — |
+
+---
+
+## Fully done — DELETED 2026-09-22
+
+Two upstream-facing plans whose goals were met and merged on plantuml/plantuml were removed
+under the same convention (`ROADMAP.md` decision D15). Their texts are in git history, last
+present at commit `158d62e5` (`git show 158d62e5:plans/<name>`). `PLANTUML_JS_PARITY_PLAN.md`,
+`SMETANA_PARITY_PLAN.md` and `TEOZ_PERF_PLAN.md` still name them as companions; those
+references resolve via git history.
+
+### PERF_CI_PLAN.md (upstream; #2840 merged 2026-08-30, #2862 merged 2026-09-04)
+A non-blocking perf workflow on plantuml/plantuml so Teoz render performance cannot drift
+unnoticed: the `perf-bench/` harness (bench.js, generators, 13 checked-in corpus fixtures,
+runner-calibrated `expected-bands.json` from four A/A runs, the reference pinned by git commit
+because npm ≤ 1.2026.7 threw on large diagrams), a workflow with dispatch inputs, three compare
+modes (pinned npm reference by default, two-build git-ref comparison on dispatch), a step
+summary and 1-day artifacts, a push-to-master trigger. Ratios rather than absolute
+milliseconds, because a GitHub runner's speed is a per-run multiplier that a same-session ratio
+cancels. #2862 recentred the bands on the measured ratios. The one deviation kept: the artifact
+is named `perf-bench-results`, not `perf-bench-<sha>`. Nothing lands in this repo.
+
+### SMETANA_PERF_PLAN.md (upstream; #2858–#2861 and issues #2866/#2867 merged 2026-09-03)
+Browser Smetana (`!pragma layout smetana`) against the viz.js bridge: from 2.8–7.7× slower to
+0.37–1.0×, winning or tying every benchmark row (the 48-class row a statistical dead heat,
+median ratio 0.996 over four 32-rep runs), SVG byte-identical on both layout paths across seven
+families. Three fixes, all output-identical; method: an unobfuscated TeaVM build with V8 CPU
+profiles at 100 µs, JFR on the JVM side, `bench-ladder.js` on the shipping engine. Shipped in
+PlantUML 1.2026.8; Kronikol's own pin (3.0.76) carries it. Smetana matters to Kronikol only for
+component diagrams and internal-flow popups (`ROADMAP.md` §5).
 
 ---
 
@@ -204,25 +237,15 @@ on the maintainer.**
   fallback) — and every ES-module render call site passes `{ maxSvgSize: 98304 }`, so
   the 98304 patch is retired. Measured on Kronikol shapes with the teoz pragma: 4–8×
   faster warm (puml-19 789→181 ms, gen-500 5.8→0.8 s). viz-global.js kept (user
-  decision); statement-limit constants re-measured, all unchanged. A move to npm
-  `@plantuml/core` can follow when 1.2026.8 final publishes.
+  decision); statement-limit constants re-measured, all unchanged. npm `@plantuml/core`
+  1.2026.8 published on 2026-09-05; the move is `ROADMAP.md` 1.8 (decision D6, recommended:
+  move now, keep `viz-global.js`).
+- 2026-09-21: seven further hotspot patches (master `70cc513`, 0.55–0.71×, SVG identical;
+  66% of warm time is the TeaVM runtime and class library) offered on #2834 as an assessment;
+  no PR opened, awaiting the maintainer (`ROADMAP.md` §5, D14).
 - Working artifacts are `tools/render-bench/alloc-real.js`, `patches/` and `results/` (committed
   2026-09-21) and the engine builds `core-head-*.js` and `core-bisect*.js`, which stay local: engine
   builds are gitignored (`tools/render-bench/README.md`).
-
-### PERF_CI_PLAN.md (new; upstream-facing, companion to TEOZ_PERF)
-A non-blocking perf workflow contributed to plantuml/plantuml so Teoz performance
-cannot drift unnoticed. **R1–R4 done, R5 blocked:**
-- Done: `perf-bench/` harness in the `lemonlion/plantuml` fork (bench.js, generators,
-  13 checked-in corpus fixtures, runner-calibrated `expected-bands.json` from 4 A/A
-  runs, pinned reference via git commit because npm ≤1.2026.7 throws on large
-  diagrams), workflow with dispatch inputs + three compare modes + step summary +
-  1-day artifacts, push-to-master trigger, 7 successful validation runs including a
-  different-day recheck, PR **plantuml/plantuml#2840** + announcement on #2834.
-- Minor deviation: artifact name is static `perf-bench-results`, not `perf-bench-<sha>`.
-- Blocked: R5 (post-merge seeding dispatches) until #2840 merges.
-- By design nothing lands in this repo; commit `087be03` (Kronikol's own perf-guard
-  retry) is independent of this plan.
 
 ### QUERY_PERF_PLAN.md (3.0.69) — ✅ Done
 Executed in full 2026-08-30 (the §3.4 gate resolved by explicit request for the whole
@@ -289,27 +312,57 @@ problem is still live and growing — see the ledger-gap item below.
 
 ## Cross-cutting follow-ups (actionable)
 
-1. **CHANGELOG has no `[3.0.66]` section.** The string does not appear in the file at
-   all; the 3.0.66 content (bulk YAML dropdowns, `NotePayloadFormat`) sits under
-   `[3.0.67]`. The tag `v3.0.66` exists. Release owner should decide whether to split
-   the entry or leave a note.
-2. **Kronikol4J divergence-ledger gaps.** Entries exist for 3.0.48/3.0.60/3.0.62/3.0.66
-   only. Missing: **3.0.63** (leading-newline block scalars), **3.0.64
-   examples-blocks** (an explicit plan deliverable, M6.3), **3.0.67** (split-note
-   indexing — directly affects the toggle scripts the port must eventually take), and
-   **3.0.68** (autocomplete refresh contract).
-3. **Commit `087be03`** (perf-guard 3-attempt retry) has no changelog entry.
-4. **`nuget-readme.md`** — the `trace` line is sitting uncommitted in the working tree.
-5. **`--note-format`** has no CLI parse/validation test in `IngestCommandTests`.
-6. **`--raw`** decision still pending (delete vs implement; deleting wants a test).
-7. **query-bench corpus gitignore** — add `tools/query-bench/TestRunReport.query-bench.json`
-   (or `tools/query-bench/*.json`) to `.gitignore` before the harness is committed.
-8. **Wiki anchor normalisation** — 93 space-form `[[Page#Heading With Spaces]]` anchors
-   across 41 pages remain (vs 40 slug-form); verify GitHub resolves them before or
-   instead of a bulk sweep.
-9. **Vacuous legacy assertions** — `ExamplesTableReportTests.cs` still asserts
-   `Contains("examples-table")` / `("examples-detail-row")`, strings the generator
-   never emits (satisfied by inlined CSS/JS resources).
+Open:
+
+1. **Kronikol4J divergence-ledger gaps** — now `ROADMAP.md` decision D11 (freeze the rendering
+   half with one entry that says so, keep ledgering capture changes). The 08-30 audit found
+   entries for 3.0.48/3.0.60/3.0.62/3.0.66 only and none for **3.0.63** (leading-newline block
+   scalars), **3.0.64 examples-blocks** (an explicit plan deliverable, M6.3), **3.0.67**
+   (split-note indexing) or **3.0.68** (autocomplete refresh contract); the ledger has grown
+   since (its last entry is .NET 3.27.0), so re-read it before acting on this list.
+2. **Dead report CSS and script for the old examples table** (found 2026-09-22 while closing
+   the assertion item below): `stylesheets.css` still carries `.examples-table`,
+   `.examples-detail-row` and `.examples-row-*` rules and
+   `report-toggle-examples-detail-function.js` still toggles `examples-row-expanded`, but the
+   generator has emitted `param-test-table`, `row-<status>` and `param-detail-panel` since the
+   outline table became the parameter table. Removing them changes report bytes (golden pins,
+   Kronikol4J parity), so it belongs with the report-size work (`ROADMAP.md` stage 8) or v4,
+   not with a docs sweep.
+
+Closed (kept so the record is in one place):
+
+- ~~CHANGELOG has no `[3.0.66]` section.~~ Closed 2026-09-22: the heading was lost when the
+  3.0.67 release commit (`aad8b630`) overwrote it; restored, with the entries split exactly as
+  the `v3.0.66` tag's CHANGELOG had them.
+- ~~Commit `087be03` (perf-guard 3-attempt retry) has no changelog entry.~~ Closed 2026-09-22:
+  a line under `[3.0.67]`, marked as recorded late.
+- ~~`nuget-readme.md` trace line uncommitted.~~ Closed: committed (line 74 today).
+- ~~`--note-format` has no CLI parse/validation test.~~ Closed 2026-09-22:
+  `IngestCommandTests.Note_format_option_is_validated_and_reaches_the_report` (a wrong word and
+  a missing value exit 2 with the usage message; `yaml`, `json` and the default reach the
+  report as `window._noteFormatDefault`). Noted, not changed: the value is matched exactly, so
+  `--note-format YAML` is refused while `--render NodeJs` is accepted in any case; making it
+  case-insensitive is a tool patch for another day.
+- ~~`--raw` decision pending.~~ Closed 3.1.0: the dead flag was deleted, with a test.
+- ~~query-bench corpus gitignore.~~ Closed: `.gitignore` lines 377–378.
+- ~~Wiki anchor normalisation: 93 space-form anchors, unverified whether GitHub resolves
+  them.~~ Closed 2026-09-22, measured on the rendered wiki: GitHub keeps a `[[Page#Fragment]]`
+  fragment as written (spaces to hyphens, `+` dropped, case and punctuation kept) while heading
+  ids are lower-case slugs, so **none of them resolved** (the link opened the page at the top);
+  and `[[a|b]]` is label `a`, target `b`, so five links written target-first landed on an absent
+  page. Every `[[…]]` link in the wiki was checked against its target page's headings with a
+  slugger verified against the ids of five rendered pages (`\p{Word}`, hyphen and space kept,
+  the rest removed, duplicates numbered): 100 space-form anchors rewritten to their heading's
+  slug (a bare link gains a `Page › Heading` label, since GitHub shows the raw target as the
+  text), 5 reversed links turned round, 39 bare slug links labelled, 16
+  `[[Integration: X Extension]]` links pointed at the pages that exist (the colon made them
+  absent pages), 4 anchors to renamed or moved sections repointed by hand, 2 typos fixed. Wiki
+  commit of 2026-09-22; the checker is `tools/wiki-links/wikilinks.py`, so the next sweep is one
+  command.
+- ~~Vacuous legacy assertions in `ExamplesTableReportTests.cs`.~~ Closed 2026-09-22: eight
+  assertions, not two (`examples-row-passed`/`-failed` and two `DoesNotContain` were vacuous
+  too), now anchor on emitted markup (`<table class="param-test-table`, `<tr class="row-failed`,
+  `<details class="failure-result"`). What they were matching is item 2 above.
 
 ## Documentation audit (2026-08-29) — closing summary
 
@@ -317,5 +370,6 @@ The full docs audit and its fix pass are recorded in git history (`2270445` and 
 docs-sweep commit `50d53a1` + wiki `5a5d770`). All identified gaps were fixed on
 08-29 across ~20 wiki pages, README, nuget-readme, and three doc-bearing code strings;
 the wiki has since gained 3.0.67/3.0.68 coverage (refresh contract, dropdown docs) via
-the feature sessions. Still open from that audit: items 6 and 8 above, plus the
-Kronikol4J wiki coverage gap (17 pages, unchanged, tracked under `JAVA_PORT_PLAN.md`).
+the feature sessions. Still open from that audit: the Kronikol4J wiki coverage gap (17 pages,
+unchanged, tracked under `JAVA_PORT_PLAN.md`). The `--raw` and wiki-anchor items closed in
+3.1.0 and on 2026-09-22 (see the list above).
