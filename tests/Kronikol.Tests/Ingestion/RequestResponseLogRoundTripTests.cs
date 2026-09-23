@@ -30,10 +30,17 @@ public class RequestResponseLogRoundTripTests
         // #94: dropped by FromLog until 3.27.4, so a measured duration was replaced by the timestamp delta.
         nameof(RequestResponseLog.DurationMs),
         nameof(RequestResponseLog.Headers),
+        // #93 (3.29.0): the marker members. Every marker log was written as the same junk request line
+        // (plan F2) until a marker became a kind: marker record, one per override half.
+        nameof(RequestResponseLog.IsActionStart), // as markerKind: Phase
+        nameof(RequestResponseLog.IsOverrideEnd), // as markerEnd: true
+        nameof(RequestResponseLog.IsOverrideStart), // a marker record without markerEnd
         nameof(RequestResponseLog.IsUserAction), // as kind: ui
+        nameof(RequestResponseLog.MarkerKind), // by name, as annotations[].kind already writes it
         nameof(RequestResponseLog.MetaType), // Default is written as absent and read back as Default
         nameof(RequestResponseLog.Method),
         nameof(RequestResponseLog.Phase), // Unknown is written as absent and read back as Unknown
+        nameof(RequestResponseLog.PlantUml), // verbatim, buffering newlines included
         nameof(RequestResponseLog.RequestResponseId),
         nameof(RequestResponseLog.ServiceName),
         nameof(RequestResponseLog.StatusCode), // an HttpStatusCode as its number, a custom label as text
@@ -69,20 +76,6 @@ public class RequestResponseLogRoundTripTests
         [nameof(RequestResponseLog.ActionVariant)] = "the same rules for the Action phase; 14.1",
     };
 
-    /// <summary>
-    /// The members that make a log a diagram marker. Every marker log is written as the same junk request
-    /// line today (plan F2); S2 of the plan (3.28.0) writes one <c>kind: marker</c> record per override half
-    /// and moves these five to <see cref="Carried"/>. Asserted lost on the marker probes until then.
-    /// </summary>
-    private static readonly Dictionary<string, string> LostUntilMarkersAreRecords = new()
-    {
-        [nameof(RequestResponseLog.IsOverrideStart)] = "the opening half of an override pair",
-        [nameof(RequestResponseLog.IsOverrideEnd)] = "the closing half",
-        [nameof(RequestResponseLog.IsActionStart)] = "the Setup/Action boundary",
-        [nameof(RequestResponseLog.MarkerKind)] = "what the marker stands for; annotations[].kind and step attribution read it",
-        [nameof(RequestResponseLog.PlantUml)] = "the fragment the opening half splices into the diagram",
-    };
-
     private static readonly DateTimeOffset T0 = new(2026, 9, 22, 10, 0, 0, TimeSpan.Zero);
     private const string TestId = "0af7651916cd43dd8448eb211c80319c";
 
@@ -93,7 +86,6 @@ public class RequestResponseLogRoundTripTests
         var classified = Carried
             .Concat(ExcludedByDesign.Keys)
             .Concat(KnownGaps.Keys)
-            .Concat(LostUntilMarkersAreRecords.Keys)
             .ToArray();
 
         var unclassified = members.Except(classified).ToArray();
@@ -109,25 +101,27 @@ public class RequestResponseLogRoundTripTests
     }
 
     [Fact]
-    public void The_probe_sets_every_carried_and_pinned_member_so_equality_is_never_vacuous()
+    public void The_probes_set_every_carried_and_pinned_member_so_equality_is_never_vacuous()
     {
-        var log = FullyPopulatedInteraction();
-        var unset = Carried.Concat(KnownGaps.Keys).Where(m => IsDefault(Get(log, m))).ToArray();
-        Assert.True(unset.Length == 0, "Probe member(s) left at their default: " + string.Join(", ", unset));
+        // The interaction probe sets what a capturer can set; the marker probes set what the emitters set.
+        var probes = AllProbes();
+        var unset = Carried.Concat(KnownGaps.Keys).Where(m => probes.All(p => IsDefault(Get(p, m)))).ToArray();
+        Assert.True(unset.Length == 0, "Member(s) left at their default on every probe: " + string.Join(", ", unset));
     }
 
     [Fact]
     public void Carried_members_survive_the_writer_and_the_reader()
     {
-        var log = FullyPopulatedInteraction();
-        var back = RoundTrip(log);
+        var lost = new List<string>();
+        foreach (var log in AllProbes())
+        {
+            var back = RoundTrip(log);
+            lost.AddRange(Carried
+                .Where(m => !Same(Get(log, m), Get(back, m)))
+                .Select(m => $"{Describe(log)} {m}: {Show(Get(log, m))} came back as {Show(Get(back, m))}"));
+        }
 
-        var lost = Carried
-            .Where(m => !Same(Get(log, m), Get(back, m)))
-            .Select(m => $"{m}: {Show(Get(log, m))} came back as {Show(Get(back, m))}")
-            .ToArray();
-
-        Assert.True(lost.Length == 0, "Carried member(s) lost by FromLog → JSON → ToLogs:\n" + string.Join("\n", lost));
+        Assert.True(lost.Count == 0, "Carried member(s) lost by FromLog → JSON → ToLogs:\n" + string.Join("\n", lost));
     }
 
     [Fact]
@@ -143,23 +137,15 @@ public class RequestResponseLogRoundTripTests
             + string.Join(", ", closed));
     }
 
-    [Fact]
-    public void Marker_members_are_lost_until_a_marker_is_written_as_a_record()
-    {
-        var probes = MarkerProbes();
-        var unset = LostUntilMarkersAreRecords.Keys.Where(m => probes.All(p => IsDefault(Get(p, m)))).ToArray();
-        Assert.True(unset.Length == 0, "No marker probe sets: " + string.Join(", ", unset));
-
-        var carried = LostUntilMarkersAreRecords.Keys
-            .Where(m => probes.All(p => Same(Get(p, m), Get(RoundTrip(p), m))))
-            .ToArray();
-
-        Assert.True(carried.Length == 0,
-            "Marker member(s) now round-trip. Move each to Carried and retire this fact (plans/INGEST_FEED_PLAN.md S2): "
-            + string.Join(", ", carried));
-    }
-
     // ─── probes ────────────────────────────────────────────────
+
+    private static RequestResponseLog[] AllProbes() => [FullyPopulatedInteraction(), .. MarkerProbes()];
+
+    private static string Describe(RequestResponseLog log) =>
+        log.IsActionStart ? "[phase marker]"
+        : log.IsOverrideStart ? "[marker start]"
+        : log.IsOverrideEnd ? "[marker end]"
+        : "[interaction]";
 
     /// <summary>Every member a capturer or the store can set, non-default, on one response log.</summary>
     private static RequestResponseLog FullyPopulatedInteraction() =>

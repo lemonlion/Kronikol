@@ -185,6 +185,27 @@ public class InteractionMergerTests
     }
 
     [Fact]
+    public void A_marker_record_is_never_paired_with_a_span_however_much_it_looks_like_a_call()
+    {
+        // kind: marker (a projected override half) is a control record whatever else it carries. These two
+        // are dressed as a wire call that overlaps the span exactly, which is what a merger that did not
+        // recognise the kind would fold into the span; the kind alone must keep them out.
+        var (request, response) = InteractionRecord.Pair("4bf92f3577b34da6a3ce929d0e0e4736", null, "Find ← Trial", "mongodb:///db/Trial", "mongo", "data-insights",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(10), requestResponseId: Guid.NewGuid().ToString("N"));
+        var start = request with { Kind = "marker", MarkerKind = "Custom", PlantUml = "\nnote over mongo : x\n\n" };
+        var end = response with { Kind = "marker", MarkerKind = "Custom", MarkerEnd = true };
+        List<InteractionRecord> records = [start, end, .. Span("Find ← Trial", "mongodb:///db/Trial", 0, 10)];
+
+        var merged = InteractionMerger.Merge(records);
+
+        Assert.Equal(4, merged.Count);
+        Assert.Equal(start, merged[0]);
+        Assert.Equal(end, merged[1]);
+        Assert.Equal(records[2], merged[2]);
+        Assert.Equal(records[3], merged[3]);
+    }
+
+    [Fact]
     public void The_verb_and_the_key_are_what_identify_a_call()
     {
         Assert.Equal("get", InteractionMerger.Verb("Get (Hit)"));

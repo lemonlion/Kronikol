@@ -470,6 +470,137 @@ public class IngestPipelineTests : IDisposable
     }
 
     [Fact]
+    public void A_projected_store_ingests_with_no_junk_and_a_tests_file_step_draws_no_second_bar()
+    {
+        // #93: an in-process store written through NdjsonInteractionWriter used to turn every marker half
+        // into a request line with no sender and no receiver, which the ingest listed and drew.
+        const string testId = "projected-markers";
+        var logs = ProjectedStore(testId);
+        var capture = Path.Combine(_dir, "projected.ndjson");
+        using (var writer = new NdjsonInteractionWriter(capture))
+            foreach (var log in logs)
+                writer.Log(log);
+        Assert.Equal(11, File.ReadAllLines(capture).Length);
+
+        var start = new TestRunRecord { Event = "start", TestId = testId, TestName = "basket › warms the cache", Feature = "basket.feature", Timestamp = T0 };
+        var end = new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 8000, Timestamp = T0.AddMilliseconds(8000) };
+
+        // Alone: the four interactions, the two exportable annotations, one bar, nothing drawn from nothing.
+        var alone = Ingest(capture, [start, end], "R-projected");
+        Assert.Equal(4, alone.Interactions.Length);
+        Assert.Equal(["Row: Row 3", "Custom: cache warmed"], alone.Annotations);
+        Assert.DoesNotContain("actor \"\"", alone.Diagram);
+        Assert.DoesNotContain(alone.Diagram.Split('\n'), l => l.StartsWith(" -[", StringComparison.Ordinal));
+        Assert.DoesNotContain("CALL: /", alone.Diagram);
+        Assert.Equal(1, Count(alone.Diagram, "<<stepDelimiter>>"));
+        Assert.Equal(1, Count(alone.Diagram, "cache warmed"));
+        Assert.Equal(1, Count(alone.Diagram, "Row 3"));
+        // No tests file, so no step list: a bar with no step to open leaves the path null rather than guessing.
+        Assert.All(alone.Interactions, i => Assert.Equal(JsonValueKind.Null, i.GetProperty("stepPath").ValueKind));
+
+        // With a tests file naming the same step (and an assertion): the capture's markers are the drawing,
+        // the tests file's events fill the step list and draw nothing, or the diagram grows two bars.
+        var same = Ingest(capture,
+        [
+            start,
+            new TestRunRecord { Event = "step", TestId = testId, Text = "a basket", Keyword = "Given", Status = "passed", DurationMs = 5000, Timestamp = T0.AddMilliseconds(1000) },
+            new TestRunRecord { Event = "assertion", TestId = testId, Text = "the cache is warm", Status = "passed", Timestamp = T0.AddMilliseconds(6000) },
+            end,
+        ], "R-projected-same");
+        Assert.Equal(1, Count(same.Diagram, "<<stepDelimiter>>"));
+        Assert.Equal(0, Count(same.Diagram, "<<assertionNote>>"));
+        Assert.Equal(alone.Diagram, same.Diagram);
+        var step = Assert.Single(same.Result.Features[0].Scenarios[0].Steps!);
+        Assert.Equal("a basket", step.Text);
+        Assert.Equal(["✓ The cache is warm"], step.SubSteps!.Select(s => s.Text));
+        Assert.All(same.Interactions, i => Assert.Equal("0", i.GetProperty("stepPath").GetString()));
+        Assert.DoesNotContain(same.Result.Diagnostics, d => d.Kind == DiagnosticKind.StepAttributionMismatch);
+
+        // With a tests file whose step is not the bar's: one mismatch and null paths, the in-process rule.
+        var other = Ingest(capture,
+        [
+            start,
+            new TestRunRecord { Event = "step", TestId = testId, Text = "checkout", Keyword = "When", Status = "passed", DurationMs = 5000, Timestamp = T0.AddMilliseconds(1000) },
+            end,
+        ], "R-projected-mismatch");
+        Assert.Equal(1, Count(other.Diagram, "<<stepDelimiter>>"));
+        Assert.Single(other.Result.Diagnostics, d => d.Kind == DiagnosticKind.StepAttributionMismatch);
+        Assert.All(other.Interactions, i => Assert.Equal(JsonValueKind.Null, i.GetProperty("stepPath").ValueKind));
+    }
+
+    [Fact]
+    public void Marker_records_keep_their_place_in_call_tree_order()
+    {
+        // No two calls of the fixture overlap, so the call tree is the timeline: every marker half stays
+        // between the neighbours it was written between.
+        var records = ProjectedStore("ordered").Select(InteractionRecord.FromLog).ToList();
+        Assert.All(records.Where(r => r.Uri.StartsWith("http://override.com", StringComparison.Ordinal)), r => Assert.True(r.IsMarker));
+        Assert.Equal(records, IngestPipeline.OrderAsCallTree(records));
+
+        // Under a user action in flight a marker half is the action's child, after the call in flight
+        // (atomic), never between that call's request and response.
+        const string t = "ordered-ui";
+        var click = InteractionRecord.UserAction(t, "Click \"Go\"", "http://app/", T0, durationMs: 10_000);
+        var (req, resp) = InteractionRecord.Pair(t, null, "POST", "http://gql/sidekick", "graphql", "web", statusCode: "200",
+            requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(9));
+        var half = InteractionRecord.FromLog(Marker(t, DiagramMarkerKind.Custom, "\nnote over graphql : mid-call\n\n", isStart: true, T0.AddSeconds(5)));
+        Assert.Equal([click, req, resp, half], IngestPipeline.OrderAsCallTree([click, req, half, resp]));
+    }
+
+    /// <summary>Two pairs and seven marker halves, every kind, strictly increasing tick-aligned timestamps, no overlap: what an in-process run leaves in the store.</summary>
+    private static List<RequestResponseLog> ProjectedStore(string testId)
+    {
+        var traceA = Guid.NewGuid(); var rrA = Guid.NewGuid();
+        var traceB = Guid.NewGuid(); var rrB = Guid.NewGuid();
+        return
+        [
+            Marker(testId, DiagramMarkerKind.Step, $"\n{InteractionRecord.StepDelimiterPlantUml("Given", "a basket")}\n\n", isStart: true, T0.AddMilliseconds(1000)),
+            Marker(testId, DiagramMarkerKind.Step, null, isStart: false, T0.AddMilliseconds(1001)),
+            new("Probe", testId, HttpMethod.Post, "{}", new Uri("http://localhost:8081/sidekick"), [("Content-Type", "application/json")], "graphql", "web", RequestResponseType.Request, traceA, rrA, false) { Timestamp = T0.AddMilliseconds(2000), Phase = TestPhase.Setup },
+            new("Probe", testId, HttpMethod.Post, """{"data":{}}""", new Uri("http://localhost:8081/sidekick"), [], "graphql", "web", RequestResponseType.Response, traceA, rrA, false, System.Net.HttpStatusCode.OK) { Timestamp = T0.AddMilliseconds(2050), DurationMs = 77, Phase = TestPhase.Setup },
+            Marker(testId, DiagramMarkerKind.Row, "\nhnote across #lightyellow : Row 3\n\n", isStart: true, T0.AddMilliseconds(3000)),
+            Marker(testId, DiagramMarkerKind.Row, null, isStart: false, T0.AddMilliseconds(3001)),
+            new("Probe", testId, "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false) { IsActionStart = true, MarkerKind = DiagramMarkerKind.Phase, Timestamp = T0.AddMilliseconds(3500) },
+            Marker(testId, DiagramMarkerKind.Custom, "\nnote over graphql : cache warmed\n\n", isStart: true, T0.AddMilliseconds(4000)),
+            Marker(testId, DiagramMarkerKind.Custom, null, isStart: false, T0.AddMilliseconds(4001)),
+            new("Probe", testId, HttpMethod.Get, null, new Uri("http://localhost:8081/health"), [], "web", "web", RequestResponseType.Request, traceB, rrB, false) { Timestamp = T0.AddMilliseconds(5000), Phase = TestPhase.Action },
+            new("Probe", testId, HttpMethod.Get, """{"ok":true}""", new Uri("http://localhost:8081/health"), [], "web", "web", RequestResponseType.Response, traceB, rrB, false, System.Net.HttpStatusCode.OK) { Timestamp = T0.AddMilliseconds(5005), Phase = TestPhase.Action },
+        ];
+    }
+
+    private static RequestResponseLog Marker(string testId, DiagramMarkerKind kind, string? plantUml, bool isStart, DateTimeOffset at) =>
+        new("Probe", testId, "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        {
+            IsOverrideStart = isStart, IsOverrideEnd = !isStart, MarkerKind = kind, PlantUml = plantUml, Timestamp = at,
+        };
+
+    private (IngestResult Result, JsonElement[] Interactions, string[] Annotations, string Diagram) Ingest(string capture, TestRunRecord[] testRecords, string folder)
+    {
+        var output = Path.Combine(_dir, folder);
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = output;
+        options.GenerateComponentDiagram = false;
+        options.WriteRunSummaryToConsole = false;
+
+        var result = IngestPipeline.Run(new IngestRequest { InteractionFiles = [capture], TestRecords = testRecords, Options = options, CallTreeOrdering = false });
+
+        Assert.True(result.Generated);
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].Clone();
+        return (result,
+            scenario.GetProperty("httpInteractions").EnumerateArray().ToArray(),
+            scenario.GetProperty("annotations").EnumerateArray().Select(a => $"{a.GetProperty("kind").GetString()}: {a.GetProperty("text").GetString()}").ToArray(),
+            scenario.GetProperty("diagrams")[0].GetString()!);
+    }
+
+    private static int Count(string text, string needle)
+    {
+        int n = 0, i = 0;
+        while ((i = text.IndexOf(needle, i, StringComparison.Ordinal)) >= 0) { n++; i += needle.Length; }
+        return n;
+    }
+
+    [Fact]
     public void Nothing_is_written_for_the_specification_files_when_both_are_turned_off()
     {
         // The command line cannot turn them off; a library caller can, and then there is nothing to say

@@ -189,6 +189,48 @@ public class ReportAttributionTests
     }
 
     [Fact]
+    public void A_mismatched_step_marker_is_reported_once_per_run_not_once_per_output()
+    {
+        // The data file and Failures.md both read the step attribution. Each used to derive it for itself,
+        // and the derivation records the mismatch, so every run with one printed it twice.
+        var testId = "attr-once-" + Guid.NewGuid().ToString("N");
+        RequestResponseLogger.Log(Marker(testId, DiagramMarkerKind.Step, "hnote across <<stepDelimiter>> #black:<color:white>a third") with { Timestamp = Start });
+        RequestResponseLogger.Log(Real(testId, "svc-a") with { Timestamp = Start.AddSeconds(1) });
+        Feature[] features =
+        [
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios = [new Scenario { Id = testId, DisplayName = "S", Steps = [new ScenarioStep { Keyword = "Given", Text = "a basket" }] }],
+            },
+        ];
+        var directory = Path.Combine(Path.GetTempPath(), "kronikol-attr-once-" + Guid.NewGuid().ToString("N"));
+        var options = new ReportConfigurationOptions
+        {
+            ReportsFolderPath = directory,
+            PlantUmlRendering = PlantUmlRendering.BrowserJs,
+            InternalFlowTracking = false,
+            GenerateComponentDiagram = false,
+            WriteRunSummaryToConsole = false,
+        };
+        var collector = new ReportDiagnosticsCollector();
+        try
+        {
+            DefaultDiagramsFetcher.Reset();
+            using (ReportDiagnosticsScope.Begin(collector))
+                ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(features, Start, End, options, RunEnvironment.Unrecorded, Environment.GetEnvironmentVariable);
+            DefaultDiagramsFetcher.Reset();
+
+            Assert.True(File.Exists(Path.Combine(directory, "Failures.md"))); // the digest, the second reader, ran
+            Assert.Single(collector.Entries, e => e.Kind == DiagnosticKind.StepAttributionMismatch);
+        }
+        finally
+        {
+            try { Directory.Delete(directory, true); } catch (IOException) { }
+        }
+    }
+
+    [Fact]
     public void Background_steps_are_numbered_before_the_scenario_steps()
     {
         var features = new[]

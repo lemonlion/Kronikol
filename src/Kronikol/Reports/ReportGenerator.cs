@@ -402,6 +402,14 @@ public static class ReportGenerator
         // by one of those outputs is therefore only in the collector, not in the files.
         var reportDiagnostics = ReportDiagnosticsScope.Current?.Entries ?? [];
 
+        // Which call happened under which step, and the annotations worth exporting: read by the data file
+        // (standard or mergeable) and by Failures.md, and deriving it records a StepAttributionMismatch.
+        // Derived once per run, here, rather than once per reader, which printed every mismatch twice.
+        // Lazy and thread-safe, because the outputs run in parallel and a run writing none of the three
+        // never pays for it.
+        var attribution = new Lazy<(Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)>(
+            () => AttributeInteractionsToSteps(dataLogs, features));
+
         var actions = new List<(string Name, Action Run)>();
         void Add(string name, Action run) => actions.Add((name, run));
 
@@ -428,13 +436,16 @@ public static class ReportGenerator
         {
             if (options.GenerateMergeableData && options.TestRunReportDataFormat == DataFormat.Json)
             {
+                // dataLogs, not trackedLogs: the latter is null with internal-flow tracking off, and a
+                // shard written that way carried no interactions at all, the gap 3.8.0 closed for the
+                // standard file and this branch kept.
                 Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => WriteFile(
-                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, trackedLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment),
+                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, dataLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment, attribution.Value),
                     $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"));
             }
             else
             {
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment, attribution.Value));
             }
         }
 
@@ -469,7 +480,7 @@ public static class ReportGenerator
                     // sibling action in this same parallel list, so File.Exists here would answer whatever
                     // the scheduler happened to have done.
                     options.GenerateTestRunReport ? options.HtmlTestRunReportFileName : null,
-                    KronikolVersion, reportDiagnostics, suite, history: history?.Verdicts,
+                    KronikolVersion, reportDiagnostics, suite, stepPaths: attribution.Value.StepPaths, history: history?.Verdicts,
                     // A retry that passes writes "All N scenarios passed" two seconds after the failure it
                     // retried. The attempt that failed is kept under runs/, and this is the file an agent
                     // reads first, so it says so.
@@ -4046,14 +4057,22 @@ public static class ReportGenerator
     /// <c>environment</c> is what the run executed on. Null means this machine, which is what a live run
     /// wants; <see cref="RunEnvironment.Unrecorded"/> leaves the key out, for a lane that cannot know.
     /// </remarks>
-    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
+    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null) =>
+        GenerateTestRunReportData(features, startTime, endTime, fileName, format, diagrams, trackedLogs, diagnostics, fullStepDetail, ciMetadata, suite, environment, attribution: null);
+
+    /// <summary>
+    /// The same, with the step attribution handed in when the run derived it already (a run derives it
+    /// once and shares it with Failures.md; deriving records the mismatch diagnostic). Null derives it.
+    /// </summary>
+    internal static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams, RequestResponseLog[]? trackedLogs, IReadOnlyList<DiagnosticEntry>? diagnostics, bool fullStepDetail, CiMetadata? ciMetadata, string? suite, RunEnvironment? environment,
+        (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         // Diagram markers belong to the diagram, not the interaction list: exported as-is they read as
         // content-free calls to http://override.com/ — one pair per Gherkin step and assertion.
         var logLookup = trackedLogs?.Where(l => !l.IsDiagramMarker).ToLookup(l => l.TestId);
         var durations = ComputeInteractionDurations(trackedLogs);
-        var (stepPaths, annotations) = AttributeInteractionsToSteps(trackedLogs, features);
+        var (stepPaths, annotations) = attribution ?? AttributeInteractionsToSteps(trackedLogs, features);
 
         return format switch
         {
@@ -4352,7 +4371,8 @@ public static class ReportGenerator
         ReportConfigurationOptions options,
         IReadOnlyList<DiagnosticEntry>? diagnostics = null,
         string? suite = null,
-        RunEnvironment? environment = null)
+        RunEnvironment? environment = null,
+        (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
 
@@ -4398,7 +4418,9 @@ public static class ReportGenerator
         return GenerateMergeableReportJson(
             features, startTime, endTime, diagramLookup,
             relationships, internalFlowSegmentData, wholeTestFlow,
-            options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs, suite: suite, environment: environment);
+            options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs,
+            stepPathsOverride: attribution?.StepPaths, annotationsOverride: attribution?.Annotations,
+            suite: suite, environment: environment);
     }
 
     /// <summary>

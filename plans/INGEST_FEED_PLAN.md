@@ -1,7 +1,8 @@
 # Ingest feed plan: the feed loses nothing (#93, #94, stage 1.7)
 
-**Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status: EXECUTING (2026-09-23): R1
-shipped as 3.27.4; R2 (3.28.0) and R3 follow.** §9 is the log. This is P1 of
+**Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status: EXECUTED (2026-09-23): R1
+shipped as 3.27.4, R2 as 3.29.0 (3.28.0 went to a release prepared in parallel), R3 run on the shipped
+code and recorded.** §9 is the log. This is P1 of
 [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md): roadmap items 1.3 (#94), 1.4 (#93)
 and 1.7 (two CLI defects), track D (`Ingestion/`, `RequestResponseLog.cs`, `IngestCommand.cs`), which
 may run beside tracks A, B and C. It needs **D4** answered (§7). One probe was run against HEAD, and
@@ -544,7 +545,7 @@ change in a release decides. D4 (roadmap §3) recommends: #93 adds a public prop
 | Release | Contents | Bump | Why this part moved |
 |---|---|---|---|
 | **R1** | S1: #94, F7, F8, the `--render local` refusal, the blank-specifications line, T1 to T4c, the wiki and plan corrections | **patch**, 3.27.4 (3.27.3 shipped on 2026-09-22 with the failures-verb fix while this plan was being revised; the number is whatever the next patch is at execution) | Nothing new to call: one member the mapping should always have copied, one classification the ingest builder should always have set, a usage error where a crash was, one console line where silence was. Precedent: 3.27.1 and 3.27.2 counted new output lines as patches. F7 changes what an ingested report contains (`stepPath` appears, two bogus annotations vanish), which the rule says to call out in the changelog, not to inflate |
-| **R2** | S2: `Kinds.Marker`, `MarkerKind`, `PlantUml` and `MarkerEnd` on `InteractionRecord`, the widened `IsMarker`, `FromLog`/`ToLogs`, the step rule, T5 to T8, the wiki field table | **minor**, 3.28.0 | New public members and a new value in a documented contract, per D4 and the rule. The four members are the whole of what 14.5 will freeze from this plan ("the contract freezes holding 1.4's `plantUml`") |
+| **R2** | S2: `Kinds.Marker`, `MarkerKind`, `PlantUml` and `MarkerEnd` on `InteractionRecord`, the widened `IsMarker`, `FromLog`/`ToLogs`, the step rule, T5 to T8, the wiki field table | **minor**, 3.29.0 (planned as 3.28.0; that number went to `kronikol query diff --baseline-run`, prepared in parallel and landed first, §9) | New public members and a new value in a documented contract, per D4 and the rule. The four members are the whole of what 14.5 will freeze from this plan ("the contract freezes holding 1.4's `plantUml`") |
 | **R3** | S3: the projection hook (test-only), the comparison script, §9 | none | Nothing in a package |
 
 If the owner reads D4's "ships alone" as "#94 in a patch with nothing else", the two CLI fixes move
@@ -615,7 +616,60 @@ Departures from the plan as written:
 
 Full `Kronikol.Tests` suite before the release: 5,466 passed, 4 failed, the four `RetainedRunsTests`
 facts for a `--baseline-run` option another session was adding at the time (its uncommitted test
-edits, red by TDD; not this release's). The CI run of `25a0773a`, the previous release, was green.
+edits, red by TDD; not this release's). The CI run of `25a0773a`, the previous release, was green;
+the CI run of `c8e27a5d` (3.27.4) went green while R2 was being built.
+
+### R2, 3.29.0 (2026-09-23)
+
+**Numbered 3.29.0, not 3.28.0.** A release prepared in parallel (`kronikol query diff
+--baseline-run`, the evidence plan's open question 6) took 3.28.0 and landed on `main` first; the
+rule agreed between the two sessions was that the first to land takes the number and the other
+rebases and renumbers. Every "3.28.0" this plan and 3.27.4's changelog entry wrote for R2 reads
+3.29.0 now.
+
+Shipped as S2 specifies: `Kinds.Marker`; `MarkerKind`, `PlantUml` and `MarkerEnd` on
+`InteractionRecord` (and `IsRawMarker`, the kind test the three ingestion sites and the pipeline's
+step rule use); `IsMarker` widened; `FromLog` writing a marker log as one `marker` record with no
+`method` and no `content` (Q9), the fragment verbatim on whichever half carries one, `markerEnd` on
+the closing half; `ToLogs` restoring exactly one half with the ids carried through `ToGuid` and an
+unknown or absent kind read as `Custom`; the steps-twice rule in `AddDiagramMarkers`; the two
+qualified `Kronikol.PlantUml` references (Q8, as the prototype found); and T5 to T8, with T2's five
+members moved to `Carried` and its Carried check widened to the marker probes.
+
+Two defects found along the way, fixed here with their own facts, both older than this plan:
+
+- **`StepAttributionMismatch` was recorded twice per run.** The data file and `Failures.md` each
+  derived the step attribution, and the derivation records the mismatch. Found by T6's mismatch case
+  (`Assert.Single` found two); in-process runs had printed every mismatch twice since the digest
+  shipped. `CreateStandardReportsWithDiagramsInEnvironment` derives it once (a thread-safe `Lazy`, the
+  outputs run in parallel) and hands it to the standard writer, the mergeable writer and the digest.
+  Pinned by `ReportAttributionTests.A_mismatched_step_marker_is_reported_once_per_run_not_once_per_output`.
+- **A mergeable shard written with `InternalFlowTracking = false` carried no `httpInteractions`.** The
+  mergeable branch of the generator handed its writer `trackedLogs`, which is the internal-flow log
+  set and null with the feature off; the standard branch had been given `dataLogs` for exactly this
+  reason. Now both take `dataLogs`. Pinned by `MergeableShardTrafficTests`, red on the old line
+  (measured by reverting it: 0 interactions) and green on the new.
+
+Departures from the plan as written: T7's tests records carry a `step` and an `assertion` event as
+well as `start` and `end`, so the comparison covers `stepPath` (`"0"` on every interaction, both
+sides) and `steps` too, and exercises the steps-twice rule inside the byte-identity claim; T4b's
+mismatch case lives in T6 as R1's log said; T8's call-tree fact is a pin (the flat order is the same
+before and after the widening), its merger and phase facts are the reds. The `Replayed N` count is
+not asserted, as §4.2 says.
+
+Full `Kronikol.Tests` suite before the release: see the line under R3.
+
+### R3, no bump (2026-09-23)
+
+The projection hook is permanent in the LightBDD xUnit3 example's `ConfiguredLightBddScope`
+(`RegisterGlobalTearDown("project ndjson", …)`, inert unless `KRONIKOL_PROJECT_NDJSON` names a file;
+Q7). The run on the code that became 3.29.0, recorded in full in
+`INGEST_FEED_PLAN.harness/real-suite-run.md`: 6 tests, 85 lines, 49 marker halves (`Step` 40,
+`Custom` 6, `Phase` 3); through the library with the suite's options **6 of 6 diagrams
+byte-identical**, `annotations` identical, every `httpInteractions` member identical but the pinned
+`attributionSource`; through the tool with its defaults 3 of 6, the three with calls differing only by
+the `partition` lines (Q11, recorded on roadmap 14.1's row); and the ingest console no longer prints
+the internal-flow warning (F8). A difference no row of §3.2 explains: none.
 
 ---
 

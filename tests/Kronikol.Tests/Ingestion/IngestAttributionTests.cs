@@ -203,6 +203,24 @@ public class IngestAttributionTests : IDisposable
     }
 
     [Fact]
+    public void A_marker_record_is_never_given_a_phase()
+    {
+        var stepWindows = IngestAttribution.BuildStepWindows(
+            [new TestRunRecord { Event = "step", TestId = "t", Keyword = "Given", Text = "setup", DurationMs = 5000, Timestamp = T0 }]);
+        var marker = Anonymous("redis", 1, testId: "t") with
+        {
+            Kind = "marker", MarkerKind = "Custom", PlantUml = "\nnote over redis : warm\n\n", Uri = "http://override.com/", ServiceName = "", CallerName = "",
+        };
+        var call = Anonymous("redis", 2, testId: "t");
+
+        var (records, tagged) = IngestAttribution.ApplyPhaseFromSteps([marker, call], stepWindows);
+
+        Assert.Equal(1, tagged);
+        Assert.Null(records[0].Phase);
+        Assert.Equal(nameof(TestPhase.Setup), records[1].Phase);
+    }
+
+    [Fact]
     public void A_capturer_that_already_knows_the_phase_keeps_it()
     {
         var stepWindows = IngestAttribution.BuildStepWindows(

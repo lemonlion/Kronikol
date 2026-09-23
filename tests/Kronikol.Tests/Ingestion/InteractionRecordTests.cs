@@ -205,6 +205,107 @@ public class InteractionRecordTests
         Assert.Equal(t0.AddSeconds(2), assertionLogs[0].Timestamp);
     }
 
+    [Theory]
+    [InlineData(DiagramMarkerKind.Custom)]
+    [InlineData(DiagramMarkerKind.Row)]
+    [InlineData(DiagramMarkerKind.Step)]
+    [InlineData(DiagramMarkerKind.Assertion)]
+    public void Every_override_half_round_trips_through_the_writer_as_one_marker_record(DiagramMarkerKind kind)
+    {
+        // #93: the writer used to turn every marker log into the same junk request line ("CALL" to
+        // http://override.com/ between two participants named ""), which an ingest then drew. A marker is
+        // now one kind: marker record per override half, restored as the half it stands for.
+        var t0 = new DateTimeOffset(2026, 9, 22, 10, 0, 0, TimeSpan.Zero);
+        var start = MarkerLog(kind, isStart: true, "\nnote over graphql : cache warmed\n\n", t0);
+        var end = MarkerLog(kind, isStart: false, null, t0.AddMilliseconds(1));
+
+        foreach (var original in new[] { start, end })
+        {
+            var json = InteractionRecord.FromLog(original).ToJson();
+            Assert.Contains("\"kind\":\"marker\"", json);
+            Assert.Equal(1, json.Split("\"kind\"").Length - 1);
+            Assert.Contains($"\"markerKind\":\"{kind}\"", json);
+            // A control record has neither: what the store held ("") is restored, not written.
+            Assert.DoesNotContain("\"method\"", json);
+            Assert.DoesNotContain("\"content\"", json);
+            Assert.Equal(original.IsOverrideEnd, json.Contains("\"markerEnd\":true"));
+
+            var record = InteractionRecord.FromJson(json);
+            Assert.True(record.IsMarker);
+            var back = Assert.Single(record.ToLogs());
+            Assert.Equal(original.IsOverrideStart, back.IsOverrideStart);
+            Assert.Equal(original.IsOverrideEnd, back.IsOverrideEnd);
+            Assert.False(back.IsActionStart);
+            Assert.Equal(kind, back.MarkerKind);
+            Assert.Equal(original.PlantUml, back.PlantUml); // byte for byte, buffering newlines included
+            Assert.Equal(original.Timestamp, back.Timestamp);
+            Assert.Equal(original.TestId, back.TestId);
+            Assert.Equal(original.TestName, back.TestName);
+            Assert.Equal(original.TraceId, back.TraceId);
+            Assert.Equal(original.RequestResponseId, back.RequestResponseId);
+            Assert.Equal("", back.Method.Value);
+            Assert.Equal("", back.Content);
+            Assert.Equal(new Uri("http://override.com"), back.Uri);
+            Assert.Equal(RequestResponseType.Request, back.Type);
+        }
+    }
+
+    [Fact]
+    public void The_phase_boundary_and_a_wrapping_pair_round_trip_as_marker_records()
+    {
+        var t0 = new DateTimeOffset(2026, 9, 22, 10, 0, 0, TimeSpan.Zero);
+
+        // StartAction: IsActionStart with MarkerKind.Phase and no fragment.
+        var phase = new RequestResponseLog("Probe", "t1", "", "", new Uri("http://override.com"), [], "", "",
+            RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        { IsActionStart = true, MarkerKind = DiagramMarkerKind.Phase, Timestamp = t0 };
+        var phaseJson = InteractionRecord.FromLog(phase).ToJson();
+        Assert.Contains("\"kind\":\"marker\"", phaseJson);
+        Assert.Contains("\"markerKind\":\"Phase\"", phaseJson);
+        Assert.DoesNotContain("\"plantUml\"", phaseJson);
+        Assert.DoesNotContain("\"markerEnd\"", phaseJson);
+        var phaseBack = Assert.Single(InteractionRecord.FromJson(phaseJson).ToLogs());
+        Assert.True(phaseBack.IsActionStart);
+        Assert.False(phaseBack.IsOverrideStart);
+        Assert.False(phaseBack.IsOverrideEnd);
+        Assert.Equal(DiagramMarkerKind.Phase, phaseBack.MarkerKind);
+        Assert.Null(phaseBack.PlantUml);
+
+        // StartOverride("group x") … EndOverride("end"): both halves carry a fragment, and both keep it.
+        var open = MarkerLog(DiagramMarkerKind.Custom, isStart: true, "\ngroup retries\n\n", t0.AddMilliseconds(1));
+        var close = MarkerLog(DiagramMarkerKind.Custom, isStart: false, "\nend\n\n", t0.AddMilliseconds(2));
+        var openBack = Assert.Single(InteractionRecord.FromJson(InteractionRecord.FromLog(open).ToJson()).ToLogs());
+        var closeBack = Assert.Single(InteractionRecord.FromJson(InteractionRecord.FromLog(close).ToJson()).ToLogs());
+        Assert.True(openBack.IsOverrideStart);
+        Assert.Equal("\ngroup retries\n\n", openBack.PlantUml);
+        Assert.True(closeBack.IsOverrideEnd);
+        Assert.Equal("\nend\n\n", closeBack.PlantUml);
+
+        // An unknown or absent markerKind is the enum's own unclassified value, never a guess.
+        var unclassified = InteractionRecord.FromJson("""{"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","testId":"t1","kind":"marker","markerKind":"Banner","plantUml":"note over a : x"}""");
+        Assert.Equal(DiagramMarkerKind.Custom, Assert.Single(unclassified.ToLogs()).MarkerKind);
+    }
+
+    [Fact]
+    public void A_marker_record_is_a_marker_to_every_ingestion_site()
+    {
+        var record = InteractionRecord.FromJson("""{"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","testId":"t1","kind":"marker","markerKind":"Custom","markerEnd":true}""");
+        Assert.True(record.IsMarker);
+        Assert.False(record.IsUserAction);
+        Assert.Equal(InteractionRecord.Kinds.Marker, record.Kind);
+    }
+
+    private static RequestResponseLog MarkerLog(DiagramMarkerKind kind, bool isStart, string? plantUml, DateTimeOffset at) =>
+        new("Probe", "t1", "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request,
+            Guid.NewGuid(), Guid.NewGuid(), false)
+        {
+            IsOverrideStart = isStart,
+            IsOverrideEnd = !isStart,
+            MarkerKind = kind,
+            PlantUml = plantUml,
+            Timestamp = at,
+        };
+
     [Fact]
     public void Reader_reports_the_offending_line_number()
     {

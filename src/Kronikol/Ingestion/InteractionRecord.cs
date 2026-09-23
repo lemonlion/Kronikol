@@ -94,6 +94,11 @@ public sealed record InteractionRecord
     /// <see cref="Timestamp"/> (see <see cref="Text"/>, <see cref="Keyword"/>, <see cref="Passed"/>, <see cref="Message"/>).
     /// The tests NDJSON (<see cref="TestRunRecord"/>) is the usual source of markers; this lets an interaction
     /// capturer emit them too.
+    /// <c>marker</c> = one half of a raw diagram marker as the in-process store held it (see
+    /// <see cref="MarkerKind"/>, <see cref="PlantUml"/>, <see cref="MarkerEnd"/>): what <see cref="FromLog"/>
+    /// writes for a <see cref="RequestResponseLog.IsDiagramMarker"/> log, so a store projected through
+    /// <see cref="NdjsonInteractionWriter"/> replays to the diagram it drew. Structure stays primary for
+    /// anything that has it; this is the fallback for the kinds that have none.
     /// </summary>
     [JsonPropertyName("kind")] public string? Kind { get; init; }
 
@@ -125,15 +130,43 @@ public sealed record InteractionRecord
         public const string Ui = "ui";
         public const string Step = "step";
         public const string Assertion = "assertion";
+        /// <summary>One half of a raw diagram marker, as the in-process store held it (3.29.0).</summary>
+        public const string Marker = "marker";
     }
+
+    /// <summary>
+    /// <c>marker</c> records: what the marker stands for, a <see cref="DiagramMarkerKind"/> by name
+    /// (<c>Custom</c>, <c>Row</c>, <c>Step</c>, <c>Assertion</c>, <c>Phase</c>), the same strings
+    /// <c>annotations[].kind</c> writes. Unknown or absent reads as <c>Custom</c>, the enum's own value for
+    /// an unclassified marker.
+    /// </summary>
+    [JsonPropertyName("markerKind")] public string? MarkerKind { get; init; }
+
+    /// <summary>
+    /// <c>marker</c> records: the PlantUML fragment verbatim, as <see cref="RequestResponseLog.PlantUml"/>
+    /// held it, buffering newlines included, so the diagram source is byte-identical after replay. Absent
+    /// when the half carries none (the usual closing half, and the <c>Phase</c> boundary).
+    /// </summary>
+    [JsonPropertyName("plantUml")] public string? PlantUml { get; init; }
+
+    /// <summary>
+    /// <c>marker</c> records: <c>true</c> for the closing half of an override pair
+    /// (<see cref="RequestResponseLog.IsOverrideEnd"/>). Absent means the opening half, or for
+    /// <c>Phase</c> the Setup/Action boundary.
+    /// </summary>
+    [JsonPropertyName("markerEnd")] public bool? MarkerEnd { get; init; }
+
+    /// <summary><see cref="Kind"/> is <c>marker</c>: one override half, restored as it was.</summary>
+    [JsonIgnore] public bool IsRawMarker => string.Equals(Kind, Kinds.Marker, StringComparison.OrdinalIgnoreCase);
 
     /// <summary><see cref="Kind"/> is <c>ui</c>.</summary>
     [JsonIgnore] public bool IsUserAction => string.Equals(Kind, Kinds.Ui, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary><see cref="Kind"/> is <c>step</c> or <c>assertion</c>: a zero-length diagram marker, never a request.</summary>
+    /// <summary><see cref="Kind"/> is <c>step</c>, <c>assertion</c> or <c>marker</c>: a zero-length diagram marker, never a request.</summary>
     [JsonIgnore] public bool IsMarker =>
         string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(Kind, Kinds.Assertion, StringComparison.OrdinalIgnoreCase);
+        || string.Equals(Kind, Kinds.Assertion, StringComparison.OrdinalIgnoreCase)
+        || IsRawMarker;
 
     /// <summary>W3C trace id of the distributed trace this call belongs to (cross-link to Tempo/Jaeger).</summary>
     [JsonPropertyName("activityTraceId")] public string? ActivityTraceId { get; init; }
@@ -160,15 +193,22 @@ public sealed record InteractionRecord
         JsonSerializer.Deserialize<InteractionRecord>(json, JsonOptions)
         ?? throw new JsonException("The line did not contain an interaction object.");
 
-    /// <summary>Maps a tracked log entry to its wire representation.</summary>
+    /// <summary>
+    /// Maps a tracked log entry to its wire representation. A diagram marker (an override half or the
+    /// Setup/Action boundary) becomes a <c>kind: marker</c> record carrying its kind, its fragment verbatim
+    /// and which half it is; until 3.29.0 every marker was written as an empty request line, which an
+    /// ingest then listed and drew (#93).
+    /// </summary>
     public static InteractionRecord FromLog(RequestResponseLog log) => new()
     {
         Type = log.Type.ToString(),
-        Method = log.Method.Value?.ToString(),
+        // A control record has neither a method nor a body: the empty strings the store holds are restored
+        // by ToLogs, not written, so the line reads as what it is.
+        Method = log.IsDiagramMarker ? null : log.Method.Value?.ToString(),
         Uri = log.Uri.ToString(),
         ServiceName = log.ServiceName,
         CallerName = log.CallerName,
-        Content = log.Content,
+        Content = log.IsDiagramMarker ? null : log.Content,
         Headers = log.Headers.Length == 0 ? null : log.Headers.Select(h => new InteractionHeader(h.Key, h.Value)).ToArray(),
         StatusCode = log.StatusCode?.Value switch
         {
@@ -189,10 +229,13 @@ public sealed record InteractionRecord
         ActivitySpanId = log.ActivitySpanId,
         TrackingIgnore = log.TrackingIgnore ? true : null,
         CapturedBy = log.CapturedBy,
-        Kind = log.IsUserAction ? Kinds.Ui : null,
+        Kind = log.IsUserAction ? Kinds.Ui : log.IsDiagramMarker ? Kinds.Marker : null,
         // A capturer's own measurement: the report believes it over the timestamp delta, and ToLog restores
         // it, so the writer has to carry it (#94: dropped here from 3.0.47 to 3.27.3).
         DurationMs = log.DurationMs,
+        MarkerKind = log.IsDiagramMarker ? log.MarkerKind.ToString() : null,
+        PlantUml = log.IsDiagramMarker ? log.PlantUml : null,
+        MarkerEnd = log.IsOverrideEnd ? true : null,
     };
 
     /// <summary>
@@ -257,13 +300,35 @@ public sealed record InteractionRecord
     /// Maps this record to the log entries it stands for: one <see cref="RequestResponseLog"/> for requests,
     /// responses and user actions; for <c>step</c> / <c>assertion</c> markers, the override pair that injects
     /// the delimiter bar or assertion note into the sequence diagram (the same PlantUML Kronikol's step and
-    /// assertion tracking emit, so the report's Show/Hide Steps and Show/Hide Assertions toggles apply).
+    /// assertion tracking emit, so the report's Show/Hide Steps and Show/Hide Assertions toggles apply);
+    /// for a <c>marker</c> record, exactly the one override half it stands for, restored as the store held it.
     /// </summary>
     public IEnumerable<RequestResponseLog> ToLogs(string? testNameOverride = null)
     {
         if (!IsMarker)
         {
             yield return ToLog(testNameOverride);
+            yield break;
+        }
+
+        var name = testNameOverride ?? TestName ?? TestIdentityScope.UnknownTestName;
+
+        if (IsRawMarker)
+        {
+            // One record is one half: the fragment verbatim, the kind by name (unknown or absent is Custom,
+            // the enum's own value for an unclassified marker), the Phase boundary as IsActionStart, and the
+            // ids carried through rather than minted, so a record and its log stay one thing.
+            var kind = Enum.TryParse<DiagramMarkerKind>(MarkerKind, ignoreCase: true, out var parsed) ? parsed : DiagramMarkerKind.Custom;
+            var half = MarkerLog(name, TestId, kind);
+            if (kind == DiagramMarkerKind.Phase)
+                half.IsActionStart = true;
+            else
+            {
+                half.IsOverrideStart = MarkerEnd != true;
+                half.IsOverrideEnd = MarkerEnd == true;
+                half.PlantUml = PlantUml;
+            }
+            yield return half;
             yield break;
         }
 
@@ -275,10 +340,22 @@ public sealed record InteractionRecord
         // its cursor on Step, the annotation export lists Row and Custom, and the Setup partition treats a
         // narration marker differently from a boundary. Unclassified, every one of them read as Custom.
         var markerKind = isStep ? DiagramMarkerKind.Step : DiagramMarkerKind.Assertion;
-        var name = testNameOverride ?? TestName ?? TestIdentityScope.UnknownTestName;
 
         yield return OverrideLog(name, TestId, isStart: true, plantUml, markerKind);
         yield return OverrideLog(name, TestId, isStart: false, null, markerKind);
+    }
+
+    /// <summary>A marker log as DefaultTrackingDiagramOverride builds one, with this record's ids and time.</summary>
+    private RequestResponseLog MarkerLog(string testName, string testId, DiagramMarkerKind kind)
+    {
+        var requestResponseId = RequestResponseId is { Length: > 0 } pair ? ToGuid(pair) : Guid.NewGuid();
+        var traceId = TraceId is { Length: > 0 } trace ? ToGuid(trace) : requestResponseId;
+        return new RequestResponseLog(testName, testId, "", "", new Uri("http://override.com"), [], "", "",
+            RequestResponseType.Request, traceId, requestResponseId, false)
+        {
+            MarkerKind = kind,
+            Timestamp = Timestamp,
+        };
     }
 
     /// <summary>
@@ -295,8 +372,9 @@ public sealed record InteractionRecord
             ? Reports.StepText.CapitaliseIfEnabled(text) ?? "step"
             : $"{keyword} {text}";
 
-        return PlantUml.StepBarPlantUml.Build(label,
-            table is { Length: > 0 } ? [new PlantUml.StepBarTable(null, table)] : null,
+        // Qualified: the record's own PlantUml member (the wire name #93 asked for) shadows the namespace here.
+        return Kronikol.PlantUml.StepBarPlantUml.Build(label,
+            table is { Length: > 0 } ? [new Kronikol.PlantUml.StepBarTable(null, table)] : null,
             docString);
     }
 
@@ -308,7 +386,7 @@ public sealed record InteractionRecord
         var body = $"{symbol} {Reports.StepText.CapitaliseIfEnabled(text) ?? "assertion"}";
         if (!passed && !string.IsNullOrWhiteSpace(message))
             body += "\n" + message!.Trim();
-        return $"hnote across <<assertionNote>> {color}\n{PlantUml.DiagramWidth.WrapBlockNoteBody(body)}\nend note";
+        return $"hnote across <<assertionNote>> {color}\n{Kronikol.PlantUml.DiagramWidth.WrapBlockNoteBody(body)}\nend note";
     }
 
     private RequestResponseLog OverrideLog(string testName, string testId, bool isStart, string? plantUml, DiagramMarkerKind kind) =>

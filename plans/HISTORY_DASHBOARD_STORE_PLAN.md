@@ -1236,7 +1236,12 @@ Three pieces, in order:
 
 1. **Close the two writer defects, #93 and #94**: a `plantUml` field on
    `InteractionRecord` that `FromLog` populates and `ToLog` restores, and `DurationMs` carried
-   through. Both are small and both are worth doing whether or not this plan proceeds.
+   through. Both are small and both are worth doing whether or not this plan proceeds. *(Done:
+   #94 in 3.27.4; #93 in 3.29.0 as a `kind: "marker"` record per override half with `markerKind`,
+   `plantUml` and `markerEnd`, not a `plantUml` field on the existing kinds, which would have left
+   `Step`, `Assertion` and `Phase` markers as the junk request line every marker became;
+   `INGEST_FEED_PLAN.md` F2 and §4.2. Measured on the LightBDD xUnit3 example: 6 of 6 diagrams
+   byte-identical after projection and ingest.)*
 2. **Teach the writer the markers.** `FromLog` must emit `Text`, `Keyword`, `Table`, `DocString`,
    `Passed` and `Message` for a log carrying a `Step` or `Assertion` `DiagramMarkerKind`, so a step
    bar survives the trip as structure rather than as pre-rendered PlantUML.
@@ -1358,7 +1363,9 @@ contract should answer, and neither plan does.
 requires and `HISTORY_ANALYZER_COST_PLAN.md` demonstrates with a per-slice Bump column. The reading:
 every slice here is **MINOR** — new verbs, new options, new public surface, nothing removed and no
 default changed. **M0's two writer fixes (#93, #94) are PATCH**, being defects in shipped behaviour.
-Nothing here is MAJOR, and nothing may become MAJOR without asking first.
+*(Roadmap D4 ruled otherwise on #93: it adds public members to `InteractionRecord` and a new `kind`
+value to a documented contract, so it shipped as the minor 3.29.0; #94 shipped as the patch 3.27.4.
+`INGEST_FEED_PLAN.md` §7.)* Nothing here is MAJOR, and nothing may become MAJOR without asking first.
 
 **Documentation, per `CLAUDE.md`.** The wiki is the primary target and this plan names no page. At
 minimum: a new store page, edits to `Cross-Run-History` where the ledger stops being the only home
@@ -1982,7 +1989,11 @@ and **`SetupVariant`** / **`ActionVariant`** (phase verbosity computed by the ca
 not re-derivable at replay without it). §9 says "the risk is a fourth found later"; it took one read
 of two files. #93 and #94 undercount. M0 should start from a mechanical member-by-member diff of the
 two types, **held by a test**, so a new `RequestResponseLog` member cannot ship without a decision
-about the record.
+about the record. *(Done: `INGEST_FEED_PLAN.md` F1 ran the diff mechanically and found 16 of 38
+members lost, this list plus `CollapsedCount`/`CollapsedSummary` (render-time, excluded by design)
+and the three flags `IsOverrideStart`/`IsOverrideEnd`/`IsActionStart`, lost with every marker until
+3.29.0; `RequestResponseLogRoundTripTests` holds the classification since 3.27.4, with the seven
+members of this paragraph pinned as known gaps for roadmap 14.1.)*
 
 **R10. Nobody renders the point-in-time report.** §3.1: *"'Any point in time' is `kronikol ingest`
 over the rows for one run."* `kronikol ingest` is a .NET tool; §3.4's page is static and there is no

@@ -4,6 +4,78 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.29.0] - 2026-09-23
+
+**Minor - the ingest feed, slice two of `plans/INGEST_FEED_PLAN.md`: a diagram marker is one
+`kind: "marker"` record on the NDJSON wire (#93), so a run's store projected through
+`NdjsonInteractionWriter` ingests to the report the run wrote, diagram source byte for byte.** The
+minor part moved because `InteractionRecord` gains three public members (`MarkerKind`, `PlantUml`,
+`MarkerEnd`) and a new `kind` value in a documented contract (roadmap decision D4). The plan numbered
+this 3.28.0; that number went to `diff --baseline-run`, released in parallel, so it is 3.29.0. Two
+defects found along the way ride with it.
+
+### Added
+
+- **`InteractionRecord` carries raw diagram markers: `kind: "marker"` with `markerKind`, `plantUml`
+  and `markerEnd`.** A step bar, an assertion note, a custom fragment, a tabular-input row band and
+  the Setup/Action boundary live in the in-process store as override halves, an opening record with a
+  PlantUML fragment and a closing record. `InteractionRecord.FromLog` now writes each half as one
+  record: `markerKind` by name (`Custom`, `Row`, `Step`, `Assertion`, `Phase`, the strings
+  `annotations[].kind` already uses), `plantUml` verbatim with its buffering newlines on whichever
+  half carries one, `markerEnd: true` on the closing half, no `method` and no `content`. `ToLogs`
+  restores exactly the half it stands for, ids carried through; an unknown or absent kind reads as
+  `Custom`. The pair a `Given a basket` bar produces:
+  ```json
+  {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"c688…","requestResponseId":"930c…","timestamp":"2026-09-22T10:00:01+00:00","testId":"0af7…","testName":"Probe","kind":"marker","markerKind":"Step","plantUml":"\nhnote across <<stepDelimiter>> #black:<color:white>Given a basket\n\n"}
+  {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"35e7…","requestResponseId":"2675…","timestamp":"2026-09-22T10:00:01.001+00:00","testId":"0af7…","testName":"Probe","kind":"marker","markerKind":"Step","markerEnd":true}
+  ```
+  `IsMarker` is true for it, so the call-tree ordering nests it as a zero-length unit, phase-from-steps
+  leaves it alone and the wire/span merger never pairs it (`IsRawMarker` is the kind test). A capture
+  whose `Step` markers cover a scenario draws no bars from that scenario's tests-file `step` and
+  `assertion` events: they fill the step list, the capture's markers are the drawing, or a projected
+  run ingested with its own tests file drew every bar twice. Structure stays primary: a `step` record
+  with `text` still yields the same pair it did; `marker` is the fallback for what has no structured
+  form, which is what #93 asked for. The existing `step` and `assertion` kinds, every external
+  capturer, `kronikol export` (markers were always skipped), `kronikol merge` and the report schema are
+  untouched; the reader validates no `kind` value, so an older tool given a newer capture treats a
+  `marker` line as the junk request it always produced, no worse.
+
+### Fixed
+
+- **A projected diagram marker was an empty request that the ingest listed and drew.** Every marker
+  log written through `NdjsonInteractionWriter`, whatever its kind and whichever half, came out as
+  `{"type":"Request","method":"","uri":"http://override.com/","serviceName":"","callerName":"","content":""…}`,
+  and read back it was an ordinary request labelled `CALL` between two participants named `""`: two
+  real pairs and seven marker halves ingested as eleven interactions, `annotations` was empty where
+  the run's report held the `Row` and `Custom` fragments, and the scenario's diagram opened with
+  `actor "" as` and carried seven arrows with no sender. Measured after the fix on the LightBDD xUnit3
+  example projected at run end and ingested with the suite's options: 6 of 6 diagrams byte-identical,
+  `annotations` identical, every `httpInteractions` member identical but `attributionSource`, which
+  the writer does not carry (pinned).
+- **A step marker that does not match its step was reported twice per run.** The data file and
+  `Failures.md` each derived which call happened under which step, and the derivation records the
+  `StepAttributionMismatch`; every in-process run with one printed it twice since the digest shipped.
+  The generator derives the attribution once per run and hands it to the standard writer, the
+  mergeable writer and the digest.
+- **A mergeable shard written with `InternalFlowTracking = false` carried no `httpInteractions`.**
+  The mergeable branch of the generator handed its writer the internal-flow log set, which is null
+  with the feature off; the standard data file had been given the run's logs for exactly this reason
+  in 3.8.0, and the other branch kept the gap. Both branches now write the same log set.
+
+### Tests
+
+- `IngestRoundTripTests`, the acceptance harness the plan asked for: one fixture of logs with every
+  marker kind, a measured duration, a failed send and tick-aligned timestamps, rendered in-process
+  from the store and again through the writer and `IngestPipeline`, compared member by member,
+  `annotations`, `steps` and the diagram source byte for byte, with and without `SeparateSetup`; the
+  one difference allowed is the failed send's `error`. `RequestResponseLogRoundTripTests` moves the
+  five marker members to Carried and asserts them on three marker probes. Every marker kind and both
+  halves round-trip (`InteractionRecordTests`), the projected-store ingest draws no junk and no second
+  bar and raises one mismatch when the tests file disagrees (`IngestPipelineTests`), and the three
+  `IsMarker` sites have a fact each. The LightBDD xUnit3 example gains a test-only run-end hook,
+  inert unless `KRONIKOL_PROJECT_NDJSON` names a file, that writes the store through the writer, the
+  way the plan's one-off run was made.
+
 ## [3.28.0] - 2026-09-23
 
 **Minor - `kronikol query diff --baseline-run ID`: the old side of a run diff, named the way `--run`
@@ -93,7 +165,7 @@ ingested report changes in two ways, both called out below.
   reader), ExcludedByDesign (the two collapse fields and the derived marker flag, never on the wire) or
   KnownGaps (`Error`, `AttributionSource`, `ExpiredFromTestId`, `FocusFields`, `NoteOnRight`,
   `SetupVariant`, `ActionVariant`, pinned as lost and feeding roadmap 14.1), with the five marker
-  members pinned as lost until 3.28.0 carries markers as records. A member added to the log without a
+  members pinned as lost until 3.29.0 carries markers as records. A member added to the log without a
   row fails the build; a gap that closes fails until its row moves.
 
 ## [3.27.3] - 2026-09-22

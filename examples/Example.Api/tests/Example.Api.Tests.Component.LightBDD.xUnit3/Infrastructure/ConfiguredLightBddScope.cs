@@ -37,9 +37,25 @@ public class ConfiguredLightBddScope : LightBddScope
 
         configuration.ExecutionExtensionsConfiguration()
                 .RegisterGlobalTearDown("dispose factory", BaseFixture.DisposeFactory)
+                .RegisterGlobalTearDown("project ndjson", ProjectNdjson)
                 .RegisterGlobalSetUp("http fakes", StartHttpFakes, DisposeHttpFakes);
     }
-    
+
+    /// <summary>
+    /// Test-only, inert unless <c>KRONIKOL_PROJECT_NDJSON</c> names a file: at run end, write every entry
+    /// of the in-process store through the NDJSON writer, so the capture can be ingested and compared
+    /// with this run's own report (plans/INGEST_FEED_PLAN.md S3). Not a library feature: a sink on the
+    /// logger is roadmap 14.1's to design.
+    /// </summary>
+    private static void ProjectNdjson()
+    {
+        if (Environment.GetEnvironmentVariable("KRONIKOL_PROJECT_NDJSON") is not { Length: > 0 } path)
+            return;
+        using var writer = new Kronikol.Ingestion.NdjsonInteractionWriter(path);
+        foreach (var log in Kronikol.Tracking.RequestResponseLogger.RequestAndResponseLogs)
+            writer.Log(log);
+    }
+
     private void StartHttpFakes()
     {
         DisposeHttpFakes();

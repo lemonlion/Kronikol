@@ -44,3 +44,19 @@ Nothing in the run was unexplained by a row of §3.2 or an option difference; no
 - `compare-reports.py`: the comparison, prints counts and first differing lines only.
 - `P1RealSuiteIngestTests.cs`: ingest A (inert unless `P1_NDJSON` and `P1_OUT` are set).
 - `s3.projection-hook.patch`: the hook.
+
+## The same run on the shipped code (2026-09-23, before 3.29.0)
+
+Repeated on the working tree that became 3.29.0 (S2 as shipped, the projection hook now permanent
+in `ConfiguredLightBddScope`, the tool built from the same tree), the same three steps. The suite: 6
+passed, 580 ms; the capture 85 lines, 49 marker halves (`Step` 40, `Custom` 6, `Phase` 3), 36
+interaction lines. Ingest A (the suite's options, `CallTreeOrdering = false`, no tests file):
+`Replayed=85 scenarios=6`, one `ResultDefaulted` diagnostic, 49 marker logs in the store
+(`Step=40, Phase=3, Custom=6`); **6 of 6 diagrams byte-identical** (553, 2714, 4081, 562, 2459, 559
+chars), `annotations` identical, `httpInteractions` 12/12, 14/14, 10/10 and 0/0 three times, every
+member identical except `attributionSource` (`TestContext` in-process, `None` ingested), `steps` 3 or
+4 against 0 (no tests file). Ingest B (`kronikol ingest … --chronological`, the tool's defaults):
+exit 0, `Replayed 85 interaction record(s) into 6 scenario(s).`, **no `InternalFlowSpanStore` warning
+any more** (F8, 3.27.4), 3 of 6 diagrams identical, the three with calls differing only by the
+`partition #F6F6F6 Setup` … `end` lines the command line cannot ask for (Q11). Nothing a row of §3.2
+or an option difference does not explain.

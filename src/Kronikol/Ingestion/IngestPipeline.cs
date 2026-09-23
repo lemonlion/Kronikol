@@ -711,12 +711,22 @@ public static class IngestPipeline
     /// Turns the tests file's step and assertion events into diagram markers — top-level step delimiter
     /// bars and ✓/✗ assertion notes — placed by timestamp among the interactions (and nested inside
     /// whatever call was in flight). Background steps draw nothing: they belong to the step list only.
+    /// Nor do the events of a scenario whose capture already carries its step bars as raw
+    /// <c>marker</c> records (a store projected from an in-process run): those draw, the tests file fills
+    /// the step list, or the diagram grows two sets of bars. The same rule the Cucumber path applies to the
+    /// reporter's own step events for the scenarios the messages own.
     /// </summary>
     private static void AddDiagramMarkers(List<InteractionRecord> records, List<TestRunRecord> testRecords)
     {
+        var drawnByCapture = new HashSet<string>(
+            records
+                .Where(r => r.IsRawMarker && string.Equals(r.MarkerKind, nameof(DiagramMarkerKind.Step), StringComparison.OrdinalIgnoreCase))
+                .Select(r => r.TestId),
+            StringComparer.Ordinal);
+
         foreach (var record in testRecords)
         {
-            if (!record.IsDiagramMarker || string.IsNullOrWhiteSpace(record.TestId))
+            if (!record.IsDiagramMarker || string.IsNullOrWhiteSpace(record.TestId) || drawnByCapture.Contains(record.TestId))
                 continue;
             records.Add(record.Is(TestRunRecord.Events.Assertion)
                 ? InteractionRecord.AssertionMarker(record.TestId, record.Text ?? "assertion",
