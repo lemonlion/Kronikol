@@ -88,6 +88,7 @@ internal static class VerbTable
         new("--both", null, "On values: read both halves of every call."),
         new("--number", null, "On grep: match numbers across formatting - 4,173.00, 4173 and 4.173,00 are one number."),
         new("--baseline", null, "On diff: compare the report against last-green, found at <reports>/baseline/TestRunReport.json or $KRONIKOL_BASELINE."),
+        new("--baseline-run", "ID", "On diff: compare the report against a run kept under <reports>/runs/, named as --run names one: a run id, a substring only one id has, its folder name, last-failed or previous."),
         new("--describe", null, "Print the verbs, their flags, the address forms and the exit codes as JSON; needs no report."),
         new("--history", "FILE", "On history: the ledger to read, instead of $KRONIKOL_HISTORY or the .kronikol/history.jsonl above the report."),
         new("--flaky", null, "On history: only scenarios the ledger calls flaky - failed, recovered and failed again at or above the flip rate, or passed on a retry."),
@@ -245,13 +246,15 @@ internal static class VerbTable
 
         new("diff", "Search and comparison",
             "Two bodies in one report, printed as the paths that differ; or two runs matched on stableId - what broke, was fixed, is new, got slower, disappeared, and which services lost tracked calls.",
-            ["<report> s3/i47 s7/i47", "<report> b:4bdea521 b:9f31c02a", "<old.json> <new.json>", "<old.json> <new.json> --body s3/i47", "<report> --baseline"],
-            ["--baseline", "--body", "--count", "--offset", "--limit", "--json"], Json: true,
+            ["<report> s3/i47 s7/i47", "<report> b:4bdea521 b:9f31c02a", "<old.json> <new.json>", "<old.json> <new.json> --body s3/i47", "<report> --baseline", "<report> --baseline-run last-failed"],
+            ["--baseline", "--baseline-run", "--body", "--count", "--offset", "--limit", "--json"], Json: true,
             [
                 "  diff         <report> s3/i47 s7/i47          two bodies in one report — only the differing paths (also b:hashes)",
                 "  diff         <old.json> <new.json> [--body s3/i47]   two runs matched on stableId; --body diffs one call across them",
                 "  diff         <report> --baseline               the same, against last-green: <reports>/baseline/TestRunReport.json,",
-                "                                                 else $KRONIKOL_BASELINE (a report, or a directory holding one)"
+                "                                                 else $KRONIKOL_BASELINE (a report, or a directory holding one)",
+                "  diff         <report> --baseline-run ID        the same, against a run kept under <reports>/runs/: last-failed, previous,",
+                "                                                 a run id or its folder name (what --run takes)"
             ]),
 
         new("history", "Search and comparison",

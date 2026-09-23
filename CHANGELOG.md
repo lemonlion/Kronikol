@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.28.0] - 2026-09-23
+
+**Minor - `kronikol query diff --baseline-run ID`: the old side of a run diff, named the way `--run`
+names a run.** The minor part moved because a flag is new surface; nothing existing changes. This is
+open question 6 of `plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md`, left as a recommendation by the plan's
+execution and taken on 2026-09-23 when the owner asked for the leftovers to be dealt with.
+
+### Added
+
+- **`diff <reports-dir> --baseline-run ID`.** "What differs between the failing run and the green
+  re-run" is the question retained runs exist for, and until now `diff` could name the old side only by
+  path (`diff <reports-dir>/runs/<name> <reports-dir>`) or by convention (`--baseline`: a `baseline/`
+  folder, else `$KRONIKOL_BASELINE`). `--baseline-run` takes what `--run` takes - a run id, a part only
+  one kept run has, the folder name, `last-failed` or `previous` - and resolves it against the directory
+  the command line named, so the two flags compose: `diff <reports-dir> --run previous --baseline-run
+  last-failed` diffs two kept runs. The report named is the new side, as under `--baseline`, and the
+  header labels the two files by the paths that tell them apart. Refused with exit 2: a run that is not
+  kept (the ones that are, and `history --run <id>`, named, as on every verb); the run the report
+  already is; `--baseline` beside it; a second report or a body address beside it (`--body s3/i47` is
+  the body form). The skill's recipe row and the wiki lead with the flag and keep the two-directory
+  form as the same comparison by path. Red first: four facts in `RetainedRunsTests`.
+
 ## [3.27.4] - 2026-09-23
 
 **Patch - the ingest feed, slice one of `plans/INGEST_FEED_PLAN.md`: a measured duration survives the

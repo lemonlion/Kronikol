@@ -485,7 +485,7 @@ internal static partial class QueryCommand
         }
 
         error.WriteLine($"No baseline to compare against. Looked for {conventional}, and $KRONIKOL_BASELINE is not set.");
-        error.WriteLine("Point $KRONIKOL_BASELINE at a report (or a directory holding one), or name the older report: kronikol query diff <old.json> <new.json>");
+        error.WriteLine("Point $KRONIKOL_BASELINE at a report (or a directory holding one), name the older report (kronikol query diff <old.json> <new.json>), or a run kept under runs/ (kronikol query diff <report> --baseline-run last-failed).");
         return null;
     }
 

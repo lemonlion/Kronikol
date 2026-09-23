@@ -67,6 +67,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--suite NAME` | the suite `history` looks the run up under, when the report does not carry one - or, with no report, which of the ledger's suites to read. `history` only |
 | `--run ID` | **every verb** (3.27.0): read a run kept under `<reports-dir>/runs/` instead of the newest - a run id, a substring only one id has, the folder name, `last-failed` (the newest run with a failure) or `previous`. The kept run's fragment, attachments and HTML are beside its report, so the whole ladder works on it. A run that is not kept is exit 2 naming the ones that are, and `history --run` - which falls back to the ledger, and needs no report at all (3.26.0). A directory with no report on top yet (a run in progress has moved the previous one to `runs/`) still opens its kept runs (3.27.2) |
 | `--sid ID` | one scenario by its stable id - what a row is addressed by when no report numbers it. `history` only (3.26.0) |
+| `--baseline-run ID` | on `diff` (3.28.0): compare the report against a run kept under `<reports-dir>/runs/`, named as `--run` names one (a run id, a substring only one id has, the folder name, `last-failed`, `previous`) and resolved against the same directory, so `--run previous --baseline-run last-failed` diffs two kept runs. Pass one of `--baseline` and `--baseline-run`. A run that is not kept is exit 2 naming the ones that are, and the run the report already is cannot be its own old side. `diff` only |
 | `--window N` | how many runs back the run is read against, the report's HistoryWindow (default 50). `history` only (3.26.0) |
 | `--describe` | one JSON document naming every verb, the flags each one reads (with what each takes), the address forms with a parsing example of each, the exit codes and the envelope's members: `kronikol query --describe`. Needs no report. Generated from the table the tool dispatches and validates from, so it cannot name a verb the tool will not run. For tooling — a wrapper validating arguments, an MCP server building a tool list — not for reading; this document is the prose form of the same table (3.7.0) |
 
@@ -378,6 +379,7 @@ kronikol query diff <report> b:4bdea521 b:9f31c02a
 kronikol query diff <old.json> <new.json>        # two runs, matched on stableId
 kronikol query diff <old.json> <new.json> --body s3/i47   # the same call across two runs
 kronikol query diff <report> --baseline          # against last-green, resolved for you
+kronikol query diff <report> --baseline-run last-failed   # against the failing run a green re-run replaced (3.28.0)
 ```
 
 **Body diff** prints only the paths that differ — never a payload:
@@ -423,6 +425,15 @@ before 3.1.0); that side is noted and the section skipped.
 holding one), else exit 2 naming both. The argument order inverts on purpose — `diff old new` names the
 old report first, `diff <report> --baseline` names the current one — but the output is oriented the same
 way either way: `-` is the older run, `+` the newer, `BROKE` means it passed then and fails now.
+
+**`--baseline-run ID`** (3.28.0) names the old side the way `--run` names a run: one kept under
+`<reports-dir>/runs/`, by id, by a part only one id has, by folder name, or as `last-failed` or
+`previous`, resolved against the directory the command line named. So it composes with `--run`
+(`diff <reports-dir> --run previous --baseline-run last-failed` diffs two kept runs), and the report
+named is the new side as under `--baseline`. Pass one of the two flags. A run that is not kept is
+exit 2 naming the ones that are, with `history --run <id>` as the way on; the run the report already
+is cannot be its own old side. The same comparison by path, with no flag:
+`diff <reports-dir>/runs/<name> <reports-dir>`, the kept run first.
 
 ### `history [<report>] [s3 | sid:<id>] [--run ID] [--sid ID] [--window N] [--flaky|--new|--failing|--regressed|--changed] [--branch NAME] [--compare-branch NAME] [--min-runs N] [--alternating-runs N] [--count-runs N] [--degraded-by X] [--calls] [--suite NAME] [--history FILE]`
 

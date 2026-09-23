@@ -497,6 +497,31 @@ internal static partial class QueryCommand
     }
 
     /// <summary>
+    /// Finds the report a <c>--baseline-run</c> diff compares against: a run kept under the reports directory
+    /// the command line named, resolved exactly as <c>--run</c> resolves one (an id, a unique part of one, the
+    /// folder name, <c>last-failed</c>, <c>previous</c>) and against the same directory, so the two flags
+    /// compose. The run the report already is says nothing diffed against itself and is refused; a run that
+    /// is not kept is refused the way every verb refuses it, with the ledger named as the way on.
+    /// </summary>
+    private static string? ResolveBaselineRun(ReportIndex given, string reportArgument, string wanted, TextWriter error)
+    {
+        switch (RetainedRunResolver.Resolve(reportArgument, wanted, error, out var kept, out var resolvedName))
+        {
+            case RetainedRunOutcome.Found when string.Equals(Path.GetFullPath(kept!), Path.GetFullPath(given.Path), StringComparison.OrdinalIgnoreCase):
+                var alias = string.Equals(resolvedName, wanted, StringComparison.Ordinal) ? "" : $" ({resolvedName})";
+                error.WriteLine($"{wanted} is the run the report already is{alias}; name another: previous, last-failed, a run id or a folder under runs/.");
+                return null;
+            case RetainedRunOutcome.Found:
+                return kept;
+            case RetainedRunOutcome.NotRetained:
+                RetainedRunResolver.RefuseNotRetained(reportArgument, wanted, error);
+                return null;
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>
     /// Names for the two sides of a diff: the file name, unless both files are called the same thing -
     /// which is the norm under <c>--baseline</c> - in which case each is shown relative to the deepest
     /// directory they share, so the labels differ by exactly what distinguishes the files.
@@ -527,17 +552,33 @@ internal static partial class QueryCommand
     ///
     /// <para><paramref name="given"/> is the report named on the command line. In
     /// <c>diff &lt;old&gt; &lt;new&gt;</c> that is the OLD one; under <c>--baseline</c> it is the CURRENT
-    /// run and the old side is resolved by convention. The two are oriented before anything is printed,
-    /// because a diff running backwards reports every regression as a fix and still exits 0.</para>
+    /// run and the old side is resolved by convention, and under <c>--baseline-run</c> the old side is a run
+    /// kept under <c>runs/</c>, named as <c>--run</c> names one. The two are oriented before anything is
+    /// printed, because a diff running backwards reports every regression as a fix and still exits 0.</para>
     /// </summary>
     private static int Diff(ReportIndex given, QueryOptions options, QueryWriter writer, TextWriter error,
         Func<string, string?> getEnv)
     {
-        if (options.Positional.Count == 0 && !options.Baseline)
+        if (options.Positional.Count == 0 && !options.Baseline && options.BaselineRun is null)
         {
             error.WriteLine("Diff takes two reports (kronikol query diff <old.json> <new.json> [--body s3/i47])");
             error.WriteLine("or two bodies in one report (kronikol query diff <report> s3/i47 s7/i47).");
             error.WriteLine("Or compare against last-green: kronikol query diff <report> --baseline.");
+            error.WriteLine("Or against a run kept under <reports>/runs/: kronikol query diff <report> --baseline-run last-failed.");
+            return 2;
+        }
+
+        if (options.Baseline && options.BaselineRun is not null)
+        {
+            error.WriteLine("Pass one of --baseline and --baseline-run: each names the old side of the diff.");
+            return 2;
+        }
+
+        // --baseline-run names the old side itself, so a positional beside it - a second report, or a body
+        // address - would be one of two things read and one ignored. Refused, not half-answered.
+        if (options.BaselineRun is not null && options.Positional.Count > 0)
+        {
+            error.WriteLine($"--baseline-run names the old side itself; {options.Positional[0]} cannot be given beside it (a body across the two runs is --body s3/i47).");
             return 2;
         }
 
@@ -547,7 +588,18 @@ internal static partial class QueryCommand
             return BodyDiff(given, options, writer, error);
 
         ReportIndex left, right;
-        if (options.Baseline)
+        if (options.BaselineRun is { } wantedRun)
+        {
+            if (ResolveBaselineRun(given, options.File!, wantedRun, error) is not { } kept)
+                return 2;
+
+            if (Scan(kept, error) is not { } scanned)
+                return 1;
+
+            // As under --baseline: the named report is the new run, the kept run what it is measured against.
+            (left, right) = (scanned, given);
+        }
+        else if (options.Baseline)
         {
             if (ResolveBaseline(given, getEnv, error) is not { } baseline)
                 return 2;

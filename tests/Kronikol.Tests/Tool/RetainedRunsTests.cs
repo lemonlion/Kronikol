@@ -223,4 +223,69 @@ public class RetainedRunsTests : IDisposable
         // Found versus given: a file named on the command line is read, and refused for what it is.
         Assert.Single(named);
     }
+
+    // plans/EVIDENCE_SURVIVES_A_RERUN_PLAN.md open question 6: "what differs between the failing run and the
+    // green re-run" is the flaky-debugging question, and the old side of diff could be named only by path.
+    // --baseline-run takes what --run takes and resolves it against the same directory.
+    [Fact]
+    public void Diff_baseline_run_compares_the_report_against_a_kept_run()
+    {
+        TheIssue();
+
+        var (output, error, exit) = Query("diff", Reports, "--baseline-run", "last-failed");
+
+        Assert.True(exit == 0, error);
+        // The kept run is the old side and the report the new one; both files are TestRunReport.json, so
+        // the labels are the paths relative to the directory they share.
+        Assert.Contains("- " + Path.Combine("runs", "gh_7_1", "TestRunReport.json"), output);
+        Assert.Contains("+ TestRunReport.json", output);
+        Assert.Contains("Fixed (1):", output);
+        Assert.Contains("fixed s0 Pay by card", output);
+    }
+
+    [Fact]
+    public void Diff_baseline_run_takes_a_folder_name_and_composes_with_run()
+    {
+        TheIssue();
+
+        // Two kept runs against each other: the subject moved by --run, the old side by --baseline-run.
+        var (output, error, exit) = Query("diff", Reports, "--run", "previous", "--baseline-run", "gh_7_1");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("- " + Path.Combine("gh_7_1", "TestRunReport.json"), output);
+        Assert.Contains("+ " + Path.Combine("gh_8_1", "TestRunReport.json"), output);
+        Assert.Contains("Fixed (1):", output);
+    }
+
+    [Fact]
+    public void Diff_baseline_run_refuses_a_run_that_is_not_kept_the_run_on_top_and_a_second_old_side()
+    {
+        TheIssue();
+
+        var notKept = Query("diff", Reports, "--baseline-run", "gh:5:1");
+        var onTop = Query("diff", Reports, "--baseline-run", "gh:9:1");
+        var twoFlags = Query("diff", Reports, "--baseline", "--baseline-run", "previous");
+        var twoReports = Query("diff", Reports, Path.Combine(Reports, "runs", "gh_8_1", "TestRunReport.json"), "--baseline-run", "previous");
+
+        Assert.Equal(2, notKept.Exit);
+        Assert.Contains("run gh:5:1 is not retained under", notKept.Error);
+        Assert.Contains("history --run gh:5:1", notKept.Error);
+        Assert.Equal(2, onTop.Exit);
+        Assert.Contains("gh:9:1 is the run the report already is", onTop.Error);
+        Assert.Equal(2, twoFlags.Exit);
+        Assert.Contains("one of --baseline and --baseline-run", twoFlags.Error);
+        Assert.Equal(2, twoReports.Exit);
+        Assert.Contains("--baseline-run names the old side itself", twoReports.Error);
+    }
+
+    [Fact]
+    public void Diff_with_nothing_to_compare_against_names_baseline_run_as_a_way()
+    {
+        TheIssue();
+
+        var (_, error, exit) = Query("diff", Reports);
+
+        Assert.Equal(2, exit);
+        Assert.Contains("--baseline-run last-failed", error);
+    }
 }

@@ -5,7 +5,9 @@
 query, merge or ledger code, and the one citation that moved is `ReportGenerator.WriteFile`, now
 `:5420` · **Status: EXECUTED 2026-09-21 as 3.25.3 (S0, S1), 3.26.0 (S2, S3) and 3.27.0 (S4), then
 audited item by item on 2026-09-22 - the four gaps found fixed as 3.27.1, §9 run on BreakfastProvider
-and the two defects it found fixed as 3.27.2; §12 is the log and says where execution departed from
+and the two defects it found fixed as 3.27.2, then on 2026-09-23 the leftovers dealt with at the owner's
+word (open question 6 shipped as 3.28.0, the real `--retry-failed-tests` run repeated on the shipped
+packages, the four issues answered and closed); §12 is the log and says where execution departed from
 the plan.** As written before that: plan written, **the analyzer cut (F4), the missing-fragment fix (F14) and the
 retry overlay (F15) prototyped in a throwaway worktree** — `EVIDENCE_SURVIVES_A_RERUN_PLAN.prototype.patch`,
 8 files, +456 −4, every new test red on `main` first, the unit suite 5,160 / 0 failed with it — nothing
@@ -1347,7 +1349,8 @@ labelled; and `HistoryLedgerWriter.Amend` ships.
     state.
 - **Not taken, on purpose:** `--baseline-run` (open question 6). The recommendation was a recommendation;
   the skill's recipe table and the wiki carry the two-directory `diff`, which needs no flag and was RUN
-  on the real directory.
+  on the real directory. *Taken on 2026-09-23 as 3.28.0, when the owner asked for the leftovers to be
+  dealt with: the last section of this log.*
 - **Statements the new default weakens, found and qualified:** "nothing rewrites the ledger during a
   test run" (the `Prune` and `Compact` doc comments and `Cross-Run-History.md`), `# No failures` means
   nothing failed (the agent file, the managed block, `Generated-Reports.md`), "a subfolder is never
@@ -1357,7 +1360,9 @@ labelled; and `HistoryLedgerWriter.Amend` ships.
   `CI-Artifact-Upload`, `Diagnostics-and-Debugging`; README; both skill copies; the per-directory agent
   file; Kronikol4J's divergence ledger (the harness must set `KRONIKOL_KEEP_RUNS=off`).
 - Nothing was posted on #80, #81, #82 or #84. #81's exit-code claim does not reproduce (F1) and the
-  reply with the `PIPESTATUS` transcript is the owner's to send.
+  reply with the `PIPESTATUS` transcript is the owner's to send. *Posted and closed on 2026-09-23, each
+  naming the release and the shape that shipped; #81's reply carries the codes measured on 3.27.3: 2
+  direct, 0 only as `$?` behind a pipe, 2 in `PIPESTATUS[0]`.*
 
 ### 3.27.1 (patch) - the audit of 2026-09-22
 
@@ -1473,3 +1478,49 @@ the process-wide `TestCorrelationStore` in its constructor and was in no xUnit c
 parallel with the subscriber tests' collection. One collection per assembly for every class that clears
 the store or resets the identity scope, held by `ProcessWideTrackingStateTests`, red on three assemblies
 first.
+
+### 3.28.0 (minor) - the leftovers, 2026-09-23
+
+The audit's closing note listed what it had not done, and the owner said to deal with whatever should
+be. Each item, and what was done:
+
+- **Open question 6, `--baseline-run`: built.** `diff <reports-dir> --baseline-run ID` takes what `--run`
+  takes and resolves it against the same directory, so `--run previous --baseline-run last-failed` diffs
+  two kept runs; the run the report already is, a run that is not kept, `--baseline` beside it and a
+  positional beside it are refused, exit 2. Four tests red first (`RetainedRunsTests`); the skill's recipe
+  row and the wiki lead with the flag and keep the two-directory form. Built in a worktree on 3.27.4,
+  because another session was releasing the ingest feed plan from the checkout at the time; the rule the
+  two sessions agreed: whoever lands first takes 3.28.0, the other renumbers.
+- **The real `--retry-failed-tests` run: repeated on the shipped 3.27.3 packages** (§6.5 item 18, §11.4
+  row 3), in a scratch xunit.v3 project under the Microsoft testing platform with a fail-once test (a
+  marker file: absent on attempt 1, so the test fails and writes it; present on attempt 2). The retry
+  extension re-ran the one failed test in a new process. **Local defaults:** two run ids a second apart
+  (`local:…T080018Z` and `…T080019Z`), the failing attempt kept whole under `runs/`, the top-level
+  `Failures.md` reading `# No failures` and then `**The run before this one failed** - 1 of its 3
+  scenarios failed, and that run is kept, whole, in runs/…` with the `--run last-failed` command.
+  **GitHub Actions variables** (`GITHUB_RUN_ID=777`, attempt 1): both attempts `gh:777:1`, the failing
+  one kept as `runs/gh_777_1` with nothing else retained, `Failures.md` reading `**An earlier attempt of
+  this run failed** - … kept, whole, in runs/gh_777_1` with the path form of the command (the id names
+  both attempts); `history record` on the directory: `recorded gh:777:1 RetryProbe 3 scenarios, 2
+  attempts … from 2 fragment(s)`, one run line; `history --flaky` reading the scenario `flaky … passed on
+  retry 2 in this run`; `history verify`: no findings. Trap: `Microsoft.Testing.Extensions.Retry` must
+  sit on the platform line the SDK's MSBuild bridge uses (1.9.1 with SDK 10.0.300; 2.4.1 brings a
+  platform the bridge cannot type-load, `IDataConsumer`, and zero tests run).
+- **The four issues: answered and closed** (#80 once 3.28.0 was on NuGet, the others before), each
+  naming the release and the shape; #81's second ask with the measured exit codes.
+- **BreakfastProvider: bumped to 3.28.0**, packages and tool, one bump for 3.27.2 through 3.28.0.
+- **The `2.*` pin on `Grpc.Net.Client`: not a Grpc defect but the repository's convention.** Twenty-three
+  extension packages float their client dependency (`2.*`, `3.*`, `12.*`; `10.*` on net10.0 while the
+  net8 and net9 pins are fixed), so each release's package takes the newest at pack time and a consumer
+  pinned lower restores with NU1605. It is also what makes the extensions' CI test against the newest
+  client for free. A floor per package, and a lane that tests at the floor, is a policy decision:
+  recorded as an issue for the owner, not changed here.
+- **The consumer's own failures, looked at with the tool and left to the consumer.** The 34 local
+  failures of 2026-09-19 (in-memory xUnit lane; three clusters from one 500 on `POST /orders`) did not
+  recur on the full run of 2026-09-22. The three Orders scenarios failing on every docker lane are event
+  assertions timing out at 30 s (`Expected orderCreatedEvents {empty} to have an item matching …`; the
+  outbox message never `Processed`), failing since the scheduled run of 2026-09-20 on a commit that had
+  passed the five days before, on all five docker lanes at once: environment, not code, and the compose
+  file pulls `docker.io/bitnamilegacy/kafka:latest`, a floating tag on a frozen repository. Kronikol's
+  side answered every question asked of it: `history --failing --suite xunit-in-docker` from the CI
+  ledger, the scenario's run rows with the stored error, and `failures` on the downloaded artifact.

@@ -75,6 +75,13 @@ internal sealed class QueryOptions
     /// </summary>
     public bool Baseline { get; private set; }
 
+    /// <summary>
+    /// <c>diff --baseline-run ID</c>: the report named on the command line is the CURRENT run and the one to
+    /// compare against is a run kept under its <c>runs/</c>, named as <see cref="Run"/> names one. Diff-only,
+    /// like <see cref="Baseline"/>.
+    /// </summary>
+    public string? BaselineRun { get; private set; }
+
     /// <summary><c>history --history FILE</c>: the ledger, instead of the one resolved from the environment or the report's repository.</summary>
     public string? HistoryPath { get; private set; }
 
@@ -167,7 +174,7 @@ internal sealed class QueryOptions
         "--label", "--service", "--status", "--method", "--grep", "--step", "--sort", "--path", "--in",
         "--where", "--group-by", "--tolerance", "--count", "--json", "--failed", "--errors-only",
         "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
-        "--number", "--baseline", "--describe", "--history", "--flaky", "--new", "--failing", "--regressed",
+        "--number", "--baseline", "--baseline-run", "--describe", "--history", "--flaky", "--new", "--failing", "--regressed",
         "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--calls", "--suite",
         "--run", "--sid", "--window"
     ];
@@ -310,6 +317,7 @@ internal sealed class QueryOptions
                 case "--both": options.Both = true; break;
                 case "--number": options.Number = true; break;
                 case "--baseline": options.Baseline = true; break;
+                case "--baseline-run": if (Next(arg) is not { } baselineRun) return null; options.BaselineRun = baselineRun; break;
                 case "--history": if (Next(arg) is not { } history) return null; options.HistoryPath = history; break;
                 case "--branch": if (Next(arg) is not { } branch) return null; options.Branch = branch; break;
                 case "--compare-branch": if (Next(arg) is not { } compareBranch) return null; options.CompareBranch = compareBranch; break;
