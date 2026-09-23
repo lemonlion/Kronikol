@@ -1508,7 +1508,10 @@ be. Each item, and what was done:
   platform the bridge cannot type-load, `IDataConsumer`, and zero tests run).
 - **The four issues: answered and closed** (#80 once 3.28.0 was on NuGet, the others before), each
   naming the release and the shape; #81's second ask with the measured exit codes.
-- **BreakfastProvider: bumped to 3.28.0**, packages and tool, one bump for 3.27.2 through 3.28.0.
+- **BreakfastProvider: bumped to 3.29.0** (`0d29537c`), packages and tool, one bump for 3.27.2
+  through 3.29.0: the other session's 3.29.0 (the ingest feed plan's R2, which changes the report
+  generator the consumer's lanes exercise) landed within the hour, so the consumer went to it directly.
+  No dependency floor moved this time; the xUnit lane restored clean against the new packages. The consumer's CI on it, run 35840040411, was green on the first attempt.
 - **The `2.*` pin on `Grpc.Net.Client`: not a Grpc defect but the repository's convention.** Twenty-three
   extension packages float their client dependency (`2.*`, `3.*`, `12.*`; `10.*` on net10.0 while the
   net8 and net9 pins are fixed), so each release's package takes the newest at pack time and a consumer
