@@ -1,0 +1,166 @@
+diff --git a/src/Kronikol/Ingestion/IngestPipeline.cs b/src/Kronikol/Ingestion/IngestPipeline.cs
+index 6749ad7b..06ca7c2d 100644
+--- a/src/Kronikol/Ingestion/IngestPipeline.cs
++++ b/src/Kronikol/Ingestion/IngestPipeline.cs
+@@ -714,9 +714,17 @@ private static bool Evaluate(Func<InteractionRecord, bool> predicate, Interactio
+     /// </summary>
+     private static void AddDiagramMarkers(List<InteractionRecord> records, List<TestRunRecord> testRecords)
+     {
++        // A capture projected from an in-process run already carries that run's step bars and assertion
++        // notes as raw marker records; the tests file's step and assertion events for those scenarios
++        // fill the step list and draw nothing, or the diagram grows two sets of bars.
++        var drawnByCapture = new HashSet<string>(
++            records.Where(r => r.IsRawMarker && string.Equals(r.MarkerKind, nameof(DiagramMarkerKind.Step), StringComparison.OrdinalIgnoreCase))
++                .Select(r => r.TestId),
++            StringComparer.Ordinal);
++
+         foreach (var record in testRecords)
+         {
+-            if (!record.IsDiagramMarker || string.IsNullOrWhiteSpace(record.TestId))
++            if (!record.IsDiagramMarker || string.IsNullOrWhiteSpace(record.TestId) || drawnByCapture.Contains(record.TestId))
+                 continue;
+             records.Add(record.Is(TestRunRecord.Events.Assertion)
+                 ? InteractionRecord.AssertionMarker(record.TestId, record.Text ?? "assertion",
+diff --git a/src/Kronikol/Ingestion/InteractionRecord.cs b/src/Kronikol/Ingestion/InteractionRecord.cs
+index 3477da07..1e7560bd 100644
+--- a/src/Kronikol/Ingestion/InteractionRecord.cs
++++ b/src/Kronikol/Ingestion/InteractionRecord.cs
+@@ -125,15 +125,29 @@ public static class Kinds
+         public const string Ui = "ui";
+         public const string Step = "step";
+         public const string Assertion = "assertion";
++        public const string Marker = "marker";
+     }
+ 
++    /// <summary>Raw diagram markers (<c>kind: marker</c>): the override half as the in-process store held it.</summary>
++    [JsonPropertyName("markerKind")] public string? MarkerKind { get; init; }
++
++    /// <summary>Raw diagram markers: the PlantUML fragment verbatim, as <c>RequestResponseLog.PlantUml</c> held it (absent on an end half and on a Phase marker).</summary>
++    [JsonPropertyName("plantUml")] public string? PlantUml { get; init; }
++
++    /// <summary>Raw diagram markers: <c>true</c> for the closing half of an override pair.</summary>
++    [JsonPropertyName("markerEnd")] public bool? MarkerEnd { get; init; }
++
++    /// <summary><see cref="Kind"/> is <c>marker</c>.</summary>
++    [JsonIgnore] public bool IsRawMarker => string.Equals(Kind, Kinds.Marker, StringComparison.OrdinalIgnoreCase);
++
+     /// <summary><see cref="Kind"/> is <c>ui</c>.</summary>
+     [JsonIgnore] public bool IsUserAction => string.Equals(Kind, Kinds.Ui, StringComparison.OrdinalIgnoreCase);
+ 
+     /// <summary><see cref="Kind"/> is <c>step</c> or <c>assertion</c>: a zero-length diagram marker, never a request.</summary>
+     [JsonIgnore] public bool IsMarker =>
+         string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase)
+-        || string.Equals(Kind, Kinds.Assertion, StringComparison.OrdinalIgnoreCase);
++        || string.Equals(Kind, Kinds.Assertion, StringComparison.OrdinalIgnoreCase)
++        || IsRawMarker;
+ 
+     /// <summary>W3C trace id of the distributed trace this call belongs to (cross-link to Tempo/Jaeger).</summary>
+     [JsonPropertyName("activityTraceId")] public string? ActivityTraceId { get; init; }
+@@ -164,11 +178,11 @@ public static InteractionRecord FromJson(string json) =>
+     public static InteractionRecord FromLog(RequestResponseLog log) => new()
+     {
+         Type = log.Type.ToString(),
+-        Method = log.Method.Value?.ToString(),
++        Method = log.IsDiagramMarker ? null : log.Method.Value?.ToString(),
+         Uri = log.Uri.ToString(),
+         ServiceName = log.ServiceName,
+         CallerName = log.CallerName,
+-        Content = log.Content,
++        Content = log.IsDiagramMarker ? null : log.Content,
+         Headers = log.Headers.Length == 0 ? null : log.Headers.Select(h => new InteractionHeader(h.Key, h.Value)).ToArray(),
+         StatusCode = log.StatusCode?.Value switch
+         {
+@@ -189,7 +203,11 @@ public static InteractionRecord FromJson(string json) =>
+         ActivitySpanId = log.ActivitySpanId,
+         TrackingIgnore = log.TrackingIgnore ? true : null,
+         CapturedBy = log.CapturedBy,
+-        Kind = log.IsUserAction ? Kinds.Ui : null,
++        Kind = log.IsUserAction ? Kinds.Ui : log.IsDiagramMarker ? Kinds.Marker : null,
++        DurationMs = log.DurationMs,
++        MarkerKind = log.IsDiagramMarker ? log.MarkerKind.ToString() : null,
++        PlantUml = log.IsDiagramMarker ? log.PlantUml : null,
++        MarkerEnd = log.IsOverrideEnd ? true : null,
+     };
+ 
+     /// <summary>
+@@ -264,13 +282,46 @@ public IEnumerable<RequestResponseLog> ToLogs(string? testNameOverride = null)
+             yield break;
+         }
+ 
+-        var plantUml = string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase)
++        var name = testNameOverride ?? TestName ?? TestIdentityScope.UnknownTestName;
++
++        if (IsRawMarker)
++        {
++            // One record is one override half, restored as the store held it: the fragment verbatim,
++            // the kind by name (unclassified → Custom, the enum's own rule), the Phase boundary as IsActionStart.
++            var kind = Enum.TryParse<DiagramMarkerKind>(MarkerKind, ignoreCase: true, out var parsed) ? parsed : DiagramMarkerKind.Custom;
++            var half = MarkerLog(name, TestId, kind);
++            if (kind == DiagramMarkerKind.Phase)
++                half.IsActionStart = true;
++            else
++            {
++                half.IsOverrideStart = MarkerEnd != true;
++                half.IsOverrideEnd = MarkerEnd == true;
++                half.PlantUml = PlantUml;
++            }
++            yield return half;
++            yield break;
++        }
++
++        var isStep = string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase);
++        var plantUml = isStep
+             ? StepDelimiterPlantUml(Keyword, Text, Table, DocString)
+             : AssertionNotePlantUml(Text, Passed ?? true, Message);
+-        var name = testNameOverride ?? TestName ?? TestIdentityScope.UnknownTestName;
++        var markerKind = isStep ? DiagramMarkerKind.Step : DiagramMarkerKind.Assertion;
++
++        yield return OverrideLog(name, TestId, isStart: true, plantUml, markerKind);
++        yield return OverrideLog(name, TestId, isStart: false, null, markerKind);
++    }
+ 
+-        yield return OverrideLog(name, TestId, isStart: true, plantUml);
+-        yield return OverrideLog(name, TestId, isStart: false, null);
++    private RequestResponseLog MarkerLog(string testName, string testId, DiagramMarkerKind kind)
++    {
++        var requestResponseId = RequestResponseId is { Length: > 0 } rr ? ToGuid(rr) : Guid.NewGuid();
++        var traceId = TraceId is { Length: > 0 } t ? ToGuid(t) : requestResponseId;
++        return new RequestResponseLog(testName, testId, "", "", new Uri("http://override.com"), [], "", "",
++            RequestResponseType.Request, traceId, requestResponseId, false)
++        {
++            MarkerKind = kind,
++            Timestamp = Timestamp,
++        };
+     }
+ 
+     /// <summary>
+@@ -287,8 +338,8 @@ public static string StepDelimiterPlantUml(string? keyword, string? text, string
+             ? Reports.StepText.CapitaliseIfEnabled(text) ?? "step"
+             : $"{keyword} {text}";
+ 
+-        return PlantUml.StepBarPlantUml.Build(label,
+-            table is { Length: > 0 } ? [new PlantUml.StepBarTable(null, table)] : null,
++        return Kronikol.PlantUml.StepBarPlantUml.Build(label,
++            table is { Length: > 0 } ? [new Kronikol.PlantUml.StepBarTable(null, table)] : null,
+             docString);
+     }
+ 
+@@ -300,15 +351,16 @@ public static string AssertionNotePlantUml(string? text, bool passed, string? me
+         var body = $"{symbol} {Reports.StepText.CapitaliseIfEnabled(text) ?? "assertion"}";
+         if (!passed && !string.IsNullOrWhiteSpace(message))
+             body += "\n" + message!.Trim();
+-        return $"hnote across <<assertionNote>> {color}\n{PlantUml.DiagramWidth.WrapBlockNoteBody(body)}\nend note";
++        return $"hnote across <<assertionNote>> {color}\n{Kronikol.PlantUml.DiagramWidth.WrapBlockNoteBody(body)}\nend note";
+     }
+ 
+-    private RequestResponseLog OverrideLog(string testName, string testId, bool isStart, string? plantUml) =>
++    private RequestResponseLog OverrideLog(string testName, string testId, bool isStart, string? plantUml, DiagramMarkerKind kind) =>
+         new(testName, testId, "", "", new Uri("http://override.com"), [], "", "",
+             RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+         {
+             IsOverrideStart = isStart,
+             IsOverrideEnd = !isStart,
++            MarkerKind = kind,
+             PlantUml = plantUml is null ? null : $"\n{plantUml}\n\n",
+             Timestamp = Timestamp,
+         };

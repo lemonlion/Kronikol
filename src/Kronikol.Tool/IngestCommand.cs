@@ -70,7 +70,19 @@ internal static class IngestCommand
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     if (!TryParseRender(args[i], out render))
                     {
-                        error.WriteLine($"Unknown render mode: {args[i]} (expected browserjs|nodejs|local|server)");
+                        error.WriteLine($"Unknown render mode: {args[i]} (expected browserjs|nodejs|server; local is library-only)");
+                        return 2;
+                    }
+                    if (render == PlantUmlRendering.Local)
+                    {
+                        // Local rendering runs a delegate the caller sets on ReportConfigurationOptions,
+                        // which a command line cannot do. Accepted by the parser (removing an accepted
+                        // value is v4's) and refused here, before anything is read or written: through
+                        // the pipeline it was an unhandled InvalidOperationException from the diagram
+                        // fetcher, printed after the "Ingesting …" lines with a crash exit status and a
+                        // message telling the user to set a delegate.
+                        error.WriteLine("--render local needs a LocalDiagramRenderer delegate, which only the library API can supply.");
+                        error.WriteLine("Use nodejs for offline SVG (needs node on PATH) or browserjs (the default).");
                         return 2;
                     }
                     break;
@@ -323,6 +335,7 @@ internal static class IngestCommand
 
             @out.WriteLine($"Replayed {result.InteractionCount} interaction record(s) into {result.ScenarioCount} scenario(s).");
             PrintDiagnostics(result.Diagnostics, @out);
+            ExplainBlankSpecifications(result.Features, options, @out);
             var summary = RunSummaryConsoleWriter.Summarise(
                 result.Features,
                 result.ReportsDirectory,
@@ -361,6 +374,42 @@ internal static class IngestCommand
         {
             RequestResponseLogger.Redaction = previousRedaction;
         }
+    }
+
+    /// <summary>
+    /// The specification outputs are written blank when any scenario failed, so a broken build cannot
+    /// publish half-truths as documentation (the rule Generated-Reports documents for in-process runs). On
+    /// this path nothing said so, and a user whose first ingest was of a red run found two empty files.
+    /// One line, not a diagnostic: the diagnostics list means "silence is a clean run", and this is the
+    /// run behaving as designed.
+    /// </summary>
+    private static void ExplainBlankSpecifications(Feature[] features, ReportConfigurationOptions options, TextWriter @out)
+    {
+        var blank = new List<string>();
+        if (options.GenerateSpecificationsReport)
+            blank.Add($"{options.HtmlSpecificationsFileName}.html");
+        if (options.GenerateSpecificationsData)
+        {
+            // The generator's own mapping of format to extension, which is not reachable from here.
+            var extension = options.SpecificationsDataFormat switch
+            {
+                DataFormat.Json => "json",
+                DataFormat.Xml => "xml",
+                _ => "yml",
+            };
+            blank.Add($"{options.YamlSpecificationsFileName}.{extension}");
+        }
+        if (blank.Count == 0)
+            return;
+
+        var scenarios = features.SelectMany(f => f.Scenarios ?? []).ToArray();
+        // The generator's predicate: Failed, and only Failed, blanks the files.
+        var failed = scenarios.Count(s => s.Result == ExecutionResult.Failed);
+        if (failed == 0)
+            return;
+
+        var names = blank.Count == 1 ? blank[0] + " is" : string.Join(" and ", blank) + " are";
+        @out.WriteLine($"{names} blank: {failed} of {scenarios.Length} scenario(s) failed, and the specification is only published from a green run.");
     }
 
     /// <summary>
@@ -442,7 +491,7 @@ internal static class IngestCommand
         w.WriteLine("Options:");
         w.WriteLine("  --tests <file>           Tests NDJSON (start/step/end records) supplying outcome, duration and steps.");
         w.WriteLine("  -o, --output <dir>       Output directory (default: ./Reports).");
-        w.WriteLine("  --render <mode>          browserjs (default, needs internet at view time) | nodejs | local | server.");
+        w.WriteLine("  --render <mode>          browserjs (default, needs internet at view time) | nodejs | server; local is library-only.");
         w.WriteLine("  -t, --title <text>       Report title.");
         w.WriteLine("  --feature <name>         Feature name for tests without one (default: Ingested).");
         w.WriteLine("  --collapse | --no-collapse   Collapse consecutive identical calls into a loop fragment (default: on).");

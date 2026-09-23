@@ -10,7 +10,7 @@ namespace Kronikol.Reports;
 public static class ReportDiagnostics
 {
     public static string[] Analyse(RequestResponseLog[] logs, Feature[] features,
-        bool includeSourceDiscovery = false)
+        bool includeSourceDiscovery = false, bool internalFlowTracking = true)
     {
         if (logs.Length == 0 && features.Length == 0)
             return [];
@@ -50,11 +50,18 @@ public static class ReportDiagnostics
                 warnings.Add($"Warning: {orphanedTestIds.Length} orphaned test ID(s) in logs do not match any feature scenario.");
         }
 
-        var totalSpans = InternalFlowSpanStore.GetSpans().Length;
-        if (totalSpans == 0)
-            warnings.Add("Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.");
-        else
-            warnings.Add($"InternalFlowSpanStore: {totalSpans} span(s).");
+        // Only a run that draws activity diagrams has anything to say about the span store: with the
+        // feature off (kronikol ingest turns it off, there being no in-process spans to show) an empty
+        // store is the expected state, and warning that the diagrams will be empty told every ingest
+        // about a feature it never had.
+        if (internalFlowTracking)
+        {
+            var totalSpans = InternalFlowSpanStore.GetSpans().Length;
+            if (totalSpans == 0)
+                warnings.Add("Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.");
+            else
+                warnings.Add($"InternalFlowSpanStore: {totalSpans} span(s).");
+        }
 
         if (includeSourceDiscovery)
         {

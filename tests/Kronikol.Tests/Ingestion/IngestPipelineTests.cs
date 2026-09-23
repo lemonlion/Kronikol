@@ -429,4 +429,69 @@ public class IngestPipelineTests : IDisposable
         Assert.Contains(".stepBody {", diagram);
         Assert.Contains("FontColor white", diagram);
     }
+
+    [Fact]
+    public void Ingested_step_and_assertion_markers_are_classified_so_step_paths_and_annotations_follow()
+    {
+        // Plan F7: the ingest builder never set MarkerKind, so every ingested step bar and assertion note
+        // was a Custom marker: exported as an annotation holding raw PlantUML, and never advancing the step
+        // cursor, so no ingested run has ever carried a stepPath.
+        const string testId = "f7-classified";
+        var (req, resp) = InteractionRecord.Pair(testId, null, "POST", "http://localhost:8081/sidekick", "graphql", "web",
+            requestContent: "{}", responseContent: """{"data":{}}""", statusCode: "200",
+            requestTimestamp: T0.AddMilliseconds(2000), responseTimestamp: T0.AddMilliseconds(2050));
+        var file = WriteCapture("f7.ndjson", req, resp);
+        var tests = WriteTests(
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "basket › starts empty", Feature = "basket.feature", Timestamp = T0 },
+            new TestRunRecord { Event = "step", TestId = testId, Text = "a basket", Keyword = "Given", Status = "passed", DurationMs = 1500, Timestamp = T0.AddMilliseconds(1000) },
+            new TestRunRecord { Event = "assertion", TestId = testId, Text = "the basket is empty", Status = "passed", Timestamp = T0.AddMilliseconds(3000) },
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 6000, Timestamp = T0.AddMilliseconds(6000) });
+        var output = Path.Combine(_dir, "R-f7");
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = output;
+
+        var result = IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], TestsFile = tests, Options = options, CallTreeOrdering = false });
+
+        Assert.True(result.Generated);
+        // Scoped to this test's id: the store is process-wide and the pipeline is the one that clears it.
+        var kinds = RequestResponseLogger.RequestAndResponseLogs
+            .Where(l => l.TestId == testId && l.IsDiagramMarker)
+            .Select(l => l.MarkerKind)
+            .ToArray();
+        Assert.Equal([DiagramMarkerKind.Step, DiagramMarkerKind.Step, DiagramMarkerKind.Assertion, DiagramMarkerKind.Assertion], kinds);
+
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
+        Assert.Equal(0, scenario.GetProperty("annotations").GetArrayLength());
+        var interactions = scenario.GetProperty("httpInteractions").EnumerateArray().ToArray();
+        Assert.Equal(2, interactions.Length);
+        Assert.All(interactions, i => Assert.Equal("0", i.GetProperty("stepPath").GetString()));
+        Assert.DoesNotContain(result.Diagnostics, d => d.Kind == DiagnosticKind.StepAttributionMismatch);
+    }
+
+    [Fact]
+    public void Nothing_is_written_for_the_specification_files_when_both_are_turned_off()
+    {
+        // The command line cannot turn them off; a library caller can, and then there is nothing to say
+        // about them being blank, because they do not exist.
+        const string testId = "specs-off";
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://a/x", "A", "Test", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddSeconds(1));
+        var file = WriteCapture("specs-off.ndjson", req, resp);
+        var tests = WriteTests(
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "off", Timestamp = T0 },
+            new TestRunRecord { Event = "end", TestId = testId, Status = "failed", Error = "boom", Timestamp = T0.AddSeconds(2) });
+        var output = Path.Combine(_dir, "R-specs-off");
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = output;
+        options.GenerateSpecificationsReport = false;
+        options.GenerateSpecificationsData = false;
+
+        var result = IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], TestsFile = tests, Options = options });
+
+        Assert.True(result.Generated);
+        Assert.True(File.Exists(result.TestRunReportHtml));
+        Assert.False(File.Exists(Path.Combine(output, "Specifications.html")));
+        Assert.False(File.Exists(Path.Combine(output, "Specifications.yml")));
+    }
 }

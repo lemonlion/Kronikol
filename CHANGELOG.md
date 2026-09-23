@@ -4,6 +4,76 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.27.4] - 2026-09-23
+
+**Patch - the ingest feed, slice one of `plans/INGEST_FEED_PLAN.md`: a measured duration survives the
+NDJSON writer (#94), an ingested step bar knows it is one, `kronikol ingest --render local` is a usage
+error where it was a crash, and the ingest console says why the specification files are blank and stops
+warning about a feature it turns off.** The patch part moved because nothing is new to call: one member
+the mapping should always have copied, one classification the ingest builder should always have set, a
+refusal where an unhandled exception was, one line where silence was, and one warning fewer. The
+ingested report changes in two ways, both called out below.
+
+### Fixed
+
+- **`InteractionRecord.FromLog` carries `DurationMs` (#94).** The writer mapped every member of
+  `RequestResponseLog` it knew about onto the wire except that one, so a log with a measured duration
+  written through `NdjsonInteractionWriter` and read back by `kronikol ingest` lost it, and the report
+  fell back to the timestamp delta: a measured `77` ms came out as `49.9999`. Since 3.0.47, which taught
+  `ToLog` to restore the member and called that "closing the round trip"; it closed the reader's half
+  only. No shipped tap sets the member (the proxy, TCP and OTLP taps build logs with timestamps), so the
+  loss was live for a store projected through the writer, for `kind: ui` actions, and for a library user
+  who measured; it is closed for all three.
+- **Ingested step bars and assertion notes are classified as what they are, so an ingested run carries
+  `stepPath` and no raw-PlantUML annotations.** The ingest builder that turns a tests file's `step` and
+  `assertion` events into diagram markers never set `MarkerKind`, so every one of them was the enum's
+  default, `Custom`, to the three consumers that read the kind: step attribution advanced its cursor on
+  no ingested bar (no ingested run has ever had a `stepPath`, and `Failures.md`'s "calls made inside that
+  step" was empty for every ingested failure), the annotation export listed each bar and note in
+  `annotations` as raw PlantUML, and the Setup partition treated a step bar as the boundary that closes
+  it. Since 3.0.47, the commit that added `MarkerKind` without touching the ingest builders. What an
+  ingested report gains and loses: `httpInteractions[].stepPath` is set, `annotations` no longer lists
+  step bars or assertion notes (a `Row` or `Custom` fragment still appears), and a bar that does not
+  match the step list raises `StepAttributionMismatch` as an in-process run's does.
+- **`kronikol ingest --render local` is refused as a usage error (exit 2) with a message the command
+  line can act on.** `Local` rendering runs a `LocalDiagramRenderer` delegate that only the library API
+  can set, and the parser accepted the value anyway; the diagram fetcher then threw
+  `InvalidOperationException` after the `Ingesting …` lines, the command caught nothing of the kind, and
+  the tool ended with an unhandled exception, no output directory and the runtime's crash status. It now
+  says `--render local needs a LocalDiagramRenderer delegate, which only the library API can supply.
+  Use nodejs for offline SVG (needs node on PATH) or browserjs (the default).` before reading anything.
+  The value stays accepted by the parser (removing an accepted value is v4's, `plans/V4_PLAN.md`), and
+  the help text and the unknown-mode message list it as library-only.
+- **`kronikol ingest` says why `Specifications.html` and `Specifications.yml` are blank.** When any
+  scenario failed the two specification outputs are written empty, the rule `Generated-Reports`
+  documents for in-process runs (the specification is only published from a green run), and nothing on
+  the ingest path said so: a user whose first ingest was of a red run found two 0-byte files, which
+  `plans/PLATFORM_FOUNDATIONS_PLAN.md` §11 recorded as a probable ingest-path bug. Verified not to be
+  one (the same capture ingested green wrote 472,431 and 149 bytes). The command now prints one line
+  after its diagnostics, `Specifications.html and Specifications.yml are blank: 1 of 1 scenario(s)
+  failed, and the specification is only published from a green run.`, naming the files the options
+  chose; nothing changes in what is written.
+- **`kronikol ingest` no longer warns that activity diagrams will be empty.** `ReportDiagnostics.Analyse`
+  reported the internal-flow span store on every run, and warned `InternalFlowSpanStore has 0 spans`
+  whenever it was empty, without knowing whether `InternalFlowTracking` was on; the ingest path turns it
+  off, so every ingest printed a warning about a feature it never had. `Analyse` gained an
+  `internalFlowTracking` argument (default `true`, so every existing caller and an in-process run with
+  no spans keep their line), and the generator passes the option; with it off the store is not
+  mentioned. Nothing else in the diagnostics changes.
+- The `TestRunReport.json` schema's `durationMs` description said the value was derived from the two
+  timestamps and nothing about a measured one; it now says the capturer's own measurement is taken
+  first. A doc string in a shipped output; recorded in the Kronikol4J parity ledger.
+
+### Tests
+
+- `RequestResponseLogRoundTripTests`, the member guard the plan's §3 asked for: every public member of
+  `RequestResponseLog` must sit in exactly one of Carried (asserted equal through the writer and the
+  reader), ExcludedByDesign (the two collapse fields and the derived marker flag, never on the wire) or
+  KnownGaps (`Error`, `AttributionSource`, `ExpiredFromTestId`, `FocusFields`, `NoteOnRight`,
+  `SetupVariant`, `ActionVariant`, pinned as lost and feeding roadmap 14.1), with the five marker
+  members pinned as lost until 3.28.0 carries markers as records. A member added to the log without a
+  row fails the build; a gap that closes fails until its row moves.
+
 ## [3.27.3] - 2026-09-22
 
 **Patch - the query tool's failure messages: `steps sN` prints them whole, and the list views that cut

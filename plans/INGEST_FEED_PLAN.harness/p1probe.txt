@@ -1,0 +1,102 @@
+## 1. Member diff
+JSON: {"type":"Response","method":"POST","uri":"http://localhost:8081/sidekick?x=1","serviceName":"graphql","callerName":"web","content":"{\u0022q\u0022:1}","headers":[{"key":"Content-Type","value":"application/json"}],"statusCode":"201","traceId":"83ce8219-5917-4819-9d72-d6e8aab11a48","requestResponseId":"0a86cb2c-6473-4e19-afab-3b842772acc9","timestamp":"2026-09-22T10:00:00+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Overview renders","dependencyCategory":"AI","callerDependencyCategory":"User","phase":"Setup","metaType":"Event","activityTraceId":"0af7651916cd43dd8448eb211c80319c","activitySpanId":"b7ad6b7169203331","trackingIgnore":true,"capturedBy":"wire"}
+| Member | Before | After | Verdict |
+|---|---|---|---|
+| `ActionVariant` | PhaseVariant(PUT,http://a/action,"ac",skip=True) | null | LOST |
+| `ActivitySpanId` | "b7ad6b7169203331" | "b7ad6b7169203331" | same |
+| `ActivityTraceId` | "0af7651916cd43dd8448eb211c80319c" | "0af7651916cd43dd8448eb211c80319c" | same |
+| `AttributionSource` | Scope | null | LOST |
+| `CallerDependencyCategory` | "User" | "User" | same |
+| `CallerName` | "web" | "web" | same |
+| `CapturedBy` | "wire" | "wire" | same |
+| `CollapsedCount` | 3 | 0 | LOST |
+| `CollapsedSummary` | "12–48 ms" | null | LOST |
+| `Content` | "{"q":1}" | "{"q":1}" | same |
+| `DependencyCategory` | "AI" | "AI" | same |
+| `DurationMs` | 123.4 | null | LOST |
+| `Error` | "boom\nCaused by: inner" | null | LOST |
+| `ExpiredFromTestId` | "expired-from" | null | LOST |
+| `FocusFields` | ["a","b"] | null | LOST |
+| `Headers` | [("Content-Type","application/json")] | [("Content-Type","application/json")] | same |
+| `IsActionStart` | False | False | same |
+| `IsDiagramMarker` | False | False | same |
+| `IsOverrideEnd` | False | False | same |
+| `IsOverrideStart` | False | False | same |
+| `IsUserAction` | False | False | same |
+| `MarkerKind` | Row | Custom | LOST |
+| `MetaType` | Event | Event | same |
+| `Method` | POST | POST | same |
+| `NoteOnRight` | True | False | LOST |
+| `Phase` | Setup | Setup | same |
+| `PlantUml` | "note over api : x" | null | LOST |
+| `RequestResponseId` | 0a86cb2c-6473-4e19-afab-3b842772acc9 | 0a86cb2c-6473-4e19-afab-3b842772acc9 | same |
+| `ServiceName` | "graphql" | "graphql" | same |
+| `SetupVariant` | PhaseVariant(GET,http://a/setup,"sc",skip=False) | null | LOST |
+| `StatusCode` | Created | Created | same |
+| `TestId` | "0af7651916cd43dd8448eb211c80319c" | "0af7651916cd43dd8448eb211c80319c" | same |
+| `TestName` | "Overview renders" | "Overview renders" | same |
+| `Timestamp` | 22/09/2026 10:00:00 +00:00 | 22/09/2026 10:00:00 +00:00 | same |
+| `TraceId` | 83ce8219-5917-4819-9d72-d6e8aab11a48 | 83ce8219-5917-4819-9d72-d6e8aab11a48 | same |
+| `TrackingIgnore` | True | True | same |
+| `Type` | Response | Response | same |
+| `Uri` | http://localhost:8081/sidekick?x=1 | http://localhost:8081/sidekick?x=1 | same |
+InteractionRecord wire members (29): type, method, uri, serviceName, callerName, content, headers, statusCode, traceId, requestResponseId, timestamp, testId, testName, dependencyCategory, callerDependencyCategory, phase, metaType, kind, durationMs, text, keyword, table, docString, passed, message, activityTraceId, activitySpanId, trackingIgnore, capturedBy
+RequestResponseLog public members: 38
+
+## 2. Marker logs through FromLog and back
+custom start: {"type":"Request","method":"","uri":"http://override.com/","serviceName":"","callerName":"","content":"","traceId":"8b9e3bb1-c371-4ea3-949e-8bda2b595963","requestResponseId":"cb682109-8833-43a8-a109-943cd1ac6cb1","timestamp":"2026-09-22T10:00:01+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe"}
+   -> 1 log(s); IsOverrideStart=False IsOverrideEnd=False IsActionStart=False IsDiagramMarker=False MarkerKind=Custom PlantUml=null Service="" Caller="" Uri=http://override.com/ Method="CALL"
+custom end: {"type":"Request","method":"","uri":"http://override.com/","serviceName":"","callerName":"","content":"","traceId":"e56237eb-8c67-4e06-bb3b-113d6391b484","requestResponseId":"ee1416f6-3826-4032-a22d-fdb42bc9bb5c","timestamp":"2026-09-22T10:00:01+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe"}
+   -> 1 log(s); IsOverrideStart=False IsOverrideEnd=False IsActionStart=False IsDiagramMarker=False MarkerKind=Custom PlantUml=null Service="" Caller="" Uri=http://override.com/ Method="CALL"
+row start: {"type":"Request","method":"","uri":"http://override.com/","serviceName":"","callerName":"","content":"","traceId":"b3ab7c14-19d0-45fa-a04e-322204862d5b","requestResponseId":"c9491f1e-4d60-4dc7-8c67-e86b8db0577b","timestamp":"2026-09-22T10:00:03+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe"}
+   -> 1 log(s); IsOverrideStart=False IsOverrideEnd=False IsActionStart=False IsDiagramMarker=False MarkerKind=Custom PlantUml=null Service="" Caller="" Uri=http://override.com/ Method="CALL"
+step start: {"type":"Request","method":"","uri":"http://override.com/","serviceName":"","callerName":"","content":"","traceId":"1a64508a-25e6-419c-8d97-184778acfd5c","requestResponseId":"c16606b5-8866-4ca7-8f6b-ba3da0dc14c9","timestamp":"2026-09-22T10:00:04+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe"}
+   -> 1 log(s); IsOverrideStart=False IsOverrideEnd=False IsActionStart=False IsDiagramMarker=False MarkerKind=Custom PlantUml=null Service="" Caller="" Uri=http://override.com/ Method="CALL"
+phase: {"type":"Request","method":"","uri":"http://override.com/","serviceName":"","callerName":"","content":"","traceId":"e370efcf-8095-4a92-85b6-6802184c860e","requestResponseId":"99088f9d-1429-40d4-aa9e-86a94a629a5f","timestamp":"2026-09-22T10:00:03.5+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe"}
+   -> 1 log(s); IsOverrideStart=False IsOverrideEnd=False IsActionStart=False IsDiagramMarker=False MarkerKind=Custom PlantUml=null Service="" Caller="" Uri=http://override.com/ Method="CALL"
+
+## 3. Ingest of a writer-produced file (passed run)
+lines written: 11
+Generated=True scenarios=1 interactions=11
+diagnostics: 
+'override.com' occurrences in TestRunReport.json: 7
+   …ype": "Request",               "method": "CALL",               "uri": "http://override.com/",               "serviceName": "",               "callerName": "",         …
+   …ype": "Request",               "method": "CALL",               "uri": "http://override.com/",               "serviceName": "",               "callerName": "",         …
+   …ype": "Request",               "method": "CALL",               "uri": "http://override.com/",               "serviceName": "",               "callerName": "",         …
+httpInteractions:
+   type=Request method=CALL uri=http://override.com/ service= caller= durationMs= stepPath=
+   type=Request method=CALL uri=http://override.com/ service= caller= durationMs= stepPath=
+   type=Request method=POST uri=http://localhost:8081/sidekick service=graphql caller=web durationMs=49.9999 stepPath=
+   type=Response method=POST uri=http://localhost:8081/sidekick service=graphql caller=web durationMs=49.9999 stepPath=
+   type=Request method=CALL uri=http://override.com/ service= caller= durationMs= stepPath=
+   type=Request method=CALL uri=http://override.com/ service= caller= durationMs= stepPath=
+   type=Request method=CALL uri=http://override.com/ service= caller= durationMs= stepPath=
+   type=Request method=CALL uri=http://override.com/ service= caller= durationMs= stepPath=
+   type=Request method=CALL uri=http://override.com/ service= caller= durationMs= stepPath=
+   type=Request method=GET uri=http://localhost:8081/health service=web caller=web durationMs=4.9999 stepPath=
+   type=Response method=GET uri=http://localhost:8081/health service=web caller=web durationMs=4.9999 stepPath=
+annotations: []
+steps: []
+'override.com' occurrences in TestRunReport.html: 0
+'cache warmed' in html: 0; 'Row 3' in html: 0; 'Given a basket' in html: 0
+outputs (passed): AGENTS.md=8301B, CLAUDE.md=8301B, Failures.jsonl=161B, Failures.md=320B, Run.json=481B, Specifications.html=472431B, Specifications.yml=149B, TestRunReport.html=471401B, TestRunReport.json=14206B, TestRunReport.schema.json=47026B
+
+## 4. Same file, failed run
+Generated=True; outputs (failed): AGENTS.md=8301B, CLAUDE.md=8301B, Failures.jsonl=1398B, Failures.md=1530B, Run.json=481B, Specifications.html=0B, Specifications.yml=0B, TestRunReport.html=471734B, TestRunReport.json=14206B, TestRunReport.schema.json=47026B
+
+## 5. --render local through IngestCommand.Run
+THREW System.InvalidOperationException: PlantUmlRendering.Local requires a LocalDiagramRenderer to be configured. Install the Kronikol.PlantUml.Ikvm package and set LocalDiagramRenderer = IkvmPlantUmlRenderer.Render.
+stderr so far: 
+outputs (local): no directory
+
+root: C:\Users\cex\AppData\Local\Temp\kronikol-p1probe-ohxotg1q.vnj
+
+## 6. Diagram source of the ingested scenario (passed run), from TestRunReport.json
+54:            "@startuml\n!pragma teoz true\n\n\nskinparam wrapWidth 800\nautonumber 1\n\nactor \u0022\u0022 as \r\nactor \u0022web\u0022 as web\r\nentity \u0022graphql\u0022 as graphql\r\n\n -[#438DD5]\u003E : CALL: /\r\n -[#438DD5]\u003E : CALL: /\r\nweb -[#438DD5]\u003E graphql: POST: /sidekick\r\nnote left\r\n\u003Ccolor:gray\u003E[Content-Type=application/json]\r\n\r\n{}\r\nend note\r\ngraphql -[#438DD5]-\u003E web: OK\r\nnote right\r\n{\r\n  \u0022data\u0022: {}\r\n}\r\nend note\r\n -[#438DD5]\u003E : CALL: /\r\n -[#438DD5]\u003E : CALL: /\r\n -[#438DD5]\u003E : CALL: /\r\n -[#438DD5]\u003E : CALL: /\r\n -[#438DD5]\u003E : CALL: /\r\nweb -[#438DD5]\u003E web: GET: /health\r\nweb -[#438DD5]-\u003E web: OK\r\nnote right\r\n{\r\n  \u0022ok\u0022: true\r\n}\r\nend note\r\n@enduml\r\n"
+
+## 7. The real command line: dotnet Kronikol.Tool.dll ingest capture.ndjson -o <dir> --render local
+Ingesting 1 capture file(s):
+  C:\Users\cex\AppData\Local\Temp\kronikol-p1probe-ohxotg1q.vnj\capture.ndjson
+Unhandled exception. System.InvalidOperationException: PlantUmlRendering.Local requires a LocalDiagramRenderer to be configured. Install the Kronikol.PlantUml.Ikvm package and set LocalDiagramRenderer = IkvmPlantUmlRenderer.Render.
+   at Kronikol.DefaultDiagramsFetcher.GetLocallyRenderedDiagrams(DiagramsFetcherOptions options) in C:\Code\Kronikol\src\Kronikol\DefaultDiagramsFetcher.cs:line 220
+exit (Git Bash) = 127

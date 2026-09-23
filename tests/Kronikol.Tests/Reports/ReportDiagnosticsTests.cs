@@ -47,6 +47,33 @@ public class ReportDiagnosticsTests : IDisposable
     }
 
     [Fact]
+    public void The_internal_flow_line_follows_the_option()
+    {
+        // With the feature on, the span store is reported (a warning when it is empty, its count otherwise);
+        // with it off (kronikol ingest), an empty store is not news and nothing is said about it. The store
+        // is process-wide and other collections fill it, so the on-case expects whichever line the store's
+        // current size earns rather than clearing what another test is mid-way through counting.
+        var testId = Guid.NewGuid().ToString();
+        var pairId = Guid.NewGuid();
+        var logs = new[]
+        {
+            MakeLog(testId, RequestResponseType.Request, pairId),
+            MakeLog(testId, RequestResponseType.Response, pairId)
+        };
+
+        var on = ReportDiagnostics.Analyse(logs, [], internalFlowTracking: true);
+        var expected = Kronikol.InternalFlow.InternalFlowSpanStore.GetSpans().Length == 0
+            ? "Warning: InternalFlowSpanStore has 0 spans"
+            : "InternalFlowSpanStore: ";
+        Assert.Contains(on, w => w.StartsWith(expected, StringComparison.Ordinal));
+
+        var off = ReportDiagnostics.Analyse(logs, [], internalFlowTracking: false);
+        Assert.DoesNotContain(off, w => w.Contains("InternalFlowSpanStore", StringComparison.Ordinal));
+        // Nothing else in the diagnostics changes with the option.
+        Assert.Equal(on.Where(w => !w.Contains("InternalFlowSpanStore", StringComparison.Ordinal)), off);
+    }
+
+    [Fact]
     public void A_background_call_is_noted_and_is_not_an_orphan()
     {
         var testId = Guid.NewGuid().ToString();

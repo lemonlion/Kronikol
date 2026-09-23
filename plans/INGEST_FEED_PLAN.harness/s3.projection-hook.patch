@@ -1,0 +1,25 @@
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3/Infrastructure/ConfiguredLightBddScope.cs b/examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3/Infrastructure/ConfiguredLightBddScope.cs
+index 5bb0a544..11383f12 100644
+--- a/examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3/Infrastructure/ConfiguredLightBddScope.cs
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3/Infrastructure/ConfiguredLightBddScope.cs
+@@ -37,8 +37,20 @@ protected override void OnConfigure(LightBddConfiguration configuration)
+ 
+         configuration.ExecutionExtensionsConfiguration()
+                 .RegisterGlobalTearDown("dispose factory", BaseFixture.DisposeFactory)
++                .RegisterGlobalTearDown("project ndjson (P1 probe)", ProjectNdjson)
+                 .RegisterGlobalSetUp("http fakes", StartHttpFakes, DisposeHttpFakes);
+     }
++
++    // TEMPORARY (plans/INGEST_FEED_PLAN.md S3 probe): project the in-process store through the NDJSON
++    // writer at run end when KRONIKOL_PROJECT_NDJSON names a file. Not a library feature.
++    private static void ProjectNdjson()
++    {
++        if (Environment.GetEnvironmentVariable("KRONIKOL_PROJECT_NDJSON") is not { Length: > 0 } path)
++            return;
++        using var writer = new Kronikol.Ingestion.NdjsonInteractionWriter(path);
++        foreach (var log in Kronikol.Tracking.RequestResponseLogger.RequestAndResponseLogs)
++            writer.Log(log);
++    }
+     
+     private void StartHttpFakes()
+     {

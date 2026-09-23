@@ -1,0 +1,152 @@
+root: C:\Users\cex\AppData\Local\Temp\kronikol-p1proto-0lyaim3i.gts
+## 1. Tests-file step + assertion on ingest: MarkerKind, annotations, stepPath
+Replayed=6 scenarios=1
+diagnostics: 
+   marker log: start=True end=False action=False MarkerKind=Step puml="\nhnote across <<stepDelimiter>> #black:<color:white>Given a basket\n\n"
+   marker log: start=False end=True action=False MarkerKind=Step puml=null
+   marker log: start=True end=False action=False MarkerKind=Assertion puml="\nhnote across <<assertionNote>> #d4edda\n✓ The basket is empty\nend note\n\n"
+   marker log: start=False end=True action=False MarkerKind=Assertion puml=null
+annotations: []
+   interaction Request POST http://localhost:8081/sidekick stepPath=0
+   interaction Response POST http://localhost:8081/sidekick stepPath=0
+steps: [
+            {
+              "keyword": "Given",
+              "text": "a basket",
+              "status": "Passed",
+              "durationSeconds": 1.5,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [
+                {
+                  "keyword": null,
+                  "text": "\u2713 The basket is empty",
+                  "status": "Passed",
+                  "durationSeconds": null,
+                  "bypassReason": null,
+                  "docString": null,
+                  "docStringMediaType": null,
+                  "failureMessage": null,
+                  "sourceFile": null,
+                  "sourceLine": null,
+                  "comments": [],
+                  "subSteps": [],
+                  "attachments": [],
+                  "parameters": [],
+                  "textSegments": null
+                }
+              ],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ]
+
+## 2. In-process versus ingest (T7 shape), default options
+[default] in-process store holds 15 logs for the test id
+[default] lines written: 15
+   marker line: {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"c6887e9e-ae60-4ad1-8015-f68ac972acf9","requestResponseId":"930c7fd6-ef7f-434d-94af-4e8eb479e13e","timestamp":"2026-09-22T10:00:01+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe","kind":"marker","markerKind":"Step","plantUml":"\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGiven a basket\n\n"}
+   marker line: {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"35e7eb50-a54d-4e7d-bbcb-3fbb16ddaa92","requestResponseId":"2675b405-94d1-41f8-96b8-2a9deba76e3d","timestamp":"2026-09-22T10:00:01.001+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe","kind":"marker","markerKind":"Step","markerEnd":true}
+   marker line: {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"b40cbeea-2823-4239-8496-e68b448d6c11","requestResponseId":"eab2a945-6151-43b9-b099-d8c6c5147628","timestamp":"2026-09-22T10:00:03+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe","kind":"marker","markerKind":"Row","plantUml":"\nhnote across #lightyellow : Row 3\n\n"}
+   marker line: {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"7d4b1785-06ba-4192-8c0e-6eca8f81ee09","requestResponseId":"44be7f57-fcd8-428f-b0af-0e04e984c8e1","timestamp":"2026-09-22T10:00:03.001+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe","kind":"marker","markerKind":"Row","markerEnd":true}
+[default] Replayed=15; diagnostics: 
+[default] httpInteractions: in-process 6, ingest 6
+   #0 Request POST http://localhost:8081/sidekick: identical
+   #1 Response POST http://localhost:8081/sidekick: identical
+   #2 Request GET http://localhost:8081/health: identical
+   #3 Response GET http://localhost:8081/health: identical
+   #4 Request POST http://localhost:8081/pay: identical
+   #5 Response POST http://localhost:8081/pay: error: "HttpRequestException: boom" vs null
+[default] annotations identical: in-process [
+            {
+              "index": 2,
+              "kind": "Row",
+              "text": "Row 3"
+            },
+            {
+              "index": 2,
+              "kind": "Custom",
+              "text": "cache warmed"
+            }
+          ] | ingest [
+            {
+              "index": 2,
+              "kind": "Row",
+              "text": "Row 3"
+            },
+            {
+              "index": 2,
+              "kind": "Custom",
+              "text": "cache warmed"
+            }
+          ]
+[default] diagram source BYTE-IDENTICAL (853 vs 853 chars)
+[default] steps: in-process [] | ingest []
+
+## 3. In-process versus ingest, SeparateSetup = true
+[separateSetup] in-process store holds 15 logs for the test id
+[separateSetup] lines written: 15
+   marker line: {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"fe6c5ac5-8cc5-4ecb-872d-a2014f229ac7","requestResponseId":"164211f1-1011-4514-bf3a-333ae74f275d","timestamp":"2026-09-22T10:00:01+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe","kind":"marker","markerKind":"Step","plantUml":"\nhnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGiven a basket\n\n"}
+   marker line: {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"a99b0b8d-e5e9-470b-a3ac-6622e47c71f0","requestResponseId":"7e498222-6295-49e2-883b-76f2b5c5b648","timestamp":"2026-09-22T10:00:01.001+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe","kind":"marker","markerKind":"Step","markerEnd":true}
+   marker line: {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"ed330ca1-5602-46dd-a0ab-92e519b4cc23","requestResponseId":"26a14521-4037-43ca-8a46-bae002b965d7","timestamp":"2026-09-22T10:00:03+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe","kind":"marker","markerKind":"Row","plantUml":"\nhnote across #lightyellow : Row 3\n\n"}
+   marker line: {"type":"Request","uri":"http://override.com/","serviceName":"","callerName":"","traceId":"2839729b-afbe-4d91-a767-b5ab6adf3989","requestResponseId":"e1079804-1291-4c18-8fa6-f1323865d484","timestamp":"2026-09-22T10:00:03.001+00:00","testId":"0af7651916cd43dd8448eb211c80319c","testName":"Probe","kind":"marker","markerKind":"Row","markerEnd":true}
+[separateSetup] Replayed=15; diagnostics: 
+[separateSetup] httpInteractions: in-process 6, ingest 6
+   #0 Request POST http://localhost:8081/sidekick: identical
+   #1 Response POST http://localhost:8081/sidekick: identical
+   #2 Request GET http://localhost:8081/health: identical
+   #3 Response GET http://localhost:8081/health: identical
+   #4 Request POST http://localhost:8081/pay: identical
+   #5 Response POST http://localhost:8081/pay: error: "HttpRequestException: boom" vs null
+[separateSetup] annotations identical: in-process [
+            {
+              "index": 2,
+              "kind": "Row",
+              "text": "Row 3"
+            },
+            {
+              "index": 2,
+              "kind": "Custom",
+              "text": "cache warmed"
+            }
+          ] | ingest [
+            {
+              "index": 2,
+              "kind": "Row",
+              "text": "Row 3"
+            },
+            {
+              "index": 2,
+              "kind": "Custom",
+              "text": "cache warmed"
+            }
+          ]
+[separateSetup] diagram source BYTE-IDENTICAL (883 vs 883 chars)
+[separateSetup] steps: in-process [] | ingest []
+
+## 4. Writer step marker + tests-file step event for the same scenario
+Replayed=15; stepDelimiter bars=1; assertion notes=1; interactions=6
+annotations: [
+            {
+              "index": 2,
+              "kind": "Row",
+              "text": "Row 3"
+            },
+            {
+              "index": 2,
+              "kind": "Custom",
+              "text": "cache warmed"
+            }
+          ]
+   interaction Request POST http://localhost:8081/sidekick stepPath=0
+   interaction Response POST http://localhost:8081/sidekick stepPath=0
+   interaction Request GET http://localhost:8081/health stepPath=0
+   interaction Response GET http://localhost:8081/health stepPath=0
+   interaction Request POST http://localhost:8081/pay stepPath=0
+   interaction Response POST http://localhost:8081/pay stepPath=0
+diagnostics: 

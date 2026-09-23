@@ -1,0 +1,23 @@
+scenarios: in-process 6, ingested 6, common 6
+- 10c4c8b4-29a 'Different muffin recipes should produce the expect': interactions 0/0; annotations same; diagram same (570/570 chars); steps 3/0; verdict None/None
+- 77be0901-796 'Calling Create Cake Endpoint Without Ingredient': interactions 14/14; annotations same; diagram DIFFERS (4116/3750 chars); steps 4/0; verdict None/None
+    member attributionSource differs, first at #0: 'TestContext' vs 'None'
+    diagram line 17: 'partition #F6F6F6 Setup\r' | '\r'
+    diagram line 18: '\r' | 'hnote across <<stepDelimiter>> #black:<color:white>GIVEN A valid post request for the Cake'
+    diagram line 19: 'hnote across <<stepDelimiter>> #black:<color:white>GIVEN A valid post request for the Cake' | '\r'
+    diagram line 20: '\r' | 'caller -[#438DD5]> dessertProvider: GET: /milk\r'
+- 9ac1121f-f53 'Calling Create Cake Endpoint Without Eggs': interactions 10/10; annotations same; diagram DIFFERS (2479/2209 chars); steps 4/0; verdict None/None
+    member attributionSource differs, first at #0: 'TestContext' vs 'None'
+    diagram line 11: 'partition #F6F6F6 Setup\r' | '\r'
+    diagram line 12: '\r' | 'hnote across <<stepDelimiter>> #black:<color:white>GIVEN A valid post request for the Cake'
+    diagram line 13: 'hnote across <<stepDelimiter>> #black:<color:white>GIVEN A valid post request for the Cake' | '\r'
+    diagram line 14: '\r' | 'caller -[#438DD5]> dessertProvider: GET: /milk\r'
+- a68b09bc-187 'Calling Create Cake Endpoint Successfully': interactions 12/12; annotations same; diagram DIFFERS (2737/2419 chars); steps 3/0; verdict None/None
+    member attributionSource differs, first at #0: 'TestContext' vs 'None'
+    diagram line 18: 'partition #F6F6F6 Setup\r' | '\r'
+    diagram line 19: '\r' | 'hnote across <<stepDelimiter>> #black:<color:white>GIVEN A valid post request for the Cake'
+    diagram line 20: 'hnote across <<stepDelimiter>> #black:<color:white>GIVEN A valid post request for the Cake' | '\r'
+    diagram line 21: '\r' | 'caller -[#438DD5]> dessertProvider: GET: /milk\r'
+- cd2a7164-39f 'Different muffin recipes should produce the expect': interactions 0/0; annotations same; diagram same (579/579 chars); steps 3/0; verdict None/None
+- e4057a9d-235 'Different muffin recipes should produce the expect': interactions 0/0; annotations same; diagram same (576/576 chars); steps 3/0; verdict None/None
+diagrams identical: 3 of 6

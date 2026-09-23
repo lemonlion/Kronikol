@@ -19,6 +19,7 @@ public class InteractionRecordTests
             RequestResponseType.Request, traceId, rrId, false, null, RequestResponseMetaType.Default, DependencyCategories.AI)
         {
             Timestamp = ts, Phase = TestPhase.Action, ActivityTraceId = "0af7651916cd43dd8448eb211c80319c", ActivitySpanId = "b7ad6b7169203331",
+            DurationMs = 123.4,
         };
 
         var json = InteractionRecord.FromLog(log).ToJson();
@@ -27,6 +28,9 @@ public class InteractionRecordTests
         Assert.Contains("\"type\":\"Request\"", json);
         Assert.Contains("\"testId\":\"0af7651916cd43dd8448eb211c80319c\"", json);
         Assert.Contains("\"dependencyCategory\":\"AI\"", json);
+        // #94: a measured duration is written and read back, so the report believes it over the timestamp delta.
+        Assert.Contains("\"durationMs\":123.4", json);
+        Assert.Equal(123.4, back.DurationMs);
         Assert.DoesNotContain("\"statusCode\"", json); // nulls omitted
         Assert.Equal(log.TestId, back.TestId);
         Assert.Equal(log.TestName, back.TestName);
@@ -188,7 +192,11 @@ public class InteractionRecordTests
         Assert.True(stepLogs[0].IsOverrideStart);
         Assert.Contains("hnote across <<stepDelimiter>> #black:<color:white>When the user accepts the trial", stepLogs[0].PlantUml);
         Assert.True(stepLogs[1].IsOverrideEnd);
+        // Classified at the source (plan F7): step attribution, the annotation export and the Setup
+        // partition all switch on the kind, and an unclassified marker is a Custom one to every one of them.
+        Assert.All(stepLogs, l => Assert.Equal(DiagramMarkerKind.Step, l.MarkerKind));
         var assertionLogs = assertion.ToLogs().ToArray();
+        Assert.All(assertionLogs, l => Assert.Equal(DiagramMarkerKind.Assertion, l.MarkerKind));
         Assert.Contains("hnote across <<assertionNote>> " + Track.FailColor, assertionLogs[0].PlantUml);
         // Keyword-less label: the note is capitalised (Reports.StepText) so the diagram reads as a sentence.
         Assert.Contains(Track.FailSymbol + " The banner is visible", assertionLogs[0].PlantUml);

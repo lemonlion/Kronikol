@@ -190,6 +190,9 @@ public sealed record InteractionRecord
         TrackingIgnore = log.TrackingIgnore ? true : null,
         CapturedBy = log.CapturedBy,
         Kind = log.IsUserAction ? Kinds.Ui : null,
+        // A capturer's own measurement: the report believes it over the timestamp delta, and ToLog restores
+        // it, so the writer has to carry it (#94: dropped here from 3.0.47 to 3.27.3).
+        DurationMs = log.DurationMs,
     };
 
     /// <summary>
@@ -264,13 +267,18 @@ public sealed record InteractionRecord
             yield break;
         }
 
-        var plantUml = string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase)
+        var isStep = string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase);
+        var plantUml = isStep
             ? StepDelimiterPlantUml(Keyword, Text, Table, DocString)
             : AssertionNotePlantUml(Text, Passed ?? true, Message);
+        // Classified at the source, as the in-process emitters classify theirs: step attribution advances
+        // its cursor on Step, the annotation export lists Row and Custom, and the Setup partition treats a
+        // narration marker differently from a boundary. Unclassified, every one of them read as Custom.
+        var markerKind = isStep ? DiagramMarkerKind.Step : DiagramMarkerKind.Assertion;
         var name = testNameOverride ?? TestName ?? TestIdentityScope.UnknownTestName;
 
-        yield return OverrideLog(name, TestId, isStart: true, plantUml);
-        yield return OverrideLog(name, TestId, isStart: false, null);
+        yield return OverrideLog(name, TestId, isStart: true, plantUml, markerKind);
+        yield return OverrideLog(name, TestId, isStart: false, null, markerKind);
     }
 
     /// <summary>
@@ -303,12 +311,13 @@ public sealed record InteractionRecord
         return $"hnote across <<assertionNote>> {color}\n{PlantUml.DiagramWidth.WrapBlockNoteBody(body)}\nend note";
     }
 
-    private RequestResponseLog OverrideLog(string testName, string testId, bool isStart, string? plantUml) =>
+    private RequestResponseLog OverrideLog(string testName, string testId, bool isStart, string? plantUml, DiagramMarkerKind kind) =>
         new(testName, testId, "", "", new Uri("http://override.com"), [], "", "",
             RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
         {
             IsOverrideStart = isStart,
             IsOverrideEnd = !isStart,
+            MarkerKind = kind,
             PlantUml = plantUml is null ? null : $"\n{plantUml}\n\n",
             Timestamp = Timestamp,
         };

@@ -530,7 +530,8 @@ public static class ReportGenerator
 
         var diagnostics = ReportDiagnostics.Analyse(
             runLogs, features,
-            includeSourceDiscovery: options.ActivitySourceDiscovery);
+            includeSourceDiscovery: options.ActivitySourceDiscovery,
+            internalFlowTracking: options.InternalFlowTracking);
         foreach (var message in diagnostics)
             Console.WriteLine(message);
 
@@ -6182,7 +6183,7 @@ public static class ReportGenerator
                         ["activityTraceId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C trace id — the bridge to OpenTelemetry traces and application logs. Unlike traceId, which is Kronikol's own identifier for the request/response pair.", ["examples"] = new[] { "4bf92f3577b34da6a3ce929d0e0e4736" } },
                         ["activitySpanId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C span id" },
                         ["capturedBy"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which capture path produced this entry: wire (proxy/TCP tap) or span (OpenTelemetry receiver)" },
-                        ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response, derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered or timestamps are absent." },
+                        ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response: the capturer's own measurement when the record carried one (durationMs on the NDJSON input), otherwise derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered and nothing was measured or timestamps are absent." },
                         ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } }
                     }
                 }

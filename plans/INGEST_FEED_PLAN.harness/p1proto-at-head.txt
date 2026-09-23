@@ -1,0 +1,757 @@
+root: C:\Users\cex\AppData\Local\Temp\kronikol-p1proto-pcg5pa3e.tgi
+## 1. Tests-file step + assertion on ingest: MarkerKind, annotations, stepPath
+Replayed=6 scenarios=1
+diagnostics: 
+   marker log: start=True end=False action=False MarkerKind=Custom puml="\nhnote across <<stepDelimiter>> #black:<color:white>Given a basket\n\n"
+   marker log: start=False end=True action=False MarkerKind=Custom puml=null
+   marker log: start=True end=False action=False MarkerKind=Custom puml="\nhnote across <<assertionNote>> #d4edda\n✓ The basket is empty\nend note\n\n"
+   marker log: start=False end=True action=False MarkerKind=Custom puml=null
+annotations: [
+            {
+              "index": 0,
+              "kind": "Custom",
+              "text": "hnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGiven a basket"
+            },
+            {
+              "index": 2,
+              "kind": "Custom",
+              "text": "\u2713 The basket is empty\nend note"
+            }
+          ]
+   interaction Request POST http://localhost:8081/sidekick stepPath=
+   interaction Response POST http://localhost:8081/sidekick stepPath=
+steps: [
+            {
+              "keyword": "Given",
+              "text": "a basket",
+              "status": "Passed",
+              "durationSeconds": 1.5,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [
+                {
+                  "keyword": null,
+                  "text": "\u2713 The basket is empty",
+                  "status": "Passed",
+                  "durationSeconds": null,
+                  "bypassReason": null,
+                  "docString": null,
+                  "docStringMediaType": null,
+                  "failureMessage": null,
+                  "sourceFile": null,
+                  "sourceLine": null,
+                  "comments": [],
+                  "subSteps": [],
+                  "attachments": [],
+                  "parameters": [],
+                  "textSegments": null
+                }
+              ],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ]
+
+## 2. In-process versus ingest (T7 shape), default options
+[default] in-process store holds 15 logs for the test id
+[default] lines written: 15
+[default] Replayed=15; diagnostics: 
+[default] httpInteractions: in-process 6, ingest 15
+   #0 Request POST http://localhost:8081/sidekick: method: "POST" vs "CALL"; uri: "http://localhost:8081/sidekick" vs "http://override.com/"; serviceName: "graphql" vs ""; callerName: "web" vs ""; content: "{}" vs ""; headers: [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ] vs []; traceId: "bc24c986-f57a-4723-8843-29c00298e671" vs "70cf227b-a5ca-4b9d-af20-cd41b7e8024f"; requestResponseId: "e9df5cf5-f102-4e82-8609-5e0a1394b9d5" vs "89d81fb3-ca2a-4c53-84db-f95d5cc6f065"; timestamp: "2026-09-22T10:00:02.000Z" vs "2026-09-22T10:00:01.000Z"; phase: "Setup" vs "Unknown"; durationMs: 77 vs null
+   #1 Response POST http://localhost:8081/sidekick: type: "Response" vs "Request"; method: "POST" vs "CALL"; uri: "http://localhost:8081/sidekick" vs "http://override.com/"; serviceName: "graphql" vs ""; callerName: "web" vs ""; content: "{\u0022data\u0022:{}}" vs ""; statusCode: 200 vs null; statusText: "OK" vs null; traceId: "bc24c986-f57a-4723-8843-29c00298e671" vs "166c6b40-0d01-4a29-923f-da60ece178a8"; requestResponseId: "e9df5cf5-f102-4e82-8609-5e0a1394b9d5" vs "65add642-35c1-401f-9fbf-205671955da9"; timestamp: "2026-09-22T10:00:02.050Z" vs "2026-09-22T10:00:01.001Z"; phase: "Setup" vs "Unknown"; durationMs: 77 vs null
+   #2 Request GET http://localhost:8081/health: method: "GET" vs "POST"; uri: "http://localhost:8081/health" vs "http://localhost:8081/sidekick"; serviceName: "web" vs "graphql"; content: null vs "{}"; headers: [] vs [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ]; traceId: "dd59dd2a-7cf1-4f06-a873-3f8ec11dd522" vs "bc24c986-f57a-4723-8843-29c00298e671"; requestResponseId: "ac1cbbd7-d387-4222-99f2-d516ae6478df" vs "e9df5cf5-f102-4e82-8609-5e0a1394b9d5"; timestamp: "2026-09-22T10:00:05.000Z" vs "2026-09-22T10:00:02.000Z"; phase: "Action" vs "Setup"; durationMs: 5 vs 50
+   #3 Response GET http://localhost:8081/health: method: "GET" vs "POST"; uri: "http://localhost:8081/health" vs "http://localhost:8081/sidekick"; serviceName: "web" vs "graphql"; content: "{\u0022ok\u0022:true}" vs "{\u0022data\u0022:{}}"; traceId: "dd59dd2a-7cf1-4f06-a873-3f8ec11dd522" vs "bc24c986-f57a-4723-8843-29c00298e671"; requestResponseId: "ac1cbbd7-d387-4222-99f2-d516ae6478df" vs "e9df5cf5-f102-4e82-8609-5e0a1394b9d5"; timestamp: "2026-09-22T10:00:05.005Z" vs "2026-09-22T10:00:02.050Z"; phase: "Action" vs "Setup"; durationMs: 5 vs 50
+   #4 Request POST http://localhost:8081/pay: method: "POST" vs "CALL"; uri: "http://localhost:8081/pay" vs "http://override.com/"; serviceName: "payments" vs ""; callerName: "web" vs ""; content: "{\u0022amount\u0022:1}" vs ""; traceId: "c0f0833b-0995-407b-923b-46774508eff4" vs "aa2600e5-f2d9-4f1d-8df5-8a5ba6734b42"; requestResponseId: "5fb4dd70-3e2f-4935-9c02-f1fae7bb8339" vs "76d33176-75a3-4daf-984c-c519a1e4e16e"; timestamp: "2026-09-22T10:00:06.000Z" vs "2026-09-22T10:00:03.000Z"; phase: "Action" vs "Unknown"; durationMs: 100 vs null
+   #5 Response POST http://localhost:8081/pay: type: "Response" vs "Request"; method: "POST" vs "CALL"; uri: "http://localhost:8081/pay" vs "http://override.com/"; serviceName: "payments" vs ""; callerName: "web" vs ""; content: null vs ""; traceId: "c0f0833b-0995-407b-923b-46774508eff4" vs "76e63bac-3593-4a54-885f-90c89a237596"; requestResponseId: "5fb4dd70-3e2f-4935-9c02-f1fae7bb8339" vs "9192c3bb-614f-439f-81d4-7559ef821392"; timestamp: "2026-09-22T10:00:06.100Z" vs "2026-09-22T10:00:03.001Z"; phase: "Action" vs "Unknown"; error: "HttpRequestException: boom" vs null; durationMs: 100 vs null
+   #6: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "5dac7fac-3d88-4cca-bc7e-7c340f656c59",
+              "requestResponseId": "da41b2be-ea80-4d12-ad76-08da74062f8e",
+              "timestamp": "2026-09-22T10:00:03.500Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #7: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "817a0401-90d8-45b9-9eab-4a1f19217077",
+              "requestResponseId": "61aa6b07-c223-47e8-a9fe-f67265823357",
+              "timestamp": "2026-09-22T10:00:04.000Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #8: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "2492b537-8b10-491c-856b-a588340cee72",
+              "requestResponseId": "f81b2ce4-dd49-4148-b242-4f5f45c23bc2",
+              "timestamp": "2026-09-22T10:00:04.001Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #9: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "9174d378-5058-4fc0-a073-398c255ab927",
+              "requestResponseId": "47de9ae7-d6c1-4984-a351-3b6352f19104",
+              "timestamp": "2026-09-22T10:00:04.500Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #10: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "74464ed8-cb5c-4fbe-bd7c-06fa4202153b",
+              "requestResponseId": "d2e9cab8-bfe1-4396-8cd6-0dc88c09cc14",
+              "timestamp": "2026-09-22T10:00:04.501Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #11: only in ingest: {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost:8081/health",
+              "serviceName": "web",
+              "callerName": "web",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "dd59dd2a-7cf1-4f06-a873-3f8ec11dd522",
+              "requestResponseId": "ac1cbbd7-d387-4222-99f2-d516ae6478df",
+              "timestamp": "2026-09-22T10:00:05.000Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": 5,
+              "stepPath": null
+            }
+   #12: only in ingest: {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost:8081/health",
+              "serviceName": "web",
+              "callerName": "web",
+              "content": "{\u0022ok\u0022:true}",
+              "headers": [],
+              "statusCode": 200,
+              "statusText": "OK",
+              "traceId": "dd59dd2a-7cf1-4f06-a873-3f8ec11dd522",
+              "requestResponseId": "ac1cbbd7-d387-4222-99f2-d516ae6478df",
+              "timestamp": "2026-09-22T10:00:05.005Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": 5,
+              "stepPath": null
+            }
+   #13: only in ingest: {
+              "type": "Request",
+              "method": "POST",
+              "uri": "http://localhost:8081/pay",
+              "serviceName": "payments",
+              "callerName": "web",
+              "content": "{\u0022amount\u0022:1}",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "c0f0833b-0995-407b-923b-46774508eff4",
+              "requestResponseId": "5fb4dd70-3e2f-4935-9c02-f1fae7bb8339",
+              "timestamp": "2026-09-22T10:00:06.000Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": 100,
+              "stepPath": null
+            }
+   #14: only in ingest: {
+              "type": "Response",
+              "method": "POST",
+              "uri": "http://localhost:8081/pay",
+              "serviceName": "payments",
+              "callerName": "web",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "c0f0833b-0995-407b-923b-46774508eff4",
+              "requestResponseId": "5fb4dd70-3e2f-4935-9c02-f1fae7bb8339",
+              "timestamp": "2026-09-22T10:00:06.100Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": 100,
+              "stepPath": null
+            }
+[default] annotations DIFFER: in-process [
+            {
+              "index": 2,
+              "kind": "Row",
+              "text": "Row 3"
+            },
+            {
+              "index": 2,
+              "kind": "Custom",
+              "text": "cache warmed"
+            }
+          ] | ingest []
+[default] diagram source DIFFERS (853 vs 794 chars)
+   line 3: in-process "<style>\r" | ingest "\r"
+   line 4: in-process " .assertionNote {\r" | ingest "skinparam wrapWidth 800\r"
+   line 5: in-process "     FontSize 11\r" | ingest "autonumber 1\r"
+   line 6: in-process "     RoundCorner 5\r" | ingest "\r"
+   line 7: in-process " }\r" | ingest "actor "" as \r"
+   line 8: in-process "</style>\r" | ingest "actor "web" as web\r"
+   line 9: in-process "skinparam wrapWidth 800\r" | ingest "entity "graphql" as graphql\r"
+   line 10: in-process "autonumber 1\r" | ingest "entity "payments" as payments\r"
+   line 12: in-process "actor "web" as web\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 13: in-process "entity "graphql" as graphql\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 14: in-process "entity "payments" as payments\r" | ingest "web -[#438DD5]> graphql: POST: /sidekick\r"
+   line 15: in-process "\r" | ingest "note left\r"
+   line 16: in-process "" | ingest "<color:gray>[Content-Type=application/json]\r"
+   line 17: in-process "hnote across <<stepDelimiter>> #black:<color:white>Given a basket" | ingest "\r"
+   line 18: in-process "" | ingest "{}\r"
+   line 19: in-process "web -[#438DD5]> graphql: POST: /sidekick\r" | ingest "end note\r"
+   line 20: in-process "note left\r" | ingest "graphql -[#438DD5]-> web: OK\r"
+   line 21: in-process "<color:gray>[Content-Type=application/json]\r" | ingest "note right\r"
+   line 22: in-process "\r" | ingest "{\r"
+   line 23: in-process "{}\r" | ingest "  "data": {}\r"
+   line 24: in-process "end note\r" | ingest "}\r"
+   line 25: in-process "graphql -[#438DD5]-> web: OK\r" | ingest "end note\r"
+   line 26: in-process "note right\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 27: in-process "{\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 28: in-process "  "data": {}\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 29: in-process "}\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 30: in-process "end note\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 31: in-process "" | ingest " -[#438DD5]> : CALL: /\r"
+   line 32: in-process "hnote across #lightyellow : Row 3" | ingest " -[#438DD5]> : CALL: /\r"
+   line 33: in-process "" | ingest "web -[#438DD5]> web: GET: /health\r"
+   line 34: in-process "" | ingest "web -[#438DD5]-> web: OK\r"
+   line 35: in-process "note over graphql : cache warmed" | ingest "note right\r"
+   line 36: in-process "" | ingest "{\r"
+   line 37: in-process "" | ingest "  "ok": true\r"
+   line 38: in-process "hnote across <<assertionNote>> #d4edda" | ingest "}\r"
+   line 39: in-process "✓ The basket is empty" | ingest "end note\r"
+   line 40: in-process "end note" | ingest "web -[#438DD5]> payments: POST: /pay\r"
+   line 41: in-process "" | ingest "note left\r"
+   line 42: in-process "web -[#438DD5]> web: GET: /health\r" | ingest "{\r"
+   line 43: in-process "web -[#438DD5]-> web: OK\r" | ingest "  "amount": 1\r"
+   line 44: in-process "note right\r" | ingest "}\r"
+   line 45: in-process "{\r" | ingest "end note\r"
+   line 46: in-process "  "ok": true\r" | ingest "payments -[#438DD5]-> web: \r"
+   line 47: in-process "}\r" | ingest "@enduml\r"
+   line 48: in-process "end note\r" | ingest ""
+   line 49: in-process "web -[#438DD5]> payments: POST: /pay\r" | ingest "<eof>"
+   line 50: in-process "note left\r" | ingest "<eof>"
+   line 51: in-process "{\r" | ingest "<eof>"
+   line 52: in-process "  "amount": 1\r" | ingest "<eof>"
+   line 53: in-process "}\r" | ingest "<eof>"
+   line 54: in-process "end note\r" | ingest "<eof>"
+   line 55: in-process "payments -[#438DD5]-> web: \r" | ingest "<eof>"
+   line 56: in-process "@enduml\r" | ingest "<eof>"
+   line 57: in-process "" | ingest "<eof>"
+[default] steps: in-process [] | ingest []
+
+## 3. In-process versus ingest, SeparateSetup = true
+[separateSetup] in-process store holds 15 logs for the test id
+[separateSetup] lines written: 15
+[separateSetup] Replayed=15; diagnostics: 
+[separateSetup] httpInteractions: in-process 6, ingest 15
+   #0 Request POST http://localhost:8081/sidekick: method: "POST" vs "CALL"; uri: "http://localhost:8081/sidekick" vs "http://override.com/"; serviceName: "graphql" vs ""; callerName: "web" vs ""; content: "{}" vs ""; headers: [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ] vs []; traceId: "cda1efdd-7822-4997-8284-d5b0d5efaa0d" vs "51ccb9ee-8443-4fc8-800b-b14316edcb8e"; requestResponseId: "391d9869-3ef0-4419-b115-c6efb803a301" vs "1b3420b1-feb4-4e8f-9b64-b55a02350af1"; timestamp: "2026-09-22T10:00:02.000Z" vs "2026-09-22T10:00:01.000Z"; phase: "Setup" vs "Unknown"; durationMs: 77 vs null
+   #1 Response POST http://localhost:8081/sidekick: type: "Response" vs "Request"; method: "POST" vs "CALL"; uri: "http://localhost:8081/sidekick" vs "http://override.com/"; serviceName: "graphql" vs ""; callerName: "web" vs ""; content: "{\u0022data\u0022:{}}" vs ""; statusCode: 200 vs null; statusText: "OK" vs null; traceId: "cda1efdd-7822-4997-8284-d5b0d5efaa0d" vs "ca67739d-6040-4bfd-8622-486a1fd9f487"; requestResponseId: "391d9869-3ef0-4419-b115-c6efb803a301" vs "a07e0303-7193-47cf-b2cf-63bcb1f021be"; timestamp: "2026-09-22T10:00:02.050Z" vs "2026-09-22T10:00:01.001Z"; phase: "Setup" vs "Unknown"; durationMs: 77 vs null
+   #2 Request GET http://localhost:8081/health: method: "GET" vs "POST"; uri: "http://localhost:8081/health" vs "http://localhost:8081/sidekick"; serviceName: "web" vs "graphql"; content: null vs "{}"; headers: [] vs [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ]; traceId: "2f39274d-eced-4409-a022-85a79319a3bb" vs "cda1efdd-7822-4997-8284-d5b0d5efaa0d"; requestResponseId: "d7479ab8-d8b1-4c17-a938-4339918bb027" vs "391d9869-3ef0-4419-b115-c6efb803a301"; timestamp: "2026-09-22T10:00:05.000Z" vs "2026-09-22T10:00:02.000Z"; phase: "Action" vs "Setup"; durationMs: 5 vs 50
+   #3 Response GET http://localhost:8081/health: method: "GET" vs "POST"; uri: "http://localhost:8081/health" vs "http://localhost:8081/sidekick"; serviceName: "web" vs "graphql"; content: "{\u0022ok\u0022:true}" vs "{\u0022data\u0022:{}}"; traceId: "2f39274d-eced-4409-a022-85a79319a3bb" vs "cda1efdd-7822-4997-8284-d5b0d5efaa0d"; requestResponseId: "d7479ab8-d8b1-4c17-a938-4339918bb027" vs "391d9869-3ef0-4419-b115-c6efb803a301"; timestamp: "2026-09-22T10:00:05.005Z" vs "2026-09-22T10:00:02.050Z"; phase: "Action" vs "Setup"; durationMs: 5 vs 50
+   #4 Request POST http://localhost:8081/pay: method: "POST" vs "CALL"; uri: "http://localhost:8081/pay" vs "http://override.com/"; serviceName: "payments" vs ""; callerName: "web" vs ""; content: "{\u0022amount\u0022:1}" vs ""; traceId: "2410577a-52dc-4c56-8c85-f1da74ed357a" vs "d68f37e1-8ab9-4d00-9995-c9d9587974e1"; requestResponseId: "8a2edbed-c9db-4860-8c76-491181f4af89" vs "e52eedba-cd22-4a0e-8852-5801b7f546d8"; timestamp: "2026-09-22T10:00:06.000Z" vs "2026-09-22T10:00:03.000Z"; phase: "Action" vs "Unknown"; durationMs: 100 vs null
+   #5 Response POST http://localhost:8081/pay: type: "Response" vs "Request"; method: "POST" vs "CALL"; uri: "http://localhost:8081/pay" vs "http://override.com/"; serviceName: "payments" vs ""; callerName: "web" vs ""; content: null vs ""; traceId: "2410577a-52dc-4c56-8c85-f1da74ed357a" vs "b3c8aa00-da7f-484b-8c13-354b0cfbc93b"; requestResponseId: "8a2edbed-c9db-4860-8c76-491181f4af89" vs "8dbcb621-6745-4a1a-ba7e-77fa8cddf3f4"; timestamp: "2026-09-22T10:00:06.100Z" vs "2026-09-22T10:00:03.001Z"; phase: "Action" vs "Unknown"; error: "HttpRequestException: boom" vs null; durationMs: 100 vs null
+   #6: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "ca31eedd-57fb-4ce2-a9bc-4d44df93fb94",
+              "requestResponseId": "65ad230a-5362-43b2-95ce-bfd68ea752d5",
+              "timestamp": "2026-09-22T10:00:03.500Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #7: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "f014d18e-539f-4f49-9977-dd17d8ea2bc5",
+              "requestResponseId": "9ed29d67-64ec-4730-8614-d614a2e9272d",
+              "timestamp": "2026-09-22T10:00:04.000Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #8: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "24d50bb7-da42-482e-aaa8-256bd5b07f61",
+              "requestResponseId": "0618fe32-9a10-4e3a-a0cf-222052d3d0bc",
+              "timestamp": "2026-09-22T10:00:04.001Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #9: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "71fe9421-6002-48a7-880c-fca6009a99d8",
+              "requestResponseId": "bb90f8b3-e2c8-4092-a491-302ed1f25a6e",
+              "timestamp": "2026-09-22T10:00:04.500Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #10: only in ingest: {
+              "type": "Request",
+              "method": "CALL",
+              "uri": "http://override.com/",
+              "serviceName": "",
+              "callerName": "",
+              "content": "",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "5fd7b964-1608-4e7d-9e84-928133feae9c",
+              "requestResponseId": "53e3a1c9-1130-453a-98a3-93072ded19e2",
+              "timestamp": "2026-09-22T10:00:04.501Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": null,
+              "stepPath": null
+            }
+   #11: only in ingest: {
+              "type": "Request",
+              "method": "GET",
+              "uri": "http://localhost:8081/health",
+              "serviceName": "web",
+              "callerName": "web",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "2f39274d-eced-4409-a022-85a79319a3bb",
+              "requestResponseId": "d7479ab8-d8b1-4c17-a938-4339918bb027",
+              "timestamp": "2026-09-22T10:00:05.000Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": 5,
+              "stepPath": null
+            }
+   #12: only in ingest: {
+              "type": "Response",
+              "method": "GET",
+              "uri": "http://localhost:8081/health",
+              "serviceName": "web",
+              "callerName": "web",
+              "content": "{\u0022ok\u0022:true}",
+              "headers": [],
+              "statusCode": 200,
+              "statusText": "OK",
+              "traceId": "2f39274d-eced-4409-a022-85a79319a3bb",
+              "requestResponseId": "d7479ab8-d8b1-4c17-a938-4339918bb027",
+              "timestamp": "2026-09-22T10:00:05.005Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": 5,
+              "stepPath": null
+            }
+   #13: only in ingest: {
+              "type": "Request",
+              "method": "POST",
+              "uri": "http://localhost:8081/pay",
+              "serviceName": "payments",
+              "callerName": "web",
+              "content": "{\u0022amount\u0022:1}",
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "2410577a-52dc-4c56-8c85-f1da74ed357a",
+              "requestResponseId": "8a2edbed-c9db-4860-8c76-491181f4af89",
+              "timestamp": "2026-09-22T10:00:06.000Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": 100,
+              "stepPath": null
+            }
+   #14: only in ingest: {
+              "type": "Response",
+              "method": "POST",
+              "uri": "http://localhost:8081/pay",
+              "serviceName": "payments",
+              "callerName": "web",
+              "content": null,
+              "headers": [],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "2410577a-52dc-4c56-8c85-f1da74ed357a",
+              "requestResponseId": "8a2edbed-c9db-4860-8c76-491181f4af89",
+              "timestamp": "2026-09-22T10:00:06.100Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Action",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": 100,
+              "stepPath": null
+            }
+[separateSetup] annotations DIFFER: in-process [
+            {
+              "index": 2,
+              "kind": "Row",
+              "text": "Row 3"
+            },
+            {
+              "index": 2,
+              "kind": "Custom",
+              "text": "cache warmed"
+            }
+          ] | ingest []
+[separateSetup] diagram source DIFFERS (883 vs 794 chars)
+   line 3: in-process "<style>\r" | ingest "\r"
+   line 4: in-process " .assertionNote {\r" | ingest "skinparam wrapWidth 800\r"
+   line 5: in-process "     FontSize 11\r" | ingest "autonumber 1\r"
+   line 6: in-process "     RoundCorner 5\r" | ingest "\r"
+   line 7: in-process " }\r" | ingest "actor "" as \r"
+   line 8: in-process "</style>\r" | ingest "actor "web" as web\r"
+   line 9: in-process "skinparam wrapWidth 800\r" | ingest "entity "graphql" as graphql\r"
+   line 10: in-process "autonumber 1\r" | ingest "entity "payments" as payments\r"
+   line 12: in-process "actor "web" as web\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 13: in-process "entity "graphql" as graphql\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 14: in-process "entity "payments" as payments\r" | ingest "web -[#438DD5]> graphql: POST: /sidekick\r"
+   line 15: in-process "\r" | ingest "note left\r"
+   line 16: in-process "partition #F6F6F6 Setup\r" | ingest "<color:gray>[Content-Type=application/json]\r"
+   line 17: in-process "" | ingest "\r"
+   line 18: in-process "hnote across <<stepDelimiter>> #black:<color:white>Given a basket" | ingest "{}\r"
+   line 19: in-process "" | ingest "end note\r"
+   line 20: in-process "web -[#438DD5]> graphql: POST: /sidekick\r" | ingest "graphql -[#438DD5]-> web: OK\r"
+   line 21: in-process "note left\r" | ingest "note right\r"
+   line 22: in-process "<color:gray>[Content-Type=application/json]\r" | ingest "{\r"
+   line 23: in-process "\r" | ingest "  "data": {}\r"
+   line 24: in-process "{}\r" | ingest "}\r"
+   line 26: in-process "graphql -[#438DD5]-> web: OK\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 27: in-process "note right\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 28: in-process "{\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 29: in-process "  "data": {}\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 30: in-process "}\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 31: in-process "end note\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 32: in-process "end\r" | ingest " -[#438DD5]> : CALL: /\r"
+   line 33: in-process "" | ingest "web -[#438DD5]> web: GET: /health\r"
+   line 34: in-process "hnote across #lightyellow : Row 3" | ingest "web -[#438DD5]-> web: OK\r"
+   line 35: in-process "" | ingest "note right\r"
+   line 36: in-process "" | ingest "{\r"
+   line 37: in-process "note over graphql : cache warmed" | ingest "  "ok": true\r"
+   line 38: in-process "" | ingest "}\r"
+   line 39: in-process "" | ingest "end note\r"
+   line 40: in-process "hnote across <<assertionNote>> #d4edda" | ingest "web -[#438DD5]> payments: POST: /pay\r"
+   line 41: in-process "✓ The basket is empty" | ingest "note left\r"
+   line 42: in-process "end note" | ingest "{\r"
+   line 43: in-process "" | ingest "  "amount": 1\r"
+   line 44: in-process "web -[#438DD5]> web: GET: /health\r" | ingest "}\r"
+   line 45: in-process "web -[#438DD5]-> web: OK\r" | ingest "end note\r"
+   line 46: in-process "note right\r" | ingest "payments -[#438DD5]-> web: \r"
+   line 47: in-process "{\r" | ingest "@enduml\r"
+   line 48: in-process "  "ok": true\r" | ingest ""
+   line 49: in-process "}\r" | ingest "<eof>"
+   line 50: in-process "end note\r" | ingest "<eof>"
+   line 51: in-process "web -[#438DD5]> payments: POST: /pay\r" | ingest "<eof>"
+   line 52: in-process "note left\r" | ingest "<eof>"
+   line 53: in-process "{\r" | ingest "<eof>"
+   line 54: in-process "  "amount": 1\r" | ingest "<eof>"
+   line 55: in-process "}\r" | ingest "<eof>"
+   line 56: in-process "end note\r" | ingest "<eof>"
+   line 57: in-process "payments -[#438DD5]-> web: \r" | ingest "<eof>"
+   line 58: in-process "@enduml\r" | ingest "<eof>"
+   line 59: in-process "" | ingest "<eof>"
+[separateSetup] steps: in-process [] | ingest []
+
+## 4. Writer step marker + tests-file step event for the same scenario
+Replayed=19; stepDelimiter bars=1; assertion notes=1; interactions=15
+annotations: [
+            {
+              "index": 1,
+              "kind": "Custom",
+              "text": "hnote across \u003C\u003CstepDelimiter\u003E\u003E #black:\u003Ccolor:white\u003EGiven a basket"
+            },
+            {
+              "index": 10,
+              "kind": "Custom",
+              "text": "\u2713 The basket is empty\nend note"
+            }
+          ]
+   interaction Request CALL http://override.com/ stepPath=
+   interaction Request CALL http://override.com/ stepPath=
+   interaction Request POST http://localhost:8081/sidekick stepPath=
+   interaction Response POST http://localhost:8081/sidekick stepPath=
+   interaction Request CALL http://override.com/ stepPath=
+   interaction Request CALL http://override.com/ stepPath=
+   interaction Request CALL http://override.com/ stepPath=
+   interaction Request CALL http://override.com/ stepPath=
+   interaction Request CALL http://override.com/ stepPath=
+   interaction Request CALL http://override.com/ stepPath=
+   interaction Request CALL http://override.com/ stepPath=
+   interaction Request GET http://localhost:8081/health stepPath=
+   interaction Response GET http://localhost:8081/health stepPath=
+   interaction Request POST http://localhost:8081/pay stepPath=
+   interaction Response POST http://localhost:8081/pay stepPath=
+diagnostics: 

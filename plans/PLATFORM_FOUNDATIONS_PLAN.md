@@ -526,8 +526,9 @@ Non-model: `CiMetadata.Detect()` reads env at *render* time (`CiMetadata.cs:21`)
 `Unrecorded` on generic ingest (`IngestPipeline.cs:396` records the wrong-runtime bug this caused for the
 Cucumber path); `ReportDiagnostics.Analyse` reads `InternalFlowSpanStore` (`:47`) and
 `TrackingComponentRegistry` (`:63`) statically; plus **G12 suite**. F5's list is **at least 11 items** before
-the round-trip test runs. Side finding: real `kronikol ingest` wrote 0-byte `Specifications.html`/`.yml` —
-probable ingest-path bug, not fixed here.
+the round-trip test runs. Side finding: real `kronikol ingest` wrote 0-byte `Specifications.html`/`.yml`
+(verified 2026-09-22: the blank-on-failed-run rule, not an ingest defect; `INGEST_FEED_PLAN.md` F4. From
+3.27.4 the command prints one line saying so).
 
 **P10 / E0 — the renderer compiles against the BCL alone: YES.** True ASP.NET/DI coupling is 18 files
 (`using Microsoft.AspNetCore|Microsoft.Extensions`, or `IHttpContextAccessor`) plus 3 capture-side files that

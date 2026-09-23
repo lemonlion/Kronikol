@@ -311,4 +311,105 @@ public class IngestCommandTests : IDisposable
     {
         Assert.False(IngestCommand.TryParseDiagnostic(value, out _));
     }
+
+    [Fact]
+    public void Render_local_is_refused_as_a_usage_error_the_command_line_can_act_on()
+    {
+        // PlantUmlRendering.Local needs a LocalDiagramRenderer delegate, which only the library API can set;
+        // through the tool it used to escape as an unhandled InvalidOperationException after the
+        // "Ingesting …" lines, with no output directory and the runtime's crash status.
+        var output = Path.Combine(_dir, "out-local");
+        var err = new StringWriter();
+
+        var exit = IngestCommand.Run(["x.ndjson", "-o", output, "--render", "local"], new StringWriter(), err);
+
+        Assert.Equal(2, exit);
+        Assert.Contains("--render local needs a LocalDiagramRenderer delegate, which only the library API can supply.", err.ToString());
+        Assert.Contains("Use nodejs for offline SVG (needs node on PATH) or browserjs (the default).", err.ToString());
+        Assert.False(Directory.Exists(output));
+
+        // The value stays accepted by the parser (removing an accepted value is v4's), and every list of
+        // modes says the same thing about it.
+        Assert.True(IngestCommand.TryParseRender("local", out var local));
+        Assert.Equal(PlantUmlRendering.Local, local);
+        err = new StringWriter();
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--render", "crayon"], new StringWriter(), err));
+        Assert.Contains("expected browserjs|nodejs|server; local is library-only", err.ToString());
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("local is library-only", usage.ToString());
+    }
+
+    [Fact]
+    public void The_specification_files_are_blank_after_a_failed_run_and_the_command_says_so()
+    {
+        const string testId = "b1ank651916cd43dd8448eb211c80319c";
+        var captures = Path.Combine(_dir, "captures-blank");
+        Directory.CreateDirectory(captures);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/health", "web", "web",
+            requestContent: "", responseContent: "{\"ok\":true}", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+
+        // A red run: both specification files are written blank (the rule Generated-Reports documents for
+        // in-process runs), and the command says so instead of leaving two empty files unexplained.
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › fails", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "failed", Error = "expected 1 got 2", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        var red = Path.Combine(_dir, "out-red");
+        var @out = new StringWriter();
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", red], @out, new StringWriter()));
+        Assert.Equal(0, new FileInfo(Path.Combine(red, "Specifications.html")).Length);
+        Assert.Equal(0, new FileInfo(Path.Combine(red, "Specifications.yml")).Length);
+        Assert.Contains("Specifications.html and Specifications.yml are blank: 1 of 1 scenario(s) failed, and the specification is only published from a green run.", @out.ToString());
+
+        // A green run: both populated, and nothing to say.
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › passes", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        var green = Path.Combine(_dir, "out-green");
+        @out = new StringWriter();
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", green], @out, new StringWriter()));
+        Assert.True(new FileInfo(Path.Combine(green, "Specifications.html")).Length > 0);
+        Assert.True(new FileInfo(Path.Combine(green, "Specifications.yml")).Length > 0);
+        Assert.DoesNotContain("are blank", @out.ToString());
+    }
+
+    [Fact]
+    public void An_ingest_does_not_warn_that_activity_diagrams_will_be_empty()
+    {
+        // The ingest path turns internal-flow tracking off (there are no in-process spans to show), so the
+        // generator's "InternalFlowSpanStore has 0 spans" warning is about a feature this run never had.
+        const string testId = "f10w651916cd43dd8448eb211c80319c";
+        var captures = Path.Combine(_dir, "captures-flow");
+        Directory.CreateDirectory(captures);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/health", "web", "web",
+            requestContent: "", responseContent: "{\"ok\":true}", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › flow", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        var output = Path.Combine(_dir, "out-flow");
+
+        // The generator prints its diagnostics to the console, not the command's writer; captured for this
+        // thread only, because the console is process-wide and those lines name no directory to scope by.
+        string console;
+        using (var scoped = new Kronikol.Tests.Reports.ThreadScopedConsole())
+        {
+            Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", output], new StringWriter(), new StringWriter()));
+            console = scoped.Text;
+        }
+
+        Assert.Contains("Report diagnostics:", console); // the capture saw this run's diagnostics at all
+        Assert.DoesNotContain("InternalFlowSpanStore", console);
+    }
 }
