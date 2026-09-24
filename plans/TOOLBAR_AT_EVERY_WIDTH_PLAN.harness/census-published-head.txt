@@ -1,0 +1,41 @@
+== lightbdd_TestRunReport.html: page scrolls sideways at 780(+310) 800(+290) 820(+270) 840(+250) 860(+230) 880(+210) 900(+190) 920(+170) 940(+150) 960(+130) 980(+110) 1000(+90) 1020(+70) 1040(+50) 1060(+30) 1080(+10)
+  +505 px, 780-1280 (26 widths): S: details.example-diagrams > div.diagram-toggle > select.note-width-select
+       e.g. "WrapWide"
+  +493 px, 320-800 (25 widths): S: details.scenario-steps > details.step.step-collapsible > summary > span.step-text
+       e.g. "A Spiced Deluxe muffin recipe at 190 degrees for 20 minutes in Silicon"
+  +420 px, 780-1180 (21 widths): S: details.example-diagrams > div.diagram-toggle > select.note-format-select
+       e.g. "JSONYAML"
+  +346 px, 780-1120 (18 widths): S: details.example-diagrams > div.diagram-toggle > button.details-radio-btn.toggle-btn
+       e.g. "Databases Shown"
+  +270 px, 320-560 (13 widths): S: details.step.step-collapsible > div.sub-steps > div.step > span.step-text
+       e.g. "=> _log provider entries should contain [ e => e.Message.Contains('Tel"
+  +143 px, 780-920 (8 widths): S: table.param-test-table
+       e.g. "#Input ParametersStatusDurationRecipe NameRecipeTemperatureDuration Mi"
+  +24 px, 780-800 (2 widths): S: details.example-diagrams > div.diagram-toggle > span.details-radio
+       e.g. "Details:ExpandCollapseTruncate34510152025303540506080100lines"
+== xunit_TestRunReport.html: page scrolls sideways at 780(+310) 800(+290) 820(+270) 840(+250) 860(+230) 880(+210) 900(+190) 920(+170) 940(+150) 960(+130) 980(+110) 1000(+90) 1020(+70) 1040(+50) 1060(+30) 1080(+10)
+  +505 px, 780-1280 (26 widths): S: details.example-diagrams > div.diagram-toggle > select.note-width-select
+       e.g. "WrapWide"
+  +420 px, 780-1180 (21 widths): S: details.example-diagrams > div.diagram-toggle > select.note-format-select
+       e.g. "JSONYAML"
+  +346 px, 780-1120 (18 widths): S: details.example-diagrams > div.diagram-toggle > button.details-radio-btn.toggle-btn
+       e.g. "Databases Shown"
+  +214 px, 320-500 (10 widths): S: details.step.step-collapsible > div.sub-steps > div.step > span.step-text
+       e.g. "Audit steps response should contain [ a => a.Action == AuditLogDefault"
+  +143 px, 780-920 (8 widths): S: table.param-test-table
+       e.g. "#Input ParametersStatusDurationRecipe NameRecipeTemperatureDuration Mi"
+  +24 px, 780-800 (2 widths): S: details.example-diagrams > div.diagram-toggle > span.details-radio
+       e.g. "Details:ExpandCollapseTruncate34510152025303540506080100lines"
+== xunit_Specifications.html: page scrolls sideways at no width
+  +505 px, 780-1280 (26 widths): S: details.example-diagrams > div.diagram-toggle > select.note-width-select
+       e.g. "WrapWide"
+  +420 px, 780-1180 (21 widths): S: details.example-diagrams > div.diagram-toggle > select.note-format-select
+       e.g. "JSONYAML"
+  +346 px, 780-1120 (18 widths): S: details.example-diagrams > div.diagram-toggle > button.details-radio-btn.toggle-btn
+       e.g. "Databases Shown"
+  +214 px, 320-500 (10 widths): S: details.step.step-collapsible > div.sub-steps > div.step > span.step-text
+       e.g. "Audit steps response should contain [ a => a.Action == AuditLogDefault"
+  +143 px, 780-920 (8 widths): S: table.param-test-table
+       e.g. "#Input ParametersStatusDurationRecipe NameRecipeTemperatureDuration Mi"
+  +24 px, 780-800 (2 widths): S: details.example-diagrams > div.diagram-toggle > span.details-radio
+       e.g. "Details:ExpandCollapseTruncate34510152025303540506080100lines"

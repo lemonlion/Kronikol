@@ -1199,10 +1199,33 @@ public class ParameterizedGroupRenderTests
         Assert.True(scenarioStart >= 0, "parameterized group not found");
         var scenarioHtml = content.Substring(scenarioStart);
 
-        // Should not have a wrapper, toggle, or grouped class in the actual HTML
-        Assert.DoesNotContain("param-table-wrapper", scenarioHtml);
+        // No flat table, toggle or grouped class in the actual HTML (the wrapper is there: it is the
+        // scroll container every parameter table sits in, see the next fact)
+        Assert.DoesNotContain("param-table-flat", scenarioHtml);
         Assert.DoesNotContain("flatten-toggle", scenarioHtml);
         Assert.DoesNotContain("param-table-grouped", scenarioHtml);
+    }
+
+    /// <summary>The grouped table is the scenario's widest child, and the scenario's content-visibility
+    /// clips whatever overflows it: without a flat view it had no wrapper, so a wide table was cut off
+    /// above 768 px, where it stops being a scroll container itself. It sits in the same scrolling
+    /// wrapper the flat view's two tables do.</summary>
+    [Fact]
+    public void Grouped_table_without_a_flat_view_sits_in_a_scrolling_wrapper_of_its_own()
+    {
+        var scenarios = new[]
+        {
+            MakeScenario("s1", "Process(region: UK)", outlineId: "Process",
+                exampleValues: new() { ["region"] = "UK" }),
+            MakeScenario("s2", "Process(region: US)", outlineId: "Process",
+                exampleValues: new() { ["region"] = "US" })
+        };
+        var content = GenerateReport(MakeFeature(scenarios));
+
+        var start = content.IndexOf("<div class=\"param-table-wrapper\"><table class=\"param-test-table\" data-prefix=\"", StringComparison.Ordinal);
+        Assert.True(start >= 0, "the grouped table does not open inside a wrapper");
+        var tableEnd = content.IndexOf("</table>", start, StringComparison.Ordinal);
+        Assert.Equal("</table></div>", content.Substring(tableEnd, "</table></div>".Length));
     }
 
     [Fact]

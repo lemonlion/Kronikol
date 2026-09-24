@@ -10,6 +10,10 @@
            margin-right: 1em;
         }
 
+        .raw-plantuml pre {
+            overflow-x: auto;
+        }
+
        summary {
            cursor: pointer;
        }
@@ -38,7 +42,13 @@
             content-visibility: auto;
             contain-intrinsic-size: auto 150px;
         }
-        
+
+        /* A long token (a type name, an identifier, a URL) breaks where it has to instead of running past
+           the feature or scenario holding it, whose content-visibility clips whatever overflows it out of
+           sight. Tables and the error diff keep their words whole and scroll instead. */
+        .feature { overflow-wrap: anywhere; }
+        .feature table, .error-diff { overflow-wrap: normal; }
+
         .example-diagrams {
             border-radius: 1em;
             border: 1px solid;
@@ -59,6 +69,7 @@
             padding: 1em;
             padding-top: 0;
             padding-bottom: 0;
+            overflow-x: auto;
         }
 
         body > details > details > details.example {
@@ -91,6 +102,7 @@
             border-radius: 1em;
             padding: 1em;
             flex-shrink: 0;
+            overflow-x: auto;
         }
         
         .test-execution-summary h2 {
@@ -328,7 +340,6 @@
             padding: 0.3em;
             border-radius: 0.3em;
             font-size: 0.7em;
-            white-space: nowrap;
             font-weight: normal;
             display: inline-block;
         }
@@ -755,14 +766,19 @@
             margin: 0.5em 0 0.5em 1.5em;
         }
 
+        /* An image is capped at 320 by 240 px, border outside, and at the width of its step, so a phone's
+           step holds it. The width cap sits on the link: a percentage on the image would size the link
+           to the image's natural width, leaving empty space that opens the lightbox beside it. */
         .attachment-image-link {
             display: inline-block;
             cursor: pointer;
+            max-width: min(322px, 100%);
         }
 
         .attachment-image {
-            max-width: 320px;
-            max-height: 240px;
+            max-width: 100%;
+            max-height: 242px;
+            box-sizing: border-box;
             border: 1px solid #ddd;
             border-radius: 4px;
             transition: box-shadow 0.2s;
@@ -797,7 +813,7 @@
             max-height: 90vh;
             border-radius: 4px;
             box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-        }rgb(100, 100, 100)
+        }
 
         .step-docstring {
             background: #f5f5f5;
@@ -947,6 +963,7 @@
             border-radius: 8px;
             padding: 1em;
             margin-top: 0.5em;
+            overflow-x: auto;
         }
 
         .feature-summary-table {
@@ -998,6 +1015,7 @@
 
         .step-param-table {
             margin: 4px 0 4px 2.3em;
+            overflow-x: auto;
         }
         .step-param-table table {
             border-collapse: collapse;
@@ -1060,6 +1078,7 @@
 
         .step-param-combined-table {
             margin: 8px 0 4px 24px;
+            overflow-x: auto;
         }
         .step-param-combined-table table {
             border-collapse: collapse;
@@ -1554,9 +1573,17 @@
         .param-test-table tbody tr.row-failed { background: #fff0f0; }
         .param-test-table tbody tr.row-skipped { background: #fff8e1; }
         .param-test-table tbody tr.row-bypassed { background: #f0f0ff; }
+        /* Every row carries one of these status classes, which the plain row hover and row-active tints
+           above cannot beat. Each status darkens its own tint under the pointer and further when selected;
+           the selected rules come last, so a hovered selected row keeps its selected tint. */
+        .param-test-table tbody tr.row-passed:hover { background: #e3fae9; }
+        .param-test-table tbody tr.row-failed:hover { background: #fde5e4; }
+        .param-test-table tbody tr.row-skipped:hover { background: #fef1cc; }
+        .param-test-table tbody tr.row-bypassed:hover { background: #e8e8fd; }
         .param-test-table tbody tr.row-active.row-passed { background: #d5f5e3; }
         .param-test-table tbody tr.row-active.row-failed { background: #fadbd8; }
-        .param-test-table tbody tr.row-active.row-skipped { background: #fef9e7; }
+        .param-test-table tbody tr.row-active.row-skipped { background: #fce9b8; }
+        .param-test-table tbody tr.row-active.row-bypassed { background: #dfe0fb; }
         .param-test-table tbody tr.row-search-match { box-shadow: inset 4px 0 0 #4285f4; }
         .param-test-table .mono { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.9em; }
         /* Examples: block separator bands — a divider, not a header; inert to row selection */
@@ -1811,10 +1838,6 @@
             .scenario {
                 padding: 0.5em;
                 border-radius: 6px;
-            }
-
-            .example-image {
-                overflow-x: auto;
             }
 
             .timeline-label {

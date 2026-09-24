@@ -1,0 +1,41 @@
+== SweepWideContent.html: page scrolls sideways at 800(+376) 840(+336) 880(+296) 920(+256) 960(+216) 1000(+176) 1040(+136) 1080(+96) 1120(+56) 1160(+16)
+  +1984 px, 320-1400 (28 widths): S: details.scenario-steps > div.step > pre.step-docstring > code.language-json
+       e.g. "{\"customerId\":\"LifecycleTestCustomer_1632818846264990595\",\"recipe\":\"Sy"
+  +1282 px, 320-1400 (28 widths): S: details.scenario-steps > div.step-param-combined-table > table
+       e.g. "KeyRecipe NameFlourApplesCinnamonPan TypeBatch Id=KeyRecipe NameFlourA"
+  +549 px, 320-840 (14 widths): S: details.scenario-steps > div.step > div.step-param-table > table
+       e.g. "KeyRecipe NameFlourApplesCinnamonPan TypeBatch Id1Spiced DeluxeAlmond "
+  +529 px, 320-840 (14 widths): S: details.scenario-steps > div.step > span.step-text
+       e.g. "a muffin recipe in System.Collections.Generic.List`1[BreakfastProvider"
+  +529 px, 320-840 (14 widths): S: div.param-detail-panel > details.scenario-steps > div.step > span.step-text
+       e.g. "A Classic muffin recipe at 190 degrees for 20 minutes in System.Collec"
+  +519 px, 320-840 (14 widths): S: div.step-param-tree > div.tree-node > div.tree-children > div.tree-node.param-success #text
+       e.g. ": System.Collections.Generic.List`1[BreakfastProvider.Tests.Component."
+  +508 px, 800-1280 (13 widths): S: table.param-test-table
+       e.g. "#Input ParametersStatusDurationRecipe NameFlourApplesCinnamonTemperatu"
+  +396 px, 320-680 (10 widths): F: details.rule > summary.h2-5 #text
+       e.g. "Every_batch_belongs_to_LifecycleTestCustomer_1632818846264990595"
+  +292 px, 320-560 (7 widths): S: div.sub-steps > details.step.step-collapsible > summary > span.step-text
+       e.g. "audit steps response should contain [ a => a.Details.Contains('Lifecyc"
+  +262 px, 320-640 (9 widths): F: summary.h2 > div.endpoint #text
+       e.g. "/api/v1/orders/{orderId}/items/LifecycleTestCustomer_16328188462649905"
+  +229 px, 320-520 (6 widths): S: details.step.step-collapsible > div.sub-steps > div.step > span.step-text
+       e.g. "retrieval steps response customer name should be 'LifecycleTestCustome"
+  +222 px, 320-480 (5 widths): S: div.scenario-description #text
+       e.g. "Checks the order at https://example.test/breakfast-provider/api/v1/ord"
+  +219 px, 320-480 (5 widths): S: details.scenario-steps > div.step > a.step-attachment
+       e.g. "request_body_for_LifecycleTestCustomer_1632818846264990595.json"
+  +212 px, 320-480 (5 widths): S: div.scenario-attachments > a.step-attachment
+       e.g. "response_body_for_LifecycleTestCustomer_1632818846264990595.json"
+  +206 px, 320-480 (5 widths): F: div.feature-description #text
+       e.g. "Covers the orders API at https://example.test/breakfast-provider/api/v"
+  +158 px, 320-520 (5 widths): F: summary.h2 #text
+       e.g. "Order lifecycle for LifecycleTestCustomer_1632818846264990595"
+  +110 px, 320-400 (3 widths): S: details.scenario-steps > div.step.step-background > span.step-text
+       e.g. "the customer LifecycleTestCustomer_1632818846264990595 exists"
+  +104 px, 320-400 (3 widths): S: summary.h3 #text
+       e.g. "Every step content kind for LifecycleTestCustomer_1632818846264990595"
+  +95 px, 320-400 (3 widths): S: details.scenario-steps > div.step > div.step-comment #text
+       e.g. "retried for LifecycleTestCustomer_1632818846264990595"
+  +90 px, 320-400 (3 widths): S: details.scenario-steps > div.step > a.attachment-image-link
+       e.g. ""

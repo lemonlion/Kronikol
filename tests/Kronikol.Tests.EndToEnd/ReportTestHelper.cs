@@ -2355,6 +2355,206 @@ public static class ReportTestHelper
         return new Uri(path).AbsoluteUri;
     }
 
+    /// <summary>
+    /// Every kind of content a feature or scenario holds, each carrying a token with no break
+    /// opportunity or more columns than a narrow window has room for, shaped like the published
+    /// BreakfastProvider reports' (LightBDD renders a parameter by its ToString(), which names its type):
+    /// step text at four depths of sub-steps and in a background step; inline, tabular, tree and record
+    /// parameters; a doc string, a comment, a long-named attachment and a 640 px inline image; a combined
+    /// table; a failure with a diff; a rule, a feature description and an endpoint; a parameterized
+    /// group's grouped table, which has no flat view and so no wrapper, and its row detail panels; a
+    /// flat-view group. The sweep measures that none of it runs past the feature or scenario holding it,
+    /// whose content-visibility clips what overflows out of sight.
+    /// </summary>
+    public static string GenerateReportWithWideContent(string tempDir, string outputDir, string fileName)
+    {
+        const string typeName = "System.Collections.Generic.List`1[BreakfastProvider.Tests.Component.Shared.Models.AppleCinnamonMuffinsRecipeTestData]";
+        const string identifier = "LifecycleTestCustomer_1632818846264990595";
+        const string url = "https://example.test/breakfast-provider/api/v1/orders/3fa85f6457174562b3fc2c963f66afa6/items?include=toppings";
+
+        static ScenarioStep Step(string keyword, string text, params ScenarioStep[] subSteps) => new()
+        {
+            Keyword = keyword, Text = text, Status = ExecutionResult.Passed, SubSteps = subSteps.Length > 0 ? subSteps : null
+        };
+        static TabularCell Cell(string value) => new(value, null, VerificationStatus.NotApplicable);
+        static StepTextSegment TypeParam() =>
+            StepTextSegment.Param("recipeData", new InlineParameterValue(typeName, null, VerificationStatus.NotApplicable));
+
+        // 640 px wide: attachment images are capped at 320 px, more than a phone's scenario has room for.
+        Directory.CreateDirectory(Path.Combine(tempDir, "attachments"));
+        File.WriteAllText(Path.Combine(tempDir, "attachments", "screenshot.svg"),
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"640\" height=\"120\"><rect width=\"640\" height=\"120\" fill=\"#8ab4f8\"/></svg>");
+
+        string[] columns = ["Key", "Recipe Name", "Flour", "Apples", "Cinnamon", "Pan Type", "Batch Id"];
+        static TabularRow Row(string key) => new(TableRowType.Matching,
+            [Cell(key), Cell("Spiced Deluxe"), Cell("Almond Flour"), Cell("Pink Lady"), Cell("Saigon"), Cell("SiliconeMuffinPan"), Cell(identifier)]);
+        var table = new TabularParameterValue([.. columns.Select((c, i) => new TabularColumn(c, i == 0))], [Row("1"), Row("2")]);
+
+        var contentKinds = new Scenario
+        {
+            Id = "wc1", DisplayName = "Every step content kind for " + identifier, IsHappyPath = true,
+            Result = ExecutionResult.Failed, Duration = TimeSpan.FromSeconds(3),
+            Description = "Checks the order at " + url + " from end to end.",
+            Labels = ["Happy Path", identifier],
+            ErrorMessage = $"Expected: \"{identifier}\"\nActual: \"{identifier}_Mismatch\"",
+            ErrorStackTrace = "   at BreakfastProvider.Tests.Component.Orders.OrderLifecycleTests.Then_the_order_is_retrievable_for_" + identifier
+                + "() in /home/runner/work/breakfast-provider/tests/Component/Orders/OrderLifecycleTests.cs:line 142",
+            Attachments = [new FileAttachment("response_body_for_" + identifier + ".json", "attachments/response.json", "application/json")],
+            BackgroundSteps = [Step("Given", "the customer " + identifier + " exists")],
+            Steps =
+            [
+                Step("Given", "an order posted to " + url),
+                new ScenarioStep
+                {
+                    Keyword = "And", Text = "a recipe", Status = ExecutionResult.Passed,
+                    TextSegments = [StepTextSegment.Literal("a muffin recipe in "), TypeParam()]
+                },
+                new ScenarioStep
+                {
+                    Keyword = "And", Text = "the batches", Status = ExecutionResult.Passed,
+                    TextSegments = [StepTextSegment.Literal("the batches "), StepTextSegment.TableRef("batches")],
+                    Parameters = [new StepParameter { Name = "batches", Kind = StepParameterKind.Tabular, TabularValue = table }]
+                },
+                new ScenarioStep
+                {
+                    Keyword = "And", Text = "the ingredients", Status = ExecutionResult.Passed,
+                    TextSegments = [StepTextSegment.Literal("the ingredients "), StepTextSegment.TableRef("ingredients")],
+                    Parameters =
+                    [
+                        new StepParameter
+                        {
+                            Name = "ingredients", Kind = StepParameterKind.Tree,
+                            TreeValue = new TreeParameterValue(new TreeNode("$", "$", "", null, VerificationStatus.NotApplicable,
+                            [
+                                new TreeNode("$.Recipe", "Recipe", typeName, null, VerificationStatus.Success, null),
+                                new TreeNode("$.Customer", "Customer", identifier, null, VerificationStatus.Success, null)
+                            ]))
+                        }
+                    ]
+                },
+                new ScenarioStep
+                {
+                    Keyword = "When", Text = "the order is sent", Status = ExecutionResult.Passed,
+                    DocString = "{\"customerId\":\"" + identifier + "\",\"recipe\":\"" + typeName + "\",\"callback\":\"" + url + "\"}",
+                    DocStringMediaType = "json",
+                    Comments = ["retried for " + identifier],
+                    Attachments =
+                    [
+                        new FileAttachment("request_body_for_" + identifier + ".json", "attachments/request.json", "application/json"),
+                        new FileAttachment("screenshot.svg", "attachments/screenshot.svg", "image/svg+xml")
+                    ]
+                },
+                Step("Then", "the audit is complete",
+                    Step("And", "audit steps response should contain [ a => a.Details.Contains('" + identifier + "') ]",
+                        Step("And", "=> _log provider entries should contain [ e => e.Message.Contains('TelemetryTest_8799047449885538831') ]",
+                            Step("And", "retrieval steps response customer name should be '" + identifier + "'"))))
+            ]
+        };
+
+        // Given and Then tables sharing a key column render as one combined table.
+        var combined = new Scenario
+        {
+            Id = "wc2", DisplayName = "Batches round trip", IsHappyPath = false,
+            Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+            Steps =
+            [
+                new ScenarioStep
+                {
+                    Keyword = "Given", Text = "the batches", Status = ExecutionResult.Passed,
+                    TextSegments = [StepTextSegment.Literal("the batches "), StepTextSegment.TableRef("input")],
+                    Parameters = [new StepParameter { Name = "input", Kind = StepParameterKind.Tabular, TabularValue = table }]
+                },
+                new ScenarioStep
+                {
+                    Keyword = "Then", Text = "the stored batches", Status = ExecutionResult.Passed,
+                    TextSegments = [StepTextSegment.Literal("the stored batches "), StepTextSegment.TableRef("output")],
+                    Parameters = [new StepParameter { Name = "output", Kind = StepParameterKind.Tabular, TabularValue = table }]
+                }
+            ]
+        };
+
+        // Nine parameters, one of them a record: the grouped table is wider than a scenario at 780 to 900 px.
+        static Scenario Recipe(string id, string name, ExecutionResult result) => new()
+        {
+            Id = id, DisplayName = $"Different muffin recipes should produce the expected batch ({name})",
+            Result = result, Duration = TimeSpan.FromMilliseconds(800),
+            OutlineId = "DifferentMuffinRecipes",
+            ExampleValues = new Dictionary<string, string>
+            {
+                ["Recipe Name"] = name, ["Flour"] = "Almond Flour", ["Apples"] = "Pink Lady", ["Cinnamon"] = "Saigon",
+                ["Temperature"] = "190", ["Duration Minutes"] = "20", ["Pan Type"] = "SiliconeMuffinPan", ["Batch Id"] = identifier,
+                ["Recipe"] = "MuffinRecipeTestData { Flour = Almond Flour, Apples = Pink Lady }"
+            },
+            Steps =
+            [
+                new ScenarioStep
+                {
+                    Keyword = "Given", Text = "a recipe", Status = ExecutionResult.Passed,
+                    TextSegments = [StepTextSegment.Literal($"A {name} muffin recipe at 190 degrees for 20 minutes in "), TypeParam()]
+                },
+                Step("Then", "the batch should contain [ b => b.Id == '" + identifier + "' ]")
+            ]
+        };
+
+        static Scenario Bake(string id, string name) => new()
+        {
+            Id = id, DisplayName = "Bake(recipe)", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+            OutlineId = "Bake",
+            ExampleValues = new Dictionary<string, string> { ["Recipe"] = "{ Flour = Plain, Eggs = 2 }" },
+            ExampleRawValues = new Dictionary<string, object?> { ["Recipe"] = new Dictionary<string, object?> { ["Flour"] = "Plain", ["Eggs"] = 2 } },
+            ExampleFlatValues = new Dictionary<string, string> { ["RecipeName"] = name, ["Flour"] = "Plain", ["Eggs"] = "2", ["BatchId"] = identifier + "_" + typeName },
+            Steps = [Step("Given", "a " + name + " recipe"), Step("Then", "the result is bread")]
+        };
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Order lifecycle for " + identifier,
+                Description = "Covers the orders API at " + url + ".",
+                Endpoint = "/api/v1/orders/{orderId}/items/" + identifier,
+                Labels = [identifier],
+                Scenarios = [contentKinds, combined]
+            },
+            new Feature
+            {
+                DisplayName = "Muffin recipes",
+                Scenarios = [Recipe("wr1", "Spiced Deluxe", ExecutionResult.Passed), Recipe("wr2", "Classic", ExecutionResult.Failed), Recipe("wr3", "Wholemeal", ExecutionResult.Skipped)]
+            },
+            new Feature { DisplayName = "Baking", Scenarios = [Bake("wb1", "Classic"), Bake("wb2", "Rustic")] },
+            new Feature
+            {
+                DisplayName = "Batch rules",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "wu1", DisplayName = "A batch keeps its customer", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                        Rule = "Every_batch_belongs_to_" + identifier,
+                        Steps = [Step("Given", "a batch for " + identifier), Step("Then", "the batch keeps its customer")]
+                    }
+                ]
+            }
+        };
+        var diagrams = new[] { new DiagramAsCode("wc1", "", PlantUmlSource), new DiagramAsCode("wc2", "", PlantUmlSource) };
+
+        var ci = new CiMetadata(CiEnvironment.GitHubActions, "20260924.3", "main", "0123456789abcdef0123456789abcdef01234567",
+            "https://github.com/my-organisation/breakfast-provider-integration-tests/actions/runs/3",
+            "my-organisation/breakfast-provider-integration-tests", "3");
+        var now = DateTime.UtcNow;
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            now, now.AddMinutes(3),
+            null, Path.Combine(tempDir, fileName), "Test Run Report", includeTestRunData: true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            ciMetadata: ci,
+            groupParameterizedTests: true);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
     private const string ToggleDefaultsComponentDiagramSource = """
         @startuml
         rectangle "Caller" as caller

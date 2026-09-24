@@ -176,8 +176,8 @@ public partial class StylesheetRulesTests
     }
 
     /// <summary>Q3: the blue the base sheet paints on the scenario's "#" link, its copy-name button and
-    /// a search-matched parameterized row. (The row hover and active tints are not overridden: every
-    /// emitted row carries a status class whose later rule of equal specificity wins over both.)</summary>
+    /// a search-matched parameterized row. (The row hover and selected tints are not overridden: every
+    /// emitted row carries a status class, and each status has its own tints, the same in both themes.)</summary>
     [Fact]
     public void The_violet_theme_recolours_the_blue_the_base_sheet_paints_outside_the_toolbars()
     {
@@ -185,4 +185,100 @@ public partial class StylesheetRulesTests
         Assert.Equal("#ede9fe", CssRules.Value(Violet, ".copy-scenario-name:hover", "background")?.ToLowerInvariant());
         Assert.Equal("inset 4px 0 0 #8b5cf6", CssRules.Value(Violet, ".param-test-table tbody tr.row-search-match", "box-shadow")?.ToLowerInvariant());
     }
+
+    // ── The parameterized row's states (roadmap 1.10) ──
+
+    /// <summary>Every row carries a status class, whose rule is as specific as the base row's
+    /// <c>:hover</c> and <c>row-active</c> rules and follows them, so neither ever painted a real row: a
+    /// hovered row gave no feedback, and a selected skipped row (a paler tint than its resting one) or
+    /// bypassed row (no tint of its own) looked like the rest. Each status now darkens its own tint under
+    /// the pointer and further when selected, and states its hover between the two, so a hovered selected
+    /// row keeps its selected tint.</summary>
+    [Theory]
+    [InlineData("passed")]
+    [InlineData("failed")]
+    [InlineData("skipped")]
+    [InlineData("bypassed")]
+    public void A_parameterized_row_darkens_its_status_tint_when_hovered_and_further_when_selected(string status)
+    {
+        string[] states = [$".param-test-table tbody tr.row-{status}", $".param-test-table tbody tr.row-{status}:hover", $".param-test-table tbody tr.row-active.row-{status}"];
+        var lightness = states.Select(s => Lightness(CssRules.Value(Base, s, "background") ?? throw new Xunit.Sdk.XunitException($"no background for {s}"))).ToArray();
+        Assert.True(lightness[0] - lightness[1] >= 2 && lightness[1] - lightness[2] >= 2,
+            $"{status}: L* resting {lightness[0]:F1}, hovered {lightness[1]:F1}, selected {lightness[2]:F1}; each step should darken by 2 or more");
+        var order = states.Select(s => CssRules.IndexOf(Base, s)).ToArray();
+        Assert.True(order[0] < order[1] && order[1] < order[2], $"{status}: rules at {string.Join(", ", order)}; the hover belongs between the resting and the selected tint");
+    }
+
+    /// <summary>CIE L* of a <c>#rrggbb</c> colour: the lightness a reader sees.</summary>
+    private static double Lightness(string hex)
+    {
+        static double Linear(int c) => c / 255.0 <= 0.04045 ? c / 255.0 / 12.92 : Math.Pow((c / 255.0 + 0.055) / 1.055, 2.4);
+        var rgb = Enumerable.Range(0, 3).Select(i => int.Parse(hex.AsSpan(1 + 2 * i, 2), NumberStyles.HexNumber)).ToArray();
+        var y = 0.2126729 * Linear(rgb[0]) + 0.7151522 * Linear(rgb[1]) + 0.0721750 * Linear(rgb[2]);
+        return y > 216.0 / 24389 ? 116 * Math.Cbrt(y) - 16 : 24389.0 / 27 * y;
+    }
+
+    // ── What a feature or scenario holds stays inside it (roadmap 1.10, the plan's Q7) ──
+
+    /// <summary>A long token (a type name, an identifier, a URL) breaks where it has to instead of running
+    /// past the feature or scenario holding it, whose content-visibility clips it out of sight. Tables and
+    /// the error diff keep their words whole and scroll instead: a column squeezed below its longest word
+    /// would split words that fit.</summary>
+    [Fact]
+    public void Text_in_a_feature_breaks_a_long_token_while_tables_keep_their_words_whole()
+    {
+        Assert.Equal("anywhere", CssRules.Value(Base, ".feature", "overflow-wrap"));
+        Assert.Equal("normal", CssRules.Value(Base, ".feature table", "overflow-wrap"));
+        Assert.Equal("normal", CssRules.Value(Base, ".error-diff", "overflow-wrap"));
+    }
+
+    /// <summary>Each of these was a scroll container only at phone widths, or not at all, so a wide one was
+    /// clipped by its scenario or scrolled the whole page.</summary>
+    [Theory]
+    [InlineData(".param-table-wrapper")]
+    [InlineData(".step-param-table")]
+    [InlineData(".step-param-combined-table")]
+    [InlineData(".step-docstring")]
+    [InlineData(".features-summary-table-wrapper")]
+    [InlineData(".test-execution-summary")]
+    [InlineData(".example-image")]
+    [InlineData(".raw-plantuml pre")]
+    public void A_table_or_block_wider_than_its_holder_scrolls_inside_it(string selector) =>
+        Assert.Equal("auto", CssRules.Value(Base, selector, "overflow-x"));
+
+    /// <summary>The image keeps its 320 by 240 px cap (border outside it) and fills at most its link, whose
+    /// width the cap now bounds together with its step: a percentage cap on the image itself would size
+    /// the link to the image's natural width.</summary>
+    [Fact]
+    public void An_attachment_image_keeps_its_cap_and_never_outgrows_its_step()
+    {
+        Assert.Equal("min(322px, 100%)", CssRules.Value(Base, ".attachment-image-link", "max-width"));
+        Assert.Equal("100%", CssRules.Value(Base, ".attachment-image", "max-width"));
+        Assert.Equal("242px", CssRules.Value(Base, ".attachment-image", "max-height"));
+        Assert.Equal("border-box", CssRules.Value(Base, ".attachment-image", "box-sizing"));
+    }
+
+    /// <summary>A label is a pill of one or two words, which moves to the next line whole; one wider than
+    /// its line (an identifier used as a tag) was held on one line and clipped. It may break now, which it
+    /// does only when it is wider than the whole line.</summary>
+    [Fact]
+    public void A_label_wider_than_its_line_may_break() =>
+        Assert.NotEqual("nowrap", CssRules.Value(Base, "span.label", "white-space"));
+
+    /// <summary>Stray text between two rules makes the browser drop the rule after it whole: the text
+    /// <c>rgb(100, 100, 100)</c> left after the lightbox rule cost the doc string its block and its
+    /// scrolling. Every selector in the built-in sheets is made of selector tokens and nothing else.</summary>
+    [Fact]
+    public void Every_selector_in_the_built_in_sheets_is_well_formed()
+    {
+        var bad = AllSheets
+            .SelectMany(s => CssRules.Parse(s.Css).SelectMany(r => r.Selectors).Where(x => !Selector().IsMatch(x)).Select(x => $"{s.Name}: {x}"))
+            .ToList();
+        Assert.True(bad.Count == 0, "selectors a browser would drop, with their whole rule:\n" + string.Join("\n", bad));
+    }
+
+    /// <summary>Type, universal, class, id, attribute, pseudo-class and pseudo-element tokens (arguments
+    /// nested one level deep, as in <c>:not(:has(svg))</c>) and combinators.</summary>
+    [GeneratedRegex(@"^(?:\s*[>+~]\s*|\s+|\*|[a-zA-Z][\w-]*|\.[\w-]+|#[\w-]+|\[[^\[\]]*\]|::?[\w-]+(?:\((?:[^()]|\([^()]*\))*\))?)+$")]
+    private static partial Regex Selector();
 }

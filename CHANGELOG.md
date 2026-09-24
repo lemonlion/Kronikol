@@ -4,6 +4,86 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.29.3] - 2026-09-24
+
+**Patch - what a scenario holds stays inside it, and a parameterized row answers the pointer (roadmap
+1.10, `plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md` Q7).** The patch part moved because nothing is new to
+call: no option, type, member or parameter is added. Everything is CSS, plus one wrapper element the
+report now puts around every parameter table. Every behaviour that changes is one that was broken, and
+each is called out below.
+
+### Fixed
+
+- **A scenario cut off whatever was wider than it, with nothing to scroll to.** A feature and a scenario
+  skip painting what overflows them (`content-visibility: auto`, which keeps a large report fast), so on
+  a narrow window:
+  - **A parameterized group's table** without a flat view had no scrolling wrapper, and is a scroll
+    container itself only at 768 px and below: above that, a wide one lost its last columns (on the
+    published BreakfastProvider reports, up to 143 px of it from 780 to 920 px). It now sits in the
+    scrolling wrapper the flat view's tables always had. **Behaviour change:** every parameter table is
+    inside `<div class="param-table-wrapper">`, and the gap under a grouped table is the flat view's,
+    15 px instead of 8.
+  - **A long token in text** (a LightBDD parameter renders its type name, such as
+    ``System.Collections.Generic.List`1[BreakfastProvider...]``; a lambda; an identifier; a URL) ran past
+    the scenario: on the published LightBDD report a step in a parameterized row's detail panel lost up
+    to 493 px from 320 to 800 px, and on all three published reports a nested sub-step up to 270 px
+    from 320 to 560 px. Step text at every depth, tree values, comments, descriptions, scenario, feature
+    and rule names, the feature's endpoint and attachment names now break where they must; tables keep
+    their words whole and scroll instead, and so does the error diff.
+  - **A step's table and the combined Given/Then table** never scrolled at any width. Now they do.
+  - **A diagram rendered by a PlantUML server or a local jar** scrolled only at 768 px and below, and its
+    source never did. Both scroll at every width, as the phone layout already chose over shrinking a
+    diagram until it is illegible.
+  - **An attachment image** was 320 px wide at any width, more than a phone's step has room for. It now
+    shrinks to its step and keeps its 320 by 240 px cap, and the link around it stays as wide as the
+    image.
+  - **A label wider than its line** (an identifier used as a tag) was held on one line. It may now break,
+    which a label does only when it is wider than the whole line.
+- **The browser dropped the doc string's rule.** Stray text, `rgb(100, 100, 100)`, between two rules of
+  the main stylesheet (there since before it moved into its own file) made the browser discard the rule
+  after it whole: a doc string was a bare `<pre>`, and a long line ran past the scenario and was cut
+  off. **Behaviour change:** a doc string is the grey, bordered, indented block its rule always
+  described, and scrolls a long line sideways.
+- **The page scrolled sideways under the run summary's tables.** The features table (under "Features
+  Summary") was a scroll container only at 768 px and below, so above that a wide one scrolled the whole
+  page (from 769 to 900 px on the sweep's run reports, 111 px of it at 800 px); under WCAG text spacing
+  the Test Execution Summary's four columns were 19 px too wide at 320 px (34 px, to 340 px, with a
+  classic scrollbar). Both now scroll inside their boxes.
+- **Hovering a parameterized row gave no feedback, in any report.** Every row carries a status class
+  whose rule is as specific as the row's hover and selected tints and follows them, so neither ever
+  painted. A selected skipped row also turned paler than the rest (`#fef9e7` against `#fff8e1`), and a
+  selected bypassed row had no tint of its own. Each status now darkens its own tint under the pointer
+  and further when selected: passed `#f0fff0`, `#e3fae9`, `#d5f5e3`; failed `#fff0f0`, `#fde5e4`,
+  `#fadbd8`; skipped `#fff8e1`, `#fef1cc`, `#fce9b8`; bypassed `#f0f0ff`, `#e8e8fd`, `#dfe0fb`. A hovered
+  selected row keeps its selected tint. **Behaviour change:** a hovered row darkens, a selected skipped
+  row is amber and a selected bypassed row lavender, in both themes.
+
+### Documentation
+
+- Wiki: `Generated-Reports` says how a scenario's wide content fits (scrolls or breaks) and how the
+  summary tables do, what a parameterized row shows when hovered and selected, and what a doc string
+  looks like. Its media type is a `language-*` class the report does not highlight, not "syntax
+  highlighting" as the page said. A search match is marked by a bar along the row's left edge, not an
+  outline. `Ingesting-External-Captures` no longer calls a doc string highlighted. The Kronikol4J
+  divergence ledger records the change.
+
+### Tests
+
+- `ViewportSweepTests` opens every `details` element and gains a check: nothing may run past the
+  feature or scenario holding it. Elements and text runs are measured with every holder laid out (one
+  off screen otherwise skips layout), and what sits in a container that scrolls it is exempt. A fourth
+  page carries every kind of content a scenario holds, each too wide for a narrow window, and is swept
+  again under WCAG text spacing. On 3.29.2 that page reports 195 problems, 225 under text spacing, and
+  the two run-report pages scroll sideways from 769 to 900 px once their features summary is open.
+- `ScenarioContentWidthTests` pins which way each kind fits: a table scrolls and keeps its words whole,
+  a long token breaks, the doc string is its block, a server-rendered diagram and its source scroll,
+  and an attachment image keeps its cap, fits a phone's step and has a link no wider than itself.
+- `ParameterizedGroupTests` reads each status's resting, hovered and selected tint. `StylesheetRulesTests`
+  pins the tints' order and lightness steps, the scroll containers, the wrap rules and that every
+  selector in the built-in sheets is well formed (the stray text failed it).
+  `ParameterizedGroupRenderTests` pins the wrapper; a fact that asserted no wrapper without a flat view
+  now asserts no flat table.
+
 ## [3.29.2] - 2026-09-24
 
 **Patch - the toolbar at every width (`plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md`): the report fits its window

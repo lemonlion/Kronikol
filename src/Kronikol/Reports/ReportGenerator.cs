@@ -2670,7 +2670,9 @@ public static class ReportGenerator
         // starts visible (toggleFlattenParams reads live visibility, so it needs no seeding).
         var hasFlatView = group.FlatParameterNames is { Length: > 0 };
         var startGrouped = hasFlatView && toggles.ParameterTableView == ParameterTableView.Grouped;
-        if (hasFlatView) body.Append("<div class=\"param-table-wrapper\">");
+        // The wrapper scrolls a table wider than the scenario, whose content-visibility would clip it out
+        // of sight: the table is a scroll container itself only at phone widths.
+        body.Append("<div class=\"param-table-wrapper\">");
 
         // Flat parameter table (visible by default) — shows original Gherkin Example columns as scalar values
         if (hasFlatView)
@@ -2910,7 +2912,7 @@ public static class ReportGenerator
             body.Append("</tr>");
         }
         body.Append("</tbody></table>");
-        if (hasFlatView) body.Append("</div>"); // close param-table-wrapper
+        body.Append("</div>"); // close param-table-wrapper
 
         // Detail panels (steps, failure) — rendered below the parameter table
         var hasAnyDetail = scenarios.Any(s => s.Steps is { Length: > 0 } || s.BackgroundSteps is { Length: > 0 } || s.Result == ExecutionResult.Failed);

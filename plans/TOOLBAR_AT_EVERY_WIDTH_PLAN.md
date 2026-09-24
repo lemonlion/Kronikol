@@ -7,8 +7,8 @@ byte-identical to the first pass's (3.27.2, `2843018a`) apart from the version s
 clock, so every first-pass RUN claim still holds. The checkout has since moved to 3.29.1 (`afeafa5b`),
 which changes none of the report, stylesheet, generator, E2E or CI files this plan measures or cites
 (only the version number, on the same lines, and other plans' index rows) · **Status: EXECUTED 2026-09-24 as 3.29.2**
-(§9: what shipped, what departed from this plan and why), with D5 taken at the recommended 1160 px and Q6 wired; Q7 is
-left to the owner. Before execution a C# prototype was built and tested in a throwaway worktree (§2.14, the harness's
+(§9: what shipped, what departed from this plan and why), with D5 taken at the recommended 1160 px and Q6 wired; Q7
+and the dead parameterized-row hover executed the same day as 3.29.3 (§9, its second part). Before execution a C# prototype was built and tested in a throwaway worktree (§2.14, the harness's
 `prototype.diff`). This is
 P2 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md): roadmap item 1.5, track B
 (`src/Kronikol/Reports/stylesheets.css`, `internal-flow-popup-styles.css`, `Constants/Stylesheets.cs`,
@@ -1149,6 +1149,110 @@ rules and no theme, as before; `kronikol ingest` writes `Specifications.html` th
 `CreateStandardReportsWithDiagrams`, so its violet theme now follows the component sheets too, and it
 turns internal-flow tracking off, so S5 never applies there.
 
+### Q7 and the parameterized row's states, executed 2026-09-24 as 3.29.3
+
+On the owner's "fix that" for the dead row hover (item 1 above) and for Q7. It shipped as a patch: CSS, plus
+the wrapper the report now puts around every parameter table.
+
+**What shipped.**
+
+- **Wide content.** Above the phone layout a grouped table without a flat view had no scrolling wrapper.
+  Now every parameter table sits in `.param-table-wrapper`. Seven more boxes scroll sideways:
+  - `.step-param-table` and `.step-param-combined-table`;
+  - `.step-docstring` (its rule restored, below);
+  - `.example-image` at every width, not only at 768 px and below;
+  - `.raw-plantuml pre`;
+  - `.features-summary-table-wrapper`;
+  - `.test-execution-summary`.
+- **Long tokens.** `.feature { overflow-wrap: anywhere }` breaks a long token in any text a feature
+  holds. `.feature table, .error-diff { overflow-wrap: normal }` keeps table columns from splitting words
+  that fit.
+- **Attachment image.** The 320 px cap moved onto the link, which also stays within its step.
+- **Labels.** `span.label` lost `white-space: nowrap`.
+- **The stray text.** `rgb(100, 100, 100)` after the lightbox rule is gone. It made every browser drop
+  the `.step-docstring` rule.
+- **Row states.** Each status gets a hover tint and a selected tint.
+- **Tests.**
+  - `ViewportSweepTests`: every `details` element opened; a check that nothing runs past the feature or
+    scenario holding it; a page of every content kind; that page swept again under text spacing.
+  - `ScenarioContentWidthTests`.
+  - The row states in `ParameterizedGroupTests`.
+  - `StylesheetRulesTests`: the new rules, and that every selector is well formed.
+  - `ParameterizedGroupRenderTests`: the wrapper.
+
+**Measured.** The census is `census.js` in the harness (§U), with every `details` element open and
+every scenario laid out:
+
+| Check | Result |
+|---|---|
+| Census of the three published reports (3.29.0, the toolbar left out: 3.29.2 fixed it) | Three culprits. A step in a LightBDD parameterized row's detail panel: +493 px, 320 to 800 px. A nested sub-step on all three reports: up to +270 px, 320 to 560 px. The grouped table on all three: +143 px, 780 to 920 px. Measured without a classic scrollbar; with one each band reaches 20 px further (`census-published-head-scrollbar.txt`). |
+| Census of the new test page on 3.29.2 | 20 culprits, with elements and text runs both measured (the full list is in the harness). |
+| Census on the release, classic scrollbar, 20 px steps | Clean: the three published reports (new sheet injected, grouped tables wrapped as the emitter now wraps them), with and without text spacing; the test page in Chromium, in Firefox, in WebKit, and under text spacing |
+| The new E2E facts on 3.29.2 (in the release worktree before the fix) | The sweep of the new page: 195 problems (225 under text spacing). The two run-report pages scroll sideways from 769 to 900 px once their features summary is open. Every `ScenarioContentWidthTests` fact red but the 1400 px image case, which holds on 3.29.2 and pins that the desktop image and its link are unchanged. The four row-state facts red. |
+| Unit suite | 5,542 passed, 1 skipped (the 100 MB streaming test, skipped on 3.29.2 too), 0 failed |
+| E2E suite without the three doc-asset generators | 838 passed, 0 failed, 7 min 48 s (818 before, plus the 20 new facts) |
+
+**Departures from §10 Q7, and findings.**
+
+1. **The detail-panel defect is step text, not a sub-table.**
+   - What was clipped in LightBDD's detail panels was `span.step-text` holding a parameter's `ToString()`
+     (``System.Collections.Generic.List`1[BreakfastProvider...]``), 740 px wide at 400 px.
+   - Ordinary scenarios lose nested sub-step text the same way: a lambda, a telemetry identifier.
+   - So Q7's `.param-detail-panels { overflow-x: auto }` would have fixed one place and left the rest. A
+     sideways scroll is also a poor way to read a sentence. Text breaks instead.
+2. **The harness saw only part of it**, three ways:
+   - Its clipped-content measure (`scrollWidth` on `.feature` and `.scenario`) read nothing from an
+     off-screen scenario, which `content-visibility` does not lay out. Which scenarios it measured
+     depended on the scroll position.
+   - It measured elements only. A long token directly inside a block (a scenario name in its summary, a
+     comment, a tree value, the feature's floated endpoint) overflows its line without widening any
+     element.
+   - It opened only features, scenarios and diagram blocks. With every `details` open, the features
+     summary scrolls the page from 769 to 900 px on the sweep's run reports.
+   The guard lays every holder out, measures text runs and opens everything.
+3. **Every kind of content was affected, not only Q7's two.** The test page found:
+   - step and combined tables;
+   - server-rendered diagrams and their source;
+   - attachment images and file names;
+   - labels;
+   - names, descriptions, rule names and the endpoint;
+   - the doc string, whose rule the stray text had dropped since before the stylesheet moved into its
+     own file (June).
+   `Every_selector_in_the_built_in_sheets_is_well_formed` catches that kind of stray text now.
+4. **The table is wrapped, not turned into a block.** Q7 offered both. `display: block` above 768 px would
+   shrink every narrow table to its content (the anonymous table inside a block is sized to fit), a
+   visible change to every report. The wrapper costs one element. The flat view's wrapper already
+   showed the one layout change: the gap under a grouped table is now the flat view's, 15.2 px instead
+   of 8.0, because a scroll container keeps its child's margin.
+5. **The hover colours**, the design choice item 1 above left open.
+   - Each status darkens its own tint. The steps in CIE L* are 2.3 to 3.1 for hover and 4.7 to 6.1 for
+     selected.
+   - Passed and failed keep their selected tints.
+   - The selected skipped tint was paler than the resting one (L* 97.9 against 97.6), so a selected
+     skipped row looked unselected. It is now amber, `#fce9b8`; `#f4e9be`, derived by formula, rendered
+     khaki.
+   - Bypassed had no selected tint and has `#dfe0fb`.
+   - The selected rules follow the hovers, so a hovered selected row keeps its selected tint.
+   - Swatches: harness `swatch.png`.
+6. **The image cap moved to the link.** `max-width: min(320px, 100%)` on the image fitted a phone. But
+   a percentage in `max-width` counts as none when the link sizes itself, so at desktop width the link
+   grew to the image's natural 642 px beside a 322 px image, and the empty space still opened the
+   lightbox (`probe-img2.js`). On the link, `max-width: min(322px, 100%)` sizes it against its step.
+   The image, `border-box` with `max-width: 100%` and `max-height: 242px`, keeps its 320 by 240 px
+   content exactly.
+7. **The 1,160 px breakpoint has an edge §10 Q1 did not measure.**
+   - Q1 calls 1,160 px clean under text spacing with a classic scrollbar "bar one width". Its runs
+     stepped 10 px from 1,080 px, so 1,161 to 1,169 px were never measured.
+   - There, with both conditions, the in-row filtering box is 189 to 198 px wide, too narrow for a
+     letter-spaced "Export Filtered HTML" (185 px) and its padding. The cluster runs up to 11 px past
+     the box through 1,172 px, and at 1,161 px the page scrolls sideways by 3 px (`probe-1161.js`). It is
+     clean from 1,175 px.
+   - Not changed: moving the breakpoint is D5's to decide. The text-spacing sweep therefore runs in the
+     shared browser without the classic scrollbar, which is how D5 was measured, and says why.
+8. **A test that could not fail, caught before shipping.** The server-diagram fact first compared
+   `scrollWidth` with `clientWidth`. That holds just as well for content running out of a box that does
+   not scroll, so it passed on 3.29.2. It now also requires `overflow-x` to be `auto` or `scroll`.
+
 ---
 
 ## 10. Open questions, with recommendations
@@ -1161,7 +1265,7 @@ turns internal-flow tracking off, so S5 never applies there.
 | Q4 | Kronikol4J: ledger entry only, or also mirror the three CSS files and the renderer's order | **Ledger only**, per D11's recommendation to freeze the rendering half; the entry records that the copies were already behind. If D11 is answered "mirror", the mirror is four file edits in the same session |
 | Q5 | The guard's step, browser and CI group | 20 px plus the two band edges, three facts, its own Chromium with classic scrollbars, named in the "Toolbar & Reports" filter and excluded from the Remainder. If a lane's time matters, 40 px still brackets the measured bands (every band starts at 770 or 780, which a 40 px step from 320 lands on at 760 and 800; 20 is the safe choice). If a second browser launch is unwelcome in the Mobile collection, the shared one works with the bands 15 px narrower than a desktop's; say which in §9 |
 | Q6 | `InternalFlowPopupCustomStyleSheet` (S5): wire it in R1 | **Wire it in R1 as a fix, patch.** The option is the public surface and has existed since internal-flow tracking; the call sites compose it into the argument they already pass (§3.7), so no signature changes and nothing new is callable. If declined, the option is marked `[Obsolete]` with the reason and the two wiki rows say it is not applied, which is the smaller honest fix |
-| Q7 | The parameterized-test content the published reports clip (§2.13): the grouped table past its scenario at 780 to 840 px, the LightBDD row detail panels at 320 to 760 px | **Its own patch, after R1, not in it** (the sibling a plan records, per the roadmap's rule that a recommendation is not a green light). Same mechanism as §2.9, different elements and different tests: `.param-test-table` a scroll container at every width, as it already is at ≤ 768 px (`stylesheets.css:1807`), or wrapped the way the flat view is (`.param-table-wrapper`, `:1578`); `.param-detail-panels` (`:1611`) `overflow-x: auto`; a sweep assertion that no `.scenario` or `.feature` holds content wider than itself, which would have caught §2.9 too. The same audit covers the run summary table's 19 px under text spacing at 320 px (§2.11). If the owner prefers, it joins 6.2 |
+| Q7 | The parameterized-test content the published reports clip (§2.13): the grouped table past its scenario at 780 to 840 px, the LightBDD row detail panels at 320 to 760 px | **Its own patch, after R1, not in it** (the sibling a plan records, per the roadmap's rule that a recommendation is not a green light). Same mechanism as §2.9, different elements and different tests: `.param-test-table` a scroll container at every width, as it already is at ≤ 768 px (`stylesheets.css:1807`), or wrapped the way the flat view is (`.param-table-wrapper`, `:1578`); `.param-detail-panels` (`:1611`) `overflow-x: auto`; a sweep assertion that no `.scenario` or `.feature` holds content wider than itself, which would have caught §2.9 too. The same audit covers the run summary table's 19 px under text spacing at 320 px (§2.11). If the owner prefers, it joins 6.2. **Executed as 3.29.3** (§9, second part): the table wrapped, the detail panels' defect fixed as the step text it was, and every other kind of content the sweep found |
 
 ---
 

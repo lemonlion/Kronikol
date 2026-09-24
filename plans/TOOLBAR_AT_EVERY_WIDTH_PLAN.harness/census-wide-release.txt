@@ -1,0 +1,8 @@
+# chromium, classic scrollbar
+== SweepWideContent.html: page scrolls sideways at no width
+# chromium, classic scrollbar, text spacing
+== SweepWideContent.html: page scrolls sideways at no width
+# firefox
+== SweepWideContent.html: page scrolls sideways at no width
+# webkit
+== SweepWideContent.html: page scrolls sideways at no width

@@ -36,13 +36,14 @@ public sealed class ClassicScrollbarBrowser : IAsyncLifetime
 
 /// <summary>
 /// The report at every width from 320 to 1400 px, reloaded at each (the init script decides the phone
-/// layout once, at load), with the phone-hidden filters and scenario toolbar opened the way a reader
-/// opens them: no sideways scroll, no label wrapped inside a toolbar button, the export buttons inside
-/// the filtering box, every scenario-toolbar control inside its toolbar, and the header laid out as
-/// the breakpoint says (plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md §4). The page's scroll width cannot see
-/// a clipped control: <c>.feature</c> and <c>.scenario</c> carry <c>content-visibility: auto</c>,
-/// whose paint containment cuts off whatever overflows them, so the toolbar is measured against its
-/// own edge. Every bad width is collected and reported together.
+/// layout once, at load), with every <c>details</c> element and the phone-hidden filters and scenario
+/// toolbar opened the way a reader opens them: no sideways scroll, no label wrapped inside a toolbar
+/// button, the export buttons inside the filtering box, every scenario-toolbar control inside its
+/// toolbar, nothing wider than the feature or scenario holding it, and the header laid out as the
+/// breakpoint says (plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md §4 and Q7). The page's scroll width cannot see
+/// clipped content: <c>.feature</c> and <c>.scenario</c> carry <c>content-visibility: auto</c>, whose
+/// paint containment cuts off whatever overflows them, so their content is measured against their own
+/// edges. Every bad width is collected and reported together.
 /// </summary>
 [Collection(PlaywrightCollections.Mobile)]
 public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDisposable
@@ -57,14 +58,16 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
         [.. Enumerable.Range(0, 55).Select(i => 320 + i * 20).Append(769).Append(Breakpoint + 1).Order()];
 
     private readonly ClassicScrollbarBrowser _browser;
+    private readonly PlaywrightFixture _shared;
     private readonly ITestOutputHelper _output;
     private readonly string _tempDir = Path.Combine(Path.GetTempPath(), "kronikol-sweep-" + Guid.NewGuid().ToString("N")[..8]);
     private static readonly string OutputDir = Path.Combine(
         Path.GetDirectoryName(typeof(ViewportSweepTests).Assembly.Location)!, "PlaywrightOutput");
 
-    public ViewportSweepTests(ClassicScrollbarBrowser browser, ITestOutputHelper output)
+    public ViewportSweepTests(ClassicScrollbarBrowser browser, PlaywrightFixture shared, ITestOutputHelper output)
     {
         _browser = browser;
+        _shared = shared;
         _output = output;
         Directory.CreateDirectory(_tempDir);
         Directory.CreateDirectory(OutputDir);
@@ -88,9 +91,30 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
     public Task Run_report_without_internal_flow_tracking_fits_every_width() =>
         Sweep(ReportTestHelper.GenerateReportWithWideHeader(_tempDir, OutputDir, "SweepRunNoFlow.html", specifications: false, internalFlowTracking: false), runReport: true);
 
-    private async Task Sweep(string url, bool runReport)
+    /// <summary>Every kind of content a scenario holds, each with a token or a table too wide for a narrow
+    /// window: step text at every depth, step tables, trees, a doc string, attachments, a parameterized
+    /// group's grouped table and its row detail panels.</summary>
+    [Fact]
+    public Task Run_report_with_wide_content_fits_every_width() =>
+        Sweep(ReportTestHelper.GenerateReportWithWideContent(_tempDir, OutputDir, "SweepWideContent.html"), runReport: true);
+
+    /// <summary>WCAG 1.4.12's text spacing, which a reader may impose: line height 1.5, letter spacing
+    /// 0.12 em, word spacing 0.16 em, paragraph spacing 2 em.</summary>
+    private const string TextSpacing =
+        "*{line-height:1.5 !important;letter-spacing:0.12em !important;word-spacing:0.16em !important}p{margin-bottom:2em !important}";
+
+    /// <summary>Under text spacing the run summary table was 19 px too wide at 320 px (34 px, to 340 px,
+    /// with the scrollbar), and scrolled the page. This sweep runs without the classic scrollbar, as the
+    /// breakpoint was chosen (plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md §2.11, §10 Q1): with both, the first
+    /// in-row widths (1161 to 1172 px) leave the letter-spaced "Export Filtered HTML" up to 11 px past a
+    /// filtering box too narrow for it.</summary>
+    [Fact]
+    public Task Run_report_with_wide_content_fits_every_width_under_wcag_text_spacing() =>
+        Sweep(ReportTestHelper.GenerateReportWithWideContent(_tempDir, OutputDir, "SweepWideContentSpaced.html"), runReport: true, TextSpacing, _shared.Browser);
+
+    private async Task Sweep(string url, bool runReport, string? injectedCss = null, IBrowser? browser = null)
     {
-        await using var context = await _browser.Browser.NewContextAsync(new BrowserNewContextOptions
+        await using var context = await (browser ?? _browser.Browser).NewContextAsync(new BrowserNewContextOptions
         {
             ViewportSize = new ViewportSize { Width = Widths[0], Height = 900 }
         });
@@ -107,10 +131,8 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
             else { await page.GotoAsync(url); loaded = true; }
             await page.WaitForFunctionAsync("() => document.querySelector('details.feature') !== null",
                 null, new() { Timeout = 30000, PollingInterval = 200 });
-            await page.EvaluateAsync("""
-                () => document.querySelectorAll('details.feature, details.scenario, details.example-diagrams')
-                    .forEach(d => d.open = true)
-                """);
+            await page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
+            if (injectedCss is not null) await page.AddStyleTagAsync(new() { Content = injectedCss });
             if (width <= 768)
             {
                 // The init script hides the filters and every scenario toolbar on a phone; open them
@@ -193,6 +215,43 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
                         if (lines(td) > 1) problems.push(`the CI label "${label(td)}" wraps`);
                 }
             }
+
+            // 7. Nothing wider than the feature or scenario holding it: their content-visibility clips it
+            //    out of sight and out of reach of the page's scroll. One off screen skips layout, so each
+            //    is laid out whole for the measurement. Elements and text runs both count. What overflows
+            //    inside a container that scrolls it (or clips it on purpose, as an ellipsis does) is not
+            //    counted, the container is; a nested scenario is measured against its own edges.
+            const holders = [...document.querySelectorAll('.feature, .scenario')].filter(vis);
+            holders.forEach(h => h.style.contentVisibility = 'visible');
+            const scrolls = el => /^(auto|scroll|hidden)$/.test(getComputedStyle(el).overflowX);
+            const name = el => el.localName + [...el.classList].map(c => '.' + c).join('');
+            const range = document.createRange();
+            for (const h of holders) {
+                const left = h.getBoundingClientRect().left + h.clientLeft, right = left + h.clientWidth;
+                let worst = null, worstOver = 1;
+                // Text too: a long token overflows its line without widening the block that holds it.
+                const walker = document.createTreeWalker(h, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+                for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+                    const text = n.nodeType === Node.TEXT_NODE;
+                    if (text && !n.data.trim()) continue;
+                    const el = text ? n.parentElement : n;
+                    if (el.closest('svg') && (text || el.localName !== 'svg')) continue;
+                    let r;
+                    if (text) { range.selectNodeContents(n); r = range.getBoundingClientRect(); } else r = el.getBoundingClientRect();
+                    if (r.width === 0) continue;
+                    const over = Math.max(r.right - right, left - r.left);
+                    if (over <= worstOver) continue;
+                    let elsewhere = false;
+                    for (let a = text ? el : el.parentElement; a && a !== h && !elsewhere; a = a.parentElement)
+                        elsewhere = a.matches('.feature, .scenario') || scrolls(a);
+                    if (!elsewhere) { worst = el; worstOver = over; }
+                }
+                if (worst) {
+                    const title = (h.querySelector('summary')?.textContent || '').trim().slice(0, 40);
+                    problems.push(`${name(worst)} runs ${Math.round(worstOver)} px past the edge of the ${h.classList.contains('scenario') ? 'scenario' : 'feature'} "${title}", clipped out of sight`);
+                }
+            }
+            holders.forEach(h => h.style.contentVisibility = '');
             return JSON.stringify({ problems, scrollbar: width - de.clientWidth });
         }
         """;

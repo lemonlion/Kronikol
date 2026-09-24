@@ -464,3 +464,43 @@ SCROLLBARS=1 TAG=release-sb node sweep2.js 20 out-release && node sweep2.js 20 o
   by copying the test files into the 3.29.1 worktree with a stub `UserStylesheets`: 23 of 75 red, the
   three sweep facts with 280, 1,050 and 1,315 problems. On the release: 75 of 75 green, the sweep 57
   widths in about 9 s a page with a 15 px scrollbar at every width.
+
+## U. Q7 and the parameterized row's states (3.29.3, 2026-09-24)
+
+`census.js` is the guard's check 7 with every culprit listed, not only the worst one per holder. It opens every
+`<details>`, lays out every feature and scenario (an off-screen one otherwise skips layout under
+`content-visibility`, and its `scrollWidth` sees nothing), and measures text runs as well as elements. A
+culprit is the outermost element or text run past its holder's padding edge that is not inside a container
+that scrolls it or a nested holder. `WRAP=1` wraps each bare grouped table as the 3.29.3 emitter does,
+`SPACING=1` adds the WCAG text-spacing override, `ENGINE=firefox|webkit` switches browsers.
+
+```bash
+# the published reports as they are (3.29.0), and with the release's stylesheet and wrapper
+node census.js out-published/lightbdd_TestRunReport.html,out-published/xunit_TestRunReport.html,out-published/xunit_Specifications.html 320-1400-20 - 0
+WRAP=1 node census.js out-published/lightbdd_TestRunReport.html,out-published/xunit_TestRunReport.html,out-published/xunit_Specifications.html 320-1400-20 ../../src/Kronikol/Reports/stylesheets.css 1
+WRAP=1 SPACING=1 node census.js <the same three> 320-1400-20 ../../src/Kronikol/Reports/stylesheets.css 1
+# the sweep's wide-content page (ViewportSweepTests writes it to the E2E output folder)
+node census.js ../../tests/Kronikol.Tests.EndToEnd/bin/Debug/net10.0/PlaywrightOutput/SweepWideContent.html 320-1400-20 - 1
+ENGINE=firefox node census.js <that page> 320-1400-20 -       # and webkit, and SPACING=1
+node probe-img2.js                                            # the attachment image under each cap
+node probe-gap.js                                             # the gap under a grouped table, wrapped or not
+node probe-1161.js <a spaced run report>                      # the export cluster at 1150 to 1180 px, text spacing + scrollbar
+node swatch.js                                                # swatch.png: the row tints at rest, hovered and selected
+```
+
+- `census-published-head.txt`: on the published reports three culprits remain once the toolbar (3.29.2's) is
+  set aside. A step in a LightBDD parameterized row's detail panel (`span.step-text` holding a parameter's
+  `ToString()`, a type name) is +493 px from 320 to 800 px. A nested sub-step's text is up to +270 px from 320
+  to 560 px on all three reports. The grouped `table.param-test-table` is +143 px from 780 to 920 px on all
+  three. Without a classic scrollbar; `census-published-head-scrollbar.txt` has the same run with one, each
+  band reaching 20 px further.
+- `census-wide-head.txt`: the wide-content page on 3.29.2, 20 culprits (tables, the doc string, text in
+  every kind of holder, attachments, the image).
+- `census-published-release.txt`, `census-published-release-spacing.txt`, `census-wide-release.txt`: clean.
+- `probe-img2.js`: a percentage in the image's `max-width` makes its inline-block link as wide as the image's
+  natural width (642 px beside a 322 px image at 1400 px), so the cap sits on the link.
+- `probe-gap.js`: 8.0 px under a grouped table without the wrapper, 15.2 px with it (a scroll container keeps
+  its child's margin), the flat view's gap.
+- `probe-1161.js`: under text spacing with a classic scrollbar the in-row filtering box is 189 to 198 px wide
+  from 1161 to 1172 px, narrower than a letter-spaced "Export Filtered HTML" (185 px) and its padding: the
+  cluster runs up to 11 px past the box and the page scrolls 3 px at 1161. Clean from 1175. Not changed (D5).

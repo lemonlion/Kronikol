@@ -726,4 +726,66 @@ public class ParameterizedGroupTests : PlaywrightTestBase
         """);
         Assert.False(isOpen, "Steps section on row 1 should be collapsed after syncing from row 0");
     }
+
+    // ── Row states: resting, hovered, selected ──
+
+    /// <summary>One row per status, and a passed row first in the report's order (by name), which the
+    /// report selects at load, so every status has an unselected row to hover.</summary>
+    private string GenerateStatusRowsReport(string fileName)
+    {
+        (string Region, ExecutionResult Result)[] rows =
+            [("AT", ExecutionResult.Passed), ("UK", ExecutionResult.Passed), ("DE", ExecutionResult.Failed), ("FR", ExecutionResult.Skipped), ("ES", ExecutionResult.Bypassed)];
+        var scenarios = rows.Select((r, i) => new Scenario
+        {
+            Id = $"rs{i}", DisplayName = $"Process(region: {r.Region})", Result = r.Result, Duration = TimeSpan.FromSeconds(1),
+            OutlineId = "Process",
+            ExampleValues = new Dictionary<string, string> { ["region"] = r.Region },
+            Steps = [new ScenarioStep { Keyword = "Given", Text = $"a valid region {r.Region}", Status = r.Result }]
+        }).ToArray();
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            scenarios.Select(s => new DiagramAsCode(s.Id, "", "")).ToArray(),
+            [new Feature { DisplayName = "Payment Processing", Scenarios = scenarios }],
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(TempDir, fileName), "Row States Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            groupParameterizedTests: true);
+
+        File.Copy(path, Path.Combine(OutputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>Every row carries a status class, whose rule used to beat the row's hover and selected
+    /// tints: a hovered row gave no feedback in any report, a selected skipped row turned paler and a
+    /// selected bypassed row did not change. Each status darkens its own tint under the pointer and further
+    /// when selected; the selected tint holds while the pointer is still over the row, and after it leaves.</summary>
+    [Theory]
+    [InlineData("uk", "passed", "rgb(240, 255, 240)", "rgb(227, 250, 233)", "rgb(213, 245, 227)")]
+    [InlineData("de", "failed", "rgb(255, 240, 240)", "rgb(253, 229, 228)", "rgb(250, 219, 216)")]
+    [InlineData("fr", "skipped", "rgb(255, 248, 225)", "rgb(254, 241, 204)", "rgb(252, 233, 184)")]
+    [InlineData("es", "bypassed", "rgb(240, 240, 255)", "rgb(232, 232, 253)", "rgb(223, 224, 251)")]
+    public async Task A_row_darkens_its_status_tint_under_the_pointer_and_further_when_selected(string region, string status, string resting, string hovered, string selected)
+    {
+        await Page.GotoAsync(GenerateStatusRowsReport($"RowStates_{status}.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFeatures();
+
+        var group = Page.Locator("details.scenario-parameterized");
+        await group.Locator("summary").First.ClickAsync();
+        var row = group.Locator($"table.param-test-table tbody tr#scenario-process-region-{region}");
+        await Expect(row).ToHaveClassAsync(new System.Text.RegularExpressions.Regex($"\\brow-{status}\\b"));
+        await Expect(row).Not.ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\brow-active\\b"));
+        await Expect(row).ToHaveCSSAsync("background-color", resting);
+
+        await row.HoverAsync();
+        await Expect(row).ToHaveCSSAsync("background-color", hovered);
+
+        await row.ClickAsync();
+        await Expect(row).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\brow-active\\b"));
+        await Expect(row).ToHaveCSSAsync("background-color", selected);
+
+        await Page.Mouse.MoveAsync(0, 0);
+        await Expect(row).ToHaveCSSAsync("background-color", selected);
+    }
 }
