@@ -286,6 +286,53 @@ public class InteractionRecordTests
         Assert.Equal(DiagramMarkerKind.Custom, Assert.Single(unclassified.ToLogs()).MarkerKind);
     }
 
+    [Theory]
+    [InlineData("7")] // a number that is no member: Enum.TryParse accepts it as (DiagramMarkerKind)7
+    [InlineData("Step, Row")] // a list: Enum.TryParse ORs it into Row
+    [InlineData("Banner")]
+    [InlineData("")]
+    [InlineData(null)]
+    public void A_marker_kind_that_is_not_one_member_reads_as_Custom(string? markerKind)
+    {
+        var record = new InteractionRecord
+        {
+            Type = "Request", Uri = "http://override.com/", ServiceName = "", CallerName = "", TestId = "t1",
+            Kind = InteractionRecord.Kinds.Marker, MarkerKind = markerKind, PlantUml = "\nnote over a : x\n\n",
+        };
+
+        var log = Assert.Single(record.ToLogs());
+
+        Assert.Equal(DiagramMarkerKind.Custom, log.MarkerKind);
+        Assert.True(log.IsOverrideStart);
+    }
+
+    [Theory]
+    [InlineData("7")]
+    [InlineData("Setup, Action")] // ORed into 3, which is no member
+    public void A_phase_or_meta_type_that_is_not_one_member_reads_as_the_default(string value)
+    {
+        // Parsed with Enum.TryParse, an undefined value reached the log, and the report wrote it where its
+        // own schema allows only the member names.
+        var record = InteractionRecord.FromJson($$"""{"type":"Request","uri":"http://a/x","serviceName":"S","callerName":"C","testId":"t1","phase":"{{value}}","metaType":"{{value}}"}""");
+
+        var log = record.ToLog();
+
+        Assert.Equal(TestPhase.Unknown, log.Phase);
+        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
+    }
+
+    [Fact]
+    public void A_member_named_in_any_case_or_by_its_number_still_reads_as_that_member()
+    {
+        // What the reader accepted before 3.29.1 and still does: only values that are no member changed.
+        var record = InteractionRecord.FromJson("""{"type":"Request","uri":"http://a/x","serviceName":"S","callerName":"C","testId":"t1","phase":"setup","metaType":"1"}""");
+        Assert.Equal(TestPhase.Setup, record.ToLog().Phase);
+        Assert.Equal(RequestResponseMetaType.Event, record.ToLog().MetaType);
+
+        var marker = record with { Kind = InteractionRecord.Kinds.Marker, MarkerKind = "row" };
+        Assert.Equal(DiagramMarkerKind.Row, Assert.Single(marker.ToLogs()).MarkerKind);
+    }
+
     [Fact]
     public void A_marker_record_is_a_marker_to_every_ingestion_site()
     {

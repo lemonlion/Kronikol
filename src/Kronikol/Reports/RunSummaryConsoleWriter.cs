@@ -57,7 +57,7 @@ public sealed record RunSummaryPreviousRun(string Directory, int Failed);
 /// The last thing a run says: where the reports are, how big the data file is, what failed, and the one
 /// command that explains it.
 ///
-/// <para>Report generation has never been silent — <see cref="ReportDiagnostics.Analyse"/>'s lines print on
+/// <para>Report generation has never been silent — <see cref="ReportDiagnostics.Analyse(Kronikol.Tracking.RequestResponseLog[], Feature[], bool, bool)"/>'s lines print on
 /// every run — but nothing ever pointed at the reports, so an agent watching a failing build had no signal
 /// that <c>kronikol query failures</c> exists. This is that signal.</para>
 ///

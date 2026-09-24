@@ -9,6 +9,14 @@ namespace Kronikol.Reports;
 /// </summary>
 public static class ReportDiagnostics
 {
+    /// <summary>
+    /// The signature every release before 3.27.4 had, kept so that a binary compiled against one still
+    /// binds (a parameter with a default value is filled in at the call site, so adding one changed the
+    /// signature such a binary calls). The span store is reported, as with internal-flow tracking on.
+    /// </summary>
+    public static string[] Analyse(RequestResponseLog[] logs, Feature[] features, bool includeSourceDiscovery) =>
+        Analyse(logs, features, includeSourceDiscovery, internalFlowTracking: true);
+
     public static string[] Analyse(RequestResponseLog[] logs, Feature[] features,
         bool includeSourceDiscovery = false, bool internalFlowTracking = true)
     {

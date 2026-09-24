@@ -110,6 +110,18 @@ public class RequestResponseLogRoundTripTests
     }
 
     [Fact]
+    public void The_marker_probes_set_every_member_a_marker_line_carries()
+    {
+        // A marker line carries every member the writer writes for any log, not only the five marker ones;
+        // probes left at the defaults would let the reader rebuild markers from constants and drop the rest
+        // unseen (it did until 3.29.1). A marker has no method, no body and is no user action by contract.
+        string[] notOnAMarker = [nameof(RequestResponseLog.Method), nameof(RequestResponseLog.Content), nameof(RequestResponseLog.IsUserAction)];
+        var probes = MarkerProbes();
+        var unset = Carried.Except(notOnAMarker).Where(m => probes.All(p => IsDefault(Get(p, m)))).ToArray();
+        Assert.True(unset.Length == 0, "Member(s) left at their default on every marker probe: " + string.Join(", ", unset));
+    }
+
+    [Fact]
     public void Carried_members_survive_the_writer_and_the_reader()
     {
         var lost = new List<string>();
@@ -174,13 +186,30 @@ public class RequestResponseLogRoundTripTests
             DurationMs = 123.4,
         };
 
-    /// <summary>The three shapes DefaultTrackingDiagramOverride emits: an opening half with its fragment, a closing half, the phase boundary.</summary>
+    /// <summary>
+    /// The three shapes DefaultTrackingDiagramOverride emits (an opening half with its fragment, a closing half,
+    /// the phase boundary), and an opening half with every other member the writer puts on a marker line set,
+    /// as a redaction hook or a library user can set them.
+    /// </summary>
     private static RequestResponseLog[] MarkerProbes() =>
     [
         Marker(start: true, DiagramMarkerKind.Row, "\nhnote across #lightyellow : Row 3\n\n", T0.AddMilliseconds(3000)),
         Marker(start: false, DiagramMarkerKind.Row, null, T0.AddMilliseconds(3001)),
         new("Overview renders", TestId, "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request,
             Guid.NewGuid(), Guid.NewGuid(), false) { IsActionStart = true, MarkerKind = DiagramMarkerKind.Phase, Timestamp = T0.AddMilliseconds(3500) },
+        new("Overview renders", TestId, "", "", new Uri("http://override.com/banner"), [("X-Probe", "1")], "graphql", "web", RequestResponseType.Response,
+            Guid.NewGuid(), Guid.NewGuid(), true, HttpStatusCode.Accepted, RequestResponseMetaType.Event, DependencyCategories.AI, DependencyCategories.User)
+        {
+            IsOverrideStart = true,
+            MarkerKind = DiagramMarkerKind.Custom,
+            PlantUml = "\nnote over graphql : cache warmed\n\n",
+            Timestamp = T0.AddMilliseconds(4000),
+            Phase = TestPhase.Setup,
+            ActivityTraceId = "0af7651916cd43dd8448eb211c80319c",
+            ActivitySpanId = "b7ad6b7169203331",
+            CapturedBy = "span",
+            DurationMs = 4.5,
+        },
     ];
 
     private static RequestResponseLog Marker(bool start, DiagramMarkerKind kind, string? plantUml, DateTimeOffset at) =>

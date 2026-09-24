@@ -61,16 +61,45 @@ public class ReportDiagnosticsTests : IDisposable
             MakeLog(testId, RequestResponseType.Response, pairId)
         };
 
+        // Either line, not the one the store's size earns when read again here: other collections add spans
+        // between the two reads.
         var on = ReportDiagnostics.Analyse(logs, [], internalFlowTracking: true);
-        var expected = Kronikol.InternalFlow.InternalFlowSpanStore.GetSpans().Length == 0
-            ? "Warning: InternalFlowSpanStore has 0 spans"
-            : "InternalFlowSpanStore: ";
-        Assert.Contains(on, w => w.StartsWith(expected, StringComparison.Ordinal));
+        Assert.Contains(on, w => w.StartsWith("Warning: InternalFlowSpanStore has 0 spans", StringComparison.Ordinal)
+                                 || w.StartsWith("InternalFlowSpanStore: ", StringComparison.Ordinal));
 
         var off = ReportDiagnostics.Analyse(logs, [], internalFlowTracking: false);
         Assert.DoesNotContain(off, w => w.Contains("InternalFlowSpanStore", StringComparison.Ordinal));
-        // Nothing else in the diagnostics changes with the option.
-        Assert.Equal(on.Where(w => !w.Contains("InternalFlowSpanStore", StringComparison.Ordinal)), off);
+
+        // Nothing else these logs earn changes with the option. The lines about process-wide registries are
+        // left out: the tracking components and assertion fallbacks other collections record move between
+        // two calls, and each line carries its count.
+        static string[] Own(string[] lines) => lines
+            .Where(w => !w.Contains("InternalFlowSpanStore", StringComparison.Ordinal)
+                        && !w.Contains("tracking component(s)", StringComparison.Ordinal)
+                        && !w.Contains("assertion argument(s)", StringComparison.Ordinal))
+            .ToArray();
+        Assert.Equal(Own(on), Own(off));
+        Assert.Contains("Report diagnostics: 2 log entries across 1 test(s).", Own(off));
+    }
+
+    [Fact]
+    public void The_three_argument_Analyse_earlier_releases_compiled_against_is_still_there()
+    {
+        // 3.27.4 gave Analyse a fourth parameter, internalFlowTracking. A default value is filled in by the
+        // compiler at the call site, so source still compiled, but a binary built against 3.27.3 or earlier
+        // calls the three-argument signature, which no longer existed: MissingMethodException at run time.
+        var method = typeof(ReportDiagnostics).GetMethod(nameof(ReportDiagnostics.Analyse),
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static,
+            [typeof(RequestResponseLog[]), typeof(Feature[]), typeof(bool)]);
+
+        Assert.NotNull(method);
+        Assert.Equal(typeof(string[]), method.ReturnType);
+
+        // And it is the analysis it always was: the span store is reported, as with the option on.
+        var testId = Guid.NewGuid().ToString();
+        var pairId = Guid.NewGuid();
+        var lines = (string[])method.Invoke(null, [new[] { MakeLog(testId, RequestResponseType.Request, pairId), MakeLog(testId, RequestResponseType.Response, pairId) }, Array.Empty<Feature>(), false])!;
+        Assert.Contains(lines, w => w.Contains("InternalFlowSpanStore", StringComparison.Ordinal));
     }
 
     [Fact]

@@ -3,13 +3,17 @@ using Kronikol.Tracking;
 namespace Kronikol.Tests.Tracking;
 
 [Collection("DiagramsFetcher")]
-public class CorrelatedProcessingScopeTests
+public class CorrelatedProcessingScopeTests : IDisposable
 {
     public CorrelatedProcessingScopeTests()
     {
         TestCorrelationStore.Clear();
         TestIdentityScope.Reset();
     }
+
+    // The TTL is process-wide: restored whatever a fact did to it, or an assertion that fails before the
+    // fact's own restore leaves every later correlation in the collection expiring in a millisecond.
+    public void Dispose() => TestCorrelationStore.DefaultTtl = TimeSpan.FromMinutes(30);
 
     [Fact]
     public void Begin_sets_TestIdentityScope_from_correlation_store()

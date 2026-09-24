@@ -109,7 +109,7 @@ public enum DiagnosticKind
 
 /// <summary>
 /// One machine-readable diagnostic from a report generation or an ingest — the structured counterpart
-/// to the human-readable strings <see cref="ReportDiagnostics.Analyse"/> returns.
+/// to the human-readable strings <see cref="ReportDiagnostics.Analyse(Kronikol.Tracking.RequestResponseLog[], Feature[], bool, bool)"/> returns.
 /// </summary>
 /// <param name="Kind">What the entry is about.</param>
 /// <param name="Message">A one-line description, safe to print.</param>

@@ -3,6 +3,7 @@ using System.Text;
 using Kronikol.Extensions.Otlp;
 using Kronikol.Ingestion;
 using Kronikol.Tool;
+using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tool;
 
@@ -55,6 +56,33 @@ public class ExportCommandTests : IDisposable
         Assert.Contains("1 span(s)", stdout);
         Assert.Contains("1 trace(s)", stdout);
         Assert.Contains("dry run", stdout);
+    }
+
+    [Fact]
+    public void A_projected_stores_marker_records_export_no_span()
+    {
+        // Rendering control, not telemetry. Until 3.29.0 the writer wrote each marker half as an empty request
+        // line, and the export sent every one as a span of its own; as kind: marker records they are restored
+        // as the markers they are, and skipped.
+        var capture = WriteCapture();
+        var opening = new RequestResponseLog(TestId, TestId, "", "", new Uri("http://override.com"), [], "", "",
+            RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        {
+            IsOverrideStart = true,
+            MarkerKind = DiagramMarkerKind.Step,
+            PlantUml = "\nhnote across <<stepDelimiter>> #black:<color:white>Given a basket\n\n",
+            Timestamp = T0.AddMilliseconds(-5),
+        };
+        var closing = opening with { IsOverrideStart = false, IsOverrideEnd = true, PlantUml = null, RequestResponseId = Guid.NewGuid(), Timestamp = T0.AddMilliseconds(-4) };
+        File.AppendAllLines(capture, [InteractionRecord.FromLog(opening).ToJson(), InteractionRecord.FromLog(closing).ToJson()]);
+        var outFile = Path.Combine(_dir, "export-markers.json");
+        var @out = new StringWriter();
+
+        var exit = ExportCommand.Run([capture, "--dry-run", "--out", outFile], @out, new StringWriter());
+
+        Assert.Equal(0, exit);
+        Assert.Equal("POST", Assert.Single(OtlpTraceReader.ReadJson(File.ReadAllBytes(outFile))).Name);
+        Assert.Contains("1 span(s) in 1 trace(s), 2 record(s) skipped", @out.ToString());
     }
 
     [Fact]

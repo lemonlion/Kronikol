@@ -3,12 +3,22 @@ using Kronikol.Tracking;
 namespace Kronikol.Tests.Tracking;
 
 [Collection("DiagramsFetcher")]
-public class TestCorrelationStoreTests
+public class TestCorrelationStoreTests : IDisposable
 {
     public TestCorrelationStoreTests()
     {
         TestCorrelationStore.Clear();
         TestCorrelationStore.DefaultTtl = TimeSpan.FromMinutes(30);
+    }
+
+    // After every fact, not only before the next one of this class: the TTL and the miss callback are
+    // process-wide, and a fact that shortened the TTL to 1 ms as the class's last left it to whatever class
+    // ran next in the collection, where every correlation expired a millisecond after it was made
+    // (DocumentOwnershipTests found no owner for a document written the line before).
+    public void Dispose()
+    {
+        TestCorrelationStore.DefaultTtl = TimeSpan.FromMinutes(30);
+        TestCorrelationStore.OnResolveMiss = null;
     }
 
     [Fact]

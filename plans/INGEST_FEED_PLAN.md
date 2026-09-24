@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status: EXECUTED (2026-09-23): R1
 shipped as 3.27.4, R2 as 3.29.0 (3.28.0 went to a release prepared in parallel), R3 run on the shipped
-code and recorded.** §9 is the log. This is P1 of
+code and recorded. Audited 2026-09-24; its follow-ups shipped as 3.29.1.** §9 is the log. This is P1 of
 [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md): roadmap items 1.3 (#94), 1.4 (#93)
 and 1.7 (two CLI defects), track D (`Ingestion/`, `RequestResponseLog.cs`, `IngestCommand.cs`), which
 may run beside tracks A, B and C. It needs **D4** answered (§7). One probe was run against HEAD, and
@@ -336,7 +336,10 @@ unchanged.
 are public (`:10`, `:33`) and both take PlantUML, so a consumer can wrap a run of calls in a
 fragment (`group` … `end`) with the calls between the halves. The writer sees one log at a time
 and cannot know where the end will fall. One record per half is the only lossless mapping, and it
-is what the in-process store holds anyway.
+is what the in-process store holds anyway. *(Corrected 2026-09-24, the audit in §9: the calls
+between the halves are not wrapped but left out of the diagram, since the builder skips every log
+while an override is open (`PlantUmlCreator.cs:270-271`) and the two fragments replace them. The
+argument stands: the replay has to put each half where the store held it.)*
 
 **Why a new kind rather than `plantUml` on `step` and `assertion`.** The issue's suggestion, a
 `plantUml` property set in `FromLog` and restored in `ToLog`, closes `Custom` and `Row` but leaves
@@ -555,7 +558,7 @@ in.
 **Per release**, in this order: the full suite green; `Directory.Build.props:4`,
 `.claude-plugin/plugin.json:5` and `.claude-plugin/marketplace.json:14` to the same number
 (`PluginManifestTests` holds the first two equal); the changelog entry stating which part moved and
-why; the wiki; commit; tag `v3.27.4` / `v3.28.0`; push both; **read the CI run of the pushed
+why; the wiki; commit; tag `v3.27.4` / `v3.29.0`; push both; **read the CI run of the pushed
 sha** before starting the next release (the 3.27.2 run is where the last Mongo flake was found).
 
 ---
@@ -670,6 +673,61 @@ byte-identical**, `annotations` identical, every `httpInteractions` member ident
 `attributionSource`; through the tool with its defaults 3 of 6, the three with calls differing only by
 the `partition` lines (Q11, recorded on roadmap 14.1's row); and the ingest console no longer prints
 the internal-flow warning (F8). A difference no row of §3.2 explains: none.
+
+### Audit, 3.29.1 (2026-09-24)
+
+The owner asked whether the plan was implemented in full and properly. Every slice of §0, T1 to T8
+and every row of §8 was found in the code, the tests and the documents. What the audit found
+beyond them, fixed in 3.29.1, each with a test that was red first unless noted:
+
+- **A `marker` half kept five things from its line and dropped the rest.** `ToLogs` built it from
+  constants (`override.com`, empty participants, a request) plus the kind, the fragment, the half,
+  the ids and the time, while `FromLog` writes every member for every log. Nothing a shipped
+  emitter writes changed (`DefaultTrackingDiagramOverride` leaves the rest at their defaults), which
+  is also why T2 could not see it: its marker probes left them at their defaults too. The half is
+  now restored as `ToLog` restores a call and then made a marker; T2 gained a marker probe that sets
+  every member a marker line carries, and a fact that the marker probes do.
+- **`markerKind`, `phase` and `metaType` were parsed with `Enum.TryParse`,** which accepts a number
+  that is no member and ORs a comma list into another value: `"phase":"7"` reached the report as
+  `"phase": "7"`, outside the schema's own enum (measured through the pipeline), and
+  `"markerKind":"Step, Row"` read as `Row`. One resolver now takes a member by name or by number and
+  anything else as the default.
+- **The steps-twice rule compared `markerKind` by name** while the replay parsed it, so a `Step` bar
+  written by number drew the tests file's bars as well. Measured with the two bars 100 ms apart: at
+  the same instant the tests file's pair nests inside the capture's override and is swallowed, so
+  only the calls' null `stepPath` shows it (T6's "same" case is guarded by its assertion-note count
+  and its paths, not by its bar count). The rule now reads the kind the replay reads.
+- **A projected store ingested without a tests file named each scenario after its test id.** The store
+  names its markers by the id, and `Replay` took the first name among a scenario's records, usually a
+  marker's. §6.1 matched scenarios by id, so it could not see it. A raw marker's name is now taken last.
+- **3.27.4 changed a public signature in a patch.** `ReportDiagnostics.Analyse` gained
+  `internalFlowTracking` with a default value: source kept compiling, but a binary built against 3.27.3
+  or earlier could no longer bind. The three-argument overload is restored beside the four-argument
+  one. Strictly, the parameter was new surface, which 3.27.4's "nothing is new to call" did not count.
+- **T4c's unit fact could flake.** It read the span store again after `Analyse` had, and compared two
+  calls' lines including the tracking-component and assertion-fallback counts, all process-wide and
+  changed by other collections while it runs. It now accepts either span-store line and compares only
+  the lines its own logs earn (no red: the race does not reproduce on demand).
+- **§4.2's export claim had no fact:** a `marker` record exports no span. Pinned, and checked by
+  reverting the `IsMarker` widening, which exported three spans for one pair.
+- **The full suite exposed a latent flake outside this plan's code.** `DocumentOwnershipTests` failed
+  4, then 2 of its 11 facts, and passed alone. Cause: `TestCorrelationStoreTests` set the process-wide
+  correlation TTL to 1 ms in one fact and never restored it, so the next class in the collection saw
+  every correlation expire at once; reproduced every time with the two classes run together, and gone
+  once both TTL-shortening classes restore it after every fact.
+- **Documents.** The wiki's `Diagnostics-and-Debugging` listed two lines `Analyse` does not print,
+  misquoted the span-store warning and placed the lines in the report footer, where they never were
+  (they go to the console); rewritten, with F8's condition. `Ingesting-External-Captures` gained the
+  naming and parsing rules and lost "spliced … between the calls they wrap". §4.2 is corrected in
+  place, §7 named `v3.28.0`, and `STAGE_1_PLAN.md` still said "Executing".
+- **Issues #93 and #94 were still open** on GitHub; closed once 3.29.1 was out, naming the releases.
+
+The real-suite run repeated on the 3.29.1 code (`harness/real-suite-run.md`, last section): the same
+capture shape, **6 of 6 diagrams byte-identical** through the library with the suite's options, 3 of
+6 through the tool (the partition, Q11), exactly as on 3.29.0; and, compared for the first time,
+scenario names 3 of 6 identical, where 3.29.0 named all six after their ids (the three still named by
+id have no calls, so nothing on the wire names them but their markers). Full `Kronikol.Tests` suite
+before the release: 5,496 passed, 1 skipped, 0 failed.
 
 ---
 

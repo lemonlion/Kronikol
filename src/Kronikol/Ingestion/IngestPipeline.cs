@@ -718,9 +718,11 @@ public static class IngestPipeline
     /// </summary>
     private static void AddDiagramMarkers(List<InteractionRecord> records, List<TestRunRecord> testRecords)
     {
+        // The kind as the replay will read it: a comparison of its own would miss a kind the replay draws
+        // as a Step bar (one written by number), and the scenario would get both sets of bars.
         var drawnByCapture = new HashSet<string>(
             records
-                .Where(r => r.IsRawMarker && string.Equals(r.MarkerKind, nameof(DiagramMarkerKind.Step), StringComparison.OrdinalIgnoreCase))
+                .Where(r => r.IsRawMarker && r.ResolvedMarkerKind == DiagramMarkerKind.Step)
                 .Select(r => r.TestId),
             StringComparer.Ordinal);
 
@@ -780,9 +782,11 @@ public static class IngestPipeline
             .ToDictionary(g => g.Key, g => g.Last().TestName!, StringComparer.Ordinal);
 
         // First non-empty name per test id among the records themselves, so every hop of one test
-        // carries the same label even without a tests file.
+        // carries the same label even without a tests file. Any other record's name before a raw marker's:
+        // the store names its markers by the test id (DefaultTrackingDiagramOverride), and a run's first
+        // record is usually one, so a projected store came back with every scenario named after its id.
         var namesFromRecords = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var record in ordered)
+        foreach (var record in ordered.Where(r => !r.IsRawMarker).Concat(ordered.Where(r => r.IsRawMarker)))
         {
             if (!string.IsNullOrWhiteSpace(record.TestName) && record.TestName != TestIdentityScope.UnknownTestName
                 && !namesFromRecords.ContainsKey(record.TestId))

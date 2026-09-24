@@ -60,3 +60,19 @@ exit 0, `Replayed 85 interaction record(s) into 6 scenario(s).`, **no `InternalF
 any more** (F8, 3.27.4), 3 of 6 diagrams identical, the three with calls differing only by the
 `partition #F6F6F6 Setup` … `end` lines the command line cannot ask for (Q11). Nothing a row of §3.2
 or an option difference does not explain.
+
+## The same run on the audit's code (2026-09-24, 3.29.1)
+
+Repeated on the tree that became 3.29.1 (a `marker` half restored with every member of its line, the
+name rule, the kind resolver). The suite: 6 passed, 667 ms; the capture unchanged in shape (85 lines,
+6 test ids, 49 marker halves: `Step` 40, `Custom` 6, `Phase` 3; 36 interaction lines). Ingest A:
+`Replayed=85 scenarios=6`, the one `ResultDefaulted`, 49 marker logs (`Step=40, Custom=6, Phase=3`),
+**6 of 6 diagrams byte-identical** (576, 4116, 579, 2479, 2737, 570 chars), `annotations` identical,
+every `httpInteractions` member identical but `attributionSource`. Ingest B (the tool's defaults,
+`--chronological`): 3 of 6, the same three scenarios by the same character counts as on 3.29.0 (the
+`partition` lines, Q11). New this time, scenario names compared by id (a separate script printing
+names only): **3 of 6 identical**. In this capture every test's first record is a marker named by its
+id (`DefaultTrackingDiagramOverride` names its markers that way), so 3.29.0 named all six scenarios
+after their ids; 3.29.1 takes a call's name first, which fixes the three scenarios with calls. The
+three muffin scenarios have no calls, so nothing on the wire names them but their markers: the
+no-tests-file limit of plan §6 step 3.

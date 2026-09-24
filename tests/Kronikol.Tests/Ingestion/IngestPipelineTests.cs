@@ -529,6 +529,68 @@ public class IngestPipelineTests : IDisposable
     }
 
     [Fact]
+    public void The_steps_twice_rule_reads_a_marker_kind_the_way_the_replay_does()
+    {
+        // A capture's step bar with its kind written by number: the replay drew it as a Step bar, but the
+        // rule that keeps a tests file from drawing a second bar compared the name, so the scenario had two
+        // and its calls lost their step. The bar is a little before the tests file's step, as two clocks
+        // put them; at the same instant the second pair nests inside the first and only the paths show it.
+        const string testId = "steps-twice-by-number";
+        var bar = InteractionRecord.FromLog(Marker(testId, DiagramMarkerKind.Step, $"\n{InteractionRecord.StepDelimiterPlantUml("Given", "a basket")}\n\n", isStart: true, T0.AddMilliseconds(900)));
+        var barEnd = InteractionRecord.FromLog(Marker(testId, DiagramMarkerKind.Step, null, isStart: false, T0.AddMilliseconds(901)));
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/health", "web", "web", statusCode: "200",
+            requestTimestamp: T0.AddMilliseconds(2000), responseTimestamp: T0.AddMilliseconds(2005));
+        var capture = WriteCapture("steps-by-number.ndjson",
+            bar with { MarkerKind = ((int)DiagramMarkerKind.Step).ToString() }, barEnd with { MarkerKind = ((int)DiagramMarkerKind.Step).ToString() }, req, resp);
+
+        var ingested = Ingest(capture,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "Basket by number", Timestamp = T0 },
+            new TestRunRecord { Event = "step", TestId = testId, Text = "a basket", Keyword = "Given", Status = "passed", DurationMs = 5000, Timestamp = T0.AddMilliseconds(1000) },
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 6000, Timestamp = T0.AddMilliseconds(6000) },
+        ], "R-steps-by-number");
+
+        Assert.Equal(1, Count(ingested.Diagram, "<<stepDelimiter>>"));
+        Assert.All(ingested.Interactions, i => Assert.Equal("0", i.GetProperty("stepPath").GetString()));
+    }
+
+    [Fact]
+    public void A_projected_store_without_a_tests_file_names_each_scenario_from_its_calls_not_its_markers()
+    {
+        // The store's markers carry the test id as their name (DefaultTrackingDiagramOverride builds each
+        // with the id twice), and a run's markers usually come first: a step bar, a test delimiter. The first
+        // name among the records was the id, so the scenario was named after it.
+        const string testId = "c0ffee16cd43dd8448eb211c80319c01";
+        DefaultTrackingDiagramOverride.InsertPlantUml(testId, "note over web : starting");
+        var emitted = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).ToArray();
+        Assert.Equal(2, emitted.Length);
+        Assert.All(emitted, l => Assert.Equal(testId, l.TestName));
+
+        var markers = emitted.Select((l, i) => InteractionRecord.FromLog(l with { Timestamp = T0.AddMilliseconds(1000 + i) }));
+        var (req, resp) = InteractionRecord.Pair(testId, "Basket named by its calls", "GET", "http://localhost:8081/health", "web", "web", statusCode: "200",
+            requestTimestamp: T0.AddMilliseconds(2000), responseTimestamp: T0.AddMilliseconds(2005));
+        var capture = WriteCapture("named.ndjson", [.. markers, req, resp]);
+
+        var ingested = Ingest(capture, [], "R-named");
+
+        Assert.Equal("Basket named by its calls", Assert.Single(Assert.Single(ingested.Result.Features).Scenarios).DisplayName);
+    }
+
+    [Fact]
+    public void A_phase_that_is_no_member_reaches_the_report_as_Unknown_not_as_a_number()
+    {
+        // The report's schema allows the member names only; the undefined value was written as "7".
+        const string testId = "phase-seven";
+        var (req, resp) = InteractionRecord.Pair(testId, "Phase seven", "GET", "http://localhost:8081/health", "web", "web", statusCode: "200",
+            requestTimestamp: T0.AddMilliseconds(1000), responseTimestamp: T0.AddMilliseconds(1005), phase: "7");
+        var capture = WriteCapture("phase-seven.ndjson", req, resp);
+
+        var ingested = Ingest(capture, [], "R-phase-seven");
+
+        Assert.All(ingested.Interactions, i => Assert.Equal(nameof(TestPhase.Unknown), i.GetProperty("phase").GetString()));
+    }
+
+    [Fact]
     public void Marker_records_keep_their_place_in_call_tree_order()
     {
         // No two calls of the fixture overlap, so the call tree is the timeline: every marker half stays

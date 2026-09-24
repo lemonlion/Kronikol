@@ -137,8 +137,8 @@ public sealed record InteractionRecord
     /// <summary>
     /// <c>marker</c> records: what the marker stands for, a <see cref="DiagramMarkerKind"/> by name
     /// (<c>Custom</c>, <c>Row</c>, <c>Step</c>, <c>Assertion</c>, <c>Phase</c>), the same strings
-    /// <c>annotations[].kind</c> writes. Unknown or absent reads as <c>Custom</c>, the enum's own value for
-    /// an unclassified marker.
+    /// <c>annotations[].kind</c> writes. Absent, or anything that is not one member (an unknown name, an
+    /// undefined number, a list), reads as <c>Custom</c>, the enum's own value for an unclassified marker.
     /// </summary>
     [JsonPropertyName("markerKind")] public string? MarkerKind { get; init; }
 
@@ -158,6 +158,12 @@ public sealed record InteractionRecord
 
     /// <summary><see cref="Kind"/> is <c>marker</c>: one override half, restored as it was.</summary>
     [JsonIgnore] public bool IsRawMarker => string.Equals(Kind, Kinds.Marker, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// <see cref="MarkerKind"/> as the replay reads it, for every reader that must agree with the replay
+    /// (the pipeline's steps-twice rule among them).
+    /// </summary>
+    internal DiagramMarkerKind ResolvedMarkerKind => ParseMember(MarkerKind, DiagramMarkerKind.Custom);
 
     /// <summary><see cref="Kind"/> is <c>ui</c>.</summary>
     [JsonIgnore] public bool IsUserAction => string.Equals(Kind, Kinds.Ui, StringComparison.OrdinalIgnoreCase);
@@ -260,8 +266,8 @@ public sealed record InteractionRecord
                 : StatusCode;
         }
 
-        var phase = Enum.TryParse<TestPhase>(Phase, ignoreCase: true, out var parsedPhase) ? parsedPhase : TestPhase.Unknown;
-        var metaType = Enum.TryParse<RequestResponseMetaType>(MetaType, ignoreCase: true, out var parsedMeta) ? parsedMeta : RequestResponseMetaType.Default;
+        var phase = ParseMember(Phase, TestPhase.Unknown);
+        var metaType = ParseMember(MetaType, RequestResponseMetaType.Default);
 
         var uri = System.Uri.TryCreate(Uri, UriKind.Absolute, out var absolute)
             ? absolute
@@ -315,11 +321,11 @@ public sealed record InteractionRecord
 
         if (IsRawMarker)
         {
-            // One record is one half: the fragment verbatim, the kind by name (unknown or absent is Custom,
-            // the enum's own value for an unclassified marker), the Phase boundary as IsActionStart, and the
-            // ids carried through rather than minted, so a record and its log stay one thing.
-            var kind = Enum.TryParse<DiagramMarkerKind>(MarkerKind, ignoreCase: true, out var parsed) ? parsed : DiagramMarkerKind.Custom;
-            var half = MarkerLog(name, TestId, kind);
+            // One record is one half: the fragment verbatim, the kind by name (anything that is not one member
+            // is Custom, the enum's own value for an unclassified marker), the Phase boundary as IsActionStart,
+            // and the ids carried through rather than minted, so a record and its log stay one thing.
+            var kind = ResolvedMarkerKind;
+            var half = MarkerLog(name, kind);
             if (kind == DiagramMarkerKind.Phase)
                 half.IsActionStart = true;
             else
@@ -345,18 +351,38 @@ public sealed record InteractionRecord
         yield return OverrideLog(name, TestId, isStart: false, null, markerKind);
     }
 
-    /// <summary>A marker log as DefaultTrackingDiagramOverride builds one, with this record's ids and time.</summary>
-    private RequestResponseLog MarkerLog(string testName, string testId, DiagramMarkerKind kind)
+    /// <summary>
+    /// A marker log with everything else the line carried, restored as <see cref="ToLog"/> restores a call's
+    /// (the writer writes those members for every log, so dropping them here lost them unseen until 3.29.1),
+    /// except what a marker never has: a method and a body, which are the store's empty strings. The ids
+    /// are carried through or minted, never derived from the uri and the time as a call's are: two halves
+    /// logged in one tick would share them.
+    /// </summary>
+    private RequestResponseLog MarkerLog(string testName, DiagramMarkerKind kind)
     {
         var requestResponseId = RequestResponseId is { Length: > 0 } pair ? ToGuid(pair) : Guid.NewGuid();
         var traceId = TraceId is { Length: > 0 } trace ? ToGuid(trace) : requestResponseId;
-        return new RequestResponseLog(testName, testId, "", "", new Uri("http://override.com"), [], "", "",
-            RequestResponseType.Request, traceId, requestResponseId, false)
+        return ToLog(testName) with
         {
+            Method = "",
+            Content = "",
+            TraceId = traceId,
+            RequestResponseId = requestResponseId,
             MarkerKind = kind,
-            Timestamp = Timestamp,
         };
     }
+
+    /// <summary>
+    /// One member of <typeparamref name="TEnum"/>, by name in any case or by its number, as the reader has
+    /// always accepted them; anything that is not one member (an unknown name, an undefined number, or a
+    /// list, which <see cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/> would OR into another value)
+    /// is <paramref name="fallback"/>, so an undefined value never reaches the log or the report.
+    /// </summary>
+    private static TEnum ParseMember<TEnum>(string? value, TEnum fallback) where TEnum : struct, Enum =>
+        value is not null && !value.Contains(',')
+        && Enum.TryParse<TEnum>(value, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
+            ? parsed
+            : fallback;
 
     /// <summary>
     /// The step delimiter bar Kronikol's step tracking draws: <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;</c>.

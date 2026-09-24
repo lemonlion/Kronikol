@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.29.1] - 2026-09-24
+
+**Patch - the audit of `plans/INGEST_FEED_PLAN.md` (§9): what the feed's two releases left short, fixed.**
+The patch part moved because nothing is new to call: a `marker` record keeps what its line carried,
+an undefined enum value on the wire reads as the default, the steps-twice rule reads a marker's kind
+the way the replay does, a projected store's scenarios keep their names, and the three-argument
+`ReportDiagnostics.Analyse` that 3.27.4 replaced is back. Three of these change what an ingest
+produces, called out below.
+
+### Fixed
+
+- **A `marker` record kept its kind, fragment, half, ids and time, and dropped the rest of its line.**
+  `ToLogs` built each half from constants, so every other member the writer puts on the line
+  (`phase`, `trackingIgnore`, `metaType`, the span ids, `capturedBy`, the dependency categories, the
+  headers, the status, `durationMs`, `type`, `uri` and the participants) was lost on read. The store's
+  own markers leave all of them at their defaults, so nothing a shipped emitter writes changes; a
+  marker written by a redaction hook, a library user or another capturer now keeps them, restored as
+  on a call.
+- **`markerKind`, `phase` and `metaType` read a value that is no member as if it were one.** They were
+  parsed with `Enum.TryParse`, which also accepts an undefined number and ORs a comma list into
+  another value: `"phase":"7"` reached `TestRunReport.json` as `"phase": "7"`, outside the report
+  schema's own enum, and `"markerKind":"Step, Row"` read as `Row`. Anything that is not one member
+  now reads as the default (`Unknown`, `Default`, `Custom`); a name in any case, and a member's
+  number, read as before.
+- **A capture's `Step` bar whose kind was written by number drew the tests file's bars as well.** The
+  rule that keeps a tests file from drawing a second set of bars compared `markerKind` by name while
+  the replay parsed it, so the scenario got both sets and, with more bars than steps, every call's
+  `stepPath` was null. The rule reads the kind the way the replay does.
+- **A projected store ingested without a tests file named every scenario after its test id.** The
+  in-process store names its markers by the test id (`DefaultTrackingDiagramOverride` builds each
+  with the id twice), a run's first record is usually one, and the ingest took the first name among a
+  scenario's records. A `marker` record's name is now taken last.
+- **`ReportDiagnostics.Analyse(RequestResponseLog[], Feature[], bool)` is back.** 3.27.4 gave `Analyse`
+  an `internalFlowTracking` parameter with a default value, which the compiler fills in at the call
+  site: source kept compiling, but a binary built against 3.27.3 or earlier calls the three-argument
+  signature and got `MissingMethodException`. The overload is restored beside the four-argument one
+  and reports the span store as before. Strictly, 3.27.4's new parameter was new surface in a patch,
+  which its entry ("nothing is new to call") did not count.
+
+### Documentation
+
+- The wiki's `Diagnostics-and-Debugging` page listed two lines `ReportDiagnostics.Analyse` does not
+  print, misquoted the span-store warning, and said the lines appear in the report footer; they are
+  printed to the console. It now lists what `Analyse` prints, and that the span-store line needs
+  `InternalFlowTracking` on (3.27.4). `Ingesting-External-Captures` gains the naming and `markerKind`
+  rules and corrects the raw-markers paragraph: an override's fragments replace whatever is logged
+  between its halves, and the Setup/Action boundary is one record, not a pair.
+
+### Tests
+
+- Each fix above has a fact that failed first; the member guard gains a marker probe that sets every
+  member a marker line carries, and a fact that the marker probes do. `kronikol export` over a
+  projected capture exports no span for its `marker` records, pinned (and checked by reverting the
+  3.29.0 `IsMarker` widening, which exported three spans for one pair). The internal-flow diagnostics
+  fact compared two snapshots of process-wide registries taken at different moments, which other test
+  collections change while it runs; it now compares only the lines its own logs earn.
+- A latent flake, fixed at its cause: `TestCorrelationStoreTests` shortened the process-wide
+  correlation TTL to 1 ms in one fact and never restored it, so when that fact ran last in its class,
+  the next class in the collection saw every correlation expire a millisecond after it was made.
+  `DocumentOwnershipTests` lost two to four facts that way (the owner of a document written the line
+  before was not found), every time the two classes ran together. Both classes that shorten the TTL now
+  restore it after every fact.
+
 ## [3.29.0] - 2026-09-23
 
 **Minor - the ingest feed, slice two of `plans/INGEST_FEED_PLAN.md`: a diagram marker is one
