@@ -1191,6 +1191,7 @@ every scenario laid out:
 | The new E2E facts on 3.29.2 (in the release worktree before the fix) | The sweep of the new page: 195 problems (225 under text spacing). The two run-report pages scroll sideways from 769 to 900 px once their features summary is open. Every `ScenarioContentWidthTests` fact red but the 1400 px image case, which holds on 3.29.2 and pins that the desktop image and its link are unchanged. The four row-state facts red. |
 | Unit suite | 5,542 passed, 1 skipped (the 100 MB streaming test, skipped on 3.29.2 too), 0 failed |
 | E2E suite without the three doc-asset generators | 838 passed, 0 failed, 7 min 48 s (818 before, plus the 20 new facts) |
+| CI on the release commit `b74c8ddc` | CI (28 of 28 jobs), Release, CodeQL and CI Summary Preview green. The "E2E (Toolbar & Reports)" group took 3.2 min (1.1 on 3.29.2), with `ScenarioContentWidthTests` and the two new sweep facts. The groups run side by side and E2E (Remainder), at 6.5 min, is still the slowest, so CI as a whole takes no longer |
 
 **Departures from §10 Q7, and findings.**
 
