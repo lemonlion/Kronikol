@@ -111,20 +111,6 @@
 .iflow-boundary-marker:hover { border-left-color: rgba(0,0,0,0.6); pointer-events: auto; }
 .whole-test-flow { margin-top: 8px; padding-top: 4px; }
 .whole-test-flow > summary { cursor: pointer; font-weight: 600; color: #555; }
-.diagram-toggle { margin-top: 8px; margin-bottom: 8px; padding-left: 1em; padding-right: 1em; display: flex; align-items: center; width: 100%; box-sizing: border-box; }
-.diagram-toggle-btn {
-    padding: 4px 14px;
-    border: 1px solid #ccc;
-    background: #f5f5f5;
-    cursor: pointer;
-    font-size: 13px;
-    border-radius: 4px;
-    margin-right: 4px;
-}
-.diagram-toggle-btn:hover { background: #e8f0fe; }
-.diagram-toggle-active { background: #4285f4; color: #fff; border-color: #4285f4; }
-.diagram-toggle-active:hover { background: #3367d6; }
-.diagram-toggle-spacer { flex: 1; }
 .collapse-all-notes-btn, .toggle-headers-btn {
     padding: 4px 14px;
     border: 1px solid #ccc;

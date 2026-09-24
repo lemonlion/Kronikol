@@ -1,0 +1,231 @@
+diff --git a/src/Kronikol/Constants/Stylesheets.cs b/src/Kronikol/Constants/Stylesheets.cs
+index ddc64294..6ede1eb4 100644
+--- a/src/Kronikol/Constants/Stylesheets.cs
++++ b/src/Kronikol/Constants/Stylesheets.cs
+@@ -31,6 +31,21 @@ public class Stylesheets
+                 .filtering-box { background-color: #DDD6FE; }
+                 .example-diagrams { border-color: #DDD6FE; }
+ 
++                /* Idle hovers first: an active rule of the same specificity must come after them. */
++                .happy-path-toggle:hover,
++                .dependency-toggle:hover,
++                .status-toggle:hover,
++                .category-toggle:hover {
++                    background: #EDE9FE;
++                    border-color: #A78BFA;
++                }
++
++                .export-btn:hover, .collapse-expand-all:hover, .percentile-btn:hover, .timeline-toggle:hover,
++                .details-radio-btn:hover, .scenario-diagram-controls-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
++                .diagram-toggle-btn:hover, .iflow-toggle-btn:hover { background: #EDE9FE; }
++                .dep-mode-toggle:hover, .cat-mode-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
++                .iflow-rel-summary-table tr:hover td { background: #EDE9FE; }
++
+                 .happy-path-toggle.happy-path-active,
+                 .dependency-toggle.dependency-active,
+                 .status-toggle.status-active,
+@@ -42,15 +57,10 @@ public class Stylesheets
+                 .percentile-btn.percentile-active {
+                     background: #8B5CF6;
+                     color: white;
++                    border-color: #8B5CF6;
+                 }
+-
+-                .happy-path-toggle:hover,
+-                .dependency-toggle:hover,
+-                .status-toggle:hover,
+-                .category-toggle:hover {
+-                    background: #EDE9FE;
+-                    border-color: #A78BFA;
+-                }
++                .timeline-toggle-active { background: #8B5CF6; color: white; border-color: #8B5CF6; }
++                .timeline-toggle-active:hover { background: #7C3AED; }
+ 
+                 .dep-mode-toggle, .cat-mode-toggle { background: #F5F3FF; }
+                 .scenario-focused { outline-color: #8B5CF6; }
+@@ -67,6 +77,7 @@ public class Stylesheets
+                 .iflow-toggle-active { background: #8B5CF6; color: #fff; border-color: #8B5CF6; }
+                 .iflow-toggle-active:hover { background: #7C3AED; }
+                 .diagram-toggle-active { background: #8B5CF6; color: #fff; border-color: #8B5CF6; }
++                .diagram-toggle-active:hover { background: #7C3AED; }
+                 .iflow-rel-list li:hover { background: #EDE9FE; border-color: #8B5CF6; }
+ 
+                 .step-status.passed { background: #8B5CF6; }
+diff --git a/src/Kronikol/Reports/ReportGenerator.cs b/src/Kronikol/Reports/ReportGenerator.cs
+index c8dfa8cb..390684fe 100644
+--- a/src/Kronikol/Reports/ReportGenerator.cs
++++ b/src/Kronikol/Reports/ReportGenerator.cs
+@@ -51,6 +51,17 @@ public static class ReportGenerator
+     private static string FailureCauseLine(string? failureCause) =>
+         failureCause is null ? "" : $"Cause: {System.Net.WebUtility.HtmlEncode(failureCause)}\n";
+ 
++    /// <summary>
++    /// The user stylesheets a report carries after its built-in sheets, in cascade order: the given
++    /// theme (the specifications sheet, or none), then <see cref="ReportConfigurationOptions.InternalFlowPopupCustomStyleSheet"/>
++    /// when internal-flow tracking is on. Null when there are none, so the report keeps its bytes.
++    /// </summary>
++    internal static string? UserStylesheets(string? theme, ReportConfigurationOptions options)
++    {
++        var popup = options.InternalFlowTracking ? options.InternalFlowPopupCustomStyleSheet : null;
++        return popup is null ? theme : theme is null ? popup : theme + "\n" + popup;
++    }
++
+     internal static bool ShouldEmbedComponentDiagram(ReportConfigurationOptions options) =>
+         (options.ComponentDiagramOptions ?? new ComponentDiagramOptions()).EmbedInTestRunReport;
+ 
+@@ -419,12 +430,12 @@ string BuildFlowScript(InternalFlowTab startTab) =>
+ 
+         if (options.GenerateSpecificationsReport)
+         {
+-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, options.HtmlSpecificationsCustomStyleSheet, $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite));
++            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite));
+         }
+ 
+         if (options.GenerateTestRunReport)
+         {
+-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, null, $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection));
++            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection));
+         }
+ 
+         if (options.GenerateSpecificationsData)
+@@ -1096,10 +1107,12 @@ function toggle_component_diagram(btn) {
+         // Deep link + init script
+         var initScript = LoadResource("report-init-script.js");
+ 
+-        var combinedStylesheet = $"""
+-                                 {Stylesheets.HtmlReportStyleSheet}
+-                                 {stylesheet}
+-                                 """;
++        // The base sheet first; the custom sheet (the specifications theme, or a user's) goes after the
++        // component sheets in the <style> block below, so it wins at equal specificity. The trailing
++        // newline is the line the custom sheet used to occupy here: kept, so a report without one keeps
++        // its bytes.
++        var combinedStylesheet = Stylesheets.HtmlReportStyleSheet + "\n";
++        var themeStyles = stylesheet is null ? "" : "\n" + stylesheet;
+ 
+         var isPlantUmlBrowser = plantUmlRendering == PlantUmlRendering.BrowserJs;
+         var isInlineSvg = !isPlantUmlBrowser && inlineSvgRendering;
+@@ -1203,7 +1216,7 @@ function toggle_component_diagram(btn) {
+                                 {{contextMenuStyles}}
+                                 {{inlineSvgStyles}}
+                                 {{collapsibleNotesStyles}}
+-                                {{internalFlowPopupStyles}}
++                                {{internalFlowPopupStyles}}{{themeStyles}}
+                             </style>
+                             {{customCssBlock}}
+                             {{faviconLink}}
+diff --git a/src/Kronikol/Reports/internal-flow-popup-styles.css b/src/Kronikol/Reports/internal-flow-popup-styles.css
+index 23f48431..e4b020cd 100644
+--- a/src/Kronikol/Reports/internal-flow-popup-styles.css
++++ b/src/Kronikol/Reports/internal-flow-popup-styles.css
+@@ -111,20 +111,6 @@
+ .iflow-boundary-marker:hover { border-left-color: rgba(0,0,0,0.6); pointer-events: auto; }
+ .whole-test-flow { margin-top: 8px; padding-top: 4px; }
+ .whole-test-flow > summary { cursor: pointer; font-weight: 600; color: #555; }
+-.diagram-toggle { margin-top: 8px; margin-bottom: 8px; padding-left: 1em; padding-right: 1em; display: flex; align-items: center; width: 100%; box-sizing: border-box; }
+-.diagram-toggle-btn {
+-    padding: 4px 14px;
+-    border: 1px solid #ccc;
+-    background: #f5f5f5;
+-    cursor: pointer;
+-    font-size: 13px;
+-    border-radius: 4px;
+-    margin-right: 4px;
+-}
+-.diagram-toggle-btn:hover { background: #e8f0fe; }
+-.diagram-toggle-active { background: #4285f4; color: #fff; border-color: #4285f4; }
+-.diagram-toggle-active:hover { background: #3367d6; }
+-.diagram-toggle-spacer { flex: 1; }
+ .collapse-all-notes-btn, .toggle-headers-btn {
+     padding: 4px 14px;
+     border: 1px solid #ccc;
+diff --git a/src/Kronikol/Reports/stylesheets.css b/src/Kronikol/Reports/stylesheets.css
+index e6f3770e..758305bb 100644
+--- a/src/Kronikol/Reports/stylesheets.css
++++ b/src/Kronikol/Reports/stylesheets.css
+@@ -132,6 +132,16 @@
+ 
+         .ci-metadata table {
+             font-size: 0.85em;
++            max-width: 100%;
++        }
++
++        /* The CI box is flex-shrink: 0 and its cells never wrapped, so a long branch or repository
++           name set the header row's width (TOOLBAR_AT_EVERY_WIDTH_PLAN.md 2.6). Value cells break
++           anywhere, label cells stay whole, and the row layout caps the box. */
++        .ci-metadata td:first-child { white-space: nowrap; }
++        .ci-metadata td:last-child { overflow-wrap: anywhere; }
++        @media (min-width: 768.02px) {
++            .ci-metadata { max-width: 20em; }
+         }
+ 
+         .filtering-box {
+@@ -149,6 +159,7 @@
+ 
+         .filtering-box-header {
+             display: flex;
++            flex-wrap: wrap;
+             justify-content: space-between;
+             align-items: center;
+             margin-bottom: 0.5em;
+@@ -156,6 +167,7 @@
+ 
+         .filtering-box-export {
+             display: flex;
++            flex-wrap: wrap;
+             gap: 0.3em;
+         }
+ 
+@@ -585,6 +597,7 @@
+             background: white;
+             cursor: pointer;
+             font-size: 0.85em;
++            white-space: nowrap;
+         }
+ 
+         .export-btn:hover {
+@@ -604,6 +617,7 @@
+ 
+         .toolbar-left {
+             display: flex;
++            flex-wrap: wrap;
+             gap: 0.5em;
+             align-items: center;
+         }
+@@ -1694,6 +1708,13 @@
+             background: rgb(70, 70, 70);
+         }
+ 
++        /* Between the phone layout and the full-width header the filtering box takes its own row
++           (TOOLBAR_AT_EVERY_WIDTH_PLAN.md 2.2 and 2.5). */
++        @media (min-width: 768.02px) and (max-width: 1160px) {
++            .header-row { flex-wrap: wrap; }
++            .filtering-box { flex-basis: 100%; }
++        }
++
+         /* ── Mobile / Responsive ── */
+         @media (max-width: 768px) {
+             body {
+@@ -1963,6 +1984,22 @@
+             font-size: 0.9em;
+             margin: 4px 0 10px;
+         }
++        /* The scenario diagram toolbar, in every report (it lived in internal-flow-popup-styles.css,
++           so a report without internal-flow tracking got an unstyled block). It wraps as a row. */
++        .diagram-toggle { margin-top: 8px; margin-bottom: 8px; padding-left: 1em; padding-right: 1em; display: flex; flex-wrap: wrap; align-items: center; width: 100%; box-sizing: border-box; }
++        .diagram-toggle-btn {
++            padding: 4px 14px;
++            border: 1px solid #ccc;
++            background: #f5f5f5;
++            cursor: pointer;
++            font-size: 13px;
++            border-radius: 4px;
++            margin-right: 4px;
++        }
++        .diagram-toggle-btn:hover { background: #e8f0fe; }
++        .diagram-toggle-active { background: #4285f4; color: #fff; border-color: #4285f4; }
++        .diagram-toggle-active:hover { background: #3367d6; }
++        .diagram-toggle-spacer { flex: 1; }
+         /* Scenario diagram toolbar on the title line (diagram-toggle-layout-script.js decides per
+            toolbar whether it fits beside the "Sequence Diagrams" / "Diagrams" title and sets
+            data-layout="inline" plus the negative margin-top that centres it on the title; without the

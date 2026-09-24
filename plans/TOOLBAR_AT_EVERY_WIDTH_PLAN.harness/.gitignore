@@ -1,0 +1,9 @@
+out*/
+shots/
+sweep-results*.json
+cascade2-results.json
+sweep2-results*.json
+deep2-log*.txt
+published-log.txt
+sweep-release*.log
+gen-*.log

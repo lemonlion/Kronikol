@@ -132,6 +132,16 @@
 
         .ci-metadata table {
             font-size: 0.85em;
+            max-width: 100%;
+        }
+
+        /* The CI box does not shrink (flex-shrink: 0), so its widest value set the header row's
+           width: a long branch or repository name pushed the page sideways. Value cells may break
+           anywhere, label cells stay whole, and above the phone layout the box is capped. */
+        .ci-metadata td:first-child { white-space: nowrap; }
+        .ci-metadata td:last-child { overflow-wrap: anywhere; }
+        @media (min-width: 768.02px) {
+            .ci-metadata { max-width: 20em; }
         }
 
         .filtering-box {
@@ -149,6 +159,7 @@
 
         .filtering-box-header {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0.5em;
@@ -156,6 +167,7 @@
 
         .filtering-box-export {
             display: flex;
+            flex-wrap: wrap;
             gap: 0.3em;
         }
 
@@ -585,6 +597,7 @@
             background: white;
             cursor: pointer;
             font-size: 0.85em;
+            white-space: nowrap;
         }
 
         .export-btn:hover {
@@ -604,6 +617,7 @@
 
         .toolbar-left {
             display: flex;
+            flex-wrap: wrap;
             gap: 0.5em;
             align-items: center;
         }
@@ -1694,6 +1708,15 @@
             background: rgb(70, 70, 70);
         }
 
+        /* Between the phone layout and a wide window the filtering box takes a row of its own: beside
+           the summary and the CI box it was squeezed to a sliver and pushed its export buttons off
+           the page. 768.02px, not 769px: a fractional viewport (768.8 CSS px at 125 % zoom) must not
+           fall between this block and the phone block. */
+        @media (min-width: 768.02px) and (max-width: 1160px) {
+            .header-row { flex-wrap: wrap; }
+            .filtering-box { flex-basis: 100%; }
+        }
+
         /* ── Mobile / Responsive ── */
         @media (max-width: 768px) {
             body {
@@ -1963,6 +1986,24 @@
             font-size: 0.9em;
             margin: 4px 0 10px;
         }
+        /* The scenario diagram toolbar, in every report (these rules lived in the internal-flow sheet,
+           so a report without internal-flow tracking got an unstyled block). It wraps whole controls
+           onto a new row: squeezed, their labels wrapped, and inside a scenario, whose
+           content-visibility clips what overflows it, the last controls were cut off out of sight. */
+        .diagram-toggle { margin-top: 8px; margin-bottom: 8px; padding-left: 1em; padding-right: 1em; display: flex; flex-wrap: wrap; align-items: center; width: 100%; box-sizing: border-box; }
+        .diagram-toggle-btn {
+            padding: 4px 14px;
+            border: 1px solid #ccc;
+            background: #f5f5f5;
+            cursor: pointer;
+            font-size: 13px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+        .diagram-toggle-btn:hover { background: #e8f0fe; }
+        .diagram-toggle-active { background: #4285f4; color: #fff; border-color: #4285f4; }
+        .diagram-toggle-active:hover { background: #3367d6; }
+        .diagram-toggle-spacer { flex: 1; }
         /* Scenario diagram toolbar on the title line (diagram-toggle-layout-script.js decides per
            toolbar whether it fits beside the "Sequence Diagrams" / "Diagrams" title and sets
            data-layout="inline" plus the negative margin-top that centres it on the title; without the

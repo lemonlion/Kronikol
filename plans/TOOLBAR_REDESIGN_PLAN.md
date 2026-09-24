@@ -78,7 +78,7 @@ list, measurement tooling, and instrument traps). Written 2026-08-31 against 3.0
 | Filter JS | `report-dependency-filter-function.js`, `report-category-filter-function.js`, `report-toggle-happy-paths-function.js` (to be deleted), `report-status-filter-function.js`, `report-duration-filter-function.js` | Dep filter hard-codes `deps.size === 0 → no match` (line 30) — 194 of 341 items in the published report vanish the moment any chip is active, with no escape hatch; categories has `__uncategorized__`, deps has nothing |
 | Search | `report-search-function.js` (legacy `@` path + tag-expression evaluator), `advanced-search.js` (`&&/||/!!`, `status:` tokens, quoted phrases) | Both match tags by **exact lowercased set membership**, and `@` names stop at whitespace in both tokenizers — multi-word names ("Happy Path", "Azure Event Hub") are unreachable via `@` today |
 | URL hash | `report-url-hash-function.js` | Params today: `q, status, deps, depmode, catmode, hp, cats, dur, pctl`. `save_filter_state`/`restore_filter_state` are empty stubs — the hash is the only persistence |
-| Styling | `stylesheets.css` (byte-shared with Kronikol4J — `Constants/Stylesheets.cs:21`), `Constants/Stylesheets.cs` (`VioletThemeStyleSheet` const), `internal-flow-popup-styles.css` (wrongly hosts `.diagram-toggle` base styles — finding F5), `collapsible-notes-styles.css` (pending spinner block) | `CustomCss` and `HtmlSpecificationsCustomStyleSheet` / `InternalFlowPopupCustomStyleSheet` are the injection points users already own |
+| Styling | `stylesheets.css` (byte-shared with Kronikol4J — `Constants/Stylesheets.cs:21`), `Constants/Stylesheets.cs` (`VioletThemeStyleSheet` const), `internal-flow-popup-styles.css` (hosted the `.diagram-toggle` base styles until 3.29.2, finding F5; they are in `stylesheets.css` now), `collapsible-notes-styles.css` (pending spinner block) | `CustomCss` and `HtmlSpecificationsCustomStyleSheet` / `InternalFlowPopupCustomStyleSheet` are the injection points users already own. Until 3.29.2 the custom sheet was emitted *before* the component sheets and lost to them at equal specificity (the violet Details radio painted blue on every default `Specifications.html`), and `InternalFlowPopupCustomStyleSheet` was never applied; both fixed in 3.29.2 (`TOOLBAR_AT_EVERY_WIDTH_PLAN.md` §2.4, S3, S5) |
 | Toolbar JS | `report-init-script.js` (mobile-⚙ decided once at load), `diagram-toggle-layout-script.js`, `toggle-script.js`, `collapsible-notes-script.js` | |
 | E2E | `tests/Kronikol.Tests.EndToEnd/` — `DiagramToggleLayoutTests`, `MobileResponsiveTests`, plus everything asserting toolbar text | Follow CLAUDE.md Playwright rules (no `force:true`, `PollingInterval = 200`, `FillSearchBar()`, dispatchEvent for SVG) |
 
@@ -86,6 +86,11 @@ list, measurement tooling, and instrument traps). Written 2026-08-31 against 3.0
 labels wrap inside the buttons from a 1200px window down (`.export-btn` has no `white-space: nowrap`); between
 ~769 and ~1000px the whole report scrolls sideways (~1090px scroll width in a 900px window — search input's
 intrinsic ~184px + `min-width:auto` flex items + 17 dependency chips in a squeezed column).
+**Both fixed in 3.29.2** (`TOOLBAR_AT_EVERY_WIDTH_PLAN.md`), whose measurement corrected the cause: the search
+input already shrinks with the box (`width: 100%` caps its automatic minimum); what escaped the box was the
+export cluster, and on a long branch the never-shrinking CI box. It also found the worse half of F11: a
+scenario toolbar with many controls had its last ones clipped out of sight by `content-visibility: auto` on
+`.scenario` (780 to about 1300px on the published reports), which the page's scroll width cannot show.
 
 **Real vocabulary to design against** (published BreakfastProvider report): 9 distinct tags (Happy Path 42 …
 four used once; 78 of 147 scenarios untagged); 17 dependencies (name lengths 6–31 chars, median 12, 254 label
@@ -117,6 +122,12 @@ published theme targets. The report is a document, not an API — but each renam
 
 ### 2.1 First slice: the two shipped bugs (own release, independent of everything else)
 
+**Shipped in 3.29.2** as `TOOLBAR_AT_EVERY_WIDTH_PLAN.md`, which departs from this section where measurement
+said to: no `min-width: 0` on the search input (it does nothing), the band is `768.02px` to `1160px` (D5),
+the cluster, the header and `.toolbar-left` wrap as rows, the CI box is capped, the violet theme and the sheet
+order are fixed too, and Kronikol4J got a ledger entry rather than a mirror (D11). The sweep is
+`ViewportSweepTests`.
+
 TDD: red Playwright tests asserting (a) no export-button label wraps at any window width 320–1400 (line-box count
 inside the button), (b) `document.scrollWidth <= innerWidth` across the same sweep. Fixes: `white-space: nowrap`
 on `.export-btn`; `min-width: 0` on the search input (and any flex item that needs it); a **minimal** header-row
@@ -141,8 +152,8 @@ truncate-lines dropdown visible only in Truncated mode; dynamic Format↔Toggle 
 list updated in the same commit** (three separate regressions in the artifact came from forgetting a drawing
 context); pending rail restyle (CSS-only — `setPending` JS untouched; delete the `padding-right: 1.5em` +
 spinner `::after` from `collapsible-notes-styles.css`); focus styles (F8); move `.diagram-toggle` base styles out
-of `internal-flow-popup-styles.css` into the always-shipped sheet (F5); collapse the duplicated 768px media blocks
-(F10); give Violet the missing active-hover rule (F6); ⚙ into the summary with a resize re-check and collapsing
+of `internal-flow-popup-styles.css` into the always-shipped sheet (F5, **done in 3.29.2**, with `flex-wrap: wrap`); collapse the duplicated 768px media blocks
+(F10); give Violet the missing active-hover rule (F6, **done in 3.29.2**, with the theme's hover order fixed and the sheet emitted after the component sheets); ⚙ into the summary with a resize re-check and collapsing
 only the options bar; M1 settings panel; T1 top bar with the sticky toolbar-row variant. Baseline alignment per
 the round-5c findings: selects pinned to the buttons' box metrics, `align-items: baseline` on the radio group.
 Markup also moves `.duration-filters` inside `.filter-row` (§0.5): under B's inline-label grammar plain flex
@@ -223,7 +234,7 @@ Markup pins first (generator emits the two-div toolbar, chips with `data-tag-sta
 violet const covers new states), then Playwright behaviour: cycle/alt-click/ANY-ALL/pseudo-chips; exclude
 semantics against a corpus where ALL vs ANY genuinely differ; `dep:`/`@dep:`/quoted-name searches in both paths;
 hash round-trips incl. legacy; exports honour tri-state; Violet still paints required chips; F5 regression (toolbar
-styled without internal-flow tracking); the §2.1 no-wrap/no-sideways-scroll sweeps become permanent guards; a
+styled without internal-flow tracking; `ToolbarStylingTests` since 3.29.2); the §2.1 no-wrap/no-sideways-scroll sweeps become permanent guards (`ViewportSweepTests` since 3.29.2, which also asserts every scenario-toolbar control stays inside its toolbar); a
 baseline-alignment guard asserting Δ = 0 between the options-bar controls' text baselines (port the `baseline.js`
 technique — text-run box + `fontBoundingBoxAscent`, no ink thresholds) at DSF 1 and 2.
 
@@ -325,7 +336,8 @@ gate — each catches a class the other two are structurally blind to.
 4. **Kronikol4J**: mirror each release or extend the existing ledger pin and port in a batch?
 5. **Fallback threshold**: confirm "≤3 estimated rows at reference width = A" after tuning in the artifact.
 6. **§2.1's minimal band wrap** changes today's header below ~1000px ahead of C — confirmed as acceptable
-   bug-fix territory?
+   bug-fix territory? **Answered 2026-09-24 (D5): yes, from 769 to 1160px**, the number the WCAG text-spacing
+   measurement needed (`TOOLBAR_AT_EVERY_WIDTH_PLAN.md` §10 Q1); shipped in 3.29.2.
 7. ~~Selected-Hasn't colour~~ **DECIDED 2026-08-31 from the two-way comparison frame: the excluded-chip
    pairing** — pink `#fbf1f0` ground, dark-red `#8a4a43` ink, border the shared segment grey (6:1). The exact
    grammar of the selected Has (tint ground + dark ink of the hue); the white-on-red it replaces was the only

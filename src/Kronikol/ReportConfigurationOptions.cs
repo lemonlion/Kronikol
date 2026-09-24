@@ -49,7 +49,10 @@ public record ReportConfigurationOptions
     /// <summary>File name (without extension) for the HTML test run report. Default: <c>"TestRunReport"</c>.</summary>
     public string HtmlTestRunReportFileName { get; set; } = "TestRunReport";
 
-    /// <summary>Custom CSS stylesheet for the HTML specifications report. Default: violet theme.</summary>
+    /// <summary>Custom CSS stylesheet for the HTML specifications report, appended after the built-in stylesheets (so its
+    /// rules win over theirs at equal specificity) and before <see cref="InternalFlowPopupCustomStyleSheet"/> and
+    /// <see cref="CustomCss"/>. Default: <see cref="Stylesheets.VioletThemeStyleSheet"/>, a violet overlay on the built-in
+    /// sheets; <c>null</c> leaves the report in the built-in blue.</summary>
     public string? HtmlSpecificationsCustomStyleSheet { get; set; } = Stylesheets.VioletThemeStyleSheet;
 
     /// <summary>File name (without extension) for the YAML specifications data file. Default: <c>"Specifications"</c>.</summary>
@@ -177,7 +180,9 @@ public record ReportConfigurationOptions
     /// <summary>Folder name for external internal flow fragment files. Default: <c>"spans"</c>.</summary>
     public string InternalFlowFragmentsFolderName { get; set; } = "spans";
 
-    /// <summary>Custom CSS stylesheet for internal flow popup windows.</summary>
+    /// <summary>Custom CSS stylesheet for the internal flow popups and controls, applied to both HTML reports when
+    /// <see cref="InternalFlowTracking"/> is on: after the built-in stylesheets and
+    /// <see cref="HtmlSpecificationsCustomStyleSheet"/>, before <see cref="CustomCss"/>.</summary>
     public string? InternalFlowPopupCustomStyleSheet { get; set; }
 
     /// <summary>Controls whole-test flow visualization mode. Default: <see cref="WholeTestFlowVisualization.Both"/>.</summary>
@@ -334,7 +339,7 @@ public record ReportConfigurationOptions
     /// <summary>When <c>true</c>, step numbers are shown in the test run report.</summary>
     public bool TestRunReportShowStepNumbers { get; set; }
 
-    /// <summary>Additional CSS injected into all generated HTML reports.</summary>
+    /// <summary>Additional CSS injected into all generated HTML reports, after every other stylesheet.</summary>
     public string? CustomCss { get; set; }
 
     /// <summary>Base64-encoded favicon to use in generated HTML reports.</summary>

@@ -209,20 +209,21 @@ public class MobileResponsiveTests : PlaywrightTestBase
             }
         """);
 
-        var toggles = Page.Locator(".diagram-toggle");
-        if (await toggles.CountAsync() > 0)
-        {
-            var toggle = toggles.First;
-            var flexWrap = await GetComputedStyle(toggle, "flex-wrap");
-            Assert.Equal("wrap", flexWrap);
+        // On a phone the init script hides every scenario toolbar behind a "Diagram Settings" button, so
+        // the toolbar is measured after the tap that shows it: read off the hidden box, flex-wrap says
+        // nothing about what a reader sees.
+        await Page.Locator(".scenario-diagram-controls-toggle").First.ClickAsync();
+        var toggle = Page.Locator(".diagram-toggle").First;
+        await Expect(toggle).ToBeVisibleAsync();
+        Assert.Equal("flex", await GetComputedStyle(toggle, "display"));
+        Assert.Equal("wrap", await GetComputedStyle(toggle, "flex-wrap"));
+        Assert.Equal("none", await GetComputedStyle(Page.Locator(".diagram-toggle-spacer").First, "display"));
 
-            var spacers = Page.Locator(".diagram-toggle-spacer");
-            if (await spacers.CountAsync() > 0)
-            {
-                var display = await GetComputedStyle(spacers.First, "display");
-                Assert.Equal("none", display);
-            }
-        }
+        var pastEdge = await toggle.EvaluateAsync<double>("""
+            t => Math.max(0, ...[...t.querySelectorAll('button, select')]
+                .map(k => k.getBoundingClientRect().right - t.getBoundingClientRect().right))
+            """);
+        Assert.True(pastEdge <= 1, $"a toolbar control ends {pastEdge} px past the toolbar's edge");
     }
 
     [Fact]

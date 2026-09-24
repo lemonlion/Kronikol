@@ -2165,10 +2165,12 @@ public static class ReportTestHelper
 
     /// <summary>
     /// A sequence diagram plus whole-test-flow activity and flame views for the same scenario
-    /// (three diagram-type tabs), with configured toggle defaults — for the DiagramTab facts.
+    /// (three diagram-type tabs), with configured toggle defaults: for the DiagramTab facts, and,
+    /// given a stylesheet, for the painted-colour facts (the tabs render with or without
+    /// internal-flow tracking; only the popup sheet depends on it).
     /// </summary>
     public static string GenerateWholeTestFlowToggleDefaultsReport(string tempDir, string outputDir, string fileName,
-        Action<ReportConfigurationOptions> configure)
+        Action<ReportConfigurationOptions> configure, string? stylesheet = null, bool internalFlowTracking = true)
     {
         var (features, _) = CreateTestData();
         var diagrams = new[]
@@ -2208,16 +2210,146 @@ public static class ReportTestHelper
         var path = ReportGenerator.GenerateHtmlReport(
             diagrams, features,
             DateTime.UtcNow, DateTime.UtcNow,
-            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            stylesheet, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            internalFlowTracking: true,
+            internalFlowTracking: internalFlowTracking,
             wholeTestSegments: segments,
             wholeTestVisualization: WholeTestFlowVisualization.Both,
             toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
 
         child.Dispose();
         root.Dispose();
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// The viewport sweep's fixture: the widest header and the fullest scenario toolbar a reader can be
+    /// given (plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md §4). Seventeen participants with the length spread of a
+    /// real suite (three of them databases), six tags, a 69-character branch and a 52-character repository
+    /// in the CI box, a diagram carrying an assertion note and a step bar, the opt-in note font select,
+    /// with flow tracking the whole-test flow views (the Sequence, Activity and Flame tabs), and on the
+    /// run report the component diagram every default run report with dependencies embeds. Each is the
+    /// measured worst case of its kind; the default fixture has none of them.
+    /// </summary>
+    public static string GenerateReportWithWideHeader(string tempDir, string outputDir, string fileName,
+        bool specifications, bool internalFlowTracking)
+    {
+        string[] dependencies =
+        [
+            "Azure Event Hub", "Reporting Database (SQL Server)", "Redis Cache", "Kafka Broker", "Orders API",
+            "Payment Gateway", "MongoDB Atlas", "Cosmos DB", "Blob Storage", "Service Bus", "Elasticsearch",
+            "Postgres Database", "ClickHouse", "Inventory Service", "Notification Service (SMTP)",
+            "gRPC Pricing Service", "Storage Queue"
+        ];
+        var source = new System.Text.StringBuilder("@startuml\nactor \"Caller\" as caller\n");
+        for (var i = 0; i < dependencies.Length; i++)
+            source.Append((i % 5 == 1 ? "database" : "participant") + $" \"{dependencies[i]}\" as p{i}\n");
+        source.Append("""
+            hnote across <<stepDelimiter>> #black:<color:white>When the request is made
+            caller -> p0 : POST /api/orders
+            note left
+            {"item":"Widget","qty":2}
+            end note
+            p0 -> p1 : INSERT INTO Orders
+            p1 --> p0 : OK
+            hnote across <<assertionNote>> #d4edda
+            ✓ status code should be created
+            end note
+            p0 --> caller : 201 Created
+            @enduml
+
+            """);
+
+        static Scenario Scenario(string id, string name, bool happy, ExecutionResult result, int ms, string[] tags) => new()
+        {
+            Id = id, DisplayName = name, IsHappyPath = happy, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Labels = tags,
+            Steps =
+            [
+                new ScenarioStep { Keyword = "Given", Text = "the system is running", Status = ExecutionResult.Passed },
+                new ScenarioStep { Keyword = "When", Text = "the request is made", Status = result == ExecutionResult.Failed ? ExecutionResult.Failed : ExecutionResult.Passed },
+                new ScenarioStep { Keyword = "Then", Text = "the response is checked", Status = result == ExecutionResult.Failed ? ExecutionResult.Skipped : ExecutionResult.Passed }
+            ]
+        };
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Order Feature",
+                Scenarios =
+                [
+                    Scenario("w1", "Create order successfully", true, ExecutionResult.Passed, 2000, ["Happy Path", "Smoke"]),
+                    Scenario("w2", "Delete order fails gracefully", false, specifications ? ExecutionResult.Passed : ExecutionResult.Failed, 5000, ["Happy Path", "Regression"]),
+                    Scenario("w3", "List orders returns paginated results", true, ExecutionResult.Passed, 1000, ["Azure"]),
+                ]
+            },
+            new Feature
+            {
+                DisplayName = "Payment Feature",
+                Scenarios =
+                [
+                    Scenario("w4", "Process payment", true, ExecutionResult.Passed, 500, ["Happy Path"]),
+                    Scenario("w5", "Refund payment", false, ExecutionResult.Skipped, 100, []),
+                    Scenario("w6", "Reconcile nightly settlement batch", false, ExecutionResult.Passed, 9000, ["Slow", "Nightly"]),
+                ]
+            }
+        };
+        var diagrams = new[] { new DiagramAsCode("w1", "", source.ToString()), new DiagramAsCode("w2", "", source.ToString()), new DiagramAsCode("w4", "", source.ToString()) };
+
+        using var activitySource = new System.Diagnostics.ActivitySource("Kronikol.Tests.ViewportSweep.E2E");
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = _ => true,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+        var now = DateTime.UtcNow;
+        var spans = new List<System.Diagnostics.Activity>();
+        Dictionary<string, InternalFlowSegment>? segments = null;
+        if (internalFlowTracking)
+        {
+            segments = [];
+            foreach (var id in new[] { "w1", "w2", "w4" })
+            {
+                System.Diagnostics.Activity.Current = null;
+                var root = activitySource.StartActivity("HTTP POST /api/orders", System.Diagnostics.ActivityKind.Server)!;
+                root.SetStartTime(now);
+                root.SetEndTime(now.AddMilliseconds(500));
+                var rootCtx = new System.Diagnostics.ActivityContext(root.TraceId, root.SpanId, System.Diagnostics.ActivityTraceFlags.Recorded);
+                var child = activitySource.StartActivity("SQL INSERT Orders", System.Diagnostics.ActivityKind.Internal, rootCtx)!;
+                child.SetStartTime(now.AddMilliseconds(20));
+                child.SetEndTime(now.AddMilliseconds(400));
+                segments["iflow-test-" + id] = new(Guid.Empty, RequestResponseType.Request, id, now, now.AddMilliseconds(500), [root, child]);
+                spans.Add(child);
+                spans.Add(root);
+            }
+        }
+
+        var ci = new CiMetadata(CiEnvironment.GitHubActions, "20260922.17",
+            "feature/KRON-1234-reconcile-nightly-settlement-batches-across-regions", "0123456789abcdef0123456789abcdef01234567",
+            "https://github.com/my-organisation/breakfast-provider-integration-tests/actions/runs/17",
+            "my-organisation/breakfast-provider-integration-tests", "17");
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            now, now.AddMinutes(3),
+            specifications ? Kronikol.Stylesheets.VioletThemeStyleSheet : null, Path.Combine(tempDir, fileName),
+            specifications ? "Service Specifications" : "Test Run Report", includeTestRunData: !specifications,
+            generateBlankOnFailedTests: specifications,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            internalFlowTracking: internalFlowTracking,
+            wholeTestSegments: segments,
+            wholeTestVisualization: WholeTestFlowVisualization.Both,
+            ciMetadata: specifications ? null : ci,
+            componentDiagramPlantUml: specifications ? null : ToggleDefaultsComponentDiagramSource,
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions { ShowNoteFontControls = true }, specifications));
+
+        foreach (var span in spans)
+            span.Dispose();
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;

@@ -28,7 +28,7 @@ public class DiagramToggleLayoutTests : DiagramNotePlaywrightBase
         await Page.SetViewportSizeAsync(1400, 900);
         await OpenReport("ToggleLayoutWide.html");
 
-        await Page.WaitForFunctionAsync($"() => document.querySelector('{Toggle}[data-layout=\"inline\"]') !== null");
+        await Page.WaitForFunctionAsync($"() => document.querySelector('{Toggle}[data-layout=\"inline\"]') !== null", null, new() { PollingInterval = 200 });
         var geometry = await Page.EvaluateAsync<string>($$"""
             () => {
                 var t = document.querySelector('{{Toggle}}[data-layout="inline"]');
@@ -51,10 +51,10 @@ public class DiagramToggleLayoutTests : DiagramNotePlaywrightBase
     {
         await Page.SetViewportSizeAsync(1400, 900);
         await OpenReport("ToggleLayoutNarrow.html");
-        await Page.WaitForFunctionAsync($"() => document.querySelector('{Toggle}[data-layout=\"inline\"]') !== null");
+        await Page.WaitForFunctionAsync($"() => document.querySelector('{Toggle}[data-layout=\"inline\"]') !== null", null, new() { PollingInterval = 200 });
 
         await Page.SetViewportSizeAsync(520, 900);
-        await Page.WaitForFunctionAsync($"() => document.querySelector('{Toggle}[data-layout=\"inline\"]') === null");
+        await Page.WaitForFunctionAsync($"() => document.querySelector('{Toggle}[data-layout=\"inline\"]') === null", null, new() { PollingInterval = 200 });
         var geometry = await Page.EvaluateAsync<string>($$"""
             () => {
                 var t = document.querySelector('{{Toggle}}');
@@ -70,6 +70,6 @@ public class DiagramToggleLayoutTests : DiagramNotePlaywrightBase
 
         // And back again when the page grows.
         await Page.SetViewportSizeAsync(1400, 900);
-        await Page.WaitForFunctionAsync($"() => document.querySelector('{Toggle}[data-layout=\"inline\"]') !== null");
+        await Page.WaitForFunctionAsync($"() => document.querySelector('{Toggle}[data-layout=\"inline\"]') !== null", null, new() { PollingInterval = 200 });
     }
 }

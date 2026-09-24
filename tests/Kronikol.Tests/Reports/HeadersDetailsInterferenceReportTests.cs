@@ -162,22 +162,16 @@ public class HeadersDetailsInterferenceReportTests
         // The toolbar-right should not have margin-right so that the toggle buttons
         // (Assertions Shown/Hidden, etc.) align with the right edge of the filtering-box.
         var css = Stylesheets.HtmlReportStyleSheet;
-        var idx = css.IndexOf(".toolbar-right {");
-        Assert.True(idx >= 0, ".toolbar-right CSS rule should exist");
-        var ruleEnd = css.IndexOf('}', idx);
-        var rule = css[idx..ruleEnd];
-        Assert.DoesNotContain("margin-right", rule);
+        Assert.NotEmpty(CssRules.For(css, ".toolbar-right"));
+        Assert.Null(CssRules.Value(css, ".toolbar-right", "margin-right"));
+        Assert.Null(CssRules.Value(css, ".toolbar-right", "margin"));
     }
 
     [Fact]
     public void Scenario_has_content_visibility_auto_for_large_report_performance()
     {
         var css = Stylesheets.HtmlReportStyleSheet;
-        var idx = css.IndexOf(".scenario {");
-        Assert.True(idx >= 0, ".scenario CSS rule should exist");
-        var ruleEnd = css.IndexOf('}', idx);
-        var rule = css[idx..ruleEnd];
-        Assert.Contains("content-visibility: auto", rule);
-        Assert.Contains("contain-intrinsic-size:", rule);
+        Assert.Equal("auto", CssRules.Value(css, ".scenario", "content-visibility"));
+        Assert.NotNull(CssRules.Value(css, ".scenario", "contain-intrinsic-size"));
     }
 }
