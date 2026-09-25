@@ -24,6 +24,9 @@ could not restore, so no 3.29.4 package was published; this release carries ever
 
 ## [3.29.4] - 2026-09-25
 
+**Tagged, never published.** The release build failed at restore on a package conflict unrelated to
+this release (see 3.29.5), so no 3.29.4 package reached NuGet. 3.29.5 carries everything below.
+
 **Patch - the report fits its window with every section it can hold (the audit of
 `plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md`, stage 1 P2).** The patch part moved because nothing is new to
 call: no option, type, member or parameter is added. Everything is four stylesheet rules. Every
