@@ -3932,7 +3932,8 @@ public class PlantUmlCreatorTests
     // Line-leading list/heading markup restyles the line and eats the marker.
     [InlineData("* bullet", "~* bullet")]
     [InlineData("  # numbered", "  ~# numbered")]
-    [InlineData("= heading", "~= heading")]
+    // `~=` is no escape: the engine paints its tilde (3.30.1, measured). The code point paints one `=`.
+    [InlineData("= heading", "<U+003D> heading")]
     // A link needs both halves; without a closing pair the brackets are literal already.
     [InlineData("[[1,2],[3,4]]", "~[~[1,2],[3,4]]")]
     [InlineData("[[1,2],[3,4]", "[[1,2],[3,4]")]
@@ -3946,10 +3947,10 @@ public class PlantUmlCreatorTests
     [InlineData("x<-y", "x<-y")]
     [InlineData("<>", "<>")]
     [InlineData("a <= b", "a <= b")]
-    // A payload that escapes the `<` itself keeps its own escape: one more `~` would pair with it into a
-    // literal tilde and make the markup live again.
-    [InlineData("~<&str>", "~<&str>")]
-    [InlineData("~~<&str>", "~~~<&str>")]
+    // A payload's own tilde is text from 3.30.1: it is written as its code point, which escapes nothing, so
+    // the `<` after it is escaped like any other and both paint as captured.
+    [InlineData("~<&str>", "<U+007E>~<&str>")]
+    [InlineData("~~<&str>", "<U+007E><U+007E>~<&str>")]
     public void EscapeCreoleMarkup_escapes_only_what_plantuml_would_consume(string input, string expected)
     {
         Assert.Equal(expected, PlantUmlCreator.EscapeCreoleMarkup(input));

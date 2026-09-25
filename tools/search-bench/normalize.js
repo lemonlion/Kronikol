@@ -34,11 +34,28 @@ function rejoinMarkedBreaks(s) {
   return out;
 }
 
+// 3. Creole escapes and code points (3.30.1). The generator writes captured text that PlantUML's
+// preprocessor or creole would act on as a code point, <U+hhhh>, which the engine paints as the one
+// character, so a search reads the character. One left-to-right pass: `~<U+0027>` is an escaped `<`
+// followed by the payload's own text, and a decoded `~` escapes nothing. It runs before the fold, so a
+// decoded `E` folds like any other. A zero-width space (<U+200B>, the generator's pair and reference
+// breaks) paints nothing and is dropped; a code point that is no character is left as written. The
+// lowercase `<u+…>` is not decoded, because the engine paints it as written.
+function decodeCreoleEscapes(s) {
+  return s.replace(/~([/*_\-"\[<#=])|<U\+([0-9A-Fa-f]{4,6})>/g, (m, escaped, hex) => {
+    if (escaped !== undefined) return escaped;
+    const cp = parseInt(hex, 16);
+    if (cp === 0x200b) return '';
+    if ((cp >= 0xd800 && cp <= 0xdfff) || cp > 0x10ffff) return m;
+    return String.fromCodePoint(cp);
+  });
+}
+
 function normalizeForSearch(s) {
   s = s.replace(/\r\n/g, '\n');                                  // 1. canonicalize CRLF
   s = rejoinMarkedBreaks(s);                                     // 1b. undo the generator's own note-body breaks
+  s = decodeCreoleEscapes(s);                                    // 3. creole escapes and code points (before the fold since 3.30.1)
   s = s.replace(/[A-Z]/g, c => c.toLowerCase());                 // 2. ASCII-only fold
-  s = s.replace(/~(?=[/*_\-"\[<#=])/g, '');                      // 3. creole escapes (same set the context-menu copy-text inverse strips)
   s = s.replace(/<\/?(?:color|font|i|b|size|back)[^>]*>/g, '');  // 4. markup tags
   s = s.replace(/\\n[ \t]*/g, '');                               // 5a. arrow-label literal \n escape + indent
   return (s + '\n').replace(/[ \t]+/g, ' ');                     // 6. collapse spaces

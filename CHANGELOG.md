@@ -4,6 +4,73 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.30.1] - 2026-09-25
+
+**Patch - captured text is drawn as it was captured, whatever PlantUML would otherwise make of it (the escape
+class `plans/DIAGRAM_COLOURS_PLAN.md` deferred to its own patch, §12.3).** Every change is a fix, so the patch
+part moved. The generated PlantUML source changes for a note whose text PlantUML would act on, and nowhere
+else.
+
+### Fixed
+
+- **A note's text reached PlantUML's preprocessor.** The preprocessor reads every line of the source before a
+  note is drawn:
+  - A captured line opening with `'` was a comment and vanished (an SQL body's `  'PENDING',` line).
+  - `/'` opened a block comment, and a line that is only `{{` opened an embedded diagram. Either broke the
+    diagram.
+  - A line opening with `!` was a directive. `!define` and `!theme` ran, `!assert` and `!log` vanished, and
+    `!include` or `!endif` broke the diagram. Under `PlantUmlRendering.Local` (the Java engine),
+    `!include <path>` drew that file from the machine generating the report into the diagram.
+  - `%name(…)` was a builtin call anywhere in a line: `%date()` painted the date.
+  - A line reading `end note`, in any spelling the engine accepts (`END NOTE`, `endnote`, indented), closed the
+    note, and the diagram failed to draw.
+  - Under the Java engine, a line opening with `@end` or `@start` ended the diagram, and a line ending in a
+    single `\` was joined to the next.
+
+  Each of these characters is now written as its code point, `<U+hhhh>`, which the engine paints as the
+  character and acts on no further. Step names, test names and assertion text keep their own markup, and a
+  builtin call in them is escaped too. An assertion note's lines are escaped like a payload's. Until now only
+  an exact `end note` was, and a wrapped assertion line opening with a quote was dropped as a comment.
+- **Creole restyled captured text the escaper missed:**
+  - a literal `~` was taken as creole's escape and vanished before `/ < . " ] # * _ - [`, so `~/.bashrc`
+    was drawn `/.bashrc` and a JSON `"~"` was drawn `""`;
+  - a line opening with `=` was a heading, and its old escape `~=` painted the tilde;
+  - `| a | b |` was a table, `..x..` a separator, and `--`, `---` or `___` alone a rule, each drawn without
+    its characters;
+  - `a << b >> c` was drawn with guillemets;
+  - `&#39;` was decoded to `'`.
+
+  A literal tilde is now always text, and the others are escaped only where creole would act on them.
+- **Kronikol's own line breaks** start a line with the same escapes as any other. That covers a run cut by the
+  width bound, a wrapped assertion line, and a response split across diagrams under `NodeJs`, `Local` or
+  `Server`. The split used to cut at exactly 15,000 characters and could leave an escape in two pieces; it
+  now cuts between lines, as the browser's splitter does.
+- **The browser's splitter** decided whether a part of a split note had its `@startuml` by searching the part
+  for the text. A payload quoting a PlantUML source mid-line made it draw the part without its header, and the
+  rest of the note was lost. The splitter now reads the header off a whole line.
+- **Copy box text, Open box text, Copy all caller request payloads, the YAML view and search** decode the code
+  points and drop the zero-width space, so they give back the captured bytes. A search query keeps its tildes:
+  a reader types what the note shows.
+
+### Tests
+
+- `CapturedTextEscapeTests` (unit): every rule on the escaper; a captured body holding each hazard, rendered
+  by the Node renderer on the pinned engine, paints every line as captured.
+- `CapturedTextEscapeTests` (IKVM): the same body under the Java engine, and a captured `!include` line that
+  no longer draws the file it names.
+- `CapturedTextEscapeTests` (Playwright): in the render worker every diagram is drawn and paints the captured
+  lines, Copy box text returns them, the YAML view paints and copies them, and a split note that quotes a
+  diagram draws every part.
+- `NoteYamlInternalsTests` (Playwright): the YAML view's escaper writes what the generator writes for each kind of
+  line, and its inverse gives the captured text back.
+- The shared search vectors gain six cases. `SearchNormalizerEquivalenceTests`, the Jint tests over the shipped
+  search script and `DiagramContextMenuTests` pin the decoder in all three places.
+- Each was red on 3.30.0.
+
+### Kronikol4J
+
+- The port has neither escape, and its normalizer does not decode code points. Its parity ledger records both.
+
 ## [3.30.0] - 2026-09-25
 
 **Minor - `PlantUmlTheme` says when it does nothing, and two diagram colours are what they should have

@@ -488,6 +488,23 @@ public static partial class PlantUmlCreator
     /// or a sprite (<c>&lt;$name&gt;</c>) is escaped too, see <see cref="EscapeLoaderMarkup"/>: the first two
     /// make the engine load a bundle the report's renderers cannot, and a sprite drops the text.
     /// </para>
+    /// <para>
+    /// PlantUML's preprocessor reads the text before creole does (3.30.1). A line opening with <c>'</c> is a
+    /// comment and vanishes; <c>/'</c> opens a block comment; a line opening with <c>!</c> is a directive, and
+    /// under the Java renderer <c>!include</c> draws a local file into the report; <c>%name(</c> is a builtin
+    /// call anywhere in a line (<c>%date()</c> paints the date); a line reading <c>end note</c> can close the
+    /// note; <c>{{</c> alone opens an embedded diagram. Under the Java renderer a line opening with
+    /// <c>@end</c> or <c>@start</c> ends the diagram, and a line ending in an odd run of <c>\</c> is joined to
+    /// the next. Creole takes a literal <c>~</c> as its escape, a line opening with <c>=</c>, <c>|</c> or
+    /// <c>..</c> as a heading, a table or a separator, <c>&lt;&lt;x&gt;&gt;</c> as guillemets and
+    /// <c>&amp;#39;</c> as a character reference. Each such character is written as its code point,
+    /// <c>&lt;U+hhhh&gt;</c>, which both engines paint as the one character and act on no further (measured:
+    /// <c>plans/DIAGRAM_COLOURS_PLAN.harness/preproc-probe.js</c>). The reference is the exception: under the
+    /// note wrap width the engine decodes code points before references, so a zero-width space after its
+    /// <c>&amp;</c> breaks it instead. <c>~=</c> and <c>~|</c> are no escapes: the engine paints their tilde.
+    /// Every reader that turns note source back into text decodes the code points and drops the zero-width
+    /// space: copy, the YAML view, search.
+    /// </para>
     /// </summary>
     internal static string EscapeCreoleMarkup(string text)
     {
@@ -523,19 +540,26 @@ public static partial class PlantUmlCreator
                 : Occurrences(line, CreolePairChars[k]) >= 2;
         }
 
-        var contentStarted = false;
+        var contentStart = ContentStart(line);
+        var trailingBackslash = OddTrailingBackslash(line);
         for (var i = 0; i < line.Length; i++)
         {
             var c = line[i];
             var pairIndex = CreolePairChars.IndexOf(c);
             var isPair = pairIndex >= 0 && live[pairIndex] && i + 1 < line.Length && line[i + 1] == c;
 
-            if (!contentStarted && c != ' ' && c != '\t')
+            if (i == contentStart && !isPair)
             {
-                contentStarted = true;
-                // A line opening with one of these is a bullet, a numbered item or a heading: creole eats
-                // the marker and restyles the line. `--`/`__` separators are already covered as pairs.
-                if (!isPair && c is '*' or '#' or '=') sb.Append('~');
+                // What the preprocessor, the block reader and creole's line markup act on. Escaped where the
+                // content starts, not only at column 0, so a reader that trims the line exposes nothing.
+                if (LineStartEscape(line, i, creole: true) is { } escaped)
+                {
+                    sb.Append(escaped);
+                    continue;
+                }
+
+                // A bullet or a numbered item: creole eats the marker and restyles the line. `~` escapes both.
+                if (c is '*' or '#') sb.Append('~');
             }
 
             if (isPair)
@@ -545,12 +569,224 @@ public static partial class PlantUmlCreator
                 continue;
             }
 
-            if (c == '<' && i + 1 < line.Length
-                && (IsCreoleTagStart(line[i + 1]) || (IsLoaderMarkupStart(line[i + 1]) && !IsTildeEscaped(line, i))))
+            if (i == trailingBackslash
+                || c == '~'
+                || (c == '%' && IsBuiltinCall(line, i))
+                || (c == '<' && OpensGuillemets(line, i)))
+            {
+                // A payload's own tilde is text: as its code point it paints and escapes nothing.
+                sb.Append(CodePoint(c));
+                continue;
+            }
+
+            if (c == '&' && IsDecimalCharacterReference(line, i))
+            {
+                // Under the note wrap width the engine decodes code points before references, so `<U+0026>#39;`
+                // still paints `'`. A zero-width space breaks the reference instead; every reader drops it.
+                sb.Append('&').Append(ZeroWidthSpace);
+                continue;
+            }
+
+            if (c == '<' && i + 1 < line.Length && (IsCreoleTagStart(line[i + 1]) || IsLoaderMarkupStart(line[i + 1])))
                 sb.Append('~');
 
             sb.Append(c);
         }
+    }
+
+    /// <summary>A character as PlantUML's code point escape, <c>&lt;U+hhhh&gt;</c>.</summary>
+    private static string CodePoint(char c) => $"<U+{(int)c:X4}>";
+
+    /// <summary>A zero-width space, which draws as nothing and which every reader of note text drops.</summary>
+    private const string ZeroWidthSpace = "<U+200B>";
+
+    /// <summary>The index of the first character that is not a space or a tab, or -1 for a blank line.</summary>
+    private static int ContentStart(ReadOnlySpan<char> line)
+    {
+        for (var i = 0; i < line.Length; i++)
+            if (line[i] != ' ' && line[i] != '\t') return i;
+        return -1;
+    }
+
+    /// <summary>
+    /// The index of the backslash the Java engine would read as a line continuation: the last of an odd
+    /// run ending the line (a CR aside). -1 when the line does not end that way.
+    /// </summary>
+    private static int OddTrailingBackslash(ReadOnlySpan<char> line)
+    {
+        var end = line.Length > 0 && line[^1] == '\r' ? line.Length - 1 : line.Length;
+        var run = 0;
+        while (end - run - 1 >= 0 && line[end - run - 1] == '\\') run++;
+        return run % 2 == 1 ? end - 1 : -1;
+    }
+
+    /// <summary>
+    /// The escape for the character at <paramref name="at"/>, where a line's content starts, when the
+    /// preprocessor or the block reader would act on it; with <paramref name="creole"/>, also when creole
+    /// would read it as a heading, a table or a separator. Null when nothing there needs escaping.
+    /// </summary>
+    private static string? LineStartEscape(ReadOnlySpan<char> line, int at, bool creole)
+    {
+        var c = line[at];
+        var rest = line[(at + 1)..];
+        var trimmed = line.Trim();
+
+        if (NoteTerminator().IsMatch(trimmed)) return CodePoint(c);
+
+        switch (c)
+        {
+            case '\'':
+            case '!':
+            case '/' when rest.StartsWith("'"):
+            case '@' when rest.StartsWith("start", StringComparison.OrdinalIgnoreCase) || rest.StartsWith("end", StringComparison.OrdinalIgnoreCase):
+            case '{' when EmbeddedDiagramOpener().IsMatch(trimmed):
+                return CodePoint(c);
+        }
+
+        return creole && (c == '=' || CreoleLineMarkup().IsMatch(trimmed))
+            ? CodePoint(c)
+            : null;
+    }
+
+    /// <summary>
+    /// A line creole restyles from its start (measured, 3.30.1): a table row (<c>| a |</c>), a separator
+    /// (<c>..x..</c>, <c>....</c>), or a rule made of dashes or underscores alone (<c>---</c>, <c>__</c>), which
+    /// all draw without their characters. A heading (<c>=</c>) is any line that opens with one. The pairs
+    /// escape covers most rules already; <c>--</c>, <c>---</c> and <c>___</c> have no partner and did not.
+    /// </summary>
+    [GeneratedRegex(@"^(?:\|.*\||\.\.(?:.*\.\.)?|-{2,}|_{2,})$", RegexOptions.CultureInvariant)]
+    private static partial Regex CreoleLineMarkup();
+
+    /// <summary>A line the engine takes for the end of a note, in any spelling it accepts.</summary>
+    [GeneratedRegex(@"^end\s*[rh]?note$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex NoteTerminator();
+
+    /// <summary>A line the engine takes for the start of an embedded diagram: <c>{{</c>, or <c>{{json</c> and the like.</summary>
+    [GeneratedRegex(@"^\{\{\w*$", RegexOptions.CultureInvariant)]
+    private static partial Regex EmbeddedDiagramOpener();
+
+    /// <summary>
+    /// Whether the <c>%</c> at <paramref name="at"/> opens a builtin call, <c>%name(</c>, which the
+    /// preprocessor evaluates wherever it sits in a line. An unknown name is left as written by the engine,
+    /// so escaping every one costs nothing and does not depend on which builtins an engine version has.
+    /// </summary>
+    private static bool IsBuiltinCall(ReadOnlySpan<char> text, int at)
+    {
+        var j = at + 1;
+        if (j >= text.Length || !(char.IsAsciiLetter(text[j]) || text[j] == '_')) return false;
+        while (j < text.Length && (char.IsAsciiLetterOrDigit(text[j]) || text[j] == '_')) j++;
+        return j < text.Length && text[j] == '(';
+    }
+
+    /// <summary>Whether the <c>&amp;</c> at <paramref name="at"/> opens a decimal character reference, which creole decodes.</summary>
+    private static bool IsDecimalCharacterReference(ReadOnlySpan<char> text, int at)
+    {
+        var j = at + 1;
+        if (j >= text.Length || text[j] != '#') return false;
+        var digits = ++j;
+        while (j < text.Length && char.IsAsciiDigit(text[j])) j++;
+        return j > digits && j < text.Length && text[j] == ';';
+    }
+
+    /// <summary>
+    /// Whether the <c>&lt;</c> at <paramref name="at"/> opens a <c>&lt;&lt;…&gt;&gt;</c> pair, which creole
+    /// paints as guillemets: <c>a &lt;&lt; b &gt;&gt; c</c> is drawn <c>a «b» c</c>. When the second
+    /// <c>&lt;</c> is escaped as a tag already, the pair is broken and nothing more is needed.
+    /// </summary>
+    private static bool OpensGuillemets(ReadOnlySpan<char> line, int at)
+    {
+        if (at + 1 >= line.Length || line[at + 1] != '<') return false;
+        if (at + 2 < line.Length && (IsCreoleTagStart(line[at + 2]) || IsLoaderMarkupStart(line[at + 2]))) return false;
+        return line[(at + 2)..].IndexOf(">>".AsSpan()) >= 0;
+    }
+
+    /// <summary>
+    /// A line Kronikol broke off a longer one, with its start escaped the way <see cref="EscapeCreoleMarkup"/>
+    /// escapes a line's start. The text is escaped already, so only its first character can need it: a cut
+    /// never strands a <c>~</c> from what it protects, nor splits a <c>&lt;…&gt;</c>.
+    /// </summary>
+    internal static string EscapeContinuationStart(string line)
+    {
+        var at = ContentStart(line);
+        if (at < 0) return line;
+        if (LineStartEscape(line, at, creole: true) is { } escaped) return line[..at] + escaped + line[(at + 1)..];
+        return line[at] is '*' or '#' ? line[..at] + "~" + line[at..] : line;
+    }
+
+    /// <summary>
+    /// A note body in pieces of at most <paramref name="maxLength"/> characters, for diagrams of their own,
+    /// cut between lines the way the browser's splitter cuts one (<c>chunkString</c> in
+    /// <c>plantuml-browser-render-script.js</c>). Until 3.30.1 the cut fell at exactly
+    /// <paramref name="maxLength"/>, which could leave an escape in two pieces and start a line with whatever
+    /// character fell there. A line longer than the whole budget is cut after its last space before the
+    /// limit, else at a point no escape spans, and the line each cut starts is escaped like any other.
+    /// </summary>
+    internal static List<string> ChunkNoteAtLineBreaks(string text, int maxLength)
+    {
+        var chunks = new List<string>();
+        var current = new StringBuilder();
+        var started = false;
+        foreach (var line in text.Split('\n').SelectMany(l => SplitOverlongLine(l, maxLength)))
+        {
+            if (started && current.Length + 1 + line.Length > maxLength)
+            {
+                chunks.Add(current.ToString());
+                current.Clear();
+                started = false;
+            }
+
+            if (started) current.Append('\n');
+            current.Append(line);
+            started = true;
+        }
+
+        if (started) chunks.Add(current.ToString());
+        return chunks;
+    }
+
+    private static IEnumerable<string> SplitOverlongLine(string line, int maxLength)
+    {
+        var pos = 0;
+        while (line.Length - pos > maxLength)
+        {
+            var cut = pos + maxLength;
+            var space = line.LastIndexOf(' ', cut - 1, maxLength);
+            if (space > pos)
+                cut = space + 1;
+            else
+            {
+                var open = line.AsSpan(pos, cut - pos).LastIndexOf('<');
+                if (open > 0 && line.AsSpan(pos + open, cut - pos - open).IndexOf('>') < 0) cut = pos + open;
+                while (cut > pos + 1 && line[cut - 1] == '~') cut--;
+            }
+
+            yield return pos == 0 ? line[..cut] : EscapeContinuationStart(line[pos..cut]);
+            pos = cut;
+        }
+
+        yield return pos == 0 ? line : EscapeContinuationStart(line[pos..]);
+    }
+
+    /// <summary>
+    /// One line of text that keeps its markup (an assertion note's body), with what the preprocessor or the
+    /// block reader would act on escaped: its start, as <see cref="EscapeCreoleMarkup"/> escapes it without
+    /// the creole markers, and a trailing backslash.
+    /// </summary>
+    internal static string EscapePreprocessorLine(string line)
+    {
+        var contentStart = ContentStart(line);
+        var head = contentStart >= 0 ? LineStartEscape(line, contentStart, creole: false) : null;
+        var trailingBackslash = OddTrailingBackslash(line);
+        if (head is null && trailingBackslash < 0) return line;
+
+        var sb = new StringBuilder(line.Length + 16);
+        for (var i = 0; i < line.Length; i++)
+        {
+            if (i == contentStart && head is not null) sb.Append(head);
+            else if (i == trailingBackslash) sb.Append(CodePoint('\\'));
+            else sb.Append(line[i]);
+        }
+        return sb.ToString();
     }
 
     /// <summary>
@@ -570,14 +806,27 @@ public static partial class PlantUmlCreator
     /// pairs, and a pair paints as two tildes and escapes nothing, so one more <c>~</c> in front of
     /// <c>~&lt;&amp;</c> would make the markup live again.
     /// </para>
+    /// <para>
+    /// A builtin call, <c>%name(</c>, is escaped as its code point too (3.30.1): the preprocessor evaluates
+    /// it wherever it sits in a line, before any markup is read, so <c>%date()</c> in a step name painted the
+    /// date. The line-level escapes a note body needs are <see cref="EscapePreprocessorLine"/>'s, applied by
+    /// the callers that write lines.
+    /// </para>
     /// </summary>
     internal static string EscapeLoaderMarkup(string text)
     {
-        if (string.IsNullOrEmpty(text) || text.IndexOf('<') < 0) return text;
+        if (string.IsNullOrEmpty(text) || text.AsSpan().IndexOfAny('<', '%') < 0) return text;
 
         StringBuilder? sb = null;
         for (var i = 0; i < text.Length; i++)
         {
+            if (text[i] == '%' && IsBuiltinCall(text, i))
+            {
+                sb ??= new StringBuilder(text.Length + 16).Append(text, 0, i);
+                sb.Append(CodePoint('%'));
+                continue;
+            }
+
             if (text[i] == '<' && i + 1 < text.Length && IsLoaderMarkupStart(text[i + 1]) && !IsTildeEscaped(text, i))
             {
                 sb ??= new StringBuilder(text.Length + 8).Append(text, 0, i);
@@ -638,12 +887,12 @@ public static partial class PlantUmlCreator
 
         if (!clientSideSplitting && noteContent.Length > maxResponseLength)
         {
-            var chunks = noteContent.ChunksUpTo(MaxResponseNoteChunkLength).ToArray();
-            for (var i = 0; i < chunks.Length; i++)
+            var chunks = ChunkNoteAtLineBreaks(noteContent, MaxResponseNoteChunkLength);
+            for (var i = 0; i < chunks.Count; i++)
             {
                 var chunk = chunks[i];
                 var isFirst = i == 0;
-                var isLast = i == chunks.Length - 1;
+                var isLast = i == chunks.Count - 1;
 
                 if (!isFirst) chunk = prefix + chunk;
                 if (!isLast) chunk += suffix;
@@ -1191,8 +1440,14 @@ public static partial class PlantUmlCreator
         var lines = text.Split('\n');
         for (var i = 0; i < lines.Length; i++)
         {
-            if (HasUnbreakableRun(lines[i]))
-                lines[i] = WrapLine(lines[i]);
+            if (!HasUnbreakableRun(lines[i])) continue;
+
+            // Each cut starts a line whose first character was mid-line when it was escaped: a quote there
+            // would make the rest of the run a comment, which the engine drops.
+            var pieces = WrapLine(lines[i]).Split('\n');
+            for (var p = 1; p < pieces.Length; p++)
+                pieces[p] = EscapeContinuationStart(pieces[p]);
+            lines[i] = string.Join('\n', pieces);
         }
         return string.Join('\n', lines);
     }

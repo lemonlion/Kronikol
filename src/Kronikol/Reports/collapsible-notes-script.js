@@ -21,6 +21,22 @@
     var NOTE_JOIN_MARKER = '<U+' + '200B>';
     var NOTE_JOIN_SPACE_MARKER = NOTE_JOIN_MARKER + NOTE_JOIN_MARKER;
 
+    // A creole escape (`~` and what it protects) or a code point (<U+hhhh>, 3.30.1: the generator writes
+    // captured text PlantUML would act on that way), read in one pass: `~<U+0027>` is an escaped `<` and then
+    // the payload's own text. A zero-width space paints nothing and is dropped. context-menu-script.js
+    // carries the same literal (DiagramContextMenuTests checks the two match).
+    var NOTE_ESCAPE = /~([\/*_\-"\[<#=])|<U\+([0-9A-Fa-f]{4,6})>/g;
+
+    function decodeNoteEscapes(text) {
+        return text.replace(NOTE_ESCAPE, function(m, escaped, hex) {
+            if (escaped !== undefined) return escaped;
+            var cp = parseInt(hex, 16);
+            if (cp === 0x200b) return '';
+            if ((cp >= 0xd800 && cp <= 0xdfff) || cp > 0x10ffff) return m;
+            return String.fromCodePoint(cp);
+        });
+    }
+
     function endsWithOwnMarker(line, marker) {
         if (line.length < marker.length || line.slice(-marker.length) !== marker) return false;
         return !(line.length > marker.length && line.charAt(line.length - marker.length - 1) === '~');
@@ -76,7 +92,12 @@
         var raw = nonGray.join(' ').trim();
         if (!raw) return '';
         if (raw.length <= 60) return raw;
-        return raw.substring(0, 60) + '...';
+        // The preview is drawn, so the cut never splits a <…> (a code point or a tag) nor strands a `~`.
+        var cut = 60;
+        var open = raw.lastIndexOf('<', cut - 1);
+        if (open >= 0 && raw.indexOf('>', open) >= cut) cut = open;
+        while (cut > 0 && raw.charAt(cut - 1) === '~') cut--;
+        return raw.substring(0, cut) + '...';
     }
 
     function hasNoteFill(pathEl) {
@@ -1037,12 +1058,13 @@
         text = text.split('~<').map(function(seg) {
             return seg.replace(/<\/?(?:b|i|u|color(?::[^>]*)?|back(?::[^>]*)?)>/g, '');
         }).join('~<');
-        // Reverse EscapeCreoleMarkup: drop the ~ before each protected char.
-        // Known narrow ambiguity (accepted): a payload LITERAL '~' directly
+        // Reverse EscapeCreoleMarkup: drop the ~ before each protected char and
+        // decode the code points. A payload's own '~' is a code point from
+        // 3.30.1. In a source written before, a payload LITERAL '~' directly
         // before one of these characters is indistinguishable from an escape
-        // and reconstructs one character off; if the result still parses the
-        // YAML view can show subtly wrong bytes. The JSON view is always exact.
-        text = text.replace(/~([\/*_\-"\[<#=])/g, '$1');
+        // and reconstructs one character off (accepted); if the result still
+        // parses the YAML view can show subtly wrong bytes.
+        text = decodeNoteEscapes(text);
         // FALLBACK for reports generated before the breaks were marked: JSON forbids raw newlines
         // inside string literals, so a line ending while a string is open is provably a wrap break —
         // join it with the next line (the wrap inserted only the newline). Marked reports have
@@ -1279,31 +1301,84 @@
     // never read by humans.
     // `<&` (an OpenIconic icon) and `<:` (an emoji) make the engine load a bundle the render worker
     // cannot, and `<$` (a sprite) drops the text: escaped like a tag, the generation side's rule
-    // (PlantUmlCreator.EscapeLoaderMarkup). A `<` the text already escapes with an odd run of tildes is
-    // left alone: PlantUML reads tildes in pairs, and one more would pair with it and free the markup.
-    function isTildeEscaped(line, at) {
-        var tildes = 0;
-        while (at - tildes - 1 >= 0 && line.charAt(at - tildes - 1) === '~') tildes++;
-        return tildes % 2 === 1;
+    // (PlantUmlCreator.EscapeLoaderMarkup).
+    // What PlantUML's preprocessor and creole act on is written as a code point, <U+hhhh>, the generation
+    // side's rules (PlantUmlCreator.EscapeCreoleMarkup, 3.30.1): a line-initial `'` (a comment), `/'`, `!`
+    // (a directive), `@start`/`@end`, a whole-line `end note` or `{{`, a heading, a table row, a separator or
+    // a rule; anywhere, a `%name(` call, a `<<…>>` pair and a literal `~`; a trailing backslash. A decimal
+    // character reference is broken with a zero-width space instead: the engine decodes code points first.
+    var NOTE_TERMINATOR = /^end\s*[rh]?note$/i;
+    var EMBEDDED_DIAGRAM_OPENER = /^\{\{\w*$/;
+    var CREOLE_LINE_MARKUP = /^(?:\|.*\||\.\.(?:.*\.\.)?|-{2,}|_{2,})$/;
+
+    function codePoint(c) {
+        return '<U+' + ('0000' + c.charCodeAt(0).toString(16).toUpperCase()).slice(-4) + '>';
     }
+
+    function contentStartOf(line) {
+        for (var i = 0; i < line.length; i++) {
+            var ch = line.charAt(i);
+            if (ch !== ' ' && ch !== '\t') return i;
+        }
+        return -1;
+    }
+
+    function oddTrailingBackslash(line) {
+        var end = line.length > 0 && line.charAt(line.length - 1) === '\r' ? line.length - 1 : line.length;
+        var run = 0;
+        while (end - run - 1 >= 0 && line.charAt(end - run - 1) === '\\') run++;
+        return run % 2 === 1 ? end - 1 : -1;
+    }
+
+    function lineStartEscape(line, at, creole) {
+        var c = line.charAt(at);
+        var rest = line.slice(at + 1);
+        var trimmed = line.trim();
+        if (NOTE_TERMINATOR.test(trimmed)) return codePoint(c);
+        if (c === "'" || c === '!' || (c === '/' && rest.charAt(0) === "'")
+            || (c === '@' && /^(?:start|end)/i.test(rest))
+            || (c === '{' && EMBEDDED_DIAGRAM_OPENER.test(trimmed))) return codePoint(c);
+        return creole && (c === '=' || CREOLE_LINE_MARKUP.test(trimmed)) ? codePoint(c) : null;
+    }
+
+    function opensGuillemets(line, at) {
+        if (line.charAt(at + 1) !== '<') return false;
+        if (/[A-Za-z\/#&:$]/.test(line.charAt(at + 2) || '')) return false;
+        return line.indexOf('>>', at + 2) >= 0;
+    }
+
     function escapeNoteLine(line) {
         var out = '';
-        var contentStarted = false;
+        var start = contentStartOf(line);
+        var backslash = oddTrailingBackslash(line);
         for (var i = 0; i < line.length; i++) {
             var c = line.charAt(i);
             var isPair = '/*_-"['.indexOf(c) >= 0 && line.charAt(i + 1) === c;
-            if (!contentStarted && c !== ' ' && c !== '\t') {
-                contentStarted = true;
-                if (!isPair && (c === '*' || c === '#' || c === '=')) out += '~';
+            if (i === start && !isPair) {
+                var head = lineStartEscape(line, i, true);
+                if (head !== null) { out += head; continue; }
+                if (c === '*' || c === '#') out += '~';
             }
             if (isPair) { out += '~' + c + '~' + c; i++; continue; }
-            if (c === '<') {
-                var next = line.charAt(i + 1) || '';
-                if (/[A-Za-z\/#]/.test(next) || (/[&:$]/.test(next) && !isTildeEscaped(line, i))) out += '~';
-            }
+            if (i === backslash || c === '~'
+                || (c === '%' && /^%[A-Za-z_][A-Za-z0-9_]*\(/.test(line.slice(i)))
+                || (c === '<' && opensGuillemets(line, i))) { out += codePoint(c); continue; }
+            if (c === '&' && /^&#[0-9]+;/.test(line.slice(i))) { out += '&' + NOTE_JOIN_MARKER; continue; }
+            if (c === '<' && /[A-Za-z\/#&:$]/.test(line.charAt(i + 1) || '')) out += '~';
             out += c;
         }
         return out;
+    }
+
+    // A line the width bound starts inside a run: escaped at its start the way escapeNoteLine escapes a
+    // line's start. It is escaped text already, and a cut never splits a <…> nor strands a `~`.
+    function escapeContinuationStart(line) {
+        var at = contentStartOf(line);
+        if (at < 0) return line;
+        var head = lineStartEscape(line, at, true);
+        if (head !== null) return line.slice(0, at) + head + line.slice(at + 1);
+        var c = line.charAt(at);
+        return c === '*' || c === '#' ? line.slice(0, at) + '~' + line.slice(at) : line;
     }
 
     // Exact inverse of escapeNoteLine, for the copy-text path: recovers the
@@ -1319,6 +1394,17 @@
         var contentStarted = false;
         for (var i = 0; i < line.length; i++) {
             var c = line.charAt(i);
+            if (c === '<') {
+                // A code point (3.30.1) is the character it paints; a zero-width space paints nothing.
+                var cpMatch = /^<U\+([0-9A-Fa-f]{4,6})>/.exec(line.slice(i));
+                var cp = cpMatch ? parseInt(cpMatch[1], 16) : -1;
+                if (cpMatch && !((cp >= 0xd800 && cp <= 0xdfff) || cp > 0x10ffff)) {
+                    out += cp === 0x200b ? '' : String.fromCodePoint(cp);
+                    i += cpMatch[0].length - 1;
+                    contentStarted = true;
+                    continue;
+                }
+            }
             if (c === '~') {
                 var n = line.charAt(i + 1) || '';
                 if ('/*_-"['.indexOf(n) >= 0 && line.charAt(i + 2) === '~' && line.charAt(i + 3) === n) {
@@ -1347,9 +1433,11 @@
     }
 
     // Breaks whitespace-free runs over 120 chars with plain newlines (the
-    // same contract as the C# WrapUnbreakableRuns), never stranding a ~ from
-    // the character it protects and never cutting right after a backslash
-    // (which would visually split an escape like \n across lines).
+    // same contract as the C# WrapUnbreakableRuns), never inside a <…> (a
+    // code point or a tag), never stranding a ~ from the character it
+    // protects and never cutting right after a backslash (which would
+    // visually split an escape like \n across lines). Each line a cut starts
+    // has its start escaped (3.30.1): a quote there would make it a comment.
     function wrapNoteLongRuns(line) {
         if (!/\S{121}/.test(line)) return line;
         var out = '';
@@ -1357,6 +1445,8 @@
         function flushRun() {
             while (run.length > 120) {
                 var cut = 120;
+                var open = run.lastIndexOf('<', cut - 1);
+                if (open > 0 && run.indexOf('>', open) >= cut) cut = open;
                 while (cut > 1 && (run.charAt(cut - 1) === '~' || run.charAt(cut - 1) === '\\')) cut--;
                 out += run.slice(0, cut) + '\n';
                 run = run.slice(cut);
@@ -1370,7 +1460,9 @@
             else run += c;
         }
         flushRun();
-        return out;
+        var pieces = out.split('\n');
+        for (var p = 1; p < pieces.length; p++) pieces[p] = escapeContinuationStart(pieces[p]);
+        return pieces.join('\n');
     }
 
     // Escapes emitted YAML lines for splicing into the render source.

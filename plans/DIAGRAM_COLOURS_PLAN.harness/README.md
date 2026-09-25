@@ -220,3 +220,61 @@ time there is one page per setting (`default`, `plain`, `noflow`), each with the
   `-/-`. The candidate predates 3.29.6's F26 fix, so the item was never offered with default arrows; it is
   offered now, and copies neither a tag nor a header line.
 - F25 is unchanged: with internal-flow tracking on, the long-path GET is not drawn in either form.
+
+## The escape patch (3.30.1, 2026-09-25): captured text PlantUML would act on
+
+Plan §12.3. Everything below ran on the same pin, with node 25.9.0 and the .NET 10 SDK.
+
+- **`preproc-probe.js`** puts one or two captured lines in a note, between a `BEFORE` and an `AFTER`
+  line, in the form the emitter writes (`note left` for a payload, `hnote across` for an assertion). It
+  renders its 214 cases in one `--batch` through the shipped Node renderer and prints each case's painted
+  note lines. `BROKEN` is the engine's error picture, shown as where it stopped and its message, and
+  `NOTE CUT` a note that lost its end without one.
+  - `PREFIX=kronikol` adds the lines Kronikol's prefix carries: teoz, the note wrap width and autonumber.
+  - `SOURCES_OUT=<dir>` writes each case's source and stops. `SVG_IN=<dir>` reads SVGs rendered
+    elsewhere instead of rendering.
+  - `s1-include-local` includes a file the probe writes to the OS temp directory, and prints its path as
+    `<sentinel>`.
+- **`ikvm-render.cs`** renders every source in a directory with the IKVM package, the Java engine
+  (PlantUML 1.2024.6) that `PlantUmlRendering.Local` runs. Run `dotnet run ikvm-render.cs -- <dir>` from
+  this directory.
+- **The outputs:**
+  - `preproc-probe.txt`: the pin, with a plain prefix.
+  - `preproc-probe-kronikol.txt`: the pin, with Kronikol's prefix. Words are spaced wider there, because
+    the wrap width lays a note out word by word.
+  - `preproc-probe-java.txt`: the Java engine. Its layout puts the arrow label, `POST: /api/orders`, at
+    the note's height, so the label shows between the sentinels in most rows. It is not note text.
+- **What they show** (plan §12.3 has the whole list):
+  - On all three, `'` at a line's start is a comment, and `/'` or a line that is only `{{` breaks the
+    diagram. `!define` runs, `!ifdef` and `!endif` break the diagram, and `!assert` and `!log` vanish.
+    `!theme` vanishes on the pin; under Java it writes the theme's own source into the note.
+  - A whole line closing the note's own kind closes it, and the diagram fails on all three: `end note`,
+    `END NOTE`, `endnote`, indented, with trailing blanks or a tab, and `end hnote` in the assertion's
+    `hnote`. The engine stops at the next line (`Syntax Error`), or, when the captured line was the body's
+    last, at the emitter's own `end note` (`Cannot create group`). `end note x`, `x end note`, `end ref`
+    and `end` paint.
+  - Under Java, `!include` of the sentinel draws `SENTINEL LINE 1` and `SENTINEL LINE 2` in the note.
+    The pin cannot read a file, and the diagram fails (`cannot include`).
+  - `%upper("x")` paints `X` and `%date()` the date, anywhere in a line. `/f%C3(x)` and `50%off(today)`
+    are left alone.
+  - Under Java only, `@enduml`, `@startuml`, `@end` and `@endfoo` at a line's start break the diagram,
+    and a line ending in a single backslash is joined to the next. Two backslashes are not.
+  - Creole: `~/.bashrc` paints `/.bashrc`, `"~"` paints `""`, `~~x~~` paints `x`, `= x` is a heading,
+    `| a | b |` a table, `..x..` a separator, and `....`, `--`, `---`, `___` and `==` alone are rules that
+    paint nothing. `a << b >> c` paints `a «b» c`, and `&#65;` paints `A`.
+  - Each `<U+hhhh>` paints its character on all three. A lower-case `<u+…>`, or fewer than four digits,
+    is left as text.
+  - Under Kronikol's prefix a code point is decoded before a character reference, so `<U+0026>#39;`
+    paints `'`. `&<U+200B>#39;` paints `&#39;` on all three, with a zero-width space the readers drop.
+  - A rule line as each escaper writes it (j1 to j10): the generator's `<U+002D>-` and the YAML view's
+    `~-~-` both paint `--` on all three, and `<U+003D>=` paints `==`.
+
+To repeat the three runs, from the repository root:
+
+```bash
+node plans/DIAGRAM_COLOURS_PLAN.harness/preproc-probe.js > preproc-probe.txt
+PREFIX=kronikol node plans/DIAGRAM_COLOURS_PLAN.harness/preproc-probe.js > preproc-probe-kronikol.txt
+SOURCES_OUT=<dir> node plans/DIAGRAM_COLOURS_PLAN.harness/preproc-probe.js
+(cd plans/DIAGRAM_COLOURS_PLAN.harness && dotnet run ikvm-render.cs -- <dir>)
+SVG_IN=<dir> node plans/DIAGRAM_COLOURS_PLAN.harness/preproc-probe.js > preproc-probe-java.txt
+```

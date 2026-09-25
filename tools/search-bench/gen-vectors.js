@@ -93,6 +93,15 @@ const normalizationInputs = [
   ['assertion-hnote-marked-rejoin', 'hnote across <<assertionNote>> #lightgreen\nexpected AAAA<U+200B><U+200B>\nBBBB tail\nend note'],
   ['single-line-hnote-is-untouched', 'hnote across <<stepDelimiter>> #black:<color:white>Step one\nflushleft\nsecond'],
   ['single-line-row-hnote-is-untouched', 'hnote across #lightyellow : Row 1\nflushleft\nsecond'],
+  // 3.30.1: captured text that PlantUML's preprocessor or creole would act on is written as its code point,
+  // which the engine paints as the character; rule 3 decodes it, in the same pass as the creole escapes and
+  // before the fold. A zero-width space paints nothing and is dropped.
+  ['code-point-escapes', "<U+0027>a', <U+0021>define X\n<U+0040>enduml <U+0025>date() <U+007E>/.bashrc <U+003D> h <U+007C> t |\n<U+002E>.x.. a <U+003C>< b >> &<U+200B>#39; c<U+005C>\n<U+0065>nd note <U+007B>{"],
+  ['escaped-code-point-is-payload-text', '~<U+0027> stays'],
+  ['decoded-tilde-escapes-nothing', '<U+007E>/ and <U+007E>* and <U+007E><'],
+  ['decoded-letter-folds', '<U+0045>ND NOTE'],
+  ['zero-width-space-paints-nothing', 'a*<U+200B>*b and x<U+200B>y'],
+  ['code-point-that-is-no-character-is-kept', '<U+FFFFFF> <U+D800> <U+27> <u+0027>'],
   ['whitespace-collapse', 'a  b\tc   d'],
   ['plain-multiline-outside-note-kept', 'alpha\nbeta\ngamma'],
   ['empty', ''],

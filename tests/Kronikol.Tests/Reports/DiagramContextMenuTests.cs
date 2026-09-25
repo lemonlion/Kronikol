@@ -206,6 +206,22 @@ public class DiagramContextMenuTests
     /// </summary>
     private const string HeaderTagRegex = @"/^<color:(?:gray|#[0-9A-Fa-f]{6})>/";
 
+    /// <summary>
+    /// What turns note source back into text (3.30.1): a creole escape or a code point, the form the
+    /// generator writes captured text that PlantUML would act on.
+    /// </summary>
+    private const string NoteEscapeRegex = @"/~([\/*_\-""\[<#=])|<U\+([0-9A-Fa-f]{4,6})>/g";
+
+    [Fact]
+    public void Both_scripts_decode_note_source_by_the_same_rule()
+    {
+        Assert.Contains($"var NOTE_ESCAPE = {NoteEscapeRegex};", _notesScript);
+        Assert.Contains($"var NOTE_ESCAPE = {NoteEscapeRegex};", _script);
+        // Copy reads through it; the YAML view's reconstructor too.
+        Assert.Contains("return decodeNoteEscapes(l);", _script);
+        Assert.Contains("text = decodeNoteEscapes(text);", _notesScript);
+    }
+
     [Fact]
     public void Both_scripts_recognise_a_header_line_by_the_same_tag()
     {

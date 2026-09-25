@@ -32,9 +32,13 @@ internal static class SearchNormalizer
         // tells Kronikol's own join marker from a payload that literally contains "<U+200B>". It
         // calls the generator's implementation rather than restating it — the two JS copies exist
         // only because they cannot reach this one, and the shared vectors pin all three together.
+        //
+        // Rule 3 runs before the fold since 3.30.1: it decodes the code points the generator writes for
+        // captured text (<U+0027> for a line-initial quote, and the like), and a decoded letter must fold
+        // like any other.
         var s = PlantUml.DiagramWidth.RejoinMarkedLines(text.Replace("\r\n", "\n"));  // rules 1 + 1b
+        s = DecodeCreoleEscapes(s);          // rule 3
         s = FoldAndCanonicalize(s);          // rule 2 (rule 1 is already applied)
-        s = StripCreoleEscapes(s);           // rule 3
         s = StripMarkupTags(s);              // rule 4
         s = StripArrowLabelBreaks(s);        // rule 5a
         return CollapseSpaces(s + "\n");     // rule 6
@@ -43,6 +47,61 @@ internal static class SearchNormalizer
     // Creole escape targets: the same set the formatter escapes and the context-menu inverse strips.
     private static bool IsCreoleEscapable(char c) =>
         c is '/' or '*' or '_' or '-' or '"' or '[' or '<' or '#' or '=';
+
+    /// <summary>
+    /// Rule 3: a creole escape (<c>~</c> and the character it protects) becomes the character, and a code
+    /// point, <c>&lt;U+hhhh&gt;</c> with four to six hex digits, becomes the character it paints, in one
+    /// left-to-right pass. <c>~&lt;U+0027&gt;</c> is an escaped <c>&lt;</c> followed by the payload's own
+    /// text, and a decoded <c>~</c> escapes nothing. A zero-width space paints nothing and is dropped; a code
+    /// point that is no character (a surrogate, past U+10FFFF) is left as written, and so is the lowercase
+    /// <c>&lt;u+</c>, which the engine paints as written.
+    /// </summary>
+    private static string DecodeCreoleEscapes(string s)
+    {
+        if (s.IndexOf('~') < 0 && s.IndexOf("<U+", StringComparison.Ordinal) < 0) return s;
+        var n = s.Length;
+        var sb = new StringBuilder(n);
+        for (var i = 0; i < n; i++)
+        {
+            var c = s[i];
+            if (c == '~' && i + 1 < n && IsCreoleEscapable(s[i + 1]))
+            {
+                sb.Append(s[i + 1]);
+                i++;
+                continue;
+            }
+
+            if (c == '<' && TryDecodeCodePoint(s, i, out var end, out var decoded))
+            {
+                sb.Append(decoded);
+                i = end - 1;
+                continue;
+            }
+
+            sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    private static bool TryDecodeCodePoint(string s, int start, out int end, out string decoded)
+    {
+        end = 0;
+        decoded = "";
+        if (start + 3 >= s.Length || s[start + 1] != 'U' || s[start + 2] != '+') return false;
+
+        var j = start + 3;
+        var codePoint = 0;
+        while (j < s.Length && j - (start + 3) < 6 && char.IsAsciiHexDigit(s[j]))
+            codePoint = codePoint * 16 + HexValue(s[j++]);
+        if (j - (start + 3) < 4 || j >= s.Length || s[j] != '>') return false;
+        if (codePoint is >= 0xD800 and <= 0xDFFF or > 0x10FFFF) return false;
+
+        end = j + 1;
+        decoded = codePoint == 0x200B ? "" : char.ConvertFromUtf32(codePoint);
+        return true;
+    }
+
+    private static int HexValue(char c) => c <= '9' ? c - '0' : (c | 0x20) - 'a' + 10;
 
     private static readonly string[] TagPrefixes = ["color", "font", "i", "b", "size", "back"];
 
@@ -79,19 +138,6 @@ internal static class SearchNormalizer
             if (c == '\r' && i + 1 < n && text[i + 1] == '\n') continue; // drop the \r of CRLF
             if (c is >= 'A' and <= 'Z') c = (char)(c + 32);
             sb.Append(c);
-        }
-        return sb.ToString();
-    }
-
-    private static string StripCreoleEscapes(string s)
-    {
-        if (s.IndexOf('~') < 0) return s;
-        var n = s.Length;
-        var sb = new StringBuilder(n);
-        for (var i = 0; i < n; i++)
-        {
-            if (s[i] == '~' && i + 1 < n && IsCreoleEscapable(s[i + 1])) continue;
-            sb.Append(s[i]);
         }
         return sb.ToString();
     }

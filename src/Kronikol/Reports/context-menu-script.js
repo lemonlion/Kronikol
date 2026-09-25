@@ -227,8 +227,24 @@
     // come off, and the ORDER is not free: rejoin first, while the escaping is intact. Unescaping
     // first would turn a payload's own `~<U+200B>` into a bare marker and a real newline would be
     // eaten. Every copy, open-in-new-tab and payload-extract path goes through here.
+    // A creole escape (`~` and what it protects) or a code point (<U+hhhh>, 3.30.1: the generator writes
+    // captured text PlantUML would act on that way), read in one pass: `~<U+0027>` is an escaped `<` and then
+    // the payload's own text. A zero-width space paints nothing and is dropped. collapsible-notes-script.js
+    // carries the same literal (DiagramContextMenuTests checks the two match).
+    var NOTE_ESCAPE = /~([\/*_\-"\[<#=])|<U\+([0-9A-Fa-f]{4,6})>/g;
+
+    function decodeNoteEscapes(text) {
+        return text.replace(NOTE_ESCAPE, function(m, escaped, hex) {
+            if (escaped !== undefined) return escaped;
+            var cp = parseInt(hex, 16);
+            if (cp === 0x200b) return '';
+            if ((cp >= 0xd800 && cp <= 0xdfff) || cp > 0x10ffff) return m;
+            return String.fromCodePoint(cp);
+        });
+    }
+
     function unescapeSourceNoteLine(l) {
-        return l.replace(/~([\/*_\-"\[<#=])/g, '$1');
+        return decodeNoteEscapes(l);
     }
 
     function rejoinNoteSource(text) {

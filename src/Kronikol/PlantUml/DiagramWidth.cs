@@ -221,9 +221,12 @@ internal static class DiagramWidth
     /// two callers wrap with different break characters.
     /// </para>
     /// <para>
-    /// A body line reading exactly <c>end note</c> would close the note early — truncating the diagram
-    /// and desynchronising the report's assertion-strip regex — so one is neutralised with a
-    /// zero-width space, which the parser does not read as the terminator and which draws as nothing.
+    /// A body line reading <c>end note</c> would close the note early, truncating the diagram and
+    /// desynchronising the report's assertion-strip regex. Each finished line, the ones the wrap starts
+    /// included, has its start escaped the way a payload's is (<see cref="PlantUmlCreator.EscapePreprocessorLine"/>):
+    /// the terminator in any spelling, a comment, a directive, a diagram marker, a trailing backslash. Until
+    /// 3.30.1 only an exact <c>end note</c> or <c>endnote</c> was, with a zero-width space, and a wrapped line
+    /// that opened with a quote was dropped as a comment.
     /// </para>
     /// </summary>
     internal static string WrapBlockNoteBody(string text)
@@ -240,7 +243,7 @@ internal static class DiagramWidth
             // breaks have to be reversible. The pieces come back already carrying their markers.
             var pieces = WrapLines(line, MaxNoteTextLineChars, markJoins: true);
             foreach (var piece in pieces)
-                wrapped.Add(piece.Trim() is "end note" or "endnote" ? "​" + piece : piece);
+                wrapped.Add(PlantUmlCreator.EscapePreprocessorLine(piece));
         }
 
         return string.Join("\n", wrapped);

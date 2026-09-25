@@ -772,21 +772,25 @@
                 for (var p = 0; p < parts.length; p++) {
                     // Each part gets wrapped as complete PlantUML and further split by height
                     var partSource = parts[p].trim();
+                    // Whether the part has its own header or footer is read off a whole line: a captured
+                    // payload can quote either word mid-line (a JSON string holding a diagram), and until
+                    // 3.30.1 such a part was taken for one that had its header and was drawn without it.
+                    var hasStart = /^@startuml\b/m.test(partSource);
                     if (carried.length > 0) {
                         var reopen = carried.join('\n');
-                        if (partSource.indexOf('@startuml') < 0) partSource = reopen + '\n' + partSource;
+                        if (!hasStart) partSource = reopen + '\n' + partSource;
                     }
                     var openAfter = scanOpenBlocks(partSource.split('\n'), []);
                     if (openAfter.length > 0) {
                         var closers = '';
                         for (var oc = 0; oc < openAfter.length; oc++) closers += '\nend';
-                        partSource = partSource.indexOf('@enduml') >= 0
+                        partSource = /^@enduml\s*$/m.test(partSource)
                             ? partSource.replace(/\n@enduml\s*$/, closers + '\n@enduml')
                             : partSource + closers;
                     }
                     carried = openAfter;
                     // Ensure it has @startuml/@enduml
-                    if (partSource.indexOf('@startuml') < 0) {
+                    if (!hasStart) {
                         var structure = parseDiagramStructure(source);
                         // Count steps from previous fragments
                         var prevSteps = 1;
@@ -794,7 +798,7 @@
                             prevSteps += countArrows(allFragments[pf].split('\n'));
                         }
                         partSource = structure.prefix.replace(/autonumber\s+\d+/, 'autonumber ' + prevSteps) + '\n' + partSource + '\n@enduml';
-                    } else if (partSource.indexOf('@enduml') < 0) {
+                    } else if (!/^@enduml\s*$/m.test(partSource)) {
                         // Part has @startuml but no @enduml (first part in chunked split).
                         // Without @enduml, parseDiagramStructure treats the last line as
                         // the end marker and excludes it from the body, which breaks

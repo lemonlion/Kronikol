@@ -53,7 +53,7 @@ public class NoteCopyFidelityScriptTests
         // Order is load-bearing: unescaping first turns a payload's own ~<U+200B> into a bare marker,
         // and the rejoin then eats a real newline.
         var rejoin = _notes.IndexOf("text = rejoinWrappedNoteLines(text);", StringComparison.Ordinal);
-        var unescape = _notes.IndexOf("text = text.replace(/~([\\/*_\\-\"\\[<#=])/g, '$1');", StringComparison.Ordinal);
+        var unescape = _notes.IndexOf("text = decodeNoteEscapes(text);", StringComparison.Ordinal);
 
         Assert.True(rejoin > 0, "reconstructNoteJson must rejoin");
         Assert.True(unescape > 0, "reconstructNoteJson must unescape");

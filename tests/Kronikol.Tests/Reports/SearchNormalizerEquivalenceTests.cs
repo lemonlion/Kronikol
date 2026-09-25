@@ -15,8 +15,18 @@ public partial class SearchNormalizerEquivalenceTests
 {
     // ---- reference implementation: literal transliteration of normalize.js ----
 
-    [GeneratedRegex("~(?=[/*_\\-\"\\[<#=])")]
-    private static partial Regex CreoleEscape();
+    // Rule 3 since 3.30.1: a creole escape or a code point, decoded in one pass (normalize.js decodeCreoleEscapes).
+    [GeneratedRegex("~([/*_\\-\"\\[<#=])|<U\\+([0-9A-Fa-f]{4,6})>")]
+    private static partial Regex CreoleEscapeOrCodePoint();
+
+    private static string RefDecodeCreoleEscapes(string s) => CreoleEscapeOrCodePoint().Replace(s, m =>
+    {
+        if (m.Groups[1].Success) return m.Groups[1].Value;
+        var codePoint = Convert.ToInt32(m.Groups[2].Value, 16);
+        if (codePoint == 0x200B) return "";
+        if (codePoint is >= 0xD800 and <= 0xDFFF or > 0x10FFFF) return m.Value;
+        return char.ConvertFromUtf32(codePoint);
+    });
 
     [GeneratedRegex("</?(?:color|font|i|b|size|back)[^>]*>")]
     private static partial Regex MarkupTag();
@@ -59,11 +69,11 @@ public partial class SearchNormalizerEquivalenceTests
     private static string ReferenceNormalize(string text)
     {
         var s = RefRejoinMarkedBreaks(text.Replace("\r\n", "\n"));
+        s = RefDecodeCreoleEscapes(s);
         var chars = s.ToCharArray();
         for (var i = 0; i < chars.Length; i++)
             if (chars[i] is >= 'A' and <= 'Z') chars[i] = (char)(chars[i] + 32);
         s = new string(chars);
-        s = CreoleEscape().Replace(s, "");
         s = MarkupTag().Replace(s, "");
         s = ArrowLabelBreak().Replace(s, "");
         return WhitespaceRun().Replace(s + "\n", " ");
@@ -102,7 +112,12 @@ public partial class SearchNormalizerEquivalenceTests
         "\\n",
         "~",
         "<",
-        "a<b&c>d<e"
+        "a<b&c>d<e",
+        // 3.30.1: the code points the generator writes for captured text, and the edges of the rule.
+        "<U+0027>a', <U+0021>define X\n<U+0040>enduml <U+0025>date() <U+007E>/x <U+003D> h &<U+200B>#39; c<U+005C>",
+        "~<U+0027> <U+0045>ND NOTE <U+007E>~< <U+007E><U+007E>x",
+        "<U+D800> <U+FFFFFF> <U+1234567> <U+27> <u+0027> <U+0027 <U+>",
+        "<U+1F600> <U+01F600> <U+10FFFF> <U+110000>"
     );
 
     [Theory]
@@ -123,7 +138,8 @@ public partial class SearchNormalizerEquivalenceTests
             "note left\n", "end note\n", "~*", "~/", "\\n   ", "<color:gray>", "<color:#686868>", "</font>", "<i>", "\r\n",
             "  ", "\t", "{ \"k\": \"v\" }\n", "POST: /api/x\n", "~[", "~\"", "AAAA\n", "bbbb\n", "<", ">", "~", "\\",
             "note<<eventNote>> right\n", "hnote across <<assertionNote>> #x\n", "hnote across #y : Row\n",
-            "across ", "\u0085", "\ufeff", "<U+200B>\n", "<U+200B><U+200B>\n", "~<U+200B>\n"
+            "across ", "\u0085", "\ufeff", "<U+200B>\n", "<U+200B><U+200B>\n", "~<U+200B>\n",
+            "<U+0027>", "<U+0045>", "<U+007E>", "~<U+0027>", "<U+", "0027>", "<U+D800>", "<U+1F600>"
         ];
         for (var doc = 0; doc < 50; doc++)
         {

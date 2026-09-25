@@ -3782,6 +3782,118 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// A captured body holding, one per line, everything PlantUML's preprocessor or creole would act on
+    /// (3.30.1): a comment, a block comment, directives, builtin calls, the note terminator, the diagram
+    /// markers, an embedded-diagram opener, literal tildes, a heading, a table, a separator, guillemets, a
+    /// character reference and a trailing backslash.
+    /// </summary>
+    public static readonly string[] CapturedTextHazardLines =
+    [
+        "'a', 'b'",
+        "/' not a comment",
+        "!define FOO BAR",
+        "FOO stays",
+        "%date() stays",
+        "@enduml",
+        "@startuml",
+        "end note",
+        "{{",
+        "~/.bashrc and \"~\" and ~~wave~~",
+        "= not a heading",
+        "| not | a table |",
+        "..not a separator..",
+        "a << b >> c",
+        "&#39; stays",
+        "trailing backslash \\",
+        "next line",
+    ];
+
+    /// <summary>A JSON body whose strings hold the same hazards, for the YAML view: one multi-line, the rest inline.</summary>
+    public const string CapturedTextHazardJson =
+        """{"script":"SELECT\n  'a',\n!important\n%upper(x)\nend note\n= heading","path":"~/.bashrc","entity":"&#39;","shift":"a << b >> c"}""";
+
+    /// <summary>
+    /// Captured text PlantUML would act on, every diagram built by the REAL emitter (3.30.1): t1 a GET whose
+    /// text/plain 400 carries <see cref="CapturedTextHazardLines"/> (its only note), t2 a POST whose JSON bodies
+    /// carry <see cref="CapturedTextHazardJson"/>, t3 a plain call.
+    /// </summary>
+    public static string GenerateReportWithCapturedTextHazards(string tempDir, string outputDir, string fileName,
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json)
+    {
+        var (features, _) = CreateTestData();
+
+        static string Pair(string testId, string method, string path, string? requestBody, string contentType, System.Net.HttpStatusCode status, string? responseBody)
+        {
+            var traceId = Guid.NewGuid();
+            var pairId = Guid.NewGuid();
+            (string, string?)[] headers = [("Content-Type", contentType)];
+            RequestResponseLog[] logs =
+            [
+                new(testId, testId, method, requestBody, new Uri("http://localhost/api" + path), requestBody is null ? [] : headers,
+                    "ParserService", "Caller", RequestResponseType.Request, traceId, pairId, TrackingIgnore: false),
+                new(testId, testId, method, responseBody, new Uri("http://localhost/api" + path), responseBody is null ? [] : headers,
+                    "ParserService", "Caller", RequestResponseType.Response, traceId, pairId, TrackingIgnore: false, StatusCode: status),
+            ];
+            return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+        }
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", Pair("t1", "GET", "/hazards", null, "text/plain", System.Net.HttpStatusCode.BadRequest, string.Join("\n", CapturedTextHazardLines))),
+            new DiagramAsCode("t2", "", Pair("t2", "POST", "/scripts", CapturedTextHazardJson, "application/json", System.Net.HttpStatusCode.OK, CapturedTextHazardJson)),
+            new DiagramAsCode("t3", "", Pair("t3", "GET", "/orders", null, "application/json", System.Net.HttpStatusCode.OK, """{"orders":[]}""")),
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            notePayloadFormat: notePayloadFormat);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// A note too long for one diagram, split by the browser (3.30.1): a JSON array whose objects each quote a
+    /// PlantUML source, so every part after the first carries <c>@startuml</c> and <c>@enduml</c> inside its
+    /// lines. The splitter asked whether a part already had its header by searching the part for the text.
+    /// </summary>
+    public static string GenerateReportWithPlantUmlQuotingLongNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+        var body = "[" + string.Join(",", Enumerable.Range(0, 320).Select(i =>
+            $$"""{"id":{{i}},"source":"@startuml\nAlice -> Bob: step {{i}}\n@enduml"}""")) + "]";
+        var traceId = Guid.NewGuid();
+        var pairId = Guid.NewGuid();
+        (string, string?)[] json = [("Content-Type", "application/json")];
+        RequestResponseLog[] logs =
+        [
+            new("t1", "t1", "GET", null, new Uri("http://localhost/api/diagrams"), [], "DiagramService", "Caller",
+                RequestResponseType.Request, traceId, pairId, TrackingIgnore: false),
+            new("t1", "t1", "GET", body, new Uri("http://localhost/api/diagrams"), json, "DiagramService", "Caller",
+                RequestResponseType.Response, traceId, pairId, TrackingIgnore: false, StatusCode: System.Net.HttpStatusCode.OK),
+        ];
+        var plantUml = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs, clientSideSplitting: true).Single().PlantUmls.First().PlainText;
+        // A long note starts truncated to 40 lines, which the splitter never sees whole: start it expanded.
+        var options = new ReportConfigurationOptions();
+        options.TestRunReportToggleDefaults.Details = ReportDetailsState.Expanded;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DiagramAsCode("t1", "", plantUml)], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// Header lines on both note fills, every diagram built by the REAL emitter (DIAGRAM_COLOURS_PLAN S1):
     /// a DELETE whose path is long enough to be cut from its label, so its note carries the headers and the
     /// <c>[Full path]</c> block; a response with headers; and an event, whose note has the event fill.

@@ -1,8 +1,8 @@
 # Diagram colours, and an honest theme option (stage 1, P3)
 
 **Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status: executed** (green-lit
-2026-09-25), in two releases: 3.29.6 (S3a, S4, S5 and F26) and 3.30.0 (S1, S2 and S3b). §12 is the
-execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
+2026-09-25), in two releases: 3.29.6 (S3a, S4, S5 and F26) and 3.30.0 (S1, S2 and S3b). The escapes it
+measured and deferred followed as 3.30.1. §12 is the execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
 `ROADMAP.md` item 1.6, written as its own plan. §10 is the assumption ledger: what was **RUN** against
 the pinned engine on 2026-09-22, what was only **READ**, and what is still open.
 
@@ -1440,7 +1440,7 @@ never offered before.
   The fix is the same kind of escape: `<U+007E>` paints a `~` and escapes nothing (measured).
 - Every reader of the text needs a decoder for these, as `~<` has: copy, search, the YAML view, the
   shared vectors and Kronikol4J. It is a class of its own, with its own review surface. It is proposed
-  as its own patch after this plan's second release, and is not folded in.
+  as its own patch after this plan's second release, and is not folded in. It shipped as 3.30.1 (§12.3).
 
 **Docs.**
 - The plan pointed the payload rule at `Large-Response-and-Diagram-Handling.md:90`. That is a table of
@@ -1615,3 +1615,132 @@ three (about 505 ms against 1.2 s each).
   running beside it.
 
 3.29.6 is green on CI, Release, CodeQL and CI Summary Preview (`ad289f55`), and NuGet has it.
+
+3.30.0 is green on CI, Release, CodeQL and CI Summary Preview (`ea486766`), and NuGet has it.
+
+### 12.3 Third release, 3.30.1 (patch): the preprocessor and tilde escapes
+
+Asked for on 2026-09-25, once 3.30.0 had shipped, together with the BreakfastProvider check below: the
+escape class §12.1 measured and deferred, as its own patch. The number was agreed with the session holding
+P5 (#100), which takes the next free one. The work was done in the same worktree, from `ea486766`.
+
+**Measured first.** `preproc-probe.js` (harness README) puts one or two captured lines in a note in the
+emitter's form and reads what is painted. It ran 214 cases on the pin, once with a plain prefix and once
+with Kronikol's, and rendered the same sources under the Java engine (IKVM, PlantUML 1.2024.6) through
+`ikvm-render.cs`. What it adds to §12.1's list:
+- **Only a line's start counts** for `'`, `/'`, `!`, `@start`/`@end` and `{{`, after any indentation.
+  `x 'a'`, `x /' y`, `x !define y` and `x @enduml` paint as written.
+- **A directive does different things.** `!define` runs and rewrites the text after it (`FOO here` paints
+  `BAR here`). `!ifdef`, `!endif` and `/'` break the diagram. `!assert`, `!log` and `!$x = 1` vanish.
+  `!theme` vanishes on the pin, and under Java writes the theme's own source into the note.
+- **`!include` reads the local disk under Java.** A captured `!include <path>` drew that file's lines into
+  the note (the probe includes a file it writes itself). The pin cannot read a file, and the diagram fails
+  with `cannot include`. So under `PlantUmlRendering.Local`, a body quoting an include line put a file from
+  the machine generating the report into the report.
+- **A builtin call is a known name and a `(`.** `%upper("x")` paints `X`, `%date()` the date, `%true()`
+  `1`, and `a%upper("x")b` `aXb`. An unknown name, a space before the `(`, `%Upper`, `%1(`, a URL escape
+  (`/f%C3(x)`) and `50%off(today)` paint as written. The escaper takes any `%name(`: a code point where
+  the engine would not have acted costs nothing on the page.
+- **Every form of the terminator.** A whole line reading `end note`, `END NOTE`, `End Note` or `endnote`,
+  indented, with trailing blanks or a tab, closes a `note`, and `end hnote` closes the assertion note's
+  `hnote`. The diagram then fails on all three engines: `Syntax Error` at the next line, or
+  `Cannot create group` at the emitter's own `end note` when the captured line was the body's last.
+  `end note x`, `x end note`, `end ref` and `end` paint.
+- **Java only:** a line opening with `@end` or `@start` (`@enduml`, `@endjson`, `@end`, `@endfoo`, not
+  `@ENDUML`) breaks the diagram, and a line ending in an odd run of backslashes is joined to the next
+  (`abc\` then `def` paints `abcdef`; a trailing blank stops it). The pin paints both.
+- **Creole.** `= x` and `==x==` are headings, `| a | b |` a table and `..x..` a separator, each painted
+  without its markers. `....`, `--`, `---`, `___` and `==` alone are rules that paint nothing. `* x` and
+  `# x` are list items (`# x` paints `1. x`). `a << b >> c` paints `a «b» c`. `&#65;` paints `A`, while
+  `&#x42;`, `&amp;` and `&copy;` paint as written.
+- **The tilde.** Creole takes `~` as its escape before `/ < . " ] # * _ - [` and paints only what
+  follows, and `~~x~~` paints `x`. `~=` and `~|` are not escapes: their tilde paints, so the old heading
+  escape `~=` drew a stray tilde.
+- **The code point.** `<U+hhhh>`, with four to six upper-case hex digits, paints its character on all
+  three and is acted on no further. `<u+0027>` and `<U+27>` paint as written.
+- **The character reference is the exception.** Under Kronikol's prefix (teoz and the note wrap width)
+  the engine decodes code points before references, so `<U+0026>#39;` still paints `'`. A zero-width space
+  after the `&`, `&<U+200B>#39;`, paints `&#39;` on all three.
+- **The two escapers write a rule line differently** (j1 to j10). The generator escapes a marker only
+  when the line pairs it, and writes `<U+002D>-`. The browser's YAML view escapes every doubled marker, and
+  writes `~-~-`. Both paint `--` on all three.
+
+**The change.**
+- `PlantUmlCreator.EscapeCreoleMarkup` writes each of these as its code point where a line's content
+  starts: `'`, `/'`, `!`, `@start`/`@end`, a whole-line terminator or `{{`, `=`, a table row, a separator or
+  a rule. Anywhere in a line, it writes a `%name(` call, a literal `~`, a `<<` with a `>>` after it and an
+  odd trailing backslash the same way. A decimal reference gets a zero-width space after its `&`, and a
+  bullet or a numbered item keeps its `~`.
+- Step names, test names and assertion text keep their markup: `EscapeLoaderMarkup` also escapes a builtin
+  call. An assertion note's lines get the line-start escapes through `EscapePreprocessorLine`. That
+  replaced the zero-width space `DiagramWidth` put in front of an exact `end note`.
+- The lines Kronikol starts itself are escaped the same way: a run the width bound cuts
+  (`WrapUnbreakableRuns`), a wrapped assertion line, and each part of the 15,000-character response split.
+  That split now cuts between lines (`ChunkNoteAtLineBreaks`), as the browser's splitter does, and a line
+  longer than the limit after the last space that fits, never inside `<…>` or after a `~`.
+- The browser's YAML view writes the same (`escapeNoteLine`, `escapeContinuationStart`). Its long-run wrap
+  and a collapsed note's preview never cut inside `<…>` or leave a `~` at the end of a piece.
+- Every reader decodes in one pass from left to right, `~X` or `<U+hhhh>`. It drops the zero-width space
+  and keeps a surrogate or a value above U+10FFFF as text. The readers are copy and Open box text
+  (`context-menu-script.js`), the YAML view and note copy (`collapsible-notes-script.js`), and search
+  (`SearchNormalizer`, `report-search-index.js`, `tools/search-bench/normalize.js`). Search now decodes
+  before the ASCII fold, so an escaped letter folds, and the query side skips the pass: a reader types what
+  the note shows.
+
+**Found on the way:**
+- **The browser's splitter lost a note quoting a diagram.** `splitWithChunkedNotes` decided whether a part
+  of a split note had its header with `indexOf('@startuml')`. A payload quoting a PlantUML source mid-line
+  made a later part look complete, so that part was drawn without its header and the rest of the note was
+  lost. It now reads `@startuml` and `@enduml` off whole lines. On 3.30.0's script, the E2E fact's second
+  part came out 408 characters long, and steps 200 and 319 were not drawn.
+- **The response split cut at exactly 15,000 characters.** It could cut an escape in two, and it started
+  the next part mid-line with whatever character fell there.
+- **`~=` drew a stray tilde** in front of a captured line that opened with `=`.
+- **An assertion line that the wrap started with a quote** was dropped as a comment. A line reading
+  `endnote` or `END NOTE` got past the old check, which caught only an exact `end note`.
+- **The probe misread its own error cases.** Its first version found `BEFORE` and `AFTER` inside the
+  engine's error picture, which lists the source, and printed the lines between them as painted. Every
+  terminator row read as drawn, which is why §12.1's "closes the note" looked wrong for a while. It was
+  right. The committed probe reports an error picture as `BROKEN`, and the paint facts in both test
+  projects now reject one outright.
+
+**Tests.** Each is red on 3.30.0, with 3.30.0's source or script in place:
+- `CapturedTextEscapeTests` (unit, 102 cases): the escaper's rules and their controls, `EscapeLoaderMarkup`,
+  the continuation starts, the assertion wrap, and the response split. One fact renders a body holding
+  every hazard through the Node renderer on the pin. The class was written before the escaper changed, and
+  66 of its cases failed; the rest are controls that pass on either.
+- `CapturedTextEscapeTests` (IKVM): the same body under the Java engine, and an `!include` of a temp file.
+  On 3.30.0 the first drew an error picture and the second drew the file's `KRONIKOL-SECRET-MARKER`.
+- `CapturedTextEscapeTests` (Playwright, four facts): in the render worker every diagram is drawn and paints
+  the captured lines, Copy box text returns them, the YAML view paints and copies them, and a split note
+  quoting a diagram draws every part. All four failed on 3.30.0's source.
+- `NoteYamlInternalsTests`: the YAML view's escaper against the generator for each kind of line (the rule
+  lines pinned in its own form), its inverse, and one changed row. All three failed on 3.30.0's script.
+- Search and the decoders: six new shared vectors and two changed, `SearchNormalizerEquivalenceTests`, two
+  Jint facts over the shipped search script, `DiagramContextMenuTests.Both_scripts_decode_note_source_by_the_same_rule`,
+  a changed `NoteCopyFidelityScriptTests` pin and three changed `PlantUmlCreatorTests` rows. On 3.30.0,
+  3 Jint facts and 12 unit facts and rows failed.
+
+**BreakfastProvider on 3.30.0.** This is the §12.2 check that had to wait for NuGet. It ran in a scratch
+clone with its 30 package pins moved to 3.30.0, and nothing was pushed:
+- restore clean; xUnit 203 of 203, LightBDD 178 of 178;
+- 409 and 359 diagrams drawn;
+- 816 and 816 header tokens, every one `#686868` on `#FEFFDD`, at 5.46 : 1;
+- 4,561 and 4,421 links rest, light up under the pointer and settle back as they should, with no blue text
+  outside a link;
+- no console warnings, no page errors, and no `OptionNotApplied` (it sets no theme).
+
+The first read of the header ink reported 138 tokens on `#E2E2F0`, 34 on `#438DD5` and 9 on `#000000`.
+That was the probe, not the report: it took the smallest shape under a token as its background, and those
+are a participant's fill and arrowheads drawn before the note. Reading the shape painted last under each
+token instead, every token sits on the note fill.
+
+**The suites:**
+- Core unit project: 5,718 passed, 1 skipped, 0 failed. Search engine (Jint): 212. IKVM: 51.
+- Adapters, all green: StepTracking 43; AssertionTracking 97, 111 and 125 on net8.0, net9.0 and net10.0;
+  MSTest 51; xUnit2 12; xUnit3 15; LightBDD.xUnit3 26; TUnit 18; LightBDD.TUnit 25.
+- Example.Api, all green: xUnit3 5; LightBDD.xUnit3 6; BDDfy.xUnit3 2; ReqNRoll.xUnit3 8; NUnit4 2.
+- E2E (the full project less the wiki GIF, screenshot and showcase classes): 887 passed, 0 failed, in
+  6 min 30 s, and again in 6 min 48 s. The first full run failed one `NoteYamlInternalsTests` row, which
+  pinned 3.30.0's rule for a payload's own `~<&str>`. That row was changed and the two parity facts added
+  before these two runs.

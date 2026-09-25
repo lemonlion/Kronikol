@@ -48,20 +48,34 @@ function kronRejoinMarkedBreaks(s) {
     return out;
 }
 
-function kronNormalizeForSearch(s) {
+// 3. (3.30.1) The generator writes captured text that PlantUML's preprocessor or creole would act on as a
+// code point, <U+hhhh>, which the engine paints as the character. Creole escapes and code points are read in
+// one left-to-right pass, before the fold: `~<U+0027>` is an escaped `<` and then the payload's own text, a
+// decoded `~` escapes nothing, and a decoded letter folds like any other. A zero-width space paints nothing
+// and is dropped; a code point that is no character is left as written. A query skips this rule
+// (`query`): it holds none of the generator's escapes, and its tildes are what the reader saw.
+function kronNormalizeForSearch(s, query) {
     s = s.replace(/\r\n/g, '\n');                                  // 1. canonicalize CRLF
     s = kronRejoinMarkedBreaks(s);                                 // 1b. undo the generator's own note-body breaks
+    if (!query) {                                                  // 3. creole escapes and code points
+        s = s.replace(/~([/*_\-"\[<#=])|<U\+([0-9A-Fa-f]{4,6})>/g, function(m, escaped, hex) {
+            if (escaped !== undefined) return escaped;
+            var cp = parseInt(hex, 16);
+            if (cp === 0x200b) return '';
+            if ((cp >= 0xd800 && cp <= 0xdfff) || cp > 0x10ffff) return m;
+            return String.fromCodePoint(cp);
+        });
+    }
     s = s.replace(/[A-Z]/g, function(c) { return c.toLowerCase(); }); // 2. ASCII-only fold
-    s = s.replace(/~(?=[/*_\-"\[<#=])/g, '');                      // 3. creole escapes
     s = s.replace(/<\/?(?:color|font|i|b|size|back)[^>]*>/g, '');  // 4. markup tags
     s = s.replace(/\\n[ \t]*/g, '');                               // 5a. arrow-label literal \n escape
     return (s + '\n').replace(/[ \t]+/g, ' ');                     // 6. collapse spaces
 }
 
-// Query text goes through the same normalization as the corpus (so creole/markup/whitespace
-// behave identically), minus the corpus's trailing newline.
+// Query text goes through the same normalization as the corpus (so markup and whitespace behave
+// identically) except rule 3, minus the corpus's trailing newline.
 function kronNormalizeQueryText(input) {
-    return kronNormalizeForSearch(input).replace(/\n+$/, '').trim();
+    return kronNormalizeForSearch(input, true).replace(/\n+$/, '').trim();
 }
 
 // FNV-1a-32 over UTF-16 code units, bucket = hash & (B-1). Constants pinned by vectors.

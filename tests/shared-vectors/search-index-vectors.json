@@ -78,12 +78,12 @@
     {
       "name": "marker-only-joins-the-line-it-ends",
       "input": "a<U+200B>b\nc",
-      "expected": "a<u+200b>b\nc\n"
+      "expected": "ab\nc\n"
     },
     {
       "name": "trailing-marker-on-the-last-line-joins-nothing",
       "input": "alpha<U+200B>",
-      "expected": "alpha<u+200b>\n"
+      "expected": "alpha\n"
     },
     {
       "name": "flush-left-note-lines-stay-split",
@@ -114,6 +114,36 @@
       "name": "single-line-row-hnote-is-untouched",
       "input": "hnote across #lightyellow : Row 1\nflushleft\nsecond",
       "expected": "hnote across #lightyellow : row 1\nflushleft\nsecond\n"
+    },
+    {
+      "name": "code-point-escapes",
+      "input": "<U+0027>a', <U+0021>define X\n<U+0040>enduml <U+0025>date() <U+007E>/.bashrc <U+003D> h <U+007C> t |\n<U+002E>.x.. a <U+003C>< b >> &<U+200B>#39; c<U+005C>\n<U+0065>nd note <U+007B>{",
+      "expected": "'a', !define x\n@enduml %date() ~/.bashrc = h | t |\n..x.. a << b >> &#39; c\\\nend note {{\n"
+    },
+    {
+      "name": "escaped-code-point-is-payload-text",
+      "input": "~<U+0027> stays",
+      "expected": "<u+0027> stays\n"
+    },
+    {
+      "name": "decoded-tilde-escapes-nothing",
+      "input": "<U+007E>/ and <U+007E>* and <U+007E><",
+      "expected": "~/ and ~* and ~<\n"
+    },
+    {
+      "name": "decoded-letter-folds",
+      "input": "<U+0045>ND NOTE",
+      "expected": "end note\n"
+    },
+    {
+      "name": "zero-width-space-paints-nothing",
+      "input": "a*<U+200B>*b and x<U+200B>y",
+      "expected": "a**b and xy\n"
+    },
+    {
+      "name": "code-point-that-is-no-character-is-kept",
+      "input": "<U+FFFFFF> <U+D800> <U+27> <u+0027>",
+      "expected": "<u+ffffff> <u+d800> <u+27> <u+0027>\n"
     },
     {
       "name": "whitespace-collapse",

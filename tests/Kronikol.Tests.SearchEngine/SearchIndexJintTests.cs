@@ -180,6 +180,25 @@ public class SearchIndexJintTests : IDisposable
     }
 
     [Fact]
+    public void Deep_match_finds_captured_text_the_generator_wrote_as_code_points()
+    {
+        // 3.30.1: the generator writes a captured line-initial quote, a builtin call and a literal tilde as
+        // code points; the engine paints the characters, and a reader types what they see.
+        var corpus = "note left\n<U+0027>a', 'b'\n<U+0025>date() stays\npath \"<U+007E>\" and <U+007E>/.bashrc\nend note";
+        Assert.True(DeepMatch("'a', 'b'", corpus, [], "Passed"));
+        Assert.True(DeepMatch("%date()", corpus, [], "Passed"));
+        Assert.True(DeepMatch("\"~\"", corpus, [], "Passed"));
+        Assert.True(DeepMatch("~/.bashrc", corpus, [], "Passed"));
+    }
+
+    [Fact]
+    public void A_query_keeps_its_tildes()
+    {
+        // A query holds none of the generator's escapes: what a reader types is what they saw.
+        Assert.Equal("\"~\" ~/x ~*", _engine.Invoke("kronNormalizeQueryText", "\"~\" ~/X ~*").AsString());
+    }
+
+    [Fact]
     public void Deep_match_phrases_cannot_span_piece_boundaries()
     {
         // pieces are '\n'-joined; a phrase with a space must not match across the join

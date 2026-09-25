@@ -746,9 +746,64 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
             "launch: ~<:rocket:>",
             "tpl: a ~<$foo> b",
             "cmp: a < b and x<-y",
-            // Already escaped by its own tilde: one more would pair with it and make the markup live.
-            "own: ~<&str>"
+            // The payload's own tilde is a code point from 3.30.1, so the `<&` after it is escaped as ever.
+            "own: <U+007E>~<&str>"
         }, escaped);
+    }
+
+    /// <summary>
+    /// A line of each kind the generator's escape rules (3.30.1) act on, and the controls beside them. The
+    /// YAML view writes a note's lines in the browser, so it must write what
+    /// <see cref="Kronikol.PlantUml.PlantUmlCreator.EscapeCreoleMarkup"/> writes.
+    /// </summary>
+    private static readonly string[] CapturedTextLines =
+    [
+        "'a', 'b'", "  'a',", "\t'a',", "x 'a'",
+        "/' not a comment", "  /' x", "x /' y",
+        "!define FOO BAR", "  !include foo.puml", "!important", "x !define y",
+        "@enduml", "  @startuml", "@EndJson", "@param x", "x @enduml",
+        "end note", "END NOTE", "  endnote  ", "end hnote", "end\trnote", "end note x", "the end note",
+        "{{", "  {{json", "{{ x", "{{name}}",
+        "%upper(\"x\")", "a%date()b", "%_x(1)", "100%(approx)", "q=%20a", "%upper (\"x\")", "%upper",
+        "~/.bashrc", "\"~\"", "~~x~~", "a~b", "~<b>x</b>", "own: ~<&str>",
+        "= heading", "  = x", "==x==", "| a | b |", "  | c |", "| a", "..x..", "....", "..", "x..y..z", "a | b",
+        "... (90 more rows not shown)", "../lib/x.js", "...",
+        "--", "---", "___", "--- x",
+        "a << b >> c", "<<\"x\">>", "<<x>>", "cat <<EOF", "a << b", "x >> y",
+        "&#39;", "a &#128512; b", "&amp; &#x27; &#; &#12",
+        "abc\\", "abc\\\\", "abc\\\\\\", "\\",
+        "'~%upper(x)", "!%upper(x)",
+        "* item", "  # step", "**bold** //it// __u__ --s-- \"\"m\"\" [[link]]",
+        "error: expected Vec<&str>, found String", "launch: <:rocket:>", "tpl: a <$foo> b"
+    ];
+
+    [Fact]
+    public async Task Escape_writes_what_the_generator_writes_for_each_line()
+    {
+        await NavigateToReport();
+        // Except where a line doubles a pair marker: the generator escapes one only when the line pairs it,
+        // and the browser every one. Both paint the text as captured (preproc-probe.js, j1 to j10).
+        var lines = CapturedTextLines
+            .Where(l => !System.Text.RegularExpressions.Regex.IsMatch(l, @"([/*_\-""\[])\1"))
+            .ToArray();
+        var browser = await Page.EvaluateAsync<string[]>(
+            "lines => lines.map(l => window._noteFormatInternals.escapeNoteLine(l))", lines);
+        Assert.Equal(lines.Select(Kronikol.PlantUml.PlantUmlCreator.EscapeCreoleMarkup).ToArray(), browser);
+
+        // A rule line: its doubled markers are escaped already, which keeps it from being a rule.
+        var rules = await Page.EvaluateAsync<string[]>(
+            "lines => lines.map(l => window._noteFormatInternals.escapeNoteLine(l))", new[] { "--", "---", "___", "  --" });
+        Assert.Equal(new[] { "~-~-", "~-~--", "~_~__", "  ~-~-" }, rules);
+    }
+
+    [Fact]
+    public async Task Unescape_gives_back_captured_text_plantuml_would_act_on()
+    {
+        await NavigateToReport();
+        var roundTripped = await Page.EvaluateAsync<string[]>(
+            "lines => lines.map(l => window._noteFormatInternals.unescapeNoteDisplayLine(window._noteFormatInternals.escapeNoteLine(l)))",
+            CapturedTextLines);
+        Assert.Equal(CapturedTextLines, roundTripped);
     }
 
     [Fact]
