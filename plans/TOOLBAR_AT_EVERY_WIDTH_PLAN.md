@@ -1335,6 +1335,7 @@ sections a run report holds outside its features, and the panels the top bar and
 | The same on the release | 15 of 15 green |
 | Unit suite | 5,543 passed, 1 skipped (the 100 MB streaming test), 0 failed |
 | E2E suite without the three doc-asset generators | 848 passed, 0 failed, 7 min 14 s (838 before, plus the 10 new facts) |
+| CI on the release | 3.29.4 (`1182432a`) was tagged, but every workflow failed at restore. The cause was unrelated: `Azure.Messaging.ServiceBus` 7.21.0 had floated in and needed a newer DI abstractions package than `Kronikol.Extensions.ServiceBus` pinned (NU1605). So nothing was published. 3.29.5 (`bb262d37`) raises that pin and carries 3.29.4: CI, Release, CodeQL and CI Summary Preview green. The "E2E (Toolbar & Reports)" group ran 123 tests in 4.0 min, the 15 new and changed facts among them |
 
 **Left open.** The internal-flow popup, the context menu and the lightbox are overlays that need a
 rendered diagram, and no sweep opens them at a narrow width.
