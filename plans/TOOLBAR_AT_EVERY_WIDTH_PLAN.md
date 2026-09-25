@@ -8,7 +8,8 @@ clock, so every first-pass RUN claim still holds. The checkout has since moved t
 which changes none of the report, stylesheet, generator, E2E or CI files this plan measures or cites
 (only the version number, on the same lines, and other plans' index rows) · **Status: EXECUTED 2026-09-24 as 3.29.2**
 (§9: what shipped, what departed from this plan and why), with D5 taken at the recommended 1160 px and Q6 wired; Q7
-and the dead parameterized-row hover executed the same day as 3.29.3 (§9, its second part). Before execution a C# prototype was built and tested in a throwaway worktree (§2.14, the harness's
+and the dead parameterized-row hover executed the same day as 3.29.3 (§9, its second part); audited
+2026-09-25, follow-ups as 3.29.4 (§9, its third part). Before execution a C# prototype was built and tested in a throwaway worktree (§2.14, the harness's
 `prototype.diff`). This is
 P2 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md): roadmap item 1.5, track B
 (`src/Kronikol/Reports/stylesheets.css`, `internal-flow-popup-styles.css`, `Constants/Stylesheets.cs`,
@@ -1254,13 +1255,97 @@ every scenario laid out:
    `scrollWidth` with `clientWidth`. That holds just as well for content running out of a box that does
    not scroll, so it passed on 3.29.2. It now also requires `overflow-x` to be `auto` or `scroll`.
 
+### The audit, 2026-09-25, follow-ups as 3.29.4
+
+On the owner's "make sure everything from STAGE_1_PLAN P2 is done, and done correctly". The harness has
+the scripts and `audit-results.txt` every figure (§V).
+
+**Checked, and as this plan says.**
+
+- S1, S1b, S2, S3, S4 and S5 are in the four files as §3 gives them, with the doc comments of §8.
+- T1 to T11 are as §5 and the first part of this log give them.
+- CI: the filter lines are in place, and the Remainder ran none of the classes the named group runs.
+- The wiki: the four pages of §8. The twelve integration pages that name `HtmlSpecificationsCustomStyleSheet` call it "appended", which stays true.
+- The ROADMAP, STAGE_1, PLANS_STATUS and TOOLBAR_REDESIGN rows are updated.
+- Both Kronikol4J ledger entries are pushed.
+- No public member changed in `src` between v3.29.1 and v3.29.3, so both patch bumps hold.
+- No open issue is left for this plan.
+- The internal-flow popup is an overlay inside the page (`.iflow-overlay`), so S5's sheet reaches it.
+- No script depended on the parameter-table wrapper's old place: row selection and the flatten toggle find their table with `closest`.
+- The battery re-run on the 3.29.3 build's nine shapes: eleven conditions, 99 page runs, every column clean.
+  - The conditions: §Q's conditions, narrowing with a scrollbar, and Verdana with a scrollbar.
+  - The census is clean on all nine shapes.
+  - Firefox at 125 % and 175 % (768.8 and 768.97 CSS px) lands in the band.
+- CI's Chromium draws the classic scrollbar. Playwright's own 1.59.1 Linux image gives 15 px once `--hide-scrollbars` is dropped.
+
+**Found, beyond what the fixtures held, and fixed in 3.29.4.** Every page any sweep measured left out the
+sections a run report holds outside its features, and the panels the top bar and the search box open.
+
+1. **A long token outside the features scrolled the whole page.** 3.29.3's `.feature { overflow-wrap: anywhere }`
+   covered what a feature holds; nothing clips the rest, so a token there widened the page instead:
+   - a failure cluster's message (606 px past its box at 320 px);
+   - a test reported by its method's full name, in the clusters' list and the History section (the page
+     +805 px at 320 px, still +17 at 1,100);
+   - the History section's branch;
+   - a dependency chip named after a typed client, in the in-row filtering box (+122 px at 1,161 to +3 at 1,280).
+
+   Chromium, Firefox and WebKit agree. The rule moved to `body`, and tables and the error diff keep
+   `normal`.
+2. **The open search help's table ran out of its panel under text spacing.** It ran 25 px past the
+   panel's border at 320 px, and past the in-row box from 1,161 to 1,260 px, scrolling the page (101 px at
+   1,161 with the scrollbar). The panel scrolls it now.
+3. **The export buttons left the in-row box under text spacing, the edge the second part left to D5.**
+   From 1,161 to about 1,190 px, "Export Filtered HTML" is wider than the whole box. `.export-btn` now has
+   `flex-shrink: 0; max-width: 100%` in place of `white-space: nowrap`:
+   - the label stays on one line wherever the row has room for it;
+   - the one button wider than the row wraps its label inside the box;
+   - the breakpoint stays at 1,160 px, so D5 is untouched.
+
+**Departures and decisions.**
+
+1. **One rule on `body`, not one per section.** The same bug would come back with the next section.
+   `geodiff.js` measured `body { overflow-wrap: anywhere }` changing no element on the nine shapes at
+   eight widths, and exactly the overflowing ones on the sections page. `geodiff2.js` compared the release
+   with 3.29.3 on the nine shapes at 30 widths. It found two differences:
+   - the open search help at 320 px, next item;
+   - the layout script settling a scenario toolbar late at 1,120 px, which the control run on 3.29.3 against
+     itself shows too.
+2. **The search help scrolls at every width.** The cost is at 320 px without text spacing, where the table
+   sat 3 px into the panel's padding. It now scrolls by those 3 px, and a classic scrollbar shows it. The
+   changelog says so. A first draft claimed the table spilled past the border there, which
+   `helpspill.js` disproved: it does only under text spacing.
+3. **The guard.**
+   - A fifth page carries every section outside the features (`GenerateReportWithEverySection`), swept plain and under text spacing.
+   - The flow run report is swept under text spacing too.
+   - Every text-spacing sweep runs with the classic scrollbar. The second part moved it off because of the export-button edge.
+   - Every sweep opens the search help and the timeline.
+   - The sweep fails when the classic scrollbar is missing, which it only logged before.
+   - Check 3 measures the export buttons against the box's content edge, not its border.
+   - Check 2 lets a label wrap only in a button that already fills its row.
+   - `ReportSectionWidthTests` pins which way each new kind fits.
+4. **Screenshots were not evidence.** `shotdiff.js` found two loads of one page differing at 320 px, so
+   layout was compared element by element with a control instead.
+
+**Measured.**
+
+| Check | Result |
+|---|---|
+| New unit pins on 3.29.3 | 3 of 32 red: the `body` rule, the export button, the search help panel |
+| New and changed E2E facts on 3.29.3 | 11 of 15 red: all 7 `ReportSectionWidthTests` facts. Also the four new sweeps: 48 and 59 problems on the sections page, 8 on each text-spacing run report. The 4 original sweeps stay green under the stricter checks. |
+| The same on the release | 15 of 15 green |
+| Unit suite | 5,543 passed, 1 skipped (the 100 MB streaming test), 0 failed |
+| E2E suite without the three doc-asset generators | 848 passed, 0 failed, 7 min 14 s (838 before, plus the 10 new facts) |
+
+**Left open.** The internal-flow popup, the context menu and the lightbox are overlays that need a
+rendered diagram, and no sweep opens them at a narrow width.
+
 ---
 
 ## 10. Open questions, with recommendations
 
 | # | Question | Recommendation |
 |---|---|---|
-| Q1 = **D5** | The band wrap between 769 px and a breakpoint: yes or no, and the number | **Yes, at 1160 px** (the first pass said 1100). Without the band the CI-run report scrolls sideways from 770 to 920 px whatever else is fixed (§2.5). On the number: 1160 is the smallest breakpoint measured clean under every condition of §2.11, including the WCAG 1.4.12 text-spacing override with a classic scrollbar, bar one width where a long branch under both stresses edges the cluster past its box without scrolling the page. At 1100 every condition is clean except the text-spacing override, under which the in-row box at 1101 to 1160 px (163 to 183 px) is narrower than one letter-spaced export button and the page scrolls sideways by up to 29 px (54 with a scrollbar on a long branch). The cost of 1160 over 1100 is the void beside the summary and CI boxes on windows of 1101 to 1160 px (about 390 px of empty band at 1150, screenshot); the cost of 1100 is that text-spacing band, which leaves content reachable by scrolling and so does not fail 1.4.12, but is the kind of sideways scroll this plan exists to remove. At 1000 px a CI-run report's box is 225 px wide in the row, one chip per line. If 1100 or 1000 is chosen, one number changes in S1, T1, T5 and the wiki bullet |
+| Q1 = **D5** | The band wrap between 769 px and a breakpoint: yes or no, and the number | **Yes, at 1160 px** (the first pass said 1100). Without the band the CI-run report scrolls sideways from 770 to 920 px whatever else is fixed (§2.5). On the number: 1160 is the smallest breakpoint measured clean under every condition of §2.11, including the WCAG 1.4.12 text-spacing override with a classic scrollbar, bar one width where a long branch under both stresses edges the cluster past its box without scrolling the page. At 1100 every condition is clean except the text-spacing override, under which the in-row box at 1101 to 1160 px (163 to 183 px) is narrower than one letter-spaced export button and the page scrolls sideways by up to 29 px (54 with a scrollbar on a long branch). The cost of 1160 over 1100 is the void beside the summary and CI boxes on windows of 1101 to 1160 px (about 390 px of empty band at 1150, screenshot); the cost of 1100 is that text-spacing band, which leaves content reachable by scrolling and so does not fail 1.4.12, but is the kind of sideways scroll this plan exists to remove. At 1000 px a CI-run report's box is 225 px wide in the row, one chip per line. If 1100 or 1000 is chosen, one number changes in S1, T1, T5 and the wiki bullet. **Taken at 1160 px (3.29.2).** The first in-row widths were not clean under text spacing with a classic scrollbar after all (1161 to 1172 px, §9 second part, item 7). That was fixed in 3.29.4 without moving the breakpoint (§9, third part) |
 | Q2 | Is F11's `flex-wrap: wrap` on `.diagram-toggle` in scope, given 1.5 does not name it | **Yes.** It is a precondition of F5 (§2.3), and on its own it fixes the worse half of F11: a toolbar with many controls clips the last ones out of sight from 780 to about 1300 px on the published reports (§2.9). One declaration, measured both ways, and 6.2 wants it anyway |
 | Q3 | The four blue states on a violet page that are not toolbar controls: `.scenario-link:hover` and `.copy-scenario-name:hover` (`stylesheets.css:547`, `:566`, the tint `#EDE9FE`), `.param-test-table tbody tr:hover` (`:1533`, `#EDE9FE`), `tr.row-active` (`:1536`, `#DDD6FE`) and `tr.row-search-match` (`:1546`, a `#8B5CF6` inset shadow) | **Include in S4**, pinned by T4 and T7: the same class of defect, in the same constant, found by the same census, and `CLAUDE.md` says fix what is found on the way. Five lines. If declined they go to 6.2's F4 (colour drift) by name, with the census table as its evidence. The failure-cluster link colour is not proposed: run reports never carry the theme |
 | Q4 | Kronikol4J: ledger entry only, or also mirror the three CSS files and the renderer's order | **Ledger only**, per D11's recommendation to freeze the rendering half; the entry records that the copies were already behind. If D11 is answered "mirror", the mirror is four file edits in the same session |
@@ -1290,7 +1375,9 @@ every scenario laid out:
 - Whether any consumer sets `InternalFlowPopupCustomStyleSheet` today is unknown; if one does, S5
   changes that consumer's popup on upgrade, which is why the changelog names it.
 - Whether anything besides the parameterized tables overflows a scenario on reports other than the
-  three published ones is unknown; Q7's sweep assertion would find it.
+  three published ones is unknown; Q7's sweep assertion would find it. (It did: 3.29.3 found every kind
+  of scenario content affected, and the audit found the sections outside the features, which scrolled
+  the page instead, §9.)
 
 ---
 

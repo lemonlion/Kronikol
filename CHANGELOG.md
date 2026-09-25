@@ -4,6 +4,67 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.29.4] - 2026-09-25
+
+**Patch - the report fits its window with every section it can hold (the audit of
+`plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md`, stage 1 P2).** The patch part moved because nothing is new to
+call: no option, type, member or parameter is added. Everything is four stylesheet rules. Every
+behaviour that changes is one that was broken, and each is called out below.
+
+### Fixed
+
+- **A long token outside the features scrolled the whole page sideways.** 3.29.3 let a long token break
+  inside a feature or scenario. The sections around them had no such rule, and nothing clips them, so a
+  token that did not fit its line made the page wider than the window:
+  - a failure cluster's shared message (an exception's type name, a method, a URL) ran 606 px past its
+    box at 320 px;
+  - a test reported by its method's full name, in the failure cluster's list and in the History
+    section: the page scrolled by 805 px at 320 px, and still at 1,100 px;
+  - the History section's branch (a Dependabot branch) ran 216 px past its box at 320 px;
+  - a dependency chip named after a typed client, in the filtering box beside the summary: the page
+    scrolled from 1,161 to 1,280 px (122 px at 1,161).
+
+  Text anywhere in the report now breaks a token that does not fit its line; tables and the error diff
+  still keep their words whole and scroll. **Behaviour change:** only where something overflowed. On the
+  toolbar plan's nine report shapes, at 30 widths from 320 to 1,400 px, no element changes size apart
+  from the open search help at 320 px (next item).
+- **The search help's table ran out of its panel.** Under WCAG text spacing the open search help's
+  table ran 25 px past the panel's border at 320 px, and past the filtering box beside the summary,
+  scrolling the page, from 1,161 to 1,260 px (101 px at 1,161 with a classic scrollbar). The panel now
+  scrolls its table. **Behaviour change:** where the table is wider than the panel, the panel scrolls
+  it, which a classic scrollbar shows. That includes a 320 px window without text spacing, where the
+  table sat 3 px into the panel's padding and now scrolls by those 3 px.
+- **Under WCAG text spacing the export buttons ran out of their box just above the breakpoint.** From
+  1,161 to about 1,190 px the filtering box beside the summary is narrower than a letter-spaced "Export
+  Filtered HTML". With its label held on one line (`white-space: nowrap`, 3.29.2) the buttons ran into
+  the box's padding (12 px at 1,161 px), and with a classic scrollbar 27 px past its content and 11 px
+  past the box itself, the page scrolling 3 px (the edge 3.29.3 recorded for the breakpoint decision).
+  A button is now never squeezed and never
+  wider than its row: its label stays on one line wherever the row has room for it, and only a button
+  wider than the whole row wraps its label. The breakpoint stays at 1,160 px. **Behaviour change:** in
+  that band, under text spacing, "Export Filtered HTML" takes two lines. Without text spacing nothing
+  changes: no button is wider than its row at any width.
+
+### Documentation
+
+- Wiki: `Generated-Reports` says that a long token breaks anywhere in the report, not only in a
+  scenario, that the search help scrolls its table, and when an export button wraps its label. The
+  Kronikol4J divergence ledger records the change.
+
+### Tests
+
+- `ViewportSweepTests` gains a page carrying every section a run report holds outside its features
+  (failure clusters, History, report diagnostics, background calls, the filter chips), each with the
+  long tokens a real run gives it, swept plain and under text spacing, and sweeps the flow run report
+  under text spacing too. Every sweep now opens the search help and the timeline, runs with the classic
+  scrollbar (the text-spacing sweep ran without it because of the export-button edge) and fails if the
+  browser stops drawing it. The export buttons are measured against the box's content, not its outer
+  edge, and a label may wrap inside its button only when the button already fills its row. On 3.29.3
+  the new sweeps report 48 and 59 problems on the new page and 8 on each text-spacing run report.
+- `ReportSectionWidthTests` pins which way each fits: a long token outside the features breaks inside
+  its box, the search help's table scrolls inside its panel, and an export button wider than the box
+  wraps its label inside it. `StylesheetRulesTests` pins the rules.
+
 ## [3.29.3] - 2026-09-24
 
 **Patch - what a scenario holds stays inside it, and a parameterized row answers the pointer (roadmap

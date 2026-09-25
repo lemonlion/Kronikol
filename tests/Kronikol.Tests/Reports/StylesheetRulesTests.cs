@@ -31,9 +31,17 @@ public partial class StylesheetRulesTests
 
     // ── T1: the widths (S1, S1b) ──
 
+    /// <summary>An export button is never squeezed, so its label stays on one line wherever the row has room
+    /// for it; a button wider than the whole row (a letter-spaced "Export Filtered HTML" in the narrow
+    /// in-row filtering box just above the breakpoint) is capped at the row and wraps its label, where
+    /// <c>white-space: nowrap</c> held it whole and pushed the export buttons out of the box.</summary>
     [Fact]
-    public void Export_button_labels_never_wrap_inside_their_buttons() =>
-        Assert.Equal("nowrap", CssRules.Value(Base, ".export-btn", "white-space"));
+    public void An_export_button_is_never_squeezed_and_never_wider_than_its_row()
+    {
+        Assert.Equal("0", CssRules.Value(Base, ".export-btn", "flex-shrink"));
+        Assert.Equal("100%", CssRules.Value(Base, ".export-btn", "max-width"));
+        Assert.Null(CssRules.Value(Base, ".export-btn", "white-space"));
+    }
 
     [Theory]
     [InlineData(".filtering-box-export")]
@@ -221,14 +229,15 @@ public partial class StylesheetRulesTests
     // ── What a feature or scenario holds stays inside it (roadmap 1.10, the plan's Q7) ──
 
     /// <summary>A long token (a type name, an identifier, a URL) breaks where it has to instead of running
-    /// past the feature or scenario holding it, whose content-visibility clips it out of sight. Tables and
-    /// the error diff keep their words whole and scroll instead: a column squeezed below its longest word
-    /// would split words that fit.</summary>
+    /// past what holds it: inside a feature or scenario, whose content-visibility clips it out of sight,
+    /// and everywhere else, where it scrolled the whole page (a failure cluster's message, a scenario name
+    /// in the History section, a dependency chip). Tables and the error diff keep their words whole and
+    /// scroll instead: a column squeezed below its longest word would split words that fit.</summary>
     [Fact]
-    public void Text_in_a_feature_breaks_a_long_token_while_tables_keep_their_words_whole()
+    public void Text_anywhere_in_the_report_breaks_a_long_token_while_tables_keep_their_words_whole()
     {
-        Assert.Equal("anywhere", CssRules.Value(Base, ".feature", "overflow-wrap"));
-        Assert.Equal("normal", CssRules.Value(Base, ".feature table", "overflow-wrap"));
+        Assert.Equal("anywhere", CssRules.Value(Base, "body", "overflow-wrap"));
+        Assert.Equal("normal", CssRules.Value(Base, "table", "overflow-wrap"));
         Assert.Equal("normal", CssRules.Value(Base, ".error-diff", "overflow-wrap"));
     }
 
@@ -243,6 +252,7 @@ public partial class StylesheetRulesTests
     [InlineData(".test-execution-summary")]
     [InlineData(".example-image")]
     [InlineData(".raw-plantuml pre")]
+    [InlineData(".search-help-panel")]
     public void A_table_or_block_wider_than_its_holder_scrolls_inside_it(string selector) =>
         Assert.Equal("auto", CssRules.Value(Base, selector, "overflow-x"));
 

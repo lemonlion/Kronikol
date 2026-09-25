@@ -1,0 +1,57 @@
+The audit of 2026-09-25 (3.29.3 at 96769c64, the fix released as 3.29.4). Harness section V.
+
+1. The conditions battery on the 3.29.3 build's nine shapes (out-audit, audit-battery.sh)
+   Eleven conditions: Chromium reloaded at every width in 10 px steps; with the classic scrollbar;
+   narrowed without a reload; widened without a reload; narrowed with the scrollbar; Firefox; WebKit;
+   WCAG text spacing; text spacing with the scrollbar; Verdana; Verdana with the scrollbar (20 px steps
+   but the first). 99 page runs: sideways scroll none, export/top-bar/scenario-toolbar label wrap never,
+   cluster outside box never, toolbar controls clipped never, content clipped inside a feature or
+   scenario never. Scrollbar width seen: 15 px on the 36 scrollbar runs, 0 on the other 63.
+   Box width at 770/900/1000/1100/1200 on the CI shape: 754/884/984/1084/425 (the long CI shape: 347 at
+   1200, CI box 352 at 1400).
+
+2. census.js on the nine shapes, 320-1400-20, classic scrollbar: no culprit on any page.
+
+3. frac769.js, Firefox, a 769 px viewport at four scale factors, three run-report shapes:
+   devPixelsPerPx 1.25 -> 768.8 CSS px, 1.75 -> 768.967, 1.5 -> 769.333, 1.1 -> 769.083: every case
+   matches the band (min-width: 768.02px), the header row wraps, the box 753 px, no sideways scroll.
+
+4. sbprobe.js in mcr.microsoft.com/playwright:v1.59.1-noble (Linux, the Chromium CI installs):
+   default launch: chromium 147.0.7727.15, innerWidth 1000, clientWidth 1000, scrollbar 0 px
+   without --hide-scrollbars: chromium 147.0.7727.15, innerWidth 1000, clientWidth 985, scrollbar 15 px
+
+5. panels.js, the panels no sweep opened (timeline, component diagram, search help) and the sections
+   outside the features, on 3.29.3:
+   - the nine shapes with the timeline or the component diagram open: clean.
+   - sections.cs's page (failure clusters, History, diagnostics, background calls, long-token chips),
+     classic scrollbar, 20 px: the page scrolls sideways at 320 to 1100 px (+805 at 320, +17 at 1100:
+     a.failure-cluster-scenario-link, a.history-link, the cluster's message) and 1161 to 1280 px
+     (+122 at 1161, +3 at 1280: button.dependency-toggle). Firefox and WebKit: the same culprits.
+   - with the search help open, under text spacing: TestRunReport_full_longci scrolls sideways at
+     1161 to 1260 px (+82 at 1180 with the scrollbar, +77 at 1170 without; table.search-help-table).
+   - the prototype, body { overflow-wrap: anywhere } with table, .error-diff { overflow-wrap: normal }
+     and .search-help-panel { overflow-x: auto } injected: every page clean, with and without text
+     spacing.
+
+6. helpspill.js, the open search help's table against its panel, 3.29.3, classic scrollbar:
+   without text spacing: 320 px -11 (inside the border; 3 px into the padding: scroll width 242 of
+   239 once the panel scrolls), 360 to 768 px -13 to -14.
+   under text spacing: 320 px +25, 340 px +5; long CI in-row: 1161 +125, 1180 +106, 1200 +86,
+   1240 +46, 1260 +26, 1280 +6.
+
+7. probe1161b.js, the export cluster under text spacing with the classic scrollbar (px past the box's
+   border / past its content):
+   3.29.3, TestRunReport.html: 1161 -8/8, 1163 -10/6, 1165 -12/4, 1168 -15/1, from 1170 inside.
+   3.29.3, TestRunReport_longci.html: 1161 11/27 (page +3), 1163 9/25 (+1), 1165 7/23, 1168 4/20,
+     1170 2/18, 1172 0/16, 1175 -3/13, 1180 -8/8, 1200 inside.
+   .export-btn { white-space: normal; flex-shrink: 0; max-width: 100% }: inside at every width, the
+     page never scrolls; "Export Filtered HTML" takes two lines at 1161 to 1168 px (TestRunReport) and
+     1161 to 1180 px (long CI, "Export Filtered CSV" too to 1175), one line elsewhere.
+
+8. geodiff2.js, every element's width, height and line count, 3.29.3 (out-audit) against the fix
+   (out-new), nine shapes, 320-1400-40 plus 769 and 1161, classic scrollbar: the only differences are
+   the open search help at 320 px (panel, filters, filtering box and header row 15 px taller: the panel
+   scrolls its 3 px) and scenario toolbars at 1120 px on the specifications shapes, which the control
+   (3.29.3 against itself) shows too: diagram-toggle-layout-script.js settles the inline or stacked
+   toolbar after the measurement on some loads (28 such differences on Specifications.html).
+   shotdiff.js (screenshots) was dropped as evidence: the control differs at 320 px as well.

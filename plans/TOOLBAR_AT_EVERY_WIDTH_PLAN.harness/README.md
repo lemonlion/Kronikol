@@ -504,3 +504,44 @@ node swatch.js                                                # swatch.png: the 
 - `probe-1161.js`: under text spacing with a classic scrollbar the in-row filtering box is 189 to 198 px wide
   from 1161 to 1172 px, narrower than a letter-spaced "Export Filtered HTML" (185 px) and its padding: the
   cluster runs up to 11 px past the box and the page scrolls 3 px at 1161. Clean from 1175. Not changed (D5).
+
+## V. The audit (3.29.4, 2026-09-25)
+
+Every plan item checked against the code, the docs, CI and the ledger; the battery re-run on the 3.29.3
+build; then what no fixture held: the sections outside the features and the panels a sweep never opened.
+`audit-results.txt` has every figure.
+
+```bash
+# the nine shapes from the build under audit (OUT_DIR=out-new on the fix), then the eleven conditions
+OUT_DIR=out-audit dotnet run gen.cs && OUT_DIR=out-audit dotnet run gen.cs -- stress && OUT_DIR=out-audit dotnet run gen.cs -- full
+bash audit-battery.sh                                   # sweep2.js x 11 conditions, results in sweep2-results-audit-*.json
+node census.js <the nine pages, comma-separated> 320-1400-20 - 1
+node frac769.js out-audit                               # Firefox at 125, 175, 150 and 110 % of a 769 px viewport
+# every section outside the features, with the long tokens a real run gives them (out-sections/)
+dotnet run sections.cs
+node panels.js out-sections/Sections.html 1 20           # page scroll and what runs past the viewport, the panels open
+SPACING=1 node panels.js out-audit/TestRunReport_full_longci.html 1 10
+INJECT='body{overflow-wrap:anywhere} table,.error-diff{overflow-wrap:normal}' node panels.js out-sections/Sections.html 1 20
+INJECT='<css>' node geodiff.js <page> 320,768,1400      # which elements an injected rule changes
+node helpspill.js <page> 1                              # the search help's table against its panel (TS=1, W=...)
+node probe1161b.js <page,...>                           # the export cluster at 1150 to 1200 px, text spacing + scrollbar
+node geodiff2.js out-audit out-new <pages> 320-1400-40 1 # two builds, element by element (run it on one build twice as the control)
+```
+
+`sbprobe.js` ran in `mcr.microsoft.com/playwright:v1.59.1-noble` under the podman WSL distro, with the E2E
+project's driver package mounted at `/pw`: `podman run --rm -v <package>:/pw:ro -v <here>:/sp:ro
+mcr.microsoft.com/playwright:v1.59.1-noble node /sp/sbprobe.js`.
+
+- The battery: 99 page runs, every column clean; the census clean; the fractional widths in the band.
+- CI's Chromium draws the classic scrollbar: 15 px on Linux once `--hide-scrollbars` is dropped.
+- `panels.js`: a failure cluster's message, a test reported by its method's full name (the clusters' list,
+  the History section), the History section's branch and a long-token dependency chip scrolled the page
+  sideways (+805 px at 320 px, still +17 at 1100; +122 at 1161 to +3 at 1280 for the chip); under text
+  spacing the open search help's table scrolled it at 1161 to 1260 px. Firefox and WebKit agree.
+- `geodiff.js`: `body { overflow-wrap: anywhere }` changes no element on the nine shapes at eight widths
+  and exactly the overflowing ones on the sections page. `geodiff2.js` on the fix: only the open search
+  help at 320 px (now a scroll container: 3 px) and the layout script's settling at 1120 px, which the
+  control shows too. `shotdiff.js` could not tell: two loads of one page differ at 320 px.
+- `probe1161b.js`: the export buttons ran 27 px past the box's content (11 past its border) at 1161 px on the
+  long-CI shape; with `flex-shrink: 0; max-width: 100%` in place of `white-space: nowrap` they stay inside
+  at every width, the one button wider than the row taking two lines.

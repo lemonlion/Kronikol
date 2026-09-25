@@ -2362,8 +2362,8 @@ public static class ReportTestHelper
     /// step text at four depths of sub-steps and in a background step; inline, tabular, tree and record
     /// parameters; a doc string, a comment, a long-named attachment and a 640 px inline image; a combined
     /// table; a failure with a diff; a rule, a feature description and an endpoint; a parameterized
-    /// group's grouped table, which has no flat view and so no wrapper, and its row detail panels; a
-    /// flat-view group. The sweep measures that none of it runs past the feature or scenario holding it,
+    /// group's grouped table, which has no flat view (and so, before 3.29.3, no scrolling wrapper), and
+    /// its row detail panels; a flat-view group. The sweep measures that none of it runs past the feature or scenario holding it,
     /// whose content-visibility clips what overflows out of sight.
     /// </summary>
     public static string GenerateReportWithWideContent(string tempDir, string outputDir, string fileName)
@@ -2550,6 +2550,116 @@ public static class ReportTestHelper
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             ciMetadata: ci,
             groupParameterizedTests: true);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>The single-token scenario name <see cref="GenerateReportWithEverySection"/> gives its second
+    /// failing scenario: a test method reported by its full name.</summary>
+    public const string EverySectionTokenName =
+        "BreakfastProvider.Tests.Component.Orders.OrderReconciliationTests.Reconciling_the_nightly_settlement_batches_settles_each_order_exactly_once";
+
+    /// <summary>The participant <see cref="GenerateReportWithEverySection"/> names by a typed client, which
+    /// becomes a dependency chip in the filtering box.</summary>
+    public const string EverySectionTokenDependency = "BreakfastProvider.Api.Clients.NightlySettlementLedgerHttpClient";
+
+    /// <summary>
+    /// Every section a run report holds outside its features, each carrying the long tokens a real run
+    /// gives it: failure clusters whose shared message names an exception type, a method and a URL, one of
+    /// whose scenarios is a test method reported by its full name; the History section, whose stream is a
+    /// Dependabot branch and whose lists hold that name; report diagnostics naming a type and a path;
+    /// background calls to a long path; a dependency chip named after a typed client and a category named
+    /// after a type; the long branch in the CI box; the timeline and the component diagram. The features
+    /// hold ordinary content: this page is about what sits around them, which no feature clips, so what
+    /// overflows it scrolls the whole page sideways.
+    /// </summary>
+    public static string GenerateReportWithEverySection(string tempDir, string outputDir, string fileName)
+    {
+        const string suite = "BreakfastProvider.Tests.Component.LightBDD.xUnit3.OrderReconciliationAcrossRegions";
+        const string error = "System.InvalidOperationException: Sequence contains no matching element in "
+            + "BreakfastProvider.Api.Services.OrderReconciliation.NightlySettlementBatchReconciler.ReconcileAcrossRegionsAsync calling "
+            + "https://breakfast-provider-integration-tests.example.com/api/v1/orders/reconciliation/nightly-settlement-batches?region=eu-west-1";
+        static string Name(int i) => i == 2
+            ? EverySectionTokenName
+            : $"Reconciling the nightly settlement batches across every region settles order {i} exactly once";
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Order reconciliation across regions",
+                Scenarios = [.. Enumerable.Range(1, 4).Select(i => new Scenario
+                {
+                    Id = $"es{i}", DisplayName = Name(i), Result = i == 4 ? ExecutionResult.Passed : ExecutionResult.Failed,
+                    Duration = TimeSpan.FromMilliseconds(200 * i), ErrorMessage = i == 4 ? null : error,
+                    Labels = ["Regression"], Categories = ["BreakfastProvider.Tests.Categories.CrossRegionSettlement"],
+                    Steps = [new ScenarioStep { Keyword = "Given", Text = "the ledger service is available", Status = ExecutionResult.Passed }]
+                })]
+            },
+            new Feature
+            {
+                DisplayName = "Payments",
+                Scenarios = [new Scenario { Id = "es5", DisplayName = "Pay by card", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(90) }]
+            }
+        };
+        var source = "@startuml\nactor \"Caller\" as caller\nparticipant \"Nightly Settlement Ledger Service\" as l\n"
+            + $"participant \"{EverySectionTokenDependency}\" as l2\n"
+            + "caller -> l : POST /api/v1/orders/reconciliation\ncaller -> l2 : GET /settlements\nl --> caller : 500\n@enduml\n";
+        var diagrams = features.SelectMany(f => f.Scenarios).Select(s => new DiagramAsCode(s.Id, "", source)).ToArray();
+
+        var ci = new CiMetadata(CiEnvironment.GitHubActions, "20260925.4",
+            "dependabot/nuget/src/BreakfastProvider.Api/Microsoft.Extensions.Http.Resilience-9.10.0", "0123456789abcdef0123456789abcdef01234567",
+            "https://github.com/my-organisation/breakfast-provider-integration-tests/actions/runs/4",
+            "my-organisation/breakfast-provider-integration-tests", "4");
+
+        // Six earlier runs on the same branch: the first three scenarios passed every time, so this run's
+        // failures are new, and the fourth alternated, so it is flaky.
+        var at = new DateTimeOffset(2026, 9, 25, 12, 0, 0, TimeSpan.Zero);
+        var ledger = Path.Combine(tempDir, "ledger-" + Guid.NewGuid().ToString("N")[..8], "history.jsonl");
+        var (roster, run, _) = Kronikol.History.HistoryRunBuilder.Build(features, [], suite, ci, at, new Kronikol.History.HistoryBuildOptions(), "e2e:99:1");
+        for (var i = 0; i < 6; i++)
+        {
+            var results = i % 2 == 0 ? "PPPFP" : "PPPPP";
+            var prior = run with
+            {
+                Id = $"e2e:{i + 1}:1", At = at.AddHours(i - 6), Commit = $"c{i + 1:D6}", Results = results,
+                Attempts = new string('-', results.Length), Durations = [200, 400, 600, 800, 90],
+                Errors = results.Select(r => r == 'F' ? "e1" : null).ToArray(),
+                ErrorText = results.Contains('F') ? new Dictionary<string, string> { ["e1"] = error } : new Dictionary<string, string>()
+            };
+            var appended = Kronikol.History.HistoryLedgerWriter.Append(ledger, roster, prior, "3.29.4");
+            if (appended.Outcome != Kronikol.History.HistoryAppendOutcome.Appended)
+                throw new InvalidOperationException($"seeding the ledger failed: {appended.Message}");
+        }
+        var held = Kronikol.History.HistoryLedgerReader.Read(ledger, 50).Ledger ?? throw new InvalidOperationException("the seeded ledger did not read back");
+        var history = Kronikol.History.HistoryAnalyzer.Analyse(held, roster, run, new Kronikol.History.HistoryAnalysisOptions { MinRuns = 3 });
+
+        var diagnostics = new List<DiagnosticEntry>
+        {
+            new(DiagnosticKind.RenderFailure, "The PlantUML engine gave up on a diagram of 14,203 lines: BreakfastProvider.Api.Services.OrderReconciliation.NightlySettlementBatchReconciler", "es1"),
+            new(DiagnosticKind.MalformedLine, "Skipped a capture line at C:/agents/_work/1/s/tests/BreakfastProvider.Tests.Component/bin/Release/net10.0/Reports/captures/interactions.ndjson:1234")
+        };
+        var calls = Enumerable.Range(0, 3).Select(_ => new RequestResponseLog(
+            Name(1), "es1", HttpMethod.Post, null,
+            new Uri("https://ledger.example.com/api/v1/orders/reconciliation/nightly-settlement-batches/2026-09-25/regions/eu-west-1/retry-after-timeout"),
+            [], "Nightly Settlement Ledger Service (eu-west-1)", "Caller", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)).ToList();
+        var background = new BackgroundCalls(3, [new BackgroundCallGroup("es1", Name(1), 3, at)], calls);
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            at.UtcDateTime.AddMinutes(-3), at.UtcDateTime,
+            null, Path.Combine(tempDir, fileName), "Test Run Report", includeTestRunData: true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            ciMetadata: ci,
+            componentDiagramPlantUml: ToggleDefaultsComponentDiagramSource,
+            diagnostics: diagnostics,
+            background: background,
+            suite: suite,
+            history: history,
+            showHistorySection: true,
+            showReportDiagnostics: true);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;

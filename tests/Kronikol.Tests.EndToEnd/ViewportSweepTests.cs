@@ -36,14 +36,15 @@ public sealed class ClassicScrollbarBrowser : IAsyncLifetime
 
 /// <summary>
 /// The report at every width from 320 to 1400 px, reloaded at each (the init script decides the phone
-/// layout once, at load), with every <c>details</c> element and the phone-hidden filters and scenario
-/// toolbar opened the way a reader opens them: no sideways scroll, no label wrapped inside a toolbar
-/// button, the export buttons inside the filtering box, every scenario-toolbar control inside its
-/// toolbar, nothing wider than the feature or scenario holding it, and the header laid out as the
-/// breakpoint says (plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md §4 and Q7). The page's scroll width cannot see
-/// clipped content: <c>.feature</c> and <c>.scenario</c> carry <c>content-visibility: auto</c>, whose
-/// paint containment cuts off whatever overflows them, so their content is measured against their own
-/// edges. Every bad width is collected and reported together.
+/// layout once, at load), with every <c>details</c> element, the phone-hidden filters and scenario
+/// toolbar, the search help and the timeline opened the way a reader opens them: no sideways scroll, no
+/// label wrapped inside a toolbar button that had room for it, the export buttons inside the filtering
+/// box, every scenario-toolbar control inside its toolbar, nothing wider than the feature or scenario
+/// holding it, and the header laid out as the breakpoint says (plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md §4,
+/// Q7 and the audit). The page's scroll width cannot see clipped content: <c>.feature</c> and
+/// <c>.scenario</c> carry <c>content-visibility: auto</c>, whose paint containment cuts off whatever
+/// overflows them, so their content is measured against their own edges. Every bad width is collected
+/// and reported together.
 /// </summary>
 [Collection(PlaywrightCollections.Mobile)]
 public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDisposable
@@ -58,16 +59,14 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
         [.. Enumerable.Range(0, 55).Select(i => 320 + i * 20).Append(769).Append(Breakpoint + 1).Order()];
 
     private readonly ClassicScrollbarBrowser _browser;
-    private readonly PlaywrightFixture _shared;
     private readonly ITestOutputHelper _output;
     private readonly string _tempDir = Path.Combine(Path.GetTempPath(), "kronikol-sweep-" + Guid.NewGuid().ToString("N")[..8]);
     private static readonly string OutputDir = Path.Combine(
         Path.GetDirectoryName(typeof(ViewportSweepTests).Assembly.Location)!, "PlaywrightOutput");
 
-    public ViewportSweepTests(ClassicScrollbarBrowser browser, PlaywrightFixture shared, ITestOutputHelper output)
+    public ViewportSweepTests(ClassicScrollbarBrowser browser, ITestOutputHelper output)
     {
         _browser = browser;
-        _shared = shared;
         _output = output;
         Directory.CreateDirectory(_tempDir);
         Directory.CreateDirectory(OutputDir);
@@ -98,23 +97,40 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
     public Task Run_report_with_wide_content_fits_every_width() =>
         Sweep(ReportTestHelper.GenerateReportWithWideContent(_tempDir, OutputDir, "SweepWideContent.html"), runReport: true);
 
+    /// <summary>Every section a run report holds outside its features (failure clusters, History, report
+    /// diagnostics, background calls, the filter chips), each with the long tokens a real run gives it. No
+    /// feature clips them, so a token that does not break scrolls the whole page: a failure cluster's
+    /// message or a test method's full name did, by up to 805 px at 320 px.</summary>
+    [Fact]
+    public Task Run_report_with_every_section_fits_every_width() =>
+        Sweep(ReportTestHelper.GenerateReportWithEverySection(_tempDir, OutputDir, "SweepEverySection.html"), runReport: true);
+
     /// <summary>WCAG 1.4.12's text spacing, which a reader may impose: line height 1.5, letter spacing
     /// 0.12 em, word spacing 0.16 em, paragraph spacing 2 em.</summary>
     private const string TextSpacing =
         "*{line-height:1.5 !important;letter-spacing:0.12em !important;word-spacing:0.16em !important}p{margin-bottom:2em !important}";
 
     /// <summary>Under text spacing the run summary table was 19 px too wide at 320 px (34 px, to 340 px,
-    /// with the scrollbar), and scrolled the page. This sweep runs without the classic scrollbar, as the
-    /// breakpoint was chosen (plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md §2.11, §10 Q1): with both, the first
-    /// in-row widths (1161 to 1172 px) leave the letter-spaced "Export Filtered HTML" up to 11 px past a
-    /// filtering box too narrow for it.</summary>
+    /// with the scrollbar), and scrolled the page.</summary>
     [Fact]
     public Task Run_report_with_wide_content_fits_every_width_under_wcag_text_spacing() =>
-        Sweep(ReportTestHelper.GenerateReportWithWideContent(_tempDir, OutputDir, "SweepWideContentSpaced.html"), runReport: true, TextSpacing, _shared.Browser);
+        Sweep(ReportTestHelper.GenerateReportWithWideContent(_tempDir, OutputDir, "SweepWideContentSpaced.html"), runReport: true, TextSpacing);
 
-    private async Task Sweep(string url, bool runReport, string? injectedCss = null, IBrowser? browser = null)
+    /// <summary>Under text spacing, just above the breakpoint, the in-row filtering box of a report with a
+    /// long branch is narrower than a letter-spaced "Export Filtered HTML": with a classic scrollbar the
+    /// export buttons ran up to 11 px past the box from 1161 to 1172 px and the page scrolled 3 px, and
+    /// the open search help's table ran past it to 1260 px.</summary>
+    [Fact]
+    public Task Run_report_with_internal_flow_tracking_fits_every_width_under_wcag_text_spacing() =>
+        Sweep(ReportTestHelper.GenerateReportWithWideHeader(_tempDir, OutputDir, "SweepRunFlowSpaced.html", specifications: false, internalFlowTracking: true), runReport: true, TextSpacing);
+
+    [Fact]
+    public Task Run_report_with_every_section_fits_every_width_under_wcag_text_spacing() =>
+        Sweep(ReportTestHelper.GenerateReportWithEverySection(_tempDir, OutputDir, "SweepEverySectionSpaced.html"), runReport: true, TextSpacing);
+
+    private async Task Sweep(string url, bool runReport, string? injectedCss = null)
     {
-        await using var context = await (browser ?? _browser.Browser).NewContextAsync(new BrowserNewContextOptions
+        await using var context = await _browser.Browser.NewContextAsync(new BrowserNewContextOptions
         {
             ViewportSize = new ViewportSize { Width = Widths[0], Height = 900 }
         });
@@ -140,6 +156,10 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
                 await page.Locator(".mobile-filter-toggle").ClickAsync();
                 await page.Locator(".scenario-diagram-controls-toggle").First.ClickAsync();
             }
+            // The search help and the timeline start closed on every load; a reader opens them.
+            await page.Locator(".search-help-toggle").First.ClickAsync();
+            var timeline = page.Locator("button.timeline-toggle", new() { HasTextString = "Scenario Timeline" });
+            if (await timeline.CountAsync() > 0) await timeline.First.ClickAsync();
             await page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))");
 
             var json = await page.EvaluateAsync<string>(Measure, new { breakpoint = Breakpoint, runReport });
@@ -151,6 +171,9 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
 
         _output.WriteLine($"{Widths.Length} widths in {clock.Elapsed.TotalSeconds:F1} s; scrollbar widths seen: {string.Join("/", scrollbars)} px");
         Assert.True(problems.Count == 0, $"{problems.Count} problem(s):\n" + string.Join("\n", problems));
+        // The classic scrollbar is the condition this sweep exists for: a browser that stops drawing it
+        // would leave every assertion above measuring the 15 px wider layout the other tests see.
+        Assert.True(scrollbars.Min > 0, $"no classic scrollbar at some width (seen: {string.Join("/", scrollbars)} px)");
     }
 
     private const string Measure = """
@@ -166,17 +189,25 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
             if (de.scrollWidth > de.clientWidth + 1)
                 problems.push(`the page scrolls sideways by ${de.scrollWidth - de.clientWidth} px`);
 
-            // 2. No label wrapped inside a button of the export cluster, the top bar or a scenario toolbar.
+            // 2. No label wrapped inside a button of the export cluster, the top bar or a scenario toolbar,
+            //    unless the button already fills its row: one wider than the whole row is capped at it and
+            //    wraps its label rather than running out of its box.
+            const fills = b => {
+                const row = b.parentElement, cs = getComputedStyle(row);
+                return b.getBoundingClientRect().width >= row.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 1;
+            };
             for (const b of document.querySelectorAll('.filtering-box-export button, .toolbar-row button, .diagram-toggle button'))
-                if (vis(b) && lines(b) > 1) problems.push(`"${label(b)}" wraps its label inside its button (${lines(b)} lines)`);
+                if (vis(b) && lines(b) > 1 && !fills(b)) problems.push(`"${label(b)}" wraps its label inside its button (${lines(b)} lines)`);
 
-            // 3. The export cluster inside the filtering box.
+            // 3. The export cluster inside the filtering box's content, not in its padding or past it.
             const box = document.querySelector('.filtering-box');
             const cluster = document.querySelector('.filtering-box-export');
             if (!vis(box) || !vis(cluster)) problems.push('the filtering box or its export buttons are not visible');
             else {
-                const over = cluster.getBoundingClientRect().right - box.getBoundingClientRect().right;
-                if (over > 1) problems.push(`the export buttons run ${Math.round(over)} px past the filtering box`);
+                const bs = getComputedStyle(box);
+                const edge = box.getBoundingClientRect().right - parseFloat(bs.borderRightWidth) - parseFloat(bs.paddingRight);
+                const over = cluster.getBoundingClientRect().right - edge;
+                if (over > 1) problems.push(`the export buttons run ${Math.round(over)} px past the filtering box's content`);
             }
 
             // 4. Every scenario-toolbar control inside its toolbar: past the edge it is clipped out of sight.

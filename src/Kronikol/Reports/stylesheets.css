@@ -1,5 +1,9 @@
        body {
            font-family: sans-serif;
+           /* A long token (a type name, an identifier, a URL) breaks where it has to instead of running
+              past what holds it: a feature or scenario, whose content-visibility clips what overflows it
+              out of sight, or any other section, where it scrolled the whole page sideways. */
+           overflow-wrap: anywhere;
        }
 
        .raw-plantuml {
@@ -43,11 +47,9 @@
             contain-intrinsic-size: auto 150px;
         }
 
-        /* A long token (a type name, an identifier, a URL) breaks where it has to instead of running past
-           the feature or scenario holding it, whose content-visibility clips whatever overflows it out of
-           sight. Tables and the error diff keep their words whole and scroll instead. */
-        .feature { overflow-wrap: anywhere; }
-        .feature table, .error-diff { overflow-wrap: normal; }
+        /* Tables and the error diff keep their words whole and scroll instead: a column squeezed below its
+           longest word would split words that fit. */
+        table, .error-diff { overflow-wrap: normal; }
 
         .example-diagrams {
             border-radius: 1em;
@@ -264,6 +266,7 @@
             background: rgb(250, 250, 250);
             font-size: 0.85em;
             line-height: 1.6;
+            overflow-x: auto;
         }
         .search-help-table {
             width: 100%;
@@ -608,7 +611,11 @@
             background: white;
             cursor: pointer;
             font-size: 0.85em;
-            white-space: nowrap;
+            /* Never squeezed, so its label stays on one line wherever the row has room for it; a button
+               wider than the whole row (letter-spaced, in the narrow in-row box just above the
+               breakpoint) is capped at the row and wraps its label instead of leaving the box. */
+            flex-shrink: 0;
+            max-width: 100%;
         }
 
         .export-btn:hover {
