@@ -278,3 +278,65 @@ SOURCES_OUT=<dir> node plans/DIAGRAM_COLOURS_PLAN.harness/preproc-probe.js
 (cd plans/DIAGRAM_COLOURS_PLAN.harness && dotnet run ikvm-render.cs -- <dir>)
 SVG_IN=<dir> node plans/DIAGRAM_COLOURS_PLAN.harness/preproc-probe.js > preproc-probe-java.txt
 ```
+
+## The audit (3.30.2, 2026-09-25): what else reached the engine as captured
+
+Plan §12.4. The same pin, node 25.9.0 and the .NET 10 SDK. Each probe prints what the engine painted,
+so a row shows both the defect and the form that fixes it.
+
+- **`bar-probe.js`** replaces the bar of `bar-template.puml` (a source Kronikol's emitter wrote) with one
+  case per display line of a step bar's body: a doc string line or a table cell. `as-is` is the form
+  3.30.1 wrote, `escaped` the form 3.30.2 writes. Output: `bar-probe.txt`.
+  - As 3.30.1 wrote them, `~/.bashrc` paints `/.bashrc`, `%date()` the date and `%upper("x")` `X`,
+    `<U+0026>#39;` paints `'`, a `..sep..` line is a separator, `....` a rule and `~~w~~` a wave. A
+    table cell loses its `~` and paints the date the same way.
+  - Written as code points they all paint as captured: `<U+007E>`, `<U+0025>` before a builtin call,
+    `<U+0026><U+200B>#39;` (or `&<U+200B>#39;`), and `<U+002E>` for the first dot of a display line
+    that is a separator or a rule.
+  - `{{` alone on a display line swallowed the bar. No row here shows it: the Node paint fact
+    `CapturedTextEscapeTests.The_node_renderer_paints_a_step_bars_doc_string_and_cells_as_written`
+    found it, and a zero-width space between the braces fixes it.
+  - The last row is the render-error placeholder as 3.30.1 wrote it: the engine's error picture.
+- **`placeholder-probe.js`** renders three placeholder sources: `current` (to 3.30.1), `transparent`
+  (3.30.2: a participant drawn transparent, since `hnote across` needs a lifeline) and `over`. Output:
+  `placeholder-probe.txt` on the pin, `placeholder-probe-java.txt` on the Java engine (`SOURCES_OUT`,
+  then `ikvm-render.cs`, then `SVG_IN`). On both, `current` is the error picture, and `transparent`
+  draws the note alone.
+- **`label-probe.js`** renders request labels with internal-flow tracking off, as 3.30.1 wrote them.
+  Output: `label-probe.txt`. `/~/x` paints `//x`, `__internal__`, `--first--` and `//cdn//` are styled
+  and lose their markers, `~~b~~` is a wave, and `%date()` paints the date. `**/*.js`, `[a]`, `==x==`
+  and `..b..` paint as written in a label. The escaped labels are pinned by the Node paint fact
+  `CapturedTextEscapeTests.The_node_renderer_paints_a_request_label_as_captured`, over both tracking
+  settings.
+- **`link-fill-probe.js`** prints the fill of every painted word of an internal-flow link. Output:
+  `link-fill-probe.txt`. A code point inside the link keeps it a link (`#0000FF`), `~` and `[` `]`
+  alike. An escaped `]` beside a raw `[` (`closeOnlyCp`) unbalances the markup, and the engine draws
+  the whole `[[#iflow-… …]]` as black text: the label escapes both brackets.
+- **`redact-probe.fsx`** runs the wiki's Bearer recipe as a request mid-processor through the
+  `Kronikol.dll` named on its command line. Output: `redact-probe.txt`, on the published 3.30.0 and
+  3.30.1 packages and on this build. 3.30.1 escaped the body before the processor saw it, so a token
+  holding `~` kept `<U+007E>def<U+007E>ghi`; 3.30.0 and 3.30.2 redact it whole.
+- **`redact-headers-probe.fsx`** runs the same recipe as a post-processor and as a mid-processor on an
+  `Authorization` header carrying a 700-character token. Output: `redact-headers-probe.txt`, on 3.29.5,
+  3.30.1 and this build. No version redacts it: a header value reaches a post-processor cut into
+  80-character lines, so the recipe stops at the first cut (642 characters of 700 survive, 677 when
+  the token holds a `~`, since 3.30.1 writes it as a code point), and a mid-processor is never given the
+  headers (all 700 survive). The third row, `post, spanning`, is the post-processor recipe the wiki
+  gives from 3.30.2: it follows the value across its lines (a `<U+200B>` ends each, the header tag
+  opens the next) and through the code points, and leaves nothing of the token on any of the three
+  versions. `ExcludedHeaders` keeps a header out of the diagram, and `CaptureRedaction.Secrets()` keeps
+  it out of every file the run writes.
+
+To repeat them, from the repository root:
+
+```bash
+node plans/DIAGRAM_COLOURS_PLAN.harness/bar-probe.js > bar-probe.txt
+node plans/DIAGRAM_COLOURS_PLAN.harness/placeholder-probe.js > placeholder-probe.txt
+SOURCES_OUT=<dir> node plans/DIAGRAM_COLOURS_PLAN.harness/placeholder-probe.js
+(cd plans/DIAGRAM_COLOURS_PLAN.harness && dotnet run ikvm-render.cs -- <dir>)
+SVG_IN=<dir> node plans/DIAGRAM_COLOURS_PLAN.harness/placeholder-probe.js > placeholder-probe-java.txt
+node plans/DIAGRAM_COLOURS_PLAN.harness/label-probe.js > label-probe.txt
+node plans/DIAGRAM_COLOURS_PLAN.harness/link-fill-probe.js > link-fill-probe.txt
+dotnet fsi plans/DIAGRAM_COLOURS_PLAN.harness/redact-probe.fsx <Kronikol.dll> > redact-probe.txt
+dotnet fsi plans/DIAGRAM_COLOURS_PLAN.harness/redact-headers-probe.fsx <Kronikol.dll> > redact-headers-probe.txt
+```

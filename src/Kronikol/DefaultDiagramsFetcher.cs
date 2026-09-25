@@ -69,8 +69,14 @@ public static class DefaultDiagramsFetcher
     /// naming the failure, in place of the diagram. One broken scenario costs the reader that scenario's
     /// picture and nothing else.
     /// </summary>
+    /// <remarks>
+    /// <c>hnote across</c> spans every lifeline, so it needs one: without a participant every engine answered with
+    /// its own syntax-error picture instead of the note (from the placeholder's first release to 3.30.1). The
+    /// participant is drawn transparent, so the note is all that shows.
+    /// </remarks>
     internal static string RenderErrorPlantUml(Exception exception) =>
-        "@startuml\nhnote across <<renderError>> #ffdddd\n"
+        "@startuml\nhide footbox\nskinparam ParticipantBorderColor transparent\nskinparam ParticipantBackgroundColor transparent\n"
+        + "skinparam LifeLineBorderColor transparent\nparticipant \" \" as renderError\nhnote across <<renderError>> #ffdddd\n"
         + EscapeNoteText($"\u26a0 diagram could not be generated: {exception.GetType().Name}: {exception.Message}")
         + "\nend note\n@enduml";
 

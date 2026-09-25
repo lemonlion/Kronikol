@@ -1,0 +1,3 @@
+current      ERROR PICTURE viewBox 0 0 358 173 ["PlantUML 1.2024.6","&#160;","&lt;b&gt;This version of PlantUML is 811 days old, so you should","&lt;b&gt;consider upgrading from https://plantuml.com/download","[From string (line 2) ]","&#160;"]
+transparent  drawn viewBox 0 0 406 98 ["&#160;","&#9888; diagram could not be generated: TimeoutException: no answer"]
+over         drawn viewBox 0 0 406 98 ["Kronikol","&#9888; diagram could not be generated: TimeoutException: no answer"]

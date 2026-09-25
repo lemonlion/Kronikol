@@ -77,6 +77,17 @@ public class CapturedTextEscapeTests : IDisposable
     }
 
     /// <summary>The PlantUML Kronikol writes for a 400 whose captured body is <paramref name="body"/>.</summary>
+    [Fact]
+    public void The_render_error_placeholder_draws_its_note()
+    {
+        // With no participant for `hnote across` to span, the Java engine drew its syntax-error picture instead.
+        var svg = RenderedDiagram.Svg(DefaultDiagramsFetcher.RenderErrorPlantUml(new TimeoutException("no answer")));
+
+        var painted = PaintedLines(svg);
+        Assert.DoesNotContain(painted, l => l.StartsWith("PlantUML ", StringComparison.Ordinal) || l.Contains("Syntax Error", StringComparison.Ordinal));
+        Assert.Contains(painted, l => l.Contains("diagram could not be generated: TimeoutException: no answer", StringComparison.Ordinal));
+    }
+
     private static string DiagramFor(string body)
     {
         var logs = new[]

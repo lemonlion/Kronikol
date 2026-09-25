@@ -247,6 +247,177 @@ public class CapturedTextEscapeTests
             Assert.Contains(Collapse(line), painted);
     }
 
+    // ── A step bar's doc string and table cells (3.30.2) ────────────────────
+    // The bar is one source line, its display lines joined by a literal \n, so the preprocessor's line-start
+    // rules cannot reach it. Its own escaper already wrote `<`, `&`, a backslash and a doubled marker safely, but
+    // a literal `~`, a builtin call, a decimal reference, a `..x..` or `....` line and a `~~x~~` wave were drawn
+    // as PlantUML read them (measured: DIAGRAM_COLOURS_PLAN.harness/bar-probe.js).
+
+    [Theory]
+    [InlineData("~/.bashrc", "<U+007E>/.bashrc")]
+    [InlineData("\"~\"", "\"<U+007E>\"")]
+    [InlineData("%date() and %upper(\"x\")", "<U+0025>date() and <U+0025>upper(\"x\")")]
+    [InlineData("it&#39;s", "it<U+0026><U+200B>#39;s")]
+    [InlineData("..not a separator..", "<U+002E>.not a separator..")]
+    [InlineData("  ..x..", "  <U+002E>.x..")]
+    [InlineData("....", "<U+002E>...")]
+    [InlineData("~~wave~~", "<U+007E><U+007E>wave<U+007E><U+007E>")]
+    // Controls: what the bar already wrote, and what PlantUML leaves alone.
+    [InlineData("a &amp; b", "a <U+0026>amp; b")]
+    [InlineData("a..b", "a..b")]
+    [InlineData("50% off", "50% off")]
+    public void A_doc_string_line_is_escaped_where_plantuml_would_act_on_it(string line, string expected)
+    {
+        var bar = StepBarPlantUml.Build("Given a doc string", docString: line);
+
+        Assert.Contains(@"\n\n" + expected + @"\n", bar);
+    }
+
+    [Theory]
+    [InlineData("~/.bashrc", "<U+007E>/.bashrc")]
+    [InlineData("%date()", "<U+0025>date()")]
+    [InlineData("&#39;", "<U+0026><U+200B>#39;")]
+    [InlineData("~~w~~", "<U+007E><U+007E>w<U+007E><U+007E>")]
+    public void A_table_cell_is_escaped_where_plantuml_would_act_on_it(string cell, string expected)
+    {
+        var bar = StepBarPlantUml.Build("Given a table", [new StepBarTable(null, [["Col"], [cell]])]);
+
+        Assert.Contains("| " + expected + " |", bar);
+    }
+
+    /// <summary>A doc string holding every hazard a bar's body can meet, one per display line.</summary>
+    internal static readonly string[] StepBarHazardLines =
+    [
+        "~/.bashrc and \"~\" and ~~wave~~",
+        "%date() and %upper(\"x\") stay",
+        "it&#39;s",
+        "..not a separator..",
+        "....",
+        "--",
+        "___",
+        "= not a heading",
+        "| not | a table |",
+        "* not a bullet",
+        "# not an item",
+        "a << b >> c",
+        "{{",
+        "trailing backslash \\",
+    ];
+
+    internal static readonly string[] StepBarHazardCells = ["~/.bashrc", "%date()", "&#39;", "~~w~~"];
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void The_node_renderer_paints_a_step_bars_doc_string_and_cells_as_written()
+    {
+        Assert.SkipWhen(!NodeIsAvailable(), "Node.js not available on PATH");
+
+        var bar = StepBarPlantUml.Build("Given hazards",
+            [new StepBarTable(null, [["Col"], .. StepBarHazardCells.Select(c => new[] { c })])],
+            string.Join("\n", StepBarHazardLines));
+        var result = NodeJsPlantUmlRenderer.RenderMany([BarDiagram(bar)]).Single();
+
+        Assert.True(result.Succeeded, result.Error);
+        var painted = PaintedLines(result.Svg!);
+        Assert.DoesNotContain(painted, l => l.StartsWith("PlantUML ", StringComparison.Ordinal));
+        foreach (var line in StepBarHazardLines.Concat(StepBarHazardCells))
+            Assert.Contains(Collapse(line), painted);
+    }
+
+    // ── The request label: its path is captured text too (3.30.2) ───────────
+    // The path reaches the arrow label as captured. Inside the internal-flow link (tracking on, the default) the
+    // engine still eats a `~` before an escapable character and evaluates a builtin call; with tracking off a
+    // doubled `__`, `--` or `//` styles the text between. A `]` ended the page's link lookup early, so a path with
+    // one (a JSON:API `page[size]`) was drawn as a link that never opened.
+
+    [Theory]
+    [InlineData("/~/x", "/<U+007E>/x")]
+    [InlineData("/users/~john/files", "/users/<U+007E>john/files")]
+    [InlineData("/x/%date()", "/x/<U+0025>date()")]
+    [InlineData("/api/__internal__/x", "/api/<U+005F>_internal<U+005F>_/x")]
+    [InlineData("/posts/my--first--post", "/posts/my<U+002D>-first<U+002D>-post")]
+    [InlineData("/x?r=https://a/b&s=https://c/d", "/x?r=https:<U+002F>/a/b&s=https:<U+002F>/c/d")]
+    [InlineData("/articles?page[size]=10", "/articles?page<U+005B>size<U+005D>=10")]
+    // Controls: one marker has no partner, and a plain path is written as captured.
+    [InlineData("/one__pair", "/one__pair")]
+    [InlineData("/plain/path?a=1&b=2", "/plain/path?a=1&b=2")]
+    public void A_request_label_escapes_what_plantuml_would_act_on(string path, string expectedPath)
+    {
+        foreach (var tracking in new[] { false, true })
+        {
+            var arrow = LabelDiagram("http://example.com" + path, tracking).Split('\n')
+                .Single(l => l.Contains("GET: ", StringComparison.Ordinal)).TrimEnd('\r');
+
+            Assert.EndsWith(tracking ? $"GET: {expectedPath}]]" : $"GET: {expectedPath}", arrow);
+        }
+    }
+
+    internal static readonly string[] LabelHazardPaths =
+        ["/~/x", "/x/%date()", "/api/__internal__/x", "/posts/my--first--post", "/x?r=https://a/b&s=https://c/d", "/articles?page[size]=10"];
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void The_node_renderer_paints_a_request_label_as_captured()
+    {
+        Assert.SkipWhen(!NodeIsAvailable(), "Node.js not available on PATH");
+
+        foreach (var tracking in new[] { false, true })
+        {
+            var results = NodeJsPlantUmlRenderer.RenderMany(
+                LabelHazardPaths.Select(p => LabelDiagram("http://example.com" + p, tracking)).ToArray()).ToList();
+
+            for (var i = 0; i < LabelHazardPaths.Length; i++)
+            {
+                Assert.True(results[i].Succeeded, results[i].Error);
+                var painted = PaintedLines(results[i].Svg!);
+                Assert.DoesNotContain(painted, l => l.StartsWith("PlantUML ", StringComparison.Ordinal));
+                Assert.True(painted.Any(l => l.Contains("GET: " + LabelHazardPaths[i], StringComparison.Ordinal)),
+                    $"tracking {tracking}: {LabelHazardPaths[i]} painted as {string.Join(" | ", painted.Where(l => l.Contains("GET", StringComparison.Ordinal)))}");
+            }
+        }
+    }
+
+    [Fact]
+    public void A_capped_label_never_ends_inside_a_code_point()
+    {
+        var label = "GET: /" + string.Concat(Enumerable.Repeat("ab<U+007E>", 40));
+
+        for (var budget = 8; budget < label.Length; budget++)
+        {
+            var capped = PlantUmlStatementLimits.TruncateLabel(label, budget);
+            Assert.True(capped.Length <= budget, $"budget {budget}: {capped.Length}");
+            var kept = capped.EndsWith(PlantUmlStatementLimits.TruncationMarker, StringComparison.Ordinal) ? capped[..^1] : capped;
+            Assert.DoesNotMatch(@"<(U(\+[0-9A-F]{0,5})?)?$", kept);
+        }
+    }
+
+    /// <summary>The PlantUML Kronikol writes for a GET of <paramref name="uri"/>, as text.</summary>
+    internal static string LabelDiagram(string uri, bool internalFlowTracking)
+    {
+        var logs = new[] { Request("GET", uri, null), Response(HttpStatusCode.OK, "{}", "application/json") };
+        return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs, internalFlowTracking: internalFlowTracking)
+            .Single().PlantUmls.Single().PlainText;
+    }
+
+    /// <summary>The PlantUML Kronikol writes for a scenario whose step bar is <paramref name="bar"/>, then one call.</summary>
+    internal static string BarDiagram(string bar)
+    {
+        RequestResponseLog Marker(bool start) => new(
+            TestName: "Escapes", TestId: "escapes-1", Method: "", Content: "", Uri: new Uri("http://override.com"), Headers: [],
+            ServiceName: "", CallerName: "", Type: RequestResponseType.Request, TraceId: Guid.NewGuid(),
+            RequestResponseId: Guid.NewGuid(), TrackingIgnore: false)
+        {
+            IsOverrideStart = start, IsOverrideEnd = !start, MarkerKind = DiagramMarkerKind.Step,
+            PlantUml = start ? "\n" + bar + "\n\n\n" : null,
+        };
+        var logs = new[]
+        {
+            Marker(start: true), Marker(start: false),
+            Request("GET", "http://example.com/api/orders", null), Response(HttpStatusCode.OK, "{}", "application/json"),
+        };
+        return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.Single().PlainText;
+    }
+
     internal static string Collapse(string text) => Regex.Replace(text.Replace('\u00a0', ' ').Replace("\u200b", ""), @"\s+", " ").Trim();
 
     /// <summary>
@@ -296,7 +467,7 @@ public class CapturedTextEscapeTests
         Headers: [("Content-Type", contentType)], ServiceName: "Orders API", CallerName: "Caller", Type: RequestResponseType.Response,
         TraceId: Guid.NewGuid(), RequestResponseId: Guid.NewGuid(), TrackingIgnore: false, StatusCode: status);
 
-    private static bool NodeIsAvailable()
+    internal static bool NodeIsAvailable()
     {
         try
         {

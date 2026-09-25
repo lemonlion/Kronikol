@@ -162,6 +162,7 @@ public class DiagramFailureIsolationTests : IDisposable
     [Fact]
     public void The_placeholder_is_valid_plant_uml_that_names_the_failure()
     {
+        // What this checks is the source's shape; that an engine accepts it is the paint fact below.
         var plantUml = DefaultDiagramsFetcher.RenderErrorPlantUml(new TimeoutException("no answer"));
 
         Assert.StartsWith("@startuml", plantUml);
@@ -188,8 +189,26 @@ public class DiagramFailureIsolationTests : IDisposable
         // placeholder would then be as useless as the diagram it replaced.
         var plantUml = DefaultDiagramsFetcher.RenderErrorPlantUml(new InvalidOperationException("first\r\nsecond"));
 
-        var noteBody = plantUml.Split('\n')[2];
-        Assert.Contains("first second", noteBody);
-        Assert.Equal("end note", plantUml.Split('\n')[3]);
+        var lines = plantUml.Split('\n');
+        var opener = Array.FindIndex(lines, l => l.StartsWith("hnote across <<renderError>>", StringComparison.Ordinal));
+        Assert.Contains("first second", lines[opener + 1]);
+        Assert.Equal("end note", lines[opener + 2]);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void The_placeholder_draws_its_note_instead_of_the_engines_error_picture()
+    {
+        // `hnote across` spans every lifeline, and the placeholder declared none: every engine answered with its own
+        // syntax-error picture, which lists the source under "Syntax Error?", instead of the red note (2026-08-22 to 3.30.1).
+        Assert.SkipWhen(!Kronikol.Tests.PlantUml.CapturedTextEscapeTests.NodeIsAvailable(), "Node.js not available on PATH");
+
+        var result = Kronikol.PlantUml.NodeJsPlantUmlRenderer.RenderMany(
+            [DefaultDiagramsFetcher.RenderErrorPlantUml(new TimeoutException("no answer"))]).Single();
+
+        Assert.True(result.Succeeded, result.Error);
+        var painted = Kronikol.Tests.PlantUml.CapturedTextEscapeTests.PaintedLines(result.Svg!);
+        Assert.DoesNotContain(painted, l => l.StartsWith("PlantUML ", StringComparison.Ordinal) || l.Contains("Syntax Error", StringComparison.Ordinal));
+        Assert.Contains(painted, l => l.Contains("diagram could not be generated: TimeoutException: no answer", StringComparison.Ordinal));
     }
 }

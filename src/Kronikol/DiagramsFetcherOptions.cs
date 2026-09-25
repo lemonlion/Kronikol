@@ -9,9 +9,16 @@ public record DiagramsFetcherOptions
     public string PlantUmlServerBaseUrl { get; set; } = "https://plantuml.com/plantuml";
     public Func<string, string>? RequestPostFormattingProcessor { get; set; }
     public Func<string, string>? RequestPreFormattingProcessor { get; set; }
+    /// <summary>
+    /// Applied to a request body once it is laid out (JSON pretty-printed, a form body split into its fields one per line,
+    /// anything else as captured) and before it is escaped for PlantUML: it is given the body as captured and never the
+    /// header lines, and what it returns is escaped like the payload. See
+    /// <see cref="ReportConfigurationOptions.RequestResponseMidProcessor"/>.
+    /// </summary>
     public Func<string, string>? RequestMidFormattingProcessor { get; set; }
     public Func<string, string>? ResponsePostFormattingProcessor { get; set; }
     public Func<string, string>? ResponsePreFormattingProcessor { get; set; }
+    /// <summary>The response body's counterpart of <see cref="RequestMidFormattingProcessor"/>.</summary>
     public Func<string, string>? ResponseMidFormattingProcessor { get; set; }
     public IEnumerable<string> ExcludedHeaders { get; set; } = [];
     public bool SeparateSetup { get; set; }

@@ -446,6 +446,76 @@ public class QueryCommandTests : IDisposable
     }
 
     [Fact]
+    public void Note_prints_what_the_note_draws()
+    {
+        var note = Run("note", WriteEscapedNote(), "s0/d0/n0");
+
+        Assert.Contains("'PENDING',", note);
+        Assert.Contains("home ~/.bashrc", note);
+        Assert.Contains("expected Vec<&str>", note);
+        Assert.Contains("a value the width bound cut in two", note);
+        Assert.Contains("end notes follow", note);
+        Assert.Contains("last line", note);
+        Assert.DoesNotContain("U+", note);
+    }
+
+    [Fact]
+    public void Grep_in_notes_finds_text_the_way_the_note_draws_it()
+    {
+        var path = WriteEscapedNote();
+
+        Assert.Contains("/d0/n0", Run("grep", path, "~/.bashrc", "--in", "notes"));
+        Assert.Contains("/d0/n0", Run("grep", path, "'PENDING'", "--in", "notes"));
+        Assert.Contains("/d0/n0", Run("grep", path, "cut in two", "--in", "notes"));
+    }
+
+    [Fact]
+    public void A_number_grep_in_notes_does_not_read_the_digits_of_an_escape()
+    {
+        var path = WriteEscapedNote();
+
+        Assert.Contains("is not in", Run("grep", path, "27", "--in", "notes"));
+        Assert.Contains("is not in", Run("grep", path, "200", "--in", "notes"));
+    }
+
+    /// <summary>
+    /// A note in the shapes 3.29.6 to 3.30.1 write it: a header in the computed ink, a code point for each character
+    /// PlantUML would act on, a <c>~</c> before loader markup, a line the width bound cut (the zero-width space marks
+    /// the cut), and a captured line that only starts like the terminator. <c>query note</c> and <c>grep --in notes</c>
+    /// read the note as drawn, where 3.30.1's tool printed the escapes and matched the digits of <c>&lt;U+0027&gt;</c>.
+    /// </summary>
+    private string WriteEscapedNote() => Write("EscapedNote.json",
+        [new Feature
+        {
+            DisplayName = "Escapes",
+            Scenarios =
+            [
+                new Scenario
+                {
+                    Id = "t0", DisplayName = "An escaped note", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                    Steps = [new ScenarioStep { Keyword = "When", Text = "reading", Status = ExecutionResult.Passed }]
+                }
+            ]
+        }],
+        null,
+        [new DefaultDiagramsFetcher.DiagramAsCode("t0", "Escapes", """
+            @startuml
+            participant api
+            note over api
+            <color:#686868>[Accept=text/plain]
+
+            <U+0027>PENDING',
+            home <U+007E>/.bashrc
+            expected Vec~<&str>
+            a value the width bound cu<U+200B>
+            t in two
+            end notes follow
+            last line
+            end note
+            @enduml
+            """)]);
+
+    [Fact]
     public void Note_lists_a_diagram_and_warns_that_a_note_is_a_rendering()
     {
         Assert.Contains("notes", Run("note", Report(), "s0/d0"));

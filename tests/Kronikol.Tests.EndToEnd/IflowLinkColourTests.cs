@@ -72,11 +72,11 @@ public class IflowLinkColourTests : PlaywrightTestBase
     /// The real emitter and the real engine: a request whose label is an internal-flow link with data, and whose
     /// body has a focused field painted blue by <c>FocusEmphasis.Colored</c>.
     /// </summary>
-    private async Task OpenRealDiagram()
+    private async Task OpenRealDiagram(string path = "/api/orders")
     {
         var pairId = Guid.NewGuid();
         Kronikol.Tracking.RequestResponseLog Log(Kronikol.Tracking.RequestResponseType type, string? body) =>
-            new("t1", "t1", "POST", body, new Uri("http://localhost/api/orders"), [], "OrderService", "Caller", type,
+            new("t1", "t1", "POST", body, new Uri("http://localhost" + path), [], "OrderService", "Caller", type,
                 Guid.NewGuid(), pairId, TrackingIgnore: false,
                 StatusCode: type == Kronikol.Tracking.RequestResponseType.Response ? System.Net.HttpStatusCode.OK : null)
             { FocusFields = ["name"] };
@@ -123,6 +123,47 @@ public class IflowLinkColourTests : PlaywrightTestBase
         var alice = await PaintsOf("Alice");
         Assert.NotEmpty(alice);
         Assert.All(alice, p => Assert.StartsWith("#0000FF|", p));
+    }
+
+    [Fact]
+    public async Task A_link_whose_path_holds_a_bracket_and_a_tilde_is_drawn_as_captured_and_still_binds()
+    {
+        // A JSON:API query (`page[size]`) ended the page's reading of the link markup at its first `]`, so the link was
+        // drawn and never bound; the engine ate the `~` before `.`. The label writes both as code points (3.30.2).
+        await OpenRealDiagram("/api/articles?page[size]=10&q=a~.b");
+
+        var painted = await Page.EvaluateAsync<string>("() => Array.from(document.querySelectorAll('#d1 svg text')).map(t => t.textContent).join('')");
+        Assert.Contains("/api/articles?page[size]=10&q=a~.b", painted);
+        Assert.All(await PaintsOf("articles"), p => Assert.Equal("#000000|", p));
+
+        await Page.EvaluateAsync("() => Array.from(document.querySelectorAll('#d1 svg text')).find(t => t.textContent.includes('articles')).dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))");
+        Assert.All(await PaintsOf("articles"), p => Assert.Equal("#0000FF|underline", p));
+    }
+
+    [Fact]
+    public async Task A_component_diagrams_link_rests_black_lights_up_blue_and_opens_its_popup()
+    {
+        // The component diagram's relationship labels take the same binding (DIAGRAM_COLOURS_PLAN F12). The label is
+        // the one ComponentDiagramGenerator writes: the link, then the stats lines under it.
+        const string source = "@startuml\nrectangle \"API\" as API\ndatabase \"DB\" as DB\n"
+            + "API --> DB : [[#iflow-rel-API-DB HTTP: GET, POST]]\\nP50: 12ms | P95: 30ms | P99: 45ms\\n3 calls across 2 tests\n@enduml";
+        var scripts = Kronikol.Reports.DiagramContextMenu.GetInternalFlowConfigScript(InternalFlowHasDataBehavior.ShowLinkOnHover)
+            + "<script>window.__iflowSegments = { 'iflow-rel-API-DB': { title: 'API to DB', content: '<p>flow</p>' } };</script>"
+            + $"<style>{Kronikol.Reports.DiagramContextMenu.GetInternalFlowPopupStyles()}</style>"
+            + Kronikol.Reports.DiagramContextMenu.GetInternalFlowPopupScript();
+        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(scripts, ("d1", source))));
+        await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await Page.WaitForFunctionAsync("() => { const el = document.getElementById('d1'); return el && el.dataset.rendered === '1' && el.querySelector('svg'); }",
+            null, new() { Timeout = 60_000, PollingInterval = 200 });
+
+        Assert.All(await PaintsOf("GET"), p => Assert.Equal("#000000|", p));
+        Assert.All(await PaintsOf("P50"), p => Assert.Equal("#000000|", p));
+
+        await Page.EvaluateAsync("() => Array.from(document.querySelectorAll('#d1 svg text')).find(t => t.textContent.includes('GET')).dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))");
+        Assert.All(await PaintsOf("GET"), p => Assert.Equal("#0000FF|underline", p));
+
+        await Page.EvaluateAsync("() => Array.from(document.querySelectorAll('#d1 svg text')).find(t => t.textContent.includes('GET')).dispatchEvent(new MouseEvent('click', { bubbles: true }))");
+        await Page.Locator(".iflow-popup").First.WaitForAsync(new() { State = Microsoft.Playwright.WaitForSelectorState.Visible, Timeout = 10_000 });
     }
 
     [Fact]

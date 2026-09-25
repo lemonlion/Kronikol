@@ -1,0 +1,18 @@
+== published 3.30.0
+tilde                  redacted "echo": "Bearer ***"
+two dashes pairs       redacted "echo": "Bearer ***"
+two underscore pairs   redacted "echo": "Bearer ***"
+two slash pairs        redacted "echo": "Bearer ***"
+plain control          redacted "echo": "Bearer ***"
+== published 3.30.1
+tilde                  LEAKS    "echo": "Bearer ***<U+007E>def<U+007E>ghi"
+two dashes pairs       redacted "echo": "Bearer ***"
+two underscore pairs   redacted "echo": "Bearer ***"
+two slash pairs        redacted "echo": "Bearer ***"
+plain control          redacted "echo": "Bearer ***"
+== this build (3.30.2)
+tilde                  redacted "echo": "Bearer ***"
+two dashes pairs       redacted "echo": "Bearer ***"
+two underscore pairs   redacted "echo": "Bearer ***"
+two slash pairs        redacted "echo": "Bearer ***"
+plain control          redacted "echo": "Bearer ***"

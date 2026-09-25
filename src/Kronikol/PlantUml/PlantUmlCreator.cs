@@ -350,6 +350,10 @@ public static partial class PlantUmlCreator
                     if (graphQlLabel is not null)
                         requestLabel = $"{requestLabel}\\n({graphQlLabel})";
 
+                    // The method and path are captured text; escaped whole, after the display breaks and before the
+                    // cap, so the cap measures what is written and the link markup added below stays live.
+                    requestLabel = EscapeCapturedLabel(requestLabel);
+
                     var arrowColor = builder.GetArrowColor(trace.ServiceName, trace.DependencyCategory, trace.CallerName, trace.CallerDependencyCategory);
                     var requestPrefix = $"{callerShortName} -{arrowColor}> {serviceShortName}: ";
 
@@ -595,7 +599,7 @@ public static partial class PlantUmlCreator
     }
 
     /// <summary>A character as PlantUML's code point escape, <c>&lt;U+hhhh&gt;</c>.</summary>
-    private static string CodePoint(char c) => $"<U+{(int)c:X4}>";
+    internal static string CodePoint(char c) => $"<U+{(int)c:X4}>";
 
     /// <summary>A zero-width space, which draws as nothing and which every reader of note text drops.</summary>
     private const string ZeroWidthSpace = "<U+200B>";
@@ -670,7 +674,7 @@ public static partial class PlantUmlCreator
     /// preprocessor evaluates wherever it sits in a line. An unknown name is left as written by the engine,
     /// so escaping every one costs nothing and does not depend on which builtins an engine version has.
     /// </summary>
-    private static bool IsBuiltinCall(ReadOnlySpan<char> text, int at)
+    internal static bool IsBuiltinCall(ReadOnlySpan<char> text, int at)
     {
         var j = at + 1;
         if (j >= text.Length || !(char.IsAsciiLetter(text[j]) || text[j] == '_')) return false;
@@ -679,7 +683,7 @@ public static partial class PlantUmlCreator
     }
 
     /// <summary>Whether the <c>&amp;</c> at <paramref name="at"/> opens a decimal character reference, which creole decodes.</summary>
-    private static bool IsDecimalCharacterReference(ReadOnlySpan<char> text, int at)
+    internal static bool IsDecimalCharacterReference(ReadOnlySpan<char> text, int at)
     {
         var j = at + 1;
         if (j >= text.Length || text[j] != '#') return false;
@@ -835,6 +839,55 @@ public static partial class PlantUmlCreator
             sb?.Append(text[i]);
         }
         return sb?.ToString() ?? text;
+    }
+
+    /// <summary>
+    /// Captured text on a message arrow: a request's method and path, which reach the label as captured (3.30.2).
+    /// The label sits mid-line, so the preprocessor's line-start rules cannot reach it, but the rest of what
+    /// <see cref="EscapeCreoleMarkup"/> handles can: creole takes a literal <c>~</c> as its escape (inside the
+    /// internal-flow link too, so <c>/~/x</c> was drawn <c>//x</c>), the preprocessor evaluates a builtin call such
+    /// as <c>%date()</c>, a <c>&lt;</c> can open a tag or a bundle load, a decimal reference is decoded, and a doubled
+    /// <c>__</c>, <c>--</c>, <c>//</c>, <c>**</c>, <c>""</c> or <c>[[…]]</c> styles or links the text between when no
+    /// internal-flow link wraps the label. Each is written as its code point, which paints the character. So is every
+    /// <c>]</c>: the page reads a link's text up to its first <c>]</c>, so a path such as <c>?page[size]=10</c> drew a
+    /// link that never opened. A label ending in a backslash would be joined to the next line by the Java engine.
+    /// </summary>
+    internal static string EscapeCapturedLabel(string label)
+    {
+        if (string.IsNullOrEmpty(label)) return label;
+
+        var line = label.AsSpan();
+        Span<bool> live = stackalloc bool[CreolePairChars.Length];
+        for (var k = 0; k < CreolePairChars.Length; k++)
+        {
+            live[k] = CreolePairChars[k] == '['
+                ? Occurrences(line, '[') >= 1 && line.IndexOf("]]".AsSpan()) >= 0
+                : Occurrences(line, CreolePairChars[k]) >= 2;
+        }
+
+        var trailingBackslash = OddTrailingBackslash(line);
+        var sb = new StringBuilder(label.Length + 16);
+        for (var i = 0; i < line.Length; i++)
+        {
+            var c = line[i];
+            var pairIndex = CreolePairChars.IndexOf(c);
+            if (c != '[' && pairIndex >= 0 && live[pairIndex] && i + 1 < line.Length && line[i + 1] == c)
+            {
+                sb.Append(CodePoint(c)).Append(c);
+                i++;
+                continue;
+            }
+
+            // Both brackets, always: one left raw beside an escaped partner unbalances the link markup, and the
+            // engine then draws the whole `[[#iflow-… …]]` as black text (measured).
+            if (c is '~' or '<' or '[' or ']' || i == trailingBackslash || (c == '%' && IsBuiltinCall(line, i)))
+                sb.Append(CodePoint(c));
+            else if (c == '&' && IsDecimalCharacterReference(line, i))
+                sb.Append('&').Append(ZeroWidthSpace);
+            else
+                sb.Append(c);
+        }
+        return sb.ToString();
     }
 
     /// <summary><c>&lt;&amp;</c> is an OpenIconic icon, <c>&lt;:</c> an emoji, <c>&lt;$</c> a sprite.</summary>
@@ -1233,7 +1286,7 @@ public static partial class PlantUmlCreator
         parsedContent ??= TryFormatAsJson(content);
         parsedContent ??= TryFormatTruncatedJson(content);
 
-        var payloadIsPreEscaped = false;
+        var isFormBody = false;
         if (parsedContent is null)
         {
             // Only a body that really is form-url-encoded gets the `&` dividers and the chunking
@@ -1246,21 +1299,25 @@ public static partial class PlantUmlCreator
                 parsedContent = content ?? string.Empty;
             else
             {
-                // Escapes each piece itself: the `&` divider it weaves in is Kronikol markup.
-                parsedContent = FormatFormUrlEncodedContent(content, escapePayload);
-                payloadIsPreEscaped = true;
+                // One field per line, whole; the chunks, the escapes and the `&` dividers come after the processor.
+                parsedContent = FormFieldLines(content);
+                isFormBody = true;
             }
         }
 
         var formattedContent = parsedContent!;
 
-        // Before the processors: a payload rewrite sees the bytes as captured, and markup a processor
-        // deliberately injects still reaches PlantUML.
-        if (escapePayload && !payloadIsPreEscaped)
-            formattedContent = EscapeCreoleMarkup(formattedContent);
-
+        // The processor sees the payload as captured, so a redaction regex matches a whole value, and what it
+        // returns is escaped like the payload (3.30.2). It ran after the escaper until then: 3.30.1 writes a tilde
+        // as <U+007E>, and the documented Bearer recipe stopped at a token's first tilde, leaving the rest drawn.
         if (midFormattingProcessor is not null)
             formattedContent = midFormattingProcessor(formattedContent);
+
+        if (isFormBody)
+            // Escapes each piece itself: the `&` divider it weaves in is Kronikol markup.
+            formattedContent = FormatFormFieldLines(formattedContent, escapePayload);
+        else if (escapePayload)
+            formattedContent = EscapeCreoleMarkup(formattedContent);
 
         // Whatever the formatter produced, no line may carry a whitespace-free run PlantUML cannot wrap:
         // `skinparam wrapWidth` breaks at spaces only, so a 65 KB minified payload on one line is a
@@ -1560,16 +1617,26 @@ public static partial class PlantUmlCreator
         && content.Contains('=')
         && content.AsSpan().IndexOfAny(FormUrlEncodedDisqualifiers) < 0;
 
-    internal static string FormatFormUrlEncodedContent(string? content, bool escape = true)
+    internal static string FormatFormUrlEncodedContent(string? content, bool escape = true) =>
+        content is null ? string.Empty : FormatFormFieldLines(FormFieldLines(content), escape);
+
+    /// <summary>A form body's fields, one per line, as captured: what a mid-formatting processor is given.</summary>
+    private static string FormFieldLines(string content) => content.Replace('&', '\n');
+
+    /// <summary>
+    /// A form body's fields, one per line, as the note draws them: each cut into chunks a note can wrap, escaped
+    /// chunk by chunk, and followed by the faint <c>&amp;</c> divider.
+    /// </summary>
+    private static string FormatFormFieldLines(string fields, bool escape)
     {
         const string divider = "<font color=\"lightgray\">&";
-        return content?
-            .Split("&")
+        return fields
+            .Split('\n')
             .SelectMany(x =>
             {
                 // Escape per chunk, after the split: a `~` and the character it protects must not land
                 // either side of a chunk boundary.
-                var chunks = x.ChunksUpTo(MaxNoteChunkChars).Select(c => escape ? EscapeCreoleMarkup(c) : c).ToArray();
+                var chunks = x.TrimEnd('\r').ChunksUpTo(MaxNoteChunkChars).Select(c => escape ? EscapeCreoleMarkup(c) : c).ToArray();
                 if (chunks.Length == 0)
                     return chunks;
                 // Only the chunking INSIDE one field is marked. The `&` divider is a deliberate,

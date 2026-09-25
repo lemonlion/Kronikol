@@ -778,12 +778,6 @@ public static class ReportGenerator
     }
 
     /// <summary>
-    /// Records how many step and assertion labels still do not read as sentences after
-    /// <see cref="StepText"/> ran — the quoted literals the rule deliberately leaves alone, and anything a
-    /// producer slipped past it — with the first few as examples, so the gap is visible in
-    /// <c>kronikol ingest</c>'s output and on a dashboard instead of only in the rendered HTML.
-    /// </summary>
-    /// <summary>
     /// Records an <see cref="DiagnosticKind.OptionNotApplied"/> for each option the run's rendering mode ignores:
     /// a PlantUML theme under <see cref="PlantUmlRendering.BrowserJs"/> or <see cref="PlantUmlRendering.NodeJs"/>,
     /// which load the engine without its theme bundle. Called after the zero-scenario guard, so a discovery pass
@@ -815,6 +809,12 @@ public static class ReportGenerator
         Console.WriteLine("⚠ WARNING: " + message);
     }
 
+    /// <summary>
+    /// Records how many step and assertion labels still do not read as sentences after
+    /// <see cref="StepText"/> ran — the quoted literals the rule deliberately leaves alone, and anything a
+    /// producer slipped past it — with the first few as examples, so the gap is visible in
+    /// <c>kronikol ingest</c>'s output and on a dashboard instead of only in the rendered HTML.
+    /// </summary>
     private static void ReportLowercaseSteps(Feature[] features)
     {
         if (ReportDiagnosticsScope.Current is null)

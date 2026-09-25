@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.RegularExpressions;
+using Kronikol.PlantUml;
 using System.Text.Json;
 
 namespace Kronikol.Tool.Query;
@@ -18,7 +20,7 @@ internal sealed class ReportChangedException(string path)
 /// by seeking to the byte range recorded for them. Nothing here is called unless a command was explicitly
 /// asked for a payload.
 /// </summary>
-internal static class PayloadReader
+internal static partial class PayloadReader
 {
     public static string? Read(ReportIndex index, Slice slice)
     {
@@ -228,7 +230,7 @@ internal static class PayloadReader
                 {
                     var colon = trimmed.IndexOf(" : ", StringComparison.Ordinal);
                     if (colon >= 0)
-                        notes.Add((notes.Count, trimmed[(colon + 3)..].Trim()));
+                        notes.Add((notes.Count, NoteSourceText.Decode(trimmed[(colon + 3)..].Trim())));
                     continue;
                 }
 
@@ -239,9 +241,12 @@ internal static class PayloadReader
 
             if (inNote)
             {
-                if (trimmed.StartsWith("end note", StringComparison.Ordinal))
+                // Only a whole line closes the note, as in the engine: a captured "end notes follow" is text.
+                if (NoteTerminator().IsMatch(line))
                 {
-                    notes.Add((notes.Count, current.ToString().TrimEnd()));
+                    // The note as it is drawn: 3.30.1 writes what PlantUML would act on as code points, and a line
+                    // the width bound cut is joined again, so a search finds what the reader saw.
+                    notes.Add((notes.Count, NoteSourceText.Decode(current.ToString().TrimEnd())));
                     inNote = false;
                     continue;
                 }
@@ -251,6 +256,10 @@ internal static class PayloadReader
 
         return notes;
     }
+
+    /// <summary>A line the engine reads as the end of a block note, in every spelling it accepts.</summary>
+    [GeneratedRegex(@"^\s*end\s*[rh]?note\s*$", RegexOptions.IgnoreCase)]
+    private static partial Regex NoteTerminator();
 
     /// <summary>
     /// A note directive line: <c>note</c>/<c>hnote</c>/<c>rnote</c> followed by a space or an inline

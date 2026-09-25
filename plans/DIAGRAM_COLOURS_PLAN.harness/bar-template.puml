@@ -1,0 +1,37 @@
+@startuml
+!pragma teoz true
+
+<style>
+ .stepBody {
+     BackgroundColor black
+     FontColor white
+     LineColor white
+ }
+</style>
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+entity "Orders API" as ordersAPI
+
+
+hnote across <<stepDelimiter>><<stepBody>>: Given a doc string\n\nline one\ntilde ~/.bashrc | ref <U+0026>#39; | date %date() | wave ~~w~~ | sep ..s.. | pct %upper("x")\n....\n..sep..\n-<U+200B>-\n~~wave~~ tail\n
+
+
+caller -[#438DD5]> ordersAPI: [[#iflow-fe119dff-8a8c-45c1-b77f-99291e2721dc GET: /plain]]
+note left
+<color:#686868>[Content-Type=application/json]
+
+{
+  "a": 1
+}
+end note
+ordersAPI -[#438DD5]-> caller: OK
+note right
+<color:#686868>[Content-Type=application/json]
+
+{
+  "ok": true
+}
+end note
+@enduml

@@ -17,9 +17,9 @@ public record ComponentDiagramOptions
     public string Title { get; set; } = "Component Diagram";
 
     /// <summary>
-    /// PlantUML theme name written as <c>!theme &lt;name&gt;</c> into the component diagram's source, after the
-    /// generator's own skinparam palette, so where it applies it overrides the dependency-type colours. Applied
-    /// under <see cref="PlantUmlRendering.Server"/> and <see cref="PlantUmlRendering.Local"/>. <b>No effect under
+    /// PlantUML theme name written as <c>!theme &lt;name&gt;</c> into the component diagram's source. Applied under
+    /// <see cref="PlantUmlRendering.Server"/> and <see cref="PlantUmlRendering.Local"/>, where the diagram is drawn with
+    /// the C4 stdlib and the directive follows its <c>!include</c>, unvalidated against it. <b>No effect under
     /// <see cref="PlantUmlRendering.BrowserJs"/> (the default) and <see cref="PlantUmlRendering.NodeJs"/></b>: the
     /// diagram is drawn unthemed, and the run records a <see cref="Reports.DiagnosticKind.OptionNotApplied"/> entry.
     /// </summary>

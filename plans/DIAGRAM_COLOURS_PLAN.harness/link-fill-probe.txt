@@ -1,0 +1,6 @@
+plain      #0000FF:GET: | #0000FF:  | #0000FF:/x
+tildeCp    #0000FF:GET: | #0000FF:  | #0000FF:/~/x
+bracketCp  #0000FF:GET: | #0000FF:  | #0000FF:/p?s[z]=1
+closeOnlyCp #000000:[[#iflow-1 | #000000:  | #000000:GET: | #000000:  | #000000:/p?s[z]=1]]
+amp        #0000FF:GET: | #0000FF:  | #0000FF:/p?a=1&amp;b=2
+full       #0000FF:POST: | #0000FF:  | #0000FF:/api/articles?page[size]=10&amp;q=a~.b

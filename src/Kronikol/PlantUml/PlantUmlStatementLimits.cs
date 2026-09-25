@@ -139,6 +139,15 @@ internal static class PlantUmlStatementLimits
 
         var cut = Math.Max(0, budget - TruncationMarker.Length);
 
+        // Never inside a code point escape, `<U+hhhh>` (at most ten characters): half of one paints as text.
+        for (var p = cut - 1; p >= 0 && p >= cut - 10; p--)
+        {
+            if (label[p] == '>') break;
+            if (label[p] != '<') continue;
+            if (label.AsSpan(p).StartsWith("<U+", StringComparison.Ordinal)) cut = p;
+            break;
+        }
+
         // A `\` immediately before the cut belongs to a two-character escape whose partner is gone.
         var trailingSlashes = 0;
         while (cut - trailingSlashes > 0 && label[cut - trailingSlashes - 1] == '\\')

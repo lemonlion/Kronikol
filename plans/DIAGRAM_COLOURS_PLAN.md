@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status: executed** (green-lit
 2026-09-25), in two releases: 3.29.6 (S3a, S4, S5 and F26) and 3.30.0 (S1, S2 and S3b). The escapes it
-measured and deferred followed as 3.30.1. §12 is the execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
+measured and deferred followed as 3.30.1, and an audit of all three as 3.30.2 (§12.4). §12 is the execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
 `ROADMAP.md` item 1.6, written as its own plan. §10 is the assumption ledger: what was **RUN** against
 the pinned engine on 2026-09-22, what was only **READ**, and what is still open.
 
@@ -891,7 +891,7 @@ Seen while measuring, with the number that makes each a decision rather than an 
 | `FocusDeEmphasis.LightGray` (the **default**) paints non-focused fields `<color:lightgray>` = `#D3D3D3`: **1.47 : 1** on the default note, 1.21 on the event note | R2, R4 | It is an opt-in feature (focus fields per trace) whose option is named for the colour it paints, and a reader is meant to skip those fields. Changing it is a design change to a documented default, not a contrast fix | Q7 for the owner; the natural home is the toolbar plan's token layer (11.2) or 6.1's palette, where "de-emphasised" gets a value that still reads |
 | The `&` divider in form bodies, `<font color="lightgray">` (`PlantUmlCreator.cs:1254`) | 1.47 | A glyph between fields, not text to read | none |
 | The step bar `#black:<color:white>` and the setup partition `#F6F6F6` assume a light diagram | audit | Theme-dependent | 6.1 (`THEME_PLAN` §2.6) |
-| Component generator writes `!theme` after its palette; `ComponentDiagramDiffer` never writes it | audit; R6 | Only observable where a theme applies (`Server`, `Local`) | 6.1 phase 5 |
+| Component generator writes `!theme` after the C4 `!include` under `Server` and `Local`, and its own palette only under the JS engines, where no theme applies (this row said "after its palette" until the 3.30.2 audit); `ComponentDiagramDiffer` never writes it | audit; R6 | Only observable where a theme applies (`Server`, `Local`) | 6.1 phase 5 |
 | Anchor-path hover colour is a CSS literal `#0000EE` (`internal-flow-popup-styles.css:151-152`) | READ | Java-rendered SVG only; theme-dependent | 6.1 (`THEME_PLAN` §2.7) |
 | The detection literal `#0000ff` (`:1063`) | R3 | Needs a palette to replace it with data | 6.1 (`THEME_PLAN` §2.7) |
 | Link and focus colour are the same `#0000FF`, so the script cannot tell them apart (§4.2's limit) | R2 | `skinparam hyperlinkColor` would separate them and moves bytes for a second reason in one patch | Q6, decide with 6.1 |
@@ -1744,3 +1744,106 @@ token instead, every token sits on the note fill.
   6 min 30 s, and again in 6 min 48 s. The first full run failed one `NoteYamlInternalsTests` row, which
   pinned 3.30.0's rule for a payload's own `~<&str>`. That row was changed and the two parity facts added
   before these two runs.
+
+**Docs.** Wiki `27c8fdd`: `Content-Formatting` (the escapes, and copy, the YAML view and search reading them
+back), `PlantUML-Browser-Rendering` (the YAML view's tilde caveat is for reports before 3.30.1),
+`Step-Tracking` (a builtin call in step, test and assertion text), `Large-Response-and-Diagram-Handling` (the
+response split falls between lines) and `Search-Syntax` (search indexes the captured characters and keeps a
+query's tildes).
+
+**Released.** 3.30.1 is green on CI, Release, CodeQL and CI Summary Preview (`512bc85a`), and NuGet has it.
+
+### 12.4 The audit, 3.30.2 (patch)
+
+Asked for on 2026-09-25: make sure everything P3 promised is done, and done correctly. Every deliverable of
+§3 to §8 and of §12.1 to §12.3 was checked against the code, the tests, CI, NuGet, the documentation and
+the port's ledger. The number was agreed with the sessions holding P4 and P5. The work was done in its own
+worktree, from `512bc85a`, and each finding was measured before it was fixed
+(`DIAGRAM_COLOURS_PLAN.harness/README.md`, the audit section).
+
+**Checked and sound:**
+- Every fact §3.4, §4.3, §5.4, §5.6 and §5.7 list exists and ran in CI with full counts, except S2's
+  component-diagram fact (below). The twelve script sites read `NOTE_HEADER_TAG`, and S3b's matrix is
+  complete.
+- Public API: only 3.30.0 added a member (`DiagnosticKind.OptionNotApplied`). ApiCompat against the
+  published packages finds nothing added by 3.29.6 or 3.30.1, so their patch numbers are right.
+- CI, Release, CodeQL and CI Summary Preview are green on `ad289f55`, `ea486766` and `512bc85a`; NuGet has
+  all 62 packages at each version, and the plugin manifests carry them.
+- `THEME_PLAN` §7.5's corrections, the stage-0 memory correction and the status rows are in.
+- 3.30.2 itself adds no public surface: a metadata diff of its `Kronikol.dll` against 3.30.1's finds the same
+  6,473 public and protected members.
+
+**Found, and fixed in 3.30.2:**
+- **A redaction regression (3.30.1).** The body has been escaped before a mid-processor sees it since
+  3.0.47. 3.30.1's code points made that matter: the wiki's Bearer recipe stops at `<`, so a token holding
+  `~` kept its tail (`redact-probe.txt`: 3.30.0 redacts it whole, 3.30.1 leaks `<U+007E>def<U+007E>ghi`).
+  The mid-processor now runs before the escaper, and a form body reaches it one whole field per line. What
+  it returns is escaped, which is a behaviour change for a processor that returned markup.
+- **Headers were never covered by the documented recipes**, on any version: a mid-processor is not given
+  them, and a post-processor gets each value cut into 80-character lines, so 642 of a 700-character token
+  stayed as a post-processor and all 700 as a mid-processor (`redact-headers-probe.txt`). No code change:
+  `CaptureRedaction.Secrets()` and `ExcludedHeaders` exist, and the wiki now leads with them and gives a
+  post-processor regex that follows a value across its lines (0 characters left on 3.29.5, 3.30.1 and
+  3.30.2).
+- **The request label was captured text nobody escaped** (`PlantUmlCreator`, the `{method}: {path}` label).
+  With tracking off, `__x__`, `--x--` and `//x//` styled it; with tracking on, the engine ate `~` and ran
+  `%date()`, and a `]` in the path ended `extractIflowMap`'s key regex, so a JSON:API `page[size]` link was
+  drawn and never opened. `EscapeCapturedLabel` writes them as code points, both brackets always: an escaped
+  `]` beside a raw `[` made the engine draw the whole `[[#iflow-… …]]` as black text (`link-fill-probe.txt`,
+  `closeOnlyCp`). The page decodes code points in the key, and `TruncateLabel` no longer cuts inside one.
+- **Step bars** (`StepBarPlantUml`): a doc string line or a cell lost `~`, ran `%date()`, decoded `&#39;`,
+  and drew `..x..`, `....` and `~~x~~` as a separator, a rule and a wave (`bar-probe.txt`). A `{{` line
+  swallowed the bar; the Node paint fact found that one.
+- **The render-error placeholder** (3.0.45) was `hnote across` with no participant, and every engine drew
+  its syntax-error picture instead (`placeholder-probe.txt`, `placeholder-probe-java.txt`). It now declares
+  a transparent participant.
+- **The tool read note source as written:** `query note` printed tags, markers and code points; `grep --in
+  notes` missed code-pointed text; number grep matched `<U+0027>` as 27; `end notes follow` ended a note.
+  `NoteSourceText.Decode` (in `Kronikol`, visible to the tool) reads what the note draws.
+- **S2's component-diagram fact was missing** (§4.3 item 7), though 3.30.0's changelog claimed the fix for
+  sequence and component diagrams alike. `IflowLinkColourTests` has it now; it passes on 3.30.1, so it pins
+  shipped behaviour.
+- **Doc comments:** `ComponentDiagramOptions.PlantUmlTheme` described a palette that is written only where
+  no theme applies (and §6's row said the same; corrected above); the processor options now say what each
+  processor is given and whether its output is escaped; `ComponentDiagramReportGenerator` said the C4
+  flavour hangs the Node renderer, which 3.29.6 ended; `ReportLowercaseSteps` had lost its summary to the
+  method 3.30.0 inserted above it.
+- **The wiki:** `$color(gray)` in `Content-Formatting` was never emitted; `SplitLongWords()` was called built
+  in and the chained helpers were never defined; the HTML-strip recipe as a post-processor deleted header
+  tags and code points; `PlantUML-Browser-Rendering`, `Step-Tracking`, `Large-Response-and-Diagram-Handling`,
+  `Component-Diagrams` and `Diagram-Customisation` each had one claim wrong (the changelog lists them).
+  3.30.1's changelog says an assertion note's lines are escaped like a payload's; they get the preprocessor's
+  line-start escapes only, which 3.30.2's entry corrects.
+- **Small:** the template pins stood at 3.22.1 (now 3.30.1), and the shared vectors' comment named
+  Kronikol4J among their consumers (the port has no search index; the vectors are its spec).
+- **The port's ledger** (`Kronikol4J/docs/REMAINING_PARITY.md`) said the port was unaffected by four script
+  defects it still has, and that it would fail vectors it never runs. Corrected there.
+
+**Not written, with the reason:**
+- §3.4's legacy fixture for "split-note continuation". Its site, `makeNotesCollapsible`'s `sourceIndexMap`
+  (`collapsible-notes-script.js`, the `noteGroups.length < noteBlocks.length` branch), cannot be reached:
+  `buildSourceWithNoteStates` gives every note a preview or a non-breaking space, so an SVG always has as
+  many note groups as the source has blocks. A mutation that made the site ignore `gray` failed none of the
+  ten `NoteButtonIndexTests`, with `gray` variants of the header-only fixtures added; the variants were
+  removed again, since they guarded nothing. The other four behaviours have their `gray` coverage in
+  `NoteHeaderFormsTests`, over both tags.
+
+**Left to the owner:**
+- Span names and UI action labels keep creole by 3.29.6's design (§6, "Full creole neutralisation"): a
+  PostgreSQL span holding `~*` or an XPath `//a//b` in a UI action label styles its text.
+- The port's four script defects are recorded in its ledger, not fixed there.
+
+**Tests.** Each new fact was red on 3.30.1's source: in the unit project 30 of the 139 facts and rows the
+filter ran (every new one but the form-identity and header pins, which hold on either); in the IKVM project
+the placeholder fact; in the E2E project 4 of 25 (the step bar, the placeholder, the Bearer recipe and the
+bracket link; the component fact passes on either).
+
+**The suites:**
+- Core unit project: 5,755 passed, 1 skipped, 0 failed. Search engine (Jint): 212. IKVM: 52.
+- Adapters, all green: StepTracking 43; AssertionTracking 97, 111 and 125 on net8.0, net9.0 and net10.0;
+  MSTest 51; xUnit2 12; xUnit3 15; LightBDD.xUnit3 26; TUnit 18; LightBDD.TUnit 25.
+- Example.Api, all green: xUnit3 5; LightBDD.xUnit3 6; BDDfy.xUnit3 2; ReqNRoll.xUnit3 8; NUnit4 2.
+- E2E (the full project less the wiki GIF, screenshot and showcase classes): 892 passed, 0 failed, in
+  6 min 54 s, and again in 6 min 35 s.
+- Three templates (xUnit v3, TUnit, ReqNRoll on xUnit v3), copied out of the repository, build against the
+  3.30.1 packages the new pins name.

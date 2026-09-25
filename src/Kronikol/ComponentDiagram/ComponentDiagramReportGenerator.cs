@@ -40,8 +40,9 @@ public static class ComponentDiagramReportGenerator
             _ => null
         };
         var useBrowserJs = reportOptions.PlantUmlRendering == PlantUmlRendering.BrowserJs;
-        // Both JS engines (browser and Node) render plantuml.js, which has no C4 stdlib / remote includes:
-        // the C4 flavour hangs the Node renderer until its timeout. Use the plain component syntax there.
+        // Both JS engines (browser and Node) render plantuml.js, which cannot load the C4 stdlib: until 3.29.6 the
+        // include hung the render until its timeout, and since then it draws the engine's error picture. Use the
+        // plain component syntax there.
         var useJsEngine = useBrowserJs || reportOptions.PlantUmlRendering == PlantUmlRendering.NodeJs;
 
         var logsArray = logs as RequestResponseLog[] ?? logs.ToArray();

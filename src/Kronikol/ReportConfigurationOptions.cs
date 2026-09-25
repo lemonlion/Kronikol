@@ -14,10 +14,20 @@ public record ReportConfigurationOptions
     /// <summary>Base URL of the PlantUML server used for diagram rendering. Default: <c>"https://plantuml.com/plantuml"</c>.</summary>
     public string PlantUmlServerBaseUrl { get; set; } = "https://plantuml.com/plantuml";
 
-    /// <summary>Optional post-processor applied to request/response content after all other processing.</summary>
+    /// <summary>
+    /// Optional post-processor applied to each request and response note after all other processing. It is given the
+    /// note as PlantUML source, header lines included, with Kronikol's markup and escapes in place: a header value is
+    /// cut onto several lines, and a character PlantUML would act on is written as its code point, <c>&lt;U+hhhh&gt;</c>.
+    /// What it returns is drawn as written.
+    /// </summary>
     public Func<string, string>? RequestResponsePostProcessor { get; set; }
 
-    /// <summary>Optional mid-processor applied to request/response content during processing.</summary>
+    /// <summary>
+    /// Optional mid-processor applied to each request and response body once it is laid out (JSON pretty-printed, a form
+    /// body split into its fields one per line, anything else as captured) and before Kronikol escapes it for PlantUML.
+    /// It is given the body as captured, and never the header lines. What it returns is escaped like the payload, so markup in it is drawn as
+    /// text; <see cref="RequestResponsePostProcessor"/> is the place for markup.
+    /// </summary>
     public Func<string, string>? RequestResponseMidProcessor { get; set; }
 
     /// <summary>Title displayed at the top of the test run report. When set, overrides the default title derived from <see cref="ComponentDiagram.ComponentDiagramOptions.Title"/> or <see cref="FixedNameForReceivingService"/>. Default: <c>null</c> (auto-derived).</summary>

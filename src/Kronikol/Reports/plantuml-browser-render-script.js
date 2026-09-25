@@ -443,10 +443,20 @@
             var re = /\[\[#(iflow-[^\s\]]+)\s+([^\]]+)\]\]/g;
             var m;
             while ((m = re.exec(source)) !== null) {
-                var key = m[2].split('\\n').join('').replace(/\s+/g, '');
+                var key = decodeLabelCodePoints(m[2]).split('\\n').join('').replace(/\s+/g, '');
                 map[key] = m[1];
             }
             return map;
+        }
+        // A request label writes captured text PlantUML would act on as code points, a `]` among them (3.30.2), and
+        // the painted text holds the characters, so the key does too. A zero-width space is painted as one, so it
+        // stays; a code point that is no character stays as written, as the engine leaves it.
+        function decodeLabelCodePoints(text) {
+            return text.replace(/<U\+([0-9A-Fa-f]{4,6})>/g, function(m, hex) {
+                var cp = parseInt(hex, 16);
+                if ((cp >= 0xd800 && cp <= 0xdfff) || cp > 0x10ffff) return m;
+                return String.fromCodePoint(cp);
+            });
         }
 
         // --- Client-side diagram splitting ---

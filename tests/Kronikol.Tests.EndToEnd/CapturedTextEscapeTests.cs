@@ -97,6 +97,119 @@ public class CapturedTextEscapeTests : PlaywrightTestBase
             Assert.Contains(value, clipboard, StringComparison.Ordinal);
     }
 
+    // ── What else reaches the engine as captured (3.30.2) ──────────────────────────────
+
+    /// <summary>Renders <paramref name="source"/> alone in the worker and returns its painted lines (text sharing a baseline).</summary>
+    private async Task<string[]> RenderAlone(string source)
+    {
+        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(("d1", source))));
+        await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await Page.WaitForFunctionAsync("() => { const el = document.getElementById('d1'); return el && el.dataset.rendered === '1' && el.querySelector('svg'); }",
+            null, new() { Timeout = 60_000, PollingInterval = 200 });
+        return await Page.EvaluateAsync<string[]>("""
+            () => {
+                const rows = new Map();
+                for (const t of document.querySelectorAll('#d1 svg text')) {
+                    const y = Math.round(parseFloat(t.getAttribute('y')));
+                    if (!rows.has(y)) rows.set(y, []);
+                    rows.get(y).push([parseFloat(t.getAttribute('x')), t.textContent]);
+                }
+                return [...rows.keys()].sort((a, b) => a - b).map(y => rows.get(y).sort((a, b) => a[0] - b[0]).map(p => p[1]).join(' ')
+                    .replace(/\u200b/g, '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim());
+            }
+            """);
+    }
+
+    private static void AssertNoErrorPicture(string[] painted) =>
+        Assert.DoesNotContain(painted, l => l.StartsWith("PlantUML ", StringComparison.Ordinal) || l.Contains("Syntax Error", StringComparison.Ordinal));
+
+    /// <summary>A doc string holding every hazard a step bar's body can meet, one per display line.</summary>
+    private static readonly string[] StepBarLines =
+    [
+        "~/.bashrc and \"~\" and ~~wave~~",
+        "%date() and %upper(\"x\") stay",
+        "it&#39;s",
+        "..not a separator..",
+        "....",
+        "= not a heading",
+        "a << b >> c",
+        "{{",
+        "trailing backslash \\",
+    ];
+
+    private static readonly string[] StepBarCells = ["~/.bashrc", "%date()", "&#39;", "~~w~~"];
+
+    [Fact]
+    public async Task A_step_bars_doc_string_and_table_cells_are_painted_as_written()
+    {
+        // A bar's body had a lighter escaper than a payload's: the engine ate a `~`, painted the date for `%date()`, a `'`
+        // for `&#39;`, a separator for `..x..`, a rule for `....`, and `{{` alone swallowed the bar (to 3.30.1).
+        var bar = Kronikol.PlantUml.StepBarPlantUml.Build("Given hazards",
+            [new Kronikol.PlantUml.StepBarTable(null, [["Col"], .. StepBarCells.Select(c => new[] { c })])],
+            string.Join("\n", StepBarLines));
+
+        var painted = await RenderAlone(BarDiagram(bar));
+
+        AssertNoErrorPicture(painted);
+        foreach (var line in StepBarLines.Concat(StepBarCells))
+            Assert.Contains(Collapse(line), painted);
+    }
+
+    [Fact]
+    public async Task The_render_error_placeholder_draws_its_note()
+    {
+        // `hnote across` spans every lifeline and the placeholder declared none, so the worker drew its syntax-error
+        // picture, listing the placeholder's source, where the red note belonged (2026-08-22 to 3.30.1).
+        var painted = await RenderAlone(DefaultDiagramsFetcher.RenderErrorPlantUml(new TimeoutException("no answer")));
+
+        AssertNoErrorPicture(painted);
+        Assert.Contains(painted, l => l.Contains("diagram could not be generated: TimeoutException: no answer", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task The_wikis_bearer_recipe_as_a_mid_processor_paints_no_part_of_a_token_that_holds_a_tilde()
+    {
+        // 3.30.1 escaped the body before the mid-processor saw it, so the recipe stopped at the token's first `~`
+        // (written `<U+007E>`) and the rest of the token was drawn.
+        var pair = Guid.NewGuid();
+        Kronikol.Tracking.RequestResponseLog Log(Kronikol.Tracking.RequestResponseType type, string body) =>
+            new("t1", "t1", "POST", body, new Uri("http://localhost/api/echo"), [("Content-Type", "application/json")], "EchoService", "Caller",
+                type, Guid.NewGuid(), pair, TrackingIgnore: false,
+                StatusCode: type == Kronikol.Tracking.RequestResponseType.Response ? System.Net.HttpStatusCode.OK : null);
+        var source = Kronikol.PlantUml.PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
+                [Log(Kronikol.Tracking.RequestResponseType.Request, """{"echo":"Bearer abc~def~ghi"}"""),
+                 Log(Kronikol.Tracking.RequestResponseType.Response, """{"ok":true}""")],
+                requestMidFormattingProcessor: c => System.Text.RegularExpressions.Regex.Replace(c, @"Bearer [A-Za-z0-9\-._~+/]+=*", "Bearer ***"))
+            .Single().PlantUmls.Single().PlainText;
+
+        var painted = await RenderAlone(source);
+
+        AssertNoErrorPicture(painted);
+        Assert.Contains(painted, l => l.Contains("\"echo\": \"Bearer ***\"", StringComparison.Ordinal));
+        Assert.DoesNotContain(painted, l => l.Contains("def", StringComparison.Ordinal) || l.Contains("ghi", StringComparison.Ordinal));
+    }
+
+    /// <summary>The PlantUML Kronikol writes for a scenario whose step bar is <paramref name="bar"/>, then one call.</summary>
+    private static string BarDiagram(string bar)
+    {
+        Kronikol.Tracking.RequestResponseLog Marker(bool start) => new(
+            TestName: "Escapes", TestId: "escapes-1", Method: "", Content: "", Uri: new Uri("http://override.com"), Headers: [],
+            ServiceName: "", CallerName: "", Type: Kronikol.Tracking.RequestResponseType.Request, TraceId: Guid.NewGuid(),
+            RequestResponseId: Guid.NewGuid(), TrackingIgnore: false)
+        {
+            IsOverrideStart = start, IsOverrideEnd = !start, MarkerKind = Kronikol.Tracking.DiagramMarkerKind.Step,
+            PlantUml = start ? "\n" + bar + "\n\n\n" : null,
+        };
+        var pair = Guid.NewGuid();
+        Kronikol.Tracking.RequestResponseLog Call(Kronikol.Tracking.RequestResponseType type) =>
+            new("Escapes", "escapes-1", "GET", "{}", new Uri("http://example.com/api/orders"), [("Content-Type", "application/json")],
+                "Orders API", "Caller", type, Guid.NewGuid(), pair, TrackingIgnore: false,
+                StatusCode: type == Kronikol.Tracking.RequestResponseType.Response ? System.Net.HttpStatusCode.OK : null);
+        return Kronikol.PlantUml.PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
+                [Marker(start: true), Marker(start: false), Call(Kronikol.Tracking.RequestResponseType.Request), Call(Kronikol.Tracking.RequestResponseType.Response)])
+            .Single().PlantUmls.Single().PlainText;
+    }
+
     [Fact]
     public async Task A_note_split_by_the_browser_draws_every_part_when_its_text_quotes_a_diagram()
     {

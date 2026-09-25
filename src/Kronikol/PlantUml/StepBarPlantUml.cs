@@ -54,8 +54,11 @@ internal static class StepBarPlantUml
     /// <summary>The zero-width space escape that breaks a creole pair at parse level while rendering invisibly.</summary>
     private const string Zwsp = "<U+200B>";
 
-    /// <summary>Characters whose doubling creole reads as a span/link marker.</summary>
-    private const string PairChars = "*/_-\"[]";
+    /// <summary>
+    /// Characters whose doubling creole reads as a span or link marker, and <c>{</c>: a <c>{{</c> opens an embedded
+    /// diagram, which swallowed a doc-string line reading <c>{{</c> (3.30.2).
+    /// </summary>
+    private const string PairChars = "*/_-\"[]{";
 
     public static string Build(string label, IReadOnlyList<StepBarTable>? tables = null, string? docString = null)
     {
@@ -147,12 +150,6 @@ internal static class StepBarPlantUml
     }
 
     /// <summary>
-    /// One body display line (a doc-string line, a table label, a continuation of multi-line marker
-    /// text): inline rules plus the line-opening block markers — a leading <c>|</c> starts a table
-    /// row, <c>*</c> a bullet, <c>=</c> a heading, <c>#</c> a numbered item. Leading whitespace is
-    /// preserved (indented lines are never table rows, and pretty-printed payloads stay readable).
-    /// </summary>
-    /// <summary>
     /// One source line of body content, broken to <see cref="DiagramWidth.MaxNoteTextLineChars"/> and
     /// escaped <b>piece by piece</b>. The order matters: <see cref="EscapeInline"/> puts a zero-width
     /// space after every backslash, so escaping a line the wrapper had already woven line breaks into
@@ -161,6 +158,17 @@ internal static class StepBarPlantUml
     private static IEnumerable<string> EscapeWrappedBodyLine(string line) =>
         DiagramWidth.WrapLines(line, DiagramWidth.MaxNoteTextLineChars).Select(EscapeBodyLine);
 
+    /// <summary>A display line creole reads as a separator (<c>..x..</c>, <c>..</c>) or a dotted rule (<c>....</c>).</summary>
+    private static bool IsSeparatorOrRule(ReadOnlySpan<char> line) =>
+        line.StartsWith("..") && (line.Length == 2 || (line.Length >= 4 && line.EndsWith("..")));
+
+    /// <summary>
+    /// One body display line (a doc-string line, a table label, a continuation of multi-line marker
+    /// text): inline rules plus the line-opening block markers — a leading <c>|</c> starts a table
+    /// row, <c>*</c> a bullet, <c>=</c> a heading, <c>#</c> a numbered item, <c>..x..</c> a separator
+    /// and <c>....</c> a rule. Leading whitespace is preserved (indented lines are never table rows,
+    /// and pretty-printed payloads stay readable).
+    /// </summary>
     private static string EscapeBodyLine(string line)
     {
         var escaped = EscapeInline(line.Replace("\r", ""));
@@ -170,14 +178,19 @@ internal static class StepBarPlantUml
             start++;
         if (start < escaped.Length && escaped[start] is '|' or '*' or '=' or '#')
             escaped = escaped[..start] + $"<U+{(int)escaped[start]:X4}>" + escaped[(start + 1)..];
+        else if (IsSeparatorOrRule(escaped.AsSpan(start).TrimEnd()))
+            // `..x..` is a separator drawn as a line with x in it, and `....` a rule that draws nothing (3.30.2).
+            escaped = escaped[..start] + "<U+002E>" + escaped[(start + 1)..];
 
         return escaped;
     }
 
     /// <summary>
     /// The context-free rules: <c>&lt;</c> and <c>&amp;</c> become their late-substituted escapes (tags
-    /// and HTML entities are live in bar text), a zero-width space breaks every doubled pair marker,
-    /// and one follows every backslash (so a literal <c>\n</c> in the data cannot become a line break).
+    /// and HTML entities are live in bar text, and a zero-width space follows an <c>&amp;</c> that opens a
+    /// decimal reference, which the engine would still decode), a <c>~</c> and a builtin call's <c>%</c>
+    /// become theirs too, a zero-width space breaks every doubled pair marker, and one follows every
+    /// backslash (so a literal <c>\n</c> in the data cannot become a line break).
     /// </summary>
     private static string EscapeInline(string text)
     {
@@ -192,6 +205,18 @@ internal static class StepBarPlantUml
                     continue;
                 case '&':
                     sb.Append("<U+0026>");
+                    // Under the note wrap width the engine decodes code points before references, so `<U+0026>#39;`
+                    // would still paint `'`: a zero-width space after it breaks the reference (3.30.2).
+                    if (PlantUmlCreator.IsDecimalCharacterReference(text, i)) sb.Append(Zwsp);
+                    continue;
+                case '~':
+                    // Creole's own escape: before / < . " ] # * _ - [ it paints only what follows, and a `~~x~~`
+                    // pair is a wave. As its code point a tilde paints and escapes nothing (3.30.2).
+                    sb.Append("<U+007E>");
+                    continue;
+                case '%' when PlantUmlCreator.IsBuiltinCall(text, i):
+                    // The preprocessor evaluates a builtin call wherever it sits: `%date()` painted the date (3.30.2).
+                    sb.Append("<U+0025>");
                     continue;
                 case '\\':
                     sb.Append(c).Append(Zwsp);

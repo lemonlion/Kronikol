@@ -4,6 +4,102 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.30.2] - 2026-09-26
+
+**Patch - an audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3, releases 3.29.6 to 3.30.1) and what it
+found.** Every change is a fix, so the patch part moved. One fix undoes a 3.30.1 regression that let part of
+a token through a documented redaction recipe; the rest reach back further. Nothing new is public.
+Template pins move to 3.30.1.
+
+### Fixed
+
+- **A mid-processor saw the escaped body, so the wiki's Bearer recipe missed part of a token (3.30.1).** Since
+  3.0.47 a body has been escaped for PlantUML before `RequestResponseMidProcessor`,
+  `RequestMidFormattingProcessor` or `ResponseMidFormattingProcessor` saw it. That mattered from 3.30.1, which
+  writes a literal `~` as `<U+007E>`: the recipe's character class stops at `<`, so a token holding a `~` kept
+  everything after it in the diagram, and `Bearer abc~def~ghi` was drawn `Bearer ***~def~ghi`. 3.30.0 redacted
+  it whole. A mid-processor now runs after the body is formatted and before it is escaped, as its
+  documentation says: it sees the payload as captured, and a recipe matches the whole value. A form body
+  reaches it one field per line and whole. Until now it got the fields already cut into 80-character pieces,
+  so a recipe redacted a long field only up to its first cut. **Behaviour change:** what a mid-processor
+  returns is escaped like the payload, so markup it returns is drawn as text. Markup belongs in a
+  post-processor, which sees the finished PlantUML.
+- **A request's path reached its arrow label as written.** The engine ate a `~` before `/`, `.` and the other
+  characters it escapes, and painted the date for `%date()`. With internal-flow tracking off, a doubled `__`,
+  `--` or `//` styled the text between (`/api/__internal__/x` was drawn `/api/internal/x`, underlined). With
+  tracking on, a `]` in the path, as in a JSON:API `page[size]`, ended the page's reading of the link markup,
+  so the link was drawn and never opened. The label now writes each of these as a code point, both brackets
+  included (an escaped `]` beside a raw `[` made the engine draw the whole link markup as black text,
+  measured), and the page decodes them when it reads a link. A label capped at the statement budget is never
+  cut inside a code point.
+- **A step bar's doc string and table cells were read as markup.** A `~` vanished, `%date()` painted the
+  date, `&#39;` painted `'`, a `..x..` line was a separator, `....` a rule, `~~x~~` a wave, and a line that
+  is only `{{` swallowed the bar. They are drawn as written now.
+- **The render-error placeholder drew the engine's error picture instead of its note (since 3.0.45).**
+  The placeholder a diagram gets when it cannot be generated put an `hnote across` in a diagram with no
+  participant. Every engine rejected it and drew its syntax-error picture, which lists the placeholder's
+  own source, in place of the red note naming the failure. It now declares a participant drawn
+  transparent, so the note is all that shows.
+- **`kronikol query note`, `grep --in notes` and number grep read a note's source as written.** `query
+  note` printed the header tags, the wrap markers and the code points. `grep --in notes` missed any text
+  3.30.1 writes as a code point (`~/.bashrc`, `'PENDING'`), and number grep read the digits of an escape,
+  so `<U+0027>` matched 27 and `<U+200B>` 200. A captured line `end notes follow` ended a note early. The
+  three commands now read the text the note draws.
+- **Doc comments:** `ComponentDiagramOptions.PlantUmlTheme` described a palette the component diagram
+  never used (under `Server` and `Local` the diagram includes the C4 library, and a theme follows it). The
+  processor options on `ReportConfigurationOptions` and `DiagramsFetcherOptions` say what each processor is
+  given and whether its output is escaped.
+
+### Documentation
+
+- **No documented recipe kept a header's secret out of the diagram, on any version.** A mid-processor is never
+  given the headers, and a header value reaches a post-processor cut into 80-character lines, so the wiki's
+  Bearer recipe left 642 of a 700-character token's characters in the diagram as a post-processor, and all 700
+  as a mid-processor (`plans/DIAGRAM_COLOURS_PLAN.harness/redact-headers-probe.txt`). The wiki now says to use
+  `ExcludedHeaders`, which keeps a header out of the diagram, or `CaptureRedaction.Secrets()`, which keeps it
+  out of every file the run writes, and gives a post-processor recipe that follows a header value across its
+  lines.
+- The wiki's `Filtering-and-Redacting-Diagram-Content` called `SplitLongWords()` built in; it is a helper of
+  your own, like the others its recipes chain, and the page says so. Its HTML-strip recipe moves to a
+  mid-processor: as a post-processor it deleted the header tags the report's scripts look for and the code
+  points captured characters are written as, and left the `~` escaping each `<`. `Content-Formatting` no
+  longer says a header line is written `$color(gray)`, and says a mid-processor is given the body and not the
+  headers, and that what it returns is escaped. `PlantUML-Browser-Rendering` says icons, emoji and stdlib
+  includes fail as themes do, and describes the failure block for a bundle the engine could not load.
+  `Step-Tracking` says an assertion note's lines get the preprocessor's line-start escapes and not creole's;
+  3.30.1's entry below said they are escaped like a payload's. `Large-Response-and-Diagram-Handling` says the
+  response split at generation time is skipped under `BrowserJs`, `Component-Diagrams` that a theme follows
+  the C4 include and meets no palette of Kronikol's, and `Diagram-Customisation` points at the theme plan.
+  `Querying-Reports`, `Step-Tracking` and `Content-Formatting` describe this release's fixes.
+
+### Tests
+
+- `NoteProcessorTests` (unit, new): the wiki's Bearer recipe as a mid-processor redacts a token holding `~`;
+  a mid-processor sees the body as captured, and what it returns is escaped; a form body reaches it one
+  whole field per line; a form body it leaves alone is drawn as before; it is not given the header lines.
+- `CapturedTextEscapeTests` (unit): the request label over both tracking settings, and the Node renderer
+  painting each hazardous path as captured; a step bar's doc string and cells, escaped and painted; a
+  capped label never ends inside a code point.
+- `DiagramFailureIsolationTests` (unit) and `CapturedTextEscapeTests` (IKVM): the placeholder draws its
+  note on the pinned engine and on the Java engine.
+- `QueryCommandTests`: `query note`, `grep --in notes` and number grep on a note holding a header tag, a
+  wrap marker, code points and an `end notes follow` line.
+- `CapturedTextEscapeTests` (Playwright): in the render worker a step bar paints its doc string and cells
+  as written, the placeholder draws its note, and the Bearer recipe as a mid-processor paints no part of a
+  token holding `~`.
+- `IflowLinkColourTests` (Playwright): a link whose path holds a bracket and a tilde is drawn as captured
+  and still opens; a component diagram's link rests black, lights up blue and opens its popup (the plan
+  listed this fact for 3.30.0, which shipped without it).
+- Every new fact was red on 3.30.1, apart from the control rows of the theories and three pins of behaviour
+  that did not change (the form body left alone, the header lines, and the component diagram's link).
+- `plans/DIAGRAM_COLOURS_PLAN.harness` gains the probes that measured each fix, with their outputs.
+
+### Kronikol4J
+
+- The port's ledger entries for 3.29.6 to 3.30.1 are corrected: the port still carries four script defects
+  .NET fixed in those releases, and it has no search normalizer to follow the shared vectors. This release's
+  fixes are recorded there, not mirrored.
+
 ## [3.30.1] - 2026-09-25
 
 **Patch - captured text is drawn as it was captured, whatever PlantUML would otherwise make of it (the escape
