@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.29.5] - 2026-09-25
+
+**Patch - the build restores again, and 3.29.4 reaches NuGet.** The patch part moved because nothing is
+new to call: one package reference moves up a patch version. 3.29.4 was tagged, but its release build
+could not restore, so no 3.29.4 package was published; this release carries everything listed under
+3.29.4.
+
+### Fixed
+
+- **`Kronikol.Extensions.ServiceBus` stopped restoring.** It takes `Azure.Messaging.ServiceBus` 7.x at its
+  latest, and 7.21.0 (through `Azure.Core` 1.62.0) needs
+  `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.10 or later, while the package referenced
+  10.0.9 for net8.0 and net9.0: NuGet reported a downgrade (NU1605, an error in this build), and every
+  build of the repository failed at restore. The reference is 10.0.10, as it moved to 10.0.9 for the
+  same reason before. **Behaviour change:** on net8.0 and net9.0 the package needs
+  `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.10, which the current Service Bus client
+  brings anyway. Issue #97 covers the floating client references behind this.
+
 ## [3.29.4] - 2026-09-25
 
 **Patch - the report fits its window with every section it can hold (the audit of
