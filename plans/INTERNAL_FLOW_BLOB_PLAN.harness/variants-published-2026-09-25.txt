@@ -1,0 +1,162 @@
+
+== xunit.html
+   segments 2,867; no diagram links 1,572; s1 list hidden of 20 ids; serialiser matches the block: True
+   today   file   7,999,910 (100.0%)   gzip-6  1,278,471 (100.0%)   binds the same arrows: yes
+   fix     file   4,919,416 ( 61.5%)   gzip-6  1,152,804 ( 90.2%)   binds the same arrows: yes
+   s1      file   3,138,816 ( 39.2%)   gzip-6  1,273,334 ( 99.6%)   binds the same arrows: yes
+   s1+fix  file   2,971,524 ( 37.1%)   gzip-6  1,155,194 ( 90.4%)   binds the same arrows: yes
+   q7      file   2,738,340 ( 34.2%)   gzip-6    966,793 ( 75.6%)   binds the same arrows: yes
+   q7+fix  file   2,622,384 ( 32.8%)   gzip-6    891,732 ( 69.7%)   binds the same arrows: yes
+
+== reqnroll.html
+   segments 3,407; no diagram links 2,163; s1 list hidden of 32 ids; serialiser matches the block: True
+   today   file   9,448,479 (100.0%)   gzip-6  1,373,598 (100.0%)   binds the same arrows: yes
+   fix     file   5,369,588 ( 56.8%)   gzip-6  1,208,756 ( 88.0%)   binds the same arrows: yes
+   s1      file   3,787,808 ( 40.1%)   gzip-6  1,366,984 ( 99.5%)   binds the same arrows: yes
+   s1+fix  file   3,568,476 ( 37.8%)   gzip-6  1,210,824 ( 88.1%)   binds the same arrows: yes
+   q7      file   3,395,684 ( 35.9%)   gzip-6  1,066,195 ( 77.6%)   binds the same arrows: yes
+   q7+fix  file   3,239,272 ( 34.3%)   gzip-6    962,364 ( 70.1%)   binds the same arrows: yes
+
+== lightbdd.html
+   segments 3,260; no diagram links 1,970; s1 list hidden of 25 ids; serialiser matches the block: True
+   today   file   9,305,027 (100.0%)   gzip-6  1,350,965 (100.0%)   binds the same arrows: yes
+   fix     file   5,517,877 ( 59.3%)   gzip-6  1,194,483 ( 88.4%)   binds the same arrows: yes
+   s1      file   3,871,392 ( 41.6%)   gzip-6  1,345,491 ( 99.6%)   binds the same arrows: yes
+   s1+fix  file   3,662,492 ( 39.4%)   gzip-6  1,197,220 ( 88.6%)   binds the same arrows: yes
+   q7      file   3,458,796 ( 37.2%)   gzip-6  1,030,125 ( 76.3%)   binds the same arrows: yes
+   q7+fix  file   3,314,864 ( 35.6%)   gzip-6    934,449 ( 69.2%)   binds the same arrows: yes
+
+== bddfy.html
+   segments 3,432; no diagram links 2,145; s1 list hidden of 28 ids; serialiser matches the block: True
+   today   file   9,192,063 (100.0%)   gzip-6  1,357,643 (100.0%)   binds the same arrows: yes
+   fix     file   5,278,142 ( 57.4%)   gzip-6  1,190,646 ( 87.7%)   binds the same arrows: yes
+   s1      file   3,653,473 ( 39.7%)   gzip-6  1,352,112 ( 99.6%)   binds the same arrows: yes
+   s1+fix  file   3,430,865 ( 37.3%)   gzip-6  1,192,996 ( 87.9%)   binds the same arrows: yes
+   q7      file   3,239,093 ( 35.2%)   gzip-6  1,035,575 ( 76.3%)   binds the same arrows: yes
+   q7+fix  file   3,082,717 ( 33.5%)   gzip-6    930,627 ( 68.5%)   binds the same arrows: yes
+
+== tunit.html
+   segments 1,851; no diagram links 1,035; s1 list hidden of 499 ids; serialiser matches the block: True
+   today   file   6,119,167 (100.0%)   gzip-6    970,229 (100.0%)   binds the same arrows: yes
+   fix     file   3,862,108 ( 63.1%)   gzip-6    889,939 ( 91.7%)   binds the same arrows: yes
+   s1      file   2,650,659 ( 43.3%)   gzip-6    974,470 (100.4%)   binds the same arrows: yes
+   s1+fix  file   2,543,867 ( 41.6%)   gzip-6    901,804 ( 92.9%)   binds the same arrows: yes
+   q7      file   2,391,791 ( 39.1%)   gzip-6    778,108 ( 80.2%)   binds the same arrows: yes
+   q7+fix  file   2,317,987 ( 37.9%)   gzip-6    730,938 ( 75.3%)   binds the same arrows: yes
+
+== nunit.html
+   segments 2,891; no diagram links 1,595; s1 list hidden of 19 ids; serialiser matches the block: True
+   today   file   7,976,840 (100.0%)   gzip-6  1,219,138 (100.0%)   binds the same arrows: yes
+   fix     file   4,832,043 ( 60.6%)   gzip-6  1,093,502 ( 89.7%)   binds the same arrows: yes
+   s1      file   3,047,983 ( 38.2%)   gzip-6  1,214,167 ( 99.6%)   binds the same arrows: yes
+   s1+fix  file   2,880,563 ( 36.1%)   gzip-6  1,094,886 ( 89.8%)   binds the same arrows: yes
+   q7      file   2,654,351 ( 33.3%)   gzip-6    913,089 ( 74.9%)   binds the same arrows: yes
+   q7+fix  file   2,536,539 ( 31.8%)   gzip-6    835,303 ( 68.5%)   binds the same arrows: yes
+
+== docker-xunit.html
+   segments 2,629; no diagram links 1,572; s1 list hidden of 66 ids; serialiser matches the block: True
+   today   file   8,418,024 (100.0%)   gzip-6  2,118,292 (100.0%)   binds the same arrows: yes
+   fix     file   5,533,517 ( 65.7%)   gzip-6  1,965,213 ( 92.8%)   binds the same arrows: yes
+   s1      file   4,343,827 ( 51.6%)   gzip-6  2,117,410 (100.0%)   binds the same arrows: yes
+   s1+fix  file   4,140,391 ( 49.2%)   gzip-6  1,968,706 ( 92.9%)   binds the same arrows: yes
+   q7      file   3,936,871 ( 46.8%)   gzip-6  1,807,480 ( 85.3%)   binds the same arrows: yes
+   q7+fix  file   3,815,311 ( 45.3%)   gzip-6  1,724,154 ( 81.4%)   binds the same arrows: yes
+
+== docker-reqnroll.html
+   segments 2,871; no diagram links 1,850; s1 list hidden of 77 ids; serialiser matches the block: True
+   today   file   8,639,591 (100.0%)   gzip-6  1,936,871 (100.0%)   binds the same arrows: yes
+   fix     file   5,648,704 ( 65.4%)   gzip-6  1,783,361 ( 92.1%)   binds the same arrows: yes
+   s1      file   4,629,822 ( 53.6%)   gzip-6  1,936,974 (100.0%)   binds the same arrows: yes
+   s1+fix  file   4,424,886 ( 51.2%)   gzip-6  1,787,655 ( 92.3%)   binds the same arrows: yes
+   q7      file   4,261,918 ( 49.3%)   gzip-6  1,657,208 ( 85.6%)   binds the same arrows: yes
+   q7+fix  file   4,130,698 ( 47.8%)   gzip-6  1,565,595 ( 80.8%)   binds the same arrows: yes
+
+== docker-lightbdd.html
+   segments 2,969; no diagram links 1,923; s1 list hidden of 79 ids; serialiser matches the block: True
+   today   file   9,510,558 (100.0%)   gzip-6  2,219,804 (100.0%)   binds the same arrows: yes
+   fix     file   6,226,185 ( 65.5%)   gzip-6  2,048,866 ( 92.3%)   binds the same arrows: yes
+   s1      file   5,133,408 ( 54.0%)   gzip-6  2,219,334 (100.0%)   binds the same arrows: yes
+   s1+fix  file   4,905,820 ( 51.6%)   gzip-6  2,052,854 ( 92.5%)   binds the same arrows: yes
+   q7      file   4,739,248 ( 49.8%)   gzip-6  1,919,683 ( 86.5%)   binds the same arrows: yes
+   q7+fix  file   4,596,660 ( 48.3%)   gzip-6  1,819,445 ( 82.0%)   binds the same arrows: yes
+
+== docker-bddfy.html
+   segments 3,362; no diagram links 2,299; s1 list hidden of 66 ids; serialiser matches the block: True
+   today   file  10,122,143 (100.0%)   gzip-6  2,259,309 (100.0%)   binds the same arrows: yes
+   fix     file   6,078,194 ( 60.0%)   gzip-6  2,056,480 ( 91.0%)   binds the same arrows: yes
+   s1      file   4,959,026 ( 49.0%)   gzip-6  2,256,580 ( 99.9%)   binds the same arrows: yes
+   s1+fix  file   4,688,866 ( 46.3%)   gzip-6  2,060,318 ( 91.2%)   binds the same arrows: yes
+   q7      file   4,530,882 ( 44.8%)   gzip-6  1,930,533 ( 85.4%)   binds the same arrows: yes
+   q7+fix  file   4,360,974 ( 43.1%)   gzip-6  1,813,198 ( 80.3%)   binds the same arrows: yes
+
+== docker-tunit.html
+   segments 1,559; no diagram links 968; s1 list hidden of 531 ids; serialiser matches the block: True
+   today   file   5,304,833 (100.0%)   gzip-6  1,070,786 (100.0%)   binds the same arrows: yes
+   fix     file   3,441,422 ( 64.9%)   gzip-6    967,926 ( 90.4%)   binds the same arrows: yes
+   s1      file   2,808,863 ( 52.9%)   gzip-6  1,081,404 (101.0%)   binds the same arrows: yes
+   s1+fix  file   2,672,591 ( 50.4%)   gzip-6    982,160 ( 91.7%)   binds the same arrows: yes
+   q7      file   2,556,495 ( 48.2%)   gzip-6    890,466 ( 83.2%)   binds the same arrows: yes
+   q7+fix  file   2,479,451 ( 46.7%)   gzip-6    837,115 ( 78.2%)   binds the same arrows: yes
+
+== docker-nunit.html
+   segments 2,595; no diagram links 1,534; s1 list hidden of 61 ids; serialiser matches the block: True
+   today   file   7,178,992 (100.0%)   gzip-6  1,330,332 (100.0%)   binds the same arrows: yes
+   fix     file   4,407,503 ( 61.4%)   gzip-6  1,182,086 ( 88.9%)   binds the same arrows: yes
+   s1      file   3,222,181 ( 44.9%)   gzip-6  1,329,798 (100.0%)   binds the same arrows: yes
+   s1+fix  file   3,023,605 ( 42.1%)   gzip-6  1,185,879 ( 89.1%)   binds the same arrows: yes
+   q7      file   2,822,937 ( 39.3%)   gzip-6  1,027,006 ( 77.2%)   binds the same arrows: yes
+   q7+fix  file   2,702,585 ( 37.6%)   gzip-6    943,085 ( 70.9%)   binds the same arrows: yes
+
+== docker-sut-xunit.html
+   segments 22; no diagram links 22; s1 list has of 0 ids; serialiser matches the block: True
+   today   file   1,794,343 (100.0%)   gzip-6    423,260 (100.0%)   binds the same arrows: yes
+   fix     file   1,747,333 ( 97.4%)   gzip-6    415,561 ( 98.2%)   binds the same arrows: yes
+   s1      file   1,755,423 ( 97.8%)   gzip-6    423,583 (100.1%)   binds the same arrows: yes
+   s1+fix  file   1,747,333 ( 97.4%)   gzip-6    415,561 ( 98.2%)   binds the same arrows: yes
+   q7      file   1,753,215 ( 97.7%)   gzip-6    421,305 ( 99.5%)   binds the same arrows: yes
+   q7+fix  file   1,747,333 ( 97.4%)   gzip-6    415,561 ( 98.2%)   binds the same arrows: yes
+
+== docker-sut-reqnroll.html
+   segments 36; no diagram links 36; s1 list has of 0 ids; serialiser matches the block: True
+   today   file   2,261,058 (100.0%)   gzip-6    454,344 (100.0%)   binds the same arrows: yes
+   fix     file   2,214,392 ( 97.9%)   gzip-6    449,985 ( 99.0%)   binds the same arrows: yes
+   s1      file   2,219,086 ( 98.1%)   gzip-6    453,927 ( 99.9%)   binds the same arrows: yes
+   s1+fix  file   2,214,392 ( 97.9%)   gzip-6    449,985 ( 99.0%)   binds the same arrows: yes
+   q7      file   2,217,454 ( 98.1%)   gzip-6    452,631 ( 99.6%)   binds the same arrows: yes
+   q7+fix  file   2,214,392 ( 97.9%)   gzip-6    449,985 ( 99.0%)   binds the same arrows: yes
+
+== docker-sut-lightbdd.html
+   segments 43; no diagram links 43; s1 list has of 0 ids; serialiser matches the block: True
+   today   file   2,476,763 (100.0%)   gzip-6    473,500 (100.0%)   binds the same arrows: yes
+   fix     file   2,400,362 ( 96.9%)   gzip-6    461,523 ( 97.5%)   binds the same arrows: yes
+   s1      file   2,413,672 ( 97.5%)   gzip-6    473,931 (100.1%)   binds the same arrows: yes
+   s1+fix  file   2,400,362 ( 96.9%)   gzip-6    461,523 ( 97.5%)   binds the same arrows: yes
+   q7      file   2,408,724 ( 97.3%)   gzip-6    469,165 ( 99.1%)   binds the same arrows: yes
+   q7+fix  file   2,400,362 ( 96.9%)   gzip-6    461,523 ( 97.5%)   binds the same arrows: yes
+
+== docker-sut-bddfy.html
+   segments 24; no diagram links 24; s1 list has of 0 ids; serialiser matches the block: True
+   today   file   2,103,142 (100.0%)   gzip-6    452,541 (100.0%)   binds the same arrows: yes
+   fix     file   2,050,812 ( 97.5%)   gzip-6    443,788 ( 98.1%)   binds the same arrows: yes
+   s1      file   2,060,814 ( 98.0%)   gzip-6    452,397 (100.0%)   binds the same arrows: yes
+   s1+fix  file   2,050,812 ( 97.5%)   gzip-6    443,788 ( 98.1%)   binds the same arrows: yes
+   q7      file   2,057,618 ( 97.8%)   gzip-6    450,159 ( 99.5%)   binds the same arrows: yes
+   q7+fix  file   2,050,812 ( 97.5%)   gzip-6    443,788 ( 98.1%)   binds the same arrows: yes
+
+== docker-sut-tunit.html
+   segments 60; no diagram links 50; s1 list has of 10 ids; serialiser matches the block: True
+   today   file   1,857,688 (100.0%)   gzip-6    418,420 (100.0%)   binds the same arrows: yes
+   fix     file   1,725,794 ( 92.9%)   gzip-6    400,428 ( 95.7%)   binds the same arrows: yes
+   s1      file   1,736,546 ( 93.5%)   gzip-6    418,018 ( 99.9%)   binds the same arrows: yes
+   s1+fix  file   1,714,314 ( 92.3%)   gzip-6    400,804 ( 95.8%)   binds the same arrows: yes
+   q7      file   1,730,814 ( 93.2%)   gzip-6    414,244 ( 99.0%)   binds the same arrows: yes
+   q7+fix  file   1,713,574 ( 92.2%)   gzip-6    400,311 ( 95.7%)   binds the same arrows: yes
+
+== docker-sut-nunit.html
+   segments 25; no diagram links 25; s1 list has of 0 ids; serialiser matches the block: True
+   today   file   1,776,654 (100.0%)   gzip-6    418,762 (100.0%)   binds the same arrows: yes
+   fix     file   1,726,156 ( 97.2%)   gzip-6    411,429 ( 98.2%)   binds the same arrows: yes
+   s1      file   1,733,618 ( 97.6%)   gzip-6    418,873 (100.0%)   binds the same arrows: yes
+   s1+fix  file   1,726,156 ( 97.2%)   gzip-6    411,429 ( 98.2%)   binds the same arrows: yes
+   q7      file   1,731,562 ( 97.5%)   gzip-6    416,892 ( 99.6%)   binds the same arrows: yes
+   q7+fix  file   1,726,156 ( 97.2%)   gzip-6    411,429 ( 98.2%)   binds the same arrows: yes
