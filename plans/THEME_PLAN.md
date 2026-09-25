@@ -62,8 +62,14 @@ as #2848's own `browser-test/` does), so the palette table can be validated befo
 
 - **The note derivation (§2.3) is untouched and still the heart of this plan.** Neither PR touches note
   colours; making a theme's notes Kronikol's notes is still ours to do.
-- **Kronikol renders in Web Workers, where the engine cannot fetch `themes.js`** — `TeaVmScriptLoader` has
-  no `document` to append a script tag to. #2848 anticipates exactly this: a host may register
+- **Kronikol renders in Web Workers, where the engine cannot fetch `themes.js`.** *(Corrected 2026-09-25,
+  `DIAGRAM_COLOURS_PLAN.md` F9, F11, F15, F21.)* The worker host gives the engine a mock `document` with a
+  `head`, so `TeaVmScriptLoader`'s script append succeeds, but nothing loads or answers it. From 3.0.76,
+  the pin that added `themes.js`, to 3.29.5 that was a hang: the themed render never finished, and nor did
+  any later render on the same worker. From 3.29.6 the mock head answers the append with `onerror`, and
+  the engine renders unthemed with a console warning. The engine loads OpenIconic, emoji and stdlib
+  modules by the same append, so the registration pattern below is the one any later bundle would
+  follow. #2848 anticipates exactly this: a host may register
   `globalThis.PLANTUML_THEMES` itself, and both the engine and the generated script resolve it through
   `globalThis`. Kronikol must do that (§2.1).
 - **22 of 44 themes declare no document background, in the Java build as much as the browser build.** Of
@@ -133,7 +139,8 @@ The source carries a plain `!theme <name>` line, which #2848 makes the engine ho
 Getting the theme text to the engine is the one place Kronikol cannot use the default path. #2848 serves
 bundled themes from a generated `themes.js` (326 KB, 27 KB gzipped) fetched on demand by
 `TeaVmScriptLoader` — which appends a script tag and therefore **cannot work inside a Web Worker**, which is
-where Kronikol renders every diagram. The PR provides for this: the engine consults
+where Kronikol renders every diagram. (The worker host's mock `document` accepts the append and nothing
+answers it: a hang until 3.29.6, an `onerror` and an unthemed render from 3.29.6, §0.) The PR provides for this: the engine consults
 `globalThis.PLANTUML_THEMES` before fetching.
 
 So Kronikol embeds **only the selected theme's text** in the report HTML through the existing placeholder
@@ -446,7 +453,11 @@ The Phase 2 gate (unthemed output byte-identical) is what keeps this list from g
 - **Worker registration is load-bearing and silent when it fails.** If `globalThis.PLANTUML_THEMES` is not
   registered, the engine falls back to fetching `themes.js`, which cannot succeed in a worker — and #2848's
   behaviour there is to render the diagram *unthemed* rather than fail. That is a silent regression to
-  exactly today's bug, hence the explicit no-fetch assertion in Phase 3.
+  exactly today's bug, hence the explicit no-fetch assertion in Phase 3. *(Corrected 2026-09-25.)* In the
+  worker the unthemed render was not what happened from 3.0.76 to 3.29.5: the append was never answered,
+  so the diagram never rendered, and nothing after it on the same worker did either. It holds from 3.29.6
+  only because the worker host's mock head answers the append with `onerror` (`DIAGRAM_COLOURS_PLAN.md`
+  S3a). The Phase 3 no-fetch assertion stays load-bearing.
 - **Kronikol4J divergence.** Parity tests are pinned on 3.0.43 fixtures already; this widens the gap unless
   the Java port mirrors the prefix and script changes.
 - **Legacy-literal rewrite is a data-compatibility surface.** Ingested captures may carry variants; the

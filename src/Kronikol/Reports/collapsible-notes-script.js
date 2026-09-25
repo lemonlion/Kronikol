@@ -1271,6 +1271,15 @@
     // literally (same contract as the 3.0.62 generation side). Deliberately
     // dumber than the C# escaper — this source is transient render input,
     // never read by humans.
+    // `<&` (an OpenIconic icon) and `<:` (an emoji) make the engine load a bundle the render worker
+    // cannot, and `<$` (a sprite) drops the text: escaped like a tag, the generation side's rule
+    // (PlantUmlCreator.EscapeLoaderMarkup). A `<` the text already escapes with an odd run of tildes is
+    // left alone: PlantUML reads tildes in pairs, and one more would pair with it and free the markup.
+    function isTildeEscaped(line, at) {
+        var tildes = 0;
+        while (at - tildes - 1 >= 0 && line.charAt(at - tildes - 1) === '~') tildes++;
+        return tildes % 2 === 1;
+    }
     function escapeNoteLine(line) {
         var out = '';
         var contentStarted = false;
@@ -1282,7 +1291,10 @@
                 if (!isPair && (c === '*' || c === '#' || c === '=')) out += '~';
             }
             if (isPair) { out += '~' + c + '~' + c; i++; continue; }
-            if (c === '<' && /[A-Za-z\/#]/.test(line.charAt(i + 1) || '')) out += '~';
+            if (c === '<') {
+                var next = line.charAt(i + 1) || '';
+                if (/[A-Za-z\/#]/.test(next) || (/[&:$]/.test(next) && !isTildeEscaped(line, i))) out += '~';
+            }
             out += c;
         }
         return out;
@@ -1309,7 +1321,7 @@
                     contentStarted = true;
                     continue;
                 }
-                if (n === '<' && /[A-Za-z\/#]/.test(line.charAt(i + 2) || '')) {
+                if (n === '<' && /[A-Za-z\/#&:$]/.test(line.charAt(i + 2) || '')) {
                     out += '<';
                     i += 1;
                     contentStarted = true;

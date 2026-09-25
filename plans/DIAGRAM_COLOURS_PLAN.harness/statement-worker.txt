@@ -1,0 +1,20 @@
+# DIAGRAM_COLOURS_PLAN R30 (F25), 2026-09-25: the capped message statement of payload-longpath.puml, cut to each length
+# worker: loader-probe.js SET=statement (the shipped render script and worker host, 4 workers, pinned 0e4f452, headless Chromium via Playwright 1.59.1)
+# node:   plantuml-render.js --batch on the same twelve sources (node 25.9.0; statement-node.js writes them to the OS temp directory)
+# TELEMETRY {"mode":"worker","workers":4,"workersRequested":4,"workersTarget":4,"renders":12,"cacheHits":0,"cacheEntries":5,"cacheBytes":113377,"workerMs":791,"injectMs":2.400000035762787,"errors":0,"inFlight":0,"maxInFlight":3,"engineFetchMs":98,"engineReadyAt":459.7000000476837,"fallbackReason":null}
+
+statement   link    worker       node
+1000        yes     drawn        drawn
+1200        yes     NOT drawn    drawn
+1400        yes     NOT drawn    drawn
+1500        yes     NOT drawn    drawn
+1600        yes     NOT drawn    drawn
+1700        yes     NOT drawn    drawn
+1800        yes     drawn        drawn
+1900        yes     NOT drawn    drawn
+2000        yes     NOT drawn    drawn
+1500        no      drawn        drawn
+1800        no      drawn        drawn
+2000        no      drawn        drawn
+
+# NOT drawn = the element holds: java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded

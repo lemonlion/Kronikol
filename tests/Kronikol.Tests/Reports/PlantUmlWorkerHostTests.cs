@@ -86,6 +86,76 @@ public class PlantUmlWorkerHostTests
         return Result.Value;
     }
 
+    // The engine loads its optional bundles (themes.js for `!theme`, a stdlib module for `!include <…>`,
+    // openiconic.js for `<&icon>`, emoji.js for `<:emoji:>`) by appending a <script> to document.head and
+    // waiting for onload or onerror. What the mock head does with that append, event by event.
+    private const string LoaderDriver = """
+        const vm = require('vm'), fs = require('fs');
+        const src = fs.readFileSync(process.argv[2], 'utf8');
+        const sandbox = {
+            postMessage: function () {},
+            OffscreenCanvas: function () { return { getContext: function () { return { measureText: function (t) { return { width: t.length * 7 }; } }; } }; },
+            console: console, setTimeout: setTimeout, clearTimeout: clearTimeout,
+            performance: { now: function () { return Date.now(); } },
+            location: { href: 'blob:null/0f7c2a5e' }
+        };
+        sandbox.self = sandbox;
+        vm.createContext(sandbox);
+        vm.runInContext(src, sandbox);
+        const d = sandbox.__kronikolWorkerHost.document;
+        const events = [];
+        function watch(el, name) {
+            el.onload = function () { events.push(name + ':load'); };
+            el.onerror = function (e) { events.push(name + ':error'); };
+        }
+        // What the engine does: callbacks first, then the append.
+        const bundle = d.createElement('script'); bundle.src = 'themes.js'; bundle.async = true; watch(bundle, 'script');
+        d.head.appendChild(bundle);
+        // The other order, and the other insertion call.
+        const late = d.createElement('script'); late.src = 'openiconic.js';
+        d.head.insertBefore(late, null); watch(late, 'late');
+        // Not a script: nothing loads, nothing is answered.
+        const style = d.createElement('style'); watch(style, 'style');
+        d.head.appendChild(style);
+        // A script with no handlers must not throw.
+        d.head.appendChild(d.createElement('script'));
+        const synchronous = events.slice();
+        setTimeout(function () {
+            process.stdout.write(JSON.stringify({ synchronous: synchronous, events: events }));
+        }, 50);
+        """;
+
+    private static readonly Lazy<JsonElement> LoaderResult = new(() =>
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "kronikol-worker-host-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var hostPath = Path.Combine(dir, "plantuml-worker-host.js");
+            File.WriteAllText(hostPath, DiagramContextMenu.GetPlantUmlWorkerHostScript());
+            return JsonDocument.Parse(NodeProbe.Run(LoaderDriver, hostPath)).RootElement.Clone();
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    });
+
+    [Fact]
+    public void A_script_appended_to_head_is_answered_with_onerror_on_the_next_tick()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+        var o = LoaderResult.Value;
+
+        // A Blob worker cannot load a script, and a head that stores the element and answers nothing
+        // leaves the engine waiting for ever, with every render queued behind it on the same worker
+        // (DIAGRAM_COLOURS_PLAN F9, F17). A real document answers an unresolvable URL with onerror,
+        // asynchronously, and never with onload.
+        Assert.Empty(o.GetProperty("synchronous").EnumerateArray());
+        Assert.Equal(["script:error", "late:error"],
+            o.GetProperty("events").EnumerateArray().Select(e => e.GetString()).ToArray());
+    }
+
     [Fact]
     public void Worker_host_is_an_embedded_resource_with_the_protocol_and_test_surface()
     {

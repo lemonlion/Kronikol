@@ -3913,9 +3913,72 @@ public class PlantUmlCreatorTests
     // A link needs both halves; without a closing pair the brackets are literal already.
     [InlineData("[[1,2],[3,4]]", "~[~[1,2],[3,4]]")]
     [InlineData("[[1,2],[3,4]", "[[1,2],[3,4]")]
+    // `<&` is an OpenIconic icon, `<:` an emoji, `<$` a sprite: the first two make the engine load a bundle
+    // by script tag (a renderer that cannot answer used to hang), the third drops the text.
+    [InlineData("expected Vec<&str>, found String", "expected Vec~<&str>, found String")]
+    [InlineData("launch <:rocket:>", "launch ~<:rocket:>")]
+    [InlineData("tpl <$foo> x", "tpl ~<$foo> x")]
+    // Any other `<` is plain text to PlantUML and stays as captured.
+    [InlineData("a < b", "a < b")]
+    [InlineData("x<-y", "x<-y")]
+    [InlineData("<>", "<>")]
+    [InlineData("a <= b", "a <= b")]
+    // A payload that escapes the `<` itself keeps its own escape: one more `~` would pair with it into a
+    // literal tilde and make the markup live again.
+    [InlineData("~<&str>", "~<&str>")]
+    [InlineData("~~<&str>", "~~~<&str>")]
     public void EscapeCreoleMarkup_escapes_only_what_plantuml_would_consume(string input, string expected)
     {
         Assert.Equal(expected, PlantUmlCreator.EscapeCreoleMarkup(input));
+    }
+
+    [Theory]
+    [InlineData("Given I have data [inputs: \"<$inputs>\"]", "Given I have data [inputs: \"~<$inputs>\"]")]
+    [InlineData("Vec<&str> and <:rocket:>", "Vec~<&str> and ~<:rocket:>")]
+    // Step, test and assertion text has always reached PlantUML as written: its styling stays live, and
+    // only the three prefixes that load a bundle or drop text are escaped.
+    [InlineData("<b>bold</b> and **x** and //y//", "<b>bold</b> and **x** and //y//")]
+    [InlineData("a < b and x<-y", "a < b and x<-y")]
+    [InlineData("~<&x>", "~<&x>")]
+    [InlineData("~~<&x>", "~~~<&x>")]
+    [InlineData("", "")]
+    public void EscapeLoaderMarkup_escapes_the_three_loader_prefixes_and_nothing_else(string input, string expected)
+    {
+        Assert.Equal(expected, PlantUmlCreator.EscapeLoaderMarkup(input));
+    }
+
+    [Fact]
+    public void A_captured_body_quoting_loader_markup_reaches_the_note_escaped()
+    {
+        // The measured case (DIAGRAM_COLOURS_PLAN R20, R21): a 400 whose body quotes Rust's Vec<&str> left
+        // its diagram undrawn in the browser, and every diagram after it on the same worker.
+        var logs = new[]
+        {
+            MakeRequest(method: "POST", content: """{"launch":"<:rocket:>"}"""),
+            MakeResponse(statusCode: HttpStatusCode.BadRequest, content: """{"error":"expected Vec<&str>, found String","tpl":"a <$foo> b"}"""),
+        };
+
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains("Vec~<&str>", plantUml);
+        Assert.Contains("~<:rocket:>", plantUml);
+        Assert.Contains("~<$foo>", plantUml);
+        Assert.DoesNotMatch(@"(?<!~)<[&:$]", plantUml);
+    }
+
+    [Fact]
+    public void A_ui_action_label_quoting_loader_markup_is_escaped()
+    {
+        // A UI action's arrow label is the tracker's own description of the step, often quoting a locator
+        // or the text typed into a field.
+        var action = new RequestResponseLog("Ui", "ui-1", "Fill 'Vec<&str>' into <:search:>", null,
+            new Uri("http://localhost:4000/overview"), [], "Web", "User", RequestResponseType.Request,
+            Guid.NewGuid(), Guid.NewGuid(), false, CallerDependencyCategory: Kronikol.Constants.DependencyCategories.User)
+        { IsUserAction = true };
+
+        var plantUml = GetPlantUml([action]);
+
+        Assert.Contains("Fill 'Vec~<&str>' into ~<:search:>", plantUml);
     }
 
     [Fact]

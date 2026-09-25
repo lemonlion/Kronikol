@@ -4,6 +4,59 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.29.6] - 2026-09-25
+
+**Patch - no diagram is lost to the renderer (`plans/DIAGRAM_COLOURS_PLAN.md`, stage 1 P3, its first
+release).** The patch part moved because every change is a fix: no option, type, member or parameter is
+added.
+
+### Fixed
+
+- **A diagram that needed one of the engine's bundles was never drawn, and nothing after it was either.**
+  The browser and Node renderers give the PlantUML engine a minimal page, and the engine asks that page
+  for four bundles by adding a script element: themes (`!theme`), stdlib modules (`!include <…>`),
+  OpenIconic icons (`<&name>`) and emoji (`<:name:>`). Neither page ever answered, so the render waited
+  for ever. In the browser the diagram stayed empty and the render worker holding it drew nothing else,
+  so a report whose first diagram asked for a bundle drew no diagram at all. Under `NodeJs` each such
+  diagram failed after about 20 seconds, and so did every diagram after it in the run. Both pages now
+  answer at once, the way a real page answers for a file that does not exist:
+  - a theme under `BrowserJs` (the default) or `NodeJs` is ignored with the engine's console warning, and
+    the diagram is drawn unthemed. From 3.0.76 to 3.29.5 the same setting left the report without
+    diagrams; before 3.0.76 it was ignored silently. `Server` and `Local` apply a theme as before;
+  - a stdlib `!include` shows the engine's error picture instead of hanging;
+  - an icon or emoji in a diagram's own markup (`InsertPlantUml`, or a source merged from an older
+    report) fails on its own, and the page says so and shows the diagram's PlantUML instead of a raw
+    `java.lang.RuntimeException`.
+- **Captured text that quoted PlantUML's icon, emoji or sprite syntax reached the engine as markup.** A
+  response body quoting Rust's `Vec<&str>` asked for the icon bundle, so on the default configuration its
+  diagram was never drawn (above), and a `<:name:>` asked for emoji. Payloads, step text, test names,
+  assertion text, UI action labels, internal-flow span names and the render-error placeholder now escape
+  `<&`, `<:` and `<$`, and so does the YAML view of a note, which rebuilds the note in the browser. The
+  text is drawn, copied and searched as captured. A LightBDD step with a table parameter keeps its
+  `<$name>` in the diagram's step bar, which used to read `""`. **Behaviour change:** only in diagrams
+  whose text carries one of the three.
+- **The `NodeJs` renderer's SVG was not XML.** It wrote text and attribute values unescaped. Inlined (the
+  default, since internal-flow tracking inlines `NodeJs` SVG), an XML body's tags became elements and its
+  note lines painted blank. As an image (internal-flow tracking off), a `&` in a URL or a body made the
+  whole diagram a broken image. The SVG is now escaped XML. The renderer also wrote the engine's
+  processing instruction as an HTML `<div>`, which the page read as the end of the inline SVG; the
+  instruction only repeats the diagram's source, which the report already holds, so it is left out.
+  **Behaviour change:** every `NodeJs` SVG is 11 bytes shorter, and SVG whose text or attributes carry
+  `&`, `<`, `>` or `"` is escaped.
+- **The raw PlantUML shown under a diagram's failure message read `&` sequences as the characters they
+  name.** The source was escaped for `<` only, so `&copy`, `&lt;` or `&amp;` in it was shown as `©`, `<`
+  or `&`. It is shown as written.
+- **"Copy all caller request payloads" was never offered on a report written with the default arrow
+  colours.** The menu looked for a plain `caller ->` arrow, and arrows have been coloured by default
+  (`caller -[#…]> service`) since 2026-04-22. It now reads both forms.
+- **`kronikol query` printed a LightBDD step with parameters as its bare keyword.** Such a step is
+  also written into the report cut into segments, for the HTML's highlighting, and the tool read each
+  segment's text as the step's own, so the last segment won. A step ending in a value or a table printed
+  as `AND` alone in `steps`, and `grep --in steps` could not find it. The tool reads the step's own text.
+- **`NodeJsPlantUmlRenderer.RenderMany`'s documentation said a failing diagram never affects the
+  others**, which a render that never finished contradicted. It now says why the renderer answers the
+  engine's script loads at once.
+
 ## [3.29.5] - 2026-09-25
 
 **Patch - the build restores again, and 3.29.4 reaches NuGet.** The patch part moved because nothing is

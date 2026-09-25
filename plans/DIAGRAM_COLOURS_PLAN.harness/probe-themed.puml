@@ -1,0 +1,22 @@
+@startuml
+!theme cerulean
+!pragma teoz true
+skinparam wrapWidth 300
+autonumber 1
+
+actor "Test" as test
+participant "Api" as api
+
+test -> api : [[#iflow-abc123 GET /orders]]
+note left
+<color:gray>[accept=application/json]
+<color:#686868>[content-type=application/json]
+
+{
+  <b><color:blue>"focused": 1</color></b>,
+  <color:lightgray>"other": 2</color>
+}
+see [[https://example.com docs]]
+end note
+api --> test : 200 OK
+@enduml

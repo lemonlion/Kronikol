@@ -709,6 +709,12 @@ internal static class ReportScanner
                 return;
             }
 
+            // A step with parameters is also written cut into segments for the HTML's highlighting, and each
+            // segment has a `text` of its own (null for a value or a table reference). The step's own `text`
+            // is the whole of it; read as the step's text, the last segment used to win.
+            if (_path.Contains("textSegments"))
+                return;
+
             switch (key)
             {
                 case "keyword": step.Keyword = reader.GetString(); break;

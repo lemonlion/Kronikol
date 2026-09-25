@@ -205,6 +205,72 @@ public class QueryCommandTests : IDisposable
         Assert.Contains(LongMessage, output);
     }
 
+    /// <summary>
+    /// Two LightBDD steps with parameters, written by the real writer. A step with parameters is written
+    /// twice: whole as <c>text</c>, and cut into <c>textSegments</c> so the HTML can highlight each value.
+    /// A segment holding a value or a table reference has no <c>text</c> of its own.
+    /// </summary>
+    private string SegmentedStepsReport()
+    {
+        var path = Path.Combine(_directory, "Segments.json");
+        ScenarioStep[] steps =
+        [
+            new()
+            {
+                Keyword = "GIVEN", Text = "The request body is missing eggs", Status = ExecutionResult.Passed,
+                TextSegments =
+                [
+                    new StepTextSegment { Text = "The request body is missing " },
+                    new StepTextSegment { Parameter = new InlineParameterValue("eggs", null, VerificationStatus.NotApplicable), ParameterName = "ingredient" },
+                ],
+                Parameters = [new StepParameter { Name = "ingredient", Kind = StepParameterKind.Inline, InlineValue = new InlineParameterValue("eggs", null, VerificationStatus.NotApplicable) }],
+            },
+            new()
+            {
+                Keyword = "AND", Text = "The request body is missing a specified ingredient [missing: \"<$missing>\"]", Status = ExecutionResult.Passed,
+                TextSegments =
+                [
+                    new StepTextSegment { Text = "The request body is missing a specified ingredient " },
+                    new StepTextSegment { TableReference = "missing" },
+                ],
+                Parameters =
+                [
+                    new StepParameter
+                    {
+                        Name = "missing", Kind = StepParameterKind.Tabular,
+                        TabularValue = new TabularParameterValue([new TabularColumn("Ingredient", false)],
+                            [new TabularRow(TableRowType.Matching, [new TabularCell("Milk", null, VerificationStatus.NotApplicable)])]),
+                    },
+                ],
+            },
+        ];
+        Feature[] features = [new Feature { DisplayName = "Cakes", Scenarios = [new Scenario { Id = "t0", DisplayName = "Without an ingredient", Result = ExecutionResult.Passed, Steps = steps }] }];
+        File.Move(ReportGenerator.GenerateTestRunReportData(features,
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc), new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            "SegmentsSrc_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json), path, overwrite: true);
+        return path;
+    }
+
+    [Fact]
+    public void Steps_prints_the_whole_text_of_a_step_with_parameters()
+    {
+        // Every `text` key under a step was read as the step's text, the segments' included, so the last
+        // segment won: a step ending in a value or a table printed as a bare keyword.
+        var output = Run("steps", SegmentedStepsReport(), "s0");
+
+        Assert.Contains("GIVEN The request body is missing eggs", output);
+        Assert.Contains("AND The request body is missing a specified ingredient [missing: \"<$missing>\"]", output);
+    }
+
+    [Fact]
+    public void Grep_finds_a_step_with_parameters_by_its_text()
+    {
+        var output = Run("grep", SegmentedStepsReport(), "missing a specified ingredient", "--in", "steps");
+
+        Assert.Contains("s0/1", output);
+        Assert.DoesNotContain("is not in steps", output);
+    }
+
     [Fact]
     public void Failures_cuts_a_long_message_at_both_ends_and_names_the_view_that_prints_it_whole()
     {

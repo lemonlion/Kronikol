@@ -181,7 +181,9 @@ public static class InternalFlowRenderer
 
     private static string EscapePlantUml(string text)
     {
-        return text.Replace("|", "\\|").Replace(";", "\\;");
+        // A span name quoting an OpenIconic icon, an emoji or a sprite would make the engine load a bundle
+        // the report's renderers cannot, or drop the text (PlantUmlCreator.EscapeLoaderMarkup).
+        return PlantUml.PlantUmlCreator.EscapeLoaderMarkup(text.Replace("|", "\\|").Replace(";", "\\;"));
     }
 
     /// <summary>
@@ -444,7 +446,7 @@ public static class InternalFlowRenderer
 
     private static string EscapeGantt(string text)
     {
-        return text.Replace("[", "(").Replace("]", ")");
+        return PlantUml.PlantUmlCreator.EscapeLoaderMarkup(text.Replace("[", "(").Replace("]", ")"));
     }
 
     /// <summary>

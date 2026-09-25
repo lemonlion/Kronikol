@@ -74,9 +74,12 @@ public static class DefaultDiagramsFetcher
         + EscapeNoteText($"\u26a0 diagram could not be generated: {exception.GetType().Name}: {exception.Message}")
         + "\nend note\n@enduml";
 
-    /// <summary>Keeps a note body on one PlantUML line and out of the parser's way.</summary>
+    /// <summary>
+    /// Keeps a note body on one PlantUML line and out of the parser's way. An exception message can quote
+    /// anything, including an OpenIconic icon or an emoji, which the placeholder's own renderer could not load.
+    /// </summary>
     private static string EscapeNoteText(string text) =>
-        text.Replace("\r", string.Empty).Replace("\n", " ").Trim();
+        PlantUml.PlantUmlCreator.EscapeLoaderMarkup(text.Replace("\r", string.Empty).Replace("\n", " ").Trim());
 
     /// <summary>
     /// The exception worth reporting. Diagram production fans out internally, so what surfaces is an

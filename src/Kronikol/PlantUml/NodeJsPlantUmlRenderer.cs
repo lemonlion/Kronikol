@@ -75,9 +75,13 @@ public static class NodeJsPlantUmlRenderer
     /// <summary>
     /// Renders every diagram through <em>one</em> node process (NDJSON in, NDJSON out) and returns one
     /// result per input, in input order. Node start, engine compile and warm-up are paid once per call
-    /// instead of once per diagram; a diagram the engine cannot render gets its own
-    /// <see cref="NodeRenderResult.Error"/> and never affects the others. Throws only when the process
-    /// itself cannot run (no <c>node</c> on PATH, engine download failure, a crash before any output).
+    /// instead of once per diagram; a diagram the engine refuses (a syntax error, a diagram too large to
+    /// draw, markup asking for a bundle the renderer cannot load, such as an OpenIconic icon) gets its own
+    /// <see cref="NodeRenderResult.Error"/>. The diagrams render one after another in the same process, so
+    /// a render that never finished would hold every later one until its own timeout: that is why the
+    /// renderer answers the engine's script loads with an error at once instead of waiting for them.
+    /// Throws only when the process itself cannot run (no <c>node</c> on PATH, engine download failure, a
+    /// crash before any output).
     /// </summary>
     public static IReadOnlyList<NodeRenderResult> RenderMany(IReadOnlyList<string> plantUmls)
     {

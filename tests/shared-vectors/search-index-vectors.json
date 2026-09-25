@@ -36,6 +36,11 @@
       "expected": "# heading-like payload line\n= another\n* bullet-like\n"
     },
     {
+      "name": "creole-loader-markup-escapes",
+      "input": "expected Vec~<&str> and ~<:rocket:> plus ~<$foo>",
+      "expected": "expected vec<&str> and <:rocket:> plus <$foo>\n"
+    },
+    {
       "name": "markup-tags",
       "input": "<color:gray>[Content-Type=application/json]</color> <font color=\"red\">x</font> <i>[binary content]</i> <b>bold</b>",
       "expected": "[content-type=application/json] x [binary content] bold\n"

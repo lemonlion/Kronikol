@@ -1,0 +1,10 @@
+page=candidate-noflow  name=New-noflow: GET whose request note is headers only Happy P  form=hex  ink=#686868  keys=Accept|Content-Type|X-Correlation-Id  yaml=.Y  copy=-/HDR  payload=none  yamlOn=ok  hide=none  yamlHidden=.Y  collapse=Content-Type  tip=-
+page=candidate-noflow  name=New-noflow: GET with a full-path block Happy Path 1.0s📋🔗  form=hex  ink=#686868  keys=Accept|Content-Type|Full path  yaml=.Y  copy=-/HDR  payload=none  yamlOn=ok  hide=none  yamlHidden=.Y  collapse=Content-Type  tip=-
+page=candidate-noflow  name=New-noflow: POST with headers and JSON bodies Happy Path 1  form=hex  ink=#686868  keys=Accept|Content-Type|Location|X-Correlation-Id  yaml=YY  copy=-/HDR  payload=none  yamlOn=ok  hide=none  yamlHidden=YY  collapse=Content-Type|Location  tip=-
+page=candidate-noflow  name=Old-noflow: GET whose request note is headers only Happy P  form=gray  ink=#808080  keys=Accept|Content-Type|X-Correlation-Id  yaml=.Y  copy=-/HDR  payload=none  yamlOn=ok  hide=none  yamlHidden=.Y  collapse=Content-Type  tip=-
+page=candidate-noflow  name=Old-noflow: GET with a full-path block Happy Path 1.0s📋🔗  form=gray  ink=#808080  keys=Accept|Content-Type|Full path  yaml=.Y  copy=-/HDR  payload=none  yamlOn=ok  hide=none  yamlHidden=.Y  collapse=Content-Type  tip=-
+page=candidate-noflow  name=Old-noflow: POST with headers and JSON bodies Happy Path 1  form=gray  ink=#808080  keys=Accept|Content-Type|Location|X-Correlation-Id  yaml=YY  copy=-/HDR  payload=none  yamlOn=ok  hide=none  yamlHidden=YY  collapse=Content-Type|Location  tip=-
+TWIN candidate-noflow | GET whose request note is headers only [noflow]: agree
+TWIN candidate-noflow | GET with a full-path block [noflow]: agree
+TWIN candidate-noflow | POST with headers and JSON bodies [noflow]: agree
+page errors: 0

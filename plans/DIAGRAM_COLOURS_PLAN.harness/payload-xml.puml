@@ -1,0 +1,23 @@
+@startuml
+!pragma teoz true
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+entity "Orders API" as ordersAPI
+
+caller -[#438DD5]> ordersAPI: POST: /api/orders
+note left
+<color:gray>[Content-Type=application/xml]
+
+~<order>~<sku>A1~</sku>~</order>
+end note
+ordersAPI -[#438DD5]-> caller: OK
+note right
+<color:gray>[Content-Type=application/xml]
+
+~<result>~<ok>true~</ok>~</result>
+end note
+@enduml

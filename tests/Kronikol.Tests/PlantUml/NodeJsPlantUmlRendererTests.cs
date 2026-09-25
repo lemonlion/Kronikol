@@ -171,6 +171,116 @@ public class NodeJsPlantUmlRendererTests
         Assert.Equal("hit", NodeJsPlantUmlRenderer.LastCodeCacheStatus);
     }
 
+    // ── The engine's script loader (DIAGRAM_COLOURS_PLAN S3a) ─────────────────────────────────────
+    //
+    // The engine loads four bundles by appending a <script> to document.head: themes.js (`!theme`), a
+    // stdlib module (`!include <…>`), openiconic.js (`<&icon>`) and emoji.js (`<:emoji:>`). The Node
+    // host can load none of them. Until 3.29.6 its mock head answered nothing, so each such diagram
+    // waited for the 20 s poll, and in a batch every diagram after it did too.
+
+    private static string WithoutProcessingInstructions(string svg) =>
+        System.Text.RegularExpressions.Regex.Replace(svg, @"<\?[\s\S]*?\?>", "");
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_themed_source_renders_unthemed_instead_of_timing_out()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+        NodeJsPlantUmlRenderer.Render(Seq("Warm", "Up"), PlantUmlImageFormat.Svg); // engine download, code cache
+
+        var plain = "@startuml\nAlice -> Bob : hello\n@enduml";
+        var themed = "@startuml\n!theme cerulean\nAlice -> Bob : hello\n@enduml";
+
+        var watch = Stopwatch.StartNew();
+        var results = NodeJsPlantUmlRenderer.RenderMany([themed, plain]);
+        watch.Stop();
+
+        Assert.All(results, r => Assert.True(r.Succeeded, r.Error));
+        // The theme bundle cannot load here, so the engine draws the diagram without it, exactly as the
+        // unthemed source draws.
+        Assert.Equal(WithoutProcessingInstructions(results[1].Svg!), WithoutProcessingInstructions(results[0].Svg!));
+        Assert.True(watch.ElapsedMilliseconds < 10_000, $"two diagrams took {watch.ElapsedMilliseconds} ms");
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_stdlib_include_draws_the_engines_own_picture_instead_of_timing_out()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // ComponentDiagramReportGenerator avoids the C4 flavour under the JS engines for this reason. The
+        // stdlib content is not in the engine build, so what it draws is its own error picture: the
+        // point is that it answers.
+        var watch = Stopwatch.StartNew();
+        var result = NodeJsPlantUmlRenderer.RenderMany(["@startuml\n!include <C4/C4_Context>\nPerson(u, \"User\")\n@enduml"])[0];
+        watch.Stop();
+
+        Assert.True(result.Succeeded, result.Error);
+        Assert.Contains("<svg", result.Svg);
+        Assert.True(watch.ElapsedMilliseconds < 10_000, $"the include took {watch.ElapsedMilliseconds} ms");
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_diagram_that_asks_for_a_bundle_fails_alone_and_the_batch_after_it_still_draws()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+        NodeJsPlantUmlRenderer.Render(Seq("Warm", "Up"), PlantUmlImageFormat.Svg);
+
+        // A user's own markup asking for an OpenIconic icon. Before 3.29.6 all three timed out, about 70 s.
+        var icon = "@startuml\nAlice -> Bob : <&check> done\n@enduml";
+
+        var watch = Stopwatch.StartNew();
+        var results = NodeJsPlantUmlRenderer.RenderMany([icon, Seq("Second", "Two"), Seq("Third", "Three")]);
+        watch.Stop();
+
+        Assert.False(results[0].Succeeded);
+        Assert.Contains("Failed to load openiconic.js", results[0].Error);
+        Assert.True(results[1].Succeeded, results[1].Error);
+        Assert.Contains("Second", results[1].Svg);
+        Assert.True(results[2].Succeeded, results[2].Error);
+        Assert.Contains("Third", results[2].Svg);
+        Assert.True(watch.ElapsedMilliseconds < 10_000, $"three diagrams took {watch.ElapsedMilliseconds} ms");
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void Loader_markup_copied_in_from_payloads_and_tests_is_drawn_as_written()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+        NodeJsPlantUmlRenderer.Render(Seq("Warm", "Up"), PlantUmlImageFormat.Svg);
+
+        // Every form the emitter writes captured text into, built by the emitter itself: a response body,
+        // a request body, both step-bar forms (LightBDD's <$name>), a test delimiter and an assertion note.
+        var diagram = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
+        [
+            MakeLog(RequestResponseType.Request, """{"launch":"<:rocket:>"}"""),
+            MakeLog(RequestResponseType.Response, """{"error":"expected Vec<&str>, found String","tpl":"a <$foo> b"}"""),
+        ]).Single().PlantUmls.First().PlainText;
+        var markers = string.Join("\n",
+            StepBarPlantUml.Build("Given I have data [inputs: \"<$inputs>\"]"),
+            StepBarPlantUml.Build("Given I have data [inputs: \"<$inputs>\"]", [new StepBarTable(null, [["a"], ["1"]])]),
+            "hnote across #black:<color:white>Test " + PlantUmlCreator.EscapeLoaderMarkup("Returns Vec<&str>"),
+            Kronikol.Ingestion.InteractionRecord.AssertionNotePlantUml("Parses Vec<&str>", passed: false, "got <:rocket:>"));
+        var withMarkers = diagram.Replace("@enduml", "<style>\n .stepBody {\n BackgroundColor black\n FontColor white\n }\n</style>\n" + markers + "\n@enduml");
+
+        var watch = Stopwatch.StartNew();
+        var results = NodeJsPlantUmlRenderer.RenderMany([diagram, withMarkers]);
+        watch.Stop();
+
+        Assert.All(results, r => Assert.True(r.Succeeded, r.Error));
+        var drawn = System.Text.RegularExpressions.Regex.Replace(string.Join(" ", System.Text.RegularExpressions.Regex
+            .Matches(results[1].Svg!, @"<text\b[^>]*>([\s\S]*?)</text>")
+            .Select(m => System.Net.WebUtility.HtmlDecode(m.Groups[1].Value))), @"\s+", " ");
+        Assert.Contains("Vec<&str>,", drawn);
+        Assert.Contains("<:rocket:>", drawn);
+        Assert.Contains("<$foo>", drawn);
+        Assert.Contains("[inputs: \"<$inputs>\"]", drawn);
+        Assert.Contains("Test Returns Vec<&str>", drawn);
+        Assert.Contains("got <:rocket:>", drawn);
+        Assert.True(watch.ElapsedMilliseconds < 10_000, $"two diagrams took {watch.ElapsedMilliseconds} ms");
+    }
+
     [Fact]
     [Trait("Category", "Integration")]
     public void Renders_class_diagram_svg()
@@ -216,17 +326,62 @@ public class NodeJsPlantUmlRendererTests
 
         var svg = System.Text.Encoding.UTF8.GetString(NodeJsPlantUmlRenderer.Render(plantUml, PlantUmlImageFormat.Svg));
         // PlantUML breaks a note line into one <text> per whitespace-separated piece, so compare on the
-        // text it drew with runs of whitespace collapsed.
-        var drawn = string.Join(" ", System.Text.RegularExpressions.Regex
-            .Matches(svg, @"<text\b[^>]*>([\s\S]*?)</text>")
-            .Select(m => m.Groups[1].Value));
-        var rendered = System.Text.RegularExpressions.Regex.Replace(drawn, @"\s+", " ");
+        // text it drew with runs of whitespace collapsed. Read through an XML parser: the SVG is XML, so
+        // `<b>raw</b>` is escaped in it, and the parser is what gives the text back as drawn.
+        var rendered = System.Text.RegularExpressions.Regex.Replace(DrawnText(svg), @"\s+", " ");
 
         Assert.Contains("-- domestic values", rendered);
         Assert.Contains("-- change values", rendered);
         Assert.Contains("https://a.example/x and https://b.example/y", rendered);
         Assert.Contains("<b>raw</b>", rendered);
         Assert.DoesNotContain("line-through", svg);
+    }
+
+    /// <summary>
+    /// The text of every &lt;text&gt; element, read through an XML parser (which also proves the SVG is XML),
+    /// with runs of whitespace collapsed: the engine draws each space between words as its own element.
+    /// </summary>
+    private static string DrawnText(string svg) => System.Text.RegularExpressions.Regex.Replace(
+        string.Join(" ", System.Xml.Linq.XDocument.Parse(svg).Descendants().Where(e => e.Name.LocalName == "text").Select(e => e.Value)),
+        @"\s+", " ");
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void An_ampersand_and_an_xml_body_come_out_as_well_formed_svg_that_keeps_their_text()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // Built by the emitter: a query string and a JSON body carrying `&`, and XML bodies. With internal-flow
+        // tracking off a NodeJs report embeds each SVG as a data: image, which a bare `&` failed to parse, and
+        // with it on (the default) the SVG is inlined, where the XML body's tags became elements that paint
+        // nothing (DIAGRAM_COLOURS_PLAN R26).
+        static RequestResponseLog Log(string uri, RequestResponseType type, string? content, Guid rr) =>
+            new(TestName: "Xml", TestId: "xml-1", Method: HttpMethod.Post, Content: content, Uri: new Uri(uri),
+                Headers: [], ServiceName: "Orders", CallerName: "Api", Type: type, TraceId: Guid.NewGuid(),
+                RequestResponseId: rr, TrackingIgnore: false, StatusCode: type == RequestResponseType.Response ? HttpStatusCode.OK : null);
+        var ampId = Guid.NewGuid();
+        var xmlId = Guid.NewGuid();
+        var amp = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
+        [
+            Log("http://example.com/api/items?page=1&size=10", RequestResponseType.Request, null, ampId),
+            Log("http://example.com/api/items?page=1&size=10", RequestResponseType.Response, """{"dish":"fish & chips"}""", ampId),
+        ]).Single().PlantUmls.First().PlainText;
+        var xml = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
+        [
+            Log("http://example.com/api/orders", RequestResponseType.Request, "<order><id>A1</id></order>", xmlId),
+            Log("http://example.com/api/orders", RequestResponseType.Response, "<result>true</result>", xmlId),
+        ]).Single().PlantUmls.First().PlainText;
+
+        var results = NodeJsPlantUmlRenderer.RenderMany([amp, xml]);
+
+        Assert.All(results, r => Assert.True(r.Succeeded, r.Error));
+        var ampText = DrawnText(results[0].Svg!);
+        Assert.Contains("?page=1&size=10", ampText);
+        Assert.Contains("fish & chips", ampText);
+        var xmlDoc = System.Xml.Linq.XDocument.Parse(results[1].Svg!);
+        Assert.DoesNotContain(xmlDoc.Descendants(), e => e.Name.LocalName is "order" or "result");
+        Assert.Contains("<order><id>A1</id></order>", DrawnText(results[1].Svg!));
+        Assert.Contains("<result>true</result>", DrawnText(results[1].Svg!));
     }
 
     private static readonly Guid CreoleRequestResponseId = Guid.NewGuid();
@@ -433,6 +588,98 @@ public class NodeJsPlantUmlRendererTests
         {
             try { Directory.Delete(dir, true); } catch { /* best effort */ }
         }
+    }
+
+    /// <summary>
+    /// Runs <c>plantuml-render.js</c> on one source against a stub viz and a stub ES-module engine whose
+    /// render is <paramref name="renderBody"/> (the body of <c>(lines, id, options) =&gt; { … }</c>).
+    /// </summary>
+    private static string RunWithStubEngine(string renderBody, string source = "@startuml\na -> b: stub\n@enduml")
+    {
+        var dir = Directory.CreateTempSubdirectory("kronikol-stub-engine-").FullName;
+        try
+        {
+            var viz = Path.Combine(dir, "viz-global.js");
+            var engine = Path.Combine(dir, "plantuml.js");
+            File.WriteAllText(viz,
+                "globalThis.Viz = { instance: function () { return Promise.resolve({ renderString: function () { return '<svg xmlns=\"http://www.w3.org/2000/svg\"/>'; } }); } };");
+            File.WriteAllText(engine,
+                "\"use strict\";\nlet C=(lines,id,options)=>{" + renderBody + "},D=(lines,options)=>'unused';\nexport{C as render,D as renderToString};\n");
+            return NodeProbe.RunWithStdin(RenderScriptSource(), source, viz, engine);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void A_script_the_engine_appends_to_head_is_answered_with_onerror()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // What the engine's loader does for `!theme`, `!include <…>`, `<&icon>` and `<:emoji:>`: append a
+        // <script> to document.head and wait for onload or onerror. Nothing can load in this host, so a
+        // head that answers nothing leaves the render waiting until the 20 s poll gives up, and in a batch
+        // every diagram after it too (DIAGRAM_COLOURS_PLAN F10, F17). The stub gives up after 2 s itself,
+        // so a head that never answers fails this fact quickly.
+        var stdout = RunWithStubEngine("""
+            var t=document.getElementById(id);
+            var s=document.createElement('script'); s.src='themes.js'; s.async=true;
+            s.onload=function(){ t.innerHTML='<svg xmlns="http://www.w3.org/2000/svg"><text>loaded</text></svg>'; };
+            s.onerror=function(){ t.innerHTML='<svg xmlns="http://www.w3.org/2000/svg"><text>refused</text></svg>'; };
+            document.head.appendChild(s);
+            setTimeout(function(){ if(!t.innerHTML) t.textContent='the head never answered'; }, 2000);
+            """);
+
+        Assert.Contains("refused", stdout);
+        Assert.DoesNotContain("loaded", stdout);
+    }
+
+    [Fact]
+    public void The_svg_is_written_as_xml_with_its_text_and_attributes_escaped()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // The engine builds its SVG through DOM calls, as text nodes, as an element's textContent and as
+        // attributes, plus a processing instruction carrying its encoded source. The serializer used to
+        // write all of it as it was: a `&` in a URL made the data: image fail to parse, an XML body's tags
+        // became elements that paint nothing, and the instruction came out as an HTML <div>, which an
+        // HTML page reads as the end of an inline <svg> (DIAGRAM_COLOURS_PLAN F20).
+        var stdout = RunWithStubEngine("""
+            var NS='http://www.w3.org/2000/svg', t=document.getElementById(id);
+            var svg=document.createElementNS(NS,'svg'); svg.setAttribute('xmlns', NS);
+            var a=document.createElementNS(NS,'text'); a.setAttribute('data-q','a "q" & <b>');
+            a.appendChild(document.createTextNode('fish & chips <order>1</order> x > y'));
+            var b=document.createElementNS(NS,'text'); b.textContent='?page=1&size=10';
+            svg.appendChild(a); svg.appendChild(b);
+            svg.appendChild(document.createProcessingInstruction('plantuml-src','SyfFKj2rKt3CoKnELR1Io4ZDoSa70000'));
+            t.appendChild(svg);
+            """);
+
+        var doc = System.Xml.Linq.XDocument.Parse(stdout);
+        var texts = doc.Root!.Elements().ToList();
+        Assert.Equal(2, texts.Count);
+        Assert.Equal("fish & chips <order>1</order> x > y", texts[0].Value);
+        Assert.Equal("a \"q\" & <b>", texts[0].Attribute("data-q")!.Value);
+        Assert.Equal("?page=1&size=10", texts[1].Value);
+        Assert.DoesNotContain("<div", stdout);
+    }
+
+    [Fact]
+    public void An_element_that_is_not_a_script_gets_no_answer_from_head()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        var stdout = RunWithStubEngine("""
+            var t=document.getElementById(id);
+            var st=document.createElement('style'); var fired='none';
+            st.onload=function(){ fired='load'; }; st.onerror=function(){ fired='error'; };
+            document.head.appendChild(st);
+            setTimeout(function(){ t.innerHTML='<svg xmlns="http://www.w3.org/2000/svg"><text>style:'+fired+'</text></svg>'; }, 50);
+            """);
+
+        Assert.Contains("style:none", stdout);
     }
 
     [Fact]

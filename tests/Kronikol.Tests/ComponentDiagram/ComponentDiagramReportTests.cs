@@ -263,11 +263,27 @@ public class ComponentDiagramReportTests : IDisposable
                 PlantUmlRendering = PlantUmlRendering.BrowserJs
             });
 
+        // Read the diagram source the page renders, gzipped into data-plantuml-z, not the whole page: the
+        // page also carries the render scripts, whose comments may name the syntax the source must not use,
+        // and a search of the page text never reached the compressed source at all.
         var html = File.ReadAllText(result.HtmlFilePath);
-        Assert.DoesNotContain("!include", html);
-        Assert.DoesNotContain("C4_Context", html);
-        Assert.DoesNotContain("Person(", html);
-        Assert.DoesNotContain("System(", html);
+        var embedded = string.Join("\n", System.Text.RegularExpressions.Regex
+            .Matches(html, "data-plantuml-z=\"([^\"]*)\"")
+            .Select(m =>
+            {
+                using var gzip = new System.IO.Compression.GZipStream(
+                    new MemoryStream(Convert.FromBase64String(m.Groups[1].Value)), System.IO.Compression.CompressionMode.Decompress);
+                using var reader = new StreamReader(gzip);
+                return reader.ReadToEnd();
+            }));
+        Assert.Contains("@startuml", embedded);
+        foreach (var source in new[] { embedded, result.PlantUml })
+        {
+            Assert.DoesNotContain("!include", source);
+            Assert.DoesNotContain("C4_Context", source);
+            Assert.DoesNotContain("Person(", source);
+            Assert.DoesNotContain("System(", source);
+        }
         // Should contain the browser-compatible skinparam styling (verify via PlantUml output)
         Assert.Contains("skinparam", result.PlantUml);
         Assert.Contains("rectangle", result.PlantUml);

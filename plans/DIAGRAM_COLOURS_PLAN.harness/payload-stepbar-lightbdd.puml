@@ -1,0 +1,37 @@
+@startuml
+!pragma teoz true
+
+<style>
+ .stepBody {
+     BackgroundColor black
+     FontColor white
+     LineColor white
+ }
+</style>
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+entity "Orders API" as ordersAPI
+
+
+hnote across <<stepDelimiter>><<stepBody>>: Given I have data [inputs: "<$inputs>"]\n\n|= Id |= Name |\n| 1 | Ann |\n
+
+
+caller -[#438DD5]> ordersAPI: POST: /api/orders
+note left
+<color:gray>[Content-Type=application/json]
+
+{
+  "sku": "A1"
+}
+end note
+ordersAPI -[#438DD5]-> caller: OK
+note right
+<color:gray>[Content-Type=application/json]
+
+{
+  "ok": true
+}
+end note
+@enduml

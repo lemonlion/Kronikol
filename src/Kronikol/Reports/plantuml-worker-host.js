@@ -171,6 +171,20 @@
     mockDocument.body = new MockElement('body', null); mockDocument.body.ownerDocument = mockDocument;
     mockDocument.head = new MockElement('head', null); mockDocument.head.ownerDocument = mockDocument;
     mockDocument.documentElement = new MockElement('html', null); mockDocument.documentElement.ownerDocument = mockDocument;
+    // The engine loads its optional bundles (themes.js for `!theme`, a stdlib module for `!include <…>`,
+    // openiconic.js for `<&icon>`, emoji.js for `<:emoji:>`) by appending a <script> to document.head and
+    // waiting for onload or onerror. This worker cannot load a script, and a head that keeps the element
+    // and answers nothing leaves that render waiting until the host's timeout, with every render queued
+    // behind it on this worker. Answer the way a real document answers a URL that does not resolve:
+    // onerror, on the next tick (whichever order the engine sets its handlers and appends in). The engine
+    // then carries on without the bundle: a theme is ignored with a console warning, and an icon, emoji
+    // or stdlib diagram fails on its own.
+    mockDocument.head._onAppend = function (c) {
+        if (!c || c.nodeType !== 1 || String(c.tagName).toLowerCase() !== 'script') return;
+        setTimeout(function () {
+            if (typeof c.onerror === 'function') c.onerror(new Error('Kronikol: a render worker cannot load ' + (c.src || 'a script')));
+        }, 0);
+    };
 
     self.window = self;
     self.document = mockDocument;

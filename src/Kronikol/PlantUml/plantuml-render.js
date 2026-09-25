@@ -120,15 +120,23 @@ class MockElement {
     blur() {}
 }
 
-// Serialize a MockElement tree to an SVG/HTML string.
+// Serialize a MockElement tree to an SVG string, as XML: the report inlines it (internal-flow tracking,
+// the default, inlines NodeJs SVG) or embeds it as a data: image, and an unescaped `&` in a URL or a body
+// broke the image while an XML body's tags became elements that paint nothing. XML escapes only: the
+// worker host also writes NBSP as &nbsp;, which XML does not define. The engine's one processing
+// instruction carries its encoded source, which the report already holds, so it is left out; written as
+// an element it became a <div>, which an HTML page reads as the end of an inline <svg>.
+function escXml(v) { return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function escXmlAttr(v) { return escXml(v).replace(/"/g, '&quot;'); }
 function serializeElement(el) {
     if (!el || typeof el !== 'object') return '';
-    if (el.nodeType === 3) return el.textContent || el.data || '';
+    if (el.nodeType === 3) return escXml(el.textContent || el.data || '');
+    if (el.nodeType === 7) return '';
     var tag = (el.tagName || 'div').toLowerCase();
     var attrs = '';
     if (el._attributes) {
         for (var k in el._attributes) {
-            attrs += ' ' + k + '="' + el._attributes[k] + '"';
+            attrs += ' ' + k + '="' + escXmlAttr(el._attributes[k]) + '"';
         }
     }
     var children = '';
@@ -137,7 +145,7 @@ function serializeElement(el) {
             children += serializeElement(el.childNodes[i]);
         }
     }
-    var text = (!el.childNodes || el.childNodes.length === 0) ? (el.textContent || '') : '';
+    var text = (!el.childNodes || el.childNodes.length === 0) ? escXml(el.textContent || '') : '';
     return '<' + tag + attrs + '>' + text + children + '</' + tag + '>';
 }
 
@@ -177,6 +185,24 @@ var mockDocument = {
     implementation: { createHTMLDocument: function() { return mockDocument; } },
     currentScript: null,
     baseURI: 'about:blank'
+};
+
+// The engine loads its optional bundles (themes.js for `!theme`, a stdlib module for `!include <…>`,
+// openiconic.js for `<&icon>`, emoji.js for `<:emoji:>`) by appending a <script> to document.head and
+// waiting for onload or onerror. Nothing loads in this host, and a head that keeps the element and
+// answers nothing leaves that render waiting until the poll in renderOne gives up, with every diagram
+// after it in a batch. Answer the way a real document answers a URL that does not resolve: onerror, on
+// the next tick (whichever order the engine sets its handlers and appends in). The engine then carries
+// on without the bundle: a theme is ignored with a warning on stderr, and an icon, emoji or stdlib
+// diagram fails on its own.
+mockDocument.head.appendChild = function (child) {
+    MockElement.prototype.appendChild.call(this, child);
+    if (child && typeof child === 'object' && child.tagName === 'SCRIPT') {
+        setTimeout(function () {
+            if (typeof child.onerror === 'function') child.onerror(new Error('Kronikol: the Node renderer cannot load ' + (child.src || 'a script')));
+        }, 0);
+    }
+    return child;
 };
 
 // --- Arguments ---

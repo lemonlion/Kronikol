@@ -172,6 +172,16 @@ public class DiagramFailureIsolationTests : IDisposable
     }
 
     [Fact]
+    public void The_placeholder_escapes_loader_markup_an_exception_message_quotes()
+    {
+        // The placeholder is offered to the same renderer that failed; a message quoting an icon would
+        // make it ask for a bundle that renderer cannot load.
+        var plantUml = DefaultDiagramsFetcher.RenderErrorPlantUml(new InvalidOperationException("expected Vec<&str>"));
+
+        Assert.Contains("expected Vec~<&str>", plantUml);
+    }
+
+    [Fact]
     public void A_multi_line_exception_message_stays_on_one_note_line()
     {
         // A note body that spills onto its own lines produces PlantUML the renderer cannot parse — the

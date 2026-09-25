@@ -276,9 +276,11 @@
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
             if (!inNote) {
-                if (line.match(new RegExp('^\\s*' + callerAlias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+->\\s+'))) {
+                // Arrows are coloured by default (SequenceDiagramArrowColors): `caller -[#438DD5]> svc` and
+                // `svc -[#438DD5]-> caller` as well as the plain `->` and `-->`.
+                if (line.match(new RegExp('^\\s*' + callerAlias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+-(?:\\[[^\\]]*\\])?>\\s+'))) {
                     afterCallerRequest = true;
-                } else if (line.match(/^\s*\S+\s+-->\s+/)) {
+                } else if (line.match(/^\s*\S+\s+-(?:\[[^\]]*\])?->\s+/)) {
                     afterCallerRequest = false;
                 }
                 if (afterCallerRequest && line.match(/^\s*note\s+left/)) {

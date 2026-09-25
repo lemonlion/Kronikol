@@ -104,12 +104,15 @@
             }
             telemetry.injectMs += now() - t0;
         }
+        // Source text shown inside markup: `&` first, or a `&lt;`, `&copy` or `&amp;` in the source would
+        // be read by the page and shown as something else.
+        function escapeMarkupText(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
         function tooLargeMarkup(source) {
             return '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
                 + '<strong>Diagram too large for client-side rendering.</strong><br>'
                 + 'Use <code>PlantUmlRendering.Server</code> or <code>PlantUmlRendering.Local</code> for large diagrams.'
                 + '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
-                + String(source || '').replace(/</g, '&lt;') + '</pre></details></div>';
+                + escapeMarkupText(source || '') + '</pre></details></div>';
         }
         function writeFailure(target, source, message) {
             message = String(message == null ? '' : message);
@@ -852,6 +855,12 @@
         // PlantUML source reachable in a <details>. Returns true when the element holds a failure.
         var _engineTooLargeRx = /Diagram too large for browser rendering/;
         var _engineSyntaxErrorRx = /Syntax Error\?/;
+        // The engine loads OpenIconic (`<&name>`) and emoji (`<:name:>`) by script tag, which the render
+        // worker answers with an error at once (plantuml-worker-host.js); the engine then writes
+        // "java.lang.RuntimeException: Failed to load openiconic.js" (or emoji.js) as the diagram's text.
+        // Kronikol escapes both forms in everything it copies in, so this is a user's own markup, or a
+        // source merged from a report written before 3.29.6.
+        var _engineBundleLoadRx = /Failed to load (openiconic|emoji)\.js/;
 
         // The engine's measured statement-length limits (PlantUmlStatementLimits, C# side). A statement
         // past its limit matches no parse rule, so the parser gives up on the entire diagram and draws
@@ -889,17 +898,29 @@
             return null;
         }
         window._findOverLongStatement = findOverLongStatement;
+        // Source text shown inside markup: `&` first, or a `&lt;`, `&copy` or `&amp;` in the source would
+        // be read by the page and shown as something else.
+        function escapeMarkupText(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
         function describeEngineFailure(el, source) {
             if (!el) return false;
             var text = el.textContent || '';
             var svg = el.querySelector('svg');
             var rawDetails = '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
-                + String(source || el.getAttribute('data-plantuml') || '').replace(/</g, '&lt;') + '</pre></details>';
+                + escapeMarkupText(source || el.getAttribute('data-plantuml') || '') + '</pre></details>';
             if (!svg && _engineTooLargeRx.test(text)) {
                 el.innerHTML = '<div class="engine-failure" data-engine-failure="too-large" style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
                     + '<strong>Diagram too large for client-side rendering.</strong> '
                     + 'One note is wider than the engine can draw — usually a single very long unbreakable line in a captured body. '
-                    + '<code>' + text.replace(/</g, '&lt;').slice(0, 200) + '</code>'
+                    + '<code>' + escapeMarkupText(text.slice(0, 200)) + '</code>'
+                    + rawDetails + '</div>';
+                return true;
+            }
+            var bundle = !svg && _engineBundleLoadRx.exec(text);
+            if (bundle) {
+                el.innerHTML = '<div class="engine-failure" data-engine-failure="loader" style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
+                    + '<strong>This diagram uses PlantUML ' + (bundle[1] === 'emoji' ? 'emoji' : 'icons') + ', which this report\'s renderer does not load.</strong> '
+                    + 'OpenIconic icons (<code>&lt;&amp;name&gt;</code>) and emoji (<code>&lt;:name:&gt;</code>) need a bundle ('
+                    + bundle[1] + '.js) that the engine in the page cannot fetch. <code>PlantUmlRendering.Server</code> and <code>PlantUmlRendering.Local</code> draw them.'
                     + rawDetails + '</div>';
                 return true;
             }
@@ -1012,7 +1033,7 @@
                         + '<strong>Diagram too large for client-side rendering.</strong><br>'
                         + 'Use <code>PlantUmlRendering.Server</code> or <code>PlantUmlRendering.Local</code> for large diagrams.'
                         + '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
-                        + item.source.replace(/</g,'&lt;') + '</pre></details></div>';
+                        + escapeMarkupText(item.source) + '</pre></details></div>';
                 } else {
                     item.el.textContent = 'Render error: ' + msg;
                 }

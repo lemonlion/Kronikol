@@ -324,6 +324,42 @@ public static class TestPageGenerator
     }
 
     /// <summary>
+    /// A page of BrowserJs diagrams, one <c>.plantuml-browser</c> element per source in the given
+    /// order, rendered through the shipped render script and worker host (the real engine in a Blob
+    /// worker). No element is inside a <c>.scenario</c>, so nothing renders until the test calls
+    /// <c>window._renderDiagramsInContainer(document.body)</c> or an element scrolls into view.
+    /// </summary>
+    public static string GenerateBrowserJsPage(params (string Id, string Source)[] diagrams)
+    {
+        var plantUmlBrowserScript = DiagramContextMenu.GetPlantUmlBrowserRenderScript();
+        var contextMenuScript = DiagramContextMenu.GetContextMenuScript();
+        var contextMenuStyles = DiagramContextMenu.GetStyles();
+        var inlineSvgStyles = DiagramContextMenu.GetInlineSvgStyles();
+        var elements = string.Join("\n", diagrams.Select(d =>
+            $"""<div class="plantuml-browser" id="{d.Id}" data-plantuml="{System.Net.WebUtility.HtmlEncode(d.Source)}" data-diagram-type="plantuml"></div>"""));
+
+        return $$"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>BrowserJs Diagrams Test</title>
+                <style>
+                    {{contextMenuStyles}}
+                    {{inlineSvgStyles}}
+                    body { font-family: sans-serif; padding: 20px; background: #fff; }
+                </style>
+                {{plantUmlBrowserScript}}
+                {{contextMenuScript}}
+            </head>
+            <body>
+                <h1>BrowserJs Diagrams</h1>
+                {{elements}}
+            </body>
+            </html>
+            """;
+    }
+
+    /// <summary>
     /// Creates a test page that mimics TestRunReport with an inline SVG sequence diagram
     /// inside a plantuml-inline-svg container, including InlineSvgStyles and context menu.
     /// </summary>

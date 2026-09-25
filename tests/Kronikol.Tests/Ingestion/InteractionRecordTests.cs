@@ -9,6 +9,22 @@ namespace Kronikol.Tests.Ingestion;
 public class InteractionRecordTests
 {
     [Fact]
+    public void Ingested_step_bars_and_assertion_notes_escape_loader_markup()
+    {
+        // LightBDD writes a table parameter as <$name>; a step or an assertion can quote Vec<&str> or an
+        // emoji. Unescaped, the first is dropped from the bar and the other two ask the engine for a bundle
+        // the report's renderers cannot load.
+        var bar = InteractionRecord.StepDelimiterPlantUml("Given", "I have data [inputs: \"<$inputs>\"]");
+        var tableBar = InteractionRecord.StepDelimiterPlantUml("Given", "I have data [inputs: \"<$inputs>\"]", [["a"], ["1"]]);
+        var note = InteractionRecord.AssertionNotePlantUml("Parses Vec<&str>", passed: false, "got <:rocket:>");
+
+        Assert.Contains("[inputs: \"~<$inputs>\"]", bar);
+        Assert.Contains("[inputs: \"~<$inputs>\"]", tableBar);
+        Assert.Contains("Parses Vec~<&str>", note);
+        Assert.Contains("got ~<:rocket:>", note);
+    }
+
+    [Fact]
     public void Round_trips_a_log_through_json_preserving_identity_and_pairing()
     {
         var traceId = Guid.NewGuid();

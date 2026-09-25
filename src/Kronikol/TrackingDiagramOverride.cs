@@ -75,7 +75,7 @@ public static class DefaultTrackingDiagramOverride
 
     public static void InsertTestDelimiter(string testRuntimeId, string testIdentifier)
     {
-        StartOverride(testRuntimeId, $"hnote across #black:<color:white>Test {testIdentifier}");
+        StartOverride(testRuntimeId, $"hnote across #black:<color:white>Test {PlantUml.PlantUmlCreator.EscapeLoaderMarkup(testIdentifier)}");
         EndOverride(testRuntimeId);
     }
 

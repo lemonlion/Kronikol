@@ -3726,6 +3726,111 @@ public static class ReportTestHelper
         return "file://" + path.Replace("\\", "/");
     }
 
+    /// <summary>The captured body of <see cref="GenerateReportWithLoaderMarkupPayloads"/>'s first scenario.</summary>
+    public const string LoaderMarkupErrorBody = """{"error":"expected Vec<&str>, found String"}""";
+
+    /// <summary>
+    /// Captured text quoting the engine's loader markup (DIAGRAM_COLOURS_PLAN S4), every diagram built by
+    /// the REAL emitter: t1, the first scenario and so the first diagram the page renders, is a 400
+    /// whose body quotes Rust's <c>Vec&lt;&amp;str&gt;</c> (OpenIconic syntax); t2 posts a body carrying
+    /// <c>&lt;:rocket:&gt;</c> (emoji syntax) and opens with a LightBDD table-parameter step bar
+    /// (<c>&lt;$inputs&gt;</c>, the sprite syntax); t3 is a plain call.
+    /// </summary>
+    public static string GenerateReportWithLoaderMarkupPayloads(string tempDir, string outputDir, string fileName,
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json)
+    {
+        var (features, _) = CreateTestData();
+
+        static string Pair(string testId, string method, string path, string? requestBody, System.Net.HttpStatusCode status, string? responseBody)
+        {
+            var traceId = Guid.NewGuid();
+            var pairId = Guid.NewGuid();
+            (string, string?)[] json = [("Content-Type", "application/json")];
+            RequestResponseLog[] logs =
+            [
+                new(testId, testId, method, requestBody, new Uri("http://localhost/api" + path), requestBody is null ? [] : json,
+                    "ParserService", "Caller", RequestResponseType.Request, traceId, pairId, TrackingIgnore: false),
+                new(testId, testId, method, responseBody, new Uri("http://localhost/api" + path), responseBody is null ? [] : json,
+                    "ParserService", "Caller", RequestResponseType.Response, traceId, pairId, TrackingIgnore: false, StatusCode: status),
+            ];
+            return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+        }
+
+        var t2 = Pair("t2", "POST", "/launch", """{"launch":"<:rocket:>"}""", System.Net.HttpStatusCode.OK, """{"ok":true}""");
+        var lightBddBar = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml(
+            "Given", "I have data [inputs: \"<$inputs>\"]", table: [["name"], ["Vec"]]);
+        t2 = t2.Replace("@enduml", "<style>\n .stepBody {\n     BackgroundColor black\n     FontColor white\n     LineColor white\n }\n</style>\n@enduml");
+        t2 = System.Text.RegularExpressions.Regex.Replace(t2, @"\n(caller -)", "\n" + lightBddBar.Replace("$", "$$") + "\n$1", System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromSeconds(5));
+
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", Pair("t1", "POST", "/parse", """{"input":"Vec"}""", System.Net.HttpStatusCode.BadRequest, LoaderMarkupErrorBody)),
+            new DiagramAsCode("t2", "", t2),
+            new DiagramAsCode("t3", "", Pair("t3", "GET", "/orders", null, System.Net.HttpStatusCode.OK, """{"orders":[]}""")),
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            notePayloadFormat: notePayloadFormat);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// A <c>PlantUmlRendering.NodeJs</c> report, rendered through the real Node renderer the way the
+    /// fetcher does (one batch; inline SVG, or a <c>data:</c> image when <paramref name="inlineSvg"/> is
+    /// false, as with internal-flow tracking off): t1 posts an XML body and gets an XML body back; t3 is a
+    /// GET whose query string carries <c>&amp;</c> and whose JSON body says <c>fish &amp; chips</c>.
+    /// </summary>
+    public static string GenerateNodeJsReport(string tempDir, string outputDir, string fileName, bool inlineSvg)
+    {
+        var (features, _) = CreateTestData();
+
+        static RequestResponseLog[] Pair(string testId, string method, string uri, string? requestBody, string responseBody)
+        {
+            var traceId = Guid.NewGuid();
+            var pairId = Guid.NewGuid();
+            return
+            [
+                new(testId, testId, method, requestBody, new Uri(uri), [], "Orders", "Caller",
+                    RequestResponseType.Request, traceId, pairId, TrackingIgnore: false),
+                new(testId, testId, method, responseBody, new Uri(uri), [], "Orders", "Caller",
+                    RequestResponseType.Response, traceId, pairId, TrackingIgnore: false, StatusCode: System.Net.HttpStatusCode.OK),
+            ];
+        }
+
+        var sources = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
+            [
+                .. Pair("t1", "POST", "http://localhost/api/orders", "<order><id>A1</id></order>", "<result>true</result>"),
+                .. Pair("t3", "GET", "http://localhost/api/items?page=1&size=10", null, """{"dish":"fish & chips"}"""),
+            ])
+            .SelectMany(t => t.PlantUmls.Select(p => (t.TestId, p.PlainText)))
+            .ToList();
+        var rendered = NodeJsPlantUmlRenderer.RenderMany(sources.Select(s => s.PlainText).ToList());
+        var diagrams = sources.Select((s, i) =>
+        {
+            var svg = rendered[i].Svg ?? throw new InvalidOperationException(rendered[i].Error);
+            var imgSrc = inlineSvg ? svg : $"data:image/svg+xml;base64,{Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(svg))}";
+            return new DiagramAsCode(s.TestId, imgSrc, s.PlainText);
+        }).ToArray();
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.NodeJs,
+            inlineSvgRendering: inlineSvg);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
     public static string GenerateReportWithEscapingYamlNote(string tempDir, string outputDir, string fileName)
     {
         var (features, _) = CreateTestData();

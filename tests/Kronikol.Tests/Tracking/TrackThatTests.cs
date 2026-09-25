@@ -50,6 +50,22 @@ public class TrackThatTests : IDisposable
     }
 
     [Fact]
+    public void An_assertion_quoting_loader_markup_is_escaped_in_its_note()
+    {
+        using var scope = TestIdentityScope.Begin(_testId, _testId);
+
+        // The expression is the note's label, the failure message its body: both are copied in as written,
+        // and both used to reach the engine's loader.
+        Assert.Throws<Exception>(() => Track.That(() => throw new Exception("expected Vec<&str>, got <:rocket:>")));
+        Track.That(() => Assert.Equal("<$foo>", "<$foo>"));
+
+        var notes = GetAssertionLogs().Select(l => l.PlantUml!).ToList();
+        Assert.Contains(notes, n => n.Contains("expected Vec~<&str>, got ~<:rocket:>"));
+        Assert.Contains(notes, n => n.Contains("~<$foo>"));
+        Assert.All(notes, n => Assert.DoesNotMatch(@"(?<!~)<[&:$]", n));
+    }
+
+    [Fact]
     public async Task ThatAsync_passed_assertion_logs_green_note()
     {
         using var scope = TestIdentityScope.Begin(_testId, _testId);

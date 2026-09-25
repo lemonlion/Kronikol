@@ -161,6 +161,19 @@ public class InternalFlowRendererTests : IDisposable
     }
 
     [Fact]
+    public void RenderActivityDiagram_escapes_loader_markup_in_a_span_name()
+    {
+        // The popup renders this through the same engine as the report's diagrams: an unescaped `<&` asks
+        // for openiconic.js, which the render worker cannot load.
+        var span = CreateSpan("Deserialize Vec<&str> for <:rocket:>");
+
+        var result = InternalFlowRenderer.RenderActivityDiagram(MakeSegment(span));
+
+        Assert.Contains("Deserialize Vec~<&str> for ~<:rocket:>", result);
+        Assert.DoesNotMatch(@"(?<!~)<[&:$]", result);
+    }
+
+    [Fact]
     public void RenderActivityDiagram_with_duplicate_SpanIds_does_not_throw()
     {
         var span = CreateSpan("op");

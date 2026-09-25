@@ -228,7 +228,10 @@ internal static class DiagramWidth
     /// </summary>
     internal static string WrapBlockNoteBody(string text)
     {
-        var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        // Assertion text quoting an OpenIconic icon, an emoji or a sprite would make the engine load a
+        // bundle it cannot, or drop the text (PlantUmlCreator.EscapeLoaderMarkup). Escaped before the
+        // wrap, which never cuts a word holding a `<`.
+        var lines = PlantUmlCreator.EscapeLoaderMarkup(text).Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
         var wrapped = new List<string>(lines.Length);
 
         foreach (var line in lines)

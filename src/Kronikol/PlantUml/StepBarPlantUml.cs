@@ -65,7 +65,11 @@ internal static class StepBarPlantUml
         // here also routes such a step to the styled form automatically: the legacy coloured bar paints
         // everything after the first display line black-on-black, and the branch below already switches
         // form as soon as the label carries a break.
-        var labelLine = string.Join(@"\n", DiagramWidth.WrapLines(labelLines[0], DiagramWidth.MaxNoteTextLineChars));
+        // The label reaches PlantUML as written (its styling has always been live), except the three
+        // prefixes that make the engine load a bundle or drop the text: LightBDD writes a table
+        // parameter as <$name>, which the bar used to paint as "". The wrapper never cuts a word that
+        // holds a `<`, so a `~` stays with the `<` it escapes.
+        var labelLine = string.Join(@"\n", DiagramWidth.WrapLines(PlantUmlCreator.EscapeLoaderMarkup(labelLines[0]), DiagramWidth.MaxNoteTextLineChars));
 
         var body = new List<string>();
         // Multi-line marker text (the ingest format allows it) used to fold into the coloured bar as

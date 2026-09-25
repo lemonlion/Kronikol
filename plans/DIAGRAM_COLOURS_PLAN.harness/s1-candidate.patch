@@ -1,0 +1,235 @@
+diff --git a/src/Kronikol/PlantUml/NotePalette.cs b/src/Kronikol/PlantUml/NotePalette.cs
+new file mode 100644
+index 00000000..a1883f5b
+--- /dev/null
++++ b/src/Kronikol/PlantUml/NotePalette.cs
+@@ -0,0 +1,18 @@
++namespace Kronikol.PlantUml;
++
++/// <summary>The inks Kronikol writes into notes, derived from the fills they land on (DIAGRAM_COLOURS_PLAN §3.2).</summary>
++internal static class NotePalette
++{
++    /// <summary>PlantUML's own note fill, unthemed. Measured on the pinned engine (DIAGRAM_COLOURS_PLAN §1 R2).</summary>
++    internal const string DefaultNoteFill = "#FEFFDD";
++    /// <summary>What <c>AddEventStyling</c> gives the event note.</summary>
++    internal const string EventNoteFill = "#CFECF7";
++    /// <summary>WCAG 2.1 AA for text under 18 pt. The note body is 13 px.</summary>
++    internal const double HeaderContrastFloor = 4.5;
++    /// <summary>
++    /// The lightest neutral grey that clears the floor on every fill a header line lands on, found by
++    /// walking down from today's <c>gray</c> (#808080). Pinned by NotePaletteTests as #686868.
++    /// </summary>
++    internal static readonly string HeaderInk = WcagContrast.LightestGreyClearing(HeaderContrastFloor, 0x80, DefaultNoteFill, EventNoteFill);
++    internal static string HeaderTag => "<color:" + HeaderInk + ">";
++}
+diff --git a/src/Kronikol/PlantUml/PlantUmlCreator.cs b/src/Kronikol/PlantUml/PlantUmlCreator.cs
+index dd4b3a38..e0a4e5ae 100644
+--- a/src/Kronikol/PlantUml/PlantUmlCreator.cs
++++ b/src/Kronikol/PlantUml/PlantUmlCreator.cs
+@@ -442,7 +442,7 @@ private static PlantUmlResult[] CreatePlantUml(
+ 
+     /// <summary>
+     /// Adds the untruncated request path to the note beside the arrow, chunked the way every other note
+-    /// value is so <c>skinparam wrapWidth</c> can break it. Kronikol's own <c>&lt;color:gray&gt;</c> label
++    /// value is so <c>skinparam wrapWidth</c> can break it. Kronikol's own header label (<see cref="NotePalette.HeaderTag"/>)
+     /// is added after escaping, like the header tags, so it stays live markup rather than printed text.
+     /// </summary>
+     internal static string AppendFullPathToNote(string noteContent, string pathAndQuery)
+@@ -451,7 +451,7 @@ internal static string AppendFullPathToNote(string noteContent, string pathAndQu
+         // URL chopped into 80-character display lines rejoins to the URL.
+         var chunks = pathAndQuery.ChunksUpTo(MaxNoteChunkChars).Select(EscapeCreoleMarkup).ToArray();
+         for (var i = 0; i < chunks.Length - 1; i++) chunks[i] += DiagramWidth.JoinMarker;
+-        var block = "<color:gray>[Full path]" + Environment.NewLine + string.Join(Environment.NewLine, chunks);
++        var block = NotePalette.HeaderTag + "[Full path]" + Environment.NewLine + string.Join(Environment.NewLine, chunks);
+         return string.IsNullOrEmpty(noteContent)
+             ? block
+             : noteContent + Environment.NewLine + Environment.NewLine + block;
+@@ -1277,7 +1277,7 @@ internal static IEnumerable<string> BatchGray(string value)
+     {
+         // Escape after chunking so a `~` never ends up split from the character it protects, and prefix the
+         // gray tag after escaping so Kronikol's own markup stays live.
+-        var chunks = value.ChunksUpTo(MaxNoteChunkChars).Select(x => "<color:gray>" + EscapeCreoleMarkup(x)).ToArray();
++        var chunks = value.ChunksUpTo(MaxNoteChunkChars).Select(x => NotePalette.HeaderTag + EscapeCreoleMarkup(x)).ToArray();
+         // Each continuation carries the gray tag again so it still draws gray; a consumer strips those
+         // per line BEFORE rejoining, which is why the rejoin itself needs no knowledge of them.
+         for (var i = 0; i < chunks.Length - 1; i++) chunks[i] += DiagramWidth.JoinMarker;
+diff --git a/src/Kronikol/PlantUml/WcagContrast.cs b/src/Kronikol/PlantUml/WcagContrast.cs
+new file mode 100644
+index 00000000..3937fc72
+--- /dev/null
++++ b/src/Kronikol/PlantUml/WcagContrast.cs
+@@ -0,0 +1,40 @@
++using System.Globalization;
++
++namespace Kronikol.PlantUml;
++
++/// <summary>WCAG 2.1 contrast between two <c>#RRGGBB</c> colours.</summary>
++internal static class WcagContrast
++{
++    /// <summary>The contrast ratio, from 1 to 21: (Lmax + 0.05) / (Lmin + 0.05).</summary>
++    internal static double Ratio(string foreground, string background)
++    {
++        var a = Luminance(foreground);
++        var b = Luminance(background);
++        return (Math.Max(a, b) + 0.05) / (Math.Min(a, b) + 0.05);
++    }
++
++    /// <summary>
++    /// Walks a neutral grey down from channel value <paramref name="from"/> and returns the first whose lowest
++    /// ratio over <paramref name="fills"/> is at or above <paramref name="floor"/>, so the answer is never
++    /// lighter than where the walk starts.
++    /// </summary>
++    internal static string LightestGreyClearing(double floor, int from, params string[] fills)
++    {
++        for (var g = from; g >= 0; g--)
++        {
++            var grey = "#" + g.ToString("X2", CultureInfo.InvariantCulture) + g.ToString("X2", CultureInfo.InvariantCulture) + g.ToString("X2", CultureInfo.InvariantCulture);
++            if (fills.All(fill => Ratio(grey, fill) >= floor)) return grey;
++        }
++        return "#000000";
++    }
++
++    private static double Luminance(string hex)
++    {
++        double Channel(int start)
++        {
++            var c = int.Parse(hex.AsSpan(start, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture) / 255.0;
++            return c <= 0.04045 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
++        }
++        return 0.2126 * Channel(1) + 0.7152 * Channel(3) + 0.0722 * Channel(5);
++    }
++}
+diff --git a/src/Kronikol/Reports/collapsible-notes-script.js b/src/Kronikol/Reports/collapsible-notes-script.js
+index 818d9e84..1385291d 100644
+--- a/src/Kronikol/Reports/collapsible-notes-script.js
++++ b/src/Kronikol/Reports/collapsible-notes-script.js
+@@ -1,5 +1,8 @@
+ <script>
+ (function() {
++    // A note header line starts with Kronikol's header ink: `gray` before 3.30.0, a computed hex grey from it
++    // (NotePalette.HeaderInk). A merged report carries sources from several releases, so both forms are headers.
++    var NOTE_HEADER_TAG = /^<color:(?:gray|#[0-9A-Fa-f]{6})>/;
+     var SVGNS = 'http://www.w3.org/2000/svg';
+ 
+     // ── Copy fidelity: undoing the breaks Kronikol wrote ────────────────────
+@@ -66,7 +69,7 @@
+ 
+     function getNotePreview(contentLines) {
+         var nonGray = contentLines.map(function(l) { return l.trim(); })
+-            .filter(function(l) { return !l.match(/^<color:gray>/); });
++            .filter(function(l) { return !l.match(NOTE_HEADER_TAG); });
+         var raw = nonGray.join(' ').trim();
+         if (!raw) return '';
+         if (raw.length <= 60) return raw;
+@@ -265,7 +268,7 @@
+         var afterGray = false;
+         for (var i = 0; i < contentLines.length; i++) {
+             var trimmed = contentLines[i].trim();
+-            if (/^<color:gray>/.test(trimmed)) { afterGray = true; continue; }
++            if (NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; continue; }
+             if (afterGray && trimmed === '') continue;
+             afterGray = false;
+             count++;
+@@ -611,7 +614,7 @@
+         // Tooltip for collapsed notes
+         if (state === 'collapsed' && contentLines && grp && grp.paths.length > 0) {
+             var tipLines = contentLines.map(function(l) {
+-                return l.replace(/^\s*<color:gray>/, '');
++                return l.replace(/^\s*<color:(?:gray|#[0-9A-Fa-f]{6})>/, '');
+             });
+             var tipText = tipLines.join('\n').trim();
+             if (tipText) {
+@@ -850,7 +853,7 @@
+                     var afterGrayLine = false;
+                     for (var li = 0; li < noteBlocks[si].contentLines.length; li++) {
+                         var cl = noteBlocks[si].contentLines[li].trim();
+-                        if (/^<color:gray>/.test(cl)) { afterGrayLine = true; continue; }
++                        if (NOTE_HEADER_TAG.test(cl)) { afterGrayLine = true; continue; }
+                         if (afterGrayLine && cl === '') continue;
+                         afterGrayLine = false;
+                         hasVisible = true;
+@@ -1014,7 +1017,7 @@
+         var afterGray = false;
+         for (var i = 0; i < contentLines.length; i++) {
+             var trimmed = contentLines[i].trim();
+-            if (/^<color:gray>/.test(trimmed)) { afterGray = true; continue; }
++            if (NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; continue; }
+             if (afterGray && trimmed === '') continue;
+             afterGray = false;
+             payload.push(contentLines[i]);
+@@ -1411,7 +1414,7 @@
+                 continue;
+             }
+             if (inNote && swapping) {
+-                if (!headerDone && /^<color:gray>/.test(trimmed)) { afterGray = true; out.push(lines[i]); continue; }
++                if (!headerDone && NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; out.push(lines[i]); continue; }
+                 if (!headerDone && afterGray && trimmed === '') { out.push(lines[i]); continue; }
+                 headerDone = true;
+                 continue; // payload line dropped — YAML lines are emitted before 'end note'
+@@ -1432,7 +1435,7 @@
+         var afterGray = false;
+         for (var i = 0; i < rawContentLines.length; i++) {
+             var trimmed = rawContentLines[i].trim();
+-            if (/^<color:gray>/.test(trimmed)) { afterGray = true; header.push(rawContentLines[i]); continue; }
++            if (NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; header.push(rawContentLines[i]); continue; }
+             if (afterGray && trimmed === '') { header.push(rawContentLines[i]); continue; }
+             break;
+         }
+@@ -1789,7 +1792,7 @@
+             }
+             if (noteMode === 'collapsed') continue;
+             if (noteMode === 'truncated') {
+-                if (hideHeaders && /^<color:gray>/.test(trimmed)) { justSkippedGray = true; continue; }
++                if (hideHeaders && NOTE_HEADER_TAG.test(trimmed)) { justSkippedGray = true; continue; }
+                 if (justSkippedGray && trimmed === '') continue;
+                 justSkippedGray = false;
+                 truncateLineCount++;
+@@ -1799,7 +1802,7 @@
+                 }
+                 continue;
+             }
+-            if (inNote && hideHeaders && /^<color:gray>/.test(trimmed)) { justSkippedGray = true; continue; }
++            if (inNote && hideHeaders && NOTE_HEADER_TAG.test(trimmed)) { justSkippedGray = true; continue; }
+             if (justSkippedGray && trimmed === '') continue;
+             justSkippedGray = false;
+             newLines.push(lines[i]);
+diff --git a/src/Kronikol/Reports/context-menu-script.js b/src/Kronikol/Reports/context-menu-script.js
+index b8feaff0..1f7ce766 100644
+--- a/src/Kronikol/Reports/context-menu-script.js
++++ b/src/Kronikol/Reports/context-menu-script.js
+@@ -1,5 +1,8 @@
+ <script>
+ (function() {
++    // A note header line starts with Kronikol's header ink: `gray` before 3.30.0, a computed hex grey from it
++    // (NotePalette.HeaderInk). A merged report carries sources from several releases, so both forms are headers.
++    var NOTE_HEADER_TAG = /^<color:(?:gray|#[0-9A-Fa-f]{6})>/;
+     var menu = null;
+ 
+     function findDiagramContainer(el) {
+@@ -231,7 +234,7 @@
+     }
+ 
+     function noteLinesToText(lines, unescapeLine) {
+-        var stripped = lines.map(function(l) { return l.replace(/^\s*<color:gray>/, ''); });
++        var stripped = lines.map(function(l) { return l.replace(/^\s*<color:(?:gray|#[0-9A-Fa-f]{6})>/, ''); });
+         return rejoinNoteSource(stripped.join('\n')).split('\n').map(unescapeLine).join('\n');
+     }
+ 
+@@ -242,7 +245,7 @@
+         var afterGray = false;
+         for (var i = 0; i < lines.length; i++) {
+             var t = lines[i].trim();
+-            if (/^<color:gray>/.test(t)) { afterGray = true; header.push(lines[i]); continue; }
++            if (NOTE_HEADER_TAG.test(t)) { afterGray = true; header.push(lines[i]); continue; }
+             if (afterGray && t === '') { header.push(lines[i]); continue; }
+             break;
+         }
+@@ -293,7 +296,7 @@
+                     // payloads as captured, so the width budget's breaks and the creole escaping both
+                     // come off. Before this it returned neither.
+                     var body = noteLinesToText(
+-                        noteLines.filter(function(l) { return !l.match(/^\s*<color:gray>/); }),
++                        noteLines.filter(function(l) { return !l.match(/^\s*<color:(?:gray|#[0-9A-Fa-f]{6})>/); }),
+                         unescapeSourceNoteLine).trim();
+                     if (body) payloads.push(body);
+                 } else {

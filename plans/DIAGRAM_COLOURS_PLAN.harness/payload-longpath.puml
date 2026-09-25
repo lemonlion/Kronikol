@@ -1,0 +1,53 @@
+@startuml
+!pragma teoz true
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+entity "Orders API" as ordersAPI
+
+caller -[#438DD5]> ordersAPI: [[#iflow-dbaa5235-df9a-4cba-86c7-634be1fac935 GET: /api/orders?filter001=value001&filter002=value002&filter003=value003&filter004=value004&filter005=va\n        lue005&filter006=value006&filter007=value007&filter008=value008&filter009=value009&filter010=value01\n        0&filter011=value011&filter012=value012&filter013=value013&filter014=value014&filter015=value015&fil\n        ter016=value016&filter017=value017&filter018=value018&filter019=value019&filter020=value020&filter02\n        1=value021&filter022=value022&filter023=value023&filter024=value024&filter025=value025&filter026=val\n        ue026&filter027=value027&filter028=value028&filter029=value029&filter030=value030&filter031=value031\n        &filter032=value032&filter033=value033&filter034=value034&filter035=value035&filter036=value036&filt\n        er037=value037&filter038=value038&filter039=value039&filter040=value040&filter041=value041&filter042\n        =value042&filter043=value043&filter044=value044&filter045=value045&filter046=value046&filter047=valu\n        e047&filter048=value048&filter049=value049&filter050=value050&filter051=value051&filter052=value052&\n        filter053=value053&filter054=value054&filter055=value055&filter056=value056&filter057=value057&filte\n        r058=value058&filter059=value059&filter060=value060&filter061=value061&filter062=value062&filter063=\n        value063&filter064=value064&filter065=value065&filter066=value066&filter067=value067&filter068=value\n        068&filter069=value069&filter070=value070&filter071=value071&filter072=value072&filter073=value073&f\n        ilter074=value074&filter075=value075&filter076=value076&filter077=value077&filter078=value078&filter\n        079=value079&filter080=value080&filter081=value081&filter082=value082&filter083=value083&filter084=v\n        alue084&filter085=value085&filter086=value086&filter087=value087&filter088=value088&filter089=value0\n        89&filter090=value090&filter091=value091&filte…]]
+note left
+<color:gray>[Accept=application/json]
+
+<color:gray>[Full path]
+/api/orders?filter001=value001&filter002=value002&filter003=value003&filter004=v<U+200B>
+alue004&filter005=value005&filter006=value006&filter007=value007&filter008=value<U+200B>
+008&filter009=value009&filter010=value010&filter011=value011&filter012=value012&<U+200B>
+filter013=value013&filter014=value014&filter015=value015&filter016=value016&filt<U+200B>
+er017=value017&filter018=value018&filter019=value019&filter020=value020&filter02<U+200B>
+1=value021&filter022=value022&filter023=value023&filter024=value024&filter025=va<U+200B>
+lue025&filter026=value026&filter027=value027&filter028=value028&filter029=value0<U+200B>
+29&filter030=value030&filter031=value031&filter032=value032&filter033=value033&f<U+200B>
+ilter034=value034&filter035=value035&filter036=value036&filter037=value037&filte<U+200B>
+r038=value038&filter039=value039&filter040=value040&filter041=value041&filter042<U+200B>
+~=value042&filter043=value043&filter044=value044&filter045=value045&filter046=val<U+200B>
+ue046&filter047=value047&filter048=value048&filter049=value049&filter050=value05<U+200B>
+0&filter051=value051&filter052=value052&filter053=value053&filter054=value054&fi<U+200B>
+lter055=value055&filter056=value056&filter057=value057&filter058=value058&filter<U+200B>
+059=value059&filter060=value060&filter061=value061&filter062=value062&filter063=<U+200B>
+value063&filter064=value064&filter065=value065&filter066=value066&filter067=valu<U+200B>
+e067&filter068=value068&filter069=value069&filter070=value070&filter071=value071<U+200B>
+&filter072=value072&filter073=value073&filter074=value074&filter075=value075&fil<U+200B>
+ter076=value076&filter077=value077&filter078=value078&filter079=value079&filter0<U+200B>
+80=value080&filter081=value081&filter082=value082&filter083=value083&filter084=v<U+200B>
+alue084&filter085=value085&filter086=value086&filter087=value087&filter088=value<U+200B>
+088&filter089=value089&filter090=value090&filter091=value091&filter092=value092&<U+200B>
+filter093=value093&filter094=value094&filter095=value095&filter096=value096&filt<U+200B>
+er097=value097&filter098=value098&filter099=value099&filter100=value100&filter10<U+200B>
+1=value101&filter102=value102&filter103=value103&filter104=value104&filter105=va<U+200B>
+lue105&filter106=value106&filter107=value107&filter108=value108&filter109=value1<U+200B>
+09&filter110=value110&filter111=value111&filter112=value112&filter113=value113&f<U+200B>
+ilter114=value114&filter115=value115
+end note
+ordersAPI -[#438DD5]-> caller: OK
+note right
+<color:gray>[Content-Type=application/json]
+
+{
+  "count": 0
+}
+end note
+@enduml

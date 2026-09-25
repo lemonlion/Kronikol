@@ -49,6 +49,43 @@ public class StepBarPlantUmlTests
     }
 
     [Fact]
+    public void A_label_quoting_loader_markup_is_escaped_in_both_forms()
+    {
+        // LightBDD writes a table parameter into the step name as <$name>: the sprite syntax, which the
+        // engine dropped, so the bar painted `[inputs: ""]`. `<&` and `<:` made it load a bundle the
+        // report's renderers cannot. `~<` is honoured by both bar forms (DIAGRAM_COLOURS_PLAN R25).
+        const string label = "Given I have data [inputs: \"<$inputs>\"] and Vec<&str> <:rocket:>";
+        const string escaped = "Given I have data [inputs: \"~<$inputs>\"] and Vec~<&str> ~<:rocket:>";
+
+        Assert.Equal(LegacyPrefix + escaped, StepBarPlantUml.Build(label));
+        Assert.StartsWith(RichPrefix + escaped + @"\n\n|= name |= price |", StepBarPlantUml.Build(label, [new StepBarTable(null, Menu())]));
+    }
+
+    [Fact]
+    public void A_label_without_loader_markup_is_unchanged_in_the_coloured_form()
+    {
+        // The coloured form promises its bytes to every report that shipped before tables joined the bar.
+        Assert.Equal(LegacyPrefix + "Given a < b and x<-y and <b>bold</b>",
+            StepBarPlantUml.Build("Given a < b and x<-y and <b>bold</b>"));
+    }
+
+    [Fact]
+    public void A_label_capped_between_a_tilde_and_its_markup_leaves_no_markup_live()
+    {
+        // One long word (a `<` in it means the wrapper never cuts it), capped for the coloured form so that
+        // the cut lands right after the `~` the escape added. What is left paints as `…~…`, and nothing
+        // after the cut reaches the engine.
+        var budget = PlantUmlStatementLimits.MaxColouredNoteBarChars - LegacyPrefix.Length;
+        var keep = budget - PlantUmlStatementLimits.TruncationMarker.Length;
+        var label = new string('s', keep - 1) + "<&str>tail";
+
+        var bar = StepBarPlantUml.Build(label);
+
+        Assert.Equal(LegacyPrefix + new string('s', keep - 1) + "~" + PlantUmlStatementLimits.TruncationMarker, bar);
+        Assert.DoesNotContain("<&", bar);
+    }
+
+    [Fact]
     public void A_table_switches_to_the_styled_body_form_with_breathing_room()
     {
         // One blank display line above the table and one below — butted directly against the step

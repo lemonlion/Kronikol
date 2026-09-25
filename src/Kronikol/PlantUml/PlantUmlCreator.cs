@@ -294,7 +294,9 @@ public static partial class PlantUmlCreator
                 {
                     // A user action: one arrow from the actor to the service, labelled with the action,
                     // no response arrow. Its detail (full title / locator) is the note.
-                    var actionLabel = (effectiveMethod.Value?.ToString() ?? "action").Replace("\r", string.Empty).Replace("\n", "\\n");
+                    // The label is the tracker's own words for the step, which can quote a locator or the text
+                    // typed into a field: loader markup in it is escaped (EscapeLoaderMarkup), the rest is not.
+                    var actionLabel = EscapeLoaderMarkup((effectiveMethod.Value?.ToString() ?? "action").Replace("\r", string.Empty).Replace("\n", "\\n"));
                     var actionCategory = trace.CallerDependencyCategory ?? Constants.DependencyCategories.User;
                     var actionColor = builder.GetArrowColor(trace.CallerName, actionCategory, trace.CallerName, actionCategory);
                     var actionPrefix = $"{callerShortName} -{actionColor}> {serviceShortName}: ";
@@ -480,6 +482,11 @@ public static partial class PlantUmlCreator
     /// style anything, so a lone <c>https://</c> is left exactly as captured. Kronikol's own markup — the
     /// gray header tags, the binary placeholder, focus emphasis — is added after this runs and is never escaped.
     /// </para>
+    /// <para>
+    /// A <c>&lt;</c> opening an OpenIconic icon (<c>&lt;&amp;name&gt;</c>), an emoji (<c>&lt;:name:&gt;</c>)
+    /// or a sprite (<c>&lt;$name&gt;</c>) is escaped too, see <see cref="EscapeLoaderMarkup"/>: the first two
+    /// make the engine load a bundle the report's renderers cannot, and a sprite drops the text.
+    /// </para>
     /// </summary>
     internal static string EscapeCreoleMarkup(string text)
     {
@@ -537,11 +544,59 @@ public static partial class PlantUmlCreator
                 continue;
             }
 
-            if (c == '<' && i + 1 < line.Length && IsCreoleTagStart(line[i + 1]))
+            if (c == '<' && i + 1 < line.Length
+                && (IsCreoleTagStart(line[i + 1]) || (IsLoaderMarkupStart(line[i + 1]) && !IsTildeEscaped(line, i))))
                 sb.Append('~');
 
             sb.Append(c);
         }
+    }
+
+    /// <summary>
+    /// Puts a <c>~</c> before every <c>&lt;</c> that opens an OpenIconic icon (<c>&lt;&amp;name&gt;</c>), an
+    /// emoji (<c>&lt;:name:&gt;</c>) or a sprite (<c>&lt;$name&gt;</c>), and before nothing else.
+    /// <para>
+    /// The engine loads OpenIconic and emoji by adding a script element to its page, which neither the
+    /// report's render worker nor the Node renderer can answer: before 3.29.6 such a diagram was never
+    /// drawn, and neither was anything rendered after it by the same engine. A sprite reference loads
+    /// nothing but is dropped from the text. For text Kronikol copies in from a test (step names, test
+    /// names, assertion messages, UI action descriptions, span names), which otherwise reaches PlantUML as
+    /// written: its other markup keeps styling it, as it always has. Payloads are escaped in full by
+    /// <see cref="EscapeCreoleMarkup"/>, which applies the same rule.
+    /// </para>
+    /// <para>
+    /// A <c>&lt;</c> that the text already escapes itself is left alone. PlantUML reads a run of tildes in
+    /// pairs, and a pair paints as two tildes and escapes nothing, so one more <c>~</c> in front of
+    /// <c>~&lt;&amp;</c> would make the markup live again.
+    /// </para>
+    /// </summary>
+    internal static string EscapeLoaderMarkup(string text)
+    {
+        if (string.IsNullOrEmpty(text) || text.IndexOf('<') < 0) return text;
+
+        StringBuilder? sb = null;
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '<' && i + 1 < text.Length && IsLoaderMarkupStart(text[i + 1]) && !IsTildeEscaped(text, i))
+            {
+                sb ??= new StringBuilder(text.Length + 8).Append(text, 0, i);
+                sb.Append('~');
+            }
+            sb?.Append(text[i]);
+        }
+        return sb?.ToString() ?? text;
+    }
+
+    /// <summary><c>&lt;&amp;</c> is an OpenIconic icon, <c>&lt;:</c> an emoji, <c>&lt;$</c> a sprite.</summary>
+    private static bool IsLoaderMarkupStart(char c) => c is '&' or ':' or '$';
+
+    /// <summary>Whether an odd run of tildes stands right before position <paramref name="at"/>, which escapes it.</summary>
+    private static bool IsTildeEscaped(ReadOnlySpan<char> text, int at)
+    {
+        var tildes = 0;
+        while (at - tildes - 1 >= 0 && text[at - tildes - 1] == '~')
+            tildes++;
+        return tildes % 2 == 1;
     }
 
     private static int Occurrences(ReadOnlySpan<char> line, char c)

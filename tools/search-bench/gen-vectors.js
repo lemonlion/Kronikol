@@ -70,6 +70,9 @@ const normalizationInputs = [
   ['combining-marks-untouched', 'éclair å'],
   ['creole-escapes', 'x ~*~*important~*~* and ~/~/slanted~/~/ plus ~_~_deep~_~_ ~[link~] ~"q~" ~-dash'],
   ['creole-line-leading-escapes', '~# heading-like payload line\n~= another\n~* bullet-like'],
+  // 3.29.6: `<&`, `<:` and `<$` are escaped in captured text too (they load an OpenIconic or emoji
+  // bundle, or drop a sprite's text); a search still finds them as captured.
+  ['creole-loader-markup-escapes', 'expected Vec~<&str> and ~<:rocket:> plus ~<$foo>'],
   ['markup-tags', '<color:gray>[Content-Type=application/json]</color> <font color="red">x</font> <i>[binary content]</i> <b>bold</b>'],
   ['arrow-label-5a', 'test -> svc: POST: /orders/pppp\\n        qqqq more'],
   // Rule 1b: the generator marks the breaks it writes into a note body, and only those are undone.

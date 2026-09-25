@@ -717,11 +717,39 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
+    public async Task Escape_protects_loader_markup_so_a_yaml_note_never_asks_for_a_bundle()
+    {
+        // The YAML view rebuilds the note's lines in the browser from the reconstructed JSON, so it needs
+        // the generation side's rule too: `<&` (an OpenIconic icon) and `<:` (an emoji) made the engine
+        // load a bundle the render worker cannot, and `<$` (a sprite) dropped the text.
+        await NavigateToReport();
+        var escaped = await EscapeLines(new object[]
+        {
+            new { t = "error: expected Vec<&str>, found String", block = false },
+            new { t = "launch: <:rocket:>", block = false },
+            new { t = "tpl: a <$foo> b", block = true },
+            new { t = "cmp: a < b and x<-y", block = false },
+            new { t = "own: ~<&str>", block = false }
+        });
+        Assert.Equal(new[]
+        {
+            "error: expected Vec~<&str>, found String",
+            "launch: ~<:rocket:>",
+            "tpl: a ~<$foo> b",
+            "cmp: a < b and x<-y",
+            // Already escaped by its own tilde: one more would pair with it and make the markup live.
+            "own: ~<&str>"
+        }, escaped);
+    }
+
+    [Fact]
     public async Task Unescape_is_the_inverse_of_escape_across_marker_classes()
     {
         await NavigateToReport();
         var cases = new[]
         {
+            "error: expected Vec<&str>, found String",
+            "launch: <:rocket:> and tpl: <$foo>",
             "url: \"https://example.com/orders\"",
             "md: **bold** text",
             "sql: -- comment -- more",
