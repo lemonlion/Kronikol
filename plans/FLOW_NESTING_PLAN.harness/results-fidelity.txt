@@ -1,0 +1,11 @@
+Fidelity: flow_prototype.py --mode flat against kronikol query flow 3.29.6, trailing whitespace ignored
+  ReqNRoll s26 identical
+  ReqNRoll s57 identical
+  ReqNRoll s59 identical
+  ReqNRoll s103 identical
+  ReqNRoll s165 identical
+  BDDfy s26 identical
+  BDDfy s57 identical
+  BDDfy s59 identical
+  BDDfy s103 identical
+  BDDfy s165 identical

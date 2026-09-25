@@ -1,0 +1,96 @@
+report                                                     scen   req  nest scn+ maxd lifo! open orph norr swal
+BreakfastProvider/tests/BreakfastProvider.Tests.Component.  203  1347   864  119    4    11    1    0    0    1
+BreakfastProvider/tests/BreakfastProvider.Tests.Component.  178  1323   855  118    4     7    0    0    0    0
+BreakfastProvider/tests/BreakfastProvider.Tests.Component.  203  1339   857  119    4    11    2    0    0    2
+BreakfastProvider/tests/BreakfastProvider.Tests.Component.  205  1346   836  118    4     9    0    0    0    0
+BreakfastProvider/tests/BreakfastProvider.Tests.Component.  203  1564   856  119    4     8    1    0    0    1
+BreakfastProvider/tests/BreakfastProvider.Tests.Component.    1     3     0    0    0     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.CiPreview.AllFailing     11    41    12    8    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing     11    36    10    7    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.CiPreview.FailingWithS    6    34    11    6    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.CiPreview.Mixed           2     7     2    1    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.BDDfy.xUnit3    2    11     3    2    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.LightBDD.TUn    3    18     4    3    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUn    3    18     4    3    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUn    6    18     4    3    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.NUnit4          2    11     3    2    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUn    2    11     3    2    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUn    2    11     3    2    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUn    8    23     7    4    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.TUnit          12    11     3    2    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.xUnit2          2    11     3    2    1     0    0    0    0    0
+Example.Api/tests/Example.Api.Tests.Component.xUnit3          3     0     0    0    0     0    0    0    0    0
+Kronikol/tests/Kronikol.Tests                                 1     0     0    0    0     0    0    0    0    0
+kronikol4j-aws/build/kronikol-report                         10     0     0    0    0     0    0    0    0    0
+kronikol4j-azure/build/kronikol-report                       15     0     0    0    0     0    0    0    0    0
+kronikol4j-cassandra/build/kronikol-report                    4     0     0    0    0     0    0    0    0    0
+kronikol4j-elasticsearch/build/kronikol-report                5     0     0    0    0     0    0    0    0    0
+kronikol4j-gcp/build/kronikol-report                         10     0     0    0    0     0    0    0    0    0
+kronikol4j-grpc/build/kronikol-report                         3     0     0    0    0     0    0    0    0    0
+kronikol4j-http/build/kronikol-report                         2     0     0    0    0     0    0    0    0    0
+kronikol4j-jdbc/build/kronikol-report                         6     0     0    0    0     0    0    0    0    0
+kronikol4j-junit5/build/kronikol-report                       2     0     0    0    0     0    0    0    0    0
+kronikol4j-messaging/build/kronikol-report                    2     0     0    0    0     0    0    0    0    0
+kronikol4j-mongodb/build/kronikol-report                      1     0     0    0    0     0    0    0    0    0
+kronikol4j-proxy/build/kronikol-report                        2     0     0    0    0     0    0    0    0    0
+kronikol4j-redis/build/kronikol-report                        1     0     0    0    0     0    0    0    0    0
+kronikol4j-spring/build/kronikol-report                       1     0     0    0    0     0    0    0    0    0
+kronikol4j-testng/build/kronikol-report                       1     0     0    0    0     0    0    0    0    0
+
+columns: nest = requests at depth >= 1; scn+ = scenarios with any nesting; lifo! = responses closing a
+non-innermost request; open = requests never answered; orph = responses with no open request;
+norr = requests with no requestResponseId; swal = requests nested under a never-answered request
+
+depth histogram (requests): {0: 2843, 1: 4272, 2: 35, 3: 19, 4: 14}
+record types: {'Request': 7183, 'Response': 7179}  metaTypes: {'Default': 11694, 'Event': 2668}
+
+depth 2 or more: a request never answered in the chain: 1
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.NUnit s165/i2
+depth 2 or more: out-of-order siblings only: 67
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s57/i2
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s57/i3
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s57/i4
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s58/i2
+nested under a request that is never answered: 4
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s165/i1
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.NUnit s165/i1
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.NUnit s165/i2
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.TUnit s165/i1
+nested: caller is the parent's service: 3702
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s0/i1
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s0/i7
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s0/i11
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s0/i13
+nested: other caller, same trace as parent: 564
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s0/i9 Kafka Broker -> Breakfast Provider
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s0/i17 Azure Event Hub -> Breakfast Provider
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s1/i9 Kafka Broker -> Breakfast Provider
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s1/i17 Azure Event Hub -> Breakfast Provider
+nested: same caller as parent (concurrent work of one party): 67
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s57/i2 Breakfast Provider -> Supplier Service under i1
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s57/i3 Breakfast Provider -> Goat Service under i2
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s57/i4 Breakfast Provider -> Cow Service under i3
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s58/i2 Breakfast Provider -> Cow Service under i1
+nested: same caller as parent (under a request never answered): 4
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s165/i1 Caller -> Breakfast Provider under i0
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.NUnit s165/i1 Caller -> Breakfast Provider under i0
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.NUnit s165/i2 Caller -> Breakfast Provider under i1
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.TUnit s165/i1 Caller -> Breakfast Provider under i0
+nested: step differs from parent's: 3
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.ReqNRoll s89/i1 step 0 under i0 step None
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.ReqNRoll s99/i1 step 1 under i0 step 0
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.ReqNRoll s174/i1 step 1 under i0 step 0
+nested: unrelated caller and trace: 3
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.ReqNRoll s89/i1 Caller -> Breakfast Provider under i0 Breakfast Provider -> CosmosDB
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.ReqNRoll s99/i1 Caller -> Breakfast Provider under i0 Breakfast Provider -> CosmosDB
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.ReqNRoll s174/i1 Caller -> Breakfast Provider under i0 Breakfast Provider -> CosmosDB
+request never answered: 4
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s165/i0 Caller -> Breakfast Provider GET meta=Default
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.NUnit s165/i0 Caller -> Breakfast Provider GET meta=Default
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.NUnit s165/i1 Caller -> Breakfast Provider GET meta=Default
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.TUnit s165/i0 Caller -> Breakfast Provider GET meta=Default
+response closes a request that is not innermost: 46
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s57/i5 closes i2 while i4 open
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s57/i6 closes i3 while i4 open
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s57/i7 closes i1 while i4 open
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s58/i5 closes i2 while i4 open

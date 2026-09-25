@@ -1,0 +1,3 @@
+992 scenarios: flow bytes 826,657 flat -> 859,022 nested (+3.9%)
+largest relative increase: +18.6% (BreakfastProvider.Tests.Component.NUnit s82: 274 -> 325 B)
+indented lines 4,261, deepest level 1, `inside` references in unfiltered views: 0

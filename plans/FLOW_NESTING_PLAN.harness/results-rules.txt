@@ -1,0 +1,16 @@
+1134 scenarios, 7183 requests
+
+rule   nested  interleaved  step-split  depth histogram
+R1       4336            0           3  {0: 2847, 1: 4268, 2: 35, 3: 19, 4: 14}
+R2       3769          961           0  {0: 3414, 1: 3769}
+R3       4333            0           0  {0: 2850, 1: 4333}
+R4       4333            0           0  {0: 2850, 1: 4333}
+
+R1 step:
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.ReqNRoll s89/i1 parent i0 step None -> 0
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.ReqNRoll s99/i1 parent i0 step 0 -> 1
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.ReqNRoll s174/i1 parent i0 step 0 -> 1
+R2 interleaved:
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s0/i11 parent i6, indentation says i9
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s0/i13 parent i6, indentation says i9
+    BreakfastProvider/tests/BreakfastProvider.Tests.Component.BDDfy s0/i15 parent i6, indentation says i9

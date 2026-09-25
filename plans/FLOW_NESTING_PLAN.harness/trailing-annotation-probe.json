@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "kronikolVersion": "3.29.6",
+  "suite": "Probe",
+  "startTime": "2026-09-25T10:00:00Z",
+  "endTime": "2026-09-25T10:00:01Z",
+  "features": [
+    {
+      "name": "Orders",
+      "labels": [],
+      "scenarios": [
+        {
+          "id": "t0", "stableId": "aaaabbbbccccdddd", "name": "Checkout", "result": "Passed", "durationSeconds": 0.1,
+          "labels": [], "categories": [], "attachments": [],
+          "steps": [ { "keyword": "When", "text": "the order is placed", "status": "Passed", "durationSeconds": 0.1, "subSteps": [], "attachments": [] } ],
+          "httpInteractions": [
+            { "type": "Request", "method": "POST", "uri": "http://api/orders", "serviceName": "api", "callerName": "test", "content": null, "headers": [],
+              "statusCode": null, "statusText": null, "traceId": "11111111-1111-1111-1111-111111111111", "requestResponseId": "22222222-2222-2222-2222-222222222222", "stepPath": "0" },
+            { "type": "Response", "method": "POST", "uri": "http://api/orders", "serviceName": "api", "callerName": "test", "content": null, "headers": [],
+              "statusCode": 201, "statusText": "Created", "traceId": "11111111-1111-1111-1111-111111111111", "requestResponseId": "22222222-2222-2222-2222-222222222222", "stepPath": "0" }
+          ],
+          "annotations": [
+            { "index": 0, "kind": "Row", "text": "Row 1" },
+            { "index": 2, "kind": "Custom", "text": "after the last call" }
+          ]
+        }
+      ]
+    }
+  ],
+  "diagnostics": []
+}

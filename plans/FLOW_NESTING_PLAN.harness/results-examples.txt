@@ -1,0 +1,291 @@
+Today = kronikol query flow 3.29.6. Proposed = flow_prototype.py --mode nested. BreakfastProvider reports of 2026-09-05 (Kronikol 3.0.83).
+
+=================== ReqNRoll s26: today
+s26  An order should progress through all status transitions to completion  [Passed]
+
+── 0  Given a pancake batch has been created
+  s26/i0    Caller → Breakfast Provider  GET /milk  OK  15 ms
+  s26/i1    Breakfast Provider → Cow Service  GET /milk  OK  14 ms
+  s26/i4    Caller → Breakfast Provider  GET /eggs  OK  1 ms
+  s26/i6    Caller → Breakfast Provider  GET /flour  OK  1 ms
+  s26/i8    Caller → Breakfast Provider  POST /pancakes  Created  1.1 s  b:2195078e 80 B
+  s26/i9    Breakfast Provider → CosmosDB  CREATE /orders  Created  
+  s26/i11   Kafka Broker → Breakfast Provider  CONSUME (KAFKA) /breakfast_recipe_logs  Ack  0 ms  b:1cc793f0 189 B
+  s26/i13   Breakfast Provider → Reporting Database (SQL Server)  INSERT /RecipeReports  OK  
+  s26/i15   Breakfast Provider → Kafka Broker  PRODUCE    
+  s26/i17   Google Cloud Pub/Sub → Breakfast Provider  CONSUME (PUB/SUB) /breakfast_batch_completions  Ack  0 ms  b:bdf6b846 168 B
+  s26/i19   Breakfast Provider → Reporting Database (SQL Server)  INSERT /BatchCompletionRecords  OK  
+  s26/i21   Breakfast Provider → Google Cloud Pub/Sub  PUBLISH (PUB/SUB) /PancakeBatchCompletedEvent  Responded  0 ms
+  s26/i23   Azure Event Hub → Breakfast Provider  CONSUME (EVENT HUB) /breakfast-equipment-alerts  Ack  0 ms  b:96dafdea 202 B
+  s26/i25   Breakfast Provider → Reporting Database (SQL Server)  INSERT /EquipmentAlerts  OK  
+── 1  And a breakfast order has been placed for the batch
+  s26/i28   Caller → Breakfast Provider  POST /orders  Created  1.58 s  b:ad4ac389 172 B
+  s26/i29   Breakfast Provider → CosmosDB  CREATE /orders  OK  
+  s26/i31   Breakfast Provider → Event Grid  PUBLISH (EVENT GRID) /OrderCreatedEvent  Responded  0 ms
+  s26/i33   Breakfast Provider → CosmosDB  CREATE /orders  Created  
+  s26/i35   Breakfast Provider → Kitchen Service  POST /prepare  OK  29 ms  b:a8eb5615 97 B
+  s26/i37   Breakfast Provider → Notification Service (gRPC)  SENDORDERCONFIRMATION /notifications.NotificationGrpc/SendOr…  OK  24 ms  b:372bb6c6 150 B
+  s26/i39   Breakfast Provider → Reporting Database (SQL Server)  SELECT /OrderSummaries  OK  
+  s26/i41   Breakfast Provider → Reporting Database (SQL Server)  INSERT /OrderSummaries  OK  
+── 2  When the order progresses through all statuses to completed
+  s26/i44   Caller → Breakfast Provider  PATCH /orders/b55eb976-dc1e-4491-b412-13341bc9ed91/status  OK  74 ms  b:9a8cd147 22 B
+  s26/i45   Breakfast Provider → CosmosDB  READ /orders  OK  
+  s26/i47   Breakfast Provider → CosmosDB  UPSERT /orders  OK  
+  s26/i49   Breakfast Provider → CosmosDB  CREATE /orders  Created  
+  s26/i52   Caller → Breakfast Provider  PATCH /orders/b55eb976-dc1e-4491-b412-13341bc9ed91/status  OK  6 ms  b:bf036887 18 B
+  s26/i53   Breakfast Provider → CosmosDB  READ /orders  OK  
+  s26/i55   Breakfast Provider → CosmosDB  UPSERT /orders  OK  
+  s26/i57   Breakfast Provider → CosmosDB  CREATE /orders  Created  
+  s26/i60   Caller → Breakfast Provider  PATCH /orders/b55eb976-dc1e-4491-b412-13341bc9ed91/status  OK  8 ms  b:073c9f90 22 B
+  s26/i61   Breakfast Provider → CosmosDB  READ /orders  OK  
+  s26/i63   Breakfast Provider → CosmosDB  UPSERT /orders  OK  
+  s26/i65   Breakfast Provider → CosmosDB  CREATE /orders  Created  
+── 3  Then the completed order should be retrievable with all details
+  s26/i68   Caller → Breakfast Provider  GET /orders/b55eb976-dc1e-4491-b412-13341bc9ed91  OK  4 ms
+  s26/i69   Breakfast Provider → CosmosDB  READ /orders  OK  
+── 4  And an audit log entry should exist for the order
+  s26/i72   Caller → Breakfast Provider  GET /audit-logs  OK  77 ms
+  s26/i73   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:d609cccf 147 B
+38 calls shown · http s26/iN --keys for a payload
+------------------- ReqNRoll s26: proposed
+s26  An order should progress through all status transitions to completion  [Passed]
+
+── 0  Given a pancake batch has been created
+  s26/i0    Caller → Breakfast Provider  GET /milk  OK  15 ms
+    s26/i1    Breakfast Provider → Cow Service  GET /milk  OK  14 ms
+  s26/i4    Caller → Breakfast Provider  GET /eggs  OK  1 ms
+  s26/i6    Caller → Breakfast Provider  GET /flour  OK  1 ms
+  s26/i8    Caller → Breakfast Provider  POST /pancakes  Created  1.1 s  b:2195078e 80 B
+    s26/i9    Breakfast Provider → CosmosDB  CREATE /orders  Created
+    s26/i11   Kafka Broker → Breakfast Provider  CONSUME (KAFKA) /breakfast_recipe_logs  Ack  0 ms  b:1cc793f0 189 B
+    s26/i13   Breakfast Provider → Reporting Database (SQL Server)  INSERT /RecipeReports  OK
+    s26/i15   Breakfast Provider → Kafka Broker  PRODUCE
+    s26/i17   Google Cloud Pub/Sub → Breakfast Provider  CONSUME (PUB/SUB) /breakfast_batch_completions  Ack  0 ms  b:bdf6b846 168 B
+    s26/i19   Breakfast Provider → Reporting Database (SQL Server)  INSERT /BatchCompletionRecords  OK
+    s26/i21   Breakfast Provider → Google Cloud Pub/Sub  PUBLISH (PUB/SUB) /PancakeBatchCompletedEvent  Responded  0 ms
+    s26/i23   Azure Event Hub → Breakfast Provider  CONSUME (EVENT HUB) /breakfast-equipment-alerts  Ack  0 ms  b:96dafdea 202 B
+    s26/i25   Breakfast Provider → Reporting Database (SQL Server)  INSERT /EquipmentAlerts  OK
+── 1  And a breakfast order has been placed for the batch
+  s26/i28   Caller → Breakfast Provider  POST /orders  Created  1.58 s  b:ad4ac389 172 B
+    s26/i29   Breakfast Provider → CosmosDB  CREATE /orders  OK
+    s26/i31   Breakfast Provider → Event Grid  PUBLISH (EVENT GRID) /OrderCreatedEvent  Responded  0 ms
+    s26/i33   Breakfast Provider → CosmosDB  CREATE /orders  Created
+    s26/i35   Breakfast Provider → Kitchen Service  POST /prepare  OK  29 ms  b:a8eb5615 97 B
+    s26/i37   Breakfast Provider → Notification Service (gRPC)  SENDORDERCONFIRMATION /notifications.NotificationGrpc/SendOr…  OK  24 ms  b:372bb6c6 150 B
+    s26/i39   Breakfast Provider → Reporting Database (SQL Server)  SELECT /OrderSummaries  OK
+    s26/i41   Breakfast Provider → Reporting Database (SQL Server)  INSERT /OrderSummaries  OK
+── 2  When the order progresses through all statuses to completed
+  s26/i44   Caller → Breakfast Provider  PATCH /orders/b55eb976-dc1e-4491-b412-13341bc9ed91/status  OK  74 ms  b:9a8cd147 22 B
+    s26/i45   Breakfast Provider → CosmosDB  READ /orders  OK
+    s26/i47   Breakfast Provider → CosmosDB  UPSERT /orders  OK
+    s26/i49   Breakfast Provider → CosmosDB  CREATE /orders  Created
+  s26/i52   Caller → Breakfast Provider  PATCH /orders/b55eb976-dc1e-4491-b412-13341bc9ed91/status  OK  6 ms  b:bf036887 18 B
+    s26/i53   Breakfast Provider → CosmosDB  READ /orders  OK
+    s26/i55   Breakfast Provider → CosmosDB  UPSERT /orders  OK
+    s26/i57   Breakfast Provider → CosmosDB  CREATE /orders  Created
+  s26/i60   Caller → Breakfast Provider  PATCH /orders/b55eb976-dc1e-4491-b412-13341bc9ed91/status  OK  8 ms  b:073c9f90 22 B
+    s26/i61   Breakfast Provider → CosmosDB  READ /orders  OK
+    s26/i63   Breakfast Provider → CosmosDB  UPSERT /orders  OK
+    s26/i65   Breakfast Provider → CosmosDB  CREATE /orders  Created
+── 3  Then the completed order should be retrievable with all details
+  s26/i68   Caller → Breakfast Provider  GET /orders/b55eb976-dc1e-4491-b412-13341bc9ed91  OK  4 ms
+    s26/i69   Breakfast Provider → CosmosDB  READ /orders  OK
+── 4  And an audit log entry should exist for the order
+  s26/i72   Caller → Breakfast Provider  GET /audit-logs  OK  77 ms
+    s26/i73   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:d609cccf 147 B
+38 calls shown · http s26/iN --keys for a payload · indented calls ran inside the call above them
+
+=================== BDDfy s57: today
+s57  Health check endpoint should return healthy status with all dependency details  [Passed]
+
+── 0  When the health check endpoint is called
+  s57/i0    Caller → Breakfast Provider  GET /health  OK  1.96 s
+  s57/i1    Breakfast Provider → Kitchen Service  GET /health  OK  139 ms
+  s57/i2    Breakfast Provider → Supplier Service  GET /health  OK  135 ms
+  s57/i3    Breakfast Provider → Goat Service  GET /health  OK  135 ms
+  s57/i4    Breakfast Provider → Cow Service  GET /health  OK  135 ms
+5 calls shown · http s57/iN --keys for a payload
+------------------- BDDfy s57: proposed
+s57  Health check endpoint should return healthy status with all dependency details  [Passed]
+
+── 0  When the health check endpoint is called
+  s57/i0    Caller → Breakfast Provider  GET /health  OK  1.96 s
+    s57/i1    Breakfast Provider → Kitchen Service  GET /health  OK  139 ms
+    s57/i2    Breakfast Provider → Supplier Service  GET /health  OK  135 ms
+    s57/i3    Breakfast Provider → Goat Service  GET /health  OK  135 ms
+    s57/i4    Breakfast Provider → Cow Service  GET /health  OK  135 ms
+5 calls shown · http s57/iN --keys for a payload · indented calls ran inside the call above them
+
+=================== ReqNRoll s59: today
+s59  Requesting goat milk when the goat service is unavailable should return a bad gateway resp…  [Passed]
+
+── 1  When goat milk is requested
+  s59/i0    Caller → Breakfast Provider  GET /goat-milk  BadGateway  48 ms
+  s59/i1    Breakfast Provider → Goat Service  GET /goat-milk  ServiceUnavailable  22 ms
+2 calls shown · http s59/iN --keys for a payload
+------------------- ReqNRoll s59: proposed
+s59  Requesting goat milk when the goat service is unavailable should return a bad gateway resp…  [Passed]
+
+── 1  When goat milk is requested
+  s59/i0    Caller → Breakfast Provider  GET /goat-milk  BadGateway  48 ms
+    s59/i1    Breakfast Provider → Goat Service  GET /goat-milk  ServiceUnavailable  22 ms
+2 calls shown · http s59/iN --keys for a payload · indented calls ran inside the call above them
+
+=================== BDDfy s165: today
+s165  The AsyncApi endpoint should return a valid specification  [Passed]
+
+── 0  When the asyncapi endpoint is called
+  s165/i0   Caller → Breakfast Provider  GET /asyncapi/v1.json    
+  s165/i1   Caller → Breakfast Provider  GET /asyncapi/v1.json  OK  5 ms
+2 calls shown · http s165/iN --keys for a payload
+------------------- BDDfy s165: proposed
+s165  The AsyncApi endpoint should return a valid specification  [Passed]
+
+── 0  When the asyncapi endpoint is called
+  s165/i0   Caller → Breakfast Provider  GET /asyncapi/v1.json
+  s165/i1   Caller → Breakfast Provider  GET /asyncapi/v1.json  OK  5 ms
+2 calls shown · http s165/iN --keys for a payload
+
+=================== ReqNRoll s89: today
+s89  All menu items should be marked unavailable when the supplier service is down  [Passed]
+
+  s89/i0    Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+── 0  Given the supplier service will return service unavailable
+  s89/i1    Caller → Breakfast Provider  DELETE /menu/cache  NoContent  563 ms
+── 1  When the menu is requested
+  s89/i4    Caller → Breakfast Provider  GET /menu  OK  44 ms
+  s89/i5    Breakfast Provider → Supplier Service  GET /ingredients/milk/availability  ServiceUnavailable  8 ms
+  s89/i7    Breakfast Provider → Google Cloud Pub/Sub  PUBLISH (PUB/SUB) /MenuAvailabilityChangedEvent  Responded  0 ms
+── 2  Then the menu response should mark all items as unavailable
+  s89/i10   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+  s89/i12   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+  s89/i14   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+  s89/i16   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+  s89/i18   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+10 calls shown · http s89/iN --keys for a payload
+------------------- ReqNRoll s89: proposed
+s89  All menu items should be marked unavailable when the supplier service is down  [Passed]
+
+  s89/i0    Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+── 0  Given the supplier service will return service unavailable
+  s89/i1    Caller → Breakfast Provider  DELETE /menu/cache  NoContent  563 ms
+── 1  When the menu is requested
+  s89/i4    Caller → Breakfast Provider  GET /menu  OK  44 ms
+    s89/i5    Breakfast Provider → Supplier Service  GET /ingredients/milk/availability  ServiceUnavailable  8 ms
+    s89/i7    Breakfast Provider → Google Cloud Pub/Sub  PUBLISH (PUB/SUB) /MenuAvailabilityChangedEvent  Responded  0 ms
+── 2  Then the menu response should mark all items as unavailable
+  s89/i10   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+  s89/i12   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+  s89/i14   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+  s89/i16   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+  s89/i18   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:930a4ff5 62 B
+10 calls shown · http s89/iN --keys for a payload · indented calls ran inside the call above them
+
+=================== ReqNRoll s26 --errors-only: today
+s26  An order should progress through all status transitions to completion  [Passed]
+
+── 0  Given a pancake batch has been created
+── 1  And a breakfast order has been placed for the batch
+── 2  When the order progresses through all statuses to completed
+── 3  Then the completed order should be retrievable with all details
+── 4  And an audit log entry should exist for the order
+  (nothing matched the filters)
+0 calls shown · http s26/iN --keys for a payload
+------------------- ReqNRoll s26 --errors-only: proposed
+s26  An order should progress through all status transitions to completion  [Passed]
+
+  (nothing matched the filters)
+0 calls shown · http s26/iN --keys for a payload
+
+=================== ReqNRoll s26 --service CosmosDB: today
+s26  An order should progress through all status transitions to completion  [Passed]
+
+── 0  Given a pancake batch has been created
+  s26/i9    Breakfast Provider → CosmosDB  CREATE /orders  Created  
+── 1  And a breakfast order has been placed for the batch
+  s26/i29   Breakfast Provider → CosmosDB  CREATE /orders  OK  
+  s26/i33   Breakfast Provider → CosmosDB  CREATE /orders  Created  
+── 2  When the order progresses through all statuses to completed
+  s26/i45   Breakfast Provider → CosmosDB  READ /orders  OK  
+  s26/i47   Breakfast Provider → CosmosDB  UPSERT /orders  OK  
+  s26/i49   Breakfast Provider → CosmosDB  CREATE /orders  Created  
+  s26/i53   Breakfast Provider → CosmosDB  READ /orders  OK  
+  s26/i55   Breakfast Provider → CosmosDB  UPSERT /orders  OK  
+  s26/i57   Breakfast Provider → CosmosDB  CREATE /orders  Created  
+  s26/i61   Breakfast Provider → CosmosDB  READ /orders  OK  
+  s26/i63   Breakfast Provider → CosmosDB  UPSERT /orders  OK  
+  s26/i65   Breakfast Provider → CosmosDB  CREATE /orders  Created  
+── 3  Then the completed order should be retrievable with all details
+  s26/i69   Breakfast Provider → CosmosDB  READ /orders  OK  
+── 4  And an audit log entry should exist for the order
+  s26/i73   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:d609cccf 147 B
+14 calls shown · http s26/iN --keys for a payload
+------------------- ReqNRoll s26 --service CosmosDB: proposed
+s26  An order should progress through all status transitions to completion  [Passed]
+
+── 0  Given a pancake batch has been created
+  s26/i9    Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s26/i8
+── 1  And a breakfast order has been placed for the batch
+  s26/i29   Breakfast Provider → CosmosDB  CREATE /orders  OK  inside s26/i28
+  s26/i33   Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s26/i28
+── 2  When the order progresses through all statuses to completed
+  s26/i45   Breakfast Provider → CosmosDB  READ /orders  OK  inside s26/i44
+  s26/i47   Breakfast Provider → CosmosDB  UPSERT /orders  OK  inside s26/i44
+  s26/i49   Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s26/i44
+  s26/i53   Breakfast Provider → CosmosDB  READ /orders  OK  inside s26/i52
+  s26/i55   Breakfast Provider → CosmosDB  UPSERT /orders  OK  inside s26/i52
+  s26/i57   Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s26/i52
+  s26/i61   Breakfast Provider → CosmosDB  READ /orders  OK  inside s26/i60
+  s26/i63   Breakfast Provider → CosmosDB  UPSERT /orders  OK  inside s26/i60
+  s26/i65   Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s26/i60
+── 3  Then the completed order should be retrievable with all details
+  s26/i69   Breakfast Provider → CosmosDB  READ /orders  OK  inside s26/i68
+── 4  And an audit log entry should exist for the order
+  s26/i73   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:d609cccf 147 B  inside s26/i72
+14 calls shown · http s26/iN --keys for a payload
+
+=================== ReqNRoll s26 --step 4: today
+s26  An order should progress through all status transitions to completion  [Passed]
+
+── 0  Given a pancake batch has been created
+── 1  And a breakfast order has been placed for the batch
+── 2  When the order progresses through all statuses to completed
+── 3  Then the completed order should be retrievable with all details
+── 4  And an audit log entry should exist for the order
+  s26/i72   Caller → Breakfast Provider  GET /audit-logs  OK  77 ms
+  s26/i73   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:d609cccf 147 B
+2 calls shown · http s26/iN --keys for a payload
+------------------- ReqNRoll s26 --step 4: proposed
+s26  An order should progress through all status transitions to completion  [Passed]
+
+── 4  And an audit log entry should exist for the order
+  s26/i72   Caller → Breakfast Provider  GET /audit-logs  OK  77 ms
+    s26/i73   Breakfast Provider → CosmosDB  QUERY /orders  OK    b:d609cccf 147 B
+2 calls shown · http s26/iN --keys for a payload · indented calls ran inside the call above them
+
+=================== ReqNRoll s59 --errors-only: proposed
+s59  Requesting goat milk when the goat service is unavailable should return a bad gateway resp…  [Passed]
+
+── 1  When goat milk is requested
+  s59/i0    Caller → Breakfast Provider  GET /goat-milk  BadGateway  48 ms
+    s59/i1    Breakfast Provider → Goat Service  GET /goat-milk  ServiceUnavailable  22 ms
+2 calls shown · http s59/iN --keys for a payload · indented calls ran inside the call above them
+
+=================== trailing-annotation-probe.json s0: today (annotations, then flow)
+before i0    Row     Row 1
+before i2    Custom  after the last call
+2 annotations · interactions s0
+s0  Checkout  [Passed]
+
+  ── Row 1
+── 0  When the order is placed
+  s0/i0     test → api  POST /orders  Created  
+1 calls shown · http s0/iN --keys for a payload
+------------------- proposed
+s0  Checkout  [Passed]
+
+  ── Row 1
+── 0  When the order is placed
+  s0/i0     test → api  POST /orders  Created
+  ── after the last call
+1 calls shown · http s0/iN --keys for a payload
