@@ -125,19 +125,29 @@ public class NodeJsPlantUmlRendererTests
         var sources = Enumerable.Range(0, 5).Select(i => Seq("P" + i, "Q" + i)).ToList();
         NodeJsPlantUmlRenderer.Render(sources[0], PlantUmlImageFormat.Svg); // warm: engine download, code cache
 
-        var single = Stopwatch.StartNew();
-        foreach (var s in sources) NodeJsPlantUmlRenderer.Render(s, PlantUmlImageFormat.Svg);
-        single.Stop();
+        // Measured 1.9 s vs 5.1 s (node start + engine compile + warm-up paid once instead of five times); the
+        // bound is loose so a loaded box does not fail it. Both halves are wall-clock on a shared machine, so a
+        // load spike during one of them can still flip a single measurement (seen once, with a Chromium render
+        // probe running beside the suite). A real regression loses every attempt and a spike does not repeat,
+        // so the first of up to three attempts that shows the batch ahead passes.
+        var attempts = new List<string>();
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var single = Stopwatch.StartNew();
+            foreach (var s in sources) NodeJsPlantUmlRenderer.Render(s, PlantUmlImageFormat.Svg);
+            single.Stop();
 
-        var batch = Stopwatch.StartNew();
-        var results = NodeJsPlantUmlRenderer.RenderMany(sources);
-        batch.Stop();
+            var batch = Stopwatch.StartNew();
+            var results = NodeJsPlantUmlRenderer.RenderMany(sources);
+            batch.Stop();
 
-        Assert.All(results, r => Assert.True(r.Succeeded, r.Error));
-        // Measured 1.9 s vs 5.1 s (node start + engine compile + warm-up paid once instead of five times);
-        // the bound is loose so a loaded box does not fail it.
-        Assert.True(batch.ElapsedMilliseconds * 1.3 < single.ElapsedMilliseconds,
-            $"batch of 5 took {batch.ElapsedMilliseconds} ms, five single spawns {single.ElapsedMilliseconds} ms");
+            Assert.All(results, r => Assert.True(r.Succeeded, r.Error));
+            if (batch.ElapsedMilliseconds * 1.3 < single.ElapsedMilliseconds)
+                return;
+            attempts.Add($"batch of 5 took {batch.ElapsedMilliseconds} ms, five single spawns {single.ElapsedMilliseconds} ms");
+        }
+
+        Assert.Fail("The batch was not faster in any of three attempts: " + string.Join("; ", attempts));
     }
 
     [Fact]

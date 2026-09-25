@@ -42,10 +42,12 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
 
         var themed = await EngineSvg("d-themed");
         var plain = await EngineSvg("d-plain");
-        // When the worker registers PLANTUML_THEMES (THEME_PLAN 6.1) the two differ and the warning is
-        // gone: this fact then fails on purpose. At that point remove the OptionNotApplied emitter for
-        // BrowserJs, and update the PlantUmlTheme doc comments and the wiki's theme pages.
-        Assert.Equal(plain, themed);
+        // The 6.1 guard: when the worker registers PLANTUML_THEMES the two differ and the warning is gone,
+        // and this fact fails on purpose.
+        Assert.True(plain == themed,
+            "The worker now applies a theme (THEME_PLAN 6.1). Remove the OptionNotApplied emitter for BrowserJs " +
+            "(ReportGenerator.RecordOptionDiagnostics, pinned by OptionDiagnosticsTests), and update the PlantUmlTheme " +
+            "doc comments and the wiki's theme pages to say BrowserJs applies a theme.");
         lock (console)
             Assert.Contains(console, m => m.Contains("themes.js could not be loaded", StringComparison.Ordinal));
     }
@@ -87,5 +89,30 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
         await Expect(failure).ToContainTextAsync("icons");
         Assert.DoesNotContain("java.lang.RuntimeException", await Page.Locator("#d-icon").TextContentAsync() ?? "");
         Assert.Equal(icon, await failure.Locator("details pre").TextContentAsync());
+    }
+
+    [Fact]
+    public async Task A_themed_report_draws_every_diagram_and_records_that_the_theme_was_not_applied()
+    {
+        var (uri, reportsDir) = ReportTestHelper.GenerateThemedRunReport(TempDir, OutputDir, "ThemedRunReport.html");
+
+        await Page.GotoAsync(uri);
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null,
+            new() { Timeout = RenderWaitMs, PollingInterval = 200 });
+
+        var states = await Page.EvaluateAsync<string[]>("""
+            () => Array.from(document.querySelectorAll('.plantuml-browser')).map(el =>
+                (el.querySelector('svg') ? 'svg' : 'none') + (el.querySelector('.engine-failure') ? ':failure' : ''))
+            """);
+        Assert.Equal(["svg", "svg"], states);
+
+        using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(reportsDir, "TestRunReport.json")));
+        var kinds = report.RootElement.GetProperty("diagnostics").EnumerateArray()
+            .Select(d => d.GetProperty("kind").GetString()).ToList();
+        Assert.Single(kinds, k => k == "OptionNotApplied");
+        Assert.DoesNotContain("RenderFailure", kinds);
     }
 }

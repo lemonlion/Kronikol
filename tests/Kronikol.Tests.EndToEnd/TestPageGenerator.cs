@@ -329,7 +329,14 @@ public static class TestPageGenerator
     /// worker). No element is inside a <c>.scenario</c>, so nothing renders until the test calls
     /// <c>window._renderDiagramsInContainer(document.body)</c> or an element scrolls into view.
     /// </summary>
-    public static string GenerateBrowserJsPage(params (string Id, string Source)[] diagrams)
+    public static string GenerateBrowserJsPage(params (string Id, string Source)[] diagrams) =>
+        GenerateBrowserJsPage("", diagrams);
+
+    /// <summary>
+    /// <see cref="GenerateBrowserJsPage(ValueTuple{string, string}[])"/> with more markup at the end of the body:
+    /// the internal-flow config and segment scripts a report carries, for the link binding.
+    /// </summary>
+    public static string GenerateBrowserJsPage(string bodyScripts, params (string Id, string Source)[] diagrams)
     {
         var plantUmlBrowserScript = DiagramContextMenu.GetPlantUmlBrowserRenderScript();
         var contextMenuScript = DiagramContextMenu.GetContextMenuScript();
@@ -354,6 +361,53 @@ public static class TestPageGenerator
             <body>
                 <h1>BrowserJs Diagrams</h1>
                 {{elements}}
+                {{bodyScripts}}
+            </body>
+            </html>
+            """;
+    }
+
+    /// <summary>The source <see cref="GenerateIflowLinkColourPage"/>'s links come from: one segment with data, one without.</summary>
+    public const string IflowLinkColourSource =
+        "@startuml\ncaller -> svc : [[#iflow-seg-1 Get order]]\ncaller -> svc : [[#iflow-seg-nodata Missing]]\n@enduml";
+
+    /// <summary>
+    /// A hand-written sequence diagram SVG in light ink on a dark fill, for the real render script's internal-flow
+    /// link binding (DIAGRAM_COLOURS_PLAN S2): a two-word link to a segment with data (<c>t-link-1</c>,
+    /// <c>t-link-2</c>), a link to a segment without data (<c>t-nodata</c>), and two blue texts no link markup
+    /// names: a focus field (<c>t-focus</c>) and an underlined payload hyperlink (<c>t-href</c>). The test binds
+    /// the container itself, through <c>window._iflowBindLinks</c>, with <see cref="IflowLinkColourSource"/>.
+    /// </summary>
+    public static string GenerateIflowLinkColourPage(InternalFlowHasDataBehavior behavior)
+    {
+        var svg = """
+            <svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
+              <g>
+                <rect fill="#1E1E1E" x="0" y="0" width="400" height="200"/>
+                <text id="t-num" fill="#E6EBE9" x="10" y="20">1</text>
+                <text id="t-link-1" fill="#0000FF" text-decoration="underline" x="30" y="20">Get</text>
+                <text id="t-link-2" fill="#0000FF" text-decoration="underline" x="60" y="20">order</text>
+                <text id="t-body" fill="#E6EBE9" x="10" y="50">{"name":</text>
+                <text id="t-focus" fill="#0000FF" x="80" y="50">"Alice"</text>
+                <text id="t-body-2" fill="#E6EBE9" x="10" y="65">"see":</text>
+                <text id="t-href" fill="#0000FF" text-decoration="underline" x="80" y="65">https://example.com/a</text>
+                <text id="t-num-2" fill="#E6EBE9" x="10" y="80">2</text>
+                <text id="t-nodata" fill="#0000FF" text-decoration="underline" x="30" y="80">Missing</text>
+              </g>
+            </svg>
+            """;
+
+        return $$"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Internal-flow link colours</title>
+                {{DiagramContextMenu.GetPlantUmlBrowserRenderScript()}}
+            </head>
+            <body>
+                <div id="diagram" data-diagram-type="plantuml">{{svg}}</div>
+                {{DiagramContextMenu.GetInternalFlowConfigScript(behavior)}}
+                <script>window.__iflowSegments = { 'iflow-seg-1': { title: 'Get order', content: '<p>flow</p>' } };</script>
             </body>
             </html>
             """;

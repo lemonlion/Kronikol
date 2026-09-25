@@ -444,8 +444,9 @@ public static partial class PlantUmlCreator
 
     /// <summary>
     /// Adds the untruncated request path to the note beside the arrow, chunked the way every other note
-    /// value is so <c>skinparam wrapWidth</c> can break it. Kronikol's own <c>&lt;color:gray&gt;</c> label
-    /// is added after escaping, like the header tags, so it stays live markup rather than printed text.
+    /// value is so <c>skinparam wrapWidth</c> can break it. Kronikol's own header label
+    /// (<see cref="NotePalette.HeaderTag"/>) is added after escaping, like the header tags, so it stays live
+    /// markup rather than printed text.
     /// </summary>
     internal static string AppendFullPathToNote(string noteContent, string pathAndQuery)
     {
@@ -453,7 +454,7 @@ public static partial class PlantUmlCreator
         // URL chopped into 80-character display lines rejoins to the URL.
         var chunks = pathAndQuery.ChunksUpTo(MaxNoteChunkChars).Select(EscapeCreoleMarkup).ToArray();
         for (var i = 0; i < chunks.Length - 1; i++) chunks[i] += DiagramWidth.JoinMarker;
-        var block = "<color:gray>[Full path]" + Environment.NewLine + string.Join(Environment.NewLine, chunks);
+        var block = NotePalette.HeaderTag + "[Full path]" + Environment.NewLine + string.Join(Environment.NewLine, chunks);
         return string.IsNullOrEmpty(noteContent)
             ? block
             : noteContent + Environment.NewLine + Environment.NewLine + block;
@@ -1331,10 +1332,11 @@ public static partial class PlantUmlCreator
     internal static IEnumerable<string> BatchGray(string value)
     {
         // Escape after chunking so a `~` never ends up split from the character it protects, and prefix the
-        // gray tag after escaping so Kronikol's own markup stays live.
-        var chunks = value.ChunksUpTo(MaxNoteChunkChars).Select(x => "<color:gray>" + EscapeCreoleMarkup(x)).ToArray();
-        // Each continuation carries the gray tag again so it still draws gray; a consumer strips those
-        // per line BEFORE rejoining, which is why the rejoin itself needs no knowledge of them.
+        // header tag after escaping so Kronikol's own markup stays live. The ink is computed to clear AA on
+        // every note fill a header lands on (NotePalette); before 3.30.0 it was `gray`, which did not.
+        var chunks = value.ChunksUpTo(MaxNoteChunkChars).Select(x => NotePalette.HeaderTag + EscapeCreoleMarkup(x)).ToArray();
+        // Each continuation carries the header tag again so it still draws in the header ink; a consumer strips
+        // those per line BEFORE rejoining, which is why the rejoin itself needs no knowledge of them.
         for (var i = 0; i < chunks.Length - 1; i++) chunks[i] += DiagramWidth.JoinMarker;
         return chunks;
     }

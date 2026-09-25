@@ -125,11 +125,11 @@ public class ScenarioTruncateAndCollapsibleNotesTests
     }
 
     [Fact]
-    public void IsLongNote_with_headersHidden_excludes_gray_lines()
+    public void IsLongNote_with_headersHidden_excludes_header_lines()
     {
         var fnBody = ExtractFunctionBody(_script, "isLongNote");
-        // When headersHidden is true, should count only non-gray lines
-        Assert.Contains("<color:gray>", fnBody);
+        // When headersHidden is true, should count only non-header lines (either header form, 3.30.0)
+        Assert.Contains("NOTE_HEADER_TAG.test(trimmed)", fnBody);
         Assert.Contains("headersHidden", fnBody);
     }
 

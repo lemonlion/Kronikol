@@ -16,8 +16,8 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
 
         caller -> svc : POST /api/orders
         note left
-        <color:gray>Content-Type: application/json
-        <color:gray>Authorization: Bearer token123
+        <color:#686868>Content-Type: application/json
+        <color:#686868>Authorization: Bearer token123
         
         {"item":"Widget","qty":2}
         Line 2 of body
@@ -28,8 +28,8 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
 
         svc --> caller : 201 Created
         note right
-        <color:gray>Content-Type: application/json
-        <color:gray>X-Request-Id: abc-123
+        <color:#686868>Content-Type: application/json
+        <color:#686868>X-Request-Id: abc-123
         
         {"id":"abc-123","status":"created"}
         end note
@@ -43,8 +43,8 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
 
         caller -> svc : POST /api/data
         note left
-        <color:gray>Content-Type: application/json
-        <color:gray>Authorization: Bearer token
+        <color:#686868>Content-Type: application/json
+        <color:#686868>Authorization: Bearer token
 
         Line01-body
         Line02-body
@@ -194,7 +194,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
 
         var source = await GetDataPlantuml();
         Assert.Contains("Widget", source);
-        Assert.DoesNotContain("color:gray", source);
+        Assert.DoesNotContain("color:#686868", source);
     }
 
     [Fact]
@@ -216,7 +216,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
         Assert.Equal("false", dataShown);
 
         var source = await GetDataPlantuml();
-        Assert.DoesNotContain("color:gray", source);
+        Assert.DoesNotContain("color:#686868", source);
         Assert.Contains("Widget", source);
     }
 
@@ -258,7 +258,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
         await Expect(expandedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
 
         var source = await GetDataPlantuml();
-        Assert.Contains("color:gray", source);
+        Assert.Contains("color:#686868", source);
         Assert.Contains("Widget", source);
     }
 
@@ -295,7 +295,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
 
         var source = await GetDataPlantuml();
         Assert.Contains("Widget", source);
-        Assert.DoesNotContain("color:gray", source);
+        Assert.DoesNotContain("color:#686868", source);
     }
 
     [Fact]
@@ -313,7 +313,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
 
         source = await GetDataPlantuml();
         Assert.Contains("Widget", source);
-        Assert.DoesNotContain("color:gray", source);
+        Assert.DoesNotContain("color:#686868", source);
     }
 
     [Fact]
@@ -339,7 +339,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
         Assert.Contains("Line01-body", sourceAfterHeaders);
         Assert.Contains("Line05-body", sourceAfterHeaders);
         Assert.DoesNotContain("Line06-body", sourceAfterHeaders);
-        Assert.DoesNotContain("color:gray", sourceAfterHeaders);
+        Assert.DoesNotContain("color:#686868", sourceAfterHeaders);
     }
 
     [Fact]

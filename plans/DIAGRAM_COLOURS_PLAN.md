@@ -1,8 +1,8 @@
 # Diagram colours, and an honest theme option (stage 1, P3)
 
-**Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status: executing** (green-lit
-2026-09-25). The first release shipped as 3.29.6 (S3a, S4, S5 and F26), and S1, S2 and S3b follow as
-3.30.0. §12 is the execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
+**Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status: executed** (green-lit
+2026-09-25), in two releases: 3.29.6 (S3a, S4, S5 and F26) and 3.30.0 (S1, S2 and S3b). §12 is the
+execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
 `ROADMAP.md` item 1.6, written as its own plan. §10 is the assumption ledger: what was **RUN** against
 the pinned engine on 2026-09-22, what was only **READ**, and what is still open.
 
@@ -1487,3 +1487,131 @@ restored, then put back. Where the new code added a member, the old code got a p
 - Example.Api, all green: xUnit3 5; LightBDD.xUnit3 6; BDDfy.xUnit3 2; ReqNRoll.xUnit3 8; NUnit4 2.
 - E2E (the full project less the wiki GIF, screenshot and showcase classes): 860 passed, 0 failed, in
   6 min 55 s, and again 860 passed, 0 failed, in 6 min 54 s.
+
+### 12.2 Second release, 3.30.0 (minor): S1, S2, S3b
+
+**S1, as §3.2 and §3.3 write it**, the candidate build of I3 made real.
+- `WcagContrast` (`Ratio`, `LightestGreyClearing`) and `NotePalette` (`DefaultNoteFill`, `EventNoteFill`,
+  `HeaderContrastFloor`, `HeaderInk`, `HeaderTag`) are new in `src/Kronikol/PlantUml/`. The ink is computed
+  when the type loads, as the lightest grey from `#808080` down that clears 4.5 on both fills. It comes out
+  `#686868`, 5.46 and 4.51 to 1. The default note alone would settle on `#757575`: the event note's fill is
+  what sets it, and a fact says so.
+- Both emitter sites (`AppendFullPathToNote`, `BatchGray`) write `NotePalette.HeaderTag`.
+- The twelve script sites read the tag through one pattern per file, `NOTE_HEADER_TAG`
+  (`/^<color:(?:gray|#[0-9A-Fa-f]{6})>/`) and its indented variant, declared at the top of each IIFE.
+  `gray` stays in the pattern: a merged report, an ingested capture or a Kronikol4J source still carries it.
+- R9 held and is pinned: a captured line that starts like the header tag is escaped by
+  `EscapeCreoleMarkup`, so no script reads a body line as a header.
+
+Knock-ons, each with a red-first test:
+- **The YAML view.** `reconstructNoteJson` strips header lines before parsing the body. On the literal, a
+  new-form note's headers stayed in, the body did not parse, and the note was never offered the YAML view.
+  `NoteHeaderFormsTests` and a `NoteYamlInternalsTests` theory run it on both tags.
+- **Search.** The normalizers strip any `<color:…>` tag already. The equivalence test gains the new tag,
+  and the shared vectors gain `header-ink-tag` (the regeneration adds only it).
+- **Fixtures.** `ReportTestHelper`'s 46 hand-written header tags, `HeadersDetailsInterferenceTests`,
+  `LargeNoteSplitTests` and the unit fixture move to the new tag. `NoteHeaderFormsTests` keeps both.
+- A collapsed note's tooltip is a `<title>` inside the SVG, so `svg.textContent` holds the headers even
+  when the preview does not. The fact reads `path > title` for the tooltip and the text elements for the
+  preview.
+
+**S2, as §4.2 writes it.**
+- Nothing is recoloured until a group of link-coloured text is known to be one of Kronikol's links
+  (`[[#iflow-…]]` names it). Blue text no link names keeps its colour (F3).
+- A link's rest colour is the nearest earlier text fill that is not the link colour, else the diagram's
+  most common text fill, else `#000000` (Q5). Its highlight is the fill the engine painted it in.
+- Show-link mode keeps the painted fill and adds the underline, instead of writing `#0000FF`.
+- A link whose segment has no data rests like the text around it and is not bound.
+- `DiagramContextMenuTests.Internal_flow_link_binding_writes_no_colour_of_its_own` fails if a literal
+  `setAttribute('fill', '#000000')` or `'#0000FF'` comes back. Its first cut matched any `#000000` in the
+  function and was narrowed to the `setAttribute` calls.
+- `IflowLinkColourTests`, six facts: five fail on 3.29.6. The sixth, a real link on the default theme
+  resting black and lighting up blue, passes on both, as the no-regression guard.
+
+**S3b, as §5.3 writes it.**
+- `DiagnosticKind.OptionNotApplied` is appended after `ReportRotationFailed`, so no existing value moves.
+  The schema's enum is generated from `Enum.GetNames`, so it follows.
+- `ReportGenerator.RecordOptionDiagnostics` runs after the zero-scenario guard and the background-call
+  entries, before the diagnostics snapshot. It records one entry for each theme option set under
+  `BrowserJs` or `NodeJs`, and prints the same text as a `⚠ WARNING:` line.
+- The message names the mode's own symptom. Under `BrowserJs` it points at the console warning. Under
+  `NodeJs` it says the warning goes to the renderer's stderr, which a successful render does not keep,
+  as 3.29.6's acceptance found.
+- The three `PlantUmlTheme` doc comments say which modes apply a theme.
+
+**The pre-tag audit** (`plan-execution-audit-checklist`) found four gaps, all closed before the tag:
+- §5.4 listed two facts the first cut did not have. `OptionDiagnosticsTests` gained the console line,
+  read through `ThreadScopedConsole` because the line names no directory. `ThemedSourceRendersTests`
+  gained the themed report end to end: a run report written by the whole pipeline, both diagrams drawn,
+  one `OptionNotApplied` in the data file. `ReportTestHelper.GenerateThemedRunReport` is the first E2E
+  helper that runs `CreateStandardReportsWithDiagrams`. Both facts fail with the call disabled.
+- §5.4 also asked the release to rewrite the 6.1 guard's message. It is now the assertion's message, not
+  a comment, and names `RecordOptionDiagnostics` and `OptionDiagnosticsTests`.
+- Two changelog claims had no test: "a run with no scenarios records nothing" (added; it fails when the
+  call moves above the guard) and "one step lighter fails the floor" (added: `#696969` on the event fill).
+- The Kronikol4J entry went to `docs/REMAINING_PARITY.md`, where the ledger chain continues, not to the
+  README that §7.4 named. The README's chain stops at 3.2.0.
+
+**Docs.** The changelog, as §7.2 wrote it. The wiki clauses listed in §7.2: `Diagnostics-and-Debugging`'s
+kinds table, the theme rows of `Report-Configuration`, `Diagram-Customisation`,
+`PlantUML-Browser-Rendering` and `Component-Diagrams`, and `PlantUML-Browser-Rendering`'s "gray headers"
+wording. The §7.5 corrections that 3.30.0 makes true: `THEME_PLAN` §2.3 (the 4.5 floor, and Phase 0's
+item that said 3.0), §2.6 (both header literals, and the one pattern to widen) and §2.7 (the rest-colour
+rule), and the `THEME_PLAN` row's note that 6.1 must remove the emitter.
+
+**Acceptance (§8), second release.** Read from the painted SVG in Chromium by a throwaway probe (the
+3.29.6 acceptance's twin), never from the page source.
+- **2, on real content.** The example API's LightBDD suite (`Example.Api.Tests.Component.LightBDD.xUnit3`:
+  real HTTP calls, real internal-flow spans) was run with `FocusEmphasis.Colored` on the Cake request's
+  `milk` field:
+  - 13 diagrams drawn;
+  - 23 header tokens, every one `#686868` on `#FEFFDD`, at 5.46 : 1;
+  - 58 link texts, each resting in the ink of the text before it (`#000000`), blue and underlined under
+    the pointer, and back at rest after it;
+  - 6 blue focus-field texts kept, in the 2 diagrams that also hold links. 3.29.6 painted those black.
+
+  The event note's header came from the 3a program below: `#686868` on `#CFECF7`, 4.51 : 1.
+  BreakfastProvider was not run. It consumes published packages, so its report on 3.30.0 can only be
+  read once NuGet has the release. `LargeReportFixture` was not used either: its sources are
+  hand-written, with no header lines.
+- **3a.** A throwaway program wrote a run report through `CreateStandardReportsWithDiagrams`, with header
+  lines on both fills, a `[Full path]` block and a focus field, once under each renderer:
+
+  | Run | Time | `OptionNotApplied` | `RenderFailure` | The diagrams |
+  |---|---|---|---|---|
+  | `BrowserJs`, `cerulean` | 0.3 s | 1 | 0 | 3 of 3 drawn in 214 ms, unthemed; the engine's console warning 3 times |
+  | `BrowserJs`, no theme | 0.2 s | 0 | 0 | 3 of 3 drawn; no warning |
+  | `NodeJs`, `cerulean` | 0.8 s | 1 | 0 | 3 SVGs, unthemed, headers `#686868` on both fills |
+  | `Local` (IKVM), `cerulean` | 5.8 s | 0 | 0 | the theme applies: cerulean's lifeline `#BABDBF` in 3 of 3 |
+  | `Local` (IKVM), no theme | 1.8 s | 0 | 0 | `#BABDBF` in 0 of 3 |
+
+  `kronikol query summary` lists `OptionNotApplied ×1` under Diagnostics, beside the temp directory's
+  `HistoryUnavailable`, and `kronikol query failures` prints nothing for it. `Server` was not run,
+  because it would send the sources to plantuml.com; `Local` shows the claim the message makes. The red
+  half, a themed report with no diagram at all, is 3.29.6's (§12.1).
+- **4.** I3 again on the release build (harness README, `i3-release*.txt`): the old form written by the
+  3.29.3 build, the new form and the merge by 3.30.0, one page each for the default settings, plain arrows
+  and no internal-flow tracking, each with the two 3.1.0 fixtures. Every twin agrees on all three pages,
+  nine pairs, with no page errors. Against the candidate's rows, every row is the same except `payload`,
+  which moved from `none` to `-/-`: the candidate predates 3.29.6's F26 fix. F25 still loses the
+  long-path diagram with tracking on, in both forms.
+- **5.** The §7.2 wiki pages were re-read against the runs above. One clause was added:
+  `Diagnostics-and-Debugging` now says the run also prints the entry as a `⚠ WARNING:` line. The four
+  doc comments were read in the built `Kronikol.xml`.
+
+**Found on the way:** `NodeJsPlantUmlRendererTests.Batch_of_five_is_faster_than_five_single_spawns`
+failed once in the second unit run, which overlapped the merge probe's Chromium. It compares two
+wall-clock times, so a load spike during one half can flip it; alone it passed. It now takes up to three
+measurements and passes on the first that shows the batch ahead. Forced to lose, it fails and lists all
+three (about 505 ms against 1.2 s each).
+
+**The suites:**
+- Core unit project: 5,611 passed, 1 skipped, 0 failed (5,608 before the pre-tag audit added three facts).
+- Adapters, all green: StepTracking 43; AssertionTracking 97, 111 and 125 on net8.0, net9.0 and
+  net10.0; MSTest 51; xUnit2 12; xUnit3 15; LightBDD.xUnit3 26; TUnit 18; LightBDD.TUnit 25.
+- Example.Api, all green: xUnit3 5; LightBDD.xUnit3 6; BDDfy.xUnit3 2; ReqNRoll.xUnit3 8; NUnit4 2.
+- E2E (the full project less the wiki GIF, screenshot and showcase classes): 881 passed, 0 failed, in
+  6 min 41 s, and again 881 passed, 0 failed, in 6 min 44 s, the second with the acceptance programs
+  running beside it.
+
+3.29.6 is green on CI, Release, CodeQL and CI Summary Preview (`ad289f55`), and NuGet has it.

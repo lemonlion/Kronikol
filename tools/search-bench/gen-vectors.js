@@ -74,6 +74,9 @@ const normalizationInputs = [
   // bundle, or drop a sprite's text); a search still finds them as captured.
   ['creole-loader-markup-escapes', 'expected Vec~<&str> and ~<:rocket:> plus ~<$foo>'],
   ['markup-tags', '<color:gray>[Content-Type=application/json]</color> <font color="red">x</font> <i>[binary content]</i> <b>bold</b>'],
+  // 3.30.0: header lines are written in a computed ink (<color:#686868>) instead of <color:gray>; a search
+  // reads a header in either form the same way, a chunked one included.
+  ['header-ink-tag', 'note left\n<color:#686868>[Content-Type=application/json]\n<color:#686868>[X-H=aaaaaaaa<U+200B>\n<color:#686868>bbbbbbbb]\n\n{\n  "ok": true\n}\nend note'],
   ['arrow-label-5a', 'test -> svc: POST: /orders/pppp\\n        qqqq more'],
   // Rule 1b: the generator marks the breaks it writes into a note body, and only those are undone.
   ['note-chunk-rejoin-1b', 'note left\n<color:gray>[X-H=aaaaaaaa<U+200B>\n<color:gray>bbbbbbbb]\n\n{\n  "blob": "AAAA<U+200B>\nBBBB",\n  "ok": true\n}\nend note'],

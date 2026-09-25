@@ -47,15 +47,22 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
     // Reconstructor — note lines → original JSON text
     // ═══════════════════════════════════════════════════════════
 
-    [Fact]
-    public async Task Gold_vector_reconstructs_with_newline_escapes_and_int64_verbatim()
+    /// <summary>
+    /// A header line's tag: the emitter's computed ink from 3.30.0, <c>gray</c> before it. A merged report
+    /// holds sources from several releases, so the YAML view must read both (DIAGRAM_COLOURS_PLAN S1).
+    /// </summary>
+    public static TheoryData<string> HeaderTags => [Kronikol.PlantUml.NotePalette.HeaderTag, "<color:gray>"];
+
+    [Theory]
+    [MemberData(nameof(HeaderTags))]
+    public async Task Gold_vector_reconstructs_with_newline_escapes_and_int64_verbatim(string headerTag)
     {
         await NavigateToReport();
         // Note lines carry the wire bytes verbatim (3.0.62 removed the
         // generation-side backslash doubling) — \n arrives single-backslash.
         var result = await Reconstruct(new[]
         {
-            "<color:gray>[content-type=application/json]</color>",
+            headerTag + "[content-type=application/json]</color>",
             "",
             "{",
             "  \"id\": 9007199254740993,",
@@ -65,7 +72,8 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
         Assert.NotNull(result);
         Assert.Contains("9007199254740993", result);
         Assert.Contains("\"SELECT o.id,\\n       o.total\\nFROM orders o\"", result);
-        Assert.DoesNotContain("<color:gray>", result);
+        Assert.DoesNotContain(headerTag, result);
+        Assert.DoesNotContain("content-type", result);
     }
 
     [Fact]
@@ -176,6 +184,7 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
         Assert.Null(await Reconstruct(new[] { "..Continued From Previous Diagram..", "\"partial\": true}" }));
         Assert.Null(await Reconstruct(new[] { "{", "\"a\": 1,", "..Continued On Next Diagram.." }));
         Assert.Null(await Reconstruct(new[] { "<color:gray>[k=v]</color>" }));
+        Assert.Null(await Reconstruct(new[] { Kronikol.PlantUml.NotePalette.HeaderTag + "[k=v]" }));
     }
 
     // ═══════════════════════════════════════════════════════════

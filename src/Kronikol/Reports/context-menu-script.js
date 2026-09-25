@@ -1,6 +1,11 @@
 <script>
 (function() {
     var menu = null;
+    // A note's header line starts with Kronikol's header ink: `gray` before 3.30.0, a computed hex grey from
+    // it (NotePalette.HeaderInk). A merged report holds sources written before and after, so both forms are
+    // header lines. collapsible-notes-script.js carries the same literal (DiagramContextMenuTests checks).
+    var NOTE_HEADER_TAG = /^<color:(?:gray|#[0-9A-Fa-f]{6})>/;
+    var NOTE_HEADER_TAG_INDENTED = new RegExp('^\\s*' + NOTE_HEADER_TAG.source.slice(1));
 
     function findDiagramContainer(el) {
         while (el) {
@@ -231,7 +236,7 @@
     }
 
     function noteLinesToText(lines, unescapeLine) {
-        var stripped = lines.map(function(l) { return l.replace(/^\s*<color:gray>/, ''); });
+        var stripped = lines.map(function(l) { return l.replace(NOTE_HEADER_TAG_INDENTED, ''); });
         return rejoinNoteSource(stripped.join('\n')).split('\n').map(unescapeLine).join('\n');
     }
 
@@ -242,7 +247,7 @@
         var afterGray = false;
         for (var i = 0; i < lines.length; i++) {
             var t = lines[i].trim();
-            if (/^<color:gray>/.test(t)) { afterGray = true; header.push(lines[i]); continue; }
+            if (NOTE_HEADER_TAG.test(t)) { afterGray = true; header.push(lines[i]); continue; }
             if (afterGray && t === '') { header.push(lines[i]); continue; }
             break;
         }
@@ -295,7 +300,7 @@
                     // payloads as captured, so the width budget's breaks and the creole escaping both
                     // come off. Before this it returned neither.
                     var body = noteLinesToText(
-                        noteLines.filter(function(l) { return !l.match(/^\s*<color:gray>/); }),
+                        noteLines.filter(function(l) { return !NOTE_HEADER_TAG_INDENTED.test(l); }),
                         unescapeSourceNoteLine).trim();
                     if (body) payloads.push(body);
                 } else {

@@ -779,11 +779,11 @@ public static class ReportTestHelper
             entity "Service" as svc
             caller -> svc : GET /api/spec
             note left
-            <color:gray>[traceparent=00-abc-123-00]
+            <color:#686868>[traceparent=00-abc-123-00]
             end note
             svc --> caller : OK
             note right
-            <color:gray>[X-Correlation-Id=test-123]
+            <color:#686868>[X-Correlation-Id=test-123]
 
             {
             {{longContent1}}
@@ -860,11 +860,11 @@ public static class ReportTestHelper
             entity "Service" as svc
             caller -[#438DD5]> svc : GET /api/spec
             note left
-            <color:gray>[traceparent=00-abc-def-00]
+            <color:#686868>[traceparent=00-abc-def-00]
             end note
             svc -[#438DD5]-> caller: OK
             note right
-            <color:gray>[X-Correlation-Id=test-456]
+            <color:#686868>[X-Correlation-Id=test-456]
 
             {
               "asyncapi": "3.0.0",
@@ -935,11 +935,11 @@ public static class ReportTestHelper
 
         caller -> svc : POST /api/orders
         note left
-        <color:gray>[Content-Type=application/json]
-        <color:gray>[Authorization=Bearer token123]
-        <color:gray>[Accept=application/json]
-        <color:gray>[X-Request-Id=req-001]
-        <color:gray>[X-Correlation-Id=corr-abc]
+        <color:#686868>[Content-Type=application/json]
+        <color:#686868>[Authorization=Bearer token123]
+        <color:#686868>[Accept=application/json]
+        <color:#686868>[X-Request-Id=req-001]
+        <color:#686868>[X-Correlation-Id=corr-abc]
 
         Line 1
         Line 2
@@ -1007,7 +1007,7 @@ public static class ReportTestHelper
 
     /// <summary>
     /// PlantUML source with one long note (45+ body lines, exceeds default truncation of 40)
-    /// AND &lt;color:gray&gt; header lines, plus one short note (4 body lines + headers).
+    /// AND header lines (<c>&lt;color:#686868&gt;</c>, the emitter's header ink), plus one short note (4 body lines + headers).
     /// Used by tests that verify note hover button behavior after hiding headers.
     /// </summary>
     private const string LongNoteWithHeadersPlantUmlSource = """
@@ -1018,8 +1018,8 @@ public static class ReportTestHelper
 
         caller -> svc : POST /api/orders
         note left
-        <color:gray>Content-Type: application/json
-        <color:gray>Authorization: Bearer token123
+        <color:#686868>Content-Type: application/json
+        <color:#686868>Authorization: Bearer token123
 
         Line 1
         Line 2
@@ -1069,8 +1069,8 @@ public static class ReportTestHelper
         end note
         svc -> db : INSERT INTO Orders
         note left
-        <color:gray>Content-Type: text/plain
-        <color:gray>X-Request-Id: abc-123
+        <color:#686868>Content-Type: text/plain
+        <color:#686868>X-Request-Id: abc-123
 
         Short note line 1
         Short note line 2
@@ -1115,13 +1115,13 @@ public static class ReportTestHelper
 
         caller -> svc : GET /api/orders
         note left
-        <color:gray>Authorization: Bearer token123
-        <color:gray>Accept: application/json
-        <color:gray>X-Request-Id: req-001
+        <color:#686868>Authorization: Bearer token123
+        <color:#686868>Accept: application/json
+        <color:#686868>X-Request-Id: req-001
         end note
         svc -> db : SELECT * FROM Orders
         note left
-        <color:gray>Content-Type: text/plain
+        <color:#686868>Content-Type: text/plain
 
         SELECT Id, Name, Status
         FROM Orders
@@ -1129,7 +1129,7 @@ public static class ReportTestHelper
         end note
         db --> svc : OK
         note right
-        <color:gray>Content-Type: application/json
+        <color:#686868>Content-Type: application/json
 
         [{"id":1,"name":"Order A"},{"id":2,"name":"Order B"}]
         end note
@@ -1150,24 +1150,24 @@ public static class ReportTestHelper
 
         caller -> svc : GET /api/orders
         note left
-        <color:gray>Authorization: Bearer token123
-        <color:gray>Accept: application/json
+        <color:#686868>Authorization: Bearer token123
+        <color:#686868>Accept: application/json
         end note
         svc -> db : SELECT * FROM Orders
         note left
-        <color:gray>X-DB-Hint: readonly
+        <color:#686868>X-DB-Hint: readonly
 
         SELECT Id, Name FROM Orders
         end note
         db --> svc : OK
         svc -> pay : POST /api/charge
         note left
-        <color:gray>Content-Type: application/json
-        <color:gray>X-Idempotency-Key: abc-123
+        <color:#686868>Content-Type: application/json
+        <color:#686868>X-Idempotency-Key: abc-123
         end note
         pay --> svc : 200 OK
         note right
-        <color:gray>Content-Type: application/json
+        <color:#686868>Content-Type: application/json
 
         {"chargeId":"ch_001","status":"succeeded"}
         end note
@@ -1312,8 +1312,8 @@ public static class ReportTestHelper
 
         caller -> svc : POST /api/orders
         note left
-        <color:gray>[Content-Type=application/json]
-        <color:gray>[Authorization=Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMSJ9.abc123]
+        <color:#686868>[Content-Type=application/json]
+        <color:#686868>[Authorization=Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMSJ9.abc123]
 
         {"orderId":"ord-12345","customerName":"John Smith","items":[{"sku":"WIDGET-001","quantity":2,"price":29.99}],"shippingAddress":"123 Main Street, Springfield, IL 62701"}
         end note
@@ -1370,17 +1370,17 @@ public static class ReportTestHelper
 
         caller -[#438DD5]> svcA: GET /api/items
         note left
-        <color:gray>[traceparent=00-abc-def-00]
-        <color:gray>[X-Request-Id=req-001]
+        <color:#686868>[traceparent=00-abc-def-00]
+        <color:#686868>[X-Request-Id=req-001]
         end note
         svcA -[#438DD5]> svcB: GET /api/data
         note left
-        <color:gray>[X-Request-Id=req-001]
-        <color:gray>[X-Correlation-Id=cor-001]
+        <color:#686868>[X-Request-Id=req-001]
+        <color:#686868>[X-Correlation-Id=cor-001]
         end note
         svcB -[#438DD5]-> svcA: OK
         note right
-        <color:gray>[Content-Type=application/json]
+        <color:#686868>[Content-Type=application/json]
 
         {
           "data": "value1"
@@ -1402,7 +1402,7 @@ public static class ReportTestHelper
         db -[#E74C3C]-> svcA: OK
         svcA -[#438DD5]-> caller: Created
         note right
-        <color:gray>[X-Correlation-Id=cor-001]
+        <color:#686868>[X-Correlation-Id=cor-001]
 
         {
           "id": "item-001",
@@ -2076,7 +2076,7 @@ public static class ReportTestHelper
         
         caller -[#438DD5]> breakfastProvider: [[#iflow-67a2a680-5cb1-4b1e-a145-e5046cd095af PUT: /customer-preferences/d37d5aba2a244807b7fe008d01f6ba0f]]
         note left
-        <color:gray>[traceparent=00-22c760ca8f8c3943bc8a2430baf4bb99-1ce90250d46976e6-00]
+        <color:#686868>[traceparent=00-22c760ca8f8c3943bc8a2430baf4bb99-1ce90250d46976e6-00]
         
         {
           "customerId": "d37d5aba2a244807b7fe008d01f6ba0f",
@@ -2877,7 +2877,7 @@ public static class ReportTestHelper
             entity "Service" as svc
             caller -> svc : POST /api/data
             note left
-            <color:gray>[traceparent=00-abc-123-00]
+            <color:#686868>[traceparent=00-abc-123-00]
 
             {
               "action": "create",
@@ -3015,7 +3015,7 @@ public static class ReportTestHelper
                 interactions.AppendLine(
                     $"\nhnote across <<stepDelimiter>> #black:<color:white>Step {i}\n" +
                     $"\ncaller -[#438DD5]> svc : [[#iflow-{i} GET: /api/item/{i}]]\n" +
-                    $"note left\n<color:gray>[traceparent=00-abc-{i.ToString("D3")}-00]\nend note\n" +
+                    $"note left\n<color:#686868>[traceparent=00-abc-{i.ToString("D3")}-00]\nend note\n" +
                     $"svc -[#438DD5]-> caller : OK\n" +
                     "note right\n" +
                     "{\n" +
@@ -3087,7 +3087,7 @@ public static class ReportTestHelper
                 interactions.AppendLine(
                     $"caller -[#438DD5]> svc : [[#iflow-{i} GET: /api/item/{i}]]\n" +
                     "note left\n" +
-                    $"<color:gray>[traceparent=00-abc-{i:D3}-00]\n" +
+                    $"<color:#686868>[traceparent=00-abc-{i:D3}-00]\n" +
                     "end note\n" +
                     "svc -[#438DD5]-> caller : OK\n" +
                     "note right\n" +
@@ -3185,7 +3185,7 @@ public static class ReportTestHelper
 
             caller -[#438DD5]> api : POST /api/query
             note left
-            <color:gray>[traceparent=00-abc-def-00]
+            <color:#686868>[traceparent=00-abc-def-00]
             end note
             api -[#E74C3C]> bq : Query /data
             note left
@@ -3193,7 +3193,7 @@ public static class ReportTestHelper
             end note
             bq -[#E74C3C]-> api : OK
             note right
-            <color:gray>[X-Correlation-Id=test-456]
+            <color:#686868>[X-Correlation-Id=test-456]
 
             {
               "configuration": {
@@ -3305,7 +3305,7 @@ public static class ReportTestHelper
 
             caller -[#438DD5]> dataInsightsAPI: POST /api/data-products/insights
             note left
-            <color:gray>[traceparent=00-abc-def-00]
+            <color:#686868>[traceparent=00-abc-def-00]
 
             {
               "context": {
@@ -3338,7 +3338,7 @@ public static class ReportTestHelper
             end note
             bigQuery -[#E74C3C]-> dataInsightsAPI: OK
             note right
-            <color:gray>[Date=Fri, 05 Jun 2026 15:23:43 GMT]
+            <color:#686868>[Date=Fri, 05 Jun 2026 15:23:43 GMT]
 
             {
               "status": {
@@ -3469,7 +3469,7 @@ public static class ReportTestHelper
         hnote across <<stepDelimiter>> #black:<color:white>Given an order request
         caller -> svc : POST /api/orders
         note left
-        <color:gray>[content-type=application/json]</color>
+        <color:#686868>[content-type=application/json]</color>
 
         {
           "id": 9007199254740993,
@@ -3669,7 +3669,7 @@ public static class ReportTestHelper
 
         caller -> svc : POST /api/orders
         note left
-        <color:gray>[content-type=application/json]</color>
+        <color:#686868>[content-type=application/json]</color>
 
         {
           "{{fieldName}}": "SELECT o.id,\nFROM orders o"
@@ -3707,7 +3707,7 @@ public static class ReportTestHelper
             + "participant \"AuthService\" as svc\n\n"
             + "caller -> svc : POST /api/token\n"
             + "note left\n"
-            + "<color:gray>[content-type=application/json]\n\n"
+            + "<color:#686868>[content-type=application/json]\n\n"
             + body + "\n"
             + "end note\n"
             + "svc --> caller : 200 OK\n"
@@ -3782,6 +3782,85 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// Header lines on both note fills, every diagram built by the REAL emitter (DIAGRAM_COLOURS_PLAN S1):
+    /// a DELETE whose path is long enough to be cut from its label, so its note carries the headers and the
+    /// <c>[Full path]</c> block; a response with headers; and an event, whose note has the event fill.
+    /// </summary>
+    public static string GenerateReportWithHeaderInkNotes(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+
+        RequestResponseLog Log(RequestResponseType type, string method, string uri, (string, string?)[] headers, string? body,
+            RequestResponseMetaType metaType = RequestResponseMetaType.Default, System.Net.HttpStatusCode? status = null) =>
+            new("t1", "t1", method, body, new Uri(uri), headers, "OrderService", "Caller", type, Guid.NewGuid(), Guid.NewGuid(),
+                TrackingIgnore: false, StatusCode: status, MetaType: metaType);
+
+        var longPath = "http://localhost/api/orders/" + new string('k', 5000);
+        var source = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
+            [
+                Log(RequestResponseType.Request, "DELETE", longPath, [("Authorization", "Bearer token123")], null),
+                Log(RequestResponseType.Response, "DELETE", longPath, [("Content-Type", "application/json")], """{"deleted":true}""",
+                    status: System.Net.HttpStatusCode.OK),
+                Log(RequestResponseType.Request, "PUBLISH", "http://localhost/events/order-deleted", [("X-Event-Type", "OrderDeleted")],
+                    """{"id":"k1"}""", RequestResponseMetaType.Event),
+            ]).Single().PlantUmls.First().PlainText;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DiagramAsCode("t1", "", source)], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// A run report written by the whole pipeline (<see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>)
+    /// with <c>PlantUmlTheme = "cerulean"</c> under <c>BrowserJs</c>, the default (DIAGRAM_COLOURS_PLAN S3b): two
+    /// scenarios with a call each, logged under ids no other test uses. Returns the HTML's URI and the directory
+    /// holding the data file.
+    /// </summary>
+    public static (string Uri, string ReportsDir) GenerateThemedRunReport(string tempDir, string outputDir, string fileName)
+    {
+        var reportsDir = Path.Combine(tempDir, "themed-run-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(reportsDir);
+        var pay = "themed-pay-" + Guid.NewGuid().ToString("N");
+        var refund = "themed-refund-" + Guid.NewGuid().ToString("N");
+        RequestResponseLogger.LogPair("Pay", pay, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test");
+        RequestResponseLogger.LogPair("Refund", refund, HttpMethod.Post, new Uri("http://payments/refund"), "payments", "Test");
+
+        ReportGenerator.CreateStandardReportsWithDiagrams(
+            [
+                new Feature
+                {
+                    DisplayName = "Checkout",
+                    Scenarios =
+                    [
+                        new Scenario { Id = pay, DisplayName = "Pay", Result = ExecutionResult.Passed },
+                        new Scenario { Id = refund, DisplayName = "Refund", Result = ExecutionResult.Passed },
+                    ]
+                }
+            ],
+            DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow,
+            new ReportConfigurationOptions
+            {
+                ReportsFolderPath = reportsDir,
+                PlantUmlTheme = "cerulean",
+                PlantUmlRendering = PlantUmlRendering.BrowserJs,
+                InternalFlowTracking = false,
+                GenerateComponentDiagram = false,
+                GenerateSpecificationsReport = false,
+                GenerateSpecificationsData = false,
+            });
+
+        var html = Path.Combine(reportsDir, "TestRunReport.html");
+        File.Copy(html, Path.Combine(outputDir, fileName), true);
+        return (new Uri(html).AbsoluteUri, reportsDir);
+    }
+
+    /// <summary>
     /// A <c>PlantUmlRendering.NodeJs</c> report, rendered through the real Node renderer the way the
     /// fetcher does (one batch; inline SVG, or a <c>data:</c> image when <paramref name="inlineSvg"/> is
     /// false, as with internal-flow tracking off): t1 posts an XML body and gets an XML body back; t3 is a
@@ -3843,7 +3922,7 @@ public static class ReportTestHelper
 
             caller -> svc : POST /api/orders
             note left
-            <color:gray>[content-type=application/json]
+            <color:#686868>[content-type=application/json]
 
             {
               "url": "https:~/~/example.com/orders",
@@ -3886,7 +3965,7 @@ public static class ReportTestHelper
 
             caller -> svc : POST /api/orders
             note left
-            <color:gray>[content-type=application/json]</color>
+            <color:#686868>[content-type=application/json]</color>
 
             {
               "query": "SELECT o.id,\r\n       o.total\r\nFROM orders o",
@@ -3932,7 +4011,7 @@ public static class ReportTestHelper
 
             caller -> bq : POST /jobs/query
             note left
-            <color:gray>[content-type=application/json]</color>
+            <color:#686868>[content-type=application/json]</color>
 
             {
               "query": "\n            -- daily revenue per location\n            SELECT \n                daily.location_id,\n                SUM(daily.total) AS revenue\n            FROM daily\n            GROUP BY daily.location_id\n            ",

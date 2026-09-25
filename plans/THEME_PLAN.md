@@ -183,7 +183,7 @@ own rendered output, measured offline (§2.4) and baked into the registry.
 | **Note ink** | The theme's own note font colour. Auto-corrected **only** when the theme's own pair fails 4.5: try near-black and near-white, and if neither clears it, walk the note fill's *lightness* (keeping the theme's hue and saturation) until it does. |
 | **Event / assertion-pass / assertion-fail** | The note fill hue-rotated to 196° / 132° / 4° at constant lightness — so on a pale note they come out as pale tints (reproducing today's `#CFECF7` / `#D4EDDA` / `#F8D7DA` almost exactly from the default theme), and on a dark note as dark tints. Because lightness is preserved, they inherit the note's text contrast for free. |
 | **Separation guard** | A hue rotation does nothing when the theme's note is *already* that hue — `sandstone`, `superhero` and `minty` have cyan notes, so the event tint came out at ΔE 3–7 from the note itself, i.e. invisible as a category. The tint therefore also walks lightness until it clears **ΔE 14** — the minimum pairwise distance of Kronikol's own shipped palette — while never dropping text contrast below 4.5. |
-| **Header line** (`<color:gray>`) | The note ink blended toward the note fill, stopping at 3.9 — matching today's `#808080`-on-`#FEFFDD` (3.87), so the default theme does not regress. |
+| **Header line** (`<color:#686868>` from 3.30.0, `<color:gray>` before it) | The note ink blended toward the note fill, stopping no lower than **4.5**, the floor `NotePalette.HeaderContrastFloor` set in 3.30.0. The derivation may land darker, never lighter. (Corrected by `DIAGRAM_COLOURS_PLAN.md` S1: this row first said "stopping at 3.9, matching today's `#808080`-on-`#FEFFDD` (3.87)". 3.30.0 replaced that grey with `#686868`, 5.46 to 1 on the default note and 4.51 on the event note, so a 3.9 stop would now be a regression.) |
 | **Step-delimiter bar** | The theme's own participant fill/ink pair when it is opaque and clears 4.5, else inverse video from the theme's dominant text and background. |
 | **Setup partition** | The page background nudged 7% toward the note ink. |
 | **Link** | The theme's own hyperlink colour, handed to the JS as data rather than pinned. |
@@ -266,14 +266,18 @@ stereotype does not change what the step toggle removes.
 
 **Backward compatibility is mandatory.** Already-captured trace files and externally-ingested captures carry
 the old literals. A report-time rewrite maps the known legacy literals (`#d4edda`, `#f8d7da`, `#cfecf7`,
-`#black:<color:white>`, `<color:gray>`) onto palette values, so old data themes correctly and unthemed
-reports keep byte-identical output.
+`#black:<color:white>`, `<color:gray>`, `<color:#686868>`) onto palette values, so old data themes correctly
+and unthemed reports keep byte-identical output. Both header forms are in the wild: 3.30.0 writes
+`<color:#686868>`, every earlier release wrote `<color:gray>`, and a merged report can hold both. The report
+scripts recognise either through one pattern, `NOTE_HEADER_TAG`, declared at the top of
+`collapsible-notes-script.js` and `context-menu-script.js`; the rewrite should widen that pattern, not add a
+third literal.
 
 ### 2.7 Repair the remaining colour-coupled JavaScript
 
 | Site | Change |
 |---|---|
-| `plantuml-browser-render-script.js:1099` | Capture each link text's original fill before recolouring and restore *that*, not `#000000` |
+| `plantuml-browser-render-script.js` `bindIflowLinks` | **Done in 3.30.0** (`DIAGRAM_COLOURS_PLAN.md` S2, §4.2), with a different rule from the one first written here ("capture each link text's original fill before recolouring and restore *that*, not `#000000`"). The original fill is the **highlight** colour, painted while the pointer is over the link. The rest colour comes from the surrounding text: the nearest preceding text fill in the same diagram that is not the link colour, else the diagram's most common text fill, else `#000000`. Link-coloured text that no `[[#iflow-…]]` markup names (a `FocusEmphasis.Colored` field, a hyperlink in a payload) is left exactly as painted. 6.1 may hand the rest colour over as palette data instead of reading it from the SVG |
 | `plantuml-browser-render-script.js:1062` | Match the theme's link colour from a data attribute rather than the literal `#0000ff` |
 | `collapsible-notes-script.js:248-407` | Injected hover chip colours (`#ffffff` chip, `#999` border, `#666` glyph) derive from the note fill and ink |
 | `internal-flow-popup-styles.css:151-152` | Hover link colour from a CSS variable |
@@ -329,7 +333,8 @@ Each phase has a gate that must pass before the next begins. TDD throughout, per
    - zero deprecation-banner text nodes;
    - `findNoteGroups()` count equals the source note count, with the right text per group;
    - `findAssertionNoteGroups()` finds the ✓ and ✗ bars;
-   - note ink vs note fill ≥ 4.5; header vs note fill ≥ 3.0; event, assertion and step-bar text ≥ 4.5;
+   - note ink vs note fill ≥ 4.5; header vs note fill ≥ 4.5 (`NotePalette.HeaderContrastFloor`; this
+     line and the audit checklist's item 06 said 3.0 until 3.30.0); event, assertion and step-bar text ≥ 4.5;
    - theme body text vs palette background ≥ 4.5;
    - **ΔE ≥ 14 between the note fill and each semantic tint, and between pass and fail** (the check that
      keeps a derived palette meaningful, not merely legible).

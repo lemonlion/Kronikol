@@ -26,7 +26,7 @@ public class LargeNoteSplitTests : DiagramNotePlaywrightBase
                 var body = '';
                 for (var i = 1; i <= 50; i++) {
                     body += 'caller -[#438DD5]> svc : GET /api/item/' + i + '\n';
-                    body += 'note left\n<color:gray>[traceparent=00-abc-' + i + '-00]\nend note\n';
+                    body += 'note left\n<color:#686868>[traceparent=00-abc-' + i + '-00]\nend note\n';
                     body += 'svc -[#438DD5]-> caller : OK\n';
                     body += 'note right\n{"id":' + i + '}\nend note\n';
                 }
@@ -131,7 +131,7 @@ public class LargeNoteSplitTests : DiagramNotePlaywrightBase
                 var body = '';
                 for (var i = 1; i <= 10; i++) {
                     body += 'caller -[#438DD5]> svc : GET /api/item/' + i + '\n';
-                    body += 'note left\n<color:gray>[traceparent=00-abc-' + i + '-00]\nend note\n';
+                    body += 'note left\n<color:#686868>[traceparent=00-abc-' + i + '-00]\nend note\n';
                     body += 'svc -[#438DD5]-> caller : OK\n';
                     body += 'note right\n{"id":' + i + '}\nend note\n';
                 }
@@ -216,7 +216,7 @@ public class LargeNoteSplitTests : DiagramNotePlaywrightBase
                 var body = '';
                 for (var i = 1; i <= 20; i++) {
                     body += 'caller -[#438DD5]> breakfastProvider: GET /api/item/' + i + '\n';
-                    body += 'note left\n<color:gray>[traceparent=00-abc-' + i + '-00]\nend note\n';
+                    body += 'note left\n<color:#686868>[traceparent=00-abc-' + i + '-00]\nend note\n';
                     body += 'breakfastProvider -[#438DD5]-> caller: OK\n';
                     body += 'note right\n{"id":' + i + '}\nend note\n';
                 }

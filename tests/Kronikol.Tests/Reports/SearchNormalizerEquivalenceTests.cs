@@ -82,6 +82,8 @@ public partial class SearchNormalizerEquivalenceTests
         "<color:never-closed and text goes on",
         "label\\n        continued\\N\tmore",
         "note left\n<color:gray>[X=aaaa<U+200B>\n<color:gray>bbbb]\n\n{\n  \"k\": \"AAAA<U+200B>\nBBBB\"\n}\nend note\nafter -> b: x",
+        // 3.30.0 writes header lines in a computed ink instead of `gray` (NotePalette.HeaderTag).
+        "note left\n<color:#686868>[X=aaaa<U+200B>\n<color:#686868>bbbb]\n\n{\n  \"k\": \"v\"\n}\nend note",
         "note right\nflush\nleft\nend note",
         "note over A,B\npayload\nend note",
         "note<<eventNote>> right\nchunkA<U+200B>\nchunkB\nend note",
@@ -118,7 +120,7 @@ public partial class SearchNormalizerEquivalenceTests
         ulong Next() { state ^= state << 13; state ^= state >> 7; state ^= state << 17; return state; }
         string[] fragments =
         [
-            "note left\n", "end note\n", "~*", "~/", "\\n   ", "<color:gray>", "</font>", "<i>", "\r\n",
+            "note left\n", "end note\n", "~*", "~/", "\\n   ", "<color:gray>", "<color:#686868>", "</font>", "<i>", "\r\n",
             "  ", "\t", "{ \"k\": \"v\" }\n", "POST: /api/x\n", "~[", "~\"", "AAAA\n", "bbbb\n", "<", ">", "~", "\\",
             "note<<eventNote>> right\n", "hnote across <<assertionNote>> #x\n", "hnote across #y : Row\n",
             "across ", "\u0085", "\ufeff", "<U+200B>\n", "<U+200B><U+200B>\n", "~<U+200B>\n"

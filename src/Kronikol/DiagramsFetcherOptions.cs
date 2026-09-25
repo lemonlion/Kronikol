@@ -20,6 +20,10 @@ public record DiagramsFetcherOptions
     public bool LazyLoadDiagramImages { get; set; } = true;
     public FocusEmphasis FocusEmphasis { get; set; } = FocusEmphasis.Bold;
     public FocusDeEmphasis FocusDeEmphasis { get; set; } = FocusDeEmphasis.LightGray;
+    /// <summary>
+    /// PlantUML theme name written as <c>!theme &lt;name&gt;</c> into every diagram source; applied by the engine
+    /// under <see cref="PlantUmlRendering.Server"/> and <see cref="PlantUmlRendering.Local"/> only.
+    /// </summary>
     public string? PlantUmlTheme { get; set; }
     public PlantUmlImageFormat PlantUmlImageFormat { get; set; } = PlantUmlImageFormat.Png;
     public Func<string, PlantUmlImageFormat, byte[]>? LocalDiagramRenderer { get; set; }

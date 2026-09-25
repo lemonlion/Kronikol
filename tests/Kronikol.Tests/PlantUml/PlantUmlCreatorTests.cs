@@ -1347,7 +1347,7 @@ public class PlantUmlCreatorTests
     // ─── Color function ─────────────────────────────────────────
 
     [Fact]
-    public void Headers_use_gray_color_tag()
+    public void Headers_use_the_header_ink_tag()
     {
         var logs = new[]
         {
@@ -1355,7 +1355,30 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs);
 
-        Assert.Contains("<color:gray>", plantUml);
+        Assert.Contains(NotePalette.HeaderTag + "[Accept=text/html]", plantUml);
+    }
+
+    [Fact]
+    public void Every_header_line_is_written_in_the_computed_ink_and_no_gray_tag_is_left()
+    {
+        // `gray` painted #808080: 3.87 : 1 on the note fill and 3.20 on the event note, below AA
+        // (DIAGRAM_COLOURS_PLAN S1). Both emitter sites carry the computed ink: the header block and the
+        // [Full path] block a truncated request label adds. No `<color:gray>` anywhere is the guard
+        // against a third site written later.
+        var logs = new[]
+        {
+            MakeRequest(method: "DELETE", uri: "http://example.com/data-insights-api/" + new string('k', 5000),
+                headers: [("Accept", "text/html")]),
+            MakeResponse(headers: [("Content-Type", "application/json")], content: "{}"),
+            MakeRequest(headers: [("X-Event", "1")], metaType: RequestResponseMetaType.Event),
+        };
+        var plantUml = GetPlantUml(logs);
+
+        Assert.Contains(NotePalette.HeaderTag + "[Accept=text/html]", plantUml);
+        Assert.Contains(NotePalette.HeaderTag + "[Full path]", plantUml);
+        Assert.Contains(NotePalette.HeaderTag + "[Content-Type=application/json]", plantUml);
+        Assert.Contains(NotePalette.HeaderTag + "[X-Event=1]", plantUml);
+        Assert.DoesNotContain("<color:gray>", plantUml);
     }
 
     // ─── Invalid JSON is treated as plain text ──────────────────
@@ -1393,9 +1416,9 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs);
 
-        // Each chunk gets its own <color:gray> prefix, so >80 chars means multiple lines
-        var colorGrayCount = plantUml.Split("<color:gray>").Length - 1;
-        Assert.True(colorGrayCount >= 2, $"Expected at least 2 <color:gray> lines for long header, got {colorGrayCount}");
+        // Each chunk gets its own header tag, so >80 chars means multiple lines
+        var headerLineCount = plantUml.Split(NotePalette.HeaderTag).Length - 1;
+        Assert.True(headerLineCount >= 2, $"Expected at least 2 header lines for long header, got {headerLineCount}");
     }
 
     [Fact]
@@ -1409,12 +1432,12 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs);
 
-        // Each <color:gray> line visible content must be ≤80 chars to avoid PlantUML wrapWidth overflow.
+        // Each header line's visible content must be ≤80 chars to avoid PlantUML wrapWidth overflow.
         // wrapWidth is 800px; at ~9px/char worst case, 80 chars = 720px which is safely under.
         var grayLines = plantUml.Split('\n')
             .Select(l => l.Trim())
-            .Where(l => l.StartsWith("<color:gray>"))
-            .Select(l => l["<color:gray>".Length..].Replace(DiagramWidth.JoinMarker, ""))
+            .Where(l => l.StartsWith(NotePalette.HeaderTag))
+            .Select(l => l[NotePalette.HeaderTag.Length..].Replace(DiagramWidth.JoinMarker, ""))
             .ToList();
 
         Assert.NotEmpty(grayLines);
@@ -2721,8 +2744,8 @@ public class PlantUmlCreatorTests
         var logs = new[] { MakeRequest(content: json, headers: [("Authorization", "Bearer xyz")], focusFields: ["name"]) };
         var plantUml = GetPlantUml(logs);
 
-        // Headers still use the gray color tag
-        Assert.Contains("<color:gray>[Authorization=Bearer xyz]", plantUml);
+        // Headers still use the header ink tag
+        Assert.Contains(NotePalette.HeaderTag + "[Authorization=Bearer xyz]", plantUml);
         // But JSON fields use focus formatting
         Assert.Contains("<b>\"name\": \"Alice\"", plantUml);
     }
@@ -3881,10 +3904,10 @@ public class PlantUmlCreatorTests
         Assert.All(pieces[..^1], piece => Assert.EndsWith(",", piece)); // cut at a comma, not mid-token
         Assert.Equal(run, DiagramWidth.RejoinMarkedLines(wrapped));
 
-        var tagged = new string('a', 110) + "<color:gray>" + new string('b', 110);
+        var tagged = new string('a', 110) + NotePalette.HeaderTag + new string('b', 110);
         var wrappedTag = PlantUmlCreator.WrapUnbreakableRuns(tagged);
-        Assert.Contains("<color:gray>", wrappedTag); // the tag survived intact
-        Assert.DoesNotContain("<color:\ngray>", wrappedTag);
+        Assert.Contains(NotePalette.HeaderTag, wrappedTag); // the tag survived intact
+        Assert.DoesNotContain("<color:\n", wrappedTag);
         Assert.Equal(tagged, DiagramWidth.RejoinMarkedLines(wrappedTag));
 
         var shortText = "fits on one line";
@@ -4028,8 +4051,23 @@ public class PlantUmlCreatorTests
 
         var plantUml = GetPlantUml(logs);
 
-        Assert.Contains("<color:gray>[Referer=https:~/~/a.example", plantUml);
-        Assert.DoesNotContain("~<color:gray>", plantUml);
+        Assert.Contains(NotePalette.HeaderTag + "[Referer=https:~/~/a.example", plantUml);
+        Assert.DoesNotContain("~" + NotePalette.HeaderTag, plantUml);
+    }
+
+    [Fact]
+    public void A_captured_line_that_starts_like_a_header_tag_is_escaped_and_never_read_as_a_header()
+    {
+        // The report's scripts take any line starting <color:gray> or <color:#rrggbb> for a header line. That
+        // is safe only because a captured body can never start a line with a live tag: the escaper puts a ~
+        // in front of it (DIAGRAM_COLOURS_PLAN R9).
+        var logs = new[] { MakeRequest(content: NotePalette.HeaderTag + "x\n<color:gray>y"), MakeResponse() };
+
+        var lines = GetPlantUml(logs).Split('\n').Select(l => l.Trim()).ToArray();
+
+        Assert.Contains("~" + NotePalette.HeaderTag + "x", lines);
+        Assert.Contains("~<color:gray>y", lines);
+        Assert.DoesNotContain(lines, l => l.StartsWith(NotePalette.HeaderTag + "x", StringComparison.Ordinal));
     }
 
     [Fact]

@@ -46,6 +46,11 @@
       "expected": "[content-type=application/json] x [binary content] bold\n"
     },
     {
+      "name": "header-ink-tag",
+      "input": "note left\n<color:#686868>[Content-Type=application/json]\n<color:#686868>[X-H=aaaaaaaa<U+200B>\n<color:#686868>bbbbbbbb]\n\n{\n  \"ok\": true\n}\nend note",
+      "expected": "note left\n[content-type=application/json]\n[x-h=aaaaaaaabbbbbbbb]\n\n{\n \"ok\": true\n}\nend note\n"
+    },
+    {
       "name": "arrow-label-5a",
       "input": "test -> svc: POST: /orders/pppp\\n        qqqq more",
       "expected": "test -> svc: post: /orders/ppppqqqq more\n"

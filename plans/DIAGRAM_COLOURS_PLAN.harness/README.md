@@ -206,3 +206,17 @@ nothing under `src/` in the main checkout was touched.
 - **Found on the way (F26).** "Copy all caller request payloads" appeared only on the `plain` pages
   (`payload` is `none` on the 21 default-arrow diagrams that drew; the other two are F25's). `extractCallerPayloads` matches `caller -> `, and the
   default arrow is `caller -[#…]>`.
+
+## I3 again on the release build (3.30.0, 2026-09-25)
+
+Plan §8 step 4 and §12.2. The I3 run above, with the 3.30.0 build in place of the candidate. The old form
+was written by the same 3.29.3 build (`b74c8ddc`) as before, and the new form and the merge by 3.30.0. This
+time there is one page per setting (`default`, `plain`, `noflow`), each with the two 3.1.0 fixtures.
+
+- `i3-release.txt`, `i3-release-plain.txt` and `i3-release-noflow.txt` are `merge-probe.js`'s output.
+- Every twin agrees on all three pages, nine pairs, with no page errors. The new form paints `#686868` and the
+  old `#808080`. With `noflow`, `[Full path]` paints in each form's ink and hides with the headers.
+- Against the candidate's rows, every fixture row is identical except `payload`, which moved from `none` to
+  `-/-`. The candidate predates 3.29.6's F26 fix, so the item was never offered with default arrows; it is
+  offered now, and copies neither a tag nor a header line.
+- F25 is unchanged: with internal-flow tracking on, the long-path GET is not drawn in either form.

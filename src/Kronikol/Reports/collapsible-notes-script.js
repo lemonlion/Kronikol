@@ -1,6 +1,12 @@
 <script>
 (function() {
     var SVGNS = 'http://www.w3.org/2000/svg';
+    // A note's header line starts with Kronikol's header ink: `gray` before 3.30.0, a computed hex grey from
+    // it (NotePalette.HeaderInk, the lightest grey that clears AA contrast on the note fills). A merged
+    // report holds sources written before and after, so both forms are header lines. context-menu-script.js
+    // carries the same literal (DiagramContextMenuTests checks the two match).
+    var NOTE_HEADER_TAG = /^<color:(?:gray|#[0-9A-Fa-f]{6})>/;
+    var NOTE_HEADER_TAG_INDENTED = new RegExp('^\\s*' + NOTE_HEADER_TAG.source.slice(1));
 
     // ── Copy fidelity: undoing the breaks Kronikol wrote ────────────────────
     // A break in a note body is a DISPLAY decision — the width budget's, not the payload's — so every
@@ -66,7 +72,7 @@
 
     function getNotePreview(contentLines) {
         var nonGray = contentLines.map(function(l) { return l.trim(); })
-            .filter(function(l) { return !l.match(/^<color:gray>/); });
+            .filter(function(l) { return !NOTE_HEADER_TAG.test(l); });
         var raw = nonGray.join(' ').trim();
         if (!raw) return '';
         if (raw.length <= 60) return raw;
@@ -265,7 +271,7 @@
         var afterGray = false;
         for (var i = 0; i < contentLines.length; i++) {
             var trimmed = contentLines[i].trim();
-            if (/^<color:gray>/.test(trimmed)) { afterGray = true; continue; }
+            if (NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; continue; }
             if (afterGray && trimmed === '') continue;
             afterGray = false;
             count++;
@@ -611,7 +617,7 @@
         // Tooltip for collapsed notes
         if (state === 'collapsed' && contentLines && grp && grp.paths.length > 0) {
             var tipLines = contentLines.map(function(l) {
-                return l.replace(/^\s*<color:gray>/, '');
+                return l.replace(NOTE_HEADER_TAG_INDENTED, '');
             });
             var tipText = tipLines.join('\n').trim();
             if (tipText) {
@@ -850,7 +856,7 @@
                     var afterGrayLine = false;
                     for (var li = 0; li < noteBlocks[si].contentLines.length; li++) {
                         var cl = noteBlocks[si].contentLines[li].trim();
-                        if (/^<color:gray>/.test(cl)) { afterGrayLine = true; continue; }
+                        if (NOTE_HEADER_TAG.test(cl)) { afterGrayLine = true; continue; }
                         if (afterGrayLine && cl === '') continue;
                         afterGrayLine = false;
                         hasVisible = true;
@@ -1014,7 +1020,7 @@
         var afterGray = false;
         for (var i = 0; i < contentLines.length; i++) {
             var trimmed = contentLines[i].trim();
-            if (/^<color:gray>/.test(trimmed)) { afterGray = true; continue; }
+            if (NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; continue; }
             if (afterGray && trimmed === '') continue;
             afterGray = false;
             payload.push(contentLines[i]);
@@ -1423,7 +1429,7 @@
                 continue;
             }
             if (inNote && swapping) {
-                if (!headerDone && /^<color:gray>/.test(trimmed)) { afterGray = true; out.push(lines[i]); continue; }
+                if (!headerDone && NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; out.push(lines[i]); continue; }
                 if (!headerDone && afterGray && trimmed === '') { out.push(lines[i]); continue; }
                 headerDone = true;
                 continue; // payload line dropped — YAML lines are emitted before 'end note'
@@ -1444,7 +1450,7 @@
         var afterGray = false;
         for (var i = 0; i < rawContentLines.length; i++) {
             var trimmed = rawContentLines[i].trim();
-            if (/^<color:gray>/.test(trimmed)) { afterGray = true; header.push(rawContentLines[i]); continue; }
+            if (NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; header.push(rawContentLines[i]); continue; }
             if (afterGray && trimmed === '') { header.push(rawContentLines[i]); continue; }
             break;
         }
@@ -1801,7 +1807,7 @@
             }
             if (noteMode === 'collapsed') continue;
             if (noteMode === 'truncated') {
-                if (hideHeaders && /^<color:gray>/.test(trimmed)) { justSkippedGray = true; continue; }
+                if (hideHeaders && NOTE_HEADER_TAG.test(trimmed)) { justSkippedGray = true; continue; }
                 if (justSkippedGray && trimmed === '') continue;
                 justSkippedGray = false;
                 truncateLineCount++;
@@ -1811,7 +1817,7 @@
                 }
                 continue;
             }
-            if (inNote && hideHeaders && /^<color:gray>/.test(trimmed)) { justSkippedGray = true; continue; }
+            if (inNote && hideHeaders && NOTE_HEADER_TAG.test(trimmed)) { justSkippedGray = true; continue; }
             if (justSkippedGray && trimmed === '') continue;
             justSkippedGray = false;
             newLines.push(lines[i]);

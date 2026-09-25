@@ -272,6 +272,30 @@ public class QueryCommandTests : IDisposable
     }
 
     [Fact]
+    public void An_option_not_applied_is_listed_in_the_summary_and_is_no_provenance_line_on_failures()
+    {
+        // DIAGRAM_COLOURS_PLAN S3b: a theme the rendering mode ignores is a fact about the configuration, worth
+        // one line where diagnostics are listed. It says nothing about how the report was built, so it must not
+        // head every failures answer the way a provenance entry does.
+        var path = Path.Combine(_directory, "OptionNotApplied.json");
+        File.WriteAllText(path, """
+            {
+              "kronikolVersion": "3.30.0", "formatVersion": 1, "suite": "Widgets.Tests",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:05:00Z",
+              "diagnostics": [ { "kind": "OptionNotApplied", "message": "PlantUmlTheme \"cerulean\" has no effect under PlantUmlRendering.BrowserJs" } ],
+              "features": [ { "name": "Orders", "labels": [], "scenarios": [
+                { "id": "t0", "stableId": "aaaabbbbccccdddd", "name": "Checkout", "result": "Failed", "durationSeconds": 1.0,
+                  "errorMessage": "Expected 4173 but found 3902", "labels": [], "categories": [], "steps": [], "httpInteractions": [], "attachments": [] } ] } ]
+            }
+            """);
+
+        Assert.Contains("OptionNotApplied", Run("summary", path));
+        var failures = Run("failures", path);
+        Assert.Contains("Expected 4173 but found 3902", failures);
+        Assert.DoesNotContain("OptionNotApplied", failures);
+    }
+
+    [Fact]
     public void Failures_cuts_a_long_message_at_both_ends_and_names_the_view_that_prints_it_whole()
     {
         // A list view cuts, keeps both ends (the verdict of an assertion is at the end), and its footer

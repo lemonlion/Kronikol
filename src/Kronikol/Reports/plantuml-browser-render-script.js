@@ -1078,18 +1078,42 @@
             if (!source) return;
             var iflowMap = extractIflowMap(source);
             if (Object.keys(iflowMap).length === 0) return;
+            // Link text is found by the engine's link colour. Nothing is recoloured until a group of it is known
+            // to be one of Kronikol's links: blue text no [[#iflow-…]] markup names (a FocusEmphasis.Colored field,
+            // a hyperlink in a payload) keeps the colour it was painted in (DIAGRAM_COLOURS_PLAN S2).
             var allTexts = Array.from(container.querySelectorAll('text'));
-            var blueIndices = new Set();
+            function isLinkFill(fill) { return (fill || '').toLowerCase() === '#0000ff'; }
+            var blueIndices = [];
             allTexts.forEach(function(t, idx) {
-                if ((t.getAttribute('fill') || '').toLowerCase() === '#0000ff') {
-                    blueIndices.add(idx);
-                    t.setAttribute('fill', '#000000');
-                    t.removeAttribute('text-decoration');
-                }
+                if (isLinkFill(t.getAttribute('fill'))) blueIndices.push(idx);
             });
+            // A link rests in the ink of the text around it: the nearest earlier text that is not link-coloured,
+            // else the ink most of the diagram's text uses, else black. On the default theme every branch answers
+            // #000000; under a theme whose text is light, the link stays readable.
+            var commonInk = null;
+            function mostCommonInk() {
+                if (commonInk !== null) return commonInk;
+                var counts = {};
+                commonInk = '#000000';
+                var best = 0;
+                allTexts.forEach(function(t) {
+                    var fill = t.getAttribute('fill');
+                    if (!fill || isLinkFill(fill)) return;
+                    counts[fill] = (counts[fill] || 0) + 1;
+                    if (counts[fill] > best) { best = counts[fill]; commonInk = fill; }
+                });
+                return commonInk;
+            }
+            function restFillBefore(index) {
+                for (var i = index - 1; i >= 0; i--) {
+                    var fill = allTexts[i].getAttribute('fill');
+                    if (fill && !isLinkFill(fill)) return fill;
+                }
+                return mostCommonInk();
+            }
             var groups = [];
             var curGrp = [];
-            var sorted = Array.from(blueIndices).sort(function(a, b) { return a - b; });
+            var sorted = blueIndices;
             for (var gi = 0; gi < sorted.length; gi++) {
                 if (curGrp.length === 0 || sorted[gi] === curGrp[curGrp.length - 1] + 1) {
                     curGrp.push(sorted[gi]);
@@ -1103,28 +1127,40 @@
                 var combined = group.map(function(idx) { return allTexts[idx].textContent; }).join('');
                 var key = combined.replace(/\s+/g, '');
                 var segId = iflowMap[key] || null;
-                if (!segId || !iflowData[segId]) return;
+                if (!segId) return; // not Kronikol's markup: left exactly as painted
                 var groupEls = group.map(function(idx) { return allTexts[idx]; });
+                // The highlight is the fill the engine painted the link in, so a theme's link colour survives.
+                var linkFills = groupEls.map(function(el) { return el.getAttribute('fill'); });
+                var rest = restFillBefore(group[0]);
+                function atRest() {
+                    groupEls.forEach(function(el) {
+                        el.setAttribute('fill', rest);
+                        el.removeAttribute('text-decoration');
+                    });
+                }
+                if (!iflowData[segId]) {
+                    // Kronikol wrote the link, but its popup would be empty: it must not look like one.
+                    atRest();
+                    return;
+                }
                 groupEls.forEach(function(textEl) {
                     textEl.style.pointerEvents = 'all';
                     if (hoverOnly) {
+                        textEl.setAttribute('fill', rest);
+                        textEl.removeAttribute('text-decoration');
                         textEl.style.cursor = 'default';
                         textEl.addEventListener('mouseenter', function() {
-                            groupEls.forEach(function(el) {
-                                el.setAttribute('fill', '#0000FF');
+                            groupEls.forEach(function(el, i) {
+                                el.setAttribute('fill', linkFills[i]);
                                 el.setAttribute('text-decoration', 'underline');
                                 el.style.cursor = 'pointer';
                             });
                         });
                         textEl.addEventListener('mouseleave', function() {
-                            groupEls.forEach(function(el) {
-                                el.setAttribute('fill', '#000000');
-                                el.removeAttribute('text-decoration');
-                                el.style.cursor = 'default';
-                            });
+                            atRest();
+                            groupEls.forEach(function(el) { el.style.cursor = 'default'; });
                         });
                     } else {
-                        textEl.setAttribute('fill', '#0000FF');
                         textEl.setAttribute('text-decoration', 'underline');
                         textEl.style.cursor = 'pointer';
                     }

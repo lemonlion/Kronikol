@@ -144,7 +144,7 @@ public class NoteCopyFidelityTests
     }
 
     [Fact]
-    public void A_chunked_gray_header_value_rejoins_to_the_original_value()
+    public void A_chunked_header_value_rejoins_to_the_original_value()
     {
         var value = "Bearer " + Jwt;
         var lines = PlantUmlCreator.BatchGray(value).ToArray();
@@ -152,9 +152,10 @@ public class NoteCopyFidelityTests
         Assert.True(lines.Length > 1, "the fixture must actually chunk");
         Assert.All(lines[..^1], l => Assert.EndsWith(Join, l));
 
-        // A consumer strips the per-line gray tag first, then rejoins - which is why the rejoin needs
+        // A consumer strips the per-line header tag first, then rejoins - which is why the rejoin needs
         // no knowledge of it.
-        var stripped = lines.Select(l => l.StartsWith("<color:gray>") ? l[12..] : l);
+        Assert.All(lines, l => Assert.StartsWith(NotePalette.HeaderTag, l));
+        var stripped = lines.Select(l => l[NotePalette.HeaderTag.Length..]);
         Assert.Equal(value, DiagramWidth.RejoinMarkedLines(string.Join("\n", stripped)));
     }
 

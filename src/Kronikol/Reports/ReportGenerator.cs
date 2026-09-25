@@ -244,6 +244,7 @@ public static class ReportGenerator
             ReportDiagnosticsScope.Record(DiagnosticKind.BackgroundCalls,
                 $"{group.Calls} call{(group.Calls == 1 ? "" : "s")} arrived after '{group.ScenarioName}' ended and are listed as background calls",
                 group.ScenarioId);
+        RecordOptionDiagnostics(options);
 
         if (options.ExpectedTestCount != null)
         {
@@ -782,6 +783,38 @@ public static class ReportGenerator
     /// producer slipped past it — with the first few as examples, so the gap is visible in
     /// <c>kronikol ingest</c>'s output and on a dashboard instead of only in the rendered HTML.
     /// </summary>
+    /// <summary>
+    /// Records an <see cref="DiagnosticKind.OptionNotApplied"/> for each option the run's rendering mode ignores:
+    /// a PlantUML theme under <see cref="PlantUmlRendering.BrowserJs"/> or <see cref="PlantUmlRendering.NodeJs"/>,
+    /// which load the engine without its theme bundle. Called after the zero-scenario guard, so a discovery pass
+    /// does not warn, and before the diagnostics snapshot, so the entry reaches the data files. The entry is the
+    /// channel; the console line is a courtesy, since most test runners swallow library output.
+    /// </summary>
+    private static void RecordOptionDiagnostics(ReportConfigurationOptions options)
+    {
+        if (options.PlantUmlRendering is not (PlantUmlRendering.BrowserJs or PlantUmlRendering.NodeJs))
+            return;
+
+        if (!string.IsNullOrWhiteSpace(options.PlantUmlTheme))
+            RecordThemeNotApplied(nameof(ReportConfigurationOptions.PlantUmlTheme), options.PlantUmlTheme, options.PlantUmlRendering);
+
+        if (options.GenerateComponentDiagram && options.ComponentDiagramOptions?.PlantUmlTheme is { } componentTheme
+            && !string.IsNullOrWhiteSpace(componentTheme))
+            RecordThemeNotApplied($"{nameof(ReportConfigurationOptions.ComponentDiagramOptions)}.{nameof(ComponentDiagram.ComponentDiagramOptions.PlantUmlTheme)}",
+                componentTheme, options.PlantUmlRendering);
+    }
+
+    private static void RecordThemeNotApplied(string option, string theme, PlantUmlRendering mode)
+    {
+        var what = mode == PlantUmlRendering.BrowserJs
+            ? "so every diagram is drawn unthemed and the browser console says \"themes.js could not be loaded\""
+            : "so every diagram is drawn unthemed; the engine's warning goes to the renderer's stderr, which a successful render does not keep";
+        var message = $"{option} \"{theme}\" has no effect under PlantUmlRendering.{mode}: the report's renderer loads the engine " +
+                      $"without its theme bundle, {what}. Server and Local apply a theme; leave {option} unset to silence this.";
+        ReportDiagnosticsScope.Record(DiagnosticKind.OptionNotApplied, message);
+        Console.WriteLine("⚠ WARNING: " + message);
+    }
+
     private static void ReportLowercaseSteps(Feature[] features)
     {
         if (ReportDiagnosticsScope.Current is null)

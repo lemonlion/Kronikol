@@ -96,7 +96,15 @@ public record ReportConfigurationOptions
     /// <summary>Visual de-emphasis style applied to non-focused participants. Default: <see cref="FocusDeEmphasis.LightGray"/>.</summary>
     public FocusDeEmphasis FocusDeEmphasis { get; set; } = FocusDeEmphasis.LightGray;
 
-    /// <summary>PlantUML theme name to apply to all diagrams (e.g. <c>"cerulean"</c>). <c>null</c> uses the default theme.</summary>
+    /// <summary>
+    /// PlantUML theme name (e.g. <c>"cerulean"</c>) written as <c>!theme &lt;name&gt;</c> into every diagram
+    /// source, so it is in the report's JSON and mergeable output too. Applied by the engine under
+    /// <see cref="PlantUmlRendering.Server"/> and <see cref="PlantUmlRendering.Local"/>, unvalidated against
+    /// Kronikol's notes and page. <b>No effect under <see cref="PlantUmlRendering.BrowserJs"/> (the default) and
+    /// <see cref="PlantUmlRendering.NodeJs"/></b>: those renderers load the engine without its theme bundle, the
+    /// diagrams are drawn unthemed, and the run records a <see cref="Reports.DiagnosticKind.OptionNotApplied"/>
+    /// entry saying so. <c>null</c> (the default) writes no directive.
+    /// </summary>
     public string? PlantUmlTheme { get; set; }
 
     /// <summary>Image format for PlantUML diagrams. Default: <see cref="PlantUmlImageFormat.Png"/>.</summary>

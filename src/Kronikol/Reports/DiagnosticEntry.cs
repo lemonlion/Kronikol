@@ -105,6 +105,16 @@ public enum DiagnosticKind
     /// before retained runs existed, and anything already staged was moved back.
     /// </summary>
     ReportRotationFailed,
+
+    /// <summary>
+    /// An option was set that the run's configuration ignores, and the message names the option, its value
+    /// and why. Today that is a PlantUML theme (<see cref="ReportConfigurationOptions.PlantUmlTheme"/>, or
+    /// <see cref="ComponentDiagram.ComponentDiagramOptions.PlantUmlTheme"/> when the component diagram is
+    /// generated) under <see cref="PlantUmlRendering.BrowserJs"/> or <see cref="PlantUmlRendering.NodeJs"/>:
+    /// both load the engine without its theme bundle, so every diagram is drawn unthemed. The run is otherwise
+    /// unaffected.
+    /// </summary>
+    OptionNotApplied,
 }
 
 /// <summary>

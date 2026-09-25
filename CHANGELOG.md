@@ -4,6 +4,87 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.30.0] - 2026-09-25
+
+**Minor - `PlantUmlTheme` says when it does nothing, and two diagram colours are what they should have
+been (`plans/DIAGRAM_COLOURS_PLAN.md`, stage 1 P3, its second and last release).** The minor part moved
+because there is one new public value, `DiagnosticKind.OptionNotApplied`, in the enum and in the report
+schema's diagnostic kinds. Everything else in the release is a fix.
+
+### Added
+
+- **A theme the report's renderer cannot apply is recorded as `DiagnosticKind.OptionNotApplied`.**
+  `BrowserJs`, the default, and `NodeJs` load the PlantUML engine without its theme bundle, so a theme set
+  under either draws every diagram unthemed (with the engine's console warning since 3.29.6). The run now
+  records one entry for each theme option set, naming the option, the theme and the mode:
+  `ReportConfigurationOptions.PlantUmlTheme`, and `ComponentDiagramOptions.PlantUmlTheme` when the
+  component diagram is generated. The entry is in the report's diagnostics, so `kronikol query summary`
+  lists it, and the run prints the same text as a `⚠ WARNING:` console line. `Server` and `Local` apply a
+  theme and record nothing, and a run with no scenarios records nothing. The documentation of the three
+  `PlantUmlTheme` options (the third is `DiagramsFetcherOptions`) says which modes apply a theme.
+
+### Fixed
+
+- **Note header lines were painted below the WCAG AA contrast floor.** A note's header lines
+  (`[Content-Type=…]`) and its `[Full path]` block were written `<color:gray>`, which paints `#808080`:
+  3.87 to 1 on the default note fill and 3.20 to 1 on the event note fill, both below 4.5. They are now
+  written `<color:#686868>`, the lightest grey that clears 4.5 to 1 on both fills (5.46 and 4.51),
+  computed from the two fills (`NotePalette`) rather than picked by eye. The report's scripts find a
+  note's header lines by that tag in twelve places: hiding headers, the YAML view (offered only when the
+  rest of the note is a JSON body), copying a note's text, copying all caller request payloads, and a
+  collapsed note's preview and tooltip. They now read both forms, so a report merged from sources written
+  before and after 3.30.0 behaves the same for both, and a search reads a header in either form the same
+  way. **Behaviour change:** the PlantUML source and the rendered SVG of every note with a header line,
+  one colour per header line.
+- **Blue text in a diagram with an internal-flow link was repainted black.** The page finds a diagram's
+  internal-flow links by the engine's link colour, `#0000ff`, and repainted every text of that colour
+  black before checking which of them were links, so a `FocusEmphasis.Colored` field or a hyperlink in a
+  payload lost its blue in any diagram that also held a link, in sequence and component diagrams alike.
+  Only the text an internal-flow link names is now touched. A link rests in the colour of the text around
+  it (the nearest earlier text that is not link-coloured, else the diagram's most common text colour, else
+  black) instead of a fixed black, and lights up in the colour the engine painted it instead of a fixed
+  blue, so a link stays readable on a diagram whose text is not black. A link whose flow has no data rests
+  the same way and does not light up. **Behaviour change:** none on the default theme for the links
+  themselves, which still rest black and light up blue; blue text that is no link keeps its colour.
+
+### Documentation
+
+- Wiki: `Diagnostics-and-Debugging` lists `OptionNotApplied`, and the theme rows and sections of
+  `Report-Configuration`, `Diagram-Customisation`, `PlantUML-Browser-Rendering` and `Component-Diagrams`
+  say that the run records it. `PlantUML-Browser-Rendering` names header lines by what they are instead
+  of by their old colour. `plans/THEME_PLAN.md` is corrected where it would have undone this release: its
+  header-line floor is 4.5 (it said 3.9, matching the old grey), both header tags are legacy literals for
+  its rewrite, and a link's rest colour comes from the text around it. The Kronikol4J divergence ledger
+  records 3.29.6 and 3.30.0.
+
+### Tests
+
+- `NotePaletteTests` pins the header ink: the contrast function against the audit's numbers and black on
+  white, the ink's ratio on both note fills, that one step lighter fails the floor, that the event note is
+  what sets it, and that the header stays quieter than the body text. `PlantUmlCreatorTests` checks that every header line is written in that ink with no
+  `<color:gray>` left, and that a captured line starting like the header tag is escaped and never read as
+  a header. `DiagramContextMenuTests` checks that both scripts recognise a header line through the same
+  pattern, that it accepts the tag the emitter writes, that no script matches the grey literal alone, and
+  that the link binding writes no colour literal of its own.
+- `OptionDiagnosticsTests` covers each rendering mode, both theme options, one entry each, a run with no
+  scenarios (it fails if the check moves above the guard that skips such a run), the warning printed once,
+  and the entry reaching the written report and its schema; `QueryCommandTests` checks that `summary` lists it and that
+  `failures` does not print it as a provenance line.
+- End to end: `NoteHeaderFormsTests` runs the five header behaviours above on both tags (the new tag's
+  five failed before the scripts changed), `NoteHeaderContrastTests` measures the painted header ink
+  against its fill in the browser (on `gray` it reads 3.87 and 3.20 and fails), `IflowLinkColourTests`
+  pins the rest and highlight colours, the untouched blue text, the link with no data and the show-link
+  mode (five of its six fail on 3.29.6), and `NoteYamlInternalsTests` runs its YAML gate on both tags.
+  `ThemedSourceRendersTests` gains a run report written by the whole pipeline with a theme set: both of
+  its diagrams are drawn and its data file holds one `OptionNotApplied` (the fact fails with the check
+  disabled). The class's first fact, which fails on purpose the day the worker applies a theme, now says
+  in its message what to remove then.
+  The search normalizers' equivalence test and the shared search vectors gain the new tag.
+- `NodeJsPlantUmlRendererTests.Batch_of_five_is_faster_than_five_single_spawns` compares two wall-clock
+  times on a shared machine, and failed once when a Chromium render probe ran beside the suite. It now
+  passes on the first of up to three measurements that shows the batch ahead; a batch that is really
+  slower still fails all three.
+
 ## [3.29.6] - 2026-09-25
 
 **Patch - no diagram is lost to the renderer (`plans/DIAGRAM_COLOURS_PLAN.md`, stage 1 P3, its first

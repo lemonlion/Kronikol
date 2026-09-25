@@ -167,7 +167,7 @@ public class DiagramContextMenuTests
         var funcBody = GetFunction("buildSourceWithNoteStates");
         // When hideHeaders is true and note is in normal (expanded) mode,
         // lines matching <color:gray> should be skipped (setting justSkippedGray)
-        Assert.Contains(@"if (inNote && hideHeaders && /^<color:gray>/.test(trimmed)) { justSkippedGray = true; continue; }", funcBody);
+        Assert.Contains(@"if (inNote && hideHeaders && NOTE_HEADER_TAG.test(trimmed)) { justSkippedGray = true; continue; }", funcBody);
     }
 
     [Fact]
@@ -195,7 +195,45 @@ public class DiagramContextMenuTests
     {
         var funcBody = GetFunction("buildSourceWithNoteStates");
         // In truncated mode, <color:gray> lines should be skippable when hideHeaders is true
-        Assert.Contains(@"if (hideHeaders && /^<color:gray>/.test(trimmed)) { justSkippedGray = true; continue; }", funcBody);
+        Assert.Contains(@"if (hideHeaders && NOTE_HEADER_TAG.test(trimmed)) { justSkippedGray = true; continue; }", funcBody);
+    }
+
+    // ─── Note header lines (DIAGRAM_COLOURS_PLAN S1) ────────
+
+    /// <summary>
+    /// What a header line starts with: <c>gray</c> before 3.30.0, the computed ink
+    /// (<c>NotePalette.HeaderInk</c>) from it. A merged report holds sources from several releases, so both.
+    /// </summary>
+    private const string HeaderTagRegex = @"/^<color:(?:gray|#[0-9A-Fa-f]{6})>/";
+
+    [Fact]
+    public void Both_scripts_recognise_a_header_line_by_the_same_tag()
+    {
+        // The two scripts cannot share a constant without a page global, so each carries the literal.
+        Assert.Contains($"var NOTE_HEADER_TAG = {HeaderTagRegex};", _notesScript);
+        Assert.Contains($"var NOTE_HEADER_TAG = {HeaderTagRegex};", _script);
+    }
+
+    [Fact]
+    public void The_header_tag_the_emitter_writes_is_one_the_scripts_recognise()
+    {
+        var regex = new System.Text.RegularExpressions.Regex(HeaderTagRegex.Trim('/'));
+
+        Assert.Matches(regex, Kronikol.PlantUml.NotePalette.HeaderTag + "[Accept=text/html]");
+        Assert.Matches(regex, "<color:gray>[Accept=text/html]");
+        // Kronikol's other own tags are named colours, never a header: focus emphasis and the step bars.
+        Assert.DoesNotMatch(regex, "<color:blue>\"name\": \"Alice\"</color>");
+        Assert.DoesNotMatch(regex, "<color:lightgray>\"age\": 30</color>");
+        Assert.DoesNotMatch(regex, "<color:white>Test 1");
+    }
+
+    [Fact]
+    public void No_script_recognises_a_header_line_by_the_gray_literal_alone()
+    {
+        // Twelve sites once read the header by the `gray` literal. One written against it again would miss
+        // every note written since 3.30.0.
+        Assert.DoesNotContain("<color:gray>/", _notesScript);
+        Assert.DoesNotContain("<color:gray>/", _script);
     }
 
     // ─── _preProcessSource ──────────────────────────────────
@@ -881,6 +919,18 @@ public class DiagramContextMenuTests
     // ═══════════════════════════════════════════════════════════
 
     private readonly string _plantUmlScript = DiagramContextMenu.GetPlantUmlBrowserRenderScript();
+
+    [Fact]
+    public void Internal_flow_link_binding_writes_no_colour_of_its_own()
+    {
+        // DIAGRAM_COLOURS_PLAN S2. The binding blacked every #0000FF text on load, links or not, and rested a
+        // link in #000000 after a hover: under a non-black ink the link went black for good, and a focus field
+        // painted blue (FocusEmphasis.Colored) or a hyperlink in a payload lost its colour. A link rests in the
+        // ink of the text around it and is highlighted in the fill the engine gave it.
+        var bind = GetFunction("bindIflowLinks", _plantUmlScript);
+        Assert.DoesNotContain("setAttribute('fill', '#000000')", bind);
+        Assert.DoesNotContain("setAttribute('fill', '#0000FF')", bind);
+    }
 
     [Fact]
     public void PlantUml_engine_is_fetched_into_workers_not_loaded_by_script_tags()
