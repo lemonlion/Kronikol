@@ -2,8 +2,8 @@
 
 **Date:** 2026-09-26 · **Repo version:** 3.29.6 in the shared checkout (`6c689b5e`); origin/main is 3.30.1
 (`512bc85a`) and has changed no tool source since, so every cited source line holds at both ·
-**Status: NOT green-lit, nothing implemented.** Roadmap items **1.13** (S1, a patch that needs no decision)
-and **10.0** (S2, a minor that needs **D22**). §9 is the assumption ledger. The scripts behind every number
+**Status: green-lit 2026-09-26, nothing implemented.** The owner took D22 as recommended: S2 goes ahead,
+with rule R4 and Q1's `no response`. Roadmap items **1.13** (S1, a patch) and **10.0** (S2, a minor). §9 is the assumption ledger. The scripts behind every number
 are in [`FLOW_NESTING_PLAN.harness/`](FLOW_NESTING_PLAN.harness/README.md), with their output.
 
 The owner asked on 2026-09-25 whether `kronikol query` should translate a scenario's diagram into Mermaid,
@@ -445,9 +445,9 @@ prints, so a patch with the behaviour change called out. Changelog draft:
 > `flow` also printed no annotation recorded after a scenario's last call, which `annotations` listed; it
 > is printed after the last call. Patch: bug fixes, nothing new to call.
 
-### 7.2 S2, a minor (roadmap 10.0, needs D22)
+### 7.2 S2, a minor (roadmap 10.0, D22 taken 2026-09-26)
 
-§4.1 to §4.3, `CallNesting`, the `VerbTable` description, and the docs of §7.3. New information in a verb's
+§4.1 to §4.3, Q1's `no response`, `CallNesting`, the `VerbTable` description, and the docs of §7.3. New information in a verb's
 output, so a minor by `CLAUDE.md`. If S1 and S2 ship in one release, that release is the minor. Changelog
 draft:
 
@@ -455,7 +455,8 @@ draft:
 > waiting for its answer, by the service handling it or on its trace. A line whose parent the indentation
 > cannot show names it (`inside s3/i8`), so `flow s3 --service orders-db` says which request each query
 > belonged to, and `--errors-only` shows a failing call with the failure inside it. The footer says what
-> indentation means. No flow line ends in spaces any more. Minor: new information in a verb's output.
+> indentation means, and a request that never got an answer says `no response`. No flow line ends in
+> spaces any more. Minor: new information in a verb's output.
 
 ### 7.3 Docs
 
@@ -526,14 +527,14 @@ budget and truncation twice. Mermaid stays where a human renders it: V4's CI sum
 
 | # | Question | Recommendation |
 |---|---|---|
-| Q1 | Print `no response` in the status place for a request never answered, so it no longer looks like the 258 answered calls with no status (F9)? | Yes, in S2. R4 gives "never answered" a consequence (such a call holds no children), and the line should say why |
+| Q1 | Print `no response` in the status place for a request never answered, so it no longer looks like the 258 answered calls with no status (F9)? | **Taken 2026-09-26: yes, in S2.** R4 gives "never answered" a consequence (such a call holds no children), and the line should say why |
 | Q2 | Should `http sN/iM` print the call it ran inside? | Later, its own minor, reusing `CallNesting` |
 | Q3 | Nest the per-step call lists of `Failures.md` and of `compare`? | Measure after S2 ships. `Failures.md` is report output, so it would be a report change with its own record |
 | Q4 | `--call-tree` ingest places a delivery after its parent's response (its parent rule has no trace clause), so `flow` would nest it in a report ingested without `--call-tree` and not with it (INFERRED from `OrderAsCallTree`'s comment, not RUN). Give `OrderAsCallTree` clause (b)? | Run §7.5's ingest check first; decide on what it shows |
 | Q5 | UI user actions have no response record, so a click cannot be a parent and the calls it caused stay at the top level | Measure on the first UI report; none is on this machine |
 | Q6 | The legend costs about 50 bytes per nested flow | Keep it. The tool explains its output in its footers, and "ran inside" is not "caused by" |
 
-D22 in the roadmap asks for the green light, R4 and Q1 together.
+D22 in the roadmap asked for the green light, R4 and Q1 together; the owner took all three on 2026-09-26.
 
 ---
 
