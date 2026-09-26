@@ -1,0 +1,731 @@
+{
+ "engines": [
+  "core-1.2026.8beta1-0e4f452.js",
+  "core-npm-1.2026.8.js"
+ ],
+ "browser": "chromium",
+ "version": "147.0.7727.15",
+ "reps": 5,
+ "all": [
+  {
+   "file": "gen-50.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 121.20000000298023
+  },
+  {
+   "file": "gen-50.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 122.69999999552965
+  },
+  {
+   "file": "gen-50.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 103.10000000149012
+  },
+  {
+   "file": "gen-50.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 98.19999999552965
+  },
+  {
+   "file": "gen-50.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 87.79999999701977
+  },
+  {
+   "file": "gen-50.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 84.60000000149012
+  },
+  {
+   "file": "gen-50.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 80.39999999850988
+  },
+  {
+   "file": "gen-50.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 81.30000000447035
+  },
+  {
+   "file": "gen-50.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 80.5
+  },
+  {
+   "file": "gen-50.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 85.70000000298023
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 269.5
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 271.20000000298023
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 264.20000000298023
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 265.6000000014901
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 277.69999999552965
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 268.19999999552965
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 261.70000000298023
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 263.6000000014901
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 267
+  },
+  {
+   "file": "gen-200.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 275.1000000014901
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 637.1000000014901
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 673.3000000044703
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 656.2000000029802
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 640.5
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 627.8999999985099
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 628.2000000029802
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 633.3000000044703
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 823.5
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 668.6999999955297
+  },
+  {
+   "file": "gen-500.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 622.5
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 84
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 79.79999999701977
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 80
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 85.69999999552965
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 85
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 79.20000000298023
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 80.89999999850988
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 84.79999999701977
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 83.19999999552965
+  },
+  {
+   "file": "puml-0.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 83.29999999701977
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 57.899999998509884
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 55.600000001490116
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 54.900000005960464
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 57.30000000447035
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 56.79999999701977
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 54.899999998509884
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 55.70000000298023
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 56.5
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 59.79999999701977
+  },
+  {
+   "file": "puml-1.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 55.29999999701977
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 105.79999999701977
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 102.69999999552965
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 105.5
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 106.69999999552965
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 104
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 103.79999999701977
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 103.39999999850988
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 107.10000000149012
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 104.79999999701977
+  },
+  {
+   "file": "puml-19.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 103.70000000298023
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 157.29999999701977
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 155.20000000298023
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 155.89999999850988
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 152
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 151.60000000149012
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 149.70000000298023
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 145.39999999850988
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 151.10000000149012
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 146.79999999701977
+  },
+  {
+   "file": "shape-activation.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 147.40000000596046
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 102.59999999403954
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 102.09999999403954
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 102.79999999701977
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 102
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 101.89999999850988
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 102.5
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 103.5
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 99.29999999701977
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 100.39999999850988
+  },
+  {
+   "file": "shape-createdestroy.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 100.20000000298023
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 76
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 72.70000000298023
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 72.79999999701977
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 73.30000000447035
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 72.89999999850988
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 71.59999999403954
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 71.29999999701977
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 73.89999999850988
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 71.5
+  },
+  {
+   "file": "shape-groups.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 71.60000000149012
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 85.5
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 128.20000000298023
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 175.09999999403954
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 205.20000000298023
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 140.60000000149012
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 202.60000000149012
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 127.10000000149012
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 169.89999999850988
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 138.69999999552965
+  },
+  {
+   "file": "shape-parallel.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 113.5
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 164.80000000447035
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 147.5
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 139.10000000149012
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 153.80000000447035
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 145.70000000298023
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 70.30000000447035
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 127
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 90.89999999850988
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 68.39999999850988
+  },
+  {
+   "file": "shape-self.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 149.70000000298023
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 0,
+   "ms": 108.70000000298023
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 0,
+   "ms": 83.5
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 1,
+   "ms": 113.5
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 1,
+   "ms": 154.79999999701977
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 2,
+   "ms": 135
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 2,
+   "ms": 132.60000000149012
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 3,
+   "ms": 115.39999999850988
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 3,
+   "ms": 135.39999999850988
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-1.2026.8beta1-0e4f452.js",
+   "rep": 4,
+   "ms": 100.69999999552965
+  },
+  {
+   "file": "shape-wide.puml",
+   "engine": "core-npm-1.2026.8.js",
+   "rep": 4,
+   "ms": 101.40000000596046
+  }
+ ]
+}

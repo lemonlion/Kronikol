@@ -1,0 +1,36 @@
+# PlantUmlStatementLimits in the shipped BrowserJs worker (2026-09-25): plans/ENGINE_PIN_PLAN.md §1.11 and Q9
+# node statement-limits-worker-probe.js <shim page, 1 worker> fork=<gh route> npm=<npm route>; Chromium 147 (Playwright 1.59.1), file://
+# Sources after plans/DIAGRAM_COLOURS_PLAN.harness/statement-node.js (P3's F25, R30). 'STACK' in the rows below is
+# java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded, written into the diagram's place.
+
+base fork=https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452 npm=https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | Chromium, 1 worker, file://
+{"kind":"message+link","n":1000,"fork":"drawn","npm":"drawn"}
+{"kind":"message+link","n":1100,"fork":"STACK","npm":"STACK"}
+{"kind":"message+link","n":1200,"fork":"STACK","npm":"STACK"}
+{"kind":"message+link","n":1300,"fork":"STACK","npm":"STACK"}
+{"kind":"message+link","n":1400,"fork":"STACK","npm":"STACK"}
+{"kind":"message+link","n":1500,"fork":"STACK","npm":"STACK"}
+{"kind":"message+link","n":1600,"fork":"drawn","npm":"drawn"}
+{"kind":"message+link","n":1700,"fork":"STACK","npm":"STACK"}
+{"kind":"message+link","n":1800,"fork":"STACK","npm":"STACK"}
+{"kind":"message+link","n":1900,"fork":"STACK","npm":"STACK"}
+{"kind":"message+link","n":2000,"fork":"STACK","npm":"STACK"}
+{"kind":"message","n":1000,"fork":"drawn","npm":"drawn"}
+{"kind":"message","n":1500,"fork":"drawn","npm":"drawn"}
+{"kind":"message","n":1800,"fork":"drawn","npm":"drawn"}
+{"kind":"message","n":2000,"fork":"drawn","npm":"drawn"}
+{"kind":"loop label","n":800,"fork":"drawn","npm":"drawn"}
+{"kind":"loop label","n":1000,"fork":"drawn","npm":"drawn"}
+{"kind":"loop label","n":1200,"fork":"drawn","npm":"drawn"}
+{"kind":"loop label","n":1300,"fork":"drawn","npm":"drawn"}
+{"kind":"loop label","n":1400,"fork":"drawn","npm":"drawn"}
+{"kind":"loop label","n":1471,"fork":"drawn","npm":"drawn"}
+{"kind":"loop label","n":1600,"fork":"drawn","npm":"drawn"}
+{"kind":"loop label","n":2000,"fork":"drawn","npm":"drawn"}
+{"kind":"coloured bar","n":800,"fork":"drawn","npm":"drawn"}
+{"kind":"coloured bar","n":1000,"fork":"drawn","npm":"drawn"}
+{"kind":"coloured bar","n":1200,"fork":"drawn","npm":"drawn"}
+{"kind":"coloured bar","n":1300,"fork":"drawn","npm":"drawn"}
+{"kind":"coloured bar","n":1400,"fork":"drawn","npm":"drawn"}
+{"kind":"coloured bar","n":1600,"fork":"drawn","npm":"drawn"}
+{"kind":"coloured bar","n":2000,"fork":"drawn","npm":"drawn"}

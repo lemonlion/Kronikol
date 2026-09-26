@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Writes .puml sources from Kronikol's own emitter for the engine comparison (plans/ENGINE_PIN_PLAN.md
+       §1.16), and a bare page carrying the shipped browser render script for worker-wedge-probe.js.
+       The assembly is named formatter-probe because Kronikol.csproj grants that name its internals
+       (StepBarPlantUml, StepBarTable, DiagramWidth); tools/search-bench/formatter-probe is the precedent.
+       Not part of the solution or of CI (CI discovers tests/* only). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>formatter-probe</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Kronikol\Kronikol.csproj" />
+  </ItemGroup>
+</Project>

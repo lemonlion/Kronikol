@@ -1,0 +1,135 @@
+# Payload text that reaches the engine's own script loader (2026-09-25)
+#
+# <&name> (openiconic.js) and <:name:> (emoji.js) in a note make the engine append a <script> that neither
+# mock DOM ever loads. plans/ENGINE_PIN_PLAN.md §1.15 and Appendix A.10; the fixes are P3's
+# (plans/DIAGRAM_COLOURS_PLAN.md F16 to F20, its S3a, S4 and S5). Engines: fork = v1.2026.8beta1-0e4f452
+# from jsDelivr, npm = @plantuml/core@1.2026.8 from the registry tarball. node 25.9.0, Chromium 147.
+
+## 1. The Node script: payload-syntax-probe.js, shipped script, then with --loader-hook
+
+### node payload-syntax-probe.js npm=<npm 1.2026.8 dir> fork=<fork 0e4f452 dir>   (2026-09-25T10:52Z)
+script shipped plantuml-render.js node v25.9.0
+{"engine":"npm","case":"plain","exit":0,"ms":291,"svgBytes":2731,"stderr":""}
+{"engine":"npm","case":"icon","exit":1,"ms":23454,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"npm","case":"emoji","exit":1,"ms":23392,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"npm","case":"sprite","exit":0,"ms":292,"svgBytes":2861,"stderr":""}
+{"engine":"npm","case":"icon-escaped","exit":0,"ms":286,"svgBytes":2748,"stderr":""}
+{"engine":"npm","case":"emoji-escaped","exit":0,"ms":344,"svgBytes":2746,"stderr":""}
+{"engine":"npm","case":"icon-in-arrow-label","exit":1,"ms":23452,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"npm","case":"theme","exit":1,"ms":23235,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"npm","case":"c4-include","exit":1,"ms":23632,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"npm","batch":"plain,icon,plain,emoji,plain","exit":0,"ms":101124,"results":["0-plain: svg","1-icon: ERROR ERROR: Timed out waiting for SVG render (20000ms)","2-plain: ERROR ERROR: Timed out waiting for SVG render (20000ms)","3-emoji: ERROR ERROR: Timed out waiting for SVG render (20000ms)","4-plain: ERROR ERROR: Timed out waiting for SVG render (20000ms)"]}
+{"engine":"fork","case":"plain","exit":0,"ms":494,"svgBytes":2731,"stderr":""}
+{"engine":"fork","case":"icon","exit":1,"ms":25057,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","case":"emoji","exit":1,"ms":24776,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","case":"sprite","exit":0,"ms":347,"svgBytes":2861,"stderr":""}
+{"engine":"fork","case":"icon-escaped","exit":0,"ms":381,"svgBytes":2748,"stderr":""}
+{"engine":"fork","case":"emoji-escaped","exit":0,"ms":310,"svgBytes":2746,"stderr":""}
+{"engine":"fork","case":"icon-in-arrow-label","exit":1,"ms":24388,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","case":"theme","exit":1,"ms":23625,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","case":"c4-include","exit":1,"ms":23575,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","batch":"plain,icon,plain,emoji,plain","exit":0,"ms":95605,"results":["0-plain: svg","1-icon: ERROR ERROR: Timed out waiting for SVG render (20000ms)","2-plain: ERROR ERROR: Timed out waiting for SVG render (20000ms)","3-emoji: ERROR ERROR: Timed out waiting for SVG render (20000ms)","4-plain: ERROR ERROR: Timed out waiting for SVG render (20000ms)"]}
+
+### node payload-syntax-probe.js --loader-hook npm=<npm dir> fork=<fork dir>
+script with PLANTUML_STDLIB_LOADER failing at once node v25.9.0
+{"engine":"npm","case":"plain","exit":0,"ms":361,"svgBytes":2731,"stderr":""}
+{"engine":"npm","case":"icon","exit":1,"ms":260,"svgBytes":0,"stderr":"java.lang.RuntimeException: Kronikol does not load openiconic.js"}
+{"engine":"npm","case":"emoji","exit":1,"ms":258,"svgBytes":0,"stderr":"java.lang.RuntimeException: Kronikol does not load emoji.js"}
+{"engine":"npm","case":"sprite","exit":0,"ms":272,"svgBytes":2861,"stderr":""}
+{"engine":"npm","case":"icon-escaped","exit":0,"ms":351,"svgBytes":2748,"stderr":""}
+{"engine":"npm","case":"emoji-escaped","exit":0,"ms":276,"svgBytes":2746,"stderr":""}
+{"engine":"npm","case":"icon-in-arrow-label","exit":1,"ms":242,"svgBytes":0,"stderr":"java.lang.RuntimeException: Kronikol does not load openiconic.js"}
+{"engine":"npm","case":"theme","exit":0,"ms":276,"svgBytes":1984,"stderr":"PlantUML: themes.js could not be loaded, so '!theme cerulean' was ignored. Serve themes.js next to t"}
+{"engine":"npm","case":"c4-include","exit":0,"ms":159,"svgBytes":1331,"stderr":""}
+{"engine":"npm","batch":"plain,icon,plain,emoji,plain","exit":0,"ms":566,"results":["0-plain: svg","1-icon: ERROR java.lang.RuntimeException: Kronikol does not load openiconi","2-plain: svg","3-emoji: ERROR java.lang.RuntimeException: Kronikol does not load emoji.js","4-plain: svg"]}
+{"engine":"fork","case":"plain","exit":0,"ms":276,"svgBytes":2731,"stderr":""}
+{"engine":"fork","case":"icon","exit":1,"ms":23496,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","case":"emoji","exit":1,"ms":23894,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","case":"sprite","exit":0,"ms":319,"svgBytes":2861,"stderr":""}
+{"engine":"fork","case":"icon-escaped","exit":0,"ms":326,"svgBytes":2748,"stderr":""}
+{"engine":"fork","case":"emoji-escaped","exit":0,"ms":284,"svgBytes":2746,"stderr":""}
+{"engine":"fork","case":"icon-in-arrow-label","exit":1,"ms":24194,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","case":"theme","exit":1,"ms":24074,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","case":"c4-include","exit":1,"ms":24057,"svgBytes":0,"stderr":"ERROR: Timed out waiting for SVG render (20000ms)"}
+{"engine":"fork","batch":"plain,icon,plain,emoji,plain","exit":0,"ms":94239,"results":["0-plain: svg","1-icon: ERROR ERROR: Timed out waiting for SVG render (20000ms)","2-plain: ERROR ERROR: Timed out waiting for SVG render (20000ms)","3-emoji: ERROR ERROR: Timed out waiting for SVG render (20000ms)","4-plain: ERROR ERROR: Timed out waiting for SVG render (20000ms)"]}
+
+## 2. The shipped BrowserJs shim: worker-wedge-probe.js (fork build from the CDN pin, file://, 100 s)
+# Pages from: dotnet run --project emitter-corpus -- --shim <page> 1 (and 4). Order: plain, icon, plain x4, emoji, plain x2.
+
+{
+ "page": "shim-1.html",
+ "order": [
+  "plain",
+  "icon",
+  "plain",
+  "plain",
+  "plain",
+  "plain",
+  "emoji",
+  "plain",
+  "plain"
+ ],
+ "rendered": [
+  "0-plain: svg +138 ms",
+  "1-icon: NOT RENDERED",
+  "2-plain: NOT RENDERED",
+  "3-plain: NOT RENDERED",
+  "4-plain: NOT RENDERED",
+  "5-plain: NOT RENDERED",
+  "6-emoji: NOT RENDERED",
+  "7-plain: NOT RENDERED",
+  "8-plain: NOT RENDERED"
+ ],
+ "telemetry": {
+  "mode": "worker",
+  "workers": 1,
+  "renders": 1,
+  "errors": 0,
+  "inFlight": 1
+ },
+ "console": []
+}
+{
+ "page": "shim-4.html",
+ "order": [
+  "plain",
+  "icon",
+  "plain",
+  "plain",
+  "plain",
+  "plain",
+  "emoji",
+  "plain",
+  "plain"
+ ],
+ "rendered": [
+  "0-plain: svg +134 ms",
+  "1-icon: NOT RENDERED",
+  "2-plain: svg +436 ms",
+  "3-plain: svg +455 ms",
+  "4-plain: svg +483 ms",
+  "5-plain: svg +493 ms",
+  "6-emoji: NOT RENDERED",
+  "7-plain: svg +638 ms",
+  "8-plain: svg +756 ms"
+ ],
+ "telemetry": {
+  "mode": "worker",
+  "workers": 4,
+  "renders": 7,
+  "errors": 0,
+  "inFlight": 2
+ },
+ "console": []
+}
+
+## 3. Cross-check of P3's R26: the Node renderer's SVG as XML (a scratch probe; P3's node-svg-probe.js is the harness of record)
+# rest-0 and formats-0 are emitter-corpus sources; esc-2 is 'x ~<b>raw~</b> y', esc-3 is 'icon ~<&check> done' in a note.
+# img = the data URI Kronikol writes with InternalFlowTracking off; inline = what it writes with it on (the default).
+
+{"file":"focus-bold-0.puml","svgBytes":19336,"rawAmpersands":0,"textElementsWithRawLt":0,"xmlError":null,"img":{"ok":true,"w":538,"h":709},"inlineTexts":120,"straysInline":0}
+{"file":"rest-0.puml","svgBytes":72448,"rawAmpersands":1,"textElementsWithRawLt":0,"xmlError":"error on line 1 at column 3795: EntityRef: expecting ';'","img":{"ok":false},"inlineTexts":479,"straysInline":0}
+{"file":"formats-0.puml","svgBytes":22644,"rawAmpersands":2,"textElementsWithRawLt":8,"xmlError":"error on line 1 at column 4983: XML declaration allowed only at the start of the","img":{"ok":false},"inlineTexts":122,"straysInline":9}
+{"file":"steps-0.puml","svgBytes":47474,"rawAmpersands":0,"textElementsWithRawLt":0,"xmlError":null,"img":{"ok":true,"w":665,"h":1477},"inlineTexts":296,"straysInline":0}
+{"file":"esc-2.puml","svgBytes":2371,"rawAmpersands":0,"textElementsWithRawLt":1,"xmlError":null,"img":{"ok":true,"w":183,"h":129},"inlineTexts":6,"straysInline":0}
+{"file":"esc-3.puml","svgBytes":2375,"rawAmpersands":1,"textElementsWithRawLt":1,"xmlError":"error on line 1 at column 2336: StartTag: invalid element name","img":{"ok":false},"inlineTexts":6,"straysInline":0}

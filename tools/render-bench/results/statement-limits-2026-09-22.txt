@@ -1,0 +1,40 @@
+# statement-limits-probe.js, 2026-09-22, node v25.9.0, one node process per probe (batch mode, as NodeJsPlantUmlRenderer.RenderMany runs the tests)
+# fork = v1.2026.8beta1-0e4f452 (the pinned build), npm = @plantuml/core@1.2026.8 (registry tarball)
+
+# 257 node processes, 307 ms each on average
+
+| probe | fork | npm |
+|---|---|---|
+| message "a -> b: " at 2000 draws | pass | pass |
+| message "a -> b: " at 2001 does not | pass | pass |
+| message "a --> b: " at 2000 draws | pass | pass |
+| message "a --> b: " at 2001 does not | pass | pass |
+| message "a -[#F39C12]> b: " at 2000 draws | pass | pass |
+| message "a -[#F39C12]> b: " at 2001 does not | pass | pass |
+| message "a -[#F39C12]-> b: " at 2000 draws | pass | pass |
+| message "a -[#F39C12]-> b: " at 2001 does not | pass | pass |
+| message "aaaaaaaaaaaaaaaaaaaa -> b: " at 2000 draws | pass | pass |
+| message "aaaaaaaaaaaaaaaaaaaa -> b: " at 2001 does not | pass | pass |
+| leading and trailing whitespace does not count | pass | pass |
+| loop at 1471 renders | pass | pass |
+| loop at 8000 does not | pass | pass |
+| coloured bar at 1400 total renders | pass | pass |
+| coloured bar with 6000 s yields no SVG | pass | pass |
+| uncoloured bar at 6000 renders | pass | pass |
+| note body at 6000 renders | pass | pass |
+| one-line note at 6000 renders | pass | pass |
+| edge: loop | 2011 | 2022 |
+| edge: alt | 2019 | 2018 |
+| edge: group | 2041 | 1980 |
+| edge: opt | 2034 | 2014 |
+| edge: coloured bar (total statement) | 2008 | 2005 |
+| edge: uncoloured bar (payload chars) | 16376 | 16376 |
+| edge: note body (payload chars) | 16370 | 16370 |
+| edge: one-line note (payload chars) | 16377 | 16377 |
+| seconds | 37 | 42 |
+
+# Failure mode past the edges, and the V8 stack (edge-mode.js, same harness):
+# loop 2100 = 'Syntax Error' SVG on both builds, bar 2100 = RangeError: Maximum call stack size exceeded on both;
+# with node --stack-size=4000 a loop label of 2100, 3000 and 5000 characters renders on both builds.
+# So the block-opener and coloured-bar edges are V8 stack edges: about 2,000 on node v25.9.0 with the default stack,
+# where the PlantUmlStatementLimits doc comment quotes 3,660 to 5,641 and about 4,124 from the 2026-09-04 measurement.

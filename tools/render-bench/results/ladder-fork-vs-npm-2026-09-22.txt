@@ -1,0 +1,26 @@
+PRAGMA=1
+e0 = core-1.2026.8beta1-0e4f452.js
+e1 = core-npm-1.2026.8.js
+chromium 147.0.7727.15, REPS 5 warm (cold discarded), engines interleaved, maxSvgSize 98304
+┌─────────┬───────────────────────┬───────┬───────┬────────┬────────┬─────────────┐
+│ (index) │ file                  │ e0 ms │ e1 ms │ e1/e0  │ e1 svg │ measureText │
+├─────────┼───────────────────────┼───────┼───────┼────────┼────────┼─────────────┤
+│ 0       │ 'gen-50'              │ 88    │ 86    │ '0.98' │ 'same' │ '245/245'   │
+│ 1       │ 'gen-200'             │ 267   │ 268   │ '1.00' │ 'same' │ '955/955'   │
+│ 2       │ 'gen-500'             │ 641   │ 633   │ '0.99' │ 'same' │ '2375/2375' │
+│ 3       │ 'puml-0'              │ 85    │ 80    │ '0.94' │ 'same' │ '292/292'   │
+│ 4       │ 'puml-1'              │ 57    │ 55    │ '0.97' │ 'same' │ '198/198'   │
+│ 5       │ 'puml-19'             │ 106   │ 104   │ '0.98' │ 'same' │ '387/387'   │
+│ 6       │ 'shape-activation'    │ 152   │ 150   │ '0.99' │ 'same' │ '426/426'   │
+│ 7       │ 'shape-createdestroy' │ 102   │ 103   │ '1.01' │ 'same' │ '242/242'   │
+│ 8       │ 'shape-groups'        │ 73    │ 72    │ '0.98' │ 'same' │ '258/258'   │
+│ 9       │ 'shape-parallel'      │ 141   │ 128   │ '0.91' │ 'same' │ '328/328'   │
+│ 10      │ 'shape-self'          │ 146   │ 139   │ '0.95' │ 'same' │ '204/204'   │
+│ 11      │ 'shape-wide'          │ 135   │ 114   │ '0.84' │ 'same' │ '236/236'   │
+└─────────┴───────────────────────┴───────┴───────┴────────┴────────┴─────────────┘
+e1 geomean ratio vs e0: 0.961   all svg same: true
+exit 0
+
+Second run, other families (REPS=2, no pragma): probe-class 20/21 ms 1.02 same; probe-json 14/14 1.03 same;
+probe-component (tools/render-bench/probe-component.puml) 36/35 0.97 same; geomean 1.006, all svg same.
+Recorded by plans/ENGINE_PIN_PLAN.md (2026-09-22), Appendix A.

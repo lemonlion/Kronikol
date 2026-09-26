@@ -1,0 +1,84 @@
+# V8 code cache: damage and concurrent writes, through the shipped plantuml-render.js (2026-09-25)
+#
+# node v8-code-cache-probe.js damage <npm 1.2026.8 dir>   and   race <npm dir> 20 8
+# exit 2147483651 = 0x80000003 (V8 fatal error), 3221225477 = 0xC0000005 (access violation),
+# 3221225725 = 0xC00000FD (stack overflow). 'cache' is the status line the script prints after compiling the engine;
+# a crash after it means the damaged code ran during the render. plans/ENGINE_PIN_PLAN.md §1.14 and Appendix A.9.
+
+## damage, series 1 (scratch copy of the same probe, cache 3,289,712 B)
+{"label":"first run (no cache)","exit":0,"signal":null,"cache":"miss","svgHash":"14d1c5fb07e6","ms":4729,"stderr":[]}
+{"label":"second run (cache present)","exit":0,"signal":null,"cache":"hit","svgHash":"14d1c5fb07e6","ms":291,"stderr":[]}
+{"label":"third run (cache deleted, rebuilt)","exit":0,"signal":null,"cache":"miss","svgHash":"14d1c5fb07e6","ms":425,"stderr":[]}
+{"label":"1 byte flipped at 10%","exit":0,"signal":null,"cache":"hit","svgHash":"14d1c5fb07e6","ms":316,"stderr":[]}
+{"label":"1 byte flipped at 25%","exit":0,"signal":null,"cache":"hit","svgHash":"14d1c5fb07e6","ms":290,"stderr":[]}
+{"label":"1 byte flipped at 50%","exit":2147483651,"signal":null,"cache":null,"svgHash":null,"ms":150,"stderr":["39: 00007FF6CA698065 v8::internal::ThreadIsolation::LookupJumpTableAllocations+565029","40: 000001CC9FE7B87A "]}
+{"label":"1 byte flipped at 75%","exit":2147483651,"signal":null,"cache":null,"svgHash":null,"ms":127,"stderr":["33: 00007FF6CA698065 v8::internal::ThreadIsolation::LookupJumpTableAllocations+565029","34: 000001B337E7B87A "]}
+{"label":"1 byte flipped at 90%","exit":3221225477,"signal":null,"cache":null,"svgHash":null,"ms":101,"stderr":[]}
+{"label":"4 KB scrambled at 25%","exit":2147483651,"signal":null,"cache":null,"svgHash":null,"ms":124,"stderr":["36: 00007FF6CA698065 v8::internal::ThreadIsolation::LookupJumpTableAllocations+565029","37: 00000252639FB87A "]}
+{"label":"4 KB scrambled at 50%","exit":2147483651,"signal":null,"cache":null,"svgHash":null,"ms":121,"stderr":["39: 00007FF6CA698065 v8::internal::ThreadIsolation::LookupJumpTableAllocations+565029","40: 000002412FE7B87A "]}
+{"label":"4 KB scrambled at 75%","exit":2147483651,"signal":null,"cache":null,"svgHash":null,"ms":121,"stderr":["33: 00007FF6CA698065 v8::internal::ThreadIsolation::LookupJumpTableAllocations+565029","34: 000002419FE7B87A "]}
+{"label":"64 KB zeroed at 50%","exit":3221225725,"signal":null,"cache":null,"svgHash":null,"ms":93,"stderr":[]}
+{"label":"truncated to half","exit":0,"signal":null,"cache":"rejected","svgHash":"14d1c5fb07e6","ms":383,"stderr":[]}
+{"label":"64 KB of random bytes appended","exit":0,"signal":null,"cache":"hit","svgHash":"14d1c5fb07e6","ms":275,"stderr":[]}
+{"label":"header byte 0 flipped","exit":0,"signal":null,"cache":"rejected","svgHash":"14d1c5fb07e6","ms":379,"stderr":[]}
+{"label":"header byte 4 flipped","exit":0,"signal":null,"cache":"rejected","svgHash":"14d1c5fb07e6","ms":406,"stderr":[]}
+{"label":"header byte 8 flipped","exit":0,"signal":null,"cache":"rejected","svgHash":"14d1c5fb07e6","ms":389,"stderr":[]}
+{"label":"header byte 12 flipped","exit":0,"signal":null,"cache":"rejected","svgHash":"14d1c5fb07e6","ms":399,"stderr":[]}
+{"label":"header byte 16 flipped","exit":0,"signal":null,"cache":"rejected","svgHash":"14d1c5fb07e6","ms":374,"stderr":[]}
+{"label":"header byte 20 flipped","exit":0,"signal":null,"cache":"rejected","svgHash":"14d1c5fb07e6","ms":372,"stderr":[]}
+{"label":"header byte 24 flipped","exit":0,"signal":null,"cache":"hit","svgHash":"14d1c5fb07e6","ms":277,"stderr":[]}
+{"label":"header byte 28 flipped","exit":0,"signal":null,"cache":"hit","svgHash":"14d1c5fb07e6","ms":276,"stderr":[]}
+
+## damage, series 2 (this script)
+node v25.9.0 --verify-snapshot-checksum default: --no-verify-snapshot-checksum
+{"label":"no cache","exit":0,"cache":"miss","svg":"14d1c5fb07e6","ms":5287}
+cache bytes 3289712
+{"label":"cache present","exit":0,"cache":"hit","svg":"14d1c5fb07e6","ms":281}
+{"label":"cache deleted, rebuilt","exit":0,"cache":"miss","svg":"14d1c5fb07e6","ms":383}
+rebuilt cache byte-identical to the first: false
+{"label":"1 byte flipped at 10%","exit":2147483651,"cache":"hit","svg":null,"ms":232}
+{"label":"1 byte flipped at 25%","exit":0,"cache":"hit","svg":"14d1c5fb07e6","ms":272}
+{"label":"1 byte flipped at 50%","exit":3221225477,"cache":null,"svg":null,"ms":180}
+{"label":"1 byte flipped at 75%","exit":2147483651,"cache":"hit","svg":null,"ms":227}
+{"label":"1 byte flipped at 90%","exit":0,"cache":"hit","svg":"14d1c5fb07e6","ms":276}
+{"label":"4 KB scrambled at 25%","exit":2147483651,"cache":null,"svg":null,"ms":117}
+{"label":"4 KB scrambled at 50%","exit":2147483651,"cache":null,"svg":null,"ms":122}
+{"label":"4 KB scrambled at 75%","exit":2147483651,"cache":null,"svg":null,"ms":127}
+{"label":"64 KB zeroed at 50%","exit":3221225725,"cache":null,"svg":null,"ms":93}
+{"label":"truncated to half","exit":0,"cache":"rejected","svg":"14d1c5fb07e6","ms":380}
+{"label":"64 KB of random bytes appended","exit":0,"cache":"hit","svg":"14d1c5fb07e6","ms":273}
+{"label":"header byte 0 flipped","exit":0,"cache":"rejected","svg":"14d1c5fb07e6","ms":370}
+{"label":"header byte 4 flipped","exit":0,"cache":"rejected","svg":"14d1c5fb07e6","ms":393}
+{"label":"header byte 8 flipped","exit":0,"cache":"rejected","svg":"14d1c5fb07e6","ms":435}
+{"label":"header byte 12 flipped","exit":0,"cache":"rejected","svg":"14d1c5fb07e6","ms":415}
+{"label":"header byte 16 flipped","exit":0,"cache":"rejected","svg":"14d1c5fb07e6","ms":437}
+{"label":"header byte 20 flipped","exit":0,"cache":"rejected","svg":"14d1c5fb07e6","ms":736}
+{"label":"header byte 24 flipped","exit":0,"cache":"hit","svg":"14d1c5fb07e6","ms":334}
+{"label":"header byte 28 flipped","exit":0,"cache":"hit","svg":"14d1c5fb07e6","ms":289}
+SUMMARY [["no cache",0,"miss","same svg"],["cache present",0,"hit","same svg"],["cache deleted, rebuilt",0,"miss","same svg"],["1 byte flipped at 10%",2147483651,"hit","no svg"],["1 byte flipped at 25%",0,"hit","same svg"],["1 byte flipped at 50%",3221225477,null,"no svg"],["1 byte flipped at 75%",2147483651,"hit","no svg"],["1 byte flipped at 90%",0,"hit","same svg"],["4 KB scrambled at 25%",2147483651,null,"no svg"],["4 KB scrambled at 50%",2147483651,null,"no svg"],["4 KB scrambled at 75%",2147483651,null,"no svg"],["64 KB zeroed at 50%",3221225725,null,"no svg"],["truncated to half",0,"rejected","same svg"],["64 KB of random bytes appended",0,"hit","same svg"],["header byte 0 flipped",0,"rejected","same svg"],["header byte 4 flipped",0,"rejected","same svg"],["header byte 8 flipped",0,"rejected","same svg"],["header byte 12 flipped",0,"rejected","same svg"],["header byte 16 flipped",0,"rejected","same svg"],["header byte 20 flipped",0,"rejected","same svg"],["header byte 24 flipped",0,"hit","same svg"],["header byte 28 flipped",0,"hit","same svg"]]
+
+## race, series 1 (scratch copy of the same probe)
+SUMMARY {"rounds":20,"concurrent":8,"nextRunCrashed":0,"nextRunRejected":0,"nextRunHit":20,"distinctCacheLengths":[3289848,3289856,3289552,3289736,3289952,3289656,3289720,3289728,3289800,3289632,3289832,3289664,3289936,3289616,3289696]}
+
+## race, series 2 (this script)
+{"round":0,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289920,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":1,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289512,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":2,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289592,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":3,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289672,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":4,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289736,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":5,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289696,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":6,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289792,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":7,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289944,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":8,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289928,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":9,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289872,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":10,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289760,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":11,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289824,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":12,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289680,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":13,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289584,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":14,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289472,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":15,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289744,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":16,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289744,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":17,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289768,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":18,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289976,"next":{"code":0,"cache":"hit","svg":true}}
+{"round":19,"cold":"miss,miss,miss,miss,miss,miss,miss,miss","cacheBytes":3289784,"next":{"code":0,"cache":"hit","svg":true}}
+SUMMARY {"rounds":20,"concurrent":8,"nextRunCrashed":0,"nextRunHit":20,"distinctCacheLengths":[3289472,3289512,3289584,3289592,3289672,3289680,3289696,3289736,3289744,3289760,3289768,3289784,3289792,3289824,3289872,3289920,3289928,3289944,3289976]}

@@ -1,0 +1,190 @@
+{
+  "script": "C:\\Code\\Kronikol\\src\\Kronikol\\PlantUml\\plantuml-render.js",
+  "node": "v25.9.0",
+  "engines": [
+    {
+      "label": "fork",
+      "dir": "C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/577a16dc-b482-45a6-b368-0f50046b1f60/scratchpad/fork"
+    },
+    {
+      "label": "npm",
+      "dir": "C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/577a16dc-b482-45a6-b368-0f50046b1f60/scratchpad/npmpack/package"
+    }
+  ],
+  "results": {
+    "fork": {
+      "pins": [
+        {
+          "name": "message \"a -> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"a -> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "message \"a --> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"a --> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "message \"a -[#F39C12]> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"a -[#F39C12]> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "message \"a -[#F39C12]-> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"a -[#F39C12]-> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "message \"aaaaaaaaaaaaaaaaaaaa -> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"aaaaaaaaaaaaaaaaaaaa -> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "leading and trailing whitespace does not count",
+          "pass": true
+        },
+        {
+          "name": "loop at 1471 renders",
+          "pass": true
+        },
+        {
+          "name": "loop at 8000 does not",
+          "pass": true
+        },
+        {
+          "name": "coloured bar at 1400 total renders",
+          "pass": true
+        },
+        {
+          "name": "coloured bar with 6000 s yields no SVG",
+          "pass": true
+        },
+        {
+          "name": "uncoloured bar at 6000 renders",
+          "pass": true
+        },
+        {
+          "name": "note body at 6000 renders",
+          "pass": true
+        },
+        {
+          "name": "one-line note at 6000 renders",
+          "pass": true
+        }
+      ],
+      "edges": {
+        "loop": 2011,
+        "alt": 2019,
+        "group": 2041,
+        "opt": 2034,
+        "coloured bar (total statement)": 2008,
+        "uncoloured bar (payload chars)": 16376,
+        "note body (payload chars)": 16370,
+        "one-line note (payload chars)": 16377
+      },
+      "seconds": 37
+    },
+    "npm": {
+      "pins": [
+        {
+          "name": "message \"a -> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"a -> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "message \"a --> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"a --> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "message \"a -[#F39C12]> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"a -[#F39C12]> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "message \"a -[#F39C12]-> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"a -[#F39C12]-> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "message \"aaaaaaaaaaaaaaaaaaaa -> b: \" at 2000 draws",
+          "pass": true
+        },
+        {
+          "name": "message \"aaaaaaaaaaaaaaaaaaaa -> b: \" at 2001 does not",
+          "pass": true
+        },
+        {
+          "name": "leading and trailing whitespace does not count",
+          "pass": true
+        },
+        {
+          "name": "loop at 1471 renders",
+          "pass": true
+        },
+        {
+          "name": "loop at 8000 does not",
+          "pass": true
+        },
+        {
+          "name": "coloured bar at 1400 total renders",
+          "pass": true
+        },
+        {
+          "name": "coloured bar with 6000 s yields no SVG",
+          "pass": true
+        },
+        {
+          "name": "uncoloured bar at 6000 renders",
+          "pass": true
+        },
+        {
+          "name": "note body at 6000 renders",
+          "pass": true
+        },
+        {
+          "name": "one-line note at 6000 renders",
+          "pass": true
+        }
+      ],
+      "edges": {
+        "loop": 2022,
+        "alt": 2018,
+        "group": 1980,
+        "opt": 2014,
+        "coloured bar (total statement)": 2005,
+        "uncoloured bar (payload chars)": 16376,
+        "note body (payload chars)": 16370,
+        "one-line note (payload chars)": 16377
+      },
+      "seconds": 42
+    }
+  }
+}

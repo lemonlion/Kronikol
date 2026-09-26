@@ -1,0 +1,53 @@
+# Kronikol's own emitter on the pinned fork build and npm 1.2026.8 (2026-09-25)
+#
+# Sources: emitter-corpus/ (PlantUmlCreator.GetPlantUmlImageTagsPerTestId, StepBarPlantUml.Build, the assertion-note
+# and override shapes) against Kronikol.dll built from src/ at 3.29.3 (PlantUml/ and Tracking/ unchanged since that build).
+# Render: the shipped src/Kronikol/PlantUml/plantuml-render.js --batch, node 25.9.0, one process per engine, then a
+# second run on the first engine for run-to-run stability. Engines: fork = v1.2026.8beta1-0e4f452 files from jsDelivr,
+# npm = @plantuml/core@1.2026.8 files from the registry tarball. plans/ENGINE_PIN_PLAN.md §1.16 and Appendix A.11.
+#
+# Run 1: all 14 sources. The creole-payload source (a JSON note holding <&check> and <:smile:>) stalls the engine,
+# and every source after it in the batch timed out too, on both builds (§1.15):
+#   arrows-200-0  f65fbc8dd3f6 (706148 B) on both   identical
+#   creole-0      ERROR: Timed out waiting for SVG render (20000ms) on both
+#   the other 12  ERROR: Timed out waiting for SVG render (20000ms) on both; 310 s (fork) and 315 s (npm) per batch
+#
+# Run 2: the 13 other sources (creole-0 moved out), with: node emitter-corpus-compare.js <dir> fork=<dir> npm=<dir>
+
+{
+ "node": "v25.9.0",
+ "engines": [
+  {
+   "label": "fork",
+   "dir": "C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/577a16dc-b482-45a6-b368-0f50046b1f60/scratchpad/fork",
+   "ms": 10963,
+   "exit": 0,
+   "cache": "hit"
+  },
+  {
+   "label": "npm",
+   "dir": "C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/577a16dc-b482-45a6-b368-0f50046b1f60/scratchpad/npmpack/package",
+   "ms": 9470,
+   "exit": 0,
+   "cache": "hit"
+  }
+ ]
+}
+┌─────────┬──────────────────────────────────┬────────────────────────────┬────────────────────────────┬───────────┬────────────────┬──────────────────┐
+│ (index) │ file                             │ fork                       │ npm                        │ identical │ stableRunToRun │ viewBox          │
+├─────────┼──────────────────────────────────┼────────────────────────────┼────────────────────────────┼───────────┼────────────────┼──────────────────┤
+│ 0       │ 'arrows-200-0.puml'              │ 'f65fbc8dd3f6 (706148 B)'  │ 'f65fbc8dd3f6 (706148 B)'  │ true      │ true           │ '0 0 534 27742'  │
+│ 1       │ 'data-0.puml'                    │ '08a8c1138b94 (41959 B)'   │ '08a8c1138b94 (41959 B)'   │ true      │ true           │ '0 0 1036 1249'  │
+│ 2       │ 'data-participant-colors-0.puml' │ '886a8064d7cc (41959 B)'   │ '886a8064d7cc (41959 B)'   │ true      │ true           │ '0 0 1036 1249'  │
+│ 3       │ 'flow-0.puml'                    │ '182d5c15e22f (18277 B)'   │ '182d5c15e22f (18277 B)'   │ true      │ true           │ '0 0 949 725'    │
+│ 4       │ 'flow-plain-0.puml'              │ 'c0c1df6d4837 (28454 B)'   │ 'c0c1df6d4837 (28454 B)'   │ true      │ true           │ '0 0 758 1130'   │
+│ 5       │ 'focus-bold-0.puml'              │ '756948b1263d (19336 B)'   │ '756948b1263d (19336 B)'   │ true      │ true           │ '0 0 538 709'    │
+│ 6       │ 'focus-colored-0.puml'           │ 'ef5eb4778656 (18880 B)'   │ 'ef5eb4778656 (18880 B)'   │ true      │ true           │ '0 0 538 709'    │
+│ 7       │ 'formats-0.puml'                 │ 'e023828e133d (22644 B)'   │ 'e023828e133d (22644 B)'   │ true      │ true           │ '0 0 1558 924'   │
+│ 8       │ 'large-0.puml'                   │ '5e7e809e20f9 (1594087 B)' │ '5e7e809e20f9 (1594087 B)' │ true      │ true           │ '0 0 1768 41573' │
+│ 9       │ 'rest-0.puml'                    │ 'e0a31754fe33 (72448 B)'   │ 'e0a31754fe33 (72448 B)'   │ true      │ true           │ '0 0 1238 2363'  │
+│ 10      │ 'rest-noheaders-0.puml'          │ '206d4dd67916 (60652 B)'   │ '206d4dd67916 (60652 B)'   │ true      │ true           │ '0 0 908 1886'   │
+│ 11      │ 'rest-server-encoded-0.puml'     │ 'e0a31754fe33 (72448 B)'   │ 'e0a31754fe33 (72448 B)'   │ true      │ true           │ '0 0 1238 2363'  │
+│ 12      │ 'steps-0.puml'                   │ 'c0d35337eda7 (47474 B)'   │ 'c0d35337eda7 (47474 B)'   │ true      │ true           │ '0 0 665 1477'   │
+└─────────┴──────────────────────────────────┴────────────────────────────┴────────────────────────────┴───────────┴────────────────┴──────────────────┘
+identical 13 of 13 ; stable run to run 13 of 13
