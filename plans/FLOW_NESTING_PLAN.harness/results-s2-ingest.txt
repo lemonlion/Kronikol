@@ -1,0 +1,69 @@
+# s2_ingest.py on 2026-09-26 (plan §7.5, Q4). BreakfastProvider's ReqNRoll lane (2026-09-05, Kronikol 3.0.83) projected with
+# 's2_ingest.py project' (2,692 records), ingested by the S2 tool built from the flow/s2 branch: 'ingest reqnroll.ndjson -o calltree
+# --no-component-diagram' (call-tree order, the default) and the same with --chronological. Each compared with the lane's own report.
+
+== call-tree order (the default)
+both top level: 513
+nested in the reference, top level ingested: 598
+same parent: 235
+nested in the reference, top level ingested, e.g.:
+    reference s0/i9 ingested s0/i0: Breakfast Provider -> CosmosDB CREATE
+    reference s0/i11 ingested s0/i20: Kafka Broker -> Breakfast Provider CONSUME (KAFKA)
+    reference s0/i13 ingested s0/i2: Breakfast Provider -> Reporting Database (SQL Server) INSERT
+    reference s0/i15 ingested s0/i4: Breakfast Provider -> Kafka Broker PRODUCE
+    reference s0/i19 ingested s0/i22: Azure Event Hub -> Breakfast Provider CONSUME (EVENT HUB)
+    reference s0/i21 ingested s0/i6: Breakfast Provider -> Reporting Database (SQL Server) INSERT
+
+== --chronological
+both top level: 513
+nested in the reference, top level ingested: 490
+same parent: 343
+nested in the reference, top level ingested, e.g.:
+    reference s0/i9 ingested s0/i0: Breakfast Provider -> CosmosDB CREATE
+    reference s0/i13 ingested s0/i2: Breakfast Provider -> Reporting Database (SQL Server) INSERT
+    reference s0/i15 ingested s0/i4: Breakfast Provider -> Kafka Broker PRODUCE
+    reference s0/i21 ingested s0/i6: Breakfast Provider -> Reporting Database (SQL Server) INSERT
+    reference s1/i7 ingested s1/i0: Breakfast Provider -> CosmosDB CREATE
+    reference s1/i11 ingested s1/i2: Breakfast Provider -> Reporting Database (SQL Server) INSERT
+
+# nesting_rules.py on the same three reports
+
+== the lane's own report
+205 scenarios, 1346 requests
+
+rule   nested  interleaved  step-split  depth histogram
+R1        836            0           3  {0: 510, 1: 818, 2: 11, 3: 4, 4: 3}
+R2        725          185           0  {0: 621, 1: 725}
+R3        833            0           0  {0: 513, 1: 833}
+R4        833            0           0  {0: 513, 1: 833}
+
+
+== ingested, call-tree order
+205 scenarios, 1346 requests
+
+rule   nested  interleaved  step-split  depth histogram
+R1        235            0           0  {0: 1111, 1: 235}
+R2        235            0           0  {0: 1111, 1: 235}
+R3        235            0           0  {0: 1111, 1: 235}
+R4        235            0           0  {0: 1111, 1: 235}
+
+
+== ingested, --chronological
+205 scenarios, 1346 requests
+
+rule   nested  interleaved  step-split  depth histogram
+R1        348            0           0  {0: 998, 1: 336, 2: 5, 3: 4, 4: 3}
+R2        235           38           0  {0: 1111, 1: 235}
+R3        343            0           0  {0: 1003, 1: 343}
+R4        343            0           0  {0: 1003, 1: 343}
+
+
+# s2_ingest_causes.py: why a call nested in the lane's own report is top level once ingested, by R4's clause and
+# whether its request carried a timestamp
+
+== call-tree order (the default)
+(a) the parent's service made it, no timestamp: 490
+(b) on the parent's trace, has a timestamp: 108
+
+== --chronological
+(a) the parent's service made it, no timestamp: 490

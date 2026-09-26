@@ -4,7 +4,9 @@
 
 S1 (plan §4.4) is the prototype's header and annotation placement without S2's indentation, so the two
 must agree once the prototype's indentation, `inside` references and legend are removed and trailing
-whitespace is ignored (the prototype trims call lines; S1 does not). Every scenario of each report is
+whitespace is ignored (the prototype trims call lines; S1 does not). Since S2 the prototype also closes
+the gap an empty field leaves and says `no response` (Q1), and both are folded before comparing, so this
+still checks S1's placement on a re-run. Every scenario of each report is
 compared unfiltered, with `--service CosmosDB` and with `--step 1`; `--errors-only` on s26 and s59 only,
 because the prototype's error test approximates `InteractionStatus.IsError` (plan §7.5).
 
@@ -30,6 +32,10 @@ def normalise(text, real):
             continue
         line = CALL.sub(r"  \1", line.rstrip())
         line = INSIDE.sub("", line).replace(LEGEND, "")
+        if CALL.match(line):
+            # Since S2 the prototype builds a line from its non-empty fields and says "no response" (Q1);
+            # S1's tool did neither, so both are folded, on both sides alike.
+            line = re.sub(r" {3,}", "  ", line.replace("  no response", ""))
         if real and line == "  (no tracked calls in this scenario)":
             line = "  (nothing matched the filters)"
         lines.append(line)

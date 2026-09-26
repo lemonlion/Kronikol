@@ -4,14 +4,25 @@
 
 --mode flat    today's output. Checked against the real tool (3.29.6): identical, trailing whitespace
                aside, on s26, s57, s59, s103 and s165 of BreakfastProvider's ReqNRoll and BDDfy lanes.
---mode nested  FLOW_NESTING_PLAN.md: parents by rule R4 (plan section 3.1), two spaces per level, a step
+--mode nested  FLOW_NESTING_PLAN.md: parents by rule R4 (plan section 4.1), two spaces per level, a step
                header or annotation printed only above a shown call, "inside sN/iM" where the
                indentation cannot show the parent, and the legend when a line is indented.
+               Brought in line with what S2 shipped (plan section 7.2): a line is built from its
+               non-empty fields, a request never answered says "no response" (Q1), the indentation's
+               parent is the nearest line above with less of it (plan F15), a request is open only
+               while its answer is ahead of it, and the empty Guid is no id, as the tool reads it.
 
 The report is read with json.load and never printed. `render()` is imported by flow_bytes.py.
 """
 import argparse, hashlib, json
 from urllib.parse import urlsplit
+
+ZERO = "00000000-0000-0000-0000-000000000000"
+
+
+def real_id(value):
+    """The tool reads an empty or all-zero id as no id (ReportScanner.NonEmptyId)."""
+    return value if value and value != ZERO else None
 
 
 def one_line(text, limit):
@@ -54,13 +65,17 @@ def is_error(r):
 
 
 def parents(recs):
-    """Section 3.1: the innermost open call whose service is this call's caller, or else, when this call's
+    """Section 4.1: the innermost open call whose service is this call's caller, or else, when this call's
     caller is not that call's caller, one sharing its traceId. Open = request recorded, its response not
-    yet; a request never answered, or without a requestResponseId, is never a parent."""
-    answered = {c.get("requestResponseId") for c in recs if c.get("type") == "Response" and c.get("requestResponseId")}
-    parent, open_reqs, req_at = {}, [], {}
+    yet; a request never answered, answered before it was recorded, or without a requestResponseId, is
+    never a parent."""
+    answered_at = {}
     for i, c in enumerate(recs):
-        rr = c.get("requestResponseId")
+        if c.get("type") == "Response" and real_id(c.get("requestResponseId")):
+            answered_at.setdefault(c["requestResponseId"], i)
+    parent, open_reqs = {}, []
+    for i, c in enumerate(recs):
+        rr = real_id(c.get("requestResponseId"))
         if c.get("type") == "Request":
             par = None
             for j in reversed(open_reqs):
@@ -68,15 +83,14 @@ def parents(recs):
                 if p.get("serviceName") == c.get("callerName"):
                     par = j
                     break
-                if c.get("callerName") != p.get("callerName") and c.get("traceId") and c.get("traceId") == p.get("traceId"):
+                if c.get("callerName") != p.get("callerName") and real_id(c.get("traceId")) and c.get("traceId") == p.get("traceId"):
                     par = j
                     break
             parent[i] = par
-            if rr and rr in answered:
+            if rr and answered_at.get(rr, -1) > i:
                 open_reqs.append(i)
-                req_at[rr] = i
-        elif c.get("type") == "Response" and rr in req_at and req_at[rr] in open_reqs:
-            open_reqs.remove(req_at[rr])
+        elif c.get("type") == "Response" and rr:
+            open_reqs = [j for j in open_reqs if real_id(recs[j].get("requestResponseId")) != rr]
     return parent
 
 
@@ -103,7 +117,7 @@ def render(data, ordinal, mode="nested", step=None, service=None, errors_only=Fa
         annotations.setdefault(a.get("index"), []).append(a.get("text"))
     response = {}
     for c in recs:
-        if c.get("type") == "Response" and c.get("requestResponseId"):
+        if c.get("type") == "Response" and real_id(c.get("requestResponseId")):
             response.setdefault(c["requestResponseId"], c)
 
     def covered(path, scope):
@@ -120,15 +134,20 @@ def render(data, ordinal, mode="nested", step=None, service=None, errors_only=Fa
             return False
         return True
 
-    def call_line(i, c, indent, suffix=""):
-        r = response.get(c.get("requestResponseId"))
+    def call_line(i, c, indent, inside=None):
+        r = response.get(real_id(c.get("requestResponseId")))
         content = c.get("content")
-        payload = f"  b:{hashlib.sha1(content.encode('utf-8')).hexdigest()[:8]} {size(len(content))}" if content else ""
+        pointer = f"b:{hashlib.sha1(content.encode('utf-8')).hexdigest()[:8]} {size(len(content))}" if content else ""
         timing = c.get("durationMs") if c.get("durationMs") is not None else (r or {}).get("durationMs")
         a = f"{addr}/i{i}"
-        line = (f"  {'  ' * indent}{a:<9} {one_line(c.get('callerName'), 40)} → {one_line(c.get('serviceName'), 40)}  "
-                f"{one_line(summary(c), 60)}  {status_text(r)}  {duration(timing)}{payload}")
-        return line.rstrip() + suffix if mode == "nested" else line
+        head = f"  {'  ' * indent}{a:<9} {one_line(c.get('callerName'), 40)} → {one_line(c.get('serviceName'), 40)}"
+        if mode == "flat":
+            return f"{head}  {one_line(summary(c), 60)}  {status_text(r)}  {duration(timing)}" + (f"  {pointer}" if pointer else "")
+        status = status_text(r)
+        if r is None and real_id(c.get("requestResponseId")) and not c.get("isUserAction"):
+            status = "no response"                    # Q1
+        fields = [one_line(summary(c), 60), status, duration(timing), pointer, f"inside {addr}/i{inside}" if inside is not None else ""]
+        return "  ".join([head] + [f for f in fields if f]).rstrip()
 
     out = [f"{addr}  {one_line(sc.get('name'), 90)}  [{sc.get('result')}]", ""]
     count, legend = 0, ""
@@ -166,10 +185,12 @@ def render(data, ordinal, mode="nested", step=None, service=None, errors_only=Fa
                 p = parent.get(p)
             depth = sum(1 for p in chain if is_shown.get(p))
             par = parent.get(i)
-            implied = next((pi for pi, pd in reversed(section_lines) if pd == depth - 1), None) if depth else None
-            suffix = f"  inside {addr}/i{par}" if par is not None and implied != par else ""
+            # F15: indentation reads as a tree, so the parent it shows is the nearest line above with less of
+            # it, and only when that line is exactly one level up.
+            above = next(((pi, pd) for pi, pd in reversed(section_lines) if pd < depth), None)
+            implied = above[0] if above is not None and above[1] == depth - 1 else None
             indented |= depth > 0
-            out.append(call_line(i, c, depth, suffix))
+            out.append(call_line(i, c, depth, par if par is not None and implied != par else None))
             section_lines.append((i, depth))
             count += 1
         if count:                                     # an annotation after the last shown call

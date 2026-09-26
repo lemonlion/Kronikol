@@ -1,0 +1,29 @@
+# Kronikol4J at deefe8e (0.1.25-SNAPSHOT), 2026-09-26: kronikol4j/NestedCallsTest.java copied into kronikol4j-http's tests in a
+# throwaway worktree and run with './gradlew :kronikol4j-http:test --tests check.NestedCallsTest'. The capture order it printed:
+CAPTURE REQUEST api -> db rr=8e4f0fd1-8350-4196-9aa4-7da12e65f239 trace=d6ba99f5-2304-47f6-bb07-a569e272322f
+CAPTURE RESPONSE api -> db rr=8e4f0fd1-8350-4196-9aa4-7da12e65f239 trace=d6ba99f5-2304-47f6-bb07-a569e272322f
+CAPTURE REQUEST test -> api rr=e7b63d60-263f-4675-8840-84438ee092b2 trace=167eb380-8c4e-4436-b7e3-206c35f534d7
+CAPTURE RESPONSE test -> api rr=e7b63d60-263f-4675-8840-84438ee092b2 trace=167eb380-8c4e-4436-b7e3-206c35f534d7
+
+# dump_records.py on the report the run wrote (build/kronikol-report/TestRunReport.json), scenario #0:
+theApiCallsTheDatabaseWhileTheTestWaits() | Passed
+i0   Requ rr=f239 tr=322f at=685d sp=4a77              step=None Unknown Default  ua=0 api                    -> db                       GET /items
+i1   Resp rr=f239 tr=322f at=685d sp=4a77              step=None Unknown Default  ua=0 api                    -> db                       GET /items
+i2   Requ rr=92b2 tr=34d7 at=a35c sp=46c6              step=None Unknown Default  ua=0 test                   -> api                      GET /orders
+i3   Resp rr=92b2 tr=34d7 at=a35c sp=46c6              step=None Unknown Default  ua=0 test                   -> api                      GET /orders
+
+# nesting_rules.py on it:
+1 scenarios, 2 requests
+
+rule   nested  interleaved  step-split  depth histogram
+R1          0            0           0  {0: 2}
+R2          0            0           0  {0: 2}
+R3          0            0           0  {0: 2}
+R4          0            0           0  {0: 2}
+
+# kronikol query flow on it (S2 as built from the flow/s2 branch): the database call first, nothing nested
+s0  theApiCallsTheDatabaseWhileTheTestWaits()  [Passed]
+
+  s0/i0     api → db  GET /items  OK
+  s0/i2     test → api  GET /orders  OK
+2 calls shown · http s0/iN --keys for a payload

@@ -1,0 +1,4 @@
+# s2_bytes.py on 2026-09-26: Kronikol.Tool 3.30.4 (NuGet) against S2 as built from the flow/s2 branch.
+992 scenarios: flow bytes 827,649 before -> 858,736 after (+3.8%)
+largest relative increase: +18.5% (BreakfastProvider.Tests.Component.NUnit s82: 275 -> 326 B)
+indented lines 4,261, deepest level 1, `inside` references in unfiltered views: 0

@@ -154,6 +154,14 @@ exist only in the diagram — `note` finds them there.
 The scenario as an interleaved sequence: step bars, annotations, and one line per call with its status,
 duration and body pointer. **This replaces reading the diagram** — 1–2 KB against 663 KB.
 
+A call is indented two spaces under the call it ran inside: made while that call was waiting for its
+answer, by the service handling it or on its trace (a message delivered on the trace of the call that
+published it). Indented means "ran during", not "caused by". Where the indentation cannot show the parent
+(a filter dropped it, it is in an earlier step, or two branches interleave) the line ends `inside s3/i8`,
+an address `http` takes, so `flow s3 --service orders-db` says which request each query belonged to and
+`--errors-only` shows a failing call with the failure inside it. A request that never got an answer says
+`no response` where the status goes.
+
 ### `annotations <report> s3`
 The example-row markers (`Row 3`) and any fragment the test author injected with
 `DefaultTrackingDiagramOverride.InsertPlantUml`, each with the interaction index it sat before. Step and

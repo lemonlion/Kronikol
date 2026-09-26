@@ -510,29 +510,68 @@ internal static partial class QueryCommand
         var stepsByPath = scenario.AllSteps().ToDictionary(s => s.Path, s => s.Step);
         string? currentStep = null;
 
+        // A call is indented under the call it ran inside (CallNesting), one level per shown ancestor, so an
+        // ancestor a filter dropped costs no level. Indentation alone says a line's parent is the nearest line
+        // above it, in its step section, with less indentation; where that is not the parent - a filtered
+        // parent, a parent in an earlier step, two branches whose calls interleave - the line names it.
+        var parents = CallNesting.Parents(scenario.Interactions);
+        var shownOrdinals = shown.Select(s => s.Request.Ordinal).ToHashSet();
+        var section = new List<(int Ordinal, int Depth)>();
+        var indented = false;
+
         foreach (var (interaction, response) in shown)
         {
             for (; nextAnnotation < annotations.Count && annotations[nextAnnotation].Index <= interaction.Ordinal; nextAnnotation++)
-                writer.Line($"  ── {annotations[nextAnnotation].Text}");
+                writer.Line($"  ── {annotations[nextAnnotation].Text}".TrimEnd());
 
             if (interaction.StepPath != currentStep)
             {
                 currentStep = interaction.StepPath;
+                section.Clear();
                 if (currentStep is not null && stepsByPath.TryGetValue(currentStep, out var step))
-                    writer.Line($"── {currentStep}  {QueryWriter.OneLine(step.Display, 90)}");
+                    writer.Line($"── {currentStep}  {QueryWriter.OneLine(step.Display, 90)}".TrimEnd());
             }
 
-            var status = StatusOf(response).Text ?? "";
-            var payload = interaction.BodyHash is { } hash ? $"  {hash} {QueryWriter.Size(interaction.BodyLength)}" : "";
+            var parent = parents[interaction.Ordinal];
+            var depth = 0;
+            for (var ancestor = parent; ancestor is { } shownOrNot; ancestor = parents[shownOrNot])
+                if (shownOrdinals.Contains(shownOrNot))
+                    depth++;
+
+            int? implied = null;
+            var nearest = section.FindLastIndex(line => line.Depth < depth);
+            if (nearest >= 0 && section[nearest].Depth == depth - 1)
+                implied = section[nearest].Ordinal;
+
+            // A request never answered said nothing where the status goes, like an answered call that carried
+            // no status. Only a call that carries a pairing id is known to have gone unanswered; a user action
+            // is never answered at all.
+            var status = response is null && interaction.RequestResponseId is not null && !interaction.IsUserAction
+                ? "no response"
+                : StatusOf(response).Text;
             var timing = interaction.DurationMs ?? response?.DurationMs;
-            writer.Line($"  {interaction.Address(scenario),-9} {QueryWriter.OneLine(interaction.CallerName, 40)} → {QueryWriter.OneLine(interaction.ServiceName, 40)}  "
-                        + $"{QueryWriter.OneLine(interaction.Summary(), 60)}  {status}  {QueryWriter.Duration(timing)}{payload}");
+
+            // Built from the fields that have something in them: an empty status or duration left its
+            // separators behind, at the end of the line or as a double gap before the next field.
+            string?[] fields =
+            [
+                $"{new string(' ', 2 + 2 * depth)}{interaction.Address(scenario),-9} {QueryWriter.OneLine(interaction.CallerName, 40)} → {QueryWriter.OneLine(interaction.ServiceName, 40)}",
+                QueryWriter.OneLine(interaction.Summary(), 60),
+                status,
+                QueryWriter.Duration(timing),
+                interaction.BodyHash is { } hash ? $"{hash} {QueryWriter.Size(interaction.BodyLength)}" : null,
+                parent is { } named && named != implied ? $"inside {scenario.Address}/i{named}" : null
+            ];
+            writer.Line(string.Join("  ", fields.Where(field => !string.IsNullOrEmpty(field))).TrimEnd());
+
+            section.Add((interaction.Ordinal, depth));
+            indented |= depth > 0;
         }
 
         if (shown.Count > 0)
         {
             for (; nextAnnotation < annotations.Count; nextAnnotation++)
-                writer.Line($"  ── {annotations[nextAnnotation].Text}");
+                writer.Line($"  ── {annotations[nextAnnotation].Text}".TrimEnd());
         }
         else if (scenario.Interactions.Any(i => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase)))
         {
@@ -547,7 +586,8 @@ internal static partial class QueryCommand
                 : "  (no calls: a mergeable file written before 3.1.0 carries none)");
         }
 
-        writer.Footer($"{shown.Count} calls shown · http {scenario.Address}/iN --keys for a payload");
+        writer.Footer($"{shown.Count} calls shown · http {scenario.Address}/iN --keys for a payload"
+                      + (indented ? " · indented calls ran inside the call above them" : ""));
         return 0;
     }
 

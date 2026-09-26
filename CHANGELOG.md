@@ -4,6 +4,73 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.0] - 2026-09-26
+
+**Minor - `kronikol query flow` shows which call ran inside which (`plans/FLOW_NESTING_PLAN.md` S2, roadmap
+10.0, decision D22).** New information in a verb's output, so the minor part moved. Nothing new is public in
+the libraries, and no report byte changes. One change to `flow`'s text beside it is called out. Template pins
+move to 3.30.4.
+
+### Added
+
+- **`flow` indents a call under the call it ran inside:** made while that call was waiting for its answer,
+  by the service handling it, or on its trace, which is how a message delivered on the trace of the call that
+  published it sits inside that call. Two spaces per level, before the address. Indented means "ran during",
+  not "caused by": work a service does in the background while a call is open nests too. The rule reads what a
+  report already holds (capture order, the pairing id, the caller and service names and Kronikol's trace id),
+  so a report written by an earlier version nests too when its records carry the pairing id: BreakfastProvider's
+  five lanes, written by 3.0.83, nest 4,261 of their 6,919 calls, none deeper than one level. Two calls from one
+  party are never shown one inside the other, whatever order they are answered in, and a request never
+  answered, or with no pairing id, holds no calls, since nobody knows when it ended. A report written by
+  `kronikol ingest` nests less, because ingest places a record without a timestamp first in its test and, in
+  its default call-tree order, a delivery after the response of the call it arrived inside (plan F17, open).
+- **A line whose parent the indentation cannot show names it**, `inside s3/i8`, an address `http` takes: when a
+  filter dropped the parent, when the parent is in an earlier step, when two branches' calls interleave, or when
+  a shallower line that is not the parent stands between. So `flow s3 --service orders-db` says which request
+  each query belonged to, and `flow s3 --errors-only` shows a failing call with the failure inside it: a 502
+  with the 503 its service got while handling it. No unfiltered view of the five lanes needed one.
+- **The footer says `indented calls ran inside the call above them`** when a line is indented.
+- **A request that never got an answer says `no response`** where the status goes. It showed nothing there, as
+  the 258 calls of the five lanes answered without a status do. A user action, which is never answered, and a
+  call with no pairing id, whose answer is looked for among the records beside it, still show nothing.
+
+### Changed
+
+- **A `flow` line is built from the fields it has.** An empty status or duration left its separators behind, at
+  the end of the line (a CosmosDB write with no duration ended in two spaces) or as a double gap before the next
+  field (`Created    b:…`, 665 lines of the five lanes). **Behaviour change:** no `flow` line ends in whitespace,
+  and those gaps close. Apart from this and the nesting, `flow` prints what it printed: on the five lanes, every
+  view that differs from 3.30.4's differs only by these changes.
+
+### Documentation
+
+- `flow`'s description in `kronikol query --describe` says each call is indented under the call it ran inside.
+- Both copies of the skill's flag reference give the rule, the `inside` reference and `no response`, and the
+  skill's "why is this slow?" row says the calls indented under the slow one are where its time went.
+- The wiki's `Querying-Reports` describes the nesting with three views of a real report.
+
+### Tests
+
+- `CallNestingTests` (unit, new): the rule on records built in memory, one fact per shape the plan measured
+  (plan §6.4): the service handling an open call, a party's calls made at once, a delivery on an open call's
+  trace, two calls from one party on one trace, a request never answered, a request with no pairing id, another
+  party on another trace, the innermost of two open calls, four levels, a response closing a call that is not
+  the innermost, and a request answered before it was recorded.
+- `FlowTests`: a nested view pinned whole; the indentation; the legend; a parent a filter dropped, named;
+  `--errors-only` with the failure inside; every `inside` address fetched through `http`; interleaved branches;
+  a child in a later step; a step address; a line below a shallower line that is not its parent; no line ending
+  in whitespace; a line built from its fields; a report with no pairing ids printing flat; `--count` unchanged;
+  and `no response`, with the three calls that must not say it.
+- `CallNestingTests` does not compile on 3.30.4, and 16 of the new `FlowTests` facts fail there. Six pass there
+  by design, since they pin what must not change, and three fail there only on the gaps this release closes.
+  Those, and the negative facts of `CallNestingTests`, were proved by breaking the clause each guards: twelve
+  breakages, each failing the fact written for it (`plans/FLOW_NESTING_PLAN.harness/s2_mutations.py`).
+- `plans/FLOW_NESTING_PLAN.harness/s2_acceptance.py` runs the built tool on every scenario of BreakfastProvider's
+  five lanes, unfiltered, with `--service CosmosDB` and with `--step 1`, against the plan's prototype: 2,986
+  views, none different, where 3.30.4 differs on 1,210, each only by this release's changes. `s2_bytes.py`: the
+  unfiltered views grow 3.8% (827,649 to 858,736 bytes over 992 scenarios), the largest by 18.5%, a 275-byte
+  flow gaining 51.
+
 ## [3.30.4] - 2026-09-26
 
 **Patch - a long label inside an internal-flow link no longer costs its diagram (`plans/ENGINE_PIN_PLAN.md`

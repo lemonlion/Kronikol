@@ -2,8 +2,8 @@
 
 **Date:** 2026-09-26 · **Repo version:** 3.29.6 in the shared checkout (`6c689b5e`); origin/main is 3.30.1
 (`512bc85a`) and has changed no tool source since, so every cited source line holds at both ·
-**Status: green-lit 2026-09-26. S1 executed 2026-09-26 as 3.30.3 (§7.1), with F13 and F14 found on the
-way; S2 not started.** The owner took D22 as recommended: S2 goes ahead,
+**Status: green-lit 2026-09-26. Executed: S1 as 3.30.3 (§7.1), with F13 and F14 found on the way, and S2 as
+3.31.0 (§7.2), with F15 to F17 found on the way.** The owner took D22 as recommended: S2 goes ahead,
 with rule R4 and Q1's `no response`. Roadmap items **1.13** (S1, a patch) and **10.0** (S2, a minor). §9 is the assumption ledger. The scripts behind every number
 are in [`FLOW_NESTING_PLAN.harness/`](FLOW_NESTING_PLAN.harness/README.md), with their output.
 
@@ -257,6 +257,45 @@ filters nobody gave (20 of the 1,067 real scenarios in `results-s1-unfiltered.tx
 calls in this scenario)`, except on a mergeable file written before 3.1.0, which carries no calls by
 construction (`ReportScanner.CarriesInteractions`).
 
+Found while executing S2 (2026-09-26). F15 changed what S2 prints; F16 and F17 lie outside it and are open
+questions (Q4, Q7, Q8):
+
+**F15. What the indentation says needed a reading.** §4.3 named the parent unless it is "the nearest line
+above it, in the same step section, one level shallower", and the prototype read that as the nearest line
+exactly one level up. A tree is read otherwise: a line belongs to the nearest line above it with less
+indentation. The two differ when a shallower line that is not the parent stands between, as when the test
+makes a second call while its first is open and a query then runs two levels inside the first: read as a
+tree, the query belonged to the test's second call, and nothing said otherwise. S2 names the parent unless
+the nearest line above with less indentation is the parent and exactly one level up. No real report nests
+past one level, so both readings print the same on all of them (§7.2); the prototype was brought in line,
+and `A_line_below_a_shallower_line_that_is_not_its_parent_names_it` holds the difference.
+
+**F16. Kronikol4J writes a call after the calls it made** (RUN, `results-s2-kronikol4j.txt`). Its HTTP
+adapters, `TrackingHttpClient`, the OkHttp interceptor and the WebClient filter and connector (READ), log a
+call's request together with its response once the answer is in, where .NET's `TestTrackingMessageHandler`
+logs the request before sending it
+([`TestTrackingMessageHandler.cs:237`](../src/Kronikol/Tracking/TestTrackingMessageHandler.cs#L237), the send at
+`:264`). A JUnit test at Kronikol4J `deefe8e` (0.1.25-SNAPSHOT) whose `test → api` handler called `api → db`
+inside the test's identity, as `KronikolServletFilter` scopes it, wrote `api → db` first and `test → api`
+after it. So in a Java report the calls a service made while handling a call come before that call, the
+Java diagram draws them in that order (its `PlantUmlCreator` sorts nothing, READ), and no request is ever
+open when another is recorded: R4 nests nothing and points at no wrong parent. The service's call also
+minted a new `traceId` and a new `traceparent` rather than carrying the ones it received. The published
+0.1.24 has only the bare recorder, which writes both halves at once by design; the adapters are unreleased.
+Kronikol4J's to fix, in its capture (Q8).
+
+**F17. An ingested run is not in capture order** (RUN, `results-s2-ingest.txt`). BreakfastProvider's
+ReqNRoll lane, projected into ingest input (its `httpInteractions` with `testId` and `testName`, the shape
+`kronikol ingest --help` documents) and ingested: R4 gives no call a different parent from the lane's own
+report, but of the 833 calls it nests there, 490 are at the top level in both orders, and 108 more in
+call-tree order, the default. The 490 carry no timestamp (F5's CosmosDB, SQL and Kafka produce records), and
+ingest's timestamp sort puts a record without one first in its test
+([`IngestPipeline.cs:743-752`](../src/Kronikol/Ingestion/IngestPipeline.cs#L743-L752), documented as "sort
+first"), ahead of the call that made it, which is where the ingested diagram draws it too. The 108 are
+deliveries on their parent's trace, which call-tree order puts after their parent's response because its
+rule has no trace clause: Q4's inference, confirmed. Neither is S2's: `flow` nests what the record order
+says. Both are ingest behaviours that change what an ingested report draws (Q4, Q7).
+
 ---
 
 ## 4. The design
@@ -295,13 +334,15 @@ legend and the docs use these words, and never "caused by".
   under a filter, an ancestor that is filtered out does not count.
 - **Two spaces per level, before the address,** so the whole line moves, the way a call stack or `tree`
   prints and the way an LLM reads nesting without being told.
-- **A line names its parent, `inside s26/i8`,** unless the parent is the nearest line above it, in the same
-  step section, one level shallower. That one condition covers a parent filtered out, a parent in an
-  earlier step, and two branches whose lines interleave in capture order. It names the immediate parent,
-  an address `http` takes. Unfiltered, the corpus needs none (RUN); under `--service CosmosDB` every line
+- **A line names its parent, `inside s26/i8`,** unless the parent is the nearest line above it with less
+  indentation, in the same step section, and exactly one level shallower: that line is the one a reader
+  takes for the parent (F15). That one condition covers a parent filtered out, a parent in an earlier step,
+  two branches whose lines interleave in capture order, and a shallower line that is not the parent standing
+  between. It names the immediate parent, an address `http` takes. Unfiltered, the corpus needs none (RUN); under `--service CosmosDB` every line
   gets one, which is how a filtered view says which call a downstream call belonged to.
 - **The line is built from its non-empty fields.** Today an empty status or duration leaves trailing
-  spaces (s26/i9 ends in two); the budget pays for them, and the suffix would sit after a gap.
+  spaces (s26/i9 ends in two); the budget pays for them, and the suffix would sit after a gap. It also
+  closes the double gap an empty field leaves inside a line (`Created    b:…`), on 665 lines of the corpus.
 - **The footer gains `indented calls ran inside the call above them`** when any line is indented.
 
 ### 4.4 Headers and annotations (S1)
@@ -420,6 +461,10 @@ top level with no header above it, as today, and the test's `DELETE /menu/cache`
     two and three are held here)
 19. `A_response_closes_its_request_wherever_it_sits` (out-of-order closing)
 
+Written beside these in S2: `A_request_answered_before_it_was_recorded_is_never_a_parent`. A request whose
+answer is behind it was never waiting, and left open it would hold every later call its service made. The
+prototype opened it, since it asked only whether the answer was anywhere; no real report has one.
+
 ### 6.5 S2, the verb (`FlowTests`)
 
 20. `A_nested_call_is_indented_two_spaces_under_its_parent` (exact line prefix)
@@ -431,6 +476,12 @@ top level with no header above it, as today, and the test's `DELETE /menu/cache`
 26. `No_flow_line_ends_in_whitespace`
 27. `A_report_without_requestResponseIds_prints_flat` (written literally, like `UnenrichedReport`)
 28. `Count_is_unchanged_by_nesting`
+
+Written beside these in S2: `A_nested_flow_is_pinned_whole`, `Errors_only_shows_a_failure_with_the_failure_inside_it`,
+`A_step_address_names_the_call_its_first_line_ran_inside`, `A_line_below_a_shallower_line_that_is_not_its_parent_names_it`
+(F15), `A_line_is_built_from_its_non_empty_fields`, and for Q1 `A_request_never_answered_says_no_response`,
+`A_request_never_answered_holds_no_calls` and the three calls that must not say it: one answered without a
+status, a user action, and a request without a pairing id.
 
 ### 6.6 Existing facts that must stay green
 
@@ -447,6 +498,16 @@ identical; verbs and flags only, no description text is pinned: READ).
 Copy the new facts into a worktree at the previous release's tag and run them there (the audit checklist's
 rule): 4 to 9 must fail there, 10 to 28 must fail or not compile. A fact that passes there is vacuous and is
 rewritten.
+
+**S2, on v3.30.4 (RUN, 2026-09-26).** `CallNestingTests` does not compile there, and its negative facts
+would pass against a rule that nests nothing. 16 of `FlowTests`' new facts fail there; six pass by design,
+since they pin what S2 must not change (27, the four rows of 28, and `A_request_never_answered_holds_no_calls`),
+and the three facts that must not say `no response` fail there only on the gaps S2 closes. Those were proved
+by breaking, one at a time, the clause each guards (`s2_mutations.py`, `results-s2-mutations.txt`): the
+same-caller exclusion, "never answered", "no id", the plain rule R1, the prototype's "answered anywhere",
+closing only the innermost call, `no response` without an id, for a user action or for a blank status, the
+prototype's one-level-up reading (F15), depth counting a filtered ancestor, and the legend always printed.
+Each of the twelve breakages fails the fact written for it.
 
 ---
 
@@ -486,6 +547,21 @@ draft:
 > indentation means, and a request that never got an answer says `no response`. No flow line ends in
 > spaces any more. Minor: new information in a verb's output.
 
+**Shipped as 3.31.0 on 2026-09-26.** `CallNesting.Parents` (`src/Kronikol.Tool/Query/CallNesting.cs`) is R4
+as §4.1 gives it, with two readings made explicit: a request is open only while its answer is still ahead
+of it, and any response carrying its id closes it, wherever it sits. `Flow` prints the depth, the `inside`
+references (F15's reading), the legend, `no response`, and a line built from its non-empty fields. `no
+response` is said only of a request that carries a pairing id and is not a user action, so the 258 answered
+calls with no status, a click, and a request paired by proximity stay blank. The `VerbTable` description and
+both skill copies say what the indentation means. Tests as §6.4 and §6.5, proved as §6.7. On real reports
+(RUN, harness `s2_acceptance.py`): the built `flow` equals the prototype line for line on all 2,986 views of
+the five lanes, where 3.30.4 differs on 1,210 of them, every difference one S2 made.
+Across the 2,986 views, 4,948 of 9,545 call lines are indented, none deeper than one level, with 957
+`inside` references and none in an unfiltered view, and `no response` stands on exactly the four calls F9
+counted. Bytes, from the real tool before and after (`s2_bytes.py`): 827,649 to 858,736 over 992 scenarios
+(+3.8%, where the prototype said +3.9%), the largest +18.5% (a 275-byte flow gaining 51), 4,261 indented
+lines.
+
 ### 7.3 Docs
 
 | Where | What | Slice |
@@ -517,6 +593,12 @@ Kronikol4J ledger entry (F12). Both skill copies change together (`SkillDriftTes
   either, stop and bring the case back.
 - The `plan-execution-audit-checklist` sweep, the wiki link checker (`tools/wiki-links`), and the CI run of
   the pushed SHA.
+
+Done 2026-09-26 (the first in §7.2). On the reports the corpus lacks, R4 pointed at no wrong parent. A
+Kronikol4J report that captured calls holds them in an order that nests nothing (F16). One run of the
+consumer, BreakfastProvider's ReqNRoll lane projected from its report (it has no projection hook), ingested in
+both orders (`--chronological`, since call-tree order is the default and there is no `--call-tree` flag),
+nests fewer calls than its own report and never a different parent (F17).
 
 ### 7.6 Where it sits in the roadmap
 
@@ -555,12 +637,14 @@ budget and truncation twice. Mermaid stays where a human renders it: V4's CI sum
 
 | # | Question | Recommendation |
 |---|---|---|
-| Q1 | Print `no response` in the status place for a request never answered, so it no longer looks like the 258 answered calls with no status (F9)? | **Taken 2026-09-26: yes, in S2.** R4 gives "never answered" a consequence (such a call holds no children), and the line should say why |
+| Q1 | Print `no response` in the status place for a request never answered, so it no longer looks like the 258 answered calls with no status (F9)? | **Taken 2026-09-26: yes, in S2. Shipped 3.31.0**, for a request that carries a pairing id and is not a user action: a click is never answered, and a request paired by proximity may have an answer the scan did not reach. R4 gives "never answered" a consequence (such a call holds no children), and the line should say why |
 | Q2 | Should `http sN/iM` print the call it ran inside? | Later, its own minor, reusing `CallNesting` |
 | Q3 | Nest the per-step call lists of `Failures.md` and of `compare`? | Measure after S2 ships. `Failures.md` is report output, so it would be a report change with its own record |
-| Q4 | `--call-tree` ingest places a delivery after its parent's response (its parent rule has no trace clause), so `flow` would nest it in a report ingested without `--call-tree` and not with it (INFERRED from `OrderAsCallTree`'s comment, not RUN). Give `OrderAsCallTree` clause (b)? | Run §7.5's ingest check first; decide on what it shows |
+| Q4 | `--call-tree` ingest places a delivery after its parent's response (its parent rule has no trace clause), so `flow` would nest it in a report ingested without `--call-tree` and not with it (INFERRED from `OrderAsCallTree`'s comment, not RUN). Give `OrderAsCallTree` clause (b)? | **RUN 2026-09-26 (F17): confirmed.** Call-tree order, the default, puts 108 of the ReqNRoll lane's deliveries after the response of the call they arrived inside, and the ingested diagram draws them there. Recommendation: yes, R4's clause (b) in `OrderAsCallTree` (another caller, the same `traceId`), its own patch with a golden of an ingested delivery. It changes what an ingested report draws, so it is the owner's call |
 | Q5 | UI user actions have no response record, so a click cannot be a parent and the calls it caused stay at the top level | Measure on the first UI report; none is on this machine |
 | Q6 | The legend costs about 50 bytes per nested flow | Keep it. The tool explains its output in its footers, and "ran inside" is not "caused by" |
+| Q7 | Ingest sorts a record without a timestamp first in its test (F17): 490 of the ReqNRoll lane's nested calls, every CosmosDB, SQL and Kafka produce record, move ahead of the call that made them, in the diagram too. Keep their place instead? | Yes, as its own patch: a record without a timestamp sorts as the record before it in the file does, which is capture order for an in-process projection and changes nothing for a capture that stamps every record. It matters most to roadmap 14.1, which projects the in-process store through the writer. It changes what an ingested report draws, so it is the owner's call |
+| Q8 | Kronikol4J's HTTP adapters write a call's request only when its answer is in (F16), so its diagrams draw a service's calls before the call they ran inside and nothing nests. Log the request before sending, as .NET does, and carry the incoming trace? | Yes, in Kronikol4J, before those adapters are released: each logs the request half before the call and the response half after, with a parity fact against .NET's order. Not this repository's code |
 
 D22 in the roadmap asked for the green light, R4 and Q1 together; the owner took all three on 2026-09-26.
 
@@ -582,13 +666,18 @@ D22 in the roadmap asked for the green light, R4 and Q1 together; the owner took
 | `FindResponse` is shared by four call sites | READ | §2.1 |
 | No test pins `flow`'s description text | READ | `DescribeTests`, `CommandTableTests`, `SkillDriftTests` |
 | Kronikol4J writes the fields R4 reads | READ | F12 |
-| R4 on a Java report, and on an ingested report | not run: no such report here | §7.5 |
+| R4 on a Java report, and on an ingested report | RUN 2026-09-26: no wrong parent on either (F16, F17) | §7.5 |
 | Background work of the handling service nests under the open call | INFERRED | §4.2 |
-| `--call-tree` ingest shows deliveries flat | INFERRED | Q4 |
+| `--call-tree` ingest shows deliveries flat | RUN 2026-09-26: 108 deliveries after their parent's response | Q4, F17 |
 | The skill's Python fallback has no `flow` to mirror | READ (`query.py` implements summary, failures, steps, services, grep, http) | none |
 | S1 matches the prototype's placement on every view of the five lanes, and the check discriminates (3.30.2 differs on 569 views) | RUN, 3.30.3 and 3.30.2 | `results-s1-acceptance*.txt` |
 | S1 leaves an unfiltered `flow` byte-identical but for F14 | RUN, 1,067 scenarios | `results-s1-unfiltered.txt` |
 | `flow`, `trace` and `compare` ignored `--count` on 3.30.2; the other twelve verbs honoured it | RUN | F13, `CountFlagTests` |
+| S2 matches the prototype on every view of the five lanes, and the check discriminates (3.30.4 differs on 1,210 views, every difference one S2 made) | RUN, S2 as built and 3.30.4 from NuGet | `results-s2-acceptance*.txt` |
+| Nesting costs +3.8% bytes over 992 scenarios on the real tool | RUN | `results-s2-bytes.txt` |
+| Every guard fact fails when the clause it guards is broken | RUN, twelve breakages | §6.7, `results-s2-mutations.txt` |
+| Kronikol4J writes a call after the calls it made, and its diagram draws that order | RUN (the capture), READ (the diagram) | F16, `results-s2-kronikol4j.txt` |
+| An ingested run loses 490 parents to records without a timestamp and, in call-tree order, 108 to deliveries | RUN, the ReqNRoll lane projected and ingested | F17, `results-s2-ingest.txt` |
 
 ## Appendix A. Re-taking the numbers
 

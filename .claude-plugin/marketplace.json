@@ -11,7 +11,7 @@
       "name": "kronikol",
       "source": "./",
       "description": "Debug a dotnet test run from its Kronikol report without opening it: why the tests failed (the failures digest), what a service actually returned, where a wrong value came from, what changed between runs, what was slow. Reads the report an xUnit, NUnit, MSTest, TUnit, Reqnroll or LightBDD run wrote, through the kronikol query CLI, so a 10 MB TestRunReport.json costs an agent a few hundred tokens instead of its whole context.",
-      "version": "3.30.4",
+      "version": "3.31.0",
       "category": "testing",
       "tags": [
         "dotnet",

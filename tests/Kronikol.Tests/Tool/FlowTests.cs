@@ -196,6 +196,228 @@ public class FlowTests : IDisposable
         Assert.Contains("before 3.1.0", output);
     }
 
+    // ─── Which call ran inside which (plan §6.5) ───────────────
+
+    [Fact]
+    public void A_nested_flow_is_pinned_whole()
+    {
+        // The API's calls ran inside the test's POST, the bank's inside the charge, the stock database's inside
+        // the stock call although the charge's lines stand between them, the delivery inside the POST on its
+        // trace, and the audit call inside the POST from the next step.
+        Assert.Equal(
+            """
+            s0  Place an order  [Passed]
+
+            ── 0  When the order is placed
+              s0/i0     test → api  POST /orders  Created  100 ms  b:6c3c4992 11 B
+                s0/i1     api → stock  GET /items/a  OK  40 ms
+                s0/i2     api → payments  POST /charge  BadGateway  33 ms  b:2d2bc192 11 B
+                  s0/i3     payments → bank  POST /debit  ServiceUnavailable  25 ms
+                  s0/i4     stock → stock-db  QUERY /items  OK  2 ms  inside s0/i1
+                s0/i9     broker → api  CONSUME /order-placed  Ack  1 ms  b:357f5667 11 B
+            ── 1  Then it is audited
+                s0/i11    api → audit  POST /entries  Created  5 ms  inside s0/i0
+              s0/i14    test → api  GET /orders/1  OK  10 ms
+            8 calls shown · http s0/iN --keys for a payload · indented calls ran inside the call above them
+
+            """.ReplaceLineEndings("\n"),
+            Run("flow", NestedReport(), "s0"));
+    }
+
+    [Fact]
+    public void A_nested_call_is_indented_two_spaces_under_its_parent()
+    {
+        var lines = Lines(Run("flow", NestedReport(), "s0"));
+
+        Assert.Contains(lines, l => l.StartsWith("  s0/i0 ", StringComparison.Ordinal));
+        Assert.Contains(lines, l => l.StartsWith("    s0/i2 ", StringComparison.Ordinal));
+        Assert.Contains(lines, l => l.StartsWith("      s0/i3 ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void The_legend_is_printed_only_when_a_line_is_indented()
+    {
+        const string legend = "indented calls ran inside the call above them";
+
+        Assert.Contains(legend, Run("flow", NestedReport(), "s0"));
+        Assert.DoesNotContain(legend, Run("flow", Report(), "s0"));
+
+        // One line, not indented, naming the call it ran inside: nothing here needs the legend.
+        var named = Run("flow", NestedReport(), "s0", "--service", "stock-db");
+        Assert.Contains("inside s0/i1", named);
+        Assert.DoesNotContain(legend, named);
+    }
+
+    [Fact]
+    public void A_line_whose_parent_is_filtered_out_names_it()
+    {
+        // Which request each query belonged to is what a filtered view cannot show by indentation.
+        var lines = Lines(Run("flow", NestedReport(), "s0", "--service", "stock-db"));
+
+        Assert.Contains("  s0/i4     stock → stock-db  QUERY /items  OK  2 ms  inside s0/i1", lines);
+    }
+
+    [Fact]
+    public void Errors_only_shows_a_failure_with_the_failure_inside_it()
+    {
+        // The 502 came from the 503 inside it; its own parent, which succeeded, is filtered out and named.
+        var lines = Lines(Run("flow", NestedReport(), "s0", "--errors-only"));
+
+        var charge = lines.IndexOf("  s0/i2     api → payments  POST /charge  BadGateway  33 ms  b:2d2bc192 11 B  inside s0/i0");
+        Assert.True(charge >= 0, string.Join("\n", lines));
+        Assert.Equal("    s0/i3     payments → bank  POST /debit  ServiceUnavailable  25 ms", lines[charge + 1]);
+    }
+
+    [Fact]
+    public void Every_inside_reference_is_an_address_http_takes()
+    {
+        var report = NestedReport();
+        string[][] views =
+        [
+            ["s0"], ["s0", "--service", "stock"], ["s0", "--service", "stock-db"], ["s0", "--service", "bank"],
+            ["s0", "--errors-only"], ["s0/1"], ["s1"], ["s2"]
+        ];
+
+        var references = views
+            .SelectMany(view => System.Text.RegularExpressions.Regex.Matches(Run("flow", report, view), @"inside (s\d+/i\d+)$",
+                System.Text.RegularExpressions.RegexOptions.Multiline))
+            .Select(match => match.Groups[1].Value)
+            .Distinct()
+            .ToList();
+
+        Assert.NotEmpty(references);
+        foreach (var reference in references)
+        {
+            var output = Run("http", report, reference);
+            Assert.Contains(reference, output);
+        }
+    }
+
+    [Fact]
+    public void Interleaved_branches_name_their_parent()
+    {
+        // The line above s0/i4 one level up is the charge, which the database query did not run inside.
+        var lines = Lines(Run("flow", NestedReport(), "s0"));
+
+        Assert.Contains(lines, l => l.StartsWith("      s0/i4 ", StringComparison.Ordinal) && l.EndsWith("  inside s0/i1", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void A_child_recorded_in_a_later_step_names_its_parent()
+    {
+        var lines = Lines(Run("flow", NestedReport(), "s0"));
+
+        var header = lines.IndexOf("── 1  Then it is audited");
+        Assert.True(header >= 0, string.Join("\n", lines));
+        Assert.Equal("    s0/i11    api → audit  POST /entries  Created  5 ms  inside s0/i0", lines[header + 1]);
+    }
+
+    [Fact]
+    public void A_line_below_a_shallower_line_that_is_not_its_parent_names_it()
+    {
+        // Indentation alone points at the nearest line above with less of it, the test's second call, which the
+        // query did not run inside; the line one level up, further above, is its parent.
+        var lines = Lines(Run("flow", NestedReport(), "s2"));
+
+        Assert.Contains("  s2/i2     test → other  GET /y  OK", lines);
+        Assert.Contains("      s2/i3     svc → db  QUERY /z  OK  inside s2/i1", lines);
+    }
+
+    [Fact]
+    public void A_step_address_names_the_call_its_first_line_ran_inside()
+    {
+        Assert.Contains("  s0/i11    api → audit  POST /entries  Created  5 ms  inside s0/i0", Lines(Run("flow", NestedReport(), "s0/1")));
+    }
+
+    [Fact]
+    public void No_flow_line_ends_in_whitespace()
+    {
+        // An empty status or duration left the separators behind it at the end of the line.
+        string[][] views =
+        [
+            ["s0"], ["s1"], ["s2"], ["s3"], ["s4"], ["s0", "--service", "payments"], ["s1", "--errors-only"]
+        ];
+        string[][] nestedViews = [["s0"], ["s1"], ["s2"], ["s0", "--errors-only"], ["s0", "--service", "stock-db"]];
+        var outputs = views.Select(view => Run("flow", Report(), view))
+            .Concat(nestedViews.Select(view => Run("flow", NestedReport(), view)))
+            .Append(Run("flow", NoIdsReport(), "s0"));
+
+        foreach (var output in outputs)
+            foreach (var line in Lines(output))
+                Assert.True(line == line.TrimEnd(), $"ends in whitespace: [{line}]");
+    }
+
+    [Fact]
+    public void A_line_is_built_from_its_non_empty_fields()
+    {
+        // No status before a duration, and no duration before a body, left a double gap in the line.
+        var lines = Lines(Run("flow", NestedReport(), "s1"));
+
+        Assert.Contains("  s1/i5     test → cache  GET /key  3 ms", lines);
+        Assert.Contains("  s1/i7     test → cosmos  CREATE /orders  Created  b:b1595f81 12 B", lines);
+    }
+
+    [Fact]
+    public void A_report_without_requestResponseIds_prints_flat()
+    {
+        // With no pairing id nobody knows when a call ended, so no call is ever a parent, whatever the names
+        // and the trace say.
+        var output = Run("flow", NoIdsReport(), "s0");
+
+        Assert.Contains(Lines(output), l => l.StartsWith("  s0/i0     test → api  POST /orders", StringComparison.Ordinal));
+        Assert.Contains(Lines(output), l => l.StartsWith("  s0/i1     api → db  QUERY /items", StringComparison.Ordinal));
+        Assert.DoesNotContain("inside", output);
+        Assert.DoesNotContain("indented", output);
+    }
+
+    [Theory]
+    [InlineData("8", "s0")]
+    [InlineData("1", "s0", "--service", "stock-db")]
+    [InlineData("2", "s0", "--errors-only")]
+    [InlineData("7", "s1")]
+    public void Count_is_unchanged_by_nesting(string expected, params string[] args) =>
+        Assert.Equal(expected + "\n", Run("flow", NestedReport(), [.. args, "--count"]));
+
+    // ─── A request never answered (plan Q1) ────────────────────
+
+    [Fact]
+    public void A_request_never_answered_says_no_response()
+    {
+        // It printed nothing where the status goes, as the answered calls with no status do.
+        var lines = Lines(Run("flow", NestedReport(), "s1"));
+
+        Assert.Contains("  s1/i0     test → api  GET /asyncapi  no response", lines);
+    }
+
+    [Fact]
+    public void A_request_never_answered_holds_no_calls()
+    {
+        // The service's query after it is at the top level: a call never answered was never known to be
+        // waiting, so nothing is placed inside it.
+        Assert.Contains("  s1/i1     api → db  QUERY /specs  OK  4 ms", Lines(Run("flow", NestedReport(), "s1")));
+    }
+
+    [Fact]
+    public void A_call_answered_without_a_status_is_not_said_to_have_had_no_response()
+    {
+        Assert.Contains("  s1/i5     test → cache  GET /key  3 ms", Lines(Run("flow", NestedReport(), "s1")));
+    }
+
+    [Fact]
+    public void A_user_action_is_not_said_to_have_had_no_response()
+    {
+        // A click is never answered: a response is not what it waits for.
+        Assert.Contains("  s1/i9     User → web  Click web", Lines(Run("flow", NestedReport(), "s1")));
+    }
+
+    [Fact]
+    public void A_request_without_a_pairing_id_is_not_said_to_have_had_no_response()
+    {
+        // Without an id its response is looked for among the records beside it, so not finding one says
+        // nothing about whether it was answered.
+        Assert.Contains("  s1/i10    test → legacy  GET /ping", Lines(Run("flow", NestedReport(), "s1")));
+    }
+
     // ─── Harness ───────────────────────────────────────────────
 
     private string Run(string command, string report, params string[] args)
@@ -297,6 +519,133 @@ public class FlowTests : IDisposable
             }
             """);
         return path;
+    }
+
+    private string? _nested;
+
+    /// <summary>
+    /// s0: the test's POST, inside it a stock call and a charge answered in another order, the bank inside the
+    /// charge (502 from a 503), the stock database inside the stock call, a delivery on the POST's trace, and
+    /// an audit call made inside the POST after the next step began. s1: a request never answered, a call
+    /// answered without a status, a body with no duration, a user action and a request with no pairing id.
+    /// s2: the test's two calls at once, and a database query two levels inside the first.
+    /// </summary>
+    private string NestedReport()
+    {
+        if (_nested is not null)
+            return _nested;
+
+        Feature[] features =
+        [
+            new Feature
+            {
+                DisplayName = "Orders",
+                Scenarios =
+                [
+                    Scenario("n0", "Place an order", ("When", "the order is placed"), ("Then", "it is audited")),
+                    Scenario("n1", "Ask the async API", ("When", "the async API is asked")),
+                    Scenario("n2", "Call two services at once", ("When", "both are called"))
+                ]
+            }
+        ];
+
+        var at = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        DateTimeOffset Ms(int ms) => at.AddMilliseconds(ms);
+        var trace = Guid.NewGuid();
+
+        var order = Pair("n0", "test", "api", "POST", "http://api/orders", "{\"sku\":\"a\"}", HttpStatusCode.Created, Ms(0), Ms(100), trace);
+        var stock = Pair("n0", "api", "stock", "GET", "http://stock/items/a", null, HttpStatusCode.OK, Ms(10), Ms(50));
+        var charge = Pair("n0", "api", "payments", "POST", "http://payments/charge", "{\"total\":5}", HttpStatusCode.BadGateway, Ms(12), Ms(45));
+        var debit = Pair("n0", "payments", "bank", "POST", "http://bank/debit", null, HttpStatusCode.ServiceUnavailable, Ms(15), Ms(40));
+        var items = Pair("n0", "stock", "stock-db", "QUERY", "http://stock-db/items", null, HttpStatusCode.OK, Ms(16), Ms(18));
+        var placed = Pair("n0", "broker", "api", "CONSUME", "http://broker/order-placed", "{\"order\":1}", "Ack", Ms(60), Ms(61), trace);
+        var audit = Pair("n0", "api", "audit", "POST", "http://audit/entries", null, HttpStatusCode.Created, Ms(70), Ms(75));
+        var read = Pair("n0", "test", "api", "GET", "http://api/orders/1", null, HttpStatusCode.OK, Ms(110), Ms(120));
+
+        var asked = Pair("n1", "test", "api", "GET", "http://api/asyncapi", null, HttpStatusCode.OK, Ms(1_000), null);
+        var specs = Pair("n1", "api", "db", "QUERY", "http://db/specs", null, HttpStatusCode.OK, Ms(1_010), Ms(1_014));
+        var again = Pair("n1", "test", "api", "GET", "http://api/asyncapi", null, HttpStatusCode.OK, Ms(1_100), Ms(1_106));
+        var key = Pair("n1", "test", "cache", "GET", "http://cache/key", null, null, Ms(1_200), Ms(1_203));
+        var created = Pair("n1", "test", "cosmos", "CREATE", "http://cosmos/orders", "{\"id\":\"o-1\"}", HttpStatusCode.Created, null, null);
+        var click = new RequestResponseLog("n1", "n1", "Click", null, new Uri("http://web/"), [], "web", "User",
+            RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false) { IsUserAction = true };
+        var ping = Pair("n1", "test", "legacy", "GET", "http://legacy/ping", null, HttpStatusCode.OK, null, null, pairId: Guid.Empty);
+
+        var first = Pair("n2", "test", "api", "GET", "http://api/a", null, HttpStatusCode.OK, null, null);
+        var behind = Pair("n2", "api", "svc", "GET", "http://svc/b", null, HttpStatusCode.OK, null, null);
+        var second = Pair("n2", "test", "other", "GET", "http://other/y", null, HttpStatusCode.OK, null, null);
+        var query = Pair("n2", "svc", "db", "QUERY", "http://db/z", null, HttpStatusCode.OK, null, null);
+
+        RequestResponseLog[] logs =
+        [
+            StepMarker("n0", "the order is placed"),
+            order[0], stock[0], charge[0], debit[0], items[0], items[1], debit[1], charge[1], stock[1], placed[0], placed[1],
+            StepMarker("n0", "it is audited"),
+            audit[0], audit[1], order[1], read[0], read[1],
+
+            StepMarker("n1", "the async API is asked"),
+            asked[0], specs[0], specs[1], again[0], again[1], key[0], key[1], created[0], created[1], click, ping[0],
+
+            StepMarker("n2", "both are called"),
+            first[0], behind[0], second[0], query[0], query[1], second[1], behind[1], first[1]
+        ];
+
+        var written = ReportGenerator.GenerateTestRunReportData(
+            features,
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            "Nested_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json, diagrams: null, logs);
+
+        var path = Path.Combine(_directory, "Nested.json");
+        File.Move(written, path, overwrite: true);
+        return _nested = path;
+    }
+
+    /// <summary>
+    /// A report as Kronikol wrote it before the pairing id: two calls, the second made by the service
+    /// handling the first, on one trace. Written literally, as the current generator cannot produce it.
+    /// </summary>
+    private string NoIdsReport()
+    {
+        var path = Path.Combine(_directory, "NoIds.json");
+        File.WriteAllText(path, """
+            {
+              "kronikolVersion": "3.0.44",
+              "startTime": "2026-01-01T10:00:00Z",
+              "endTime": "2026-01-01T10:05:00Z",
+              "features": [ { "name": "Orders", "labels": [], "scenarios": [
+                { "id": "old-1", "stableId": "aaaabbbbccccdddd", "name": "Checkout", "result": "Passed", "durationSeconds": 1.0,
+                  "labels": [], "categories": [],
+                  "steps": [ { "keyword": "When", "text": "the order is placed", "status": "Passed", "durationSeconds": 0.1, "subSteps": [], "attachments": [] } ],
+                  "backgroundSteps": [], "attachments": [],
+                  "httpInteractions": [
+                    { "type": "Request", "method": "POST", "uri": "http://api/orders", "serviceName": "api", "callerName": "test", "content": null, "headers": [], "statusCode": null, "traceId": "00000000-0000-0000-0000-000000000001" },
+                    { "type": "Request", "method": "QUERY", "uri": "http://db/items", "serviceName": "db", "callerName": "api", "content": null, "headers": [], "statusCode": null, "traceId": "00000000-0000-0000-0000-000000000001" },
+                    { "type": "Response", "method": "QUERY", "uri": "http://db/items", "serviceName": "db", "callerName": "api", "content": null, "headers": [], "statusCode": "OK", "traceId": "00000000-0000-0000-0000-000000000001" },
+                    { "type": "Response", "method": "POST", "uri": "http://api/orders", "serviceName": "api", "callerName": "test", "content": null, "headers": [], "statusCode": "Created", "traceId": "00000000-0000-0000-0000-000000000001" }
+                  ] }
+              ] } ]
+            }
+            """);
+        return path;
+    }
+
+    /// <summary>
+    /// A request and its response between any two parties, on a trace of its own unless given one. A call
+    /// never answered is its first half alone; a null status is a response that carried none.
+    /// </summary>
+    private static RequestResponseLog[] Pair(string testId, string caller, string service, OneOf<HttpMethod, string> method, string uri, string? body,
+        OneOf<HttpStatusCode, string>? status, DateTimeOffset? sent, DateTimeOffset? answered, Guid? traceId = null, Guid? pairId = null)
+    {
+        var id = pairId ?? Guid.NewGuid();
+        var trace = traceId ?? Guid.NewGuid();
+        return
+        [
+            new RequestResponseLog(testId, testId, method, body, new Uri(uri), [], service, caller,
+                RequestResponseType.Request, trace, id, false) { Timestamp = sent },
+            new RequestResponseLog(testId, testId, method, "{\"ok\":true}", new Uri(uri), [], service, caller,
+                RequestResponseType.Response, trace, id, false, status) { Timestamp = answered }
+        ];
     }
 
     private static Scenario Scenario(string id, string name, params (string Keyword, string Text)[] steps) => new()

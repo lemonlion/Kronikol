@@ -1,0 +1,9 @@
+# s2_acceptance.py on 2026-09-26. Tool: built from the flow/s2 branch (S2, 3.31.0 before its version bump).
+BreakfastProvider.Tests.Component.ReqNRoll: 617 views, 0 differ
+BreakfastProvider.Tests.Component.BDDfy: 611 views, 0 differ
+BreakfastProvider.Tests.Component.LightBDD: 536 views, 0 differ
+BreakfastProvider.Tests.Component.NUnit: 611 views, 0 differ
+BreakfastProvider.Tests.Component.TUnit: 611 views, 0 differ
+total: 2986 views, 0 differ
+real output: call lines 9,545, depth 0 4,597, depth 1 4,948, indented lines 4,948, inside references 957, inside references, unfiltered 0, legends 870
+no response: 4 calls: BDDfy s165/i0, NUnit s165/i0, NUnit s165/i1, TUnit s165/i0

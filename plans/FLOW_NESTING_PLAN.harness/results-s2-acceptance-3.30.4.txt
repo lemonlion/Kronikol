@@ -1,0 +1,85 @@
+# s2_acceptance.py on 2026-09-26, the control. Tool: Kronikol.Tool 3.30.4 from NuGet, the release before S2.
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s0 
+    real:    s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  23 ms
+    proto:     s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  23 ms
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s0 --service CosmosDB
+    real:    s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s0/i8
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s0 --step 1
+    real:    s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:     s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s1 
+    real:    s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  5 ms
+    proto:     s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  5 ms
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s1 --service CosmosDB
+    real:    s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s1/i6
+BreakfastProvider.Tests.Component.ReqNRoll: 617 views, 275 differ
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s0 
+    real:    s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  271 ms
+    proto:     s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  271 ms
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s0 --service CosmosDB
+    real:    s0/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s0/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s0/i6
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s0 --step 1
+    real:    s0/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:     s0/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s1 
+    real:    s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  24 ms
+    proto:     s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  24 ms
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s1 --service CosmosDB
+    real:    s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s1/i6
+BreakfastProvider.Tests.Component.BDDfy: 611 views, 283 differ
+DIFFERS BreakfastProvider.Tests.Component.LightBDD s0 
+    real:    s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  134 ms
+    proto:     s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  134 ms
+DIFFERS BreakfastProvider.Tests.Component.LightBDD s0 --service CosmosDB
+    real:    s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s0/i8
+DIFFERS BreakfastProvider.Tests.Component.LightBDD s0 --step 1
+    real:    s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:     s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created
+DIFFERS BreakfastProvider.Tests.Component.LightBDD s1 
+    real:    s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  283 ms
+    proto:     s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  283 ms
+DIFFERS BreakfastProvider.Tests.Component.LightBDD s1 --service CosmosDB
+    real:    s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s1/i6
+BreakfastProvider.Tests.Component.LightBDD: 536 views, 278 differ
+DIFFERS BreakfastProvider.Tests.Component.NUnit s0 
+    real:    s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  2 ms
+    proto:     s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  2 ms
+DIFFERS BreakfastProvider.Tests.Component.NUnit s0 --service CosmosDB
+    real:    s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s0/i8
+DIFFERS BreakfastProvider.Tests.Component.NUnit s1 
+    real:    s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  27 ms
+    proto:     s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  27 ms
+DIFFERS BreakfastProvider.Tests.Component.NUnit s1 --service CosmosDB
+    real:    s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s1/i6
+DIFFERS BreakfastProvider.Tests.Component.NUnit s2 
+    real:    s2/i1     Breakfast Provider → Cow Service  GET /milk  OK  3 ms
+    proto:     s2/i1     Breakfast Provider → Cow Service  GET /milk  OK  3 ms
+BreakfastProvider.Tests.Component.NUnit: 611 views, 186 differ
+DIFFERS BreakfastProvider.Tests.Component.TUnit s0 
+    real:    s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  2 ms
+    proto:     s0/i1     Breakfast Provider → Cow Service  GET /milk  OK  2 ms
+DIFFERS BreakfastProvider.Tests.Component.TUnit s0 --service CosmosDB
+    real:    s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s0/i9     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s0/i8
+DIFFERS BreakfastProvider.Tests.Component.TUnit s1 
+    real:    s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  2 ms
+    proto:     s1/i1     Breakfast Provider → Cow Service  GET /milk  OK  2 ms
+DIFFERS BreakfastProvider.Tests.Component.TUnit s1 --service CosmosDB
+    real:    s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  
+    proto:   s1/i7     Breakfast Provider → CosmosDB  CREATE /orders  Created  inside s1/i6
+DIFFERS BreakfastProvider.Tests.Component.TUnit s2 
+    real:    s2/i1     Breakfast Provider → Cow Service  GET /milk  OK  2 ms
+    proto:     s2/i1     Breakfast Provider → Cow Service  GET /milk  OK  2 ms
+BreakfastProvider.Tests.Component.TUnit: 611 views, 188 differ
+total: 2986 views, 1210 differ
+the differences: only S2's changes 1,210
+real output: call lines 9,545, depth 0 9,545, indented lines 0, inside references 0, inside references, unfiltered 0, legends 0
+no response: 0 calls: 

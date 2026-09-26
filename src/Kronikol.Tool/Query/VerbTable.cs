@@ -165,7 +165,7 @@ internal static class VerbTable
             ["  assertions   <report> [s3] [--failed]        flat assertion list with results and source locations"]),
 
         new("flow", "Narrative",
-            "One scenario's calls in order, grouped under the step that made them - the diagram as text, in 1-2 KB.",
+            "One scenario's calls in order, grouped under the step that made them, each indented under the call it ran inside - the diagram as text, in 1-2 KB.",
             ["<report> s3", "<report> s3/2"],
             ["--step", "--service", "--errors-only", "--count"], Json: false,
             ["  flow         <report> s3 [--step 2] [--service X] [--errors-only]"]),

@@ -15,6 +15,11 @@ and prints counts, addresses and `flow` lines; none prints a body or a header.
 | `trailing-annotation-probe.json` | A two-record report with an annotation after its last call (plan F7) | in `results-examples.txt` |
 | `s1_acceptance.py` | S1's acceptance (plan §7.1): the built `flow` on every scenario of the five lanes, unfiltered, with `--service CosmosDB` and `--step 1`, against `--mode nested` with the nesting taken out | `results-s1-acceptance.txt` (3.30.3), `results-s1-acceptance-3.30.2.txt` (the control) |
 | `s1_unfiltered.py` | That S1 leaves an unfiltered `flow` as it was: every scenario, 3.30.2 against 3.30.3, byte for byte | `results-s1-unfiltered.txt` |
+| `s2_acceptance.py` | S2's acceptance (plan §7.5): the built `flow` on every scenario of the five lanes, unfiltered, with `--service CosmosDB` and `--step 1`, against `--mode nested` line for line, and what the real output holds (indented lines, depth, `inside`, `no response`) | `results-s2-acceptance.txt` (S2), `results-s2-acceptance-3.30.4.txt` (the control) |
+| `s2_bytes.py` | `flow_bytes.py`'s numbers taken again from the real tool: every scenario unfiltered, the release before S2 against S2 | `results-s2-bytes.txt` |
+| `s2_mutations.py` | Each clause of the rule and of the verb broken in turn, and the facts that failed (plan §6.7): how a guard fact that passed on the release before proves itself | `results-s2-mutations.txt` |
+| `s2_ingest.py`, `s2_ingest_causes.py` | R4 on an ingested run (plan §7.5, F17, Q4): a lane projected into ingest input, ingested in both orders, each call's parent compared with the lane's own report, and why a lost one was lost | `results-s2-ingest.txt` |
+| `kronikol4j/NestedCallsTest.java` | R4 on a Java report (plan §7.5, F16): a Kronikol4J test whose service makes a call while the test's call waits | `results-s2-kronikol4j.txt` |
 
 ## The corpus
 
@@ -55,7 +60,7 @@ done; done
 `6c689b5e`. Against 3.29.3 the fidelity check differs on s103, whose step text 3.29.3 read wrongly
 (fixed in 3.29.6); that is the tool's old defect, not the prototype's.
 
-Once S2 is built, run the same corpus through the real `flow` rather than the prototype (plan §7.5).
+S2 ran the same corpus through the real `flow` (plan §7.5, below).
 
 S1, 3.30.3 (K = the built tool, OLD = one built from the tag `v3.30.2`):
 
@@ -68,3 +73,29 @@ PYTHONUTF8=1 python s1_unfiltered.py $OLD $K $B.{ReqNRoll,BDDfy,LightBDD,NUnit,T
 
 The control run is what makes the acceptance mean something: on 3.30.2, 569 of 1,228 views differ, every one
 a step header with nothing under it.
+
+S2, 3.31.0 (K = the built tool, PREV = Kronikol.Tool 3.30.4 installed from NuGet with `--tool-path`). The prototype's
+`--mode nested` was brought in line with what S2 shipped (its docstring says how), so `results-examples.txt` and
+`results-bytes.txt`, taken before, show the prototype as it was:
+
+```bash
+PYTHONUTF8=1 python s2_acceptance.py $K    $B.{ReqNRoll,BDDfy,LightBDD,NUnit,TUnit}/bin/Debug/net10.0/Reports/TestRunReport.json > results-s2-acceptance.txt
+PYTHONUTF8=1 python s2_acceptance.py $PREV $B.{ReqNRoll,BDDfy,LightBDD,NUnit,TUnit}/bin/Debug/net10.0/Reports/TestRunReport.json > results-s2-acceptance-3.30.4.txt
+PYTHONUTF8=1 python s2_bytes.py $PREV $K $B.{ReqNRoll,BDDfy,LightBDD,NUnit,TUnit}/bin/Debug/net10.0/Reports/TestRunReport.json > results-s2-bytes.txt
+PYTHONUTF8=1 python s2_mutations.py > results-s2-mutations.txt      # rebuilds tests/Kronikol.Tests once per breakage
+
+# An ingested run (write the ndjson and the reports outside the repository):
+REF=$B.ReqNRoll/bin/Debug/net10.0/Reports/TestRunReport.json
+PYTHONUTF8=1 python s2_ingest.py project $REF $OUT/reqnroll.ndjson
+$K ingest $OUT/reqnroll.ndjson -o $OUT/calltree --no-component-diagram
+$K ingest $OUT/reqnroll.ndjson -o $OUT/chrono --chronological --no-component-diagram
+PYTHONUTF8=1 python s2_ingest.py compare $REF $OUT/calltree/TestRunReport.json
+PYTHONUTF8=1 python s2_ingest_causes.py $REF $OUT/calltree/TestRunReport.json
+```
+
+The Java report: `kronikol4j/NestedCallsTest.java` copied into `kronikol4j-http/src/test/java/check/` of a
+throwaway Kronikol4J worktree, run with `./gradlew :kronikol4j-http:test --tests check.NestedCallsTest`, which
+prints the capture order and writes `kronikol4j-http/build/kronikol-report/TestRunReport.json`; then
+`dump_records.py`, `nesting_rules.py` and `kronikol query flow` on that report.
+
+The S2 control differs on 1,210 of the 2,986 views, and `s2_acceptance.py` classes every one as a change S2 made.
