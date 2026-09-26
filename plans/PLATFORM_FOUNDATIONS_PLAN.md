@@ -373,6 +373,16 @@ An interaction sourced from an OTel span rather than a body-capturing adapter ca
 capped records today — present in the diagram, thin in the note. `NEXT_LANGUAGE_PLAN.md` §1 is the
 reason there is no attempt to do better.
 
+### 4.7 Party identity and kind (added 2026-09-26)
+
+`FLEET_EVIDENCE_PLAN.md` §4.1 asks the contract for two things no stream record carries: the canonical id
+of the service under test (`serviceId`), and a `parties` table keyed on the display names the interactions
+already use, each with an id and a kind (`test`, `underTest`, `real`, `double`, `unknown`). Both are
+sections of the options file F4 carries, not stream records (that plan's Q7 recommends so; F4 decides).
+They must be in before `captureFormatVersion 1` freezes (§8.1, roadmap 14.5): a reader that cannot tell a
+stub's answer from a dependency's, or join one report's `payments` to another's `Payments API`, is the
+class of lie a frozen contract would carry for a version. Not green-lit; roadmap D23.
+
 ---
 
 ## 5. What this plan supersedes, explicitly
