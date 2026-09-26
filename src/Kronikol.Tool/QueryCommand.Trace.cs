@@ -18,6 +18,10 @@ internal static partial class QueryCommand
             return 2;
         }
 
+        // Under --count stdout is the one token --count documents, so what is said around the rows goes to
+        // stderr, as history's notes do.
+        Action<string> note = options.Count && !options.Json ? error.WriteLine : writer.Note;
+
         var all = AllInteractions(index).ToList();
         var distinctIds = all.Select(t => t.Request.ActivityTraceId)
             .Where(id => id is { Length: > 0 })
@@ -70,7 +74,7 @@ internal static partial class QueryCommand
                 && all.FirstOrDefault(t => string.Equals(t.Request.ActivitySpanId, prefix, StringComparison.OrdinalIgnoreCase))
                     is { Request.ActivityTraceId: { Length: > 0 } spanTrace })
             {
-                writer.Note($"! {argument} is a span id, not a trace id — showing the trace that span belongs to");
+                note($"! {argument} is a span id, not a trace id — showing the trace that span belongs to");
                 candidates = [spanTrace];
             }
 
@@ -95,6 +99,21 @@ internal static partial class QueryCommand
             .Where(t => string.Equals(t.Request.ActivityTraceId, traceId, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
+        var scenarios = chain.Select(t => t.Scenario).Distinct().ToList();
+        var leak = scenarios.Count > 1
+            ? $"! spans {scenarios.Count} scenarios ({string.Join(", ", scenarios.Select(s => s.Address))}) — shared state or fixture leakage"
+            : null;
+
+        // `--count` was declared for trace and never read, so the whole trace was printed where one number
+        // was documented: the calls on the trace, the number its header states.
+        if (options.Count)
+        {
+            writer.Count(chain.Count);
+            if (leak is not null)
+                note(leak);
+            return 0;
+        }
+
         // Chronology needs every timestamp; when one is absent or unparseable the whole trace falls back
         // to file order, with a line saying so — never a silent mix of two orderings.
         var timestamps = chain.Select(t => ParseTimestamp(t.Request.Timestamp)).ToList();
@@ -104,7 +123,6 @@ internal static partial class QueryCommand
         if (!fileOrder)
             ordered = ordered.OrderBy(pair => pair.At!.Value).ToList();
 
-        var scenarios = chain.Select(t => t.Scenario).Distinct().ToList();
         writer.Line($"trace {traceId[..Math.Min(8, traceId.Length)]}… — {chain.Count} call{(chain.Count == 1 ? "" : "s")} across {scenarios.Count} scenario{(scenarios.Count == 1 ? "" : "s")}");
         if (fileOrder)
             writer.Note("! a timestamp was absent or unparseable — rows are in file order, not chronological");
@@ -121,8 +139,8 @@ internal static partial class QueryCommand
             writer.Line($"  {offset,-9} {request.Address(scenario),-9} {request.ServiceName,-12} {QueryWriter.OneLine(request.Summary(), 50),-50} {StatusOf(response).Text ?? "",-6}{span}");
         }
 
-        if (scenarios.Count > 1)
-            writer.Note($"! spans {scenarios.Count} scenarios ({string.Join(", ", scenarios.Select(s => s.Address))}) — shared state or fixture leakage");
+        if (leak is not null)
+            writer.Note(leak);
 
         writer.Footer("parent span ids are not captured — this is the chronology of the trace, not its tree");
         return 0;

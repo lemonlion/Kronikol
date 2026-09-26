@@ -53,7 +53,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--max-bytes N` | output budget, default `6000`; `0` removes it. Every verb |
 | `--offset N` | resume a truncated listing at row N. The verbs that list rows |
 | `--limit N` | cap rows. The verbs that list rows |
-| `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps` |
+| `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps`, `compare` |
 | `--out FILE` | write the answer to a file instead of the terminal; prints one line. Lifts the byte budget — a file is not a context window. `http`, `body`, `note` and `diagram` write the payload; every other verb writes what it would have printed |
 | `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `services`, `interactions`, `assertions`, `diff`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
 | `--history FILE` | the cross-run ledger `history` reads, instead of `$KRONIKOL_HISTORY` or the `.kronikol/history.jsonl` above the report. `history` only |

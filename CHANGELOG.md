@@ -4,6 +4,64 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.30.3] - 2026-09-26
+
+**Patch - `kronikol query flow` under a filter or a step address, and `--count` on three verbs
+(`plans/FLOW_NESTING_PLAN.md` S1, roadmap 1.13).** Every change is a fix, so the patch part moved. Two of them
+change what a command prints, and each is called out. Nothing new is public. Template pins move to 3.30.2.
+
+### Fixed
+
+- **A filtered `flow`, and a step address, printed the header of every step that made a call, with nothing
+  under it.** The step headers and annotations were printed as the records went by, before `--step`,
+  `--service` or `--errors-only` ran. So `flow s3 --errors-only` on a passing scenario listed each step, which
+  read as steps that made no calls, and `flow s3/4` listed steps 0 to 3 above step 4's calls. A step header or
+  an annotation is now printed only above a call that is shown, and an annotation whose call is filtered out
+  stands above the next call shown. **Behaviour change:** a filtered `flow` prints fewer lines, and a view
+  that shows no call prints only `(nothing matched the filters)`. Unfiltered, the view is unchanged: over
+  1,067 scenarios of real reports it is byte-identical to 3.30.2's, apart from the 20 that made no calls
+  (below).
+- **`flow` never printed an annotation recorded after a scenario's last call**, which `annotations` listed. Its
+  index is the record count, and the loop that printed annotations stopped at the last record. It now closes
+  the view.
+- **`flow --count` and `trace --count` printed their whole answer.** Both verbs declared the flag and never
+  read it. `flow --count` prints how many calls the view shows, and `trace --count` how many calls carry the
+  trace, with the span-id and cross-scenario lines on stderr, as `--count` is documented to.
+- **`compare --count` printed the whole comparison.** `compare` selects nothing to count, so it no longer
+  takes the flag. **Behaviour change:** `compare s3 s7 --count` is refused with exit 2, like any other flag a
+  verb does not read. The refusal also stops saying that every flag it refuses was ignored before 3.1.0.
+- **`flow` on a scenario that made no calls said `(nothing matched the filters)`**, naming filters nobody had
+  given. It says `(no tracked calls in this scenario)`, or, on a mergeable file written before 3.1.0, which
+  carries no calls at all, that the file carries none.
+- `flow` built a dictionary of responses and never read it; it is gone.
+
+### Documentation
+
+- The README's "Feeding AI tools" said to feed a diagram's raw PlantUML to an AI assistant, the one thing the
+  tool refuses to print and the skill says never to read (one diagram has measured 663 KB). It now points an
+  assistant debugging a run at `kronikol query`, and keeps the PlantUML for the architecture work described
+  after it.
+- The wiki's `Querying-Reports` says what a filtered `flow` prints and what `--count` does on `flow`, `trace`
+  and `compare`. Both copies of the skill's flag reference add `compare` to the verbs that take no `--count`.
+
+### Tests
+
+- `FlowTests` (unit, new): the view pinned whole, and pairing by id and by proximity, taken before the fixes and
+  held after them (plan §6.2); a step address, a filter that matches nothing, a step whose calls are all
+  filtered out, an annotation after the last call, an annotation whose call is filtered out and a view that
+  shows no call (plan §6.3); `--count` against the footer; the empty view of a scenario that made no calls, and
+  of an old mergeable file.
+- `CountFlagTests` (unit, new): every verb that takes `--count` prints one number and nothing else, and a fact
+  fails when a verb declares the flag without being in that list; `trace --count` and what it says on stderr;
+  `compare` refusing the flag.
+- Every new fact was red on 3.30.2, apart from the pins taken before the fixes, two pins of behaviour that did
+  not change (`compare` still compares, `trace` still warns in its answer), and the count theory's rows for
+  the verbs that already counted.
+- `plans/FLOW_NESTING_PLAN.harness/s1_acceptance.py` runs the built tool on every scenario of the five
+  BreakfastProvider lanes, unfiltered, with `--service CosmosDB` and with `--step 1`, against the plan's
+  prototype with its nesting taken out: 2,986 views, none different. On 3.30.2, 569 of the first two lanes'
+  1,228 views differed.
+
 ## [3.30.2] - 2026-09-26
 
 **Patch - an audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3, releases 3.29.6 to 3.30.1) and what it

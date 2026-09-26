@@ -2,7 +2,8 @@
 
 **Date:** 2026-09-26 · **Repo version:** 3.29.6 in the shared checkout (`6c689b5e`); origin/main is 3.30.1
 (`512bc85a`) and has changed no tool source since, so every cited source line holds at both ·
-**Status: green-lit 2026-09-26, nothing implemented.** The owner took D22 as recommended: S2 goes ahead,
+**Status: green-lit 2026-09-26. S1 executed 2026-09-26 as 3.30.3 (§7.1), with F13 and F14 found on the
+way; S2 not started.** The owner took D22 as recommended: S2 goes ahead,
 with rule R4 and Q1's `no response`. Roadmap items **1.13** (S1, a patch) and **10.0** (S2, a minor). §9 is the assumption ledger. The scripts behind every number
 are in [`FLOW_NESTING_PLAN.harness/`](FLOW_NESTING_PLAN.harness/README.md), with their output.
 
@@ -99,6 +100,9 @@ Kronikol4J module reports (66 scenarios, no calls).
 ## 2. What `flow` does today
 
 ### 2.1 The verb (READ)
+
+As written before S1, at 3.29.6; the line numbers are that version's. §7.1 says what S1 (3.30.3) changed:
+the headers, annotations, dictionary and `--count` below.
 
 [`Flow`](../src/Kronikol.Tool/QueryCommand.Narrative.cs#L467-L527) walks every record of the scenario,
 requests and responses both, in the order of `httpInteractions`, which is capture order and the order
@@ -239,6 +243,20 @@ Kronikol4J has no query tool, and it writes the fields R4 reads
 ([`ReportDataSerializer.java:293-309`](../../Kronikol4J/kronikol4j-report/src/main/java/io/kronikol/report/data/ReportDataSerializer.java)),
 but none of its reports on this machine holds a call, so R4 has not run on a Java report (§7.5).
 
+Found while executing S1 (2026-09-26), both fixed in 3.30.3:
+
+**F13. `--count` was declared and never read by three verbs.** `flow`, `trace` and `compare` listed it in
+the per-verb flag table, so the refusal of an unread flag let it through, and each printed its whole
+answer (RUN on 3.30.2: `flow s26 --count` printed 46 lines, `trace s26/i8 --count` 7, `compare s26 s27
+--count` 89). The other twelve verbs that take it print one number. `flow` and `trace` now count (the calls
+shown, the calls on the trace, caveats on stderr); `compare` selects nothing to count, so it no longer takes
+the flag and refuses it. `CountFlagTests` holds every verb that declares `--count` to one number.
+
+**F14. An unfiltered `flow` of a scenario that made no calls said `(nothing matched the filters)`,** naming
+filters nobody gave (20 of the 1,067 real scenarios in `results-s1-unfiltered.txt`). It says `(no tracked
+calls in this scenario)`, except on a mergeable file written before 3.1.0, which carries no calls by
+construction (`ReportScanner.CarriesInteractions`).
+
 ---
 
 ## 4. The design
@@ -296,7 +314,8 @@ scenario's last call, are printed at the end. A view that shows no call prints o
 
 ### 4.5 What does not change
 
-The order of lines (capture order), every address, what each filter selects, `--count`, the byte budget,
+The order of lines (capture order), every address, what each filter selects, `--count` (a number since S1,
+F13), the byte budget,
 the shape of `--describe` (only the description text), and the report. No new flag (§8.2) and no `--json`
 for `flow`.
 
@@ -445,6 +464,15 @@ prints, so a patch with the behaviour change called out. Changelog draft:
 > `flow` also printed no annotation recorded after a scenario's last call, which `annotations` listed; it
 > is printed after the last call. Patch: bug fixes, nothing new to call.
 
+**Shipped as 3.30.3 on 2026-09-26**, with F13 and F14 beside the three defects. `Flow` now settles which
+calls are shown before printing a line, which is the first of §4.6's two passes. Tests 1 to 9 of §6.2 and
+§6.3 are `FlowTests`, beside facts for F13 and F14 and `CountFlagTests`. Every new fact failed on 3.30.2
+except the three pins of §6.2, two pins of unchanged behaviour and the count theory's rows for the verbs
+that already counted. On real reports (RUN, harness `s1_acceptance.py` and `s1_unfiltered.py`): the built
+`flow` equals the prototype with its nesting taken out on all 2,986 views of the five lanes, where 3.30.2
+differs on 569 of the first two lanes' 1,228 (every difference a step header), and an unfiltered `flow` is
+byte-identical to 3.30.2's on 1,067 scenarios apart from F14's 20.
+
 ### 7.2 S2, a minor (roadmap 10.0, D22 taken 2026-09-26)
 
 §4.1 to §4.3, Q1's `no response`, `CallNesting`, the `VerbTable` description, and the docs of §7.3. New information in a verb's
@@ -558,6 +586,9 @@ D22 in the roadmap asked for the green light, R4 and Q1 together; the owner took
 | Background work of the handling service nests under the open call | INFERRED | §4.2 |
 | `--call-tree` ingest shows deliveries flat | INFERRED | Q4 |
 | The skill's Python fallback has no `flow` to mirror | READ (`query.py` implements summary, failures, steps, services, grep, http) | none |
+| S1 matches the prototype's placement on every view of the five lanes, and the check discriminates (3.30.2 differs on 569 views) | RUN, 3.30.3 and 3.30.2 | `results-s1-acceptance*.txt` |
+| S1 leaves an unfiltered `flow` byte-identical but for F14 | RUN, 1,067 scenarios | `results-s1-unfiltered.txt` |
+| `flow`, `trace` and `compare` ignored `--count` on 3.30.2; the other twelve verbs honoured it | RUN | F13, `CountFlagTests` |
 
 ## Appendix A. Re-taking the numbers
 

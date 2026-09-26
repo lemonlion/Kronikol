@@ -1,0 +1,63 @@
+# s1_unfiltered.py on 2026-09-26: unfiltered flow of every scenario, 3.30.2 (tag v3.30.2) against 3.30.3 (S1), byte for byte.
+# Reports: BreakfastProvider's five lanes and the fifteen in-repo examples/Example.Api reports.
+DIFFERS Example.Api.Tests.Component.LightBDD.xUnit3 s3
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.LightBDD.xUnit3 s4
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.LightBDD.xUnit3 s5
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.ReqNRoll.xUnit3 s4
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.ReqNRoll.xUnit3 s5
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.ReqNRoll.xUnit3 s6
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.ReqNRoll.xUnit3 s7
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s2
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s3
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s4
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s5
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s6
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s7
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s8
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s9
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s10
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.TUnit s11
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.xUnit3 s0
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.xUnit3 s1
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+DIFFERS Example.Api.Tests.Component.xUnit3 s2
+    old:   (nothing matched the filters)
+    new:   (no tracked calls in this scenario)
+total: 1067 scenarios, 20 differ

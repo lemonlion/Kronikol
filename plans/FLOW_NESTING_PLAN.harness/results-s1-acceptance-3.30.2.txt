@@ -1,0 +1,34 @@
+# s1_acceptance.py on 2026-09-26. Tool: 3.30.2 (tag v3.30.2), the control: the defect makes filtered views differ.
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s0 --service CosmosDB
+    real:  ── 0  Given a valid apple cinnamon muffin recipe with all ingredients
+    proto: ── 1  When the muffins are prepared
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s0 --step 1
+    real:  ── 0  Given a valid apple cinnamon muffin recipe with all ingredients
+    proto: ── 1  When the muffins are prepared
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s1 --service CosmosDB
+    real:  ── 0  Given a muffin recipe "Classic" with the following ingredients:
+    proto: ── 3  When the muffins are prepared
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s1 --step 1
+    real:  ── 0  Given a muffin recipe "Classic" with the following ingredients:
+    proto:   (nothing matched the filters)
+DIFFERS BreakfastProvider.Tests.Component.ReqNRoll s2 --service CosmosDB
+    real:  ── 0  Given a muffin recipe "Rustic Wholesome" with the following ingredients:
+    proto: ── 3  When the muffins are prepared
+BreakfastProvider.Tests.Component.ReqNRoll: 617 views, 285 differ
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s0 --service CosmosDB
+    real:  ── 0  Given all ingredients are retrieved for the muffin recipe
+    proto: ── 1  When the muffins are prepared
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s0 --step 1
+    real:  ── 0  Given all ingredients are retrieved for the muffin recipe
+    proto: ── 1  When the muffins are prepared
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s1 --service CosmosDB
+    real:  ── 0  Given all ingredients are retrieved for the muffin recipe
+    proto: ── 1  When the muffins are prepared
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s1 --step 1
+    real:  ── 0  Given all ingredients are retrieved for the muffin recipe
+    proto: ── 1  When the muffins are prepared
+DIFFERS BreakfastProvider.Tests.Component.BDDfy s2 --service CosmosDB
+    real:  ── 0  Given all ingredients are retrieved for the muffin recipe
+    proto: ── 1  When the muffins are prepared
+BreakfastProvider.Tests.Component.BDDfy: 611 views, 284 differ
+total: 1228 views, 569 differ

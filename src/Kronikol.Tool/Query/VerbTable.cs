@@ -241,7 +241,7 @@ internal static class VerbTable
         new("compare", "Search and comparison",
             "Two scenarios of one run side by side: steps, calls, and the first body that differs.",
             ["<report> s3 s7"],
-            ["--count"], Json: false,
+            [], Json: false,
             ["  compare      <report> s3 s7                  two scenarios in one run"]),
 
         new("diff", "Search and comparison",

@@ -1,0 +1,7 @@
+# s1_acceptance.py on 2026-09-26. Tool: 3.30.3 as built from the flow/s1 branch (S1).
+BreakfastProvider.Tests.Component.ReqNRoll: 617 views, 0 differ
+BreakfastProvider.Tests.Component.BDDfy: 611 views, 0 differ
+BreakfastProvider.Tests.Component.LightBDD: 536 views, 0 differ
+BreakfastProvider.Tests.Component.NUnit: 611 views, 0 differ
+BreakfastProvider.Tests.Component.TUnit: 611 views, 0 differ
+total: 2986 views, 0 differ

@@ -297,7 +297,7 @@ internal static partial class QueryCommand
                 || UniversalFlags.Contains(flag, StringComparer.Ordinal))
                 continue;
 
-            error.WriteLine($"{command} does not read {flag} — it was accepted and ignored before 3.1.0, which made an unfiltered answer look like a filtered one.");
+            error.WriteLine($"{command} does not read {flag}, so it is refused rather than ignored: an ignored flag makes an answer look filtered, sorted or counted when it is not.");
 
             var elsewhere = Verbs.Where(v => FlagsByVerb[v].Contains(flag, StringComparer.Ordinal)).ToArray();
             if (elsewhere.Length > 0)

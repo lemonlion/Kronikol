@@ -119,7 +119,7 @@ The generated HTML reports and YAML specifications serve as an always-up-to-date
 
 ### Feeding AI tools for more accurate analysis
 
-The raw PlantUML code behind each diagram is a compact, structured representation of your service's interactions — HTTP calls, database queries, cache operations, events, and more. You can feed it directly into AI coding assistants, chat interfaces, or documentation generators to give them precise context about how services communicate. This produces significantly better results than asking an AI to infer behaviour from source code alone, because the diagrams capture the actual runtime flow including payloads, status codes, and service names.
+A report holds what actually ran: every HTTP call, database query, cache operation and event, with its payloads, status codes and service names, under the step that made it. That is better context for an AI assistant than asking it to infer behaviour from source code. When the assistant is debugging a run, point it at `kronikol query` rather than at the report or a diagram's PlantUML source: one diagram has measured 663 KB, more than most context windows, while `kronikol query flow ./Reports s3` prints a scenario's calls in order in a kilobyte or two, and `kronikol query failures ./Reports` gives each failure with the calls made inside the failing step (see [Debugging a run](#debugging-a-run) below). The PlantUML source remains a good input for the architecture work in the next section.
 
 ### Creating accurate high-level architecture diagrams
 
@@ -172,7 +172,7 @@ kronikol export ./captures --otlp http://localhost:4318/v1/traces
 
 Captured W3C trace ids are preserved, and pairs without one group into one trace per test. See [Exporting to OpenTelemetry](https://github.com/lemonlion/Kronikol/wiki/Exporting-to-OpenTelemetry).
 
-### Debugging a run — including with an AI agent
+### <a name="debugging-a-run"></a>Debugging a run — including with an AI agent
 
 `TestRunReport.json` holds everything about a run. On real suites that has measured 10.7 MB on one and 82.7 MB on another, with single embedded diagrams past 600 KB. Even the smaller file is roughly 2.7 million tokens: an agent asked to debug a failing test spends its entire context reading the file and never gets to the question. `kronikol query` answers questions about the report without loading it, from run summaries through aggregation, structural diffs and trace following:
 

@@ -472,25 +472,48 @@ internal static partial class QueryCommand
         // `flow s0/1` and `flow s0 --step 1` are the same question, and both cover the step's sub-steps.
         options.ScopeToStep(addressedStep);
 
+        // Which calls are shown is settled before a line is printed. The step headers and annotations were
+        // printed as the records went by, before any filter ran, so a filtered view headed every step that
+        // made a call, with nothing under it, and a step address listed every step before its own.
+        var shown = new List<(InteractionEntry Request, InteractionEntry? Response)>();
+        foreach (var interaction in scenario.Interactions)
+        {
+            if (!interaction.Type.Equals("Request", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (options.Step is { } wanted && !Address.PathCoveredBy(interaction.StepPath, wanted))
+                continue;
+            if (options.Service is { } service && !interaction.ServiceName.Contains(service, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var response = FindResponse(scenario, interaction);
+            if (options.ErrorsOnly && !IsError(response?.StatusCode, response?.StatusText))
+                continue;
+
+            shown.Add((interaction, response));
+        }
+
+        if (options.Count)
+        {
+            writer.Count(shown.Count);
+            return 0;
+        }
+
         writer.Line($"{scenario.Address}  {QueryWriter.OneLine(scenario.Name, 90)}  [{scenario.Result}]");
         writer.Line();
 
-        var responses = scenario.Interactions
-            .Where(i => i.Type.Equals("Response", StringComparison.OrdinalIgnoreCase))
-            .GroupBy(i => i.Ordinal)
-            .ToDictionary(g => g.Key, g => g.First());
-
-        var annotationsByIndex = scenario.Annotations.ToLookup(a => a.Index);
+        // An annotation's index is the number of records before it, so it stands above the first shown call
+        // recorded after it, ahead of that call's step header. One whose call a filter dropped moves down to
+        // the next call shown, and one recorded after the last shown call - the scenario's last included,
+        // whose index is the record count - closes the view.
+        var annotations = scenario.Annotations.OrderBy(a => a.Index).ToList();
+        var nextAnnotation = 0;
         var stepsByPath = scenario.AllSteps().ToDictionary(s => s.Path, s => s.Step);
         string? currentStep = null;
-        var shown = 0;
 
-        for (var i = 0; i < scenario.Interactions.Count; i++)
+        foreach (var (interaction, response) in shown)
         {
-            var interaction = scenario.Interactions[i];
-
-            foreach (var annotation in annotationsByIndex[i])
-                writer.Line($"  ── {annotation.Text}");
+            for (; nextAnnotation < annotations.Count && annotations[nextAnnotation].Index <= interaction.Ordinal; nextAnnotation++)
+                writer.Line($"  ── {annotations[nextAnnotation].Text}");
 
             if (interaction.StepPath != currentStep)
             {
@@ -499,30 +522,32 @@ internal static partial class QueryCommand
                     writer.Line($"── {currentStep}  {QueryWriter.OneLine(step.Display, 90)}");
             }
 
-            if (!interaction.Type.Equals("Request", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            if (options.Step is { } wanted && !Address.PathCoveredBy(interaction.StepPath, wanted))
-                continue;
-            if (options.Service is { } service && !interaction.ServiceName.Contains(service, StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            var response = FindResponse(scenario, interaction);
             var status = StatusOf(response).Text ?? "";
-            if (options.ErrorsOnly && !IsError(response?.StatusCode, response?.StatusText))
-                continue;
-
             var payload = interaction.BodyHash is { } hash ? $"  {hash} {QueryWriter.Size(interaction.BodyLength)}" : "";
             var timing = interaction.DurationMs ?? response?.DurationMs;
             writer.Line($"  {interaction.Address(scenario),-9} {QueryWriter.OneLine(interaction.CallerName, 40)} → {QueryWriter.OneLine(interaction.ServiceName, 40)}  "
                         + $"{QueryWriter.OneLine(interaction.Summary(), 60)}  {status}  {QueryWriter.Duration(timing)}{payload}");
-            shown++;
         }
 
-        if (shown == 0)
+        if (shown.Count > 0)
+        {
+            for (; nextAnnotation < annotations.Count; nextAnnotation++)
+                writer.Line($"  ── {annotations[nextAnnotation].Text}");
+        }
+        else if (scenario.Interactions.Any(i => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase)))
+        {
             writer.Line("  (nothing matched the filters)");
+        }
+        else
+        {
+            // Blaming a filter for a scenario that had nothing to filter names a cause that is not there, and
+            // a file of the format that could not carry calls says nothing about what the run made.
+            writer.Line(ReportScanner.CarriesInteractions(index)
+                ? "  (no tracked calls in this scenario)"
+                : "  (no calls: a mergeable file written before 3.1.0 carries none)");
+        }
 
-        writer.Footer($"{shown} calls shown · http {scenario.Address}/iN --keys for a payload");
+        writer.Footer($"{shown.Count} calls shown · http {scenario.Address}/iN --keys for a payload");
         return 0;
     }
 

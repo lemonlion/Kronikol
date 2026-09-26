@@ -13,6 +13,8 @@ and prints counts, addresses and `flow` lines; none prints a body or a header.
 | `flow_bytes.py` | What nesting costs over whole reports: bytes before and after, indented lines, deepest level, `inside` references in unfiltered views | `results-bytes.txt` |
 | (shell loop below) | That `--mode flat` is today's `flow`: diffed against the real tool, trailing whitespace ignored | `results-fidelity.txt` |
 | `trailing-annotation-probe.json` | A two-record report with an annotation after its last call (plan F7) | in `results-examples.txt` |
+| `s1_acceptance.py` | S1's acceptance (plan §7.1): the built `flow` on every scenario of the five lanes, unfiltered, with `--service CosmosDB` and `--step 1`, against `--mode nested` with the nesting taken out | `results-s1-acceptance.txt` (3.30.3), `results-s1-acceptance-3.30.2.txt` (the control) |
+| `s1_unfiltered.py` | That S1 leaves an unfiltered `flow` as it was: every scenario, 3.30.2 against 3.30.3, byte for byte | `results-s1-unfiltered.txt` |
 
 ## The corpus
 
@@ -54,3 +56,15 @@ done; done
 (fixed in 3.29.6); that is the tool's old defect, not the prototype's.
 
 Once S2 is built, run the same corpus through the real `flow` rather than the prototype (plan §7.5).
+
+S1, 3.30.3 (K = the built tool, OLD = one built from the tag `v3.30.2`):
+
+```bash
+PYTHONUTF8=1 python s1_acceptance.py $K   $B.{ReqNRoll,BDDfy,LightBDD,NUnit,TUnit}/bin/Debug/net10.0/Reports/TestRunReport.json > results-s1-acceptance.txt
+PYTHONUTF8=1 python s1_acceptance.py $OLD $B.{ReqNRoll,BDDfy}/bin/Debug/net10.0/Reports/TestRunReport.json > results-s1-acceptance-3.30.2.txt
+EX=$(find "$PWD/../../examples" -name TestRunReport.json -not -path "*/runs/*" -not -path "*/baseline/*")
+PYTHONUTF8=1 python s1_unfiltered.py $OLD $K $B.{ReqNRoll,BDDfy,LightBDD,NUnit,TUnit}/bin/Debug/net10.0/Reports/TestRunReport.json $EX > results-s1-unfiltered.txt
+```
+
+The control run is what makes the acceptance mean something: on 3.30.2, 569 of 1,228 views differ, every one
+a step header with nothing under it.
