@@ -1,0 +1,54 @@
+@startuml
+left to right direction
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+skinparam shadowing false
+skinparam rectangle<<person>> {
+  BackgroundColor #08427B
+  FontColor #FFFFFF
+  BorderColor #073B6F
+  RoundCorner 25
+  StereotypeFontColor #08427B
+  StereotypeFontSize 0
+}
+skinparam rectangle<<system>> {
+  BackgroundColor #438DD5
+  FontColor #FFFFFF
+  BorderColor #3C7FC0
+  RoundCorner 25
+  StereotypeFontColor #438DD5
+  StereotypeFontSize 0
+}
+skinparam database {
+  BackgroundColor #E74C3C
+  FontColor #FFFFFF
+  BorderColor #C0392B
+}
+skinparam collections {
+  BackgroundColor #F39C12
+  FontColor #FFFFFF
+  BorderColor #D68910
+}
+skinparam queue {
+  BackgroundColor #9B59B6
+  FontColor #FFFFFF
+  BorderColor #7D3C98
+}
+skinparam arrow {
+  Color #666666
+  FontColor #666666
+  FontSize 11
+}
+
+title Component Diagram
+
+rectangle "**Caller**\n<size:10>[Person]</size>" as caller <<person>>
+rectangle "**Orders API**\n<size:10>[Software System]</size>" as ordersAPI <<system>>
+database "Orders DB" as ordersDB
+queue "Events" as events
+
+caller -[#438DD5]-> ordersAPI : "[[#iflow-rel-Caller-Orders_API HTTP: GET, POST]]\nP50: 12ms | P95: 30ms | P99: 45ms\n3 calls across 2 tests"
+ordersAPI -[#E74C3C]-> ordersDB : "[[#iflow-rel-Orders_API-Orders_DB SQL: SELECT]]\nP50: 12ms | P95: 30ms | P99: 45ms\n3 calls across 2 tests"
+ordersAPI -[#9B59B6]-> events : "[[#iflow-rel-Orders_API-Events ServiceBus: Send]]\nP50: 12ms | P95: 30ms | P99: 45ms\n3 calls across 2 tests"
+
+@enduml

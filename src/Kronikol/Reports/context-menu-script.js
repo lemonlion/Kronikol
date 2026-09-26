@@ -225,7 +225,7 @@
     // Source-derived lines carry the generation-side creole escapes (~/ for /, etc.) which PlantUML
     // consumes before display, and the breaks the width budget inserted, which it marks. Both have to
     // come off, and the ORDER is not free: rejoin first, while the escaping is intact. Unescaping
-    // first would turn a payload's own `~<U+200B>` into a bare marker and a real newline would be
+    // first would turn a payload's own escaped `<U+200B>` text into a bare marker and a real newline would be
     // eaten. Every copy, open-in-new-tab and payload-extract path goes through here.
     // A creole escape (`~` and what it protects) or a code point (<U+hhhh>, 3.30.1: the generator writes
     // captured text PlantUML would act on that way), read in one pass: `~<U+0027>` is an escaped `<` and then

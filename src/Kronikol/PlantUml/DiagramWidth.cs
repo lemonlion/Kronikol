@@ -142,12 +142,14 @@ internal static class DiagramWidth
     /// and the two must agree, so keep the rules here and there in step: longest marker first, an
     /// escaped marker (<c>~</c> in front) is the payload's own text and is never a break, and CRLF is
     /// normalised so a line split on <c>\n</c> is not left with a <c>\r</c> between its text and the
-    /// marker.
+    /// marker. A payload's own <c>&lt;U+200B&gt;</c> is written <c>&lt;U+003C&gt;&lt;U+200B&gt;U+200B&gt;</c> since
+    /// DIAGRAM_COLOURS_PLAN §12.5 (<c>~&lt;U+200B&gt;</c> before, still read here), and the width bound never ends a
+    /// line in an escape's zero-width space, so a marker at a line's end is Kronikol's own.
     /// </para>
     /// <para>
     /// Run this <b>before</b> reversing the creole escaping, never after: unescaping turns a payload's
-    /// <c>~&lt;U+200B&gt;</c> into a bare marker and the distinction this whole mechanism rests on is
-    /// gone.
+    /// escaped <c>&lt;U+200B&gt;</c> text into a bare marker and the distinction this whole mechanism rests on
+    /// is gone.
     /// </para>
     /// </summary>
     internal static string RejoinMarkedLines(string text)

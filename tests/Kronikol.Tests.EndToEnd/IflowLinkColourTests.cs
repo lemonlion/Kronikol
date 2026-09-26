@@ -1,3 +1,4 @@
+using Kronikol.ComponentDiagram;
 using Kronikol.InternalFlow;
 
 namespace Kronikol.Tests.EndToEnd;
@@ -141,14 +142,21 @@ public class IflowLinkColourTests : PlaywrightTestBase
     }
 
     [Fact]
-    public async Task A_component_diagrams_link_rests_black_lights_up_blue_and_opens_its_popup()
+    public async Task A_component_diagrams_links_rest_in_their_labels_ink_light_up_blue_and_open_their_popups()
     {
-        // The component diagram's relationship labels take the same binding (DIAGRAM_COLOURS_PLAN F12). The label is
-        // the one ComponentDiagramGenerator writes: the link, then the stats lines under it.
-        const string source = "@startuml\nrectangle \"API\" as API\ndatabase \"DB\" as DB\n"
-            + "API --> DB : [[#iflow-rel-API-DB HTTP: GET, POST]]\\nP50: 12ms | P95: 30ms | P99: 45ms\\n3 calls across 2 tests\n@enduml";
+        // The component diagram's relationship labels take the same binding (DIAGRAM_COLOURS_PLAN F12). The source is the
+        // generator's own, with the plain palette the JS engines draw: its component names are white, and a link resting
+        // in the ink of the text before it rested the first edge's link white on white (§12.5). The hand-written source
+        // this fact used before had no palette, so it passed either way.
+        ComponentRelationship Rel(string caller, string service, string protocol, string method) =>
+            new(caller, service, protocol, [method], 3, 2, protocol);
+        var rels = new[] { Rel("Caller", "Orders API", "HTTP", "GET"), Rel("Orders API", "Orders DB", "SQL", "SELECT"), Rel("Orders API", "Events", "ServiceBus", "Send") };
+        string Key(ComponentRelationship r) => $"iflow-rel-{r.Caller.Replace(" ", "_")}-{r.Service.Replace(" ", "_")}";
+        var stats = rels.ToDictionary(Key, _ => new RelationshipStats(3, 2, 10, 12, 30, 45, 1, 50, 0, [], [], null, null, false, 0.1, [], null, 5));
+        var source = ComponentDiagramGenerator.GeneratePlantUml(rels, new ComponentDiagramOptions(), stats, useC4: false);
+        var segments = string.Join(", ", rels.Select(r => $"'{Key(r)}': {{ title: '{r.Service}', content: '<p>flow</p>' }}"));
         var scripts = Kronikol.Reports.DiagramContextMenu.GetInternalFlowConfigScript(InternalFlowHasDataBehavior.ShowLinkOnHover)
-            + "<script>window.__iflowSegments = { 'iflow-rel-API-DB': { title: 'API to DB', content: '<p>flow</p>' } };</script>"
+            + "<script>window.__iflowSegments = { " + segments + " };</script>"
             + $"<style>{Kronikol.Reports.DiagramContextMenu.GetInternalFlowPopupStyles()}</style>"
             + Kronikol.Reports.DiagramContextMenu.GetInternalFlowPopupScript();
         await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(scripts, ("d1", source))));
@@ -156,8 +164,9 @@ public class IflowLinkColourTests : PlaywrightTestBase
         await Page.WaitForFunctionAsync("() => { const el = document.getElementById('d1'); return el && el.dataset.rendered === '1' && el.querySelector('svg'); }",
             null, new() { Timeout = 60_000, PollingInterval = 200 });
 
-        Assert.All(await PaintsOf("GET"), p => Assert.Equal("#000000|", p));
-        Assert.All(await PaintsOf("P50"), p => Assert.Equal("#000000|", p));
+        // Each link rests in the ink of its own label's stats lines, the arrow ink the generator's palette sets.
+        foreach (var word in new[] { "GET", "SELECT", "Send", "P50" })
+            Assert.All(await PaintsOf(word), p => Assert.Equal("#666666|", p));
 
         await Page.EvaluateAsync("() => Array.from(document.querySelectorAll('#d1 svg text')).find(t => t.textContent.includes('GET')).dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))");
         Assert.All(await PaintsOf("GET"), p => Assert.Equal("#0000FF|underline", p));

@@ -1,0 +1,126 @@
+engine v1.2026.8beta1-0e4f452; 13605 cases in 808090 ms; 10761 drawn as captured, 2844 not
+(cell rows removed: this run read a cell from the header row; fuzz-pin-cells.txt has the cells, read right)
+
+body      d19_11-start "|_x"                        -> "BEFORE\n|_x\nAFTER"               => PAINTS "x"
+body      d20_25-start "\\<x"                       -> "BEFORE\n\\~<x\nAFTER"             => PAINTS "~<x"
+body      d20_25-mid   "a\\<c"                      -> "BEFORE\na\\~<c\nAFTER"            => PAINTS "a~<c"
+body      cp1          "<U+0041>"                   -> "BEFORE\n~<U+0041>\nAFTER"         => PAINTS "A"
+body      cp2          "x<U+0041>y"                 -> "BEFORE\nx~<U+0041>y\nAFTER"       => PAINTS "xAy"
+body      cp3          "<U+1F600>"                  -> "BEFORE\n~<U+1F600>\nAFTER"        => PAINTS "😀"
+body      cp8          "<U+D800>"                   -> "BEFORE\n~<U+D800>\nAFTER"         => PAINTS "\ud800"
+body      cp9          "<U+003C>b>"                 -> "BEFORE\n~<U+003C>b>\nAFTER"       => PAINTS "<b>"
+body      cp10         "<U+007E>"                   -> "BEFORE\n~<U+007E>\nAFTER"         => PAINTS "~"
+body      cp11         "<U+200B>"                   -> "BEFORE\n~<U+200B>\nAFTER"         => PAINTS "​"
+body      cp12         "R says <U+00E9>t<U+00E9>"   -> "BEFORE\nR says ~<U+00E9>t~<U+00E9>\nAFTER" => PAINTS "R   says   été"
+body      cp15         "<U+00041>"                  -> "BEFORE\n~<U+00041>\nAFTER"        => PAINTS "A"
+body      cp18         "<U+0000>"                   -> "BEFORE\n~<U+0000>\nAFTER"         => PAINTS "\u0000"
+body      cp19         "<U+000A>"                   -> "BEFORE\n~<U+000A>\nAFTER"         => PAINTS "\n"
+body      cp20         "<U+0022><U+0022>x<U+0022><U+0022>" -> "BEFORE\n~<U+0022>~<U+0022>x~<U+0022>~<U+0022>\nAFTER" => PAINTS "\"\"x\"\""
+body      bs1          "\\t"                        -> "BEFORE\n\\t\nAFTER"               => PAINTS ""
+body      bs5          "\\\\t"                      -> "BEFORE\n\\\\t\nAFTER"             => PAINTS "\\"
+body      bs6          "\\\\\\t"                    -> "BEFORE\n\\\\\\t\nAFTER"           => PAINTS "\\\\"
+body      bs7          "C:\\temp\\new"              -> "BEFORE\nC:\\temp\\new\nAFTER"     => PAINTS "C: emp\\new"
+body      bs8          "C:\\\\temp\\\\new"          -> "BEFORE\nC:\\\\temp\\\\new\nAFTER" => PAINTS "C:\\ emp\\\\new"
+body      bs24         "{\"msg\": \"line1\\nline2\\tend\"}" -> "BEFORE\n{\"msg\": \"line1\\nline2\\tend\"}\nAFTER" => PAINTS "{\"msg\":   \"line1\\nline2 end\"}"
+body      bs25         "\"path\": \"C:\\\\temp\\\\x.txt\"" -> "BEFORE\n\"path\": \"C:\\\\temp\\\\x.txt\"\nAFTER" => PAINTS "\"path\":   \"C:\\ emp\\\\x.txt\""
+body      bs28         "a\\tb\\tc"                  -> "BEFORE\na\\tb\\tc\nAFTER"         => PAINTS "a b c"
+body      bs29         "\\t\\t"                     -> "BEFORE\n\\t\\t\nAFTER"            => PAINTS ""
+body      bs30         "<\\t>"                      -> "BEFORE\n<\\t>\nAFTER"             => PAINTS "< >"
+body      bs31         "~\\t"                       -> "BEFORE\n<U+007E>\\t\nAFTER"       => PAINTS "~"
+body      bs33         "\\<b>"                      -> "BEFORE\n\\~<b>\nAFTER"            => PAINTS "~<b>"
+body      bs35         "\\[[x]]"                    -> "BEFORE\n\\~[~[x]]\nAFTER"         => PAINTS "~[[x]]"
+body      bs38         "tab\\there"                 -> "BEFORE\ntab\\there\nAFTER"        => PAINTS "tab here"
+body      cr32         "<U+0041>**b**"              -> "BEFORE\n~<U+0041>~*~*b~*~*\nAFTER" => PAINTS "A**b**"
+label     s20-pair     "\\\\x\\\\"                  -> "BEFORE \\\\x\\\\ AFTER"           => PAINTS "  \\x\\  "
+label     s20-pairmid  "a\\\\b\\\\c"                -> "BEFORE a\\\\b\\\\c AFTER"         => PAINTS "  a\\b\\c  "
+label     s20-triple   "\\\\\\"                     -> "BEFORE \\\\\\ AFTER"              => PAINTS "  \\\\  "
+label     s20-quad     "\\\\\\\\"                   -> "BEFORE \\\\\\\\ AFTER"            => PAINTS "  \\\\  "
+label     d20_20-start "\\\\x"                      -> "BEFORE \\\\x AFTER"               => PAINTS "  \\x  "
+label     d20_20-mid   "a\\\\c"                     -> "BEFORE a\\\\c AFTER"              => PAINTS "  a\\c  "
+label     cp1          "<U+0041>"                   -> "BEFORE <U+003C>U+0041> AFTER"     => PAINTS "  A  "
+label     cp2          "x<U+0041>y"                 -> "BEFORE x<U+003C>U+0041>y AFTER"   => PAINTS "  xAy  "
+label     cp3          "<U+1F600>"                  -> "BEFORE <U+003C>U+1F600> AFTER"    => PAINTS "  😀  "
+label     cp8          "<U+D800>"                   -> "BEFORE <U+003C>U+D800> AFTER"     => PAINTS "  \ud800  "
+label     cp9          "<U+003C>b>"                 -> "BEFORE <U+003C>U+003C>b> AFTER"   => PAINTS "  <b>  "
+label     cp10         "<U+007E>"                   -> "BEFORE <U+003C>U+007E> AFTER"     => PAINTS "  ~  "
+label     cp11         "<U+200B>"                   -> "BEFORE <U+003C>U+200B> AFTER"     => PAINTS "  ​  "
+label     cp12         "R says <U+00E9>t<U+00E9>"   -> "BEFORE R says <U+003C>U+00E9>t<U+003C>U+00E9> AFTER" => PAINTS "  R   says   été  "
+label     cp15         "<U+00041>"                  -> "BEFORE <U+003C>U+00041> AFTER"    => PAINTS "  A  "
+label     cp18         "<U+0000>"                   -> "BEFORE <U+003C>U+0000> AFTER"     => PAINTS "  \u0000  "
+label     cp19         "<U+000A>"                   -> "BEFORE <U+003C>U+000A> AFTER"     => PAINTS "  \n  "
+label     cp20         "<U+0022><U+0022>x<U+0022><U+0022>" -> "BEFORE <U+003C>U+0022><U+003C>U+0022>x<U+003C>U+0022><U+003C>U+0022> AFTER" => PAINTS "  \"\"x\"\"  "
+label     bs1          "\\t"                        -> "BEFORE \\t AFTER"                 => PAINTS "   "
+label     bs2          "\\n"                        -> "BEFORE \\n AFTER"                 => CUT Caller Orders API / BEFORE / 1 /   AFTER / 2 200 / Caller Orders API
+label     bs3          "\\r"                        -> "BEFORE \\r AFTER"                 => CUT Caller Orders API / BEFORE / 1 /   AFTER / 2 200 / Caller Orders API
+label     bs4          "\\\\"                       -> "BEFORE \\\\ AFTER"                => PAINTS "  \\  "
+label     bs5          "\\\\t"                      -> "BEFORE \\\\t AFTER"               => PAINTS "   "
+label     bs6          "\\\\\\t"                    -> "BEFORE \\\\\\t AFTER"             => PAINTS "  \\  "
+label     bs7          "C:\\temp\\new"              -> "BEFORE C:\\temp\\new AFTER"       => CUT Caller Orders API / BEFORE   C: emp / 1 / ew   AFTER / 2 200 / Caller Orders API
+label     bs8          "C:\\\\temp\\\\new"          -> "BEFORE C:\\\\temp\\\\new AFTER"   => PAINTS "  C: emp\\new  "
+label     bs20         "\\l"                        -> "BEFORE \\l AFTER"                 => CUT Caller Orders API / BEFORE / 1 /   AFTER / 2 200 / Caller Orders API
+label     bs22         "a\\\\"                      -> "BEFORE a\\\\ AFTER"               => PAINTS "  a\\  "
+label     bs23         "a\\\\\\"                    -> "BEFORE a\\\\\\ AFTER"             => PAINTS "  a\\\\  "
+label     bs24         "{\"msg\": \"line1\\nline2\\tend\"}" -> "BEFORE {\"msg\": \"line1\\nline2\\tend\"} AFTER" => CUT Caller Orders API / BEFORE   {"msg":   "line1 / 1 / line2 end"}   AFTER / 2 200 / Caller Orders API
+label     bs25         "\"path\": \"C:\\\\temp\\\\x.txt\"" -> "BEFORE \"path\": \"C:\\\\temp\\\\x.txt\" AFTER" => PAINTS "  \"path\":   \"C: emp\\x.txt\"  "
+label     bs28         "a\\tb\\tc"                  -> "BEFORE a\\tb\\tc AFTER"           => PAINTS "  a b c  "
+label     bs29         "\\t\\t"                     -> "BEFORE \\t\\t AFTER"              => PAINTS "   "
+label     bs30         "<\\t>"                      -> "BEFORE <U+003C>\\t> AFTER"        => PAINTS "  < >  "
+label     bs31         "~\\t"                       -> "BEFORE <U+007E>\\t AFTER"         => PAINTS "  ~  "
+label     bs36         "\\\\n"                      -> "BEFORE \\\\n AFTER"               => PAINTS "  \\n  "
+label     bs37         "\\n\\n"                     -> "BEFORE \\n\\n AFTER"              => CUT Caller Orders API / BEFORE / 1   /   AFTER / 2 200 / Caller Orders API
+label     bs38         "tab\\there"                 -> "BEFORE tab\\there AFTER"          => PAINTS "  tab here  "
+label     cr32         "<U+0041>**b**"              -> "BEFORE <U+003C>U+0041><U+002A>*b<U+002A>* AFTER" => PAINTS "  A**b**  "
+label     rw87         "{\"re\": \"^\\\\d+$\"}"     -> "BEFORE {\"re\": \"^\\\\d+$\"} AFTER" => PAINTS "  {\"re\":   \"^\\d+$\"}  "
+label     cc85         "ab"                        -> "BEFORE ab AFTER"                 => BROKEN Caller -[#438DD5]> OrdersAPI: BEFORE ab AFTER |  Syntax Error? (Assumed diagram type: sequence)
+label     cc2028       "a b"                        -> "BEFORE a b AFTER"                 => BROKEN Caller -[#438DD5]> OrdersAPI: BEFORE a b AFTER |  Syntax Error? (Assumed diagram type: sequence)
+label     cc2029       "a b"                        -> "BEFORE a b AFTER"                 => BROKEN Caller -[#438DD5]> OrdersAPI: BEFORE a b AFTER |  Syntax Error? (Assumed diagram type: sequence)
+label     ccr          "a\rb"                       -> "BEFORE a\rb AFTER"                => BROKEN Caller -[#438DD5]> OrdersAPI: BEFORE ab AFTER |  Syntax Error? (Assumed diagram type: sequence)
+labellink cp1          "<U+0041>"                   -> "BEFORE <U+003C>U+0041> AFTER"     => PAINTS "  A  "
+labellink cp2          "x<U+0041>y"                 -> "BEFORE x<U+003C>U+0041>y AFTER"   => PAINTS "  xAy  "
+labellink cp3          "<U+1F600>"                  -> "BEFORE <U+003C>U+1F600> AFTER"    => PAINTS "  😀  "
+labellink cp8          "<U+D800>"                   -> "BEFORE <U+003C>U+D800> AFTER"     => PAINTS "  \ud800  "
+labellink cp9          "<U+003C>b>"                 -> "BEFORE <U+003C>U+003C>b> AFTER"   => PAINTS "  <b>  "
+labellink cp10         "<U+007E>"                   -> "BEFORE <U+003C>U+007E> AFTER"     => PAINTS "  ~  "
+labellink cp11         "<U+200B>"                   -> "BEFORE <U+003C>U+200B> AFTER"     => PAINTS "  ​  "
+labellink cp12         "R says <U+00E9>t<U+00E9>"   -> "BEFORE R says <U+003C>U+00E9>t<U+003C>U+00E9> AFTER" => PAINTS "  R   says   été  "
+labellink cp15         "<U+00041>"                  -> "BEFORE <U+003C>U+00041> AFTER"    => PAINTS "  A  "
+labellink cp18         "<U+0000>"                   -> "BEFORE <U+003C>U+0000> AFTER"     => PAINTS "  \u0000  "
+labellink cp19         "<U+000A>"                   -> "BEFORE <U+003C>U+000A> AFTER"     => PAINTS "  \n  "
+labellink cp20         "<U+0022><U+0022>x<U+0022><U+0022>" -> "BEFORE <U+003C>U+0022><U+003C>U+0022>x<U+003C>U+0022><U+003C>U+0022> AFTER" => PAINTS "  \"\"x\"\"  "
+labellink bs1          "\\t"                        -> "BEFORE \\t AFTER"                 => PAINTS "   "
+labellink bs2          "\\n"                        -> "BEFORE \\n AFTER"                 => CUT Caller Orders API / BEFORE  / 1 /  AFTER / 2 200 / Caller Orders API
+labellink bs3          "\\r"                        -> "BEFORE \\r AFTER"                 => CUT Caller Orders API / BEFORE  / 1 /  AFTER / 2 200 / Caller Orders API
+labellink bs5          "\\\\t"                      -> "BEFORE \\\\t AFTER"               => PAINTS "  \\  "
+labellink bs6          "\\\\\\t"                    -> "BEFORE \\\\\\t AFTER"             => PAINTS "  \\\\  "
+labellink bs7          "C:\\temp\\new"              -> "BEFORE C:\\temp\\new AFTER"       => CUT Caller Orders API / BEFORE C: emp / 1 / ew AFTER / 2 200 / Caller Orders API
+labellink bs8          "C:\\\\temp\\\\new"          -> "BEFORE C:\\\\temp\\\\new AFTER"   => PAINTS "  C:\\ emp\\\\new  "
+labellink bs20         "\\l"                        -> "BEFORE \\l AFTER"                 => CUT Caller Orders API / BEFORE  / 1 /  AFTER / 2 200 / Caller Orders API
+labellink bs24         "{\"msg\": \"line1\\nline2\\tend\"}" -> "BEFORE {\"msg\": \"line1\\nline2\\tend\"} AFTER" => CUT Caller Orders API / BEFORE {"msg": "line1 / 1 / line2 end"} AFTER / 2 200 / Caller Orders API
+labellink bs25         "\"path\": \"C:\\\\temp\\\\x.txt\"" -> "BEFORE \"path\": \"C:\\\\temp\\\\x.txt\" AFTER" => PAINTS "  \"path\":   \"C:\\ emp\\\\x.txt\"  "
+labellink bs28         "a\\tb\\tc"                  -> "BEFORE a\\tb\\tc AFTER"           => PAINTS "  a b c  "
+labellink bs29         "\\t\\t"                     -> "BEFORE \\t\\t AFTER"              => PAINTS "   "
+labellink bs30         "<\\t>"                      -> "BEFORE <U+003C>\\t> AFTER"        => PAINTS "  < >  "
+labellink bs31         "~\\t"                       -> "BEFORE <U+007E>\\t AFTER"         => PAINTS "  ~  "
+labellink bs37         "\\n\\n"                     -> "BEFORE \\n\\n AFTER"              => CUT Caller Orders API / BEFORE  / 1 /  AFTER / 2 200 / Caller Orders API
+labellink bs38         "tab\\there"                 -> "BEFORE tab\\there AFTER"          => PAINTS "  tab here  "
+labellink cr32         "<U+0041>**b**"              -> "BEFORE <U+003C>U+0041><U+002A>*b<U+002A>* AFTER" => PAINTS "  A**b**  "
+labellink cc85         "ab"                        -> "BEFORE ab AFTER"                 => BROKEN Caller -[#438DD5]> OrdersAPI: [[#iflow-abc123 BEFORE ab AFTER]] |  Syntax Error? (Assumed diagram type: sequence)
+labellink cc2028       "a b"                        -> "BEFORE a b AFTER"                 => BROKEN Caller -[#438DD5]> OrdersAPI: [[#iflow-abc123 BEFORE a b AFTER]] |  Syntax Error? (Assumed diagram type: sequence)
+labellink cc2029       "a b"                        -> "BEFORE a b AFTER"                 => BROKEN Caller -[#438DD5]> OrdersAPI: [[#iflow-abc123 BEFORE a b AFTER]] |  Syntax Error? (Assumed diagram type: sequence)
+labellink ccr          "a\rb"                       -> "BEFORE a\rb AFTER"                => BROKEN Caller -[#438DD5]> OrdersAPI: [[#iflow-abc123 BEFORE ab AFTER]] |  Syntax Error? (Assumed diagram type: sequence)
+doc       cp1          "<U+0041>"                   -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+0041>\\nAFTER\\n" => PAINTS "A"
+doc       cp2          "x<U+0041>y"                 -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\nx<U+003C>U+0041>y\\nAFTER\\n" => PAINTS "xAy"
+doc       cp3          "<U+1F600>"                  -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+1F600>\\nAFTER\\n" => PAINTS "😀"
+doc       cp8          "<U+D800>"                   -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+D800>\\nAFTER\\n" => PAINTS "\ud800"
+doc       cp9          "<U+003C>b>"                 -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+003C>b>\\nAFTER\\n" => PAINTS "<b>"
+doc       cp10         "<U+007E>"                   -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+007E>\\nAFTER\\n" => PAINTS "~"
+doc       cp11         "<U+200B>"                   -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+200B>\\nAFTER\\n" => PAINTS "​"
+doc       cp12         "R says <U+00E9>t<U+00E9>"   -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\nR says <U+003C>U+00E9>t<U+003C>U+00E9>\\nAFTER\\n" => PAINTS "R   says   été"
+doc       cp15         "<U+00041>"                  -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+00041>\\nAFTER\\n" => PAINTS "A"
+doc       cp18         "<U+0000>"                   -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+0000>\\nAFTER\\n" => PAINTS "\u0000"
+doc       cp19         "<U+000A>"                   -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+000A>\\nAFTER\\n" => PAINTS "\n"
+doc       cp20         "<U+0022><U+0022>x<U+0022><U+0022>" -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+0022><U+003C>U+0022>x<U+003C>U+0022><U+003C>U+0022>\\nAFTER\\n" => PAINTS "\"\"x\"\""
+doc       cr32         "<U+0041>**b**"              -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\n<U+003C>U+0041>*<U+200B>*b*<U+200B>*\\nAFTER\\n" => PAINTS "A*​*b*​*"
+doc       cc85         "ab"                        -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\nab\\nAFTER\\n" => BROKEN hnote across <<stepDelimiter>><<stepBody>>: Given x\n\nBEFORE\nab\nAFTER\n |  Syntax Error? (Assumed diagram type: sequ
+doc       cc2028       "a b"                        -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\na b\\nAFTER\\n" => BROKEN hnote across <<stepDelimiter>><<stepBody>>: Given x\n\nBEFORE\na b\nAFTER\n |  Syntax Error? (Assumed diagram type: sequ
+doc       cc2029       "a b"                        -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\nBEFORE\\na b\\nAFTER\\n" => BROKEN hnote across <<stepDelimiter>><<stepBody>>: Given x\n\nBEFORE\na b\nAFTER\n |  Syntax Error? (Assumed diagram type: sequ

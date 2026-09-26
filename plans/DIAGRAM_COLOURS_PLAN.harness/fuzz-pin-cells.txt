@@ -1,0 +1,5 @@
+engine v1.2026.8beta1-0e4f452; 2721 cases in 161291 ms; 2718 drawn as captured, 3 not
+
+cell      cc85         "ab"                        -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\n|= BEFORE |= H |= AFTER |\\n| BEFORE | ab | AFTER |\\n" => BROKEN hnote across <<stepDelimiter>><<stepBody>>: Given x\n\n|= BEFORE |= H |= AFTER |\n| BEFORE | ab | AFTER |\n |  Syntax E
+cell      cc2028       "a b"                        -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\n|= BEFORE |= H |= AFTER |\\n| BEFORE | a b | AFTER |\\n" => BROKEN hnote across <<stepDelimiter>><<stepBody>>: Given x\n\n|= BEFORE |= H |= AFTER |\n| BEFORE | a b | AFTER |\n |  Syntax E
+cell      cc2029       "a b"                        -> "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\n|= BEFORE |= H |= AFTER |\\n| BEFORE | a b | AFTER |\\n" => BROKEN hnote across <<stepDelimiter>><<stepBody>>: Given x\n\n|= BEFORE |= H |= AFTER |\n| BEFORE | a b | AFTER |\n |  Syntax E

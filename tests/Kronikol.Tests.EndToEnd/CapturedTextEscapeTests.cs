@@ -53,6 +53,27 @@ public class CapturedTextEscapeTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task A_collapsed_notes_tooltip_reads_the_captured_lines()
+    {
+        // The tooltip of a collapsed note was built from the note's source with only the header tag removed, so it showed
+        // the escapes (<U+0027>a', 'b') and the width bound's join markers (DIAGRAM_COLOURS_PLAN §12.5).
+        await OpenReport(ReportTestHelper.GenerateReportWithCapturedTextHazards(TempDir, OutputDir, "CapturedTextHazards_Tooltip.html"));
+
+        var collapse = Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First;
+        await collapse.ClickAsync();
+        await Page.WaitForFunctionAsync(
+            "() => Array.from(document.querySelectorAll('.plantuml-browser svg path > title')).some(t => (t.textContent || '').indexOf('not a comment') >= 0)",
+            null, new() { Timeout = 30_000, PollingInterval = 200 });
+
+        var tooltip = await Page.EvaluateAsync<string>(
+            "() => Array.from(document.querySelectorAll('.plantuml-browser svg path > title')).map(t => t.textContent).find(t => t.indexOf('not a comment') >= 0)");
+        Assert.DoesNotContain("<U+", tooltip, StringComparison.Ordinal);
+        Assert.Contains("'a', 'b'", tooltip, StringComparison.Ordinal);
+        Assert.Contains("/' not a comment", tooltip, StringComparison.Ordinal);
+        Assert.Contains("!define FOO BAR", tooltip, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Every_diagram_is_drawn_and_paints_the_captured_lines()
     {
         await OpenReport(ReportTestHelper.GenerateReportWithCapturedTextHazards(TempDir, OutputDir, "CapturedTextHazards_Drawn.html"));

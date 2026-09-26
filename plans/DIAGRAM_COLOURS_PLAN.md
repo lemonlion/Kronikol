@@ -2,7 +2,8 @@
 
 **Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status: executed** (green-lit
 2026-09-25), in two releases: 3.29.6 (S3a, S4, S5 and F26) and 3.30.0 (S1, S2 and S3b). The escapes it
-measured and deferred followed as 3.30.1, and an audit of all three as 3.30.2 (§12.4). §12 is the execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
+measured and deferred followed as 3.30.1, an audit of all three as 3.30.2 (§12.4), and a second audit, which
+drew every kind of captured text on both engines, as 3.31.2 (§12.5). §12 is the execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
 `ROADMAP.md` item 1.6, written as its own plan. §10 is the assumption ledger: what was **RUN** against
 the pinned engine on 2026-09-22, what was only **READ**, and what is still open.
 
@@ -1847,3 +1848,127 @@ bracket link; the component fact passes on either).
   6 min 54 s, and again in 6 min 35 s.
 - Three templates (xUnit v3, TUnit, ReqNRoll on xUnit v3), copied out of the repository, build against the
   3.30.1 packages the new pins name.
+
+**Released** as `8fd58c64` (tag `v3.30.2`): CI, Release, CodeQL and CI Summary Preview green, and NuGet has it.
+
+### 12.5 The second audit, 3.31.2 (patch)
+
+Asked for on 2026-09-26: was anything missed from P3, or not good in its implementation; fix it, without
+getting in the way of the session holding P4. The first audit (§12.4) checked each deliverable against the code,
+the tests and the documentation. This one attacked the escapes: a differential probe put 13,605 cases of
+captured text through the real escapers in five contexts (a note's lines, a request label with and without its
+internal-flow link, a step bar's doc string, a table cell), drew each on the pin through the shipped Node
+renderer and on the Java engine through IKVM, and compared the drawn text with the captured text. On the
+escapers 3.30.2 to 3.30.4 ship, the pin drew all but 126 as captured and Java all but 466. Each class of
+difference was then reproduced alone, and every fix form was measured on both engines before it was written
+(`DIAGRAM_COLOURS_PLAN.harness/README.md`, the second audit's section). The work was done in its own worktree,
+from `9c7a4cd9`. The numbering was agreed with the sessions holding P4 (3.30.4) and `FLOW_NESTING_PLAN` S2 (a
+minor, 3.31.0 whenever it lands); the two edit ranges in `PlantUmlCreator.cs` do not overlap P4's.
+
+**Found, and fixed in 3.31.2:**
+- **A carriage return inside a line was a line break for the Java engine, past every line-start escape.** The
+  escaper splits a body at `\n`; the Java preprocessor also ends a line at a carriage return with no `\n` after
+  it. `x`, a carriage return and `!include <sentinel>` drew the sentinel file into the note under IKVM
+  (`java-bypass-gen.js`); `@enduml` or `end note` after one broke the diagram, and `'` dropped the rest. NEL,
+  LINE SEPARATOR, PARAGRAPH SEPARATOR, VT and FF are inert in a note on both engines. Such a carriage return is
+  written `<U+000D>` in a note, in an assertion note's lines and in the YAML view's mirror (`escapeNoteLine`):
+  the Java engine draws it at no width and runs nothing, and the pin draws the character (`cand6.json`).
+- **A step bar drew `U+200B>` for every backslash under the Java engine, since 3.0.78.** The bar wrote
+  `\<U+200B>` after each backslash of a doc string or a cell, and the Java engine reads `\<` inside a one-line
+  statement as an escape: 352 of the 466 Java differences (`fuzz-java.txt`). The bar writes
+  `<U+005C><U+200B>`. `<U+005C>` followed by the zero-width space as the character draws on both engines too
+  (`cand5-pin.txt`, `cand5-java.txt`), and was the first form written, but search reads the diagram's source and
+  keeps that character, so a doc string's `C:\temp` could not be found; both as code points draw on both
+  engines (`cand7-pin.txt`, `cand7-java.txt`) and search as the text. A code point alone is read back as a
+  backslash before the next character.
+- **U+0085, U+2028 and U+2029 ended a one-line statement on both engines**, and the diagram was lost: a doc
+  string or a cell (`StepBarPlantUml.EscapeInline`), a step name (`EscapeLoaderMarkup`), a request label
+  (`EscapeCapturedLabel`). They are written as code points (`cand4.json`).
+- **A line break in a test name split the test delimiter's statement**
+  (`TrackingDiagramOverride.InsertTestDelimiter`). It is folded to a space.
+- **A captured `<U+hhhh>` was drawn as the character it names.** The engines decode four or five hex digits
+  in either case after `~<` and after `<U+003C>` alike: 13 cases each in a note and a doc string on both
+  engines, and in a label on the pin. A `<U+D800>` in a bar made the Java engine's SVG writer fail. A `<` that
+  opens a code point is written `<U+003C><U+200B>`, which keeps it text in all six contexts on both engines;
+  every reader drops the zero-width space (`cand4.json`).
+- **`\t` in a note was a tab, and a backslash took an escaping `~` with it**, on both engines: `\<b>`, written
+  `\~<b>`, drew `~<b>`, and `\[[x]]` lost its `~` the same way. A `<U+200B>` between the backslash and the `t`
+  or the `~` keeps both. `PlantUmlCreator`'s comment and `Content-Formatting` said `\t` could not be
+  protected; both are corrected.
+- **`|_` at a line's start is a creole tree item**, drawn without its marker. The `|` is written as its code
+  point in a note (`LineStartEscape`) and in the YAML view's mirror.
+- **A collapsed note's tooltip read the source as written** (`collapsible-notes-script.js`, `tipLines`):
+  code points, escapes and wrap markers. It now reads like Copy box text.
+- **A component diagram's first link rested white.** `bindIflowLinks` rested a link in the ink of the nearest
+  earlier text that is not link-coloured. On a component diagram generated with relationship stats, the text
+  before the first edge's link is a component's name, `#FFFFFF` with the default palette, so the link rested at
+  1.00 to 1 on the page (`link-rest.txt`). It now takes whichever of the nearest texts before and after the
+  link group is nearer on the page, its own stats line, `#666666`. §12.4's component fact passed on either
+  rule: its hand-written source had no palette. It now renders `ComponentDiagramGenerator`'s own output.
+- **Captured text reached two arrows unescaped.** A GraphQL request's label carries the `operationName` read
+  from the body's raw JSON text, and a status recorded as thrown (a leading `!`) is drawn as recorded; a line
+  break in either ended the arrow's statement, so the rest ran as a line of its own (`!include` under Java).
+  `EscapeCapturedLabel` writes a line break as a space, and the response label now goes through it: a status
+  that is not thrown is title-cased to its words, so its output is unchanged.
+
+**Found in this release's own escapes, before it shipped:** the width bound (`ChooseCut`) could end a line
+right after an escape's zero-width space, so the line ended in two markers, which every reader takes for a break
+that had a space in it (`\ tb`, `< U+0041>`). On 3.30.4 the only such escape, `&<U+200B>`, sits after an `&`,
+which the cut prefers as a punctuation boundary, so nothing shipped was affected; the guard written first put
+`&#39;` beside `\tb` and passed on either for the same reason. The cut now backs up before a trailing
+`<U+200B>`, and the guard is a theory that puts each escape alone between letters. Two more, found reviewing the
+diff: the first form written for a bar's backslash, `<U+005C>` and the zero-width space as the character, hid a
+doc string's `C:\temp` from search, which indexes the diagram's source and keeps that character; the fact written
+for it passed on the defect, because xUnit's `Assert.Contains` on two strings compares by culture, and a culture
+comparison ignores a zero-width space. The bar writes both as code points, and the fact compares ordinally.
+Folding a test name's line breaks threw on a null name, which wrote `Test ` before; it is folded as empty.
+
+**Found outside P3, recorded for the owner:** no generated report passes relationship stats to
+`ComponentDiagramGenerator.GeneratePlantUml` (`ReportGenerator`, `MergeableReportRenderer`,
+`ComponentDiagramReportGenerator`), and none has since `74b9763c` (2.0.92-beta, 2026-04-14) removed the stats
+path. The P50/P95/P99 lines, the error rate and the `[[#iflow-rel-…]]` links exist only when a consumer
+computes the stats and passes the diagram in, while `Component-Diagrams` described them as report features.
+The session holding P4 corrected its 3.30.4 text (wiki `ec9dc33`); the page's stats section now says so too.
+Whether to restore them in reports is in `ROADMAP.md` Appendix C.
+
+**Not fixed, with the reason:**
+- A backslash in an arrow label is still read: `\n` breaks the label, `\t` is a tab, and Java reads `\<`
+  (`fuzz-*.txt`, label rows). A request path cannot hold one (`uri-probe.fsx`: `Uri` turns it into `/` or
+  `%5C`), so it comes only from a GraphQL operation name, a thrown status or an ingested method. The label is
+  escaped after Kronikol's own `\n` display breaks are woven in, so escaping its backslashes means building the
+  label from escaped parts, in the lines P4's S0 changed. Appendix C.
+- The Java engine draws a lone surrogate as U+FFFD. The engine's, and the text is not valid UTF-16.
+- `ChunksUpTo` can cut a long path label inside a surrogate pair. Older than P3.
+- Under `DiagramFormat.Mermaid`, the `OptionNotApplied` entry for a theme names the wrong reason (it says the
+  engine ignores the theme; the theme is never written). Minor. Appendix C.
+- A component diagram's method and participant names are written as given. Not captured payload text, and
+  outside the sequence-diagram escapes P3 made. Appendix C.
+
+**Left to the owner** (all in `ROADMAP.md` Appendix C, where §6 and §12.4 had left them without a row): Q7
+(`FocusDeEmphasis.LightGray` at 1.47 to 1), hung-engine recovery (P4 is its natural owner, and
+`ENGINE_PIN_PLAN.md` §7 points at the row), `OptionNotApplied` for the other options `BrowserJs` ignores, Q10
+(OpenIconic), full creole neutralisation of step, test, assertion, span and action text, and the port's four
+script defects.
+
+**Tests.** Each new fact was red on 3.30.4's source, whose escapers and scripts are 3.30.2's. In the unit
+project 21 of the 210 facts and rows in the four touched classes failed: the eleven new rows of the escape
+theory (its five controls pass), the eight new facts, and the two pins this release moves (a bar cell's
+backslash, and the form a captured `<U+200B>` is written in). The width-bound theory passes on 3.30.4, since it
+guards this release's own escapes; against those escapes without the cut rule, three of its five rows failed.
+So do the two facts added last, on a bar's backslash searching as the text and a null test name still being
+written: each failed on this release's first form of its change, not on 3.30.4.
+In the IKVM project the carriage-return and bar-backslash facts failed (2 of 5), and in the E2E project the
+tooltip fact and the YAML view's parity fact (2 of 59 in their classes) and the component fact (1 of 8). The IKVM
+and unit helpers that read painted text misread the Java engine's self-closing `<text/>` (a run drawn at no
+width, which is how it draws a carriage return); both read it now.
+
+**The suites:**
+- Core unit project on 3.31.1: 5,878 passed, 1 skipped, 0 failed. IKVM: 54.
+- On the tree rebased on 3.31.0: search engine (Jint) 212; adapters, all green: StepTracking 43;
+  AssertionTracking 97, 111 and 125 on net8.0, net9.0 and net10.0; MSTest 51; xUnit2 12; xUnit3 15;
+  LightBDD.xUnit3 26; TUnit 18; LightBDD.TUnit 25. Example.Api, all green: xUnit3 5; LightBDD.xUnit3 6;
+  BDDfy.xUnit3 2; ReqNRoll.xUnit3 8; NUnit4 2.
+- E2E (the full project less the wiki GIF, screenshot and showcase classes): 893 passed twice on the first
+  base (7 min 50 s, 7 min 56 s), 895 on 3.30.4 and on 3.31.0 (8 min 29 s, 9 min 38 s), and 899 (7 min 59 s) on 3.31.1.
+- The differential fuzz was not run again on the final build: the paint facts cover each fixed class on both
+  engines, and a second pass costs 14 minutes of the pin and the Java renders beside the timing-sensitive E2E run.

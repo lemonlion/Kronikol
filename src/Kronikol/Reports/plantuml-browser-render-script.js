@@ -1149,9 +1149,11 @@
             allTexts.forEach(function(t, idx) {
                 if (isLinkFill(t.getAttribute('fill'))) blueIndices.push(idx);
             });
-            // A link rests in the ink of the text around it: the nearest earlier text that is not link-coloured,
-            // else the ink most of the diagram's text uses, else black. On the default theme every branch answers
-            // #000000; under a theme whose text is light, the link stays readable.
+            // A link rests in the ink of the text beside it: of the nearest texts before and after it in the diagram's
+            // text order that are not link-coloured, the nearer on the page (a sequence arrow's number, a component
+            // edge's own stats line), else the ink most of the diagram's text uses, else black. On the default theme a
+            // sequence link rests #000000; under a theme whose text is light, the link stays readable. The text before
+            // alone was a component's white name for a component diagram's first edge (DIAGRAM_COLOURS_PLAN §12.5).
             var commonInk = null;
             function mostCommonInk() {
                 if (commonInk !== null) return commonInk;
@@ -1166,12 +1168,22 @@
                 });
                 return commonInk;
             }
-            function restFillBefore(index) {
-                for (var i = index - 1; i >= 0; i--) {
-                    var fill = allTexts[i].getAttribute('fill');
-                    if (fill && !isLinkFill(fill)) return fill;
+            function restFillNear(first, last) {
+                var before = null, after = null;
+                for (var i = first - 1; i >= 0 && !before; i--) {
+                    if (allTexts[i].getAttribute('fill') && !isLinkFill(allTexts[i].getAttribute('fill'))) before = allTexts[i];
                 }
-                return mostCommonInk();
+                for (var j = last + 1; j < allTexts.length && !after; j++) {
+                    if (allTexts[j].getAttribute('fill') && !isLinkFill(allTexts[j].getAttribute('fill'))) after = allTexts[j];
+                }
+                if (!before && !after) return mostCommonInk();
+                if (!before || !after) return (before || after).getAttribute('fill');
+                var x0 = parseFloat(allTexts[first].getAttribute('x')), y0 = parseFloat(allTexts[first].getAttribute('y'));
+                function gap(el) {
+                    var d = Math.abs(parseFloat(el.getAttribute('x')) - x0) + Math.abs(parseFloat(el.getAttribute('y')) - y0);
+                    return isNaN(d) ? Infinity : d;
+                }
+                return (gap(after) < gap(before) ? after : before).getAttribute('fill');
             }
             var groups = [];
             var curGrp = [];
@@ -1193,7 +1205,7 @@
                 var groupEls = group.map(function(idx) { return allTexts[idx]; });
                 // The highlight is the fill the engine painted the link in, so a theme's link colour survives.
                 var linkFills = groupEls.map(function(el) { return el.getAttribute('fill'); });
-                var rest = restFillBefore(group[0]);
+                var rest = restFillNear(group[0], group[group.length - 1]);
                 function atRest() {
                     groupEls.forEach(function(el) {
                         el.setAttribute('fill', rest);

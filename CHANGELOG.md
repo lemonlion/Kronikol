@@ -4,6 +4,85 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.2] - 2026-09-26
+
+**Patch - a second audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3, releases 3.29.6 to 3.30.2), which
+drew every kind of captured text on both PlantUML engines and compared the result with what was captured.**
+Every change is a fix, so the patch part moved. Nothing new is public. Template pins move to 3.31.1.
+
+### Fixed
+
+- **A carriage return inside a captured line let the Java engine run the rest as a line of its own.** A note's
+  lines are escaped where a line starts, and the body is split into lines at `\n` only, but the Java engine's
+  preprocessor also ends a line at a carriage return with no `\n` after it. Under `PlantUmlRendering.Local` and
+  `Server` a body holding `x`, a carriage return and `!include <path>` drew the named local file into the
+  report, `@enduml` or `end note` after one broke the diagram, and `'` dropped the rest as a comment. Such a
+  carriage return is now written as its code point, which the Java engine draws as nothing and the browser
+  engine as the character. The same goes for an assertion note's lines and for the note's YAML view.
+- **A step bar drew `U+200B>` for every backslash under the Java engine (since 3.0.78).** A bar put a
+  zero-width space after each backslash in a doc string or a table cell, written `\<U+200B>`, and the Java
+  engine reads `\<` inside a one-line statement as an escape, so `C:\temp` came out as `C:U+200B>temp` under
+  `Local` and `Server`. The bar now writes both as code points, `<U+005C><U+200B>`, which both engines draw
+  as a backslash and search reads as one.
+- **NEL, LINE SEPARATOR and PARAGRAPH SEPARATOR lost the diagram.** Both engines end a one-line statement at
+  U+0085, U+2028 and U+2029, so one of them in a step bar's doc string or table cell, a step name, a test name
+  or a request label broke the diagram. They are written as code points.
+- **A captured code point was drawn as the character it names.** Text reading `<U+0041>` in a payload or a
+  step bar's doc string was drawn as `A` on both engines, and in an arrow label on the browser engine;
+  `<U+200B>` was drawn as nothing. A zero-width space after the `<` now keeps it as written, and everything that
+  reads a note back (Copy box text, the YAML view, search, `kronikol query`) drops the space.
+- **`\t` in a note was drawn as a tab, and a backslash took an escaping `~` with it.** Both engines draw
+  `\t` in a note as a tab (the wiki and a code comment said it could not be protected), and a backslash before
+  a `~` Kronikol writes to escape the next character took the `~` with it, so `\<b>` was drawn `~<b>`. A
+  zero-width space between the two keeps both as written.
+- **A line opening with `|_` was drawn as a creole tree item**, without its `|_`. The `|` is written as its
+  code point.
+- **A line break in a test name split the scenario's divider.** A parameterised test whose argument held a
+  line break wrote the rest of its name as a line of its own. The break is drawn as a space.
+- **A line break in a GraphQL operation name or a thrown status ended its arrow.** A GraphQL request's arrow
+  label carries the `operationName` read from the body's JSON text, and a status recorded as thrown (one
+  starting with `!`) is drawn as recorded. A line break in either ended the arrow's statement and ran the rest
+  as a line of its own. A line break in an arrow label is now drawn as a space, and a thrown status is escaped
+  like a request label. A status that is not thrown is drawn title-cased, which keeps only its words, so it is
+  unchanged.
+- **A collapsed note's tooltip showed the note's source.** Hovering a collapsed note showed its code points,
+  escapes and wrap markers; it now reads the way Copy box text does.
+- **A component diagram's first link rested in a component's colour.** On a component diagram generated with
+  relationship stats (`ComponentDiagramGenerator.GeneratePlantUml` with the stats
+  `ComponentFlowSegmentBuilder.ComputeRelationshipStats` computes; a generated report passes none), a link
+  rested in the colour of the nearest text before it. For the first edge that text is a component's name,
+  white on the default palette, so the link could not be seen until it was hovered. A link now rests in the
+  colour of whichever text beside it is nearer on the page, its own stats line.
+
+### Documentation
+
+- `Content-Formatting` no longer says `\t` cannot be protected, and lists this release's escapes.
+  `Step-Tracking` says how a bar writes a backslash, and that a line break in a test name is drawn as a space.
+  `Component-Diagrams` shows the default edge label as the generator writes it (` - `, not an em dash), and
+  says that the stats labels come only from `GeneratePlantUml` with stats: no generated report has passed
+  stats since 2.0.92-beta. `plans/ROADMAP.md` Appendix C records whether to restore them in reports or keep
+  them to the API.
+
+### Tests
+
+- `CapturedTextEscapeTests` (unit): the escape theory gains the cases this audit found (captured code points, a
+  backslash before `t` or before an escaped `<`, `|_`, a lone carriage return) with controls beside them; a line
+  separator is written as its code point in a doc string, a cell, a step name and a label; a captured code point
+  is kept as written in every one-line escaper; a bar writes a backslash as its code point and a zero-width space;
+  a bar's backslash searches as the text (ordinally: a culture comparison ignores a zero-width space); a test
+  name holding line breaks stays one statement, and a null one is still written; a GraphQL operation name holding
+  line breaks stays in its label; a thrown status is escaped like a request label; and the width bound reads back whole wherever an escape
+  falls, each escape alone between letters. The Node paint facts draw the new hazard lines and bar cases.
+- `CapturedTextEscapeTests` (IKVM): the Java engine draws a carriage return inside a line without running the
+  `!include`, `'` or `@enduml` after it, draws a bar's backslash as a backslash, and paints the new hazard lines.
+- `CapturedTextEscapeTests`, `NoteYamlInternalsTests` and `IflowLinkColourTests` (Playwright): a collapsed
+  note's tooltip reads the captured lines; the YAML view escapes the new hazard lines as the generator does; a
+  component diagram built by `ComponentDiagramGenerator` with stats rests each link in its label's ink.
+- Two pins move with the behaviour: `StepBarPlantUmlTests` (a cell's backslash) and `NoteCopyFidelityTests`
+  (how a captured `<U+200B>` is written). Every new fact was red on 3.30.4 apart from the controls, and the
+  width-bound theory, the search fact and the null-name fact, which guard this release's own changes and each
+  failed on its first form.
+
 ## [3.31.1] - 2026-09-26
 
 **Patch - the report page and the Node renderer check the PlantUML engine against its known hash, and the engine
@@ -109,6 +188,7 @@ is called out. Template pins move to 3.31.0.
   steps and on 20 of 80. The 12,000 px default was the fastest for the full render at both sizes and for the note
   toggle at the larger; at 4,000 px the full render took 56% and 66% longer than at 12,000, and the toggle 41% and
   77% longer. No default moves.
+
 
 ## [3.31.0] - 2026-09-26
 

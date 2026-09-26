@@ -35,12 +35,15 @@ internal readonly record struct StepBarTable(string? Name, string[][] Rows);
 /// so body content is neutralised with the two mechanisms that verifiably work:
 /// <c>&lt;U+00XX&gt;</c> escapes for <c>|</c> <c>&lt;</c> <c>&amp;</c> and line-opening block markers
 /// (these codes substitute after creole parsing, so the marker never fires), and a zero-width space
-/// <c>&lt;U+200B&gt;</c> inserted between doubled pair markers (<c>**</c>, <c>""</c>, <c>__</c>, …) and
-/// after backslashes (<c>\n</c> in a cell would break the display line mid-row). The quote/bracket/
-/// backslash/underscore codes can NOT be used as replacements — they substitute back BEFORE creole
-/// parsing and rebuild the live marker — which is why pairs are broken with the invisible character
-/// instead. A table row is only recognised when its display line starts and ends with <c>|</c>
-/// (trailing whitespace kills the row), so lines are joined with a bare <c>\n</c>.
+/// <c>&lt;U+200B&gt;</c> inserted between doubled pair markers (<c>**</c>, <c>""</c>, <c>__</c>, …). The quote/
+/// bracket/backslash/underscore codes can NOT be used as replacements on their own — they substitute back
+/// BEFORE creole parsing and rebuild the live marker — which is why pairs are broken with the invisible
+/// character instead. A backslash is written <c>&lt;U+005C&gt;&lt;U+200B&gt;</c>, both as code points
+/// (<c>\n</c> in a cell would break the display line mid-row, the Java engine reads the <c>\&lt;</c> of a
+/// <c>\&lt;U+200B&gt;</c> as an escape, and search, which reads the diagram's source, keeps a zero-width space
+/// written as the character; DIAGRAM_COLOURS_PLAN §12.5). A table
+/// row is only recognised when its display line starts and ends with <c>|</c> (trailing whitespace kills
+/// the row), so lines are joined with a bare <c>\n</c>.
 /// </para>
 /// </summary>
 internal static class StepBarPlantUml
@@ -151,8 +154,8 @@ internal static class StepBarPlantUml
 
     /// <summary>
     /// One source line of body content, broken to <see cref="DiagramWidth.MaxNoteTextLineChars"/> and
-    /// escaped <b>piece by piece</b>. The order matters: <see cref="EscapeInline"/> puts a zero-width
-    /// space after every backslash, so escaping a line the wrapper had already woven line breaks into
+    /// escaped <b>piece by piece</b>. The order matters: <see cref="EscapeInline"/> rewrites every
+    /// backslash, so escaping a line the wrapper had already woven line breaks into
     /// would turn every one of those breaks back into literal text.
     /// </summary>
     private static IEnumerable<string> EscapeWrappedBodyLine(string line) =>
@@ -189,8 +192,9 @@ internal static class StepBarPlantUml
     /// The context-free rules: <c>&lt;</c> and <c>&amp;</c> become their late-substituted escapes (tags
     /// and HTML entities are live in bar text, and a zero-width space follows an <c>&amp;</c> that opens a
     /// decimal reference, which the engine would still decode), a <c>~</c> and a builtin call's <c>%</c>
-    /// become theirs too, a zero-width space breaks every doubled pair marker, and one follows every
-    /// backslash (so a literal <c>\n</c> in the data cannot become a line break).
+    /// become theirs too, a zero-width space breaks every doubled pair marker, a backslash becomes its code
+    /// point and a zero-width space's (so a literal <c>\n</c> in the data cannot become a line break), and a
+    /// character that ends a one-line statement becomes its code point.
     /// </summary>
     private static string EscapeInline(string text)
     {
@@ -201,7 +205,8 @@ internal static class StepBarPlantUml
             switch (c)
             {
                 case '<':
-                    sb.Append("<U+003C>");
+                    // A captured `<U+hhhh>` would be decoded again after `<U+003C>`: a zero-width space keeps it text (§12.5).
+                    sb.Append(PlantUmlCreator.OpensCodePoint(text, i) ? "<U+003C>" + Zwsp : "<U+003C>");
                     continue;
                 case '&':
                     sb.Append("<U+0026>");
@@ -219,7 +224,15 @@ internal static class StepBarPlantUml
                     sb.Append("<U+0025>");
                     continue;
                 case '\\':
-                    sb.Append(c).Append(Zwsp);
+                    // Its code point and a zero-width space's: a bare backslash meets the next character (`\n` breaks the
+                    // line, `\t` is a tab), the Java engine read the `\<` of the `\<U+200B>` written here before as an
+                    // escape and painted "U+200B>", and search keeps a zero-width space written as the character, so it
+                    // could not find the text (§12.5). This form draws a backslash on both engines and searches as one.
+                    sb.Append("<U+005C>").Append(Zwsp);
+                    continue;
+                case var _ when PlantUmlCreator.IsStatementBreak(c):
+                    // NEL, LINE SEPARATOR and PARAGRAPH SEPARATOR end the bar's one statement on both engines (§12.5).
+                    sb.Append(PlantUmlCreator.CodePoint(c));
                     continue;
             }
 

@@ -50,7 +50,7 @@ public class NoteCopyFidelityScriptTests
     [Fact]
     public void The_yaml_reconstructor_rejoins_before_it_unescapes()
     {
-        // Order is load-bearing: unescaping first turns a payload's own ~<U+200B> into a bare marker,
+        // Order is load-bearing: unescaping first turns a payload's own escaped <U+200B> text into a bare marker,
         // and the rejoin then eats a real newline.
         var rejoin = _notes.IndexOf("text = rejoinWrappedNoteLines(text);", StringComparison.Ordinal);
         var unescape = _notes.IndexOf("text = decodeNoteEscapes(text);", StringComparison.Ordinal);

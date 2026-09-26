@@ -16,8 +16,9 @@
     // longest marker first, a marker with `~` in front is the PAYLOAD's own text and never a break,
     // and CRLF is normalised so splitting on \n does not leave a \r between the text and its marker.
     //
-    // Run this BEFORE reversing the creole escaping, never after: unescaping turns a payload's
-    // `~<U+200B>` into a bare marker and the distinction the whole mechanism rests on is gone.
+    // Run this BEFORE reversing the creole escaping, never after: unescaping turns a payload's escaped
+    // `<U+200B>` text (`<U+003C><U+200B>U+200B>`, or `~<U+200B>` before DIAGRAM_COLOURS_PLAN §12.5) into a
+    // bare marker and the distinction the whole mechanism rests on is gone.
     var NOTE_JOIN_MARKER = '<U+' + '200B>';
     var NOTE_JOIN_SPACE_MARKER = NOTE_JOIN_MARKER + NOTE_JOIN_MARKER;
 
@@ -640,7 +641,8 @@
             var tipLines = contentLines.map(function(l) {
                 return l.replace(NOTE_HEADER_TAG_INDENTED, '');
             });
-            var tipText = tipLines.join('\n').trim();
+            // Read like Copy box text: the width bound's breaks joined first, then the escapes decoded (§12.5).
+            var tipText = decodeNoteEscapes(rejoinWrappedNoteLines(tipLines.join('\n'))).trim();
             if (tipText) {
                 var displayLines = tipText.split('\n');
                 var tipLimit = (container && container._truncateLines) || window._truncateLines;
@@ -1049,7 +1051,7 @@
         if (payload.length === 0) return null;
         var text = payload.join('\n');
         // Undo the width budget's breaks FIRST, while the creole escaping is still intact: the
-        // unescape below would turn a payload's own `~<U+200B>` into a bare marker and this pass
+        // unescape below would turn a payload's own escaped `<U+200B>` text into a bare marker and this pass
         // would then eat a real newline.
         text = rejoinWrappedNoteLines(text);
         // Strip focus emphasis markup. A literal '<' in the payload was
@@ -1338,13 +1340,20 @@
         if (c === "'" || c === '!' || (c === '/' && rest.charAt(0) === "'")
             || (c === '@' && /^(?:start|end)/i.test(rest))
             || (c === '{' && EMBEDDED_DIAGRAM_OPENER.test(trimmed))) return codePoint(c);
-        return creole && (c === '=' || CREOLE_LINE_MARKUP.test(trimmed)) ? codePoint(c) : null;
+        // `|_` opens a creole tree item, drawn without its marker (DIAGRAM_COLOURS_PLAN §12.5).
+        return creole && (c === '=' || (c === '|' && rest.charAt(0) === '_') || CREOLE_LINE_MARKUP.test(trimmed)) ? codePoint(c) : null;
     }
 
     function opensGuillemets(line, at) {
         if (line.charAt(at + 1) !== '<') return false;
         if (/[A-Za-z\/#&:$]/.test(line.charAt(at + 2) || '')) return false;
         return line.indexOf('>>', at + 2) >= 0;
+    }
+
+    // Creole's escape. A backslash right before it takes the `~` with it on both engines, so a zero-width space
+    // parts the two (the generator's AppendTilde, DIAGRAM_COLOURS_PLAN §12.5).
+    function appendTilde(out) {
+        return (out.charAt(out.length - 1) === '\\' ? out + NOTE_JOIN_MARKER : out) + '~';
     }
 
     function escapeNoteLine(line) {
@@ -1357,14 +1366,19 @@
             if (i === start && !isPair) {
                 var head = lineStartEscape(line, i, true);
                 if (head !== null) { out += head; continue; }
-                if (c === '*' || c === '#') out += '~';
+                if (c === '*' || c === '#') out = appendTilde(out);
             }
-            if (isPair) { out += '~' + c + '~' + c; i++; continue; }
+            if (isPair) { out = appendTilde(out) + c; out = appendTilde(out) + c; i++; continue; }
+            // A lone carriage return ends the line for the Java engine; a captured <U+hhhh> is kept text with a zero-width
+            // space after its `<`; a backslash before `t` would be drawn as a tab. As the generator writes them (§12.5).
+            if (c === '\r' && i < line.length - 1) { out += codePoint(c); continue; }
+            if (c === '<' && /^<U\+[0-9A-Fa-f]{4,6}>/.test(line.slice(i))) { out += codePoint(c) + NOTE_JOIN_MARKER; continue; }
+            if (c === 't' && out.charAt(out.length - 1) === '\\') out += NOTE_JOIN_MARKER;
             if (i === backslash || c === '~'
                 || (c === '%' && /^%[A-Za-z_][A-Za-z0-9_]*\(/.test(line.slice(i)))
                 || (c === '<' && opensGuillemets(line, i))) { out += codePoint(c); continue; }
             if (c === '&' && /^&#[0-9]+;/.test(line.slice(i))) { out += '&' + NOTE_JOIN_MARKER; continue; }
-            if (c === '<' && /[A-Za-z\/#&:$]/.test(line.charAt(i + 1) || '')) out += '~';
+            if (c === '<' && /[A-Za-z\/#&:$]/.test(line.charAt(i + 1) || '')) out = appendTilde(out);
             out += c;
         }
         return out;

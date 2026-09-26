@@ -340,3 +340,76 @@ node plans/DIAGRAM_COLOURS_PLAN.harness/link-fill-probe.js > link-fill-probe.txt
 dotnet fsi plans/DIAGRAM_COLOURS_PLAN.harness/redact-probe.fsx <Kronikol.dll> > redact-probe.txt
 dotnet fsi plans/DIAGRAM_COLOURS_PLAN.harness/redact-headers-probe.fsx <Kronikol.dll> > redact-headers-probe.txt
 ```
+
+## The second audit (3.31.2, 2026-09-26): every context on both engines
+
+Plan §12.5. The same pin, node 25.9.0, the .NET 10 SDK, and the Java engine through `ikvm-render.cs`. The
+first audit checked what the plan promised; this one attacked the escapes. A differential probe put a corpus
+of captured text through the real escapers and both engines, and compared what each drew with what was
+captured. Each class of difference was then reproduced alone, and every fix form was measured on both engines
+before it was written.
+
+- **`escape-oracle.fsx`** runs the real escapers over a JSON array of cases, by reflection over the
+  `Kronikol.dll` named on its command line: `body` (a payload note's lines), `label` (a request label),
+  `doc` (a step bar's doc string) and `cell` (a table cell). `fuzz-probe.js` calls it.
+- **`fuzz-probe.js`** builds the corpus: each of the 32 ASCII punctuation characters alone, doubled, at the
+  start, middle and end of a line and inside a tag, every ordered pair of them, control characters, U+0085,
+  U+2028, U+2029, a BOM, bidi controls, lone surrogates, code points, backslash sequences, and about a hundred
+  real-world strings (Windows paths, regexes, SQL, shell). That is 13,605 cases over five contexts (`labellink`
+  is a request label inside its internal-flow link). The shipped Node renderer draws them on the pin, or
+  `SVG_IN` reads what the Java engine drew from `SOURCES_OUT`'s sources, and the drawn text is compared with the
+  captured text, whitespace aside. Output on the escapers 3.30.2 to 3.30.4 ship:
+  - `fuzz-pin.txt`: 123 differences outside the cells. This run's cell reader matched the header row, so its
+    cell rows are removed. `fuzz-pin-cells.txt` has the 2,721 cell cases read right: 3 differences.
+  - `fuzz-java.txt`: 466 differences. 352 of them are the step bar's backslash: the bar wrote `\<U+200B>`
+    after every backslash, and the Java engine reads `\<` inside a one-line statement as an escape, so it drew
+    `U+200B>` (174 doc string, 178 cell cases).
+  - On both engines: a captured `<U+hhhh>` in a note or a doc string is drawn as the character it names (13
+    cases each), and on the pin in a label too; `\t` is a tab in a note and a label; a backslash before `<`
+    in a note takes the `~` escaping it; `|_` at a line's start is a creole tree item; a line break, U+0085,
+    U+2028 or U+2029 ends a label's or a bar's one statement and the diagram is lost. Java alone draws a lone
+    surrogate as U+FFFD.
+- **`java-bypass-gen.js`** writes note sources for the Java engine in which a line separator inside one
+  captured line is followed by a comment, a terminator, `@enduml` or `!include` of a sentinel file it writes
+  to the temp directory. Only the carriage return is a line break there: `x`, a carriage return and `!include
+  <sentinel>` drew both sentinel lines into the note. NEL, LINE SEPARATOR, PARAGRAPH SEPARATOR, VT and FF are
+  inert in a note on both engines.
+- **`cand-probe.js`** draws candidate forms in seven contexts (`body`, `label`, `link`, `doc`, `cell`, `bar`,
+  `hnote`) on the pin, or on Java through `SOURCES_OUT` and `SVG_IN`. `cand1.json` to `cand6.json` are the
+  candidate sets (`cand4-gen.js` and `cand5-gen.js` write theirs); `cand5-pin.txt` and `cand5-java.txt` are the
+  backslash forms on both engines. What they settled:
+  - `<U+003C><U+200B>` for a `<` that opens a code point keeps it text in all six contexts on both engines,
+    where `~<` and `<U+003C>` alone are decoded (cand4).
+  - In a bar `<U+005C>` followed by a literal U+200B draws a backslash on both engines; `\<U+200B>` is
+    Java's escape, and a code point alone is read back as a backslash before the next character (cand5). The
+    literal character stays in what search reads, so `cand7-gen.js` tried `<U+005C><U+200B>`, both as code
+    points: it draws on both engines too (`cand7-pin.txt`, `cand7-java.txt`, 42 of 42), and it is the form
+    3.31.2 writes.
+  - U+0085, U+2028 and U+2029 as code points keep a label or a bar one statement (cand4); a carriage return as
+    `<U+000D>` runs nothing on Java, which draws it at no width, and the pin draws the character (cand6; the
+    include path in it has to name the sentinel file `java-bypass-gen.js` writes).
+  - In a note, `\` then `<U+200B>` before `t` or before an emitted `~` keeps both as written, and
+    `<U+007C>_` keeps a tree marker text.
+- **`component-links.fsx`** writes `comp-links.puml`, a component diagram from
+  `ComponentDiagramGenerator.GeneratePlantUml` with relationship stats (the API path; no generated report
+  passes stats). **`link-rest.js`** renders it and prints each link's rest fill under 3.30.4's rule, the
+  nearest earlier non-link text. Output: `link-rest.txt`. The first edge's link rested `#FFFFFF`, the
+  component name before it, at 1.00 to 1 on the page; the other two rested `#666666`, their own stats line.
+- **`escape-perf.fsx`** times the note escaper on a 1 MB payload (33 ms per MB, Debug), and **`uri-probe.fsx`**
+  shows what `Uri.PathAndQuery` does to a backslash, a tilde and a code point: a backslash becomes `/` in the
+  path and `%5C` in the query, `<` and `>` become `%3C` and `%3E`, and `~` and `%date()` stay. That is why a
+  request path cannot put a backslash or a code point into a label, and the 3.30.2 label escape still has work.
+
+To repeat them, from the repository root (build `src/Kronikol` first):
+
+```bash
+node plans/DIAGRAM_COLOURS_PLAN.harness/fuzz-probe.js src/Kronikol/bin/Debug/net10.0/Kronikol.dll > fuzz-pin.txt
+SOURCES_OUT=<dir> node plans/DIAGRAM_COLOURS_PLAN.harness/fuzz-probe.js src/Kronikol/bin/Debug/net10.0/Kronikol.dll
+(cd plans/DIAGRAM_COLOURS_PLAN.harness && dotnet run ikvm-render.cs -- <dir>)
+SVG_IN=<dir> node plans/DIAGRAM_COLOURS_PLAN.harness/fuzz-probe.js src/Kronikol/bin/Debug/net10.0/Kronikol.dll > fuzz-java.txt
+node plans/DIAGRAM_COLOURS_PLAN.harness/java-bypass-gen.js
+(cd plans/DIAGRAM_COLOURS_PLAN.harness && dotnet run ikvm-render.cs -- java-bypass)
+node plans/DIAGRAM_COLOURS_PLAN.harness/cand-probe.js plans/DIAGRAM_COLOURS_PLAN.harness/cand5.json > cand5-pin.txt
+dotnet fsi plans/DIAGRAM_COLOURS_PLAN.harness/component-links.fsx
+node plans/DIAGRAM_COLOURS_PLAN.harness/link-rest.js plans/DIAGRAM_COLOURS_PLAN.harness/comp-links.puml > link-rest.txt
+```

@@ -23,14 +23,15 @@ public class NoteCopyFidelityTests
     [Fact]
     public void The_join_markers_are_the_escape_form_so_a_payloads_own_text_can_never_be_mistaken_for_one()
     {
-        // EscapeCreoleMarkup escapes '<', so a payload literally containing "<U+200B>" reaches the
-        // source as "~<U+200B>". An UNESCAPED marker is therefore provably Kronikol's own — the same
-        // argument reconstructNoteJson already makes about focus-emphasis tags. A literal U+200B
-        // character would be indistinguishable from one in the captured bytes.
+        // EscapeCreoleMarkup writes the '<' of a captured code point as its own code point and a zero-width
+        // space (DIAGRAM_COLOURS_PLAN §12.5: the `~<U+200B>` it wrote before was decoded by both engines), so a
+        // payload literally containing "<U+200B>" reaches the source as "<U+003C><U+200B>U+200B>". The width
+        // bound never ends a line in an escape's zero-width space, so a marker at a line's end is provably
+        // Kronikol's own. A literal U+200B character would be indistinguishable from one in the captured bytes.
         Assert.Equal("<U+200B>", Join);
         Assert.Equal("<U+200B><U+200B>", JoinSpace);
         Assert.StartsWith(Join, JoinSpace);
-        Assert.Contains("~<U+200B>", PlantUmlCreator.EscapeCreoleMarkup("<U+200B>"));
+        Assert.Equal("<U+003C><U+200B>U+200B>", PlantUmlCreator.EscapeCreoleMarkup("<U+200B>"));
     }
 
     // ── Site 1 & 2: WrapUnbreakableRuns (payload notes, user-action notes) ──

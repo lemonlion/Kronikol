@@ -774,7 +774,11 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
         "abc\\", "abc\\\\", "abc\\\\\\", "\\",
         "'~%upper(x)", "!%upper(x)",
         "* item", "  # step", "**bold** //it// __u__ --s-- \"\"m\"\" [[link]]",
-        "error: expected Vec<&str>, found String", "launch: <:rocket:>", "tpl: a <$foo> b"
+        "error: expected Vec<&str>, found String", "launch: <:rocket:>", "tpl: a <$foo> b",
+        // What the first audit missed (DIAGRAM_COLOURS_PLAN §12.5): a captured code point, a backslash before t or before an
+        // escape written as ~, a creole tree item, and a lone carriage return.
+        "<U+0041>", "R says <U+00e9>t", "C:\\temp\\new", "a\\\\tb", "grep '\\<word\\>'",
+        "|_x", "  |_ item", "x\r!include /etc/hosts", "10%\r20%"
     ];
 
     [Fact]

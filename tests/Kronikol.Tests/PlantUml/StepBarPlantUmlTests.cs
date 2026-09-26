@@ -231,12 +231,13 @@ public class StepBarPlantUmlTests
     public void Cell_backslashes_are_defused_with_a_zero_width_space()
     {
         // A literal \n sequence in a cell value ("C:\new\table") would otherwise display as a line
-        // break mid-row and tear the table apart. <U+005C> substitutes back before that processing
-        // (measured — it rebuilds the live \n), so the working fix is a zero-width space after the
-        // backslash.
+        // break mid-row and tear the table apart, and \t as a tab. <U+005C> alone substitutes back before
+        // that processing (measured — it rebuilds the live \n), and the Java engine read the `\<` of a
+        // `\<U+200B>` as an escape, painting "U+200B>" (DIAGRAM_COLOURS_PLAN §12.5). The code point
+        // followed by a zero-width space's draws on both engines.
         var bar = StepBarPlantUml.Build("Given paths", [new StepBarTable(null, [["h"], [@"C:\new\table"]])]);
 
-        Assert.Contains(@"| C:\<U+200B>new\<U+200B>table |", bar);
+        Assert.Contains("| C:<U+005C><U+200B>new<U+005C><U+200B>table |", bar);
     }
 
     [Fact]

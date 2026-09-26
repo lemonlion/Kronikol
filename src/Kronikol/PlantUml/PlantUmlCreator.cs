@@ -474,10 +474,11 @@ public static partial class PlantUmlCreator
     // Note bodies carry the payload's backslash bytes verbatim. PlantUML block
     // notes render backslash sequences literally (probed against plantuml.js
     // 1.2026.6 and the IKVM jar, with and without teoz): the ONLY consumed
-    // sequence is \t, rendered as a real tab — and no escaping can prevent
-    // that, since the final \t pair of any backslash run is consumed. The
-    // pre-3.0.62 blanket backslash doubling therefore displayed \\n for a
-    // wire \n while still losing tabs, and was removed.
+    // sequence is \t, rendered as a real tab, and the final \t pair of any
+    // backslash run is consumed. The pre-3.0.62 blanket backslash doubling
+    // therefore displayed \\n for a wire \n while still losing tabs, and was
+    // removed. A zero-width space between the backslash and the t keeps both,
+    // and every reader drops it (DIAGRAM_COLOURS_PLAN §12.5).
 
     /// <summary>
     /// Neutralises PlantUML creole markup a captured payload happens to contain, so a note shows the bytes
@@ -567,14 +568,39 @@ public static partial class PlantUmlCreator
                 }
 
                 // A bullet or a numbered item: creole eats the marker and restyles the line. `~` escapes both.
-                if (c is '*' or '#') sb.Append('~');
+                if (c is '*' or '#') AppendTilde(sb);
             }
 
             if (isPair)
             {
-                sb.Append('~').Append(c).Append('~').Append(c);
+                AppendTilde(sb);
+                sb.Append(c);
+                AppendTilde(sb);
+                sb.Append(c);
                 i++;
                 continue;
+            }
+
+            if (c == '\r' && i < line.Length - 1)
+            {
+                // A carriage return that ends no line here ends one for the Java engine's preprocessor, so the text
+                // after it met none of the line-start escapes: `x<CR>!include <path>` drew the file (§12.5).
+                sb.Append(CodePoint(c));
+                continue;
+            }
+
+            if (c == '<' && OpensCodePoint(line, i))
+            {
+                // A captured `<U+hhhh>`: both engines decode it after `~<` and after `<U+003C>` alike, and paint the
+                // character. A zero-width space after the `<` leaves it text; every reader drops the space (§12.5).
+                sb.Append(CodePoint(c)).Append(ZeroWidthSpace);
+                continue;
+            }
+
+            if (c == 't' && sb.Length > 0 && sb[^1] == '\\')
+            {
+                // Both engines draw `\t` in a note as a tab, the last pair of a run of backslashes included.
+                sb.Append(ZeroWidthSpace);
             }
 
             if (i == trailingBackslash
@@ -596,11 +622,41 @@ public static partial class PlantUmlCreator
             }
 
             if (c == '<' && i + 1 < line.Length && (IsCreoleTagStart(line[i + 1]) || IsLoaderMarkupStart(line[i + 1])))
-                sb.Append('~');
+                AppendTilde(sb);
 
             sb.Append(c);
         }
     }
+
+    /// <summary>
+    /// Writes creole's escape. A backslash right before it takes the <c>~</c> with it on both engines (<c>\&lt;b&gt;</c>
+    /// written <c>\~&lt;b&gt;</c> painted <c>~&lt;b&gt;</c>), so a zero-width space parts the two (§12.5).
+    /// </summary>
+    private static void AppendTilde(StringBuilder sb)
+    {
+        if (sb.Length > 0 && sb[^1] == '\\') sb.Append(ZeroWidthSpace);
+        sb.Append('~');
+    }
+
+    /// <summary>
+    /// Whether the <c>&lt;</c> at <paramref name="at"/> opens a code point, <c>&lt;U+hhhh&gt;</c> with four to six hex digits
+    /// in either case: the engines decode four or five of them and every reader four to six, so each such run is kept text.
+    /// </summary>
+    internal static bool OpensCodePoint(ReadOnlySpan<char> text, int at)
+    {
+        if (at + 2 >= text.Length || text[at] != '<' || text[at + 1] != 'U' || text[at + 2] != '+') return false;
+        var j = at + 3;
+        while (j < text.Length && j - at - 3 < 7 && char.IsAsciiHexDigit(text[j])) j++;
+        var digits = j - at - 3;
+        return digits is >= 4 and <= 6 && j < text.Length && text[j] == '>';
+    }
+
+    /// <summary>
+    /// Whether <paramref name="c"/> ends a statement on both engines although no reader of the text sees a line break there:
+    /// NEL, LINE SEPARATOR and PARAGRAPH SEPARATOR. In a one-line statement (a bar, a label, a test name) the diagram then
+    /// fails with a syntax error, so they are written as code points there (§12.5).
+    /// </summary>
+    internal static bool IsStatementBreak(char c) => c is '\u0085' or '\u2028' or '\u2029';
 
     /// <summary>A character as PlantUML's code point escape, <c>&lt;U+hhhh&gt;</c>.</summary>
     internal static string CodePoint(char c) => $"<U+{(int)c:X4}>";
@@ -651,7 +707,8 @@ public static partial class PlantUmlCreator
                 return CodePoint(c);
         }
 
-        return creole && (c == '=' || CreoleLineMarkup().IsMatch(trimmed))
+        // `|_` opens a creole tree item, drawn without its marker (§12.5).
+        return creole && (c == '=' || (c == '|' && rest.StartsWith("_")) || CreoleLineMarkup().IsMatch(trimmed))
             ? CodePoint(c)
             : null;
     }
@@ -785,17 +842,24 @@ public static partial class PlantUmlCreator
         var contentStart = ContentStart(line);
         var head = contentStart >= 0 ? LineStartEscape(line, contentStart, creole: false) : null;
         var trailingBackslash = OddTrailingBackslash(line);
-        if (head is null && trailingBackslash < 0) return line;
+        // A carriage return that ends no line here ends one for the Java engine's preprocessor (§12.5).
+        var loneReturn = line.Length > 1 && line.AsSpan(0, line.Length - 1).IndexOf('\r') >= 0;
+        if (head is null && trailingBackslash < 0 && !loneReturn) return line;
 
         var sb = new StringBuilder(line.Length + 16);
         for (var i = 0; i < line.Length; i++)
         {
             if (i == contentStart && head is not null) sb.Append(head);
             else if (i == trailingBackslash) sb.Append(CodePoint('\\'));
+            else if (line[i] == '\r' && i < line.Length - 1) sb.Append(CodePoint('\r'));
             else sb.Append(line[i]);
         }
         return sb.ToString();
     }
+
+    /// <summary>What sends a text through <see cref="EscapeLoaderMarkup"/>'s loop: a markup opener, a builtin call's
+    /// <c>%</c>, or a character that ends a one-line statement.</summary>
+    private static readonly string LoaderMarkupTriggers = new(['<', '%', (char)0x85, (char)0x2028, (char)0x2029]);
 
     /// <summary>
     /// Puts a <c>~</c> before every <c>&lt;</c> that opens an OpenIconic icon (<c>&lt;&amp;name&gt;</c>), an
@@ -820,14 +884,26 @@ public static partial class PlantUmlCreator
     /// date. The line-level escapes a note body needs are <see cref="EscapePreprocessorLine"/>'s, applied by
     /// the callers that write lines.
     /// </para>
+    /// <para>
+    /// NEL, LINE SEPARATOR and PARAGRAPH SEPARATOR are written as code points as well (§12.5): each ends the
+    /// one-line statement a step name or a test name is written into, on both engines, and the diagram is lost.
+    /// </para>
     /// </summary>
     internal static string EscapeLoaderMarkup(string text)
     {
-        if (string.IsNullOrEmpty(text) || text.AsSpan().IndexOfAny('<', '%') < 0) return text;
+        if (string.IsNullOrEmpty(text) || text.AsSpan().IndexOfAny(LoaderMarkupTriggers) < 0) return text;
 
         StringBuilder? sb = null;
         for (var i = 0; i < text.Length; i++)
         {
+            if (IsStatementBreak(text[i]))
+            {
+                // It ends the one statement a step name, a test name or a span label is written into (§12.5).
+                sb ??= new StringBuilder(text.Length + 16).Append(text, 0, i);
+                sb.Append(CodePoint(text[i]));
+                continue;
+            }
+
             if (text[i] == '%' && IsBuiltinCall(text, i))
             {
                 sb ??= new StringBuilder(text.Length + 16).Append(text, 0, i);
@@ -846,8 +922,10 @@ public static partial class PlantUmlCreator
     }
 
     /// <summary>
-    /// Captured text on a message arrow: a request's method and path, which reach the label as captured (3.30.2).
-    /// The label sits mid-line, so the preprocessor's line-start rules cannot reach it, but the rest of what
+    /// Captured text on a message arrow: a request's method and path, which reach the label as captured (3.30.2), a
+    /// GraphQL operation name read from the body, and a status recorded as thrown (§12.5). A line break in them is
+    /// written as a space, since it would end the statement and run the rest as a line of its own. The label sits
+    /// mid-line, so the preprocessor's line-start rules cannot reach it, but the rest of what
     /// <see cref="EscapeCreoleMarkup"/> handles can: creole takes a literal <c>~</c> as its escape (inside the
     /// internal-flow link too, so <c>/~/x</c> was drawn <c>//x</c>), the preprocessor evaluates a builtin call such
     /// as <c>%date()</c>, a <c>&lt;</c> can open a tag or a bundle load, a decimal reference is decoded, and a doubled
@@ -874,6 +952,14 @@ public static partial class PlantUmlCreator
         for (var i = 0; i < line.Length; i++)
         {
             var c = line[i];
+            if (c is '\r' or '\n')
+            {
+                // A line break ends the arrow's statement and the rest runs as a line of its own (§12.5): a GraphQL
+                // operation name read from a body's raw JSON can hold one, and so can a status recorded as thrown.
+                if (c == '\r' || i == 0 || line[i - 1] != '\r') sb.Append(' ');
+                continue;
+            }
+
             var pairIndex = CreolePairChars.IndexOf(c);
             if (c != '[' && pairIndex >= 0 && live[pairIndex] && i + 1 < line.Length && line[i + 1] == c)
             {
@@ -882,9 +968,16 @@ public static partial class PlantUmlCreator
                 continue;
             }
 
+            if (c == '<' && OpensCodePoint(line, i))
+            {
+                // `<U+003C>` alone is decoded again with what follows it: a captured `<U+0041>` painted A (§12.5).
+                sb.Append(CodePoint(c)).Append(ZeroWidthSpace);
+                continue;
+            }
+
             // Both brackets, always: one left raw beside an escaped partner unbalances the link markup, and the
-            // engine then draws the whole `[[#iflow-… …]]` as black text (measured).
-            if (c is '~' or '<' or '[' or ']' || i == trailingBackslash || (c == '%' && IsBuiltinCall(line, i)))
+            // engine then draws the whole `[[#iflow-… …]]` as black text (measured). A statement break ends the label.
+            if (c is '~' or '<' or '[' or ']' || i == trailingBackslash || (c == '%' && IsBuiltinCall(line, i)) || IsStatementBreak(c))
                 sb.Append(CodePoint(c));
             else if (c == '&' && IsDecimalCharacterReference(line, i))
                 sb.Append('&').Append(ZeroWidthSpace);
@@ -969,7 +1062,8 @@ public static partial class PlantUmlCreator
             if (trace?.StatusCode?.Value as HttpStatusCode? == (HttpStatusCode)302)
                 status += " (Redirect)"; // The name of 302 'Found' is a bit ambiguous, so we make it clearer for the reader
 
-            var responseLabel = status ?? "";
+            // A thrown status is drawn as recorded, so it is captured text; a title-cased one is only its words (§12.5).
+            var responseLabel = EscapeCapturedLabel(status ?? "");
 
             var arrowColor = builder.GetArrowColor(trace!.ServiceName, trace.DependencyCategory, trace.CallerName, trace.CallerDependencyCategory);
             var responsePrefix = $"{serviceShortName} -{arrowColor}-> {callerShortName}: ";
@@ -1575,6 +1669,10 @@ public static partial class PlantUmlCreator
             cut = pos + open;
         // Never strand a creole escape from the character it protects.
         while (cut > pos + 1 && run[cut - 1] == '~') cut--;
+        // Never end a line in an escape's zero-width space: with the join marker after it the line would end in two,
+        // which every reader takes for a break that had a space in it (§12.5). The space starts the next line instead.
+        while (cut - pos > ZeroWidthSpace.Length && run[pos..cut].EndsWith(ZeroWidthSpace, StringComparison.Ordinal))
+            cut -= ZeroWidthSpace.Length;
         return cut;
     }
 

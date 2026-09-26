@@ -228,6 +228,12 @@ public class CapturedTextEscapeTests
         "&#39; stays",
         "trailing backslash \\",
         "next line",
+        // What the first audit missed (§12.5).
+        "R says <U+00E9>t and <U+0041>",
+        "C:\\temp\\new and a\\tb",
+        "grep '\\<word\\>' and \\[[x]]",
+        "|_ tree item",
+        "progress 10%\r20%",
     ];
 
     [Fact]
@@ -302,9 +308,13 @@ public class CapturedTextEscapeTests
         "a << b >> c",
         "{{",
         "trailing backslash \\",
+        // What the first audit missed (§12.5).
+        "C:\\temp\\new",
+        "R says <U+00E9>t",
+        $"a{(char)0x2028}b",
     ];
 
-    internal static readonly string[] StepBarHazardCells = ["~/.bashrc", "%date()", "&#39;", "~~w~~"];
+    internal static readonly string[] StepBarHazardCells = ["~/.bashrc", "%date()", "&#39;", "~~w~~", "C:\\temp", "<U+0041>"];
 
     [Fact]
     [Trait("Category", "Integration")]
@@ -391,6 +401,171 @@ public class CapturedTextEscapeTests
         }
     }
 
+    // ── What the first audit missed (DIAGRAM_COLOURS_PLAN §12.5) ──────────
+    // A differential fuzz of the escapers against both engines (every case escaped by the real escaper, painted by the shipped
+    // Node renderer on the pin and by the Java engine through IKVM, and compared with what was captured) found text that was
+    // still not drawn as captured, and one way past the line-start escapes.
+
+    [Theory]
+    // A captured code point: the engine decodes four or five hex digits in either case and the readers four to six, and both
+    // `~<U+0041>` and `<U+003C>U+0041>` are decoded all the same (each paints A). A zero-width space after the `<` keeps it text.
+    [InlineData("<U+0041>", "<U+003C><U+200B>U+0041>")]
+    [InlineData("R says <U+00e9>t", "R says <U+003C><U+200B>U+00e9>t")]
+    [InlineData("<U+000041>", "<U+003C><U+200B>U+000041>")]
+    [InlineData("<U+41>", "~<U+41>")]
+    [InlineData("<u+0041>", "~<u+0041>")]
+    // A backslash before `t` was drawn as a tab (both engines), and one before an escape written as `~` took the `~` with it.
+    [InlineData("C:\\temp\\new", "C:\\<U+200B>temp\\new")]
+    [InlineData("a\\\\tb", "a\\\\<U+200B>tb")]
+    [InlineData("grep '\\<word\\>'", "grep '\\<U+200B>~<word\\>'")]
+    [InlineData("\\[[x]]", "\\<U+200B>~[~[x]]")]
+    [InlineData("a\\nb", "a\\nb")]
+    // A line opening with |_ is a creole tree item, drawn without the marker.
+    [InlineData("|_x", "<U+007C>_x")]
+    [InlineData("  |_ item", "  <U+007C>_ item")]
+    [InlineData("| _x", "| _x")]
+    // A lone carriage return ends the line for the Java engine's preprocessor, so what followed it was never escaped: after
+    // `x<CR>!include <path>` the Java engine drew the file into the note.
+    [InlineData("x\r!include /etc/hosts", "x<U+000D>!include /etc/hosts")]
+    [InlineData("10%\r20%", "10%<U+000D>20%")]
+    [InlineData("crlf\r\nnext", "crlf\r\nnext")]
+    public void EscapeCreoleMarkup_escapes_what_the_first_audit_missed(string input, string expected) =>
+        Assert.Equal(expected, PlantUmlCreator.EscapeCreoleMarkup(input));
+
+    [Fact]
+    public void A_line_separator_in_a_one_line_statement_is_written_as_its_code_point()
+    {
+        // A bar, a step name, a test name and a label are each one statement; U+0085, U+2028 and U+2029 end it on both engines
+        // and the diagram fails with a syntax error.
+        foreach (var (c, cp) in new[] { ((char)0x2028, "<U+2028>"), ((char)0x2029, "<U+2029>"), ((char)0x85, "<U+0085>") })
+        {
+            Assert.Equal($"a{cp}b", PlantUmlCreator.EscapeLoaderMarkup($"a{c}b"));
+            Assert.Equal($"GET: /a{cp}b", PlantUmlCreator.EscapeCapturedLabel($"GET: /a{c}b"));
+            Assert.Contains(@"\n\na" + cp + @"b\n", StepBarPlantUml.Build("Given x", docString: $"a{c}b"));
+            Assert.Contains($"| a{cp}b |", StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], [$"a{c}b"]])]));
+        }
+    }
+
+    [Fact]
+    public void A_captured_code_point_is_broken_in_every_one_line_escaper()
+    {
+        Assert.Equal("GET: /x<U+003C><U+200B>U+0041>", PlantUmlCreator.EscapeCapturedLabel("GET: /x<U+0041>"));
+        Assert.Contains(@"\n\n<U+003C><U+200B>U+0041>\n", StepBarPlantUml.Build("Given x", docString: "<U+0041>"));
+        Assert.Contains("| <U+003C><U+200B>U+0041> |", StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], ["<U+0041>"]])]));
+    }
+
+    [Fact]
+    public void A_bar_writes_a_backslash_as_its_code_point_and_a_zero_width_space()
+    {
+        // The Java engine reads `\<` in a one-line statement as an escape, so the `\<U+200B>` a bar wrote since 3.0.78 painted
+        // "U+200B>" for every backslash under Local and Server. Both as code points, the two draw a backslash on both engines.
+        Assert.Contains(@"\n\nC:<U+005C><U+200B>temp<U+005C><U+200B>new\n", StepBarPlantUml.Build("Given x", docString: @"C:\temp\new"));
+        Assert.Contains("| a<U+005C><U+200B>b |", StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], [@"a\b"]])]));
+    }
+
+    [Fact]
+    public void A_bars_backslash_is_found_by_search()
+    {
+        // Search indexes a diagram's source, and its normalizer drops a zero-width space written as a code point but not
+        // the character itself, so a bar that wrote one after each backslash hid `C:\temp` from search (§12.5).
+        var bar = StepBarPlantUml.Build("Given a path", [new StepBarTable(null, [["Col"], [@"D:\data"]])], @"C:\temp\new");
+
+        var normalized = Kronikol.Reports.SearchIndex.SearchNormalizer.Normalize(bar);
+
+        // A search is normalized by the same rules, which also drop a `\n` pair as an arrow label's break. Ordinal: a
+        // culture comparison ignores a zero-width space, and passed on the defect.
+        Assert.Contains(Query(@"C:\temp\new"), normalized, StringComparison.Ordinal);
+        Assert.Contains(Query(@"D:\data"), normalized, StringComparison.Ordinal);
+
+        static string Query(string text) => Kronikol.Reports.SearchIndex.SearchNormalizer.Normalize(text).TrimEnd('\n');
+    }
+
+    [Fact]
+    public void A_test_name_holding_a_line_break_stays_one_statement()
+    {
+        // Read by this test's own id: the store is process-wide and other classes write to it in parallel.
+        var id = $"CapturedTextEscapeTests.{Guid.NewGuid():N}";
+        DefaultTrackingDiagramOverride.InsertTestDelimiter(id, "Parses(\"a\nb\r\nc\rd\")");
+
+        var bar = RequestResponseLogger.RequestAndResponseLogs
+            .Where(l => l.TestId == id && l.PlantUml is not null)
+            .Select(l => l.PlantUml!)
+            .Single(p => p.Contains("hnote across"));
+        Assert.Contains("Test Parses(\"a b c d\")", bar);
+    }
+
+    [Fact]
+    public void A_test_delimiter_for_a_null_name_is_still_written()
+    {
+        // The escaper returns a null name as it is, so a null name wrote "Test " before the line breaks were folded.
+        var id = $"CapturedTextEscapeTests.{Guid.NewGuid():N}";
+        DefaultTrackingDiagramOverride.InsertTestDelimiter(id, null!);
+
+        var bar = RequestResponseLogger.RequestAndResponseLogs
+            .Where(l => l.TestId == id && l.PlantUml is not null)
+            .Select(l => l.PlantUml!)
+            .Single(p => p.Contains("hnote across"));
+        Assert.Contains("<color:white>Test ", bar);
+    }
+
+    // Two arrows carry captured text the first audit did not follow: a GraphQL request's operation name, read from the
+    // body's raw JSON, and a status recorded as thrown (`!` and the exception), drawn as recorded where any other status
+    // is title-cased to its words. A line break in either ended the arrow's statement and the rest ran as a line of its
+    // own: under the Java engine `!include` drew a local file (§12.5).
+
+    [Fact]
+    public void A_graphql_operation_name_holding_a_line_break_stays_in_its_label()
+    {
+        var body = "{\"query\":\"query Q { a }\",\"operationName\":\"x\r\n!include /etc/hosts\ny\rz\"}";
+        foreach (var tracking in new[] { false, true })
+        {
+            var logs = new[] { Request("POST", "http://example.com/graphql", body), Response(HttpStatusCode.OK, "{}", "application/json") };
+
+            var lines = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs, internalFlowTracking: tracking)
+                .Single().PlantUmls.Single().PlainText.Split('\n');
+
+            Assert.DoesNotContain(lines, l => l.TrimStart().StartsWith("!include", StringComparison.Ordinal));
+            Assert.Contains(lines, l => l.Contains("(query x !include /etc/hosts y z)", StringComparison.Ordinal));
+        }
+    }
+
+    [Fact]
+    public void A_thrown_status_is_escaped_like_a_request_label()
+    {
+        var logs = new[]
+        {
+            Request("GET", "http://example.com/api/orders", null),
+            Response(HttpStatusCode.OK, "{}", "application/json") with
+            {
+                StatusCode = (OneOf<HttpStatusCode, string>)"!IOException: refused\n!include /etc/hosts ~/x",
+            },
+        };
+
+        var lines = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.Single().PlainText.Split('\n');
+
+        Assert.DoesNotContain(lines, l => l.TrimStart().StartsWith("!include", StringComparison.Ordinal));
+        Assert.Contains(lines, l => l.TrimEnd('\r').EndsWith(": !IOException: refused !include /etc/hosts <U+007E>/x", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(@"\tb")]
+    [InlineData("<U+0041>")]
+    [InlineData(@"\<b>")]
+    [InlineData("&#39;")]
+    [InlineData("&#39;\tb<U+0041>")]
+    public void A_run_the_width_bound_cuts_reads_back_whole_wherever_an_escape_falls(string escaped)
+    {
+        // A cut right after an escape's zero-width space (`\<U+200B>t`, `<U+003C><U+200B>U+`, `\<U+200B>~<`) ended the
+        // line in two markers, which the readers take for a break that had a space in it. Each escape stands alone
+        // between letters here: punctuation near it moved the cut away and hid the case.
+        for (var at = 90; at < 135; at++)
+        {
+            var run = new string('a', at) + escaped + new string('c', 200);
+            var written = PlantUmlCreator.WrapUnbreakableRuns(PlantUmlCreator.EscapeCreoleMarkup(run));
+            Assert.Equal(run, NoteSourceText.Decode(written));
+        }
+    }
+
     /// <summary>The PlantUML Kronikol writes for a GET of <paramref name="uri"/>, as text.</summary>
     internal static string LabelDiagram(string uri, bool internalFlowTracking)
     {
@@ -433,9 +608,12 @@ public class CapturedTextEscapeTests
         return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.Single().PlainText;
     }
 
-    /// <summary>The painted text of an SVG, one entry per drawn line (text elements sharing a baseline).</summary>
+    /// <summary>
+    /// The painted text of an SVG, one entry per drawn line (text elements sharing a baseline). A self-closing element is
+    /// a run drawn at no width, such as the Java engine's carriage return.
+    /// </summary>
     internal static List<string> PaintedLines(string svg) =>
-        Regex.Matches(svg, @"<text\b([^>]*)>([\s\S]*?)</text>")
+        Regex.Matches(svg, @"<text\b([^>]*?)(?:/>|>([\s\S]*?)</text>)")
             .Select(m => (
                 Y: double.Parse(Regex.Match(m.Groups[1].Value, @"\by=""([\d.]+)""").Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture),
                 X: double.Parse(Regex.Match(m.Groups[1].Value, @"\bx=""([\d.]+)""").Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture),
