@@ -41,8 +41,9 @@ internal enum PlantUmlStatementKind
 /// <summary>
 /// The statement-length limits PlantUML's parser enforces, measured against the engine Kronikol ships
 /// (originally <c>lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched</c>,
-/// re-verified against the <c>@v1.2026.6-patched</c> build and again against the stock
-/// <c>@v1.2026.8beta1-0e4f452</c> build that replaced it). They are per statement
+/// re-verified against the <c>@v1.2026.6-patched</c> build, the stock <c>@v1.2026.8beta1-0e4f452</c>
+/// build, and the published <c>@plantuml/core@1.2026.8</c> that replaced it, where every pin below holds and
+/// every edge sits within a few characters of the build before: plans/ENGINE_PIN_PLAN.md §1.11). They are per statement
 /// kind, not one global line limit, and they fail in two different ways — neither of which says
 /// "too long":
 /// <list type="bullet">
@@ -57,15 +58,18 @@ internal enum PlantUmlStatementKind
 /// main thread draw it (<see cref="MaxLinkedLabelChars"/>).</description></item>
 /// </list>
 /// <para>Measured caps on the trimmed statement (the value below each is the constant, kept under the
-/// measurement so a small engine drift does not reopen the bug; the 1.2026.8beta1 re-measurement moved
-/// only the TeaVM-build artifacts — upward, so every constant stays safely under its cap):</para>
+/// lowest measurement so a small engine drift, or a runtime with a smaller stack, does not reopen the bug;
+/// a stack edge moves with the runtime, so the constants keep their margin under the lowest figure, not
+/// under any one of them):</para>
 /// <list type="table">
 /// <item><term><c>a -&gt; b: …</c>, <c>a --&gt; b: …</c>, <c>a -[#F39C12]&gt; b: …</c></term><description>2000 — exactly, on every build measured, and on the
 /// whole statement: a 27-character prefix leaves a 1973-character label, not a longer statement.</description></item>
 /// <item><term><c>loop</c> 1476, <c>alt</c> 1477, <c>group</c> 1482, <c>opt</c> 1484 (1.2026.6 parse limits;
-/// on 1.2026.8beta1 the parse accepts more but the engine stack-overflows around <c>loop</c> 3660 / <c>group</c> 4975 / <c>alt</c>,<c>opt</c> 5641)</term><description>constant 1471</description></item>
-/// <item><term><c>hnote across … #black:&lt;color:white&gt;…</c> 1458–1534 (≈4124 on 1.2026.8beta1; a stack-overflow
-/// edge, so it wobbles between processes)</term><description>constant 1400</description></item>
+/// from 1.2026.8beta1 the parse accepts more and the edge is the engine's stack, not the parser: about 2,000
+/// on node 25.9 with its default stack, 1980 to 2041 on the 1.2026.8 builds, 3660 to 5641 on the runtime of
+/// 2026-09-04, and past 5000 with a larger stack)</term><description>constant 1471</description></item>
+/// <item><term><c>hnote across … #black:&lt;color:white&gt;…</c> 1458–1534 on 1.2026.6; from 1.2026.8beta1 a
+/// stack edge too, 2005 to 2008 on node 25.9 (≈4124 on the runtime of 2026-09-04)</term><description>constant 1400</description></item>
 /// <item><term>note bodies 16371, <c>note over a : …</c> 16392, plain <c>hnote across</c> 16398
 /// (16370/16377/16376 on 1.2026.8beta1 — unchanged)</term><description>constant 16000</description></item>
 /// <item><term>the text inside a <c>[[#iflow-…]]</c> link, in the Chromium worker: 980 cold, 475 to 495 with the

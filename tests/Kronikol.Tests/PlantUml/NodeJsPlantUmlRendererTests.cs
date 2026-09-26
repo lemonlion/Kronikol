@@ -169,7 +169,8 @@ public class NodeJsPlantUmlRendererTests
         NodeJsPlantUmlRenderer.Render(Seq("Warm", "Two"), PlantUmlImageFormat.Svg);
         Assert.Equal("hit", NodeJsPlantUmlRenderer.LastCodeCacheStatus);
 
-        // A cache V8 refuses (here: garbage; in real life a node upgrade) is rebuilt, and the render still works.
+        // A cache that fails its checksum (here: garbage) or that V8 refuses (a node upgrade) is rebuilt, and the
+        // render still works.
         File.WriteAllBytes(cachePath, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
         var svg = System.Text.Encoding.UTF8.GetString(NodeJsPlantUmlRenderer.Render(Seq("Rejected", "Three"), PlantUmlImageFormat.Svg));
         Assert.Contains("<svg", svg);
@@ -477,10 +478,11 @@ public class NodeJsPlantUmlRendererTests
     {
         Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
 
-        // On the 1.2026.6 build this was a parse limit around 1476 (loop) to 1484 (opt); on the
+        // On the 1.2026.6 build this was a parse limit around 1476 (loop) to 1484 (opt); from the
         // 1.2026.8beta1 build the parse accepts far more but the engine crashes on its own JS stack
-        // instead (RangeError), measured around 3660 (loop) to 5641 (opt) — stack-dependent, so the
-        // exact edge wobbles between processes. The constant sits well under the lowest measurement
+        // instead (RangeError): about 2,000 on node 25.9 with its default stack on both 1.2026.8 builds,
+        // 3660 to 5641 on the runtime of 2026-09-04 (plans/ENGINE_PIN_PLAN.md §1.11). A stack edge moves
+        // with the runtime and wobbles between processes. The constant sits well under the lowest measurement
         // rather than on it, so the pins are the two facts that matter and survive a small engine
         // drift: the constant parses, and a runaway block label still kills the whole diagram.
         var safe = StatementOf("loop ", PlantUmlStatementLimits.MaxBlockLabelChars);
@@ -499,8 +501,9 @@ public class NodeJsPlantUmlRendererTests
 
         // The step-delimiter bar's own form. Past the cap the engine throws `RangeError: Maximum call
         // stack size exceeded` and returns no SVG at all, so the scenario loses every diagram it had
-        // rather than one statement. Measured 1458 on the 1.2026.6 build and around 4124 on
-        // 1.2026.8beta1 — a stack-overflow edge, so it wobbles between processes; the crash probe sits
+        // rather than one statement. Measured 1458 on the 1.2026.6 build, around 4124 on 1.2026.8beta1
+        // on 2026-09-04 and 2005 to 2008 on node 25.9 with both 1.2026.8 builds: a stack-overflow edge,
+        // so it moves with the runtime and wobbles between processes; the crash probe sits
         // far past it and the constant far under it.
         var safe = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml("Given", new string('s', 1200));
         Assert.True(safe.Length <= PlantUmlStatementLimits.MaxColouredNoteBarChars);
@@ -720,6 +723,72 @@ public class NodeJsPlantUmlRendererTests
         Assert.Contains("style:none", stdout);
     }
 
+    /// <summary>
+    /// Runs <c>plantuml-render.js</c> once against a stub viz and a stub ES-module engine kept in
+    /// <paramref name="dir"/>, so the engine's code cache (<c>plantuml.js.v8cache</c> beside the stub) carries over
+    /// from one run to the next; returns the run and the code-cache status it reported.
+    /// </summary>
+    private static (NodeProbe.NodeRun Run, string? Status) RunStubEngineIn(string dir)
+    {
+        var viz = Path.Combine(dir, "viz-global.js");
+        var engine = Path.Combine(dir, "plantuml.js");
+        if (!File.Exists(engine))
+        {
+            File.WriteAllText(viz,
+                "globalThis.Viz = { instance: function () { return Promise.resolve({ renderString: function () { return '<svg xmlns=\"http://www.w3.org/2000/svg\"/>'; } }); } };");
+            File.WriteAllText(engine,
+                "\"use strict\";\nlet C=(lines,id,options)=>{var t=document.getElementById(id);t.innerHTML='<svg xmlns=\"http://www.w3.org/2000/svg\"><text>'+lines.join(' ')+'</text></svg>';},D=(lines,options)=>'unused';\nexport{C as render,D as renderToString};\n");
+        }
+        var run = NodeProbe.RunCaptured(RenderScriptSource(), "@startuml\na -> b: cached\n@enduml", viz, engine);
+        var status = System.Text.RegularExpressions.Regex.Match(run.Stderr, @"\[plantuml-render\] code cache: (\w+)");
+        return (run, status.Success ? status.Groups[1].Value : null);
+    }
+
+    [Fact]
+    public void A_code_cache_damaged_in_its_middle_is_rejected_and_rebuilt_instead_of_run()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // A release node checks a code cache's header and never its payload (plans/ENGINE_PIN_PLAN.md §1.14): one
+        // byte flipped in the real engine's cache crashed node in 6 of 10 flips, before any output, and the crash
+        // never rewrote the file, so every later render on that machine crashed the same way. The file carries a
+        // SHA-256 of its data now, checked before V8 is handed the data.
+        var dir = Directory.CreateTempSubdirectory("kronikol-code-cache-").FullName;
+        try
+        {
+            var cachePath = Path.Combine(dir, NodeJsPlantUmlRenderer.CodeCacheFileName);
+            Assert.Equal("miss", RunStubEngineIn(dir).Status);
+            Assert.Equal("hit", RunStubEngineIn(dir).Status);
+
+            var bytes = File.ReadAllBytes(cachePath);
+            bytes[bytes.Length / 2] ^= 0xFF;
+            File.WriteAllBytes(cachePath, bytes);
+            var (damaged, status) = RunStubEngineIn(dir);
+
+            Assert.True(damaged.ExitCode == 0, $"node exited {damaged.ExitCode}: {damaged.Stderr}");
+            Assert.Contains("<svg", damaged.Stdout);
+            Assert.Contains("cached", damaged.Stdout);
+            Assert.Equal("rejected", status);
+            Assert.Equal("hit", RunStubEngineIn(dir).Status);
+            Assert.Empty(Directory.GetFiles(dir, "*.tmp"));
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void The_render_script_says_what_v8_checks_a_code_cache_against()
+    {
+        // V8 checks cached data against the source's length, not its bytes (plans/ENGINE_PIN_PLAN.md §1.12). The
+        // script's comments said a changed file was rejected, which holds only for a change of length.
+        var source = RenderScriptSource();
+
+        Assert.DoesNotContain("a changed file", source);
+        Assert.Contains("length, not its bytes", source);
+    }
+
     [Fact]
     public void The_engine_cache_is_versioned_by_the_cdn_tag()
     {
@@ -729,5 +798,24 @@ public class NodeJsPlantUmlRendererTests
         var tag = Kronikol.Constants.TrackingDefaults.PlantUmlJsCdnBase.Split('/')[^1].Split('@')[^1];
         Assert.Contains($"{Path.DirectorySeparatorChar}{tag}{Path.DirectorySeparatorChar}",
             NodeJsPlantUmlRenderer.CodeCachePath);
+        // On the npm route the last segment is `core@1.2026.8`: the directory is the release version, distinct
+        // from every fork tag's directory (plans/ENGINE_PIN_PLAN.md §1.6).
+        Assert.Equal("1.2026.8", tag);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void The_engine_files_on_the_cdn_hash_to_the_known_constants()
+    {
+        // The Node cache refuses a file that does not match these constants, and the report page hands them to the
+        // browser's own integrity check (plans/ENGINE_PIN_PLAN.md S2, S3): one wrong character in a constant would
+        // cost every diagram. Checked against what the CDN serves.
+        using var http = new HttpClient();
+        foreach (var (file, expected) in NodeJsPlantUmlRenderer.ExpectedIntegrity)
+        {
+            var bytes = http.GetByteArrayAsync($"{Kronikol.Constants.TrackingDefaults.PlantUmlJsCdnBase}/{file}").GetAwaiter().GetResult();
+            var actual = EngineCache.Integrity(bytes);
+            Assert.True(actual == expected, $"{file}: the CDN serves {actual} ({bytes.Length:N0} bytes), the constant says {expected}");
+        }
     }
 }

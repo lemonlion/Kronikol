@@ -10,10 +10,12 @@ const variantName = process.argv[2] || 'baseline';
 const reportPath = process.argv[3] || 'C:/Code/work/sidekick-intelligence-e2e/.logs/kronikol/TestRunReport.html';
 const variant = variantName === 'baseline' ? { engine: 'old-plantuml.js', viz: 'viz-global.js', replace: [] } : require(path.join(SP, 'variants', variantName + '.js'));
 const reportDir = path.dirname(reportPath);
-const CDN = 'https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched';
+// Whichever jsDelivr engine route the report was written with (a fork tag, or the npm package from 3.30.5),
+// so the script follows TrackingDefaults.PlantUmlJsCdnBase instead of going stale with one pinned tag.
+const CDN_ENGINE_FILE = /https:\/\/cdn\.jsdelivr\.net\/(?:gh|npm)\/[^\s"'<>]*?\/(plantuml\.js|viz-global\.js)/g;
 
 let html = fs.readFileSync(reportPath, 'utf8').split('\r\n').join('\n');
-html = html.split(CDN + '/viz-global.js').join('/__engine/viz-global.js').split(CDN + '/plantuml.js').join('/__engine/plantuml.js');
+html = html.replace(CDN_ENGINE_FILE, (m, file) => '/__engine/' + file);
 for (const [from, to] of (variant.replace || [])) {
   if (!html.includes(from)) { console.error('VARIANT REPLACEMENT NOT FOUND: ' + from.slice(0, 80)); process.exit(2); }
   html = html.split(from).join(to);

@@ -2,8 +2,10 @@
 
 **Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status:** **green-lit 2026-09-26**: the
 owner asked for the plan in full, so D6 is taken as recommended (move now, keep `viz-global.js`) and Q1, Q2,
-Q4, Q5, Q6 and Q7 as their recommendations say. **S0 shipped as 3.30.4**; S1 to S6 are the second patch. §1 is
-what was RUN and READ on 2026-09-22, §9 is the assumption ledger, §10 is the execution log.
+Q4, Q5, Q6 and Q7 as their recommendations say. **Executed: S0 shipped as 3.30.4, S1 to S6 as 3.31.1** (both
+2026-09-26). §1 is what was RUN and READ on 2026-09-22, §9 is the assumption ledger, §10 is the execution log,
+with the departures (§10.2: a refused `viz-global.js` loses no Kronikol diagram, since the engine falls back to
+Smetana; the default fragment height is the fastest measured).
 
 **Re-checked 2026-09-25 against 3.29.3 (`b74c8ddc`):** every source, test and render-bench file this plan
 cites is unchanged since `2843018a` except `ReportGenerator.cs` (the fragment-height parameter moved
@@ -1159,8 +1161,16 @@ label past 500 characters.
   overflowed on it too (475 with the optimizers off, 1,050 once after warm-up), and eighty methods took the
   label past the statement cap, which cut it inside the link: the link was never closed and the stats and counts
   after it were lost. The same cap now applies to the text inside that link, after wrapping (`CapLinkText`). The
-  user-reported ClickHouse edge in `ComponentDiagramGeneratorTests` (thirty operations) holds about 1,150
-  characters.
+  ClickHouse edge in `ComponentDiagramGeneratorTests` (thirty operations) holds about 1,150 characters.
+  **Corrected 2026-09-26 (kronikol-63's finding, checked):** this link is API-only. It is written only when
+  stats are passed, and no generated report passes them: `ReportGenerator.cs:403`,
+  `MergeableReportRenderer.cs:46` and `ComponentDiagramReportGenerator.cs:51` call `GeneratePlantUml` without
+  stats, and `ComputeRelationshipStats` has had no caller in `src/` since 74b9763c (2.0.92-beta). The cap covers
+  a consumer who generates the diagram with stats and hands it to `GenerateHtmlReport` as
+  `componentDiagramPlantUml`, which is what the E2E does. The 3.30.4 changelog's "user-reported" was wrong: the
+  test comment that says so (`ComponentDiagramGeneratorTests.cs:1189`) is about a plain label's width, with no
+  link. Whether to restore the stats labels in reports or document them as API-only is kronikol-63's ROADMAP
+  Appendix C row, for the owner.
 - **The E2E pair.** `Long_request_label_with_an_internal_flow_link_draws_in_the_worker` runs in the shared
   Chromium, as planned. `Long_linked_labels_draw_in_a_worker_with_the_optimizing_compilers_off` launches its own
   with `--js-flags=--no-opt --no-maglev` and draws the request and the component diagram; it was proved red for
@@ -1181,6 +1191,99 @@ owns it.
 2 Playwright facts in `LongStatementRenderingTests`, 1 Integration fact in `NodeJsPlantUmlRendererTests`; every one
 red on 3.30.3 apart from two pins of unchanged behaviour. After the fix, every source the emitter writes draws in
 every configuration above, on both engine builds (`ASIS=1`), the component under `--jitless` apart.
+
+### 10.2 S1 to S6, released as 3.31.1 (2026-09-26)
+
+Same worktree and branch, the slices kept as local WIP commits and squashed into one release commit. kronikol-e1's
+3.31.0 (`b686665d`, FLOW_NESTING S2, a minor) landed while S5 ran, so this patch is 3.31.1 rather than the planned
+3.30.5, rebased onto it with no conflict.
+
+**S1, the pin.** The route-shape fact (`DependencyCategoriesTests`), the four moved literal asserts and the cache
+directory's `1.2026.8` assert failed on the fork URL and pass on the npm one. Every Integration fact of
+`NodeJsPlantUmlRendererTests` passes on the npm bytes, and the files the renderer downloaded hash to the constants.
+The statement probes on the npm build: the block-opener and coloured-bar edges are V8 stack edges, not parse limits,
+about 2,000 on node 25.9 (1,980 to 2,041 for the openers, 2,005 to 2,008 for the coloured bar); the 3,660 to 5,641
+and 4,124 the class doc quoted were measured on the node of 2026-09-04 and moved with the runtime (§1.11). Both caps (1,471 and 1,400) stay
+under the lowest figure, so no constant moved; the class doc says what is a stack edge now. The bench scripts
+match any jsDelivr engine URL, and `variants/worker.js` reads the pin from `TrackingDefaults.cs`.
+
+**§1.16 re-run** on the current serializer (3.29.6's XML serializer, 3.30.1 and 3.30.2's escapes, and S3's
+script): all 14 emitter sources byte-identical on the fork and npm builds and stable run to run, the creole
+source included, since 3.29.6's mock DOM answers the engine's script loads at once and it no longer stalls the
+batch (`results/emitter-corpus-2026-09-26.txt`).
+
+**S3, the Node cache.** `EngineCacheTests` (6 facts) were red by compilation first; each behaviour was then proved
+by a mutation of the shipped class that turned the matching fact red: trusting an existing file without its hash,
+no retry, installing a download unverified, keeping the code cache when the engine is replaced, and one wrong
+character in a constant (the Integration fact against the real CDN). The concurrency fact is a smoke test: no
+mutation of the rename path turned it red, because nothing in the test holds the final file open. The code-cache
+fact, on the stub engine, was red on 3.31.0's script: a byte flipped in the middle of the cache was reported
+`hit` (node ran the damaged cache without crashing on the stub, as 4 of the 10 flips of §1.14 did on the real
+engine). Green: a 32-byte SHA-256 prefix, checked before V8 is handed the data, written to `<cache>.<pid>.tmp` and
+renamed. `NodeProbe.RunCaptured` was added to read the status line from stderr. The first real run after the
+change reported `rejected` on the old unprefixed cache and rebuilt it, the upgrade path of item 6.
+
+**S2, the page.** The three script-content facts were red on 3.31.0's shim. The four E2Es cannot be red on the old
+shim in a meaningful way (it carries no hash to wrong, so the helper's own "the hash is in the page once" assert
+fails first), so each was proved by mutating the new shim: the worker fetch without `integrity` turned the
+worker-path engine and viz E2Es red, the tags without `integrity` turned the main-thread E2E red, and a refused
+viz refusing the engine turned the viz E2E red.
+- **Departure, measured: a refused `viz-global.js` loses no Kronikol diagram.** §3.2 said a diagram that needs
+  Graphviz "fails in the engine, exactly as it does today when viz fails to evaluate in the worker". On 1.2026.8 it
+  does not: before calling Graphviz the engine checks `typeof Viz` and, when it is missing, logs `PlantUML:
+  viz-global.js is not loaded, falling back to the Smetana layout engine` and lays the diagram out with its
+  Smetana port. A component diagram rendered in the worker with viz refused drew both components (the viz E2E
+  asserts it). Only a diagram type the build sends straight to Graphviz fails, with `Viz is not loaded: this
+  diagram type needs the Graphviz layout engine (viz-global.js)`; Kronikol emits none. So Q7's cost is a
+  different layout engine for the component diagram, and the console sentence says that. The same fallback is
+  why the "dormant Smetana fallback" of §10.1 is not dormant: it answers a missing `Viz`, not a `Viz` whose
+  WebAssembly is off, which is the `--jitless` case.
+- **Not in §3.2:** a refused engine leaves `mode` at `'starting'` (no worker starts and the fallback is not taken),
+  and `fallbackReason` carries the refusal, as it does for any engine failure; `shim.prefetch` stops queueing
+  once the engine is refused; a plain fetch that answers a non-OK status (a 404) is a network failure, not a
+  mismatch, so `fileIsServed` checks `r.ok`.
+- The fidelity E2E's loader moved to the module tag with `integrity` and a direct `import()`, so it still loads
+  as the shim's fallback does. `engineFetchMs` joined the `Metrics` record and the results line.
+
+**S4, the budgets.** Through the worker on the 6 × 40 fixture, divided by the stretch, over 12 runs: per-render
+98 to 146 ms (median 111; §1.8's 146 was the p50 of the 1.2026.6 to fork era); the arrow-heavy render 293 to
+633 ms when one render follows the warm-up, because it can land on a worker the warm-up did not warm, so the
+budget takes the faster of two renders after the warm-up: 198 to 373 ms (median 247, 9 runs, against the ladder's
+267 of §3.4, so A6 holds and the 1,500 ms budget keeps its headroom). `engineFetchMs`, both files with their
+checks, 86 to 277 ms. Budgets 600 and 1,500 ms times the stretch,
+the regressions they are for being about 2,200 ms (1.2026.6 teoz) and 7,000 ms (1.2026.7). The 1 ms red proof:
+each budget failed all three attempts with the sustained message. **D17's number** is that median, 247 ms per
+stretch through the worker. Its runs spread from 198 to 373, far wider than the ladder's 10% between reps, because
+the worker figure includes the transfer and the insertion and shares the machine with the rest of the run, so a
+Teoz change is judged on the ladder, not on this figure (`results/engine-speed-2026-09-26.txt`).
+
+**S5, the fragment height.** `Bench_fragment_height_against_render_and_toggle_time` (Explicit, Trait Bench), three
+runs each, times divided by the stretch, medians (`results/fragment-height-2026-09-26.txt`):
+
+| Fixture | Height | Fragments | Full render ms | Note toggle ms |
+|---|---|---|---|---|
+| 6 × 40 | 4,000 | 180 | 4,718 | 637 |
+| 6 × 40 | 6,000 | 120 | 3,963 | 565 |
+| 6 × 40 | 8,000 | 84 | 4,092 | 422 |
+| 6 × 40 | 12,000 | 60 | **3,027** | 451 |
+| 20 × 80 | 4,000 | 600 | 15,079 | 1,752 |
+| 20 × 80 | 6,000 | 400 | 11,537 | 1,520 |
+| 20 × 80 | 8,000 | 270 | 10,017 | 1,077 |
+| 20 × 80 | 12,000 | 190 | **9,082** | **988** |
+
+On this engine the default is the fastest height measured for the full render at both sizes, and for the toggle
+at 20 × 80 (8,000 toggles within noise of it at 6 × 40). 4,000 px renders 56% and 66% slower and toggles 41% and
+77% slower, with three times the seams: the 1.2026.6 finding the wiki quoted is reversed. The per-render figure
+falls with the height (34 to 108 ms), so the fixed cost per fragment, not the size of one, dominates now. No default
+moves (12.1 decides); the three wiki sentences quote these numbers.
+
+**S6.** Wiki: `PlantUML-Browser-Rendering` (the engine source, the new "Engine integrity (3.31.1)" section, the
+CORS sentence, the fallback, the telemetry list, the Node cache's two new bullets, the fragment-height figures),
+`Report-Configuration` rows 129 and 136, `Large-Response-and-Diagram-Handling` row 11, `Diagnostics-and-Debugging`'s
+worker-mode check. Kronikol4J: a README paragraph beside the render-script divergence (the port's
+`v1.2026.3beta6-patched` pin, now only in `DotNetHtmlReportRenderer.java:72`, is unaffected). The correction of
+3.30.4's component-edge claims (§10.1) is in the wiki (`ec9dc33`) and the Kronikol4J ledger (`ac72ed9`), and
+the changelog carries it.
 
 ---
 

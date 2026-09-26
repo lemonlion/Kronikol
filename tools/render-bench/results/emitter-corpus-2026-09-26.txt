@@ -1,0 +1,52 @@
+# Kronikol's own emitter on the fork build and npm 1.2026.8, re-run on the current serializer (2026-09-26)
+#
+# plans/ENGINE_PIN_PLAN.md §1.16, re-run as §10 asks once P3's serializer change had landed (3.29.6 made the Node
+# renderer's SVG XML, 3.30.1 and 3.30.2 changed the escapes). Sources: emitter-corpus/ against Kronikol.dll built
+# from src/ at 3.31.0 plus this plan's S1 to S5 (branch p4/engine-pin); 14 sources, creole-0 included: since
+# 3.29.6 the mock DOM answers the engine's script loads at once, so it no longer stalls the batch (the 2026-09-25
+# run had to leave it out). Render: the shipped src/Kronikol/PlantUml/plantuml-render.js --batch (with S3's
+# checksummed code cache), node 25.9.0. Engines: fork = v1.2026.8beta1-0e4f452 from jsDelivr, npm =
+# @plantuml/core@1.2026.8 (the files in %LOCALAPPDATA%/Kronikol/plantuml-js/1.2026.8, which hash to the constants).
+# The fork directory's code cache was written by 3.31.0's script, without the checksum prefix, so it reported
+# `rejected` once and was rebuilt: the upgrade path S3 describes.
+#
+# node emitter-corpus-compare.js <dir> fork=<dir> npm=<dir>
+
+{
+ "node": "v25.9.0",
+ "engines": [
+  {
+   "label": "fork",
+   "dir": "C:\\Users\\cex\\AppData\\Local/Kronikol/plantuml-js/v1.2026.8beta1-0e4f452",
+   "ms": 5286,
+   "exit": 0,
+   "cache": "rejected"
+  },
+  {
+   "label": "npm",
+   "dir": "C:\\Users\\cex\\AppData\\Local/Kronikol/plantuml-js/1.2026.8",
+   "ms": 5810,
+   "exit": 0,
+   "cache": "hit"
+  }
+ ]
+}
+┌─────────┬──────────────────────────────────┬────────────────────────────┬────────────────────────────┬───────────┬────────────────┬──────────────────┐
+│ (index) │ file                             │ fork                       │ npm                        │ identical │ stableRunToRun │ viewBox          │
+├─────────┼──────────────────────────────────┼────────────────────────────┼────────────────────────────┼───────────┼────────────────┼──────────────────┤
+│ 0       │ 'arrows-200-0.puml'              │ '284906552d43 (706137 B)'  │ '284906552d43 (706137 B)'  │ true      │ true           │ '0 0 534 27742'  │
+│ 1       │ 'creole-0.puml'                  │ 'e078055f14d2 (32639 B)'   │ 'e078055f14d2 (32639 B)'   │ true      │ true           │ '0 0 1126 625'   │
+│ 2       │ 'data-0.puml'                    │ 'facf31695cdc (41960 B)'   │ 'facf31695cdc (41960 B)'   │ true      │ true           │ '0 0 1036 1249'  │
+│ 3       │ 'data-participant-colors-0.puml' │ 'd12aca041aaf (41960 B)'   │ 'd12aca041aaf (41960 B)'   │ true      │ true           │ '0 0 1036 1249'  │
+│ 4       │ 'flow-0.puml'                    │ '94fcd7e86926 (18266 B)'   │ '94fcd7e86926 (18266 B)'   │ true      │ true           │ '0 0 949 725'    │
+│ 5       │ 'flow-plain-0.puml'              │ 'f2200898b915 (28443 B)'   │ 'f2200898b915 (28443 B)'   │ true      │ true           │ '0 0 758 1130'   │
+│ 6       │ 'focus-bold-0.puml'              │ 'c320d821a1ba (19325 B)'   │ 'c320d821a1ba (19325 B)'   │ true      │ true           │ '0 0 538 709'    │
+│ 7       │ 'focus-colored-0.puml'           │ '5d9f2af9005a (18869 B)'   │ '5d9f2af9005a (18869 B)'   │ true      │ true           │ '0 0 538 709'    │
+│ 8       │ 'formats-0.puml'                 │ 'cb1b655d4787 (22755 B)'   │ 'cb1b655d4787 (22755 B)'   │ true      │ true           │ '0 0 1558 924'   │
+│ 9       │ 'large-0.puml'                   │ '5ef3730931b9 (1594076 B)' │ '5ef3730931b9 (1594076 B)' │ true      │ true           │ '0 0 1768 41573' │
+│ 10      │ 'rest-0.puml'                    │ '72df1cf89183 (72441 B)'   │ '72df1cf89183 (72441 B)'   │ true      │ true           │ '0 0 1238 2363'  │
+│ 11      │ 'rest-noheaders-0.puml'          │ '728240eff29d (60645 B)'   │ '728240eff29d (60645 B)'   │ true      │ true           │ '0 0 908 1886'   │
+│ 12      │ 'rest-server-encoded-0.puml'     │ '72df1cf89183 (72441 B)'   │ '72df1cf89183 (72441 B)'   │ true      │ true           │ '0 0 1238 2363'  │
+│ 13      │ 'steps-0.puml'                   │ 'a1825387d79d (47463 B)'   │ 'a1825387d79d (47463 B)'   │ true      │ true           │ '0 0 665 1477'   │
+└─────────┴──────────────────────────────────┴────────────────────────────┴────────────────────────────┴───────────┴────────────────┴──────────────────┘
+identical 14 of 14 ; stable run to run 14 of 14

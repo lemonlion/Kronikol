@@ -55,4 +55,13 @@ public class DependencyCategoriesTests
         Assert.StartsWith("https://", TrackingDefaults.PlantUmlJsCdnBase);
         Assert.Contains("plantuml", TrackingDefaults.PlantUmlJsCdnBase);
     }
+
+    [Fact]
+    public void TrackingDefaults_PlantUmlJsCdnBase_is_the_npm_route_at_a_release_version()
+    {
+        // The published package on jsDelivr's /npm/ route, at a release version: the registry never lets a
+        // name@version hold other bytes (plans/ENGINE_PIN_PLAN.md §1.5). A personal build (a fork tag, a beta, a
+        // -<sha> suffix) cannot come back without changing this fact.
+        Assert.Matches(@"^https://cdn\.jsdelivr\.net/npm/@plantuml/core@\d+\.\d+\.\d+$", TrackingDefaults.PlantUmlJsCdnBase);
+    }
 }

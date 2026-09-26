@@ -156,9 +156,10 @@ public record ReportConfigurationOptions
 
     /// <summary>
     /// <c>BrowserJs</c> only. Estimated rendered height (px; 45 per arrow, 18 per note line) at which the
-    /// browser splits one diagram into fragments rendered separately. Smaller fragments render and
-    /// re-render faster (4,000–6,000 measured ~20 % faster on note-heavy reports) at the cost of more
-    /// fragment seams. Default: <c>12000</c>.
+    /// browser splits one diagram into fragments rendered separately. On the current engine the default is the
+    /// fastest height measured: at 4,000 a note-heavy report took 56 to 66% longer to render and 41 to 77% longer
+    /// to re-render on a note toggle, with three times the fragment seams (plans/ENGINE_PIN_PLAN.md §10.2; the
+    /// 1.2026.6 engine measured smaller fragments faster). Default: <c>12000</c>.
     /// </summary>
     public int BrowserFragmentMaxHeight { get; set; } = Constants.TrackingDefaults.BrowserFragmentMaxHeight;
 

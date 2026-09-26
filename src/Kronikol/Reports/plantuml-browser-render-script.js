@@ -23,15 +23,24 @@
     //   window.plantuml.maxParallel  — how many renders the queue may keep in flight.
     //   window.plantumlLoad()  — a no-op kept for compatibility; the shim owns the engine lifecycle.
     //   window.__kronikolRender  — telemetry: { mode: 'worker' | 'main-thread', workers, renders,
-    //       cacheHits, workerMs, injectMs, errors, inFlight, maxInFlight, engineFetchMs, fallbackReason }.
+    //       cacheHits, workerMs, injectMs, errors, inFlight, maxInFlight, engineFetchMs, fallbackReason,
+    //       engineIntegrity, vizIntegrity }.
+    //
+    // Both files are checked against their known hashes (TrackingDefaults) by the browser itself: the
+    // worker path's fetch and the fallback's tags carry `integrity`, and a file whose bytes differ is never
+    // evaluated. A refused engine refuses every diagram, naming the file and the hash it should have had; a
+    // refused viz-global.js drops Graphviz only: sequence diagrams never use it, and the engine lays out a
+    // component diagram with its Smetana port when Graphviz is absent (plans/ENGINE_PIN_PLAN.md S2).
     //
     // Fallback: when Workers, fetch, Blob URLs or OffscreenCanvas are unavailable, when
     // BrowserRenderWorkers is 0, or when the engine cannot be fetched (offline with a cold cache, a CDN
-    // host without CORS), the shim injects the two script tags and renders on the main thread — the
-    // pre-3.0.45 path, one render at a time.
+    // host without CORS), the shim injects a viz script tag and an engine module tag and renders on the
+    // main thread — the pre-3.0.45 path, one render at a time.
     (function () {
         var VIZ_URL = '__PLANTUML_CDN_BASE__/viz-global.js';
         var ENGINE_URL = '__PLANTUML_CDN_BASE__/plantuml.js';
+        var VIZ_INTEGRITY = '__PLANTUML_VIZ_INTEGRITY__';
+        var ENGINE_INTEGRITY = '__PLANTUML_ENGINE_INTEGRITY__';
         var WORKERS_REQUESTED = __BROWSER_RENDER_WORKERS__;
         var CACHE_MEGABYTES = __BROWSER_RENDER_CACHE_MB__;
         var WORKER_HOST_SOURCE = __PLANTUML_WORKER_HOST_SOURCE__;
@@ -42,7 +51,9 @@
         var telemetry = window.__kronikolRender = {
             mode: 'starting', workers: 0, workersRequested: WORKERS_REQUESTED, workersTarget: targetWorkers,
             renders: 0, cacheHits: 0, cacheEntries: 0, cacheBytes: 0, workerMs: 0, injectMs: 0, errors: 0,
-            inFlight: 0, maxInFlight: 0, engineFetchMs: null, engineReadyAt: null, fallbackReason: null
+            inFlight: 0, maxInFlight: 0, engineFetchMs: null, engineReadyAt: null, fallbackReason: null,
+            // 'verified' | 'mismatch' | null: null until the file's fetch settles, and after a network failure.
+            engineIntegrity: null, vizIntegrity: null
         };
 
         var mode = null;            // null (undecided) | 'worker' | 'main-thread'
@@ -201,18 +212,50 @@
             }
         }
 
-        function fetchText(url) {
-            return fetch(url).then(function (r) {
+        function integrityMessage(file, url, expected) {
+            return 'engine integrity check failed: ' + file + ' from ' + url + ' does not match ' + expected
+                + '; the browser console names the hash it computed';
+        }
+        // A fetch or a tag the browser refused fails the same way whether the hash was wrong or the network
+        // was: a generic TypeError, or an error event. A plain fetch of the same URL tells them apart; the
+        // browser answers it from the cache the refused one filled. Resolves true when the file is there.
+        function fileIsServed(url) {
+            if (typeof fetch !== 'function') return Promise.resolve(false);
+            return fetch(url).then(function (r) { return r.ok; }, function () { return false; });
+        }
+        // Fetches a file under its known hash. The promise resolves only once the whole body has been
+        // received and checked, so the text is never unverified bytes. Resolves the text, or null when the
+        // hash did not match; rejects when the file could not be fetched at all.
+        function fetchVerified(url, integrity, field) {
+            return fetch(url, { integrity: integrity }).then(function (r) {
                 if (!r.ok) throw new Error(url + ' -> HTTP ' + r.status);
                 return r.text();
+            }).then(function (text) {
+                telemetry[field] = 'verified';
+                return text;
+            }, function (e) {
+                return fileIsServed(url).then(function (served) {
+                    if (!served) throw e;
+                    telemetry[field] = 'mismatch';
+                    return null;
+                });
             });
         }
         function acquireEngine() {
             var tf = now();
-            Promise.all([fetchText(VIZ_URL), fetchText(ENGINE_URL)]).then(function (parts) {
+            Promise.all([fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity'), fetchVerified(ENGINE_URL, ENGINE_INTEGRITY, 'engineIntegrity')]).then(function (parts) {
                 telemetry.engineFetchMs = Math.round(now() - tf);
                 if (mode === 'main-thread') return;
                 var viz = parts[0], engine = parts[1];
+                if (engine === null) {
+                    // No fallback: the script tags would fetch the same bytes and fail the same check.
+                    engineFailed(new Error(integrityMessage('plantuml.js', ENGINE_URL, ENGINE_INTEGRITY)));
+                    return;
+                }
+                if (viz === null) {
+                    console.error('Kronikol: ' + integrityMessage('viz-global.js', VIZ_URL, VIZ_INTEGRITY)
+                        + '. Graphviz is not loaded: the engine lays out what it can with its Smetana port instead.');
+                }
                 // An ES-module engine build (the npm @plantuml/core line) ends in `export { X as render,
                 // Y as renderToString }`; a classic worker cannot evaluate that, so expose the exports instead.
                 var tail = engine.slice(-300);
@@ -221,10 +264,10 @@
                     esmMode = true;
                     engine = engine.slice(0, engine.length - tail.length + em.index) + 'self.__plantumlExports = { render: ' + em[1] + ', renderToString: ' + em[2] + ' };\n';
                 }
-                // Graphviz is only used for non-sequence diagrams: a failure there must not take the
-                // sequence diagrams down with it.
+                // Graphviz is only used for non-sequence diagrams: a failure there, or a refused file, must
+                // not take the sequence diagrams down with it.
                 var src = WORKER_HOST_SOURCE
-                    + '\n;try {\n' + viz + '\n} catch (e) { console.error("Kronikol: viz-global failed: " + e); }\n'
+                    + (viz === null ? '' : '\n;try {\n' + viz + '\n} catch (e) { console.error("Kronikol: viz-global failed: " + e); }\n')
                     + ';(function () {\n' + engine + '\n})();\n';
                 blobUrl = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
                 mode = 'worker'; telemetry.mode = 'worker';
@@ -257,43 +300,49 @@
             queue = expanded;
             loadEngineScripts();
         }
-        function addScript(src) {
+        function addScript(src, integrity, type) {
             return new Promise(function (resolve, reject) {
                 var s = document.createElement('script');
+                if (type) s.type = type;
+                s.integrity = integrity;
+                s.crossOrigin = 'anonymous';
                 s.src = src; s.async = false;
                 s.onload = function () { resolve(); };
                 s.onerror = function () { reject(new Error('failed to load ' + src)); };
                 (document.head || document.documentElement).appendChild(s);
             });
         }
+        // A tag the browser refused: the file's integrity field and the error to report, told apart by
+        // whether the file is served at all.
+        function tagFailure(url, integrity, file, field, e) {
+            return fileIsServed(url).then(function (served) {
+                if (!served) return e;
+                telemetry[field] = 'mismatch';
+                return new Error(integrityMessage(file, url, integrity));
+            });
+        }
         function loadEngineScripts() {
-            addScript(VIZ_URL).catch(function (e) { console.error('Kronikol: ' + e.message); });
-            addScript(ENGINE_URL).then(function () {
-                var realLoad = window.plantumlLoad;
-                window.plantumlLoad = noop;
-                if (typeof realLoad !== 'function' || realLoad === noop) {
-                    // The ES-module engine build (the npm @plantuml/core line) parses to nothing as a
-                    // classic script — import() it and drive its exports directly (that build has no
-                    // plantumlLoad). import() is reached through Function so browsers too old to parse
-                    // the syntax fail here, with a message, instead of rejecting the whole shim.
-                    return new Function('u', 'return import(u)')(ENGINE_URL).then(function (mod) {
-                        if (!mod || typeof mod.render !== 'function') throw new Error('the engine module has no render export: ' + ENGINE_URL);
-                        // Stock engine builds refuse diagrams past 8192px by default; Kronikol's limit is 98304px.
-                        engineRender = function (lines, id) { return mod.render(lines, id, { maxSvgSize: 98304 }); };
-                    });
-                }
-                return new Promise(function (resolve, reject) {
-                    var timer = setTimeout(function () { reject(new Error('engine initialisation timed out')); }, 120000);
-                    realLoad([], function () { clearTimeout(timer); resolve(); });
-                }).then(function () {
-                    // The engine does `window.plantuml = window.plantuml || {}` and sets .render on it —
-                    // on our shim object. Keep the real render, put the shim's back.
-                    var real = window.plantuml && window.plantuml.render;
-                    if (typeof real !== 'function' || real === shimRender) throw new Error('plantuml.render is missing after plantumlLoad');
-                    engineRender = real;
-                    window.plantuml = shim; shim.render = shimRender;
+            addScript(VIZ_URL, VIZ_INTEGRITY).then(function () {
+                telemetry.vizIntegrity = 'verified';
+            }, function (e) {
+                return tagFailure(VIZ_URL, VIZ_INTEGRITY, 'viz-global.js', 'vizIntegrity', e).then(function (failure) {
+                    console.error('Kronikol: ' + failure.message);
                 });
-            }).then(function () {
+            });
+            // The engine is an ES module (the npm @plantuml/core line). The module tag fetches and checks
+            // it; import() then reuses the record the tag verified, since the module map keys on the URL,
+            // and a refused tag leaves a failed entry the import rejects.
+            addScript(ENGINE_URL, ENGINE_INTEGRITY, 'module').then(function () {
+                telemetry.engineIntegrity = 'verified';
+                return import(ENGINE_URL);
+            }, function (e) {
+                return tagFailure(ENGINE_URL, ENGINE_INTEGRITY, 'plantuml.js', 'engineIntegrity', e).then(function (failure) {
+                    throw failure;
+                });
+            }).then(function (mod) {
+                if (!mod || typeof mod.render !== 'function') throw new Error('the engine module has no render export: ' + ENGINE_URL);
+                // Stock engine builds refuse diagrams past 8192px by default; Kronikol's limit is 98304px.
+                engineRender = function (lines, id) { return mod.render(lines, id, { maxSvgSize: 98304 }); };
                 engineReady = true;
                 if (telemetry.engineReadyAt === null) telemetry.engineReadyAt = now();
                 pumpMain();
@@ -356,7 +405,7 @@
             pumpMain();
         }
         function shimPrefetch(sources) {
-            if (!workerCapable() || !sources || !sources.length) return;
+            if (engineError || !workerCapable() || !sources || !sources.length) return;
             for (var i = 0; i < sources.length; i++) {
                 var src = sources[i];
                 if (typeof src !== 'string' || !src) continue;
@@ -376,9 +425,8 @@
             clearCache: function () { cache.clear(); cacheBytes = 0; telemetry.cacheEntries = 0; telemetry.cacheBytes = 0; }
         };
         window.plantuml = shim;
-        // Must be the same `noop` the fallback compares against: loadEngineScripts detects "the engine
-        // script defined no plantumlLoad" (the ES-module build) by `realLoad === noop` — a distinct
-        // function here would read as a real loader whose callback never comes.
+        // The classic engine builds' loader, kept as a no-op for anything outside the shim that still calls
+        // it. Nothing in the shim compares against it any more: the engine is an ES module, imported.
         window.plantumlLoad = noop;
 
         // --- go -------------------------------------------------------------------------------

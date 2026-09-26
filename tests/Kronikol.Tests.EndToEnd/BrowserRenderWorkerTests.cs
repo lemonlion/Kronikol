@@ -80,12 +80,15 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     private sealed record Metrics(double ReadyMs, double EngineReadyMs, double AllMs, double BlockedMs, double WorstTaskMs, int LongTasks,
         double ToggleMs, double ToggleBlockedMs, double ToggleWorstTaskMs, int ToggleRenders, int Fragments,
         string Mode, int Workers, int ExpectedWorkers, int MaxInFlight, int Renders, int CacheHits, double WorkerMs, double InjectMs,
+        double EngineFetchMs, double PerRenderMs, double ArrowHeavyMs,
         double DeepQueryMs, int DeepVerified,
         double[] ProbeMs, double Stretch);
 
     private bool _benchInitInstalled;
 
-    private async Task<Metrics> MeasureLargeReport(string fileName, int workers = Constants.TrackingDefaults.BrowserRenderWorkers)
+    private async Task<Metrics> MeasureLargeReport(string fileName, int workers = Constants.TrackingDefaults.BrowserRenderWorkers,
+        int diagrams = LargeReportFixture.DefaultDiagrams, int stepsPerDiagram = LargeReportFixture.DefaultStepsPerDiagram,
+        int fragmentMaxHeight = Constants.TrackingDefaults.BrowserFragmentMaxHeight)
     {
         // Register the bench init script once per page — a second registration
         // would run twice on each navigation and double-count long tasks.
@@ -94,7 +97,8 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             await Page.AddInitScriptAsync(BenchInitWithProbe);
             _benchInitInstalled = true;
         }
-        await Page.GotoAsync(LargeReportFixture.Generate(TempDir, OutputDir, fileName, browserRenderWorkers: workers));
+        await Page.GotoAsync(LargeReportFixture.Generate(TempDir, OutputDir, fileName, diagrams, stepsPerDiagram,
+            browserRenderWorkers: workers, browserFragmentMaxHeight: fragmentMaxHeight));
         await Page.WaitForFunctionAsync("() => window.__bench && window.__bench.readyAt !== null", null,
             new() { Timeout = 120000, PollingInterval = 200 });
         var readyAt = await Page.EvaluateAsync<double>("() => window.__bench.readyAt");
@@ -153,7 +157,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
                 return {
                     mode: r.mode || 'legacy', workers: r.workers || 0, renders: r.renders || 0, cacheHits: r.cacheHits || 0,
                     maxInFlight: r.maxInFlight || 0, workerMs: r.workerMs || 0, injectMs: r.injectMs || 0,
-                    engineReadyAt: r.engineReadyAt || 0,
+                    engineReadyAt: r.engineReadyAt || 0, engineFetchMs: r.engineFetchMs || 0,
                     expectedWorkers: Math.max(1, Math.min(r.workersRequested || 0, navigator.hardwareConcurrency || 2))
                 };
             }
@@ -169,12 +173,43 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         var deep = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolSearch.lastQuery");
         await Page.EvaluateAsync("() => { document.getElementById('searchbar').value = ''; run_search_scenarios(); }");
 
+        // Arrow-heavy: the fixture's notes make text measurement its cost, so an engine that got slower at
+        // layout (the Teoz regressions of 1.2026.6 and 1.2026.7) would not show in it. The ladder's gen-200
+        // shape, timed from the render call to the SVG's insertion: a warm-up, then the faster of two renders,
+        // since a render can land on a worker the warm-up did not warm (measured 293 to 633 ms per stretch on
+        // one render). The three differ by a comment, so none is a cache hit (plans/ENGINE_PIN_PLAN.md S4).
+        var arrowHeavy = LargeReportFixture.BuildArrowHeavyDiagram(200);
+        var arrowMs = await Page.EvaluateAsync<double[]>("""
+            (sources) => new Promise(function (resolve, reject) {
+                var times = [];
+                // A promise that never settles hangs the whole test run (EvaluateAsync has no timeout).
+                setTimeout(function () { reject(new Error('the arrow-heavy renders did not finish within 120 s')); }, 120000);
+                function renderOne(i) {
+                    if (i >= sources.length) { resolve(times); return; }
+                    var el = document.createElement('div'); el.id = 'arrow-heavy-' + i; document.body.appendChild(el);
+                    var t0 = 0;
+                    new MutationObserver(function (m, mo) {
+                        if (!el.querySelector('svg')) return;
+                        mo.disconnect();
+                        times.push(performance.now() - t0);
+                        el.remove();
+                        renderOne(i + 1);
+                    }).observe(el, { childList: true, subtree: true });
+                    t0 = performance.now();
+                    window.plantuml.render(sources[i].split('\n'), el.id,
+                        { onError: function (message) { reject(new Error('the arrow-heavy render failed: ' + message)); return true; } });
+                }
+                renderOne(0);
+            })
+            """, new[] { arrowHeavy.Replace("@startuml\n", "@startuml\n' warm-up\n"), arrowHeavy, arrowHeavy.Replace("@startuml\n", "@startuml\n' again\n") });
+
         var probeMs = await Page.EvaluateAsync<double[]>("() => window.__bench.probe || []");
         var m = new Metrics(readyAt, t.GetProperty("engineReadyAt").GetDouble(), t1 - t0, blocked, worst, count, tt1 - tt0, tBlocked, tWorst,
             t.GetProperty("renders").GetInt32() - rendersBefore, toggle.GetProperty("fragments").GetInt32(),
             t.GetProperty("mode").GetString()!, t.GetProperty("workers").GetInt32(), t.GetProperty("expectedWorkers").GetInt32(),
             t.GetProperty("maxInFlight").GetInt32(), t.GetProperty("renders").GetInt32(), t.GetProperty("cacheHits").GetInt32(),
-            t.GetProperty("workerMs").GetDouble(), t.GetProperty("injectMs").GetDouble(),
+            t.GetProperty("workerMs").GetDouble(), t.GetProperty("injectMs").GetDouble(), t.GetProperty("engineFetchMs").GetDouble(),
+            t.GetProperty("workerMs").GetDouble() / Math.Max(1, t.GetProperty("renders").GetInt32()), arrowMs.Skip(1).Min(),
             deep.GetProperty("ms").GetDouble(), deep.GetProperty("verified").GetInt32(),
             probeMs, ContentionScale.Stretch(probeMs));
         _output.WriteLine("render-bench " + fileName + ": " + JsonSerializer.Serialize(m));
@@ -245,6 +280,10 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
                 m.ToggleMs >= 5000 * stretch ? $"note toggle on the largest diagram took {m.ToggleMs:F0} ms (budget 5000 x {stretch:F2})" :
                 m.ToggleWorstTaskMs >= 800 * stretch ? $"note toggle blocked the main thread for a {m.ToggleWorstTaskMs:F0} ms task (budget 800 x {stretch:F2})" :
                 m.DeepQueryMs >= 2000 * stretch ? $"cold worst-case deep search took {m.DeepQueryMs:F0} ms (verified {m.DeepVerified}; budget 2000 x {stretch:F2})" :
+                // Engine speed (plans/ENGINE_PIN_PLAN.md S4): the budgets above are page-responsiveness checks,
+                // and none of them moved when an engine release got 4 to 8 times slower on arrow-heavy diagrams.
+                m.PerRenderMs >= 600 * stretch ? $"a fragment render took {m.PerRenderMs:F0} ms on average in the workers ({m.Renders} renders; budget 600 x {stretch:F2})" :
+                m.ArrowHeavyMs >= 1500 * stretch ? $"a warm render of the 200-step arrow-heavy diagram took {m.ArrowHeavyMs:F0} ms (budget 1500 x {stretch:F2})" :
                 "";
             if (budgetFailure.Length == 0) return;
             _output.WriteLine($"attempt {attempt}/{attempts} breached a contention-scaled budget: {budgetFailure}");
@@ -266,6 +305,30 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         var samples = await Page.EvaluateAsync<double[]>("() => window.__bench.probe");
         Assert.All(samples, d => Assert.True(d > 0, $"probe sample {d} ms"));
         _output.WriteLine($"probe samples: [{string.Join(", ", samples.Select(d => d.ToString("F1")))}] -> stretch {ContentionScale.Stretch(samples):F2}");
+    }
+
+    [Fact(Explicit = true)]
+    [Trait("Category", "Bench")]
+    public async Task Bench_fragment_height_against_render_and_toggle_time()
+    {
+        // plans/ENGINE_PIN_PLAN.md S5. The wiki's "4,000 to 6,000 px renders about 20 % faster" came from the
+        // 1.2026.6 engine on a real 20-diagram report that no longer exists. Re-measured on the pinned engine at
+        // the default fixture (6 x 40) and at 20 x 80, the closest stand-in for that report; every time is divided
+        // by the run's contention stretch. No default moves on these numbers (roadmap 12.1). Explicit, so it runs
+        // only by name: dotnet test --filter "FullyQualifiedName~Bench_fragment_height" -- xUnit.Explicit=on
+        foreach (var (diagrams, steps) in new[] { (LargeReportFixture.DefaultDiagrams, LargeReportFixture.DefaultStepsPerDiagram), (20, 80) })
+        foreach (var height in new[] { 4000, 6000, 8000, 12000 })
+        for (var run = 1; run <= 3; run++)
+        {
+            var m = await MeasureLargeReport($"FragmentBench-{diagrams}x{steps}-{height}-{run}.html",
+                diagrams: diagrams, stepsPerDiagram: steps, fragmentMaxHeight: height);
+            var seams = await Page.EvaluateAsync<int>("() => document.querySelectorAll('.puml-fragment').length");
+            var line = $"fragment-bench {diagrams}x{steps} height={height} run={run} fragments={seams} " +
+                       $"all={m.AllMs / m.Stretch:F0} toggle={m.ToggleMs / m.Stretch:F0} perRender={m.PerRenderMs / m.Stretch:F0} " +
+                       $"toggleRenders={m.ToggleRenders} renders={m.Renders} stretch={m.Stretch:F2}";
+            _output.WriteLine(line);
+            File.AppendAllText(Path.Combine(OutputDir, "fragment-bench-results.txt"), $"{DateTime.UtcNow:O} {line}{Environment.NewLine}");
+        }
     }
 
     [Fact]
@@ -318,8 +381,148 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         Assert.Contains("Worker unavailable", r.GetProperty("fallbackReason").GetString());
         var engineScripts = await Page.EvaluateAsync<int>("() => document.querySelectorAll('script[src*=\"plantuml.js\"]').length");
         Assert.Equal(1, engineScripts);
+        // The module tag carried the engine's known hash, and the browser checked it (plans/ENGINE_PIN_PLAN.md S2).
+        Assert.Equal("verified", r.GetProperty("engineIntegrity").GetString());
         // And the post-render hooks still ran (notes are interactive on the fallback path too).
         await WaitForNoteElements();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // The known-hash check (plans/ENGINE_PIN_PLAN.md S2)
+    // ═══════════════════════════════════════════════════════════
+
+    private const string WrongHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+
+    /// <summary>
+    /// Replaces one known hash in a written report's render script. The browser then sees what a proxy's rewrite
+    /// of that file would show it: bytes that do not match. The script sits in the page as plain text, and no
+    /// request is touched.
+    /// </summary>
+    private static string WithWrongHash(string reportUrl, string rightHash)
+    {
+        var path = new Uri(reportUrl).LocalPath;
+        var html = File.ReadAllText(path);
+        var quoted = $"'{rightHash}'";
+        var at = html.IndexOf(quoted, StringComparison.Ordinal);
+        Assert.True(at >= 0 && html.IndexOf(quoted, at + 1, StringComparison.Ordinal) < 0, "the render script should carry the hash exactly once");
+        File.WriteAllText(path, html.Replace(quoted, $"'{WrongHash}'"));
+        return reportUrl;
+    }
+
+    private async Task<string[]> RenderEveryDiagramAndReadIt()
+    {
+        await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
+        await ExpandFirstScenarioWithDiagram();
+        await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await Page.WaitForFunctionAsync(AllRenderedJs, null, new() { Timeout = 120000, PollingInterval = 200 });
+        return await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('.plantuml-browser')).map(el => el.textContent)");
+    }
+
+    private static void AssertEveryDiagramNamesTheRefusedEngine(string[] diagrams)
+    {
+        Assert.NotEmpty(diagrams);
+        Assert.All(diagrams, text =>
+        {
+            Assert.Contains($"engine integrity check failed: plantuml.js from {Constants.TrackingDefaults.PlantUmlJsCdnBase}/plantuml.js", text);
+            Assert.Contains($"does not match {WrongHash}", text);
+        });
+    }
+
+    [Fact]
+    public async Task Engine_with_a_wrong_expected_hash_is_refused_and_says_so()
+    {
+        // A proxy's rewrite, a captive portal's login page or a damaged cache entry used to be evaluated as the
+        // engine, usually failing as a syntax error, and the fallback then fetched the same bytes. Now the browser
+        // refuses them, the engine is never evaluated, and every diagram says which file failed.
+        await Page.GotoAsync(WithWrongHash(GenerateReport("EngineWrongHash.html"), Constants.TrackingDefaults.PlantUmlJsIntegrity));
+
+        var diagrams = await RenderEveryDiagramAndReadIt();
+
+        AssertEveryDiagramNamesTheRefusedEngine(diagrams);
+        var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
+        Assert.Equal("mismatch", r.GetProperty("engineIntegrity").GetString());
+        Assert.NotEqual("worker", r.GetProperty("mode").GetString());
+        Assert.Equal(0, r.GetProperty("workers").GetInt32());
+        Assert.Equal(0, r.GetProperty("renders").GetInt32());
+        Assert.Equal(0, await Page.Locator(".plantuml-browser svg").CountAsync());
+    }
+
+    [Fact]
+    public async Task Engine_with_a_wrong_expected_hash_is_refused_on_the_main_thread_path()
+    {
+        // The fallback loads the engine by a module tag carrying the hash, then import()s the record the tag
+        // verified: a refused tag leaves a failed entry, and the diagrams say so exactly as on the worker path.
+        var url = LargeReportFixture.Generate(TempDir, OutputDir, "EngineWrongHashMainThread.html", diagrams: 2, stepsPerDiagram: 2, browserRenderWorkers: 0);
+        await Page.GotoAsync(WithWrongHash(url, Constants.TrackingDefaults.PlantUmlJsIntegrity));
+
+        var diagrams = await RenderEveryDiagramAndReadIt();
+
+        AssertEveryDiagramNamesTheRefusedEngine(diagrams);
+        var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
+        Assert.Equal("main-thread", r.GetProperty("mode").GetString());
+        Assert.Equal("mismatch", r.GetProperty("engineIntegrity").GetString());
+        Assert.Equal(0, await Page.Locator(".plantuml-browser svg").CountAsync());
+    }
+
+    [Fact]
+    public async Task Viz_with_a_wrong_expected_hash_drops_graphviz_only()
+    {
+        // Graphviz is only used for non-sequence diagrams: a refused viz-global.js must not take the sequence
+        // diagrams down with it (plans/ENGINE_PIN_PLAN.md Q7).
+        var errors = new List<string>();
+        Page.Console += (_, m) => { if (m.Type == "error") lock (errors) errors.Add(m.Text); };
+        await Page.GotoAsync(WithWrongHash(GenerateReport("VizWrongHash.html"), Constants.TrackingDefaults.VizGlobalJsIntegrity));
+        await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
+        await ExpandFirstScenarioWithDiagram();
+
+        await WaitForDiagramSvg(90000);
+
+        var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
+        Assert.Equal("worker", r.GetProperty("mode").GetString());
+        Assert.Equal("mismatch", r.GetProperty("vizIntegrity").GetString());
+        Assert.Equal("verified", r.GetProperty("engineIntegrity").GetString());
+        Assert.True(r.GetProperty("renders").GetInt32() >= 1);
+        lock (errors)
+            Assert.Contains(errors, e => e.Contains($"engine integrity check failed: viz-global.js from {Constants.TrackingDefaults.PlantUmlJsCdnBase}/viz-global.js")
+                                         && e.Contains($"does not match {WrongHash}") && e.Contains("Graphviz is not loaded"));
+
+        // A diagram Graphviz would lay out still draws: without it the engine uses its Smetana port, and says so
+        // on the console ("viz-global.js is not loaded, falling back to the Smetana layout engine").
+        var graphviz = await Page.EvaluateAsync<JsonElement>("""
+            () => new Promise(function (resolve) {
+                var el = document.createElement('div'); el.id = 'needs-graphviz'; document.body.appendChild(el);
+                var settle = function (outcome) { mo.disconnect(); resolve(outcome); };
+                // A promise that never settles hangs the whole test run (EvaluateAsync has no timeout).
+                setTimeout(function () { settle({ timedOut: true, text: (el.textContent || '').slice(0, 300) }); }, 60000);
+                var mo = new MutationObserver(function () {
+                    settle({ svg: !!el.querySelector('svg'), text: (el.textContent || '').slice(0, 300) });
+                });
+                mo.observe(el, { childList: true, subtree: true, characterData: true });
+                window.plantuml.render(['@startuml', 'component Alpha', 'component Beta', 'Alpha --> Beta', '@enduml'], el.id,
+                    { onError: function (message) { settle({ error: String(message).slice(0, 300) }); return true; } });
+            })
+            """);
+        _output.WriteLine("graphviz diagram with viz refused: " + graphviz);
+        Assert.True(graphviz.TryGetProperty("svg", out var drawn) && drawn.GetBoolean(), graphviz.ToString());
+        Assert.Contains("Alpha", graphviz.GetProperty("text").GetString());
+        Assert.Contains("Beta", graphviz.GetProperty("text").GetString());
+    }
+
+    [Fact]
+    public async Task Engine_integrity_is_verified_before_the_worker_starts()
+    {
+        // The positive case every other worker test exercises without saying so: both files match their known
+        // hashes on the real CDN, and the worker runs what was checked.
+        await Page.GotoAsync(GenerateReport("EngineIntegrityVerified.html"));
+        await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
+        await ExpandFirstScenarioWithDiagram();
+
+        await WaitForDiagramSvg(60000);
+
+        var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
+        Assert.Equal("worker", r.GetProperty("mode").GetString());
+        Assert.Equal("verified", r.GetProperty("engineIntegrity").GetString());
+        Assert.Equal("verified", r.GetProperty("vizIntegrity").GetString());
     }
 
     [Fact]
@@ -415,32 +618,22 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // Main-thread side: load the real engine into the page and render the same sources with it.
         var main = await Page.EvaluateAsync<JsonElement>("""
             (args) => new Promise(function (resolve, reject) {
-                var cdn = args[0], sources = args[1];
+                var cdn = args[0], sources = args[1], engineIntegrity = args[2], vizIntegrity = args[3];
                 var shim = window.plantuml; window.plantuml = undefined;
                 // A promise that never settles hangs the whole test run (EvaluateAsync has no timeout).
                 setTimeout(function () { reject(new Error('main-thread engine did not render within 180 s')); }, 180000);
-                function add(src) { return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = src; s.async = false; s.onload = res; s.onerror = function () { rej(new Error('load ' + src)); }; document.head.appendChild(s); }); }
-                var preLoad = window.plantumlLoad;
-                add(cdn + '/viz-global.js').catch(function () {});
-                add(cdn + '/plantuml.js').then(function () {
-                    // A classic build replaces window.plantumlLoad; the ES-module build (parsed to
-                    // nothing as a classic script) leaves the shim's no-op — import() it instead,
-                    // exactly as the shim's own main-thread fallback does.
-                    if (typeof window.plantumlLoad === 'function' && window.plantumlLoad !== preLoad) {
-                        return new Promise(function (res) {
-                            window.plantumlLoad([], function () {
-                                var engine = window.plantuml; window.plantuml = shim;
-                                res(function (lines, id) { engine.render(lines, id); });
-                            });
-                        });
-                    }
-                    return new Function('u', 'return import(u)')(cdn + '/plantuml.js').then(function (mod) {
-                        if (!mod || typeof mod.render !== 'function') throw new Error('the engine module has no render export');
-                        window.plantuml = shim;
-                        // Same maxSvgSize the shim passes — the stock build's 8192px default refuses
-                        // the large fixture diagram outright.
-                        return function (lines, id) { mod.render(lines, id, { maxSvgSize: 98304 }); };
-                    });
+                function add(src, integrity, type) { return new Promise(function (res, rej) { var s = document.createElement('script'); if (type) s.type = type; s.integrity = integrity; s.crossOrigin = 'anonymous'; s.src = src; s.async = false; s.onload = res; s.onerror = function () { rej(new Error('load ' + src)); }; document.head.appendChild(s); }); }
+                add(cdn + '/viz-global.js', vizIntegrity).catch(function () {});
+                // A module tag carrying the known hash, then import() of the record it verified, exactly as
+                // the shim's own main-thread fallback loads the engine.
+                add(cdn + '/plantuml.js', engineIntegrity, 'module').then(function () {
+                    return import(cdn + '/plantuml.js');
+                }).then(function (mod) {
+                    if (!mod || typeof mod.render !== 'function') throw new Error('the engine module has no render export');
+                    window.plantuml = shim;
+                    // Same maxSvgSize the shim passes — the stock build's 8192px default refuses
+                    // the large fixture diagram outright.
+                    return function (lines, id) { mod.render(lines, id, { maxSvgSize: 98304 }); };
                 }).then(function (render) {
                     var left = sources.length, out = [];
                     function renderNext(i) {
@@ -457,7 +650,8 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
                     renderNext(0);
                 }).catch(reject);
             })
-            """, new object[] { Constants.TrackingDefaults.PlantUmlJsCdnBase, sources });
+            """, new object[] { Constants.TrackingDefaults.PlantUmlJsCdnBase, sources,
+                Constants.TrackingDefaults.PlantUmlJsIntegrity, Constants.TrackingDefaults.VizGlobalJsIntegrity });
 
         for (var i = 0; i < sources.Length; i++)
         {

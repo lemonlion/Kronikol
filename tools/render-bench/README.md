@@ -16,7 +16,7 @@ Prerequisites
   `tests/Kronikol.Tests.EndToEnd/bin/Debug/net10.0/.playwright/package` and the installed Chromium).
 - Engine builds next to these scripts (not committed — large):
   `old-plantuml.js` + `viz-global.js` = copy of `%LOCALAPPDATA%/Kronikol/plantuml-js/{plantuml.js,viz-global.js}`
-  (or download from `TrackingDefaults.PlantUmlJsCdnBase`); optional `core-1.2026.6-patched.js` =
+  (or download from `TrackingDefaults.PlantUmlJsCdnBase`, the npm package `@plantuml/core@1.2026.8` from 3.30.5); optional `core-1.2026.6-patched.js` =
   `https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.6/plantuml.js` with every `4096.0` → `98304.0`.
 - `polyfill.js` is the DOM-polyfill half of `src/Kronikol/PlantUml/plantuml-render.js` (regenerate if that changes).
 
@@ -25,7 +25,7 @@ Scripts
   variant, measures ready / first diagram / force-render-all / main-thread long tasks / note-toggle time; writes
   `results/report-<TAG>.json`. Env for the `worker` variant (`variants/worker.js`): `WORKERS=4`, `MAXH=12000`,
   `PREFETCH=1`, `ENGINE=<file>`, `FILEMODE=2` (open via file://, engine inlined into a Blob worker), `CDNENGINE=1`
-  (fetch the engine from the real jsDelivr fork), `LAZYVIZ=1`, `TAG=<result name>`.
+  (fetch the engine from `TrackingDefaults.PlantUmlJsCdnBase`, read from the source), `LAZYVIZ=1`, `TAG=<result name>`.
 - `puml-worker.js` — the Web Worker engine host (mock DOM + protocol). Basis for the production worker host.
 - `fidelity.js [engine]` — renders the same sources on the main thread and in the worker and compares geometry/counts.
 - `bench-browser.js <old|new> <engine> [sizes]` — engine-only render timings on synthetic sequence diagrams.
@@ -60,7 +60,8 @@ Scripts
   `-- --shim <page> <workers>` writes a bare page carrying the shipped render script; `-- --linked-labels <dir>` writes the linked
   statements `statement-limits-worker-probe.js --scan` cuts. `emitter-corpus-compare.js <dir> <label>=<engine
   dir> <label>=<engine dir>` renders the sources through the shipped Node script on two builds and compares the SVG bytes
-  (`results/emitter-corpus-2026-09-25.txt`). Keep the creole-payload source out of the folder: it stalls every later source of the batch.
+  (`results/emitter-corpus-2026-09-25.txt`; re-run on the 3.31.1 serializer, all 14 sources, `results/emitter-corpus-2026-09-26.txt`).
+  Before 3.29.6 the creole-payload source stalled every later source of the batch; the mock DOM now answers the engine's script loads at once.
 - `statement-limits-worker-probe.js <shim page> <label>=<cdn base> [...]`: the statement limits in the shipped BrowserJs worker, per
   engine route (the page from `emitter-corpus -- --shim <page> 1`); `results/statement-limits-worker-2026-09-25.txt`.
   `--scan <dir> <shim page> <label>=<cdn base> [...]` cuts the text inside each `[[#iflow-…]]` link the emitter wrote (the sources
@@ -73,4 +74,7 @@ Scripts
   written (the check after a fix). `results/statement-limits-worker-2026-09-26.txt` is the S0 measurement behind
   `PlantUmlStatementLimits.MaxLinkedLabelChars`.
 - `probe-component.puml`: a Kronikol-shaped plain-shape component diagram for the ladder's non-sequence row.
-- `results/`: the JSON results quoted in the plans.
+- `results/`: the JSON results quoted in the plans. `engine-speed-2026-09-26.txt` holds the samples behind the two engine-speed budgets of
+  `Large_report_renders_off_the_main_thread_within_budget`, and `fragment-height-2026-09-26.txt` the fragment-height table from
+  `BrowserRenderWorkerTests.Bench_fragment_height_against_render_and_toggle_time` (explicit: run it by name with `-- xUnit.Explicit=on`),
+  both `plans/ENGINE_PIN_PLAN.md` §10.2.

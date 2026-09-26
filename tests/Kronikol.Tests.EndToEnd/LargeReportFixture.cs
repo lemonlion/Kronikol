@@ -18,7 +18,8 @@ public static class LargeReportFixture
 
     public static string Generate(string tempDir, string outputDir, string fileName,
         int diagrams = DefaultDiagrams, int stepsPerDiagram = DefaultStepsPerDiagram,
-        int browserRenderWorkers = Constants.TrackingDefaults.BrowserRenderWorkers)
+        int browserRenderWorkers = Constants.TrackingDefaults.BrowserRenderWorkers,
+        int browserFragmentMaxHeight = Constants.TrackingDefaults.BrowserFragmentMaxHeight)
     {
         var (features, _) = ReportTestHelper.CreateTestData();
         // Two diagrams per scenario over the first scenarios (t1, t2, t3 …); the first scenario's
@@ -36,7 +37,8 @@ public static class LargeReportFixture
             null, Path.Combine(tempDir, fileName), "Large Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            browserRenderWorkers: browserRenderWorkers);
+            browserRenderWorkers: browserRenderWorkers,
+            browserFragmentMaxHeight: browserFragmentMaxHeight);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -75,6 +77,41 @@ public static class LargeReportFixture
         }
         sb.Append("@enduml\n");
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// The render ladder's arrow-heavy shape (<c>tools/render-bench/gen.js</c>, <c>gen-200</c> at 200): four
+    /// participants, <paramref name="steps"/> request/query/reply rounds with a short note on every third and an
+    /// audit call on every fifth. Layout, not text measurement, is its cost, which is what an engine regression
+    /// of the Teoz kind moves (plans/ENGINE_PIN_PLAN.md §1.8, S4).
+    /// </summary>
+    public static string BuildArrowHeavyDiagram(int steps)
+    {
+        var lines = new List<string>
+        {
+            "@startuml", "skinparam responseMessageBelowArrow true", "participant \"Test\" as T", "participant \"Example.Api\" as A",
+            "database \"OrdersDb\" as D", "participant \"External\" as X"
+        };
+        for (var i = 0; i < steps; i++)
+        {
+            lines.Add($"T -> A: GET /orders/{i}?include=lines");
+            lines.Add($"A -> D: SELECT o.id, o.total FROM orders o WHERE o.id = {i}");
+            lines.Add($"D --> A: 1 row (id={i})");
+            if (i % 3 == 0)
+            {
+                lines.Add("note right of A");
+                lines.Add($"{{ \"id\": {i}, \"customer\": \"cust-{i}\", \"total\": {(i * 3.5).ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} }}");
+                lines.Add("end note");
+            }
+            if (i % 5 == 0)
+            {
+                lines.Add($"A -> X: POST /audit/{i}");
+                lines.Add("X --> A: 202 Accepted");
+            }
+            lines.Add($"A --> T: 200 OK ({i * 7 % 40} ms)");
+        }
+        lines.Add("@enduml");
+        return string.Join("\n", lines);
     }
 
     /// <summary>

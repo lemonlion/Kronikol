@@ -8,7 +8,8 @@ namespace Kronikol.Tests.PlantUml;
 
 /// <summary>
 /// The step-delimiter bar's two emission forms, pinned against what the shipped plantuml.js engine
-/// actually renders (measured on the stock v1.2026.8beta1-0e4f452 build, teoz pragma):
+/// actually renders (measured on the stock v1.2026.8beta1-0e4f452 build, teoz pragma, and on npm 1.2026.8, which
+/// draws both forms identically: plans/ENGINE_PIN_PLAN.md §1.16):
 /// <list type="bullet">
 /// <item>a bar with no body content keeps the legacy one-line coloured form byte for byte —
 /// <c>hnote across &lt;&lt;stepDelimiter&gt;&gt; #black:&lt;color:white&gt;…</c>;</item>

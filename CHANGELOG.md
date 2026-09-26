@@ -4,6 +4,112 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.1] - 2026-09-26
+
+**Patch - the report page and the Node renderer check the PlantUML engine against its known hash, and the engine
+comes from PlantUML's own npm release (`plans/ENGINE_PIN_PLAN.md` S1 to S6, stage 1 P4, roadmap 1.8).** Nothing new
+is public, so the patch part moved: `TrackingDefaults.PlantUmlJsCdnBase` keeps its name and changes its value, the
+two hashes are internal constants, and the rest is fixes, two test budgets and a measurement. One behaviour change
+is called out. Template pins move to 3.31.0.
+
+### Changed
+
+- **The engine comes from PlantUML's npm release.** `TrackingDefaults.PlantUmlJsCdnBase` is now
+  `https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8`, the release PlantUML itself published, in place of the
+  `lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452` fork tag. The registry never lets a
+  published name@version hold other bytes, so nobody, PlantUML included, can change what the URL serves. The build
+  is PlantUML's release commit `149874a1`, nine commits past the `0e4f452e` build it replaces, none of them
+  reachable from a Kronikol diagram: all 14 sources of Kronikol's own emitter corpus draw byte-identical on the two
+  through the current Node serializer, and the render ladder is 4% faster on the sequence corpus. No golden moved.
+  The fork's tags stay published for the reports that point at them. The Node renderer downloads the new engine
+  once, into a new directory, `%LOCALAPPDATA%/Kronikol/plantuml-js/1.2026.8/`. A consumer that copied the constant
+  into its own assembly keeps the old URL, which still works, until it is rebuilt.
+- **Behaviour change: anything that serves the engine URLs in jsDelivr's place, a corporate mirror for one, must
+  serve the npm package's exact bytes** (see Fixed) and send a CORS header, which the fallback's tags now need too.
+
+### Fixed
+
+- **A report ran whatever the CDN answered as the engine.** A proxy that injects a script, a captive portal
+  answering with its login page, or a damaged cache entry was evaluated as `plantuml.js`, usually failing as a
+  syntax error, and the main-thread fallback then fetched the same bytes. The page now hands both engine files'
+  known SHA-256 hashes to the browser's own Subresource Integrity check, on the worker path's fetch and on the
+  fallback's tags, so a file that does not match is never evaluated. Chromium, Firefox and WebKit enforce it on
+  `file://`, on localhost and on a plain-http origin. A refused `plantuml.js` refuses every diagram, each saying
+  `Render error: PlantUML engine unavailable: engine integrity check failed: plantuml.js from <url> does not match
+  sha256-<expected>; the browser console names the hash it computed`, and no worker starts. A refused
+  `viz-global.js` loses no diagram: sequence diagrams never use Graphviz, and without it the engine lays a
+  component diagram out with its Smetana port (measured; the plan had expected the component diagram to fail).
+  `window.__kronikolRender` gains `engineIntegrity` and `vizIntegrity`: `'verified'`, `'mismatch'`, or `null`
+  before the file arrives and when it could not be fetched at all.
+- **The main-thread fallback could not load the engine under a content security policy without `unsafe-eval`.**
+  It reached `import()` through `new Function`, which such a policy refuses. It now loads the engine by a module
+  tag carrying the hash and a plain `import()` of the module that tag verified, so the fallback runs checked bytes
+  too. The branch that drove the pre-3.0.76 classic engine builds is gone; `window.plantumlLoad` stays a no-op for
+  anything that still calls it.
+- **The Node renderer trusted every file it had downloaded, for good.** `PlantUmlRendering.NodeJs` wrote what the
+  CDN answered straight to the final name and never looked at a file again: a proxy's rewrite, a portal's page, or
+  a download cut short by a killed process was used by every later run, and two processes sharing the directory
+  wrote the same file. Both files are now checked against the same hashes on the first render in each process and
+  on every download. A download is written under a temporary name of its own and renamed into place once it
+  matched; a mismatch is tried once more, and a second one stops the render with the URL, both hashes, the byte
+  count, and what to do (look for a proxy that rewrites JavaScript, or delete the directory).
+- **One damaged byte in the V8 code cache crashed node on every later render.** A release node checks a code
+  cache's header and never its payload: a byte flipped in the real engine's 3.29 MB cache crashed node in 6 of 10
+  flips, before any output, and since the crash left the file in place, every `NodeJs` render on that machine
+  failed until someone deleted it by hand. `plantuml.js.v8cache` now carries a SHA-256 of its data, checked before
+  V8 is handed it, and a cache that fails is reported `rejected` and rebuilt. It is written under a name of its
+  own and renamed into place, and it is deleted whenever the engine file is replaced, because V8 checks a cache
+  against the source's length, not its bytes. A cache written by an earlier version has no checksum, so it is
+  rejected once and rebuilt.
+
+### Documentation
+
+- Wiki: `PlantUML-Browser-Rendering` (the engine source, a new "Engine integrity" section, the CORS sentence and
+  the fallback corrected, the telemetry list, the Node cache's checks, the fragment-height figures),
+  `Report-Configuration` (`BrowserRenderWorkers`, `BrowserFragmentMaxHeight`), `Large-Response-and-Diagram-Handling`
+  (the fragment-height row) and `Diagnostics-and-Debugging` (the worker-mode check). The wiki's "4,000 to 6,000 px
+  renders about 20% faster" was measured on the 1.2026.6 engine and is reversed on this one (see Tests).
+- **Correction to 3.30.4.** Its second entry said a component diagram edge in a report puts its method list inside
+  `[[#iflow-rel-… …]]`, and called the thirty-operation ClickHouse edge user-reported. No generated report draws
+  that link: it is written only when stats are passed, and no report path has passed them since 2.0.92-beta. A
+  consumer reaches it by calling `ComponentDiagramGenerator.GeneratePlantUml` with the stats from
+  `ComponentFlowSegmentBuilder.ComputeRelationshipStats` and handing the result to `ReportGenerator.GenerateHtmlReport`
+  as `componentDiagramPlantUml`. The user report was about a plain label's width. The cap stays, for that path; the
+  wiki and the Kronikol4J ledger say so.
+- Doc comments: `TrackingDefaults.PlantUmlJsCdnBase` says what the URL is and why it cannot change;
+  `PlantUmlStatementLimits` records the block-opener and coloured-bar edges as V8 stack edges, about 2,000 on node
+  25.9, measured on the npm build too; `NodeJsPlantUmlRenderer.LastCodeCacheStatus` says what `rejected` means;
+  `ReportConfigurationOptions.BrowserFragmentMaxHeight` quotes the new measurement in place of the 1.2026.6 one.
+- `plans/ENGINE_PIN_PLAN.md` §10.2 is the execution log. `tools/render-bench/results/` gains the engine-speed
+  samples, the fragment-height table and the emitter comparison on the current serializer.
+
+### Tests
+
+- `EngineCacheTests` (6, new). Each behaviour was proved by a mutation of the class that turned its fact red:
+  trusting a file without its hash, no retry, installing a download unverified, keeping the code cache when the
+  engine is replaced. The fact for two caches on one directory is a smoke test. `NodeJsPlantUmlRendererTests`: a
+  code cache damaged in its middle is rejected and rebuilt (the script before the change reported `hit`), the
+  render script's comments say what V8 checks, and (Integration) the real CDN files hash to the constants (red
+  with one character of a constant changed).
+- `DiagramContextMenuTests`: the script carries both hashes, both fetches and both tags pass them, the refusal
+  names the file and the expected hash, and neither `new Function` nor the classic-build branch is left, each red
+  before the change.
+- `BrowserRenderWorkerTests` (Playwright): an engine with a wrong expected hash is refused on the worker path and
+  on the main-thread path, a wrong viz hash drops Graphviz only while a component diagram still draws, and both
+  files verify on the real CDN. Each negative fact was proved red by a mutation of the new shim (a fetch or a tag
+  without `integrity`, a refused viz refusing the engine). The fidelity test loads its main-thread engine the way
+  the fallback now does.
+- `Large_report_renders_off_the_main_thread_within_budget` gains two engine-speed budgets, contention-scaled like
+  the rest: the average fragment render (600 ms times the stretch; median 111 per stretch over 12 runs) and a warm
+  200-step arrow-heavy render, the faster of two after a warm-up (1,500 ms; median 247). The arrow-heavy one is
+  where the Teoz regressions of 1.2026.6 and 1.2026.7 (about 2,200 and 7,000 ms) would show; the fixture's
+  note-heavy renders cannot see them. Set to 1 ms, each failed all three attempts. `engineFetchMs` joins the record.
+- `Bench_fragment_height_against_render_and_toggle_time` (explicit, `Trait("Category", "Bench")`) renders the
+  fixture at a `BrowserFragmentMaxHeight` of 4,000, 6,000, 8,000 and 12,000 px, on the default 6 diagrams of 40
+  steps and on 20 of 80. The 12,000 px default was the fastest for the full render at both sizes and for the note
+  toggle at the larger; at 4,000 px the full render took 56% and 66% longer than at 12,000, and the toggle 41% and
+  77% longer. No default moves.
+
 ## [3.31.0] - 2026-09-26
 
 **Minor - `kronikol query flow` shows which call ran inside which (`plans/FLOW_NESTING_PLAN.md` S2, roadmap

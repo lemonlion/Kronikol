@@ -958,8 +958,8 @@ public class DiagramContextMenuTests
         Assert.Contains("fetch(", _plantUmlScript);
         Assert.Contains("new Worker(", _plantUmlScript);
         Assert.Contains("URL.createObjectURL(new Blob(", _plantUmlScript);
-        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452/viz-global.js", _plantUmlScript);
-        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452/plantuml.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8/viz-global.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8/plantuml.js", _plantUmlScript);
     }
 
     [Fact]
@@ -973,6 +973,61 @@ public class DiagramContextMenuTests
         Assert.Contains("maxSvgSize: 98304", _plantUmlScript);
     }
 
+    /// <summary>One function of the render shim, from its declaration to the next one at the same depth.</summary>
+    private string ShimFunction(string name)
+    {
+        var start = _plantUmlScript.IndexOf($"        function {name}(", StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Could not find function {name}");
+        var end = _plantUmlScript.IndexOf("\n        function ", start + 1, StringComparison.Ordinal);
+        return _plantUmlScript[start..(end > 0 ? end : _plantUmlScript.Length)];
+    }
+
+    [Fact]
+    public void The_engine_files_are_handed_to_the_browser_with_their_known_hashes()
+    {
+        // plans/ENGINE_PIN_PLAN.md S2. The shim evaluated whatever the CDN answered: a proxy's rewrite, a captive
+        // portal's login page or a damaged cache entry ran as the engine or failed as a syntax error, and the
+        // fallback then fetched the same bytes. The browser checks each file against its known hash now, on the
+        // worker path's fetch and on the fallback's tags, and a file that fails is never evaluated.
+        Assert.Contains($"var VIZ_INTEGRITY = '{Kronikol.Constants.TrackingDefaults.VizGlobalJsIntegrity}';", _plantUmlScript);
+        Assert.Contains($"var ENGINE_INTEGRITY = '{Kronikol.Constants.TrackingDefaults.PlantUmlJsIntegrity}';", _plantUmlScript);
+        Assert.DoesNotContain("__PLANTUML_", _plantUmlScript);
+
+        Assert.Contains("fetch(url, { integrity: integrity })", ShimFunction("fetchVerified"));
+        var acquire = ShimFunction("acquireEngine");
+        Assert.Contains("fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity')", acquire);
+        Assert.Contains("fetchVerified(ENGINE_URL, ENGINE_INTEGRITY, 'engineIntegrity')", acquire);
+        var addScript = ShimFunction("addScript");
+        Assert.Contains("s.integrity = integrity;", addScript);
+        Assert.Contains("s.crossOrigin = 'anonymous';", addScript);
+        var load = ShimFunction("loadEngineScripts");
+        Assert.Contains("addScript(VIZ_URL, VIZ_INTEGRITY)", load);
+        Assert.Contains("addScript(ENGINE_URL, ENGINE_INTEGRITY, 'module')", load);
+        Assert.Contains("return import(ENGINE_URL);", load);
+    }
+
+    [Fact]
+    public void A_refused_engine_file_is_named_with_its_expected_hash()
+    {
+        // The failure a viewer sees names the file and the hash it should have had; the browser console names
+        // the hash it computed (Chromium and Firefox; WebKit prints the byte counts).
+        var message = ShimFunction("integrityMessage");
+        Assert.Contains("'engine integrity check failed: ' + file + ' from ' + url + ' does not match ' + expected", message);
+        Assert.Contains("the browser console names the hash it computed", message);
+        Assert.Contains("integrityMessage('plantuml.js', ENGINE_URL, ENGINE_INTEGRITY)", _plantUmlScript);
+        Assert.Contains("integrityMessage('viz-global.js', VIZ_URL, VIZ_INTEGRITY)", _plantUmlScript);
+    }
+
+    [Fact]
+    public void The_fallback_imports_the_engine_directly_and_drives_no_classic_build()
+    {
+        // A Function constructor is refused by any content security policy without unsafe-eval, one of the
+        // hosted-report cases the fallback exists for. The classic-build branch (realLoad) cannot run behind a
+        // module tag, and the pin has been an ES-module build since 3.0.76 (plans/ENGINE_PIN_PLAN.md S2).
+        Assert.DoesNotContain("new Function", _plantUmlScript);
+        Assert.DoesNotContain("realLoad", _plantUmlScript);
+    }
+
     [Fact]
     public void Worker_bootstrap_is_registered_before_the_DOMContentLoaded_handler()
     {
@@ -982,9 +1037,8 @@ public class DiagramContextMenuTests
         var dclIndex = _plantUmlScript.IndexOf("DOMContentLoaded");
         Assert.True(bootstrapIndex >= 0 && dclIndex >= 0);
         Assert.True(bootstrapIndex < dclIndex, "worker bootstrap should be registered before the DOMContentLoaded handler");
-        // plantumlLoad() stays a callable no-op for anything that still calls it; the shim owns the
-        // engine. It must be the shim's shared `noop` — the fallback detects an ES-module engine build
-        // (which defines no plantumlLoad of its own) by that identity.
+        // plantumlLoad() stays a callable no-op for anything outside the shim that still calls it; the
+        // shim owns the engine, an ES module it imports.
         Assert.Contains("window.plantumlLoad = noop", _plantUmlScript);
         Assert.Contains("window.plantuml = ", _plantUmlScript);
         Assert.Contains("prefetch:", _plantUmlScript);

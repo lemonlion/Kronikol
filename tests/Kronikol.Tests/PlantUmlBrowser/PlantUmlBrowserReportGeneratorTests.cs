@@ -38,8 +38,8 @@ public class PlantUmlBrowserReportGeneratorTests
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
         var content = File.ReadAllText(html);
-        Assert.Contains("cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452/plantuml.js", content);
-        Assert.Contains("cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452/viz-global.js", content);
+        Assert.Contains("cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8/plantuml.js", content);
+        Assert.Contains("cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8/viz-global.js", content);
     }
 
     [Fact]
@@ -194,9 +194,9 @@ public class PlantUmlBrowserReportGeneratorTests
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
         var content = File.ReadAllText(html);
-        // The engine runs in Web Workers; window.plantumlLoad stays a no-op for compatibility (the
-        // shim's shared `noop`, whose identity the fallback uses to detect an ES-module engine) and
-        // window.__kronikolRender exposes the render telemetry (mode, workers, renders, cache hits).
+        // The engine runs in Web Workers; window.plantumlLoad stays a no-op for anything outside the shim
+        // that still calls it, and window.__kronikolRender exposes the render telemetry (mode, workers,
+        // renders, cache hits).
         Assert.Contains("window.plantumlLoad = noop", content);
         Assert.Contains("window.__kronikolRender", content);
         Assert.Contains("var WORKERS_REQUESTED = 4;", content);

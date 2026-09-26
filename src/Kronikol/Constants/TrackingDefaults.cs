@@ -12,20 +12,35 @@ public static class TrackingDefaults
     public const string CallerName = "Caller";
 
     /// <summary>
-    /// CDN base URL for the PlantUML JavaScript renderer used in HTML reports. The build is a
-    /// <em>stock</em> ES-module engine (plantuml/plantuml master <c>0e4f452e</c>, 1.2026.8beta1 —
-    /// carries the Teoz/Smetana performance work, so it renders Kronikol-shaped sequence diagrams
-    /// 4–8× faster than the previous <c>v1.2026.6-patched</c> pin). Unlike the older tags nothing is
-    /// patched: the engine's default 8192px size limit is raised at render time instead — every
-    /// ES-module render call site passes <c>{ maxSvgSize: 98304 }</c> (pinned by unit tests on the
-    /// scripts and an end-to-end render past the stock default). Every consumer (the browser shim,
-    /// the worker host, <c>plantuml-render.js</c>) rewrites the engine's trailing <c>export</c>
-    /// statement into an assignment, since Workers and <c>vm</c> contexts cannot evaluate ES modules.
-    /// If this is ever pointed at a host that does not send CORS headers, the browser falls back to
-    /// script-tag loading on the main thread (see
-    /// <see cref="ReportConfigurationOptions.BrowserRenderWorkers"/>).
+    /// CDN base URL for the PlantUML JavaScript renderer used in HTML reports: the published
+    /// <c>@plantuml/core</c> package at its release version 1.2026.8, on jsDelivr's <c>/npm/</c> route. The
+    /// registry never lets a published name@version hold other bytes, so nobody can change what this URL
+    /// serves. It is a stock ES-module build of PlantUML's release commit <c>149874a1</c>, nine commits past
+    /// the <c>0e4f452e</c> build that was pinned before it, none of them reachable from a Kronikol diagram, and
+    /// it draws every diagram Kronikol emits byte-identical to that build (plans/ENGINE_PIN_PLAN.md §1.3,
+    /// §1.16). The engine's default 8192px size limit is raised at render time: every ES-module render call
+    /// site passes <c>{ maxSvgSize: 98304 }</c>. Every consumer (the browser shim, the worker host,
+    /// <c>plantuml-render.js</c>) rewrites the engine's trailing <c>export</c> statement into an assignment,
+    /// since Workers and <c>vm</c> contexts cannot evaluate ES modules. The previous engine builds stay
+    /// published on the <c>lemonlion/plantuml-js-plantuml_limit_size_98304</c> fork's tags, for the reports
+    /// that reference them.
+    /// <para>
+    /// A <c>const</c> is compiled into the code that reads it: a consumer that copied this value into its
+    /// own assembly keeps the old URL, which still works, until it is rebuilt.
+    /// </para>
     /// </summary>
-    public const string PlantUmlJsCdnBase = "https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452";
+    public const string PlantUmlJsCdnBase = "https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8";
+
+    /// <summary>
+    /// The Subresource Integrity value of <c>plantuml.js</c> under <see cref="PlantUmlJsCdnBase"/>: the base64 SHA-256
+    /// of the file's bytes, as jsDelivr lists it and as the registry tarball's file hashes (plans/ENGINE_PIN_PLAN.md
+    /// §1.1, §1.13). The report page hands it to the browser's own integrity check, and the Node renderer checks its
+    /// cached copy against it. It moves with the CDN base; the fork build's values are in the plan's A.3.
+    /// </summary>
+    internal const string PlantUmlJsIntegrity = "sha256-rejxXtfyoyJYFDMtOsbQW8fr277IYwUSzHz2eLwMTVI=";
+
+    /// <summary>The Subresource Integrity value of <c>viz-global.js</c> under <see cref="PlantUmlJsCdnBase"/> (see <see cref="PlantUmlJsIntegrity"/>).</summary>
+    internal const string VizGlobalJsIntegrity = "sha256-/Gyi3oPdTj/Kln1SFBInd4kKXNGrEBEVofcW/ITm3F4=";
 
     /// <summary>
     /// Default number of Web Workers a <c>BrowserJs</c> report renders diagrams on (capped by the

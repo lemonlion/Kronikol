@@ -9,8 +9,9 @@
 //       the cold JIT (0.8–1.4 s together) are paid once instead of once per diagram. Each render gets its
 //       own target element id — TeaVM keeps global state and leaks between targets that share an id.
 // Both modes compile plantuml.js through vm.Script with V8 cached data kept next to the engine
-// (<plantuml.js>.v8cache, written on first run; ~160 ms → ~1 ms). A cache V8 rejects (node/V8 upgrade)
-// is regenerated. stderr carries "[plantuml-render] code cache: hit|miss|rejected" for diagnostics.
+// (<plantuml.js>.v8cache, written on first run; ~160 ms → ~1 ms). A cache whose SHA-256 does not match
+// its data, or that V8 rejects (another node version or flags), is regenerated. stderr carries
+// "[plantuml-render] code cache: hit|miss|rejected" for diagnostics.
 //
 // Both viz-global.js and plantuml.js are designed for browsers (<script> tags).
 // We load them via vm.runInThisContext to simulate browser <script> tag loading,
@@ -23,6 +24,7 @@
 
 var vm = require('vm');
 var fs = require('fs');
+var crypto = require('crypto');
 var path = require('path');
 var urlModule = require('url');
 var readline = require('readline');
@@ -265,7 +267,13 @@ function loadScript(filePath) {
 
 // The engine is compiled through vm.Script so V8's code cache can be reused across processes: the
 // cache lives next to the engine file, is produced after the first run (so it covers the functions the
-// run compiled lazily) and is thrown away and rebuilt when V8 rejects it (a node upgrade, a changed file).
+// run compiled lazily) and is thrown away and rebuilt when it is rejected. V8 checks cached data against
+// its own version and flags and the source's length, not its bytes, and a release node never checks the
+// payload (plans/ENGINE_PIN_PLAN.md §1.12, §1.14): a damaged payload crashed node before any output, and
+// the crash left the file in place for every later run. So the file holds a SHA-256 of the data ahead of
+// the data, checked before V8 is handed it, and the .NET side deletes it whenever it replaces the engine.
+// It is written under a name of this process's own and renamed into place, so a process killed mid-write
+// leaves no torn file under the real name.
 function loadEngineWithCodeCache(filePath) {
     var code = fs.readFileSync(filePath, 'utf8');
     // An ES-module engine build (the npm @plantuml/core line) ends in `export { X as render,
@@ -278,8 +286,8 @@ function loadEngineWithCodeCache(filePath) {
             + 'globalThis.__plantumlExports = { render: ' + em[1] + ', renderToString: ' + em[2] + ' };\n';
     }
     var cachePath = filePath + '.v8cache';
-    var cached = null;
-    try { cached = fs.readFileSync(cachePath); } catch (_) { cached = null; }
+    var cached = readCodeCache(cachePath);
+    var damaged = cached === false;
     var script;
     try {
         script = new vm.Script(code, { filename: filePath, cachedData: cached || undefined });
@@ -287,14 +295,34 @@ function loadEngineWithCodeCache(filePath) {
         script = new vm.Script(code, { filename: filePath });
         cached = null;
     }
-    var status = !cached ? 'miss' : (script.cachedDataRejected ? 'rejected' : 'hit');
+    var status = damaged ? 'rejected' : !cached ? 'miss' : (script.cachedDataRejected ? 'rejected' : 'hit');
     script.runInThisContext();
-    if (status !== 'hit') {
-        try { fs.writeFileSync(cachePath, script.createCachedData()); }
-        catch (e) { process.stderr.write('[plantuml-render] code cache not written: ' + (e && e.message || e) + '\n'); }
-    }
+    if (status !== 'hit') writeCodeCache(cachePath, script.createCachedData());
     process.stderr.write('[plantuml-render] code cache: ' + status + '\n');
     return status;
+}
+
+var CODE_CACHE_HASH_BYTES = 32;
+
+// The V8 data when the file's SHA-256 prefix matches it; null when there is no file; false when it does not match.
+function readCodeCache(cachePath) {
+    var file;
+    try { file = fs.readFileSync(cachePath); } catch (_) { return null; }
+    if (file.length <= CODE_CACHE_HASH_BYTES) return false;
+    var data = file.subarray(CODE_CACHE_HASH_BYTES);
+    var digest = crypto.createHash('sha256').update(data).digest();
+    return digest.equals(file.subarray(0, CODE_CACHE_HASH_BYTES)) ? data : false;
+}
+
+function writeCodeCache(cachePath, data) {
+    var temp = cachePath + '.' + process.pid + '.tmp';
+    try {
+        fs.writeFileSync(temp, Buffer.concat([crypto.createHash('sha256').update(data).digest(), data]));
+        fs.renameSync(temp, cachePath);
+    } catch (e) {
+        try { fs.unlinkSync(temp); } catch (_) { /* nothing was written */ }
+        process.stderr.write('[plantuml-render] code cache not written: ' + (e && e.message || e) + '\n');
+    }
 }
 
 // --- Phase 1: Load viz-global.js ---

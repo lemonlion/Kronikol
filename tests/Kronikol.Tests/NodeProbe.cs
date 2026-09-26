@@ -37,6 +37,17 @@ internal static class NodeProbe
     /// first argument stdin.</summary>
     public static string RunWithStdin(string script, string? stdin, params string[] args)
     {
+        var run = RunCaptured(script, stdin, args);
+        if (run.ExitCode != 0) throw new InvalidOperationException($"node exited {run.ExitCode}: {run.Stderr}");
+        return run.Stdout;
+    }
+
+    /// <summary>What one node process wrote and how it ended.</summary>
+    public sealed record NodeRun(int ExitCode, string Stdout, string Stderr);
+
+    /// <summary>Like <see cref="RunWithStdin"/>, but returns stderr and the exit code instead of throwing on a non-zero exit.</summary>
+    public static NodeRun RunCaptured(string script, string? stdin, params string[] args)
+    {
         var dir = Path.Combine(Path.GetTempPath(), "kronikol-node-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
         try
@@ -64,8 +75,7 @@ internal static class NodeProbe
             var stdout = p.StandardOutput.ReadToEndAsync();
             var stderr = p.StandardError.ReadToEndAsync();
             if (!p.WaitForExit(60_000)) { try { p.Kill(); } catch { } throw new TimeoutException("node driver timed out"); }
-            if (p.ExitCode != 0) throw new InvalidOperationException($"node exited {p.ExitCode}: {stderr.Result}");
-            return stdout.Result;
+            return new NodeRun(p.ExitCode, stdout.Result, stderr.Result);
         }
         finally
         {

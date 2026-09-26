@@ -13,7 +13,9 @@ const FILEMODE = process.env.FILEMODE || '';
 const INLINE = FILEMODE === '2';
 const CDNENGINE = process.env.CDNENGINE === '1';
 const ESM = !/^old-/.test(engine);
-const BASE = CDNENGINE ? 'https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.3beta6-patched' : FILEMODE ? 'http://127.0.0.1:18765' : '';
+// CDNENGINE=1 fetches the engine the shipped report does: TrackingDefaults.PlantUmlJsCdnBase, read from the source.
+const PINNED_CDN = /PlantUmlJsCdnBase = "([^"]+)"/.exec(fs.readFileSync(path.resolve(__dirname, '../../../src/Kronikol/Constants/TrackingDefaults.cs'), 'utf8'))[1];
+const BASE = CDNENGINE ? PINNED_CDN : FILEMODE ? 'http://127.0.0.1:18765' : '';
 const ENGDIR = CDNENGINE ? BASE : BASE + '/__engine';
 const workerSrc = fs.readFileSync(path.join(__dirname, '..', 'puml-worker.js'), 'utf8');
 const workerCtor = FILEMODE ? 'new Worker(URL.createObjectURL(new Blob([' + JSON.stringify(workerSrc) + '], { type: "application/javascript" })))' : "new Worker('/__sp/puml-worker.js')";

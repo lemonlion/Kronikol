@@ -1,0 +1,50 @@
+# The fragment-height re-measure (plans/ENGINE_PIN_PLAN.md S5), 2026-09-26
+#
+# BrowserRenderWorkerTests.Bench_fragment_height_against_render_and_toggle_time (Explicit, Trait Bench):
+#   dotnet test tests/Kronikol.Tests.EndToEnd --filter "FullyQualifiedName~Bench_fragment_height" -- xUnit.Explicit=on
+# The E2E suite's Chromium, 4 render workers, the @plantuml/core@1.2026.8 engine, this machine. Each row is one
+# MeasureLargeReport run on LargeReportFixture at the given BrowserFragmentMaxHeight: all = the forced full render,
+# toggle = the note toggle on the diagram with the most fragments, perRender = workerMs / renders; all three are
+# divided by the run's contention stretch. fragments = every div.puml-fragment on the page after the run.
+#
+# Medians of three runs (range):
+#   fixture  height  fragments  full render           note toggle
+#   6x40     4000    180        4,718 (4,240-6,111)   637 (550-862)
+#   6x40     6000    120        3,963 (3,880-4,812)   565 (543-573)
+#   6x40     8000     84        4,092 (3,456-4,765)   422 (378-640)
+#   6x40    12000     60        3,027 (2,688-3,154)   451 (406-513)
+#   20x80    4000    600       15,079 (11,552-15,149) 1,752 (1,692-1,812)
+#   20x80    6000    400       11,537 (11,296-12,789) 1,520 (1,256-1,714)
+#   20x80    8000    270       10,017 (9,385-12,199)  1,077 (1,020-1,157)
+#   20x80   12000    190        9,082 (8,968-9,712)     988 (969-1,178)
+#
+# On this engine the default, 12,000 px, is the fastest height measured for the full render at both sizes and for
+# the toggle at 20x80; 8,000 px toggles a little faster at 6x40 (422 against 451 ms, inside each other's range).
+# The 1.2026.6 figure the wiki quoted (4,000 to 6,000 px about 20 % faster) no longer holds: 4,000 px renders
+# 56 % (6x40) and 66 % (20x80) slower than 12,000 px. No default moves on these numbers (roadmap 12.1).
+#
+# Raw rows:
+2026-09-26T11:59:14.9648488Z fragment-bench 6x40 height=4000 run=1 fragments=180 all=6111 toggle=637 perRender=52 toggleRenders=30 renders=210 stretch=1.00
+2026-09-26T11:59:23.4648189Z fragment-bench 6x40 height=4000 run=2 fragments=180 all=4718 toggle=862 perRender=54 toggleRenders=30 renders=210 stretch=1.01
+2026-09-26T11:59:30.7929509Z fragment-bench 6x40 height=4000 run=3 fragments=180 all=4240 toggle=550 perRender=50 toggleRenders=30 renders=210 stretch=1.01
+2026-09-26T11:59:38.0428300Z fragment-bench 6x40 height=6000 run=1 fragments=120 all=3963 toggle=573 perRender=66 toggleRenders=20 renders=140 stretch=1.00
+2026-09-26T11:59:44.8902102Z fragment-bench 6x40 height=6000 run=2 fragments=120 all=3880 toggle=543 perRender=66 toggleRenders=20 renders=140 stretch=1.00
+2026-09-26T11:59:53.5414915Z fragment-bench 6x40 height=6000 run=3 fragments=120 all=4812 toggle=565 perRender=90 toggleRenders=20 renders=140 stretch=1.12
+2026-09-26T12:00:01.2873021Z fragment-bench 6x40 height=8000 run=1 fragments=84 all=4092 toggle=640 perRender=108 toggleRenders=14 renders=98 stretch=1.08
+2026-09-26T12:00:10.1058479Z fragment-bench 6x40 height=8000 run=2 fragments=84 all=4765 toggle=378 perRender=123 toggleRenders=14 renders=98 stretch=1.23
+2026-09-26T12:00:16.8255267Z fragment-bench 6x40 height=8000 run=3 fragments=84 all=3456 toggle=422 perRender=92 toggleRenders=14 renders=98 stretch=1.20
+2026-09-26T12:00:23.1648143Z fragment-bench 6x40 height=12000 run=1 fragments=60 all=3027 toggle=451 perRender=108 toggleRenders=10 renders=70 stretch=1.11
+2026-09-26T12:00:28.5538778Z fragment-bench 6x40 height=12000 run=2 fragments=60 all=2688 toggle=513 perRender=96 toggleRenders=10 renders=70 stretch=1.02
+2026-09-26T12:00:34.1829408Z fragment-bench 6x40 height=12000 run=3 fragments=60 all=3154 toggle=406 perRender=108 toggleRenders=10 renders=70 stretch=1.06
+2026-09-26T12:00:51.5736398Z fragment-bench 20x80 height=4000 run=1 fragments=600 all=11552 toggle=1692 perRender=27 toggleRenders=60 renders=660 stretch=1.06
+2026-09-26T12:01:12.3631551Z fragment-bench 20x80 height=4000 run=2 fragments=600 all=15079 toggle=1752 perRender=36 toggleRenders=60 renders=660 stretch=1.04
+2026-09-26T12:01:33.4495246Z fragment-bench 20x80 height=4000 run=3 fragments=600 all=15149 toggle=1812 perRender=34 toggleRenders=60 renders=660 stretch=1.06
+2026-09-26T12:01:50.5507917Z fragment-bench 20x80 height=6000 run=1 fragments=400 all=12789 toggle=1256 perRender=48 toggleRenders=40 renders=440 stretch=1.02
+2026-09-26T12:02:06.6052827Z fragment-bench 20x80 height=6000 run=2 fragments=400 all=11296 toggle=1714 perRender=47 toggleRenders=40 renders=440 stretch=1.02
+2026-09-26T12:02:22.8101146Z fragment-bench 20x80 height=6000 run=3 fragments=400 all=11537 toggle=1520 perRender=45 toggleRenders=40 renders=440 stretch=1.00
+2026-09-26T12:02:36.5016466Z fragment-bench 20x80 height=8000 run=1 fragments=270 all=10017 toggle=1077 perRender=63 toggleRenders=27 renders=297 stretch=1.00
+2026-09-26T12:02:49.6467991Z fragment-bench 20x80 height=8000 run=2 fragments=270 all=9385 toggle=1157 perRender=59 toggleRenders=27 renders=297 stretch=1.00
+2026-09-26T12:03:07.0750000Z fragment-bench 20x80 height=8000 run=3 fragments=270 all=12199 toggle=1020 perRender=87 toggleRenders=27 renders=297 stretch=1.12
+2026-09-26T12:03:19.7538409Z fragment-bench 20x80 height=12000 run=1 fragments=190 all=8968 toggle=1178 perRender=81 toggleRenders=19 renders=209 stretch=1.00
+2026-09-26T12:03:33.1976996Z fragment-bench 20x80 height=12000 run=2 fragments=190 all=9712 toggle=988 perRender=83 toggleRenders=19 renders=209 stretch=1.00
+2026-09-26T12:03:45.8903184Z fragment-bench 20x80 height=12000 run=3 fragments=190 all=9082 toggle=969 perRender=75 toggleRenders=19 renders=209 stretch=1.00

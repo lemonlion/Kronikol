@@ -42,8 +42,10 @@ public static class NodeJsPlantUmlRenderer
 
     /// <summary>
     /// What the last node process reported about the engine's V8 code cache: <c>hit</c> (reused),
-    /// <c>miss</c> (none yet — written now), <c>rejected</c> (V8 refused it, e.g. after a node upgrade —
-    /// rebuilt now), or <c>null</c> when nothing has run. Diagnostics only.
+    /// <c>miss</c> (none yet, written now), <c>rejected</c> (rebuilt now: the file's SHA-256 did not match its
+    /// data, or V8 refused it, as it does after a node upgrade or for a source of another length; V8 never
+    /// compares the source's bytes, which is why the engine's replacement deletes the cache), or <c>null</c>
+    /// when nothing has run. Diagnostics only.
     /// </summary>
     public static string? LastCodeCacheStatus { get; private set; }
 
@@ -251,20 +253,19 @@ public static class NodeJsPlantUmlRenderer
         stream.CopyTo(file);
     }
 
-    private static void DownloadJsFiles()
+    /// <summary>The known hash of each engine file under <see cref="CdnBase"/> (plans/ENGINE_PIN_PLAN.md S3).</summary>
+    internal static readonly IReadOnlyDictionary<string, string> ExpectedIntegrity = new Dictionary<string, string>
     {
-        using var http = new HttpClient();
-        DownloadIfMissing(http, VizFileName);
-        DownloadIfMissing(http, PlantUmlFileName);
-    }
+        [VizFileName] = TrackingDefaults.VizGlobalJsIntegrity,
+        [PlantUmlFileName] = TrackingDefaults.PlantUmlJsIntegrity,
+    };
 
-    private static void DownloadIfMissing(HttpClient http, string fileName)
-    {
-        var targetPath = Path.Combine(CacheDir, fileName);
-        if (File.Exists(targetPath)) return;
-
-        var url = $"{CdnBase}/{fileName}";
-        var bytes = http.GetByteArrayAsync(url).GetAwaiter().GetResult();
-        File.WriteAllBytes(targetPath, bytes);
-    }
+    // Every file is verified on each start in a process, downloaded when missing or wrong, and renamed into place
+    // only once it verified (EngineCache).
+    private static void DownloadJsFiles() =>
+        new EngineCache(CacheDir, url =>
+        {
+            using var http = new HttpClient();
+            return http.GetByteArrayAsync(url).GetAwaiter().GetResult();
+        }, CdnBase, ExpectedIntegrity).EnsureFiles();
 }

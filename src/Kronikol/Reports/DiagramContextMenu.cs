@@ -62,6 +62,8 @@ public static class DiagramContextMenu
             .Replace("__BROWSER_RENDER_CACHE_MB__", Math.Max(0, browserRenderCacheMegabytes).ToString(System.Globalization.CultureInfo.InvariantCulture))
             .Replace("__BROWSER_FRAGMENT_MAX_HEIGHT__", (browserFragmentMaxHeight > 0 ? browserFragmentMaxHeight : TrackingDefaults.BrowserFragmentMaxHeight).ToString(System.Globalization.CultureInfo.InvariantCulture))
             .Replace("__PLANTUML_CDN_BASE__", PlantUmlJsCdnBase)
+            .Replace("__PLANTUML_ENGINE_INTEGRITY__", TrackingDefaults.PlantUmlJsIntegrity)
+            .Replace("__PLANTUML_VIZ_INTEGRITY__", TrackingDefaults.VizGlobalJsIntegrity)
             .Replace("__PLANTUML_WORKER_HOST_SOURCE__", hostLiteral);
     }
 
