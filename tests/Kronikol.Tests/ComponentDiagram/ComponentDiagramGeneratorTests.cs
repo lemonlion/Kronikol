@@ -1267,6 +1267,39 @@ public class ComponentDiagramGeneratorTests
         Assert.Contains(marked, EdgeLabel(result), StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void GeneratePlantUml_ManyMethods_KeepTheInternalFlowLinkClosedAndShortEnoughForTheWorker(bool useC4)
+    {
+        // Eighty operations on one edge: the statement cap cut the label inside its [[#iflow-rel-… link, so the
+        // link never closed and the stats and call counts went with it. And a Chromium worker, where BrowserJs
+        // renders, overflows its stack parsing a long link and draws nothing of the diagram: from 1,050
+        // characters of link text once warm, from 475 without the JIT (plans/ENGINE_PIN_PLAN.md §10).
+        var relationships = new[]
+        {
+            new ComponentRelationship("Caller", "OrderService", "HTTP",
+                [.. Enumerable.Range(0, 80).Select(i => $"GET /api/orders/very/long/route/segment/{i:D2}")], 10, 5)
+        };
+        var stats = new Dictionary<string, RelationshipStats>
+        {
+            ["iflow-rel-Caller-OrderService"] = new(10, 5, 50.0, 45.0, 120.0, 250.0, 5.0, 300.0,
+                0.0, new Dictionary<HttpStatusCode, int>(), [], null, null, false, 0, new Dictionary<string, int>(), null, 0)
+        };
+
+        var source = ComponentDiagramGenerator.GeneratePlantUml(relationships, stats: stats, useC4: useC4);
+
+        var edge = source.Split('\n').Select(l => l.TrimEnd('\r')).Single(l => l.Contains("[[#iflow-rel-", StringComparison.Ordinal));
+        var link = System.Text.RegularExpressions.Regex.Match(edge, @"\[\[#iflow-rel-Caller-OrderService (?<text>.*?)\]\]");
+        Assert.True(link.Success, $"the edge's internal-flow link is not closed: …{edge[^Math.Min(120, edge.Length)..]}");
+        var text = link.Groups["text"].Value;
+        Assert.True(text.Length <= PlantUmlStatementLimits.MaxLinkedLabelChars, $"{text.Length} characters inside the link");
+        Assert.StartsWith("HTTP: GET /api/orders/very/long/route/segment/00", text, StringComparison.Ordinal);
+        Assert.EndsWith(PlantUmlStatementLimits.TruncationMarker, text, StringComparison.Ordinal);
+        Assert.Contains("P50: 45ms", edge, StringComparison.Ordinal);
+        Assert.Contains("10 calls across 5 tests", edge, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void GeneratePlantUml_Wrapping_PreservesTheStatsLabelsOwnLineStructure()
     {

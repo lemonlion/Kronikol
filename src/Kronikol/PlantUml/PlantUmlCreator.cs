@@ -361,9 +361,13 @@ public static partial class PlantUmlCreator
                     // a 5,300-character Redis DELETE path became 53 display chunks joined by a literal
                     // `\n        ` and one 5,410-character statement, which the engine refuses outright.
                     // Cap against the real statement, counting the prefix and the internal-flow link that
-                    // wraps the label — cutting inside `[[…]]` would leave the link unclosed.
+                    // wraps the label — cutting inside `[[…]]` would leave the link unclosed. Inside the link the
+                    // cap is lower: the Chromium worker BrowserJs renders in overflows its stack parsing a long
+                    // link and loses the whole diagram (MaxLinkedLabelChars). The link, and its id, always stay.
                     var linkWrapperLength = internalFlowTracking ? $"[[#iflow-{trace.RequestResponseId} ]]".Length : 0;
                     var labelBudget = PlantUmlStatementLimits.MaxMessageStatementChars - requestPrefix.Length - linkWrapperLength;
+                    if (internalFlowTracking)
+                        labelBudget = Math.Min(labelBudget, PlantUmlStatementLimits.MaxLinkedLabelChars);
                     var cappedLabel = PlantUmlStatementLimits.TruncateLabel(requestLabel, labelBudget);
                     var labelWasTruncated = cappedLabel.Length != requestLabel.Length;
                     requestLabel = cappedLabel;

@@ -4,6 +4,67 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.30.4] - 2026-09-26
+
+**Patch - a long label inside an internal-flow link no longer costs its diagram (`plans/ENGINE_PIN_PLAN.md`
+S0, stage 1 P4, roadmap 1.8).** Both changes are fixes, so the patch part moved. The limit they add,
+`PlantUmlStatementLimits.MaxLinkedLabelChars`, is internal, so nothing new is public. One of them shortens what
+a diagram shows, and it is called out. Template pins move to 3.30.3.
+
+### Fixed
+
+- **A request whose label ran past about 1,000 characters lost its diagram in a `BrowserJs` report.** With
+  internal-flow tracking on, the default, the request label sits inside its `[[#iflow-<id> …]]` link, and its
+  only cap was the 2,000-character statement limit. `BrowserJs` renders in a Chromium Web Worker, whose stack
+  is smaller than the page's, and the engine overflows it parsing a long link. The diagram's place then held
+  `Render error: … RangeError: Maximum call stack size exceeded` and nothing else of it was drawn. Measured in
+  Chromium 147 on both engine builds: from 980 characters inside the link in a worker whose JIT has not warmed
+  up, and from 495 with V8's optimizing compilers off, which an enterprise policy or a browser security mode
+  can set. The same label without its link, the page's main thread (`BrowserRenderWorkers = 0`), node, Firefox
+  and WebKit drew every length measured. The text inside the link is now cut at 350 characters, a quarter under
+  the lowest edge found, and the link, with the id the internal-flow popup opens by, always stays closed.
+  **Behaviour change:** such a label is cut shorter than before (it was cut at about 1,930 characters, where it
+  failed anyway), and the whole path is in the note beside the arrow under `[Full path]`, as it already was for
+  a label cut at the statement limit. A label without the link keeps the 2,000-character limit.
+- **A component diagram edge with a long list of methods lost its stats, and could lose the diagram.** The edge
+  label puts the method list inside `[[#iflow-rel-… …]]`, followed by its P50/P95/P99 line and its call
+  counts. Eighty methods took the label past the statement limit, which cut it inside the link: the link was
+  never closed, and the stats and counts were gone. A shorter list could still overflow the worker's stack: the
+  user-reported edge listing thirty ClickHouse operations holds about 1,150 characters of link text, and a
+  worker that had drawn other diagrams first failed on the component diagram from 1,050 characters in one run of
+  two (the edge moves with the JIT's state); with the optimizing compilers off it failed from 475 every time.
+  The method list is cut at the same 350 characters, and the link closes before the stats.
+
+### Documentation
+
+- The `PlantUmlStatementLimits` doc comment records the link as a third failure mode, measured in the worker
+  rather than in node. The wiki's `Large-Response-and-Diagram-Handling` lists the link limit beside the other
+  statement limits, and `Component-Diagrams` says a long method list is cut inside its link.
+- With V8's `--jitless`, which turns WebAssembly off too, no component diagram draws at all, link or none:
+  Graphviz needs WebAssembly. That is older than this release, and it is recorded in the plan (§10), not fixed.
+
+### Tests
+
+- `PlantUmlStatementLengthTests` (unit): the text inside a request's link is capped at the linked-label limit and
+  keeps the request's id; the whole path is in its note; the cap counts the label as written and is never cut
+  inside a code point escape; a linked label that fits is left as it was; an unlinked label keeps the message
+  limit. `ComponentDiagramGeneratorTests`: an edge with eighty methods keeps its link closed and short enough for
+  the worker, and keeps its stats, in the C4 and the plain form.
+- `LongStatementRenderingTests` (Playwright): a report with a 2,450-character query behind its link draws the
+  diagram in the worker, with its `[Full path]` note; and in a Chromium with the optimizing compilers off
+  (`--js-flags=--no-opt --no-maglev`), both that diagram and a component diagram whose edge lists thirty
+  operations draw.
+- `NodeJsPlantUmlRendererTests` (Integration): the cut linked label still draws in node.
+- Every new fact was red on 3.30.3 apart from two pins of behaviour that did not change (a label that fits, an
+  unlinked label). A one-line mutation (the new `Math.Min` left out) turns the three request facts red, and the
+  optimizers-off Playwright fact was proved red for each diagram on its own.
+- `tools/render-bench/statement-limits-worker-probe.js --scan` measured the edge per label shape (a query string,
+  a path of many short segments, one long token, a percent-encoded non-ASCII path, a path of escaped
+  brackets, a request inside a collapsed-run `loop`, and a component edge), cold and warm, with the JIT on,
+  with the optimizing compilers off and with `--jitless`, on the worker and the main thread, in Chromium,
+  Firefox and WebKit (`results/statement-limits-worker-2026-09-26.txt`). After the fix every source the emitter
+  writes draws in every one of those configurations, the component under `--jitless` apart.
+
 ## [3.30.3] - 2026-09-26
 
 **Patch - `kronikol query flow` under a filter or a step address, and `--count` on three verbs

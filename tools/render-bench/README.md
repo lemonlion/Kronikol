@@ -57,10 +57,20 @@ Scripts
 - `emitter-corpus/`: a console app named `formatter-probe`, the assembly name Kronikol grants its internals to.
   `dotnet run --project emitter-corpus -- <dir>` writes 14 sources from Kronikol's own emitter (header blocks, both step-bar forms,
   assertion notes, internal-flow links, focus colours, a 400-line note, 200 calls, creole-looking payloads);
-  `-- --shim <page> <workers>` writes a bare page carrying the shipped render script. `emitter-corpus-compare.js <dir> <label>=<engine
+  `-- --shim <page> <workers>` writes a bare page carrying the shipped render script; `-- --linked-labels <dir>` writes the linked
+  statements `statement-limits-worker-probe.js --scan` cuts. `emitter-corpus-compare.js <dir> <label>=<engine
   dir> <label>=<engine dir>` renders the sources through the shipped Node script on two builds and compares the SVG bytes
   (`results/emitter-corpus-2026-09-25.txt`). Keep the creole-payload source out of the folder: it stalls every later source of the batch.
 - `statement-limits-worker-probe.js <shim page> <label>=<cdn base> [...]`: the statement limits in the shipped BrowserJs worker, per
   engine route (the page from `emitter-corpus -- --shim <page> 1`); `results/statement-limits-worker-2026-09-25.txt`.
+  `--scan <dir> <shim page> <label>=<cdn base> [...]` cuts the text inside each `[[#iflow-…]]` link the emitter wrote (the sources
+  from `emitter-corpus -- --linked-labels <dir>`: five request-label shapes, a request inside a collapsed-run `loop`, and a component
+  edge) to every length from `FROM` to `TO` by `STEP`, the way `TruncateLabel` cuts it. The edge moves with V8's tier-up, so
+  `COLD=1` gives each case a fresh page (the first render in a new worker; `CONCURRENCY=<n>` pages at once), `JSFLAGS` goes to
+  Chromium as `--js-flags` (`--no-opt --no-maglev` for interpreter-sized frames with WebAssembly on, `--jitless` for both off),
+  `BROWSER=firefox|webkit` and `LAUNCH=<json launch options>` (Firefox prefs, a WebKit environment) measure the other engines, a
+  shim page written with 0 workers measures the main thread, `UNLINKED=1` drops the link and `ASIS=1` renders each source as
+  written (the check after a fix). `results/statement-limits-worker-2026-09-26.txt` is the S0 measurement behind
+  `PlantUmlStatementLimits.MaxLinkedLabelChars`.
 - `probe-component.puml`: a Kronikol-shaped plain-shape component diagram for the ladder's non-sequence row.
 - `results/`: the JSON results quoted in the plans.

@@ -251,6 +251,7 @@ public static partial class ComponentDiagramGenerator
             // toward the statement the parser measures, so capping the wrapped label is what actually
             // keeps the emitted line inside the limit.
             label = WrapLabel(label);
+            label = CapLinkText(label, $"[[#{relKey} ");
 
             var edgeOverhead = callerAlias.Length + serviceAlias.Length + 40;
             label = PlantUml.PlantUmlStatementLimits.TruncateLabel(
@@ -313,6 +314,25 @@ public static partial class ComponentDiagramGenerator
     /// </para>
     /// </summary>
     private static string WrapLabel(string label) => Wrap(label, MaxLabelLineChars);
+
+    /// <summary>
+    /// Cuts the text of the edge's internal-flow link, the method list, to
+    /// <see cref="PlantUml.PlantUmlStatementLimits.MaxLinkedLabelChars"/> as written, display breaks included,
+    /// and keeps the link closed and the stats lines after it. A Chromium worker, where BrowserJs renders,
+    /// overflows its stack parsing a longer link and draws nothing of the diagram, and the statement cap
+    /// below would otherwise cut a long method list inside the link. A label without the link comes back unchanged.
+    /// </summary>
+    private static string CapLinkText(string label, string linkOpen)
+    {
+        if (!label.StartsWith(linkOpen, StringComparison.Ordinal))
+            return label;
+        var close = label.IndexOf("]]", linkOpen.Length, StringComparison.Ordinal);
+        if (close < 0)
+            return label;
+        var text = label[linkOpen.Length..close];
+        var capped = PlantUml.PlantUmlStatementLimits.TruncateLabel(text, PlantUml.PlantUmlStatementLimits.MaxLinkedLabelChars);
+        return capped.Length == text.Length ? label : string.Concat(linkOpen, capped, label.AsSpan(close));
+    }
 
     /// <summary>
     /// A participant's name, broken onto display lines of at most <see cref="MaxNameLineChars"/>

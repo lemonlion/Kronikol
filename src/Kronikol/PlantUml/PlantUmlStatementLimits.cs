@@ -51,7 +51,10 @@ internal enum PlantUmlStatementKind
 /// diagram when the class-parse fallback succeeds);</description></item>
 /// <item><description>an over-long <b>coloured note bar</b> or — since the 1.2026.8beta1 build — an
 /// over-long <b>block opener</b> takes the engine's own renderer down with
-/// <c>RangeError: Maximum call stack size exceeded</c> and produces no SVG at all.</description></item>
+/// <c>RangeError: Maximum call stack size exceeded</c> and produces no SVG at all;</description></item>
+/// <item><description>an over-long <b>link</b>, the text inside <c>[[…]]</c>, does the same in the Chromium
+/// worker <c>BrowserJs</c> renders in, from under a quarter of the message limit, where node and the page's
+/// main thread draw it (<see cref="MaxLinkedLabelChars"/>).</description></item>
 /// </list>
 /// <para>Measured caps on the trimmed statement (the value below each is the constant, kept under the
 /// measurement so a small engine drift does not reopen the bug; the 1.2026.8beta1 re-measurement moved
@@ -65,6 +68,8 @@ internal enum PlantUmlStatementKind
 /// edge, so it wobbles between processes)</term><description>constant 1400</description></item>
 /// <item><term>note bodies 16371, <c>note over a : …</c> 16392, plain <c>hnote across</c> 16398
 /// (16370/16377/16376 on 1.2026.8beta1 — unchanged)</term><description>constant 16000</description></item>
+/// <item><term>the text inside a <c>[[#iflow-…]]</c> link, in the Chromium worker: 980 cold, 475 to 495 with the
+/// optimizing compilers off (measured in the worker, not in node)</term><description>constant 350</description></item>
 /// </list>
 /// <para>
 /// Leading and trailing whitespace is not counted — a valid short arrow padded to 2500 characters with
@@ -111,6 +116,20 @@ internal static class PlantUmlStatementLimits
     /// chunks note values long before this.
     /// </summary>
     public const int MaxNoteLineChars = 16000;
+
+    /// <summary>
+    /// Longest text inside a <c>[[…]]</c> link: the request arrow's internal-flow link
+    /// <c>[[#iflow-&lt;id&gt; text]]</c> and the component diagram edge's <c>[[#iflow-rel-… text]]</c>, measured
+    /// as written (escapes and display breaks count). BrowserJs renders in a Chromium worker, whose stack is
+    /// smaller than the page's or node's, and there the engine overflows it parsing a long link:
+    /// <c>RangeError: Maximum call stack size exceeded</c> takes the place of the whole diagram. Measured in
+    /// Chromium 147 on both engine builds (plans/ENGINE_PIN_PLAN.md §10): from 980 characters in a worker whose
+    /// JIT has not warmed up, 1,575 in one that has, and 475 (a component edge) to 495 (a request) with V8's
+    /// optimizing compilers off, as a browser runs them when a policy or a security mode turns them off. The same text unlinked
+    /// draws at every length to the message limit, and the page's main thread, node, Firefox and WebKit draw
+    /// every length measured. The constant keeps a quarter under the lowest edge.
+    /// </summary>
+    public const int MaxLinkedLabelChars = 350;
 
     /// <summary>Appended where a statement is cut, so a reader can tell truncation from a short value.</summary>
     public const string TruncationMarker = "…";

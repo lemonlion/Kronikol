@@ -249,6 +249,70 @@ public static class ReportTestHelper
     /// Generates a report with an embedded component diagram for testing
     /// the dependency-type coloring and embedded component diagram section.
     /// </summary>
+    /// <summary>
+    /// A BrowserJs report with internal-flow tracking on, written by the real emitters: one scenario whose request
+    /// carries a 2,450-character query inside its <c>[[#iflow-…]]</c> link, and a component diagram whose edge lists
+    /// thirty ClickHouse operations inside its <c>[[#iflow-rel-…]]</c> link (the user-reported shape of
+    /// <c>ComponentDiagramGeneratorTests</c>). A Chromium worker overflowed its stack parsing either link and drew
+    /// nothing of the diagram (plans/ENGINE_PIN_PLAN.md S0).
+    /// </summary>
+    public static string GenerateReportWithLongLinkedLabels(string tempDir, string outputDir, string fileName)
+    {
+        var at = new DateTimeOffset(2026, 9, 26, 10, 0, 0, TimeSpan.Zero);
+        var pairId = Guid.NewGuid();
+        var url = "http://orders.internal/orders/search?" + string.Join("&", Enumerable.Range(0, 140).Select(i => $"filter{i}=value{i}"));
+        var request = new RequestResponseLog("Search orders", "long-linked-1", HttpMethod.Get, null, new Uri(url), [],
+            "OrderService", "Api", RequestResponseType.Request, Guid.NewGuid(), pairId, false) { Timestamp = at };
+        var response = new RequestResponseLog("Search orders", "long-linked-1", HttpMethod.Get, "{ \"orders\": [] }", new Uri(url), [],
+            "OrderService", "Api", RequestResponseType.Response, request.TraceId, pairId, false, System.Net.HttpStatusCode.OK) { Timestamp = at.AddMilliseconds(40) };
+        var source = Kronikol.PlantUml.PlantUmlCreator.GetPlantUmlImageTagsPerTestId([request, response], internalFlowTracking: true)
+            .Single().PlantUmls.First().PlainText;
+
+        var componentLogs = new List<RequestResponseLog>();
+        for (var i = 0; i < 30; i++)
+        {
+            var trace = Guid.NewGuid(); var id = Guid.NewGuid();
+            componentLogs.Add(new RequestResponseLog("Search orders", "long-linked-1", $"SELECT FROM location_performance_{i:D2}", "{}",
+                new Uri("clickhouse://analytics.internal/"), [], "ClickHouse", "Data Insights API", RequestResponseType.Request, trace, id, false,
+                null, RequestResponseMetaType.Default, "ClickHouse") { Timestamp = at.AddSeconds(i) });
+            componentLogs.Add(new RequestResponseLog("Search orders", "long-linked-1", $"SELECT FROM location_performance_{i:D2}", "{}",
+                new Uri("clickhouse://analytics.internal/"), [], "ClickHouse", "Data Insights API", RequestResponseType.Response, trace, id, false,
+                System.Net.HttpStatusCode.OK, RequestResponseMetaType.Default, "ClickHouse") { Timestamp = at.AddSeconds(i).AddMilliseconds(25) });
+        }
+        var relationships = Kronikol.ComponentDiagram.ComponentDiagramGenerator.ExtractRelationships(componentLogs);
+        var stats = Kronikol.ComponentDiagram.ComponentFlowSegmentBuilder.ComputeRelationshipStats(relationships, componentLogs.ToArray());
+        var componentSource = Kronikol.ComponentDiagram.ComponentDiagramGenerator.GeneratePlantUml(relationships, stats: stats, useC4: false);
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Order search",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "long-linked-1", DisplayName = "Search orders", IsHappyPath = true, Result = ExecutionResult.Passed,
+                        Duration = TimeSpan.FromMilliseconds(40),
+                        Steps = [new ScenarioStep { Keyword = "When", Text = "the orders are searched", Status = ExecutionResult.Passed }]
+                    }
+                ]
+            }
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DiagramAsCode("long-linked-1", "", source)], features,
+            at.UtcDateTime, at.UtcDateTime.AddSeconds(30),
+            null, Path.Combine(tempDir, fileName), "Test Run Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            internalFlowTracking: true,
+            componentDiagramPlantUml: componentSource);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
     public static string GenerateReportWithEmbeddedComponentDiagram(string tempDir, string outputDir, string fileName)
     {
         var (features, diagrams) = CreateTestData();

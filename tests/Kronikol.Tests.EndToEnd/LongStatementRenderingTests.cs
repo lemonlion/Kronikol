@@ -2,6 +2,7 @@ using System.Text.Json;
 using Kronikol.PlantUml;
 using Kronikol.Reports;
 using Kronikol.Tracking;
+using Microsoft.Playwright;
 
 namespace Kronikol.Tests.EndToEnd;
 
@@ -90,6 +91,72 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         Assert.Equal(2, found.GetProperty("line").GetInt32());
         Assert.Equal(2514, found.GetProperty("length").GetInt32());
         Assert.Equal(2000, found.GetProperty("limit").GetInt32());
+    }
+
+    // ── A long label inside an internal-flow link (plans/ENGINE_PIN_PLAN.md S0) ─────────────────────
+    //
+    // With internal-flow tracking on, the default, the request label sits inside [[#iflow-<id> …]] and a component
+    // edge's method list inside [[#iflow-rel-… …]]. BrowserJs renders in a Chromium worker, whose stack is smaller
+    // than the page's, and the engine overflowed it parsing a long link: the diagram's place held "RangeError:
+    // Maximum call stack size exceeded" (the component diagram drew the engine's error picture) and nothing else.
+
+    /// <summary>What a rendered diagram container holds: its text, and whether an SVG is in it.</summary>
+    private sealed record Rendered(string Text, bool HasSvg);
+
+    /// <summary>
+    /// Opens the report on <paramref name="page"/>, renders every diagram in it (the component diagram's section is
+    /// hidden until toggled, and the worker renders hidden diagrams too), and reads each container once it has rendered.
+    /// </summary>
+    private static async Task<(Rendered Sequence, Rendered Component)> RenderLongLinkedLabelReport(IPage page, string reportUri)
+    {
+        await page.GotoAsync(reportUri);
+        await page.Locator("details.feature").First.WaitForAsync();
+        await page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await page.WaitForFunctionAsync(
+            "() => { const all = document.querySelectorAll('.plantuml-browser[data-plantuml]'); return all.length === 2 && Array.from(all).every(el => el.dataset.rendered === '1'); }",
+            null, new() { Timeout = 120_000, PollingInterval = 200 });
+        async Task<Rendered> Read(string selector) => new(
+            await page.Locator(selector).First.EvaluateAsync<string>("el => el.textContent"),
+            await page.Locator(selector + " svg").CountAsync() > 0);
+        return (await Read(".scenario .plantuml-browser[data-plantuml]"), await Read("#component-diagram .plantuml-browser[data-plantuml]"));
+    }
+
+    private static void AssertDrawn(Rendered rendered, string expectedText)
+    {
+        Assert.DoesNotContain("Maximum call stack size exceeded", rendered.Text);
+        Assert.DoesNotContain("Render error", rendered.Text);
+        Assert.True(rendered.HasSvg, $"no diagram was drawn: {rendered.Text[..Math.Min(300, rendered.Text.Length)]}");
+        Assert.Contains(expectedText, rendered.Text);
+    }
+
+    [Fact]
+    public async Task Long_request_label_with_an_internal_flow_link_draws_in_the_worker()
+    {
+        var (sequence, _) = await RenderLongLinkedLabelReport(Page,
+            ReportTestHelper.GenerateReportWithLongLinkedLabels(TempDir, OutputDir, "LongLinkedLabels.html"));
+
+        Assert.Equal("worker", await Page.EvaluateAsync<string>("() => window.__kronikolRender.mode"));
+        // The label is cut inside its link, and the whole path is in the note beside the arrow.
+        AssertDrawn(sequence, "Full path");
+    }
+
+    [Fact]
+    public async Task Long_linked_labels_draw_in_a_worker_with_the_optimizing_compilers_off()
+    {
+        // A browser run with V8's optimizing compilers off, as an enterprise policy or a browser security mode can
+        // set, runs every frame at the interpreter's size, and there the worker overflowed from 495 characters inside
+        // a request's link and 475 inside a component edge's. WebAssembly stays on, so Graphviz lays the component
+        // diagram out (V8's --jitless turns WebAssembly off too, and then no component diagram draws at all).
+        using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true, Args = ["--js-flags=--no-opt --no-maglev"] });
+        var page = await browser.NewPageAsync(new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+
+        var (sequence, component) = await RenderLongLinkedLabelReport(page,
+            ReportTestHelper.GenerateReportWithLongLinkedLabels(TempDir, OutputDir, "LongLinkedLabelsNoOpt.html"));
+
+        Assert.Equal("worker", await page.EvaluateAsync<string>("() => window.__kronikolRender.mode"));
+        AssertDrawn(sequence, "Full path");
+        AssertDrawn(component, "calls across");
     }
 
     [Fact]

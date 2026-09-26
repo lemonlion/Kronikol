@@ -5,6 +5,7 @@
 // failed sends, creole-looking payloads, very large notes and an arrow-heavy scenario.
 //   dotnet run -- <out dir>                     the corpus (14 sources)
 //   dotnet run -- --shim <page.html> <workers>  a bare page with the shipped render script, for worker-wedge-probe.js
+//   dotnet run -- --linked-labels <dir>         one request per label shape with its internal-flow link (the S0 scan)
 using System.Net;
 using System.Text;
 using Kronikol;
@@ -18,6 +19,67 @@ if (args.Length >= 3 && args[0] == "--shim")
     var script = Kronikol.Reports.DiagramContextMenu.GetPlantUmlBrowserRenderScript(workers, 64, 12000);
     File.WriteAllText(args[1], "<!doctype html><html><head><meta charset=\"utf-8\"><title>shim</title>" + script + "</head><body></body></html>");
     Console.WriteLine($"wrote {args[1]} ({workers} workers)");
+    return;
+}
+
+if (args.Length >= 2 && args[0] == "--linked-labels")
+{
+    // One source per request-label shape, with the internal-flow link, for statement-limits-worker-probe.js --scan
+    // (plans/ENGINE_PIN_PLAN.md S0): the probe cuts the linked label to each length the way TruncateLabel does.
+    // .NET's Uri percent-encodes the non-ASCII path, so that shape reaches the label as %XX runs, as it does in a report.
+    var dir = args[1];
+    Directory.CreateDirectory(dir);
+    (string Shape, HttpMethod Method, string Url)[] shapes =
+    [
+        ("query", HttpMethod.Get, "http://orders.internal/orders/search?" + string.Join("&", Enumerable.Range(0, 160).Select(i => $"filter{i}=value{i}"))),
+        ("segments", HttpMethod.Get, "http://catalog.internal/" + string.Join("/", Enumerable.Range(0, 500).Select(i => $"s{i}"))),
+        ("token", HttpMethod.Delete, "http://cache.internal/keys/" + new string('k', 3000)),
+        ("nonascii", HttpMethod.Get, "http://catalog.internal/products/" + string.Concat(Enumerable.Repeat("商品カテゴリ-café-", 40))),
+        ("brackets", HttpMethod.Get, "http://api.internal/articles?" + string.Join("&", Enumerable.Range(0, 200).Select(i => $"page[{i}]=~{i}"))),
+    ];
+    List<RequestResponseLog> Pair(string shape, HttpMethod method, string url)
+    {
+        var trace = Guid.NewGuid(); var id = Guid.NewGuid();
+        return
+        [
+            new(shape, shape, method, null, new Uri(url), [], "OrderService", "Api", RequestResponseType.Request, trace, id, false),
+            new(shape, shape, method, "{ \"ok\": true }", new Uri(url), [], "OrderService", "Api", RequestResponseType.Response, trace, id, false, HttpStatusCode.OK),
+        ];
+    }
+    foreach (var (shape, method, url) in shapes)
+    {
+        var source = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(Pair(shape, method, url), internalFlowTracking: true).Single().PlantUmls.First().PlainText;
+        File.WriteAllText(Path.Combine(dir, $"linked-{shape}.puml"), source);
+    }
+    // The same query three times over, collapsed into one `loop ×3` block: the linked statement inside a block.
+    var loopLogs = Enumerable.Range(0, 3).SelectMany(_ => Pair("loop", HttpMethod.Get, shapes[0].Url)).ToList();
+    var loopSource = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(loopLogs, internalFlowTracking: true, collapseConsecutiveIdenticalCalls: true)
+        .Single().PlantUmls.First().PlainText;
+    if (!loopSource.Contains("loop ")) throw new InvalidOperationException("the collapsed run wrote no loop block");
+    File.WriteAllText(Path.Combine(dir, "linked-loop.puml"), loopSource);
+
+    // The component diagram's edge link, [[#iflow-rel-… <protocol>: <methods>]]: an edge whose calls carry 30
+    // distinct method names, laid out as BrowserJs lays it out (plain shapes, no C4 include). 30 fit under the 2,000
+    // statement cap, so the link closes and the probe can cut it; more are cut inside the link by the cap.
+    var t0Component = new DateTimeOffset(2026, 9, 26, 10, 0, 0, TimeSpan.Zero);
+    var componentLogs = new List<RequestResponseLog>();
+    for (var i = 0; i < 30; i++)
+    {
+        var trace = Guid.NewGuid(); var id = Guid.NewGuid();
+        var at = t0Component.AddSeconds(i);
+        componentLogs.Add(new RequestResponseLog("component", "component", $"pricing.v1.PricingService/GetQuoteForRegion{i:D2}", "{}",
+            new Uri("grpc://pricing.internal/"), [], "PricingService", "Api", RequestResponseType.Request, trace, id, false,
+            null, RequestResponseMetaType.Default, "gRPC") { Timestamp = at });
+        componentLogs.Add(new RequestResponseLog("component", "component", $"pricing.v1.PricingService/GetQuoteForRegion{i:D2}", "{}",
+            new Uri("grpc://pricing.internal/"), [], "PricingService", "Api", RequestResponseType.Response, trace, id, false,
+            HttpStatusCode.OK, RequestResponseMetaType.Default, "gRPC") { Timestamp = at.AddMilliseconds(40) });
+    }
+    var relationships = Kronikol.ComponentDiagram.ComponentDiagramGenerator.ExtractRelationships(componentLogs);
+    var stats = Kronikol.ComponentDiagram.ComponentFlowSegmentBuilder.ComputeRelationshipStats(relationships, componentLogs.ToArray());
+    var componentSource = Kronikol.ComponentDiagram.ComponentDiagramGenerator.GeneratePlantUml(relationships, stats: stats, useC4: false);
+    if (!componentSource.Contains("[[#iflow-rel-")) throw new InvalidOperationException("the component edge carries no internal-flow link");
+    File.WriteAllText(Path.Combine(dir, "linked-component.puml"), componentSource);
+    Console.WriteLine($"wrote {shapes.Length + 2} linked-label sources to {Path.GetFullPath(dir)}");
     return;
 }
 

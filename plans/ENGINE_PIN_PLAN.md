@@ -1,10 +1,9 @@
 # Engine pin plan (`ROADMAP.md` 1.8, `STAGE_1_PLAN.md` P4)
 
-**Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status:** written, nothing
-implemented, **NOT green-lit**. S0 needs no decision. S1 to S6 need D6; the recommendation below is the
-roadmap's (move now, keep `viz-global.js`), with the measurements that back it. Two patch releases: S0
-alone, then S1 to S6. §1 is what was RUN and READ on
-2026-09-22, §9 is the assumption ledger, §10 is the execution log, empty until the work starts.
+**Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status:** **green-lit 2026-09-26**: the
+owner asked for the plan in full, so D6 is taken as recommended (move now, keep `viz-global.js`) and Q1, Q2,
+Q4, Q5, Q6 and Q7 as their recommendations say. **S0 shipped as 3.30.4**; S1 to S6 are the second patch. §1 is
+what was RUN and READ on 2026-09-22, §9 is the assumption ledger, §10 is the execution log.
 
 **Re-checked 2026-09-25 against 3.29.3 (`b74c8ddc`):** every source, test and render-bench file this plan
 cites is unchanged since `2843018a` except `ReportGenerator.cs` (the fragment-height parameter moved
@@ -1062,6 +1061,7 @@ revert of its own, for two reasons:
 | `PLATFORM_FOUNDATIONS_PLAN` 14.2 | one more managed-hash site, off the WASI path |
 | Roadmap §5 / a consumer ask | the CDN-override option, with the hash constants as the thing it must also override |
 | `TEOZ_PERF_PLAN.md` | the pin move and the budget it promised are done; W0.4 and the speedscope export stay optional |
+| From P3, 2026-09-26 | "A hung engine is never recovered" (after a host's 150 s timeout the worker keeps its stuck state, a Node batch keeps its process, and the lazy workers start only on a success): `DIAGRAM_COLOURS_PLAN.md` §6 names this plan its natural owner, and kronikol-63 recorded it in `ROADMAP.md` Appendix C under P3's leftovers. It is not one of this plan's slices, and it is scheduled from there |
 
 ---
 
@@ -1112,8 +1112,8 @@ unpublish 1.2026.8 (§1.5).
 
 ## 10. Execution log
 
-Empty. Filled slice by slice when the work runs:
-- S0's worker bisection, per label shape, and the cap it chose;
+Filled slice by slice as the work runs:
+- S0's worker bisection, per label shape, and the cap it chose (below);
 - the Integration-test run of the statement probes (S1; §1.11 already holds the harness numbers);
 - the code-cache test's red run (S3);
 - the viz E2E's red run (S2);
@@ -1121,6 +1121,66 @@ Empty. Filled slice by slice when the work runs:
 - the fragment-height table (S5);
 - §1.16's comparison re-run on P3's serializer, if S5 of that plan has landed;
 - any departure from §3.
+
+### 10.1 S0, shipped as 3.30.4 (2026-09-26)
+
+Executed in the worktree `C:/Code/Kronikol-p4` (branch `p4/engine-pin`), beside kronikol-63's second P3 audit
+and kronikol-e1's 3.30.3, which took the number S0 would otherwise have had. The re-check of §4's start point
+found the cited request-label block unchanged in shape: P3's 3.30.2 escapes the label (`EscapeCapturedLabel`) at
+line 355, before the cap, so the cap already measured the label as written.
+
+**The measurement** (`statement-limits-worker-probe.js --scan`, `results/statement-limits-worker-2026-09-26.txt`).
+The sources are the emitter's own (`emitter-corpus -- --linked-labels`): five request-label shapes (a query
+string, many short path segments, one long token, a percent-encoded non-ASCII path, a path of escaped
+brackets), the same request inside a collapsed-run `loop`, and a component-diagram edge. The probe cuts the text
+inside the link the way `TruncateLabel` does. The label shape made no difference; the state of V8 made all of it:
+
+| Configuration (Chromium 147 worker unless named) | Request link, lowest length that failed | Component edge |
+|---|---|---|
+| JIT on, warm (51 shorter renders first) | 1,575 | drew to 1,450; 1,050 in one run of two after another shape's renders |
+| JIT on, cold (a fresh worker per case) | 980 to 1,010 | drew to 1,450 |
+| cold, 12 pages compiling at once | unchanged | |
+| `--no-opt --no-maglev` (optimizing compilers off, WebAssembly on) | 496 to 500 | 475 |
+| `--jitless` (WebAssembly off too) | 495 to 500 | never draws: Graphviz needs WebAssembly |
+| the page's main thread; Firefox and WebKit workers, JIT on or off | every length to 1,975 (Firefox warm: two sporadic failures at 1,125 and 1,175) | |
+| the same labels unlinked, optimizers off; `--jitless` loop labels, coloured bars and unlinked messages | every length to 1,975 or 2,000 | |
+
+P3's figure (drawn at 1,000, failed from 1,100, 1,600 drawn) was the same effect: its probe ran the lengths in
+one page, so each was rendered in a warmer worker than the last.
+
+**The cap: `MaxLinkedLabelChars` = 350,** 75% of the lowest edge found (475), where §3.0 expected about 750 from
+the cold JIT figure alone. The lowest edges are in the configuration an enterprise policy or a browser security
+mode sets when it turns V8's optimizing compilers off, and a report opened there lost every diagram with a request
+label past 500 characters.
+
+**Departures from §3.0:**
+- **A second emitter.** `ComponentDiagramGenerator` writes the same link on a component edge,
+  `[[#iflow-rel-… <protocol>: <methods>]]`, and its method list is capped only by the statement cap. The worker
+  overflowed on it too (475 with the optimizers off, 1,050 once after warm-up), and eighty methods took the
+  label past the statement cap, which cut it inside the link: the link was never closed and the stats and counts
+  after it were lost. The same cap now applies to the text inside that link, after wrapping (`CapLinkText`). The
+  user-reported ClickHouse edge in `ComponentDiagramGeneratorTests` (thirty operations) holds about 1,150
+  characters.
+- **The E2E pair.** `Long_request_label_with_an_internal_flow_link_draws_in_the_worker` runs in the shared
+  Chromium, as planned. `Long_linked_labels_draw_in_a_worker_with_the_optimizing_compilers_off` launches its own
+  with `--js-flags=--no-opt --no-maglev` and draws the request and the component diagram; it was proved red for
+  each diagram on its own. `--jitless` is not used there: it turns WebAssembly off, and then no component diagram
+  draws at all.
+- **The Node fact** asserts what node draws: the engine writes a link as underlined text, not an `<a>` (the
+  page's binding finds a link by its text, `extractIflowMap`), in the worker's SVG as in node's.
+- **Kronikol4J** emits both links (`PlantUmlCreator.java:430`, the component edge) and caps neither, since it
+  never took the 3.0.48 statement limits; its report renders on the main thread with its 3.0.43 script, where
+  nothing overflowed. A ledger entry, not mirrored.
+
+**Found and not fixed:** under `--jitless`, which also turns WebAssembly off, no component diagram draws in any
+report, link or none ("dot/GraphViz has crashed … WebAssembly is not defined"). It is older than this plan and
+outside it; whoever next touches the Graphviz dependency (`viz-global.js`, the dormant Smetana fallback, 6.1)
+owns it.
+
+**Tests:** 5 unit facts in `PlantUmlStatementLengthTests` and a two-row theory in `ComponentDiagramGeneratorTests`,
+2 Playwright facts in `LongStatementRenderingTests`, 1 Integration fact in `NodeJsPlantUmlRendererTests`; every one
+red on 3.30.3 apart from two pins of unchanged behaviour. After the fix, every source the emitter writes draws in
+every configuration above, on both engine builds (`ASIS=1`), the component under `--jitless` apart.
 
 ---
 

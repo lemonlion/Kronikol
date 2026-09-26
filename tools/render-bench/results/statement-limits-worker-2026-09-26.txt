@@ -1,0 +1,288 @@
+# The text inside an internal-flow link, in the shipped BrowserJs worker (2026-09-26): plans/ENGINE_PIN_PLAN.md S0 (§3.0, §10)
+# node statement-limits-worker-probe.js --scan <dir from emitter-corpus -- --linked-labels> <shim page, 1 worker | 0 workers> fork=<gh route> npm=<npm route>
+# Playwright 1.59.1: Chromium 147.0.7727.15, Firefox 148.0.2, WebKit 26.4; file://; Windows 11, 20 logical cores.
+# Each shape is the emitter's own statement (PlantUmlCreator, internalFlowTracking on; the component edge from ComponentDiagramGenerator,
+# useC4 false, as BrowserJs lays it out) with the text inside [[...]] cut the way TruncateLabel cuts it. 'n' is the budget, the
+# lengths below are the characters inside the link as written (escapes and \n display breaks count).
+# Grid: one character per length from the first length shown, '.' drawn, 'S' RangeError (text or the engine's picture),
+# 'E' another error picture. COLD=1 = a fresh page per case, so each render is the first one in a new worker.
+
+## The edge, per configuration (lowest length that did not draw)
+| configuration | request shapes | component edge |
+|---|---|---|
+| Chromium worker, JIT on, warm (after 51 shorter renders in the same worker) | 1,575, every shape, both builds | drew to 1,450 on a component-only page; after 24 renders of another shape, 1,050 in one run of two, the other drew to 1,450 |
+| Chromium worker, JIT on, cold | 980 (loop, token once) to 1,010; 1,050 on the 50-step scan | drew to 1,450 |
+| Chromium worker, cold, 12 pages compiling at once | 1,050 on the 50-step scan (unchanged) | |
+| Chromium worker, --no-opt --no-maglev (optimizing compilers off, WebAssembly on) | 496 to 500 | 475 |
+| Chromium worker, --jitless (WebAssembly off too) | 495 to 500 | never draws: Graphviz needs WebAssembly (the error picture at any length) |
+| Chromium main thread (BrowserRenderWorkers = 0), cold | every length to 1,975 drew | |
+| Firefox worker, warm | sporadic: 1,125 (brackets), 1,175 (token) | |
+| Firefox worker, cold; with its JITs off | every length to 1,975 drew | |
+| WebKit worker, warm and cold; JSC_useJIT=false | every length to 1,975 drew | |
+| unlinked (UNLINKED=1), Chromium worker, --no-opt --no-maglev | every length to 1,975 drew | |
+| --jitless, legacy cases (the message without its link, loop labels, coloured bars) | drawn to 2,000 | |
+
+MaxLinkedLabelChars = 350: 75% of the lowest edge (475) is 356.
+
+## scan-chromium-worker
+fork brackets    ...................................................SSSSSSSSSSSSSS  from 295 step 25
+fork nonascii    ...................................................SSSSSSSSSSSSSS  from 300 step 25
+fork query       ...................................................SSSSSSSSSSSSSS  from 300 step 25
+fork segments    ...................................................SSSSSSSSSSSSSS  from 300 step 25
+fork token       ...................................................SSSSSSSSSSSSSS  from 300 step 25
+npm brackets     ...................................................SSSSSSSSSSSSSS  from 295 step 25
+npm nonascii     ...................................................SSSSSSSSSSSSSS  from 300 step 25
+npm query        ...................................................SSSSSSSSSSSSSS  from 300 step 25
+npm segments     ...................................................SSSSSSSSSSSSSS  from 300 step 25
+npm token        ...................................................SSSSSSSSSSSSSS  from 300 step 25
+# fork https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452 | chromium 147.0.7727.15, worker, file://
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, file://
+
+## scan-chromium-worker-cold
+fork brackets    ...............SSSSSSSSSSSS  from 295 step 50
+fork nonascii    ...............SSSSSSSSSSSS  from 300 step 50
+fork query       ...............SSSSSSSSSSSS  from 300 step 50
+fork segments    ...............SSSSSSSSSSSS  from 300 step 50
+fork token       ...............SSSSSSSSSSSS  from 300 step 50
+npm brackets     ...............SSSSSSSSSSSS  from 295 step 50
+npm nonascii     ...............SSSSSSSSSSSS  from 300 step 50
+npm query        ...............SSSSSSSSSSSS  from 300 step 50
+npm segments     ...............SSSSSSSSSSSS  from 300 step 50
+npm token        ...............SSSSSSSSSSSS  from 300 step 50
+# fork https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452 | chromium 147.0.7727.15, worker, a fresh page per case, file://
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, a fresh page per case, file://
+
+## scan-chromium-worker-cold-contended
+npm brackets     ...............SSSS  from 295 step 50
+npm nonascii     ...............SSSS  from 300 step 50
+npm query        ...............SSSS  from 300 step 50
+npm segments     ...............SSSS  from 300 step 50
+npm token        ...............SSSS  from 300 step 50
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, a fresh page per case, file://
+
+## scan-chromium-worker-interp
+fork brackets    ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 295 step 25
+fork nonascii    ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+fork query       ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+fork segments    ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+fork token       ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+npm brackets     ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 295 step 25
+npm nonascii     ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+npm query        ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+npm segments     ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+npm token        ........SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+# fork https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.8beta1-0e4f452 | chromium 147.0.7727.15, worker, one page, --js-flags=--no-opt --no-maglev, file://
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, one page, --js-flags=--no-opt --no-maglev, file://
+
+## scan-chromium-worker-jitless
+npm brackets     ........SSSSSSSSS  from 295 step 25
+npm nonascii     ........SSSSSSSSS  from 300 step 25
+npm query        ........SSSSSSSSS  from 300 step 25
+npm segments     ........SSSSSSSSS  from 300 step 25
+npm token        ........SSSSSSSSS  from 300 step 25
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, one page, --js-flags=--jitless, file://
+
+## scan-chromium-worker-jitless-cold
+npm brackets     ........SSSSSSSSS  from 295 step 25
+npm nonascii     ........SSSSSSSSS  from 300 step 25
+npm query        ........SSSSSSSSS  from 300 step 25
+npm segments     ........SSSSSSSSS  from 300 step 25
+npm token        ........SSSSSSSSS  from 300 step 25
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, a fresh page per case, --js-flags=--jitless, file://
+
+## scan-jitless-fine
+npm brackets     ............SSSSS  from 437 step 5
+npm loop         ...........SSSSSS  from 440 step 5
+npm nonascii     ............SSSSS  from 440 step 5
+npm query        ............SSSSS  from 440 step 5
+npm segments     ............SSSSS  from 440 step 5
+npm token        ............SSSSS  from 439 step 5
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, a fresh page per case, --js-flags=--jitless, file://
+
+## scan-cold-fine
+npm brackets     .....SSSSSS  from 958 step 10
+npm loop         ..SSSSSSSSS  from 960 step 10
+npm nonascii     .....SSSSSS  from 960 step 10
+npm query        .....SSSSSS  from 960 step 10
+npm segments     .....SSSSSS  from 960 step 10
+npm token        ..S..SSSSSS  from 960 step 10
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, a fresh page per case, file://
+
+## scan-chromium-worker-interp-unlinked
+npm brackets     ......................  from 295 step 75
+npm nonascii     ......................  from 300 step 75
+npm query        ......................  from 300 step 75
+npm segments     ......................  from 300 step 75
+npm token        ......................  from 300 step 75
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, one page, --js-flags=--no-opt --no-maglev, file://
+
+## scan-chromium-main-cold
+npm brackets     .......................  from 198 step 75
+npm nonascii     .......................  from 200 step 75
+npm query        .......................  from 200 step 75
+npm segments     .......................  from 200 step 75
+npm token        .......................  from 200 step 75
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, main-thread (BrowserRenderWorkers = 0), a fresh page per case, file://
+
+## scan-firefox-worker-warm
+npm brackets     .....................................S.S.............................  from 198 step 25
+npm nonascii     .....................................................................  from 200 step 25
+npm query        .....................................................................  from 200 step 25
+npm segments     .....................................................................  from 200 step 25
+npm token        .......................................S.............................  from 200 step 25
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | firefox 148.0.2, worker, one page, file://
+
+## scan-firefox-worker-cold
+npm brackets     .......................  from 198 step 75
+npm nonascii     .......................  from 200 step 75
+npm query        .......................  from 200 step 75
+npm segments     .......................  from 200 step 75
+npm token        .......................  from 200 step 75
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | firefox 148.0.2, worker, a fresh page per case, file://
+
+## scan-firefox-nojit
+npm brackets     ...................................  from 198 step 50
+npm loop         ...................................  from 200 step 50
+npm nonascii     ...................................  from 200 step 50
+npm query        ...................................  from 200 step 50
+npm segments     ...................................  from 200 step 50
+npm token        ...................................  from 200 step 50
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | firefox 148.0.2, worker, one page, file://
+
+## scan-webkit-worker-warm
+npm brackets     .....................................................................  from 198 step 25
+npm nonascii     .....................................................................  from 200 step 25
+npm query        .....................................................................  from 200 step 25
+npm segments     .....................................................................  from 200 step 25
+npm token        .....................................................................  from 200 step 25
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | webkit 26.4, main-thread (OffscreenCanvas unavailable), one page, file://
+
+## scan-webkit-worker-cold
+npm brackets     .......................  from 198 step 75
+npm nonascii     .......................  from 200 step 75
+npm query        .......................  from 200 step 75
+npm segments     .......................  from 200 step 75
+npm token        .......................  from 200 step 75
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | webkit 26.4, main-thread (OffscreenCanvas unavailable), a fresh page per case, file://
+
+## scan-webkit-nojit
+npm brackets     ...................................  from 198 step 50
+npm loop         ...................................  from 200 step 50
+npm nonascii     ...................................  from 200 step 50
+npm query        ...................................  from 200 step 50
+npm segments     ...................................  from 200 step 50
+npm token        ...................................  from 200 step 50
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | webkit 26.4, main-thread (OffscreenCanvas unavailable), one page, file://
+
+## scan-component-none
+npm component    ..............................................  from 300 step 25
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, one page, file://
+
+## scan-component-noopt
+npm component    .......SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, one page, --js-flags=--no-opt --no-maglev, file://
+
+## scan-component-jitless
+npm component    EEEEEEESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  from 300 step 25
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, one page, --js-flags=--jitless, file://
+
+## scan-component-cold2
+npm component    .......................  from 300 step 50
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, a fresh page per case, file://
+
+## scan-bc-warm-1 (brackets, then the component, in one page)
+npm brackets     ........................  from 295 step 50
+npm component    ...............SSSSSSSS  from 300 step 50
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, one page, file://
+
+## scan-bc-warm-2 (the same command again, the E2E suite running beside it both times)
+npm brackets     ........................  from 295 step 50
+npm component    .......................  from 300 step 50
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chromium 147.0.7727.15, worker, one page, file://
+
+## After the fix: every source exactly as the fixed emitter writes it (ASIS=1), 350 characters inside each link
+### chromium worker, cold
+  fork brackets 350 drawn
+  fork component 350 drawn
+  fork loop 350 drawn
+  fork nonascii 350 drawn
+  fork query 350 drawn
+  fork segments 350 drawn
+  fork token 350 drawn
+  npm brackets 350 drawn
+  npm component 350 drawn
+  npm loop 350 drawn
+  npm nonascii 350 drawn
+  npm query 350 drawn
+  npm segments 350 drawn
+  npm token 350 drawn
+### chromium worker, one page
+  fork brackets 350 drawn
+  fork component 350 drawn
+  fork loop 350 drawn
+  fork nonascii 350 drawn
+  fork query 350 drawn
+  fork segments 350 drawn
+  fork token 350 drawn
+  npm brackets 350 drawn
+  npm component 350 drawn
+  npm loop 350 drawn
+  npm nonascii 350 drawn
+  npm query 350 drawn
+  npm segments 350 drawn
+  npm token 350 drawn
+### chromium worker, --no-opt --no-maglev
+  fork brackets 350 drawn
+  fork component 350 drawn
+  fork loop 350 drawn
+  fork nonascii 350 drawn
+  fork query 350 drawn
+  fork segments 350 drawn
+  fork token 350 drawn
+  npm brackets 350 drawn
+  npm component 350 drawn
+  npm loop 350 drawn
+  npm nonascii 350 drawn
+  npm query 350 drawn
+  npm segments 350 drawn
+  npm token 350 drawn
+### chromium worker, --jitless
+  fork brackets 350 drawn
+  fork component 350 ERROR-PICTURE
+  fork loop 350 drawn
+  fork nonascii 350 drawn
+  fork query 350 drawn
+  fork segments 350 drawn
+  fork token 350 drawn
+  npm brackets 350 drawn
+  npm component 350 ERROR-PICTURE
+  npm loop 350 drawn
+  npm nonascii 350 drawn
+  npm query 350 drawn
+  npm segments 350 drawn
+  npm token 350 drawn
+### chromium main thread
+  npm brackets 350 drawn
+  npm component 350 drawn
+  npm loop 350 drawn
+  npm nonascii 350 drawn
+  npm query 350 drawn
+  npm segments 350 drawn
+  npm token 350 drawn
+### firefox worker
+  npm brackets 350 drawn
+  npm component 350 drawn
+  npm loop 350 drawn
+  npm nonascii 350 drawn
+  npm query 350 drawn
+  npm segments 350 drawn
+  npm token 350 drawn
+### webkit worker
+  npm brackets 350 drawn
+  npm component 350 drawn
+  npm loop 350 drawn
+  npm nonascii 350 drawn
+  npm query 350 drawn
+  npm segments 350 drawn
+  npm token 350 drawn
+(The component under --jitless is the Graphviz picture, 'WebAssembly is not defined', with or without a link.)

@@ -114,6 +114,7 @@ public class PlantUmlStatementLengthTests
         Assert.Equal(1471, MaxBlock);
         Assert.Equal(1400, PlantUmlStatementLimits.MaxColouredNoteBarChars);
         Assert.Equal(16000, PlantUmlStatementLimits.MaxNoteLineChars);
+        Assert.Equal(350, PlantUmlStatementLimits.MaxLinkedLabelChars);
     }
 
     // ── Layer 1: the request arrow ──────────────────────────────
@@ -193,6 +194,91 @@ public class PlantUmlStatementLengthTests
         Assert.True(message.Length <= MaxMessage, $"{message.Length} chars");
         Assert.Contains("[[#iflow-", message);
         Assert.EndsWith("]]", message);
+    }
+
+    // ── The text inside the internal-flow link ──────────────────
+    //
+    // BrowserJs renders in a Chromium worker, whose stack is smaller than node's or the page's. There the
+    // engine overflows it parsing a long `[[…]]` link and draws nothing of the diagram: from 980 characters
+    // of link text in a worker whose JIT has not warmed up, and from 475 in one without the JIT at all
+    // (plans/ENGINE_PIN_PLAN.md §10). The same label unlinked draws at every length up to the message limit.
+
+    /// <summary>The request arrow's <c>[[#iflow-&lt;id&gt; text]]</c>, taken apart; fails when the link is not closed.</summary>
+    private static (string Id, string Text) LinkedLabel(string diagram)
+    {
+        var message = Classify(diagram).First(l => l.Kind == PlantUmlStatementKind.Message).Line.Trim();
+        var match = System.Text.RegularExpressions.Regex.Match(message, @"\[\[#iflow-(?<id>[0-9a-f-]+) (?<text>.*)\]\]$");
+        Assert.True(match.Success, $"no closed internal-flow link: {message[..Math.Min(200, message.Length)]}");
+        return (match.Groups["id"].Value, match.Groups["text"].Value);
+    }
+
+    private static string LongQuery(int parameters) =>
+        "http://example.com/orders/search?" + string.Join("&", Enumerable.Range(0, parameters).Select(i => $"filter{i}=value{i}"));
+
+    [Fact]
+    public void The_text_inside_an_internal_flow_link_is_capped_at_the_linked_label_limit()
+    {
+        var request = Request(LongQuery(140));
+        Assert.True(request.Uri.PathAndQuery.Length > 2300);
+
+        var (id, text) = LinkedLabel(Diagrams([request], internalFlowTracking: true).Single());
+
+        // The link keeps the request's own id, so the arrow still opens its internal flow.
+        Assert.Equal(request.RequestResponseId.ToString(), id);
+        Assert.True(text.Length <= PlantUmlStatementLimits.MaxLinkedLabelChars, $"{text.Length} characters inside the link");
+        Assert.StartsWith("GET: /orders/search?filter0=value0", text);
+        Assert.EndsWith(PlantUmlStatementLimits.TruncationMarker, text);
+    }
+
+    [Fact]
+    public void A_linked_label_cut_at_the_limit_keeps_the_whole_path_in_its_note()
+    {
+        var path = LongPath(2300);
+        var diagram = Diagrams([Request($"http://example.com{path}", method: "DELETE")], internalFlowTracking: true).Single();
+
+        var noteBody = string.Concat(Classify(diagram)
+            .Where(l => l.Kind == PlantUmlStatementKind.NoteBody)
+            .Select(l => l.Line.Trim()));
+
+        Assert.True(LinkedLabel(diagram).Text.Length <= PlantUmlStatementLimits.MaxLinkedLabelChars);
+        Assert.Contains("Full path", noteBody);
+        Assert.Contains(path, noteBody.Replace(DiagramWidth.JoinMarker, ""));
+    }
+
+    [Fact]
+    public void A_linked_label_counts_its_escapes_and_is_never_cut_inside_one()
+    {
+        // `[` and `]` are written as code points (eight characters each) so the page can read the link; the cap
+        // measures the label as written, and half of an escape would paint as text.
+        var request = Request("http://example.com/articles?" + string.Join("&", Enumerable.Range(0, 200).Select(i => $"page[{i}]=~{i}")));
+
+        var (_, text) = LinkedLabel(Diagrams([request], internalFlowTracking: true).Single());
+
+        Assert.True(text.Length <= PlantUmlStatementLimits.MaxLinkedLabelChars, $"{text.Length} characters inside the link");
+        Assert.Contains("<U+005B>", text);
+        Assert.Equal(text.Count(c => c == '<'), System.Text.RegularExpressions.Regex.Matches(text, @"<U\+[0-9A-F]{4,6}>").Count);
+    }
+
+    [Fact]
+    public void A_linked_label_that_fits_is_left_exactly_as_it_was()
+    {
+        var diagram = Diagrams([Request("http://example.com/api/orders?page=2")], internalFlowTracking: true).Single();
+
+        Assert.Equal("GET: /api/orders?page=2", LinkedLabel(diagram).Text);
+        Assert.DoesNotContain("Full path", diagram);
+    }
+
+    [Fact]
+    public void Without_the_link_a_request_label_keeps_the_message_limit()
+    {
+        // The worker draws an unlinked label at every length up to the message limit, so only the linked
+        // form is cut shorter.
+        var diagram = Diagrams([Request(LongQuery(140))]).Single();
+
+        var message = Classify(diagram).First(l => l.Kind == PlantUmlStatementKind.Message).Line.Trim();
+        Assert.DoesNotContain("[[#iflow-", message);
+        Assert.True(message.Length > MaxMessage - 100, $"{message.Length} chars");
+        Assert.True(message.Length <= MaxMessage, $"{message.Length} chars");
     }
 
     // ── What must NOT be capped ─────────────────────────────────

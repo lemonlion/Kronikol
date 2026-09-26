@@ -552,6 +552,34 @@ public class NodeJsPlantUmlRendererTests
         Assert.Contains(new string('k', 80), svg);
     }
 
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_long_request_label_inside_its_internal_flow_link_renders_in_node()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // plans/ENGINE_PIN_PLAN.md S0: the text inside the link is cut to MaxLinkedLabelChars because a Chromium
+        // worker overflowed its stack parsing a longer one. Node drew the longer link, and draws the cut one.
+        var url = "http://orders.internal/orders/search?" + string.Join("&", Enumerable.Range(0, 140).Select(i => $"filter{i}=value{i}"));
+        var pairId = Guid.NewGuid();
+        var request = new RequestResponseLog("Search orders", "long-linked-1", HttpMethod.Get, null, new Uri(url), [],
+            "OrderService", "Api", RequestResponseType.Request, Guid.NewGuid(), pairId, TrackingIgnore: false);
+        var response = request with { Type = RequestResponseType.Response, Content = "{ \"orders\": [] }", StatusCode = HttpStatusCode.OK };
+        var plantUml = PlantUmlCreator.GetPlantUmlImageTagsPerTestId([request, response], internalFlowTracking: true)
+            .Single().PlantUmls.First().PlainText;
+        Assert.Contains($"[[#iflow-{pairId} GET: /orders/search?filter0=value0", plantUml);
+
+        var svg = NodeJsPlantUmlRenderer.RenderMany([plantUml])[0].Svg ?? "";
+
+        Assert.DoesNotContain("Syntax Error", svg);
+        Assert.True(System.Text.RegularExpressions.Regex.Matches(svg, ">OrderService</text>").Count >= 2,
+            "the sequence diagram was not drawn (a sequence diagram draws each participant twice)");
+        // The engine draws a link as underlined text (the page binds it by its text, there is no <a>), and the
+        // whole path is in the note beside the arrow.
+        Assert.Matches("text-decoration=\"underline\"[^>]*>GET: /orders/search\\?filter0=value0", svg);
+        Assert.Contains(">[Full<", svg);
+    }
+
     // ── ES-module engine builds (npm @plantuml/core line) ────────────────────────────────────────
 
     private static string RenderScriptSource()
