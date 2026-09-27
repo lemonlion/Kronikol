@@ -91,6 +91,39 @@ public class InternalFlowSegmentMapReportTests : IDisposable
     }
 
     [Fact]
+    public void The_element_list_is_chosen_over_the_links_of_the_scenarios_the_page_shows()
+    {
+        // The page shows a diagram only for a scenario it lists, but the list was counted over every test the
+        // process had logged: another test's calls, links without a segment here, outnumbered the page's own and
+        // tipped the choice to "has" (red in CI from 3.31.9 on, in the E2E ArrowLinkOpensPopupTests, whose fixtures
+        // share a process). Four such calls under a test this run does not name.
+        var elsewhere = "iflow-map-elsewhere-" + Guid.NewGuid().ToString("N");
+        var at = DateTimeOffset.UtcNow.AddSeconds(-40);
+        for (var i = 0; i < 4; i++)
+        {
+            var id = Guid.NewGuid();
+            var trace = ActivityTraceId.CreateRandom();
+            Log(Call(elsewhere, HttpMethod.Get, id, trace, RequestResponseType.Request, at.AddMilliseconds(i * 20)));
+            Log(Call(elsewhere, HttpMethod.Get, id, trace, RequestResponseType.Response, at.AddMilliseconds(i * 20 + 5)));
+        }
+
+        var run = Generate(InternalFlowNoDataBehavior.HideLink);
+
+        const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
+        var start = run.Html.IndexOf(head, StringComparison.Ordinal) + head.Length;
+        using var element = JsonDocument.Parse(run.Html[start..run.Html.IndexOf("</script>", start, StringComparison.Ordinal)]);
+        var list = element.RootElement.EnumerateObject().First();
+        var linked = LinkedIds(DiagramSourcesInPage(run.Html));
+        var keys = SegmentKeysInPage(run.Html).ToHashSet();
+        var withSegment = linked.Count(keys.Contains);
+
+        // Not vacuous: the page's two calls both have a segment, so over its own links "hidden" is the shorter list.
+        Assert.Equal(2, withSegment);
+        Assert.Equal(linked.Count - withSegment < withSegment ? "hidden" : "has", list.Name);
+        Assert.All(list.Value.EnumerateArray(), id => Assert.Contains(id.GetString()!, linked));
+    }
+
+    [Fact]
     public void A_scenario_that_made_no_call_has_no_whole_test_flow()
     {
         var run = Generate(InternalFlowNoDataBehavior.HideLink);

@@ -387,8 +387,12 @@ public static class ReportGenerator
         if (perBoundarySegments is not null)
         {
             // The segment map's id list is computed over every diagram source a page can show, so it needs the
-            // component diagram, which is why the popup data is built here rather than with the segments.
-            var linkSources = diagrams.Select(d => (string?)d.CodeBehind)
+            // component diagram, which is why the popup data is built here rather than with the segments. A page shows
+            // a diagram only for a scenario it lists (every read of diagramsByTestId is by a scenario's id), so a test
+            // the process logged that these features do not name is left out: counted in, its links, none of which the
+            // page shows, could outnumber the page's own and tip the list's choice.
+            var shownTestIds = features.SelectMany(f => f.Scenarios).Select(s => s.Id).ToHashSet(StringComparer.Ordinal);
+            var linkSources = diagrams.Where(d => shownTestIds.Contains(d.TestRuntimeId)).Select(d => (string?)d.CodeBehind)
                 .Append(ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null)
                 .ToArray();
 
