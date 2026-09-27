@@ -7,10 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [3.31.10] - 2026-09-27
 
 **Patch - a `#sid-` link, *Next Failure* and a failure-cluster link land on their scenario (`plans/DOORSTEP_PLAN.md`
-F28, found checking BreakfastProvider's published report at phone width for roadmap 2.1).** Bug fixes, with nothing new
-for a consumer to call, so the patch part moved. Report output changes (three of the page's scripts and the cluster
-link's `onclick`): the Kronikol4J divergence ledger owes an entry, drafted in the plan's Appendix A because this
-session could not reach that repository. Template pins move to 3.31.9.
+F28, found checking BreakfastProvider's published report at phone width for roadmap 2.1), and the internal-flow
+element's list is counted over the diagrams the page shows (`plans/INTERNAL_FLOW_BLOB_PLAN.md` §11.3).** Bug fixes,
+with nothing new for a consumer to call, so the patch part moved. Report output changes (three of the page's scripts,
+the cluster link's `onclick`, and the element's list where a run logged tests its features do not name): the
+Kronikol4J divergence ledger owes two entries, drafted in `DOORSTEP_PLAN.md` Appendix A because this session could not
+reach that repository. Template pins move to 3.31.9.
 
 ### Fixed
 
@@ -31,6 +33,12 @@ session could not reach that repository. Template pins move to 3.31.9.
   fold, so it ended the panel's height too far down: a link into the first feature left the scenario 220 px above the
   screen at 390 x 844. The link is now followed after the phone-width layout is done, the rule `parse_url_hash`
   already kept for its own filters.
+- **The internal-flow element's list was counted over tests the page does not show.** Since 3.31.9 the segment element
+  carries the shorter of two lists, `has` or `hidden`, over the diagram sources a page can show, but it was counted
+  over every diagram the run's fetcher made, one for each test the process had logged, including tests the run's
+  features do not name, whose diagrams the page never shows. The list stayed exact for the page's own links, but
+  those could be outnumbered, so the element could carry the longer list and its choice depended on what else the
+  process had logged. It is now counted over the diagrams of the scenarios the page lists.
 
 ### Tests
 
@@ -41,17 +49,15 @@ session could not reach that repository. Template pins move to 3.31.9.
   category each) and `PlaywrightTestBase`'s `WaitForScrollToSettleAsync` and `SummaryIsOnScreenAsync`.
 - `DeepLinkReportTests` and `FailureClusterReportTests` pin `jump_into_view` where they pinned `scrollIntoView`, and
   that it never scrolls smoothly.
-- **A red CI job from 3.31.9 on, and not the product's fault.** The (2, 1) case of `ArrowLinkOpensPopupTests`'
-  `An_arrow_is_bound_when_drawn_exactly_when_it_has_a_segment` read `has` where `hidden` was right on every main run
-  since the 3.31.9 release (E2E, Popups & Flows). The fixtures that run the whole pipeline shared the process-wide call
-  log and span store with every fixture before them, and nothing emptied either, so a report counted earlier
-  fixtures' arrows as links it shows and their spans as segments: which list the element carried depended on which
-  case ran first, and CI ran them the other way round from a local run. The list stays exact for the page's own links
-  either way. Every such fixture now holds `ReportTestHelper.WholePipeline` and starts from nothing
-  (`StartFromNothing` empties the call log, the span store and the diagram cache), `OnDemandRenderingTests`' Node case
-  among them, which ran the pipeline outside the lock. Both cases' reports now carry the list they should, run alone
-  or with the rest of their CI group.
-- In this container: `Kronikol.Tests` 5,942 passed and 5 skipped, with 3 failures that fail the same on 3.31.9 (they
+- `InternalFlowSegmentMapReportTests`: calls logged under a test the run does not name leave the element's list as
+  the page's own links choose it. Red on 3.31.9, which read `has` where `hidden` is right. The same fault made
+  `ArrowLinkOpensPopupTests`' (2, 1) case red in CI's E2E (Popups & Flows) on every main run since the 3.31.9 release,
+  because its fixtures share a process and CI ran its cases the other way round from a local run. An earlier commit
+  of this release made those fixtures empty the process-wide call log instead, and `ProcessGlobalStoreTests` rejected
+  that, rightly, since other classes read the log in parallel; this fix leaves the log alone.
+- `OnDemandRenderingTests`' Node case ran the whole pipeline outside `ReportTestHelper.WholePipeline`, which every
+  such fixture holds because the pipeline memoises its diagrams process-wide. It holds it now, from a fresh cache.
+- In this container: `Kronikol.Tests` 5,943 passed and 5 skipped, with 3 failures that fail the same on 3.31.9 (they
   need a read-only file, and the container runs as root). The 14 end-to-end classes that follow a link, jump to a
   failure, read the URL hash or lay the page out at a phone's width, run on 3.31.9 and on this release: each of the
   222 tests they share has the same outcome on both (196 pass, and 26 fail on both, every one waiting for a diagram

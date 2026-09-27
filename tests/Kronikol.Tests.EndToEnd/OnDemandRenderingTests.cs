@@ -243,11 +243,11 @@ public class OnDemandRenderingTests : PlaywrightTestBase
         var reportsDir = Path.Combine(TempDir, "nodejs-run-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(reportsDir);
         var order = "od-order-" + Guid.NewGuid().ToString("N");
-        // The whole pipeline reads process-wide state, so it runs as every such fixture does: one at a time, from
-        // nothing (ReportTestHelper.StartFromNothing).
+        // The whole pipeline memoises its diagrams process-wide, so it runs as every such fixture does: one at a time,
+        // from a fresh cache (ReportTestHelper.WholePipeline).
         lock (ReportTestHelper.WholePipeline)
         {
-        ReportTestHelper.StartFromNothing();
+        DefaultDiagramsFetcher.Reset();
         RequestResponseLogger.LogPair("Order", order, HttpMethod.Post, new Uri("http://orders-api/orders"), "OrdersApi", "Test", statusCode: HttpStatusCode.Created);
         RequestResponseLogger.LogPair("Order", order, HttpMethod.Get, new Uri("http://stock-api/stock"), "StockApi", "OrdersApi");
 

@@ -477,10 +477,12 @@ alive.
 | nuget.org | 3.31.9 latest; the project URL is the repository; the description is mechanism-first (RUN, F16) | |
 | S3 and S4 | S4's check dry-run on the live site (RUN, §7) | |
 
-## Appendix A. The Kronikol4J ledger entry F28's fix owes
+## Appendix A. The Kronikol4J ledger entries 3.31.10 owes
 
-For `../Kronikol4J/docs/REMAINING_PARITY.md`'s divergence ledger. The session that made the fix could not
-reach that repository, so the entry waits for whoever works there next (the owner's choice, 2026-09-27).
+For `../Kronikol4J/docs/REMAINING_PARITY.md`'s divergence ledger. The session that made the fixes could not
+reach that repository, so the entries wait for whoever works there next (the owner's choice, 2026-09-27). The
+first is F28's; the second is a fault CI found in 3.31.9 while this release was being checked
+(`INTERNAL_FLOW_BLOB_PLAN.md` §11.3).
 
 > - **Long jumps land on their scenario (.NET 3.31.10, 2026-09-27).** .NET's `reveal_url_anchor`
 >   (`report-url-hash-function.js`), `jump_to_next_failure` (`report-jump-to-failure-function.js`) and the
@@ -493,3 +495,11 @@ reach that repository, so the entry waits for whoever works there next (the owne
 >   `report-init-script.js` calls `parse_url_hash()` last in its `DOMContentLoaded` handler, after the two
 >   phone-width blocks, where it was first. Copy the three scripts verbatim and move the generator's
 >   `onclick` string with them. Whether the port's scripts are .NET's byte for byte today was not checked.
+>
+> - **The internal-flow element's list is counted over the page's own diagrams (.NET 3.31.10, 2026-09-27).**
+>   .NET's run report chooses the `iflow-segments` element's list (`has` or `hidden`, whichever is shorter)
+>   over the diagrams of the scenarios the page lists: `ReportGenerator` passes `WrapSegmentData` only the
+>   diagrams whose test id is one of the features' scenario ids, with the component diagram, where it passed
+>   every diagram the fetcher made. The element differs only for a run that logged tests its features do not
+>   name. If the port counts over every diagram, count the same way; `InternalFlowSegmentMapReportTests` has
+>   the fact.
