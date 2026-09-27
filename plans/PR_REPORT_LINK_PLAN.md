@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-27 · **Repo version:** 3.31.9 (`e4c9e360`) · **PR head:** `e31b42fa` on
 `pr-report-link-template`, one commit on `49f5ea87` (the tree of 2026-09-15, 3.19.0) · **Status:** a plan,
-**not green-lit**. It needs the owner's answers to Q1 to Q4 (`ROADMAP.md` D24), then about a day of work, then
+**not green-lit**. It needs the owner's answers to Q1 to Q4 (`ROADMAP.md` D25), then about a day of work, then
 the owner's go-ahead to merge. §1 is what was RUN, READ and read on the web today, §2 the findings, §3 the
 questions, §4 the slices, §9 the assumption ledger. The probe behind §1.5 is in `PR_REPORT_LINK_PLAN.harness/`.
 
@@ -11,7 +11,8 @@ locally and pushed nowhere: the PR rebased onto `main` at `2de961ec` stops
 on `CHANGELOG.md` alone, resolved as S1 says; its 17 facts pass, none skipped; all of `Kronikol.Tests` passes
 but for three tests that expect a write to be refused, which fail the same way on `main` without the PR because
 the machine ran as root (§6); and `Kronikol.Templates` packed from that tree carries the PR's paragraph with its
-relative link and no `github-actions/` file (§1.4).
+relative link and no `github-actions/` file (§1.4). **Re-checked against 3.31.10** (`5ca0878a`, later the same
+day): `git merge-tree` still stops on `CHANGELOG.md` alone (RUN).
 
 Roadmap item 2.2 reads: "Rebase and merge PR #73 (#72). One PR comment, one line per report artifact, kept
 current by every run", in hours. This plan re-checks each premise of that row against today's `main` and
@@ -254,7 +255,9 @@ pull requests, because a `permissions` block raises Dependabot's token (§1.6).
 
 ---
 
-## 3. Questions for the owner (`ROADMAP.md` D24)
+## 3. Questions for the owner (`ROADMAP.md` D25)
+
+D25, because the doorstep plan (`DOORSTEP_PLAN.md`, row 2.1) took D24 on `main` the same day.
 
 **Q1. The version.** Merge with no bump, as the PR and the roadmap say, so that the action first appears in the
 tag of whichever release follows the merge? And from that tag on, treat the action's inputs, the README's calling
@@ -318,12 +321,13 @@ Premises expire (roadmap §8). Before any change:
 
 1. `git switch -C pr-report-link-template origin/pr-report-link-template`, then `git rebase origin/main`.
 2. The one conflict, `CHANGELOG.md`: keep `main`'s file whole and put the PR's `## [Unreleased]` block above
-   `## [3.31.9] - 2026-09-27` (Q3). S4 rewrites its words.
+   the newest release's section (`## [3.31.10] - 2026-09-27` at the last check) (Q3). S4 rewrites its words.
 3. Run the 17 facts, then the whole project:
    - `dotnet test tests/Kronikol.Tests --configuration Release --filter "FullyQualifiedName~PrReportLinkActionTests"`:
      17 pass, none skipped.
-   - `dotnet test tests/Kronikol.Tests --configuration Release`: the count 3.31.9 recorded (5,949 passed and 1
-     skipped) plus 17.
+   - `dotnet test tests/Kronikol.Tests --configuration Release`: the count the newest release recorded, plus 17
+     (3.31.9 recorded 5,949 passed and 1 skipped). On Linux as root, expect §1.2's five skips and its three
+     root-only failures, and nothing else.
 4. `git push --force-with-lease=pr-report-link-template:e31b42fa origin pr-report-link-template`. The explicit
    expected head makes the push refuse, rather than overwrite, if anyone pushed to the branch meanwhile.
 5. CI on the rebased head is green: 28 of 28 jobs and CodeQL. This run is the baseline that tells rebase fallout
@@ -498,7 +502,7 @@ posted on #72: the merge closes it.
 2. **The first tag.** When the next release folds the `[Unreleased]` section (Q3), record its tag in
    `ROADMAP.md` 2.2 as the first that carries the action. From that tag the template README's "reference it from
    a release tag" is true.
-3. **`ROADMAP.md`**: 2.2 struck with the merge and the tag; D24 moved into the stage.
+3. **`ROADMAP.md`**: 2.2 struck with the merge and the tag; D25 moved into the stage.
 4. **`PLANS_STATUS.md`**: this plan's row, executed.
 5. **The consumer** (Q4): its copy replaced by the tag, and its two lanes' next comment checked as S3's check 2
    checks this repository's.
