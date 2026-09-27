@@ -185,16 +185,43 @@
     // Expose for direct binding from the render script
     window._iflowShowPopup = showPopup;
 
+    // A server-drawn SVG (Server or Local rendering, inline) keeps every link Kronikol wrote as an <a>, and the browser
+    // engine's render script, which leaves a link with no segment at rest, never runs over it. So a link HideLink had
+    // dropped the segment of opened a popup saying there was no data. Such a link loses its href here and is text again:
+    // no pointer, nothing to open.
+    var XLINK = 'http://www.w3.org/1999/xlink';
+    function iflowId(a) {
+        var href = a.getAttribute('xlink:href') || a.getAttributeNS(XLINK, 'href') || a.getAttribute('href') || '';
+        return href.indexOf('#iflow-') === 0 ? href.substring(1) : null;
+    }
+    function unlink(a) {
+        a.removeAttribute('href');
+        a.removeAttribute('xlink:href');
+        a.removeAttributeNS(XLINK, 'href');
+    }
+    function unlinkDead(root) {
+        var links = (root || document).querySelectorAll('a');
+        for (var i = 0; i < links.length; i++) {
+            var id = iflowId(links[i]);
+            if (id && !hasSegment(id)) unlink(links[i]);
+        }
+    }
+    window._iflowUnlinkDead = unlinkDead;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function() { unlinkDead(document); });
+    else unlinkDead(document);
+
     // Fallback: document-level click handler (capture phase for IKVM/server SVG compatibility)
     document.addEventListener('click', function(e) {
         var el = e.target;
         while (el && el !== document) {
             if (el.localName === 'a') {
-                var href = el.getAttribute('xlink:href') || el.getAttribute('href') || '';
-                if (href.indexOf('#iflow-') === 0) {
+                var id = iflowId(el);
+                if (id) {
                     e.preventDefault();
                     e.stopPropagation();
-                    showPopup(href.substring(1));
+                    // A link added after the page loaded is checked when it is clicked.
+                    if (hasSegment(id)) showPopup(id);
+                    else unlink(el);
                     return;
                 }
             }

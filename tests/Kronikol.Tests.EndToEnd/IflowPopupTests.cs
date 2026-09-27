@@ -359,6 +359,34 @@ public class IflowPopupTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task Under_HideLink_a_server_drawn_link_with_no_segment_opens_nothing()
+    {
+        // F4 (INTERNAL_FLOW_BLOB_PLAN S3): Server and Local rendering put the SVG in the page with every link Kronikol wrote
+        // as an <a>, and no render script runs to hide one; the popup script's click handler opened a popup saying
+        // there was no data for a link whose segment HideLink had dropped. The page is shaped as such a report is.
+        var withSegment = TestPageGenerator.GenerateIflowPopupTestPage();
+        var svg = """
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="120">
+              <a href="#iflow-seg-1" xlink:href="#iflow-seg-1"><text id="t-live" x="10" y="30" fill="#0000FF">GET /live</text></a>
+              <a href="#iflow-dropped" xlink:href="#iflow-dropped"><text id="t-dead" x="10" y="80" fill="#0000FF">GET /dead</text></a>
+            </svg>
+            """;
+        await Page.GotoAsync(ServePage(withSegment.Replace("<h1 id=\"page-title\">", svg + "<h1 id=\"page-title\">")));
+
+        var dead = Page.Locator("#t-dead");
+        Assert.Null(await dead.EvaluateAsync<string?>("t => t.parentNode.getAttribute('href')"));
+        Assert.Null(await dead.EvaluateAsync<string?>("t => t.parentNode.getAttribute('xlink:href')"));
+        Assert.NotEqual("pointer", await dead.EvaluateAsync<string>("t => getComputedStyle(t).cursor"));
+        await dead.EvaluateAsync("t => t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))");
+        await Page.WaitForTimeoutAsync(500);
+        Assert.Equal(0, await Page.Locator(".iflow-overlay").CountAsync());
+
+        // The link with a segment keeps its href and opens it.
+        await Page.Locator("#t-live").EvaluateAsync("t => t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))");
+        await Expect(Page.Locator(".iflow-popup h3")).ToContainTextAsync("Internal Flow");
+    }
+
+    [Fact]
     public async Task Opening_new_popup_replaces_existing_one()
     {
         await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeEmptySegment: true)));
