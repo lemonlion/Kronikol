@@ -6,7 +6,8 @@
 the owner's go-ahead to merge. §1 is what was RUN, READ and read on the web today, §2 the findings, §3 the
 questions, §4 the slices, §9 the assumption ledger. The probe behind §1.5 is in `PR_REPORT_LINK_PLAN.harness/`.
 
-**S1 rehearsed the same day** (§1.2), locally and pushed nowhere: the PR rebased onto `main` at `2de961ec` stops
+**S1 rehearsed the same day** (§1.2; the output is `PR_REPORT_LINK_PLAN.harness/results-s1-rehearsal.txt`),
+locally and pushed nowhere: the PR rebased onto `main` at `2de961ec` stops
 on `CHANGELOG.md` alone, resolved as S1 says; its 17 facts pass, none skipped; all of `Kronikol.Tests` passes
 but for three tests that expect a write to be refused, which fail the same way on `main` without the PR because
 the machine ran as root (§6); and `Kronikol.Templates` packed from that tree carries the PR's paragraph with its
@@ -171,7 +172,8 @@ does, against an in-memory GitHub, and prints what happened. Output: `results-pr
 ### 1.6 GitHub and nuget.org as they are today (WEB)
 
 Read on 2026-09-27. Tags were listed with `git ls-remote`, release dates and runtimes read from each action's
-releases and `action.yml`.
+releases and `action.yml`. Every address, the full quotes and each answer's verification mark are in
+`PR_REPORT_LINK_PLAN.harness/web-sources.md`.
 
 | Question | Answer | Source |
 |---|---|---|
