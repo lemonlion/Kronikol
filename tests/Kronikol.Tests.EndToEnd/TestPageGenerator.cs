@@ -20,7 +20,8 @@ public static class TestPageGenerator
         bool includeToggle = false,
         bool includeCallTree = false,
         bool includeEmptySegment = false,
-        bool includeContextMenu = false)
+        bool includeContextMenu = false,
+        bool includeTwin = false)
     {
         using var activitySource = new ActivitySource("Kronikol.Tests.EndToEnd");
         using var listener = new ActivityListener
@@ -47,6 +48,15 @@ public static class TestPageGenerator
                 parentSpan.StartTimeUtc, parentSpan.StartTimeUtc + parentSpan.Duration,
                 [parentSpan, childSpan])
         };
+
+        // A second segment over the same spans draws the same activity diagram source: its popup is a render-cache hit.
+        if (includeTwin)
+        {
+            segments["iflow-seg-twin"] = new(
+                Guid.NewGuid(), RequestResponseType.Request, "test-1",
+                parentSpan.StartTimeUtc, parentSpan.StartTimeUtc + parentSpan.Duration,
+                [parentSpan, childSpan]);
+        }
 
         if (includeEmptySegment)
         {
@@ -107,6 +117,11 @@ public static class TestPageGenerator
                 <button id="trigger-seg-empty" class="test-trigger"
                     onclick="window._iflowShowPopup('iflow-seg-empty')">
                     Open Empty Segment
+                </button>
+
+                <button id="trigger-seg-twin" class="test-trigger"
+                    onclick="window._iflowShowPopup('iflow-seg-twin')">
+                    Open Twin Segment
                 </button>
 
                 <button id="trigger-seg-missing" class="test-trigger"

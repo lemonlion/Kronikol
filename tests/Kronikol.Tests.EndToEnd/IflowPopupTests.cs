@@ -273,6 +273,43 @@ public class IflowPopupTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task A_popup_draws_its_activity_diagram_with_no_decode_of_its_own()
+    {
+        // Q7: the diagram's PlantUML is in data-plantuml inside the map, so the map is the only thing decoded.
+        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.EvaluateAsync("""
+            () => {
+                const real = window.decompressGzipBase64;
+                window._decodes = 0;
+                window.decompressGzipBase64 = b64 => { window._decodes++; return real(b64); };
+            }
+            """);
+
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+        await WaitForActivityDiagramSvg();
+
+        Assert.Equal(1, await Page.EvaluateAsync<int>("() => window._decodes"));
+        Assert.NotNull(await Page.Locator(".iflow-diagram .plantuml-browser").First.GetAttributeAsync("data-plantuml"));
+    }
+
+    [Fact]
+    public async Task A_second_popup_whose_diagram_is_already_drawn_still_draws_it()
+    {
+        // F12: the render shim writes a cached diagram at once, into whatever its target id names then. A popup that was
+        // not in the page yet drew nothing; the popup is attached before it renders.
+        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeTwin: true)));
+
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+        await WaitForActivityDiagramSvg();
+        await Page.Locator(".iflow-popup-close").ClickAsync();
+        await Page.Locator(".iflow-overlay").WaitForAsync(new() { State = WaitForSelectorState.Detached });
+
+        await Page.Locator("#trigger-seg-twin").ClickAsync();
+        var svg = await WaitForActivityDiagramSvg();
+        Assert.Contains("HTTP GET /api/orders", await svg.First.TextContentAsync());
+    }
+
+    [Fact]
     public async Task A_map_that_is_not_gzip_says_so_in_the_popup()
     {
         var html = System.Text.RegularExpressions.Regex.Replace(

@@ -110,8 +110,9 @@ public static class InternalFlowHtmlGenerator
 
     /// <summary>
     /// Builds the per-segment data map (segment key → { title, content, flameData }) that the popup
-    /// JavaScript consumes. The rendered fragments inline their compressed payloads (no shared
-    /// <c>diagramDataMap</c>), so the map is fully self-contained and safe to serialize and merge.
+    /// JavaScript consumes. Each fragment carries its payload inline (no shared <c>diagramDataMap</c>), so the map
+    /// is fully self-contained and safe to serialize and merge: an activity diagram as its PlantUML in a
+    /// <c>data-plantuml</c> attribute, since the report gzips the map whole (<see cref="WrapSegmentData(Dictionary{string, object})"/>).
     /// </summary>
     public static Dictionary<string, object> BuildSegmentData(
         Dictionary<string, InternalFlowSegment> segments,
@@ -132,8 +133,8 @@ public static class InternalFlowHtmlGenerator
                 var mainContent = diagramStyle switch
                 {
                     InternalFlowDiagramStyle.CallTree => InternalFlowRenderer.RenderCallTree(segment),
-                    InternalFlowDiagramStyle.ActivityDiagram => RenderActivityDiagramHtml(segment),
-                    _ => RenderActivityDiagramHtml(segment)
+                    InternalFlowDiagramStyle.ActivityDiagram => RenderActivityDiagramHtml(segment, rawSource: true),
+                    _ => RenderActivityDiagramHtml(segment, rawSource: true)
                 };
 
                 var content = mainContent;
@@ -217,10 +218,15 @@ public static class InternalFlowHtmlGenerator
         return sb.ToString();
     }
 
-    private static string RenderActivityDiagramHtml(InternalFlowSegment segment, Dictionary<string, string>? diagramDataMap = null)
+    private static string RenderActivityDiagramHtml(InternalFlowSegment segment, Dictionary<string, string>? diagramDataMap = null, bool rawSource = false)
     {
         var plantuml = InternalFlowRenderer.RenderActivityDiagram(segment);
         var id = $"iflow-puml-{segment.RequestResponseId}-{segment.BoundaryType.ToString().ToLowerInvariant()}";
+        // A popup's diagram inside the segment map, which is gzipped whole: gzip cannot shrink an island that is gzip
+        // already, and base64 had grown it by a third (INTERNAL_FLOW_BLOB_PLAN §3.7, Q7). The popup renders the
+        // attribute as it is; line breaks stay literal, which an attribute returns as written.
+        if (rawSource)
+            return $"<div class=\"plantuml-browser iflow-diagram\" id=\"{id}\" data-plantuml=\"{EscapeAttribute(plantuml)}\" data-diagram-type=\"plantuml\"></div>";
         var compressed = CompressToBase64(plantuml);
         if (diagramDataMap is not null)
         {
@@ -394,6 +400,10 @@ public static class InternalFlowHtmlGenerator
         sb.AppendLine("</table>");
         return sb.ToString();
     }
+
+    /// <summary>A value for a double-quoted attribute: the three characters that could end it or start markup.</summary>
+    private static string EscapeAttribute(string text) =>
+        text.Replace("&", "&amp;").Replace("\"", "&quot;").Replace("<", "&lt;");
 
     internal static string CompressToBase64(string text)
     {
