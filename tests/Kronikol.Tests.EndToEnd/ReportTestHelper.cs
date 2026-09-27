@@ -4130,7 +4130,22 @@ public static class ReportTestHelper
     }
 
     /// <summary>Held by every fixture that runs the whole pipeline, which memoises its diagrams process-wide.</summary>
-    private static readonly object WholePipeline = new();
+    internal static readonly object WholePipeline = new();
+
+    /// <summary>
+    /// Starts a whole-pipeline fixture from nothing, under <see cref="WholePipeline"/>. The pipeline reads the
+    /// process-wide call log, span store and diagram cache, and nothing empties the first two, so a report drew on
+    /// every earlier fixture's calls and spans as well as its own: which list the internal-flow element carried then
+    /// depended on what had run before it in the process, and ArrowLinkOpensPopupTests' (2, 1) case read "has" in CI
+    /// from 3.31.9 on. Every fixture that logs calls or spans holds the lock, so emptying them here takes nothing
+    /// from a fixture still running.
+    /// </summary>
+    internal static void StartFromNothing()
+    {
+        RequestResponseLogger.Clear();
+        Kronikol.InternalFlow.InternalFlowSpanStore.Clear();
+        DefaultDiagramsFetcher.Reset();
+    }
 
     /// <summary>
     /// A run report written by the whole pipeline (<see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>) with
@@ -4170,7 +4185,7 @@ public static class ReportTestHelper
 
         lock (WholePipeline)
         {
-            DefaultDiagramsFetcher.Reset();
+            StartFromNothing();
             for (var i = 0; i < withFlow + withoutFlow; i++)
             {
                 var flow = i < withFlow;
@@ -4231,7 +4246,7 @@ public static class ReportTestHelper
         // each from a fresh cache, or one report is drawn from the other's logs.
         lock (WholePipeline)
         {
-        DefaultDiagramsFetcher.Reset();
+        StartFromNothing();
         RequestResponseLogger.LogPair("Pay", pay, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test");
         RequestResponseLogger.LogPair("Refund", refund, HttpMethod.Post, new Uri("http://payments/refund"), "payments", "Test");
 

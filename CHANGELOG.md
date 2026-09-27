@@ -41,6 +41,16 @@ session could not reach that repository. Template pins move to 3.31.9.
   category each) and `PlaywrightTestBase`'s `WaitForScrollToSettleAsync` and `SummaryIsOnScreenAsync`.
 - `DeepLinkReportTests` and `FailureClusterReportTests` pin `jump_into_view` where they pinned `scrollIntoView`, and
   that it never scrolls smoothly.
+- **A red CI job from 3.31.9 on, and not the product's fault.** The (2, 1) case of `ArrowLinkOpensPopupTests`'
+  `An_arrow_is_bound_when_drawn_exactly_when_it_has_a_segment` read `has` where `hidden` was right on every main run
+  since the 3.31.9 release (E2E, Popups & Flows). The fixtures that run the whole pipeline shared the process-wide call
+  log and span store with every fixture before them, and nothing emptied either, so a report counted earlier
+  fixtures' arrows as links it shows and their spans as segments: which list the element carried depended on which
+  case ran first, and CI ran them the other way round from a local run. The list stays exact for the page's own links
+  either way. Every such fixture now holds `ReportTestHelper.WholePipeline` and starts from nothing
+  (`StartFromNothing` empties the call log, the span store and the diagram cache), `OnDemandRenderingTests`' Node case
+  among them, which ran the pipeline outside the lock. Both cases' reports now carry the list they should, run alone
+  or with the rest of their CI group.
 - In this container: `Kronikol.Tests` 5,942 passed and 5 skipped, with 3 failures that fail the same on 3.31.9 (they
   need a read-only file, and the container runs as root). The 14 end-to-end classes that follow a link, jump to a
   failure, read the URL hash or lay the page out at a phone's width, run on 3.31.9 and on this release: each of the

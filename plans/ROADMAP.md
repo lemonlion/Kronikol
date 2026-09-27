@@ -235,14 +235,15 @@ were already in flight (1.1 and the #82 half of 1.2 are 3.25.3; the #84 half is 
 Nothing here is in a package, so **no bump**. **Why here:** rule 2 for 2.2, rule 8 for the rest, and
 both forges first-class is a row of the bar. The store plan's own review (§13 R16) found that the
 highest-value near-term work in it sits outside its slices: it is 2.3 and 2.4. No file here is
-touched by any other stage, so all of it can run beside anything. **None of it is outreach** (rule
-9): a template in the repository and a filled-in description bring nobody in. They serve whoever
-arrives anyway. The listing, the README relaunch and the posts are stage 13.
+touched by any other stage, so all of it can run beside any other stage. Inside the stage, 2.2 to
+2.4 are a chain (section 5). **None of it is outreach** (rule 9): a template in the repository and a
+filled-in description bring nobody in. They serve whoever arrives anyway. The listing, the README
+relaunch and the posts are stage 13.
 
 | # | Item | Effort | Detail |
 |---|---|---|---|
 | 2.1 | **The doorstep.** The repository's homepage field is empty (RUN): point it at the live BreakfastProvider report. Rewrite the description from mechanism to outcome; the direction report's draft is "see what your integration test actually did: every HTTP call, SQL query and message, as a sequence diagram" | about an hour | Passive: it changes what the fortnight's 31 visitors see and invites no more. Outward-facing text: the owner's hand, and no em-dashes or other tells. **Planned 2026-09-27: `DOORSTEP_PLAN.md`, needs D24.** Premises re-checked that day (RUN): homepage empty, description unchanged, twenty topics. The hour is S0 (the owner looks first), S1 the homepage and S2 the description; S3 (the README's first line) and S4 (a weekly check that the homepage answers and the reports it links are green) are optional. S0 was run by a session the same day as far as it reaches, the second time with full network access: the demo moved from 3.29.0 to 3.31.4 that day (`INTERNAL_FLOW_BLOB_PLAN.md` S5), its root and all 18 reports answer, the six the landing page links are green, and nothing scrolls sideways at phone or desktop width, so S1 waits only on D24 and the owner's traffic reading. A report's first screen shows no diagram (the first is three taps from the root), which a deep link to one scenario fixes. Found on the way and fixed in 3.31.10 the same day (the plan's F28): a `#sid-` link, Next Failure and a failure-cluster link landed past their scenario, because a smooth scroll aimed across features `content-visibility` had not drawn yet ran to the bottom of any long report, and on a phone the report folded its filters away after the scroll had started. The generated card prints the description whole, and about 35 characters of it survive a search result's cut. On nuget.org the old TestTrackingDiagrams packages (2.5 million downloads, not deprecated) outrank Kronikol's; their deprecation stays 13.4's. Traffic, GitHub's search, the About block on a phone and the time to the first diagram stay the owner's. The draft's "every" cannot be proved, and the direction report's "self-contained" is not true of the default report. Fixed on the way: `README.md:33` linked the BreakfastProvider repository with a doubled slash |
-| 2.2 | **Rebase and merge PR #73 (#72).** One PR comment, one line per report artifact, kept current by every run | hours | Green since 2026-09-15. Conflicts are in `CHANGELOG.md` and `README.md` and grow with each release |
+| 2.2 | **Rebase and merge PR #73 (#72).** One PR comment, one line per report artifact, kept current by every run | hours | Green since 2026-09-15. **Rechecked 2026-09-27:** only `CHANGELOG.md` conflicts, where the PR opens an `[Unreleased]` section `main` does not have; `README.md` and the rest merge clean (RUN: `git merge-tree` against `main` at 3.31.9, 67 commits past the PR's base). The APIs its tests call are unchanged on `main` (`NodeProbe.RunWithStdin`, `Assert.SkipWhen`, YamlDotNet 16.3.0), and no test on `main` reads `CHANGELOG.md` or walks `templates/` for anything but `*.csproj` (READ; not built). First of a chain: section 5 |
 | 2.3 | **A history composite action** in 2.2's directory, shape and test pattern. Today cross-run history on CI costs about 45 lines of copied YAML (orphan branch, worktrees, fetch and rebase retry). The action makes it three | days | Store plan §6.1 and §11 Q7, which order it ahead of alerting. It reuses 2.2's 597 lines of test scaffolding |
 | 2.4 | **Azure DevOps at the same level.** A Tier 0 recipe for Azure Pipelines (with the build-identity Contribute permission it needs) and a pipeline template as the sibling of 2.3 | days | Store plan §6.3: the likely buyer of a .NET product runs Azure DevOps on Azure with Entra ID and is today the least served. Owner's requirement of 2026-09-20: GitHub and Azure DevOps both first-class. The library already detects ADO (`TF_BUILD`). The plan's platform claims are REFERENCE and need half a day of checking first |
 
@@ -457,6 +458,40 @@ launch date is set by the longer of tracks A and B, so running them together is 
 | B. Report rendering | 1.5, 1.6, 1.8, 1.9, 5, 6, 8, 11, 12 | `ReportGenerator.cs`, `stylesheets.css`, the report scripts, `InternalFlow/` | A, C, D. 5 and 8.2 beside 6 only with care (both embed blocks in the HTML) |
 | C. Templates and CI | 2, 3.1 | the repository page, `templates/github-actions/`, `ci.yml` | anything |
 | D. Capture records | 1.3, 1.4, 12b, 14.1 to 14.3 | `Ingestion/`, `RequestResponseLog.cs`, and for 12b `IngestCommand.cs` | A, B, C |
+
+**Inside track C, stage 2 is one chain, not four tracks** (2026-09-27). 2.1 touches no file: it
+is two fields in the repository's settings, so it runs beside anything. 2.2, 2.3 and 2.4 can
+overlap, but should not all start from `main` at once:
+
+- **2.3 branches from 2.2 once 2.2 is rebased.** `templates/github-actions/` exists only on PR #73's
+  branch, and a Claude Code worktree branches from `origin/main` unless told otherwise. The
+  scaffolding 2.3 reuses is private to `PrReportLinkActionTests`, so reusing it means extracting
+  it, which edits 2.2's file: do that once, in 2.3. Only its YAML half carries over (the inputs,
+  their `env` wiring, the README drift check). The node driver imitates `actions/github-script`,
+  while 2.3 wraps the git fold of `ci-summary-preview.yml` and will want real repositories in a
+  temporary directory (INFERRED).
+- **2.4 starts in part at once.** The half day of checking the plan's Azure DevOps claims (it
+  needs an Azure DevOps project) and the Tier 0 recipe wait for nothing. The template is 2.3's
+  sibling and takes 2.3's inputs, so it follows 2.3's interface, or both build to one written
+  down first.
+- **They merge in the order 2.2, 2.3, 2.4.**
+
+**What separate worktrees still share** (2026-09-27):
+
+- **The wiki.** It is one checkout. From a worktree under `.claude/worktrees/`, `CLAUDE.md`'s
+  `../Kronikol.wiki` and `tools/wiki-links/wikilinks.py` both point at a folder that does not
+  exist (the script reads `KRONIKOL_WIKI`). The wiki publishes on push, so each item's wiki change
+  waits for its pull request to merge, as #73's did. 2.3, and most likely 2.4, change
+  `Cross-Run-History`.
+- **Tags.** Every worktree sees the same tags, so a second `git tag` of one version fails (RUN).
+  Parallel sessions agree who releases. Stage 2 releases nothing.
+- **The main tree.** `.gitignore` does not exclude `.claude/worktrees/`, and `git add -A` in the
+  main tree adds a worktree under it as an embedded repository (RUN). Exclude it in
+  `.git/info/exclude`, or put worktrees beside the repository, where `../Kronikol.wiki` also
+  resolves.
+- **Adjacent lines.** Git reads edits to adjacent lines as one conflict (RUN): this file's rows,
+  `CHANGELOG.md`'s `[Unreleased]` entries (`main` has no such section yet) and a section each in
+  `templates/README.md`. Small, and certain.
 
 **Upstream PlantUML is off the critical path**, and with a bar to reach the direction report's
 verdicts on it stand (D14): hold the queue, stop the parity dive, gate Teoz on a number, and "native
