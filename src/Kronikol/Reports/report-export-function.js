@@ -77,6 +77,31 @@ function export_data_scripts(exported) {
     });
     return out;
 }
+// A diagram the report had drawn went into the export as the SVG it drew, and nothing the render script
+// had bound to it survives serialisation: its internal-flow links opened nothing and its notes no
+// longer folded. A diagram queued but not yet drawn went in marked as queued, and the export's own
+// pipeline, which skips a queued element, never drew it. A flame chart went in drawn and marked so, and
+// no longer zoomed. The export's copy of each is put back as it was before it was drawn, so the export
+// draws it again from its source and binds it as the report does. A diagram's drawn source is left out
+// when the element has a source of its own (puml-data or data-plantuml-z): it was written after the
+// report's filters had run, and the export applies its own.
+function export_undrawn(feature) {
+    var copy = feature.cloneNode(true);
+    copy.querySelectorAll('.plantuml-browser').forEach(function (el) {
+        if (!el.hasAttribute('data-rendered') && !el.hasAttribute('data-queued')) return;
+        var ownSource = window._getPumlZ && window._getPumlZ(el);
+        el.innerHTML = '';
+        el.removeAttribute('data-rendered');
+        el.removeAttribute('data-queued');
+        if (ownSource) el.removeAttribute('data-plantuml');
+    });
+    copy.querySelectorAll('[data-flame-rendered]').forEach(function (el) {
+        if (!el.hasAttribute('data-flame') && !el.hasAttribute('data-flame-z')) return;
+        el.innerHTML = '';
+        el.removeAttribute('data-flame-rendered');
+    });
+    return copy.outerHTML;
+}
 function export_html() {
     var c = fc();
     var head = document.querySelector('head');
@@ -86,7 +111,7 @@ function export_html() {
     for (var i = 0; i < c.features.length; i++) {
         if (c.features[i].style.display === 'none') continue;
         exported.push(c.features[i]);
-        featuresHtml += c.features[i].outerHTML;
+        featuresHtml += export_undrawn(c.features[i]);
     }
     var html = '<html><head>' + headHtml + '</head><body>';
     html += '<h1>Filtered Report</h1>';

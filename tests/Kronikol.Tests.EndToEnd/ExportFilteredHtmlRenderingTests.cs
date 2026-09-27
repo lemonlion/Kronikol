@@ -123,6 +123,33 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
         Assert.Equal(0, orphaned);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task An_arrow_opens_its_popup_in_the_export(bool drawnBeforeTheExport)
+    {
+        // INTERNAL_FLOW_BLOB_PLAN S2: the export carries the segment map, and its arrows open it. F14 (§11.1): a diagram
+        // drawn before the export was serialised as the SVG it drew, its link texts still styled as bound, but no
+        // listener survives serialisation, so a click opened nothing.
+        var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, $"ExportRender_Arrows_{drawnBeforeTheExport}.html", withFlow: 1, withoutFlow: 1);
+        await Page.GotoAsync(uri);
+        await ExpandFirstScenarioWithDiagram();
+        if (drawnBeforeTheExport)
+            await DrawAll();
+
+        var exported = await ExportFilteredHtml();
+        await OpenExport(exported);
+        await DrawAll();
+
+        await Page.EvaluateAsync("""
+            () => Array.from(document.querySelectorAll('.plantuml-browser:not(.iflow-diagram) svg text'))
+                .find(t => t.textContent.includes('/with-flow-0'))
+                .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+            """);
+        await Expect(Page.Locator(".iflow-popup h3")).ToHaveTextAsync("Internal Flow (2 spans)");
+        await Page.Locator(".iflow-popup .iflow-diagram svg").First.WaitForAsync(new() { Timeout = 30000 });
+    }
+
     [Fact]
     public async Task The_export_carries_the_segment_map_whole()
     {
@@ -142,5 +169,54 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
             return html[start..(html.IndexOf("</script>", start, StringComparison.Ordinal) + "</script>".Length)];
         }
         Assert.Equal(Element(File.ReadAllText(Path.Combine(reportsDir, "TestRunReport.html"))), Element(File.ReadAllText(exported)));
+    }
+
+    [Fact]
+    public async Task A_note_drawn_before_the_export_still_folds_in_the_export()
+    {
+        // F14 (INTERNAL_FLOW_BLOB_PLAN §11.1) beyond the links: every listener the render script bound to a drawn
+        // diagram was lost in the export, a note's fold on a double-click among them.
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithLongNotes(TempDir, OutputDir, "ExportRender_Notes.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await DrawAll();
+        await Page.Locator(".note-hover-rect").First.WaitForAsync();
+
+        var exported = await ExportFilteredHtml();
+        await OpenExport(exported);
+        await DrawAll();
+        await Page.Locator(".note-hover-rect").First.WaitForAsync();
+
+        var before = await Page.Locator(".plantuml-browser svg").First.EvaluateAsync<string>("svg => svg.outerHTML");
+        await Page.Locator(".note-hover-rect").First.EvaluateAsync(
+            "el => el.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }))");
+        await Page.WaitForFunctionAsync(
+            "before => { const svg = document.querySelector('.plantuml-browser svg'); return !window._plantumlRendering && !!svg && svg.outerHTML !== before; }",
+            before, new() { Timeout = 15000, PollingInterval = 200 });
+    }
+
+    [Fact]
+    public async Task A_flame_chart_drawn_before_the_export_still_zooms_in_the_export()
+    {
+        // A flame chart went into the export drawn and marked as drawn, so the export never bound its click-to-zoom.
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithMarkersInTheWholeTestFlow(TempDir, OutputDir, "ExportRender_Flame.html"));
+        await ExpandFirstScenarioWithDiagram();
+        await Page.Locator(".diagram-toggle-btn[data-dtype='flame']").First.ClickAsync();
+        var bar = Page.Locator(".diagram-view-flame .iflow-flame .iflow-flame-bar").First;
+        await Expect(bar).ToBeVisibleAsync();
+
+        var exported = await ExportFilteredHtml();
+        await OpenExport(exported);
+
+        await Expect(bar).ToBeVisibleAsync();
+        await bar.EvaluateAsync("el => el.dispatchEvent(new MouseEvent('click', { bubbles: true }))");
+        await Expect(Page.Locator(".diagram-view-flame .iflow-flame-zoom-hint").First).ToBeVisibleAsync();
+    }
+
+    /// <summary>Asks the page to draw every diagram and waits until each has drawn.</summary>
+    private async Task DrawAll()
+    {
+        await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = 60000, PollingInterval = 200 });
     }
 }
