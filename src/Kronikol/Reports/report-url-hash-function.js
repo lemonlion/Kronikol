@@ -42,7 +42,26 @@ function reveal_url_anchor(anchor) {
         el.click();
         target = el.closest('details.scenario-parameterized') || el;
     }
-    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    jump_into_view(target, 'center');
+}
+function jump_into_view(target, block) {
+    // At once, not smoothly. A feature or scenario has content-visibility: auto, so one the browser has
+    // never drawn counts as its placeholder height (500 px for a closed feature about 60 px tall). A
+    // smooth scroll is aimed once, across those placeholders, and they shrink to their true size as it
+    // passes them: it ended past the target, at the bottom of the page. A jump draws only what it lands
+    // among, but those shrink in the frames after it, which moves the target wherever the browser does
+    // not anchor the scroll (Safari has no scroll anchoring), so the jump is re-aimed while that settles.
+    // A target that grows downward, a diagram drawn inside it, does not move its top and is left alone.
+    var frames = 10, aimed;
+    function aim() {
+        target.scrollIntoView({ behavior: 'instant', block: block });
+        aimed = target.getBoundingClientRect().top;
+    }
+    aim();
+    requestAnimationFrame(function settle() {
+        if (Math.abs(target.getBoundingClientRect().top - aimed) > 1) aim();
+        if (--frames > 0) requestAnimationFrame(settle);
+    });
 }
 function update_url_hash() {
     var parts = [];

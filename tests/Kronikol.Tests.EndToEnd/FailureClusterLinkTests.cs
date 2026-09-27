@@ -264,6 +264,24 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task Cluster_link_reaches_a_scenario_far_down_a_long_report()
+    {
+        // A long report's features have mostly never been drawn, so each counts as its 500 px
+        // content-visibility placeholder, and a smooth scroll aimed across them ends past the scenario
+        // (StableIdDeepLinkTests has the same fault for a #sid- link).
+        await Page.GotoAsync(GenerateLongReport("ClusterFarDown.html", "Scenario 30.2", "Scenario 31.1"));
+        await Page.Locator(".failure-cluster > summary").First.ClickAsync();
+        var link = Page.Locator(".failure-cluster-scenario-link").First;
+        var target = (await link.GetAttributeAsync("href"))!.TrimStart('#');
+
+        await link.ClickAsync();
+        await WaitForScrollToSettleAsync();
+
+        Assert.True(await SummaryIsOnScreenAsync($"[id='{target}']"),
+            "The scenario's title should be on screen once the page has stopped scrolling");
+    }
+
+    [Fact]
     public async Task Cluster_link_opens_scenario_details()
     {
         var url = GenerateClusterReport("ClusterOpensScenario.html", CreateBasicClusterData());
