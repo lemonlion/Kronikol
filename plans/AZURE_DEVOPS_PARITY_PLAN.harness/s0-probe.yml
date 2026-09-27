@@ -1,0 +1,179 @@
+# S0 of plans/AZURE_DEVOPS_PARITY_PLAN.md: every Azure Pipelines claim the plan rests on that could not be
+# run without an Azure DevOps organisation, exercised in one throwaway pipeline. Each step is named after
+# the ledger row (§9) it settles; write what each printed into results-s0.txt beside this file.
+#
+# How to run it (about half a day, most of it waiting and reading):
+#   1. A scratch project in any organisation. Import this repository into its Azure Repos, or commit this
+#      file alone to a scratch repository; the pipeline needs nothing else from the checkout.
+#   2. Create a pipeline from this file. Leave the build identity's repository permissions at their
+#      defaults for the first run: A12 records what the default identity is refused.
+#   3. Queue it. Shard a fails its first attempt on purpose (A10).
+#   4. On the finished run, "Rerun failed jobs". Record which jobs ran again (A10) and what A2, A7 and A8
+#      printed on the second attempt.
+#   5. Grant the build identity Contribute on the repository (then, for A13, on the probe branch only) and
+#      queue it again: A12 should push.
+#   6. Open a pull request against main with a build-validation policy running this pipeline: A2 prints the
+#      pull-request variables (A5).
+#   7. For A14: in a second pipeline whose YAML has no trigger section (every branch triggers), push one
+#      commit to the probe branch with ***NO_CI*** in its message and one without; record which queued a run.
+#   8. The same file in a GitHub repository connected through the Azure Pipelines app, runs 3 to 6 again:
+#      A5's target-branch format and whether A12 can push with the persisted credentials (§4.6).
+#   9. On the pull-request build of step 6, A21 posts one iteration status and one thread with the build
+#      identity: record whether each is refused, and what the pull request shows.
+#  10. Once on windows-latest (pool below): A20 records which bash a `bash` step runs there, WSL's or Git's.
+# Nothing here reads a secret. The one token, System.AccessToken, is mapped into the A11, A12 and A21 steps
+# only. Delete the branch kronikol-history-probe afterwards.
+
+trigger: none
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  PROBE_BRANCH: kronikol-history-probe
+
+stages:
+- stage: probe
+  jobs:
+  - job: shard
+    strategy:
+      matrix:
+        a: { SHARD: a }
+        b: { SHARD: b }
+    steps:
+    - checkout: self
+      # A1 runs once with this line removed: the fetch depth a new pipeline gets by default.
+      fetchDepth: 1
+
+    - bash: env | sort | grep -E '^(TF_BUILD|BUILD_|SYSTEM_|AGENT_JOB|AGENT_OS|PIPELINE_)' | grep -v -i -E 'token|secret'
+      displayName: 'A2 A5 F11 the predefined variables: attempts, pull-request target, both server URIs, provider'
+
+    - bash: |
+        uname -a
+        command -v bash git
+        bash --version | head -1
+        git --version
+      displayName: 'A20 which bash and which git a bash step runs (WSL or Git Bash on Windows; 3.2 on macOS)'
+
+    - bash: |
+        echo "some text first ##vso[task.setvariable variable=PROBE_MIDLINE]set-from-mid-line"
+        echo "   ##vso[task.setvariable variable=PROBE_INDENTED]set-after-whitespace"
+        echo "##vso[task.setvariable variable=PROBE_LINESTART]set-from-line-start"
+      displayName: 'A3 is a logging command acted on mid-line, or only at the start of a line?'
+    - bash: echo "mid-line=${PROBE_MIDLINE:-unset} indented=${PROBE_INDENTED:-unset} line-start=${PROBE_LINESTART:-unset}"
+      displayName: 'A3 read back'
+
+    - bash: |
+        f="$(Agent.TempDirectory)/CiSummary.md"
+        cat > "$f" <<'MARKDOWN'
+        # Probe summary
+
+        | Metric | Value |
+        |---|---|
+        | Status | ❌ Failed |
+
+        <details><summary>❌ <strong>A collapsed block</strong></summary>
+
+        Text inside the collapsed block.
+
+        </details>
+
+        <details open><summary>An open block</summary>
+
+        ![diagram](https://plantuml.com/plantuml/svg/SoWkIImgAStDuNBAJrBGjLDmpCbCJbMmKiX8pSd9vt98pKi1IW80)
+
+        </details>
+
+        ```mermaid
+        sequenceDiagram
+          autonumber
+          Test->>Api: POST /orders
+          Api-->>Test: 201 Created
+        ```
+
+        ```bash
+        kronikol query failures ./Reports
+        ```
+
+        > [!TIP]
+        > A GitHub alert block.
+        MARKDOWN
+        echo "##vso[task.uploadsummary]$f"
+        echo "##vso[task.uploadsummary]$f"
+      displayName: 'A4 what the Extensions tab renders, and whether one file posted twice shows twice'
+
+    - bash: echo "##vso[task.logissue type=warning]A9 a warning annotation from shard $SHARD"
+      displayName: 'A9 where a warning annotation surfaces'
+
+    - bash: |
+        mkdir -p "$(Agent.TempDirectory)/reports"
+        echo "shard $SHARD, job attempt $(System.JobAttempt)" > "$(Agent.TempDirectory)/reports/TestRunReport.html"
+        echo "##vso[artifact.upload containerfolder=TestReports;artifactname=TestReports]$(Agent.TempDirectory)/reports/TestRunReport.html"
+      displayName: 'A7 both shards, and a re-run, upload into one container artifact name (what CiArtifactName does today)'
+
+    - publish: $(Agent.TempDirectory)/reports
+      artifact: probe-reports-$(System.JobName)
+      condition: succeededOrFailed()
+      displayName: 'A8 a pipeline artifact name the re-run of this job publishes again'
+
+    - bash: |
+        if git -c http.extraheader="AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN" fetch --depth=1 origin "$PROBE_BRANCH"; then
+          git show FETCH_HEAD:probe.txt
+        else
+          echo "no $PROBE_BRANCH yet (expected on the first run)"
+        fi
+        git config --get-regexp 'http.*extraheader' || echo "no credential persisted in .git/config (expected: persistCredentials is off in this job)"
+      displayName: 'A11 read a data branch with a step-scoped token, without persisting it'
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+    - bash: |
+        if [ "$SHARD" = a ] && [ "$(System.JobAttempt)" = 1 ]; then
+          echo "shard a fails its first attempt on purpose"
+          exit 1
+        fi
+      displayName: 'A10 fail the first attempt of shard a'
+
+    - bash: |
+        set -u
+        api="$(System.CollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.ID)/pullRequests/$(System.PullRequest.PullRequestId)"
+        auth="Authorization: Bearer $SYSTEM_ACCESSTOKEN"
+        iteration=$(curl -sS -H "$auth" "$api/iterations?api-version=7.1" | python3 -c 'import json,sys; print(json.load(sys.stdin)["value"][-1]["id"])')
+        echo "iteration $iteration"
+        curl -sS -o /dev/null -w "iteration status: HTTP %{http_code}\n" -H "$auth" -H "Content-Type: application/json" \
+          -d '{"state":"succeeded","description":"Kronikol probe: 2 scenarios, 0 failed","context":{"name":"probe-'"$SHARD"'","genre":"kronikol"},"targetUrl":"$(System.CollectionUri)$(System.TeamProjectId)/_build/results?buildId=$(Build.BuildId)&view=artifacts&pathAsName=false&type=publishedArtifacts"}' \
+          "$api/iterations/$iteration/statuses?api-version=7.1"
+        curl -sS -o /dev/null -w "thread: HTTP %{http_code}\n" -H "$auth" -H "Content-Type: application/json" \
+          -d '{"comments":[{"parentCommentId":0,"content":"Kronikol probe thread from shard '"$SHARD"'","commentType":1}],"status":"closed","properties":{"kronikol":"probe"}}' \
+          "$api/threads?api-version=7.1"
+      displayName: 'A21 the build identity posts an iteration status and a thread (pull-request builds only)'
+      condition: eq(variables['Build.Reason'], 'PullRequest')
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+  - job: fold
+    dependsOn: shard
+    condition: succeededOrFailed()
+    steps:
+    - checkout: self
+      persistCredentials: true
+      fetchDepth: 1
+    - bash: |
+        echo "fold: job attempt $(System.JobAttempt), stage attempt $(System.StageAttempt)"
+        git config user.name "Kronikol probe"
+        git config user.email "probe@example.invalid"
+        if git fetch --depth=1 origin "$PROBE_BRANCH" 2>/dev/null; then
+          git switch -q -c "$PROBE_BRANCH" FETCH_HEAD
+        else
+          git switch -q --orphan "$PROBE_BRANCH"
+        fi
+        echo "build $(Build.BuildId), fold job attempt $(System.JobAttempt)" >> probe.txt
+        git add probe.txt
+        git commit -q -m "Probe $(Build.BuildId):$(System.JobAttempt) ***NO_CI***"
+        if git push origin "HEAD:refs/heads/$PROBE_BRANCH"; then
+          echo "pushed"
+        else
+          echo "push refused: record the message above, it names the missing permission"
+        fi
+      displayName: 'A12 A13 the build identity creates, then appends to, an orphan branch'

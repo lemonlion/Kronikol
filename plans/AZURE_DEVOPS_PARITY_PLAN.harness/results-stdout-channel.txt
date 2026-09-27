@@ -1,0 +1,10 @@
+project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing
+dotnet:  10.0.401
+
+Azure DevOps, default verbosity: summary files written for the agent 1; ##vso[ lines on stdout 0, on stderr 0
+Azure DevOps, --verbosity normal: summary files written for the agent 1; ##vso[ lines on stdout 0, on stderr 0
+Azure DevOps, --verbosity detailed: summary files written for the agent 1; ##vso[ lines on stdout 0, on stderr 0
+Azure DevOps, --logger console;verbosity=detailed: summary files written for the agent 1; ##vso[ lines on stdout 0, on stderr 0
+
+CiSummary.md beside the report (the library wrote it either way): 35228 bytes
+GitHub Actions, default verbosity: $GITHUB_STEP_SUMMARY received 35220 bytes

@@ -1,0 +1,26 @@
+dotnet 10.0.401; marker: "Kronikol: reports written to"
+
+project                                       how it was run                           pointer lines reaching the console
+Example.Api.Tests.Component.BDDfy.xUnit3      dotnet test (exit 0)                     0
+Example.Api.Tests.Component.BDDfy.xUnit3      dotnet test --verbosity normal (exit 0)  0
+Example.Api.Tests.Component.BDDfy.xUnit3      the test executable itself (exit 0)      1
+Example.Api.Tests.Component.LightBDD.TUnit    dotnet run --project (exit 0)            0
+Example.Api.Tests.Component.LightBDD.xUnit2   dotnet test (exit 0)                     0
+Example.Api.Tests.Component.LightBDD.xUnit2   dotnet test --verbosity normal (exit 0)  1
+Example.Api.Tests.Component.LightBDD.xUnit3   dotnet test (exit 0)                     0
+Example.Api.Tests.Component.LightBDD.xUnit3   dotnet test --verbosity normal (exit 0)  0
+Example.Api.Tests.Component.LightBDD.xUnit3   the test executable itself (exit 0)      1
+Example.Api.Tests.Component.NUnit4            dotnet test (exit 0)                     0
+Example.Api.Tests.Component.NUnit4            dotnet test --verbosity normal (exit 0)  0
+Example.Api.Tests.Component.ReqNRoll.TUnit    dotnet run --project (exit 0)            0
+Example.Api.Tests.Component.ReqNRoll.xUnit2   dotnet test (exit 0)                     0
+Example.Api.Tests.Component.ReqNRoll.xUnit2   dotnet test --verbosity normal (exit 0)  1
+Example.Api.Tests.Component.ReqNRoll.xUnit3   dotnet test (exit 0)                     0
+Example.Api.Tests.Component.ReqNRoll.xUnit3   dotnet test --verbosity normal (exit 0)  0
+Example.Api.Tests.Component.ReqNRoll.xUnit3   the test executable itself (exit 0)      1
+Example.Api.Tests.Component.TUnit             dotnet run --project (exit 0)            0
+Example.Api.Tests.Component.xUnit2            dotnet test (exit 0)                     0
+Example.Api.Tests.Component.xUnit2            dotnet test --verbosity normal (exit 0)  1
+Example.Api.Tests.Component.xUnit3            dotnet test (exit 0)                     0
+Example.Api.Tests.Component.xUnit3            dotnet test --verbosity normal (exit 0)  0
+Example.Api.Tests.Component.xUnit3            the test executable itself (exit 0)      1
