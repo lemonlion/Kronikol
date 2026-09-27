@@ -504,6 +504,8 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             """);
         _output.WriteLine("graphviz diagram with viz refused: " + graphviz);
         Assert.True(graphviz.TryGetProperty("svg", out var drawn) && drawn.GetBoolean(), graphviz.ToString());
+        // The engine's error picture is an SVG too ("dot/GraphViz has crashed").
+        Assert.DoesNotContain("has crashed", graphviz.GetProperty("text").GetString());
         Assert.Contains("Alpha", graphviz.GetProperty("text").GetString());
         Assert.Contains("Beta", graphviz.GetProperty("text").GetString());
     }

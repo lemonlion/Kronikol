@@ -150,7 +150,7 @@ function scan() {
               // and the class-diagram fallback do not.
               const heads = (text.match(/OrderService/g) || []).length;
               // The engine's error pictures: a syntax error, a stack overflow, and "An error has occurred!" (for
-              // instance Graphviz without WebAssembly, which --jitless turns off).
+              // instance Graphviz without WebAssembly, which --jitless turns off, until 3.31.3 left Graphviz out there).
               done(/RangeError|Maximum call stack/.test(text) ? 'STACK-PICTURE' : /Syntax Error|An error has occurred/.test(text) ? 'ERROR-PICTURE'
                 : !sequence || heads >= 2 ? 'drawn' : 'drawn-once');
             } else if (el.textContent.trim()) {

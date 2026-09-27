@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.3] - 2026-09-27
+
+**Patch - a component diagram draws where WebAssembly is off, and the Node renderer runs there at all.** Both
+changes are fixes, so the patch part moved. Nothing new is public: `window.__kronikolRender` gains a
+`webAssembly` field, the page's own telemetry. Template pins move to 3.31.2.
+
+### Fixed
+
+- **A component diagram drew "dot/GraphViz has crashed" wherever WebAssembly was off.** Graphviz, which lays the
+  component diagram out, is WebAssembly. Under V8's `--jitless` (a hardened browser configuration), under a
+  content security policy without `'wasm-unsafe-eval'` (a report served by a host that sets one) and in a
+  browser with WebAssembly turned off (Firefox's `javascript.options.wasm`), `viz-global.js` still loaded, the
+  engine handed it the diagram, and the diagram's place held the engine's error picture ("An error has occurred!
+  … For some reason, dot/GraphViz has crashed"), in the render worker and on the main thread alike. The engine
+  lays a diagram out with its Smetana port when Graphviz is absent, not when it cannot run, so the page now
+  compiles the smallest WebAssembly module before it fetches Graphviz, and leaves Graphviz out where that fails.
+  The component diagram then draws through Smetana, with the same components and edges in a different layout
+  (a diagram of 40 services and 120 edges took 1.2 s under `--jitless`); `window.__kronikolRender.webAssembly`
+  reads `false`, `vizIntegrity` stays `null`, and the console says `Kronikol: WebAssembly is not available here
+  (<reason>), so Graphviz is not loaded: the engine lays diagrams out with its Smetana port instead.` Sequence
+  diagrams never used Graphviz and are unchanged. 3.30.4 recorded this as found and not fixed
+  (`plans/ENGINE_PIN_PLAN.md` §10.1).
+- **The Node renderer lost every diagram under `NODE_OPTIONS=--jitless`.** `plantuml-render.js` waited for
+  Graphviz's WebAssembly instance before it loaded the engine, and without WebAssembly it exited with `Viz WASM
+  init failed: ReferenceError: WebAssembly is not defined` before its first diagram, so every diagram of a
+  `PlantUmlRendering.NodeJs` report, sequence diagrams included, lost its picture and stood as a placeholder
+  naming the failure. The script makes the same check as the page now, loads Graphviz only where a module
+  compiles, and writes `[plantuml-render] layout: smetana (<reason>; …)` to stderr. Without Graphviz the engine
+  says so on `console.info`, which node writes to stdout, where the SVG goes (in batch mode, one JSON line per
+  diagram): `console.info` and `console.debug` go to stderr.
+
+### Changed
+
+- Where WebAssembly is off, a component diagram is laid out by Smetana instead of drawing the error picture.
+  Where it is on, nothing moves: Graphviz is fetched, checked and used as in 3.31.2.
+
+### Tests
+
+- `WebAssemblyOffRenderingTests` (new, Playwright): the component diagram draws in the worker and on the main
+  thread of a `--jitless` Chromium and under a content security policy without `'wasm-unsafe-eval'`, with the
+  telemetry and the console line; each red on 3.31.2 on the drawing itself, the engine's error picture. A control
+  keeps Graphviz where WebAssembly compiles (on 3.31.2 it draws and lacks only the new field).
+- `LongStatementRenderingTests.Long_linked_labels_draw_in_a_worker_under_jitless`: 3.30.4's long linked labels,
+  on the request and the component edge, draw under `--jitless` (red on 3.31.2: the component's error picture).
+- `DiagramContextMenuTests`: the page's probe under node answers `null` with WebAssembly, `WebAssembly is not
+  defined` under `--jitless`, and the refusal where `WebAssembly.Module` refuses to compile (red on 3.31.2).
+- `NodeJsPlantUmlRendererTests`: the render script under `--jitless`, on stubs (a viz whose instance needs
+  WebAssembly, an engine that draws the layout it used and says so on `console.info`) and, as an Integration
+  fact, on the real engine, where a component diagram draws and every stdout line is a result; both red on
+  3.31.2 (node exited 1). `NodeProbe.RunCaptured` takes node options.
+- `BrowserRenderWorkerTests`: the refused-viz fact also rejects the error picture by its text.
+- Mutations, each turning its own facts red: the worker path loading Graphviz anyway (the three worker-path
+  facts), the main thread loading it (the main-thread fact), a probe that checks `typeof WebAssembly` only (the
+  policy fact, where WebAssembly is defined and refuses to compile), `console.info` left on stdout (both node
+  facts).
+- The whole E2E suite with its shared Chromium launched `--jitless`, for one run: 899 of 904 passed. Four
+  failures assert WebAssembly on; the fifth timed out waiting for its first diagram under the suite's load and
+  passed on its own three times out of three (`plans/ENGINE_PIN_PLAN.md` §10.3). Measured before and after in
+  Chromium and Firefox and in node: `tools/render-bench/results/webassembly-off-2026-09-26.txt`.
+
 ## [3.31.2] - 2026-09-26
 
 **Patch - a second audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3, releases 3.29.6 to 3.30.2), which

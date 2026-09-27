@@ -1,0 +1,74 @@
+WebAssembly off: the component diagram before and after 3.31.3 (plans/ENGINE_PIN_PLAN.md §10.3), 2026-09-26.
+Browser: webassembly-off-probe.js over shim pages written by `emitter-corpus -- --shim <page> 1` (worker) and
+`-- --shim <page> 0` (main thread), from the 3.31.2 sources (edf258e7) and from the fix. Engine: the pin,
+@plantuml/core@1.2026.8 from jsDelivr. "ERROR PICTURE" is the engine's SVG reading "An error has occurred! ...
+For some reason, dot/GraphViz has crashed", which holds none of the diagram's text; "drawn" is an SVG without it.
+Sources: sequence (two participants), component (two elements), kronikolShape (probe-component.puml), big40x120
+(40 services, 120 edges). Times include the first render's engine start (sequence) and are wall-clock.
+
+## Chromium --jitless; 3.31.2 shim (chromium 147.0.7727.15)
+- worker: mode worker, webAssembly (no field), vizIntegrity verified; sequence drawn 2756 ms; component ERROR PICTURE 204 ms; kronikolShape ERROR PICTURE 159 ms; big40x120 ERROR PICTURE 509 ms
+  console: error: failed to asynchronously prepare wasm: ReferenceError: WebAssembly is not defined
+- main: mode main-thread, webAssembly (no field), vizIntegrity verified; sequence drawn 271 ms; component ERROR PICTURE 196 ms; kronikolShape ERROR PICTURE 160 ms; big40x120 ERROR PICTURE 460 ms
+  console: error: failed to asynchronously prepare wasm: ReferenceError: WebAssembly is not defined
+
+## Chromium --jitless; 3.31.2 shim, viz hash wrong (Graphviz dropped) (chromium 147.0.7727.15)
+- worker: mode worker, webAssembly (no field), vizIntegrity mismatch; sequence drawn 756 ms; component drawn 155 ms; kronikolShape drawn 152 ms; big40x120 drawn 1202 ms
+  console: info: PlantUML: viz-global.js is not loaded, falling back to the Smetana layout engine
+- main: mode main-thread, webAssembly (no field), vizIntegrity mismatch; sequence drawn 270 ms; component drawn 126 ms; kronikolShape drawn 127 ms; big40x120 drawn 1191 ms
+  console: info: PlantUML: viz-global.js is not loaded, falling back to the Smetana layout engine
+
+## Chromium, CSP without 'wasm-unsafe-eval'; 3.31.2 shim (chromium 147.0.7727.15)
+- worker: mode worker, webAssembly (no field), vizIntegrity verified; sequence drawn 512 ms; component ERROR PICTURE 117 ms
+  console: error: failed to asynchronously prepare wasm: CompileError: WebAssembly.instantiate(): Compiling or instantiating WebAssembly module violates the following Content Security policy directive because 'u
+- main: mode main-thread, webAssembly (no field), vizIntegrity verified; sequence drawn 127 ms; component ERROR PICTURE 73 ms
+  console: error: failed to asynchronously prepare wasm: CompileError: WebAssembly.instantiate(): Compiling or instantiating WebAssembly module violates the following Content Security policy directive because 'u
+
+## Chromium, the same CSP with 'wasm-unsafe-eval' (control); 3.31.2 shim (chromium 147.0.7727.15)
+- worker: mode worker, webAssembly (no field), vizIntegrity verified; sequence drawn 520 ms; component drawn 102 ms
+- main: mode main-thread, webAssembly (no field), vizIntegrity verified; sequence drawn 128 ms; component drawn 66 ms
+
+## Firefox, javascript.options.wasm false; 3.31.2 shim (firefox 148.0.2)
+- worker: mode worker, webAssembly (no field), vizIntegrity verified; sequence drawn 638 ms; component ERROR PICTURE 107 ms
+  console: error: failed to asynchronously prepare wasm: ReferenceError: WebAssembly is not defined
+- main: mode main-thread, webAssembly (no field), vizIntegrity verified; sequence drawn 137 ms; component ERROR PICTURE 89 ms
+  console: error: failed to asynchronously prepare wasm: ReferenceError: WebAssembly is not defined
+
+## Chromium (control); 3.31.2 shim (chromium 147.0.7727.15)
+- worker: mode worker, webAssembly (no field), vizIntegrity verified; sequence drawn 556 ms; component drawn 105 ms; kronikolShape drawn 102 ms; big40x120 drawn 303 ms
+
+## Chromium --jitless; 3.31.3 shim (chromium 147.0.7727.15)
+- worker: mode worker, webAssembly false, vizIntegrity null; sequence drawn 656 ms; component drawn 155 ms; kronikolShape drawn 153 ms; big40x120 drawn 1203 ms
+  console: warning: Kronikol: WebAssembly is not available here (WebAssembly is not defined), so Graphviz is not loaded: the engine lays diagrams out with its Smetana port instead.
+- main: mode main-thread, webAssembly false, vizIntegrity null; sequence drawn 269 ms; component drawn 131 ms; kronikolShape drawn 126 ms; big40x120 drawn 1167 ms
+  console: warning: Kronikol: WebAssembly is not available here (WebAssembly is not defined), so Graphviz is not loaded: the engine lays diagrams out with its Smetana port instead.
+
+## Chromium, CSP without 'wasm-unsafe-eval'; 3.31.3 shim (chromium 147.0.7727.15)
+- worker: mode worker, webAssembly false, vizIntegrity null; sequence drawn 506 ms; component drawn 117 ms; kronikolShape drawn 52 ms; big40x120 drawn 254 ms
+  console: warning: Kronikol: WebAssembly is not available here (WebAssembly.Module(): Compiling or instantiating WebAssembly module violates the following Content Security policy directive because 'unsafe-eval'
+- main: mode main-thread, webAssembly false, vizIntegrity null; sequence drawn 129 ms; component drawn 60 ms; kronikolShape drawn 62 ms; big40x120 drawn 254 ms
+  console: warning: Kronikol: WebAssembly is not available here (WebAssembly.Module(): Compiling or instantiating WebAssembly module violates the following Content Security policy directive because 'unsafe-eval'
+
+## Firefox, javascript.options.wasm false; 3.31.3 shim (firefox 148.0.2)
+- worker: mode worker, webAssembly false, vizIntegrity null; sequence drawn 617 ms; component drawn 107 ms; kronikolShape drawn 113 ms; big40x120 drawn 442 ms
+  console: warning: Kronikol: WebAssembly is not available here (WebAssembly is not defined), so Graphviz is not loaded: the engine lays diagrams out with its Smetana port instead.
+- main: mode main-thread, webAssembly false, vizIntegrity null; sequence drawn 138 ms; component drawn 64 ms; kronikolShape drawn 85 ms; big40x120 drawn 471 ms
+  console: warning: Kronikol: WebAssembly is not available here (WebAssembly is not defined), so Graphviz is not loaded: the engine lays diagrams out with its Smetana port instead.
+
+## Chromium (control); 3.31.3 shim (chromium 147.0.7727.15)
+- worker: mode worker, webAssembly true, vizIntegrity verified; sequence drawn 505 ms; component drawn 102 ms; kronikolShape drawn 102 ms; big40x120 drawn 302 ms
+- main: mode main-thread, webAssembly true, vizIntegrity verified; sequence drawn 131 ms; component drawn 67 ms; kronikolShape drawn 73 ms; big40x120 drawn 304 ms
+
+## Firefox (control); 3.31.3 shim (firefox 148.0.2)
+- worker: mode worker, webAssembly true, vizIntegrity verified; sequence drawn 556 ms; component drawn 125 ms; kronikolShape drawn 125 ms; big40x120 drawn 739 ms
+
+## Node: plantuml-render.js --batch over the same four sources, real engine files, no code cache, node 25.9.0
+- 3.31.2 script, NODE_OPTIONS=--jitless: exit 1 before any output: "Viz WASM init failed: ReferenceError:
+  WebAssembly is not defined". Every diagram of a PlantUmlRendering.NodeJs report stands as a placeholder.
+- 3.31.3 script, NODE_OPTIONS=--jitless: exit 0; sequence, component, kronikolShape, big40x120 all drawn; every
+  stdout line parses as a JSON result. stderr: "[plantuml-render] layout: smetana (WebAssembly is not defined;
+  Graphviz is WebAssembly, so it is not loaded)" and the engine's "PlantUML: viz-global.js is not loaded, falling
+  back to the Smetana layout engine".
+- Both scripts without the flag: exit 0, all four drawn through Graphviz.
+- Before the stderr routing, the engine's console.info line landed in stdout between two JSON results (the batch
+  reader skips a line it cannot parse; the single-diagram mode would have returned it ahead of the SVG).

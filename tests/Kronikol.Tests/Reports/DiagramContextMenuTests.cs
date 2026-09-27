@@ -1029,6 +1029,27 @@ public class DiagramContextMenuTests
     }
 
     [Fact]
+    public void The_page_finds_out_whether_webassembly_compiles_before_it_loads_graphviz()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // Graphviz is WebAssembly, and the engine lays a diagram out with its Smetana port only when Graphviz is absent:
+        // loaded where no module compiles, it took every component diagram down with it. The probe answers null where a
+        // module compiles, and the reason where one does not: WebAssembly undefined (V8's --jitless, a browser setting),
+        // or defined and refusing to compile (a content security policy without 'wasm-unsafe-eval').
+        var probe = ShimFunction("webAssemblyUnavailable");
+        const string report = "\nprocess.stdout.write(JSON.stringify(webAssemblyUnavailable()));";
+
+        Assert.Equal("null", NodeProbe.Run(probe + report));
+        Assert.Equal("\"WebAssembly is not defined\"", NodeProbe.RunCaptured(["--jitless"], probe + report, null).Stdout);
+        Assert.Equal("\"refused by the page's policy\"", NodeProbe.Run(
+            "globalThis.WebAssembly = { Module: function () { throw new Error(\"refused by the page's policy\"); } };\n" + probe + report));
+
+        Assert.Contains("WEBASSEMBLY_PROBLEM === null ? fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity')", ShimFunction("acquireEngine"));
+        Assert.Contains("if (WEBASSEMBLY_PROBLEM === null) addScript(VIZ_URL, VIZ_INTEGRITY)", ShimFunction("loadEngineScripts"));
+    }
+
+    [Fact]
     public void Worker_bootstrap_is_registered_before_the_DOMContentLoaded_handler()
     {
         // The shim (window.plantuml, window.plantumlLoad, window.__kronikolRender) must exist before the

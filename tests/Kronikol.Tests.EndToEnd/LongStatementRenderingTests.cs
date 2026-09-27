@@ -146,7 +146,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         // A browser run with V8's optimizing compilers off, as an enterprise policy or a browser security mode can
         // set, runs every frame at the interpreter's size, and there the worker overflowed from 495 characters inside
         // a request's link and 475 inside a component edge's. WebAssembly stays on, so Graphviz lays the component
-        // diagram out (V8's --jitless turns WebAssembly off too, and then no component diagram draws at all).
+        // diagram out (V8's --jitless turns WebAssembly off too: the next fact).
         using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true, Args = ["--js-flags=--no-opt --no-maglev"] });
         var page = await browser.NewPageAsync(new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
@@ -157,6 +157,26 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         Assert.Equal("worker", await page.EvaluateAsync<string>("() => window.__kronikolRender.mode"));
         AssertDrawn(sequence, "Full path");
         AssertDrawn(component, "calls across");
+    }
+
+    [Fact]
+    public async Task Long_linked_labels_draw_in_a_worker_under_jitless()
+    {
+        // V8's --jitless runs every frame at the interpreter's size, as the fact above does, and turns WebAssembly off,
+        // so Graphviz cannot run: the page leaves it out and the engine lays the component diagram out with its
+        // Smetana port. Before that, the component diagram drew the engine's "dot/GraphViz has crashed" picture.
+        using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true, Args = ["--js-flags=--jitless"] });
+        var page = await browser.NewPageAsync(new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+
+        var (sequence, component) = await RenderLongLinkedLabelReport(page,
+            ReportTestHelper.GenerateReportWithLongLinkedLabels(TempDir, OutputDir, "LongLinkedLabelsJitless.html"));
+
+        Assert.Equal("worker", await page.EvaluateAsync<string>("() => window.__kronikolRender.mode"));
+        Assert.False(await page.EvaluateAsync<bool>("() => window.__kronikolRender.webAssembly"));
+        AssertDrawn(sequence, "Full path");
+        AssertDrawn(component, "calls across");
+        Assert.DoesNotContain("has crashed", component.Text);
     }
 
     [Fact]

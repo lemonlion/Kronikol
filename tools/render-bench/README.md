@@ -73,6 +73,12 @@ Scripts
   shim page written with 0 workers measures the main thread, `UNLINKED=1` drops the link and `ASIS=1` renders each source as
   written (the check after a fix). `results/statement-limits-worker-2026-09-26.txt` is the S0 measurement behind
   `PlantUmlStatementLimits.MaxLinkedLabelChars`.
+- `webassembly-off-probe.js <shim page> [...]`: a sequence diagram and three component diagrams (up to 40 services and 120 edges)
+  through the shipped render script where WebAssembly is off, telling a drawing from the engine's "dot/GraphViz has crashed"
+  picture, which is an SVG too. `JSFLAGS=--jitless` (Chromium), `CSP=<policy>` (a policy without `'wasm-unsafe-eval'`),
+  `BROWSER=firefox LAUNCH='{"firefoxUserPrefs":{"javascript.options.wasm":false}}'`, `NOVIZ=1` (a wrong viz hash, so the shim drops
+  Graphviz). `results/webassembly-off-2026-09-26.txt` is the run before and after 3.31.3 (`plans/ENGINE_PIN_PLAN.md` §10.3), with
+  the Node renderer under `NODE_OPTIONS=--jitless`.
 - `probe-component.puml`: a Kronikol-shaped plain-shape component diagram for the ladder's non-sequence row.
 - `results/`: the JSON results quoted in the plans. `engine-speed-2026-09-26.txt` holds the samples behind the two engine-speed budgets of
   `Large_report_renders_off_the_main_thread_within_budget`, and `fragment-height-2026-09-26.txt` the fragment-height table from

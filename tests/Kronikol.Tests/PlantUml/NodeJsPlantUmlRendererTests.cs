@@ -789,6 +789,96 @@ public class NodeJsPlantUmlRendererTests
         Assert.Contains("length, not its bytes", source);
     }
 
+    /// <summary>
+    /// Runs <c>plantuml-render.js</c> once under <paramref name="nodeOptions"/> against a stub viz whose instance needs
+    /// WebAssembly, as the real one does, and a stub engine that draws the layout it would use: Graphviz when
+    /// <c>Viz</c> is there, and its Smetana port when it is not, which it says on <c>console.info</c> as the real
+    /// engine does.
+    /// </summary>
+    private static NodeProbe.NodeRun RunLayoutStub(IReadOnlyList<string> nodeOptions)
+    {
+        var dir = Directory.CreateTempSubdirectory("kronikol-layout-stub-").FullName;
+        try
+        {
+            var viz = Path.Combine(dir, "viz-global.js");
+            var engine = Path.Combine(dir, "plantuml.js");
+            File.WriteAllText(viz,
+                "globalThis.Viz = { instance: function () { return typeof WebAssembly === 'undefined' ? Promise.reject(new ReferenceError('WebAssembly is not defined')) : Promise.resolve({ renderString: function () { return '<svg xmlns=\"http://www.w3.org/2000/svg\"/>'; } }); } };");
+            File.WriteAllText(engine,
+                "\"use strict\";\nlet C=(lines,id,options)=>{var smetana=typeof Viz==='undefined';if(smetana)console.info('PlantUML: viz-global.js is not loaded, falling back to the Smetana layout engine');document.getElementById(id).innerHTML='<svg xmlns=\"http://www.w3.org/2000/svg\"><text>'+(smetana?'smetana':'graphviz')+'</text></svg>';},D=(lines,options)=>'unused';\nexport{C as render,D as renderToString};\n");
+            return NodeProbe.RunCaptured(nodeOptions, RenderScriptSource(), "@startuml\ncomponent a\n@enduml", viz, engine);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void Under_jitless_the_render_script_leaves_graphviz_out_and_keeps_stdout_to_the_svg()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // Graphviz is WebAssembly, and node --jitless (NODE_OPTIONS can carry it) has none: viz-global.js loaded, its
+        // instance never did, and the script stopped before its first diagram, sequence diagrams included. It leaves
+        // viz out there now, and the engine lays the diagram out with its Smetana port. The engine says so on
+        // console.info, which node writes to stdout, where the SVG goes (in batch mode, one JSON line per diagram).
+        var jitless = RunLayoutStub(["--jitless"]);
+
+        Assert.True(jitless.ExitCode == 0, $"node exited {jitless.ExitCode}: {jitless.Stderr}");
+        Assert.StartsWith("<svg", jitless.Stdout);
+        Assert.Contains("smetana", jitless.Stdout);
+        Assert.DoesNotContain("PlantUML:", jitless.Stdout);
+        Assert.Contains("falling back to the Smetana layout engine", jitless.Stderr);
+        Assert.Contains("[plantuml-render] layout: smetana (WebAssembly is not defined", jitless.Stderr);
+
+        // Where WebAssembly works nothing moves: Graphviz is loaded and used.
+        var usual = RunLayoutStub([]);
+        Assert.True(usual.ExitCode == 0, $"node exited {usual.ExitCode}: {usual.Stderr}");
+        Assert.Contains("graphviz", usual.Stdout);
+        Assert.DoesNotContain("layout: smetana", usual.Stderr);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void Under_jitless_the_real_engine_draws_every_diagram_and_the_component_diagram_with_smetana()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // The renderer downloads and checks the real files on its first render. The run works on copies, so the code
+        // cache it writes under --jitless (V8 rejects one made under other flags) stays out of the shared directory.
+        NodeJsPlantUmlRenderer.RenderMany([Seq("Warm", "Up")]);
+        var cacheDir = Path.GetDirectoryName(NodeJsPlantUmlRenderer.CodeCachePath)!;
+        var dir = Directory.CreateTempSubdirectory("kronikol-jitless-").FullName;
+        try
+        {
+            foreach (var file in new[] { "viz-global.js", "plantuml.js" })
+                File.Copy(Path.Combine(cacheDir, file), Path.Combine(dir, file));
+            var batch = System.Text.Json.JsonSerializer.Serialize(new { id = "sequence", source = Seq("Alpha", "Beta") }) + "\n"
+                        + System.Text.Json.JsonSerializer.Serialize(new { id = "component", source = "@startuml\ncomponent Orders\ndatabase Stock\nOrders --> Stock : reads\n@enduml" }) + "\n";
+
+            var run = NodeProbe.RunCaptured(["--jitless"], RenderScriptSource(), batch,
+                Path.Combine(dir, "viz-global.js"), Path.Combine(dir, "plantuml.js"), "--batch");
+
+            Assert.True(run.ExitCode == 0, $"node exited {run.ExitCode}: {run.Stderr}");
+            // Every stdout line is a result: the engine's fallback notice went to stderr.
+            var results = run.Stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => System.Text.Json.JsonDocument.Parse(line).RootElement)
+                .ToDictionary(r => r.GetProperty("id").GetString()!, r => r.TryGetProperty("svg", out var svg) ? svg.GetString()! : "error: " + r.GetProperty("error").GetString());
+            Assert.Equal(2, results.Count);
+            Assert.Contains("Alpha", results["sequence"]);
+            Assert.StartsWith("<svg", results["component"]);
+            Assert.Contains("Orders", results["component"]);
+            Assert.Contains("Stock", results["component"]);
+            Assert.DoesNotContain("has crashed", results["component"]);
+            Assert.Contains("falling back to the Smetana layout engine", run.Stderr);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
     [Fact]
     public void The_engine_cache_is_versioned_by_the_cdn_tag()
     {

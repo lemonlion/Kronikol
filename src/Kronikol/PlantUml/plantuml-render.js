@@ -19,6 +19,10 @@
 //
 // CRITICAL: Viz.js compiles Graphviz WASM asynchronously. We pre-compile it and
 // cache the instance so plantuml.js gets a ready-to-use Viz.
+//
+// Where no WebAssembly module compiles (node --jitless, which NODE_OPTIONS can carry) viz-global.js is not
+// loaded at all: the engine then lays a diagram out with its Smetana port, and stderr says
+// "[plantuml-render] layout: smetana (<why>)".
 
 'use strict';
 
@@ -28,6 +32,7 @@ var crypto = require('crypto');
 var path = require('path');
 var urlModule = require('url');
 var readline = require('readline');
+var util = require('util');
 
 // --- Minimal DOM polyfills for plantuml.js (TeaVM-compiled) ---
 
@@ -325,17 +330,35 @@ function writeCodeCache(cachePath, data) {
     }
 }
 
-// --- Phase 1: Load viz-global.js ---
-var vizScript = new MockElement('script');
-vizScript.src = urlModule.pathToFileURL(path.resolve(vizPath)).href;
-mockDocument.currentScript = vizScript;
-mockDocument.baseURI = urlModule.pathToFileURL(process.cwd()).href + '/';
+// Why no WebAssembly module compiles here, or null when one does.
+function webAssemblyUnavailable() {
+    if (typeof WebAssembly !== 'object' || !WebAssembly) return 'WebAssembly is not defined';
+    try {
+        new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));   // the smallest module: magic and version
+        return null;
+    } catch (e) {
+        return String(e && e.message || e);
+    }
+}
 
-loadScript(vizPath);
-mockDocument.currentScript = null;
+// --- Phase 1: Load viz-global.js, where WebAssembly works ---
+// Graphviz is WebAssembly. Under --jitless viz-global.js loaded but its instance never did, and the renderer
+// stopped before its first diagram, sequence diagrams included. The engine lays a diagram out with its Smetana
+// port when Graphviz is absent, not when it cannot run, so viz is loaded only where a module compiles.
+var webAssemblyProblem = webAssemblyUnavailable();
+mockDocument.baseURI = urlModule.pathToFileURL(process.cwd()).href + '/';
+if (webAssemblyProblem === null) {
+    var vizScript = new MockElement('script');
+    vizScript.src = urlModule.pathToFileURL(path.resolve(vizPath)).href;
+    mockDocument.currentScript = vizScript;
+    loadScript(vizPath);
+    mockDocument.currentScript = null;
+} else {
+    process.stderr.write('[plantuml-render] layout: smetana (' + webAssemblyProblem + '; Graphviz is WebAssembly, so it is not loaded)\n');
+}
 
 // --- Phase 2: Wait for WASM to compile BEFORE loading plantuml.js ---
-var vizReady = globalThis.Viz.instance().then(function(viz) {
+var vizReady = webAssemblyProblem !== null ? Promise.resolve(null) : globalThis.Viz.instance().then(function(viz) {
     var testSvg = viz.renderString('digraph { a -> b }', { format: 'svg' });
     if (!testSvg || testSvg.indexOf('<svg') === -1) {
         process.stderr.write('Viz test render failed\n');
@@ -364,6 +387,9 @@ var rendererReady = vizReady.then(function() {
     // "[PSystemBuilder2] createDiagram start") to console.log, which would pollute
     // the SVG output on stdout.
     console.log = function() {};
+    // Node writes console.info and console.debug to stdout too, which carries only the SVG (or one JSON line per
+    // diagram): the engine's one info line, "falling back to the Smetana layout engine", goes to stderr.
+    console.info = console.debug = function() { process.stderr.write(util.format.apply(null, arguments) + '\n'); };
 
     loadEngineWithCodeCache(plantumlPath);
 

@@ -5,7 +5,8 @@ owner asked for the plan in full, so D6 is taken as recommended (move now, keep 
 Q4, Q5, Q6 and Q7 as their recommendations say. **Executed: S0 shipped as 3.30.4, S1 to S6 as 3.31.1** (both
 2026-09-26). §1 is what was RUN and READ on 2026-09-22, §9 is the assumption ledger, §10 is the execution log,
 with the departures (§10.2: a refused `viz-global.js` loses no Kronikol diagram, since the engine falls back to
-Smetana; the default fragment height is the fastest measured).
+Smetana; the default fragment height is the fastest measured). **§10.1's `--jitless` leftover was fixed as 3.31.3**
+(2026-09-27, §10.3), with the other ways WebAssembly is off and the Node renderer.
 
 **Re-checked 2026-09-25 against 3.29.3 (`b74c8ddc`):** every source, test and render-bench file this plan
 cites is unchanged since `2843018a` except `ReportGenerator.cs` (the fragment-height parameter moved
@@ -1185,7 +1186,8 @@ label past 500 characters.
 **Found and not fixed:** under `--jitless`, which also turns WebAssembly off, no component diagram draws in any
 report, link or none ("dot/GraphViz has crashed … WebAssembly is not defined"). It is older than this plan and
 outside it; whoever next touches the Graphviz dependency (`viz-global.js`, the dormant Smetana fallback, 6.1)
-owns it.
+owns it. **Fixed in 3.31.3** (§10.3): the page and the Node renderer load Graphviz only where a WebAssembly module
+compiles, and the engine's Smetana fallback, which answers a missing `Viz`, takes the diagram.
 
 **Tests:** 5 unit facts in `PlantUmlStatementLengthTests` and a two-row theory in `ComponentDiagramGeneratorTests`,
 2 Playwright facts in `LongStatementRenderingTests`, 1 Integration fact in `NodeJsPlantUmlRendererTests`; every one
@@ -1284,6 +1286,68 @@ worker-mode check. Kronikol4J: a README paragraph beside the render-script diver
 `v1.2026.3beta6-patched` pin, now only in `DotNetHtmlReportRenderer.java:72`, is unaffected). The correction of
 3.30.4's component-edge claims (§10.1) is in the wiki (`ec9dc33`) and the Kronikol4J ledger (`ac72ed9`), and
 the changelog carries it.
+
+### 10.3 §10.1's `--jitless` leftover, fixed as 3.31.3 (2026-09-27)
+
+The owner asked for it after the 3.31.1 report. Worktree `C:/Code/Kronikol-jitless`, branch `fix/jitless`, from
+`edf258e7`; the number agreed with the eight other sessions.
+
+**The cause (RUN, `results/webassembly-off-2026-09-26.txt`, `webassembly-off-probe.js`).** The engine's Graphviz
+check (`ES0` in 1.2026.8) is `typeof Viz==='undefined'||!Viz||typeof Viz.instance!=='function'`: the Smetana
+fallback answers a missing `Viz`, as §10.2 found. Where no WebAssembly module compiles, `viz-global.js` still loads
+and defines `Viz`, the engine calls `Viz.instance()`, the instance rejects, and the diagram's place holds the error
+picture ("An error has occurred! … For some reason, dot/GraphViz has crashed. RootCause java.io.IOException"), which
+carries none of the diagram's text. Measured on 3.31.2, each way WebAssembly is off:
+- V8's `--jitless`, where `WebAssembly` is not defined: every component diagram the error picture, in the Chromium
+  worker and on the main thread; the probe's four sources and every sequence diagram otherwise drew.
+- A content security policy without `'wasm-unsafe-eval'`, where `WebAssembly` is defined and compiling throws: the
+  same picture in Chromium; the same policy with `'wasm-unsafe-eval'` drew. The engine itself needs no eval (§10.2).
+- Firefox with `javascript.options.wasm` false: the same picture.
+- Node under `--jitless`, which `NODE_OPTIONS` can carry: `plantuml-render.js` awaited `Viz.instance()` before it
+  loaded the engine and exited 1 before its first diagram, so a `PlantUmlRendering.NodeJs` report lost every
+  picture, sequence diagrams included (`DefaultDiagramsFetcher.RenderNodeBatchIsolated` stands each as a
+  placeholder when the process cannot run).
+With the page's viz hash made wrong, so the 3.31.2 shim dropped Graphviz, every component diagram drew under
+`--jitless`, the 40-service, 120-edge one in 1.2 s: the fallback the fix relies on, measured first.
+
+**The fix.** The page and the Node script compile the smallest module (`new WebAssembly.Module` over the eight bytes
+of magic and version) and load `viz-global.js` only when that works: the worker path skips its fetch, the fallback its
+tag, node its load and its Graphviz warm-up. A blob worker inherits the page's policy and runs under the same V8
+flags, so the page's answer is the worker's. `window.__kronikolRender.webAssembly` says which; `vizIntegrity` stays
+`null` when viz is not fetched; a console warning names the reason (`WebAssembly is not defined`, or the browser's
+own policy refusal). In node, `console.info` and `console.debug` go to stderr: without Graphviz the engine logs its
+fallback on `console.info`, which node writes to stdout, and the line landed between two batch results.
+
+**After the fix:** every source draws in every configuration above, worker and main thread, Chromium 147 and
+Firefox 148, and with WebAssembly on Graphviz is fetched, verified and used as before. Node under `--jitless` draws
+all four sources and every stdout line is a result; with WebAssembly on, the batch of four takes what it took
+(warm cache 704 to 778 ms before, 707 to 799 after; cold 856 to 862 and 821 to 868).
+
+**Tests.** `WebAssemblyOffRenderingTests` (4, Playwright),
+`LongStatementRenderingTests.Long_linked_labels_draw_in_a_worker_under_jitless`, a `DiagramContextMenuTests` fact on
+the probe run under node, two `NodeJsPlantUmlRendererTests` facts (stubs, and the real engine as Integration), and
+the refused-viz fact now rejecting the error picture by its text. Every new fact red on 3.31.2 for the reason it names: the three WebAssembly-off Playwright facts and the long
+labels on the drawing itself, the node facts on node's exit 1, the probe fact on the missing function. The first red
+run stopped four Playwright facts on the new telemetry field instead, before their drawing checks; the drawing
+checks now come first. The control draws on 3.31.2 and lacks only the field. Four mutations, each red on its own
+facts: the worker path loading Graphviz anyway (the three worker-path facts), the main thread loading it (the
+main-thread fact), a probe checking `typeof WebAssembly` only (the policy fact), `console.info` left on stdout (both
+node facts).
+
+**The suite under `--jitless`.** The whole E2E suite with its shared Chromium launched `--jitless` (a fixture change
+for this run only): 899 of 904 passed in 13 min 36 s, the two engine-speed budgets included. Four failures assert
+WebAssembly on (`vizIntegrity` verified or mismatch, the policy fact's reason, the control). The fifth,
+`NoteButtonsAfterHeaderHideTests.After_hiding_headers_note_toggle_icons_still_exist`, timed out waiting 20 s for its
+first diagram under the full suite's load; its class passed 13 of 13 on its own three times.
+
+**Kronikol4J** loads `viz-global.js` unconditionally from its 3.0.43 script, and its `v1.2026.3beta6-patched` engine
+has no `typeof Viz` check and no Smetana fallback (searched 2026-09-26), so leaving Graphviz out would not help it: a
+port needs the npm pin first. A ledger entry, not mirrored.
+
+**Not done.** WebKit was not measured: Playwright's WebKit has no switch that turns WebAssembly off (Safari's
+Lockdown Mode is the case it stands for). Upstream, the engine could fall back to Smetana when `Viz.instance()`
+rejects, not only when `Viz` is missing, which would cover a host that loads Graphviz itself; not proposed, since
+Kronikol's own pages no longer load it there.
 
 ---
 

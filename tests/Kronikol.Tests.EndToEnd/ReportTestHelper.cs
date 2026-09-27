@@ -313,7 +313,8 @@ public static class ReportTestHelper
         return new Uri(path).AbsoluteUri;
     }
 
-    public static string GenerateReportWithEmbeddedComponentDiagram(string tempDir, string outputDir, string fileName)
+    public static string GenerateReportWithEmbeddedComponentDiagram(string tempDir, string outputDir, string fileName,
+        int browserRenderWorkers = Constants.TrackingDefaults.BrowserRenderWorkers)
     {
         var (features, diagrams) = CreateTestData();
 
@@ -371,7 +372,8 @@ public static class ReportTestHelper
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            componentDiagramPlantUml: componentPlantUml);
+            componentDiagramPlantUml: componentPlantUml,
+            browserRenderWorkers: browserRenderWorkers);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;

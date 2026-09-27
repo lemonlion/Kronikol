@@ -24,7 +24,7 @@
     //   window.plantumlLoad()  — a no-op kept for compatibility; the shim owns the engine lifecycle.
     //   window.__kronikolRender  — telemetry: { mode: 'worker' | 'main-thread', workers, renders,
     //       cacheHits, workerMs, injectMs, errors, inFlight, maxInFlight, engineFetchMs, fallbackReason,
-    //       engineIntegrity, vizIntegrity }.
+    //       engineIntegrity, vizIntegrity, webAssembly }.
     //
     // Both files are checked against their known hashes (TrackingDefaults) by the browser itself: the
     // worker path's fetch and the fallback's tags carry `integrity`, and a file whose bytes differ is never
@@ -32,10 +32,16 @@
     // refused viz-global.js drops Graphviz only: sequence diagrams never use it, and the engine lays out a
     // component diagram with its Smetana port when Graphviz is absent (plans/ENGINE_PIN_PLAN.md S2).
     //
+    // Graphviz is WebAssembly. Where no module compiles (V8's --jitless, a content security policy without
+    // 'wasm-unsafe-eval', a browser or policy that turns WebAssembly off), viz-global.js used to load anyway,
+    // the engine handed it every component diagram, and each drew "dot/GraphViz has crashed": the engine falls
+    // back to Smetana only when Graphviz is absent, not when it cannot run. So viz-global.js is fetched only
+    // where a module compiles; `webAssembly` in the telemetry says which, and the console says why.
+    //
     // Fallback: when Workers, fetch, Blob URLs or OffscreenCanvas are unavailable, when
     // BrowserRenderWorkers is 0, or when the engine cannot be fetched (offline with a cold cache, a CDN
-    // host without CORS), the shim injects a viz script tag and an engine module tag and renders on the
-    // main thread — the pre-3.0.45 path, one render at a time.
+    // host without CORS), the shim injects a viz script tag (where WebAssembly compiles) and an engine
+    // module tag and renders on the main thread — the pre-3.0.45 path, one render at a time.
     (function () {
         var VIZ_URL = '__PLANTUML_CDN_BASE__/viz-global.js';
         var ENGINE_URL = '__PLANTUML_CDN_BASE__/plantuml.js';
@@ -47,14 +53,22 @@
         var CACHE_LIMIT = Math.max(0, CACHE_MEGABYTES) * 1024 * 1024;
         var hardware = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 2;
         var targetWorkers = WORKERS_REQUESTED > 0 ? Math.max(1, Math.min(WORKERS_REQUESTED, hardware)) : 0;
+        // Why no WebAssembly module compiles here, or null when one does: Graphviz is loaded only then.
+        var WEBASSEMBLY_PROBLEM = webAssemblyUnavailable();
 
         var telemetry = window.__kronikolRender = {
             mode: 'starting', workers: 0, workersRequested: WORKERS_REQUESTED, workersTarget: targetWorkers,
             renders: 0, cacheHits: 0, cacheEntries: 0, cacheBytes: 0, workerMs: 0, injectMs: 0, errors: 0,
             inFlight: 0, maxInFlight: 0, engineFetchMs: null, engineReadyAt: null, fallbackReason: null,
-            // 'verified' | 'mismatch' | null: null until the file's fetch settles, and after a network failure.
-            engineIntegrity: null, vizIntegrity: null
+            // 'verified' | 'mismatch' | null: null until the file's fetch settles, after a network failure, and
+            // for viz-global.js when it is not fetched (no WebAssembly).
+            engineIntegrity: null, vizIntegrity: null,
+            webAssembly: WEBASSEMBLY_PROBLEM === null
         };
+        if (WEBASSEMBLY_PROBLEM !== null) {
+            console.warn('Kronikol: WebAssembly is not available here (' + WEBASSEMBLY_PROBLEM + '), so Graphviz is not loaded:'
+                + ' the engine lays diagrams out with its Smetana port instead.');
+        }
 
         var mode = null;            // null (undecided) | 'worker' | 'main-thread'
         var workers = [];           // { w, busy, ready }
@@ -80,6 +94,18 @@
             return String(lines == null ? '' : lines).split('\n');
         }
         function newJob(key, lines, targets) { return { seq: ++seq, key: key, lines: lines, targets: targets, worker: null }; }
+        // WebAssembly is undefined under V8's --jitless and where a browser setting turns it off; a content security
+        // policy without 'wasm-unsafe-eval' leaves it defined and refuses to compile. A blob worker inherits the page's
+        // policy and runs under the same V8 flags, so the page's answer is the worker's.
+        function webAssemblyUnavailable() {
+            if (typeof WebAssembly !== 'object' || !WebAssembly) return 'WebAssembly is not defined';
+            try {
+                new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));   // the smallest module: magic and version
+                return null;
+            } catch (e) {
+                return String(e && e.message ? e.message : e);
+            }
+        }
 
         // --- cache (bytes-bounded, least-recently-used first) ---------------------------------
         function cacheGet(key) {
@@ -243,7 +269,9 @@
         }
         function acquireEngine() {
             var tf = now();
-            Promise.all([fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity'), fetchVerified(ENGINE_URL, ENGINE_INTEGRITY, 'engineIntegrity')]).then(function (parts) {
+            // Graphviz only where WebAssembly compiles: undefined stands for "not fetched", null for "refused".
+            var vizFetch = WEBASSEMBLY_PROBLEM === null ? fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity') : Promise.resolve(undefined);
+            Promise.all([vizFetch, fetchVerified(ENGINE_URL, ENGINE_INTEGRITY, 'engineIntegrity')]).then(function (parts) {
                 telemetry.engineFetchMs = Math.round(now() - tf);
                 if (mode === 'main-thread') return;
                 var viz = parts[0], engine = parts[1];
@@ -267,7 +295,7 @@
                 // Graphviz is only used for non-sequence diagrams: a failure there, or a refused file, must
                 // not take the sequence diagrams down with it.
                 var src = WORKER_HOST_SOURCE
-                    + (viz === null ? '' : '\n;try {\n' + viz + '\n} catch (e) { console.error("Kronikol: viz-global failed: " + e); }\n')
+                    + (viz == null ? '' : '\n;try {\n' + viz + '\n} catch (e) { console.error("Kronikol: viz-global failed: " + e); }\n')
                     + ';(function () {\n' + engine + '\n})();\n';
                 blobUrl = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
                 mode = 'worker'; telemetry.mode = 'worker';
@@ -322,7 +350,7 @@
             });
         }
         function loadEngineScripts() {
-            addScript(VIZ_URL, VIZ_INTEGRITY).then(function () {
+            if (WEBASSEMBLY_PROBLEM === null) addScript(VIZ_URL, VIZ_INTEGRITY).then(function () {
                 telemetry.vizIntegrity = 'verified';
             }, function (e) {
                 return tagFailure(VIZ_URL, VIZ_INTEGRITY, 'viz-global.js', 'vizIntegrity', e).then(function (failure) {

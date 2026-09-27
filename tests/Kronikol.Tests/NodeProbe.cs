@@ -46,7 +46,11 @@ internal static class NodeProbe
     public sealed record NodeRun(int ExitCode, string Stdout, string Stderr);
 
     /// <summary>Like <see cref="RunWithStdin"/>, but returns stderr and the exit code instead of throwing on a non-zero exit.</summary>
-    public static NodeRun RunCaptured(string script, string? stdin, params string[] args)
+    public static NodeRun RunCaptured(string script, string? stdin, params string[] args) => RunCaptured([], script, stdin, args);
+
+    /// <summary>Like <see cref="RunCaptured(string, string?, string[])"/>, with <paramref name="nodeOptions"/> (such as
+    /// <c>--jitless</c>) given to node ahead of the script.</summary>
+    public static NodeRun RunCaptured(IReadOnlyList<string> nodeOptions, string script, string? stdin, params string[] args)
     {
         var dir = Path.Combine(Path.GetTempPath(), "kronikol-node-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
@@ -64,6 +68,7 @@ internal static class NodeProbe
                 StandardOutputEncoding = Encoding.UTF8,
                 StandardErrorEncoding = Encoding.UTF8
             };
+            foreach (var option in nodeOptions) psi.ArgumentList.Add(option);
             psi.ArgumentList.Add(scriptPath);
             foreach (var a in args) psi.ArgumentList.Add(a);
             using var p = Process.Start(psi) ?? throw new InvalidOperationException("node did not start");
