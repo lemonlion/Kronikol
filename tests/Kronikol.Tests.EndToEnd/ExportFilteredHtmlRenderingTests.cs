@@ -122,4 +122,25 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
 
         Assert.Equal(0, orphaned);
     }
+
+    [Fact]
+    public async Task The_export_carries_the_segment_map_whole()
+    {
+        // §5, Q1: the export copies the head, and the segment element with it, whole: the element is small once
+        // compressed, and pruning it by key would need its ids read back out of the map.
+        var (uri, reportsDir) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "ExportRender_Map.html", withFlow: 2, withoutFlow: 1);
+        await Page.GotoAsync(uri);
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        var exported = await ExportFilteredHtml();
+
+        static string Element(string html)
+        {
+            const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
+            var start = html.IndexOf(head, StringComparison.Ordinal);
+            Assert.True(start >= 0, "the page carries the segment element");
+            return html[start..(html.IndexOf("</script>", start, StringComparison.Ordinal) + "</script>".Length)];
+        }
+        Assert.Equal(Element(File.ReadAllText(Path.Combine(reportsDir, "TestRunReport.html"))), Element(File.ReadAllText(exported)));
+    }
 }

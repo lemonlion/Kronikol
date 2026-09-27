@@ -120,8 +120,9 @@ public class IflowPopupTests : PlaywrightTestBase
         var popup = Page.Locator(".iflow-popup");
         await Expect(popup).ToBeVisibleAsync();
 
+        // The popup is in the page before its segment is decoded (3.31.9), so the buttons are waited for.
         var toggleBtns = popup.Locator(".iflow-toggle-btn");
-        Assert.Equal(2, await toggleBtns.CountAsync());
+        await Expect(toggleBtns).ToHaveCountAsync(2);
         await Expect(toggleBtns.First).ToHaveTextAsync("Activity");
         await Expect(toggleBtns.Nth(1)).ToHaveTextAsync("Flame Chart");
     }
@@ -215,6 +216,109 @@ public class IflowPopupTests : PlaywrightTestBase
 
         var treeText = await callTree.TextContentAsync();
         Assert.Contains("HTTP GET /api/orders", treeText!);
+    }
+
+    // ── The segment map as one blob (3.31.9, INTERNAL_FLOW_BLOB_PLAN §3.2 to §3.4) ──
+
+    private const string SegmentElementPattern = "<script id=\"iflow-segments\" type=\"application/json\">[^<]*</script>";
+
+    [Fact]
+    public async Task The_popup_opens_before_the_map_is_decoded_and_fills_when_it_is()
+    {
+        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        // Hold the decode until the test lets it go.
+        await Page.EvaluateAsync("""
+            () => {
+                const real = window.decompressGzipBase64;
+                window.decompressGzipBase64 = b64 => new Promise(resolve => { window._releaseDecode = () => resolve(real(b64)); });
+            }
+            """);
+
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+
+        await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".iflow-popup .iflow-loading")).ToHaveTextAsync("Loading…");
+        Assert.Equal(0, await Page.Locator(".iflow-popup h3").CountAsync());
+
+        await Page.EvaluateAsync("() => window._releaseDecode()");
+
+        await Expect(Page.Locator(".iflow-popup h3")).ToContainTextAsync("Internal Flow");
+        await WaitForActivityDiagramSvg();
+        Assert.Equal(0, await Page.Locator(".iflow-popup .iflow-loading").CountAsync());
+    }
+
+    [Fact]
+    public async Task The_map_is_decoded_once_however_many_popups_open()
+    {
+        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeEmptySegment: true)));
+        // Count the decodes of the map itself; an activity diagram's own island goes through the same helper.
+        await Page.EvaluateAsync("""
+            () => {
+                const z = JSON.parse(document.getElementById('iflow-segments').textContent).z;
+                const real = window.decompressGzipBase64;
+                window._mapDecodes = 0;
+                window.decompressGzipBase64 = b64 => { if (b64 === z) window._mapDecodes++; return real(b64); };
+            }
+            """);
+
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+        await WaitForActivityDiagramSvg();
+        await Page.Locator(".iflow-popup-close").ClickAsync();
+        await Page.EvaluateAsync("() => window._iflowShowPopup('iflow-seg-empty')");
+        await Expect(Page.Locator(".iflow-popup .iflow-no-data")).ToContainTextAsync("No internal activity");
+        await Page.EvaluateAsync("() => window._iflowShowPopup('iflow-seg-1')");
+        await Expect(Page.Locator(".iflow-popup h3")).ToContainTextAsync("Internal Flow");
+
+        Assert.Equal(1, await Page.EvaluateAsync<int>("() => window._mapDecodes"));
+    }
+
+    [Fact]
+    public async Task A_map_that_is_not_gzip_says_so_in_the_popup()
+    {
+        var html = System.Text.RegularExpressions.Regex.Replace(
+            TestPageGenerator.GenerateIflowPopupTestPage(), "\"z\":\"[^\"]*\"", "\"z\":\"bm90IGd6aXA=\"");
+        var errors = new List<string>();
+        Page.Console += (_, message) => { if (message.Type == "error") errors.Add(message.Text); };
+        await Page.GotoAsync(ServePage(html));
+
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+
+        var failed = Page.Locator(".iflow-popup .iflow-load-failed");
+        await Expect(failed).ToBeVisibleAsync();
+        await Expect(failed).ToContainTextAsync("Internal flow data could not be decompressed: ");
+        Assert.Equal(0, await Page.Locator(".iflow-popup .iflow-loading").CountAsync());
+        // The console event reaches the test after the page wrote the message.
+        for (var i = 0; i < 50 && !errors.Any(e => e.Contains("internal flow data could not be decompressed", StringComparison.Ordinal)); i++)
+            await Task.Delay(200);
+        Assert.Contains(errors, e => e.Contains("internal flow data could not be decompressed", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_page_with_no_segment_element_has_no_segment()
+    {
+        var page = TestPageGenerator.GenerateIflowPopupTestPage();
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(page, SegmentElementPattern));
+        await Page.GotoAsync(ServePage(System.Text.RegularExpressions.Regex.Replace(page, SegmentElementPattern, "")));
+
+        Assert.True(await Page.EvaluateAsync<bool>("() => document.getElementById('iflow-segments') === null"));
+        Assert.False(await Page.EvaluateAsync<bool>("() => window._iflowHasSegment('iflow-seg-1')"));
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+        await Expect(Page.Locator(".iflow-popup .iflow-no-data")).ToContainTextAsync("No internal flow data");
+    }
+
+    [Fact]
+    public async Task A_page_that_sets_the_old_global_is_read_as_before()
+    {
+        // A page built by hand, or carrying an older emitter's script, sets window.__iflowSegments itself.
+        var html = System.Text.RegularExpressions.Regex.Replace(TestPageGenerator.GenerateIflowPopupTestPage(), SegmentElementPattern,
+            "<script>window.__iflowSegments = { 'iflow-seg-1': { title: 'Legacy flow', content: '<p class=\"legacy\">flow</p>' } };</script>");
+        await Page.GotoAsync(ServePage(html));
+
+        Assert.True(await Page.EvaluateAsync<bool>("() => window._iflowHasSegment('iflow-seg-1')"));
+        Assert.False(await Page.EvaluateAsync<bool>("() => window._iflowHasSegment('iflow-nonexistent')"));
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+        await Expect(Page.Locator(".iflow-popup h3")).ToHaveTextAsync("Legacy flow");
+        await Expect(Page.Locator(".iflow-popup p.legacy")).ToHaveTextAsync("flow");
     }
 
     [Fact]

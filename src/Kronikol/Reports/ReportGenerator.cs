@@ -318,27 +318,6 @@ public static class ReportGenerator
 
             perBoundarySegments = InternalFlowSegmentBuilder.BuildSegments(trackedLogs, spans);
 
-            string BuildFlowScript(InternalFlowTab startTab) =>
-                DiagramContextMenu.GetInternalFlowConfigScript(options.InternalFlowHasDataBehavior)
-                + InternalFlowHtmlGenerator.GenerateSegmentDataScript(
-                    perBoundarySegments,
-                    options.InternalFlowDiagramStyle,
-                    options.InternalFlowShowFlameChart,
-                    options.InternalFlowFlameChartPosition,
-                    options.InternalFlowNoDataBehavior,
-                    options.InternalFlowSpanGranularity,
-                    options.InternalFlowActivitySources,
-                    startTab);
-
-            // The popup data script is shared by both HTML reports; only a Specifications
-            // override that actually changes the internal-flow tab pays for a second build.
-            var testRunTab = ReportToggleDefaultsResolver.Resolve(options, specifications: false).InternalFlowTab;
-            var specificationsTab = ReportToggleDefaultsResolver.Resolve(options, specifications: true).InternalFlowTab;
-            internalFlowDataScript = BuildFlowScript(testRunTab);
-            internalFlowDataScriptSpecifications = specificationsTab == testRunTab
-                ? internalFlowDataScript
-                : BuildFlowScript(specificationsTab);
-
             if (options.WholeTestFlowVisualization != WholeTestFlowVisualization.None)
             {
                 wholeTestSegments = InternalFlowSegmentBuilder.BuildWholeTestSegments(trackedLogs, spans);
@@ -403,6 +382,38 @@ public static class ReportGenerator
             // the Node renderer cannot load.
             componentDiagramPlantUml = ComponentDiagramGenerator.GeneratePlantUml(componentRelationships, componentOptions,
                 useC4: ComponentDiagramReportGenerator.UsesC4(options.PlantUmlRendering));
+        }
+
+        if (perBoundarySegments is not null)
+        {
+            // The segment map's id list is computed over every diagram source a page can show, so it needs the
+            // component diagram, which is why the popup data is built here rather than with the segments.
+            var linkSources = diagrams.Select(d => (string?)d.CodeBehind)
+                .Append(ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null)
+                .ToArray();
+
+            string BuildFlowScript(InternalFlowTab startTab) =>
+                DiagramContextMenu.GetInternalFlowConfigScript(options.InternalFlowHasDataBehavior)
+                + InternalFlowHtmlGenerator.WrapSegmentData(
+                    InternalFlowHtmlGenerator.BuildSegmentData(
+                        perBoundarySegments,
+                        options.InternalFlowDiagramStyle,
+                        options.InternalFlowShowFlameChart,
+                        options.InternalFlowFlameChartPosition,
+                        options.InternalFlowNoDataBehavior,
+                        options.InternalFlowSpanGranularity,
+                        options.InternalFlowActivitySources,
+                        startTab),
+                    linkSources);
+
+            // The popup data script is shared by both HTML reports; only a Specifications
+            // override that actually changes the internal-flow tab pays for a second build.
+            var testRunTab = ReportToggleDefaultsResolver.Resolve(options, specifications: false).InternalFlowTab;
+            var specificationsTab = ReportToggleDefaultsResolver.Resolve(options, specifications: true).InternalFlowTab;
+            internalFlowDataScript = BuildFlowScript(testRunTab);
+            internalFlowDataScriptSpecifications = specificationsTab == testRunTab
+                ? internalFlowDataScript
+                : BuildFlowScript(specificationsTab);
         }
 
         // Copy attachment files into the Reports directory so that HTML links resolve

@@ -69,6 +69,27 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         Assert.All(inData, key => Assert.Contains(key, linkedInData));
     }
 
+    [Theory]
+    [InlineData(InternalFlowNoDataBehavior.HideLink)]
+    [InlineData(InternalFlowNoDataBehavior.ShowMessage)]
+    public void The_element_list_answers_for_every_link_the_page_shows_what_the_map_says(InternalFlowNoDataBehavior noData)
+    {
+        // The render script binds links from the list alone, without decoding (INTERNAL_FLOW_BLOB_PLAN §3.3): for every
+        // id a diagram of the page links, "has a segment" by the list must be "is a key" by the map.
+        var run = Generate(noData);
+
+        const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
+        var start = run.Html.IndexOf(head, StringComparison.Ordinal) + head.Length;
+        using var element = JsonDocument.Parse(run.Html[start..run.Html.IndexOf("</script>", start, StringComparison.Ordinal)]);
+        var keys = SegmentKeysInPage(run.Html).ToHashSet();
+        var listed = element.RootElement.EnumerateObject().First().Value.EnumerateArray().Select(e => e.GetString()!).ToHashSet();
+        var hasList = element.RootElement.EnumerateObject().First().Name == "has";
+
+        var linked = LinkedIds(DiagramSourcesInPage(run.Html));
+        Assert.Contains($"iflow-{run.First}", linked);
+        Assert.All(linked, id => Assert.Equal(keys.Contains(id), hasList ? listed.Contains(id) : !listed.Contains(id)));
+    }
+
     [Fact]
     public void A_scenario_that_made_no_call_has_no_whole_test_flow()
     {
@@ -200,15 +221,16 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         InternalFlowSpanStore.Add(span);
     }
 
-    /// <summary>The segment map's keys, read from the page's segment block.</summary>
+    /// <summary>The segment map's keys, read from the page's segment element (its <c>z</c>, decoded).</summary>
     internal static string[] SegmentKeysInPage(string html)
     {
-        const string head = "<script>window.__iflowSegments = ";
+        const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
         var at = html.IndexOf(head, StringComparison.Ordinal);
-        Assert.True(at >= 0, "the page carries a segment block");
+        Assert.True(at >= 0, "the page carries a segment element");
         var start = at + head.Length;
-        var end = html.IndexOf(";</script>", start, StringComparison.Ordinal);
-        using var map = JsonDocument.Parse(html[start..end]);
+        var end = html.IndexOf("</script>", start, StringComparison.Ordinal);
+        using var element = JsonDocument.Parse(html[start..end]);
+        using var map = JsonDocument.Parse(Gunzip(element.RootElement.GetProperty("z").GetString()!));
         return map.RootElement.EnumerateObject().Select(p => p.Name).ToArray();
     }
 

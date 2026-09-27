@@ -39,7 +39,8 @@ public sealed record MergeableReport
     /// <summary>Aggregated component-diagram relationships extracted from the run's tracked traffic.</summary>
     public ComponentRelationship[] ComponentRelationships { get; init; } = [];
 
-    /// <summary>Precomputed, self-contained internal-flow segment payloads keyed by segment id (consumed by the popup JS as <c>window.__iflowSegments</c>).</summary>
+    /// <summary>Precomputed, self-contained internal-flow segment payloads keyed by segment id. A rendered report carries them
+    /// gzipped in its <c>iflow-segments</c> element, which the popup decodes on its first opening; this file keeps them plain.</summary>
     public Dictionary<string, JsonElement> InternalFlowSegments { get; init; } = new();
 
     /// <summary>Precomputed, self-contained whole-test-flow fragments keyed by scenario id.</summary>

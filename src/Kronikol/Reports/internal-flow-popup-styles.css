@@ -37,10 +37,15 @@
     font-size: 15px;
     color: #333;
 }
-.iflow-popup .iflow-no-data {
+.iflow-popup .iflow-no-data,
+.iflow-popup .iflow-loading {
     color: #888;
     font-style: italic;
     padding: 20px 0;
+}
+.iflow-popup .iflow-load-failed {
+    color: #c00;
+    font-style: normal;
 }
 .iflow-popup .iflow-diagram {
     min-height: 60px;

@@ -1191,9 +1191,15 @@
             }
         }
         window._iflowBindLinks = function(container, source) { bindIflowLinks(container, source); };
+        // Whether a link opens a segment, answered without decoding the segment map: the popup script keeps the
+        // map's id list (INTERNAL_FLOW_BLOB_PLAN §3.3). A page with no popup script can only have set the old global.
+        function hasSegment(segId) {
+            if (window._iflowHasSegment) return window._iflowHasSegment(segId);
+            var legacy = window.__iflowSegments;
+            return !!(legacy && legacy[segId]);
+        }
         function bindIflowLinks(container, source) {
             if (!container) return;
-            var iflowData = window.__iflowSegments || {};
             var config = window.__iflowConfig || {};
             var hoverOnly = config.hasDataBehavior === 'showLinkOnHover';
             var bound = 0;
@@ -1201,7 +1207,7 @@
                 var href = a.getAttribute('xlink:href') || a.getAttribute('href') || '';
                 if (href.indexOf('#iflow-') !== 0) return;
                 var segId = href.substring(1);
-                if (!iflowData[segId]) return;
+                if (!hasSegment(segId)) return;
                 if (hoverOnly) {
                     a.removeAttribute('xlink:href');
                     a.removeAttribute('href');
@@ -1292,7 +1298,7 @@
                         el.removeAttribute('text-decoration');
                     });
                 }
-                if (!iflowData[segId]) {
+                if (!hasSegment(segId)) {
                     // Kronikol wrote the link, but its popup would be empty: it must not look like one.
                     atRest();
                     return;

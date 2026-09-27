@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Kronikol.ComponentDiagram;
 using Kronikol.Reports;
 
@@ -12,9 +13,13 @@ namespace Kronikol.InternalFlow;
 /// </summary>
 public static class InternalFlowHtmlGenerator
 {
+    /// <summary>The id of the element that carries the segment map in a report.</summary>
+    internal const string SegmentsElementId = "iflow-segments";
+
     /// <summary>
-    /// Generates a &lt;script&gt; block that populates <c>window.__iflowSegments</c>
-    /// with segment data for the popup to consume.
+    /// Generates the segment map as one <c>&lt;script id="iflow-segments" type="application/json"&gt;</c> element
+    /// (see <see cref="WrapSegmentData(Dictionary{string, object})"/>), or an empty string when no segment has
+    /// anything to show.
     /// </summary>
     public static string GenerateSegmentDataScript(
         Dictionary<string, InternalFlowSegment> segments,
@@ -31,15 +36,77 @@ public static class InternalFlowHtmlGenerator
     }
 
     /// <summary>
-    /// Wraps a precomputed segment-data map in the <c>window.__iflowSegments</c> script block.
-    /// Used both by <see cref="GenerateSegmentDataScript"/> and when re-rendering a merged report
-    /// from previously serialized segment data.
+    /// Wraps a precomputed segment-data map in the element the report's popup reads:
+    /// <c>&lt;script id="iflow-segments" type="application/json"&gt;{"has":[…],"z":"…"}&lt;/script&gt;</c>, where
+    /// <c>z</c> is the map's JSON gzipped and base64'd, decoded by the page once, on the first popup, and
+    /// <c>has</c> lists every key, so the page can tell which links open something without decoding. An empty map
+    /// gives an empty string: the page reads a missing element as a map with no segment. Used both by
+    /// <see cref="GenerateSegmentDataScript"/> and when re-rendering a merged report from previously serialized
+    /// segment data. Before 3.31.9 this was a script setting <c>window.__iflowSegments</c> to the map as a
+    /// JavaScript object; the page still reads that global when a page sets it.
     /// </summary>
-    public static string WrapSegmentData(Dictionary<string, object> data)
+    public static string WrapSegmentData(Dictionary<string, object> data) => WrapSegmentData(data, linkSources: null);
+
+    /// <summary>
+    /// The element <see cref="WrapSegmentData(Dictionary{string, object})"/> writes, with the shorter of the two
+    /// exact membership lists over <paramref name="linkSources"/>, every PlantUML source the page embeds:
+    /// <c>hidden</c>, the link ids the sources hold that have no segment, when there are fewer of those than
+    /// <c>has</c>, the segment keys some source links. Either answers "does this link open a segment?" for every
+    /// link the page can show. Null lists every key under <c>has</c>, which is exact for any page.
+    /// </summary>
+    internal static string WrapSegmentData(Dictionary<string, object> data, IEnumerable<string?>? linkSources)
     {
+        if (data.Count == 0)
+            return "";
+
         var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false });
-        return $"<script>window.__iflowSegments = {json};</script>";
+        var (list, ids) = MembershipList(data, linkSources);
+
+        // The ids go through the serializer, which escapes anything HTML-sensitive; the base64 needs no escape at
+        // all, and the serializer's default encoder would write every '+' in it as six characters.
+        return new StringBuilder()
+            .Append("<script id=\"").Append(SegmentsElementId).Append("\" type=\"application/json\">{\"")
+            .Append(list).Append("\":").Append(JsonSerializer.Serialize(ids))
+            .Append(",\"z\":\"").Append(CompressToBase64(json)).Append("\"}</script>")
+            .ToString();
     }
+
+    /// <summary>
+    /// Which list the element carries and the ids in it, in the order the sources first link them (or the map's
+    /// order, with no sources). A tie gives <c>has</c>.
+    /// </summary>
+    internal static (string List, IReadOnlyList<string> Ids) MembershipList(
+        IReadOnlyDictionary<string, object> data, IEnumerable<string?>? linkSources)
+    {
+        if (linkSources is null)
+            return ("has", data.Keys.ToList());
+
+        var linked = LinkedIds(linkSources);
+        var has = linked.Where(data.ContainsKey).ToList();
+        var hidden = linked.Where(id => !data.ContainsKey(id)).ToList();
+        return hidden.Count < has.Count ? ("hidden", hidden) : ("has", has);
+    }
+
+    /// <summary>
+    /// Every internal-flow link id (<c>[[#iflow-… …]]</c>) in the sources, once each, in first-seen order. The id
+    /// ends at whitespace or a bracket, as the report's own link reader (<c>extractIflowMap</c>) reads it.
+    /// </summary>
+    internal static List<string> LinkedIds(IEnumerable<string?> sources)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var ids = new List<string>();
+        foreach (var source in sources)
+        {
+            if (string.IsNullOrEmpty(source))
+                continue;
+            foreach (Match match in LinkIdPattern.Matches(source))
+                if (seen.Add(match.Groups[1].Value))
+                    ids.Add(match.Groups[1].Value);
+        }
+        return ids;
+    }
+
+    private static readonly Regex LinkIdPattern = new(@"\[\[#(iflow-[^\s\]]+)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     /// <summary>
     /// Builds the per-segment data map (segment key → { title, content, flameData }) that the popup

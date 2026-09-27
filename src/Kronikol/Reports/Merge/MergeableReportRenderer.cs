@@ -28,16 +28,6 @@ public static class MergeableReportRenderer
 
         var hasInternalFlow = report.InternalFlowSegments.Count > 0 || report.WholeTestFlow.Count > 0;
 
-        var internalFlowDataScript = "";
-        if (report.InternalFlowSegments.Count > 0)
-        {
-            // Box the JsonElement values; the serializer emits them as raw JSON, reconstituting the map.
-            var map = report.InternalFlowSegments.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
-            internalFlowDataScript =
-                DiagramContextMenu.GetInternalFlowConfigScript(options.InternalFlowHasDataBehavior)
-                + InternalFlowHtmlGenerator.WrapSegmentData(map);
-        }
-
         string? componentDiagramPlantUml = null;
         if (report.ComponentRelationships.Length > 0)
         {
@@ -45,6 +35,8 @@ public static class MergeableReportRenderer
             // Browser-rendered reports use the non-C4 PlantUML dialect.
             componentDiagramPlantUml = ComponentDiagramGenerator.GeneratePlantUml(report.ComponentRelationships, componentOptions, useC4: false);
         }
+
+        var internalFlowDataScript = BuildInternalFlowDataScript(report, options, componentDiagramPlantUml);
 
         var fileName = Path.GetFileName(outputPath);
         if (string.IsNullOrEmpty(fileName))
@@ -115,6 +107,23 @@ public static class MergeableReportRenderer
         }
 
         return destination;
+    }
+
+    /// <summary>
+    /// The popup data a merged report carries: the merged segment map, through the same wrapper as a live run's, with
+    /// its id list computed over the merged diagrams and the component diagram the page embeds. A merge never re-keys
+    /// a segment, so the ids in the shards' diagrams still name their segments. Empty when no shard had one.
+    /// </summary>
+    internal static string BuildInternalFlowDataScript(MergeableReport report, ReportConfigurationOptions options, string? componentDiagramPlantUml)
+    {
+        if (report.InternalFlowSegments.Count == 0)
+            return "";
+
+        // Box the JsonElement values; the serializer emits them as raw JSON, reconstituting the map.
+        var map = report.InternalFlowSegments.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+        var linkSources = report.Diagrams.Select(d => (string?)d.CodeBehind).Append(componentDiagramPlantUml).ToArray();
+        return DiagramContextMenu.GetInternalFlowConfigScript(options.InternalFlowHasDataBehavior)
+               + InternalFlowHtmlGenerator.WrapSegmentData(map, linkSources);
     }
 
     /// <summary>
