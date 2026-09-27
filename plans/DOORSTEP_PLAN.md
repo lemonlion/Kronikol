@@ -2,7 +2,9 @@
 
 **Date:** 2026-09-27 · **Repo version:** 3.31.3 (`fa866f8`) when written, 3.31.5 (`4aa1e1e`) at the first
 same-day update, 3.31.9 (`e4c9e36`) at the second · **Status: plan written, NOT green-lit; S0 run as far as
-a session can reach; the defect it found (F28) fixed in 3.31.10.** It needs D24, and most of D24 is the owner's own words: the roadmap gives this text to
+a session can reach; the defect it found (F28) fixed in 3.31.10.** 3.31.10 is on `main` with CI green
+(`571a98d`, 28 of 28 jobs) but not published: this environment refused to push the tag `v3.31.10` and the wiki
+commit (HTTP 403, where branch pushes worked), so both are the owner's (Appendix B). It needs D24, and most of D24 is the owner's own words: the roadmap gives this text to
 "the owner's hand". Roadmap item **2.1** (stage 2, track C). No package changes, so **no version bump**, and
 nothing in it is outreach (rule 9).
 
@@ -503,3 +505,22 @@ first is F28's; the second is a fault CI found in 3.31.9 while this release was 
 >   every diagram the fetcher made. The element differs only for a run that logged tests its features do not
 >   name. If the port counts over every diagram, count the same way; `InternalFlowSegmentMapReportTests` has
 >   the fact.
+
+## Appendix B. What 3.31.10 left for the owner (2026-09-27)
+
+1. **Publish it.** The tag starts `release.yml`, which builds, runs `Kronikol.Tests`, pushes the packages to NuGet
+   and makes the GitHub release. Tag the commit CI passed, not a later one:
+   `git fetch origin && git tag v3.31.10 571a98d && git push origin v3.31.10`.
+2. **The wiki note.** In `Generated-Reports.md`, section "Deep links (`#scenario-` and `#sid-`)", after the
+   paragraph that ends "resolves to the first match in document order.", add:
+
+   > Following a link opens every section around the scenario and puts the scenario in the middle of the screen at
+   > once. Before 3.31.10 the report scrolled there smoothly, and in a report longer than a few features the scroll
+   > ended past the scenario, at the bottom of the page: a feature the browser has not drawn yet counts as a 500 px
+   > placeholder (`content-visibility: auto`), and the placeholders shrank to their true size as the scroll passed
+   > them. On a phone it also ended above a scenario near the top, because the filter panel folds away as the
+   > report loads. *Next Failure* and the failure-cluster links jump the same way since 3.31.10.
+
+3. **Kronikol4J.** Copy the two ledger entries of Appendix A.
+4. **The demo.** BreakfastProvider gets the fix with its next pin move (to 3.31.10 or later), which Q5's deep
+   link waits for.
