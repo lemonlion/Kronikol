@@ -300,7 +300,8 @@ public static partial class ComponentDiagramGenerator
         sb.AppendLine();
         sb.AppendLine("@enduml");
 
-        return sb.ToString();
+        // Names and labels come from the captured calls (an ingested run's from its files): nothing XML cannot hold.
+        return PlantUml.PlantUmlCreator.ReplaceXmlInvalidCharacters(sb.ToString());
     }
 
     /// <summary>

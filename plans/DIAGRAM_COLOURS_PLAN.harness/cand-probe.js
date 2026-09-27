@@ -4,7 +4,7 @@
 // label, tracking off), link (the same inside [[#iflow-… ]]), doc (a step bar's doc string line, the rich bar form).
 // Usage: node cand-probe.js [cases.json]  (default: the list below). Prints what each paints.
 const fs = require('fs'), path = require('path'), cp = require('child_process');
-const C = path.join(process.env.LOCALAPPDATA, 'Kronikol', 'plantuml-js', 'v1.2026.8beta1-0e4f452');
+const C = path.join(process.env.LOCALAPPDATA, 'Kronikol', 'plantuml-js', process.env.ENGINE || 'v1.2026.8beta1-0e4f452');
 const RENDERER = process.env.RENDERER || path.join(path.resolve(__dirname, '..', '..'), 'src', 'Kronikol', 'PlantUml', 'plantuml-render.js');
 const cases = process.argv[2] ? JSON.parse(fs.readFileSync(process.argv[2], 'utf8')) : [];
 const PREFIX = ['@startuml', '!pragma teoz true', '<style>', ' .stepBody {', '     BackgroundColor black', '     FontColor white', '     LineColor white', ' }', '</style>',
@@ -18,6 +18,9 @@ function source(ctx, text) {
         case 'cell': return [...PREFIX, 'hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\n|= H |\\n| BEFORE ' + text + ' AFTER |\\n', 'Caller -[#438DD5]> OrdersAPI: GET: /x', '@enduml'];
         case 'bar': return [...PREFIX, 'hnote across <<stepDelimiter>> #black:<color:white>BEFORE ' + text + ' AFTER', 'Caller -[#438DD5]> OrdersAPI: GET: /x', '@enduml'];
         case 'hnote': return [...PREFIX, 'Caller -[#438DD5]> OrdersAPI: GET: /x', 'hnote across <<assertionNote>> #e6ffe6', 'BEFORE', text, 'AFTER', 'end note', '@enduml'];
+        // Third audit: a test's name (the delimiter bar) and an internal-flow activity label.
+        case 'test': return [...PREFIX, 'hnote across #black:<color:white>Test BEFORE ' + text + ' AFTER', 'Caller -[#438DD5]> OrdersAPI: GET: /x', '@enduml'];
+        case 'span': return ['@startuml', 'skinparam ActivityBackgroundColor #f0f4ff', 'skinparam wrapWidth 800', '|Orders|', ':BEFORE ' + text + ' AFTER (5ms);', '@enduml'];
     }
 }
 function decode(s) {

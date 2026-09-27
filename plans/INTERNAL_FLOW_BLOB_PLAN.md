@@ -3,8 +3,8 @@
 **Date:** 2026-09-22 (deep dives added the same day; third pass 2026-09-25 against 3.29.6, `ad289f55`,
 and the consumer's published reports) · **Repo version:** 3.27.2 (`2843018a`), where the cited line
 numbers hold; the harness's `check-anchors.py` re-derives them at any revision ·
-**Status: green-lit 2026-09-27** (the owner asked for P5 in full, so Q1 to Q8 are taken as
-recommended). **R1 shipped as 3.31.4** (§11.1); R2 is in progress. This is P5 of
+**Status: executed 2026-09-27** (green-lit that day: the owner asked for P5 in full, so Q1 to Q8
+are taken as recommended). **R1 shipped as 3.31.4** (§11.1), **R2 as 3.31.9** (§11.2). This is P5 of
 [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md), roadmap items 1.9 and 1.12. §10 is the assumption ledger: what was RUN, what was only READ, and what is taken
 from the issue. The scripts behind every number are in
 [`INTERNAL_FLOW_BLOB_PLAN.harness/`](INTERNAL_FLOW_BLOB_PLAN.harness/README.md), with their output.
@@ -567,6 +567,7 @@ see the popup. That test does not exist today for the raw map either;
 | F11 | The wiki's browser floor is wrong for the decompressor: `PlantUML-Browser-Rendering.md:66` says "Blob workers + OffscreenCanvas 2D + DecompressionStream: Chrome/Edge 69+, Firefox 105+, Safari 16.4+"; `DecompressionStream` is Chrome 80 and Firefox 113 (RUN, BCD) | S4 |
 | F12 | **Q7, as first written, would have lost popups.** §3.7 said the readers need no change. But the popup script renders before it attaches the popup, and today only the island's async decode hides that. With raw sources, a popup whose diagram is a render-cache hit is written into an element not yet in the page: 3 of 8 popups on the prototype drew nothing, and all 8 drew with the popup attached first (RUN, harness G) | §3.4's order, S1; S1b's end-to-end fact |
 | F13 | **S1 alone does not change what a visitor to a published report downloads**: 99.5% to 101.0% of today's gzip (§1.5). The summary's file sizes are the file as stored and opened. The download moves with R1 (87.7% to 92.8%) and Q7 (68.5% to 82.0% with R1). GitHub Pages serves gzip only, and CI artifacts are zipped, so both behave like the download | §0, §8.2: each changelog entry states the file and the download |
+| F14 | **A filtered export kept the look of what a report had drawn and lost what it did** (found executing R1's §8.6 check, 2026-09-27; older than this plan). A diagram drawn before the export: its arrows opened no popup and its notes did not fold. A diagram queued but not yet drawn: never drawn in the export. A drawn flame chart: no zoom. RUN on the consumer's 3.29.0 and 3.31.4 exports | §11.1, §11.2; fixed in R2 (`export_undrawn`) |
 
 ---
 
@@ -1013,11 +1014,133 @@ span of the run; `puml-data` went from 17 diagrams to 13.
   export). It found a defect that R1 did not cause (F14 below): the same failure appears on the
   published 3.29.0 report.
 
+**S5, released (2026-09-27).** 3.31.4 is `81f77b58`, and its CI, Release and CodeQL runs were green.
+NuGet's registration index listed all 62 packages before the bump. #100 is closed, the wiki is at
+`783dc9b` and the Kronikol4J ledger at `7af0ba6`. Then the consumer:
+
+- **The bump.** All 30 sites moved in `9f242d4` ("Kronikol 3.31.4: …", pushed from a scratch clone,
+  because the shared `C:/Code/BreakfastProvider` holds someone else's untracked work). The restore
+  (`--no-cache`) was clean, and the xUnit lane passed 203 of 203 locally.
+- **`CI: Main` on the push** (`36315296700`): all 58 jobs green, 18 suites recorded, the fakes
+  published and Pages deployed. The history gates:
+  - **In memory:** "nothing changed" on five lanes. ReqNRoll reads "1 slower": the Heartbeat scenario
+    took 431 ms, against 362 ms on the run before and a p95 of 59 ms. That is noise, since R1 changes
+    only report-time building.
+  - **External SUT:** "nothing changed" on all six lanes.
+  - **In docker:** "3 still failing" on all six lanes. These are the same three Orders scenarios,
+    failing since `7a0fb9b` (11 runs), because the outbox dispatch gets "Connection refused
+    (localhost:60101)" from the consumer's Azure emulator. That is the consumer's environment, not
+    Kronikol. The nightly before the bump (`36306999910`) showed the same, plus one "behaviour changed"
+    on ReqNRoll in docker.
+  - "behaviour-change" is 0 on every lane.
+- **The published site, all 18 lanes on 3.31.4:**
+
+| | 3.29.0 (§1.5) | 3.31.4 | Predicted for R1 |
+|---|---:|---:|---:|
+| Files | 111.5 MB | 73.6 MB | 73.0 MB |
+| Downloaded | 21.13 MB | 19.86 MB | 19.32 MB |
+| xUnit file | 7,999,910 | 4,944,153 | — |
+| xUnit download | 1,300,236 served | 1,176,295 | — |
+
+  `popup-smoke.js` over https on the six in-memory lanes and the xUnit docker lane drew every popup and
+  logged no console error. Each diagram binds exactly its links with data, as the baseline did: for
+  example ReqNRoll's `puml-11`, with 23 of 24 links holding data, binds 83 texts on both runs.
+- **The second run** (dispatched, `36316716498`, on the same commit): all 58 jobs green. The history
+  gates:
+  - **In memory and external SUT:** "nothing changed" on all twelve lanes.
+  - **In docker:** the same "3 still failing" on all six lanes. TUnit in docker also reads
+    "1 behaviour changed": the health-check detail scenario made 6 calls on the first 3.31.4 run and 5
+    on this one. The call gone is the service's own `GET /health` probe of Cow Service. That is a
+    difference between two runs of one version and one capture path, so the release does not explain
+    it, and R1 changes nothing that is captured.
+
+  R1 is accepted.
+
 **F14, found in the export check. It is pre-existing, and R2 fixes it.** In a filtered export, a
 diagram that had been drawn before the export arrives as inline SVG. Its arrows keep the bound
 look (44 on the first diagram), but a click opens no popup: `popupMs` is null on 3.29.0's export and
 on R1's alike. A diagram drawn after the export opens as normal. This is the export path that S2 tests,
-so R2 takes it, with a red test first.
+so R2 takes it, with a red test first. Writing that test found more of the same defect: see §11.2.
+
+### 11.2 R2, the blob: 3.31.9 (2026-09-27)
+
+**What shipped: S0 to S4 with Q1 to Q8 as recommended, plus F14.**
+
+- **S1, the element.** `WrapSegmentData(data, linkSources)` (internal) writes
+  `<script id="iflow-segments" type="application/json">{"has"|"hidden":[ids],"z":"<gzip+base64>"}</script>`,
+  and nothing for an empty map (Q4). `z` is written raw, since the serializer would have escaped
+  every `+`. The list is the shorter of the two exact sets over every source the page embeds, the
+  diagrams' `CodeBehind` plus the embedded component diagram, and a tie gives `has`. The public
+  `WrapSegmentData(map)` lists every key under `has`.
+- **The two emit sites.** `ReportGenerator` builds the flow script after the component diagram, so
+  the list sees it. `MergeableReportRenderer.BuildInternalFlowDataScript` goes through the same
+  wrapper with the merged diagrams.
+- **The popup script.** `loadSegments` is memoised and still reads a legacy `window.__iflowSegments`.
+  It exposes `hasSegment`, `_iflowLoadSegments` and `_iflowHasSegment`. The popup is attached first
+  with "Loading…" and filled when the map is decoded, unless it was closed meanwhile. A decode failure
+  shows "Internal flow data could not be decompressed: <reason>" and logs a console error. The render
+  script's two membership lines call `hasSegment`.
+- **S1b (Q7).** The map's activity divs carry `data-plantuml` (`&`, `"` and `<` escaped); the
+  whole-test flow keeps `data-plantuml-z`.
+- **S3 (F4, Q2), confirmed red first.** At load, the popup script strips the href from every
+  `<a href="#iflow-…">` whose id has no segment. The click handler opens only an id that has one, and
+  unlinks one that has none.
+- **S2 (Q1).** The export carries the element whole.
+- **F7 and F9 (Q3).** The XML docs and the wiki now say that `InternalFlowDisplay.Inline`,
+  `InternalFlowTrigger.Hover`, `InternalFlowContentStrategy.SeparateFragments` with
+  `InternalFlowFragmentsFolderName`, and `InternalFlowNoDataBehavior.VisualDistinction` are not
+  implemented. ROADMAP 12.1 gains their fate for v4.
+
+**F14, completed.** Writing S2's test found three defects of one kind in `export_html`, all older
+than this plan:
+
+1. A diagram drawn before the export went in as the SVG it drew, and none of the render script's
+   listeners survive serialisation. Its arrows opened nothing (F14 as first seen) and its notes no
+   longer folded.
+2. A diagram queued but not yet drawn when the export was taken went in marked `data-queued`, and the
+   export's pipeline, which skips a queued element, never drew it.
+3. A drawn flame chart went in marked `data-flame-rendered` and was never bound, so it no longer
+   zoomed.
+
+`export_undrawn` puts the export's copy of each back as it was before it was drawn. It clears the
+element and drops the marks, and it drops the post-filter `data-plantuml` when `puml-data` or
+`data-plantuml-z` holds the source. The export then draws each one with every hook. This happens in
+`report-export-function.js` alone. The P3 session's on-demand work (inline SVGs, `data-iflow-bound`)
+is untouched, and it agreed.
+
+**Tests, red first** (on 3.31.4 in a detached worktree, unless the fact is a guard):
+
+- **Unit:** 11 of 11 red. That is the five `InternalFlowSegmentBlobTests` facts that use only public
+  API, the S1b attribute fact, the list theory (2 cases), the merge re-anchor, and R1's two map facts
+  that now read the element. The other seven blob facts call the internal API R2 adds.
+- **Playwright, S0 guard:** `Clicking_an_arrow_that_has_a_segment_opens_its_popup` is green on
+  3.31.4, as intended.
+- **Playwright, S3:** red before its code.
+- **Playwright, export:** the binding theory is red on 3.31.4 (no element). The five export facts are
+  red on 3.31.4, each for its own reason: no popup, a queued diagram never drawn, no zoom, no fold,
+  and no element.
+- **Mutation:** the popup attached after it is filled (the old order) fails the render-cache twin
+  fact and two others.
+- **Full suites** on the release tree, rebased on 3.31.8: the unit tier's 48 projects (`Kronikol.Tests`
+  5,949 passed and 1 skipped; IKVM 55) and Playwright 937 passed with 28 skipped, no failure.
+
+**§8.6 dry run** (the consumer's xUnit lane in memory: the published 3.31.4 against R2 packed as
+`3.31.9-p5r2`, the same 203 scenarios, both 203 of 203):
+
+| | 3.31.4 | R2 |
+|---|---:|---:|
+| `TestRunReport.html` | 4,842,803 | 2,565,751 (53.0%) |
+| Its gzip, level 6 (a Pages download) | 1,157,608 | 898,931 (77.7%) |
+| `Specifications.html` | 4,714,637 (R1's run) | 2,442,492 |
+| The map's blob, base64 | — | 158,808 (gzip of a 2,774,594-byte map) |
+| `domContentLoaded`, median of 7 | 99 ms | 75 ms |
+| JS heap after load | 10 MB | 7 MB |
+| A filtered export ("apple cinnamon", 5 features) | 3,460,858 | 1,003,645 |
+
+`variants.py` finds the element's `hidden` list (23 ids) admitting exactly the keys a diagram links.
+`popup-smoke.js` finds the baseline's bound counts on all eight diagrams (44, 41, 3, 86, 86, 86, 6,
+86), every popup drawn, one decode of the map, and no console error. On the exports, 3.31.4's first
+diagram opens nothing (F14) and R2's all open, with one decode.
 
 ## Appendix A. Re-taking the numbers
 

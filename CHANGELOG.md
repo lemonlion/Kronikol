@@ -4,6 +4,263 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.9] - 2026-09-27
+
+**Patch - the internal-flow segment map ships as one gzip blob (#89), a filtered export draws and binds its diagrams
+again, and `HideLink` hides links under every rendering mode.** Performance work and bug fixes, with nothing new for a
+consumer to call. The two public emitters keep their signatures, no option is added, and the report's own scripts
+read what they now write. So the patch part moved. Report output changes (the segment element, the popup and render
+scripts, the export function): the Kronikol4J divergence ledger records it. Template pins move to 3.31.8.
+
+### Changed
+
+- **The internal-flow segment map is compressed (#89).** It was the one large block a report shipped raw, a
+  `<script>` that set `window.__iflowSegments` to an object literal in the head of both HTML reports, which the
+  browser parsed before the page could draw. It is now `<script id="iflow-segments" type="application/json">`, and it
+  holds two things:
+  - `z`: the same map, gzipped and base64-encoded.
+  - The list of arrow ids the render script needs to bind arrows without decoding the map: `hidden` (the linked ids
+    that have no segment) or `has` (the segment ids some diagram links), whichever is shorter.
+
+  The map is decoded once, on the first popup, by the decompressor every report carries. Its activity diagrams are
+  plain PlantUML now (`data-plantuml`), because the map is compressed whole. As gzip inside gzip they made the
+  compressed map three times larger.
+
+  Measured on BreakfastProvider's xUnit lane in memory, on the same 203 scenarios, 3.31.4 against this release:
+
+  | | 3.31.4 | This release |
+  |---|---:|---:|
+  | `TestRunReport.html` | 4,842,803 bytes | 2,565,751 (53%) |
+  | What a GitHub Pages visitor downloads (gzip) | about 1,157,608 | 898,931 (78%) |
+  | `domContentLoaded` in Chromium | 99 ms | 75 ms |
+  | JS heap after load | 10 MB | 7 MB |
+  | A filtered export of five features | 3,460,858 bytes | 1,003,645 |
+
+  Every diagram checked binds the same arrows, every popup draws, and the map is decoded once. A report with no
+  segment carries no element. `puml-data` is deliberately left as it is: it is read by key, one diagram at a time.
+
+  The popup now needs `DecompressionStream` (Chrome/Edge 80, Firefox 113, Safari 16.4), which `BrowserJs` rendering
+  and deep search already required. A page that sets `window.__iflowSegments` itself (built by hand, or written by
+  an older emitter) still works. `InternalFlowHtmlGenerator.GenerateSegmentDataScript` and `WrapSegmentData` return
+  the element.
+- **The popup opens at once and says why when it cannot show a segment.** It shows "Loading…" until the map is
+  decoded. If the map cannot be decoded, it shows "Internal flow data could not be decompressed: <reason>" and logs
+  it to the console, where a segment that could not be shown used to be a blank box. The popup is in the page before
+  anything is drawn in it. Otherwise a popup whose diagram is already in the render cache would be written before it
+  existed: in a prototype with the diagrams carried raw, 3 popups of 8 drew nothing.
+- The mergeable data file's `internalFlowSegments` is unchanged. A merged report writes the element from the merged
+  map, and its id list from the merged diagrams.
+
+### Fixed
+
+- **`HideLink` hides the link under Server and Local rendering too.** Kronikol writes a link on every tracked arrow
+  before it knows which calls captured spans. Under `BrowserJs`, the render script leaves the links with no segment
+  at rest. An inline SVG drawn by Server or Local rendering keeps every link as an `<a>`, though, and nothing hid it:
+  an arrow whose call captured nothing still looked like a link, and a click opened a popup saying there was no data.
+  Such a link now loses its href when the page loads, so it is plain text, and a click on one added later opens
+  nothing. Under `ShowMessage`, which keeps a message for every segment, nothing changes.
+- **A filtered export lost what a report's drawn diagrams could do.** "Export Filtered HTML" copied a diagram the
+  report had drawn as the SVG it drew, and no event listener survives that copy. Its arrows still looked bound but
+  opened nothing, and its notes no longer folded on a double-click. A flame chart the report had drawn no longer
+  zoomed. A diagram queued but not yet drawn when the export was taken went in marked as queued, and the export,
+  which skips a queued diagram, never drew it. The export's copy of each is now reset to its state before it was
+  drawn, so the export draws it from its source and binds it as the report does. Found in the consumer check of
+  3.31.4, and present in 3.29.0 too.
+- The XML documentation of five options described behaviour no report has. `InternalFlowDisplay.Inline`,
+  `InternalFlowTrigger.Hover`, `InternalFlowContentStrategy.SeparateFragments` with `InternalFlowFragmentsFolderName`,
+  and `InternalFlowNoDataBehavior.VisualDistinction` are read by nothing; the last behaves as `ShowMessage`. The docs
+  and the wiki now say so. Whether v4 removes or implements them is recorded in the roadmap (12.1).
+
+### Tests
+
+- `InternalFlowSegmentBlobTests` (new, 12 facts):
+  - The map round-trips through `z` as the same JSON.
+  - The element is a JSON script that sets no global.
+  - The base64 is written raw.
+  - The public wrapper lists every key.
+  - An empty map writes no element.
+  - The list is `hidden`, `has` or a tie as its sets say, and a key no diagram links is in neither.
+  - Every source counts once, in first-seen order, and an id ends where the page ends it.
+  - The live and merge emit sites write the same element.
+
+  The five facts that call only public API are red on 3.31.4; the rest call the internal API this release adds.
+- `InternalFlowHtmlGeneratorTests`: the map's activity diagram carries its PlantUML raw, and it decodes back to the
+  source. Red on 3.31.4.
+- `InternalFlowSegmentMapReportTests`: for every link a real report shows, the element's list says what the map says
+  (under `HideLink` and `ShowMessage`). Red on 3.31.4. The existing facts read the element.
+- `MergeableReportTests` and `ComponentDiagramReportTests` now anchor on the element. The merge assertion used to
+  pass on the popup script's own mention of the old global, and it is red on 3.31.4.
+- `IflowPopupTests` (Playwright):
+  - The popup opens before the map is decoded and fills when it is.
+  - The map is decoded once however many popups open.
+  - A popup draws its diagram with no decode of its own.
+  - A second popup whose diagram is cached still draws it. Attaching the popup after filling it (the old order)
+    fails this fact and two others.
+  - A map that is not gzip says so.
+  - A page with no element has no segment.
+  - A page that sets the old global works as before.
+  - Under `HideLink`, a server-drawn link with no segment opens nothing (red before the fix).
+- `ArrowLinkOpensPopupTests` (new, Playwright, on reports written by the whole pipeline):
+  - Clicking an arrow opens its popup. This one is green on 3.31.4 as well: until now no test clicked a real arrow.
+  - An arrow is bound exactly when it has a segment, on a page carrying `hidden` and on one carrying `has`. Red on
+    3.31.4.
+  - A merged report binds and opens the arrows of both shards.
+- `ExportFilteredHtmlRenderingTests` (Playwright):
+  - An arrow opens its popup in the export, whether its diagram was drawn before the export or not.
+  - A note drawn before the export still folds.
+  - A flame chart drawn before the export still zooms.
+  - The export carries the segment element whole.
+
+  All red on 3.31.4, each for its own reason.
+- Full suites on the release: the unit tier's 48 projects (`Kronikol.Tests` 5,949 passed and 1 skipped; IKVM 55) and
+  Playwright 937 passed with 28 skipped, no failure.
+
+## [3.31.8] - 2026-09-27
+
+**Patch - a third audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3), and the views a report drawn by the Node
+renderer, the Java engine or a PlantUML server left blank.** Every change is a fix, so the patch part moved. Nothing
+new is public. Report output changes (diagram sources, the page scripts, the component panel): the Kronikol4J
+divergence ledger records it. Template pins move to 3.31.7.
+
+### Fixed
+
+- **Under `PlantUmlRendering.NodeJs`, an internal-flow link opened nothing.** The Node renderer's engine draws a link
+  as blue text, not as a link element, and only a `BrowserJs` page carried the script that binds link text to its
+  popup. The page now binds a diagram's links when the diagram comes into view: a link opens its popup, and a link
+  with nothing to show rests in the text's colour, as under `BrowserJs`.
+- **Under every renderer but `BrowserJs`, the Activity tab and the internal-flow popups stayed blank.** Kronikol
+  writes those diagrams for the page to draw, and the page had no engine to draw them with. Such a page now carries
+  the engine on demand: it fetches nothing when the page opens, and fetches the engine the first time a reader opens
+  one of those views. Behaviour change: a NodeJs, Server or Local report with internal-flow tracking on fetches the
+  engine from the CDN when a reader opens the Activity tab or a popup; offline, the view says the engine could not
+  be loaded, where it was blank.
+- **The run report's embedded component diagram stayed blank under every renderer but `BrowserJs`.** It was left
+  for the page to draw, and under NodeJs was written with the C4 library, which the Node renderer cannot load. It is
+  now drawn when the report is written, the way `ComponentDiagram.html` draws it: the Node renderer's picture of the
+  plain syntax under NodeJs, the delegate's under Local, the server's under Server. If the drawing fails, the panel
+  says why and the run records a `RenderFailure` diagnostic.
+- **A control character in captured text broke the diagram's picture.** A terminal's escape character, a NUL, a
+  vertical tab or a form feed (any C0 control but a tab, a line feed or a carriage return), U+FFFE and U+FFFF cannot
+  appear in XML, and both engines copied them into the SVG. As an image (NodeJs, Local and Server with internal-flow
+  tracking off) the diagram did not load, and the context menu's Copy and Save as PNG did nothing. Such a character
+  is now drawn as its Control Pictures symbol (the escape character as ␛), and U+FFFE and U+FFFF as U+FFFD; the same
+  goes for a code point or a numeric reference naming one. The context menu's copies and the Node renderer write the
+  same symbols for a diagram from an earlier report. Behaviour change: such a character was drawn as nothing or as a
+  box, and is drawn as its symbol.
+- **A numeric reference past U+10FFFF lost the diagram.** `&#9999999;` in a step name, a test name, a UI action's
+  label or an assertion message made both engines fail. It is drawn as written.
+- **A backslash in a step name, a test name, a UI action's label or a span name was read by the engine.** In those
+  one-line statements `\n`, `\r` and `\l` broke the line, `\t` was a tab and `\\` one backslash, so a step naming
+  `C:\temp\new` drew `C:`, a tab, `emp` and then `ew` on a line of its own. Each backslash is drawn as written.
+  Behaviour change: a literal `\n` in a step name no longer breaks the line.
+- **`\t` in an assertion message was drawn as a tab, and a backslash took an escaping `~` with it**, as in a payload
+  note before 3.31.2. Both are drawn as written.
+- **A line break in a span name broke the Activity tab's and the popup's diagram.** It is drawn as a line break.
+- **The browser split a tall diagram wrongly when a note quoted an arrow.** A line holding `->` or `-->` inside a
+  payload note (`a -> b`, an HTML comment) was counted as a message, so every later fragment was numbered too high,
+  and one inside an assertion message could end a fragment in the middle of the note. A note's lines are no longer
+  read as diagram lines.
+- **A split diagram holding `alt … else … end` drew a syntax error in every fragment (since 3.0.48).** `else` was
+  counted as a block of its own, so each fragment closed it with an extra `end`.
+- **Hiding assertions broke a diagram whose assertion message said "end note".** The assertion was cut at the words
+  and the rest of it was left in the diagram. An assertion note now ends at its own last line.
+
+### Documentation
+
+- `Internal-Flow-Tracking`, `PlantUML-Browser-Rendering` and `Inline-SVG-Rendering` say what a NodeJs, Server or
+  Local report draws in the browser and when it fetches the engine, and how its component diagram is drawn.
+  `Content-Formatting` and `Step-Tracking` list this release's escapes.
+
+### Tests
+
+- `OnDemandRenderingReportTests` (unit, new): the component panel per renderer, a failed drawing, the C4 rule and which
+  pages carry the engine and how. `OnDemandRenderingTests` (Playwright, new): a NodeJs link opens its popup and one
+  with nothing to show rests; the page fetches no engine until the Activity tab is opened; a popup draws its diagram
+  under NodeJs and Local; a NodeJs run report shows its component diagram without the engine.
+- `CapturedTextEscapeTests` (unit): every character XML cannot hold, as a character, a code point or a reference, in
+  every place a diagram is built from; the Node renderer writes XML whatever the capture holds; the one-line
+  statements write and draw a backslash as written; an assertion note keeps `\t` and `\~`. `InternalFlowRendererTests`:
+  a span name's line breaks and backslashes. IKVM: a capture holding such characters draws a diagram that is XML.
+- `CapturedTextSplitTests` and `CapturedTextPageTests` (Playwright, new): numbering, notes and `else` across fragments;
+  Save as PNG on a diagram holding an escape character; hiding an assertion that says "end note".
+- One pin moves with the behaviour: `StepBarPlantUmlTests` (a literal `\n` in a step name is text). Every new fact
+  failed on the code before its fix, apart from the controls.
+
+## [3.31.7] - 2026-09-27
+
+**Patch - 3.31.6 reaches NuGet.** The patch part moved because nothing is new: one call is replaced by one
+every target framework has. 3.31.6 was tagged, but its release build failed, so no 3.31.6 package was
+published; this release carries everything listed under 3.31.6. Template pins stay at 3.31.5, the last
+published release.
+
+### Fixed
+
+- **3.31.6 did not build for net8.0.** The name of the Node renderer's script used
+  `Convert.ToHexStringLower`, which .NET 9 added, and `Kronikol` also targets net8.0, so the release build
+  stopped with CS0117. It uses `Convert.ToHexString` and lowers the result, which gives the same name. The
+  checks before 3.31.6 built only the net10.0 test projects; 3.31.7's release filter was built in Release
+  for every target framework before it was tagged.
+
+## [3.31.6] - 2026-09-27
+
+**Tagged, never published.** The release build failed on the net8.0 target (see 3.31.7), so no 3.31.6
+package reached NuGet. 3.31.7 carries everything below.
+
+**Patch - an audit of `plans/ENGINE_PIN_PLAN.md` (stage 1 P4, shipped as 3.30.4, 3.31.1 and 3.31.3).** Every change
+is a fix, so the patch part moved. Nothing new is public. Template pins move to 3.31.5.
+
+### Fixed
+
+- **A Node render could run another Kronikol version's script, or one half written.** `PlantUmlRendering.NodeJs`
+  keeps the engine in `%LOCALAPPDATA%/Kronikol/plantuml-js/<engine version>/`. Every process wrote its render script
+  there as `plantuml-render.js` on its first render and started node on that name from then on. The directory is
+  named for the engine, so every Kronikol version on one engine shares it: 3.31.1 to 3.31.3 on 1.2026.8, and the
+  `kronikol` tool beside a test project on another version. A process therefore ran whichever version's script had
+  been written last, so a 3.31.3 process could run 3.31.1's and lose 3.31.3's `--jitless` fix. The write also
+  truncated a file another process's node could be reading, and on Windows it failed outright while another process
+  had the file open ("being used by another process"). Either way the batch failed and every diagram of that report
+  stood as a placeholder. The script is now `plantuml-render.<hash>.js`, named for its own bytes: a copy already
+  there with those bytes is left alone, and anything else is replaced by the verified rename 3.31.1 gave the engine
+  files. An older `plantuml-render.js` in the directory stays, for the versions that still run it.
+- **A refused rename said only "Access to the path is denied."** When the Node renderer could not replace a cached
+  file because another process held it open, and the file in place did not match its known hash, the error named
+  neither the file nor what to do. It now names the file and the directory to delete, and a file that cannot be read
+  counts as one that does not match (the read used to throw from inside the handler).
+- **The main-thread path did not say what a refused `viz-global.js` costs.** On the worker path the console says
+  that Graphviz is not loaded and the engine lays out with its Smetana port; the main-thread fallback logged the
+  integrity failure alone. Both now log the same sentence. The report's render script changes by that one function.
+
+### Tests
+
+- `EngineCacheTests`: the render script is written under a name of its own bytes and two builds keep their own; a
+  script already in place is not written again, with or without a reader holding it; a damaged one is replaced; and,
+  on Windows, a rename refused while another process holds the file keeps that process's verified copy, or, when
+  the copy does not verify, fails naming the directory to delete. That branch had never run under test.
+- `NodeJsPlantUmlRendererTests`: node is started on the script of this build, and a render leaves that script under
+  its own name (Integration).
+- `BrowserRenderWorkerTests`: the engine refusal's console line on the worker path, the main-thread path and over
+  http; a refused `viz-global.js` on the main-thread path (telemetry, console line, and a component diagram laid out
+  by Smetana); and two facts on a report served over `http://127.0.0.1` by a loopback file server, where every other
+  fact opens `file://`: both engine files verified in worker mode, and a wrong hash refused.
+- Red on 3.31.3: the script facts on a stub, the node-start fact on its file name, the refused-rename fact on the bare
+  `UnauthorizedAccessException`, the main-thread viz fact on its console line. The rest pin behaviour 3.31.3 already
+  had. Eight mutations of the new code, each turning only its own facts red.
+
+### Documentation
+
+- Wiki: `Large-Response-and-Diagram-Handling` gives the statement-limit edges measured on the npm engine (the block
+  and bar edges are where V8's stack runs out, about 2,000 characters under node 25.9) instead of the fork build's
+  3,660 to 5,641 and 4,124, which 3.31.1 corrected in the source only; `Diagnostics-and-Debugging`'s worker-mode check
+  gains `webAssembly` and what a refused `viz-global.js` costs; `PlantUML-Browser-Rendering` says how the Node
+  renderer writes its script.
+- `plans/ENGINE_PIN_PLAN.md` §10.4 records the audit. `ROADMAP.md`: row 14.2 counts the Node cache's hash as a sixth
+  site, off the WASI path, as the plan had said it would; Appendix C gains the plan's leftovers (the mirror option
+  among them), and rows that still called the npm move or the fragment re-measure open say they are done.
+
+### Kronikol4J
+
+- A ledger entry: the render script's viz message, not mirrored (the port's 3.0.43 script has no integrity check).
+
 ## [3.31.5] - 2026-09-27
 
 **Patch - an audit of `kronikol query flow`'s nesting (`plans/FLOW_NESTING_PLAN.md` S1 and S2, releases 3.30.3

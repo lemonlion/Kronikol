@@ -3,7 +3,7 @@
 **Date:** 2026-09-22 · **Repo version:** 3.27.2 (`2843018a`) · **Status: executed** (green-lit
 2026-09-25), in two releases: 3.29.6 (S3a, S4, S5 and F26) and 3.30.0 (S1, S2 and S3b). The escapes it
 measured and deferred followed as 3.30.1, an audit of all three as 3.30.2 (§12.4), and a second audit, which
-drew every kind of captured text on both engines, as 3.31.2 (§12.5). §12 is the execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
+drew every kind of captured text on both engines, as 3.31.2 (§12.5), and a third, which fuzzed the contexts the second left out and the page scripts that read captured text back, as 3.31.8 (§12.6). §12 is the execution log. This is P3 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
 `ROADMAP.md` item 1.6, written as its own plan. §10 is the assumption ledger: what was **RUN** against
 the pinned engine on 2026-09-22, what was only **READ**, and what is still open.
 
@@ -1972,3 +1972,125 @@ width, which is how it draws a carriage return); both read it now.
   base (7 min 50 s, 7 min 56 s), 895 on 3.30.4 and on 3.31.0 (8 min 29 s, 9 min 38 s), and 899 (7 min 59 s) on 3.31.1.
 - The differential fuzz was not run again on the final build: the paint facts cover each fixed class on both
   engines, and a second pass costs 14 minutes of the pin and the Java renders beside the timing-sensitive E2E run.
+
+### 12.6 The third audit, 3.31.8 (patch)
+
+Asked for on 2026-09-27: was anything missed from P3, or were there holes in its implementation; fix it, without
+getting in the way of the live sessions (the audits of P4 and of `FLOW_NESTING_PLAN`, and P5). The first audit
+(§12.4) checked each deliverable against the code and the second (§12.5) drew captured text in five contexts on
+both engines. This one took the angles neither had: the differential fuzz on the engine 3.31.1 pins (the npm
+release; the second audit drew on the fork build), the contexts the fuzz had left out (a step's name, a test's
+name, a UI action's label, an assertion's message, a span's name), whether each SVG the engines draw is XML at
+all, and the page scripts that read captured text back (the fragment splitter, the assertion filter, the context
+menu). The work was done in its own worktree from `edf258e7`, rebased on 3.31.3 and on 3.31.4; the numbering was
+agreed with the sessions holding 3.31.4 (P5 R1), 3.31.5 (the `FLOW_NESTING_PLAN` audit) and 3.31.6 (the P4 audit).
+
+**Checked, and sound:** the pin 3.31.1 moved to draws the second audit's corpus as the fork build did: the same 43
+differences, every one a backslash in an arrow label (§12.5's leftover), and none in a note, a doc string or a cell
+(`fuzz-npm.txt`, `fuzz-fork-labels.txt`). 3.31.2's IKVM and Node paint facts ran in CI; none was skipped. Every S1
+reader keys on `NOTE_HEADER_TAG`. The rest rule in `bindIflowLinks` reads attributes only, so it costs no layout
+on a large diagram.
+
+**Found, and fixed in 3.31.8:**
+- **A character XML cannot hold left the diagram's SVG not XML, on both engines.** A C0 control other than a tab,
+  a line feed or a carriage return (a terminal's escape character, NUL, VT, FF), U+FFFE or U+FFFF in captured text
+  reached the SVG as the character (the pin) or as a reference to it (Java's `&#27;`): 65 of the 135
+  control-character cases each engine drew are not XML (`xmlcheck.py`). A page draws an inline SVG anyway; as an
+  image (NodeJs, Local and Server with internal-flow tracking off) the diagram did not load, the context menu's
+  Copy and Save as PNG did nothing (its image has no `onerror`), and its SVG copies opened nowhere.
+  `IsBinaryContent` replaces only a body that is more than a tenth control characters. Every line a diagram is
+  built from now goes through `PlantUmlCreator.ReplaceXmlInvalidCharacters`: a control is written as its Control
+  Pictures glyph (the escape character as U+241B), U+FFFE and U+FFFF as U+FFFD, and so is a `<U+hhhh>` or a decimal
+  reference naming one or a surrogate, which the engines decode in text that keeps its markup. The Node renderer's
+  serializer and the context menu's copy write the same stand-ins, for a source from an earlier report. A
+  behaviour change: such a character was drawn as nothing or as a box, and is drawn as its picture.
+- **A decimal reference past U+10FFFF lost the diagram.** `&#9999999;` in a step's name, a test's name, a UI
+  action's label or an assertion message made both engines throw (`java.lang.IllegalArgumentException` under
+  IKVM). It gets a zero-width space after its `&`, as a payload's references have since 3.30.1, and draws as written.
+- **A backslash in a one-line statement was read.** A step's name, a test's name, a UI action's label and a span's
+  name are each one statement, where both engines read `\n`, `\r` and `\l` as line breaks, `\t` as a tab and `\\`
+  as one backslash: a step naming `C:\temp\new` drew `C:`, a tab and `emp`, then `ew` on a line of its own (the new
+  contexts' fuzz, `fuzz-npm-new-contexts.txt`). Each backslash is written `<U+005C><U+200B>`, the step bar's form
+  since 3.31.2 (`PlantUmlCreator.EscapeOneLineMarkup`), measured in all four statements on both engines before it
+  was written (`cand8.json`, `cand8-pin.txt`, `cand8-java.txt`: 51 cases drawn as written; the other 8 are creole
+  those statements keep by design). A UI action's label is escaped before its own line breaks are written as `\n`.
+  A behaviour change: a literal `\n` in a step's name no longer breaks the line.
+- **An assertion note read `\t` as a tab, and a backslash took an escaping `~` with it**, as a payload note did
+  until 3.31.2: `EscapePreprocessorLine` now puts the zero-width space between them in an assertion note's lines too.
+- **A carriage return in a span's name ended the activity diagram's statement**, and the Activity tab and the
+  popup drew the engine's syntax error. A span's line breaks are written `\n`, a line break.
+- **The fragment splitter read a note's lines as diagram syntax** (`plantuml-browser-render-script.js`). Any line
+  holding `->` or `-->` counted as a message, so a body quoting `a -> b` or holding an HTML comment's `-->` did too:
+  with a note holding `<!-- a comment -->`, `a -> b` and `x --> y` after each call, the fragments of twelve calls
+  started their numbering at 1, 6 and 11 while each held two messages (`split-probe.js`). An assertion note is an
+  `hnote`, which the splitter did not know as a note, so a message in it that held an arrow started a unit inside
+  the note, and a fragment could end there: 474 fragments over a sweep of heights (`split-hnote-sweep.js`). The
+  splitter now knows every block note (`note`, `hnote` and `rnote` without a `:` in the header) and skips its lines
+  when it counts messages, cuts units, estimates heights, tracks blocks and chunks notes.
+- **`else` was a block of its own.** The statement-length check (3.0.48) declared its arrow and block patterns under
+  the splitter's names, and the later declaration replaced the earlier when the page loaded. Its block pattern counts
+  `else` and `also` as openers, so every fragment of a split diagram holding `alt … else … end` closed the `else`
+  with an extra `end`: 320 of 320 fragments over a sweep (`split-else-probe.js`). The check's patterns take names of
+  their own. The arrow pattern the splitter has in fact used since 3.0.48 is kept, under its own name: every
+  autonumber since has been built from its counts.
+- **Hiding assertions cut a note at "end note" mid-line.** `stripAssertionNotes` ended an assertion note at the
+  first `end note` anywhere, so a message saying "the end note" left the rest of the note in the source, and the
+  engine drew its syntax error in place of the diagram. The note now ends at a line that is `end note`.
+
+**Found outside P3, and fixed at the owner's request (N3).** A report drawn when it was written carried no engine
+for the views only a page can draw:
+- Under `PlantUmlRendering.NodeJs` an internal-flow link was drawn and opened nothing. The JavaScript engine draws a
+  link as blue text, never as an `<a>` (its one `setAttributeNS` is an image's), and a page binds link text in
+  `bindIflowLinks`, which only a `BrowserJs` page carried; the popup script catches clicks on `<a>` links, which the
+  Java engine draws (Server, Local). On the example project's NodeJs report: 64 link texts, no anchor, and a click
+  opened nothing (`nodejs-links-probe.js`).
+- Under every renderer but `BrowserJs` the Activity tab (the whole-test flow) and the internal-flow popups' diagrams
+  stayed blank: `InternalFlowHtmlGenerator` writes them for the page to draw, and the page had no engine. So did the
+  embedded component diagram, which the run report left to the page under every renderer and, under NodeJs, wrote
+  with the C4 library, which neither JavaScript engine can load.
+
+Recommended and taken: the component diagram is drawn by the report's renderer, the way `ComponentDiagram.html`
+draws it (NodeJs: the Node renderer's SVG of the plain syntax; Local: the delegate's; Server: the server's image).
+`ComponentDiagramReportGenerator.UsesC4` is one rule for both pages, and a render that fails says why in the panel
+and records a `RenderFailure`. The Activity tab and the popups are drawn in the browser, as under `BrowserJs`: such
+a page carries the render script with the engine on demand (`ON_DEMAND`), which fetches nothing when the page opens
+and fetches the engine the first time one of those views is shown. There is one of them per scenario and one per
+call, so drawing them when the report is written would cost a Node render each and report size, the opposite of
+P5. A NodeJs diagram's links are bound as a diagram drawn in the page is, once it comes into view: a link opens its
+popup, and a link with no popup rests in the text's ink (S2). A behaviour change: such a page fetches the engine
+from the CDN when a reader first opens one of those views; offline, the view says the engine could not be loaded,
+where it was blank. `GenerateHtmlReport` keeps its signature; the run report goes through an internal core that
+also takes the drawn component diagram.
+
+**Found by the P5 session, near this work:** in a filtered export under `BrowserJs`, a diagram drawn before the
+export keeps its link styling and loses its listeners (F14, `INTERNAL_FLOW_BLOB_PLAN.md` §11.1). P5 R2 fixes it in the
+export alone, which resets each drawn diagram so the exported page draws it again with every hook; this release's
+markers on a diagram that arrives drawn (`data-iflow-bound`, and an expando guard that does not survive the export)
+need nothing from it.
+
+**Not fixed, with the reason:**
+- A backslash in an arrow label (§12.5, Appendix C): still the only difference on the pin in the second audit's corpus.
+- Creole in a step's name, a test's name, an assertion message, a span's name and a UI action's label is drawn as
+  markup: most of the new contexts' 1,123 differences are that. By design, and in Appendix C since §12.5.
+- A header line cut at 80 characters can part a `<` from the `U+hhhh>` after it; the reader joins the pieces before
+  it decodes, so Copy box text reads it right.
+
+**Tests.** Each new fact was red on the code before its fix, apart from controls:
+- Unit: with `ReplaceXmlInvalidCharacters` and `EscapeOneLineMarkup` as pass-throughs, 14 of the 202 facts and rows
+  in `CapturedTextEscapeTests` and `StepBarPlantUmlTests` failed (the escape theory's nine new rows, its controls
+  passing; four new facts; and the step bar pin this release moves, since a literal `\n` is text now). The two span
+  facts in `InternalFlowRendererTests` failed on 3.31.3's renderer. `OnDemandRenderingReportTests` (new): 11 of 16
+  failed on 3.31.3's generator with the two new members stubbed as it behaved; the other five pin what does not
+  change (a `BrowserJs` page, the C4 rule's Java rows, a NodeJs page without internal-flow tracking).
+- IKVM: the XML fact failed with the escapes as pass-throughs: the engine drew its error picture.
+- E2E, each on 3.31.3's scripts and generator: `OnDemandRenderingTests` (new) 6 of 6, `CapturedTextSplitTests`
+  (new) 3 of 3, and `CapturedTextPageTests` (new) 2 of 2 failed.
+
+**The suites:**
+- Core unit project on 3.31.4: 5,924 passed, 1 skipped, 0 failed. IKVM: 55.
+- E2E (the full project less the wiki GIF, screenshot and showcase classes) on 3.31.4: 917 passed (7 min 41 s). On 3.31.7: 920 passed (7 min 8 s).
+- Core unit project on 3.31.7: 5,933 passed, 1 skipped, and 1 failed: a timing comparison of a Node batch with single
+  spawns (`Batch_of_five_is_faster_than_five_single_spawns`), under the load of the full run; it passed three runs of three alone.
+- On 3.31.7, all green: StepTracking 43; AssertionTracking 97, 111 and 125 on net8.0, net9.0 and net10.0; search engine
+  (Jint) 212; MSTest 51; xUnit2 12; xUnit3 15; LightBDD.xUnit3 26; TUnit 18; LightBDD.TUnit 25. Example.Api: xUnit3 5;
+  LightBDD.xUnit3 6; BDDfy.xUnit3 2; ReqNRoll.xUnit3 8; NUnit4 2.

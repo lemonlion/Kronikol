@@ -4089,6 +4089,92 @@ public static class ReportTestHelper
         return new Uri(path).AbsoluteUri;
     }
 
+    /// <summary>Held by every fixture that runs the whole pipeline, which memoises its diagrams process-wide.</summary>
+    private static readonly object WholePipeline = new();
+
+    /// <summary>
+    /// A run report written by the whole pipeline (<see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>) with
+    /// internal-flow tracking on and its defaults (HideLink, ShowLinkOnHover): one scenario whose calls to
+    /// <c>/with-flow-N</c> have spans of their own trace, so they get a segment, and whose calls to <c>/without-flow-N</c>
+    /// have none, so they do not. Logged under an id no other test uses; the spans go to the process's span store.
+    /// <paramref name="name"/> names the feature and the scenario; <paramref name="mergeableData"/> also writes the mergeable
+    /// data file, <c>TestRunReport.json</c>, beside the report.
+    /// </summary>
+    public static (string Uri, string ReportsDir) GenerateRunReportWithFlowArrows(string tempDir, string outputDir, string fileName,
+        int withFlow, int withoutFlow, string name = "Flow arrows", bool mergeableData = false)
+    {
+        var reportsDir = Path.Combine(tempDir, "flow-arrows-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(reportsDir);
+        var testId = "flow-arrows-" + Guid.NewGuid().ToString("N");
+        var sourceName = "Kronikol.Tests.FlowArrows.E2E." + Guid.NewGuid().ToString("N");
+        using var source = new System.Diagnostics.ActivitySource(sourceName);
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = s => s.Name == sourceName,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+        var spans = new List<System.Diagnostics.Activity>();
+        var at = DateTimeOffset.UtcNow.AddSeconds(-30);
+
+        void Span(string name, System.Diagnostics.ActivityTraceId trace, DateTimeOffset start, int ms)
+        {
+            System.Diagnostics.Activity.Current = null;
+            var span = source.StartActivity(name, System.Diagnostics.ActivityKind.Internal,
+                new System.Diagnostics.ActivityContext(trace, System.Diagnostics.ActivitySpanId.CreateRandom(), System.Diagnostics.ActivityTraceFlags.Recorded))!;
+            span.SetStartTime(start.UtcDateTime);
+            span.SetEndTime(start.UtcDateTime.AddMilliseconds(ms));
+            spans.Add(span);
+        }
+
+        lock (WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            for (var i = 0; i < withFlow + withoutFlow; i++)
+            {
+                var flow = i < withFlow;
+                var path = flow ? $"/with-flow-{i}" : $"/without-flow-{i - withFlow}";
+                var id = Guid.NewGuid();
+                var trace = System.Diagnostics.ActivityTraceId.CreateRandom();
+                var start = at.AddMilliseconds(i * 200);
+                RequestResponseLogger.Log(new RequestResponseLog(name, testId, HttpMethod.Get, null, new Uri("http://orders" + path), [],
+                    "Orders", "Caller", RequestResponseType.Request, Guid.NewGuid(), id, false) { Timestamp = start, ActivityTraceId = trace.ToString() });
+                RequestResponseLogger.Log(new RequestResponseLog(name, testId, HttpMethod.Get, "{}", new Uri("http://orders" + path), [],
+                    "Orders", "Caller", RequestResponseType.Response, Guid.NewGuid(), id, false, System.Net.HttpStatusCode.OK)
+                    { Timestamp = start.AddMilliseconds(100), ActivityTraceId = trace.ToString() });
+                if (flow)
+                {
+                    Span("GET " + path, trace, start.AddMilliseconds(1), 60);
+                    Span("SELECT orders " + i, trace, start.AddMilliseconds(10), 20);
+                }
+            }
+            foreach (var span in spans)
+                Kronikol.InternalFlow.InternalFlowSpanStore.Add(span);
+
+            ReportGenerator.CreateStandardReportsWithDiagrams(
+                [new Feature { DisplayName = name, Scenarios = [new Scenario { Id = testId, DisplayName = name, Result = ExecutionResult.Passed }] }],
+                at.UtcDateTime.AddSeconds(-1), DateTime.UtcNow,
+                new ReportConfigurationOptions
+                {
+                    ReportsFolderPath = reportsDir,
+                    PlantUmlRendering = PlantUmlRendering.BrowserJs,
+                    InternalFlowTracking = true,
+                    InternalFlowSpanGranularity = InternalFlowSpanGranularity.Full,
+                    GenerateComponentDiagram = false,
+                    GenerateSpecificationsReport = false,
+                    GenerateSpecificationsData = false,
+                    GenerateMergeableData = mergeableData,
+                });
+            DefaultDiagramsFetcher.Reset();
+        }
+        foreach (var span in spans) span.Dispose();
+
+        var html = Path.Combine(reportsDir, "TestRunReport.html");
+        File.Copy(html, Path.Combine(outputDir, fileName), true);
+        return (new Uri(html).AbsoluteUri, reportsDir);
+    }
+
     /// <summary>
     /// A run report written by the whole pipeline (<see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>)
     /// with <c>PlantUmlTheme = "cerulean"</c> under <c>BrowserJs</c>, the default (DIAGRAM_COLOURS_PLAN S3b): two
@@ -4101,6 +4187,11 @@ public static class ReportTestHelper
         Directory.CreateDirectory(reportsDir);
         var pay = "themed-pay-" + Guid.NewGuid().ToString("N");
         var refund = "themed-refund-" + Guid.NewGuid().ToString("N");
+        // The whole pipeline memoises its diagrams process-wide (DefaultDiagramsFetcher): one such fixture at a time,
+        // each from a fresh cache, or one report is drawn from the other's logs.
+        lock (WholePipeline)
+        {
+        DefaultDiagramsFetcher.Reset();
         RequestResponseLogger.LogPair("Pay", pay, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test");
         RequestResponseLogger.LogPair("Refund", refund, HttpMethod.Post, new Uri("http://payments/refund"), "payments", "Test");
 
@@ -4127,6 +4218,8 @@ public static class ReportTestHelper
                 GenerateSpecificationsReport = false,
                 GenerateSpecificationsData = false,
             });
+        DefaultDiagramsFetcher.Reset();
+        }
 
         var html = Path.Combine(reportsDir, "TestRunReport.html");
         File.Copy(html, Path.Combine(outputDir, fileName), true);

@@ -6,7 +6,8 @@ Q4, Q5, Q6 and Q7 as their recommendations say. **Executed: S0 shipped as 3.30.4
 2026-09-26). §1 is what was RUN and READ on 2026-09-22, §9 is the assumption ledger, §10 is the execution log,
 with the departures (§10.2: a refused `viz-global.js` loses no Kronikol diagram, since the engine falls back to
 Smetana; the default fragment height is the fastest measured). **§10.1's `--jitless` leftover was fixed as 3.31.3**
-(2026-09-27, §10.3), with the other ways WebAssembly is off and the Node renderer.
+(2026-09-27, §10.3), with the other ways WebAssembly is off and the Node renderer. **Audited 2026-09-27, follow-ups as
+3.31.6, published as 3.31.7** (§10.4): the Node renderer's script is named for its own bytes, and what the plan's own steps missed.
 
 **Re-checked 2026-09-25 against 3.29.3 (`b74c8ddc`):** every source, test and render-bench file this plan
 cites is unchanged since `2843018a` except `ReportGenerator.cs` (the fragment-height parameter moved
@@ -1348,6 +1349,83 @@ port needs the npm pin first. A ledger entry, not mirrored.
 Lockdown Mode is the case it stands for). Upstream, the engine could fall back to Smetana when `Viz.instance()`
 rejects, not only when `Viz` is missing, which would cover a host that loads Graphviz itself; not proposed, since
 Kronikol's own pages no longer load it there.
+
+### 10.4 The audit, tagged 3.31.6 and published as 3.31.7 (2026-09-27)
+
+The owner asked whether anything in P4 had been missed or left a hole. Worktree `C:/Code/Kronikol-p4audit`, branch
+`p4/audit2`, from `fa866f8b`; the number agreed with kronikol-bc (3.31.4, P5 R1) and kronikol-e1 (3.31.5). Each slice
+was read against its part of §3, §5 and §7 line by line, then against the checklist earlier audits built (stale doc
+comments, sibling wiki pages, a fallback path with no test, every writer of a changed file).
+
+**Held as planned** (READ, and CI where named). The request arrow and the component edge are the only `[[#iflow…]]`
+writers, and both are capped. `maxSvgSize` is passed at the three engine sites. The S0 E2E reads the `[Full path]`
+note. The four integrity E2Es, the budget test and the four WebAssembly-off facts ran on CI for `fa866f8b`. The 3.31.1
+changelog carries the four behaviours §3.6 lists and the inlined constant §6 asks for. The THEME, TEOZ, D17 and 12.1
+rows say what §7 hands them. The Kronikol4J ledger has all three entries. Only two pages load the engine, the report
+and the standalone component page, and both go through the shim.
+
+**Found in the code.**
+- **The render script lived under one fixed name.** `NodeJsPlantUmlRenderer` wrote `plantuml-render.js` with
+  `File.Create` on every process's first render and started node on that name from then on. The directory is named
+  for the engine, so every Kronikol version on one engine shares it: 3.31.1, 3.31.2 and 3.31.3 on 1.2026.8, and the
+  `kronikol` tool beside a test project on another version. So a process ran whichever build's script was written
+  last (a 3.31.3 process could run 3.31.1's and lose the `--jitless` fix), a node process could read the file while
+  another process truncated it (READ), and on Windows the write itself threw while another handle had the file open
+  (RUN: `File.Create` over a file opened with node's sharing flags, "being used by another process"). Either way
+  `RenderMany` threw, and `RenderNodeBatchIsolated` stood every diagram of that report as a placeholder. S3 made the
+  engine files safe across processes and left this write out. `EngineCache.EnsureScript` now writes the script as
+  `plantuml-render.<first 16 hex digits of its SHA-256>.js`, leaves a file already there with those bytes alone, and
+  replaces anything else by the verified rename the engine files use; node is started on that name.
+- **A refused rename over a file that does not verify** rethrew the operating system's exception, "Access to the path
+  is denied.", with neither the file nor the remedy §3.3 item 5 asks for. It now names the file and the directory to
+  delete. A file that cannot be read counts as one that does not verify, where the read used to throw from inside the
+  handler. The branch that keeps another process's verified copy had never run under test (§10.2); two Windows facts
+  now hold the final file open to reach both outcomes.
+- **The fallback's refused `viz-global.js`** logged the integrity failure only, where the worker path also said that
+  Graphviz is not loaded and Smetana lays out instead (§5: "says in the console why Graphviz is missing"). Both paths
+  now log one sentence, from one function.
+
+**Found in the tests.** §5 says an engine refusal is named in every diagram's place and in the console, on both paths:
+the console line was never asserted. The fallback's viz refusal had no test. Every E2E opened its report from
+`file://`, where §5 names `http://localhost` too, and a hosted report is on an http(s) origin whose fetches carry a real
+`Origin`. The probes of §1.10 measured it; nothing guarded it.
+
+**Found in the docs.**
+- S1 reworded the statement-limit class doc (the block and bar edges are V8 stack edges near 2,000 on node 25.9) but
+  not its copy in the wiki's `Large-Response-and-Diagram-Handling`, which still quoted the fork build's 3,660 to 5,641
+  and 4,124 and said the edges had only ever moved up.
+- 3.31.3 missed a sibling page: the `Diagnostics-and-Debugging` worker-mode check listed the integrity fields, not
+  `webAssembly`.
+- §7's hand-offs to `ROADMAP.md`. §2 says the sixth managed-hash site is "noted for the 14.2 count", and it was not; the
+  mirror option was recorded nowhere; Appendix C had no row for this plan; its `TEOZ_PERF` and Render Bench rows, D.3
+  and the register's `TEOZ_PERF` row still called the npm move or the fragment re-measure open.
+- `STAGE_1_PLAN.md`'s header still said P4 was written and not green-lit at `fa866f8b`; kronikol-bc's 3.31.4 corrected it
+  while this audit ran.
+
+**Tests.** `EngineCacheTests`, 5 new: the script's name, a script in place left alone, a damaged one replaced, and the
+two refused renames (Windows only: Linux renames over an open file). `NodeJsPlantUmlRendererTests`, 2 new: node is
+started on the build's own script, and a render leaves it under that name (Integration). `BrowserRenderWorkerTests`: the
+console line on the three engine refusals, the fallback's viz refusal, and two facts over `http://127.0.0.1` through a
+loopback file server (`LoopbackFileServer`; only the report comes from it, the engine from the CDN). Red on 3.31.3: the
+three script facts on a stub, the node-start fact on the name (`plantuml-render.js`), the refused-rename fact on the
+bare `UnauthorizedAccessException`, the fallback's viz fact on its console line. Guards that pass on 3.31.3 by design:
+the verified-copy fact, the console asserts, the two http facts and the Integration fact. Mutations, each red on its
+own facts only: one fixed name rewritten every time (2 facts); a script trusted without its hash (1); the other
+process's verified copy refused (1); the script rewritten through the rename every time (1: the first cut of that fact
+missed it, because the refused rename fell back to the verified copy, so it now also checks with no handle open); node
+started on the fixed name (1); initialization writing the fixed name (1, the Integration fact); no console line on a
+refusal (3); the fallback's viz tag without its hash (1). Full suites on the release tree before the push: unit 5,897
+(+1 skip), IKVM 54, E2E 909; a history timing budget that failed once under the other sessions' load passed alone
+three times out of three.
+
+**3.31.6 never reached NuGet.** Its release build failed on net8.0: `EngineCache.ScriptFileName` called
+`Convert.ToHexStringLower`, which .NET 9 added, and every check before the tag had built the net10.0 test projects
+only. 3.31.7 calls `Convert.ToHexString` and lowers the result (the same name), and `release.slnf` was built in
+Release for every target framework before its tag. The tag `v3.31.6` stays, as `v3.29.4` did.
+
+**Not done.** Firefox and WebKit stay measured by probes, not guarded by the E2E suite. A process whose cache directory
+is deleted by hand while it runs keeps its first check until it restarts (the documented remedy follows a failed check,
+and a failed check runs again). A process killed mid-download leaves its temporary file in the directory.
 
 ---
 

@@ -356,8 +356,9 @@ public class MergeableReportTests
         Assert.Contains("Adjust stock", html);
         // Component diagram embedded (toggle button rendered when component PlantUML is supplied).
         Assert.Contains("toggle_component_diagram", html);
-        // Internal-flow popup data present.
-        Assert.Contains("__iflowSegments", html);
+        // Internal-flow popup data present, as the element the popup decodes: the popup script itself names the old
+        // global (it still reads one a page sets), so the bare name would pass with no data at all (the 3.0.82 rule).
+        Assert.Contains("<script id=\"iflow-segments\" type=\"application/json\">{", html);
         // Whole-test-flow fragment injected verbatim.
         Assert.Contains("<div>flame</div>", html);
 

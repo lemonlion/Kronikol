@@ -2209,8 +2209,11 @@
     window._noteFontControls = __NOTE_FONT_CONTROLS__;
     window._noteWidthDefault = '__NOTE_WIDTH_DEFAULT__';
 
+    // The note ends at a line reading `end note`: its message can say "the end notes" mid-line, which ended the match
+    // there and left the rest of the note in the source, so hiding assertions broke the diagram (§12.6). A message line
+    // reading exactly `end note` is written as code points (EscapePreprocessorLine), so the first such line is the end.
     function stripAssertionNotes(source) {
-        return source.replace(/\n?hnote across <<assertionNote>>[^\n]*\n[\s\S]*?end note\n?/g, '');
+        return source.replace(/\n?hnote across <<assertionNote>>[^\n]*\n(?:[^\n]*\n)*?end note(?=\n|$)\n?/g, '');
     }
 
     function stripStepDelimiters(source) {

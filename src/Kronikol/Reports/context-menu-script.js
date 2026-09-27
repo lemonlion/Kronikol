@@ -64,8 +64,14 @@
         return 'PlantUML';
     }
 
+    // XMLSerializer writes a C0 control, U+FFFE or U+FFFF as it is, and an SVG holding one is not XML: its PNG never
+    // loaded (Copy and Save did nothing) and its SVG file opened in no viewer. Kronikol's generator no longer writes
+    // one, but a source from an earlier report can, so the copy writes each as the generator would (§12.6).
     function serializeSvg(svg) {
-        return new XMLSerializer().serializeToString(svg);
+        return new XMLSerializer().serializeToString(svg).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, function (c) {
+            var code = c.charCodeAt(0);
+            return code < 0x20 ? String.fromCharCode(0x2400 + code) : '\uFFFD';
+        });
     }
 
     function getBackgroundColor(svg) {

@@ -75,7 +75,7 @@ internal static class StepBarPlantUml
         // prefixes that make the engine load a bundle or drop the text: LightBDD writes a table
         // parameter as <$name>, which the bar used to paint as "". The wrapper never cuts a word that
         // holds a `<`, so a `~` stays with the `<` it escapes.
-        var labelLine = string.Join(@"\n", DiagramWidth.WrapLines(PlantUmlCreator.EscapeLoaderMarkup(labelLines[0]), DiagramWidth.MaxNoteTextLineChars));
+        var labelLine = string.Join(@"\n", DiagramWidth.WrapLines(PlantUmlCreator.EscapeOneLineMarkup(labelLines[0]), DiagramWidth.MaxNoteTextLineChars));
 
         var body = new List<string>();
         // Multi-line marker text (the ingest format allows it) used to fold into the coloured bar as

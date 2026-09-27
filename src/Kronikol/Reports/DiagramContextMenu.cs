@@ -51,7 +51,15 @@ public static class DiagramContextMenu
     /// a rendered-SVG cache of <paramref name="browserRenderCacheMegabytes"/> MB and diagram fragments of
     /// at most <paramref name="browserFragmentMaxHeight"/> estimated px. Negative values are treated as 0.
     /// </summary>
-    public static string GetPlantUmlBrowserRenderScript(int browserRenderWorkers, int browserRenderCacheMegabytes, int browserFragmentMaxHeight)
+    public static string GetPlantUmlBrowserRenderScript(int browserRenderWorkers, int browserRenderCacheMegabytes, int browserFragmentMaxHeight) =>
+        GetPlantUmlBrowserRenderScript(browserRenderWorkers, browserRenderCacheMegabytes, browserFragmentMaxHeight, onDemand: false);
+
+    /// <summary>
+    /// The browser render script, which fetches the engine when the page opens, or with <paramref name="onDemand"/> the
+    /// first time a view asks for a render: a report whose diagrams were drawn when it was written (NodeJs, Server,
+    /// Local) carries it that way for the views only the page can draw, the Activity tab and the internal-flow popups.
+    /// </summary>
+    internal static string GetPlantUmlBrowserRenderScript(int browserRenderWorkers, int browserRenderCacheMegabytes, int browserFragmentMaxHeight, bool onDemand)
     {
         var hostSource = GetPlantUmlWorkerHostScript();
         // JSON-escaping gives a JavaScript string literal; the default encoder also escapes `<`, so the
@@ -64,7 +72,8 @@ public static class DiagramContextMenu
             .Replace("__PLANTUML_CDN_BASE__", PlantUmlJsCdnBase)
             .Replace("__PLANTUML_ENGINE_INTEGRITY__", TrackingDefaults.PlantUmlJsIntegrity)
             .Replace("__PLANTUML_VIZ_INTEGRITY__", TrackingDefaults.VizGlobalJsIntegrity)
-            .Replace("__PLANTUML_WORKER_HOST_SOURCE__", hostLiteral);
+            .Replace("__PLANTUML_WORKER_HOST_SOURCE__", hostLiteral)
+            .Replace("__PLANTUML_ON_DEMAND__", onDemand ? "true" : "false");
     }
 
     public static string GetContextMenuScript() => WithDecompressHelper(LoadResource("context-menu-script.js"));

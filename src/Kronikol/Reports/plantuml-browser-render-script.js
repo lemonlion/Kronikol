@@ -42,7 +42,14 @@
     // BrowserRenderWorkers is 0, or when the engine cannot be fetched (offline with a cold cache, a CDN
     // host without CORS), the shim injects a viz script tag (where WebAssembly compiles) and an engine
     // module tag and renders on the main thread — the pre-3.0.45 path, one render at a time.
+    //
+    // On demand (ON_DEMAND): a report whose diagrams were drawn when it was written (PlantUmlRendering.NodeJs,
+    // Server or Local) still has views only the page can draw: the Activity tab of a scenario and the
+    // internal-flow popups. Until 3.31.8 such a page carried no engine and those views stayed blank. It now carries
+    // this script with ON_DEMAND set: nothing is fetched when the page opens (telemetry mode 'idle'), and the engine
+    // is fetched the first time one of those views asks for a render.
     (function () {
+        var ON_DEMAND = __PLANTUML_ON_DEMAND__;
         var VIZ_URL = '__PLANTUML_CDN_BASE__/viz-global.js';
         var ENGINE_URL = '__PLANTUML_CDN_BASE__/plantuml.js';
         var VIZ_INTEGRITY = '__PLANTUML_VIZ_INTEGRITY__';
@@ -57,7 +64,7 @@
         var WEBASSEMBLY_PROBLEM = webAssemblyUnavailable();
 
         var telemetry = window.__kronikolRender = {
-            mode: 'starting', workers: 0, workersRequested: WORKERS_REQUESTED, workersTarget: targetWorkers,
+            mode: ON_DEMAND ? 'idle' : 'starting', workers: 0, workersRequested: WORKERS_REQUESTED, workersTarget: targetWorkers,
             renders: 0, cacheHits: 0, cacheEntries: 0, cacheBytes: 0, workerMs: 0, injectMs: 0, errors: 0,
             inFlight: 0, maxInFlight: 0, engineFetchMs: null, engineReadyAt: null, fallbackReason: null,
             // 'verified' | 'mismatch' | null: null until the file's fetch settles, after a network failure, and
@@ -238,6 +245,11 @@
             }
         }
 
+        // What a viz-global.js that did not load costs, the same on both paths.
+        function vizMissing(reason) {
+            console.error('Kronikol: ' + reason
+                + '. Graphviz is not loaded: the engine lays out what it can with its Smetana port instead.');
+        }
         function integrityMessage(file, url, expected) {
             return 'engine integrity check failed: ' + file + ' from ' + url + ' does not match ' + expected
                 + '; the browser console names the hash it computed';
@@ -280,10 +292,7 @@
                     engineFailed(new Error(integrityMessage('plantuml.js', ENGINE_URL, ENGINE_INTEGRITY)));
                     return;
                 }
-                if (viz === null) {
-                    console.error('Kronikol: ' + integrityMessage('viz-global.js', VIZ_URL, VIZ_INTEGRITY)
-                        + '. Graphviz is not loaded: the engine lays out what it can with its Smetana port instead.');
-                }
+                if (viz === null) vizMissing(integrityMessage('viz-global.js', VIZ_URL, VIZ_INTEGRITY));
                 // An ES-module engine build (the npm @plantuml/core line) ends in `export { X as render,
                 // Y as renderToString }`; a classic worker cannot evaluate that, so expose the exports instead.
                 var tail = engine.slice(-300);
@@ -354,7 +363,7 @@
                 telemetry.vizIntegrity = 'verified';
             }, function (e) {
                 return tagFailure(VIZ_URL, VIZ_INTEGRITY, 'viz-global.js', 'vizIntegrity', e).then(function (failure) {
-                    console.error('Kronikol: ' + failure.message);
+                    vizMissing(failure.message);
                 });
             });
             // The engine is an ES module (the npm @plantuml/core line). The module tag fetches and checks
@@ -414,6 +423,7 @@
 
         // --- the shim -------------------------------------------------------------------------
         function shimRender(lines, id, opts) {
+            start();
             lines = normalizeLines(lines);
             var key = lines.join('\n');
             var target = { el: id ? document.getElementById(id) : null, id: id || null, opts: opts || null };
@@ -433,7 +443,8 @@
             pumpMain();
         }
         function shimPrefetch(sources) {
-            if (engineError || !workerCapable() || !sources || !sources.length) return;
+            // A prefetch is a guess: it never fetches the engine for an on-demand page.
+            if (!started || engineError || !workerCapable() || !sources || !sources.length) return;
             for (var i = 0; i < sources.length; i++) {
                 var src = sources[i];
                 if (typeof src !== 'string' || !src) continue;
@@ -466,13 +477,19 @@
             if (typeof Promise !== 'function' || typeof Map !== 'function') return 'ES2015 unavailable';
             return null;
         }
-        if (targetWorkers === 0) {
-            useMainThreadEngine('BrowserRenderWorkers = ' + WORKERS_REQUESTED);
-        } else {
-            var unavailable = canUseWorkers();
-            if (unavailable) useMainThreadEngine(unavailable);
-            else acquireEngine();
+        var started = false;
+        function start() {
+            if (started) return;
+            started = true;
+            if (targetWorkers === 0) {
+                useMainThreadEngine('BrowserRenderWorkers = ' + WORKERS_REQUESTED);
+            } else {
+                var unavailable = canUseWorkers();
+                if (unavailable) useMainThreadEngine(unavailable);
+                else acquireEngine();
+            }
         }
+        if (!ON_DEMAND) start();
     })();
 </script>
 <script>
@@ -493,6 +510,7 @@
             window._plantumlRendering = inFlight > 0;
         }
         var _pumlData = null;
+        var _onDemand = __PLANTUML_ON_DEMAND__;
         var _maxDiagramHeight = __BROWSER_FRAGMENT_MAX_HEIGHT__;
         var _maxNoteChars = 15000;
         var _estimatedArrowHeight = 45;
@@ -500,11 +518,33 @@
         window._splitDiagramSource = splitDiagramSource;
         window._chunkLargeNotes = chunkLargeNotes;
         window._countArrows = function(lines) { return countArrows(lines); };
-        // Regex arrow detection: matches ->, -->, -[#color]>, -[#color]->
-        var _arrowRx = /-(?:\[[^\]]*\])?-?>/;
+        // A message arrow in any of PlantUML's forms: ->, -->, -[#color]>, -[#color]->, <-, ->>. From 3.0.48 the
+        // splitter's narrower pattern shared its name with the statement-length check's (now _statementArrowRx), which
+        // replaced it when the page loaded, so this is the set every arrow count has used since, kept as it was.
+        var _messageArrowRx = /<{1,2}[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}|[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}>{1,2}/;
         // Regex return arrow detection: matches --> and -[#color]->
         var _returnArrowRx = /-(?:\[[^\]]*\])?->/;
-        function isArrowLine(trimmed) { return _arrowRx.test(trimmed); }
+        // A note, an hnote or an rnote statement. It is one line when its header has a `:` before any `<` (a step bar,
+        // a test's name, `note over X: text`), else a block running to its `end note`. Captured text lives in both: a
+        // note's lines, a step's or a test's name, an assertion's message. None of it is an arrow or a block, however
+        // it reads: a body quoting `a -> b` or an HTML comment's `-->` was counted as a step, so every later fragment
+        // was numbered too high, and an assertion message holding one started a unit inside its note, so a fragment
+        // could end inside the note (DIAGRAM_COLOURS_PLAN §12.6).
+        var _noteStatementRx = /^[hr]?note\b/i;
+        var _noteBlockEndRx = /^end\s*[hr]?note$/i;
+        function isNoteStatement(trimmed) { return _noteStatementRx.test(trimmed); }
+        function opensNoteBlock(trimmed) {
+            if (!_noteStatementRx.test(trimmed)) return false;
+            var header = trimmed.replace(/<<[^>]*>>/g, '');
+            var colon = header.indexOf(':'), angle = header.indexOf('<');
+            return !(colon >= 0 && (angle < 0 || colon < angle));
+        }
+        function closesNoteBlock(trimmed) { return _noteBlockEndRx.test(trimmed); }
+        // Only a statement outside a note is read: callers skip the lines of a note block, and this skips a note's own
+        // line and a comment.
+        function isArrowLine(trimmed) {
+            return !isNoteStatement(trimmed) && trimmed.charAt(0) !== "'" && _messageArrowRx.test(trimmed);
+        }
         function isReturnArrow(trimmed) { return _returnArrowRx.test(trimmed); }
         function getPumlZ(el) {
             if (!_pumlData) {
@@ -586,13 +626,11 @@
             for (var i = 0; i < lines.length; i++) {
                 var trimmed = lines[i].trim();
 
-                if (trimmed.startsWith('note') && (trimmed.indexOf(' left') >= 0 || trimmed.indexOf(' right') >= 0) && !trimmed.startsWith('note over')) {
+                if (inNote) {
+                    if (closesNoteBlock(trimmed)) inNote = false;
+                    currentUnit.push(lines[i]);
+                } else if (opensNoteBlock(trimmed)) {
                     inNote = true;
-                    currentUnit.push(lines[i]);
-                } else if (trimmed === 'end note') {
-                    inNote = false;
-                    currentUnit.push(lines[i]);
-                } else if (inNote) {
                     currentUnit.push(lines[i]);
                 } else if (isArrowLine(trimmed)) {
                     // Arrow line — this starts a new trace unit if we have response from previous
@@ -631,6 +669,8 @@
         // `partition X`, `loop ×3 · 12–40 ms`, `alt …`, `opt …`, `group …`, `par …`, `critical …` — the
         // block statements that are closed by a bare `end` and must be closed/re-opened when a diagram
         // is split into height-bounded fragments (the server-side builder does the same).
+        // Until the statement-length check's pattern took its own name (_statementBlockRx), it replaced this one, and
+        // `else` and `also` were read as openers too: a fragment cut after an `else` closed its `alt` twice.
         var _blockOpenerRx = /^(partition\s|loop\b|alt\b|opt\b|group\b|par\b|critical\b|break\b)/;
         function isBlockOpener(trimmed) { return _blockOpenerRx.test(trimmed); }
         window._isBlockOpener = isBlockOpener;
@@ -639,17 +679,23 @@
         function estimateUnitHeight(unitLines) {
             var height = 0;
             var inNote = false;
+            // A block note other than a payload note (an assertion note) adds nothing, as before: only its lines
+            // stopped counting as arrows.
+            var inOtherNote = false;
             for (var i = 0; i < unitLines.length; i++) {
                 var trimmed = unitLines[i].trim();
-                if (isArrowLine(trimmed)) {
+                if (inNote || inOtherNote) {
+                    if (closesNoteBlock(trimmed)) { inNote = false; inOtherNote = false; }
+                    else if (inNote) height += _estimatedNoteLineHeight;
+                } else if (opensNoteBlock(trimmed)) {
+                    if (trimmed.startsWith('note') && (trimmed.indexOf(' left') >= 0 || trimmed.indexOf(' right') >= 0)) {
+                        inNote = true;
+                        height += _estimatedArrowHeight; // note header
+                    } else {
+                        inOtherNote = true;
+                    }
+                } else if (isArrowLine(trimmed)) {
                     height += _estimatedArrowHeight;
-                } else if (trimmed.startsWith('note') && (trimmed.indexOf(' left') >= 0 || trimmed.indexOf(' right') >= 0)) {
-                    inNote = true;
-                    height += _estimatedArrowHeight; // note header
-                } else if (trimmed === 'end note') {
-                    inNote = false;
-                } else if (inNote) {
-                    height += _estimatedNoteLineHeight;
                 }
             }
             return height;
@@ -690,12 +736,14 @@
                     for (var rb = 0; rb < openBlocks.length; rb++) currentLines.push(openBlocks[rb]);
                 }
 
-                // Track block state through this unit
+                // Track block state through this unit. A note's lines are never a block, and neither is a
+                // one-line note (an assertion message reading `group by customer`, a captured `end`).
                 var inNoteTrack = false;
                 for (var li = 0; li < units[u].length; li++) {
                     var t = units[u][li].trim();
-                    if (!inNoteTrack && t.startsWith('note') && (t.indexOf(' left') >= 0 || t.indexOf(' right') >= 0 || t.indexOf(' over') >= 0) && t.indexOf(':') < 0) { inNoteTrack = true; continue; }
-                    if (inNoteTrack) { if (t === 'end note') inNoteTrack = false; continue; }
+                    if (inNoteTrack) { if (closesNoteBlock(t)) inNoteTrack = false; continue; }
+                    if (opensNoteBlock(t)) { inNoteTrack = true; continue; }
+                    if (isNoteStatement(t)) continue;
                     if (isBlockOpener(t)) openBlocks.push(units[u][li]);
                     else if (t === 'end' && openBlocks.length > 0) openBlocks.pop();
                 }
@@ -726,21 +774,20 @@
             return result;
         }
 
+        // The messages among `lines`, which is what autonumber counts: never a line inside a note.
         function countArrows(lines) {
             var c = 0;
+            var inNote = false;
             for (var i = 0; i < lines.length; i++) {
                 var t = lines[i].trim();
-                if (isArrowLine(t) && !t.startsWith('note') && !t.startsWith('end note')) c++;
+                if (inNote) { if (closesNoteBlock(t)) inNote = false; continue; }
+                if (opensNoteBlock(t)) { inNote = true; continue; }
+                if (isArrowLine(t)) c++;
             }
             return c;
         }
         function countArrowsInUnit(unitLines) {
-            var c = 0;
-            for (var i = 0; i < unitLines.length; i++) {
-                var t = unitLines[i].trim();
-                if (isArrowLine(t) && !t.startsWith('note')) c++;
-            }
-            return c;
+            return countArrows(unitLines);
         }
         function countArrowsInLines(lines) {
             return countArrows(lines);
@@ -754,10 +801,14 @@
             var inNote = false;
             var noteLines = [];
             var noteHeader = '';
+            // The last message before a note, read as the lines go by: a note's own lines (an assertion message, a
+            // payload quoting `a -> b`) are never taken for it.
+            var lastArrow = null;
+            var inOtherNote = false;
 
             for (var i = 0; i < lines.length; i++) {
                 var trimmed = lines[i].trim();
-                if (!inNote && (trimmed.startsWith('note') && (trimmed.indexOf(' left') >= 0 || trimmed.indexOf(' right') >= 0) && !trimmed.startsWith('note over'))) {
+                if (!inNote && !inOtherNote && opensNoteBlock(trimmed) && (trimmed.startsWith('note') && (trimmed.indexOf(' left') >= 0 || trimmed.indexOf(' right') >= 0) && !trimmed.startsWith('note over'))) {
                     inNote = true;
                     noteHeader = lines[i];
                     noteLines = [];
@@ -765,17 +816,14 @@
                     inNote = false;
                     var noteContent = noteLines.join('\n');
                     if (noteContent.length > maxChars) {
-                        // Find the last arrow before this note to determine the anchor participant
+                        // The last arrow before this note determines the anchor participant
                         var anchorParticipant = '';
                         var noteDir = /\bright\b/.test(noteHeader) ? 'right' : 'left';
-                        for (var ra = result.length - 1; ra >= 0; ra--) {
-                            if (isArrowLine(result[ra].trim())) {
-                                var am = result[ra].match(/^\s*(\S+)\s+.*?>\s*([^\s:]+)/);
-                                if (am) {
-                                    // 'note right' anchors to target; 'note left' anchors to source
-                                    anchorParticipant = noteDir === 'right' ? am[2] : am[1];
-                                }
-                                break;
+                        if (lastArrow !== null) {
+                            var am = lastArrow.match(/^\s*(\S+)\s+.*?>\s*([^\s:]+)/);
+                            if (am) {
+                                // 'note right' anchors to target; 'note left' anchors to source
+                                anchorParticipant = noteDir === 'right' ? am[2] : am[1];
                             }
                         }
                         // Chunk the note content
@@ -806,6 +854,9 @@
                 } else if (inNote) {
                     noteLines.push(lines[i]);
                 } else {
+                    if (inOtherNote) { if (closesNoteBlock(trimmed)) inOtherNote = false; }
+                    else if (opensNoteBlock(trimmed)) inOtherNote = true;
+                    else if (isArrowLine(trimmed)) lastArrow = lines[i];
                     result.push(lines[i]);
                 }
             }
@@ -836,8 +887,9 @@
             var inNote = false;
             for (var i = 0; i < lines.length; i++) {
                 var t = lines[i].trim();
-                if (!inNote && /^h?note\b/.test(t) && t.indexOf(':') < 0) { inNote = true; continue; }
-                if (inNote) { if (t === 'end note' || t === 'endhnote' || t === 'endrnote') inNote = false; continue; }
+                if (inNote) { if (closesNoteBlock(t)) inNote = false; continue; }
+                if (opensNoteBlock(t)) { inNote = true; continue; }
+                if (isNoteStatement(t)) continue;
                 if (isBlockOpener(t)) stack.push(lines[i]);
                 else if (t === 'end' && stack.length > 0) stack.pop();
             }
@@ -956,8 +1008,8 @@
         // past its limit matches no parse rule, so the parser gives up on the entire diagram and draws
         // "Syntax Error?" with no hint at what was wrong. Naming the offending line here turns a
         // recurrence into a one-glance diagnosis.
-        var _arrowRx = /<{1,2}[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}|[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}>{1,2}/;
-        var _blockOpenerRx = /^(loop|alt|else|opt|group|par|critical|break|partition|also)\b/i;
+        var _statementArrowRx = /<{1,2}[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}|[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}>{1,2}/;
+        var _statementBlockRx = /^(loop|alt|else|opt|group|par|critical|break|partition|also)\b/i;
         var _noteStartRx = /^[hrn]?note\b/i;
         var _noteEndRx = /^end\s*[hrn]?note$/i;
         function findOverLongStatement(source) {
@@ -977,11 +1029,11 @@
                     if (!singleLine) noteDepth++;
                     continue;
                 }
-                if (_blockOpenerRx.test(t)) {
+                if (_statementBlockRx.test(t)) {
                     if (t.length > 1471) return { line: i + 1, kind: 'block label', length: t.length, limit: 1471 };
                     continue;
                 }
-                var m = _arrowRx.exec(t);
+                var m = _statementArrowRx.exec(t);
                 if (m && t.indexOf(':', m.index + m[0].length) >= 0 && t.length > 2000)
                     return { line: i + 1, kind: 'message statement', length: t.length, limit: 2000 };
             }
@@ -1139,9 +1191,15 @@
             }
         }
         window._iflowBindLinks = function(container, source) { bindIflowLinks(container, source); };
+        // Whether a link opens a segment, answered without decoding the segment map: the popup script keeps the
+        // map's id list (INTERNAL_FLOW_BLOB_PLAN §3.3). A page with no popup script can only have set the old global.
+        function hasSegment(segId) {
+            if (window._iflowHasSegment) return window._iflowHasSegment(segId);
+            var legacy = window.__iflowSegments;
+            return !!(legacy && legacy[segId]);
+        }
         function bindIflowLinks(container, source) {
             if (!container) return;
-            var iflowData = window.__iflowSegments || {};
             var config = window.__iflowConfig || {};
             var hoverOnly = config.hasDataBehavior === 'showLinkOnHover';
             var bound = 0;
@@ -1149,7 +1207,7 @@
                 var href = a.getAttribute('xlink:href') || a.getAttribute('href') || '';
                 if (href.indexOf('#iflow-') !== 0) return;
                 var segId = href.substring(1);
-                if (!iflowData[segId]) return;
+                if (!hasSegment(segId)) return;
                 if (hoverOnly) {
                     a.removeAttribute('xlink:href');
                     a.removeAttribute('href');
@@ -1240,7 +1298,7 @@
                         el.removeAttribute('text-decoration');
                     });
                 }
-                if (!iflowData[segId]) {
+                if (!hasSegment(segId)) {
                     // Kronikol wrote the link, but its popup would be empty: it must not look like one.
                     atRest();
                     return;
@@ -1304,22 +1362,59 @@
                 enqueueElement(el);
             });
         }, { rootMargin: '200px' });
+        // A diagram the report drew when it was written (PlantUmlRendering.NodeJs, Server, Local) arrives inline. The
+        // JavaScript engine the Node renderer runs draws a link as blue text and never as an <a>, so the popup script,
+        // which catches clicks on <a> links, had nothing to catch: under NodeJs every internal-flow link was drawn and
+        // opened nothing. Such a diagram's links are bound as a diagram drawn here is, once it comes into view. One
+        // holding an <a> (the Java engine, under Server and Local) is left to the popup script.
+        function bindInlineSvg(el) {
+            if (el._iflowBinding) return;
+            el._iflowBinding = true;
+            if (el.querySelector('a') || !el.querySelector('text[fill="#0000ff" i]')) {
+                el.dataset.iflowBound = '1';
+                return;
+            }
+            var raw = el.getAttribute('data-plantuml');
+            var pumlZ = raw ? null : getPumlZ(el);
+            (raw ? Promise.resolve(raw) : pumlZ ? decompressGzipBase64(pumlZ) : Promise.resolve(null)).then(function(source) {
+                if (source) bindIflowLinks(el, source);
+                el.dataset.iflowBound = '1';
+            }).catch(function(e) { console.error('Kronikol: the links of ' + el.id + ' could not be bound:', e); });
+        }
+        var inlineObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (!entry.isIntersecting) return;
+                inlineObserver.unobserve(entry.target);
+                bindInlineSvg(entry.target);
+            });
+        }, { rootMargin: '200px' });
+        // An on-demand page draws only what is shown: a view still hidden is left to the observer, which draws it when
+        // it appears, so a row or a toggle that renders a whole container never fetches the engine for a hidden tab.
+        function isShown(el) { return el.getClientRects().length > 0; }
         // decompressGzipBase64 comes from the always-included shared helper
         // (report-decompress-helper.js).
         window._renderDiagramsInContainer = function(container) {
             if (!container) return;
             container.querySelectorAll('.plantuml-browser').forEach(function(el) {
                 if (el.dataset.queued) return;
+                if (_onDemand && !isShown(el)) return;
                 el.dataset.queued = '1';
                 observer.unobserve(el);
                 enqueueElement(el);
+            });
+            container.querySelectorAll('.plantuml-inline-svg').forEach(function(el) {
+                inlineObserver.unobserve(el);
+                bindInlineSvg(el);
             });
         };
         document.querySelectorAll('.plantuml-browser').forEach(function(el) {
             observer.observe(el);
         });
-        // Preload first scenario's diagrams immediately
-        var firstScenario = document.querySelector('.scenario');
+        document.querySelectorAll('.plantuml-inline-svg').forEach(function(el) {
+            inlineObserver.observe(el);
+        });
+        // Preload first scenario's diagrams immediately (a page that draws on demand draws only what is shown)
+        var firstScenario = _onDemand ? null : document.querySelector('.scenario');
         if (firstScenario) {
             firstScenario.querySelectorAll('.plantuml-browser').forEach(function(el) {
                 if (el.dataset.queued) return;

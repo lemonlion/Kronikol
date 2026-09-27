@@ -413,3 +413,51 @@ node plans/DIAGRAM_COLOURS_PLAN.harness/cand-probe.js plans/DIAGRAM_COLOURS_PLAN
 dotnet fsi plans/DIAGRAM_COLOURS_PLAN.harness/component-links.fsx
 node plans/DIAGRAM_COLOURS_PLAN.harness/link-rest.js plans/DIAGRAM_COLOURS_PLAN.harness/comp-links.puml > link-rest.txt
 ```
+
+## The third audit (3.31.8, 2026-09-27): the npm pin, the other contexts, XML, the page scripts
+
+Plan §12.6. Node 25.9.0, the .NET 10 SDK, the engine 3.31.1 pins (`@plantuml/core@1.2026.8`, cached under
+`%LOCALAPPDATA%/Kronikol/plantuml-js/1.2026.8`), and the Java engine through `ikvm-render.cs`.
+
+- **`fuzz-probe.js`** gained `ENGINE=<directory>`, which picks the cached engine (the default stays the fork build
+  the second audit drew on), `SVG_OUT=<dir>`, which keeps what the Node renderer drew, and five contexts:
+  `step` (a step bar's name), `test` (a test delimiter), `action` (a UI action's label), `assert` (an assertion
+  note's lines) and `span` (a span's activity label). **`escape-oracle.fsx`** runs the real escapers for them.
+  Output:
+  - `fuzz-npm.txt`: the second audit's five contexts on the npm pin, 13,605 cases: 43 differences, every one a
+    backslash in an arrow label (§12.5's leftover). `fuzz-fork-labels.txt` is the label contexts on the fork build,
+    for comparison: the same 43.
+  - `fuzz-npm-new-contexts.txt`: the five new contexts on the npm pin, on 3.31.4's escapers: 1,123 differences.
+    Most are creole those contexts keep by design; the rest are a backslash read in one statement (`\n`, `\t`,
+    `\l`, `\\`: 108 of the cases holding a backslash across step, test, action and span, 19 in an assertion note), a carriage return in a span's
+    name, which broke the activity diagram (`span ccr`), and `&#9999999;`, which the Java engine throws on.
+- **`xmlcheck.py <dir>`** lists the SVGs in a directory that are not well-formed XML. Over the 135 control-character
+  cases, 27 in each of the second audit's five contexts (`SVG_OUT` with the filter `cc` on the pin,
+  `ikvm-render.cs` on Java), 65 on each engine were not.
+- **`cand-probe.js`** gained `ENGINE=` and two contexts, `test` and `span`. `cand8.json` holds the fix forms for a
+  backslash in one statement, a backslash before `t` in an assertion note and a decimal reference past U+10FFFF:
+  `cand8-pin.txt` and `cand8-java.txt` are the two engines' drawings, 51 as written on each, the other 8 being creole
+  (`\<b>`, `\[[x]]`) those statements keep by design.
+- **The splitter probes** load the shipped render script into a page (`split-page.fsx` writes `split-page.html`) and
+  call its pure source functions: `split-probe.js` prints where each fragment's numbering starts when notes quote
+  arrows, `split-hnote-sweep.js` sweeps heights for fragments that end inside a note, `split-else-probe.js` counts
+  the fragments whose `alt … else … end` blocks are broken, and `split-arrow-count.js` prints what counts as a
+  message. Built from 3.31.4: starts 1, 6 and 11 with two messages in each fragment; 474 fragments ending inside a
+  note; 320 of 320 fragments with an extra `end`. Built from 3.31.8: the numbering follows the messages, and no
+  fragment ends inside a note or has a broken block.
+- **`nodejs-links-probe.js <TestRunReport.html>`** opens a report and counts its inline diagrams, their link texts
+  and anchors, whether a click on a link opens a popup, and what the component panel shows. On the example project's
+  NodeJs report before 3.31.8: 64 link texts, 0 anchors, nothing opened, and a blank panel.
+
+To repeat them, from the repository root (build `src/Kronikol` and the E2E project first; the probes use its
+Playwright):
+
+```bash
+ENGINE=1.2026.8 node plans/DIAGRAM_COLOURS_PLAN.harness/fuzz-probe.js src/Kronikol/bin/Debug/net10.0/Kronikol.dll > fuzz-npm.txt
+ENGINE=1.2026.8 node plans/DIAGRAM_COLOURS_PLAN.harness/fuzz-probe.js src/Kronikol/bin/Debug/net10.0/Kronikol.dll step,test,action,assert,span > fuzz-npm-new-contexts.txt
+ENGINE=1.2026.8 SVG_OUT=<dir> node plans/DIAGRAM_COLOURS_PLAN.harness/fuzz-probe.js src/Kronikol/bin/Debug/net10.0/Kronikol.dll body,label,labellink,doc,cell cc
+python plans/DIAGRAM_COLOURS_PLAN.harness/xmlcheck.py <dir>
+ENGINE=1.2026.8 node plans/DIAGRAM_COLOURS_PLAN.harness/cand-probe.js plans/DIAGRAM_COLOURS_PLAN.harness/cand8.json > cand8-pin.txt
+(cd plans/DIAGRAM_COLOURS_PLAN.harness && dotnet fsi split-page.fsx split-page.html && node split-probe.js && node split-hnote-sweep.js && node split-else-probe.js)
+node plans/DIAGRAM_COLOURS_PLAN.harness/nodejs-links-probe.js <reports>/TestRunReport.html
+```

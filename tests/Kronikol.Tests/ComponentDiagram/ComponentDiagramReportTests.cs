@@ -346,6 +346,8 @@ public class ComponentDiagramReportTests : IDisposable
         var html = File.ReadAllText(result.HtmlFilePath);
         Assert.DoesNotContain("iflow-rel-list", html);
         Assert.DoesNotContain("System Flow", html);
+        // Neither the element a report carries its segment map in (3.31.9) nor the global the map was before it.
+        Assert.DoesNotContain("<script id=\"iflow-segments\"", html);
         Assert.DoesNotContain("window.__iflowSegments = {", html);
         Assert.DoesNotContain("focus-dimmed", html);
         Assert.DoesNotContain("focusNode", html);

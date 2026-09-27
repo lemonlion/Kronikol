@@ -166,10 +166,12 @@ public record ReportConfigurationOptions
     /// <summary>When <c>true</c>, internal flow tracking data (OpenTelemetry spans) is included in reports. Default: <c>true</c>.</summary>
     public bool InternalFlowTracking { get; set; } = true;
 
-    /// <summary>How internal flow diagrams are displayed. Default: <see cref="InternalFlowDisplay.Popup"/>.</summary>
+    /// <summary>How internal flow diagrams are displayed. Default: <see cref="InternalFlowDisplay.Popup"/>. Not implemented: no report
+    /// reads it, and every report shows the flow in a popup.</summary>
     public InternalFlowDisplay InternalFlowDisplay { get; set; } = InternalFlowDisplay.Popup;
 
-    /// <summary>User interaction that opens an internal flow diagram. Default: <see cref="InternalFlowTrigger.Click"/>.</summary>
+    /// <summary>User interaction that opens an internal flow diagram. Default: <see cref="InternalFlowTrigger.Click"/>. Not implemented:
+    /// no report reads it, and every report opens the popup on a click.</summary>
     public InternalFlowTrigger InternalFlowTrigger { get; set; } = InternalFlowTrigger.Click;
 
     /// <summary>Diagram style for internal flow visualisation. Default: <see cref="InternalFlowDiagramStyle.ActivityDiagram"/>.</summary>
@@ -193,10 +195,12 @@ public record ReportConfigurationOptions
     /// <summary>Position of the flame chart relative to the activity diagram. Default: <see cref="InternalFlowFlameChartPosition.BehindWithToggle"/>.</summary>
     public InternalFlowFlameChartPosition InternalFlowFlameChartPosition { get; set; } = InternalFlowFlameChartPosition.BehindWithToggle;
 
-    /// <summary>Strategy for including internal flow HTML content. Default: <see cref="InternalFlowContentStrategy.Embedded"/>.</summary>
+    /// <summary>Strategy for including internal flow HTML content. Default: <see cref="InternalFlowContentStrategy.Embedded"/>. Not
+    /// implemented: no report reads it, and every report embeds the data, gzipped, in one element.</summary>
     public InternalFlowContentStrategy InternalFlowContentStrategy { get; set; } = InternalFlowContentStrategy.Embedded;
 
-    /// <summary>Folder name for external internal flow fragment files. Default: <c>"spans"</c>.</summary>
+    /// <summary>Folder name for external internal flow fragment files. Default: <c>"spans"</c>. Not implemented: no report writes
+    /// fragment files (see <see cref="InternalFlowContentStrategy"/>).</summary>
     public string InternalFlowFragmentsFolderName { get; set; } = "spans";
 
     /// <summary>Custom CSS stylesheet for the internal flow popups and controls, applied to both HTML reports when

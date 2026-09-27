@@ -174,6 +174,33 @@ public class InternalFlowRendererTests : IDisposable
     }
 
     [Fact]
+    public void RenderActivityDiagram_writes_a_span_names_line_breaks_and_backslashes_as_it_reads()
+    {
+        // A carriage return ended the `:label;` statement, and the popup's activity diagram was not drawn; a backslash
+        // before n, t or l in the label was read as a line break, a tab or a left alignment (DIAGRAM_COLOURS_PLAN §12.6).
+        var span = CreateSpan("GET C:\\temp\\new\r\nfile", duration: TimeSpan.FromMilliseconds(12));
+
+        var result = InternalFlowRenderer.RenderActivityDiagram(MakeSegment(span));
+
+        var label = result.Split('\n').Select(l => l.TrimEnd('\r')).Single(l => l.StartsWith(":GET", StringComparison.Ordinal));
+        Assert.Equal(":GET C:<U+005C><U+200B>temp<U+005C><U+200B>new\\nfile (12ms);", label);
+    }
+
+    [Fact]
+    public void The_node_renderer_draws_that_span_name_on_two_lines_as_written()
+    {
+        Assert.SkipWhen(!Tests.PlantUml.CapturedTextEscapeTests.NodeIsAvailable(), "Node.js not available on PATH");
+        var span = CreateSpan("GET C:\\temp\\new\r\nfile", duration: TimeSpan.FromMilliseconds(12));
+
+        var drawn = Kronikol.PlantUml.NodeJsPlantUmlRenderer.RenderMany([InternalFlowRenderer.RenderActivityDiagram(MakeSegment(span))]).Single();
+
+        Assert.True(drawn.Succeeded, drawn.Error);
+        var painted = Tests.PlantUml.CapturedTextEscapeTests.PaintedLines(drawn.Svg!);
+        Assert.Contains(@"GET C:\temp\new", painted);
+        Assert.Contains("file (12ms)", painted);
+    }
+
+    [Fact]
     public void RenderActivityDiagram_with_duplicate_SpanIds_does_not_throw()
     {
         var span = CreateSpan("op");

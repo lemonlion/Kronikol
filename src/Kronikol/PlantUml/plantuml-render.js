@@ -133,7 +133,17 @@ class MockElement {
 // worker host also writes NBSP as &nbsp;, which XML does not define. The engine's one processing
 // instruction carries its encoded source, which the report already holds, so it is left out; written as
 // an element it became a <div>, which an HTML page reads as the end of an inline <svg>.
-function escXml(v) { return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+// A character XML cannot hold (a C0 control but a tab, a line feed or a carriage return; U+FFFE; U+FFFF) is written as
+// the one Kronikol's generator writes for it: a control as its Control Pictures glyph, the others as U+FFFD. The
+// generator no longer sends one; a source from an earlier report, merged or ingested, still can, and the SVG would
+// not be XML (DIAGRAM_COLOURS_PLAN §12.6).
+function xmlChars(s) {
+    return s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, function (c) {
+        var code = c.charCodeAt(0);
+        return code < 0x20 ? String.fromCharCode(0x2400 + code) : '\uFFFD';
+    });
+}
+function escXml(v) { return xmlChars(String(v)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function escXmlAttr(v) { return escXml(v).replace(/"/g, '&quot;'); }
 function serializeElement(el) {
     if (!el || typeof el !== 'object') return '';

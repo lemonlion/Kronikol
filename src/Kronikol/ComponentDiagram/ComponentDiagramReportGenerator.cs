@@ -1,3 +1,4 @@
+using System.Text;
 using Kronikol.InternalFlow;
 using Kronikol.PlantUml;
 using Kronikol.Reports;
@@ -40,15 +41,11 @@ public static class ComponentDiagramReportGenerator
             _ => null
         };
         var useBrowserJs = reportOptions.PlantUmlRendering == PlantUmlRendering.BrowserJs;
-        // Both JS engines (browser and Node) render plantuml.js, which cannot load the C4 stdlib: until 3.29.6 the
-        // include hung the render until its timeout, and since then it draws the engine's error picture. Use the
-        // plain component syntax there.
-        var useJsEngine = useBrowserJs || reportOptions.PlantUmlRendering == PlantUmlRendering.NodeJs;
 
         var logsArray = logs as RequestResponseLog[] ?? logs.ToArray();
         var relationships = ComponentDiagramGenerator.ExtractRelationships(logsArray, options.ParticipantFilter);
 
-        var plantUml = ComponentDiagramGenerator.GeneratePlantUml(relationships, options, useC4: !useJsEngine);
+        var plantUml = ComponentDiagramGenerator.GeneratePlantUml(relationships, options, useC4: UsesC4(reportOptions.PlantUmlRendering));
 
         var directory = Reports.ReportGenerator.ResolveReportsDirectory(reportOptions);
         Directory.CreateDirectory(directory);
@@ -65,6 +62,72 @@ public static class ComponentDiagramReportGenerator
         RunFileCollector.Record(htmlPath);
 
         return new ComponentDiagramResult(htmlPath, plantUml);
+    }
+
+    /// <summary>
+    /// Whether the component diagram is written with the C4 library for <paramref name="rendering"/>: only where the Java
+    /// engine draws it (Server, Local). Both JavaScript engines (the page's and the Node renderer's) run plantuml.js,
+    /// which cannot load the C4 stdlib: until 3.29.6 the include hung the render until its timeout, and since then it
+    /// draws the engine's error picture, so they are given the plain component syntax.
+    /// </summary>
+    internal static bool UsesC4(PlantUmlRendering rendering) => rendering is PlantUmlRendering.Server or PlantUmlRendering.Local;
+
+    /// <summary>The run report's embedded component diagram as the report's renderer drew it: inline SVG, an image source, or why neither.</summary>
+    internal sealed record DrawnDiagram(string? InlineSvg, string? ImageSource, string? Failure);
+
+    /// <summary>
+    /// Draws the run report's embedded component diagram the way this page draws the standalone one, for a report whose
+    /// diagrams are drawn when it is written: the Node renderer's SVG under <c>NodeJs</c>, the delegate's image under
+    /// <c>Local</c>, the server's under <c>Server</c>. Null under <c>BrowserJs</c>, where the page draws it. Inline SVG
+    /// when <see cref="ReportConfigurationOptions.InlineSvgRendering"/> is on (internal-flow tracking turns it on), else
+    /// an image source, never a file of its own. A render that fails costs the panel its picture and not the report: it
+    /// comes back as the reason, and the run records a <see cref="DiagnosticKind.RenderFailure"/>.
+    /// </summary>
+    /// <remarks>
+    /// Until 3.31.8 the run report embedded the diagram for the browser to draw under every renderer, and only a
+    /// <c>BrowserJs</c> page carries the engine, so the panel opened blank; under <c>NodeJs</c> it was also written with
+    /// the C4 library, which neither JavaScript engine can load (DIAGRAM_COLOURS_PLAN §12.6).
+    /// </remarks>
+    internal static DrawnDiagram? DrawEmbedded(string plantUml, ReportConfigurationOptions options)
+    {
+        if (options.PlantUmlRendering == PlantUmlRendering.BrowserJs)
+            return null;
+
+        try
+        {
+            var inline = options.InlineSvgRendering;
+            switch (options.PlantUmlRendering)
+            {
+                case PlantUmlRendering.NodeJs:
+                {
+                    var svg = Encoding.UTF8.GetString(PlantUml.NodeJsPlantUmlRenderer.Render(plantUml, PlantUmlImageFormat.Svg));
+                    return inline
+                        ? new DrawnDiagram(DefaultDiagramsFetcher.StripXmlDeclaration(svg), null, null)
+                        : new DrawnDiagram(null, $"data:image/svg+xml;base64,{Convert.ToBase64String(Encoding.UTF8.GetBytes(svg))}", null);
+                }
+                case PlantUmlRendering.Local:
+                {
+                    var render = options.LocalDiagramRenderer ?? throw new InvalidOperationException(
+                        "PlantUmlRendering.Local requires a LocalDiagramRenderer to be configured.");
+                    var png = !inline && options.PlantUmlImageFormat is PlantUmlImageFormat.Png or PlantUmlImageFormat.Base64Png;
+                    var bytes = render(plantUml, png ? PlantUmlImageFormat.Png : PlantUmlImageFormat.Svg);
+                    if (inline)
+                        return new DrawnDiagram(DefaultDiagramsFetcher.StripXmlDeclaration(Encoding.UTF8.GetString(bytes)), null, null);
+                    return new DrawnDiagram(null, $"data:{(png ? "image/png" : "image/svg+xml")};base64,{Convert.ToBase64String(bytes)}", null);
+                }
+                default:
+                {
+                    var format = inline || options.PlantUmlImageFormat is PlantUmlImageFormat.Svg or PlantUmlImageFormat.Base64Svg ? "svg" : "png";
+                    return new DrawnDiagram(null, $"{options.PlantUmlServerBaseUrl}/{format}/{PlantUmlTextEncoder.Encode(plantUml)}", null);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var cause = DefaultDiagramsFetcher.Unwrap(ex);
+            ReportDiagnosticsScope.Record(DiagnosticKind.RenderFailure, "Drawing the embedded component diagram failed", cause);
+            return new DrawnDiagram(null, null, $"The component diagram could not be drawn: {cause.GetType().Name}: {cause.Message}");
+        }
     }
 
     private static string GetImageSource(

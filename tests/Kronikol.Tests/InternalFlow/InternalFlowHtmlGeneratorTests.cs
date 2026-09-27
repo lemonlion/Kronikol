@@ -308,6 +308,25 @@ public class InternalFlowHtmlGeneratorTests : IDisposable
     }
 
     [Fact]
+    public void A_segment_map_activity_diagram_carries_its_plantuml_raw_in_the_attribute()
+    {
+        // The map is gzipped whole (3.31.9), so its diagrams are no gzip islands (INTERNAL_FLOW_BLOB_PLAN §3.7, Q7).
+        var span = CreateSpan("SELECT \"id\" FROM t WHERE a < 1 && b\tc", TimeSpan.FromMilliseconds(5));
+        var segment = new InternalFlowSegment(Guid.NewGuid(), RequestResponseType.Request, "t1",
+            span.StartTimeUtc, span.StartTimeUtc + span.Duration, [span]);
+
+        var data = InternalFlowHtmlGenerator.BuildSegmentData(
+            new Dictionary<string, InternalFlowSegment> { ["iflow-a"] = segment }, InternalFlowDiagramStyle.ActivityDiagram);
+        var content = System.Text.Json.JsonSerializer.SerializeToElement(data["iflow-a"]).GetProperty("content").GetString()!;
+
+        Assert.DoesNotContain("data-plantuml-z", content, StringComparison.Ordinal);
+        var attribute = System.Text.RegularExpressions.Regex.Match(content, "data-plantuml=\"([^\"]*)\"");
+        Assert.True(attribute.Success);
+        Assert.Equal(InternalFlowRenderer.RenderActivityDiagram(segment), System.Net.WebUtility.HtmlDecode(attribute.Groups[1].Value));
+        Assert.Contains("&quot;id&quot;", attribute.Groups[1].Value, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ActivityDiagram_div_does_not_contain_inner_loading_text()
     {
         var span = CreateSpan("op", TimeSpan.FromMilliseconds(100));
