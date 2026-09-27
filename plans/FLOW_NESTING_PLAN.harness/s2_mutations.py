@@ -1,7 +1,9 @@
-"""S2's mutation check (plan §6.7): break one clause of the rule or of the verb at a time, rebuild, run
-`FlowTests` and `CallNestingTests`, and report which facts failed. A guard fact that passed on the release
-before S2 (a pin, or a fact that must not print something) proves itself here: the breakage it guards
-against must fail it. Every file is restored after each mutation.
+"""S2's mutation check (plan §6.7), and the audit's (§7.7): break one clause of the rule or of the verb at a
+time, rebuild, run `FlowTests`, `FlowTreeTests` and `CallNestingTests`, and report which facts failed. A guard
+fact that passed on the release before S2 (a pin, or a fact that must not print something) proves itself here:
+the breakage it guards against must fail it. M12 is the audit's; `FlowTreeTests`, the audit's generated
+scenarios, is named as expected only there, and the output shows which of the others it catches as well.
+Every file is restored after each mutation.
 
     python s2_mutations.py [M1 M4 ...]      # from anywhere; the repository is two directories up
 """
@@ -76,6 +78,12 @@ MUTATIONS = [
      '(indented ? " · indented calls ran inside the call above them" : "")',
      '" · indented calls ran inside the call above them"',
      {"FlowTests.The_legend_is_printed_only_when_a_line_is_indented"}),
+    ("M12 an annotation does not start a section (3.31.0 to 3.31.4)", FLOW,
+     """                writer.Line($"  ── {annotations[nextAnnotation].Text}".TrimEnd());
+                section.Clear();""",
+     """                writer.Line($"  ── {annotations[nextAnnotation].Text}".TrimEnd());""",
+     {"FlowTests.A_line_whose_parent_stands_above_an_annotation_names_it",
+      "FlowTreeTests.Every_line_reads_as_a_tree_of_the_calls_it_ran_inside"}),
 ]
 
 
@@ -95,7 +103,7 @@ for name, path, old, new, expected in MUTATIONS:
         if " error " in build.stdout or build.returncode != 0:
             print(f"{name}: BUILD FAILED\n{build.stdout[-1500:]}")
             continue
-        test = run('dotnet test tests/Kronikol.Tests --no-build --filter "FullyQualifiedName~Kronikol.Tests.Tool.FlowTests|FullyQualifiedName~Kronikol.Tests.Tool.CallNestingTests" -- RunConfiguration.TreatNoTestsAsError=true')
+        test = run('dotnet test tests/Kronikol.Tests --no-build --filter "FullyQualifiedName~Kronikol.Tests.Tool.FlowTests|FullyQualifiedName~Kronikol.Tests.Tool.FlowTreeTests|FullyQualifiedName~Kronikol.Tests.Tool.CallNestingTests" -- RunConfiguration.TreatNoTestsAsError=true')
         failed = set(re.findall(r"^\s+Failed Kronikol\.Tests\.Tool\.(\S+?)(?:\(.*)? \[", test.stdout, re.M))
         missing = {e for e in expected if e not in failed}
         verdict = "CAUGHT" if not missing else f"NOT CAUGHT: {sorted(missing)}"

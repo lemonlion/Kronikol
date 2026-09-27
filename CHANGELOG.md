@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.5] - 2026-09-27
+
+**Patch - an audit of `kronikol query flow`'s nesting (`plans/FLOW_NESTING_PLAN.md` S1 and S2, releases 3.30.3
+and 3.31.0).** One fix, so the patch part moved. Nothing new is public, no report byte changes, and no view of a
+real report prints differently. Template pins move to 3.31.4.
+
+### Fixed
+
+- **A call printed below an annotation read as the annotation's, and did not name the call it ran inside.** An
+  annotation line is printed two spaces in, as a top-level call is. When one was recorded while a call was open,
+  such as a note a test adds while its request is in flight, the calls that ran inside that call were printed
+  below the note, and the nearest line above them with less indentation was the note, not their parent. `flow`
+  named a line's parent across a step header only. It names it across an annotation too (`inside s3/i8`), as the
+  indentation cannot show it there. **Behaviour change** on such views only. None of the annotations in
+  BreakfastProvider's five lanes stands between a call and one that ran inside it, so every view of those lanes
+  prints what 3.31.4 printed (2,986 views compared).
+
+### Tests
+
+- `FlowTests`: a note recorded while the test's call is open, its view pinned whole. Red on 3.31.3 on the missing
+  `inside`.
+- `FlowTreeTests` (new): 120 scenarios made from one seed, with calls nested several levels deep, a party's calls
+  answered in any order, deliveries on an open call's trace, requests never answered or answered before they
+  were recorded, requests with no pairing id, user actions, steps that begin while calls are open, and notes
+  anywhere. Each view, unfiltered and under `--service`, `--step` and `--errors-only`, is read as a tree: two
+  spaces per shown call a line ran inside, and an `inside` exactly where the line its indentation points at is not
+  the call it ran inside. On 3.31.3 it finds 22 misread lines, every one below a note. A second fact holds the
+  generator to every shape the reading must survive, so it cannot pass by making none of them.
+- The plan's mutation harness gains the fix's breakage; all thirteen breakages of the rule and the verb fail the
+  facts written for them, and `FlowTreeTests` also fails two S2 breakages it was not written for.
+
+### Documentation
+
+- The wiki's `Querying-Reports` names the annotation case, and says its real-report example is an excerpt, since
+  it left two lines out without saying so. Both copies of the skill's flag reference name the case too.
+- `QueryWriter.Count`'s comment counted thirteen verbs that take `--count`. Fourteen have since 3.30.3, and the
+  comment now points at `CountFlagTests`, which holds the list.
+- The plan records the audit (§7.7): 600 generated scenarios checked against every rule of S1 and S2, and a
+  `kronikol merge` of them, which keeps every view's nesting. `ROADMAP.md` Appendix C gains the plan's open
+  questions, which had no row there.
+
 ## [3.31.4] - 2026-09-27
 
 **Patch - step bars and assertion notes no longer get an internal-flow segment, a whole-test flow or a flame-chart

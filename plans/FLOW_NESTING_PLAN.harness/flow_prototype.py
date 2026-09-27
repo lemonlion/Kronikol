@@ -11,6 +11,11 @@
                non-empty fields, a request never answered says "no response" (Q1), the indentation's
                parent is the nearest line above with less of it (plan F15), a request is open only
                while its answer is ahead of it, and the empty Guid is no id, as the tool reads it.
+               Brought in line with the audit of 2026-09-27 (plan section 7.7): an annotation, like a
+               step header, is a line with less indentation than the calls below it, so a call whose
+               parent stands above one names it (F18); and a request with no requestResponseId takes
+               the tool's proximity pairing (FindResponse: a response to the same service within the
+               next four records), which only generated scenarios had exercised.
 
 The report is read with json.load and never printed. `render()` is imported by flow_bytes.py.
 """
@@ -123,19 +128,28 @@ def render(data, ordinal, mode="nested", step=None, service=None, errors_only=Fa
     def covered(path, scope):
         return path is not None and (path == scope or path.startswith(scope + "."))
 
-    def shown(c):
+    def paired(i, c):
+        rid = real_id(c.get("requestResponseId"))
+        if rid:
+            return response.get(rid)
+        for j in range(i + 1, min(len(recs), i + 5)):          # FindResponse's proximity scan, for no id
+            if recs[j].get("type") == "Response" and recs[j].get("serviceName") == c.get("serviceName"):
+                return recs[j]
+        return None
+
+    def shown(i, c):
         if c.get("type") != "Request":
             return False
         if step and not covered(c.get("stepPath"), step):
             return False
         if service and service.lower() not in (c.get("serviceName") or "").lower():
             return False
-        if errors_only and not is_error(response.get(c.get("requestResponseId"))):
+        if errors_only and not is_error(paired(i, c)):
             return False
         return True
 
     def call_line(i, c, indent, inside=None):
-        r = response.get(real_id(c.get("requestResponseId")))
+        r = paired(i, c)
         content = c.get("content")
         pointer = f"b:{hashlib.sha1(content.encode('utf-8')).hexdigest()[:8]} {size(len(content))}" if content else ""
         timing = c.get("durationMs") if c.get("durationMs") is not None else (r or {}).get("durationMs")
@@ -161,12 +175,12 @@ def render(data, ordinal, mode="nested", step=None, service=None, errors_only=Fa
                 current = c.get("stepPath")
                 if current is not None and current in steps:
                     out.append(f"── {current}  {one_line(steps[current], 90)}")
-            if shown(c):
+            if shown(i, c):
                 out.append(call_line(i, c, 0))
                 count += 1
     else:
         parent = parents(recs)
-        is_shown = {i: shown(c) for i, c in enumerate(recs)}
+        is_shown = {i: shown(i, c) for i, c in enumerate(recs)}
         pending, section, section_lines, indented = [], object(), [], False
         for i, c in enumerate(recs):
             pending += annotations.get(i, [])
@@ -174,6 +188,7 @@ def render(data, ordinal, mode="nested", step=None, service=None, errors_only=Fa
                 continue
             for text in pending:                      # today's order: annotations, then the header
                 out.append(f"  ── {text}")
+                section_lines = []                    # F18: a note has less indentation, as a header does
             pending = []
             if c.get("stepPath") != section:
                 section, section_lines = c.get("stepPath"), []

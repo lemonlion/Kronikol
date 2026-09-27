@@ -1,0 +1,152 @@
+tree      s6 (unfiltered): i6 reads as inside ('annotation', None), R4 parent i5, not named:     s6/i6     broker → db  CONSUME /topic10  BadGateway  3 ms
+tree      s6 (unfiltered): i8 reads as inside ('annotation', None), R4 parent i5, not named:     s6/i8     svc1 → api  POST /r13  ServiceUnavailable  0 ms  b:84a01e46 8 B
+proto     s6 (unfiltered) differs:
+--- tool
+s6  Generated 6  [Passed]
+
+── 0  When step 0
+  s6/i0     test → svc2  GET /r2  ServiceUnavailable  45 ms
+  s6/i1     User → web  Click web
+  s6/i3     test → db  GET /r5  OK  3 ms
+  s6/i5     test → svc1  QUERY /r8
+  ── note 8
+    s6/i6     broker → db  CONSUME /topic10  BadGateway  3 ms
+      s6/i7     svc1 → db  GET /r11  no response
+    s6/i8     svc1 → api  POST /r13  ServiceUnavailable  0 ms  b:84a01e46 8 B
+  ── note 13
+  s6/i9     test → api  POST /r16  12 s  b:031a0251 8 B
+  ── after the last call
+8 calls shown · http s6/iN --keys for a payload · indented calls ran inside the call above them
+--- prototype
+s6  Generated 6  [Passed]
+
+── 0  When step 0
+  s6/i0     test → svc2  GET /r2  ServiceUnavailable  45 ms
+  s6/i1     User → web  Click web
+  s6/i3     test → db  GET /r5  OK  3 ms
+  s6/i5     test → svc1  QUERY /r8
+  ── note 8
+    s6/i6     broker → db  CONSUME /topic10  BadGateway  3 ms  inside s6/i5
+      s6/i7     svc1 → db  GET /r11  no response
+    s6/i8     svc1 → api  POST /r13  ServiceUnavailable  0 ms  b:84a01e46 8 B  inside s6/i5
+  ── note 13
+  s6/i9     test → api  POST /r16  12 s  b:031a0251 8 B
+  ── after the last call
+8 calls shown · http s6/iN --keys for a payload · indented calls ran inside the call above them
+
+tree      s6 --step 0: i6 reads as inside ('annotation', None), R4 parent i5, not named:     s6/i6     broker → db  CONSUME /topic10  BadGateway  3 ms
+tree      s6 --step 0: i8 reads as inside ('annotation', None), R4 parent i5, not named:     s6/i8     svc1 → api  POST /r13  ServiceUnavailable  0 ms  b:84a01e46 8 B
+proto     s6 --step 0 differs:
+--- tool
+s6  Generated 6  [Passed]
+
+── 0  When step 0
+  s6/i0     test → svc2  GET /r2  ServiceUnavailable  45 ms
+  s6/i1     User → web  Click web
+  s6/i3     test → db  GET /r5  OK  3 ms
+  s6/i5     test → svc1  QUERY /r8
+  ── note 8
+    s6/i6     broker → db  CONSUME /topic10  BadGateway  3 ms
+      s6/i7     svc1 → db  GET /r11  no response
+    s6/i8     svc1 → api  POST /r13  ServiceUnavailable  0 ms  b:84a01e46 8 B
+  ── note 13
+  s6/i9     test → api  POST /r16  12 s  b:031a0251 8 B
+  ── after the last call
+8 calls shown · http s6/iN --keys for a payload · indented calls ran inside the call above them
+--- prototype
+s6  Generated 6  [Passed]
+
+── 0  When step 0
+  s6/i0     test → svc2  GET /r2  ServiceUnavailable  45 ms
+  s6/i1     User → web  Click web
+  s6/i3     test → db  GET /r5  OK  3 ms
+  s6/i5     test → svc1  QUERY /r8
+  ── note 8
+    s6/i6     broker → db  CONSUME /topic10  BadGateway  3 ms  inside s6/i5
+      s6/i7     svc1 → db  GET /r11  no response
+    s6/i8     svc1 → api  POST /r13  ServiceUnavailable  0 ms  b:84a01e46 8 B  inside s6/i5
+  ── note 13
+  s6/i9     test → api  POST /r16  12 s  b:031a0251 8 B
+  ── after the last call
+8 calls shown · http s6/iN --keys for a payload · indented calls ran inside the call above them
+
+tree      s16 (unfiltered): i3 reads as inside ('annotation', None), R4 parent i2, not named:       s16/i3    api → svc2  POST /r9  3 ms
+proto     s16 (unfiltered) differs:
+--- tool
+s16  Generated 16  [Passed]
+
+── 0  When step 0
+  s16/i0    test → cache  GET /r2  OK  b:db4bad55 7 B
+  ── note 2
+  s16/i1    test → svc1  POST /r5  BadGateway
+    s16/i2    svc1 → api  GET /r7  Created  b:f944364a 7 B
+  ── note 7
+      s16/i3    api → svc2  POST /r9  3 ms
+        s16/i4    svc2 → db  QUERY /r11  ServiceUnavailable  45 ms  b:b828c209 8 B
+  s16/i5    User → web  Click web
+  ── note 13
+        s16/i7    svc2 → api  GET /r16  Created  1.5 s  b:031a0251 8 B  inside s16/i3
+  s16/i8    test → db  GET /r17  ServiceUnavailable  45 ms  b:f3edee02 8 B
+    s16/i9    svc1 → api  QUERY /r18  InternalServerError  12 s  b:99ea8699 8 B  inside s16/i1
+9 calls shown · http s16/iN --keys for a payload · indented calls ran inside the call above them
+--- prototype
+s16  Generated 16  [Passed]
+
+── 0  When step 0
+  s16/i0    test → cache  GET /r2  OK  b:db4bad55 7 B
+  ── note 2
+  s16/i1    test → svc1  POST /r5  BadGateway
+    s16/i2    svc1 → api  GET /r7  Created  b:f944364a 7 B
+  ── note 7
+      s16/i3    api → svc2  POST /r9  3 ms  inside s16/i2
+        s16/i4    svc2 → db  QUERY /r11  ServiceUnavailable  45 ms  b:b828c209 8 B
+  s16/i5    User → web  Click web
+  ── note 13
+        s16/i7    svc2 → api  GET /r16  Created  1.5 s  b:031a0251 8 B  inside s16/i3
+  s16/i8    test → db  GET /r17  ServiceUnavailable  45 ms  b:f3edee02 8 B
+    s16/i9    svc1 → api  QUERY /r18  InternalServerError  12 s  b:99ea8699 8 B  inside s16/i1
+9 calls shown · http s16/iN --keys for a payload · indented calls ran inside the call above them
+
+tree      s43 (unfiltered): i1 reads as inside ('annotation', None), R4 parent i0, not named:     s43/i1    svc2 → cache  GET /r5  ServiceUnavailable
+tree      s43 (unfiltered): i4 reads as inside ('annotation', None), R4 parent i3, not named:         s43/i4    svc1 → cache  QUERY /r9  InternalServerError  3 ms  b:1e7f7aa0 7 B
+tree      s43 (unfiltered): i6 reads as inside ('annotation', None), R4 parent i1, not named:       s43/i6    cache → db  QUERY /r10  Created  999 ms  b:8eee4a3e 8 B
+proto     s43 (unfiltered) differs:
+--- tool
+s43  Generated 43  [Passed]
+
+── 0  When step 0
+  s43/i0    test → svc2  GET /r2  BadGateway  1.5 s
+  ── note 2
+    s43/i1    svc2 → cache  GET /r5  ServiceUnavailable
+      s43/i3    cache → svc1  GET /r7  ServiceUnavailable  45 ms
+  ── note 7
+        s43/i4    svc1 → cache  QUERY /r9  InternalServerError  3 ms  b:1e7f7aa0 7 B
+      s43/i6    cache → db  QUERY /r10  Created  999 ms  b:8eee4a3e 8 B
+5 calls shown · http s43/iN --keys for a payload · indented calls ran inside the call above them
+--- prototype
+s43  Generated 43  [Passed]
+
+── 0  When step 0
+  s43/i0    test → svc2  GET /r2  BadGateway  1.5 s
+  ── note 2
+    s43/i1    svc2 → cache  GET /r5  ServiceUnavailable  inside s43/i0
+      s43/i3    cache → svc1  GET /r7  ServiceUnavailable  45 ms
+  ── note 7
+        s43/i4    svc1 → cache  QUERY /r9  InternalServerError  3 ms  b:1e7f7aa0 7 B  inside s43/i3
+      s43/i6    cache → db  QUERY /r10  Created  999 ms  b:8eee4a3e 8 B  inside s43/i1
+5 calls shown · http s43/iN --keys for a payload · indented calls ran inside the call above them
+
+
+600 scenarios, 2400 views; requests by depth: {0: 1893, 1: 866, 2: 344, 3: 119, 4: 30, 5: 6, 6: 2}
+     0  exit
+     0  order
+     0  header
+     0  annotation
+     0  depth
+   165  tree
+   165  tree, below an annotation
+     0  status
+     0  legend
+     0  trailing
+   119  proto
+   119  proto, by inside references alone

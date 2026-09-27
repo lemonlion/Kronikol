@@ -6,7 +6,8 @@ using Kronikol.Tracking;
 namespace Kronikol.Tests.Tool;
 
 /// <summary>
-/// <c>kronikol query flow</c>: one scenario's calls in capture order, under the steps that made them.
+/// <c>kronikol query flow</c>: one scenario's calls in capture order, under the steps that made them, each
+/// indented under the call it ran inside.
 ///
 /// <para>Before 3.30.3 the step headers and annotations were printed as the records went by, before any
 /// filter ran, so a filtered view and a step address printed the header of every step that made a call,
@@ -14,6 +15,11 @@ namespace Kronikol.Tests.Tool;
 /// the loop that printed annotations stopped at the last record; and <c>--count</c> was accepted and the
 /// whole flow printed anyway. <c>FlowTests</c> pins the view whole, then each of those
 /// (plans/FLOW_NESTING_PLAN.md §6.2 and §6.3).</para>
+///
+/// <para>From 3.31.0 a call is indented under the call it ran inside (rule R4, <see cref="CallNestingTests"/>),
+/// and a line whose parent the indentation cannot show names it. The facts under "Which call ran inside which"
+/// hold each case the plan named (§6.5); <see cref="FlowTreeTests"/> holds the reading on generated
+/// scenarios.</para>
 /// </summary>
 public class FlowTests : IDisposable
 {
@@ -275,7 +281,7 @@ public class FlowTests : IDisposable
         string[][] views =
         [
             ["s0"], ["s0", "--service", "stock"], ["s0", "--service", "stock-db"], ["s0", "--service", "bank"],
-            ["s0", "--errors-only"], ["s0/1"], ["s1"], ["s2"]
+            ["s0", "--errors-only"], ["s0/1"], ["s1"], ["s2"], ["s3"]
         ];
 
         var references = views
@@ -324,6 +330,28 @@ public class FlowTests : IDisposable
     }
 
     [Fact]
+    public void A_line_whose_parent_stands_above_an_annotation_names_it()
+    {
+        // The note was recorded while the test's POST was open. Its line has less indentation than the calls
+        // after it, so indentation alone put them under the note: each names the POST, as across a step
+        // header, while the cache's query below the cache call needs no name.
+        Assert.Equal(
+            """
+            s3  Note while the order is open  [Passed]
+
+            ── 0  When the order is placed
+              s3/i0     test → api  POST /orders  Created  100 ms
+              ── waiting for the order
+                s3/i1     api → db  QUERY /items  OK  2 ms  inside s3/i0
+                s3/i3     api → cache  GET /k  OK  10 ms  inside s3/i0
+                  s3/i4     cache → db  QUERY /k  OK  4 ms
+            4 calls shown · http s3/iN --keys for a payload · indented calls ran inside the call above them
+
+            """.ReplaceLineEndings("\n"),
+            Run("flow", NestedReport(), "s3"));
+    }
+
+    [Fact]
     public void A_step_address_names_the_call_its_first_line_ran_inside()
     {
         Assert.Contains("  s0/i11    api → audit  POST /entries  Created  5 ms  inside s0/i0", Lines(Run("flow", NestedReport(), "s0/1")));
@@ -337,7 +365,7 @@ public class FlowTests : IDisposable
         [
             ["s0"], ["s1"], ["s2"], ["s3"], ["s4"], ["s0", "--service", "payments"], ["s1", "--errors-only"]
         ];
-        string[][] nestedViews = [["s0"], ["s1"], ["s2"], ["s0", "--errors-only"], ["s0", "--service", "stock-db"]];
+        string[][] nestedViews = [["s0"], ["s1"], ["s2"], ["s3"], ["s0", "--errors-only"], ["s0", "--service", "stock-db"]];
         var outputs = views.Select(view => Run("flow", Report(), view))
             .Concat(nestedViews.Select(view => Run("flow", NestedReport(), view)))
             .Append(Run("flow", NoIdsReport(), "s0"));
@@ -528,7 +556,8 @@ public class FlowTests : IDisposable
     /// charge (502 from a 503), the stock database inside the stock call, a delivery on the POST's trace, and
     /// an audit call made inside the POST after the next step began. s1: a request never answered, a call
     /// answered without a status, a body with no duration, a user action and a request with no pairing id.
-    /// s2: the test's two calls at once, and a database query two levels inside the first.
+    /// s2: the test's two calls at once, and a database query two levels inside the first. s3: a note recorded
+    /// while the test's call is open, before the calls that ran inside it.
     /// </summary>
     private string NestedReport()
     {
@@ -544,7 +573,8 @@ public class FlowTests : IDisposable
                 [
                     Scenario("n0", "Place an order", ("When", "the order is placed"), ("Then", "it is audited")),
                     Scenario("n1", "Ask the async API", ("When", "the async API is asked")),
-                    Scenario("n2", "Call two services at once", ("When", "both are called"))
+                    Scenario("n2", "Call two services at once", ("When", "both are called")),
+                    Scenario("n3", "Note while the order is open", ("When", "the order is placed"))
                 ]
             }
         ];
@@ -576,6 +606,11 @@ public class FlowTests : IDisposable
         var second = Pair("n2", "test", "other", "GET", "http://other/y", null, HttpStatusCode.OK, null, null);
         var query = Pair("n2", "svc", "db", "QUERY", "http://db/z", null, HttpStatusCode.OK, null, null);
 
+        var waiting = Pair("n3", "test", "api", "POST", "http://api/orders", null, HttpStatusCode.Created, Ms(2_000), Ms(2_100));
+        var lookup = Pair("n3", "api", "db", "QUERY", "http://db/items", null, HttpStatusCode.OK, Ms(2_010), Ms(2_012));
+        var cached = Pair("n3", "api", "cache", "GET", "http://cache/k", null, HttpStatusCode.OK, Ms(2_020), Ms(2_030));
+        var miss = Pair("n3", "cache", "db", "QUERY", "http://db/k", null, HttpStatusCode.OK, Ms(2_021), Ms(2_025));
+
         RequestResponseLog[] logs =
         [
             StepMarker("n0", "the order is placed"),
@@ -587,7 +622,11 @@ public class FlowTests : IDisposable
             asked[0], specs[0], specs[1], again[0], again[1], key[0], key[1], created[0], created[1], click, ping[0],
 
             StepMarker("n2", "both are called"),
-            first[0], behind[0], second[0], query[0], query[1], second[1], behind[1], first[1]
+            first[0], behind[0], second[0], query[0], query[1], second[1], behind[1], first[1],
+
+            StepMarker("n3", "the order is placed"),
+            waiting[0], Marker("n3", DiagramMarkerKind.Custom, "note across : waiting for the order"),
+            lookup[0], lookup[1], cached[0], miss[0], miss[1], cached[1], waiting[1]
         ];
 
         var written = ReportGenerator.GenerateTestRunReportData(

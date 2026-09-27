@@ -1,0 +1,3 @@
+600 scenarios merged from two shards; 1200 views, unfiltered and --service db, 528 of them nested
+122 views differ after the merge
+    122  nesting differs: no; every changed line a request with no pairing id: yes

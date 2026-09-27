@@ -512,8 +512,9 @@ internal static partial class QueryCommand
 
         // A call is indented under the call it ran inside (CallNesting), one level per shown ancestor, so an
         // ancestor a filter dropped costs no level. Indentation alone says a line's parent is the nearest line
-        // above it, in its step section, with less indentation; where that is not the parent - a filtered
-        // parent, a parent in an earlier step, two branches whose calls interleave - the line names it.
+        // above it with less indentation; where that is not the parent - a filtered parent, a parent in an
+        // earlier step or above an annotation, two branches whose calls interleave - the line names it. A step
+        // header and an annotation are such lines, so each starts a section: only a call line within it counts.
         var parents = CallNesting.Parents(scenario.Interactions);
         var shownOrdinals = shown.Select(s => s.Request.Ordinal).ToHashSet();
         var section = new List<(int Ordinal, int Depth)>();
@@ -522,7 +523,10 @@ internal static partial class QueryCommand
         foreach (var (interaction, response) in shown)
         {
             for (; nextAnnotation < annotations.Count && annotations[nextAnnotation].Index <= interaction.Ordinal; nextAnnotation++)
+            {
                 writer.Line($"  ── {annotations[nextAnnotation].Text}".TrimEnd());
+                section.Clear();
+            }
 
             if (interaction.StepPath != currentStep)
             {
