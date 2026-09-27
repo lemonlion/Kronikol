@@ -594,6 +594,44 @@ public class NodeJsPlantUmlRendererTests
         return reader.ReadToEnd();
     }
 
+    private static byte[] RenderScriptBytes()
+    {
+        var assembly = typeof(NodeJsPlantUmlRenderer).Assembly;
+        var name = assembly.GetManifestResourceNames()
+            .First(n => n.EndsWith("plantuml-render.js", StringComparison.OrdinalIgnoreCase));
+        using var stream = new MemoryStream();
+        assembly.GetManifestResourceStream(name)!.CopyTo(stream);
+        return stream.ToArray();
+    }
+
+    [Fact]
+    public void Node_is_started_on_the_render_script_of_this_build()
+    {
+        // The cache directory is named for the engine, so every Kronikol version on one engine pin shares it, the
+        // kronikol tool beside a test project on another version included. Each process wrote its build's script to
+        // one fixed name on its first render and ran whatever that name held from then on: another version's script,
+        // or one another process was halfway through writing.
+        var start = NodeJsPlantUmlRenderer.NodeStartInfo(batch: true);
+
+        var script = start.ArgumentList[0];
+        var hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(RenderScriptBytes()))[..16];
+        Assert.Equal($"plantuml-render.{hash}.js", Path.GetFileName(script));
+        Assert.Equal(Path.GetDirectoryName(NodeJsPlantUmlRenderer.CodeCachePath), Path.GetDirectoryName(script));
+        Assert.Equal(NodeJsPlantUmlRenderer.RenderScriptPath, script);
+        Assert.Equal("--batch", start.ArgumentList[^1]);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_render_leaves_this_builds_script_under_its_own_name()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        Assert.True(NodeJsPlantUmlRenderer.RenderMany([Seq("Script", "Own")])[0].Succeeded);
+
+        Assert.Equal(RenderScriptBytes(), File.ReadAllBytes(NodeJsPlantUmlRenderer.RenderScriptPath));
+    }
+
     [Fact]
     public void An_esm_engine_build_is_rewritten_and_drives_the_renderer()
     {

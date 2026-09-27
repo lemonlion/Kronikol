@@ -8,7 +8,7 @@ namespace Kronikol.PlantUml;
 
 /// <summary>
 /// Renders PlantUML diagrams locally using a bundled Node.js PlantUML renderer.
-/// Downloads the required JavaScript files on first use and caches them locally.
+/// Downloads the required JavaScript files on first use and caches them locally, checked against their known hashes.
 /// </summary>
 public static class NodeJsPlantUmlRenderer
 {
@@ -20,9 +20,9 @@ public static class NodeJsPlantUmlRenderer
     /// <summary>The V8 code cache <c>plantuml-render.js</c> keeps next to the downloaded engine (see <see cref="CodeCachePath"/>).</summary>
     public const string CodeCacheFileName = PlantUmlFileName + ".v8cache";
 
-    // The cache directory carries the CDN tag: DownloadJsFiles skips files that already exist, so an
-    // unversioned directory would silently keep every existing machine on the old engine when
-    // TrackingDefaults.PlantUmlJsCdnBase moves to a new build.
+    // The cache directory carries the engine's version, so machines that run two Kronikol versions on different
+    // engines keep both instead of replacing one with the other on every run. Every Kronikol version on one engine
+    // shares the directory, which is why the render script is written under a name of its own bytes.
     private static readonly string CacheDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Kronikol", "plantuml-js", CdnVersionSegment());
@@ -184,9 +184,21 @@ public static class NodeJsPlantUmlRenderer
         return svg;
     }
 
-    private static Process StartNode(bool batch)
+    private static readonly Lazy<byte[]> RenderScript = new(ReadRenderScript);
+
+    /// <summary>
+    /// The render script of this build: <c>plantuml-render.&lt;hash&gt;.js</c> in the cache directory, named for its own
+    /// bytes, so each Kronikol version runs its own script and none rewrites a file another process is running.
+    /// </summary>
+    internal static string RenderScriptPath => Path.Combine(CacheDir, EngineCache.ScriptFileName(RenderScriptName, RenderScript.Value));
+
+    private static Process StartNode(bool batch) =>
+        Process.Start(NodeStartInfo(batch))
+            ?? throw new InvalidOperationException("Failed to start Node.js process. Ensure 'node' is available on PATH.");
+
+    internal static ProcessStartInfo NodeStartInfo(bool batch)
     {
-        var renderScriptPath = Path.Combine(CacheDir, RenderScriptName);
+        var renderScriptPath = RenderScriptPath;
         var vizPath = Path.Combine(CacheDir, VizFileName);
         var plantumlJsPath = Path.Combine(CacheDir, PlantUmlFileName);
 
@@ -209,9 +221,7 @@ public static class NodeJsPlantUmlRenderer
         psi.ArgumentList.Add(vizPath);
         psi.ArgumentList.Add(plantumlJsPath);
         if (batch) psi.ArgumentList.Add("--batch");
-
-        return Process.Start(psi)
-            ?? throw new InvalidOperationException("Failed to start Node.js process. Ensure 'node' is available on PATH.");
+        return psi;
     }
 
     private static void RecordCodeCacheStatus(string stderr)
@@ -232,25 +242,30 @@ public static class NodeJsPlantUmlRenderer
         {
             if (_initialized) return;
 
-            Directory.CreateDirectory(CacheDir);
-            ExtractRenderScript();
-            DownloadJsFiles();
+            // Every file is verified on each start in a process, written when missing or wrong, and renamed into
+            // place only once it verified (EngineCache).
+            var cache = new EngineCache(CacheDir, url =>
+            {
+                using var http = new HttpClient();
+                return http.GetByteArrayAsync(url).GetAwaiter().GetResult();
+            }, CdnBase, ExpectedIntegrity);
+            cache.EnsureScript(RenderScriptName, RenderScript.Value);
+            cache.EnsureFiles();
             _initialized = true;
         }
     }
 
-    private static void ExtractRenderScript()
+    private static byte[] ReadRenderScript()
     {
-        var targetPath = Path.Combine(CacheDir, RenderScriptName);
-
         var assembly = Assembly.GetExecutingAssembly();
         var resourceName = assembly.GetManifestResourceNames()
             .FirstOrDefault(n => n.EndsWith("plantuml-render.js", StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException("Embedded resource plantuml-render.js not found.");
 
         using var stream = assembly.GetManifestResourceStream(resourceName)!;
-        using var file = File.Create(targetPath);
-        stream.CopyTo(file);
+        using var bytes = new MemoryStream();
+        stream.CopyTo(bytes);
+        return bytes.ToArray();
     }
 
     /// <summary>The known hash of each engine file under <see cref="CdnBase"/> (plans/ENGINE_PIN_PLAN.md S3).</summary>
@@ -259,13 +274,4 @@ public static class NodeJsPlantUmlRenderer
         [VizFileName] = TrackingDefaults.VizGlobalJsIntegrity,
         [PlantUmlFileName] = TrackingDefaults.PlantUmlJsIntegrity,
     };
-
-    // Every file is verified on each start in a process, downloaded when missing or wrong, and renamed into place
-    // only once it verified (EngineCache).
-    private static void DownloadJsFiles() =>
-        new EngineCache(CacheDir, url =>
-        {
-            using var http = new HttpClient();
-            return http.GetByteArrayAsync(url).GetAwaiter().GetResult();
-        }, CdnBase, ExpectedIntegrity).EnsureFiles();
 }

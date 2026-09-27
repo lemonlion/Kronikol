@@ -4,6 +4,63 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.6] - 2026-09-27
+
+**Patch - an audit of `plans/ENGINE_PIN_PLAN.md` (stage 1 P4, shipped as 3.30.4, 3.31.1 and 3.31.3).** Every change
+is a fix, so the patch part moved. Nothing new is public. Template pins move to 3.31.5.
+
+### Fixed
+
+- **A Node render could run another Kronikol version's script, or one half written.** `PlantUmlRendering.NodeJs`
+  keeps the engine in `%LOCALAPPDATA%/Kronikol/plantuml-js/<engine version>/`. Every process wrote its render script
+  there as `plantuml-render.js` on its first render and started node on that name from then on. The directory is
+  named for the engine, so every Kronikol version on one engine shares it: 3.31.1 to 3.31.3 on 1.2026.8, and the
+  `kronikol` tool beside a test project on another version. A process therefore ran whichever version's script had
+  been written last, so a 3.31.3 process could run 3.31.1's and lose 3.31.3's `--jitless` fix. The write also
+  truncated a file another process's node could be reading, and on Windows it failed outright while another process
+  had the file open ("being used by another process"). Either way the batch failed and every diagram of that report
+  stood as a placeholder. The script is now `plantuml-render.<hash>.js`, named for its own bytes: a copy already
+  there with those bytes is left alone, and anything else is replaced by the verified rename 3.31.1 gave the engine
+  files. An older `plantuml-render.js` in the directory stays, for the versions that still run it.
+- **A refused rename said only "Access to the path is denied."** When the Node renderer could not replace a cached
+  file because another process held it open, and the file in place did not match its known hash, the error named
+  neither the file nor what to do. It now names the file and the directory to delete, and a file that cannot be read
+  counts as one that does not match (the read used to throw from inside the handler).
+- **The main-thread path did not say what a refused `viz-global.js` costs.** On the worker path the console says
+  that Graphviz is not loaded and the engine lays out with its Smetana port; the main-thread fallback logged the
+  integrity failure alone. Both now log the same sentence. The report's render script changes by that one function.
+
+### Tests
+
+- `EngineCacheTests`: the render script is written under a name of its own bytes and two builds keep their own; a
+  script already in place is not written again, with or without a reader holding it; a damaged one is replaced; and,
+  on Windows, a rename refused while another process holds the file keeps that process's verified copy, or, when
+  the copy does not verify, fails naming the directory to delete. That branch had never run under test.
+- `NodeJsPlantUmlRendererTests`: node is started on the script of this build, and a render leaves that script under
+  its own name (Integration).
+- `BrowserRenderWorkerTests`: the engine refusal's console line on the worker path, the main-thread path and over
+  http; a refused `viz-global.js` on the main-thread path (telemetry, console line, and a component diagram laid out
+  by Smetana); and two facts on a report served over `http://127.0.0.1` by a loopback file server, where every other
+  fact opens `file://`: both engine files verified in worker mode, and a wrong hash refused.
+- Red on 3.31.3: the script facts on a stub, the node-start fact on its file name, the refused-rename fact on the bare
+  `UnauthorizedAccessException`, the main-thread viz fact on its console line. The rest pin behaviour 3.31.3 already
+  had. Eight mutations of the new code, each turning only its own facts red.
+
+### Documentation
+
+- Wiki: `Large-Response-and-Diagram-Handling` gives the statement-limit edges measured on the npm engine (the block
+  and bar edges are where V8's stack runs out, about 2,000 characters under node 25.9) instead of the fork build's
+  3,660 to 5,641 and 4,124, which 3.31.1 corrected in the source only; `Diagnostics-and-Debugging`'s worker-mode check
+  gains `webAssembly` and what a refused `viz-global.js` costs; `PlantUML-Browser-Rendering` says how the Node
+  renderer writes its script.
+- `plans/ENGINE_PIN_PLAN.md` §10.4 records the audit. `ROADMAP.md`: row 14.2 counts the Node cache's hash as a sixth
+  site, off the WASI path, as the plan had said it would; Appendix C gains the plan's leftovers (the mirror option
+  among them), and rows that still called the npm move or the fragment re-measure open say they are done.
+
+### Kronikol4J
+
+- A ledger entry: the render script's viz message, not mirrored (the port's 3.0.43 script has no integrity check).
+
 ## [3.31.5] - 2026-09-27
 
 **Patch - an audit of `kronikol query flow`'s nesting (`plans/FLOW_NESTING_PLAN.md` S1 and S2, releases 3.30.3

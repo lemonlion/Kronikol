@@ -238,6 +238,11 @@
             }
         }
 
+        // What a viz-global.js that did not load costs, the same on both paths.
+        function vizMissing(reason) {
+            console.error('Kronikol: ' + reason
+                + '. Graphviz is not loaded: the engine lays out what it can with its Smetana port instead.');
+        }
         function integrityMessage(file, url, expected) {
             return 'engine integrity check failed: ' + file + ' from ' + url + ' does not match ' + expected
                 + '; the browser console names the hash it computed';
@@ -280,10 +285,7 @@
                     engineFailed(new Error(integrityMessage('plantuml.js', ENGINE_URL, ENGINE_INTEGRITY)));
                     return;
                 }
-                if (viz === null) {
-                    console.error('Kronikol: ' + integrityMessage('viz-global.js', VIZ_URL, VIZ_INTEGRITY)
-                        + '. Graphviz is not loaded: the engine lays out what it can with its Smetana port instead.');
-                }
+                if (viz === null) vizMissing(integrityMessage('viz-global.js', VIZ_URL, VIZ_INTEGRITY));
                 // An ES-module engine build (the npm @plantuml/core line) ends in `export { X as render,
                 // Y as renderToString }`; a classic worker cannot evaluate that, so expose the exports instead.
                 var tail = engine.slice(-300);
@@ -354,7 +356,7 @@
                 telemetry.vizIntegrity = 'verified';
             }, function (e) {
                 return tagFailure(VIZ_URL, VIZ_INTEGRITY, 'viz-global.js', 'vizIntegrity', e).then(function (failure) {
-                    console.error('Kronikol: ' + failure.message);
+                    vizMissing(failure.message);
                 });
             });
             // The engine is an ES module (the npm @plantuml/core line). The module tag fetches and checks

@@ -139,4 +139,117 @@ public sealed class EngineCacheTests : IDisposable
         Assert.Equal(Viz, File.ReadAllBytes(PathOf("viz-global.js")));
         Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
     }
+
+    /// <summary>
+    /// Answers the engine's right bytes after putting <paramref name="inPlace"/> under the final name and opening it
+    /// the way another process reading it would, without letting it be deleted: Windows then refuses the rename
+    /// over it. The handle is kept in <paramref name="held"/> for the test to close.
+    /// </summary>
+    private Func<string, byte[]> HoldingTheFinalFile(byte[] inPlace, List<FileStream> held) => url =>
+    {
+        if (!url.EndsWith("/plantuml.js", StringComparison.Ordinal)) return Viz;
+        File.WriteAllBytes(PathOf("plantuml.js"), inPlace);
+        held.Add(new FileStream(PathOf("plantuml.js"), FileMode.Open, FileAccess.Read, FileShare.Read));
+        return Engine;
+    };
+
+    [Fact]
+    public void A_rename_refused_while_another_process_holds_a_verified_copy_keeps_that_copy()
+    {
+        // The branch the two-cache fact never reaches (plan §10.2: nothing there holds the final file open). Another
+        // process renamed its own verified copy into place first and is reading it, so this one's rename is refused.
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "only Windows refuses to rename over a file another handle holds open");
+        var held = new List<FileStream>();
+        try
+        {
+            Cache(HoldingTheFinalFile(Engine, held)).EnsureFiles();
+
+            Assert.Equal(Engine, File.ReadAllBytes(PathOf("plantuml.js")));
+            Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
+        }
+        finally
+        {
+            held.ForEach(s => s.Dispose());
+        }
+    }
+
+    [Fact]
+    public void A_rename_refused_over_a_copy_that_does_not_verify_names_the_directory_to_delete()
+    {
+        // Plan §3.3 item 5: when the file in place does not verify either, the failure says what a persistent mismatch
+        // says (the directory to delete), not only the operating system's "being used by another process".
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "only Windows refuses to rename over a file another handle holds open");
+        var held = new List<FileStream>();
+        try
+        {
+            var e = Assert.Throws<InvalidOperationException>(() => Cache(HoldingTheFinalFile(Wrong, held)).EnsureFiles());
+
+            Assert.Contains(PathOf("plantuml.js"), e.Message);
+            Assert.Contains($"delete {_dir}", e.Message);
+            Assert.True(e.InnerException is IOException or UnauthorizedAccessException, e.InnerException?.ToString());
+            Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
+        }
+        finally
+        {
+            held.ForEach(s => s.Dispose());
+        }
+    }
+
+    private static readonly byte[] ScriptOne = Encoding.UTF8.GetBytes("// the render script of one build\n");
+    private static readonly byte[] ScriptTwo = Encoding.UTF8.GetBytes("// the render script of another build\n");
+
+    [Fact]
+    public void Each_build_writes_its_render_script_under_a_name_of_its_own_bytes()
+    {
+        // The directory is named for the engine, so every Kronikol version on one engine pin shares it (3.31.1 to
+        // 3.31.3 on 1.2026.8, and the kronikol tool beside a test project on another version). A script written under
+        // one fixed name was the last writer's: a process ran whichever build's script had been extracted last.
+        var cache = Cache(_ => throw new InvalidOperationException("no download expected"));
+
+        var one = cache.EnsureScript("plantuml-render.js", ScriptOne);
+        var two = cache.EnsureScript("plantuml-render.js", ScriptTwo);
+
+        Assert.NotEqual(one, two);
+        Assert.Equal(ScriptOne, File.ReadAllBytes(one));
+        Assert.Equal(ScriptTwo, File.ReadAllBytes(two));
+        Assert.Equal(_dir, Path.GetDirectoryName(one));
+        Assert.Matches(@"^plantuml-render\.[0-9a-f]{16}\.js$", Path.GetFileName(one));
+        Assert.False(File.Exists(PathOf("plantuml-render.js")));
+        Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
+    }
+
+    [Fact]
+    public void A_render_script_already_in_place_is_not_written_again()
+    {
+        // Every process wrote the script again on its first render, truncating a file another process's node could be
+        // reading, and on Windows the write itself failed while another handle was open.
+        var cache = Cache(_ => throw new InvalidOperationException("no download expected"));
+        var path = cache.EnsureScript("plantuml-render.js", ScriptOne);
+        var written = new DateTime(2001, 2, 3, 4, 5, 6, DateTimeKind.Utc);
+        File.SetLastWriteTimeUtc(path, written);
+
+        Assert.Equal(path, cache.EnsureScript("plantuml-render.js", ScriptOne));
+        Assert.Equal(written, File.GetLastWriteTimeUtc(path));
+
+        // A node process reading it (node opens files for sharing, delete included).
+        using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            Assert.Equal(path, cache.EnsureScript("plantuml-render.js", ScriptOne));
+
+        Assert.Equal(written, File.GetLastWriteTimeUtc(path));
+        Assert.Equal(ScriptOne, File.ReadAllBytes(path));
+        Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
+    }
+
+    [Fact]
+    public void A_damaged_render_script_is_replaced()
+    {
+        var cache = Cache(_ => throw new InvalidOperationException("no download expected"));
+        var path = cache.EnsureScript("plantuml-render.js", ScriptOne);
+        File.WriteAllBytes(path, Encoding.UTF8.GetBytes("// cut sh"));
+
+        Assert.Equal(path, cache.EnsureScript("plantuml-render.js", ScriptOne));
+
+        Assert.Equal(ScriptOne, File.ReadAllBytes(path));
+        Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
+    }
 }

@@ -418,6 +418,21 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         return await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('.plantuml-browser')).map(el => el.textContent)");
     }
 
+    /// <summary>Every console error the page logs from now on.</summary>
+    private List<string> ConsoleErrors()
+    {
+        var errors = new List<string>();
+        Page.Console += (_, m) => { if (m.Type == "error") lock (errors) errors.Add(m.Text); };
+        return errors;
+    }
+
+    private static void AssertTheConsoleNamesTheRefusedEngine(List<string> errors)
+    {
+        lock (errors)
+            Assert.Contains(errors, e => e.StartsWith("Kronikol: PlantUML engine unavailable: engine integrity check failed: plantuml.js from "
+                                                      + $"{Constants.TrackingDefaults.PlantUmlJsCdnBase}/plantuml.js does not match {WrongHash}", StringComparison.Ordinal));
+    }
+
     private static void AssertEveryDiagramNamesTheRefusedEngine(string[] diagrams)
     {
         Assert.NotEmpty(diagrams);
@@ -434,11 +449,13 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // A proxy's rewrite, a captive portal's login page or a damaged cache entry used to be evaluated as the
         // engine, usually failing as a syntax error, and the fallback then fetched the same bytes. Now the browser
         // refuses them, the engine is never evaluated, and every diagram says which file failed.
+        var errors = ConsoleErrors();
         await Page.GotoAsync(WithWrongHash(GenerateReport("EngineWrongHash.html"), Constants.TrackingDefaults.PlantUmlJsIntegrity));
 
         var diagrams = await RenderEveryDiagramAndReadIt();
 
         AssertEveryDiagramNamesTheRefusedEngine(diagrams);
+        AssertTheConsoleNamesTheRefusedEngine(errors);
         var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
         Assert.Equal("mismatch", r.GetProperty("engineIntegrity").GetString());
         Assert.NotEqual("worker", r.GetProperty("mode").GetString());
@@ -453,11 +470,13 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // The fallback loads the engine by a module tag carrying the hash, then import()s the record the tag
         // verified: a refused tag leaves a failed entry, and the diagrams say so exactly as on the worker path.
         var url = LargeReportFixture.Generate(TempDir, OutputDir, "EngineWrongHashMainThread.html", diagrams: 2, stepsPerDiagram: 2, browserRenderWorkers: 0);
+        var errors = ConsoleErrors();
         await Page.GotoAsync(WithWrongHash(url, Constants.TrackingDefaults.PlantUmlJsIntegrity));
 
         var diagrams = await RenderEveryDiagramAndReadIt();
 
         AssertEveryDiagramNamesTheRefusedEngine(diagrams);
+        AssertTheConsoleNamesTheRefusedEngine(errors);
         var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
         Assert.Equal("main-thread", r.GetProperty("mode").GetString());
         Assert.Equal("mismatch", r.GetProperty("engineIntegrity").GetString());
@@ -469,8 +488,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     {
         // Graphviz is only used for non-sequence diagrams: a refused viz-global.js must not take the sequence
         // diagrams down with it (plans/ENGINE_PIN_PLAN.md Q7).
-        var errors = new List<string>();
-        Page.Console += (_, m) => { if (m.Type == "error") lock (errors) errors.Add(m.Text); };
+        var errors = ConsoleErrors();
         await Page.GotoAsync(WithWrongHash(GenerateReport("VizWrongHash.html"), Constants.TrackingDefaults.VizGlobalJsIntegrity));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         await ExpandFirstScenarioWithDiagram();
@@ -482,12 +500,46 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         Assert.Equal("mismatch", r.GetProperty("vizIntegrity").GetString());
         Assert.Equal("verified", r.GetProperty("engineIntegrity").GetString());
         Assert.True(r.GetProperty("renders").GetInt32() >= 1);
-        lock (errors)
-            Assert.Contains(errors, e => e.Contains($"engine integrity check failed: viz-global.js from {Constants.TrackingDefaults.PlantUmlJsCdnBase}/viz-global.js")
-                                         && e.Contains($"does not match {WrongHash}") && e.Contains("Graphviz is not loaded"));
+        AssertTheConsoleNamesTheRefusedViz(errors);
+        await AssertAGraphvizDiagramStillDraws();
+    }
 
-        // A diagram Graphviz would lay out still draws: without it the engine uses its Smetana port, and says so
-        // on the console ("viz-global.js is not loaded, falling back to the Smetana layout engine").
+    [Fact]
+    public async Task Viz_with_a_wrong_expected_hash_drops_graphviz_only_on_the_main_thread_path()
+    {
+        // The fallback's viz tag carries the hash too. Refused there, the tag leaves Viz undefined, the engine lays a
+        // component diagram out with Smetana, and the console says so, as on the worker path.
+        var url = LargeReportFixture.Generate(TempDir, OutputDir, "VizWrongHashMainThread.html", diagrams: 2, stepsPerDiagram: 2, browserRenderWorkers: 0);
+        var errors = ConsoleErrors();
+        await Page.GotoAsync(WithWrongHash(url, Constants.TrackingDefaults.VizGlobalJsIntegrity));
+        await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
+        await ExpandFirstScenarioWithDiagram();
+
+        await WaitForDiagramSvg(90000);
+        await Page.WaitForFunctionAsync("() => window.__kronikolRender.vizIntegrity !== null", null, new() { Timeout = 30000, PollingInterval = 200 });
+
+        var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
+        Assert.Equal("main-thread", r.GetProperty("mode").GetString());
+        Assert.Equal("mismatch", r.GetProperty("vizIntegrity").GetString());
+        Assert.Equal("verified", r.GetProperty("engineIntegrity").GetString());
+        AssertTheConsoleNamesTheRefusedViz(errors);
+        await AssertAGraphvizDiagramStillDraws();
+    }
+
+    private static void AssertTheConsoleNamesTheRefusedViz(List<string> errors)
+    {
+        lock (errors)
+            Assert.Contains(errors, e => e.StartsWith("Kronikol: engine integrity check failed: viz-global.js from "
+                                                      + $"{Constants.TrackingDefaults.PlantUmlJsCdnBase}/viz-global.js does not match {WrongHash}", StringComparison.Ordinal)
+                                         && e.Contains("Graphviz is not loaded: the engine lays out what it can with its Smetana port instead", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// A diagram Graphviz would lay out still draws with Graphviz refused: without it the engine uses its Smetana port,
+    /// and says so on the console ("viz-global.js is not loaded, falling back to the Smetana layout engine").
+    /// </summary>
+    private async Task AssertAGraphvizDiagramStillDraws()
+    {
         var graphviz = await Page.EvaluateAsync<JsonElement>("""
             () => new Promise(function (resolve) {
                 var el = document.createElement('div'); el.id = 'needs-graphviz'; document.body.appendChild(el);
@@ -525,6 +577,45 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         Assert.Equal("worker", r.GetProperty("mode").GetString());
         Assert.Equal("verified", r.GetProperty("engineIntegrity").GetString());
         Assert.Equal("verified", r.GetProperty("vizIntegrity").GetString());
+    }
+
+    [Fact]
+    public async Task A_report_served_over_http_renders_in_workers_with_both_engine_files_verified()
+    {
+        // Every other fact opens its report from file://. A hosted report is on an http(s) origin, where the page's
+        // fetches go out with a real Origin: the plan's acceptance names it (ENGINE_PIN_PLAN §5), measured by a probe.
+        var file = new Uri(GenerateReport("ServedOverHttp.html")).LocalPath;
+        await using var server = LoopbackFileServer.Start(Path.GetDirectoryName(file)!);
+        await Page.GotoAsync(server.UrlOf(Path.GetFileName(file)));
+        await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
+        await ExpandFirstScenarioWithDiagram();
+
+        await WaitForDiagramSvg(60000);
+
+        Assert.Equal("http:", await Page.EvaluateAsync<string>("() => location.protocol"));
+        Assert.True(server.Served >= 1);
+        var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
+        Assert.Equal("worker", r.GetProperty("mode").GetString());
+        Assert.Equal("verified", r.GetProperty("engineIntegrity").GetString());
+        Assert.Equal("verified", r.GetProperty("vizIntegrity").GetString());
+    }
+
+    [Fact]
+    public async Task A_report_served_over_http_refuses_an_engine_that_fails_its_hash()
+    {
+        // The refusal is told from a network failure by a plain fetch of the same URL; on an http origin that fetch
+        // is a real cross-origin request, and it must still find the file.
+        var file = new Uri(WithWrongHash(GenerateReport("ServedOverHttpWrongHash.html"), Constants.TrackingDefaults.PlantUmlJsIntegrity)).LocalPath;
+        await using var server = LoopbackFileServer.Start(Path.GetDirectoryName(file)!);
+        var errors = ConsoleErrors();
+        await Page.GotoAsync(server.UrlOf(Path.GetFileName(file)));
+
+        var diagrams = await RenderEveryDiagramAndReadIt();
+
+        Assert.Equal("http:", await Page.EvaluateAsync<string>("() => location.protocol"));
+        AssertEveryDiagramNamesTheRefusedEngine(diagrams);
+        AssertTheConsoleNamesTheRefusedEngine(errors);
+        Assert.Equal("mismatch", (await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender")).GetProperty("engineIntegrity").GetString());
     }
 
     [Fact]
