@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.10] - 2026-09-27
+
+**Patch - a `#sid-` link, *Next Failure* and a failure-cluster link land on their scenario (`plans/DOORSTEP_PLAN.md`
+F28, found checking BreakfastProvider's published report at phone width for roadmap 2.1).** Bug fixes, with nothing new
+for a consumer to call, so the patch part moved. Report output changes (three of the page's scripts and the cluster
+link's `onclick`): the Kronikol4J divergence ledger owes an entry, drafted in the plan's Appendix A because this
+session could not reach that repository. Template pins move to 3.31.9.
+
+### Fixed
+
+- **A deep link, *Next Failure* or a failure-cluster link into a long report ended past its scenario, at the bottom of
+  the page.** Every feature and scenario is drawn with `content-visibility: auto`, so one the browser has not drawn
+  yet counts as its placeholder: 500 px for a feature (about 532 with its padding, where a closed feature is about 60)
+  and 150 px for a scenario. The three jumps scrolled smoothly, and a smooth scroll is aimed once, across those
+  placeholders; they were drawn at their true size as it passed them, and it ran on to the bottom of the page. On
+  BreakfastProvider's published xUnit report a `#sid-` link into the 40th of 67 features ended with the scenario
+  1,766 px above the screen at 1280 px wide and 1,267 px above at 390 px. The three now go through
+  `jump_into_view(target, block)`, which jumps and then re-aims for up to ten frames while the features it landed
+  among are drawn (a browser without scroll anchoring, such as Safari, would otherwise let the target drift). On a
+  copy of that report, links into the first, 40th and last features land with the scenario's title on screen, -15 to
+  85 px from the middle, at both widths. **Behaviour change:** the three no longer animate. Keyboard navigation and a
+  step's table reference move a short way and still scroll smoothly.
+- **On a phone, a `#sid-` link landed above its scenario even near the top of the report.** At 768 px and below the
+  page folds its filter panel away as it loads (559 px on that report), and the link's scroll was aimed before the
+  fold, so it ended the panel's height too far down: a link into the first feature left the scenario 220 px above the
+  screen at 390 x 844. The link is now followed after the phone-width layout is done, the rule `parse_url_hash`
+  already kept for its own filters.
+
+### Tests
+
+- `StableIdDeepLinkTests`: a link into the 30th of 60 features, and a link into the first feature at 390 x 844.
+  `JumpToFailureTests`: a failure in the 30th feature. `FailureClusterLinkTests`: a cluster link into the 30th feature.
+  Each is red on 3.31.9, and each waits for the page to stop scrolling before it looks, since a smooth scroll passes
+  its target on the way. They share `ReportTestHelper.GenerateLongReport` (60 closed features without diagrams, a
+  category each) and `PlaywrightTestBase`'s `WaitForScrollToSettleAsync` and `SummaryIsOnScreenAsync`.
+- `DeepLinkReportTests` and `FailureClusterReportTests` pin `jump_into_view` where they pinned `scrollIntoView`, and
+  that it never scrolls smoothly.
+- In this container: `Kronikol.Tests` 5,942 passed and 5 skipped, with 3 failures that fail the same on 3.31.9 (they
+  need a read-only file, and the container runs as root). The full suite runs in CI on this commit, and the tag waits
+  for it.
+
 ## [3.31.9] - 2026-09-27
 
 **Patch - the internal-flow segment map ships as one gzip blob (#89), a filtered export draws and binds its diagrams
