@@ -89,6 +89,8 @@ public class StaleOutputTests : IDisposable
     [Fact]
     public void The_pointer_does_not_name_the_previous_runs_file_when_this_run_could_not_replace_it()
     {
+        Assert.SkipUnless(ReadOnlyFiles.AreEnforced, ReadOnlyFiles.NotEnforcedReason);
+
         var stale = Path.Combine(_dir, "TestRunReport.json");
         File.WriteAllText(stale, "{\"from\":\"an earlier run\"}");
         File.SetAttributes(stale, FileAttributes.ReadOnly);

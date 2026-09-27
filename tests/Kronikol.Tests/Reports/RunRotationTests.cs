@@ -310,6 +310,8 @@ public class RunRotationTests : IDisposable
     [Fact]
     public void A_read_only_previous_report_stops_the_rotation_and_never_the_run()
     {
+        Assert.SkipUnless(ReadOnlyFiles.AreEnforced, ReadOnlyFiles.NotEnforcedReason);
+
         Run(ExecutionResult.Failed);
         var report = Path.Combine(Reports, "TestRunReport.json");
         File.SetAttributes(report, FileAttributes.ReadOnly);

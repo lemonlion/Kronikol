@@ -283,6 +283,8 @@ public class InitAgentsCommandTests : IDisposable
     [Fact]
     public void A_file_that_cannot_be_written_is_reported_rather_than_thrown()
     {
+        Assert.SkipUnless(ReadOnlyFiles.AreEnforced, ReadOnlyFiles.NotEnforcedReason);
+
         // A read-only working copy and a file locked by an editor are ordinary conditions, and the rest of
         // this tool answers them with a message and an exit code rather than a stack trace.
         var path = Path.Combine(_directory, "CLAUDE.md");
