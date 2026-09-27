@@ -234,9 +234,10 @@ releases and `action.yml`. Every address, the full quotes and each answer's veri
   writes it again. `_Sidebar.md:139` and `Home.md:57` link the page, so no new page is needed.
 - **`CHANGELOG.md`** has no `[Unreleased]` practice: every entry since 3.0 sits in a release's section. Its
   link definitions stop at 2.0.139-beta, and `[Unreleased]` is defined as `compare/v2.0.139-beta...HEAD`
-  (line 7170), so the PR's `## [Unreleased]` heading would render as a link to a 2.0 comparison. No 3.x heading
-  has a definition, so each renders as plain text. The three 2.0.13x definitions appear twice (lines 7171 to
-  7176).
+  (the file's last four lines: 7170 at 3.31.9, 7231 at 3.31.10), so the PR's `## [Unreleased]` heading would
+  render as a link to a 2.0 comparison. No 3.x heading has a definition, so each renders as plain text. The three
+  2.0.13x definitions below it appear once each. (A first version of this plan said twice; it was re-read at the
+  PR's base, the PR's head, 3.31.9 and 3.31.10, once each every time.)
 - **No example project sets `PublishCiArtifacts`.** Only `src/` and the tests mention it. So nothing in this
   repository has uploaded a report the way the action's README tells a consumer to, and
   `ci-summary-preview.yml` uploads only the history fragments.
@@ -608,10 +609,10 @@ and prints the step's `reports-path`. What it holds goes into S6's wiki sentence
 
 - **`CHANGELOG.md`**, the `[Unreleased]` entry (Q3), reworded: "No version change: a GitHub Actions template in
   the repository. The action ships in no package; the `Kronikol.Templates` package README gains a paragraph
-  that points at it." The Added bullet keeps the PR's content and gains the live lane, `queue: max`, the tag's rule
-and, if Q5 is yes, the end marker; the tests line gains the package README guard. The line
-  `[Unreleased]: https://github.com/lemonlion/Kronikol/compare/v2.0.139-beta...HEAD` and the second copy of the
-  three 2.0.13x definitions are deleted (F10).
+  that points at it." The Added bullet keeps the PR's content and gains the live lane, `queue: max`, the tag's
+  rule and, if Q5 is yes, the end marker; the tests line gains the package README guard. The line
+  `[Unreleased]: https://github.com/lemonlion/Kronikol/compare/v2.0.139-beta...HEAD` is deleted (F10); the three
+  2.0.13x definitions below it stay, since their headings use them.
 - **The template README**: S2's changes, and the "reference it from a Kronikol release tag" sentence unchanged. It
   names no tag, and it becomes true with the first tag (S6).
 - **The root `README.md`**: the PR's sentence stands.
