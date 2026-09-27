@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-27 · **Repo version:** 3.31.3 (`fa866f8`) when written, 3.31.5 (`4aa1e1e`) at the first
 same-day update, 3.31.9 (`e4c9e36`) at the second · **Status: plan written, NOT green-lit; S0 run as far as
-a session can reach.** It needs D24, and most of D24 is the owner's own words: the roadmap gives this text to
+a session can reach; the defect it found (F28) fixed in 3.31.10.** It needs D24, and most of D24 is the owner's own words: the roadmap gives this text to
 "the owner's hand". Roadmap item **2.1** (stage 2, track C). No package changes, so **no version bump**, and
 nothing in it is outreach (rule 9).
 
@@ -41,9 +41,10 @@ two here and put the third into 13.1, the README as a landing page. What this pl
   features start collapsed: the first diagram is three taps from the landing page (a report, a feature, a
   scenario), and on a phone a screen of scrolling as well (RUN, F21). The report already has what a demo
   needs, a `#sid-` link that opens one scenario with its diagram in view (F22), which the landing page
-  could use (Q5). **Found on the way:** at phone widths that link lands above its scenario, because the
-  report folds its filters away after the scroll has started. The cause is two blocks in the wrong order
-  in `report-init-script.js`, and a copy with them swapped lands in the middle of the screen (RUN, F28).
+  could use (Q5). **Found on the way, and fixed in 3.31.10:** that link, Next Failure and a failure-cluster
+  link landed past their scenario. A smooth scroll aimed across features the browser had not drawn yet ran
+  to the bottom of any long report, and on a phone the report folded its filters away after the scroll had
+  started (RUN, F28).
 - **The draft over-claims by one word.** "Every HTTP call" holds only for calls through a tracked client
   that are attributed to a test, and section 0 of the roadmap rules out a document that states a
   falsehood (F9). "Self-contained", the direction report's word for the file, is not true of the default
@@ -82,8 +83,8 @@ Two repository fields change. Nothing in `src/`, no package, no report byte, no 
 The roadmap's hour is S0, S1, S2 and S5. S3 and S4 are proposals, each a yes or no in D24. The demo's
 upgrade is in neither the hour nor this plan, and it is done: S0 first found the demo on 3.29.0, and
 `INTERNAL_FLOW_BLOB_PLAN.md` S5 moved its pins to 3.31.4 the same day (F5). S2 never waited: the words
-change nothing the demo shows. The phone-width defect of F28 is Kronikol's, not this plan's: its fix is a
-patch release for a session that can run the E2E tier, and only Q5's deep link waits for it.
+change nothing the demo shows. The defect of F28 was Kronikol's, not this plan's, and it shipped as a patch
+of its own, 3.31.10, the same day. The demo gets it with its next pin move, and Q5's deep link waits for that.
 
 ## 1. What was checked
 
@@ -118,13 +119,13 @@ a network's.
 | F19 | A trap for whoever measures at phone width: headless Chromium's `--window-size` lays a page out no narrower than 500 px and crops the screenshot, so a 390 px check needs a real viewport (Playwright's, or DevTools' device mode). The first attempt here showed the landing page clipped at 390 px; measured with a real viewport, nothing overflows | RUN |
 | F20 | The live site, 2026-09-27, as `CI: Main` run `36316716498` left it (11:57 UTC). The root (6,206 bytes, `max-age=600`) and all 18 reports answer 200 over https with no cookies. The root without its final slash answers 301 to the slash form; `lemonlion.github.io/` and `.../BreakfastProvider/demo/` answer 404. The six linked in-memory reports are 3.9 to 5.5 MB, 0.91 to 1.23 MB as Pages sends them (xUnit 4,962,030 and 1,179,176 bytes); the docker ones 3.5 to 6.2 MB (1.0 to 2.1 MB), the external-SUT ones 1.7 to 2.4 MB (0.40 to 0.48 MB). Beside each report sit its `Failures.md`, `Failures.jsonl`, `CLAUDE.md`, `AGENTS.md`, `TestRunReport.json` (6.4 MB for xUnit) and `ctrf-report.json`. The digests open `# No failures` on the six in-memory and the six external-SUT lanes, and `# Failures` with 3 of 178 to 205 scenarios on each docker lane: the three Orders scenarios the consumer's Azure emulator has failed since `7a0fb9b` (PLAN: `INTERNAL_FLOW_BLOB_PLAN.md` §11.1). The API viewers, the icon and the Kronikol link on the root answer 200; its two BreakfastProvider links are outside what this environment's proxy serves | RUN |
 | F21 | A report's first look, drawn from copies of the live xUnit and ReqNRoll reports in Chromium through Playwright (1280 × 800; and 390 × 844 as a phone, with the CPU slowed four times): nothing scrolls sideways at either width (a wide parameter table scrolls inside its own box). The first screen is the title, the folded Features Summary and the execution summary ("Passed", 67 features, 203 scenarios) at 390 px, with the CI box and the filters beside them at 1280 px. All 67 features start collapsed, and so does each scenario, so no diagram is on a report's first screen at either width. The first diagram is three taps from the landing page (a report, a feature, a scenario), and at 390 px the first feature is a screen below the top. How long it takes to draw is the owner's to time: the browser here cannot fetch the engine (F10) | RUN |
-| F22 | Deep links. A report opened at `TestRunReport.html#sid-<stableId>` (or `#scenario-<slug>`) opens every section around that scenario and scrolls it to the middle of the screen, the scenario opened (`report-url-hash-function.js`). On a copy of the live xUnit report at 1280 × 800, `#sid-83cb467c01ca1187` landed with the scenario's title and diagram box in the first screen. The id hashes the suite, the feature and scenario names, the outline and the example values (`ScenarioStableId.Compute`), so it survives reruns and releases and moves on a rename; an id that matches nothing leaves the visitor at the top of the report | READ; RUN for the landing. At 390 px, see F28 |
+| F22 | Deep links. A report opened at `TestRunReport.html#sid-<stableId>` (or `#scenario-<slug>`) opens every section around that scenario and scrolls it to the middle of the screen, the scenario opened (`report-url-hash-function.js`). On a copy of the live xUnit report at 1280 × 800, `#sid-83cb467c01ca1187` landed with the scenario's title and diagram box in the first screen. The id hashes the suite, the feature and scenario names, the outline and the example values (`ScenarioStableId.Compute`), so it survives reruns and releases and moves on a rename; an id that matches nothing leaves the visitor at the top of the report | READ; RUN for the landing. At 390 px, and far down a long report, see F28 |
 | F23 | The About block on a phone. The repository page's HTML holds one visible copy of the description, in the sidebar's About section, which carries `hide-sm hide-md`: GitHub's stylesheet hides those at 543.98 px and below and from 544 to 767.98 px, so below 768 px. The HTML served to a phone's user agent is the same and holds no other copy, so whatever a phone shows is drawn by the page's script, which the browser here cannot load. §2's "above the file list" is therefore unconfirmed, and S0 step 5's phone look is the owner's | RUN: the page's HTML for a desktop and a phone user agent, GitHub's stylesheets |
 | F24 | nuget.org's search, before (its search API, stable versions, 2026-09-27). The three problem phrasings find nothing at all: its search matches words, not questions. "integration test diagram" and "sequence diagram tests" return the old name's package first and Kronikol's second; "plantuml" has `TestTrackingDiagrams.PlantUml.Ikvm` second; the first Kronikol or TestTrackingDiagrams package is sixth for "sequence diagram", ninth for "reqnroll report" and fortieth for "test report html"; "living documentation" has neither in its first hundred | RUN |
 | F25 | The old name on nuget.org. The 56 `TestTrackingDiagrams` packages have 2,520,149 downloads against the 62 Kronikol packages' 893,458 (the main packages 463,560 and 127,720). Their last version is 2.37.4 (2026-05-17), none is deprecated, and their project URL is `github.com/lemonlion/TestTrackingDiagrams`, which reaches this repository only through GitHub's redirect for a renamed repository (REFERENCE: this environment's proxy answers only for the session's own repositories, so the redirect was not checked). Deprecating them is 13.4's (`LLM_FIRST_PLAN.md` §14.3's outward steps) | RUN: nuget.org's search API and registration index |
 | F26 | How much of the description a search result keeps. Measured with Arial's metrics at 20 px (the metric-compatible Liberation Sans here), a title cut at 600 px (REFERENCE: the width a desktop result is commonly cut at) holds the 29-character prefix (255 px) and 34 to 38 characters of each draft, then an ellipsis. Today's keeps "A mechanism for tracking the reques", and draft B "See what your .NET integration tests". A phone result wraps the title onto a second line instead (REFERENCE) | RUN for the measurement; REFERENCE for the cut |
 | F27 | The README's links, 2026-09-27: 119 of its 152 answered 200 (59 badges, none drawing an error; 57 nuget.org pages; ctrf.io; the plantuml.com link; the demo). The 29 wiki links name a page and a heading that exist in the wiki at `86a77c1`. The CI badge and workflow link are refused by this environment's proxy (the workflow is `.github/workflows/ci.yml`), and the image and the BreakfastProvider link are outside what it serves. Nothing is broken | RUN |
-| F28 | **A defect: at phone widths a `#sid-` link lands above its scenario.** At 390 × 844 the link to the scenario of F22 left it at -220 to 61 px, above the screen. `report-init-script.js` calls `parse_url_hash()` first, whose `reveal_url_anchor` starts a smooth scroll, and only then, at 768 px and below, hides `.filters` (559 px of the filter panel here) and swaps each scenario's diagram controls for a button: the scroll ends where the scenario was before the layout shrank. `parse_url_hash` already reveals the anchor last so that "the scroll has to land on the layout the filters produced"; the init script breaks that rule. A copy with the hash block moved after the two phone-width blocks landed the scenario at 339 to 620 px, its diagram box inside the screen, and nothing changed at 1280 px. None of the eight facts in `StableIdDeepLinkTests` runs at a phone width. Not fixed here: a release needs the full test suite, and this container has no .NET SDK, Playwright 1.59's browser build or a browser that reaches jsDelivr. The fix is a patch release: a Playwright fact at 390 px, red on 3.31.9, then the move | RUN: copies of the live report, as found and with the blocks swapped; READ: `report-init-script.js`, `report-url-hash-function.js`, `StableIdDeepLinkTests.cs` |
+| F28 | **A defect, fixed in 3.31.10: a `#sid-` link, Next Failure and a failure-cluster link landed past their scenario.** Two causes. Every feature and scenario is drawn with `content-visibility: auto`, whose placeholder is 500 px for a feature (about 532 px with its padding, where a closed feature is about 60) and 150 px for a scenario, until the browser first draws it. The three jumps scrolled smoothly, and a smooth scroll is aimed once, across those placeholders: as it passed them they were drawn at their true size, and it ran on to the bottom of the page. On the live xUnit report a link into the 40th of 67 features ended with the scenario 1,766 px above the screen at 1280 px and 1,267 px at 390 px. And at 768 px and below, `report-init-script.js` called `parse_url_hash()` first and only then folded the filter panel (559 px there) away, so even a link into the first feature ended 220 px above the screen at 390 × 844; `parse_url_hash` itself reveals its anchor last so that "the scroll has to land on the layout the filters produced", and the init script broke that rule. 3.31.10 routes the three jumps through `jump_into_view(target, block)` in `report-url-hash-function.js`, which jumps (`behavior: 'instant'`) and re-aims for up to ten frames while the target's top moves (the features it lands among are drawn in the frames after it, and Safari has no scroll anchoring to absorb that), and calls `parse_url_hash()` last in the init handler. On a copy of the live report with the change, links into the first, 40th and last features land with the scenario's title on screen, -15 to 85 px from the middle, at both widths. The keyboard and table-reference jumps move a short way and stay smooth. Tests: four Playwright facts, each red on 3.31.9 (a link into the 30th of 60 features; a link into the first feature at 390 px; Next Failure and a cluster link into the 30th feature). Report output changes, so the Kronikol4J ledger owes the entry of Appendix A | RUN: copies of the live report, as found and with the change; the new facts on 3.31.9 and 3.31.10. READ: `stylesheets.css`, `report-init-script.js`, `report-url-hash-function.js` |
 
 ## 2. Where the two fields show
 
@@ -175,7 +176,7 @@ step 5's About block on a phone.
    | It answers | 200 over https, logged out | **Yes:** the root and all 18 reports, with no cookies. Use the address with its final slash; the other form costs a 301 (F20) |
    | It says what it is | the first screen names Kronikol and says what the page holds | In part. The hero reads "Breakfast Provider", "Component Test Reports & API Documentation" and "Powered by Kronikol": Kronikol is named, but not as what the page shows, and the first paragraph is insider language (F18) |
    | It shows breadth | the root names the test frameworks, so a visitor finds their own (roadmap §0: a visitor who finds their case missing does not return) | Yes: six framework cards. MSTest, which Kronikol supports, has no lane, and the twelve docker and external-SUT reports are linked from nowhere, which suits the docker six while they carry their three failures (F20) |
-   | It reaches a diagram | a report in one click from the root; a drawn diagram on a report's first screen, with the time it took on the owner's connection noted | Half. A report is one click away (F18), but its first screen holds no diagram at either width, and the first is two taps further in, a feature and a scenario (F21). A `#sid-` link lands on one (F22), at a phone's width only once F28 is fixed. The time is the owner's: the first diagram costs the report (1.18 MB for xUnit) and, once, the engine (about 1.7 MB) |
+   | It reaches a diagram | a report in one click from the root; a drawn diagram on a report's first screen, with the time it took on the owner's connection noted | Half. A report is one click away (F18), but its first screen holds no diagram at either width, and the first is two taps further in, a feature and a scenario (F21). A `#sid-` link lands on one (F22), at a phone's width and far down a long report only from 3.31.10 (F28), which the demo does not have yet. The time is the owner's: the first diagram costs the report (1.18 MB for xUnit) and, once, the engine (about 1.7 MB) |
    | Nothing is broken | no failing scenario, no render-error picture, nothing clipped or scrolling sideways at 390 px | The six linked reports are green, and the two drawn scroll nothing sideways at either width (F20, F21). `popup-smoke.js` drew every popup, with no console error, on the six in-memory lanes and the xUnit docker lane of the published 3.31.4 site (PLAN: `INTERNAL_FLOW_BLOB_PLAN.md` §11.1). A drawn diagram needs a browser that reaches jsDelivr: the owner's |
    | It is current | the version the lane's `Failures.md` names (`Kronikol <version>.` on a green run, `Written by Kronikol <version>.` when something failed), which sits beside the report | **Yes, since 11:57 UTC: 3.31.4** (F5, F20) |
    | Nothing leaks | open two notes and the headers of one request. The site is already public and linked from the README, so this is a glance, not an audit | Not run by a session. The owner's glance |
@@ -337,8 +338,8 @@ yes: point the example image's link at the demo instead of plantuml.com, so the 
 the product no longer sends a click to a third-party ad site.
 
 The line points at the root, not at a scenario. A `#sid-` link (F22) would land the reader on a diagram,
-but the root survives a renamed scenario and a renamed lane, and on a phone the deep link lands wrong
-until F28 is fixed. The landing page is where a deep link belongs (Q5).
+but the root survives a renamed scenario and a renamed lane, and before 3.31.10 the deep link landed past
+its scenario (F28). The landing page is where a deep link belongs (Q5).
 
 S3 and S4 are the only parts of 2.1 that touch a file (the roadmap's §5 counts 2.1 as settings alone). S3
 edits `README.md`, which 2.2's PR #73 edits as well; the roadmap found that branch merging clean with
@@ -432,7 +433,7 @@ alive.
 | It becomes outreach | Nothing here announces anything. Editing a repository's fields notifies nobody (REFERENCE). The topics stay as they are |
 | A phone visitor waits on a large download | Measured by size: a linked report is 0.91 to 1.23 MB as sent, and the first diagram adds the engine, about 1.7 MB once and then kept for a year (F10, F20). Under H1 the visitor picks a report before paying for one. The time is the owner's |
 | A visitor's network blocks jsDelivr | Every diagram becomes a render error naming the engine's address (F10). Accepted for the homepage: it is the product's default, and the page says what failed. Drawing the demo without the CDN is BreakfastProvider's configuration, not this plan |
-| A visitor finds no diagram on the first screen | Three taps to the first one (F21). Q5's deep link on the landing page makes it one, once F28 is fixed |
+| A visitor finds no diagram on the first screen | Three taps to the first one (F21). Q5's deep link on the landing page makes it one, once the demo is on 3.31.10 or later (F28) |
 | Something private in the demo | It is public today and linked from the README, so pointing the homepage at it adds visitors, not exposure. The owner glances anyway (S0 step 4) |
 
 ## 10. Out of scope, and where it lives
@@ -444,7 +445,7 @@ alive.
 | The topics | Unchanged: at the maximum, and "done right" (F3) |
 | nuget.org's package description and project URL | Package metadata, so it ships in a release. The project URL already points here, and the description is mechanism-first and opens with the old name (F16). If the owner wants the new words there too, they ride along with the next release; they are not a reason for one |
 | The old name's packages on nuget.org: their deprecation, and the old address they send people to (F25) | 13.4, `LLM_FIRST_PLAN.md` §14.3's outward steps |
-| The phone-width deep-link defect (F28) | A patch release by a session that can run the E2E tier; this plan's Q5 deep link waits for it |
+| The deep-link defect (F28) | Fixed in 3.31.10. The demo gets it with BreakfastProvider's next pin move, and this plan's Q5 deep link waits for that |
 | A report that opens a scenario on arrival | Not proposed. The demo gets it from a `#sid-` link (F22), with no change to the product |
 | The Kronikol4J repository's front door | D10, taken 2026-09-22 in its README |
 | A Pages site for Kronikol itself | The dashboard plan (9.3), not green-lit |
@@ -459,7 +460,7 @@ alive.
 | Q2 | Which words? | The owner's. Start from B (".NET" early, no claim about every call, a kept part that ends on a whole phrase) and rewrite it by hand; run §5.3 on the result (§5) |
 | Q3 | Does the README's first line point at the demo now, or wait for 13.1? | Now, as one line to the root, with the example image linking to the demo. It is as passive as the homepage, and the rewrite and screenshot stay in 13.1 (§6) |
 | Q4 | A guard on the homepage? | Yes, the weekly workflow in this repository, reading the reports the homepage links as well as the page (§7). Dry-run on 2026-09-27; proved by one failing run before it is kept, and committed after S1 |
-| Q5 | If H1: the landing page's title (`Breakfast Provider — Kronikol`), a line on that page saying what it is to someone arriving from Kronikol, and a link to one scenario by `#sid-` so a diagram is one tap from the root rather than three (F21, F22). And BreakfastProvider's own description, which still names Kronikol by its old initials (F17) | All of it, in BreakfastProvider (its workflow and its settings), in a commit of its own, in the owner's words as for S2; the deep link after F28's fix. The title is the browser tab's text for every visitor the homepage sends (F8), the hero names Kronikol only as "Powered by" (F18), and the landing page's source card leads to that description |
+| Q5 | If H1: the landing page's title (`Breakfast Provider — Kronikol`), a line on that page saying what it is to someone arriving from Kronikol, and a link to one scenario by `#sid-` so a diagram is one tap from the root rather than three (F21, F22). And BreakfastProvider's own description, which still names Kronikol by its old initials (F17) | All of it, in BreakfastProvider (its workflow and its settings), in a commit of its own, in the owner's words as for S2; the deep link once the demo is on 3.31.10 or later (F28). The title is the browser tab's text for every visitor the homepage sends (F8), the hero names Kronikol only as "Powered by" (F18), and the landing page's source card leads to that description |
 
 ## 12. Results (filled in at execution)
 
@@ -475,3 +476,20 @@ alive.
 | The demo (S0 step 4) | 3.31.4 since 11:57 UTC, 3.29.0 before (RUN, F5). The root and all 18 reports answer 200; the six linked reports are green (F20); nothing scrolls sideways at either width; no diagram on a report's first screen, the first three taps from the root (F21). The first diagram's time and the glance: the owner's | |
 | nuget.org | 3.31.9 latest; the project URL is the repository; the description is mechanism-first (RUN, F16) | |
 | S3 and S4 | S4's check dry-run on the live site (RUN, §7) | |
+
+## Appendix A. The Kronikol4J ledger entry F28's fix owes
+
+For `../Kronikol4J/docs/REMAINING_PARITY.md`'s divergence ledger. The session that made the fix could not
+reach that repository, so the entry waits for whoever works there next (the owner's choice, 2026-09-27).
+
+> - **Long jumps land on their scenario (.NET 3.31.10, 2026-09-27).** .NET's `reveal_url_anchor`
+>   (`report-url-hash-function.js`), `jump_to_next_failure` (`report-jump-to-failure-function.js`) and the
+>   failure-cluster links' `onclick`, which `ReportGenerator` writes, no longer call
+>   `scrollIntoView({ behavior: 'smooth' })`. They call a new `jump_into_view(target, block)`, defined in
+>   `report-url-hash-function.js`, which jumps (`behavior: 'instant'`) and re-aims for up to ten frames
+>   while the target's top moves: a smooth scroll aimed across features `content-visibility: auto` had not
+>   drawn yet ran past its target to the bottom of the page. The cluster link's `onclick` fragment
+>   `el.scrollIntoView({behavior:'smooth',block:'start'});` is now `jump_into_view(el,'start');`. And
+>   `report-init-script.js` calls `parse_url_hash()` last in its `DOMContentLoaded` handler, after the two
+>   phone-width blocks, where it was first. Copy the three scripts verbatim and move the generator's
+>   `onclick` string with them. Whether the port's scripts are .NET's byte for byte today was not checked.
