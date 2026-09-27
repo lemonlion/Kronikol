@@ -103,5 +103,35 @@ function upload(state, runId, id, name, at) {
     out.p4_section_kept = s.comments[0].body.includes('Changed scenarios');
   }
 
+  // P5: two lanes share one comment but pass different report-file and heading inputs. Each input is per call,
+  // but the tip and the heading are per comment: which does the comment show after each run?
+  {
+    const s = world();
+    const tipOf = () => (s.comments[0].body.match(/Open `([^`]+)`/) || [])[1];
+    const headingOf = () => (s.comments[0].body.match(/^## (.*)$/m) || [])[1];
+    upload(s, 701, 9401, 'api', '2026-09-15T18:00:00Z');
+    await run(script, s, 701, { ARTIFACT_NAME: 'api' });
+    const afterA = `${tipOf()} | ${headingOf()}`;
+    upload(s, 702, 9402, 'ui', '2026-09-15T18:05:00Z');
+    await run(script, s, 702, { ARTIFACT_NAME: 'ui', REPORT_FILE: 'UiReport.html', HEADING: 'UI reports' });
+    const afterB = `${tipOf()} | ${headingOf()}`;
+    upload(s, 703, 9403, 'api', '2026-09-15T18:10:00Z');
+    await run(script, s, 703, { ARTIFACT_NAME: 'api' });
+    out.p5_tip_and_heading_after_each_run = [afterA, afterB, `${tipOf()} | ${headingOf()}`];
+  }
+
+  // P6: a later version puts a field BEFORE the run id (wf:77 run:500). What does this version do with it?
+  {
+    const s = world();
+    s.comments.push({ id: 1, user: { login: bot }, body: [
+      '<!-- kronikol-report-link -->', '## 📊 Kronikol test reports', '',
+      '- 🧪 **unit** — 📦 [unit](u) <!-- kronikol-report-link:unit wf:77 run:500 -->', '',
+    ].join('\n') });
+    upload(s, 400, 9500, 'unit', '2026-09-15T19:00:00Z');
+    await run(script, s, 400, { ARTIFACT_NAME: 'unit' });
+    out.p6_writes = s.writes;
+    out.p6_lines_for_unit = s.comments[0].body.split('\n').filter(l => l.includes('kronikol-report-link:unit ')).length;
+  }
+
   console.log(JSON.stringify(out, null, 2));
 })().catch(e => { console.error(e && e.stack || String(e)); process.exit(1); });

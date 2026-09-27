@@ -1,10 +1,11 @@
 # PR report link plan (`ROADMAP.md` 2.2, #72, PR #73)
 
-**Date:** 2026-09-27 · **Repo version:** 3.31.9 (`e4c9e360`) · **PR head:** `e31b42fa` on
-`pr-report-link-template`, one commit on `49f5ea87` (the tree of 2026-09-15, 3.19.0) · **Status:** a plan,
-**not green-lit**. It needs the owner's answers to Q1 to Q4 (`ROADMAP.md` D25), then about a day of work, then
-the owner's go-ahead to merge. §1 is what was RUN, READ and read on the web today, §2 the findings, §3 the
-questions, §4 the slices, §9 the assumption ledger. The probe behind §1.5 is in `PR_REPORT_LINK_PLAN.harness/`.
+**Date:** 2026-09-27 · **Repo version:** 3.31.10 (`5ca0878a`; first written at 3.31.9, `e4c9e360`) · **PR head:**
+`e31b42fa` on `pr-report-link-template`, one commit on `49f5ea87` (the tree of 2026-09-15, 3.19.0) · **Status:** a
+plan, **not green-lit**. It needs the owner's answers to Q1 to Q5 (`ROADMAP.md` D25), then about a day of work,
+then the owner's go-ahead to merge. §1 is what was RUN, READ and read on the web today, §2 the findings, §3 the
+questions, §4 the slices, §9 the assumption ledger. The probes, the rehearsals and their output are in
+`PR_REPORT_LINK_PLAN.harness/`.
 
 **S1 rehearsed the same day** (§1.2; the output is `PR_REPORT_LINK_PLAN.harness/results-s1-rehearsal.txt`),
 locally and pushed nowhere: the PR rebased onto `main` at `2de961ec` stops
@@ -13,6 +14,13 @@ but for three tests that expect a write to be refused, which fail the same way o
 the machine ran as root (§6); and `Kronikol.Templates` packed from that tree carries the PR's paragraph with its
 relative link and no `github-actions/` file (§1.4). **Re-checked against 3.31.10** (`5ca0878a`, later the same
 day): `git merge-tree` still stops on `CHANGELOG.md` alone (RUN).
+
+**Deepened the same evening** (§1.9, §1.10): **S2 and S3 rehearsed** on the PR rebased onto 3.31.10, nothing
+pushed. Every new fact failed first for the reason §4.2 gives, then passed with the fixes: 24 of 24, and all of
+`Kronikol.Tests` with nothing new failing. The four diffs are in the harness as patches that rebuild that tree
+exactly. GitHub's own records were read: the PR's state, its checks, every re-run in the repository, how pull
+requests here are merged, and `main`'s CI, which failed six of its eight runs that day (F17). actionlint was run on
+the workflows (F16). Two more probes found F15 and the rule F3's fix needs. Q5 is new.
 
 Roadmap item 2.2 reads: "Rebase and merge PR #73 (#72). One PR comment, one line per report artifact, kept
 current by every run", in hours. This plan re-checks each premise of that row against today's `main` and
@@ -40,8 +48,17 @@ visible to its tests, because each lives outside the script, or in a case the in
 7. **Nothing in this repository has ever run the action on GitHub**, and no project here publishes a report
    the way its README tells a consumer to (F8). The PR says so itself. Its claim about re-runs rests on
    behaviour GitHub does not document, and the evidence on it conflicts (F13).
+8. **The newest actionlint rejects `queue: max`** (F16, RUN). A consumer whose CI lints workflows fails on the
+   copied job until they add one ignore line, which the README gives.
+9. **`heading` and `report-file` belong to the comment, but every lane passes its own** (F15, RUN): lanes that
+   differ swap the comment's heading and its "open this file" tip on every run.
+10. **The comment's shape freezes with the first tag too** (F5, Q5). Roadmap 7.4 means to add its section to
+    this comment, and a lane still on the first tag would drop it on each of its runs. An end marker, with what
+    follows it kept, is seven lines of script, a two-line comment and one fact, rehearsed.
 
-Each is small, and the fixes need no redesign. With them, 2.2 is about a day rather than hours.
+Each is small, and the fixes need no redesign. With them, 2.2 is about a day rather than hours. The rehearsal
+(§1.9) turned most of that day into patches that apply as they stand, so what is left is mostly the live proof
+(S3) and the owner's steps.
 
 One more thing the re-check found belongs after 2.2, not in it, but it may matter more than any of the above
 (§8): the issue ruled out a browsable report because "artifacts only download as a zip". **That stopped being
@@ -55,15 +72,16 @@ S3 can measure it for the price of one more step.
 
 | Slice | What | Bump | Tests it adds |
 |---|---|---|---|
-| S0 | Re-check at execution time: the PR head, the trial merge, the consumer's copy, the action majors (§4.0) | none | none |
-| S1 | Rebase onto `main`; the changelog conflict resolved by Q3; the 17 facts and then all of `Kronikol.Tests` on the rebased head; push (§4.1) | none | none: CI on the rebased head is the baseline |
-| S2 | The fixes, each fact red first on the rebased head: `queue: max` in the README's calling job (F1); the README's sample is the action's output (F2); the run tag read wherever fields follow it (F3); inputs flattened to one line (F4); current action majors (F7); the README's paragraphs on concurrency, ownership, sign-in and input text; the package README's link absolute, with a guard (F6) (§4.2) | none | three facts, one extended, one guard |
-| S3 | The live lane: `.github/workflows/pr-report-link.yml` runs the CI Preview example with `PublishCiArtifacts = true`, uploads the reports and calls the action by path, on pull requests that touch the action. It runs on PR #73 itself, which is the live proof, nine checks (§4.3) | none | a fact holding the lane to the action |
+| S0 | Re-check at execution time: the PR head, the trial merge, the consumer's copy, the action majors, `main`'s CI, actionlint (§4.0) | none | none |
+| S1 | Rebase onto `main`; the changelog conflict resolved by Q3; the 17 facts and then all of `Kronikol.Tests` on the rebased head; push (§4.1) | none | none: CI on the rebased head, read against `main`'s own run (F17), is the baseline |
+| S2 | The fixes, each fact red first on the rebased head: `queue: max` in the README's calling job (F1); the README's sample is the action's output (F2); the run tag read wherever fields follow it, and the rule that they only follow it (F3); inputs flattened to one line (F4); current action majors (F7); the README's paragraphs on concurrency, actionlint (F16), ownership, sign-in, input text and what the link is (F14), and the inputs that belong to the comment (F15); the package README's link absolute, with a guard (F6); if Q5 is yes, the end marker (§4.2). **Rehearsed**: the harness's patches | none | three facts, one extended, one guard (two cases); a fourth fact if Q5 is yes |
+| S3 | The live lane: `.github/workflows/pr-report-link.yml` runs the CI Preview example with `PublishCiArtifacts = true`, uploads the reports and calls the action by path, on pull requests that touch the action. It runs on PR #73 itself, which is the live proof, nine checks (§4.3). **Rehearsed** as far as a machine without GitHub reaches: the fact, the test step, actionlint | none | a fact holding the lane to the action |
 | S4 | The documents in the pull request: the changelog entry reworded, the stale `[Unreleased]` link definition removed, the PR body (§4.4) | none | |
-| S5 | Merge through the pull request, so "Closes #72" fires (§4.5) | none (Q1) | CI 28 of 28, CodeQL and the lane, green on the final head |
+| S5 | Merge through the pull request, so "Closes #72" fires (§4.5) | none (Q1) | CI (28 of 28 where `main` is green, F17), CodeQL and the lane, green on the final head |
 | S6 | After the merge: the wiki section, the first tag that carries the action, `ROADMAP.md` and `PLANS_STATUS.md`, the consumer (§4.6) | none | |
 
-Order: S0 to S4, then S5 once CI and the live proof are green, then S6.
+Order: S0 to S4, then S5 once CI and the live proof are green, then S6. §4.7 says which steps a Claude Code
+session may be refused, and who runs them then.
 
 ---
 
@@ -94,7 +112,10 @@ PR #73 was opened by the owner on 2026-09-15 and holds one commit, `e31b42fa`: s
   sections written at the same place since. `README.md` merges cleanly, because the "CI artifact upload"
   paragraph the PR extends has not changed on `main`. The roadmap's "Conflicts are in `CHANGELOG.md` and
   `README.md` and grow with each release" is half stale: the README half never grew.
-- The PR has no review and no comment. GitHub reports `mergeable_state: unknown`: it has not computed it.
+- The PR has no review and no comment. GitHub first reported `mergeable_state: unknown`, not yet computed; by the
+  evening it read `dirty`, with `mergeable: false` and `rebaseable: false` (§1.10).
+- **Against 3.31.10** (`5ca0878a`, 76 commits past the merge base): `git merge-tree` still stops on
+  `CHANGELOG.md` alone (RUN).
 
 ### 1.2 The CI the pull request has had (READ, the check-runs API)
 
@@ -115,7 +136,9 @@ PR #73 was opened by the owner on 2026-09-15 and holds one commit, `e31b42fa`: s
     `StaleOutputTests.The_pointer_does_not_name_the_previous_runs_file_when_this_run_could_not_replace_it`. Each
     expects a write to be refused, and the machine ran as root (uid 0), which a read-only file does not stop.
     **The same three fail the same way on `main` at `2de961ec` without the PR** (RUN), so they are not the
-    PR's. CI runs unprivileged, and `main` is green there. §6 has the fix.
+    PR's. CI runs unprivileged, so it never meets them. §6 has the fix.
+- **`main`'s own CI is not the green baseline this section first assumed** (READ, §1.10, F17): six of its eight
+  runs on 2026-09-27 failed, the newest on a Core Tests fact the PR does not touch.
 
 ### 1.3 What the tests stand on, and what they cannot see (READ)
 
@@ -169,6 +192,12 @@ does, against an in-memory GitHub, and prints what happened. Output: `results-pr
 | P2 | A line whose tag carries one field more than today (`run:500 wf:77`), then run 400 | **Run 400 overwrote it**: one write, and the line links run 400. The run id is read with `/ run:(\d+) -->/`, which needs ` -->` straight after the digits, so the guard reads run 0 |
 | P3 | A `label` holding a line break: run 600, then run 550 | **Run 550 replaced run 600's link**: two writes. The line is written as two lines, and the next read recognises neither as its own |
 | P4 | Text in the comment outside the lines (a `### Changed scenarios` section) | Dropped on the next rewrite: the body is rebuilt from the marker, the heading, the lines, the tip and the footer |
+| P5 | Two lanes share the comment, one with the default `report-file` and `heading`, one with `UiReport.html` and `UI reports`; runs A, B, A | **The comment swaps with each run**: after A the tip names `TestRunReport.html` under the default heading, after B `UiReport.html` under `UI reports`, after A again the first pair. Both inputs are per call; the tip and the heading are per comment (F15) |
+| P6 | A later version's field written **before** the run id (`wf:77 run:500`), then run 400 | **A second line for the same artifact**: the tag is not recognised as the line's own, so the run adds its line beside it. Fields may only follow the run id (F3) |
+
+After S2's fixes (§1.9), the same probes: P2 and P3 no longer let the older run write (no write, and one write
+linking run 600). P4 to P6 are unchanged: P4's section sits above any end marker, so Q5's patch drops it too; P5
+is documented; P6's order is the rule the tag now keeps.
 
 ### 1.6 GitHub and nuget.org as they are today (WEB)
 
@@ -228,17 +257,75 @@ releases and `action.yml`. Every address, the full quotes and each answer's veri
 | 9.6 | Alerting is "`history gate` plus the #72 pattern" | Same |
 | 13.2 | "2.2 and 2.3 are the action", listed on the Marketplace | The Marketplace lists only an action at a repository's root (§1.6), so the listing needs a repository of its own; §7 |
 
+### 1.9 S2 and S3 rehearsed (RUN)
+
+The same evening, in a scratch worktree, nothing pushed: PR #73 rebased onto `main` at `5ca0878a` (3.31.10),
+`CHANGELOG.md` resolved as S1 says, then S2 and S3 as §4.2 and §4.3 describe them. The four diffs are
+`PR_REPORT_LINK_PLAN.harness/rehearsal/*.patch`; applied in order to that rebased head they give the rehearsal's
+tree exactly (checked). The output is `results-s2-s3-rehearsal.txt`.
+
+- **Red first, each for the reason §4.2 gives.** With the facts alone, five failed: the extended README fact
+  ("leaves its concurrency group on the default queue"), the sample fact ("no ```markdown sample"), the tag fact
+  and the line-break fact (two writes where one is right), and the guard's `templates/README.md` case (the
+  relative link). The guard's `nuget-readme.md` case passed, and so did the PR's 16 other facts.
+- **Green with the fixes:** 22 of 22. Q5's end marker made its own fact red without its seven lines of script
+  and green with them, 23 of 23. The live lane's fact was red until the workflow file existed, then 24 of 24. If Q5
+  is no, the other three patches apply without its patch and pass 23 of 23.
+- **All of `Kronikol.Tests` with all four patches:** 5,975 tests, `main`'s 5,951 and these 24. 5,967 passed, 5
+  skipped, and the three root-only failures of §1.2. Nothing else.
+- **actionlint 1.7.12, the newest release, rejects `queue`** (F16): `unexpected key "queue" for "concurrency"
+  section. expected one of "cancel-in-progress", "group"`, at job and at workflow level. The PR's README
+  workflow and this repository's four workflows pass it. `-ignore 'unexpected key "queue" for "concurrency"
+  section'` clears it, and so does the same pattern under `paths:` in `.github/actionlint.yaml`. actionlint does
+  not read `action.yml` as an action (it reports a workflow without `jobs`), but from the repository's root it
+  checks the lane's `with:` against the action's declared inputs: a copy with `artifact-nam:` failed on the
+  missing required input.
+- **The lane's test step, run locally** with `GITHUB_ACTIONS` and `GITHUB_OUTPUT` set: 11 of 11 passed, and the
+  output file got `reports-path=<the project's bin/Release/net10.0/Reports>` and `reports-retention-days=1`.
+  That directory held 13 files, 1.7 MB: `TestRunReport.html`, `.json` and `.schema.json`, `Failures.md` and
+  `.jsonl`, `Run.json`, `History.run.json`, `Specifications.html` and `.yml`, `ComponentDiagram.html`,
+  `CiSummary.md`, `CLAUDE.md` and `AGENTS.md`. S3 check 3 knows what its zip should hold.
+- **F12, Kronikol's half:** two Kronikol projects in one `dotnet test` (a solution filter) wrote two pairs of lines
+  to the one output file, one pair per project, in the order the projects finished.
+
+### 1.10 GitHub's own records (READ)
+
+Read the same evening through the GitHub tools and REST. Ids and details are in
+`PR_REPORT_LINK_PLAN.harness/github-records.md`.
+
+- **PR #73 now reads as conflicted:** `mergeable: false`, `mergeable_state: dirty`, `rebaseable: false`. Still no
+  review, comment or label, and its body closes #72.
+- **CodeQL analyses C# only.** PR #73's 30 checks are CI's 28 jobs, the CodeQL job and the code-scanning check.
+  Nothing analyses the `actions` language, so no scanner has read `action.yml`, and none would read the S3
+  workflow (§6).
+- **No re-run in this repository has ever had an artifact.** There were four re-runs since 2026-09-03, none of them
+  uploading, and CI Summary Preview, the one workflow that uploads, has never been re-run (723 of 723 runs at
+  attempt 1). F13 cannot be settled from history here.
+- **Artifact ids do not follow upload order.** In run 36348913868 the first artifact created has the third
+  highest id. The action takes the newest by `created_at`, which is right; the id would not be.
+- **An artifact's `expires_at` is counted from the run's creation, not from its upload**: all four of that run's
+  artifacts expire at its `created_at` plus 90 days, to the second, where the uploads came 39 to 48 seconds
+  later. One run, attempt 1. What a re-run's artifact gets is for S3's check 5 to record (F13).
+- **Pull requests here have always been merged with a merge commit** (20 of 20), and `main` has moved by direct
+  push since May. Rebase merging is allowed (`allow_rebase_merge: true`). `main` is protected, but it requires
+  no status check and has no ruleset.
+- **`main`'s CI is not reliably green** (F17). Of its eight CI runs on 2026-09-27, six failed. Four failed on E2E
+  (Popups & Flows), and one on a first fix for it; 3.31.10 (`571a98dc`) ended both. The newest, on `5ca0878a`,
+  failed one Core Tests fact of 5,951,
+  `NodeJsPlantUmlRendererTests.Code_cache_is_created_on_first_run_reused_afterwards_and_regenerated_when_v8_rejects_it`
+  ("miss" expected, "hit" found), which passed in §1.9's local run.
+
 ---
 
 ## 2. Findings
 
 | # | Finding | Level | What it costs | Where fixed |
 |---|---|---|---|---|
-| F1 | **The README's calling job loses a lane when three link jobs meet.** It asks for a per-pull-request concurrency group with the default queue, which holds one running and one waiting job and cancels the waiting one when a third arrives (§1.6). Two lanes are safe. Three that finish within a link job's length of each other can drop one lane's update, and a matrix of three or more link jobs, all queued at once, drops one every time. The dropped lane's line keeps its previous run's link, or is missing if that was its first run on the pull request, until the lane runs again. The job shows as cancelled, which reads as noise, not as a lost link. **`queue: max` fixes it**: every job waits its turn, and the order they run in does not matter, because a line written by a newer run is never replaced by an older one | WEB + INFERRED; S3 runs it | A stale or missing link on exactly the pull requests with the most lanes, the case #72 was written for | S2 |
+| F1 | **The README's calling job loses a lane when three link jobs meet.** It asks for a per-pull-request concurrency group with the default queue, which holds one running and one waiting job and cancels the waiting one when a third arrives (§1.6). Two lanes are safe. Three that finish within a link job's length of each other can drop one lane's update, and a matrix of three or more link jobs, all queued at once, drops one every time. The dropped lane's line keeps its previous run's link, or is missing if that was its first run on the pull request, until the lane runs again. The job shows as cancelled, which reads as noise, not as a lost link. **`queue: max` fixes it**: every job waits its turn, and the order they run in does not matter, because a line written by a newer run is never replaced by an older one. The fix is one line, which the newest actionlint rejects (F16) | WEB + INFERRED; S3 runs it | A stale or missing link on exactly the pull requests with the most lanes, the case #72 was written for | S2 |
 | F2 | **The README's sample is not the comment the action writes** (P1): no alert, no footer | RUN | The first thing a reader compares with their own pull request disagrees with it | S2 |
-| F3 | **The run tag cannot take a field it does not know** (P2). Any lane still pinned to this version would overwrite a newer line whose tag carries one | RUN | Frozen by the first tag that carries the action (rule 6); cheap now, a compatibility problem later | S2 |
+| F3 | **The run tag cannot take a field it does not know** (P2). Any lane still pinned to this version would overwrite a newer line whose tag carries one. A field written **before** the run id is worse: this version then writes a second line for the same artifact (P6). So the fix comes with a rule for every later version: fields go after the run id, never before it | RUN | Frozen by the first tag that carries the action (rule 6); cheap now, a compatibility problem later | S2, with the rule in the script and the README |
 | F4 | **A line break in `label`, `icon` or `heading` breaks the line's identity** (P3), so an older run replaces a newer link. A `with:` value can span lines in YAML | RUN | Only a workflow author can cause it, but it defeats the guard the action exists for | S2 |
-| F5 | **The comment is rebuilt whole** (P4). Anything written into it outside the lines is dropped by the next run of any lane. By design, and undocumented | RUN | 7.4 cannot simply append its section; a person's note in the comment vanishes | S2 documents it; §7 hands it to 7.4 |
+| F5 | **The comment is rebuilt whole** (P4). Anything written into it outside the lines is dropped by the next run of any lane. By design, and undocumented | RUN | 7.4 cannot simply append its section; a person's note in the comment vanishes. **And the first tag freezes it** (rule 6): 7.4 means to add its section to this comment, and a lane still on the first tag would drop it on each of its runs | S2 documents it; Q5 decides whether the first tag keeps what follows an end marker; §7 |
 | F6 | **`templates/README.md` is the `Kronikol.Templates` package README** (§1.4), and nuget.org renders the new paragraph's relative link with an empty address (§1.6) | READ + WEB | A dead link on the package page; a changelog line that is not true | S2, S4 |
 | F7 | **The README's workflow pins old majors**: `checkout@v5` and `upload-artifact@v5` where v7 is current, `setup-dotnet@v5` where v6 is (§1.6). `github-script@v9` in `action.yml` is current | WEB | A template that looks unmaintained the day it ships, and copies that start two majors behind | S2 |
 | F8 | **Nothing here has run the action on GitHub, and nothing here publishes a report the way its README says to** (§1.7). The in-memory GitHub is faithful where it was checked (the `name` filter gave 2, 1 and 0 artifacts on a live run, per the PR), but it cannot hold permissions, the bot's identity, rendering, re-runs or concurrency | READ | The chain `PublishCiArtifacts` → `reports-path` → `upload-artifact` → the action has never run in the repository that ships it | S3 |
@@ -246,12 +333,17 @@ releases and `action.yml`. Every address, the full quotes and each answer's veri
 | F10 | **The changelog's `[Unreleased]` link definition is from 2.0.139-beta** (§1.7), so the PR's heading renders as a link to a 2.0 comparison | READ | A small falsehood in the file every release edits | S4 |
 | F11 | **The roadmap row's premises moved.** The README conflict is gone; "hours" was the rebase alone | RUN | The row understates 2.2 | S6 |
 | F12 | **Several Kronikol test projects in one `dotnet test` step each append `reports-path`**, and a step output holds one value per name, so the upload would carry one project's reports. The wiki's example and the action's README both run a bare `dotnet test` | INFERRED: which value wins is not checked | A lane that silently links part of its reports | S3 checks it; S6 documents it |
-| F13 | **The README's re-run claim is unproven.** It says "a re-run keeps its run id and uploads again, so the newest artifact of that name is linked". GitHub documents nothing about a same-name upload in a later attempt, and the evidence conflicts (§1.6). If the upload fails, the re-run's report is never uploaded and the comment keeps linking the first attempt's. Picking the newest of several is right either way | WEB | A re-run of a failed lane, the case most worth linking, may not reach the comment | S3 check 5; S2 adds `overwrite: true` if it fails |
-| F14 | **The issue's reason for ruling out a browsable report no longer holds** (§1.6, `archive: false`) | WEB | Not a defect of 2.2. Possibly the largest improvement on offer for 13.2 | §8; S3 check 9 measures it |
+| F13 | **The README's re-run claim is unproven.** It says "a re-run keeps its run id and uploads again, so the newest artifact of that name is linked". GitHub documents nothing about a same-name upload in a later attempt, and the evidence conflicts (§1.6). If the upload fails, the re-run's report is never uploaded and the comment keeps linking the first attempt's. Picking the newest of several is right either way. This repository's history cannot answer it: no re-run here has ever had an artifact (§1.10). And an artifact's expiry is counted from the run's creation, so a re-run's upload may expire sooner than its upload time suggests | WEB, READ | A re-run of a failed lane, the case most worth linking, may not reach the comment, or may reach it already short-lived | S3 check 5, which also records the re-run's expiry; S2 adds `overwrite: true` if the upload fails |
+| F14 | **The issue's reason for ruling out a browsable report no longer holds** (§1.6, `archive: false`), and the action's README still says "GitHub serves artifacts only as downloads" | WEB | Not a defect of 2.2's code. Possibly the largest improvement on offer for 13.2 | S2 corrects the README's sentence; §8; S3 check 9 measures it |
+| F15 | **`heading` and `report-file` belong to the comment, but each lane passes its own** (P5). The comment shows whichever lane wrote last, so lanes that differ swap its heading and its tip on every run, and the tip can name a file another lane's zip does not hold | RUN | A wrong instruction, half the time, in a comment shared by lanes that differ | S2 says so in the inputs table. Not frozen: a later version can name the file in each line, which a lane on this version keeps as it is |
+| F16 | **The newest actionlint rejects `queue: max`** (§1.9): 1.7.12 knows only `group` and `cancel-in-progress`, at job and at workflow level. A consumer whose CI lints workflows fails on the README's job as soon as it is copied | RUN | F1's fix costs such a consumer one ignore line | S2: the README gives the line; S0 re-checks actionlint |
+| F17 | **The baseline S1 and S5 lean on is not there**: `main`'s CI failed six of its eight runs on 2026-09-27, the newest on a Core Tests fact the PR does not touch (§1.10). "Green on the rebased head" can be out of the PR's reach | READ | A red S1 read as rebase fallout, or S5 held on a failure that is `main`'s | S1 step 5 and S5 read the PR's runs against `main`'s at the same base; §6 |
 
 Checked and **not** a finding: `github-script@v9` exists and is current, and v9's breaking changes touch
 nothing the script does; `pull-requests: write` is enough to comment; the README's job works on Dependabot's
-pull requests, because a `permissions` block raises Dependabot's token (§1.6).
+pull requests, because a `permissions` block raises Dependabot's token (§1.6); the script takes the newest
+artifact by `created_at` rather than by id, which is right, because ids do not follow upload order (§1.10); both
+`github.paginate` calls ask for 100 a page, so a busy pull request's comment is still found.
 
 ---
 
@@ -296,6 +388,17 @@ copy of the logic with `uses: lemonlion/Kronikol/templates/github-actions/kronik
 *Recommendation: yes.* It removes the second copy, which is how the two would drift (F9), and it is the second
 live proof, on two real lanes.
 
+**Q5. What a lane on the first tag does with content it does not know.** The first tag freezes it (Q1), and
+roadmap 7.4 means to add "its line, and the changed scenarios' diagrams, to the comment of 2.2". As PR #73
+stands, every lane rebuilds the comment whole (F5), so a lane still on the first tag would drop 7.4's section on
+each of its runs. Should the action end its part of the comment with a hidden marker, `<!-- <comment-key>:end -->`,
+keep whatever follows the marker as it is, and read lines only above it?
+
+*Recommendation: yes.* It is seven lines of script and one fact, rehearsed (`rehearsal/s2-3-q5-end-marker.patch`,
+§1.9), and it decides nothing about 7.4's section except where it goes. Without it, 7.4 writes a comment of its
+own, which stays possible either way, or changes this comment's format in v4 (rule 7). A reader sees nothing new:
+the marker is one more hidden line.
+
 The rebase itself needs no decision: the roadmap says rebase, and the branch is the owner's own single commit.
 If the owner would rather not have the branch force-pushed, S1 merges `main` into it instead and nothing else
 changes.
@@ -316,6 +419,12 @@ Premises expire (roadmap §8). Before any change:
    generalisation, say so in the execution log.
 4. The majors in §1.6 are still the current ones (`git ls-remote --tags` on each action), and `queue: max` is
    still documented as §1.6 quotes it.
+5. **`main`'s CI (F17).** The newest CI run on `main`, and which jobs are red there. S1 and S5 read the PR's runs
+   against it.
+6. **actionlint (F16).** Whether its newest release knows `queue` yet. If it does, S2's README drops its ignore
+   line and §5's pre-push check its `-ignore`.
+7. **The rehearsal's patches.** `git apply --check` of `rehearsal/*.patch` on the rebased head. They were made on
+   `5ca0878a`; a patch that no longer applies is redone by hand from §4.2 and §4.3, which say the same.
 
 ### 4.1 S1: onto `main`
 
@@ -325,26 +434,30 @@ Premises expire (roadmap §8). Before any change:
 3. Run the 17 facts, then the whole project:
    - `dotnet test tests/Kronikol.Tests --configuration Release --filter "FullyQualifiedName~PrReportLinkActionTests"`:
      17 pass, none skipped.
-   - `dotnet test tests/Kronikol.Tests --configuration Release`: the count the newest release recorded, plus 17
-     (3.31.9 recorded 5,949 passed and 1 skipped). On Linux as root, expect §1.2's five skips and its three
-     root-only failures, and nothing else.
+   - `dotnet test tests/Kronikol.Tests --configuration Release`: `main`'s count plus 17 (5,951 on `5ca0878a`, so
+     5,968). On Linux as root, expect §1.2's five skips and its three root-only failures, and nothing else.
 4. `git push --force-with-lease=pr-report-link-template:e31b42fa origin pr-report-link-template`. The explicit
-   expected head makes the push refuse, rather than overwrite, if anyone pushed to the branch meanwhile.
-5. CI on the rebased head is green: 28 of 28 jobs and CodeQL. This run is the baseline that tells rebase fallout
-   from S2's.
+   expected head makes the push refuse, rather than overwrite, if anyone pushed to the branch meanwhile. A
+   Claude Code session may be refused this push (§4.7).
+5. CI on the rebased head is green wherever `main`'s own run at the same base is green: 28 of 28 jobs and CodeQL
+   when `main` has them. A job red on `main` too (F17) is not the PR's: it is named once on the PR, with `main`'s
+   run, and not fixed in 2.2. This run is the baseline that tells rebase fallout from S2's.
 
 ### 4.2 S2: the fixes
 
 Each fact is written first and seen to fail on the rebased head, then the change makes it pass. All of them live
-in `PrReportLinkActionTests`, except the guard.
+in `PrReportLinkActionTests`, except the guard. **Rehearsed** (§1.9): `rehearsal/s2-1-facts.patch` is the facts,
+which fail as the table says; `s2-2-fixes.patch` the changes; `s2-3-q5-end-marker.patch` Q5's, if the owner says
+yes. The executing session applies the facts first and sees the same five failures before it applies a fix.
 
 | Fact | Red on the rebased head because | The change |
 |---|---|---|
-| `The_readme_workflow_calls_the_action_as_it_is_declared_from_a_job_that_can_use_it`, **extended** | F1: the calling job's `concurrency` has no `queue: max` | The README's calling job gains `queue: max`. The fact also asserts that `cancel-in-progress` is not `true`, which GitHub refuses beside `queue: max` |
+| `The_readme_workflow_calls_the_action_as_it_is_declared_from_a_job_that_can_use_it`, **extended** | F1: the calling job's `concurrency` has no `queue: max` | The README's calling job gains `queue: max`. The fact also asserts that `cancel-in-progress` is not `true`, which GitHub refuses beside `queue: max`, and that the job's `if` keeps the fork guard, without which every fork's pull request would fail the job. Its checks move into a helper, `CallsOfTheAction`, which the live lane's fact reuses (S3) |
 | `The_readme_shows_the_comment_the_action_writes` | P1: the README's sample has no alert and no footer | The README's blockquote becomes the raw comment in a ```` ```markdown ```` fence, written by the driver for the README's two lanes with fixed dates, links included, and one sentence on how it renders (a list, a green Tip box, a small footer). A blockquote cannot show it faithfully, because an alert cannot be nested in a quote (§1.6). The fact renders the same two lanes and compares the fence byte for byte |
-| `A_tag_with_a_field_this_version_does_not_know_still_stops_an_older_run` | P2: run 400 overwrites a line tagged `run:500 x:1` | The run id is read as the digits straight after the line's own tag prefix, `<!-- <key>:<artifact> run:`, whatever follows them |
-| `A_line_break_in_an_input_keeps_the_line_whole` | P3: run 550 replaces run 600's link | `label`, `icon`, `heading` and `report-file` are collapsed to one line (each run of whitespace to one space, trimmed) before use |
-| `The_package_readmes_link_only_to_absolute_addresses`, a guard in `Packaging/` | F6: the new paragraph's relative link | The link becomes `https://github.com/lemonlion/Kronikol/tree/main/templates/github-actions/kronikol-pr-report-link`. The guard reads `templates/README.md` and `nuget-readme.md`, the two files a package ships as its README, and fails on any link or image that is neither `http(s)://` nor a `#fragment`: nuget.org's own rule (§1.6) |
+| `A_tag_with_a_field_this_version_does_not_know_still_stops_an_older_run` | P2: run 400 overwrites a line whose tag gained ` x:1` after the run id (the driver's new `tag-field` edit) | The run id is read as the digits straight after the line's own tag prefix, `<!-- <key>:<artifact> run:`, whatever follows them, by position, not by a pattern built from the artifact's name. A comment beside it states the rule for later versions: fields only after the run id (P6) |
+| `A_line_break_in_an_input_keeps_the_line_whole` | P3: run 550 replaces run 600's link | `label`, `icon`, `heading` and `report-file` are collapsed to one line (each run of whitespace to one space, trimmed) before use, by one `oneLine` helper |
+| `A_package_readme_links_only_to_absolute_addresses`, a theory in `Packaging/PackageReadmeLinkTests` | F6: the new paragraph's relative link | The link becomes `https://github.com/lemonlion/Kronikol/tree/main/templates/github-actions/kronikol-pr-report-link`. The guard finds each package README the way `dotnet pack` does, through every `PackageReadmeFile` in `Directory.Build.props` and the projects under `src/` and `templates/` (today `nuget-readme.md` and `templates/README.md`, one case each), and fails on any link, reference definition, `href` or `src` outside a code fence that is neither `http(s)://` nor a `#fragment`: nuget.org's own rule (§1.6) |
+| `What_follows_the_end_marker_survives_every_rewrite_and_holds_no_line`, **if Q5 is yes** | P4: what follows the lines is dropped (the driver's new `section-after-end` edit appends a section holding a decoy line with this lane's tag and a newer run) | The body ends with `<!-- <comment-key>:end -->`; whatever follows the marker in the existing comment is appended as it is, and lines are read only above it. The README's sample gains the marker, so the sample fact holds it too |
 
 And in the template README, with no fact of their own beyond the extended one (the sample fact holds the only
 prose a test can):
@@ -356,6 +469,13 @@ prose a test can):
   cancels the waiting one; `queue: max` keeps them all, in an order that does not matter because an older run
   never replaces a newer line. It names the date the key arrived, 2026-05-07, for anyone on a GitHub that lacks
   it.
+- **actionlint (F16).** In the same paragraph: actionlint does not know `queue` yet (1.7.12), so run it with
+  `-ignore 'unexpected key "queue" for "concurrency" section'`, or put that pattern under `paths:` in
+  `.github/actionlint.yaml`. Both were run (§1.9).
+- **The inputs that belong to the comment (F15).** The inputs table says `heading` and `report-file` are the
+  comment's: every lane that shares it passes the same, or the comment shows whichever ran last.
+- **The tag's rule and one-line inputs (F3, F4).** "How it behaves" adds that a later version adds fields to a
+  line's tag only after the run id, and that an input given over several lines is written on one.
 - **Re-runs (F13).** The sentence on re-runs waits for S3's check 5 and says what it found. If a same-name upload
   fails in a re-run, the upload step gains `overwrite: true`, and the README says the earlier attempt's artifact
   is replaced.
@@ -363,20 +483,23 @@ prose a test can):
   copied action at the commit being tested with no checkout step (runner 2.336.0 or later, not GitHub Enterprise
   Server, §1.6). The checkout form stays the example, because it works everywhere.
 - **Limits.** Three lines: the comment is the action's, and anything else written into it is dropped by the next
-  run, so other content takes its own `comment-key` (F5); the links need a GitHub sign-in (§1.6); `label`,
-  `icon` and `heading` are written into the comment as Markdown, so pass fixed text, never a value a pull
-  request controls, such as its branch name or title. (No code can be injected, since the inputs reach the
+  run, so other content takes its own `comment-key` (F5; with Q5, "down to its end marker", and other content
+  may go after the marker); the links download a zip, for a signed-in reader who can read the repository, which
+  replaces the README's "GitHub serves artifacts only as downloads", untrue since 2026-02-26 (F14, §1.6);
+  `label`, `icon` and `heading` are written into the comment as Markdown, so pass fixed text, never a value a
+  pull request controls, such as its branch name or title. (No code can be injected, since the inputs reach the
   script as environment variables. This is about what the comment says.)
 
 ### 4.3 S3: the live lane, and the proof on PR #73
 
-**The workflow** (Q2), `.github/workflows/pr-report-link.yml`:
+**The workflow** (Q2), `.github/workflows/pr-report-link.yml`, as rehearsed (`rehearsal/s3-lane.patch`):
 
 ```yaml
 name: PR report link
 
-# Runs the kronikol-pr-report-link action for real on the pull requests that change it. The in-memory GitHub in
-# PrReportLinkActionTests cannot hold permissions, the bot's identity, re-runs or concurrency.
+# Runs the kronikol-pr-report-link action for real, on the pull requests that change it. The in-memory GitHub of
+# PrReportLinkActionTests cannot hold permissions, the bot's identity, re-runs or concurrency. Not a required
+# check: a workflow its paths filter skips never reports, and a required check would wait for it.
 on:
   pull_request:
     branches: [ main ]
@@ -393,12 +516,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
+
       - name: Test
         id: test
         run: dotnet test examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing --configuration Release
+
+      # `error`, where the README's example says `ignore`: here a reports path that went missing must fail the lane.
       - name: Upload the Kronikol reports
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
@@ -411,7 +538,7 @@ jobs:
   report-link:
     name: Link the Kronikol report on the PR
     needs: [test]
-    if: ${{ !cancelled() && github.event.pull_request.head.repo.full_name == github.repository }}
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -421,26 +548,32 @@ jobs:
       group: kronikol-report-link-${{ github.event.pull_request.number }}
       queue: max
     steps:
+      # The checkout form, not `$/`, because this lane proves what the README tells a consumer to copy.
       - uses: actions/checkout@v7
         with:
           sparse-checkout: templates/github-actions
+
       - uses: ./templates/github-actions/kronikol-pr-report-link
         with:
           artifact-name: ci-preview-reports
           label: CI Preview (all passing)
 ```
 
-- `Example.Api.Tests.CiPreview.AllPassing/Infrastructure/TestRun.cs` gains `PublishCiArtifacts = true`. On
+- `Example.Api.Tests.CiPreview.AllPassing/Infrastructure/TestRun.cs` gains `PublishCiArtifacts = true`, with a
+  comment naming the lane. Kronikol has no environment switch for the option, so the project carries it. On
   GitHub that adds two `$GITHUB_OUTPUT` lines to `ci-summary-preview.yml`'s run of the same project, which
-  nothing there reads. The all-passing project is chosen so that the lane is green when the action is.
+  nothing there reads, and no test reads the example's options. The all-passing project is chosen so that the
+  lane is green when the action is.
 - `if-no-files-found: error`, not the README's `ignore`: here a broken `reports-path` must fail the lane.
 - The checkout form, not `$/`, because the lane proves what the README tells a consumer to copy.
-- **Its fact,** `The_live_lane_calls_the_action_as_it_is_declared`: the workflow calls the action with declared
-  inputs and every required one, from a job with the per-pull-request group, `queue: max` and the two
-  permissions (the README fact's assertions, factored into one helper both use), and its `paths` filter names the
-  action's directory. Red until the file exists.
-- `actionlint` on the workflow, as the PR ran it on the README's. If the installed actionlint does not know
-  `queue`, that is recorded, and the key stays: GitHub's schema is the authority.
+- **Its fact,** `The_live_lane_calls_the_action_as_it_is_declared`: the workflow calls the action once, through
+  the README fact's `CallsOfTheAction` (declared inputs, every required one, the per-pull-request group,
+  `queue: max`, no `cancel-in-progress`, the fork guard, the two permissions), and its `paths` filter names the
+  action's directory and the workflow itself. Rehearsed red (the file missing) and then green (§1.9).
+- `actionlint` on the workflow, with F16's `-ignore`: the `queue` key is its only complaint (§1.9).
+- **Rehearsed without GitHub** (§1.9): the test step, run locally with `GITHUB_ACTIONS` and `GITHUB_OUTPUT` set,
+  passes and writes both outputs, and the directory it names holds 13 files. What only GitHub can show is the
+  live proof below.
 
 **The live proof**, once S2 and S3 are pushed to PR #73 (the lane runs on the pull request that adds it). Each
 check goes into the execution log with its run and artifact ids:
@@ -449,11 +582,14 @@ check goes into the execution log with its run and artifact ids:
    links `…/actions/runs/<run>/artifacts/<id>`. The alert renders as a Tip box (A7).
 2. The id, upload time and expiry match
    `GET /repos/lemonlion/Kronikol/actions/runs/<run>/artifacts?name=ci-preview-reports`, to the minute, in UTC.
-3. The link downloads a zip holding `TestRunReport.html`, `Failures.md` and `Run.json`.
+3. The link downloads a zip holding the 13 files §1.9 lists, `TestRunReport.html`, `Failures.md` and `Run.json`
+   among them.
 4. Re-running the link job alone edits the same comment: still one comment.
 5. **Re-runs (F13).** Re-run the whole workflow: record what the same-name upload does in attempt 2 (a second
-   artifact, a replacement, or a failure) and what the line links afterwards. Then "re-run failed jobs" on a
-   scratch commit whose test step fails, for the same record. The README's sentence (S2) is written from this.
+   artifact, a replacement, or a failure), what the line links afterwards, and the new artifact's `expires_at`
+   against the attempt's start (§1.10: attempt 1's expiry is counted from the run's creation). Then "re-run
+   failed jobs" on a scratch commit whose test step fails, for the same record. This repository has no re-run
+   with an artifact to learn from, so this is the first. The README's sentence (S2) is written from it.
 6. A new commit: the line moves to the new run.
 7. Re-running the older run's link job from the Actions page: its log says a newer run already linked, and the
    comment is unchanged.
@@ -472,7 +608,8 @@ and prints the step's `reports-path`. What it holds goes into S6's wiki sentence
 
 - **`CHANGELOG.md`**, the `[Unreleased]` entry (Q3), reworded: "No version change: a GitHub Actions template in
   the repository. The action ships in no package; the `Kronikol.Templates` package README gains a paragraph
-  that points at it." The Added bullet keeps the PR's content and gains the live lane and `queue: max`. The line
+  that points at it." The Added bullet keeps the PR's content and gains the live lane, `queue: max`, the tag's rule
+and, if Q5 is yes, the end marker; the tests line gains the package README guard. The line
   `[Unreleased]: https://github.com/lemonlion/Kronikol/compare/v2.0.139-beta...HEAD` and the second copy of the
   three 2.0.13x definitions are deleted (F10).
 - **The template README**: S2's changes, and the "reference it from a Kronikol release tag" sentence unchanged. It
@@ -483,10 +620,13 @@ and prints the step's `reports-path`. What it holds goes into S6's wiki sentence
 
 ### 4.5 S5: the merge
 
-With the owner's go-ahead, once CI (28 of 28), CodeQL and the lane are green on the final head and the live proof
-is logged: merge through the pull request, so that "Closes #72" closes the issue. **Rebase and merge** keeps
-`main` linear, as its history is, and keeps S1 to S4's commits apart. No tag and no version (Q1). Nothing is
-posted on #72: the merge closes it.
+With the owner's go-ahead, once CI (28 of 28, or every job `main` passes at the same base, F17), CodeQL and the
+lane are green on the final head and the live proof is logged: merge through the pull request, so that "Closes
+#72" closes the issue. The repository allows every method (§1.10). Its pull requests, 20 of 20, have landed as
+merge commits, and `main` has moved by direct push since May, so its first-parent history is linear. **Rebase and
+merge** keeps it so and keeps S1 to S4's commits apart; a merge commit, the owner's old habit, groups them under
+one. After S1's rebase both give the same tree, so the owner picks at the button. No tag and no version (Q1).
+Nothing is posted on #72: the merge closes it.
 
 ### 4.6 S6: after the merge
 
@@ -495,7 +635,8 @@ posted on #72: the merge closes it.
    `tools/wiki-links/wikilinks.py` reads `KRONIKOL_WIKI` (roadmap §5). `CI-Artifact-Upload.md`
    gains "Link the report on the pull request" after "Combining with CI Summary": what the action does, the
    calling job and why each part is there, taken from the template README, which the section links rather than
-   copying the workflow a third time, and the limits. The page's own examples move to the same majors (F7) and
+   copying the workflow a third time, and the limits. The words are drafted in
+   `PR_REPORT_LINK_PLAN.harness/wiki-draft.md`, with the sentence S3's check 5 decides marked. The page's own examples move to the same majors (F7) and
    its upload step from `if: always()` to `if: ${{ !cancelled() }}`, with GitHub's reason (§1.6). F12's sentence:
    one reports directory per step output, so several test projects either run in their own steps or are
    combined with `kronikol merge`, which writes the same two outputs (`MergedRunOutputs`).
@@ -507,6 +648,19 @@ posted on #72: the merge closes it.
 5. **The consumer** (Q4): its copy replaced by the tag, and its two lanes' next comment checked as S3's check 2
    checks this repository's.
 
+### 4.7 Who can run each step
+
+This plan was written in a Claude Code session. The same environment, the same day, refused to push a tag
+(`v3.31.10`) and the wiki (HTTP 403), where pushes to `main` went through (`DOORSTEP_PLAN.md` Appendix B). So:
+
+| Step | Pushes to | From a Claude Code session |
+|---|---|---|
+| S1 step 4, S2 to S4 | `pr-report-link-template`, the owner's branch, with a force-push in S1 | Not tried: the first try would overwrite the owner's branch. If refused, the session pushes the same commits to its own branch and the owner moves the pull request's branch to them: `git push --force-with-lease=pr-report-link-template:e31b42fa origin <sha>:pr-report-link-template` |
+| S3's live proof | the same branch (scratch commits for checks 5, 8 and 9, then their reverts) | As above. Re-running jobs (checks 4, 5, 7) is a click on the Actions page, the owner's if the session has no way to re-run |
+| S5 | the merge button | The owner's (the go-ahead is theirs anyway) |
+| S6 step 1 | the wiki | Expected to be refused, as it was for 3.31.10; the owner pushes `wiki-draft.md`'s text |
+| S6 steps 2 to 4 | `main` (plan files) | Allowed, as this plan's own commits were |
+
 ---
 
 ## 5. Tests
@@ -514,20 +668,26 @@ posted on #72: the merge closes it.
 | Fact | Slice | Proved red on | Kind |
 |---|---|---|---|
 | The 17 of PR #73 | S1 | the tree before the PR (the PR: all 17 failed before the action existed; each guard broken in turn fails at least one) | node driver, YAML |
-| The README workflow fact, extended with `queue: max` | S2 | the rebased head (F1) | YAML |
-| `The_readme_shows_the_comment_the_action_writes` | S2 | the rebased head (P1) | node driver, README |
-| `A_tag_with_a_field_this_version_does_not_know_still_stops_an_older_run` | S2 | the rebased head (P2) | node driver |
-| `A_line_break_in_an_input_keeps_the_line_whole` | S2 | the rebased head (P3) | node driver |
-| `The_package_readmes_link_only_to_absolute_addresses` | S2 | the rebased head (F6) | file read |
-| `The_live_lane_calls_the_action_as_it_is_declared` | S3 | the head before the workflow exists | YAML |
+| The README workflow fact, extended with `queue: max`, `cancel-in-progress` and the fork guard | S2 | the rebased head (F1); rehearsed | YAML |
+| `The_readme_shows_the_comment_the_action_writes` | S2 | the rebased head (P1); rehearsed | node driver, README |
+| `A_tag_with_a_field_this_version_does_not_know_still_stops_an_older_run` | S2 | the rebased head (P2); rehearsed | node driver |
+| `A_line_break_in_an_input_keeps_the_line_whole` | S2 | the rebased head (P3); rehearsed | node driver |
+| `A_package_readme_links_only_to_absolute_addresses`, two cases | S2 | the rebased head (F6), the `templates/README.md` case; rehearsed | file read |
+| `What_follows_the_end_marker_survives_every_rewrite_and_holds_no_line`, if Q5 is yes | S2 | the fixed head without the marker's seven lines; rehearsed | node driver |
+| `The_live_lane_calls_the_action_as_it_is_declared` | S3 | the head before the workflow exists; rehearsed | YAML |
 
 The node facts skip where node is missing, as the 17 do (`NodeProbe`), and run in CI's Core Tests job, where node
-is present. A fact that skipped everywhere would prove nothing, so CI's log is read for the count that ran: 17
-after S1, 20 after S2 (three new node facts; the extended fact and the guard need no node), 21 after S3.
+is present. A fact that skipped everywhere would prove nothing, so CI's log is read for the count that ran in
+`PrReportLinkActionTests`: 17 after S1, 20 after S2 (three new node facts; the extended fact needs no node), 21 if
+Q5 is yes, and one more after S3. `PackageReadmeLinkTests` adds its two cases. The rehearsal ran 24 across both,
+with Q5 (§1.9).
 
 **Before each push**, the repository's own fast checks: the facts above; the whole of `Kronikol.Tests`;
-`actionlint` on `action.yml`, the README's workflow and `pr-report-link.yml`; the diff re-read for anything CI
-would reject. One validated push beats three speculative ones.
+`actionlint -ignore 'unexpected key "queue" for "concurrency" section'` on the README's workflow and
+`pr-report-link.yml`, from the repository's root (actionlint reads workflows, not `action.yml`, but from the root
+it holds the lane's `with:` to the action's declared inputs, as a typo proved, §1.9); the diff re-read for
+anything CI would reject.
+One validated push beats three speculative ones.
 
 ---
 
@@ -549,6 +709,20 @@ would reject. One validated push beats three speculative ones.
   never sees this; a container that runs as root, such as the one this plan was written in, does. The fix is the
   one the Windows-only tests already use: skip with a reason when the process runs as root, so such a run reports
   three skips rather than three failures. A test-only change, outside this plan.
+- **A flaky fact on `main`** (F17, §1.10):
+  `NodeJsPlantUmlRendererTests.Code_cache_is_created_on_first_run_reused_afterwards_and_regenerated_when_v8_rejects_it`
+  failed CI on `5ca0878a` ("miss" expected at line 165, "hit" found) and passed in the local full run that
+  evening. The fact deletes the process-wide V8 code cache, renders, and reads
+  `NodeJsPlantUmlRenderer.LastCodeCacheStatus`, a static with a private setter, while other classes may render with
+  node beside it (eight more test files name the node renderer, and the class has no collection to hold them
+  apart). A render from another
+  class between the delete and the fact's own render writes the cache back, and the fact reads "hit"
+  (INFERRED from the code; not reproduced). Not the PR's. A test-only fix, putting the fact in the collection
+  that owns the renderer's process-wide state or giving it a cache path of its own, belongs to whoever next
+  touches the renderer's tests; until then S1 and S5 treat it as `main`'s.
+- **CodeQL analyses C# only** (§1.10). Adding `actions` to `codeql.yml`'s languages would scan every workflow and
+  composite action, the S3 lane and this action included. A change to `codeql.yml`, outside 2.2; it fits with the
+  workflow sweep above.
 - **Two packing leftovers in `Kronikol.Templates`**, seen in §1.4's pack and older than PR #73: `LICENSE` is
   included twice (`Directory.Build.props:29` and the project's own line 65), so `dotnet pack` warns NU5118; and
   the package carries `nuget-readme.md` from `Directory.Build.props` beside the `README.md` its nuspec names, a
@@ -571,11 +745,14 @@ would reject. One validated push beats three speculative ones.
   identity writes the comment (the author check rests on `github-actions[bot]`), which permission the build
   identity needs on pull request threads, and how the thread is found again. The store plan marks the Azure
   DevOps platform claims REFERENCE; 2.4's half day of checking covers these.
-- **To 7.4, the changed scenarios.** The comment is rebuilt whole (F5), so 7.4 either extends this action with a
-  section it owns, designed then with Q1's semver in view, or writes its own comment under its own
-  `comment-key`. A comment holds 65,536 characters (§1.6), where a step summary holds the 1 MiB that
+- **To 7.4, the changed scenarios.** The comment is rebuilt whole (F5). If Q5 is yes, 7.4's section goes after
+  the end marker, where a lane on the first tag keeps it, and 7.4 designs the section itself then, with Q1's
+  semver in view. If Q5 is no, 7.4 writes its own comment under its own `comment-key`, or waits for v4. A comment holds 65,536 characters (§1.6), where a step summary holds the 1 MiB that
   `V4_PLAN`'s 768 KiB budget is set against, so diagrams in a comment need a budget of their own.
 - **To 9.4 and 9.6.** The same directory, README pattern and tests; alerting reuses the comment machinery.
+- **To every later version of this action.** A line's tag takes new fields only after its run id (F3), new
+  content goes after the end marker (Q5), and `heading` and `report-file` stay the comment's until a version
+  names the file in each line (F15). The README's actionlint line goes when actionlint knows `queue` (F16).
 - **To 13.2, the Marketplace.** Only an action at the root of a public repository is listed (§1.6), so the listing
   is a repository of its own, for example one that holds this action at its root, with a unique name and
   optional `branding`. Consumers who reference the path in this repository at a tag keep working, because a tag
@@ -623,7 +800,12 @@ would reject. One validated push beats three speculative ones.
 | A8 | Editing a comment notifies nobody, so the action's rewrites are silent after the first | WEB for creation only; editing unverified | Needed by no step; noted because a noisy comment would be a reason to use the action less |
 | A9 | Several `reports-path` lines in one step leave one value (F12) | INFERRED | S3's scratch step |
 | A10 | The 17 facts still pass on today's `main` | RUN: 17 of 17 on the rehearsed tree (§1.2) | Settled; S1 step 3 runs them again at execution |
-| A11 | The README's upload works in a re-run (F13) | WEB: undocumented, evidence conflicts | S3 check 5 |
+| A11 | The README's upload works in a re-run (F13) | WEB: undocumented, evidence conflicts. READ: no re-run in this repository has had an artifact (§1.10) | S3 check 5 |
+| A13 | actionlint accepts the README's workflow | RUN: 1.7.12 rejects `queue` (F16); `-ignore` and the `paths` config clear it (§1.9) | Settled for 1.7.12; S0 step 6 re-checks the newest |
+| A14 | A re-run's artifact lives a retention period from its upload | READ: attempt 1's `expires_at` is the run's `created_at` plus the retention, not the upload's (§1.10); a re-run's is unknown | S3 check 5 |
+| A15 | A Claude Code session can push to `pr-report-link-template` | Not tried (§4.7): tag and wiki pushes were refused here the same day, `main` was not | S1 step 4; §4.7's fallback |
+| A16 | `main`'s CI is green at S1's base | READ: two of eight runs green on 2026-09-27 (§1.10) | S0 step 5; S1 step 5 reads against it |
+| A17 | S2's and S3's patches apply at execution | RUN: they rebuild the rehearsed tree on `5ca0878a` exactly (§1.9) | S0 step 7 |
 
 ---
 
