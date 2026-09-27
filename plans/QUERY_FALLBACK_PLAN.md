@@ -3,6 +3,30 @@
 **Date:** 2026-09-13 · **Repo version:** 3.3.0 (released) · **Target:** 3.4.0 (MINOR)
 · **Status: investigation complete and measured, nothing implemented, NOT green-lit.**
 
+**Re-checked 2026-09-27, at 3.31.10. Nothing past M0 is built.** The owner moved this plan from
+`ROADMAP.md` 14.10, after the launch, to stage 1b, before it, and into the launch bar. The reason:
+an agent whose session may not install a tool or reach the feed can meet Kronikol on any new
+install. The text beside every report offers only `dotnet tool install -g` and `dnx`, and past
+`Failures.md` its only route is `query.py`, which needs Python and exists only where the skill was
+installed. The green light is `ROADMAP.md` D25. What changed under the plan since it was written:
+
+- **The engine is 27 files and 9,484 lines**, not 20 and 6,568 (§1.1, §2.1); `QueryCommand.History.cs`
+  alone is 1,111. The dependency direction holds. Beyond the BCL the engine reads `Kronikol.Reports`,
+  `Kronikol.History` and `Kronikol.PlantUml`, all in `Kronikol`, and it reaches back into the tool
+  once, for `Commands.Version` (`QueryCommand.Describe.cs:33`). A6's conclusion stands.
+- **Four more callers of engine internals.** `CtrfCommand`, `ExportCommand`, `MergeCommand` and
+  `HistoryCommand.Maintenance` use `ResolveReport`, `ReportScanner`, `ReportGate` or `QueryWriter`,
+  so §2.1's `InternalsVisibleTo` serves them too. 33 test files name the engine.
+- **§3's line numbers are from 3.3.0.** `dnx Kronikol.Tool` (3.8.0) now sits beside the install
+  line in `agent-instructions.md` and the skill, and M3's rewrite covers it too.
+- **§5's premise is the owner's reason, reversed.** It says a missing tool is "almost never" a
+  permissions problem. This plan moved forward for exactly that case, so the rewritten sentence
+  names it.
+- **M4 is now a question (D25).** §5 says a machine without the .NET 10 SDK "has no option under any
+  design". `query.py` needs only Python, so on that machine it is the one option there is.
+- **The query verbs number 20, not 18**, and `query.py` still implements 6 of them.
+- **The target is the next minor.** "3.4.0" was overtaken long ago.
+
 **The short version.** The skill ships `scripts/query.py`, a 413-line reimplementation of six of the
 tool's eighteen verbs, advertised as what to use "if the tool is genuinely unavailable". It is the
 wrong fallback on three counts: its runtime (Python) is *rarer* on a .NET machine than the one it
