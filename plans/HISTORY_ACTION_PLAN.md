@@ -884,3 +884,21 @@ github.blog. Issues were read as rendered pages, so where a thread was not visib
 | Runner images | actions/runner-images README and image readmes (ubuntu 24.04 20260920, windows 2025 20260907, macOS 26 arm64 20260907) | ".NET Core SDK: … 10.0.401"; "Bash 3.2.57(1)-release"; "When specifying a bash shell on Windows, the bash shell included with Git for Windows is used" |
 | checkout credentials | actions/checkout README (v6), CHANGELOG v6.0.1 | "`persist-credentials` now stores credentials in a separate file under `$RUNNER_TEMP`"; "Add worktree support for persist-credentials includeIf" |
 | `ls-remote` | git-scm.com, git-ls-remote | "--exit-code Exit with status "2" when no matching refs are found" |
+
+**Also reported that day, and not yet used by the design.** Each bears on S2 to S5 or on a question in §10.
+
+- **Sibling references with `$/`** (github.blog changelog, 2026-07-30; runner 2.336.0 or later): an action
+  can call a sibling action at the commit it is running from. The four phases could share one `tool`
+  phase this way once every runner a consumer uses has it. GHES and self-hosted runners lag, so the
+  scripts share code through `$GITHUB_ACTION_PATH/../scripts/` instead (§4.1).
+- **Organisations can require actions to be pinned to a commit** (since August 2025). A consumer may have
+  to reference the action by SHA, which F12 already allows for: the version rides in `VERSION`, not in
+  the ref.
+- **`queue: max` cannot be combined with `cancel-in-progress: true`**, and concurrency group names are
+  compared case-insensitively (docs, control workflow concurrency).
+- **`actions/checkout`'s current major is v7.** Under `pull_request_target` it refuses a fork's code. The
+  plan's examples use `@v5`, as this repository's workflows do, and the executing session picks the
+  current major.
+- **Pull-request events created with `GITHUB_TOKEN`** have started in an approval-required state since
+  June 2026. That is irrelevant to pushes to the data branch, which start nothing.
+- **`pull_request_target` runs the default branch's workflow** since 2025-12-08.
