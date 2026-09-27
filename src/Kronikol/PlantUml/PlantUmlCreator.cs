@@ -296,7 +296,8 @@ public static partial class PlantUmlCreator
                     // no response arrow. Its detail (full title / locator) is the note.
                     // The label is the tracker's own words for the step, which can quote a locator or the text
                     // typed into a field: loader markup in it is escaped (EscapeLoaderMarkup), the rest is not.
-                    var actionLabel = EscapeLoaderMarkup((effectiveMethod.Value?.ToString() ?? "action").Replace("\r", string.Empty).Replace("\n", "\\n"));
+                    // Its own backslashes are escaped before its line breaks become `\n` (EscapeOneLineMarkup).
+                    var actionLabel = EscapeOneLineMarkup((effectiveMethod.Value?.ToString() ?? "action").Replace("\r", string.Empty)).Replace("\n", "\\n");
                     var actionCategory = trace.CallerDependencyCategory ?? Constants.DependencyCategories.User;
                     var actionColor = builder.GetArrowColor(trace.CallerName, actionCategory, trace.CallerName, actionCategory);
                     var actionPrefix = $"{callerShortName} -{actionColor}> {serviceShortName}: ";
@@ -844,7 +845,10 @@ public static partial class PlantUmlCreator
         var trailingBackslash = OddTrailingBackslash(line);
         // A carriage return that ends no line here ends one for the Java engine's preprocessor (§12.5).
         var loneReturn = line.Length > 1 && line.AsSpan(0, line.Length - 1).IndexOf('\r') >= 0;
-        if (head is null && trailingBackslash < 0 && !loneReturn) return line;
+        // A block note draws a backslash as written except before `t` (a tab) and before a `~` it then takes with it; a
+        // zero-width space parts them, as it does in a payload note (§12.5, §12.6: `C:\temp` drew `C:` and a tab).
+        var backslashPair = line.Contains("\\t", StringComparison.Ordinal) || line.Contains("\\~", StringComparison.Ordinal);
+        if (head is null && trailingBackslash < 0 && !loneReturn && !backslashPair) return line;
 
         var sb = new StringBuilder(line.Length + 16);
         for (var i = 0; i < line.Length; i++)
@@ -852,6 +856,7 @@ public static partial class PlantUmlCreator
             if (i == contentStart && head is not null) sb.Append(head);
             else if (i == trailingBackslash) sb.Append(CodePoint('\\'));
             else if (line[i] == '\r' && i < line.Length - 1) sb.Append(CodePoint('\r'));
+            else if (line[i] == '\\' && i + 1 < line.Length && line[i + 1] is 't' or '~') sb.Append('\\').Append("<U+200B>");
             else sb.Append(line[i]);
         }
         return sb.ToString();
@@ -920,6 +925,99 @@ public static partial class PlantUmlCreator
         }
         return sb?.ToString() ?? text;
     }
+
+    /// <summary>
+    /// <see cref="EscapeLoaderMarkup"/> for text written into one statement (a step's name, a test's name, a UI action's
+    /// label, a span's name), which also writes each backslash as <c>&lt;U+005C&gt;&lt;U+200B&gt;</c>. In one statement both
+    /// engines read <c>\n</c>, <c>\r</c> and <c>\l</c> as line breaks, <c>\t</c> as a tab and <c>\\</c> as one backslash,
+    /// so a step naming <c>C:\temp\new</c> drew <c>C:</c>, a tab, <c>emp</c> and <c>ew</c> on a line of its own. The zero-width
+    /// space keeps the decoded backslash from reading the next character (a step bar's doc string and cells use the same
+    /// form, §12.5; measured in all four statement kinds on both engines, §12.6). Its other markup still styles it.
+    /// </summary>
+    internal static string EscapeOneLineMarkup(string text)
+    {
+        var escaped = EscapeLoaderMarkup(text);
+        return string.IsNullOrEmpty(escaped) || !escaped.Contains('\\') ? escaped : escaped.Replace("\\", "<U+005C><U+200B>");
+    }
+
+    /// <summary>The characters XML 1.0 cannot hold: the C0 controls but a tab, a line feed and a carriage return, U+FFFE and U+FFFF.</summary>
+    private static bool IsXmlInvalid(int c) => c is < 0x20 and not (0x09 or 0x0A or 0x0D) or 0xFFFE or 0xFFFF or (>= 0xD800 and <= 0xDFFF);
+
+    /// <summary>What an XML-invalid character is drawn as: a C0 control as its Control Pictures glyph (ESC as U+241B), anything else as U+FFFD.</summary>
+    private static char XmlSafeStandIn(int c) => c < 0x20 ? (char)(0x2400 + c) : '\uFFFD';
+
+    private static readonly SearchValues<char> XmlInvalidOrDecodable = SearchValues.Create(
+        "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\u0008\u000B\u000C\u000E\u000F\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001A\u001B\u001C\u001D\u001E\u001F\uFFFE\uFFFF<&");
+
+    /// <summary>
+    /// Writes what XML cannot hold as something it can, over a whole line of a diagram's source. The engines copy a
+    /// note's, a label's or a bar's text into the SVG as it is (the Java engine as a reference to the same character),
+    /// and an SVG holding a C0 control, U+FFFE or U+FFFF is not XML: as an image (NodeJs, Local and Server with
+    /// internal-flow tracking off) it did not load, and the page's PNG and SVG copies of it failed. So such a character
+    /// is written as its stand-in (<see cref="XmlSafeStandIn"/>), and so is a code point (<c>&lt;U+001B&gt;</c>) or a
+    /// decimal reference (<c>&amp;#27;</c>) naming one or a surrogate, which the engines decode in text that keeps its
+    /// markup. A decimal reference past U+10FFFF made both engines throw, and the diagram was lost: it gets a zero-width
+    /// space after its <c>&amp;</c>, as a payload's references do, and draws as written (DIAGRAM_COLOURS_PLAN §12.6).
+    /// Text Kronikol writes holds none of these, so this runs over everything a diagram is built from.
+    /// </summary>
+    internal static string ReplaceXmlInvalidCharacters(string text)
+    {
+        if (string.IsNullOrEmpty(text) || text.AsSpan().IndexOfAny(XmlInvalidOrDecodable) < 0) return text;
+
+        StringBuilder? sb = null;
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c < 0x20 || c >= 0xFFFE)
+            {
+                if (IsXmlInvalid(c))
+                {
+                    sb ??= new StringBuilder(text.Length).Append(text, 0, i);
+                    sb.Append(XmlSafeStandIn(c));
+                    continue;
+                }
+            }
+            else if (c == '<' && XmlInvalidCodePoint().Match(text, i) is { Success: true } cp)
+            {
+                var value = Convert.ToInt32(cp.Groups[1].Value, 16);
+                if (IsXmlInvalid(value))
+                {
+                    sb ??= new StringBuilder(text.Length).Append(text, 0, i);
+                    sb.Append(XmlSafeStandIn(value));
+                    i += cp.Length - 1;
+                    continue;
+                }
+            }
+            else if (c == '&' && DecimalReference().Match(text, i) is { Success: true } re)
+            {
+                var digits = re.Groups[1].Value.TrimStart('0');
+                var value = digits.Length == 0 ? 0 : digits.Length > 7 ? int.MaxValue : int.Parse(digits, System.Globalization.CultureInfo.InvariantCulture);
+                if (value > 0x10FFFF)
+                {
+                    sb ??= new StringBuilder(text.Length + 8).Append(text, 0, i);
+                    sb.Append("&<U+200B>");
+                    continue;
+                }
+                if (IsXmlInvalid(value))
+                {
+                    sb ??= new StringBuilder(text.Length).Append(text, 0, i);
+                    sb.Append(XmlSafeStandIn(value));
+                    i += re.Length - 1;
+                    continue;
+                }
+            }
+            sb?.Append(c);
+        }
+        return sb?.ToString() ?? text;
+    }
+
+    /// <summary>A code point the engines decode, at the position matching starts from: four or five hex digits in either case, after an upper-case <c>U+</c>.</summary>
+    [GeneratedRegex("\\G<U\\+([0-9A-Fa-f]{4,5})>")]
+    private static partial Regex XmlInvalidCodePoint();
+
+    /// <summary>A decimal character reference, at the position matching starts from.</summary>
+    [GeneratedRegex("\\G&#([0-9]+);")]
+    private static partial Regex DecimalReference();
 
     /// <summary>
     /// Captured text on a message arrow: a request's method and path, which reach the label as captured (3.30.2), a
@@ -1095,7 +1193,8 @@ public static partial class PlantUmlCreator
     {
         var entitiesPlantUml = CreateEntitiesPlantUml(tracesForTest, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides);
         var themeDirective = !string.IsNullOrWhiteSpace(plantUmlTheme) ? $"!theme {plantUmlTheme}\n" : "";
-        return $"""
+        // Participant names come from the captured calls (an ingested run's names from its files).
+        return ReplaceXmlInvalidCharacters($"""
 
                 @startuml
                 {themeDirective}!pragma teoz true
@@ -1106,7 +1205,7 @@ public static partial class PlantUmlCreator
 
                 {entitiesPlantUml}
 
-                """.TrimStart();
+                """.TrimStart());
     }
 
     private const string AssertionNoteClass = "assertionNote";
@@ -1949,8 +2048,9 @@ public static partial class PlantUmlCreator
 
         private readonly PlantUmlStatementGuard _statementGuard = new();
 
-        public void Append(string text) => _currentDiagram.Append(_statementGuard.Apply(text, terminated: false));
-        public void AppendLine(string text) => _currentDiagram.AppendLine(_statementGuard.Apply(text, terminated: true));
+        // Every line of the body passes here, Kronikol's own and a user's markup alike, so nothing XML cannot hold reaches the engine.
+        public void Append(string text) => _currentDiagram.Append(_statementGuard.Apply(ReplaceXmlInvalidCharacters(text), terminated: false));
+        public void AppendLine(string text) => _currentDiagram.AppendLine(_statementGuard.Apply(ReplaceXmlInvalidCharacters(text), terminated: true));
         public void IncrementStep() => _stepNumber++;
         public bool HasOpenPartition => _openPartitionLine != null;
 

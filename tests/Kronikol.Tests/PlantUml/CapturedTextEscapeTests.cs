@@ -566,6 +566,149 @@ public class CapturedTextEscapeTests
         }
     }
 
+    // ── What the second audit missed (DIAGRAM_COLOURS_PLAN §12.6) ─────────
+    // XML 1.0 cannot hold a C0 control other than a tab, a line feed or a carriage return, nor U+FFFE or U+FFFF. Both
+    // engines copy a captured one into the SVG (the Java engine as a reference to it), and so did a code point or a
+    // decimal reference naming one in step, test and assertion text, which keeps its markup. That SVG is not XML: as an
+    // image (NodeJs, Local and Server with internal-flow tracking off) it does not load, and the page's PNG and SVG copies
+    // of it fail. A reference past U+10FFFF made both engines throw, and the diagram was lost.
+
+    [Theory]
+    [InlineData("a\u001B[31mred", "a\u241B[31mred")]
+    [InlineData("\u0000", "\u2400")]
+    [InlineData("a\u0008\u000B\u000C\u000E\u001Fz", "a\u2408\u240B\u240C\u240E\u241Fz")]
+    [InlineData("\uFFFE\uFFFF", "\uFFFD\uFFFD")]
+    [InlineData("<U+001B>[0m and <U+001b>", "\u241B[0m and \u241B")]
+    [InlineData("<U+0000><U+D800><U+FFFF>", "\u2400\uFFFD\uFFFD")]
+    [InlineData("&#27;[0m &#0; &#55296; &#65535;", "\u241B[0m \u2400 \uFFFD \uFFFD")]
+    [InlineData("&#9999999; and &#99999999999999;", "&<U+200B>#9999999; and &<U+200B>#99999999999999;")]
+    // Controls: what XML holds, what the engines do not decode, and the code points Kronikol writes itself.
+    [InlineData("a\tb\nc\rd\u007F\u0085", "a\tb\nc\rd\u007F\u0085")]
+    [InlineData("<U+000D> <U+0041> <U+200B> &#65; &#x1B;", "<U+000D> <U+0041> <U+200B> &#65; &#x1B;")]
+    [InlineData("<u+001B> <U+1B> <U+00001B>", "<u+001B> <U+1B> <U+00001B>")]
+    public void A_character_xml_cannot_hold_is_written_as_one_it_can(string input, string expected) =>
+        Assert.Equal(expected, PlantUmlCreator.ReplaceXmlInvalidCharacters(input));
+
+    /// <summary>
+    /// A scenario carrying an XML-invalid character in every kind of text a diagram draws: a body, a header, a step's
+    /// name, doc string and cell, an assertion's message, a test's name and a user's own markup.
+    /// </summary>
+    internal static string XmlHazardDiagram()
+    {
+        var id = $"CapturedTextEscapeTests.{Guid.NewGuid():N}";
+        DefaultTrackingDiagramOverride.InsertTestDelimiter(id, "Reads \u001B[1m <U+0000> &#9999999;");
+        var delimiter = RequestResponseLogger.RequestAndResponseLogs
+            .Where(l => l.TestId == id && l.PlantUml is not null).Select(l => l.PlantUml!).Single(p => p.Contains("hnote across"));
+        RequestResponseLog Marker(string plantUml) => new(
+            TestName: "Escapes", TestId: "escapes-1", Method: "", Content: "", Uri: new Uri("http://override.com"), Headers: [],
+            ServiceName: "", CallerName: "", Type: RequestResponseType.Request, TraceId: Guid.NewGuid(),
+            RequestResponseId: Guid.NewGuid(), TrackingIgnore: false)
+        { IsOverrideStart = true, PlantUml = "\n" + plantUml + "\n" };
+        RequestResponseLog End() => new(
+            TestName: "Escapes", TestId: "escapes-1", Method: "", Content: "", Uri: new Uri("http://override.com"), Headers: [],
+            ServiceName: "", CallerName: "", Type: RequestResponseType.Request, TraceId: Guid.NewGuid(),
+            RequestResponseId: Guid.NewGuid(), TrackingIgnore: false)
+        { IsOverrideEnd = true };
+        var bar = StepBarPlantUml.Build("Given \u001B[32mgreen <U+0000> &#9999999;",
+            [new StepBarTable(null, [["Col"], ["&#0; \u000B"]])], "doc \u000C <U+001B>");
+        var assertion = "hnote across <<assertionNote>> #F8D7DA\n" + DiagramWidth.WrapBlockNoteBody("✗ it said &#9999999; and \u001B[0m") + "\nend note";
+        var request = Request("POST", "http://example.com/api/orders", "{\"sku\":\"A1\"}");
+        // Under a tenth controls, or the body counts as binary and is not drawn at all.
+        var response = Response(HttpStatusCode.BadRequest, "\u001B[31mred\u001B[0m the build failed at step three of the pipeline, see the log for the details\n"
+            + "then a\u0000b and a\u000Bc, which a terminal wrote into the captured output of the job", "text/plain") with
+        {
+            Headers = [("Content-Type", "text/plain"), ("X-Trace", "a\u001Bb")],
+        };
+        var logs = new[]
+        {
+            Marker(delimiter), End(), Marker(bar), End(), request, response, Marker(assertion), End(),
+            Marker("note over Caller: a user's \u001B note"), End(),
+        };
+        return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.Single().PlainText;
+    }
+
+    [Fact]
+    public void No_diagram_source_holds_a_character_xml_cannot()
+    {
+        var source = XmlHazardDiagram();
+
+        Assert.DoesNotMatch("[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]", source);
+        Assert.DoesNotMatch(@"<U\+(?:0{2,3}(?:0[0-8BCEFbcef]|1[0-9A-Fa-f])|[Dd][89ABab][0-9A-Fa-f]{2}|[Ff]{3}[EeFf])>", source);
+        Assert.DoesNotContain("&#9999999;", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("&#0;", source, StringComparison.Ordinal);
+        Assert.Contains("\u241B[31mred\u241B[0m", source, StringComparison.Ordinal);
+        Assert.Contains("Reads \u241B[1m", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void The_node_renderer_writes_xml_whatever_the_capture_holds()
+    {
+        Assert.SkipWhen(!NodeIsAvailable(), "Node.js not available on PATH");
+
+        // The second source is written by hand the way a report from an earlier release carries it: merged or
+        // ingested, it reaches the renderer with the character itself.
+        var results = NodeJsPlantUmlRenderer.RenderMany([XmlHazardDiagram(), HazardDiagram("old \u001B[31mred\u0000")]);
+
+        Assert.All(results, r => Assert.True(r.Succeeded, r.Error));
+        var documents = results.Select(r => System.Xml.Linq.XDocument.Parse(r.Svg!)).ToList();
+        Assert.Contains("\u241B[31mred", documents[0].Root!.Value, StringComparison.Ordinal);
+        Assert.DoesNotContain(PaintedLines(results[0].Svg!), l => l.StartsWith("PlantUML ", StringComparison.Ordinal));
+    }
+
+    // A step's name, a test's name, a UI action's label and a span's name are each one statement, where the engines read a
+    // backslash: `\n`, `\r` and `\l` break the line, `\t` is a tab and `\\` one backslash, so `C:\temp\new` drew as
+    // `C:<tab>emp` and `ew`. A doc string and a cell already write a backslash as `<U+005C><U+200B>` (3.31.2).
+
+    [Fact]
+    public void A_one_line_statement_writes_a_backslash_as_its_code_point_and_a_zero_width_space()
+    {
+        const string written = "C:<U+005C><U+200B>temp<U+005C><U+200B>new.txt";
+        Assert.Contains(written, StepBarPlantUml.Build(@"Given the file C:\temp\new.txt"), StringComparison.Ordinal);
+        Assert.Contains(written, PlantUmlCreator.EscapeOneLineMarkup(@"C:\temp\new.txt"), StringComparison.Ordinal);
+
+        var id = $"CapturedTextEscapeTests.{Guid.NewGuid():N}";
+        DefaultTrackingDiagramOverride.InsertTestDelimiter(id, @"Reads(C:\temp\new.txt)");
+        var delimiter = RequestResponseLogger.RequestAndResponseLogs
+            .Where(l => l.TestId == id && l.PlantUml is not null).Select(l => l.PlantUml!).Single(p => p.Contains("hnote across"));
+        Assert.Contains(written, delimiter, StringComparison.Ordinal);
+
+        var action = new RequestResponseLog("Escapes", "escapes-1", "Fill #path with C:\\temp\\new.txt\nthen Tab", null,
+            new Uri("http://localhost:4000/form"), [], "web", "User", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        { IsUserAction = true };
+        var arrow = PlantUmlCreator.GetPlantUmlImageTagsPerTestId([action]).Single().PlantUmls.Single().PlainText
+            .Split('\n').Single(l => l.Contains("Fill #path", StringComparison.Ordinal));
+        // Its own line break is still drawn as one: Kronikol writes it after the backslashes are escaped.
+        Assert.Contains(written + @"\nthen Tab", arrow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_assertion_note_keeps_a_backslash_before_t_or_a_tilde()
+    {
+        // A block note draws every backslash as written except before `t` (a tab) and before a `~` it escapes, which it
+        // takes with it: the payload note breaks both with a zero-width space (3.31.2), an assertion note did not.
+        var body = DiagramWidth.WrapBlockNoteBody(@"✗ Expected C:\temp\x.txt, found \<&x>");
+
+        Assert.Contains(@"C:\<U+200B>temp\x.txt", body, StringComparison.Ordinal);
+        Assert.Contains(@"\<U+200B>~<&x>", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void The_node_renderer_paints_backslashes_in_one_line_statements_as_written()
+    {
+        Assert.SkipWhen(!NodeIsAvailable(), "Node.js not available on PATH");
+
+        var bar = StepBarPlantUml.Build(@"Given C:\temp\new and a\tb and \l");
+        var assertion = "hnote across <<assertionNote>> #F8D7DA\n" + DiagramWidth.WrapBlockNoteBody(@"✗ read C:\temp\x.txt") + "\nend note";
+        var result = NodeJsPlantUmlRenderer.RenderMany([BarDiagram(bar + "\n\n" + assertion)]).Single();
+
+        Assert.True(result.Succeeded, result.Error);
+        var painted = PaintedLines(result.Svg!);
+        Assert.Contains(Collapse(@"Given C:\temp\new and a\tb and \l"), painted);
+        Assert.Contains(Collapse(@"✗ read C:\temp\x.txt"), painted);
+    }
+
     /// <summary>The PlantUML Kronikol writes for a GET of <paramref name="uri"/>, as text.</summary>
     internal static string LabelDiagram(string uri, bool internalFlowTracking)
     {

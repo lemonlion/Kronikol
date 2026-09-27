@@ -183,7 +183,10 @@ public static class InternalFlowRenderer
     {
         // A span name quoting an OpenIconic icon, an emoji or a sprite would make the engine load a bundle
         // the report's renderers cannot, or drop the text (PlantUmlCreator.EscapeLoaderMarkup).
-        return PlantUml.PlantUmlCreator.EscapeLoaderMarkup(text.Replace("|", "\\|").Replace(";", "\\;"));
+        // Its own backslashes first (EscapeOneLineMarkup), then the `\|` and `\;` this label form needs, and a line break as the
+        // `\n` break: a carriage return in a span's name ended the label and the activity diagram was not drawn (§12.6).
+        var escaped = PlantUml.PlantUmlCreator.EscapeOneLineMarkup(text).Replace("|", "\\|").Replace(";", "\\;");
+        return PlantUml.PlantUmlCreator.ReplaceXmlInvalidCharacters(escaped.Replace("\r\n", "\n").Replace('\r', '\n').Replace("\n", "\\n"));
     }
 
     /// <summary>
@@ -446,7 +449,8 @@ public static class InternalFlowRenderer
 
     private static string EscapeGantt(string text)
     {
-        return PlantUml.PlantUmlCreator.EscapeLoaderMarkup(text.Replace("[", "(").Replace("]", ")"));
+        var escaped = PlantUml.PlantUmlCreator.EscapeOneLineMarkup(text.Replace("[", "(").Replace("]", ")"));
+        return PlantUml.PlantUmlCreator.ReplaceXmlInvalidCharacters(escaped.Replace("\r\n", " ").Replace('\r', ' ').Replace('\n', ' '));
     }
 
     /// <summary>

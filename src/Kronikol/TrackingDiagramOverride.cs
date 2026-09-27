@@ -78,7 +78,7 @@ public static class DefaultTrackingDiagramOverride
         // One statement: a line break in a test's display name (a data row's value) ended it, and the rest of the name was
         // read as PlantUML source (DIAGRAM_COLOURS_PLAN §12.5).
         var name = (testIdentifier ?? "").ReplaceLineEndings(" ");
-        StartOverride(testRuntimeId, $"hnote across #black:<color:white>Test {PlantUml.PlantUmlCreator.EscapeLoaderMarkup(name)}");
+        StartOverride(testRuntimeId, $"hnote across #black:<color:white>Test {PlantUml.PlantUmlCreator.EscapeOneLineMarkup(name)}");
         EndOverride(testRuntimeId);
     }
 

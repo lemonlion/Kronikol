@@ -116,6 +116,22 @@ public class CapturedTextEscapeTests : IDisposable
     }
 
     [Fact]
+    public void A_capture_holding_characters_xml_cannot_draws_a_diagram_that_is_xml()
+    {
+        // This engine wrote a captured escape character as &#27;, which XML 1.0 cannot hold, so an image of the diagram never
+        // loaded and its SVG file opened nowhere; a decimal reference past U+10FFFF in a step's name threw inside the engine
+        // and the diagram was lost (DIAGRAM_COLOURS_PLAN §12.6). A control is drawn as its Control Pictures glyph.
+        var bar = StepBarPlantUml.Build("Given \u001B[32mgreen and &#9999999; and <U+0000>");
+        var body = "\u001B[31mred\u001B[0m the build failed at step three of the pipeline, see the log for the details\n"
+            + "then a\u0000b and a\u000Bc, which a terminal wrote into the captured output of the job";
+        string[] svgs = [RenderedDiagram.Svg(BarDiagram(bar)), RenderedDiagram.Svg(DiagramFor(body))];
+
+        Assert.All(svgs, svg => Assert.NotNull(System.Xml.Linq.XDocument.Parse(svg).Root));
+        Assert.Contains(PaintedLines(svgs[0]), l => l.Contains("\u241B[32mgreen and &#9999999; and \u2400", StringComparison.Ordinal));
+        Assert.Contains(PaintedLines(svgs[1]), l => l.StartsWith("\u241B[31mred\u241B[0m the build failed", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void The_render_error_placeholder_draws_its_note()
     {
         // With no participant for `hnote across` to span, the Java engine drew its syntax-error picture instead.

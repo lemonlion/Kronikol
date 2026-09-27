@@ -4,11 +4,13 @@
 // pinned engine (or SVG_IN reads SVGs the Java engine drew), and the painted text is compared with the captured
 // text, whitespace aside. Any difference is text a report does not draw as captured.
 // Usage: node fuzz-probe.js <Kronikol.dll> [kinds=body,label,labellink,doc,cell] [filter]
-//   SOURCES_OUT=<dir> writes the sources and stops; SVG_IN=<dir> reads <id>.svg / <id>.err instead of rendering.
+//   SOURCES_OUT=<dir> writes the sources and stops; SVG_IN=<dir> reads <id>.svg / <id>.err instead of rendering;
+//   SVG_OUT=<dir> keeps what the Node renderer drew; ENGINE=<a directory under %LOCALAPPDATA%/Kronikol/plantuml-js>
+//   picks the engine (default the fork build the second audit ran on; 1.2026.8 is the npm release 3.31.1 pins).
 const fs = require('fs'), path = require('path'), cp = require('child_process'), os = require('os');
 const HERE = __dirname;
 const REPO = process.env.REPO || path.resolve(__dirname, '..', '..');
-const C = path.join(process.env.LOCALAPPDATA, 'Kronikol', 'plantuml-js', 'v1.2026.8beta1-0e4f452');
+const C = path.join(process.env.LOCALAPPDATA, 'Kronikol', 'plantuml-js', process.env.ENGINE || 'v1.2026.8beta1-0e4f452');
 const RENDERER = process.env.RENDERER || path.join(REPO, 'src', 'Kronikol', 'PlantUml', 'plantuml-render.js');
 const dll = process.argv[2];
 const kinds = (process.argv[3] || 'body,label,labellink,doc,cell').split(',');
@@ -100,11 +102,17 @@ function sourceFor(kind, escaped) {
         case 'body': return [...PREFIX, 'Caller -[#438DD5]> OrdersAPI: GET: /x', 'note left', escaped, 'end note', 'OrdersAPI --> Caller: 200', '@enduml'];
         case 'label': return [...PREFIX, 'Caller -[#438DD5]> OrdersAPI: ' + escaped, 'OrdersAPI --> Caller: 200', '@enduml'];
         case 'labellink': return [...PREFIX, 'Caller -[#438DD5]> OrdersAPI: [[#iflow-abc123 ' + escaped + ']]', 'OrdersAPI --> Caller: 200', '@enduml'];
-        case 'doc': case 'cell': {
+        case 'doc': case 'cell': case 'step': {
             const p = [...PREFIX];
             p.splice(2, 0, ...STEP_STYLE);
             return [...p, escaped, 'Caller -[#438DD5]> OrdersAPI: GET: /x', 'OrdersAPI --> Caller: 200', '@enduml'];
         }
+        case 'test': return [...PREFIX, escaped, 'Caller -[#438DD5]> OrdersAPI: GET: /x', 'OrdersAPI --> Caller: 200', '@enduml'];
+        case 'action': return [...PREFIX, 'Caller -[#438DD5]> OrdersAPI: ' + escaped, '@enduml'];
+        case 'assert': return [...PREFIX, 'Caller -[#438DD5]> OrdersAPI: GET: /x', 'OrdersAPI --> Caller: 200',
+            'hnote across <<assertionNote>> #D4EDDA', escaped, 'end note', '@enduml'];
+        case 'span': return ['@startuml', 'skinparam ActivityBackgroundColor #f0f4ff', 'skinparam wrapWidth 800', '|Orders|',
+            ':' + escaped + ' (5ms);', '@enduml'];
     }
 }
 
@@ -128,7 +136,7 @@ function painted(kind, svg) {
     const rows = rowsOf(svg);
     const flat = rows.map(r => r.join(' '));
     if (/^PlantUML (version|\d)/.test(flat.find(l => l.trim()) || '') || flat.some(l => /Syntax Error|Error line \d/.test(l))) return { broken: flat.slice(-2).join(' | ') };
-    if (kind === 'body' || kind === 'doc') {
+    if (kind === 'body' || kind === 'doc' || kind === 'assert') {
         const b = flat.findIndex(l => l.trim() === 'BEFORE'), a = flat.findIndex((l, i) => i > b && l.trim() === 'AFTER');
         if (b < 0 || a < 0) return { cut: flat.join(' / ').slice(0, 200) };
         return { text: flat.slice(b + 1, a).join('\n') };
@@ -145,7 +153,7 @@ function painted(kind, svg) {
     return { cut: flat.join(' / ').slice(0, 200) };
 }
 function expected(kind, raw) {
-    if (kind === 'cell') return raw.replace(/\r\n|\r|\n/g, ' ').trim();
+    if (kind === 'cell' || kind === 'test') return raw.replace(/\r\n|\r|\n/g, ' ').trim();
     return raw.replace(/\r/g, '');
 }
 
@@ -179,6 +187,10 @@ if (process.env.SVG_IN) {
     const r = cp.spawnSync('node', [RENDERER, path.join(C, 'viz-global.js'), path.join(C, 'plantuml.js'), '--batch'], { input, maxBuffer: 1 << 30, timeout: 3600000 });
     if (r.status !== 0) console.log('renderer exit ' + r.status + ': ' + (r.stderr || '').toString().slice(0, 400));
     results = new Map((r.stdout || '').toString().split('\n').filter(Boolean).map(l => JSON.parse(l)).map(o => [o.id, o]));
+    if (process.env.SVG_OUT) {
+        fs.mkdirSync(process.env.SVG_OUT, { recursive: true });
+        for (const [id, o] of results) if (o.svg) fs.writeFileSync(path.join(process.env.SVG_OUT, id + '.svg'), o.svg);
+    }
 }
 let ok = 0;
 const bad = [];

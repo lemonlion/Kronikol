@@ -4,6 +4,77 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.8] - 2026-09-27
+
+**Patch - a third audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3), and the views a report drawn by the Node
+renderer, the Java engine or a PlantUML server left blank.** Every change is a fix, so the patch part moved. Nothing
+new is public. Report output changes (diagram sources, the page scripts, the component panel): the Kronikol4J
+divergence ledger records it. Template pins move to 3.31.7.
+
+### Fixed
+
+- **Under `PlantUmlRendering.NodeJs`, an internal-flow link opened nothing.** The Node renderer's engine draws a link
+  as blue text, not as a link element, and only a `BrowserJs` page carried the script that binds link text to its
+  popup. The page now binds a diagram's links when the diagram comes into view: a link opens its popup, and a link
+  with nothing to show rests in the text's colour, as under `BrowserJs`.
+- **Under every renderer but `BrowserJs`, the Activity tab and the internal-flow popups stayed blank.** Kronikol
+  writes those diagrams for the page to draw, and the page had no engine to draw them with. Such a page now carries
+  the engine on demand: it fetches nothing when the page opens, and fetches the engine the first time a reader opens
+  one of those views. Behaviour change: a NodeJs, Server or Local report with internal-flow tracking on fetches the
+  engine from the CDN when a reader opens the Activity tab or a popup; offline, the view says the engine could not
+  be loaded, where it was blank.
+- **The run report's embedded component diagram stayed blank under every renderer but `BrowserJs`.** It was left
+  for the page to draw, and under NodeJs was written with the C4 library, which the Node renderer cannot load. It is
+  now drawn when the report is written, the way `ComponentDiagram.html` draws it: the Node renderer's picture of the
+  plain syntax under NodeJs, the delegate's under Local, the server's under Server. If the drawing fails, the panel
+  says why and the run records a `RenderFailure` diagnostic.
+- **A control character in captured text broke the diagram's picture.** A terminal's escape character, a NUL, a
+  vertical tab or a form feed (any C0 control but a tab, a line feed or a carriage return), U+FFFE and U+FFFF cannot
+  appear in XML, and both engines copied them into the SVG. As an image (NodeJs, Local and Server with internal-flow
+  tracking off) the diagram did not load, and the context menu's Copy and Save as PNG did nothing. Such a character
+  is now drawn as its Control Pictures symbol (the escape character as ␛), and U+FFFE and U+FFFF as U+FFFD; the same
+  goes for a code point or a numeric reference naming one. The context menu's copies and the Node renderer write the
+  same symbols for a diagram from an earlier report. Behaviour change: such a character was drawn as nothing or as a
+  box, and is drawn as its symbol.
+- **A numeric reference past U+10FFFF lost the diagram.** `&#9999999;` in a step name, a test name, a UI action's
+  label or an assertion message made both engines fail. It is drawn as written.
+- **A backslash in a step name, a test name, a UI action's label or a span name was read by the engine.** In those
+  one-line statements `\n`, `\r` and `\l` broke the line, `\t` was a tab and `\\` one backslash, so a step naming
+  `C:\temp\new` drew `C:`, a tab, `emp` and then `ew` on a line of its own. Each backslash is drawn as written.
+  Behaviour change: a literal `\n` in a step name no longer breaks the line.
+- **`\t` in an assertion message was drawn as a tab, and a backslash took an escaping `~` with it**, as in a payload
+  note before 3.31.2. Both are drawn as written.
+- **A line break in a span name broke the Activity tab's and the popup's diagram.** It is drawn as a line break.
+- **The browser split a tall diagram wrongly when a note quoted an arrow.** A line holding `->` or `-->` inside a
+  payload note (`a -> b`, an HTML comment) was counted as a message, so every later fragment was numbered too high,
+  and one inside an assertion message could end a fragment in the middle of the note. A note's lines are no longer
+  read as diagram lines.
+- **A split diagram holding `alt … else … end` drew a syntax error in every fragment (since 3.0.48).** `else` was
+  counted as a block of its own, so each fragment closed it with an extra `end`.
+- **Hiding assertions broke a diagram whose assertion message said "end note".** The assertion was cut at the words
+  and the rest of it was left in the diagram. An assertion note now ends at its own last line.
+
+### Documentation
+
+- `Internal-Flow-Tracking`, `PlantUML-Browser-Rendering` and `Inline-SVG-Rendering` say what a NodeJs, Server or
+  Local report draws in the browser and when it fetches the engine, and how its component diagram is drawn.
+  `Content-Formatting` and `Step-Tracking` list this release's escapes.
+
+### Tests
+
+- `OnDemandRenderingReportTests` (unit, new): the component panel per renderer, a failed drawing, the C4 rule and which
+  pages carry the engine and how. `OnDemandRenderingTests` (Playwright, new): a NodeJs link opens its popup and one
+  with nothing to show rests; the page fetches no engine until the Activity tab is opened; a popup draws its diagram
+  under NodeJs and Local; a NodeJs run report shows its component diagram without the engine.
+- `CapturedTextEscapeTests` (unit): every character XML cannot hold, as a character, a code point or a reference, in
+  every place a diagram is built from; the Node renderer writes XML whatever the capture holds; the one-line
+  statements write and draw a backslash as written; an assertion note keeps `\t` and `\~`. `InternalFlowRendererTests`:
+  a span name's line breaks and backslashes. IKVM: a capture holding such characters draws a diagram that is XML.
+- `CapturedTextSplitTests` and `CapturedTextPageTests` (Playwright, new): numbering, notes and `else` across fragments;
+  Save as PNG on a diagram holding an escape character; hiding an assertion that says "end note".
+- One pin moves with the behaviour: `StepBarPlantUmlTests` (a literal `\n` in a step name is text). Every new fact
+  failed on the code before its fix, apart from the controls.
+
 ## [3.31.7] - 2026-09-27
 
 **Patch - 3.31.6 reaches NuGet.** The patch part moved because nothing is new: one call is replaced by one

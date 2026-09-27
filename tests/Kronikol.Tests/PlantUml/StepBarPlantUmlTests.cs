@@ -119,10 +119,10 @@ public class StepBarPlantUmlTests
         var real = StepBarPlantUml.Build("Given a payload\nwith a second line");
         Assert.Equal(RichPrefix + "Given a payload\\nwith a second line", real);
 
-        // A literal backslash-n already in the text displays as a line break too, so it needs the
-        // styled form just the same.
+        // A literal backslash-n is text: until §12.6 of DIAGRAM_COLOURS_PLAN it drew a line break (so it took the styled
+        // form); its backslash is now written as a code point and it draws as written, on the bar's one line.
         var literal = StepBarPlantUml.Build(@"Given a payload\nwith an escape");
-        Assert.StartsWith(RichPrefix, literal);
+        Assert.Equal(StepBarPlantUml.LegacyPrefix + "Given a payload<U+005C><U+200B>nwith an escape", literal);
     }
 
     [Fact]

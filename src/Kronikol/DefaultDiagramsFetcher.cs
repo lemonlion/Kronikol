@@ -85,7 +85,7 @@ public static class DefaultDiagramsFetcher
     /// anything, including an OpenIconic icon or an emoji, which the placeholder's own renderer could not load.
     /// </summary>
     private static string EscapeNoteText(string text) =>
-        PlantUml.PlantUmlCreator.EscapeLoaderMarkup(text.Replace("\r", string.Empty).Replace("\n", " ").Trim());
+        PlantUml.PlantUmlCreator.ReplaceXmlInvalidCharacters(PlantUml.PlantUmlCreator.EscapeLoaderMarkup(text.Replace("\r", string.Empty).Replace("\n", " ").Trim()));
 
     /// <summary>
     /// The exception worth reporting. Diagram production fans out internally, so what surfaces is an
@@ -438,7 +438,7 @@ public static class DefaultDiagramsFetcher
             .ToArray();
     }
 
-    private static string StripXmlDeclaration(string svg)
+    internal static string StripXmlDeclaration(string svg)
     {
         if (svg.StartsWith("<?xml", StringComparison.Ordinal))
         {

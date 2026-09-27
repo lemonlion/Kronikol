@@ -399,8 +399,10 @@ public static class ReportGenerator
             componentOptions.DependencyColors ??= options.DependencyColors;
             var componentLogs = runLogs.Where(x => !(x?.TrackingIgnore ?? true));
             var componentRelationships = ComponentDiagramGenerator.ExtractRelationships(componentLogs, componentOptions.ParticipantFilter);
-            var useBrowserJs = options.PlantUmlRendering == PlantUmlRendering.BrowserJs;
-            componentDiagramPlantUml = ComponentDiagramGenerator.GeneratePlantUml(componentRelationships, componentOptions, useC4: !useBrowserJs);
+            // The syntax ComponentDiagram.html is written in: until 3.31.8 the run report gave NodeJs the C4 library, which
+            // the Node renderer cannot load.
+            componentDiagramPlantUml = ComponentDiagramGenerator.GeneratePlantUml(componentRelationships, componentOptions,
+                useC4: ComponentDiagramReportGenerator.UsesC4(options.PlantUmlRendering));
         }
 
         // Copy attachment files into the Reports directory so that HTML links resolve
@@ -408,6 +410,12 @@ public static class ReportGenerator
         var reportsDir = CurrentReportsDirectory;
         Directory.CreateDirectory(reportsDir);
         CopyAttachmentsToReportsFolder(features, reportsDir);
+
+        // The run report's component diagram, drawn now by the report's renderer where the page will not draw it
+        // (NodeJs, Server, Local), and before the diagnostics are taken below, so a failure to draw it is in the report.
+        var componentDiagramDrawn = options.GenerateTestRunReport && ShouldEmbedComponentDiagram(options) && componentDiagramPlantUml is not null
+            ? ComponentDiagramReportGenerator.DrawEmbedded(componentDiagramPlantUml, options)
+            : null;
 
         // Everything recorded so far — the host's entries (IngestRequest.HostDiagnostics), malformed lines,
         // diagram render failures, attachment failures — goes into the report itself. One snapshot, taken
@@ -437,7 +445,7 @@ public static class ReportGenerator
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection));
         }
 
         if (options.GenerateSpecificationsData)
@@ -1004,7 +1012,103 @@ public static class ReportGenerator
         string? suite = null,
         HistoryVerdicts? history = null,
         bool showHistorySection = false,
-        bool showReportDiagnostics = false)
+        bool showReportDiagnostics = false) =>
+        GenerateHtmlReportCore(
+            diagrams: diagrams,
+            features: features,
+            startRunTime: startRunTime,
+            endRunTime: endRunTime,
+            stylesheet: stylesheet,
+            fileName: fileName,
+            title: title,
+            includeTestRunData: includeTestRunData,
+            generateBlankOnFailedTests: generateBlankOnFailedTests,
+            lazyLoadImages: lazyLoadImages,
+            diagramFormat: diagramFormat,
+            plantUmlRendering: plantUmlRendering,
+            inlineSvgRendering: inlineSvgRendering,
+            internalFlowTracking: internalFlowTracking,
+            internalFlowDataScript: internalFlowDataScript,
+            wholeTestSegments: wholeTestSegments,
+            trackedLogs: trackedLogs,
+            wholeTestVisualization: wholeTestVisualization,
+            ciMetadata: ciMetadata,
+            showStepNumbers: showStepNumbers,
+            customCss: customCss,
+            customFaviconBase64: customFaviconBase64,
+            customLogoHtml: customLogoHtml,
+            groupParameterizedTests: groupParameterizedTests,
+            maxParameterColumns: maxParameterColumns,
+            titleizeParameterNames: titleizeParameterNames,
+            componentDiagramPlantUml: componentDiagramPlantUml,
+            precomputedWholeTestContent: precomputedWholeTestContent,
+            showNoInteractionsMarker: showNoInteractionsMarker,
+            diagnostics: diagnostics,
+            background: background,
+            browserRenderWorkers: browserRenderWorkers,
+            browserRenderCacheMegabytes: browserRenderCacheMegabytes,
+            browserFragmentMaxHeight: browserFragmentMaxHeight,
+            separateBackgroundSteps: separateBackgroundSteps,
+            collapseRepeatedStepKeywords: collapseRepeatedStepKeywords,
+            notePayloadFormat: notePayloadFormat,
+            fullSearchIndex: fullSearchIndex,
+            searchIndexCache: searchIndexCache,
+            toggleDefaults: toggleDefaults,
+            suite: suite,
+            history: history,
+            showHistorySection: showHistorySection,
+            showReportDiagnostics: showReportDiagnostics);
+
+    /// <summary>
+    /// <see cref="GenerateHtmlReport"/> with the run report's component diagram as the report's renderer drew it
+    /// (<see cref="ComponentDiagramReportGenerator.DrawEmbedded"/>), which the page shows in its panel in place of drawing
+    /// <paramref name="componentDiagramPlantUml"/> itself.
+    /// </summary>
+    internal static string GenerateHtmlReportCore(DefaultDiagramsFetcher.DiagramAsCode[] diagrams,
+        Feature[] features,
+        DateTime startRunTime,
+        DateTime endRunTime,
+        string? stylesheet,
+        string fileName,
+        string title,
+        bool includeTestRunData,
+        bool generateBlankOnFailedTests = false,
+        bool lazyLoadImages = true,
+        DiagramFormat diagramFormat = DiagramFormat.PlantUml,
+        PlantUmlRendering plantUmlRendering = PlantUmlRendering.BrowserJs,
+        bool inlineSvgRendering = false,
+        bool internalFlowTracking = false,
+        string internalFlowDataScript = "",
+        Dictionary<string, InternalFlowSegment>? wholeTestSegments = null,
+        RequestResponseLog[]? trackedLogs = null,
+        WholeTestFlowVisualization wholeTestVisualization = WholeTestFlowVisualization.None,
+        CiMetadata? ciMetadata = null,
+        bool showStepNumbers = false,
+        string? customCss = null,
+        string? customFaviconBase64 = null,
+        string? customLogoHtml = null,
+        bool groupParameterizedTests = true,
+        int maxParameterColumns = 10,
+        bool titleizeParameterNames = true,
+        string? componentDiagramPlantUml = null,
+        Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
+        bool showNoInteractionsMarker = false,
+        IReadOnlyList<DiagnosticEntry>? diagnostics = null,
+        BackgroundCalls? background = null,
+        int browserRenderWorkers = Constants.TrackingDefaults.BrowserRenderWorkers,
+        int browserRenderCacheMegabytes = Constants.TrackingDefaults.BrowserRenderCacheMegabytes,
+        int browserFragmentMaxHeight = Constants.TrackingDefaults.BrowserFragmentMaxHeight,
+        bool separateBackgroundSteps = false,
+        bool collapseRepeatedStepKeywords = true,
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json,
+        bool fullSearchIndex = true,
+        SearchIndex.SearchIndexBuildCache? searchIndexCache = null,
+        ResolvedToggleDefaults? toggleDefaults = null,
+        string? suite = null,
+        HistoryVerdicts? history = null,
+        bool showHistorySection = false,
+        bool showReportDiagnostics = false,
+        ComponentDiagramReportGenerator.DrawnDiagram? componentDiagramDrawn = null)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -1218,12 +1322,21 @@ public static class ReportGenerator
         var scenarioToolbarControlsNoFilters = BuildScenarioDiagramToolbar(toggles,
             includeAssertions: false, includeSteps: false, includeDatabases: false, scenarioNoteFormatSelect,
             scenarioNoteFontSelect, scenarioNoteWidthSelect);
-        var plantUmlBrowserScript = isPlantUmlBrowser ? DiagramContextMenu.GetPlantUmlBrowserRenderScript(browserRenderWorkers, browserRenderCacheMegabytes, browserFragmentMaxHeight) : "";
+        // A report drawn when it was written (NodeJs, Server, Local) still has views only the page draws: the Activity
+        // tab and the internal-flow popups, whose diagrams are one per scenario and one per call. It carries the engine
+        // on demand for them, fetched the first time one is shown; until 3.31.8 it carried none and they stayed blank,
+        // and a NodeJs diagram's links, drawn as text, opened nothing (DIAGRAM_COLOURS_PLAN §12.6).
+        // A component diagram nobody drew for it (a caller that passed only its source) is the page's to draw as well.
+        var drawsOnDemand = !isPlantUmlBrowser
+            && (internalFlowTracking || (!string.IsNullOrEmpty(componentDiagramPlantUml) && componentDiagramDrawn is null));
+        var plantUmlBrowserScript = isPlantUmlBrowser || drawsOnDemand
+            ? DiagramContextMenu.GetPlantUmlBrowserRenderScript(browserRenderWorkers, browserRenderCacheMegabytes, browserFragmentMaxHeight, onDemand: drawsOnDemand)
+            : "";
         var collapsibleNotesScript = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesScript(toggles) : "";
         var collapsibleNotesStyles = isPlantUmlBrowser ? DiagramContextMenu.GetCollapsibleNotesStyles() : "";
         var contextMenuScript = hasInteractiveDiagrams || internalFlowTracking ? DiagramContextMenu.GetContextMenuScript() : "";
         var contextMenuStyles = hasInteractiveDiagrams || internalFlowTracking ? DiagramContextMenu.GetStyles() : "";
-        var inlineSvgStyles = (isInlineSvg || isPlantUmlBrowser) ? DiagramContextMenu.GetInlineSvgStyles() : "";
+        var inlineSvgStyles = (isInlineSvg || isPlantUmlBrowser || drawsOnDemand) ? DiagramContextMenu.GetInlineSvgStyles() : "";
         var internalFlowPopupStyles = internalFlowTracking ? DiagramContextMenu.GetInternalFlowPopupStyles() : "";
         var internalFlowPopupScript = internalFlowTracking ? DiagramContextMenu.GetInternalFlowPopupScript() : "";
         var flameChartRenderScript = internalFlowTracking ? DiagramContextMenu.GetFlameChartRenderScript() : "";
@@ -1724,7 +1837,15 @@ public static class ReportGenerator
             var compDiagramId = $"puml-{plantUmlBrowserCounter++}";
             var compDiagramCompressed = InternalFlowHtmlGenerator.CompressToBase64(componentDiagramPlantUml);
             diagramDataMap[compDiagramId] = compDiagramCompressed;
-            body.Append($"""<div id="component-diagram" class="component-diagram-section"{(showComponentPanel ? "" : " style=\"display:none\"")}><div class="plantuml-browser" id="{compDiagramId}" data-diagram-type="plantuml"></div></div>""");
+            // Drawn by the page under BrowserJs, and by the report's renderer under the others (DrawEmbedded).
+            var componentDiagramHtml = componentDiagramDrawn switch
+            {
+                { InlineSvg: { } svg } => $"<div class=\"plantuml-inline-svg\" id=\"{compDiagramId}\" data-diagram-type=\"plantuml\">{svg}</div>",
+                { ImageSource: { } src } => $"<img src=\"{System.Net.WebUtility.HtmlEncode(src)}\" alt=\"Component diagram\" style=\"max-width:100%\">",
+                { Failure: { } why } => $"<div class=\"component-diagram-failure\">{System.Net.WebUtility.HtmlEncode(why)}</div>",
+                _ => $"<div class=\"plantuml-browser\" id=\"{compDiagramId}\" data-diagram-type=\"plantuml\"></div>"
+            };
+            body.Append($"""<div id="component-diagram" class="component-diagram-section"{(showComponentPanel ? "" : " style=\"display:none\"")}>{componentDiagramHtml}</div>""");
         }
 
         body.Append("<div id=\"report-content\">");

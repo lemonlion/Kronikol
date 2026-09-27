@@ -37,6 +37,8 @@ document.addEventListener('click', function(e) {
     if (target) {
         target.style.display = '';
         if (window._renderFlameCharts) window._renderFlameCharts(target);
+        // The view's diagrams are drawn now it is shown, rather than whenever the page's observer notices it.
+        if (window._renderDiagramsInContainer) window._renderDiagramsInContainer(target);
     }
 });
 </script>
