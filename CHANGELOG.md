@@ -4,6 +4,105 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.5] - 2026-09-27
+
+**Patch - an audit of `kronikol query flow`'s nesting (`plans/FLOW_NESTING_PLAN.md` S1 and S2, releases 3.30.3
+and 3.31.0).** One fix, so the patch part moved. Nothing new is public, no report byte changes, and no view of a
+real report prints differently. Template pins move to 3.31.4.
+
+### Fixed
+
+- **A call printed below an annotation read as the annotation's, and did not name the call it ran inside.** An
+  annotation line is printed two spaces in, as a top-level call is. When one was recorded while a call was open,
+  such as a note a test adds while its request is in flight, the calls that ran inside that call were printed
+  below the note, and the nearest line above them with less indentation was the note, not their parent. `flow`
+  named a line's parent across a step header only. It names it across an annotation too (`inside s3/i8`), as the
+  indentation cannot show it there. **Behaviour change** on such views only. None of the annotations in
+  BreakfastProvider's five lanes stands between a call and one that ran inside it, so every view of those lanes
+  prints what 3.31.4 printed (2,986 views compared).
+
+### Tests
+
+- `FlowTests`: a note recorded while the test's call is open, its view pinned whole. Red on 3.31.3 on the missing
+  `inside`.
+- `FlowTreeTests` (new): 120 scenarios made from one seed, with calls nested several levels deep, a party's calls
+  answered in any order, deliveries on an open call's trace, requests never answered or answered before they
+  were recorded, requests with no pairing id, user actions, steps that begin while calls are open, and notes
+  anywhere. Each view, unfiltered and under `--service`, `--step` and `--errors-only`, is read as a tree: two
+  spaces per shown call a line ran inside, and an `inside` exactly where the line its indentation points at is not
+  the call it ran inside. On 3.31.3 it finds 22 misread lines, every one below a note. A second fact holds the
+  generator to every shape the reading must survive, so it cannot pass by making none of them.
+- The plan's mutation harness gains the fix's breakage; all thirteen breakages of the rule and the verb fail the
+  facts written for them, and `FlowTreeTests` also fails two S2 breakages it was not written for.
+
+### Documentation
+
+- The wiki's `Querying-Reports` names the annotation case, and says its real-report example is an excerpt, since
+  it left two lines out without saying so. Both copies of the skill's flag reference name the case too.
+- `QueryWriter.Count`'s comment counted thirteen verbs that take `--count`. Fourteen have since 3.30.3, and the
+  comment now points at `CountFlagTests`, which holds the list.
+- The plan records the audit (§7.7): 600 generated scenarios checked against every rule of S1 and S2, and a
+  `kronikol merge` of them, which keeps every view's nesting. `ROADMAP.md` Appendix C gains the plan's open
+  questions, which had no row there.
+
+## [3.31.4] - 2026-09-27
+
+**Patch - step bars and assertion notes no longer get an internal-flow segment, a whole-test flow or a flame-chart
+line (#100).** All three are fixes of one regression from 3.15.1, and nothing is new for a consumer to call, so the
+patch part moved. Report output changes (the segment map, the whole-test flows and their flame charts): the Kronikol4J
+divergence ledger records it. Template pins move to 3.31.3.
+
+### Fixed
+
+- **A step bar, an assertion note and the Setup/Action marker each carried an internal-flow segment that no arrow
+  could open.** Since 3.15.1 every captured record carries a time, marker records included, and the segment builder
+  made a segment of every request record with a time: a marker got the test's spans from just before it to the next
+  record. No diagram links a marker, so none of those segments could ever be opened, and each repeated its
+  neighbours' spans. They were more than half of every segment map. A diagram marker and a user action (whose arrow
+  carries no link either) now get no segment. Both still count as points in time, so a call with no response (an
+  event published) still runs to the next record, and no arrow's popup changes. On BreakfastProvider's xUnit lane in
+  memory, the same 203 scenarios on 3.31.3 and on this release: the segments go from 2,786 to 1,296, of which 3 are
+  linked from no diagram (1,499 before). Those 3 are real calls that the consumer's step code attributes to a
+  request id instead of a scenario. `TestRunReport.html` shrinks from 7,630,306 to 4,774,437 bytes (62.6%), and
+  `Specifications.html` from 7,541,487 to 4,714,637. What a visitor downloads from a report published on GitHub
+  Pages, which serves gzip, shrinks from about 1,276,691 to 1,148,695 bytes (90.0%). In headless Chromium,
+  `domContentLoaded` goes from 135 to 104 ms and the JS heap after load from 17 to 12 MB. Every diagram checked
+  binds the same number of arrows (eight diagrams, 44 to 86 each), every popup draws its diagram, and no console
+  error appears. The mergeable data file's `internalFlowSegments` loses the same segments.
+- **A scenario that made no tracked call showed every span of the run as its whole-test flow.** A test's own spans are
+  found through the trace ids of its calls, and a test with none falls back to every span, which is right for calls
+  that carry no trace id. Since 3.15.1 its step and assertion markers carried a time, so a scenario with no call
+  took that fallback and showed the whole run. Only a test's calls take part now, and a scenario that made none has
+  no whole-test flow. In this repository's ReqNRoll example, four Muffins scenarios that make no HTTP call lost a flow
+  of the whole run.
+- **Each step bar and assertion note drew a dashed request line labelled `: /` in the whole-test flame chart.** The
+  lines are meant for the scenario's requests. A marker draws none now; a user action keeps its line. The live
+  report and the mergeable data file build the lines in one place (`InternalFlowSegmentBuilder.BuildWholeTestBoundaries`,
+  internal), where each had its own copy. In the ReqNRoll example, 60 such lines went and the 19 request lines
+  stayed; its report shrinks from 735,671 to 629,704 bytes, and its segments from 92 to 23, every one of them
+  linked (69 were not).
+- `InternalFlowSegmentBuilder.BuildSegments`'s doc comment promised `-res` keys, which no code has produced.
+
+### Changed
+
+- A scenario that made no tracked call has no whole-test flow (above). Nothing else changes for an arrow, a popup or
+  a call's segment.
+
+### Tests
+
+- `InternalFlowSegmentBuilderTests`: a marker of each kind and a user action between two calls get no segment, and
+  the calls keep theirs; a test whose only records are markers or user actions gets no whole-test segment; the
+  boundary lines take every request and user action and no marker. Each is red on 3.31.3's logic. Two facts pin
+  behaviour that must not change, and both are green before and after: a marker still ends the window of a call with
+  no response, and no logs give no lines. A mutation that dropped the markers from the ordering (so a call with no
+  response would run on to the next call) turns the first pin red.
+- `InternalFlowSegmentMapReportTests` (new): real reports written through the report writers. Every segment of a
+  scenario with a step bar and an assertion note is opened by an arrow in its diagram, under `HideLink` and
+  `ShowMessage`; a scenario with no call has no whole-test flow; a marker draws no boundary line. Each is read from
+  the HTML report and from the mergeable data file, and all four are red on 3.31.3.
+- `WholeTestFlowTests` (Playwright): in a real report, a step bar and an assertion note draw no line in the flame
+  chart, and a scenario that made no call shows no whole-test flow. Both are red on 3.31.3.
+
 ## [3.31.3] - 2026-09-27
 
 **Patch - a component diagram draws where WebAssembly is off, and the Node renderer runs there at all.** Both

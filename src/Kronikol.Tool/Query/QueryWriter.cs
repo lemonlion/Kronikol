@@ -204,9 +204,9 @@ internal sealed class QueryWriter
     }
 
     /// <summary>
-    /// The answer to <c>--count</c>. One place, so the thirteen verbs that support it cannot fork: text
-    /// prints the bare number and nothing else, JSON gives an envelope with <c>count</c> and no
-    /// <c>items</c>.
+    /// The answer to <c>--count</c>. One place, so the verbs that support it (<c>CountFlagTests</c> holds the
+    /// list) cannot fork: text prints the bare number and nothing else, JSON gives an envelope with
+    /// <c>count</c> and no <c>items</c>.
     /// </summary>
     public void Count(int value)
     {

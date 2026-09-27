@@ -17,9 +17,11 @@ and prints counts, addresses and `flow` lines; none prints a body or a header.
 | `s1_unfiltered.py` | That S1 leaves an unfiltered `flow` as it was: every scenario, 3.30.2 against 3.30.3, byte for byte | `results-s1-unfiltered.txt` |
 | `s2_acceptance.py` | S2's acceptance (plan §7.5): the built `flow` on every scenario of the five lanes, unfiltered, with `--service CosmosDB` and `--step 1`, against `--mode nested` line for line, and what the real output holds (indented lines, depth, `inside`, `no response`) | `results-s2-acceptance.txt` (S2), `results-s2-acceptance-3.30.4.txt` (the control) |
 | `s2_bytes.py` | `flow_bytes.py`'s numbers taken again from the real tool: every scenario unfiltered, the release before S2 against S2 | `results-s2-bytes.txt` |
-| `s2_mutations.py` | Each clause of the rule and of the verb broken in turn, and the facts that failed (plan §6.7): how a guard fact that passed on the release before proves itself | `results-s2-mutations.txt` |
+| `s2_mutations.py` | Each clause of the rule and of the verb broken in turn, and the facts that failed (plan §6.7): how a guard fact that passed on the release before proves itself. The audit added M12 and `FlowTreeTests` | `results-s2-mutations.txt` (S2), `results-audit-mutations.txt` (the audit) |
 | `s2_ingest.py`, `s2_ingest_causes.py` | R4 on an ingested run (plan §7.5, F17, Q4): a lane projected into ingest input, ingested in both orders, each call's parent compared with the lane's own report, and why a lost one was lost | `results-s2-ingest.txt` |
 | `kronikol4j/NestedCallsTest.java` | R4 on a Java report (plan §7.5, F16): a Kronikol4J test whose service makes a call while the test's call waits | `results-s2-kronikol4j.txt` |
+| `audit_properties.py` | The audit (plan §7.7, F18): 600 generated scenarios through the real `flow`, each view checked against S1's and S2's rules (selection, order, headers, annotations, depth, the tree reading, `no response`, the legend, line ends) and against the prototype | `results-audit-properties.txt` (3.31.5), `results-audit-properties-3.31.0.txt` (the control) |
+| `audit_merge.py` | The audit (plan §7.7): the generated scenarios as two mergeable shards, merged by the real tool, and every `flow` view compared before and after | `results-audit-merge.txt` |
 
 ## The corpus
 
@@ -99,3 +101,17 @@ prints the capture order and writes `kronikol4j-http/build/kronikol-report/TestR
 `dump_records.py`, `nesting_rules.py` and `kronikol query flow` on that report.
 
 The S2 control differs on 1,210 of the 2,986 views, and `s2_acceptance.py` classes every one as a change S2 made.
+
+The audit, 3.31.5 (K = the built tool, OLD = `Kronikol.Tool` 3.31.0 from NuGet, whose `flow` is the same through
+3.31.4; OUT = a folder outside the repository). The prototype took F18 and the tool's proximity pairing, so
+`s2_acceptance.py` was run again with both builds: each equals it on all 2,986 views, with numbers identical to
+`results-s2-acceptance.txt`, which is how 3.31.5 is known to change no real view.
+
+```bash
+PYTHONUTF8=1 python audit_properties.py $K   $OUT/gen     > results-audit-properties.txt
+PYTHONUTF8=1 python audit_properties.py $OLD $OUT/gen-old > results-audit-properties-3.31.0.txt
+PYTHONUTF8=1 python audit_merge.py $K $OUT/gen/TestRunReport.json $OUT/merge > results-audit-merge.txt
+PYTHONUTF8=1 python s2_mutations.py > results-audit-mutations.txt
+PYTHONUTF8=1 python s2_acceptance.py $K   $B.{ReqNRoll,BDDfy,LightBDD,NUnit,TUnit}/bin/Debug/net10.0/Reports/TestRunReport.json
+PYTHONUTF8=1 python s2_acceptance.py $OLD $B.{ReqNRoll,BDDfy,LightBDD,NUnit,TUnit}/bin/Debug/net10.0/Reports/TestRunReport.json
+```

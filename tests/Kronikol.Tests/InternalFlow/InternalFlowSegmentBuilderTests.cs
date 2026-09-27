@@ -93,6 +93,157 @@ public class InternalFlowSegmentBuilderTests : IDisposable
         };
     }
 
+    // A marker as DefaultTrackingDiagramOverride writes it (a step bar, an assertion note, the Setup/Action boundary):
+    // a request record with no response and no trace id, which the logger stamps with a time since 3.15.1.
+    private static RequestResponseLog MakeMarker(
+        string testId,
+        DateTimeOffset timestamp,
+        DiagramMarkerKind kind,
+        bool start = true,
+        bool actionStart = false)
+    {
+        return new RequestResponseLog(testId, testId, "", "", new Uri("http://override.com"), [], "", "",
+            RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        {
+            IsOverrideStart = start && !actionStart,
+            IsOverrideEnd = !start && !actionStart,
+            IsActionStart = actionStart,
+            MarkerKind = kind,
+            PlantUml = start && !actionStart ? "note over Caller: marker" : null,
+            Timestamp = timestamp
+        };
+    }
+
+    private static RequestResponseLog MakeUserAction(string testId, DateTimeOffset timestamp) =>
+        new(testId, testId, "Click \"Place order\"", null, new Uri("http://web/orders"), [], "Web", "User",
+            RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        {
+            IsUserAction = true,
+            Timestamp = timestamp
+        };
+
+    // ── Records that are not calls (#100) ──
+
+    [Fact]
+    public void BuildSegments_gives_no_segment_to_a_diagram_marker_or_a_user_action()
+    {
+        // Since 3.15.1 every record carries a time, marker records included, and the builder made a segment of each
+        // from the test's spans between it and the next record. No arrow links a marker, and a user action's arrow
+        // carries no link either, so each such segment was unreachable: 1,602 of 2,903 on an 8 MB report.
+        var t0 = new DateTimeOffset(2026, 9, 27, 10, 0, 0, TimeSpan.Zero);
+        var traceId1 = "0af7651916cd43dd8448eb211c80319c";
+        var traceId2 = "aaaabbbbccccddddeeee111122223333";
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+
+        var root1 = CreateSpan("first.root", t0.UtcDateTime.AddMilliseconds(1), TimeSpan.FromMilliseconds(98), traceId1);
+        // Work the service went on with after answering. Each marker's window below holds one of these, so each
+        // marker segment has spans, as on the consumer's report, and would survive HideLink.
+        var tailA = CreateSpan("first.tail-a", t0.UtcDateTime.AddMilliseconds(105), TimeSpan.FromMilliseconds(2), traceId1);
+        var tailB = CreateSpan("first.tail-b", t0.UtcDateTime.AddMilliseconds(125), TimeSpan.FromMilliseconds(2), traceId1);
+        var root2 = CreateSpan("second.root", t0.UtcDateTime.AddMilliseconds(201), TimeSpan.FromMilliseconds(98), traceId2);
+
+        var logs = new[]
+        {
+            MakeRequest(timestamp: t0, requestResponseId: first, activityTraceId: traceId1),
+            MakeResponse(timestamp: t0.AddMilliseconds(100), requestResponseId: first, activityTraceId: traceId1),
+            MakeMarker("test-1", t0.AddMilliseconds(110), DiagramMarkerKind.Assertion),
+            MakeMarker("test-1", t0.AddMilliseconds(111), DiagramMarkerKind.Assertion, start: false),
+            MakeMarker("test-1", t0.AddMilliseconds(150), DiagramMarkerKind.Step),
+            MakeMarker("test-1", t0.AddMilliseconds(151), DiagramMarkerKind.Step, start: false),
+            MakeMarker("test-1", t0.AddMilliseconds(160), DiagramMarkerKind.Phase, actionStart: true),
+            MakeUserAction("test-1", t0.AddMilliseconds(170)),
+            MakeRequest(timestamp: t0.AddMilliseconds(200), requestResponseId: second, activityTraceId: traceId2),
+            MakeResponse(timestamp: t0.AddMilliseconds(300), requestResponseId: second, activityTraceId: traceId2),
+        };
+
+        var result = InternalFlowSegmentBuilder.BuildSegments(logs, [root1, tailA, tailB, root2]);
+
+        Assert.Equal(
+            new[] { $"iflow-{first}", $"iflow-{second}" }.OrderBy(k => k, StringComparer.Ordinal),
+            result.Keys.OrderBy(k => k, StringComparer.Ordinal));
+        // The calls' own segments are what they were.
+        Assert.Equal(["first.root"], result[$"iflow-{first}"].Spans.Select(s => s.OperationName));
+        Assert.Equal(["second.root"], result[$"iflow-{second}"].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void BuildSegments_a_marker_still_ends_the_window_of_a_call_with_no_response()
+    {
+        // A marker gets no segment of its own, but it stays a point in time: a call with no response (an event
+        // published) still runs to the next record, a marker included, so no arrow's popup changes with the fix.
+        var t0 = new DateTimeOffset(2026, 9, 27, 10, 0, 0, TimeSpan.Zero);
+        var published = Guid.NewGuid();
+        var during = CreateSpan("during", t0.UtcDateTime.AddMilliseconds(10), TimeSpan.FromMilliseconds(5));
+        var after = CreateSpan("after", t0.UtcDateTime.AddMilliseconds(60), TimeSpan.FromMilliseconds(5));
+
+        var logs = new[]
+        {
+            MakeRequest(timestamp: t0, requestResponseId: published),
+            MakeMarker("test-1", t0.AddMilliseconds(50), DiagramMarkerKind.Step),
+        };
+
+        var result = InternalFlowSegmentBuilder.BuildSegments(logs, [during, after]);
+
+        Assert.Equal(["during"], result[$"iflow-{published}"].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void BuildWholeTestSegments_a_test_whose_only_records_are_markers_or_user_actions_gets_none()
+    {
+        // A test with no trace id of its own falls back to every span, which is right for calls that carry no trace
+        // id and wrong for a test that made no call at all: since 3.15.1 its step and assertion markers carry a time,
+        // and its whole-test flow showed every span of the run.
+        var t0 = new DateTimeOffset(2026, 9, 27, 10, 0, 0, TimeSpan.Zero);
+        var traceId = "0af7651916cd43dd8448eb211c80319c";
+        var span = CreateSpan("calls.root", t0.UtcDateTime.AddMilliseconds(1), TimeSpan.FromMilliseconds(50), traceId);
+
+        var logs = new[]
+        {
+            MakeRequest("calls", t0, activityTraceId: traceId),
+            MakeMarker("markers-only", t0.AddMilliseconds(5), DiagramMarkerKind.Step),
+            MakeMarker("markers-only", t0.AddMilliseconds(6), DiagramMarkerKind.Step, start: false),
+            MakeMarker("markers-only", t0.AddMilliseconds(7), DiagramMarkerKind.Assertion),
+            MakeMarker("markers-only", t0.AddMilliseconds(8), DiagramMarkerKind.Phase, actionStart: true),
+            MakeUserAction("clicks-only", t0.AddMilliseconds(9)),
+        };
+
+        var result = InternalFlowSegmentBuilder.BuildWholeTestSegments(logs, [span]);
+
+        Assert.Equal(["iflow-test-calls"], result.Keys);
+    }
+
+    [Fact]
+    public void BuildWholeTestBoundaries_draws_a_line_for_each_call_and_none_for_a_marker()
+    {
+        // The whole-test flame chart draws a dashed line at each request's time. Since 3.15.1 a marker is a request
+        // with a time, so every step bar and assertion note drew a line labelled ": /" (no method, override.com's path).
+        var t0 = new DateTimeOffset(2026, 9, 27, 10, 0, 0, TimeSpan.Zero);
+        var logs = new[]
+        {
+            MakeMarker("test-1", t0, DiagramMarkerKind.Step),
+            MakeMarker("test-1", t0.AddMilliseconds(1), DiagramMarkerKind.Step, start: false),
+            MakeRequest(timestamp: t0.AddMilliseconds(10)),
+            MakeResponse(timestamp: t0.AddMilliseconds(20)),
+            MakeMarker("test-1", t0.AddMilliseconds(30), DiagramMarkerKind.Assertion),
+            MakeMarker("test-1", t0.AddMilliseconds(31), DiagramMarkerKind.Assertion, start: false),
+            MakeMarker("test-1", t0.AddMilliseconds(32), DiagramMarkerKind.Phase, actionStart: true),
+            MakeUserAction("test-1", t0.AddMilliseconds(40)),
+            MakeRequest("another-test", t0.AddMilliseconds(50)),
+        };
+
+        var boundaries = InternalFlowSegmentBuilder.BuildWholeTestBoundaries(logs, "test-1");
+
+        // A user action is a real moment of the test and keeps its line; only the markers go.
+        Assert.Equal(
+            new[] { ("GET: /api/orders", t0.AddMilliseconds(10)), ("Click \"Place order\": /orders", t0.AddMilliseconds(40)) },
+            boundaries);
+    }
+
+    [Fact]
+    public void BuildWholeTestBoundaries_of_no_logs_is_empty() =>
+        Assert.Empty(InternalFlowSegmentBuilder.BuildWholeTestBoundaries(null, "test-1"));
+
     // ── Empty inputs ──
 
     [Fact]

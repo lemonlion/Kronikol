@@ -3,7 +3,8 @@
 **Date:** 2026-09-26 · **Repo version:** 3.29.6 in the shared checkout (`6c689b5e`); origin/main is 3.30.1
 (`512bc85a`) and has changed no tool source since, so every cited source line holds at both ·
 **Status: green-lit 2026-09-26. Executed: S1 as 3.30.3 (§7.1), with F13 and F14 found on the way, and S2 as
-3.31.0 (§7.2), with F15 to F17 found on the way.** The owner took D22 as recommended: S2 goes ahead,
+3.31.0 (§7.2), with F15 to F17 found on the way. Audited 2026-09-27 (§7.7), which found F18, fixed as
+3.31.5.** The owner took D22 as recommended: S2 goes ahead,
 with rule R4 and Q1's `no response`. Roadmap items **1.13** (S1, a patch) and **10.0** (S2, a minor). §9 is the assumption ledger. The scripts behind every number
 are in [`FLOW_NESTING_PLAN.harness/`](FLOW_NESTING_PLAN.harness/README.md), with their output.
 
@@ -296,6 +297,18 @@ deliveries on their parent's trace, which call-tree order puts after their paren
 rule has no trace clause: Q4's inference, confirmed. Neither is S2's: `flow` nests what the record order
 says. Both are ingest behaviours that change what an ingested report draws (Q4, Q7).
 
+Found by the audit of 2026-09-27 (§7.7), fixed in 3.31.5:
+
+**F18. The indentation was read across an annotation** (RUN, `results-audit-properties*.txt`). An annotation
+line is printed two spaces in, as a top-level call is. When one stood between a call and a call that ran
+inside it, the inner call's nearest line above with less indentation was the annotation, so read as a tree
+(F15) it belonged to the note. §4.3 asks for the parent to be that nearest line within the step section, and
+3.31.0 began a section only at a step header, so the line named nothing. An annotation lands there when it
+is recorded while a call is open, such as a note a test adds while its request is in flight. A line now
+names its parent across an annotation as it does across a header. None of the corpus's 9 annotations stands
+between a call and one that ran inside it, so no real view changes (§7.7); on 600 generated scenarios, 3.31.0
+misread 165 lines, every one of them below an annotation.
+
 ---
 
 ## 4. The design
@@ -335,10 +348,11 @@ legend and the docs use these words, and never "caused by".
 - **Two spaces per level, before the address,** so the whole line moves, the way a call stack or `tree`
   prints and the way an LLM reads nesting without being told.
 - **A line names its parent, `inside s26/i8`,** unless the parent is the nearest line above it with less
-  indentation, in the same step section, and exactly one level shallower: that line is the one a reader
-  takes for the parent (F15). That one condition covers a parent filtered out, a parent in an earlier step,
-  two branches whose lines interleave in capture order, and a shallower line that is not the parent standing
-  between. It names the immediate parent, an address `http` takes. Unfiltered, the corpus needs none (RUN); under `--service CosmosDB` every line
+  indentation, in the same section, and exactly one level shallower: that line is the one a reader
+  takes for the parent (F15). A step header starts a section, and so does an annotation (F18, 3.31.5), since
+  each is a line with less indentation than an indented call. That one condition covers a parent filtered
+  out, a parent in an earlier step or above an annotation, two branches whose lines interleave in capture
+  order, and a shallower line that is not the parent standing between. It names the immediate parent, an address `http` takes. Unfiltered, the corpus needs none (RUN); under `--service CosmosDB` every line
   gets one, which is how a filtered view says which call a downstream call belonged to.
 - **The line is built from its non-empty fields.** Today an empty status or duration leaves trailing
   spaces (s26/i9 ends in two); the budget pays for them, and the suffix would sit after a gap. It also
@@ -483,6 +497,13 @@ Written beside these in S2: `A_nested_flow_is_pinned_whole`, `Errors_only_shows_
 `A_request_never_answered_holds_no_calls` and the three calls that must not say it: one answered without a
 status, a user action, and a request without a pairing id.
 
+Written in the audit (§7.7): `A_line_whose_parent_stands_above_an_annotation_names_it` (F18, the view pinned
+whole), and `FlowTreeTests`, which reads every line of 480 views of 120 scenarios made from one seed as a
+tree: two spaces per shown call a line ran inside, and an `inside` exactly where the line its indentation
+points at is not the call it ran inside. Its second fact holds the generator to the shapes the reading must
+survive (a call three levels deep, a note between a call and one inside it, an `inside` unfiltered, under
+`--service` and under `--errors-only`, and `no response`), so it cannot pass by making none of them.
+
 ### 6.6 Existing facts that must stay green
 
 `QueryCommandTests`: `Flow_replaces_reading_the_diagram`, `Created_and_NoContent_are_not_errors_anywhere`,
@@ -508,6 +529,14 @@ same-caller exclusion, "never answered", "no id", the plain rule R1, the prototy
 closing only the innermost call, `no response` without an id, for a user action or for a blank status, the
 prototype's one-level-up reading (F15), depth counting a filtered ancestor, and the legend always printed.
 Each of the twelve breakages fails the fact written for it.
+
+**The audit, on 3.31.3 (RUN, 2026-09-27).** The flow source is the same from 3.31.0 to 3.31.4. The three new facts
+were written before the fix, and two failed there on F18 itself: the pinned view on the missing `inside
+s3/i0`, and the tree reading on 22 misread lines, every one below an annotation. The third, `FlowTreeTests`'
+vacuity fact, passes there by design, since it tests the generator. `s2_mutations.py` gains the audit's breakage, M12 (an annotation starts
+no section), and runs `FlowTreeTests` too (`results-audit-mutations.txt`): all thirteen breakages fail the
+facts written for them, and `FlowTreeTests`, written for M12 alone, fails M9 and M10 as well. It cannot see a
+broken rule (M1 to M6), since it takes `CallNesting` as its oracle; `CallNestingTests` holds the rule.
 
 ---
 
@@ -611,6 +640,42 @@ nests fewer calls than its own report and never a different parent (F17).
   track A stage (rule 5). The files are few, so S2 may be pulled forward to any point when no other track A
   stage is in flight (rule 8: small and measured).
 
+### 7.7 The audit (2026-09-27), a patch
+
+The owner asked whether S1 or S2 missed anything, or left a hole. Checked against the code as shipped:
+
+- **Every item of the plan is in the code and the tests.** R4 (§4.1) is `CallNesting.Parents` clause for clause;
+  §4.3 to §4.5 are `Flow`; every fact §6.2 to §6.5 names exists and tests the shape it names; §7.3's docs and
+  §7.4's records were written. A request's ordinal is its position in the scenario's list (`ReportScanner`),
+  which `Parents` relies on, and no record type other than a request or a response reaches a report.
+- **The corpus holds none of the shapes the fixtures lack** (RUN): no annotation between a call and one that ran
+  inside it, no pairing id on two requests, no request without a step after one with a step, no request
+  answered before it was recorded, and no user action.
+- **So the rules were checked on generated scenarios** (RUN, `audit_properties.py`): 600 scenarios, calls up
+  to six levels deep, each unfiltered and under `--service`, `--step` and `--errors-only`, 2,400 views. S1's
+  rules hold on every view of 3.31.0 (the calls selected, capture order, a header directly above a call of its
+  step, each annotation above the first shown call recorded after it), as do depth, `no response`, the legend,
+  the count and line ends. The tree reading failed on 165 lines, every one below an annotation: F18. The
+  prototype differed from the tool only where a request carries no pairing id, which the tool pairs by
+  proximity (`FindResponse`) and the prototype did not; the prototype now does, and takes F18.
+- **`kronikol merge`, a producer S2 did not check** (RUN, `audit_merge.py`): the 600 scenarios split into two
+  shards and merged. Every one of 1,200 views, unfiltered and under `--service db`, nests as before the merge.
+  The 122 views that change do so only on lines of requests with no pairing id, and only by a duration: the
+  merge rebuilds the records through the generator, whose `ComputeInteractionDurations` groups them by pairing
+  id, so every record with the empty id takes the first duration any of them carries. No Kronikol writer
+  records the empty id (`MessageTracker` returns it only when it records nothing, and ingest gives a record
+  without an id one derived from its test, URI and timestamp), so no real shard has one. Recorded, not fixed.
+- **Records and comments.** `QueryWriter.Count` said "the thirteen verbs" that take `--count`; fourteen do since
+  S1, and the comment now points at `CountFlagTests`, which holds the list. `FlowTests`' summary described S1
+  only. The wiki's s26 example left two lines out without saying so. The plan's open questions had no row in
+  `ROADMAP.md` Appendix C, where a plan's leftovers are kept.
+
+**Shipped as 3.31.5**, a patch: F18's fix, the two facts and `FlowTreeTests` (§6.5, §6.7), the comment, the
+records above, the wiki and both skill copies. Measured (RUN): on the corpus, the fixed `flow` equals the
+audited prototype on all 2,986 views of the five lanes, and so does 3.31.0, so no real view changes. On the
+2,400 generated views the fix passes every check; 3.31.0 misreads 165 lines, every one below an annotation,
+and differs from the prototype on 119 views, each by `inside` references alone.
+
 ---
 
 ## 8. Not taken, and open questions
@@ -678,6 +743,12 @@ D22 in the roadmap asked for the green light, R4 and Q1 together; the owner took
 | Every guard fact fails when the clause it guards is broken | RUN, twelve breakages | §6.7, `results-s2-mutations.txt` |
 | Kronikol4J writes a call after the calls it made, and its diagram draws that order | RUN (the capture), READ (the diagram) | F16, `results-s2-kronikol4j.txt` |
 | An ingested run loses 490 parents to records without a timestamp and, in call-tree order, 108 to deliveries | RUN, the ReqNRoll lane projected and ingested | F17, `results-s2-ingest.txt` |
+| The corpus holds no annotation between a call and one inside it, no id on two requests, no stepless request after a stepped one, no request answered before it was recorded, no user action | RUN, 37 reports | §7.7 |
+| S1's and S2's rules hold on generated scenarios, apart from F18 on 3.31.0; the fix passes every check | RUN, 2,400 views of 600 scenarios, 3.31.0 and the fix | F18, `results-audit-properties*.txt` |
+| 3.31.5 changes no real view | RUN, 2,986 views: the fix and 3.31.0 each equal the audited prototype | §7.7 |
+| `kronikol merge` keeps every view's nesting | RUN, 1,200 views of 600 scenarios merged from two shards | §7.7, `results-audit-merge.txt` |
+| No Kronikol writer records an empty pairing id, so the merge's grouping of empty ids reaches no real shard | READ (`MessageTracker` returns `Guid.Empty` only when it records nothing; `InteractionRecord` derives an id for a record without one) | §7.7 |
+| Every guard fact fails when the clause it guards is broken, the audit's included | RUN, thirteen breakages | §6.7, `results-audit-mutations.txt` |
 
 ## Appendix A. Re-taking the numbers
 

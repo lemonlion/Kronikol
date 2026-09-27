@@ -3,8 +3,9 @@
 **Date:** 2026-09-22 (deep dives added the same day; third pass 2026-09-25 against 3.29.6, `ad289f55`,
 and the consumer's published reports) · **Repo version:** 3.27.2 (`2843018a`), where the cited line
 numbers hold; the harness's `check-anchors.py` re-derives them at any revision ·
-**Status: NOT green-lit, nothing implemented.** This is P5 of [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md),
-roadmap item 1.9. §10 is the assumption ledger: what was RUN, what was only READ, and what is taken
+**Status: green-lit 2026-09-27** (the owner asked for P5 in full, so Q1 to Q8 are taken as
+recommended). **R1 shipped as 3.31.4** (§11.1); R2 is in progress. This is P5 of
+[`STAGE_1_PLAN.md`](STAGE_1_PLAN.md), roadmap items 1.9 and 1.12. §10 is the assumption ledger: what was RUN, what was only READ, and what is taken
 from the issue. The scripts behind every number are in
 [`INTERNAL_FLOW_BLOB_PLAN.harness/`](INTERNAL_FLOW_BLOB_PLAN.harness/README.md), with their output.
 
@@ -933,9 +934,90 @@ diagnostics section counts them as 3 orphaned test ids.
 | The prototype of S1 behaves as §3.2 to §3.4 say | RUN, Chromium, one report | Patched copies of the consumer's 3.29.6 report (`prototype-s1.py`): 8 diagrams, same bound counts, one decode, no console error. The prototype waits for the decode before the popup appears, where §3.4 shows it first |
 | Popups are lost with Q7 and today's order | RUN | 3 of 8 on the prototype, all render-cache hits; 8 of 8 attached first |
 | The consumer upgrades cleanly | RUN at 3.29.6 only | Restore and the xUnit lane in memory; the other 17 lanes, CI and the gate are §8.6's, per release |
-| Kronikol4J's markers carry no time | NOT CHECKED | The Java builder has the same missing check (READ); whether it bites depends on the port's capture side |
+| Kronikol4J's markers carry no time | READ 2026-09-27 | The Java builder has the same missing check, and it does not bite yet: the port's `RequestResponseLogger.log` stamps no time and `TrackingDiagramOverride.marker` sets none, so the builder's time filters (`buildWholeTestSegments` `:46`, `buildSegments` `:77`) drop every marker. The ledger entry says to port the three checks with the capture side's timestamps |
 
 ---
+
+## 11. Execution log
+
+### 11.1 R1, the marker fix: 3.31.4 (2026-09-27)
+
+**What shipped.** `InternalFlowSegmentBuilder` gains `IsCall` (neither `IsDiagramMarker` nor
+`IsUserAction`). `BuildSegments` gives a segment to calls only, and keeps markers and user actions in
+the ordering, so a call with no response still ends at the next record, whatever it is.
+`BuildWholeTestSegments` groups by calls only. The new internal `BuildWholeTestBoundaries` excludes
+`IsDiagramMarker` (a user action keeps its line) and serves both `ReportGenerator` sites, the live
+page and the mergeable data file, which had a copy each. Two defects beyond S1c's, found writing its
+report test, went into the same release:
+
+- **F8b.** A scenario with no call (only markers, or only user actions) took `FilterSpansByTestTraceIds`'s
+  fallback, meant for calls without a trace id, and its whole-test flow showed every span of the run.
+- **F8c.** Every marker drew a dashed boundary line labelled `: /` (an empty method and the marker's
+  URI path) in the whole-test flame chart.
+
+**Tests, red first.**
+
+- `InternalFlowSegmentBuilderTests`: five facts. The three that state the fix fail on 3.31.3's logic.
+  Two pins (a marker still ends a response-less call's window, and no logs give no lines) are green on
+  both. The mutation "markers left out of the ordering" turns the first pin red.
+- `InternalFlowSegmentMapReportTests` (new; DiagramsFetcher collection; real report writers; HTML and
+  mergeable JSON): four cases, all red on 3.31.3.
+- `WholeTestFlowTests`: two Playwright facts, with the fixture
+  `ReportTestHelper.GenerateReportWithMarkersInTheWholeTestFlow`. Both are red on 3.31.3, each for its
+  own reason.
+- Full suites on the release: the unit tier's 48 projects (`Kronikol.Tests` 5,890 passed and 1 skipped;
+  IKVM 54) and E2E 906 passed with 28 skipped, no failure.
+
+**Acceptance in this repository** (`Example.Api.Tests.Component.ReqNRoll.xUnit3`, 3.31.3 against R1):
+
+| | 3.31.3 | R1 |
+|---|---:|---:|
+| File | 735,671 | 629,704 |
+| Segments | 92 | 23 |
+| Linked from no diagram | 69 | 0 |
+| Flame-chart boundary lines `: /` | 60 | 0 |
+| Flame-chart lines from calls | 19 | 19 |
+
+The four Muffins scenarios that make no HTTP call lost their whole-test flows, which had shown every
+span of the run; `puml-data` went from 17 diagrams to 13.
+
+**§8.6 dry run** (in a scratch clone with the packages from a local feed, as `3.31.4-p5r1`):
+
+- **Step 1, the baseline.** The published site, the nightly of 2026-09-27, was on 3.29.0. `variants.py`:
+  xUnit 8,023,513 bytes, 2,872 segments, 1,578 unlinked; ReqNRoll 9,191,136, 3,337, 2,098; LightBDD
+  9,083,400, 3,219, 1,935. `popup-smoke.js`, 8 diagrams each: xUnit bound 44, 41, 3, 86, 86, 86, 6, 86;
+  ReqNRoll 44, 41, 3, 53, 83, 86, 6, 86; LightBDD 44, 41, 3, 86, 86, 86, 6, 86; every popup drew and
+  no console error appeared.
+- **Restore** with all 27 package pins moved came back clean.
+- **The xUnit lane in memory, 3.31.3 as the control against R1**, on the same scenarios:
+
+| | 3.31.3 | R1 |
+|---|---:|---:|
+| Scenarios passed | 203 of 203 | 203 of 203 |
+| `TestRunReport.html` | 7,630,306 | 4,774,437 (62.6%) |
+| Its gzip, level 6 (a Pages download) | 1,276,691 | 1,148,695 (90.0%) |
+| `Specifications.html` | 7,541,487 | 4,714,637 (62.5%) |
+| Segments | 2,786 | 1,296 |
+| Linked from no diagram | 1,499 | 3 (the consumer's own, F8) |
+| Link ids with / without a segment | 1,287 / 28 | 1,293 / 22 |
+| `domContentLoaded`, median of 7 (Chromium, network off) | 135 ms | 104 ms |
+| JS heap after load | 17 MB | 12 MB |
+
+  The links without a segment are the calls that captured no spans in that run, and the count moves
+  from run to run (21 on the published run, 28 and 22 here). `variants.py`'s "fix" variant of the
+  control, R1's prediction, binds exactly the control's arrows. `popup-smoke.js` on R1 found the
+  baseline's bound counts on all eight diagrams (44, 41, 3, 86, 86, 86, 6, 86), every popup drawn and
+  no console error.
+
+- **The export** (scripted as a filter, then Export Filtered HTML, then `popup-smoke.js` on the
+  export). It found a defect that R1 did not cause (F14 below): the same failure appears on the
+  published 3.29.0 report.
+
+**F14, found in the export check. It is pre-existing, and R2 fixes it.** In a filtered export, a
+diagram that had been drawn before the export arrives as inline SVG. Its arrows keep the bound
+look (44 on the first diagram), but a click opens no popup: `popupMs` is null on 3.29.0's export and
+on R1's alike. A diagram drawn after the export opens as normal. This is the export path that S2 tests,
+so R2 takes it, with a red test first.
 
 ## Appendix A. Re-taking the numbers
 
