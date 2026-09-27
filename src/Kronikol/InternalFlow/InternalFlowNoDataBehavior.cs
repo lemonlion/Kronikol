@@ -11,6 +11,7 @@ public enum InternalFlowNoDataBehavior
     /// <summary>Hides the internal-flow link entirely.</summary>
     HideLink,
 
-    /// <summary>Shows the link but with a visual distinction (e.g. dimmed) indicating no data.</summary>
+    /// <summary>Shows the link but with a visual distinction (e.g. dimmed) indicating no data. Not implemented: behaves as
+    /// <see cref="ShowMessage"/>.</summary>
     VisualDistinction
 }

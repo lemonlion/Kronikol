@@ -4,6 +4,117 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.9] - 2026-09-27
+
+**Patch - the internal-flow segment map ships as one gzip blob (#89), a filtered export draws and binds its diagrams
+again, and `HideLink` hides links under every rendering mode.** Performance work and bug fixes, with nothing new for a
+consumer to call. The two public emitters keep their signatures, no option is added, and the report's own scripts
+read what they now write. So the patch part moved. Report output changes (the segment element, the popup and render
+scripts, the export function): the Kronikol4J divergence ledger records it. Template pins move to 3.31.8.
+
+### Changed
+
+- **The internal-flow segment map is compressed (#89).** It was the one large block a report shipped raw, a
+  `<script>` that set `window.__iflowSegments` to an object literal in the head of both HTML reports, which the
+  browser parsed before the page could draw. It is now `<script id="iflow-segments" type="application/json">`, and it
+  holds two things:
+  - `z`: the same map, gzipped and base64-encoded.
+  - The list of arrow ids the render script needs to bind arrows without decoding the map: `hidden` (the linked ids
+    that have no segment) or `has` (the segment ids some diagram links), whichever is shorter.
+
+  The map is decoded once, on the first popup, by the decompressor every report carries. Its activity diagrams are
+  plain PlantUML now (`data-plantuml`), because the map is compressed whole. As gzip inside gzip they made the
+  compressed map three times larger.
+
+  Measured on BreakfastProvider's xUnit lane in memory, on the same 203 scenarios, 3.31.4 against this release:
+
+  | | 3.31.4 | This release |
+  |---|---:|---:|
+  | `TestRunReport.html` | 4,842,803 bytes | 2,565,751 (53%) |
+  | What a GitHub Pages visitor downloads (gzip) | about 1,157,608 | 898,931 (78%) |
+  | `domContentLoaded` in Chromium | 99 ms | 75 ms |
+  | JS heap after load | 10 MB | 7 MB |
+  | A filtered export of five features | 3,460,858 bytes | 1,003,645 |
+
+  Every diagram checked binds the same arrows, every popup draws, and the map is decoded once. A report with no
+  segment carries no element. `puml-data` is deliberately left as it is: it is read by key, one diagram at a time.
+
+  The popup now needs `DecompressionStream` (Chrome/Edge 80, Firefox 113, Safari 16.4), which `BrowserJs` rendering
+  and deep search already required. A page that sets `window.__iflowSegments` itself (built by hand, or written by
+  an older emitter) still works. `InternalFlowHtmlGenerator.GenerateSegmentDataScript` and `WrapSegmentData` return
+  the element.
+- **The popup opens at once and says why when it cannot show a segment.** It shows "Loading…" until the map is
+  decoded. If the map cannot be decoded, it shows "Internal flow data could not be decompressed: <reason>" and logs
+  it to the console, where a segment that could not be shown used to be a blank box. The popup is in the page before
+  anything is drawn in it. Otherwise a popup whose diagram is already in the render cache would be written before it
+  existed: in a prototype with the diagrams carried raw, 3 popups of 8 drew nothing.
+- The mergeable data file's `internalFlowSegments` is unchanged. A merged report writes the element from the merged
+  map, and its id list from the merged diagrams.
+
+### Fixed
+
+- **`HideLink` hides the link under Server and Local rendering too.** Kronikol writes a link on every tracked arrow
+  before it knows which calls captured spans. Under `BrowserJs`, the render script leaves the links with no segment
+  at rest. An inline SVG drawn by Server or Local rendering keeps every link as an `<a>`, though, and nothing hid it:
+  an arrow whose call captured nothing still looked like a link, and a click opened a popup saying there was no data.
+  Such a link now loses its href when the page loads, so it is plain text, and a click on one added later opens
+  nothing. Under `ShowMessage`, which keeps a message for every segment, nothing changes.
+- **A filtered export lost what a report's drawn diagrams could do.** "Export Filtered HTML" copied a diagram the
+  report had drawn as the SVG it drew, and no event listener survives that copy. Its arrows still looked bound but
+  opened nothing, and its notes no longer folded on a double-click. A flame chart the report had drawn no longer
+  zoomed. A diagram queued but not yet drawn when the export was taken went in marked as queued, and the export,
+  which skips a queued diagram, never drew it. The export's copy of each is now reset to its state before it was
+  drawn, so the export draws it from its source and binds it as the report does. Found in the consumer check of
+  3.31.4, and present in 3.29.0 too.
+- The XML documentation of five options described behaviour no report has. `InternalFlowDisplay.Inline`,
+  `InternalFlowTrigger.Hover`, `InternalFlowContentStrategy.SeparateFragments` with `InternalFlowFragmentsFolderName`,
+  and `InternalFlowNoDataBehavior.VisualDistinction` are read by nothing; the last behaves as `ShowMessage`. The docs
+  and the wiki now say so. Whether v4 removes or implements them is recorded in the roadmap (12.1).
+
+### Tests
+
+- `InternalFlowSegmentBlobTests` (new, 12 facts):
+  - The map round-trips through `z` as the same JSON.
+  - The element is a JSON script that sets no global.
+  - The base64 is written raw.
+  - The public wrapper lists every key.
+  - An empty map writes no element.
+  - The list is `hidden`, `has` or a tie as its sets say, and a key no diagram links is in neither.
+  - Every source counts once, in first-seen order, and an id ends where the page ends it.
+  - The live and merge emit sites write the same element.
+
+  The five facts that call only public API are red on 3.31.4; the rest call the internal API this release adds.
+- `InternalFlowHtmlGeneratorTests`: the map's activity diagram carries its PlantUML raw, and it decodes back to the
+  source. Red on 3.31.4.
+- `InternalFlowSegmentMapReportTests`: for every link a real report shows, the element's list says what the map says
+  (under `HideLink` and `ShowMessage`). Red on 3.31.4. The existing facts read the element.
+- `MergeableReportTests` and `ComponentDiagramReportTests` now anchor on the element. The merge assertion used to
+  pass on the popup script's own mention of the old global, and it is red on 3.31.4.
+- `IflowPopupTests` (Playwright):
+  - The popup opens before the map is decoded and fills when it is.
+  - The map is decoded once however many popups open.
+  - A popup draws its diagram with no decode of its own.
+  - A second popup whose diagram is cached still draws it. Attaching the popup after filling it (the old order)
+    fails this fact and two others.
+  - A map that is not gzip says so.
+  - A page with no element has no segment.
+  - A page that sets the old global works as before.
+  - Under `HideLink`, a server-drawn link with no segment opens nothing (red before the fix).
+- `ArrowLinkOpensPopupTests` (new, Playwright, on reports written by the whole pipeline):
+  - Clicking an arrow opens its popup. This one is green on 3.31.4 as well: until now no test clicked a real arrow.
+  - An arrow is bound exactly when it has a segment, on a page carrying `hidden` and on one carrying `has`. Red on
+    3.31.4.
+  - A merged report binds and opens the arrows of both shards.
+- `ExportFilteredHtmlRenderingTests` (Playwright):
+  - An arrow opens its popup in the export, whether its diagram was drawn before the export or not.
+  - A note drawn before the export still folds.
+  - A flame chart drawn before the export still zooms.
+  - The export carries the segment element whole.
+
+  All red on 3.31.4, each for its own reason.
+- Full suites on the release: the unit tier's 48 projects (`Kronikol.Tests` 5,949 passed and 1 skipped; IKVM 55) and
+  Playwright 937 passed with 28 skipped, no failure.
+
 ## [3.31.8] - 2026-09-27
 
 **Patch - a third audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3), and the views a report drawn by the Node
