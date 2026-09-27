@@ -2292,6 +2292,101 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// Two scenarios whose records hold markers as a run writes them (#100): "Two calls" made a GET and a POST around a
+    /// step bar and an assertion note, "No call" wrote only a step bar and an assertion note. Its whole-test segments and
+    /// the flame chart's boundary lines come from the real builder, fed the records as report generation feeds them.
+    /// </summary>
+    public static string GenerateReportWithMarkersInTheWholeTestFlow(string tempDir, string outputDir, string fileName)
+    {
+        using var activitySource = new System.Diagnostics.ActivitySource("Kronikol.Tests.MarkersInTheWholeTestFlow.E2E");
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = s => s.Name == "Kronikol.Tests.MarkersInTheWholeTestFlow.E2E",
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+
+        var t0 = new DateTimeOffset(2026, 9, 27, 10, 0, 0, TimeSpan.Zero);
+        var getTrace = System.Diagnostics.ActivityTraceId.CreateRandom();
+        var postTrace = System.Diagnostics.ActivityTraceId.CreateRandom();
+        var spans = new[]
+        {
+            Span(activitySource, "HTTP GET /orders", getTrace, t0.AddMilliseconds(9), 45),
+            Span(activitySource, "SELECT orders", getTrace, t0.AddMilliseconds(20), 10),
+            Span(activitySource, "HTTP POST /payments", postTrace, t0.AddMilliseconds(99), 45),
+        };
+
+        RequestResponseLog Marker(string testId, DateTimeOffset at, DiagramMarkerKind kind, bool start, string? plantUml = null) =>
+            new(testId, testId, "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request,
+                Guid.NewGuid(), Guid.NewGuid(), false)
+            { IsOverrideStart = start, IsOverrideEnd = !start, MarkerKind = kind, PlantUml = plantUml, Timestamp = at };
+
+        RequestResponseLog Call(HttpMethod method, string path, Guid id, System.Diagnostics.ActivityTraceId trace, RequestResponseType type, DateTimeOffset at) =>
+            new("Two calls", "calls", method, null, new Uri("http://orders" + path), [], "Orders", "Caller", type,
+                Guid.NewGuid(), id, false, type == RequestResponseType.Response ? System.Net.HttpStatusCode.OK : null)
+            { Timestamp = at, ActivityTraceId = trace.ToString() };
+
+        var get = Guid.NewGuid();
+        var post = Guid.NewGuid();
+        var logs = new[]
+        {
+            Marker("calls", t0, DiagramMarkerKind.Step, true, "hnote across <<stepDelimiter>> #black:<color:white>Given a basket"),
+            Marker("calls", t0.AddMilliseconds(1), DiagramMarkerKind.Step, false),
+            Call(HttpMethod.Get, "/orders", get, getTrace, RequestResponseType.Request, t0.AddMilliseconds(10)),
+            Call(HttpMethod.Get, "/orders", get, getTrace, RequestResponseType.Response, t0.AddMilliseconds(60)),
+            Marker("calls", t0.AddMilliseconds(70), DiagramMarkerKind.Assertion, true, "hnote across <<assertionNote>> #DFF0D8\n✓ one order\nend note"),
+            Marker("calls", t0.AddMilliseconds(71), DiagramMarkerKind.Assertion, false),
+            Call(HttpMethod.Post, "/payments", post, postTrace, RequestResponseType.Request, t0.AddMilliseconds(100)),
+            Call(HttpMethod.Post, "/payments", post, postTrace, RequestResponseType.Response, t0.AddMilliseconds(150)),
+            Marker("quiet", t0.AddMilliseconds(30), DiagramMarkerKind.Step, true, "hnote across <<stepDelimiter>> #black:<color:white>Given nothing to call"),
+            Marker("quiet", t0.AddMilliseconds(31), DiagramMarkerKind.Step, false),
+            Marker("quiet", t0.AddMilliseconds(40), DiagramMarkerKind.Assertion, true, "hnote across <<assertionNote>> #DFF0D8\n✓ nothing called\nend note"),
+            Marker("quiet", t0.AddMilliseconds(41), DiagramMarkerKind.Assertion, false),
+        };
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Whole test flow",
+                Scenarios =
+                [
+                    new Scenario { Id = "calls", DisplayName = "Two calls", Result = ExecutionResult.Passed },
+                    new Scenario { Id = "quiet", DisplayName = "No call", Result = ExecutionResult.Passed },
+                ]
+            }
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [], features,
+            t0.UtcDateTime, t0.UtcDateTime.AddSeconds(1),
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            internalFlowTracking: true,
+            wholeTestSegments: InternalFlowSegmentBuilder.BuildWholeTestSegments(logs, spans),
+            trackedLogs: logs,
+            wholeTestVisualization: WholeTestFlowVisualization.Both);
+
+        foreach (var span in spans) span.Dispose();
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+
+        static System.Diagnostics.Activity Span(System.Diagnostics.ActivitySource source, string name,
+            System.Diagnostics.ActivityTraceId trace, DateTimeOffset start, int milliseconds)
+        {
+            System.Diagnostics.Activity.Current = null;
+            var span = source.StartActivity(name, System.Diagnostics.ActivityKind.Internal,
+                new System.Diagnostics.ActivityContext(trace, System.Diagnostics.ActivitySpanId.CreateRandom(), System.Diagnostics.ActivityTraceFlags.Recorded))!;
+            span.SetStartTime(start.UtcDateTime);
+            span.SetEndTime(start.UtcDateTime.AddMilliseconds(milliseconds));
+            return span;
+        }
+    }
+
+    /// <summary>
     /// The viewport sweep's fixture: the widest header and the fullest scenario toolbar a reader can be
     /// given (plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md §4). Seventeen participants with the length spread of a
     /// real suite (three of them databases), six tags, a 69-character branch and a 52-character repository

@@ -10,8 +10,9 @@ namespace Kronikol.InternalFlow;
 public static class InternalFlowSegmentBuilder
 {
     /// <summary>
-    /// Builds a dictionary mapping segment keys (e.g. "iflow-{guid}" and "iflow-{guid}-res")
-    /// to the spans that occurred during each segment.
+    /// Builds a dictionary mapping segment keys ("iflow-{RequestResponseId}", one per request record that is a call)
+    /// to the spans that occurred during each segment: from the request to its response, or to the next record when
+    /// there is no response. Diagram markers and user actions get no segment, since no arrow links them.
     /// </summary>
     public static Dictionary<string, InternalFlowSegment> BuildSegments(
         RequestResponseLog[] logs,
@@ -48,6 +49,13 @@ public static class InternalFlowSegmentBuilder
                 // represent the instant the response arrives and contain no
                 // internal processing spans.
                 if (log.Type != RequestResponseType.Request)
+                    continue;
+
+                // A marker (a step bar, an assertion note, the Setup/Action boundary) and a user action are not
+                // calls, and no arrow links either, so a segment of theirs could never be opened. Both still carry
+                // a time since 3.15.1 and stay in the ordering: a call with no response still runs to the next
+                // record, whatever it is, so no call's segment changes.
+                if (!IsCall(log))
                     continue;
 
                 var segmentStart = log.Timestamp!.Value;
@@ -111,8 +119,10 @@ public static class InternalFlowSegmentBuilder
         if (spans.Length == 0 || logs.Length == 0)
             return segments;
 
+        // Only a test's calls say which spans are its own. A test that made none (its markers and user actions carry
+        // no trace id) would otherwise fall back to every span of the run.
         var logsByTest = logs
-            .Where(l => l.Timestamp.HasValue)
+            .Where(l => l.Timestamp.HasValue && IsCall(l))
             .GroupBy(l => l.TestId);
 
         foreach (var testGroup in logsByTest)
@@ -139,6 +149,26 @@ public static class InternalFlowSegmentBuilder
 
         return segments;
     }
+
+    /// <summary>
+    /// The request boundaries a test's whole-test flame chart draws as dashed lines: each request's label and time,
+    /// in time order, a user action's included. A marker draws none: it is not a request, it only carries a time.
+    /// The live report and the mergeable data file both take them from here.
+    /// </summary>
+    internal static (string Label, DateTimeOffset Timestamp)[] BuildWholeTestBoundaries(
+        IEnumerable<RequestResponseLog>? logs,
+        string testId) =>
+        logs?
+            .Where(l => l.TestId == testId && l.Type == RequestResponseType.Request && l.Timestamp.HasValue && !l.IsDiagramMarker)
+            .OrderBy(l => l.Timestamp!.Value)
+            .Select(l => ($"{l.Method.Value}: {l.Uri.PathAndQuery}", l.Timestamp!.Value))
+            .ToArray() ?? [];
+
+    /// <summary>
+    /// False for the records in the log stream that are not calls: a diagram marker (<see cref="RequestResponseLog.IsDiagramMarker"/>)
+    /// and a user action (<see cref="RequestResponseLog.IsUserAction"/>). Neither carries a trace id or a link.
+    /// </summary>
+    private static bool IsCall(RequestResponseLog log) => !log.IsDiagramMarker && !log.IsUserAction;
 
     private static Activity[] FilterSpansByTestTraceIds(Activity[] allSpans, RequestResponseLog[] testLogs)
     {

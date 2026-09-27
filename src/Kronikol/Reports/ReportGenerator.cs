@@ -2494,11 +2494,7 @@ public static class ReportGenerator
         if (wholeTestSegments is null || wholeTestVisualization == WholeTestFlowVisualization.None)
             return null;
 
-        var boundaryLogs = trackedLogs?
-            .Where(l => l.TestId == scenarioId && l.Type == RequestResponseType.Request && l.Timestamp.HasValue)
-            .OrderBy(l => l.Timestamp!.Value)
-            .Select(l => ($"{l.Method.Value}: {l.Uri.PathAndQuery}", l.Timestamp!.Value))
-            .ToArray() ?? [];
+        var boundaryLogs = InternalFlowSegmentBuilder.BuildWholeTestBoundaries(trackedLogs, scenarioId);
 
         return InternalFlowHtmlGenerator.GetWholeTestFlowContent(
             wholeTestSegments, scenarioId, boundaryLogs, wholeTestVisualization, diagramDataMap);
@@ -4449,11 +4445,7 @@ public static class ReportGenerator
             wholeTestFlow = new Dictionary<string, Merge.WholeTestFlowFragment>();
             foreach (var scenario in features.SelectMany(f => f.Scenarios))
             {
-                var boundaryLogs = trackedLogs?
-                    .Where(l => l.TestId == scenario.Id && l.Type == RequestResponseType.Request && l.Timestamp.HasValue)
-                    .OrderBy(l => l.Timestamp!.Value)
-                    .Select(l => ($"{l.Method.Value}: {l.Uri.PathAndQuery}", l.Timestamp!.Value))
-                    .ToArray() ?? [];
+                var boundaryLogs = InternalFlowSegmentBuilder.BuildWholeTestBoundaries(trackedLogs, scenario.Id);
 
                 // diagramDataMap left null so payloads are inlined into the fragment HTML.
                 var content = InternalFlowHtmlGenerator.GetWholeTestFlowContent(
