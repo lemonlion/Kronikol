@@ -42,8 +42,12 @@ session could not reach that repository. Template pins move to 3.31.9.
 - `DeepLinkReportTests` and `FailureClusterReportTests` pin `jump_into_view` where they pinned `scrollIntoView`, and
   that it never scrolls smoothly.
 - In this container: `Kronikol.Tests` 5,942 passed and 5 skipped, with 3 failures that fail the same on 3.31.9 (they
-  need a read-only file, and the container runs as root). The full suite runs in CI on this commit, and the tag waits
-  for it.
+  need a read-only file, and the container runs as root). The 14 end-to-end classes that follow a link, jump to a
+  failure, read the URL hash or lay the page out at a phone's width, run on 3.31.9 and on this release: each of the
+  222 tests they share has the same outcome on both (196 pass, and 26 fail on both, every one waiting for a diagram
+  this container's browser cannot draw, since it cannot fetch the PlantUML engine from jsDelivr), and the four new
+  facts pass. Most of the rest of the E2E tier waits for a drawn diagram as well, so the full suite runs in CI on this
+  commit, and the tag waits for it.
 
 ## [3.31.9] - 2026-09-27
 
