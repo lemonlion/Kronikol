@@ -11,6 +11,7 @@ organisation (plan §7.5, S0).
 | `stdout_channel.sh` | Plan F1 on the one project that posts a summary: whether its `##vso[task.uploadsummary]` line reaches `dotnet test`'s output at four verbosity settings, and what GitHub Actions' file channel receives from the same run | `results-stdout-channel.txt` |
 | `f2_rerun_fold.sh` | Plan F2: the run id the library writes for a re-run Azure DevOps job, and what `kronikol history record` then records, today and with the attempt in the id | `results-f2-rerun-fold.txt` |
 | `s0-probe.yml` | Plan §7.5: every Azure Pipelines claim the plan rests on and could not run here | none yet: `results-s0.txt` when it is run |
+| `research-notes.md` | The evidence the plan was written from: Microsoft's pages and the agent's source (quotes and flags, including what the plan did not need), every provider-specific path in this repository by file and line, and what the other plans already say | (notes, not a script) |
 
 Each script runs from the repository root with the .NET 10 SDK and sets the variables an Azure Pipelines
 agent sets (`TF_BUILD`, `BUILD_*`, `SYSTEM_*`). None needs an organisation: an agent reads logging commands
