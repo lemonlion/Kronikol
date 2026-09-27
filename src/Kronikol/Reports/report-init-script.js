@@ -1,9 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Restore filters from URL hash if present
-    if (window.location.hash && window.location.hash.length > 1) {
-        parse_url_hash();
-    }
-
     // A `#sid-` link pasted into the address bar of a report that is already open changes the hash
     // without reloading, and parse_url_hash only ever ran on load. Filters are deliberately not
     // re-applied here: update_url_hash rewrites through replaceState, which fires no hashchange, so
@@ -51,5 +46,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 btn.textContent = showing ? '\u2699 Diagram Settings' : '\u2699 Hide Settings';
             });
         });
+    }
+
+    // Restore filters from URL hash if present. Last, for the reason parse_url_hash reveals its anchor
+    // last: the scroll to a `#sid-` scenario is aimed when it starts, so it has to start on the finished
+    // layout. Run first, it was aimed before the mobile blocks above folded the filter panel away, and
+    // ended the panel's height too far down, with the scenario off the top of a phone's screen.
+    if (window.location.hash && window.location.hash.length > 1) {
+        parse_url_hash();
     }
 });

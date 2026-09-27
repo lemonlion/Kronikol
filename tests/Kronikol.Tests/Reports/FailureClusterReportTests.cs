@@ -235,7 +235,7 @@ public class FailureClusterReportTests
     }
 
     [Fact]
-    public void Report_cluster_link_onclick_calls_scrollIntoView()
+    public void Report_cluster_link_onclick_jumps_into_view()
     {
         var features = MakeFeatures(
             ("t1", "Test 1", ExecutionResult.Failed, "Connection refused"),
@@ -248,7 +248,9 @@ public class FailureClusterReportTests
         foreach (Match m in onclickMatches)
         {
             var onclick = m.Groups[1].Value;
-            Assert.Contains("scrollIntoView", onclick);
+            // Through jump_into_view, which jumps rather than scrolls: a smooth scroll ended past a scenario
+            // far down a long report (plans/DOORSTEP_PLAN.md F28).
+            Assert.Contains("jump_into_view(el,'start')", onclick);
         }
     }
 

@@ -1779,8 +1779,11 @@ public static class ReportGenerator
                 {
                     var anchorId = scenarioAnchorIds[s.Id];
                     var featureName = scenarioFeatureLookup.GetValueOrDefault(s.Id, "");
+                    // The link jumps rather than scrolls smoothly: a smooth scroll across features the browser
+                    // has never drawn is aimed at their content-visibility placeholders, and ends past the
+                    // scenario (jump_into_view, in report-url-hash-function.js, says why).
                     var prefix = featureName.Length > 0 ? $"<span style=\"color:rgb(100,100,100);font-size:0.85em\">{System.Net.WebUtility.HtmlEncode(featureName)} &rsaquo;</span> " : "";
-                    return $"<li>{prefix}<a class=\"failure-cluster-scenario-link\" href=\"#{anchorId}\" onclick=\"event.preventDefault();var el=document.getElementById('{anchorId}');if(el){{var p=el;while(p){{if(p.tagName==='DETAILS')p.setAttribute('open','');p=p.parentElement;}}if(el.tagName==='TR')el.click();else el.setAttribute('open','');el.scrollIntoView({{behavior:'smooth',block:'start'}});history.replaceState(null,'',location.pathname+location.search+'#{anchorId}');}}\">{System.Net.WebUtility.HtmlEncode(s.DisplayName)}</a></li>";
+                    return $"<li>{prefix}<a class=\"failure-cluster-scenario-link\" href=\"#{anchorId}\" onclick=\"event.preventDefault();var el=document.getElementById('{anchorId}');if(el){{var p=el;while(p){{if(p.tagName==='DETAILS')p.setAttribute('open','');p=p.parentElement;}}if(el.tagName==='TR')el.click();else el.setAttribute('open','');jump_into_view(el,'start');history.replaceState(null,'',location.pathname+location.search+'#{anchorId}');}}\">{System.Net.WebUtility.HtmlEncode(s.DisplayName)}</a></li>";
                 }));
                 body.Append($"<details class=\"failure-cluster\"><summary>{System.Net.WebUtility.HtmlEncode(cluster.ClusterKey)}<span class=\"failure-cluster-count\">{cluster.Scenarios.Length} scenarios</span></summary>");
                 body.Append($"<ul class=\"failure-cluster-scenarios\">{anchorLinks}</ul></details>");
