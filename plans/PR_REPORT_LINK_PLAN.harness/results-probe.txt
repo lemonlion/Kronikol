@@ -1,0 +1,10 @@
+# node probe.js action.yml, on 2026-09-27, node v22.22.2
+# action.yml: git show origin/pr-report-link-template:templates/github-actions/kronikol-pr-report-link/action.yml (PR #73 head e31b42fa)
+{
+  "p1_body": "<!-- kronikol-report-link -->\n## 📊 Kronikol test reports\n\n- 🧪 **Component tests** — 📦 [component-test-reports](https://github.com/octo/app/actions/runs/101/artifacts/9001) 🕒 _(last updated 2026-09-15 13:58 UTC)_ ⏳ _(expires on 2026-09-16 13:58 UTC)_ <!-- kronikol-report-link:component-test-reports run:101 -->\n- 🧪 **Unit tests** — 📦 [unit-test-reports](https://github.com/octo/app/actions/runs/102/artifacts/9002) 🕒 _(last updated 2026-09-15 14:05 UTC)_ ⏳ _(expires on 2026-09-16 14:05 UTC)_ <!-- kronikol-report-link:unit-test-reports run:102 -->\n\n> [!TIP]\n> 💡 Each link downloads a zip of the latest reports. Open `TestRunReport.html` inside it.\n\n<sub>🤖 CI rewrites this comment every time a linked workflow runs.</sub>",
+  "p2_older_run_wrote": 1,
+  "p2_body_links_run": "400",
+  "p3_writes": 2,
+  "p3_links_run": "runs/550/",
+  "p4_section_kept": false
+}
