@@ -4,7 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.7] - 2026-09-27
+
+**Patch - 3.31.6 reaches NuGet.** The patch part moved because nothing is new: one call is replaced by one
+every target framework has. 3.31.6 was tagged, but its release build failed, so no 3.31.6 package was
+published; this release carries everything listed under 3.31.6. Template pins stay at 3.31.5, the last
+published release.
+
+### Fixed
+
+- **3.31.6 did not build for net8.0.** The name of the Node renderer's script used
+  `Convert.ToHexStringLower`, which .NET 9 added, and `Kronikol` also targets net8.0, so the release build
+  stopped with CS0117. It uses `Convert.ToHexString` and lowers the result, which gives the same name. The
+  checks before 3.31.6 built only the net10.0 test projects; 3.31.7's release filter was built in Release
+  for every target framework before it was tagged.
+
 ## [3.31.6] - 2026-09-27
+
+**Tagged, never published.** The release build failed on the net8.0 target (see 3.31.7), so no 3.31.6
+package reached NuGet. 3.31.7 carries everything below.
 
 **Patch - an audit of `plans/ENGINE_PIN_PLAN.md` (stage 1 P4, shipped as 3.30.4, 3.31.1 and 3.31.3).** Every change
 is a fix, so the patch part moved. Nothing new is public. Template pins move to 3.31.5.

@@ -49,7 +49,7 @@ internal sealed class EngineCache(string directory, Func<string, byte[]> downloa
 
     /// <summary><paramref name="fileName"/> with the first 16 hex digits of the SHA-256 of <paramref name="bytes"/> before its extension.</summary>
     internal static string ScriptFileName(string fileName, byte[] bytes) =>
-        $"{Path.GetFileNameWithoutExtension(fileName)}.{Convert.ToHexStringLower(SHA256.HashData(bytes))[..16]}{Path.GetExtension(fileName)}";
+        $"{Path.GetFileNameWithoutExtension(fileName)}.{Convert.ToHexString(SHA256.HashData(bytes))[..16].ToLowerInvariant()}{Path.GetExtension(fileName)}";
 
     /// <summary>The Subresource Integrity form of a SHA-256: what a browser's <c>integrity</c> attribute takes.</summary>
     internal static string Integrity(byte[] bytes) => "sha256-" + Convert.ToBase64String(SHA256.HashData(bytes));

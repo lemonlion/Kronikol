@@ -7,7 +7,7 @@ Q4, Q5, Q6 and Q7 as their recommendations say. **Executed: S0 shipped as 3.30.4
 with the departures (§10.2: a refused `viz-global.js` loses no Kronikol diagram, since the engine falls back to
 Smetana; the default fragment height is the fastest measured). **§10.1's `--jitless` leftover was fixed as 3.31.3**
 (2026-09-27, §10.3), with the other ways WebAssembly is off and the Node renderer. **Audited 2026-09-27, follow-ups as
-3.31.6** (§10.4): the Node renderer's script is named for its own bytes, and what the plan's own steps missed.
+3.31.6, published as 3.31.7** (§10.4): the Node renderer's script is named for its own bytes, and what the plan's own steps missed.
 
 **Re-checked 2026-09-25 against 3.29.3 (`b74c8ddc`):** every source, test and render-bench file this plan
 cites is unchanged since `2843018a` except `ReportGenerator.cs` (the fragment-height parameter moved
@@ -1350,7 +1350,7 @@ Lockdown Mode is the case it stands for). Upstream, the engine could fall back t
 rejects, not only when `Viz` is missing, which would cover a host that loads Graphviz itself; not proposed, since
 Kronikol's own pages no longer load it there.
 
-### 10.4 The audit, shipped as 3.31.6 (2026-09-27)
+### 10.4 The audit, tagged 3.31.6 and published as 3.31.7 (2026-09-27)
 
 The owner asked whether anything in P4 had been missed or left a hole. Worktree `C:/Code/Kronikol-p4audit`, branch
 `p4/audit2`, from `fa866f8b`; the number agreed with kronikol-bc (3.31.4, P5 R1) and kronikol-e1 (3.31.5). Each slice
@@ -1417,6 +1417,11 @@ started on the fixed name (1); initialization writing the fixed name (1, the Int
 refusal (3); the fallback's viz tag without its hash (1). Full suites on the release tree before the push: unit 5,897
 (+1 skip), IKVM 54, E2E 909; a history timing budget that failed once under the other sessions' load passed alone
 three times out of three.
+
+**3.31.6 never reached NuGet.** Its release build failed on net8.0: `EngineCache.ScriptFileName` called
+`Convert.ToHexStringLower`, which .NET 9 added, and every check before the tag had built the net10.0 test projects
+only. 3.31.7 calls `Convert.ToHexString` and lowers the result (the same name), and `release.slnf` was built in
+Release for every target framework before its tag. The tag `v3.31.6` stays, as `v3.29.4` did.
 
 **Not done.** Firefox and WebKit stay measured by probes, not guarded by the E2E suite. A process whose cache directory
 is deleted by hand while it runs keeps its first check until it restarts (the documented remedy follows a failed check,
