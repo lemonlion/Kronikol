@@ -3,11 +3,10 @@
 **Date:** 2026-09-27, third pass finished 2026-09-28 · **Repo version:** 3.31.3 (`fa866f8`) when written,
 3.31.5 (`4aa1e1e`) at the first same-day update, 3.31.9 (`e4c9e36`) at the second, 3.31.10 (`28e4460`) at the
 third · **Status: plan written, NOT green-lit; S0 run as far as
-a session can reach; the defect it found (F28) fixed in 3.31.10.** 3.31.10 is on `main` with CI green
-(`571a98d`: all 34 checks, CodeQL's included; `28e4460` adds a test fix, passed all 34 as well, and is the commit
-to tag) but not
-published: this environment refused to push the tag `v3.31.10` and the wiki commit (HTTP 403, where branch pushes
-worked), so both are the owner's (Appendix B). It needs D24, and most of D24 is the owner's own words: the
+a session can reach; the defect it found (F28) fixed in 3.31.10.** 3.31.10 was published on 2026-09-28 from
+`28e4460` (`571a98d` with a test fix; CI green on both, all 34 checks). The session that made it could not: its
+environment refused the tag `v3.31.10` and the wiki commit (HTTP 403, where branch pushes worked), so a local
+session pushed both at the owner's word, with the Kronikol4J entries (Appendix B). It needs D24, and most of D24 is the owner's own words: the
 roadmap gives this text to "the owner's hand". Roadmap item **2.1** (stage 2, track C). No package changes, so **no version bump**, and
 nothing in it is outreach (rule 9).
 
@@ -613,3 +612,8 @@ first is F28's; the second is a fault CI found in 3.31.9 while this release was 
 3. **Kronikol4J.** Copy the two ledger entries of Appendix A.
 4. **The demo.** BreakfastProvider gets the fix with its next pin move (to 3.31.10 or later), which Q5's deep
    link waits for.
+
+**Done 2026-09-28, steps 1 to 3** (a local session, at the owner's word). The tag `v3.31.10` on `28e4460` ran
+Release `36404942578`: it passed, NuGet lists all 62 packages at 3.31.10, and GitHub has the release. The wiki
+note is `5bc9589`, and the Kronikol4J ledger has both entries of Appendix A (`8001eba`, each marked "Not
+mirrored, a ledger entry only" like its neighbours). Step 4 still waits for the demo's next pin move.
