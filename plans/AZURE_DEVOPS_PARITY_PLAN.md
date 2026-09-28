@@ -455,8 +455,9 @@ over, are the stronger evidence on races.
 
 ### 3.13 F13: a credential a step passes loses to one the checkout persisted
 
-Both forges' checkouts can leave a credential in `.git/config` under a URL-specific key. `actions/checkout`
-does it by default (`http.https://github.com/.extraheader`). The Azure Pipelines agent does it with
+Both forges' checkouts can leave a credential in the repository's configuration under a URL-specific key.
+`actions/checkout` does it by default (`http.https://github.com/.extraheader`: in `.git/config` up to v5,
+and from v6 in a file the workspace's configuration includes, `HISTORY_ACTION_PLAN.md` F9). The Azure Pipelines agent does it with
 `persistCredentials: true`, under `http.<repository URL>.extraheader`, and removes it when the job ends (DOC
 [GSP]). Git reads `http.extraheader` through its URL-matching configuration, where the more specific key
 wins, and a `-c http.extraheader=…` on the command line names no URL. So when a URL-specific value exists,
