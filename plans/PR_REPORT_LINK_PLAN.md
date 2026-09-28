@@ -20,7 +20,9 @@ pushed. Every new fact failed first for the reason §4.2 gives, then passed with
 `Kronikol.Tests` with nothing new failing. The four diffs are in the harness as patches that rebuild that tree
 exactly. GitHub's own records were read: the PR's state, its checks, every re-run in the repository, how pull
 requests here are merged, and `main`'s CI, which failed six of its eight runs that day (F17). actionlint was run on
-the workflows (F16). Two more probes found F15 and the rule F3's fix needs. Q5 is new.
+the workflows (F16). Two more probes found F15 and the rule F3's fix needs. Q5 is new. The web questions left
+open were answered the next morning (§1.6's last five rows): a job-level group takes `queue: max`, and a step
+output keeps the last value written, which settles F12.
 
 Roadmap item 2.2 reads: "Rebase and merge PR #73 (#72). One PR comment, one line per report artifact, kept
 current by every run", in hours. This plan re-checks each premise of that row against today's `main` and
@@ -201,9 +203,9 @@ is documented; P6's order is the rule the tag now keeps.
 
 ### 1.6 GitHub and nuget.org as they are today (WEB)
 
-Read on 2026-09-27. Tags were listed with `git ls-remote`, release dates and runtimes read from each action's
-releases and `action.yml`. Every address, the full quotes and each answer's verification mark are in
-`PR_REPORT_LINK_PLAN.harness/web-sources.md`.
+Read on 2026-09-27, and the last five rows on 2026-09-28. Tags were listed with `git ls-remote`, release dates and
+runtimes read from each action's releases and `action.yml`. Every address, the full quotes and each answer's
+verification mark are in `PR_REPORT_LINK_PLAN.harness/web-sources.md`.
 
 | Question | Answer | Source |
 |---|---|---|
@@ -224,6 +226,11 @@ releases and `action.yml`. Every address, the full quotes and each answer's veri
 | Comment size | 65,536 characters (the API's 422, "Body is too long (maximum is 65536 characters)", and a GitHub staff answer); the REST page states no limit | github.com/orgs/community/discussions/27190 |
 | Notifications | Creating a comment "triggers notifications"; the update endpoint says nothing either way | docs.github.com REST *Issue comments* |
 | `always()` | "Avoid using always for any task that could suffer from a critical failure… use the recommended alternative: `if: ${{ !cancelled() }}`" | docs.github.com, *Expressions* |
+| `queue` on a job | The workflow syntax reference carries the `queue` text, word for word, in its `jobs.<job_id>.concurrency` section too, so a job-level group takes `queue: max`. The how-to's only `queue: max` example is workflow-level | docs.github.com, workflow syntax (web-sources §16) |
+| actionlint's `main` | Not only the 1.7.12 release: `main` at `011a6d15` parses `group` and `cancel-in-progress` alone (`ast.go`'s `Concurrency`, `parse.go`'s `parseConcurrency`), so F16 holds until a release adds `queue` | rhysd/actionlint source (§17) |
+| A name written twice to `$GITHUB_OUTPUT` | **The last line wins.** The runner reads the file's lines in order and assigns each to the step's outputs by name (`outputs[outputName] = new StringContextData(value)`) | actions/runner `main` at `15231bed`: `FileCommandManager.cs`, `ExecutionContext.cs`, `StepsContext.cs` (§18) |
+| CodeQL for Actions | 26 queries. The default suite's `actions/missing-workflow-permissions` wants a `permissions` key, which both workflows have; `actions/code-injection` advises passing input through an environment variable, as `action.yml` does; `actions/unpinned-tag` (pin by commit) is only in the extended suites | codeql.github.com query help (§19) |
+| The majors, again | Unchanged on 2026-09-28: v9, v7, v6, v7, v8 | `git ls-remote --tags` (§20) |
 
 ### 1.7 The documents around the action (READ)
 
@@ -287,7 +294,8 @@ tree exactly (checked). The output is `results-s2-s3-rehearsal.txt`.
   `.jsonl`, `Run.json`, `History.run.json`, `Specifications.html` and `.yml`, `ComponentDiagram.html`,
   `CiSummary.md`, `CLAUDE.md` and `AGENTS.md`. S3 check 3 knows what its zip should hold.
 - **F12, Kronikol's half:** two Kronikol projects in one `dotnet test` (a solution filter) wrote two pairs of lines
-  to the one output file, one pair per project, in the order the projects finished.
+  to the one output file, one pair per project, in the order the projects finished. The runner's half is in §1.6:
+  the last line of a name wins.
 
 ### 1.10 GitHub's own records (READ)
 
@@ -333,7 +341,7 @@ Read the same evening through the GitHub tools and REST. Ids and details are in
 | F9 | **The consumer's copy was not read.** The PR says the logic was hardened on a consumer repository before it was generalised. That repository could not be opened from this session | not checked | A fix made there after 2026-09-15 would be missing here | S0 |
 | F10 | **The changelog's `[Unreleased]` link definition is from 2.0.139-beta** (§1.7), so the PR's heading renders as a link to a 2.0 comparison | READ | A small falsehood in the file every release edits | S4 |
 | F11 | **The roadmap row's premises moved.** The README conflict is gone; "hours" was the rebase alone | RUN | The row understates 2.2 | S6 |
-| F12 | **Several Kronikol test projects in one `dotnet test` step each append `reports-path`**, and a step output holds one value per name, so the upload would carry one project's reports. The wiki's example and the action's README both run a bare `dotnet test` | INFERRED: which value wins is not checked | A lane that silently links part of its reports | S3 checks it; S6 documents it |
+| F12 | **Several Kronikol test projects in one `dotnet test` step each append `reports-path`** (§1.9: a pair of lines per project), and the runner keeps the last line of a name (§1.6), so the upload carries only the reports of the project that finished last, which varies from run to run. The wiki's example and the action's README both run a bare `dotnet test` | RUN + WEB | A lane that silently links part of its reports, and a different part each time | S2 (a sentence in the action's README, rehearsed); S6 (the wiki) |
 | F13 | **The README's re-run claim is unproven.** It says "a re-run keeps its run id and uploads again, so the newest artifact of that name is linked". GitHub documents nothing about a same-name upload in a later attempt, and the evidence conflicts (§1.6). If the upload fails, the re-run's report is never uploaded and the comment keeps linking the first attempt's. Picking the newest of several is right either way. This repository's history cannot answer it: no re-run here has ever had an artifact (§1.10). And an artifact's expiry is counted from the run's creation, so a re-run's upload may expire sooner than its upload time suggests | WEB, READ | A re-run of a failed lane, the case most worth linking, may not reach the comment, or may reach it already short-lived | S3 check 5, which also records the re-run's expiry; S2 adds `overwrite: true` if the upload fails |
 | F14 | **The issue's reason for ruling out a browsable report no longer holds** (§1.6, `archive: false`), and the action's README still says "GitHub serves artifacts only as downloads" | WEB | Not a defect of 2.2's code. Possibly the largest improvement on offer for 13.2 | S2 corrects the README's sentence; §8; S3 check 9 measures it |
 | F15 | **`heading` and `report-file` belong to the comment, but each lane passes its own** (P5). The comment shows whichever lane wrote last, so lanes that differ swap its heading and its tip on every run, and the tip can name a file another lane's zip does not hold | RUN | A wrong instruction, half the time, in a comment shared by lanes that differ | S2 says so in the inputs table. Not frozen: a later version can name the file in each line, which a lane on this version keeps as it is |
@@ -465,6 +473,10 @@ prose a test can):
 
 - **The majors (F7).** `checkout@v7`, `setup-dotnet@v6`, `upload-artifact@v7`, as S0 re-checks them. The live
   lane (S3) uses the same, so it proves them.
+- **One project per upload (F12).** Under "Use it": an output holds one value, the last written, so a step that
+  runs several Kronikol test projects uploads only the one that finished last; each project gets its own step,
+  upload and lane, or the runs are combined with `kronikol merge <inputs…> --publish-artifacts`, which writes the
+  same two outputs.
 - **Concurrency (F1).** "`cancel-in-progress` stays off, so the second job waits instead of being cancelled"
   becomes what GitHub does: with the default queue, a third job that arrives while one runs and one waits
   cancels the waiting one; `queue: max` keeps them all, in an order that does not matter because an older run
@@ -602,8 +614,8 @@ check goes into the execution log with its run and artifact ids:
    link: does the page load, do its scripts run, do diagrams draw (the engine comes from jsDelivr), does the
    search work. A screenshot and the browser console go into the execution log. Reverted before S5.
 
-F12 is checked while the lane is at hand: a scratch step runs two Kronikol test projects in one `dotnet test`
-and prints the step's `reports-path`. What it holds goes into S6's wiki sentence.
+F12 needs no scratch step: §1.9 ran two projects in one `dotnet test` and §1.6 read the runner's rule, so the
+README says it (S2) and the wiki will (S6).
 
 ### 4.4 S4: the documents in the pull request
 
@@ -639,8 +651,9 @@ Nothing is posted on #72: the merge closes it.
    copying the workflow a third time, and the limits. The words are drafted in
    `PR_REPORT_LINK_PLAN.harness/wiki-draft.md`, with the sentence S3's check 5 decides marked. The page's own examples move to the same majors (F7) and
    its upload step from `if: always()` to `if: ${{ !cancelled() }}`, with GitHub's reason (§1.6). F12's sentence:
-   one reports directory per step output, so several test projects either run in their own steps or are
-   combined with `kronikol merge`, which writes the same two outputs (`MergedRunOutputs`).
+   an output keeps the last value written, so several test projects in one step upload only the one that
+   finished last; they run in their own steps, or are combined with `kronikol merge <inputs…>
+   --publish-artifacts`, which writes the same two outputs (`MergedRunOutputs`). `wiki-draft.md` has the words.
 2. **The first tag.** When the next release folds the `[Unreleased]` section (Q3), record its tag in
    `ROADMAP.md` 2.2 as the first that carries the action. From that tag the template README's "reference it from
    a release tag" is true.
@@ -722,8 +735,10 @@ One validated push beats three speculative ones.
   that owns the renderer's process-wide state or giving it a cache path of its own, belongs to whoever next
   touches the renderer's tests; until then S1 and S5 treat it as `main`'s.
 - **CodeQL analyses C# only** (§1.10). Adding `actions` to `codeql.yml`'s languages would scan every workflow and
-  composite action, the S3 lane and this action included. A change to `codeql.yml`, outside 2.2; it fits with the
-  workflow sweep above.
+  composite action, the S3 lane and this action included. What 2.2 adds should pass its default suite: both
+  workflows declare `permissions`, and the action passes its inputs through `env` as `actions/code-injection`
+  advises (§1.6). The existing workflows are another matter, not read here. A change to `codeql.yml`, outside
+  2.2; it fits with the workflow sweep above.
 - **Two packing leftovers in `Kronikol.Templates`**, seen in §1.4's pack and older than PR #73: `LICENSE` is
   included twice (`Directory.Build.props:29` and the project's own line 65), so `dotnet pack` warns NU5118; and
   the package carries `nuget-readme.md` from `Directory.Build.props` beside the `README.md` its nuspec names, a
@@ -799,9 +814,10 @@ One validated push beats three speculative ones.
 | A6 | nuget.org renders a relative link with an empty address | WEB, from NuGetGallery's source (§1.6) | Moot once the S2 guard holds |
 | A7 | An alert renders in a pull request comment | WEB, a docs maintainer's word (§1.6) | S3 check 1, by eye |
 | A8 | Editing a comment notifies nobody, so the action's rewrites are silent after the first | WEB for creation only; editing unverified | Needed by no step; noted because a noisy comment would be a reason to use the action less |
-| A9 | Several `reports-path` lines in one step leave one value (F12) | INFERRED | S3's scratch step |
+| A9 | Several `reports-path` lines in one step leave one value (F12) | RUN: a pair of lines per project (§1.9). WEB: the runner keeps the last line of a name (§1.6, its source) | Settled |
 | A10 | The 17 facts still pass on today's `main` | RUN: 17 of 17 on the rehearsed tree (§1.2) | Settled; S1 step 3 runs them again at execution |
 | A11 | The README's upload works in a re-run (F13) | WEB: undocumented, evidence conflicts. READ: no re-run in this repository has had an artifact (§1.10) | S3 check 5 |
+| A12 | A job-level concurrency group takes `queue: max` | WEB: the workflow syntax reference documents `queue` in the `jobs.<job_id>.concurrency` section (§1.6); no example shows it on a job | S3 checks 1 and 8 run it |
 | A13 | actionlint accepts the README's workflow | RUN: 1.7.12 rejects `queue` (F16); `-ignore` and the `paths` config clear it (§1.9) | Settled for 1.7.12; S0 step 6 re-checks the newest |
 | A14 | A re-run's artifact lives a retention period from its upload | READ: attempt 1's `expires_at` is the run's `created_at` plus the retention, not the upload's (§1.10); a re-run's is unknown | S3 check 5 |
 | A15 | A Claude Code session can push to `pr-report-link-template` | Not tried (§4.7): tag and wiki pushes were refused here the same day, `main` was not | S1 step 4; §4.7's fallback |

@@ -1,5 +1,5 @@
 diff --git a/templates/github-actions/kronikol-pr-report-link/README.md b/templates/github-actions/kronikol-pr-report-link/README.md
-index af774919..d4af0933 100644
+index f565298c..6631eb45 100644
 --- a/templates/github-actions/kronikol-pr-report-link/README.md
 +++ b/templates/github-actions/kronikol-pr-report-link/README.md
 @@ -16,6 +16,7 @@ report is always one click from the PR. With two lanes, component tests and unit
@@ -10,7 +10,7 @@ index af774919..d4af0933 100644
  ```
  
  GitHub shows the heading, one line per lane with its tag hidden, a Tip box and a small footer.
-@@ -146,8 +147,9 @@ own `artifact-name` and `label`.
+@@ -149,8 +150,9 @@ own `artifact-name` and `label`.
  
  - **`GITHUB_TOKEN` only.** The action writes with the workflow token and recognises its comment by the
    `github-actions[bot]` author, so it has no token input.

@@ -19,10 +19,10 @@ is left as it is; the new text follows this repository's plain style.
 - A paragraph after the note (F12):
 
 > **One reports directory per step.** The step's `reports-path` output holds one directory. A `dotnet test` over a
-> solution runs each Kronikol test project in its own process, and each writes its own `reports-path` line, so
-> the upload would carry one project's reports and not the others'. Run each project in a step of its own, each
-> with its own upload and artifact name, or combine the runs with `kronikol merge <inputs…> --publish-artifacts`,
-> which writes the same two outputs for the merged report.
+> solution runs each Kronikol test project in its own process, each writes its own `reports-path` line, and the
+> output keeps the last one written, so the upload carries only the project that finished last. Run each project
+> in a step of its own, each with its own upload and artifact name, or combine the runs with
+> `kronikol merge <inputs…> --publish-artifacts`, which writes the same two outputs for the merged report.
 
 ## 2. A new section after "Combining with CI Summary"
 

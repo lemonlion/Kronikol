@@ -1,8 +1,10 @@
 # Web sources for PR_REPORT_LINK_PLAN §1.6
 
-Gathered on 2026-09-27 by a research agent in the session that wrote the plan, from official pages, release
-notes and source code: tags with `git ls-remote` and blobless clones, quotes taken from the raw HTML. The plan's
-author relayed them and did not re-read every page. Each answer carries the agent's own mark: VERIFIED (the
+Sections 1 to 15 were gathered on 2026-09-27 by a research agent in the session that wrote the plan, from
+official pages, release notes and source code: tags with `git ls-remote` and blobless clones, quotes taken from
+the raw HTML. The plan's author relayed them and did not re-read every page. Sections 16 to 21 were added on
+2026-09-28 by the plan's author, who read each source named there (a second research agent stopped on a rate
+limit before writing anything). Each answer carries the agent's own mark: VERIFIED (the
 source was read and says so), PARTLY VERIFIED, or UNVERIFIED (no source found, or sources conflict). Re-check
 anything a step depends on before executing it (plan §4.0).
 
@@ -206,3 +208,67 @@ The token starts read-only, and a `permissions` block raises it, so a job that c
 - "Warning: Avoid using always for any task that could suffer from a critical failure, for example: getting
   sources, otherwise the workflow may hang until it times out. If you want to run a job or step regardless of its
   success or failure, use the recommended alternative: `if: ${{ !cancelled() }}`"
+
+## 16. `queue` in a job's concurrency block: VERIFIED
+
+The workflow syntax reference documents `queue` twice, in the workflow-level `concurrency` section and again,
+word for word, in the `jobs.<job_id>.concurrency` section (the page as saved on 2026-09-27; the text sits between
+that section's heading and `jobs.<job_id>.outputs`):
+
+- <https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax>, `jobs.<job_id>.concurrency`:
+  "To allow more than one pending job or workflow run to wait in the same concurrency group, use the optional
+  queue property. The queue property accepts the following values: single (default)… max : Up to 100 jobs or
+  workflow runs can be pending in the concurrency group."
+- The concurrency how-to page opens its reusable block with "You can use jobs.<job_id>.concurrency to ensure that
+  only a single job or workflow using the same concurrency group will run at a time" and carries the same
+  `queue` text. Its only `queue: max` example is workflow-level; no example shows it on a job.
+
+## 17. actionlint and `queue`: VERIFIED (run, and read in the source)
+
+- actionlint 1.7.12, the newest release, rejects the key at job and workflow level: `unexpected key "queue" for
+  "concurrency" section. expected one of "cancel-in-progress", "group"` (plan §1.9; the runs are in
+  `results-s2-s3-rehearsal.txt` §6).
+- Its `main`, `011a6d15` on 2026-09-28, has not added it: `ast.go`'s `Concurrency` struct holds `Group`,
+  `CancelInProgress` and `Pos`, and `parse.go`'s `parseConcurrency` has cases for `"group"` and
+  `"cancel-in-progress"` only. <https://github.com/rhysd/actionlint>
+
+## 18. Duplicate names in `$GITHUB_OUTPUT`: VERIFIED (the runner's source)
+
+The last line of a name wins. actions/runner `main` at `15231bed` (2026-09-28):
+
+- `src/Runner.Worker/FileCommandManager.cs`, `SetOutputFileCommand.ProcessCommand`: `foreach (var pair in pairs)`
+  over the file's lines in order, each either `context.DeferredOutputs[pair.Key] = pair.Value` or
+  `context.SetOutput(pair.Key, pair.Value, out var reference)`.
+- `src/Runner.Worker/ExecutionContext.cs`, `SetOutput`: `Global.StepsContext.SetOutput(ScopeName, ContextName,
+  name, value, out reference)`.
+- `src/Runner.Worker/StepsContext.cs`, `SetOutput`: `outputs[outputName] = new StringContextData(value)`, an
+  assignment, so a second line of the same name replaces the first.
+- So a step in which two test processes each append `reports-path=` ends with the directory of whichever wrote
+  last. In a `dotnet test` over a solution the projects run in parallel, so which one is not fixed.
+
+## 19. CodeQL for GitHub Actions: VERIFIED (the query help)
+
+<https://codeql.github.com/codeql-query-help/actions/> lists 26 queries. Those that touch what 2.2 adds:
+
+- `actions/missing-workflow-permissions`, in the default suite (`actions-code-scanning.qls`): a job or workflow
+  with no `permissions` key. The README's workflow and the S3 lane both declare them.
+- `actions/code-injection/critical` and `/medium`: user-controlled input in `run:` or `script:`. Its advice, "set
+  the untrusted input value of the expression to an intermediate environment variable and then use the
+  environment variable using the native syntax", is what `action.yml` does (`env:`, then `process.env`).
+- `actions/unpinned-tag`, "Unpinned tag for a non-immutable Action or reusable workflow", is only in
+  `actions-security-extended.qls` and `actions-security-and-quality.qls`, not the default suite. It would flag
+  `@v7`-style references.
+- The rest (artifact and cache poisoning, untrusted checkout, secrets exposure) are about `pull_request_target`,
+  `workflow_run`, secrets and caches, none of which the action or the lane uses.
+
+## 20. Current majors, re-checked 2026-09-28: VERIFIED (`git ls-remote --tags`)
+
+Unchanged from section 5: actions/github-script v9, actions/checkout v7, actions/setup-dotnet v6,
+actions/upload-artifact v7, actions/download-artifact v8.
+
+## 21. Not researched further
+
+The second research agent stopped before writing anything, and these were left as sections 4, 3 and 13 have
+them: what a same-name upload does in a later attempt (UNVERIFIED; S3 check 5 measures it), how GitHub serves an
+unzipped HTML artifact, its content type, any content security policy or sandbox (UNVERIFIED; S3 check 9 measures
+it), and whether editing a comment notifies anyone (UNVERIFIED; no step needs it).
