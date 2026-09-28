@@ -4,6 +4,76 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.31.10] - 2026-09-27
+
+**Patch - a `#sid-` link, *Next Failure* and a failure-cluster link land on their scenario (`plans/DOORSTEP_PLAN.md`
+F28, found checking BreakfastProvider's published report at phone width for roadmap 2.1), and the internal-flow
+element's list is counted over the diagrams the page shows (`plans/INTERNAL_FLOW_BLOB_PLAN.md` §11.3).** Bug fixes,
+with nothing new for a consumer to call, so the patch part moved. Report output changes (three of the page's scripts,
+the cluster link's `onclick`, and the element's list where a run logged tests its features do not name): the
+Kronikol4J divergence ledger owes two entries, drafted in `DOORSTEP_PLAN.md` Appendix A because this session could not
+reach that repository. Template pins move to 3.31.9.
+
+### Fixed
+
+- **A deep link, *Next Failure* or a failure-cluster link into a long report ended past its scenario, at the bottom of
+  the page.** Every feature and scenario is drawn with `content-visibility: auto`, so one the browser has not drawn
+  yet counts as its placeholder: 500 px for a feature (about 532 with its padding, where a closed feature is about 60)
+  and 150 px for a scenario. The three jumps scrolled smoothly, and a smooth scroll is aimed once, across those
+  placeholders; they were drawn at their true size as it passed them, and it ran on to the bottom of the page. On
+  BreakfastProvider's published xUnit report a `#sid-` link into the 40th of 67 features ended with the scenario
+  1,766 px above the screen at 1280 px wide and 1,267 px above at 390 px. The three now go through
+  `jump_into_view(target, block)`, which jumps and then re-aims for up to ten frames while the features it landed
+  among are drawn (a browser without scroll anchoring, such as Safari, would otherwise let the target drift). On a
+  copy of that report, links into the first, 40th and last features land with the scenario's title on screen, -15 to
+  85 px from the middle, at both widths. **Behaviour change:** the three no longer animate. Keyboard navigation and a
+  step's table reference move a short way and still scroll smoothly.
+- **On a phone, a `#sid-` link landed above its scenario even near the top of the report.** At 768 px and below the
+  page folds its filter panel away as it loads (559 px on that report), and the link's scroll was aimed before the
+  fold, so it ended the panel's height too far down: a link into the first feature left the scenario 220 px above the
+  screen at 390 x 844. The link is now followed after the phone-width layout is done, the rule `parse_url_hash`
+  already kept for its own filters.
+- **The internal-flow element's list was counted over tests the page does not show.** Since 3.31.9 the segment element
+  carries the shorter of two lists, `has` or `hidden`, over the diagram sources a page can show, but it was counted
+  over every diagram the run's fetcher made, one for each test the process had logged, including tests the run's
+  features do not name, whose diagrams the page never shows. The list stayed exact for the page's own links, but
+  those could be outnumbered, so the element could carry the longer list and its choice depended on what else the
+  process had logged. It is now counted over the diagrams of the scenarios the page lists.
+
+### Tests
+
+- `StableIdDeepLinkTests`: a link into the 30th of 60 features, and a link into the first feature at 390 x 844.
+  `JumpToFailureTests`: a failure in the 30th feature. `FailureClusterLinkTests`: a cluster link into the 30th feature.
+  Each is red on 3.31.9, and each waits for the page to stop scrolling before it looks, since a smooth scroll passes
+  its target on the way. They share `ReportTestHelper.GenerateLongReport` (60 closed features without diagrams, a
+  category each) and `PlaywrightTestBase`'s `WaitForScrollToSettleAsync` and `SummaryIsOnScreenAsync`.
+- `DeepLinkReportTests` and `FailureClusterReportTests` pin `jump_into_view` where they pinned `scrollIntoView`, and
+  that it never scrolls smoothly.
+- `InternalFlowSegmentMapReportTests`: calls logged under a test the run does not name leave the element's list as
+  the page's own links choose it. Red on 3.31.9, which read `has` where `hidden` is right. The same fault made
+  `ArrowLinkOpensPopupTests`' (2, 1) case red in CI's E2E (Popups & Flows) on every main run since the 3.31.9 release,
+  because its fixtures share a process and CI ran its cases the other way round from a local run. An earlier commit
+  of this release made those fixtures empty the process-wide call log instead, and `ProcessGlobalStoreTests` rejected
+  that, rightly, since other classes read the log in parallel; this fix leaves the log alone.
+- `OnDemandRenderingTests`' Node case ran the whole pipeline outside `ReportTestHelper.WholePipeline`, which every
+  such fixture holds because the pipeline memoises its diagrams process-wide. It holds it now, from a fresh cache.
+- The code-cache fact (`Code_cache_is_created_on_first_run_reused_afterwards_and_regenerated_when_v8_rejects_it`)
+  moved from `NodeJsPlantUmlRendererTests` to `NodeJsCodeCacheTests`, in `NodeCodeCacheCollection`, which is declared
+  with `DisableParallelization` and so runs after every parallel collection. The fact deletes and then corrupts the
+  machine's one V8 code cache, which every class that renders through Node reads and writes back. In CI's Core Tests
+  on `5ca0878`, a plan-only commit, another class's render rebuilt the file between the delete and the fact's own
+  render, which read `hit` where `miss` is right. `SharedCodeCacheTests` scans the test sources and keeps any test that
+  deletes or writes the cache in that collection; it was red on the fact's old home. Six local runs of the
+  Node-rendering classes never lost the race, which is why the guard is a source scan. `Kronikol.Tests` after it:
+  5,945 passed and 5 skipped, and the same 3 read-only-file failures as root. Test-only, so the version stays 3.31.10.
+- In this container: `Kronikol.Tests` 5,943 passed and 5 skipped, with 3 failures that fail the same on 3.31.9 (they
+  need a read-only file, and the container runs as root). The 14 end-to-end classes that follow a link, jump to a
+  failure, read the URL hash or lay the page out at a phone's width, run on 3.31.9 and on this release: each of the
+  222 tests they share has the same outcome on both (196 pass, and 26 fail on both, every one waiting for a diagram
+  this container's browser cannot draw, since it cannot fetch the PlantUML engine from jsDelivr), and the four new
+  facts pass. Most of the rest of the E2E tier waits for a drawn diagram as well, so the full suite runs in CI on this
+  commit, and the tag waits for it.
+
 ## [3.31.9] - 2026-09-27
 
 **Patch - the internal-flow segment map ships as one gzip blob (#89), a filtered export draws and binds its diagrams

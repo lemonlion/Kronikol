@@ -44,6 +44,38 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
     protected string GenerateReport(string fileName) =>
         ReportTestHelper.GenerateReport(TempDir, OutputDir, fileName);
 
+    protected string GenerateLongReport(string fileName, params string[] failing) =>
+        ReportTestHelper.GenerateLongReport(TempDir, OutputDir, fileName, failing: failing);
+
+    /// <summary>
+    /// Waits until the page has held one scroll offset for half a second. A smooth scroll passes through
+    /// every offset on its way, so a check made while it runs can find its target on screen and pass
+    /// on a scroll that then carries the target away.
+    /// </summary>
+    protected async Task WaitForScrollToSettleAsync() =>
+        await Page.WaitForFunctionAsync(
+            """
+            () => {
+                const now = performance.now(), last = window.__scrollSettle;
+                if (!last || last.y !== scrollY) { window.__scrollSettle = { y: scrollY, since: now }; return false; }
+                return now - last.since >= 500;
+            }
+            """,
+            null, new() { PollingInterval = 200, Timeout = 10000 });
+
+    /// <summary>
+    /// Whether the summary line of the first element <paramref name="selector"/> matches (or the element
+    /// itself, when it has none) lies wholly inside the screen.
+    /// </summary>
+    protected Task<bool> SummaryIsOnScreenAsync(string selector) =>
+        Page.Locator(selector).First.EvaluateAsync<bool>(
+            """
+            el => {
+                const r = (el.querySelector(':scope > summary') || el).getBoundingClientRect();
+                return r.top >= 0 && r.bottom <= innerHeight;
+            }
+            """);
+
     protected string GenerateReportWithWideDiagram(string fileName) =>
         ReportTestHelper.GenerateReportWithWideDiagram(TempDir, OutputDir, fileName);
 

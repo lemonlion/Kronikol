@@ -1,0 +1,130 @@
+# S2 and S3 rehearsed, 2026-09-27 (plan §1.9). Local and pushed nowhere.
+#
+# The tree: PR #73 (e31b42fa) rebased onto main at 5ca0878a (3.31.10), CHANGELOG.md resolved as S1 step 2 says
+# (f3ad41e9 in a scratch worktree), then four commits, saved as the patches in rehearsal/:
+#   s2-1-facts.patch          the S2 facts and the guard, written first
+#   s2-2-fixes.patch          action.yml, its README, templates/README.md
+#   s2-3-q5-end-marker.patch  Q5's end marker, if the owner says yes
+#   s3-lane.patch             .github/workflows/pr-report-link.yml, its fact, PublishCiArtifacts on the CI Preview example
+# `git apply --index` of the four, in that order, on f3ad41e9 gives a tree identical to the rehearsal's head (checked).
+# To rebuild f3ad41e9: git switch -c x origin/pr-report-link-template && git rebase origin/main (at 5ca0878a), then
+# resolve CHANGELOG.md with the PR's [Unreleased] block above ## [3.31.10] (plan §4.1 step 2).
+# .NET SDK 10.0.401, node v22.22.2, Linux, as root. Tests:
+#   dotnet test tests/Kronikol.Tests --configuration Release --no-build \
+#     --filter "FullyQualifiedName~PrReportLinkActionTests|FullyQualifiedName~PackageReadmeLinkTests"
+
+## 1. After s2-1-facts.patch alone: red, each for the reason plan §4.2 gives
+  Failed Kronikol.Tests.Packaging.PackageReadmeLinkTests.A_package_readme_links_only_to_absolute_addresses(readme: "templates/README.md") [3 ms]
+   templates/README.md is shown on nuget.org, which renders these addresses empty: github-actions/kronikol-pr-report-link. Link to an absolute https:// address instead.
+  Failed Kronikol.Tests.Templates.PrReportLinkActionTests.A_line_break_in_an_input_keeps_the_line_whole [46 ms]
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  Failed Kronikol.Tests.Templates.PrReportLinkActionTests.A_tag_with_a_field_this_version_does_not_know_still_stops_an_older_run [45 ms]
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  Failed Kronikol.Tests.Templates.PrReportLinkActionTests.The_readme_shows_the_comment_the_action_writes [46 ms]
+   the README shows no ```markdown sample of the comment the action writes
+  Failed Kronikol.Tests.Templates.PrReportLinkActionTests.The_readme_workflow_calls_the_action_as_it_is_declared_from_a_job_that_can_use_it [7 ms]
+   job report-link leaves its concurrency group on the default queue, which cancels a waiting job when a third arrives
+Failed!  - Failed:     5, Passed:    17, Skipped:     0, Total:    22, Duration: 1 s - Kronikol.Tests.dll (net10.0)
+
+## 2. After s2-2-fixes.patch: green
+Passed!  - Failed:     0, Passed:    22, Skipped:     0, Total:    22, Duration: 1 s - Kronikol.Tests.dll (net10.0)
+
+## 3. s2-3-q5-end-marker.patch: its fact red without the patch's action.yml change, green with it
+#    Without: What_follows_the_end_marker_survives_every_rewrite_and_holds_no_line failed (Assert.EndsWith: the section
+#    after the end marker was dropped), and so did The_readme_shows_the_comment_the_action_writes (the README's sample
+#    carries the marker the action did not write): Failed 2, Passed 19, Total 21.
+#    With: Passed 23, Total 23.
+
+## 4. s3-lane.patch: The_live_lane_calls_the_action_as_it_is_declared red without the workflow file, green with it
+#    Without: System.IO.FileNotFoundException, .github/workflows/pr-report-link.yml. With: Passed 24, Total 24
+#    (PrReportLinkActionTests 22, PackageReadmeLinkTests 2: nuget-readme.md and templates/README.md).
+#    If Q5 is no: s2-1, s2-2 and s3 applied without s2-3, on a fresh copy of f3ad41e9, build, and pass 23 of 23.
+
+## 5. All of Kronikol.Tests on the rehearsed tree (all four patches)
+Failed!  - Failed:     3, Passed:  5967, Skipped:     5, Total:  5975, Duration: 54 s - Kronikol.Tests.dll (net10.0)
+#  5,975 = main's 5,951 at 5ca0878a (CI's count, run 36348913904) + 17 (PR #73) + 3 (S2) + 1 (Q5) + 1 (S3) + 2 (the guard's cases).
+#  The three failures are the root-only ones of results-s1-rehearsal.txt, which fail the same way on main:
+  Failed Kronikol.Tests.Tool.InitAgentsCommandTests.A_file_that_cannot_be_written_is_reported_rather_than_thrown
+  Failed Kronikol.Tests.Reports.RunRotationTests.A_read_only_previous_report_stops_the_rotation_and_never_the_run
+  Failed Kronikol.Tests.Reports.StaleOutputTests.The_pointer_does_not_name_the_previous_runs_file_when_this_run_could_not_replace_it
+#  Skipped (5): the four Windows-only tests and the 100 MB corpus test of results-s1-rehearsal.txt.
+
+## 6. actionlint 1.7.12 (the newest release, rhysd/actionlint, downloaded from its release page)
+$ actionlint .github/workflows/pr-report-link.yml
+.github/workflows/pr-report-link.yml:52:7: unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group" [syntax-check]
+   |
+52 |       queue: max
+   |       ^~~~~~
+exit 1
+$ actionlint readme-fixed.yml   (the README workflow after s2-2-fixes.patch)
+readme-fixed.yml:40:7: unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group" [syntax-check]
+   |
+40 |       queue: max
+   |       ^~~~~~
+exit 1
+$ actionlint readme-pr.yml      (the README workflow in PR #73, no queue key)
+exit 0
+$ actionlint .github/workflows/*.yml   (this repository's four workflows on main, 5ca0878a)
+exit 0
+$ actionlint wf-level.yml       (queue: max in a workflow-level concurrency block)
+wf-level.yml:4:3: unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group" [syntax-check]
+exit 1
+$ actionlint -ignore 'unexpected key "queue" for "concurrency" section' readme-fixed.yml pr-report-link.yml
+exit 0
+$ actionlint   (in a repository whose .github/actionlint.yaml reads:)
+#   paths:
+#     .github/workflows/**/*.{yml,yaml}:
+#       ignore:
+#         - 'unexpected key "queue" for "concurrency" section'
+exit 0
+$ actionlint templates/github-actions/kronikol-pr-report-link/action.yml   (an action's metadata, not a workflow)
+templates/github-actions/kronikol-pr-report-link/action.yml:1:1: "jobs" section is missing in workflow [syntax-check]
+templates/github-actions/kronikol-pr-report-link/action.yml:1:1: "on" section is missing in workflow [syntax-check]
+#  actionlint reads workflows only. Run from the repository's root, it does read a local action's inputs through
+#  `uses: ./templates/github-actions/kronikol-pr-report-link`: a copy of the lane with `artifact-nam:` for
+#  `artifact-name:` gave
+#  missing input "artifact-name" which is required by action "Kronikol PR report link" defined at
+#  "./templates/github-actions/kronikol-pr-report-link". all required inputs are "artifact-name" [action]
+
+## 7. The lane's test step, run locally with GitHub's files simulated
+$ GITHUB_ACTIONS=true GITHUB_OUTPUT=github_output GITHUB_STEP_SUMMARY=step_summary \
+    dotnet test examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing --configuration Release
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 660 ms - Example.Api.Tests.CiPreview.AllPassing.dll (net10.
+$ cat github_output   (absolute paths on disk; the scratch worktree's prefix is cut here)
+reports-path=examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/bin/Release/net10.0/Reports
+reports-retention-days=1
+$ ls <reports-path>   (1.7M, 13 files: what upload-artifact would zip)
+AGENTS.md
+CLAUDE.md
+CiSummary.md
+ComponentDiagram.html
+Failures.jsonl
+Failures.md
+History.run.json
+Run.json
+Specifications.html
+Specifications.yml
+TestRunReport.html
+TestRunReport.json
+TestRunReport.schema.json
+
+## 8. F12: two Kronikol test projects in one dotnet test (a solution filter naming CiPreview.AllPassing and
+##    CiPreview.Mixed, Mixed given PublishCiArtifacts = true for this run only)
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 946 ms - Example.Api.Tests.CiPreview.AllPassing.dll (net10.
+Failed!  - Failed:    15, Passed:     5, Skipped:     0, Total:    20, Duration: 706 ms - Example.Api.Tests.CiPreview.Mixed.dll (net10.0)
+$ cat github_output   (absolute paths on disk; the scratch worktree's prefix is cut here)
+reports-path=examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/bin/Release/net10.0/Reports
+reports-retention-days=1
+reports-path=examples/Example.Api/tests/Example.Api.Tests.CiPreview.Mixed/bin/Release/net10.0/Reports
+reports-retention-days=1
+#  One pair of lines per test project, in the order the projects finished. Which reports-path the step output
+#  takes is the runner's rule (web-sources.md §18).
+
+## 9. main's own CI on 5ca0878a (run 36348913904, job 108703601424 Core Tests), the log's failure lines
+[xUnit.net 00:00:41.43]     Kronikol.Tests.PlantUml.NodeJsPlantUmlRendererTests.Code_cache_is_created_on_first_run_reused_afterwards_and_regenerated_when_v8_rejects_it [FAIL]
+Total tests: 5951
+     Failed: 1

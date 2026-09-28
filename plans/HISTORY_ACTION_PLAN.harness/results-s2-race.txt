@@ -1,0 +1,32 @@
+wiki-branch-exists: 6 writers, exit codes: 1 1 0 0 1 0 
+wiki-branch-exists:         2 error: ca
+wiki-branch-exists:         8 error: failed to push some refs to 'file://<origin>
+wiki-branch-exists: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 12}; runs by id {'gh:100:1': 3, 'gh:203:1': 3, 'gh:204:1': 3, 'gh:206:1': 3}; duplicate roster lines 0
+wiki-branch-exists: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+wiki-branch-exists: commits on the branch: 4
+dogfood-branch-exists: 6 writers, exit codes: 1 0 0 0 0 0 
+dogfood-branch-exists:         1 could not push the ledger after 5 attempts
+dogfood-branch-exists:         7 error: ca
+dogfood-branch-exists:        15 error: failed to push some refs to 'file://<origin>
+dogfood-branch-exists:        15 lost the race; rebasing onto the branch as it is now
+dogfood-branch-exists: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 18}; runs by id {'gh:100:1': 3, 'gh:202:1': 3, 'gh:203:1': 3, 'gh:204:1': 3, 'gh:205:1': 3, 'gh:206:1': 3}; duplicate roster lines 0
+dogfood-branch-exists: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+dogfood-branch-exists: commits on the branch: 6
+prototype-branch-exists: 6 writers, exit codes: 0 0 0 0 0 0 
+prototype-branch-exists:        15 lost the race; recording again on the branch as it is now
+prototype-branch-exists: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 21}; runs by id {'gh:100:1': 3, 'gh:201:1': 3, 'gh:202:1': 3, 'gh:203:1': 3, 'gh:204:1': 3, 'gh:205:1': 3, 'gh:206:1': 3}; duplicate roster lines 0
+prototype-branch-exists: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+prototype-branch-exists: commits on the branch: 7
+dogfood-first-run: 6 writers, exit codes: 0 0 0 0 0 0 
+dogfood-first-run:         7 error: ca
+dogfood-first-run:        14 error: failed to push some refs to 'file://<origin>
+dogfood-first-run:         6 fatal: could
+dogfood-first-run:        14 lost the race; rebasing onto the branch as it is now
+dogfood-first-run: lines {'header': 1, 'roster': 13, 'shapes': 13, 'run': 18}; runs by id {'gh:201:1': 3, 'gh:202:1': 3, 'gh:203:1': 3, 'gh:204:1': 3, 'gh:205:1': 3, 'gh:206:1': 3}; duplicate roster lines 10
+dogfood-first-run: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+dogfood-first-run: commits on the branch: 6
+prototype-first-run: 6 writers, exit codes: 0 0 0 0 0 0 
+prototype-first-run:         9 lost the race; recording again on the branch as it is now
+prototype-first-run: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 18}; runs by id {'gh:201:1': 3, 'gh:202:1': 3, 'gh:203:1': 3, 'gh:204:1': 3, 'gh:205:1': 3, 'gh:206:1': 3}; duplicate roster lines 0
+prototype-first-run: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+prototype-first-run: commits on the branch: 6

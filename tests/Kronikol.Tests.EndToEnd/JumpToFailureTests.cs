@@ -29,6 +29,22 @@ public class JumpToFailureTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task Jump_to_failure_reaches_a_failure_far_down_a_long_report()
+    {
+        // The report above has two features, so every feature between the button and the failure had
+        // been drawn. In a long report most have not: each counts as its 500 px content-visibility
+        // placeholder, a smooth scroll aimed across them ends past the failure, at the bottom of the page
+        // (StableIdDeepLinkTests has the same fault for a #sid- link).
+        await Page.GotoAsync(GenerateLongReport("JumpToFailureFarDown.html", "Scenario 30.2"));
+
+        await Page.Locator("button.jump-to-failure").ClickAsync();
+        await WaitForScrollToSettleAsync();
+
+        Assert.True(await SummaryIsOnScreenAsync("details.scenario[data-status='Failed']"),
+            "The failure's title should be on screen once the page has stopped scrolling");
+    }
+
+    [Fact]
     public async Task Jump_to_failure_counter_updates()
     {
         await Page.GotoAsync(GenerateReport("JumpToFailureCounter.html"));

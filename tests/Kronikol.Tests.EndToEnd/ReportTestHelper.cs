@@ -160,6 +160,46 @@ public static class ReportTestHelper
         return new Uri(path).AbsoluteUri;
     }
 
+    /// <summary>
+    /// A report long enough that a jump into its middle crosses features the browser has never drawn, and
+    /// leaves more below than a screen, so a jump that overshoots to the bottom of the page cannot still
+    /// show its target: <paramref name="featureCount"/> closed features, "Feature 01" onwards, of three scenarios each
+    /// ("Scenario 01.1" to "Scenario 01.3"). No scenario has a diagram, so a scenario's height is its step
+    /// alone and does not change once a jump has landed on it. Each feature has a category of its own,
+    /// which gives the filter panel many rows to fold at a phone's width. The scenarios
+    /// <paramref name="failing"/> names fail with one message, so they form one failure cluster.
+    /// </summary>
+    public static string GenerateLongReport(string tempDir, string outputDir, string fileName,
+        int featureCount = 60, params string[] failing)
+    {
+        var features = Enumerable.Range(1, featureCount).Select(f => new Feature
+        {
+            DisplayName = $"Feature {f:00}",
+            Scenarios = Enumerable.Range(1, 3).Select(s =>
+            {
+                var name = $"Scenario {f:00}.{s}";
+                var result = failing.Contains(name) ? ExecutionResult.Failed : ExecutionResult.Passed;
+                return new Scenario
+                {
+                    Id = $"f{f}s{s}", DisplayName = name, Result = result,
+                    Duration = TimeSpan.FromMilliseconds(10 * s), Categories = [$"area-{f:00}"],
+                    ErrorMessage = result == ExecutionResult.Failed ? "the batch was not baked" : null,
+                    Steps = [new ScenarioStep { Keyword = "Then", Text = "it bakes", Status = result }]
+                };
+            }).ToArray()
+        }).ToArray();
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Long Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
     public static string GenerateReportWithWideDiagram(string tempDir, string outputDir, string fileName)
     {
         var (features, _) = CreateTestData();
@@ -4090,7 +4130,7 @@ public static class ReportTestHelper
     }
 
     /// <summary>Held by every fixture that runs the whole pipeline, which memoises its diagrams process-wide.</summary>
-    private static readonly object WholePipeline = new();
+    internal static readonly object WholePipeline = new();
 
     /// <summary>
     /// A run report written by the whole pipeline (<see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>) with
