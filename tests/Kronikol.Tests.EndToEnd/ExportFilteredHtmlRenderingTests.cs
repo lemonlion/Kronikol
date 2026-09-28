@@ -1,3 +1,6 @@
+using Kronikol.InternalFlow;
+using Kronikol.Reports;
+
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
@@ -211,6 +214,44 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
         await Expect(bar).ToBeVisibleAsync();
         await bar.EvaluateAsync("el => el.dispatchEvent(new MouseEvent('click', { bubbles: true }))");
         await Expect(Page.Locator(".diagram-view-flame .iflow-flame-zoom-hint").First).ToBeVisibleAsync();
+    }
+
+    [Fact]
+    public async Task An_inline_diagram_goes_into_the_export_not_marked_as_bound()
+    {
+        // A diagram drawn when the report was written (NodeJs, Server, Local) arrives inline, and the page marks it
+        // data-iflow-bound once it has looked at its links. The mark means "bound in this page", and no listener survives
+        // the copy, so the export's copy goes without it and the export looks at its links again.
+        const string svg = """
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="220" height="90" viewBox="0 0 220 90"><g><line x1="30" y1="50" x2="190" y2="50" stroke="#181818"/><a href="#iflow-seg-1" xlink:href="#iflow-seg-1"><text x="40" y="45" fill="#0000FF" font-size="13" text-decoration="underline">GET: /api/orders</text></a></g></svg>
+            """;
+        const string scenarioId = "export-inline-1";
+        var dataScript = DiagramContextMenu.GetInternalFlowConfigScript(InternalFlowHasDataBehavior.ShowLinkOnHover)
+            + InternalFlowHtmlGenerator.WrapSegmentData(new Dictionary<string, object>
+            {
+                ["iflow-seg-1"] = new { title = "Internal Flow (1 span)", content = "<p>flow</p>" }
+            });
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DefaultDiagramsFetcher.DiagramAsCode(scenarioId, svg, "@startuml\nCaller -> Orders: [[#iflow-seg-1 GET: /api/orders]]\n@enduml")],
+            [new Feature { DisplayName = "Orders", Scenarios = [new Scenario { Id = scenarioId, DisplayName = "Look an order up", Result = ExecutionResult.Passed }] }],
+            DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, "ExportRender_Inline.html"), "Inline Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.Local,
+            inlineSvgRendering: true,
+            internalFlowTracking: true,
+            internalFlowDataScript: dataScript);
+        File.Copy(path, Path.Combine(OutputDir, "ExportRender_Inline.html"), true);
+        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await ExpandFirstScenarioWithDiagram();
+        await Page.Locator(".plantuml-inline-svg").First.ScrollIntoViewIfNeededAsync();
+        await Page.WaitForFunctionAsync("() => document.querySelector('.plantuml-inline-svg').dataset.iflowBound === '1'", null,
+            new() { Timeout = 10_000, PollingInterval = 200 });
+
+        var exported = await ExportFilteredHtml();
+
+        var copies = System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(exported), "<div class=\"plantuml-inline-svg\"[^>]*>");
+        Assert.Single(copies);
+        Assert.DoesNotContain("data-iflow-bound", copies[0].Value, StringComparison.Ordinal);
     }
 
     /// <summary>Asks the page to draw every diagram and waits until each has drawn.</summary>

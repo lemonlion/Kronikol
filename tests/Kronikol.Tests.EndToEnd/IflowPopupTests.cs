@@ -330,6 +330,54 @@ public class IflowPopupTests : PlaywrightTestBase
         Assert.Contains(errors, e => e.Contains("internal flow data could not be decompressed", StringComparison.Ordinal));
     }
 
+    [Theory]
+    [InlineData("no DecompressionStream")]
+    [InlineData("not base64")]
+    public async Task A_map_the_browser_cannot_start_to_decode_says_so_in_the_popup(string cause)
+    {
+        // §3.4 and §3.5 name a browser without DecompressionStream (Chrome before 80, Firefox before 113, Safari before
+        // 16.4) as the case the message is for; a blob atob refuses is the other way in. The decompressor throws for both
+        // before it returns a promise, which left the popup on "Loading…" for good.
+        var html = TestPageGenerator.GenerateIflowPopupTestPage();
+        if (cause == "not base64")
+            html = System.Text.RegularExpressions.Regex.Replace(html, "\"z\":\"[^\"]*\"", "\"z\":\"*not base64*\"");
+        else
+            await Page.AddInitScriptAsync("delete window.DecompressionStream;");
+        var errors = new List<string>();
+        Page.Console += (_, message) => { if (message.Type == "error") errors.Add(message.Text); };
+        await Page.GotoAsync(ServePage(html));
+
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+
+        var failed = Page.Locator(".iflow-popup .iflow-load-failed");
+        await Expect(failed).ToBeVisibleAsync();
+        await Expect(failed).ToContainTextAsync("Internal flow data could not be decompressed: ");
+        if (cause == "no DecompressionStream")
+            await Expect(failed).ToContainTextAsync("DecompressionStream");
+        Assert.Equal(0, await Page.Locator(".iflow-popup .iflow-loading").CountAsync());
+        for (var i = 0; i < 50 && !errors.Any(e => e.Contains("internal flow data could not be decompressed", StringComparison.Ordinal)); i++)
+            await Task.Delay(200);
+        Assert.Contains(errors, e => e.Contains("internal flow data could not be decompressed", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_popup_draws_a_span_whose_name_holds_attribute_markup()
+    {
+        // Q7 (§3.7, §8.5): the popup's activity diagram travels in a data-plantuml attribute with &, " and < escaped. The
+        // browser's own reading of the attribute gives back the name as the report wrote it, a literal "&lt" included (a
+        // reference a browser decodes even without its semicolon), and the engine draws it.
+        const string name = "a \"b\" < c && d\tsays &lt";
+        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(childSpanName: name)));
+
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+        var svg = await WaitForActivityDiagramSvg();
+
+        var source = await Page.Locator(".iflow-popup .plantuml-browser").First.GetAttributeAsync("data-plantuml");
+        Assert.Contains(":" + name + " (", source, StringComparison.Ordinal);
+        var drawn = string.Concat((await svg.First.TextContentAsync())!.Where(c => !char.IsWhiteSpace(c)));
+        Assert.Contains("a\"b\"<c&&d", drawn, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task A_page_with_no_segment_element_has_no_segment()
     {
@@ -383,6 +431,46 @@ public class IflowPopupTests : PlaywrightTestBase
 
         // The link with a segment keeps its href and opens it.
         await Page.Locator("#t-live").EvaluateAsync("t => t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))");
+        await Expect(Page.Locator(".iflow-popup h3")).ToContainTextAsync("Internal Flow");
+    }
+
+    [Fact]
+    public async Task A_server_drawn_link_added_after_the_page_loaded_is_checked_when_it_is_clicked()
+    {
+        // The load-time pass cannot see a link that arrives later: the click handler asks, and a link with no segment
+        // loses its href there and opens nothing, while one with a segment opens it.
+        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.EvaluateAsync("""
+            () => {
+                const ns = 'http://www.w3.org/2000/svg', xlink = 'http://www.w3.org/1999/xlink';
+                const svg = document.createElementNS(ns, 'svg');
+                svg.setAttribute('width', '400');
+                svg.setAttribute('height', '120');
+                [['iflow-dropped', 't-late-dead', 30], ['iflow-seg-1', 't-late-live', 80]].forEach(([id, textId, y]) => {
+                    const a = document.createElementNS(ns, 'a');
+                    a.setAttribute('href', '#' + id);
+                    a.setAttributeNS(xlink, 'xlink:href', '#' + id);
+                    const text = document.createElementNS(ns, 'text');
+                    text.id = textId;
+                    text.setAttribute('x', '10');
+                    text.setAttribute('y', String(y));
+                    text.setAttribute('fill', '#0000FF');
+                    text.textContent = 'GET /' + textId;
+                    a.appendChild(text);
+                    svg.appendChild(a);
+                });
+                document.body.insertBefore(svg, document.getElementById('page-title'));
+            }
+            """);
+
+        var dead = Page.Locator("#t-late-dead");
+        Assert.Equal("#iflow-dropped", await dead.EvaluateAsync<string?>("t => t.parentNode.getAttribute('href')"));
+        await dead.EvaluateAsync("t => t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))");
+        await Page.WaitForTimeoutAsync(500);
+        Assert.Equal(0, await Page.Locator(".iflow-overlay").CountAsync());
+        Assert.Null(await dead.EvaluateAsync<string?>("t => t.parentNode.getAttribute('href')"));
+
+        await Page.Locator("#t-late-live").EvaluateAsync("t => t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))");
         await Expect(Page.Locator(".iflow-popup h3")).ToContainTextAsync("Internal Flow");
     }
 

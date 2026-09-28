@@ -124,6 +124,41 @@ public class InternalFlowSegmentMapReportTests : IDisposable
     }
 
     [Fact]
+    public void The_run_report_and_a_merge_of_its_data_file_carry_the_same_element()
+    {
+        // INTERNAL_FLOW_BLOB_PLAN §7.4: the two emit sites, ReportGenerator for a run and MergeableReportRenderer for a
+        // merge, write the same element for the same run, and do so when the process also logged a test the run does not
+        // name (§11.3): the merge renders the data file's diagrams, which are the run's scenarios' only.
+        var elsewhere = "iflow-map-elsewhere-" + Guid.NewGuid().ToString("N");
+        var at = DateTimeOffset.UtcNow.AddSeconds(-40);
+        for (var i = 0; i < 4; i++)
+        {
+            var id = Guid.NewGuid();
+            var trace = ActivityTraceId.CreateRandom();
+            Log(Call(elsewhere, HttpMethod.Get, id, trace, RequestResponseType.Request, at.AddMilliseconds(i * 20)));
+            Log(Call(elsewhere, HttpMethod.Get, id, trace, RequestResponseType.Response, at.AddMilliseconds(i * 20 + 5)));
+        }
+        var run = Generate(InternalFlowNoDataBehavior.HideLink);
+
+        var merged = Kronikol.Reports.Merge.MergeableReportRenderer.Render(
+            Kronikol.Reports.Merge.MergeableReportReader.ReadFile(Path.Combine(_directory, "TestRunReport.json")),
+            Path.Combine(_directory, "merged", "TestRunReport.html"));
+
+        var element = Element(run.Html);
+        Assert.Contains($"iflow-{run.First}", SegmentKeysInPage(run.Html));
+        Assert.Equal(element, Element(File.ReadAllText(merged)));
+    }
+
+    /// <summary>The page's segment element, whole.</summary>
+    private static string Element(string html)
+    {
+        const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
+        var start = html.IndexOf(head, StringComparison.Ordinal);
+        Assert.True(start >= 0, "the page carries a segment element");
+        return html[start..(html.IndexOf("</script>", start, StringComparison.Ordinal) + "</script>".Length)];
+    }
+
+    [Fact]
     public void A_scenario_that_made_no_call_has_no_whole_test_flow()
     {
         var run = Generate(InternalFlowNoDataBehavior.HideLink);

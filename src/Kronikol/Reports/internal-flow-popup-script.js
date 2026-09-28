@@ -32,7 +32,10 @@
         if (legacy) return (segments = Promise.resolve(legacy));
         var z = readIndex().z;
         if (!z) return (segments = Promise.resolve({}));
-        segments = window.decompressGzipBase64(z).then(function(json) { return JSON.parse(json); });
+        // The decompressor throws before it returns a promise where the browser has no DecompressionStream, or when atob
+        // refuses the text: a map that cannot be decoded either way, which the popup reports as it does a failed decode.
+        segments = new Promise(function(resolve) { resolve(window.decompressGzipBase64(z)); })
+            .then(function(json) { return JSON.parse(json); });
         return segments;
     }
     function hasSegment(segmentId) {

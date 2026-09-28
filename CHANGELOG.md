@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.32.4] - 2026-09-28
+
+**Patch - an audit of `plans/INTERNAL_FLOW_BLOB_PLAN.md` (stage 1 P5, releases 3.31.4 and 3.31.9), asked for by the
+owner: an internal-flow popup that cannot decode its data says so in every browser, and a filtered export no longer
+copies an inline diagram's "bound" mark.** Bug fixes, with nothing new for a consumer to call, so the patch part moved.
+Report output changes (the internal-flow popup script and the export function): the Kronikol4J divergence ledger
+records it. The audit's other findings were records: the wiki's sentence on the popup's failure message, a hand-off
+to roadmap 5.2 (the figures in #86 predate 3.31.4), and the plan's leftovers in the roadmap's Appendix C. Template
+pins stay at 3.31.10, since 3.32.0 is not on NuGet yet.
+
+### Fixed
+
+- **In a browser without `DecompressionStream`, an internal-flow popup said "Loading…" for good.** Since 3.31.9 the
+  popup decodes the segment data on its first opening. A popup that cannot decode it is meant to show "Internal flow
+  data could not be decompressed: <reason>" and log the error, and the plan named this browser as the case: Chrome
+  and Edge before 80, Firefox before 113, Safari before 16.4. There, and on data `atob` refuses, the decompressor
+  fails before it returns a promise, so the popup's error path never ran: it stayed on "Loading…", and the console
+  got an uncaught error instead. Both now show the message. It matters where nothing else on the page needs
+  `DecompressionStream`: `CallTree` popups under Server or Local rendering, which worked in such a browser before
+  3.31.9. Data that decompresses to something wrong showed the message already.
+- **A filtered export copied an inline diagram's `data-iflow-bound` mark.** A diagram drawn when the report was written
+  (NodeJs, Server, Local) is marked once the page has bound its links, and no listener survives the export's copy.
+  The copy now goes without the mark, so the mark always means "bound in this page". This is the export's half of a
+  defect 3.32.3 fixed in the link binder: under the default `ShowLinkOnHover`, an export lost the popups of every
+  NodeJs diagram the page had bound before it.
+
+### Tests
+
+- `IflowPopupTests` (Playwright):
+  - A popup that cannot start to decode says so, with `DecompressionStream` taken away and with data that is not
+    base64. Both are red on 3.31.10.
+  - A popup draws a span whose name holds `"`, `<`, `&&`, a tab and a literal `&lt`. The attribute Chromium reads back
+    holds the name as the report wrote it, and the engine draws it. The plan asked for this paint-level fact when the
+    popup's diagrams became raw PlantUML in 3.31.9; the unit fact decodes the attribute in .NET. Leaving `&` unescaped
+    turns it red.
+  - A server-drawn link added after the page loaded is checked when it is clicked: with no segment it loses its link
+    and opens nothing, and one with a segment opens it. 3.31.9's changelog said so, and no test had clicked such a
+    link. A click handler that opens every link turns it red.
+- `ExportFilteredHtmlRenderingTests`: an inline diagram goes into the export without the mark. Red on 3.31.10.
+- `InternalFlowSegmentMapReportTests`: a run's report and a merge of its own data file carry the same segment element,
+  with another test's calls in the process. The plan asked for the two emit sites to be compared, and the fact that
+  did so built the run's element by hand. Counting the list over every diagram the process logged, as 3.31.9 did,
+  turns it red.
+- Full suites on this release: `Kronikol.Tests` 6,077 passed and 1 skipped, and the end-to-end suite 962 passed with 28
+  skipped. The rest of the unit tier passed on 3.32.0 with this change, where two load-sensitive facts (a Node
+  renderer timeout and a history-ledger time budget) failed while other sessions' suites loaded the machine, and
+  both pass alone.
+
 ## [3.32.3] - 2026-09-28
 
 **Patch - a fourth audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3, plan §12.7), mostly of 3.31.8's views for a
