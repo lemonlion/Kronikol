@@ -32,6 +32,48 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
             .map(t => (t.style.pointerEvents || 'none') + '|' + (t.getAttribute('fill') || '').toUpperCase())
         """, pathPart);
 
+    /// <summary>
+    /// The report as written, its segment element rewritten to carry <paramref name="list"/>. The generator picks the
+    /// shorter list over every diagram the process has logged, which other tests change (CI ran this group after other
+    /// fixtures and got <c>has</c> where a lone run gets <c>hidden</c>), so the form is forced here from the page's own
+    /// diagram sources and map keys; the choice itself is <c>InternalFlowSegmentBlobTests</c>'. Both lists are exact.
+    /// </summary>
+    private static string WithList(string uri, string list)
+    {
+        var path = new Uri(uri).LocalPath;
+        var html = File.ReadAllText(path);
+        const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
+        var start = html.IndexOf(head, StringComparison.Ordinal) + head.Length;
+        var end = html.IndexOf("</script>", start, StringComparison.Ordinal);
+        using var element = System.Text.Json.JsonDocument.Parse(html[start..end]);
+        var z = element.RootElement.GetProperty("z").GetString()!;
+        using var map = System.Text.Json.JsonDocument.Parse(Gunzip(z));
+        var keys = map.RootElement.EnumerateObject().Select(p => p.Name).ToHashSet();
+
+        // The data element, not the head's scripts that name it: its text starts with '{'.
+        const string dataHead = "<script id=\"puml-data\" type=\"application/json\">{";
+        var dataStart = html.IndexOf(dataHead, StringComparison.Ordinal) + dataHead.Length - 1;
+        var dataEnd = html.IndexOf("</script>", dataStart, StringComparison.Ordinal);
+        using var data = System.Text.Json.JsonDocument.Parse(html[dataStart..dataEnd]);
+        var linked = data.RootElement.EnumerateObject()
+            .SelectMany(p => System.Text.RegularExpressions.Regex.Matches(Gunzip(p.Value.GetString()!), @"\[\[#(iflow-[^\s\]]+)").Select(m => m.Groups[1].Value))
+            .Distinct()
+            .ToList();
+        var ids = list == "has" ? linked.Where(keys.Contains).ToList() : linked.Where(id => !keys.Contains(id)).ToList();
+        Assert.NotEmpty(ids);
+
+        var copy = Path.Combine(Path.GetDirectoryName(path)!, $"TestRunReport.{list}.html");
+        File.WriteAllText(copy, html[..start] + "{\"" + list + "\":" + System.Text.Json.JsonSerializer.Serialize(ids) + ",\"z\":\"" + z + "\"}" + html[end..]);
+        return new Uri(copy).AbsoluteUri;
+    }
+
+    private static string Gunzip(string base64)
+    {
+        using var gzip = new System.IO.Compression.GZipStream(new MemoryStream(Convert.FromBase64String(base64)), System.IO.Compression.CompressionMode.Decompress);
+        using var reader = new StreamReader(gzip);
+        return reader.ReadToEnd();
+    }
+
     private Task<string> ListInPage() => Page.EvaluateAsync<string>(
         "() => Object.keys(JSON.parse(document.getElementById('iflow-segments').textContent))[0]");
 
@@ -96,7 +138,7 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
     public async Task An_arrow_is_bound_when_drawn_exactly_when_it_has_a_segment(int withFlow, int withoutFlow, string list)
     {
         var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, $"ArrowLink_Bind_{list}.html", withFlow, withoutFlow);
-        await OpenAndDraw(uri);
+        await OpenAndDraw(WithList(uri, list));
 
         Assert.Equal(list, await ListInPage());
         // Read at once after the render, with no popup opened and no wait on the map: binding needs only the list.
