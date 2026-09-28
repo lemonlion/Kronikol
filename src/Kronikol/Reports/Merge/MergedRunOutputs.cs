@@ -82,11 +82,11 @@ public static class MergedRunOutputs
                 report.Interactions.Length > 0 ? report.Interactions : null,
                 baseName,
                 report.KronikolVersion,
+                queryScriptPlanned,
                 report.Diagnostics,
                 report.Suite,
                 report.StepPaths,
-                history: history,
-                queryScript: queryScriptPlanned));
+                history: history));
 
             Attempt(ReportGenerator.FailuresDigestFileName,
                 () => File.WriteAllText(Path.Combine(directory, ReportGenerator.FailuresDigestFileName), digest.Value.Markdown));

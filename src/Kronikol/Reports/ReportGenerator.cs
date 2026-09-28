@@ -531,7 +531,7 @@ public static class ReportGenerator
                     // sibling action in this same parallel list, so File.Exists here would answer whatever
                     // the scheduler happened to have done.
                     options.GenerateTestRunReport ? options.HtmlTestRunReportFileName : null,
-                    KronikolVersion, reportDiagnostics, suite, stepPaths: attribution.Value.StepPaths, history: history?.Verdicts,
+                    KronikolVersion, queryScriptPlanned, reportDiagnostics, suite, stepPaths: attribution.Value.StepPaths, history: history?.Verdicts,
                     // A retry that passes writes "All N scenarios passed" two seconds after the failure it
                     // retried. The attempt that failed is kept under runs/, and this is the file an agent
                     // reads first, so it says so.
@@ -543,8 +543,7 @@ public static class ReportGenerator
                         : rotation is { KeptDirectory: { } keptRun, Kept: { Failed: > 0 } keptManifest }
                             ? new FailuresDigestEarlierAttempt(
                                 Path.GetRelativePath(reportsDir, keptRun).Replace('\\', '/'), keptManifest.Failed, keptManifest.Scenarios, SameRun: false)
-                            : null,
-                    queryScript: queryScriptPlanned));
+                            : null));
 
             Add(FailuresDigestFileName, () => WriteFile(digest.Value.Markdown, FailuresDigestFileName));
             Add(FailuresDigestJsonlFileName, () => WriteFile(digest.Value.Jsonl, FailuresDigestJsonlFileName));

@@ -97,6 +97,25 @@ public class QueryScriptAdviceTests
         Assert.DoesNotContain("query.cs", FailuresDigestGenerator.Generate(OneFailure, null, "TestRunReport", "3.32.0").Markdown, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// The digest learned about query.cs through an internal overload, not a new parameter on the public
+    /// <c>Generate</c>: a parameter added to a public method removes the signature compiled callers bind to,
+    /// which is a break the semver rule keeps for a major.
+    /// </summary>
+    [Fact]
+    public void The_digest_keeps_the_public_signature_compiled_callers_bind_to()
+    {
+        var publicGenerate = typeof(FailuresDigestGenerator)
+            .GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+            .Where(m => m.Name == nameof(FailuresDigestGenerator.Generate))
+            .Select(m => string.Join(", ", m.GetParameters().Select(p => p.ParameterType.Name)))
+            .ToArray();
+
+        Assert.Equal(
+            ["Feature[], RequestResponseLog[], String, String, IReadOnlyList`1, String, IReadOnlyDictionary`2, HistoryVerdicts, FailuresDigestEarlierAttempt"],
+            publicGenerate);
+    }
+
     [Fact]
     public void The_managed_block_says_what_query_cs_needs_and_what_it_does_not()
     {

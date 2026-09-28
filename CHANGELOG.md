@@ -4,6 +4,80 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.32.0] - 2026-09-28
+
+**Minor - every run writes `query.cs` beside its report: `kronikol query` with nothing installed and no network
+(roadmap stage 1b, `plans/QUERY_FALLBACK_PLAN.md`).** The minor part moved because there is new public surface: the
+type `Kronikol.Query.QueryCommand`, the option `ReportConfigurationOptions.WriteQueryScript` and the property
+`RunSummary.QueryScriptWritten`. Nothing was removed or renamed and every existing signature is unchanged
+(`FailuresDigestGenerator.Generate` keeps its own, pinned by a test), so it is not a major. Report output changes (a
+new file beside the report, a line in `Failures.md`, the instruction files, the data file schema's `$comment`, a line
+in a failing run's pointer and in the CI summary): the Kronikol4J divergence ledger owes an entry, drafted in the
+plan's log because this session could not reach that repository. Template pins stay at 3.31.9, the newest version on
+nuget.org: 3.31.10 was committed and never tagged, so it was never published.
+
+### Added
+
+- **`query.cs` beside every report.** An agent whose session may not install a tool or reach the NuGet feed met
+  Kronikol with no way past `Failures.md`: the instructions offered `dotnet tool install -g` and `dnx`, which fetches
+  from the feed on every call, and `scripts/query.py` needed Python, answered 6 of the 20 verbs and was on disk only
+  where the skill had been installed. Now, from the reports directory, `dotnet run --file query.cs -- summary .`
+  prints what `kronikol query summary .` prints, byte for byte, for every verb and flag, because it runs the same
+  engine: the `Kronikol` that wrote the report. It needs the .NET 10 SDK; the first run compiles it in a few seconds
+  and later runs start at once. Measured with an empty NuGet cache and the network cut. The plan's design, a
+  `#:package Kronikol@version` directive, failed that measurement twice (a file-based app defaults to native AOT,
+  whose restore fetches a package no consumer has, and a net8.0 or net9.0 project never restored the net10.0
+  dependency group), so the file restores nothing: it loads the test run's own `Kronikol.dll` when that is a .NET 10
+  build, else `lib/net10.0` from the NuGet cache, which every consumer holds whatever it targets, either only at
+  exactly the version that wrote the report. Where neither is on the machine it says where it looked, exits 1 and
+  prints the `dnx Kronikol.Tool@<version>` line. It carries `#:property` lines that keep a repository's own
+  `Directory.Build.props` from breaking it or printing into its answer (native AOT, a pinned `TargetFramework`,
+  warnings as errors, analyzers, NuGet audit). It names the engine by a path relative to itself, never an absolute
+  one, which would carry a home directory into a folder that is often published. A `query.cs` Kronikol did not write
+  is left alone, and like `CLAUDE.md` the file describes the directory, not the run: it is not in `Run.json` and never
+  moves into `runs/`. `kronikol merge`, and so `kronikol ingest`, write it too.
+- **`ReportConfigurationOptions.WriteQueryScript`**, default `true`. Written only beside a JSON data file, which is
+  all the engine reads.
+- **`Kronikol.Query.QueryCommand`**, public: `Run(IReadOnlyList<string> args, TextWriter out, TextWriter error)` and
+  `PrintUsage(TextWriter)`, the engine behind `kronikol query`, for anything that wants to embed it. `query.cs` binds
+  to that `Run` by reflection, so its signature does not change within a major version.
+- **`RunSummary.QueryScriptWritten`**: a failing run whose directory has Kronikol's `query.cs` adds
+  `no tool: dotnet run --file <dir>/query.cs -- failures <target>` to its pointer, and the CI summary's *Debug this
+  run* names it. A green run's pointer is still one line.
+
+### Changed
+
+- **The query engine moved from `Kronikol.Tool` into `Kronikol`**, namespace `Kronikol.Query`, compiled for net10.0
+  and later only: the net8.0 and net9.0 builds carry none of it and are unchanged by it, and the net10.0
+  `Kronikol.dll` grows by about 0.44 MB. `kronikol query` behaves exactly as before; `query --describe`'s
+  `toolVersion` now comes from the library, the same string since every package ships at one version.
+- Every surface that says how to ask a run a question names `query.cs` beside `kronikol query`, always as
+  `dotnet run --file query.cs -- …`: without `--file`, from a folder holding a project, `dotnet run` runs that
+  project instead. That is the `CLAUDE.md`/`AGENTS.md` beside every report, `Failures.md`'s command blocks (only
+  where the directory has Kronikol's `query.cs`), the schema's `$comment`, the agent block `kronikol init-agents`
+  installs, both copies of the skill and its flag reference, `README.md`, `templates/README.md` and the NuGet
+  readme. The skill's `scripts/query.py` stays, named for a machine without the .NET 10 SDK (roadmap D25).
+- **Behaviour change:** a reports directory inside a C# project's folder, outside that project's `bin` and `obj`,
+  gets no `query.cs`, because the project would compile it and its `#:` directives are error CS9298 in a project
+  build. The run prints a `⚠ WARNING` and records an `OptionNotApplied` diagnostic naming the project file, on every
+  run. A project that already leaves the folder out (default compile items off, or an unconditioned
+  `Compile Remove` of that folder or of everything) does not count. Set `WriteQueryScript = false` to silence it.
+
+### Tests
+
+- `QueryEngineHomeTests`: the engine is in `Kronikol`, the tool keeps no copy, and `QueryCommand` is the only public
+  type it brings, with `Run` and `PrintUsage` its only public members.
+- `QueryScriptTests` (27): the file's text, the version pins, the relative path, the binding, the properties, the
+  switch, a JSON data file, ownership, the project-folder rule and its exceptions, and the merge.
+- `QueryScriptEndToEndTests` (25): 22 invocations through `dotnet run --file query.cs` and through the built tool,
+  with exit code, stdout bytes and stderr identical, offline with an empty NuGet cache; the engine from a cache holding
+  `Kronikol.dll` alone; no engine anywhere; a strict `Directory.Build.props`. Skipped, visibly, without a .NET 10
+  SDK. Mutation-checked: a wrong type name fails 24 of 25, and dropping `PublishAot=false` fails all 25.
+- `QueryScriptAdviceTests`: seven surfaces name `query.cs`, every `query.cs -- verb` they show is a verb with flags
+  it reads, none runs it without `--file`, and `FailuresDigestGenerator.Generate` keeps its public signature.
+- `RunEndPointerTests`, `RunRotationTests`, `MergeWritesTheRunOutputsTests`, `TestRunReportSchemaContractTests`,
+  `SkillDriftTests` and `CommandTableTests` follow the file and the engine's new home.
+
 ## [3.31.10] - 2026-09-27
 
 **Patch - a `#sid-` link, *Next Failure* and a failure-cluster link land on their scenario (`plans/DOORSTEP_PLAN.md`

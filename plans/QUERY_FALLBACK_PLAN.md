@@ -1,7 +1,9 @@
 # QUERY_FALLBACK_PLAN.md — replace the Python fallback with the CLI itself
 
 **Date:** 2026-09-13 · **Repo version:** 3.3.0 (released) · **Target:** 3.4.0 (MINOR)
-· **Status: investigation complete and measured, nothing implemented, NOT green-lit.**
+· **Status: EXECUTED 2026-09-28 as 3.32.0 (M1 to M3, M5, M6; green-lit by the owner that day, `ROADMAP.md`
+D25). M4 held: `query.py` stays, for a machine without the .NET 10 SDK. §11 is the log, and says where execution
+departed from this plan, on measurements: `query.cs` restores nothing and loads `Kronikol.dll` itself.**
 
 **Re-checked 2026-09-27, at 3.31.10. Nothing past M0 is built.** The owner moved this plan from
 `ROADMAP.md` 14.10, after the launch, to stage 1b, before it, and into the launch bar. The reason:
@@ -382,3 +384,119 @@ cheap.
   it backs up.
 - **No extra pre-rendered digests.** A good idea on its own — `Failures.md` proves the shape — but
   it answers fixed questions, not `grep this value` or `fetch that body by path`. Separate plan.
+
+---
+
+## 11. Execution log (2026-09-28, 3.32.0)
+
+Green-lit by the owner on 2026-09-28 (`ROADMAP.md` D25, as recommended: M1 to M3, M5 and M6; M4 held). Shipped as
+one minor, 3.32.0, in three commits on `claude/focused-gauss-ztr0zm`: M1 `1adc750`, M2 `3d79c5a`, M3 `4cae42e`,
+then the release. All measurements on SDK 10.0.401 in a Linux container.
+
+### 11.1 M1, the move
+
+27 files and 9,484 lines, as `git mv`, to `src/Kronikol/Query/`, namespace `Kronikol.Query`, removed from the
+net8.0 and net9.0 compiles by `Kronikol.csproj` (`Compile Remove="Query\**"` where the framework is not compatible
+with net10.0) rather than 27 `#if` blocks. `Kronikol` already granted `InternalsVisibleTo` to `Kronikol.Tool`
+(§2.1's edit was not needed). Gate A9 held, as predicted, with one collision: the engine's internal
+`DiagnosticEntry` beside the public `Kronikol.Reports.DiagnosticEntry` made a test ambiguous, so it is now
+`ReportDiagnosticEntry`. `query --describe`'s `toolVersion` reads `ReportGenerator.KronikolVersion`, the same string.
+`QueryCommand.Run` took two test seams by 3.31.10 (`getEnv`, `workingDirectory`), so the public method is a
+three-argument overload and the seamed one stays internal. The net10.0 `Kronikol.dll` grew 2.47 to 2.92 MB (debug).
+
+### 11.2 M2, where the design departed: `query.cs` restores nothing
+
+§2.2's `#:package Kronikol@version` was run before it was built, against a consumer's cache simulated by restoring
+the published 3.31.9 into an empty `NUGET_PACKAGES` (a net10.0 project on Mvc.Testing 10.0.12, and a net8.0 one), with
+every feed cleared or the network cut:
+
+| Case | Result |
+|---|---|
+| any file-based app, defaults | **fails**: native AOT is the default, and its restore fetches `Microsoft.DotNet.ILCompiler` and `Microsoft.NET.ILLink.Tasks`, which no consumer has (NU1100, NU1301). §1's measurement passed only on a cache that held them |
+| `#:package`, AOT off, net10.0 consumer | works, but NU1603 (10.0.7 not found, 10.0.12 used) is printed **into stdout**, twice, on the first run |
+| `#:package`, AOT off, net8.0 consumer | **fails**: the net10.0 dependency group (Mvc.Testing 10.0.7 and its closure) was never restored. A3 held for `Kronikol`'s own `lib/`, never for its dependencies |
+| no package, AOT off, empty cache, network cut | works |
+
+So the file restores nothing: it loads `Kronikol.dll` by reflection and calls
+`Kronikol.Query.QueryCommand.Run(IReadOnlyList<string>, TextWriter, TextWriter)`. Candidates, each taken only at the
+exact assembly version: the test run's own copy (written only when the writing build is net10.0 or later, which
+carries the engine), by a path **relative** to the file; then `lib/net10.0` in `$NUGET_PACKAGES`, else
+`~/.nuget/packages`. No absolute path: the reports folder is often published. Proved by
+`QueryScriptEndToEndTests.The_NuGet_cache_alone_is_enough`, with a cache holding `Kronikol.dll` and nothing else: the
+engine needs none of `Kronikol`'s dependencies. And with the real package, the owner's case whole: a net8.0 console
+app restored the packed 3.32.0 from a local feed into a fresh cache and wrote a report through `Kronikol`'s net8.0
+build, whose `query.cs` names only the cache; with the network cut, `dotnet run --file query.cs -- failures .` loaded
+`lib/net10.0` from that cache and matched the built tool byte for byte, on stdout and stderr.
+
+Every `#:property` answers a failure seen in a probe under a consumer's `Directory.Build.props`, which a file-based
+app imports and which `#:property` can override but not switch off (`ImportDirectoryBuildProps=false` lands too late):
+
+| Property | The failure without it |
+|---|---|
+| `PublishAot=false` | the offline restore failure above |
+| `TargetFramework=net$(BundledNETCoreAppTargetFrameworkVersion)` | `<TargetFramework>net8.0</TargetFramework>` retargeted the app; it built and then could not run ("You must install or update .NET") |
+| `TreatWarningsAsErrors=false`, `WarningsAsErrors=`, `WarningLevel=0` | a warning became an error and the build failed, printing to stdout |
+| `RunAnalyzers=false`, `NuGetAudit=false`, `LangVersion=latest`, `OutputType=Exe` | analyzers, an offline audit (NU1900), an old language version or a library output type from the consumer's props |
+| `TieredCompilationQuickJitForLoops=false` | none: the tool's own setting, for the same speed |
+
+Two hazards §2 did not have: **a `.cs` file inside a C# project's folder is compiled by that project**, and `#:` is
+error CS9298 there, so a `query.cs` written into a project folder breaks the consumer's build (a dot-folder does not
+help). It is never written where a `.csproj` above the directory would take it in (outside that project's `bin` and
+`obj`, unless the project plainly leaves the folder out: default compile items off, or an unconditioned
+`Compile Remove` of the folder or of everything; this repository's template pack and one test project's fixtures are
+both that case). The run records `OptionNotApplied` instead, naming the project file and no path. And **a bare
+`dotnet run query.cs`, from a folder holding a project, runs that project** with a one-line warning, so every
+instruction uses `--file`. Found with them: a comment may precede `#:` directives, so the file's first line is its
+ownership marker, and a `query.cs` Kronikol did not write is never replaced. `EntryPointFilePath` gives the file's
+real path even under `ContinuousIntegrationBuild`. A `global.json` pinning an older SDK stops any `dotnet run`
+under it; from outside, with full paths, it works.
+
+Gate A10 held: 22 invocations, including `--json`, a usage error, a missing report and `--describe`, are
+byte-identical to the built tool in exit code, stdout and stderr, with stdout set to UTF-8 without a BOM as
+`Program.cs` sets it. A11 no longer applies: nothing is restored. Written beside a JSON data file only; like
+`CLAUDE.md` it describes the directory, so it is not in `Run.json` and never moves into `runs/`.
+
+### 11.3 M3, the surfaces
+
+All of §3's ten and the NuGet readme. §5's replacement sentence was rewritten: its premise, that a missing tool is
+"almost never" a permissions problem, is the case this plan moved forward for. The run-end pointer names `query.cs`
+on a failing run whose directory has one (`RunSummary.QueryScriptWritten`), and `Failures.md`'s two command blocks
+gain one line through an internal overload of `FailuresDigestGenerator.Generate`: a new parameter on the public
+method would have removed the signature compiled callers bind to. `QueryScriptAdviceTests` is §6.4's
+`InstallAdviceTests`, over seven surfaces; `SkillDriftTests` exempts the `dotnet run --file …query.cs --` prefix from
+its flag extraction as it exempts `dotnet test`.
+
+### 11.4 M4, M5, M6
+
+M4 held (D25): `query.py`, `FallbackScriptTests` and `PythonProbe` stay, the skill names the script for a machine
+without the .NET 10 SDK, where it is the one option there is. M5: the README and the changelog, and the wiki's
+`Querying-Reports`, `Report-Configuration`, `Generated-Reports`, `Diagnostics-and-Debugging` and
+`CI-Summary-Integration`, written and held as `QUERY_FALLBACK_PLAN.wiki.patch` (made on wiki `cbc0e95`; apply with
+`git -C ../Kronikol.wiki am`) because the wiki publishes on push and must not describe an unreleased version. M6:
+`Kronikol.Tests` 6,028 passed, failing only the 3 read-only-file tests that cannot fail as root; versions 3.32.0 in
+`Directory.Build.props` and both `.claude-plugin` manifests; template pins stay at 3.31.9, the newest version on
+nuget.org (3.31.10 was never tagged). **The tag `v3.32.0` is not pushed:** `release.yml` publishes to nuget.org on
+a `v*` tag, and `ci.yml` runs only on `main` and on pull requests to it, so the other test projects have not run on
+this branch. It waits for a pull request's CI and the merge, the rule 3.31.10's release followed.
+
+### 11.5 What is left
+
+- **A report away from its build.** A downloaded CI artifact on a machine that never restored that `Kronikol` version
+  has no engine for `query.cs`; it says so and prints the `dnx` line, which needs the feed.
+- **A NuGet `globalPackagesFolder` set in a `NuGet.config`** and not in `NUGET_PACKAGES` is not looked in.
+- **A consumer's `Directory.Build.targets`** is imported after the properties and could still reach the file, and the
+  first build prints any NuGet warning the consumer's own props cause. Neither was seen; both would show in its first
+  run's output, not later.
+- **No .NET 10 SDK:** neither the tool nor `query.cs` runs; `query.py` does, for 6 verbs (M4, held).
+- **The Kronikol4J ledger entry**, below, for the owner to add: this session could not reach that repository.
+- **The release itself:** a pull request to `main` (whose CI runs every test project), the merge, the tag `v3.32.0`
+  on the merged commit (which publishes 3.32.0, and with it 3.31.10's changes), then the wiki patch.
+
+### 11.6 Kronikol4J divergence ledger entry (draft)
+
+> **3.32.0 — `query.cs` beside the report; not ported.** .NET writes `query.cs` into the reports directory beside a
+> JSON data file (`ReportConfigurationOptions.WriteQueryScript`, default on), and names it in the
+> `CLAUDE.md`/`AGENTS.md` instructions, in a failing run's console pointer (`no tool: dotnet run --file …`), in the CI
+> summary's *Debug this run*, in `Failures.md`'s command blocks, and in the data file schema's `$comment`. It is a .NET
+> 10 file-based app that loads the .NET engine, with no JVM counterpart: where the port writes those files, they differ
+> from .NET's by those lines. Nothing in the report's HTML or data file changed.

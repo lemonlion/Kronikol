@@ -129,14 +129,24 @@ public static class FailuresDigestGenerator
     /// none - they are dropped when a shard is written and <c>stepPath</c> is carried instead - so a
     /// digest built from a merge attributed every call to <c>scenario</c> rather than to the step that
     /// made it. Null derives them, which is right for a live run.
-    /// <para><paramref name="queryScript"/> says the directory holds a <c>query.cs</c>, and the digest then says
-    /// how to ask its questions without the tool: every command it shows is <c>kronikol query</c>, which an
-    /// agent that may not install anything cannot run.</para>
     /// </remarks>
     public static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string? htmlFileName,
         string kronikolVersion, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null,
         IReadOnlyDictionary<string, List<string?>>? stepPaths = null, HistoryVerdicts? history = null,
-        FailuresDigestEarlierAttempt? earlierAttempt = null, bool queryScript = false)
+        FailuresDigestEarlierAttempt? earlierAttempt = null) =>
+        Generate(features, trackedLogs, htmlFileName, kronikolVersion, queryScript: false, diagnostics, suite, stepPaths, history, earlierAttempt);
+
+    /// <summary>
+    /// The same, for a directory that holds, or is about to hold, Kronikol's <c>query.cs</c>: the digest then
+    /// says how to ask its questions without the tool, because every command it shows is
+    /// <c>kronikol query</c>, which an agent that may not install anything cannot run. A separate overload so
+    /// the public signature stays the one compiled callers bind to, and <paramref name="queryScript"/> is
+    /// required so the two never compete for a call.
+    /// </summary>
+    internal static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string? htmlFileName,
+        string kronikolVersion, bool queryScript, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null,
+        IReadOnlyDictionary<string, List<string?>>? stepPaths = null, HistoryVerdicts? history = null,
+        FailuresDigestEarlierAttempt? earlierAttempt = null)
     {
         ArgumentNullException.ThrowIfNull(features);
 
