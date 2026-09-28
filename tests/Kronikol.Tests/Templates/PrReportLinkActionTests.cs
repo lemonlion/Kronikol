@@ -460,6 +460,24 @@ public class PrReportLinkActionTests
         Assert.True(calls > 0, "the README has no workflow that calls the action, so nothing here checked it.");
     }
 
+    /// <summary>
+    /// The workflow that runs the action for real, on the pull requests that change it, calls it the way the README
+    /// tells a consumer to, and runs whenever the action changes.
+    /// </summary>
+    [Fact]
+    public void The_live_lane_calls_the_action_as_it_is_declared()
+    {
+        var action = ActionDefinition.Load(ActionDir);
+        var lane = ActionDefinition.LoadYaml(File.ReadAllText(Path.Combine(RepoRoot, ".github", "workflows", "pr-report-link.yml")));
+
+        Assert.Equal(1, CallsOfTheAction(lane, action));
+
+        var pullRequest = (YamlMappingNode)((YamlMappingNode)lane["on"])["pull_request"];
+        var paths = ((YamlSequenceNode)pullRequest["paths"]).Children.Select(p => ((YamlScalarNode)p).Value).ToList();
+        Assert.Contains("templates/github-actions/kronikol-pr-report-link/**", paths);
+        Assert.Contains(".github/workflows/pr-report-link.yml", paths);
+    }
+
     /// <summary>Holds each job of a workflow that calls the action to the rules above, and counts the calls.</summary>
     private static int CallsOfTheAction(YamlMappingNode root, ActionDefinition action)
     {

@@ -27,7 +27,10 @@ public class TestRun : DiagrammedTestRun, IDisposable
                 // The second real shard. Together with CiPreview.FailingWithSteps this is the first
                 // sharded run the repository has ever produced: every previous assertion about
                 // `kronikol merge` was made against hand-built JSON, because no project turned this on.
-                GenerateMergeableData = true
+                GenerateMergeableData = true,
+                // The reports the PR report link lane uploads (.github/workflows/pr-report-link.yml): the step's
+                // reports-path and reports-retention-days outputs. Elsewhere on GitHub the two lines go unread.
+                PublishCiArtifacts = true
             });
     }
 
