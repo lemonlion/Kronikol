@@ -62,7 +62,7 @@ the templates, install `Kronikol.Tool` and run `kronikol init-agents .`.
 
 ## GitHub Actions: link the report on the pull request
 
-[`github-actions/kronikol-pr-report-link/`](github-actions/kronikol-pr-report-link) is a composite action, not
+[`github-actions/kronikol-pr-report-link/`](https://github.com/lemonlion/Kronikol/tree/main/templates/github-actions/kronikol-pr-report-link) is a composite action, not
 part of the `dotnet new` package. It keeps one comment on a pull request that links the Kronikol report
 artifact from each workflow run, with the time it was uploaded and when it expires. Copy it into
 `.github/actions/`. Its README has the workflow to call it from.

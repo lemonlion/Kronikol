@@ -188,6 +188,57 @@ public class PrReportLinkActionTests
     }
 
     [Fact]
+    public void A_tag_with_a_field_this_version_does_not_know_still_stops_an_older_run()
+    {
+        SkipWithoutNode();
+
+        // The first release tag that carries the action freezes the line's tag, so a later version can only add
+        // to it, after the run id. A lane still on this version has to go on reading the run id, or its older
+        // run replaces the newer version's link.
+        var outcome = new PullRequest()
+            .Upload(1000, 9010, Unit, "2026-09-15T20:00:00Z", "2026-09-16T20:00:00Z")
+            .Run(1000, Unit)
+            .EditComments("tag-field")
+            .Upload(999, 9011, Unit, "2026-09-15T20:05:00Z", "2026-09-16T20:05:00Z")
+            .Run(999, Unit)
+            .Go();
+
+        Assert.Equal(1, outcome.Writes);
+        Assert.Equal(outcome.BodiesAfterStep[2], outcome.BodiesAfterStep[4]);
+    }
+
+    [Fact]
+    public void A_line_break_in_an_input_keeps_the_line_whole()
+    {
+        SkipWithoutNode();
+
+        // A `with:` value can span lines in YAML. Written into the comment as it is, it splits the line in two,
+        // the half holding the tag no longer reads as a line of the comment, and an older run replaces the
+        // newer link.
+        var inputs = new Dictionary<string, string>
+        {
+            ["label"] = "Unit\ntests",
+            ["icon"] = "🧪\n",
+            ["heading"] = "Kronikol\r\nreports",
+            ["report-file"] = "TestRun\nReport.html",
+        };
+
+        var outcome = new PullRequest()
+            .Upload(600, 9030, Unit, "2026-09-15T22:00:00Z", "2026-09-16T22:00:00Z")
+            .Run(600, Unit, inputs)
+            .Upload(550, 9031, Unit, "2026-09-15T22:05:00Z", "2026-09-16T22:05:00Z")
+            .Run(550, Unit, inputs)
+            .Go();
+
+        Assert.Equal(1, outcome.Writes);
+        var body = Assert.Single(outcome.BotComments).Body;
+        Assert.StartsWith("- 🧪 **Unit tests** — 📦 [unit-test-reports](https://github.com/octo/app/actions/runs/600/artifacts/9030) ",
+            LineFor(body, Unit), StringComparison.Ordinal);
+        Assert.Contains("\n## Kronikol reports\n", body, StringComparison.Ordinal);
+        Assert.Contains("Open `TestRun Report.html` inside it.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Outside_a_pull_request_it_fails_naming_the_event_and_writes_nothing()
     {
         SkipWithoutNode();
@@ -342,10 +393,34 @@ public class PrReportLinkActionTests
     }
 
     /// <summary>
+    /// The README shows the comment a reader will find on their pull request, so it is the comment the action
+    /// writes: the README's two lanes run through the script, compared byte for byte.
+    /// </summary>
+    [Fact]
+    public void The_readme_shows_the_comment_the_action_writes()
+    {
+        SkipWithoutNode();
+
+        var outcome = new PullRequest()
+            .Upload(101, 9001, Component, "2026-09-15T13:58:00Z", "2026-09-16T13:58:00Z")
+            .Run(101, Component, Label("Component tests"))
+            .Upload(102, 9002, Unit, "2026-09-15T14:05:00Z", "2026-09-16T14:05:00Z")
+            .Run(102, Unit, Label("Unit tests"))
+            .Go();
+
+        var readme = File.ReadAllText(Path.Combine(ActionDir, "README.md")).ReplaceLineEndings("\n");
+        var sample = Regex.Match(readme, @"^```markdown\n(.*?)\n```$", RegexOptions.Singleline | RegexOptions.Multiline);
+        Assert.True(sample.Success, "the README shows no ```markdown sample of the comment the action writes");
+        Assert.Equal(Assert.Single(outcome.BotComments).Body, sample.Groups[1].Value);
+    }
+
+    /// <summary>
     /// The README's workflow is what a consumer copies, so it is held to the action. It may only pass inputs
     /// the action declares, it must pass every required one, and the calling job needs the per-PR concurrency
-    /// group and the two permissions the action depends on. Without the group, two lanes finishing together
-    /// can each read the comment before the other writes, and one line is lost.
+    /// group, <c>queue: max</c>, the fork guard and the two permissions the action depends on. Without the
+    /// group, two lanes finishing together can each read the comment before the other writes, and one line is
+    /// lost. With the group's default queue, a third job that arrives while one runs and one waits cancels
+    /// the waiting one, and that lane's link is lost the same way.
     /// </summary>
     [Fact]
     public void The_readme_workflow_calls_the_action_as_it_is_declared_from_a_job_that_can_use_it()
@@ -355,44 +430,58 @@ public class PrReportLinkActionTests
 
         var calls = 0;
         foreach (Match block in Regex.Matches(readme, @"^```ya?ml\n(.*?)^```", RegexOptions.Singleline | RegexOptions.Multiline))
+            calls += CallsOfTheAction(ActionDefinition.LoadYaml(block.Groups[1].Value), action);
+
+        Assert.True(calls > 0, "the README has no workflow that calls the action, so nothing here checked it.");
+    }
+
+    /// <summary>Holds each job of a workflow that calls the action to the rules above, and counts the calls.</summary>
+    private static int CallsOfTheAction(YamlMappingNode root, ActionDefinition action)
+    {
+        var calls = 0;
+        if (!root.Children.TryGetValue(new YamlScalarNode("jobs"), out var jobs))
+            return 0;
+
+        foreach (var (jobName, jobNode) in ((YamlMappingNode)jobs).Children)
         {
-            var root = ActionDefinition.LoadYaml(block.Groups[1].Value);
-            if (!root.Children.TryGetValue(new YamlScalarNode("jobs"), out var jobs))
+            var job = (YamlMappingNode)jobNode;
+            if (!job.Children.TryGetValue(new YamlScalarNode("steps"), out var steps))
                 continue;
 
-            foreach (var (jobName, jobNode) in ((YamlMappingNode)jobs).Children)
+            foreach (var step in ((YamlSequenceNode)steps).Children.Cast<YamlMappingNode>())
             {
-                var job = (YamlMappingNode)jobNode;
-                if (!job.Children.TryGetValue(new YamlScalarNode("steps"), out var steps))
+                var uses = ActionDefinition.Scalar(step, "uses");
+                if (uses is null || !uses.Contains("kronikol-pr-report-link", StringComparison.Ordinal))
                     continue;
+                calls++;
 
-                foreach (var step in ((YamlSequenceNode)steps).Children.Cast<YamlMappingNode>())
-                {
-                    var uses = ActionDefinition.Scalar(step, "uses");
-                    if (uses is null || !uses.Contains("kronikol-pr-report-link", StringComparison.Ordinal))
-                        continue;
-                    calls++;
+                var passed = step.Children.TryGetValue(new YamlScalarNode("with"), out var with)
+                    ? ((YamlMappingNode)with).Children.Keys.Select(k => ((YamlScalarNode)k).Value!).ToList()
+                    : [];
+                Assert.Empty(passed.Where(p => !action.Inputs.ContainsKey(p)));
+                Assert.Empty(action.Inputs.Where(i => i.Value.Required && !passed.Contains(i.Key)).Select(i => i.Key));
 
-                    var passed = step.Children.TryGetValue(new YamlScalarNode("with"), out var with)
-                        ? ((YamlMappingNode)with).Children.Keys.Select(k => ((YamlScalarNode)k).Value!).ToList()
-                        : [];
-                    Assert.Empty(passed.Where(p => !action.Inputs.ContainsKey(p)));
-                    Assert.Empty(action.Inputs.Where(i => i.Value.Required && !passed.Contains(i.Key)).Select(i => i.Key));
+                var concurrency = job.Children.TryGetValue(new YamlScalarNode("concurrency"), out var node)
+                    ? (YamlMappingNode)node
+                    : new YamlMappingNode();
+                var group = ActionDefinition.Scalar(concurrency, "group");
+                Assert.True(group?.Contains("github.event.pull_request.number", StringComparison.Ordinal) == true,
+                    $"job {jobName} calls the action without a per-pull-request concurrency group");
+                Assert.True(ActionDefinition.Scalar(concurrency, "queue") == "max",
+                    $"job {jobName} leaves its concurrency group on the default queue, which cancels a waiting job when a third arrives");
+                Assert.NotEqual("true", ActionDefinition.Scalar(concurrency, "cancel-in-progress"));
 
-                    var group = job.Children.TryGetValue(new YamlScalarNode("concurrency"), out var concurrency)
-                        ? ActionDefinition.Scalar((YamlMappingNode)concurrency, "group")
-                        : null;
-                    Assert.True(group?.Contains("github.event.pull_request.number", StringComparison.Ordinal) == true,
-                        $"job {jobName} calls the action without a per-pull-request concurrency group");
+                // A fork's token cannot write comments, so on a fork's pull request the job would fail.
+                Assert.Contains("github.event.pull_request.head.repo.full_name == github.repository",
+                    ActionDefinition.Scalar(job, "if") ?? "", StringComparison.Ordinal);
 
-                    var permissions = (YamlMappingNode)job["permissions"];
-                    Assert.Equal("write", ActionDefinition.Scalar(permissions, "pull-requests"));
-                    Assert.Equal("read", ActionDefinition.Scalar(permissions, "actions"));
-                }
+                var permissions = (YamlMappingNode)job["permissions"];
+                Assert.Equal("write", ActionDefinition.Scalar(permissions, "pull-requests"));
+                Assert.Equal("read", ActionDefinition.Scalar(permissions, "actions"));
             }
         }
 
-        Assert.True(calls > 0, "the README has no workflow that calls the action, so nothing here checked it.");
+        return calls;
     }
 
     private static readonly Regex InputExpression = new(@"^\$\{\{\s*inputs\.([A-Za-z0-9_-]+)\s*\}\}$");
@@ -502,7 +591,10 @@ public class PrReportLinkActionTests
             return this;
         }
 
-        /// <summary>A person editing the bot's comment: <c>crlf</c> or <c>trailing-whitespace</c>.</summary>
+        /// <summary>
+        /// A person editing the bot's comment, <c>crlf</c> or <c>trailing-whitespace</c>, or a later version of the
+        /// action writing a field after each line's run id, <c>tag-field</c>.
+        /// </summary>
         public PullRequest EditComments(string how)
         {
             _steps.Add(new { edit = how });
@@ -570,6 +662,8 @@ public class PrReportLinkActionTests
               (state.artifacts[u.runId] ??= []).push({ id: u.id, name: u.name, created_at: u.createdAt, expires_at: u.expiresAt, expired: false });
             } else if (step.edit === 'crlf') {
               for (const c of state.comments.filter(c => c.user.login === bot)) c.body = c.body.replace(/\r?\n/g, '\r\n');
+            } else if (step.edit === 'tag-field') {
+              for (const c of state.comments.filter(c => c.user.login === bot)) c.body = c.body.replace(/( run:\d+)( -->)/g, '$1 x:1$2');
             } else if (step.edit === 'trailing-whitespace') {
               for (const c of state.comments.filter(c => c.user.login === bot))
                 c.body = c.body.split('\n').map(l => l.startsWith('- ') ? l + ' \t ' : l).join('\n');
