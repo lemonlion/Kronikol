@@ -4,8 +4,8 @@
 3.31.5 (`4aa1e1e`) at the first same-day update, 3.31.9 (`e4c9e36`) at the second, 3.31.10 (`28e4460`) at the
 third · **Status: plan written, NOT green-lit; S0 run as far as
 a session can reach; the defect it found (F28) fixed in 3.31.10.** 3.31.10 is on `main` with CI green
-(`571a98d`: all 34 checks, CodeQL's included; `28e4460` adds a test fix, and is the commit to tag once its own CI
-is green) but not
+(`571a98d`: all 34 checks, CodeQL's included; `28e4460` adds a test fix, passed all 34 as well, and is the commit
+to tag) but not
 published: this environment refused to push the tag `v3.31.10` and the wiki commit (HTTP 403, where branch pushes
 worked), so both are the owner's (Appendix B). It needs D24, and most of D24 is the owner's own words: the
 roadmap gives this text to "the owner's hand". Roadmap item **2.1** (stage 2, track C). No package changes, so **no version bump**, and
@@ -597,8 +597,8 @@ first is F28's; the second is a fault CI found in 3.31.9 while this release was 
 1. **Publish it.** The tag starts `release.yml`, which builds, runs `Kronikol.Tests`, pushes the packages to NuGet
    and makes the GitHub release with generated notes. Tag `28e4460`, the last commit 3.31.10 needs. It adds to
    `571a98d` only a test fix and its changelog line (2026-09-28: the code-cache fact lost a race to parallel renders
-   in CI's Core Tests on a plan-only commit), so it builds the same packages. Its CI was queued when this was
-   written; tag it once that is green, or tag `571a98d`, whose CI passed and which builds the same packages:
+   in CI's Core Tests on a plan-only commit), so it builds the same packages, and its CI passed all 34 checks,
+   Core Tests and CodeQL included (2026-09-28):
    `git fetch origin && git tag v3.31.10 28e4460 && git push origin v3.31.10`.
 2. **The wiki note.** In `Generated-Reports.md`, section "Deep links (`#scenario-` and `#sid-`)", after the
    paragraph that ends "resolves to the first match in document order.", add:

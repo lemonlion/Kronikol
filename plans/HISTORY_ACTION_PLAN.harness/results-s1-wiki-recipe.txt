@@ -1,0 +1,28 @@
+== W1: the first run, no kronikol-history branch yet
+fold job: exit 128
+fatal: invalid reference: origin/kronikol-history
+W1: no kronikol-history branch on origin
+
+== W2: the branch exists (made by the dogfood recipe), the next run's fold job
+seed (dogfood recipe): exit 0
+fold job: exit 128
+fatal: invalid reference: origin/kronikol-history
+W2: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 3}; runs by id {'gh:100:1': 3}; duplicate roster lines 0
+W2: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+W2: commits on the branch: 1
+
+== W3: as W2, with the fetch the fold job lacks added before the recipe
+seed (dogfood recipe): exit 0
+fold job: exit 128
+Author identity unknown
+*** Please tell me who you are.
+W3: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 3}; runs by id {'gh:100:1': 3}; duplicate roster lines 0
+W3: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+W3: commits on the branch: 1
+
+== W4: as W3, with a committer identity too: one writer
+seed (dogfood recipe): exit 0
+fold job: exit 0
+W4: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 6}; runs by id {'gh:100:1': 3, 'gh:101:1': 3}; duplicate roster lines 0
+W4: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+W4: commits on the branch: 2

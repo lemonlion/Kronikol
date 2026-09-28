@@ -1,0 +1,6 @@
+dogfood (branch exists): 10 races of 6 writers: 9 jobs failed, 9 runs lost, 0 duplicate roster lines
+dogfood (first run    ): 10 races of 6 writers: 10 jobs failed, 10 runs lost, 80 duplicate roster lines
+dogfood_fair (branch exists): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 0 duplicate roster lines
+dogfood_fair (first run    ): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 100 duplicate roster lines
+prototype (branch exists): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 0 duplicate roster lines
+prototype (first run    ): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 0 duplicate roster lines

@@ -1,0 +1,10 @@
+== M1: the scripts checked out with core.autocrlf=true
+none .gitattributes in the folder: 89 of 89 lines end in CR; bash says: <tmp>/s10/m1-none/runner-checkout/.github/actions/kronikol-history/scripts/record.sh: line 10: set: pipefail: invalid option name
+folder .gitattributes in the folder: 0 of 89 lines end in CR; bash says: <tmp>/s10/m1-folder/runner-checkout/.github/actions/kronikol-history/scripts/record.sh: line 11: cd: /nonexistent: No such file or directory
+
+== M2: a machine-wide pre-commit hook that refuses every commit
+a plain commit on that machine: policy: commits need a ticket number
+the prototype on that machine: exit 0, pushed on attempt 1
+
+== M3: a machine that signs every commit, with no key it can use
+the prototype on that machine: exit 128, error: gpg failed to sign the data:
