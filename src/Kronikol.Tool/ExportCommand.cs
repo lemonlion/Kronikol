@@ -1,6 +1,7 @@
 using System.Text;
 using Kronikol.Extensions.Otlp;
 using Kronikol.Ingestion;
+using Kronikol.Query;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tool;
@@ -208,7 +209,7 @@ internal static class ExportCommand
             }
             else
             {
-                if (!Kronikol.Tool.Query.QueryWriter.TryWriteFile(outFile, json, error, "--out",
+                if (!QueryWriter.TryWriteFile(outFile, json, error, "--out",
                         new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)))
                     return 1;
 

@@ -1,0 +1,298 @@
+From 6708defa41be9111e46881abba8a0edbedc935b9 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 28 Sep 2026 09:52:18 +0000
+Subject: [PATCH] 3.32.0: every run writes query.cs beside its report, and from
+ the reports directory `dotnet run --file query.cs -- <verb> .` answers as
+ `kronikol query` does, byte for byte, with no tool installed and no network:
+ where the engine comes from (the run's own Kronikol.dll on .NET 10, else
+ lib/net10.0 in the NuGet cache, at exactly the version, and the cache a
+ NuGet.config moved), what it needs (the .NET 10 SDK), why --file, a
+ global.json pinning an older SDK, a consumer's Directory.Build.props and
+ .targets, no query.cs where a C# project would compile it (bin, obj and a
+ dot-folder such as .logs/kronikol are fine), and one Kronikol did not write
+ or cannot read is left alone (Querying Reports; query.py kept for a machine
+ without the SDK). WriteQueryScript, default on (Report Configuration).
+ query.cs beside the report, not in Run.json and never under runs/ (Generated
+ Reports). The OptionNotApplied warning for a reports folder inside a project
+ (Diagnostics and Debugging). The no-tool line in Debug this run (CI Summary
+ Integration). query.cs in the uploaded artifact on both CIs, and what it
+ needs on another machine (CI Artifact Upload). A merge writes it too, and the
+ combined-report recipe uploads it (Merging Parallel Reports).
+ Kronikol.Query.QueryCommand, public, net10.0 only (API Reference). Home and
+ the AI integration prompt name it beside kronikol query
+
+---
+ AI-Integration-Prompt.md     |  4 +--
+ API-Reference.md             |  1 +
+ CI-Artifact-Upload.md        |  6 +++-
+ CI-Summary-Integration.md    |  4 +++
+ Diagnostics-and-Debugging.md |  2 +-
+ Generated-Reports.md         |  5 ++--
+ Home.md                      |  2 +-
+ Merging-Parallel-Reports.md  |  7 ++++-
+ Querying-Reports.md          | 53 ++++++++++++++++++++++++++++++++++--
+ Report-Configuration.md      |  2 ++
+ 10 files changed, 75 insertions(+), 11 deletions(-)
+
+diff --git a/AI-Integration-Prompt.md b/AI-Integration-Prompt.md
+index 77e3c4f..097b986 100644
+--- a/AI-Integration-Prompt.md
++++ b/AI-Integration-Prompt.md
+@@ -1,8 +1,8 @@
+ > **Debugging a run afterwards?** Run `kronikol init-agents .` in the repository. It installs the
+ > [**kronikol-test-debugging** skill](https://github.com/lemonlion/Kronikol/tree/main/templates/skills/kronikol-test-debugging)
+ > and adds the instruction block to `CLAUDE.md` and `AGENTS.md`, so every agent that opens the project
+-> reaches for [`kronikol query`](Querying-Reports) rather than trying to read the report — which does
+-> not fit in a context window. A project scaffolded from a `kronikol-*` template already has both. See
++> reaches for [`kronikol query`](Querying-Reports), or, where it may not install a tool, the `query.cs` beside
++> the report (3.32.0), rather than trying to read the report — which does not fit in a context window. A project scaffolded from a `kronikol-*` template already has both. See
+ > [Querying-Reports § Using it from an AI agent](Querying-Reports#using-it-from-an-ai-agent).
+ 
+ Rather than integrating the library manually, why not get an AI agent (e.g. Claude/Gemini) to do it for you? Here is an example prompt for you to use, just replace `{Component/Integration/AcceptanceTestProject}` with the name or full path of your Component/Acceptance/Integration test project.
+diff --git a/API-Reference.md b/API-Reference.md
+index 70bd9a4..9c33024 100644
+--- a/API-Reference.md
++++ b/API-Reference.md
+@@ -52,6 +52,7 @@
+ | `ReportDiagnostics` | Static class; `Analyse(logs, features, includeSourceDiscovery)` returns diagnostic warning strings for the report footer. |
+ | `DiagnosticReportGenerator` | Static class; `Generate(logs, features, options)` produces `DiagnosticReport.html` with config dumps, log counts, unpaired requests, and activity source discovery. Only called when `DiagnosticMode` is `true`. |
+ | `ReportGenerator` | Generates HTML and YAML report files from features, scenarios, and diagrams. `CreateStandardReportsWithDiagrams()` is the main entry point; also exposes `GenerateHtmlReport()`, `GenerateSpecificationsData()`, `GenerateTestRunReportData()`, and `GenerateTestRunReportSchema()` for custom pipelines. The `ReportFormatVersion` constant (3.1.0, currently `1`) is the version of the data file's *shape*, written as the first key, element or line of `TestRunReport.json` / `.xml` / `.yml`. It is distinct from the Kronikol version that wrote the file: adding a key does not move it, changing what a key means or what type it holds does. `kronikol query` and `kronikol merge` refuse a file declaring a version they do not understand. |
++| `Query.QueryCommand` | Static class (3.32.0), namespace `Kronikol.Query`, in the net10.0 build only: `Run(IReadOnlyList<string> args, TextWriter out, TextWriter error)` runs a `kronikol query` command line and returns its exit code, and `PrintUsage(TextWriter)` prints its help. The engine behind `kronikol query` and behind the `query.cs` each run writes beside its report, which binds to `Run` by reflection, so its signature holds within a major version. See [[Querying Reports]]. |
+ | `DataFormat` | Enum: `Json`, `Xml`, `Yaml`. Format for generated report data files (`Specifications.*`, `TestRunReport.*`). |
+ | `CiMetadata` | Record: `Provider`, `BuildId`, `BuildNumber`, `Branch`, `CommitSha`, `PipelineName`, `PipelineUrl`, `RunUrl`. Embedded in reports when CI environment is detected. |
+ | `RunEnvironment` | Record (3.1.0): `Os`, `Runtime` — `RuntimeInformation.OSDescription` and `FrameworkDescription`, written to the data file as `environment`. `RunEnvironment.Current` computes this process's values once. Deliberately two fields and no more: a report is an artifact other people download, so the machine name, the user name and the environment block stay out of it. Together with `CiMetadata` this is what tells a downloaded `TestRunReport.json` which run it is. `RunEnvironment.Unrecorded` (3.4.0) is the marker for "nobody can say": the writers leave the `environment` key out entirely rather than fill it in with the writing process's own answer. `kronikol merge` uses it when its shards disagree, and `kronikol ingest` when the source file does not report one - a Cucumber Messages source usually does, in its `meta` envelope, and that is what an ingested report now records. |
+diff --git a/CI-Artifact-Upload.md b/CI-Artifact-Upload.md
+index 213b0aa..554b6f7 100644
+--- a/CI-Artifact-Upload.md
++++ b/CI-Artifact-Upload.md
+@@ -61,7 +61,7 @@ These are consumed by the `actions/upload-artifact@v5` step in your workflow.
+ ## What Gets Uploaded
+ 
+ All files in the `Reports` directory with an `.html`, `.yml`, `.md`, `.json`, `.jsonl` or `.xml`
+-extension. The directory is enumerated **top level only**, so a subfolder is never uploaded — which is
++extension, and `query.cs` (3.32.0). The directory is enumerated **top level only**, so a subfolder is never uploaded — which is
+ what makes `Reports/baseline/` a safe place to put last-green. The one exception (3.27.0) is
+ `Reports/runs/`, the [runs kept before this one](Generated-Reports#earlier-runs-runjson-and-runs): on
+ CI that is empty unless a retry extension or a second workflow step ran again under the same run id
+@@ -79,6 +79,7 @@ and uploads them with it:
+ | `Specifications.yml` | Always generated |
+ | `Failures.md`, `Failures.jsonl` | Always generated (`GenerateFailuresDigest`) — written on a green run too, so that the file's *absence* means the run did not finish rather than that nothing broke |
+ | `CLAUDE.md`, `AGENTS.md` | Always generated — identical instruction files telling an agent how to read the rest |
++| `query.cs` | When `WriteQueryScript = true`, the default, and the data file is JSON (3.32.0) — `kronikol query` with no tool installed: `dotnet run --file query.cs -- failures .` |
+ | `CiSummary.md` | When `WriteCiSummary = true` |
+ | `Specifications.md` | When `GenerateSpecificationsMarkdown = true` |
+ | `ctrf-report.json` | When `GenerateCtrfReport = true` — the run in [Common Test Report Format](https://ctrf.io), which is the point of uploading it: a downstream action reads it straight out of the artifact |
+@@ -88,6 +89,9 @@ and uploads them with it:
+ 
+ Because the JSON is in the artifact, `kronikol query` can be pointed at a downloaded artifact folder
+ (`kronikol query failures ./TestReports`) without re-running anything — see [Querying Reports](Querying-Reports).
++The artifact's `query.cs` answers the same with no tool installed on a machine that has restored the
++`Kronikol` version that wrote it, such as a developer's own; anywhere else it says where it looked for the
++engine and prints the `dnx` line that fetches it.
+ 
+ ### Keeping one artifact as a baseline
+ 
+diff --git a/CI-Summary-Integration.md b/CI-Summary-Integration.md
+index d54b1a8..f1b609b 100644
+--- a/CI-Summary-Integration.md
++++ b/CI-Summary-Integration.md
+@@ -238,6 +238,8 @@ Do not open `TestRunReport.json` or `TestRunReport.html` — a real report reach
+ dotnet tool install -g Kronikol.Tool
+ kronikol query summary ./Reports
+ ```
++
++Nothing to install and no network needed: `dotnet run --file ./Reports/query.cs -- summary ./Reports` runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.
+ ````
+ 
+ ### 3 Failures Out of 203
+@@ -306,6 +308,8 @@ kronikol query summary ./Reports
+ kronikol query failures ./Reports
+ ```
+ 
++Nothing to install and no network needed: `dotnet run --file ./Reports/query.cs -- summary ./Reports` runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.
++
+ history: 1 broke, 2 flaky (against 12 earlier runs on main)
+ 
+ The artifact also carries `Failures.md` — every failure in context, ready to read.
+diff --git a/Diagnostics-and-Debugging.md b/Diagnostics-and-Debugging.md
+index e267176..8121014 100644
+--- a/Diagnostics-and-Debugging.md
++++ b/Diagnostics-and-Debugging.md
+@@ -102,7 +102,7 @@ hand.
+ | `StepAttributionMismatch` | A step delimiter in the log stream did not line up with the step it should have opened, so the interactions after it carry no `stepPath`. Expected when a test does work on a background thread, where a record can enqueue after the following step's marker — see [Background-Thread-Correlation](Background-Thread-Correlation). Kronikol leaves the field empty rather than attributing a call to the wrong step. |
+ | `BackgroundCalls` | Interactions captured under a scenario's identity after that scenario had ended (3.17.0): the test host's hosted services, timers and consumers still running with the identity the test's context handed them. One entry per scenario, saying how many; the calls are listed in the report's `background` block. |
+ | `ReportRotationFailed` | The previous run's files could not be moved to `runs/<run>/` before this run wrote (3.27.0): a report a reader holds open, a read-only file, a `runs` that is not a directory; or a kept run past `KeepRuns` could not be removed. The message names the file. The run itself is unaffected: it overwrites the previous run's files as it always did, and anything already staged was moved back. See [Generated Reports](Generated-Reports#earlier-runs-runjson-and-runs). |
+-| `OptionNotApplied` | An option was set that the run's configuration ignores (3.30.0). Today that is a PlantUML theme (`PlantUmlTheme`, or `ComponentDiagramOptions.PlantUmlTheme` when the component diagram is generated) under `PlantUmlRendering.BrowserJs` or `NodeJs`: both load the engine without its theme bundle, so every diagram is drawn unthemed. The message names the option, its value and the mode, and the run also prints it as a `⚠ WARNING:` console line. The run is otherwise unaffected. |
++| `OptionNotApplied` | An option was set that the run's configuration ignores (3.30.0). Today that is a PlantUML theme (`PlantUmlTheme`, or `ComponentDiagramOptions.PlantUmlTheme` when the component diagram is generated) under `PlantUmlRendering.BrowserJs` or `NodeJs`: both load the engine without its theme bundle, so every diagram is drawn unthemed. The message names the option, its value and the mode, and the run also prints it as a `⚠ WARNING:` console line. The run is otherwise unaffected. And `WriteQueryScript` where the reports directory is inside a C# project's folder, outside its `bin`, its `obj` and any folder whose name starts with a dot (3.32.0): the project would compile a `query.cs` written there, so none is, and the message names the project file and both ways out (`bin` or `obj`, or a dot-folder such as `.logs/kronikol/`). |
+ | `Other` | Anything without a dedicated kind yet. |
+ 
+ ```csharp
+diff --git a/Generated-Reports.md b/Generated-Reports.md
+index ca5af48..484e1bf 100644
+--- a/Generated-Reports.md
++++ b/Generated-Reports.md
+@@ -14,6 +14,7 @@ After tests complete, the following files are written to the `Reports` folder in
+ | `Failures.md` | Every failure in context, small enough to read whole: the error, expected/actual, the steps around it, the calls it made, and the address to query next | No | Partially | Yes (3.1.0) — `# No failures` when nothing failed **in the newest run** (3.27.0: when the run it replaced had failures, the next line says so and where that run is kept) |
+ | `Failures.jsonl` | The same failures, one JSON object per line, under a header line | No | Yes (JSONL) | Yes (3.1.0) — the header line alone when nothing failed |
+ | `CLAUDE.md`, `AGENTS.md` | Byte-identical instruction files telling an agent what these files are and how to query them — two names because Claude Code reads one and Codex, Cursor and Copilot read the other | No | No | Yes (3.1.0) |
++| `query.cs` | `kronikol query` with nothing installed and no network: `dotnet run --file query.cs -- summary .` from this directory runs the engine that wrote the report ([Querying Reports](Querying-Reports#with-nothing-installed-and-no-network-querycs-3320)) | No | No (C#) | Yes (3.32.0) — beside a JSON data file, unless `WriteQueryScript` is off or the directory is inside a C# project's folder |
+ | `Specifications.md` | The specification as prose — every feature, rule, scenario and step, with no run data at all | No | Partially | When `GenerateSpecificationsMarkdown = true` (3.1.0) |
+ | `ctrf-report.json` | The run in [Common Test Report Format](https://ctrf.io), for CI tooling that already speaks it | No | Yes (JSON) | When `GenerateCtrfReport = true` (3.1.0) |
+ | `History.run.json` | The run's own line of cross-run history with the roster it needs — what `kronikol history record` folds into the ledger, and what `kronikol query history` reads as the run's line. See [Cross-Run History](Cross-Run-History) | No | Yes (JSON) | Yes (3.9.0) — unless `KRONIKOL_HISTORY=off` or `GenerateHistoryFragment = false` |
+@@ -328,8 +329,8 @@ Reports/
+   (`gh:18273645:1` is `gh_18273645_1`), the same on every operating system, with `-2`, `-3` appended
+   when the name is taken: two steps of one workflow run share one id. The true id is in the kept run's
+   `Run.json`.
+-- **What moves** is exactly what the previous run's `Run.json` lists, plus the manifest. `CLAUDE.md` and
+-  `AGENTS.md` describe the directory and never move. A differently named report a host writes into the
++- **What moves** is exactly what the previous run's `Run.json` lists, plus the manifest. `CLAUDE.md`,
++  `AGENTS.md` and `query.cs` describe the directory and never move. A differently named report a host writes into the
+   same folder is left alone, and an attachment it may link to is copied rather than taken. A directory
+   written before 3.27.0 has no manifest: it is rotated once, by the files this run is about to write.
+ - **It never fails the run.** A report held open by a reader, a read-only file: the rotation is
+diff --git a/Home.md b/Home.md
+index 188dffc..82b7da9 100644
+--- a/Home.md
++++ b/Home.md
+@@ -57,7 +57,7 @@ Kronikol was published as **TestTrackingDiagrams** until 3.0.0 (May 2026); it is
+ - [CI Artifact Upload](CI-Artifact-Upload)
+ - [Merging Parallel Reports](Merging-Parallel-Reports)
+ - [Cross-Run History](Cross-Run-History) — the append-only ledger a run reads and appends to, so `Failures.md`, the CTRF document, the pointer and `kronikol query history` say whether a failure is a regression, has been failing since a particular run, or flips (3.9.0); `kronikol history gate` fails the build on what is new, with quarantine, rename aliases and CTRF/Allure imports (3.10.0); a sparkline and verdict beside every scenario, a History section (off by default from 3.21.0, `ShowHistorySection` brings it back) and `$flaky` in the report, and `merge --history` (3.11.0)
+-- [Querying Reports](Querying-Reports) — `kronikol query`: debug a run without reading a report of tens of megabytes — including aggregating a field across every call (`values`) — and the AI agent skill that uses it, which `kronikol init-agents` installs into any repository
++- [Querying Reports](Querying-Reports) — `kronikol query`: debug a run without reading a report of tens of megabytes — including aggregating a field across every call (`values`) — and the AI agent skill that uses it, which `kronikol init-agents` installs into any repository; with no tool installed and no network, the `query.cs` every run writes beside its report runs the same engine (3.32.0)
+ - [PlantUML Server Configuration](PlantUML-Server-Configuration)
+ - [Example Project](Example-Project)
+ - [API Reference](API-Reference)
+diff --git a/Merging-Parallel-Reports.md b/Merging-Parallel-Reports.md
+index a7f0208..f359851 100644
+--- a/Merging-Parallel-Reports.md
++++ b/Merging-Parallel-Reports.md
+@@ -7,7 +7,7 @@ This works in two steps:
+ 1. Each test runner produces an enriched, *mergeable* `TestRunReport.json`.
+ 2. A final job runs `kronikol merge` over all the JSON files to produce the combined report — the HTML,
+    the merged data file beside it, and (since 3.6.0) everything else a run writes beside its report:
+-   `Failures.md`, `CLAUDE.md`, the schema, and the pointer in the job log.
++   `Failures.md`, `CLAUDE.md`, the schema, the pointer in the job log, and (since 3.32.0) `query.cs`.
+ 
+ ---
+ 
+@@ -98,6 +98,10 @@ above — so the one shape of run that is always on CI had none of the things Kr
+ - **`CLAUDE.md` and `AGENTS.md`** — the agent instruction files, naming the merged report's own file
+   names. A file already in the output directory keeps its own text; the block is spliced in.
+ - **`<name>.schema.json`** — the schema the merged data file validates against, named after `-o`.
++- **`query.cs`** (3.32.0) — `kronikol query` with no tool installed, running the engine of the
++  `Kronikol` version that did the merge: from the output directory, `dotnet run --file query.cs -- failures .`,
++  or with the data file's name when it is not `TestRunReport.json` (`-- failures Combined.json`). A `query.cs`
++  Kronikol did not write is left alone. See [Querying Reports](Querying-Reports).
+ - **The run-end pointer** on stdout: where the files are, how big the data file is, what failed, and the
+   `kronikol query failures` command that explains it. When the data file is not called
+   `TestRunReport.json` — `-o Combined.html` gives `Combined.json` — the command names the **file**,
+@@ -185,6 +189,7 @@ jobs:
+             Failures.jsonl          # written beside the merged report, exactly as a run writes them
+             CLAUDE.md
+             AGENTS.md
++            query.cs                # since 3.32.0: kronikol query with no tool installed
+           retention-days: 30        # longer than the shards: a baseline outlives the run that made it
+ ```
+ 
+diff --git a/Querying-Reports.md b/Querying-Reports.md
+index a351afd..83e0e55 100644
+--- a/Querying-Reports.md
++++ b/Querying-Reports.md
+@@ -29,6 +29,52 @@ answers `--help` and `--version` itself, so the tool's own help is `dnx Kronikol
+ the right shape for a one-off question on a machine you do not own, and the wrong one for a debugging
+ session - install for those.
+ 
++### With nothing installed and no network: `query.cs` (3.32.0)
++
++Every run writes `query.cs` beside its report ([`WriteQueryScript`](Report-Configuration), on by default).
++From the reports directory:
++
++```bash
++dotnet run --file query.cs -- summary .
++dotnet run --file query.cs -- failures .
++dotnet run --file query.cs -- http . s3/i47 --keys
++```
++
++It is `kronikol query` for a machine where the tool is not installed and cannot be: an AI agent's session
++that may not install tools, a sandbox without a network. It takes every verb, address and flag and prints
++the same bytes, because it runs the same engine, the `Kronikol` that wrote the report, loaded from where the
++test run left it. It restores nothing and downloads nothing.
++
++- **Where the engine comes from.** The test run's own `Kronikol.dll` when the test project targets .NET 10
++  (that build carries the engine), found by a path relative to `query.cs`, never an absolute one; else
++  `lib/net10.0` of the `Kronikol` package in the NuGet cache (`$NUGET_PACKAGES`, else `~/.nuget/packages`),
++  which every consumer holds whatever it targets, because NuGet caches whole packages. A `NuGet.config` can
++  move the cache (`globalPackagesFolder`), so where both miss, the file asks NuGet
++  (`dotnet nuget locals global-packages --list`, from its own folder) and looks there. Each is used only at
++  exactly the version that wrote the report. When none is there it says where it looked, exits 1, and prints
++  the `dnx` line for that version.
++- **What it needs.** The .NET 10 SDK. The first run compiles it, in a few seconds; later runs start at once.
++- **Keep `--file`.** From a folder holding a project, a bare `dotnet run query.cs` runs that project and
++  hands it `query.cs` as an argument.
++- **A `global.json` pinning an older SDK** stops any `dotnet run` under it. Run from outside with full
++  paths: `cd / && dotnet run --file /path/to/Reports/query.cs -- summary /path/to/Reports`.
++- **A repository's build settings do not reach it.** A file-based app takes the `Directory.Build.props`
++  and `Directory.Packages.props` above it; `query.cs` overrides what would break it or print into its
++  answer: native AOT (which fetches a package), a pinned `TargetFramework`, warnings as errors, analyzers,
++  NuGet audit. A `Directory.Build.targets` would come after all of that, so `query.cs` imports none.
++- **Never where a project would compile it.** A C# project compiles every `.cs` file below it except under
++  `bin`, `obj` and a folder whose name starts with a dot (the SDK's default items leave `**/.*/**` out), and
++  the file's `#:` directives are an error there, so `query.cs` is not written into such a folder unless that
++  project already leaves it out (default compile items off, or a `Compile Remove` of that folder, with no `**`
++  glob of its own reaching below its folder). The run records an `OptionNotApplied` diagnostic instead. The
++  default reports folder, under `bin/`, is always fine, and so is a dot-folder such as `.logs/kronikol/`.
++- **A `query.cs` Kronikol did not write, or cannot read, is left alone.** Like `CLAUDE.md`, the file belongs to the directory
++  rather than the run: it is not in `Run.json` and is never moved into `runs/`. Retained runs are queried
++  through the top-level one: `dotnet run --file query.cs -- failures . --run last-failed`.
++
++On a machine without the .NET 10 SDK neither the tool nor `query.cs` can run, and the skill's
++`scripts/query.py` answers a smaller set of commands under Python.
++
+ `<report>` may be the file or a directory holding one. Given a directory with several reports, the tool
+ lists them and stops rather than guessing which you meant.
+ 
+@@ -1241,7 +1287,7 @@ which installs the same three files and adds the instruction block to `CLAUDE.md
+ .claude/skills/kronikol-test-debugging/
+   SKILL.md
+   references/commands.md
+-  scripts/query.py      # a smaller fallback for machines without the dotnet tool
++  scripts/query.py      # a smaller fallback for a machine without the .NET 10 SDK
+ CLAUDE.md               # the block, appended - the rest of the file is left alone
+ AGENTS.md               # byte-identical: Claude Code reads one, Codex, Cursor and Copilot the other
+ ```
+@@ -1257,8 +1303,9 @@ The three files are also still readable in the repository, if you would rather c
+ That folder is the single canonical copy - the twelve templates pack it, `init-agents` embeds it, and the
+ Kronikol repository itself installs it, with a test pinning all four to the same bytes.
+ 
+-The fallback script supports only `summary`, `failures`, `steps`, `services`, `grep` and `http`; every
+-other verb needs the dotnet tool and will error under the script. Its counts and its addresses are pinned
++The fallback script is for a machine without the .NET 10 SDK, where neither the tool nor the report's own
++`query.cs` can run. It supports only `summary`, `failures`, `steps`, `services`, `grep` and `http`; every
++other verb needs the engine and will error under the script. Its counts and its addresses are pinned
+ against the real tool's, so an address it prints is one you can paste into `kronikol query`.
+ 
+ The skill's description tells the agent to load it whenever a Kronikol report exists and the question is
+diff --git a/Report-Configuration.md b/Report-Configuration.md
+index 9334883..bf06ea2 100644
+--- a/Report-Configuration.md
++++ b/Report-Configuration.md
+@@ -72,6 +72,7 @@ new ReportConfigurationOptions
+     GenerateCtrfReport = false,           // Set to true to write ctrf-report.json (Common Test Report Format)
+     GenerateFailuresDigest = true,        // Writes Failures.md and Failures.jsonl — on a green run too
+     WriteAgentInstructions = true,        // Writes CLAUDE.md and AGENTS.md into the reports directory
++    WriteQueryScript = true,              // Writes query.cs: kronikol query with nothing installed
+     WriteRunSummaryToConsole = true,      // Prints the closing where-to-look block at the end of the run
+     SetupHighlightColor = "#F6F6F6",     // Background colour for setup partition
+     ExpectedTestCount = null              // Guard against partial test runs overwriting specs
+@@ -207,6 +208,7 @@ The `SpecificationsDataFormat` controls the format of the machine-readable speci
+ | `EmbedHistoryInReport` | `bool` | `true` | Render the history the run read in `TestRunReport.html` (3.11.0) — a sparkline and verdict pill beside each scenario, and the History section when `ShowHistorySection` asks for it. With no ledger the report is byte-for-byte what it was. Since 3.9.0. |
+ | `ShowHistorySection` | `bool` | `false` | Render the **History** section beside the timeline: the run's summary line, the trend of the last runs, and the lists of what changed. Off by default since 3.21.0, because a run where nothing changed still has a section saying so. Off, the sparkline and pill beside each scenario stay, as do `Failures.md`, the CTRF document, the pointer and `kronikol query history`. `kronikol merge --history` turns it on for the report it was asked to render. Since 3.21.0. |
+ | `WriteAgentInstructions` | `bool` | `true` | When `true`, writes byte-identical `CLAUDE.md` and `AGENTS.md` files into the reports directory, telling an AI agent to read `Failures.md` and use [`kronikol query`](Querying-Reports) rather than open the report. Static text — no scenario names, no captured content — because an instruction file carrying attacker-influenceable text is a prompt-injection channel. Since 3.1.0. |
++| `WriteQueryScript` | `bool` | `true` | When `true`, writes `query.cs` into the reports directory beside a JSON data file (3.32.0): `kronikol query` for a machine where the tool is not installed and cannot be, such as an AI agent's session that may not install tools or reach the NuGet feed. From the reports directory, `dotnet run --file query.cs -- summary .` prints what `kronikol query summary .` prints, because it runs the same engine: the `Kronikol` that wrote the report, loaded from the test run's output or the NuGet cache. It restores and downloads nothing, and needs the .NET 10 SDK. Never written into a folder a C# project would compile (below one holding a `.csproj`, outside its `bin`, its `obj` and any folder whose name starts with a dot, such as `.logs/kronikol/`, unless the project leaves the folder out); the run records an `OptionNotApplied` diagnostic instead. A `query.cs` Kronikol did not write is left alone. See [Querying Reports](Querying-Reports#with-nothing-installed-and-no-network-querycs-3320) |
+ | `WriteRunSummaryToConsole` | `bool` | `true` | When `true`, the run prints one closing block naming the reports directory, the size of the data file, the failing scenarios and the `kronikol query failures` command that explains them. Paths, counts, `stableId`s and scenario names only — never a message, a URI or a body, because CI logs are read far more widely than artifacts. On GitHub Actions a matching `::notice` annotation follows. The console is a best-effort channel rather than a guaranteed one: measured on .NET 10, every VSTest-hosted runner under `dotnet test` swallows what a library writes from a run-end hook unless verbosity is `detailed`, and TUnit's runner suppresses it at any verbosity — which is why `GenerateFailuresDigest` and `WriteAgentInstructions` write *files*. Since 3.1.0. |
+ | `SetupHighlightColor` | `string` | `"#F6F6F6"` | Background colour for the setup partition when `SeparateSetup` and `HighlightSetup` are both `true`. |
+ | `ExpectedTestCount` | `Func<int>?` | `null` | When set, report generation is skipped if the actual test count is less than the expected count. Guards against partial test runs overwriting complete specifications. |
+-- 
+2.43.0
+

@@ -529,8 +529,11 @@
         // note's lines, a step's or a test's name, an assertion's message. None of it is an arrow or a block, however
         // it reads: a body quoting `a -> b` or an HTML comment's `-->` was counted as a step, so every later fragment
         // was numbered too high, and an assertion message holding one started a unit inside its note, so a fragment
-        // could end inside the note (DIAGRAM_COLOURS_PLAN §12.6).
-        var _noteStatementRx = /^[hr]?note\b/i;
+        // could end inside the note (DIAGRAM_COLOURS_PLAN §12.6). The keyword is followed by where the note goes, after
+        // any stereotype (`note<<requestNote>> left`, `hnote across <<assertionNote>>`): a participant's alias is its
+        // service's name, so a service called "Note" writes `Note -> OrdersAPI: …`, a message both engines draw, which
+        // the keyword alone took for a note (from 3.31.8 until 3.32.3 its calls went uncounted, §12.7).
+        var _noteStatementRx = /^[hr]?note\b(?:\s*<<[^>]*>>)*\s*(?:left|right|over|across)\b/i;
         var _noteBlockEndRx = /^end\s*[hr]?note$/i;
         function isNoteStatement(trimmed) { return _noteStatementRx.test(trimmed); }
         function opensNoteBlock(trimmed) {
@@ -1010,23 +1013,20 @@
         // recurrence into a one-glance diagnosis.
         var _statementArrowRx = /<{1,2}[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}|[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}>{1,2}/;
         var _statementBlockRx = /^(loop|alt|else|opt|group|par|critical|break|partition|also)\b/i;
-        var _noteStartRx = /^[hrn]?note\b/i;
-        var _noteEndRx = /^end\s*[hrn]?note$/i;
+        // A note is read by the splitter's rule (isNoteStatement, opensNoteBlock): this check's own pattern took a line
+        // starting with the keyword for a note, so an over-long message from a service called "Note" was never named.
         function findOverLongStatement(source) {
             var lines = String(source).split('\n');
-            var noteDepth = 0;
+            var inNote = false;
             for (var i = 0; i < lines.length; i++) {
                 var t = lines[i].replace(/\r$/, '').trim();
-                if (noteDepth > 0) {
-                    if (_noteEndRx.test(t)) noteDepth--;
+                if (inNote) {
+                    if (closesNoteBlock(t)) inNote = false;
                     continue;
                 }
                 if (!t || t[0] === "'" || t[0] === '!' || t[0] === '@') continue;
-                if (_noteStartRx.test(t)) {
-                    var stripped = t.replace(/<<[^>]*>>/g, '');
-                    var colon = stripped.indexOf(':'), angle = stripped.indexOf('<');
-                    var singleLine = colon >= 0 && (angle < 0 || colon < angle);
-                    if (!singleLine) noteDepth++;
+                if (isNoteStatement(t)) {
+                    inNote = opensNoteBlock(t);
                     continue;
                 }
                 if (_statementBlockRx.test(t)) {
@@ -1198,43 +1198,25 @@
             var legacy = window.__iflowSegments;
             return !!(legacy && legacy[segId]);
         }
+        // Kronikol's internal-flow links, as each engine draws them: the JavaScript engine (BrowserJs, NodeJs) as text in its
+        // link colour, the Java engine (Server, Local) as an <a> round that text, naming the segment in its href and title. A
+        // link whose segment has data opens its popup and, in the default mode (ShowLinkOnHover), rests in the ink of the
+        // text beside it until it is hovered. A link whose segment has none rests in that ink and does not look like a link
+        // (DIAGRAM_COLOURS_PLAN S2). A text this function repaints keeps the fill it was painted with in data-iflow-fill, and
+        // the function reads that back: a copy of a bound diagram (Export Filtered HTML), which keeps the paint and loses the
+        // listeners, binds again as the page did. Until 3.32.3 such a copy of a NodeJs diagram showed no link-coloured text
+        // in the default mode, so nothing bound it, and the Java engine's <a> was left to the popup script, which opens it
+        // but never applied either rule (DIAGRAM_COLOURS_PLAN §12.7).
         function bindIflowLinks(container, source) {
             if (!container) return;
             var config = window.__iflowConfig || {};
             var hoverOnly = config.hasDataBehavior === 'showLinkOnHover';
-            var bound = 0;
-            container.querySelectorAll('a').forEach(function(a) {
-                var href = a.getAttribute('xlink:href') || a.getAttribute('href') || '';
-                if (href.indexOf('#iflow-') !== 0) return;
-                var segId = href.substring(1);
-                if (!hasSegment(segId)) return;
-                if (hoverOnly) {
-                    a.removeAttribute('xlink:href');
-                    a.removeAttribute('href');
-                    a.classList.add('iflow-link-hover');
-                } else {
-                    a.style.cursor = 'pointer';
-                }
-                a.addEventListener('click', function(ev) {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    if (window._iflowShowPopup) window._iflowShowPopup(segId);
-                });
-                bound++;
-            });
-            if (bound > 0) return;
-            if (!source) return;
-            var iflowMap = extractIflowMap(source);
-            if (Object.keys(iflowMap).length === 0) return;
-            // Link text is found by the engine's link colour. Nothing is recoloured until a group of it is known
-            // to be one of Kronikol's links: blue text no [[#iflow-…]] markup names (a FocusEmphasis.Colored field,
-            // a hyperlink in a payload) keeps the colour it was painted in (DIAGRAM_COLOURS_PLAN S2).
-            var allTexts = Array.from(container.querySelectorAll('text'));
+            // Listed only once a link is found to bind, as before: an activity diagram, say, has none.
+            var allTexts = null;
             function isLinkFill(fill) { return (fill || '').toLowerCase() === '#0000ff'; }
-            var blueIndices = [];
-            allTexts.forEach(function(t, idx) {
-                if (isLinkFill(t.getAttribute('fill'))) blueIndices.push(idx);
-            });
+            // The fill a text was painted with: the one this function kept, else its own.
+            function paintedFill(t) { return t.hasAttribute('data-iflow-fill') ? t.getAttribute('data-iflow-fill') : t.getAttribute('fill'); }
+            function isLinkText(t) { return isLinkFill(paintedFill(t)); }
             // A link rests in the ink of the text beside it: of the nearest texts before and after it in the diagram's
             // text order that are not link-coloured, the nearer on the page (a sequence arrow's number, a component
             // edge's own stats line), else the ink most of the diagram's text uses, else black. On the default theme a
@@ -1248,7 +1230,7 @@
                 var best = 0;
                 allTexts.forEach(function(t) {
                     var fill = t.getAttribute('fill');
-                    if (!fill || isLinkFill(fill)) return;
+                    if (!fill || isLinkText(t)) return;
                     counts[fill] = (counts[fill] || 0) + 1;
                     if (counts[fill] > best) { best = counts[fill]; commonInk = fill; }
                 });
@@ -1257,10 +1239,10 @@
             function restFillNear(first, last) {
                 var before = null, after = null;
                 for (var i = first - 1; i >= 0 && !before; i--) {
-                    if (allTexts[i].getAttribute('fill') && !isLinkFill(allTexts[i].getAttribute('fill'))) before = allTexts[i];
+                    if (allTexts[i].getAttribute('fill') && !isLinkText(allTexts[i])) before = allTexts[i];
                 }
                 for (var j = last + 1; j < allTexts.length && !after; j++) {
-                    if (allTexts[j].getAttribute('fill') && !isLinkFill(allTexts[j].getAttribute('fill'))) after = allTexts[j];
+                    if (allTexts[j].getAttribute('fill') && !isLinkText(allTexts[j])) after = allTexts[j];
                 }
                 if (!before && !after) return mostCommonInk();
                 if (!before || !after) return (before || after).getAttribute('fill');
@@ -1271,27 +1253,14 @@
                 }
                 return (gap(after) < gap(before) ? after : before).getAttribute('fill');
             }
-            var groups = [];
-            var curGrp = [];
-            var sorted = blueIndices;
-            for (var gi = 0; gi < sorted.length; gi++) {
-                if (curGrp.length === 0 || sorted[gi] === curGrp[curGrp.length - 1] + 1) {
-                    curGrp.push(sorted[gi]);
-                } else {
-                    groups.push(curGrp);
-                    curGrp = [sorted[gi]];
-                }
-            }
-            if (curGrp.length > 0) groups.push(curGrp);
-            groups.forEach(function(group) {
-                var combined = group.map(function(idx) { return allTexts[idx].textContent; }).join('');
-                var key = combined.replace(/\s+/g, '');
-                var segId = iflowMap[key] || null;
-                if (!segId) return; // not Kronikol's markup: left exactly as painted
-                var groupEls = group.map(function(idx) { return allTexts[idx]; });
-                // The highlight is the fill the engine painted the link in, so a theme's link colour survives.
-                var linkFills = groupEls.map(function(el) { return el.getAttribute('fill'); });
-                var rest = restFillNear(group[0], group[group.length - 1]);
+            // One link's texts. The highlight is the fill the engine painted the link in, so a theme's link colour
+            // survives. A text is bound once in a page: the mark is an expando, which a copy does not carry.
+            function bindLink(groupEls, segId) {
+                groupEls.forEach(function(el) {
+                    if (!el.hasAttribute('data-iflow-fill')) el.setAttribute('data-iflow-fill', el.getAttribute('fill') || '');
+                });
+                var linkFills = groupEls.map(paintedFill);
+                var rest = restFillNear(allTexts.indexOf(groupEls[0]), allTexts.indexOf(groupEls[groupEls.length - 1]));
                 function atRest() {
                     groupEls.forEach(function(el) {
                         el.setAttribute('fill', rest);
@@ -1303,15 +1272,17 @@
                     atRest();
                     return;
                 }
-                groupEls.forEach(function(textEl) {
+                groupEls.forEach(function(textEl, i) {
+                    if (textEl._iflowBound) return;
+                    textEl._iflowBound = true;
                     textEl.style.pointerEvents = 'all';
                     if (hoverOnly) {
                         textEl.setAttribute('fill', rest);
                         textEl.removeAttribute('text-decoration');
                         textEl.style.cursor = 'default';
                         textEl.addEventListener('mouseenter', function() {
-                            groupEls.forEach(function(el, i) {
-                                el.setAttribute('fill', linkFills[i]);
+                            groupEls.forEach(function(el, k) {
+                                el.setAttribute('fill', linkFills[k]);
                                 el.setAttribute('text-decoration', 'underline');
                                 el.style.cursor = 'pointer';
                             });
@@ -1321,6 +1292,7 @@
                             groupEls.forEach(function(el) { el.style.cursor = 'default'; });
                         });
                     } else {
+                        textEl.setAttribute('fill', linkFills[i]);
                         textEl.setAttribute('text-decoration', 'underline');
                         textEl.style.cursor = 'pointer';
                     }
@@ -1330,7 +1302,56 @@
                         if (window._iflowShowPopup) window._iflowShowPopup(segId);
                     });
                 });
-                bound++;
+            }
+            // The Java engine's <a>, one or more per link (a label wrapped onto lines), each round that line's text. The
+            // popup script takes the href of one whose segment has no data (P5 R2), and so does this; its title still
+            // names the segment, since the Java engine writes both.
+            var anchorTexts = {}, anchorIds = [];
+            container.querySelectorAll('a').forEach(function(a) {
+                var segId = null;
+                [a.getAttribute('href'), a.getAttribute('xlink:href'), a.getAttributeNS('http://www.w3.org/1999/xlink', 'href'),
+                    a.getAttribute('title'), a.getAttribute('xlink:title')].forEach(function(name) {
+                    if (!segId && name && name.indexOf('#iflow-') === 0) segId = name.substring(1);
+                });
+                if (!segId) return;
+                if (!hasSegment(segId)) {
+                    a.removeAttribute('href');
+                    a.removeAttribute('xlink:href');
+                    a.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
+                }
+                if (!anchorTexts[segId]) { anchorTexts[segId] = []; anchorIds.push(segId); }
+                a.querySelectorAll('text').forEach(function(t) { anchorTexts[segId].push(t); });
+            });
+            if (anchorIds.length > 0) {
+                allTexts = Array.from(container.querySelectorAll('text'));
+                anchorIds.forEach(function(segId) { if (anchorTexts[segId].length > 0) bindLink(anchorTexts[segId], segId); });
+                return;
+            }
+            if (!source) return;
+            var iflowMap = extractIflowMap(source);
+            if (Object.keys(iflowMap).length === 0) return;
+            allTexts = Array.from(container.querySelectorAll('text'));
+            // Link text is found by the engine's link colour. Nothing is recoloured until a group of it is known
+            // to be one of Kronikol's links: blue text no [[#iflow-…]] markup names (a FocusEmphasis.Colored field,
+            // a hyperlink in a payload) keeps the colour it was painted in (DIAGRAM_COLOURS_PLAN S2).
+            var groups = [];
+            var curGrp = [];
+            allTexts.forEach(function(t, idx) {
+                if (!isLinkText(t)) return;
+                if (curGrp.length === 0 || idx === curGrp[curGrp.length - 1] + 1) {
+                    curGrp.push(idx);
+                } else {
+                    groups.push(curGrp);
+                    curGrp = [idx];
+                }
+            });
+            if (curGrp.length > 0) groups.push(curGrp);
+            groups.forEach(function(group) {
+                var combined = group.map(function(idx) { return allTexts[idx].textContent; }).join('');
+                var key = combined.replace(/\s+/g, '');
+                var segId = iflowMap[key] || null;
+                if (!segId) return; // not Kronikol's markup: left exactly as painted
+                bindLink(group.map(function(idx) { return allTexts[idx]; }), segId);
             });
         }
         function enqueueElement(el) {
@@ -1365,12 +1386,19 @@
         // A diagram the report drew when it was written (PlantUmlRendering.NodeJs, Server, Local) arrives inline. The
         // JavaScript engine the Node renderer runs draws a link as blue text and never as an <a>, so the popup script,
         // which catches clicks on <a> links, had nothing to catch: under NodeJs every internal-flow link was drawn and
-        // opened nothing. Such a diagram's links are bound as a diagram drawn here is, once it comes into view. One
-        // holding an <a> (the Java engine, under Server and Local) is left to the popup script.
+        // opened nothing (3.31.8). Such a diagram's links are bound as a diagram drawn here is, once it comes into view.
+        // So is one holding the Java engine's <a> links (Server, Local), which the binder reads without the source: the
+        // popup script opens them, and the binder gives them the look the mode asks for (3.32.3).
         function bindInlineSvg(el) {
             if (el._iflowBinding) return;
             el._iflowBinding = true;
-            if (el.querySelector('a') || !el.querySelector('text[fill="#0000ff" i]')) {
+            if (el.querySelector('a')) {
+                bindIflowLinks(el, null);
+                el.dataset.iflowBound = '1';
+                return;
+            }
+            // Link text in the engine's link colour, or repainted by the binder in a copy of a bound page (an export).
+            if (!el.querySelector('text[fill="#0000ff" i], text[data-iflow-fill]')) {
                 el.dataset.iflowBound = '1';
                 return;
             }

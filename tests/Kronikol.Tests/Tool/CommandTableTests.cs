@@ -138,7 +138,10 @@ public class CommandTableTests
         foreach (var (name, target) in runTargets)
         {
             Assert.DoesNotContain("<>c", target, StringComparison.Ordinal);
-            var expected = "Kronikol.Tool." + string.Concat(name.Split('-')
+            // `query` is the one command implemented in the library rather than the tool: the engine lives in
+            // Kronikol so the query.cs written beside every report can run it with nothing installed.
+            var home = name == "query" ? "Kronikol.Query." : "Kronikol.Tool.";
+            var expected = home + string.Concat(name.Split('-')
                 .Select(part => char.ToUpperInvariant(part[0]) + part[1..])) + "Command.Run";
             Assert.Equal(expected, target);
         }

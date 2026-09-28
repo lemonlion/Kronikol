@@ -1,9 +1,9 @@
 ﻿using System.Net;
 using System.Text;
 using System.Text.Json;
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tool;
-using Kronikol.Tool.Query;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tool;

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Kronikol.Query;
 using Kronikol.Tool;
 
 namespace Kronikol.Tests.Tool;

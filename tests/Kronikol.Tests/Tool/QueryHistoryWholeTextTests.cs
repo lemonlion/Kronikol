@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Kronikol.History;
+using Kronikol.Query;
 using Kronikol.Tool;
-using Kronikol.Tool.Query;
 
 namespace Kronikol.Tests.Tool;
 

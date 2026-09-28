@@ -1,4 +1,5 @@
 using Kronikol.History;
+using Kronikol.Query;
 using Kronikol.Tool;
 
 namespace Kronikol.Tests.Tool;

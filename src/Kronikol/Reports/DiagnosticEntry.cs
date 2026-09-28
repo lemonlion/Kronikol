@@ -111,8 +111,10 @@ public enum DiagnosticKind
     /// and why. Today that is a PlantUML theme (<see cref="ReportConfigurationOptions.PlantUmlTheme"/>, or
     /// <see cref="ComponentDiagram.ComponentDiagramOptions.PlantUmlTheme"/> when the component diagram is
     /// generated) under <see cref="PlantUmlRendering.BrowserJs"/> or <see cref="PlantUmlRendering.NodeJs"/>:
-    /// both load the engine without its theme bundle, so every diagram is drawn unthemed. The run is otherwise
-    /// unaffected.
+    /// both load the engine without its theme bundle, so every diagram is drawn unthemed. And
+    /// <see cref="ReportConfigurationOptions.WriteQueryScript"/> where the reports directory is inside a C#
+    /// project's folder, outside its <c>bin</c>, its <c>obj</c> and any folder whose name starts with a dot: that
+    /// project would compile a <c>query.cs</c> written there, so none is. The run is otherwise unaffected.
     /// </summary>
     OptionNotApplied,
 }

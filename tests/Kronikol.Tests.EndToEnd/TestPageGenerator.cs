@@ -21,7 +21,8 @@ public static class TestPageGenerator
         bool includeCallTree = false,
         bool includeEmptySegment = false,
         bool includeContextMenu = false,
-        bool includeTwin = false)
+        bool includeTwin = false,
+        string childSpanName = "SELECT * FROM Orders")
     {
         using var activitySource = new ActivitySource("Kronikol.Tests.EndToEnd");
         using var listener = new ActivityListener
@@ -36,7 +37,7 @@ public static class TestPageGenerator
         parentSpan.SetStartTime(DateTime.UtcNow);
         parentSpan.SetEndTime(DateTime.UtcNow.AddMilliseconds(150));
 
-        var childSpan = activitySource.StartActivity("SELECT * FROM Orders", ActivityKind.Client,
+        var childSpan = activitySource.StartActivity(childSpanName, ActivityKind.Client,
             new ActivityContext(parentSpan.TraceId, parentSpan.SpanId, ActivityTraceFlags.Recorded))!;
         childSpan.SetStartTime(DateTime.UtcNow.AddMilliseconds(20));
         childSpan.SetEndTime(DateTime.UtcNow.AddMilliseconds(80));

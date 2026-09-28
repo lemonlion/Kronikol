@@ -572,6 +572,19 @@ public class NodeJsPlantUmlRendererTests
         return stream.ToArray();
     }
 
+    /// <summary>
+    /// An engine cache on a directory of the test's own, whose downloader serves <paramref name="files"/> and whose known
+    /// hashes are theirs, so nothing the machine shares is touched and no network is needed.
+    /// </summary>
+    private static EngineCache CacheServing(string dir, IReadOnlyDictionary<string, byte[]> files, List<string>? downloads = null) =>
+        new(dir, url =>
+            {
+                var file = url[(url.LastIndexOf('/') + 1)..];
+                lock (files) downloads?.Add(file);
+                return files[file];
+            }, Kronikol.Constants.TrackingDefaults.PlantUmlJsCdnBase,
+            files.ToDictionary(f => f.Key, f => EngineCache.Integrity(f.Value)));
+
     [Fact]
     public void Node_is_started_on_the_render_script_of_this_build()
     {
@@ -579,14 +592,65 @@ public class NodeJsPlantUmlRendererTests
         // kronikol tool beside a test project on another version included. Each process wrote its build's script to
         // one fixed name on its first render and ran whatever that name held from then on: another version's script,
         // or one another process was halfway through writing.
-        var start = NodeJsPlantUmlRenderer.NodeStartInfo(batch: true);
+        var dir = Directory.CreateTempSubdirectory("kronikol-node-start-").FullName;
+        try
+        {
+            var engine = CacheServing(dir, new Dictionary<string, byte[]>
+            {
+                ["viz-global.js"] = "globalThis.Viz = {};"u8.ToArray(),
+                ["plantuml.js"] = "export{C as render,D as renderToString};"u8.ToArray(),
+            });
 
-        var script = start.ArgumentList[0];
-        var hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(RenderScriptBytes()))[..16];
-        Assert.Equal($"plantuml-render.{hash}.js", Path.GetFileName(script));
-        Assert.Equal(Path.GetDirectoryName(NodeJsPlantUmlRenderer.CodeCachePath), Path.GetDirectoryName(script));
-        Assert.Equal(NodeJsPlantUmlRenderer.RenderScriptPath, script);
-        Assert.Equal("--batch", start.ArgumentList[^1]);
+            var start = NodeJsPlantUmlRenderer.NodeStartInfo(engine, batch: true);
+
+            var script = start.ArgumentList[0];
+            var hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(RenderScriptBytes()))[..16];
+            Assert.Equal(Path.Combine(dir, $"plantuml-render.{hash}.js"), script);
+            Assert.Equal(RenderScriptBytes(), File.ReadAllBytes(script));
+            Assert.Equal(Path.Combine(dir, "viz-global.js"), start.ArgumentList[1]);
+            Assert.Equal(Path.Combine(dir, "plantuml.js"), start.ArgumentList[2]);
+            Assert.Equal("--batch", start.ArgumentList[^1]);
+            // The machine's directory holds its own under the same name.
+            Assert.Equal(Path.GetDirectoryName(NodeJsPlantUmlRenderer.CodeCachePath), Path.GetDirectoryName(NodeJsPlantUmlRenderer.RenderScriptPath));
+            Assert.Equal(Path.GetFileName(script), Path.GetFileName(NodeJsPlantUmlRenderer.RenderScriptPath));
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_render_after_its_engine_directory_was_deleted_fills_it_again()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // Deleting the directory is the remedy a failed check names. A process that had rendered once never checked its
+        // files again, so node was started on a script that was gone, and every later diagram of the process became a
+        // placeholder. The render runs on a directory of its own, filled from the machine's verified copies: the machine's
+        // directory is shared by every class that renders, and none of it is deleted here.
+        NodeJsPlantUmlRenderer.RenderMany([Seq("Warm", "Up")]);
+        var shared = Path.GetDirectoryName(NodeJsPlantUmlRenderer.CodeCachePath)!;
+        var files = new[] { "viz-global.js", "plantuml.js" }.ToDictionary(f => f, f => File.ReadAllBytes(Path.Combine(shared, f)));
+        var downloads = new List<string>();
+        var dir = Directory.CreateTempSubdirectory("kronikol-engine-deleted-").FullName;
+        try
+        {
+            var engine = CacheServing(dir, files, downloads);
+            Assert.True(NodeJsPlantUmlRenderer.RenderMany([Seq("Before", "Delete")], engine)[0].Succeeded);
+
+            Directory.Delete(dir, recursive: true);
+            var after = NodeJsPlantUmlRenderer.RenderMany([Seq("After", "Delete")], engine)[0];
+
+            Assert.True(after.Succeeded, after.Error);
+            Assert.Contains("After", after.Svg);
+            Assert.Equal(["plantuml.js", "plantuml.js", "viz-global.js", "viz-global.js"], downloads.Order());
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
     }
 
     [Fact]
@@ -785,6 +849,21 @@ public class NodeJsPlantUmlRendererTests
     }
 
     [Fact]
+    public void The_engine_rewrite_the_shared_code_cache_is_compiled_from_stays_as_every_version_wrote_it()
+    {
+        // The code cache sits in the directory every Kronikol version on one engine shares, and V8 checks a cache against
+        // the source's length only (plans/ENGINE_PIN_PLAN.md §1.12). It is right for all of them because each compiles the
+        // same source: the engine with its trailing export rewritten by these two lines, unchanged since 3.0.50. A version
+        // that rewrote it to other text of the same length would run another version's compiled code (§10.5). To change
+        // them, give the cache a file of its own first.
+        var source = RenderScriptSource();
+
+        Assert.Contains("""var em = /export\s*\{\s*([A-Za-z_$][\w$]*)\s+as\s+render\s*,\s*([A-Za-z_$][\w$]*)\s+as\s+renderToString\s*\}\s*;?\s*$/.exec(tail);""", source);
+        Assert.Contains("""+ 'globalThis.__plantumlExports = { render: ' + em[1] + ', renderToString: ' + em[2] + ' };\n';""", source);
+        Assert.Contains("var cachePath = filePath + '.v8cache';", source);
+    }
+
+    [Fact]
     public void The_render_script_says_what_v8_checks_a_code_cache_against()
     {
         // V8 checks cached data against the source's length, not its bytes (plans/ENGINE_PIN_PLAN.md §1.12). The
@@ -888,9 +967,10 @@ public class NodeJsPlantUmlRendererTests
     [Fact]
     public void The_engine_cache_is_versioned_by_the_cdn_tag()
     {
-        // DownloadJsFiles skips files that already exist: with an unversioned cache directory a change
-        // of TrackingDefaults.PlantUmlJsCdnBase would silently keep every existing machine on the old
-        // engine forever. The cache directory must therefore carry the CDN tag.
+        // The cache directory carries the engine's version. Before 3.31.1 the renderer kept any file already there, so a
+        // change of TrackingDefaults.PlantUmlJsCdnBase kept every machine on the old engine for good; the known-hash check
+        // (EngineCache) would now replace it, but a machine running two Kronikol versions on two engines would then
+        // replace one with the other on every run.
         var tag = Kronikol.Constants.TrackingDefaults.PlantUmlJsCdnBase.Split('/')[^1].Split('@')[^1];
         Assert.Contains($"{Path.DirectorySeparatorChar}{tag}{Path.DirectorySeparatorChar}",
             NodeJsPlantUmlRenderer.CodeCachePath);

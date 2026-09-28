@@ -1,0 +1,9 @@
+# default-mode-links-probe.js on the example project's LightBDD.xUnit3 suite, KRONIKOL_INTEGRATION_MODE=true KRONIKOL_PLANTUML_RENDERING=NodeJs, ShowLinkOnHover (the default)
+# 3.31.10 (e7e85044):
+PAGE {"diagrams":7,"anchors":0,"texts":949,"restBlue":0,"hoverable":58,"hoverOpensOfFirst20":20,"restBlueOpensOfFirst20":0}
+EXPORT {"diagrams":6,"anchors":0,"texts":881,"restBlue":0,"hoverable":0,"hoverOpensOfFirst20":0,"restBlueOpensOfFirst20":0}
+ERRORS []
+# this release:
+PAGE {"diagrams":7,"anchors":0,"texts":949,"restBlue":0,"hoverable":58,"hoverOpensOfFirst20":20,"restBlueOpensOfFirst20":0}
+EXPORT {"diagrams":6,"anchors":0,"texts":881,"restBlue":0,"hoverable":58,"hoverOpensOfFirst20":20,"restBlueOpensOfFirst20":0}
+ERRORS []

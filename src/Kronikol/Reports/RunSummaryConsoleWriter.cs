@@ -46,6 +46,14 @@ public sealed record RunSummary(
     /// positional parameter, so the constructor every caller already compiles against does not change.
     /// </summary>
     public RunSummaryPreviousRun? PreviousRun { get; init; }
+
+    /// <summary>
+    /// Whether this run wrote <c>query.cs</c> into <see cref="Directory"/>: <c>kronikol query</c> with nothing
+    /// installed, which a failing run's pointer and the CI summary then name beside the tool
+    /// (<see cref="ReportConfigurationOptions.WriteQueryScript"/>). A property for the same reason as
+    /// <see cref="PreviousRun"/>.
+    /// </summary>
+    public bool QueryScriptWritten { get; init; }
 }
 
 /// <summary>The previous run, kept: where it went and how many of its scenarios had failed.</summary>
@@ -174,6 +182,11 @@ public static class RunSummaryConsoleWriter
             text.Append(summary.AgentInstructionsWritten
                 ? $"  agents: read {Quote(Path.Combine(summary.Directory, "CLAUDE.md"))} first; never open {DataFileName(summary)}\n"
                 : $"  agents: run kronikol query --help; never open {DataFileName(summary)}\n");
+
+            // The line above names a tool an agent that may not install anything cannot run. The query.cs
+            // this run wrote is the same engine with nothing installed and no network.
+            if (summary.QueryScriptWritten)
+                text.Append($"  no tool: dotnet run --file {Quote(Path.Combine(summary.Directory, QueryScriptGenerator.FileName))} -- failures {QueryTarget(summary)}\n");
         }
 
         return text.ToString();
@@ -248,6 +261,10 @@ public static class RunSummaryConsoleWriter
         if (summary.Failures.Count > 0)
             markdown.Append($"kronikol query failures {target}\n");
         markdown.Append("```\n\n");
+
+        if (summary.QueryScriptWritten)
+            markdown.Append($"Nothing to install and no network needed: `dotnet run --file {Quote(Path.Combine(summary.Directory, QueryScriptGenerator.FileName))} -- summary {target}` "
+                            + "runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.\n\n");
 
         if (summary.History is { Length: > 0 } history)
             markdown.Append(OneLine(history)).Append("\n\n");

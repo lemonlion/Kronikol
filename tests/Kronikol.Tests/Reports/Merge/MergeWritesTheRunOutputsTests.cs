@@ -85,6 +85,43 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         }
     }
 
+    /// <summary>
+    /// A merged report is queried by the engine that wrote it, with nothing installed: the query.cs a run
+    /// writes beside its report, written beside a merged one (plans/QUERY_FALLBACK_PLAN.md).
+    /// </summary>
+    [Fact]
+    public void Merge_writes_query_cs_beside_the_merged_report()
+    {
+        WriteShard("runner1.json", "0-1002", "Cart is priced", "Passed");
+
+        var (exit, _, error) = Merge();
+
+        Assert.True(exit == 0, error);
+        Assert.StartsWith("// Written by Kronikol ", File.ReadAllText(Out("query.cs")), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Whose the <c>query.cs</c> already there is gets asked before the outputs, outside what keeps one failed
+    /// output from stopping the rest. One that cannot be read is taken as somebody else's: left as it is,
+    /// never named, and every other output written.
+    /// </summary>
+    [Fact]
+    public void A_query_cs_that_cannot_be_read_stops_nothing()
+    {
+        WriteShard("runner1.json", "0-1002", "Discount is applied", "Failed", error: "expected 10 but was 12");
+        File.WriteAllText(Out("query.cs"), "// Written by Kronikol 0.0.1 beside the report in this directory\n");
+
+        int exit;
+        string error;
+        using (new FileStream(Out("query.cs"), FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            (exit, _, error) = Merge();
+
+        Assert.True(exit == 0, error);
+        Assert.True(File.Exists(Out("Combined.json")));
+        Assert.DoesNotContain("query.cs", File.ReadAllText(Out("Failures.md")), StringComparison.Ordinal);
+        Assert.Equal("// Written by Kronikol 0.0.1 beside the report in this directory\n", File.ReadAllText(Out("query.cs")));
+    }
+
     [Fact]
     public void An_existing_instruction_file_beside_the_output_keeps_its_own_text()
     {
@@ -232,6 +269,18 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         var text = File.ReadAllText(githubOutput);
         Assert.Contains($"reports-path={_out}", text);
         Assert.Contains("reports-retention-days=1", text);
+    }
+
+    [Fact]
+    public void Publish_artifacts_on_azure_devops_uploads_every_output_query_cs_included()
+    {
+        WriteShard("runner1.json", "0-1002", "Cart is priced", "Failed");
+
+        var (exit, output, error) = Merge(name => name == "TF_BUILD" ? "True" : null, "--publish-artifacts");
+
+        Assert.True(exit == 0, error);
+        foreach (var name in new[] { "Combined.html", "Combined.json", "Failures.md", "CLAUDE.md", "query.cs" })
+            Assert.Contains($"##vso[artifact.upload containerfolder=TestReports;artifactname=TestReports]{Out(name)}", output);
     }
 
     // ─── Helpers ───────────────────────────────────────────────

@@ -1,5 +1,7 @@
 # Kronikol
 
+**[See a live report](https://lemonlion.github.io/BreakfastProvider/)** from a sample service's test run.
+
 *Formerly **TestTrackingDiagrams** — the same project, renamed in 3.0.0. The `TestTrackingDiagrams.*` packages are the old identity and are no longer updated.*
 
 Effortlessly autogenerate **PlantUML sequence diagrams** from your component and acceptance tests. Tracks interactions between your test caller, your Service Under Test (SUT), and its dependencies — including HTTP calls, Azure Cosmos DB operations, SQL queries (via EF Core), Redis commands, events/messages, and arbitrary method calls — then converts them into diagrams embedded in searchable HTML reports and structured data files. Diagrams render client-side in the browser (on Web Workers), payload notes flip between JSON and YAML on hover, and the report search box searches *everything* the report contains — payloads, headers, SQL and diagram text — via a compact embedded full-text index.
@@ -76,6 +78,8 @@ kronikol query grep     ./Reports "4173" --values   # where a wrong value entere
 kronikol query failures ./Reports --json            # the same answer as one envelope, for scripts
 kronikol ctrf           ./Reports --out ctrf-report.json  # the run in Common Test Report Format, for CI tooling
 ```
+
+With nothing installed and no network, every run's `query.cs` answers the same: from the reports directory, `dotnet run --file query.cs -- failures .` runs the engine that wrote the report (it needs the .NET 10 SDK).
 
 ## Teach your agents to use it
 

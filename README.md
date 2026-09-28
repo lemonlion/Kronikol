@@ -7,6 +7,8 @@
 
 # <img src="icon.svg" width="32" height="32" alt="Kronikol icon" style="vertical-align: middle;"> Kronikol
 
+**[See a live report](https://lemonlion.github.io/BreakfastProvider/)** from a sample service's test run.
+
 *Formerly **TestTrackingDiagrams** — the same project, renamed in 3.0.0 (May 2026). The `TestTrackingDiagrams.*` NuGet packages are the old identity and are no longer updated; install `Kronikol.*`.*
 
 Automatically generates [rich interactive HTML reports](https://lemonlion.github.io/BreakfastProvider/) with PlantUML sequence, activity and component diagrams, with timeline visualizations from your integration/component test HTTP traffic (real or faked) and telemetry.
@@ -32,7 +34,7 @@ Input data sets (eg InlineData/MemberData/ClassData for xUnit, and equivalents i
 
 **This is just a very simple static example, for a full, rich, interactive example, see the generated [BreakfastProvider diagrams](https://lemonlion.github.io/BreakfastProvider/) in the [BreakfastProvider](https://github.com/lemonlion/BreakfastProvider) project.** 
 
-[<img width="770" height="1017" alt="image" src="https://github.com/user-attachments/assets/43d48a00-ba37-4951-945c-dd75de64c2bb" />](https://www.plantuml.com/plantuml/uml/j5NDJjj04BvRyZiCBWSGSKa28c2520418PI2258F2A7DxjYnukn6utKYG7so7lf8VONkseO4DnKGgJvvPhwPRtxjtpz_7QMQaSx6YUkiJOX5OmOQrHDeoj1rsgb-JB3ZEl0LfoZrDwKHderedsF6Hn6fJ8eJbIY2Bpn47hPAwvcIkXy_8JGQfUQcW994WaRTA7yOWkqNXdGKomaZDeOPiSdtMEWXxDSDR2tC9DUnah3EBS_6-fGb6MuQ2w7EI8BNpWs1jrMOjZpeUCQCKhpukWxBj9BPU639NSV8N9kSlHEM94WUi1Hu_kewfivOFu9tYccAfE6Qr3GM9KWKoXVT77sYPj17ciOSYsXgLefpJDVs40QaHcMqlAd7kMnpAZ80lrEb2U2yUnl0zZXEHgvJCLhydEqjTAu7VrdOgqlNaNQe54T3xJfbYoDYZvjtfqpZOK_96ZHteCS8clNc7ZJsWjrwK6_0UU_slk9XkP0EBp7LX4dLUajCfY6ItvLSYLX6XtoOoH4A0tITVAqycxONWDTNOtmu8qo73pshSXspBMQWOBDTqWBRWxnxVzVqgS3lZW2ZA5s5t_gzydUjy5dcC54PhKATEyvhpwMFarzVzIqxPoCiWoSOljlMsZ-PQnzhnv8bNxYMmDoQWMuK5sL0MfbDsoppVCYHPamsLBlz-kdgTDxaVimq7ru8cmORx30sE6ZvZHRd_cvJD7qMjfWVYi4-QxA3aDTtoymlP4GeOajWFE-AZzj27RL5JRKZK1a2m7sbxeKYbv_i3QOJ9GMALLPXi5B9vbJ_Pyb7vZN_0_q1003__mC0)
+[<img width="770" height="1017" alt="image" src="https://github.com/user-attachments/assets/43d48a00-ba37-4951-945c-dd75de64c2bb" />](https://lemonlion.github.io/BreakfastProvider/)
 
 Each test that uses tracked dependencies automatically produces a sequence diagram (with matching PlantUML) showing the full request/response flow between services.
 
@@ -198,6 +200,8 @@ For the CI tooling that speaks somebody else's format rather than Kronikol's, `k
 A green re-run no longer destroys the failing run's report: the reports directory keeps the last three runs, whole, under `runs/` (the newest one that failed is never the one pruned), and `--run last-failed` on any verb opens it - `kronikol query failures ./Reports --run last-failed`. When only the ledger survived, `kronikol query history --run last-failed` still answers, with no report at all. See [Generated Reports](https://github.com/lemonlion/Kronikol/wiki/Generated-Reports#earlier-runs-runjson-and-runs).
 
 Every command prints addresses rather than payloads, announces any truncation with the flags that resume it, and fetches a body only when you name one. `--out FILE` saves any answer to a file instead of printing it, without the budget; `--json` turns the listing verbs into one machine-readable envelope for scripts (text stays the default, and is what to read in a terminal - the same answer as JSON costs about twice the tokens).
+
+**With nothing installed.** An agent's session often may not install a tool, and a sandbox may have no network. So every run writes `query.cs` beside its report, and from the reports directory `dotnet run --file query.cs -- failures .` answers exactly what `kronikol query failures .` answers, with every verb and flag above. It runs the same engine: the Kronikol that wrote the report, loaded from the test run's output or the NuGet cache, so nothing is installed, restored or downloaded. It needs the .NET 10 SDK. See [Querying Reports](https://github.com/lemonlion/Kronikol/wiki/Querying-Reports).
 
 The agent skill that teaches this whole workflow installs itself. A project scaffolded from a `kronikol-*` template ships with `.claude/skills/kronikol-test-debugging/` and a `CLAUDE.md`/`AGENTS.md` block already in place; for a repository that came first, `kronikol init-agents .` adds the same three files and appends the block to both instruction files. It is safe to re-run — the block sits between markers and is replaced in place, so upgrading is the same command — and it leaves everything you wrote around it alone. The canonical copy is [`templates/skills/kronikol-test-debugging/`](templates/skills/kronikol-test-debugging) if you would rather copy it by hand. See [Querying Reports](https://github.com/lemonlion/Kronikol/wiki/Querying-Reports).
 

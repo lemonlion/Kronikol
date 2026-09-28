@@ -52,11 +52,12 @@ the runs it produces:
 
 | Path | Purpose |
 |---|---|
-| `.claude/skills/kronikol-test-debugging/` | The skill: the command ladder, the recipes, the full flag reference, and a Python fallback for machines without the CLI |
+| `.claude/skills/kronikol-test-debugging/` | The skill: the command ladder, the recipes, the full flag reference, and a Python fallback for a machine without the .NET 10 SDK (with it, the `query.cs` every run writes beside its report needs nothing installed) |
 | `CLAUDE.md`, `AGENTS.md` | Byte-identical instruction files pointing at the reports directory and the skill — two names because Claude Code reads one and Codex, Cursor and Copilot read the other |
 
-They need no setup. An agent that opens the project reads them and knows to run `kronikol query` rather
-than open a report that does not fit in its context. To add the same thing to a repository that predates
+They need no setup. An agent that opens the project reads them and knows to run `kronikol query`, or
+`dotnet run --file query.cs` from the reports directory where it may not install the tool, rather than open
+a report that does not fit in its context. To add the same thing to a repository that predates
 the templates, install `Kronikol.Tool` and run `kronikol init-agents .`.
 
 ## After Scaffolding

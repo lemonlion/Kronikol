@@ -215,13 +215,17 @@ public static class DefaultDiagramsFetcher
         return perTestId
             .SelectMany(test => test.PlantUmls.Select(plantUml =>
                 RenderIsolated(test.TestId, plantUml.PlainText, source =>
-                {
-                    var svgUrl = $"{options.PlantUmlServerBaseUrl}/svg/{PlantUmlTextEncoder.Encode(source)}";
-                    var svgContent = httpClient.GetStringAsync(svgUrl).GetAwaiter().GetResult();
-                    return new DiagramAsCode(test.TestId, StripXmlDeclaration(svgContent), source);
-                }, "Rendering the diagram on the PlantUML server")))
+                    new DiagramAsCode(test.TestId, FetchServerSvg(httpClient, options.PlantUmlServerBaseUrl, source), source),
+                    "Rendering the diagram on the PlantUML server")))
             .ToArray();
     }
+
+    /// <summary>
+    /// The PlantUML server's SVG of <paramref name="source"/>, fetched now and ready to inline (no XML declaration): how an
+    /// inline report under <see cref="PlantUmlRendering.Server"/> draws each diagram, the run report's component diagram too.
+    /// </summary>
+    internal static string FetchServerSvg(HttpClient httpClient, string serverBaseUrl, string source) =>
+        StripXmlDeclaration(httpClient.GetStringAsync($"{serverBaseUrl}/svg/{PlantUmlTextEncoder.Encode(source)}").GetAwaiter().GetResult());
 
     private static DiagramAsCode[] GetLocallyRenderedDiagrams(DiagramsFetcherOptions options)
     {

@@ -84,7 +84,9 @@ function export_data_scripts(exported) {
 // no longer zoomed. The export's copy of each is put back as it was before it was drawn, so the export
 // draws it again from its source and binds it as the report does. A diagram's drawn source is left out
 // when the element has a source of its own (puml-data or data-plantuml-z): it was written after the
-// report's filters had run, and the export applies its own.
+// report's filters had run, and the export applies its own. A diagram drawn when the report was written
+// (NodeJs, Server, Local) cannot be drawn again, and the page marks it data-iflow-bound once it has
+// bound its links; the mark means "bound in this page", so the copy goes without it.
 function export_undrawn(feature) {
     var copy = feature.cloneNode(true);
     copy.querySelectorAll('.plantuml-browser').forEach(function (el) {
@@ -99,6 +101,9 @@ function export_undrawn(feature) {
         if (!el.hasAttribute('data-flame') && !el.hasAttribute('data-flame-z')) return;
         el.innerHTML = '';
         el.removeAttribute('data-flame-rendered');
+    });
+    copy.querySelectorAll('.plantuml-inline-svg[data-iflow-bound]').forEach(function (el) {
+        el.removeAttribute('data-iflow-bound');
     });
     return copy.outerHTML;
 }

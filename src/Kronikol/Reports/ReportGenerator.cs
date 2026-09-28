@@ -246,6 +246,16 @@ public static class ReportGenerator
                 group.ScenarioId);
         RecordOptionDiagnostics(options);
 
+        // Decided here rather than with the outputs, so the diagnostic reaches the data files: a reports
+        // directory inside a C# project's folder takes no query.cs, because that project would compile it.
+        var queryScriptBlockedBy = WritesQueryScript(options) ? QueryScriptGenerator.CompilingProject(CurrentReportsDirectory) : null;
+        if (queryScriptBlockedBy is not null)
+        {
+            var message = QueryScriptGenerator.NotApplied(queryScriptBlockedBy);
+            ReportDiagnosticsScope.Record(DiagnosticKind.OptionNotApplied, message);
+            Console.WriteLine("⚠ WARNING: " + message);
+        }
+
         if (options.ExpectedTestCount != null)
         {
             var scenarioCount = features.SelectMany(f => f.Scenarios).Count();
@@ -424,6 +434,11 @@ public static class ReportGenerator
         // when reports are uploaded to GitHub Pages or CI artifacts.
         var reportsDir = CurrentReportsDirectory;
         Directory.CreateDirectory(reportsDir);
+
+        // Decided before the outputs run in parallel, because the digest tells its reader about query.cs and is
+        // written beside it: planned, not yet written. A query.cs someone else put here is not Kronikol's to
+        // replace, and the digest must not send anyone to run it.
+        var queryScriptPlanned = WritesQueryScript(options) && queryScriptBlockedBy is null && !QueryScriptGenerator.IsForeign(reportsDir);
         CopyAttachmentsToReportsFolder(features, reportsDir);
 
         // The run report's component diagram, drawn now by the report's renderer where the page will not draw it
@@ -516,7 +531,7 @@ public static class ReportGenerator
                     // sibling action in this same parallel list, so File.Exists here would answer whatever
                     // the scheduler happened to have done.
                     options.GenerateTestRunReport ? options.HtmlTestRunReportFileName : null,
-                    KronikolVersion, reportDiagnostics, suite, stepPaths: attribution.Value.StepPaths, history: history?.Verdicts,
+                    KronikolVersion, queryScriptPlanned, reportDiagnostics, suite, stepPaths: attribution.Value.StepPaths, history: history?.Verdicts,
                     // A retry that passes writes "All N scenarios passed" two seconds after the failure it
                     // retried. The attempt that failed is kept under runs/, and this is the file an agent
                     // reads first, so it says so.
@@ -569,6 +584,15 @@ public static class ReportGenerator
             });
         }
 
+        // `kronikol query` without the tool (plans/QUERY_FALLBACK_PLAN.md). Never the run's: like the two
+        // instruction files it describes the directory, and in runs/<run>/ it would name an engine by a path
+        // one folder too shallow.
+        if (WritesQueryScript(options) && queryScriptBlockedBy is null)
+        {
+            Add(QueryScriptGenerator.FileName, () => QueryScriptGenerator.Write(reportsDir, QueryScriptGenerator.Build(reportsDir),
+                text => WriteFile(text, QueryScriptGenerator.FileName, partOfTheRun: false)));
+        }
+
         var written = RunOutputs(actions);
 
         // After every output is on disk: a run whose report failed to write still has its fragment, and a
@@ -613,7 +637,8 @@ public static class ReportGenerator
                 // green run rotated is a line people learn to skip.
                 PreviousRun = rotation is { KeptDirectory: { } keptDirectory, Kept.Failed: > 0 }
                     ? new RunSummaryPreviousRun(keptDirectory, rotation.Kept.Failed)
-                    : null
+                    : null,
+                QueryScriptWritten = written.Contains(QueryScriptGenerator.FileName)
             };
 
         if (options.WriteCiSummary)
@@ -656,10 +681,7 @@ public static class ReportGenerator
             var ciReportsDir = CurrentReportsDirectory;
             if (Directory.Exists(ciReportsDir))
             {
-                var reportFiles = Directory.GetFiles(ciReportsDir)
-                    .Where(f => f.EndsWith(".html") || f.EndsWith(".yml") || f.EndsWith(".md") || f.EndsWith(".json") || f.EndsWith(".jsonl") || f.EndsWith(".xml"))
-                    .ToArray();
-                CiArtifactPublisher.Publish(reportFiles, ciEnv, options.CiArtifactName, options.CiArtifactRetentionDays,
+                CiArtifactPublisher.Publish(CiArtifactPublisher.ReportFiles(ciReportsDir), ciEnv, options.CiArtifactName, options.CiArtifactRetentionDays,
                     Environment.GetEnvironmentVariable, File.AppendAllText, Console.WriteLine, File.Exists,
                     CiArtifactPublisher.RetainedFiles(ciReportsDir));
             }
@@ -820,6 +842,13 @@ public static class ReportGenerator
             RecordThemeNotApplied($"{nameof(ReportConfigurationOptions.ComponentDiagramOptions)}.{nameof(ComponentDiagram.ComponentDiagramOptions.PlantUmlTheme)}",
                 componentTheme, options.PlantUmlRendering);
     }
+
+    /// <summary>
+    /// Whether this run writes <c>query.cs</c>: asked for, and with a JSON data file for it to query, since the
+    /// engine reads JSON only. Where it goes is <see cref="QueryScriptGenerator.CompilingProject"/>'s call.
+    /// </summary>
+    private static bool WritesQueryScript(ReportConfigurationOptions options) =>
+        options.WriteQueryScript && options.GenerateTestRunReportData && options.TestRunReportDataFormat == DataFormat.Json;
 
     private static void RecordThemeNotApplied(string option, string theme, PlantUmlRendering mode)
     {
@@ -1175,8 +1204,8 @@ public static class ReportGenerator
 
 
 
-        // Copy scenario name
-        var copyScenarioNameFunction = LoadResource("report-copy-scenario-name-function.js");
+        // Copy scenario name, through the shared clipboard writer (a page without a secure context has no navigator.clipboard)
+        var copyScenarioNameFunction = LoadResource("report-copy-text-function.js") + "\n" + LoadResource("report-copy-scenario-name-function.js");
 
         // Toggle examples detail row
         var toggleExamplesDetailFunction = LoadResource("report-toggle-examples-detail-function.js");
@@ -5967,7 +5996,7 @@ public static class ReportGenerator
         var schema = new Dictionary<string, object?>
         {
             ["$schema"] = "https://json-schema.org/draft/2020-12/schema",
-            ["$comment"] = "A real TestRunReport.json runs to megabytes, with single embedded diagrams past 600 KB, so do not read it whole: `kronikol query <command> <report>` (dotnet tool install -g Kronikol.Tool) answers questions about it under a byte budget — summary, failures, steps sN, services, flow sN, http sN/iN. This schema is the field-level contract of that file.",
+            ["$comment"] = "A real TestRunReport.json runs to megabytes, with single embedded diagrams past 600 KB, so do not read it whole: `kronikol query <command> <report>` (dotnet tool install -g Kronikol.Tool) answers questions about it under a byte budget — summary, failures, steps sN, services, flow sN, http sN/iN — and with nothing installed, `dotnet run --file query.cs -- <command> <report>` from the reports directory answers the same, with the engine that wrote it. This schema is the field-level contract of that file.",
             ["title"] = "TestRunReport",
             ["description"] = "Schema for Kronikol test run report data",
             ["type"] = "object",

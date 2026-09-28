@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Kronikol.Tool.Query;
+using Kronikol.Query;
 
 // The in-process internals harness behind plans/QUERY_PERF_PLAN.md section 1.3: calls the tool's real
 // internals with per-stage time and allocation, warmed, so the steady-state cost of each stage is

@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text;
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tool;
-using Kronikol.Tool.Query;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tool;

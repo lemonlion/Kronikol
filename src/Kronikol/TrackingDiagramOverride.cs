@@ -75,11 +75,17 @@ public static class DefaultTrackingDiagramOverride
 
     public static void InsertTestDelimiter(string testRuntimeId, string testIdentifier)
     {
+        StartOverride(testRuntimeId, TestDelimiterStatement(testIdentifier));
+        EndOverride(testRuntimeId);
+    }
+
+    /// <summary>The statement <see cref="InsertTestDelimiter(string, string)"/> draws for a test's name.</summary>
+    internal static string TestDelimiterStatement(string? testIdentifier)
+    {
         // One statement: a line break in a test's display name (a data row's value) ended it, and the rest of the name was
         // read as PlantUML source (DIAGRAM_COLOURS_PLAN §12.5).
         var name = (testIdentifier ?? "").ReplaceLineEndings(" ");
-        StartOverride(testRuntimeId, $"hnote across #black:<color:white>Test {PlantUml.PlantUmlCreator.EscapeOneLineMarkup(name)}");
-        EndOverride(testRuntimeId);
+        return $"hnote across #black:<color:white>Test {PlantUml.PlantUmlCreator.EscapeOneLineMarkup(name)}";
     }
 
     public static void StartAction(string testId)

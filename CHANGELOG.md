@@ -4,6 +4,331 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.32.4] - 2026-09-28
+
+**Patch - an audit of `plans/INTERNAL_FLOW_BLOB_PLAN.md` (stage 1 P5, releases 3.31.4 and 3.31.9), asked for by the
+owner: an internal-flow popup that cannot decode its data says so in every browser, and a filtered export no longer
+copies an inline diagram's "bound" mark.** Bug fixes, with nothing new for a consumer to call, so the patch part moved.
+Report output changes (the internal-flow popup script and the export function): the Kronikol4J divergence ledger
+records it. The audit's other findings were records: the wiki's sentence on the popup's failure message, a hand-off
+to roadmap 5.2 (the figures in #86 predate 3.31.4), and the plan's leftovers in the roadmap's Appendix C. Template
+pins stay at 3.31.10, since 3.32.0 is not on NuGet yet.
+
+### Fixed
+
+- **In a browser without `DecompressionStream`, an internal-flow popup said "Loading…" for good.** Since 3.31.9 the
+  popup decodes the segment data on its first opening. A popup that cannot decode it is meant to show "Internal flow
+  data could not be decompressed: <reason>" and log the error, and the plan named this browser as the case: Chrome
+  and Edge before 80, Firefox before 113, Safari before 16.4. There, and on data `atob` refuses, the decompressor
+  fails before it returns a promise, so the popup's error path never ran: it stayed on "Loading…", and the console
+  got an uncaught error instead. Both now show the message. It matters where nothing else on the page needs
+  `DecompressionStream`: `CallTree` popups under Server or Local rendering, which worked in such a browser before
+  3.31.9. Data that decompresses to something wrong showed the message already.
+- **A filtered export copied an inline diagram's `data-iflow-bound` mark.** A diagram drawn when the report was written
+  (NodeJs, Server, Local) is marked once the page has bound its links, and no listener survives the export's copy.
+  The copy now goes without the mark, so the mark always means "bound in this page". This is the export's half of a
+  defect 3.32.3 fixed in the link binder: under the default `ShowLinkOnHover`, an export lost the popups of every
+  NodeJs diagram the page had bound before it.
+
+### Tests
+
+- `IflowPopupTests` (Playwright):
+  - A popup that cannot start to decode says so, with `DecompressionStream` taken away and with data that is not
+    base64. Both are red on 3.31.10.
+  - A popup draws a span whose name holds `"`, `<`, `&&`, a tab and a literal `&lt`. The attribute Chromium reads back
+    holds the name as the report wrote it, and the engine draws it. The plan asked for this paint-level fact when the
+    popup's diagrams became raw PlantUML in 3.31.9; the unit fact decodes the attribute in .NET. Leaving `&` unescaped
+    turns it red.
+  - A server-drawn link added after the page loaded is checked when it is clicked: with no segment it loses its link
+    and opens nothing, and one with a segment opens it. 3.31.9's changelog said so, and no test had clicked such a
+    link. A click handler that opens every link turns it red.
+- `ExportFilteredHtmlRenderingTests`: an inline diagram goes into the export without the mark. Red on 3.31.10.
+- `InternalFlowSegmentMapReportTests`: a run's report and a merge of its own data file carry the same segment element,
+  with another test's calls in the process. The plan asked for the two emit sites to be compared, and the fact that
+  did so built the run's element by hand. Counting the list over every diagram the process logged, as 3.31.9 did,
+  turns it red.
+- Full suites on this release: `Kronikol.Tests` 6,077 passed and 1 skipped, and the end-to-end suite 962 passed with 28
+  skipped. The rest of the unit tier passed on 3.32.0 with this change, where two load-sensitive facts (a Node
+  renderer timeout and a history-ledger time budget) failed while other sessions' suites loaded the machine, and
+  both pass alone.
+
+## [3.32.3] - 2026-09-28
+
+**Patch - a fourth audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3, plan §12.7), mostly of 3.31.8's views for a
+report drawn when it was written.** Bug fixes with nothing new for a consumer to call, so the patch part moved. Report
+output changes (the page script that binds internal-flow links and splits diagrams, and the run report's component
+panel under `Server`), recorded in the Kronikol4J divergence ledger. Template pins stay at 3.31.10, the newest published
+release.
+
+Every fact 3.31.8 wrote for a page's links set `InternalFlowHasDataBehavior.ShowLink`, and the default is
+`ShowLinkOnHover`; its `Local` facts drew a hand-written stand-in for the Java engine's SVG. The first three fixes sit
+in that gap.
+
+### Fixed
+
+- **Export Filtered HTML lost every internal-flow link of a `NodeJs` report in the default mode.** Under
+  `ShowLinkOnHover` the page repaints a bound link in the ink of the text beside it. The export copies that paint and
+  none of the listeners, and the exported page found no link-coloured text to bind. On the example project's LightBDD
+  suite written under `NodeJs`: 58 links showed on hover and opened their popups on the page, and none did in the export
+  (3.31.10); on this release, 58 and 58. The page now keeps the fill it painted a link in (`data-iflow-fill`) and reads
+  it back when it binds, so a copy of a bound diagram binds again. The 3.31.8 record said such a diagram needed nothing
+  from 3.31.9's export fix; in the default mode it did.
+- **Under `Server` and `Local`, the default `ShowLinkOnHover` was never applied, and a link with no flow still looked like
+  one.** The Java engine draws a link as an `<a>`, which the page left to the popup script: that opens the link but
+  never touched its look, so every link rested blue and underlined, and one whose segment had no data, which 3.31.9 made
+  open nothing, kept the blue and the underline. Such a link now rests in the text's ink and shows blue and underlined on
+  hover, as under `BrowserJs` and `NodeJs`; one with no flow rests in that ink without an underline, in either mode. A
+  label wrapped onto several lines highlights as one link. **Behaviour change:** a `Server` or `Local` report's links no
+  longer show until hovered, which is what the option's documentation always said.
+- **Under `Server` with inline SVG (the default with internal-flow tracking), the run report's component panel was an
+  image of the server's address.** Every sequence diagram of such a report is fetched when the report is written, so the
+  page needs no server to show it; the panel alone drew only where the reader could reach the server, though its own
+  documentation and the wiki said it was inlined. It is fetched with the rest now (`DefaultDiagramsFetcher.FetchServerSvg`,
+  shared by both), and a fetch that fails says why in the panel and records a `RenderFailure`.
+- **The fragment splitter took a service called "Note" for a note (from 3.31.8).** A participant's alias is its service's
+  name, so such a service's calls read `Note -> OrdersAPI: …`, which both engines draw as messages. 3.31.8's note pattern
+  took any line starting with `note`, `hnote` or `rnote`, in any case, for a note statement, so none of those calls was
+  counted: a long diagram of them was not split, and a split one numbered its later fragments too low. The
+  statement-length check had read such a line as a note since 3.0.48, and so never named one that was too long. A note
+  statement now needs where it goes (`left`, `right`, `over`, `across`) after the keyword and any stereotype, and the
+  check reads notes by the splitter's rule.
+
+### Documentation
+
+- The wiki's telemetry sentences (PlantUML Browser Rendering, Diagnostics and Debugging) name `mode` `'idle'`, which a page
+  drawn when it was written shows until a view first asks for the engine (3.31.8). Internal Flow Tracking says when
+  `ShowLinkOnHover` and `HideLink`'s look began to hold under `Server` and `Local`; Inline SVG Rendering, when the
+  `Server` panel began to be inlined.
+
+### Tests
+
+- `OnDemandRenderingTests`, in the default mode, which none of the 3.31.8 facts used. Under `NodeJs`: a link at rest,
+  hovered, released and clicked; the same in a filtered export (red before the fix); a `ShowLink` export (a control).
+  Under `Local`, with the Java engine's SVG of the facts' own source (drawn by the plan harness's `ikvm-render.cs`): a
+  link at rest and hovered (red), a link with no flow in both modes (red), and the export (red). An on-demand page whose
+  engine address refuses the connection says in the Activity view that the engine is unavailable: the 3.31.8 promise
+  for a reader offline, which no fact held.
+- `CapturedTextSplitTests.A_service_named_Note_draws_messages_the_splitter_counts` (red): the count, the fragments'
+  numbering, the over-long message, and every note header Kronikol writes still read as a note.
+- `OnDemandRenderingReportTests`: the `Server` panel inline from a local server, and its reason when the server cannot be
+  reached (both red). The local server speaks HTTP over a socket: `HttpListener` refuses a path segment longer than 260
+  characters, and an encoded C4 diagram is longer.
+- Red means red on 3.31.10's code (`e7e85044`; 3.32.0 and 3.32.1 do not touch it) with the new tests copied in. Five
+  mutations, each restored after, each turned its own facts red: the recorded fill ignored (both exports), the export's
+  lookup for it dropped (the `NodeJs` export), the anchor's title not read (3), the Java links' look left alone (4), the
+  length check's old note pattern (1).
+- Suites on 3.32.2 with this release: core unit 6,075 passed, 1 skipped, and 1 timing fact that failed under other
+  sessions' load and passed three runs of three alone; E2E 957 passed (the project less the wiki GIF, screenshot and
+  showcase classes). Before the rebase, on 3.32.1: E2E 950 of 950, then 949 of 950 with a Release build running beside
+  it, the one a 30-second wait for a popup's diagram in `ExportFilteredHtmlRenderingTests`, which passed four runs of
+  four alone.
+
+## [3.32.2] - 2026-09-28
+
+**Patch - a second audit of the engine pin plan (`plans/ENGINE_PIN_PLAN.md` §10.5, stage 1 P4, roadmap 1.8), at the
+owner's request, and the copies of a report served over plain http from another machine.** Every change is a fix or a
+test, and nothing new is public, so the patch part moved. Template pins stay at 3.31.10, the last release on NuGet.
+
+### Fixed
+
+- **Every copy in a report served over plain http from another machine did nothing.** A browser gives its clipboard API
+  only to a secure context (`https://`, `localhost`, `file://`), and a report a team hosts at a LAN address or an
+  internal host name has none. There each copy of the diagram menu (the source, the SVG, a box's text, highlighted
+  text, the request payloads) and the scenario name's copy button threw a TypeError and copied nothing. Where the API
+  is missing, text is now copied through the page's own selection. An image reaches the clipboard only through that
+  API, so there the menu leaves out Copy as PNG and Copy as PNG (no transparency), and a flame chart's or call tree's
+  Copy as PNG; Save as PNG and the Open items still work. The same holds in Firefox before 127, which has no
+  `ClipboardItem` on any page.
+- **Deleting the Node renderer's cache directory broke a process that was still running.** Deleting it is the remedy
+  the renderer's own messages name, but a process that had checked its engine files once never looked again: every
+  later render of a test host an IDE keeps alive, or of a long `kronikol` run, started node on files that were gone,
+  and every diagram became a placeholder until the process ended. Before each render the renderer now checks that its
+  files are still there, and checks them in full again when one is gone.
+- **A process killed mid-download left its temporary file for good.** A download and node's code cache are written
+  under temporary names and renamed into place, and a process killed in between left up to 4 MB in
+  `%LOCALAPPDATA%/Kronikol/plantuml-js/<version>/` that nothing removed. A full check now deletes any temporary file
+  there once it is an hour old.
+
+### Tests
+
+- The page tells an engine file the browser refused from one it could not fetch by fetching it again without the
+  hash, and a response that is not OK counts as not fetched. No test pointed a report at an engine that did not
+  answer or answered 404, and three mutations of that rule passed every test. Two facts now do, and see the fallback
+  taken and every diagram say it could not load the file, with no mention of the hash.
+- A refused engine's telemetry as the wiki documents it (`mode` stays `'starting'`, `fallbackReason` carries the
+  refusal) and the rule that no fallback runs are asserted.
+- `NonSecureOriginTests` opens reports from a non-secure origin, the LAN address the plan's acceptance names, which
+  no test had opened (3.31.7 added `http://127.0.0.1`, a secure context). The report renders in the workers with both
+  engine files verified, refuses a wrong hash, and its copies work.
+- The V8 code cache in the directory every Kronikol version on one engine shares is right for all of them only
+  because each rewrites the engine's tail to the same text, unchanged since 3.0.50, and V8 checks a cache against the
+  source's length only. A fact pins those lines.
+- Every new fact was red on 3.31.10 or is a guard proved by a mutation: 11 mutations, each red on its own facts only.
+  Suites on the release tree: unit 6,049 passed and 1 skipped (Release), E2E 948 passed and 28 skipped, IKVM 55; `release.slnf` built in Release for every target framework.
+
+### Documentation
+
+- Wiki: `Inline-SVG-Rendering` (the copies on a page without a secure context) and `PlantUML-Browser-Rendering` (a
+  file that cannot be fetched is not a failed check; the Node cache looks for its files again before each render).
+- `THEME_PLAN.md` and `TEOZ_PERF_PLAN.md` carry the notes the engine pin plan handed them: their index rows had them,
+  but the plans themselves still said the fork was the pin and the budget was to come. `tools/render-bench/README.md`
+  named the wrong release for the npm pin and a cache path without its version.
+- Kronikol4J: the report page's copy code changed; a ledger entry, not mirrored.
+
+## [3.32.1] - 2026-09-28
+
+**Patch - `Kronikol.Extensions.TcpTap` records every command with its own reply on a busy connection, found in a sweep
+of `main`'s red CI runs for flaky tests.** A bug fix with nothing new for a consumer to call, so the patch part moved.
+Capture output changes on a busy connection (a reply is no longer recorded against the wrong command), not report
+rendering, so no Kronikol4J ledger entry is owed. Template pins stay at 3.31.10, the newest published release.
+
+### Fixed
+
+- **TcpTap: a reply could be decoded ahead of the command it answered, and every exchange after it on the connection
+  was mis-paired.** Both directions of a connection feed one decode queue, and each pump wrote a read downstream
+  before it queued the copy. A server that answered at once could have its reply queued before the pump carrying the
+  command had queued the command, so the decoder saw an answer to nothing and then a command nothing answered. The
+  Redis decoder matches replies to commands in order, so from there on every command on the connection was recorded
+  with the next command's reply, and the last was left unanswered; with `ReapStuckConnectionsAfter` set, that command
+  made the reaper close a healthy connection. Measured through a `RedisTap` with 16 connections of 1,500 GETs each,
+  against a local stub that answered every GET with its own key: on 3.32.0, 6,785 of the 23,991 exchanges recorded
+  carried another command's reply, and the last exchange was lost on 9 of the 16 connections; on 3.32.1, none and
+  none. Each read is now queued before it is forwarded: the far side cannot answer bytes it has not been sent, so a
+  reply is always queued after its command. Forwarding is unchanged, and the queue write still never blocks. CI had
+  shown it as flaky tests. `TheNdjsonSinkWritesReplayableRecords` waited for its two records and got fewer
+  (2026-09-15). `AnIdleConnectionWithNothingUnansweredIsNeverReaped` reaped one connection where none may be
+  (2026-09-13); 3.4.1 put that down to a dropped segment and made the reaper stand down after one, a real gap, but a
+  test of one exchange cannot fill a 1,024-segment queue, and the race fits it as it fits the 2026-09-15 failure,
+  which came after 3.4.1 (INFERRED; neither CI failure can be replayed). **Behaviour change:** a Redis capture made
+  through the tap before this release may hold mis-paired exchanges on any busy connection.
+
+### Tests
+
+- `PumpOrderTests.A_read_is_queued_for_decoding_before_it_is_forwarded`, in both directions: the pump is handed a
+  destination that notes, at each write, whether the queue already holds what it is given. Red on 3.32.0 in both
+  directions. `TcpTap`'s `PumpAsync`, its segment and its per-connection state are now internal for it.
+- `BusyConnectionTests.On_busy_connections_every_command_is_recorded_with_its_own_reply`: 8 connections of 1,000 GETs
+  against the key-echoing stub. Red on 3.32.0 in 2 of 2 runs (7,999 and 7,993 of 8,000 exchanges recorded), green on
+  3.32.1 in under half a second. It cannot fail on a correct tap, since the fix leaves no ordering to chance.
+- **Three classes read the process-global request log back while an ingest could clear it.** `IngestPipeline.Run`
+  clears the log by default (`IngestRequest.ClearExistingLogs`), a clear the source scan in `ProcessGlobalStoreTests`
+  cannot see, and all 17 classes that run one, through the pipeline or `IngestCommand`, are in the DiagramsFetcher
+  collection. `StepBarPlantUmlTests`,
+  `TestDelimiterTests` and `CapturedTextEscapeTests` read the log from outside it. `StepBarPlantUmlTests` failed on CI
+  with "the collection was empty" on 2026-09-14, which was put down to an explicit clear since removed; the ingests'
+  clears could do the same. The first two join the collection (they take 0.02 s between them). `CapturedTextEscapeTests`
+  (174 tests, 9 s, which would have lengthened the collection that is already the suite's critical path) instead reads
+  the delimiter's statement from `DefaultTrackingDiagramOverride.TestDelimiterStatement`, a new internal function
+  `InsertTestDelimiter` now calls, and no longer reads the log; its fact about a null name moved to
+  `TestDelimiterTests`, with a new fact that the bar written is the statement the function names.
+  `ProcessGlobalStoreTests.Every_class_that_reads_the_request_log_back_runs_beside_the_ingests_that_clear_it` holds it:
+  red before, naming the three.
+- The sweep: 22 of `main`'s 135 CI runs since 2026-09-12 failed, and two more failed on their first attempt and passed
+  on a re-run. Every failing test in them was a regression a later commit fixed, or a flake already fixed
+  (`StaleOutputTests`' pointer read from another run's output, `MongoDbTrackingSubscriberTests`' correlation store
+  cleared by `ChangeStreamCorrelationTests`, `OtlpExporterTests`' reused port, and the code-cache fact fixed earlier
+  today), apart from the two above. Six local runs of `Kronikol.Tests` on 3.32.0 failed nothing but the three tests
+  that expect a refused write and run as root.
+- Kronikol.Tests: 6,042 tests, 6,034 passed, 5 skipped and those 3 root-only failures. Kronikol.Tests.TcpTap: 261
+  passed and 4 skipped (the Docker end-to-end tests).
+
+## [3.32.0] - 2026-09-28
+
+**Minor - every run writes `query.cs` beside its report: `kronikol query` with nothing installed and no network
+(roadmap stage 1b, `plans/QUERY_FALLBACK_PLAN.md`).** The minor part moved because there is new public surface: the
+type `Kronikol.Query.QueryCommand`, the option `ReportConfigurationOptions.WriteQueryScript` and the property
+`RunSummary.QueryScriptWritten`. Nothing was removed or renamed and every existing signature is unchanged
+(`FailuresDigestGenerator.Generate` keeps its own, pinned by a test), so it is not a major. Report output changes (a
+new file beside the report, a line in `Failures.md`, the instruction files, the data file schema's `$comment`, a line
+in a failing run's pointer and in the CI summary): the Kronikol4J divergence ledger owes an entry, drafted in the
+plan's log because this session could not reach that repository. Template pins move to 3.31.10.
+
+### Added
+
+- **`query.cs` beside every report.** An agent whose session may not install a tool or reach the NuGet feed met
+  Kronikol with no way past `Failures.md`: the instructions offered `dotnet tool install -g` and `dnx`, which fetches
+  from the feed on every call, and `scripts/query.py` needed Python, answered 6 of the 20 verbs and was on disk only
+  where the skill had been installed. Now, from the reports directory, `dotnet run --file query.cs -- summary .`
+  prints what `kronikol query summary .` prints, byte for byte, for every verb and flag, because it runs the same
+  engine: the `Kronikol` that wrote the report. It needs the .NET 10 SDK; the first run compiles it in a few seconds
+  and later runs start at once. Measured with an empty NuGet cache and the network cut. The plan's design, a
+  `#:package Kronikol@version` directive, failed that measurement twice (a file-based app defaults to native AOT,
+  whose restore fetches a package no consumer has, and a net8.0 or net9.0 project never restored the net10.0
+  dependency group), so the file restores nothing: it loads the test run's own `Kronikol.dll` when that is a .NET 10
+  build, else `lib/net10.0` from the NuGet cache, which every consumer holds whatever it targets, either only at
+  exactly the version that wrote the report. The cache is where `NUGET_PACKAGES` or the default puts it, and where
+  neither holds the engine the file asks NuGet (`dotnet nuget locals global-packages --list`, from its own folder),
+  since a `NuGet.config` can move it. Where the engine is nowhere on the machine it says where it looked, exits 1 and
+  prints the `dnx Kronikol.Tool@<version>` line. It carries `#:property` lines that keep a repository's own
+  `Directory.Build.props` from breaking it or printing into its answer (native AOT, a pinned `TargetFramework`,
+  warnings as errors, analyzers, NuGet audit), and it imports no `Directory.Build.targets`, which would come after
+  them. It names the engine by a path relative to itself, never an absolute one, which would carry a home directory
+  into a folder that is often published; where no relative path reaches it (on Windows, another drive), it names only
+  the cache. A `query.cs` Kronikol did not write, or that cannot be read, is left alone and never named, and like
+  `CLAUDE.md` the file describes the directory, not the run: it is not in `Run.json` and never moves into `runs/`.
+  `kronikol merge`, and so `kronikol ingest`, write it too. A CI artifact carries it: GitHub
+  Actions uploads the directory, and the Azure DevOps upload, which names each file and picked them by extension
+  alone, names `query.cs` too. The run and the merge now pick the files by one rule, where each had its own copy of
+  the extension list (the run's matched case-sensitively; both now ignore case).
+- **`ReportConfigurationOptions.WriteQueryScript`**, default `true`. Written only beside a JSON data file, which is
+  all the engine reads.
+- **`Kronikol.Query.QueryCommand`**, public: `Run(IReadOnlyList<string> args, TextWriter out, TextWriter error)` and
+  `PrintUsage(TextWriter)`, the engine behind `kronikol query`, for anything that wants to embed it. `query.cs` binds
+  to that `Run` by reflection, so its signature does not change within a major version.
+- **`RunSummary.QueryScriptWritten`**: a failing run whose directory has Kronikol's `query.cs` adds
+  `no tool: dotnet run --file <dir>/query.cs -- failures <target>` to its pointer, and the CI summary's *Debug this
+  run* names it. A green run's pointer is still one line.
+
+### Changed
+
+- **The query engine moved from `Kronikol.Tool` into `Kronikol`**, namespace `Kronikol.Query`, compiled for net10.0
+  and later only: the net8.0 and net9.0 builds carry none of it and are unchanged by it, and the net10.0
+  `Kronikol.dll` grows by about 0.44 MB. `kronikol query` behaves exactly as before; `query --describe`'s
+  `toolVersion` now comes from the library, the same string since every package ships at one version.
+- Every surface that says how to ask a run a question names `query.cs` beside `kronikol query`, always as
+  `dotnet run --file query.cs -- …`: without `--file`, from a folder holding a project, `dotnet run` runs that
+  project instead. That is the `CLAUDE.md`/`AGENTS.md` beside every report, `Failures.md`'s command blocks (only
+  where the directory has Kronikol's `query.cs`), the schema's `$comment`, the agent block `kronikol init-agents`
+  installs, both copies of the skill and its flag reference, `README.md`, `templates/README.md`, the NuGet
+  readme and the plugin's marketplace description. The instructions beside every report and the skill's rule lead
+  with it, the tool second, as the plan has it: an agent that may not install anything reads them first, and its
+  first command should be one it can run. The skill's `scripts/query.py` stays, named for a machine without the .NET 10 SDK (roadmap D28).
+- **Behaviour change:** a reports directory inside a C# project's folder, outside that project's `bin`, its `obj`
+  and any folder whose name starts with a dot, gets no `query.cs`, because the project would compile it and its `#:`
+  directives are error CS9298 in a project build. A dot-folder such as `.logs/kronikol/` does get one: the SDK's
+  default items leave `**/.*/**` out, and a project built with `query.cs` there builds clean. The run prints a
+  `⚠ WARNING` and records an `OptionNotApplied` diagnostic naming the project file, on every run, and the warning
+  names both ways out. A project that already leaves the folder out (default compile items off, or an unconditioned
+  `Compile Remove` of that folder or of everything) does not count, unless it globs `**` below its own folder itself.
+  Set `WriteQueryScript = false` to silence it.
+
+### Tests
+
+- `QueryEngineHomeTests`: the engine is in `Kronikol`, the tool keeps no copy, and `QueryCommand` is the only public
+  type it brings, with `Run` and `PrintUsage` its only public members.
+- `QueryScriptTests` (35): the file's text, the version pins, the relative path and a copy no relative path
+  reaches, the binding, the properties, when it asks NuGet, the switch, a JSON data file, ownership and a `query.cs`
+  that cannot be read (red: its `IOException` escaped and no output was written), the project-folder rule, its dot-folder
+  exception and its exceptions (red: a dot-folder was refused, and a project with default items off that globs `**`
+  itself was trusted), and the merge.
+- `QueryScriptEndToEndTests` (28): 22 invocations through `dotnet run --file query.cs` and through the built tool,
+  with exit code, stdout bytes and stderr identical, offline with an empty NuGet cache; the engine from a cache holding
+  `Kronikol.dll` alone; the engine from a cache a `NuGet.config` moved; no engine anywhere; a strict
+  `Directory.Build.props` and a `Directory.Build.targets` with a policy target; and a real project built with
+  `query.cs` in its `.logs/kronikol/` (clean) and in its `TestResults/` (CS9298), with the file answering from the
+  former. The last four were red on the file before them. Skipped, visibly, without a .NET 10 SDK.
+  Mutation-checked on the first 25: a wrong type name fails 24 of them, and dropping `PublishAot=false` fails all 25.
+- `CiArtifactPublisherTests.ReportFiles_takes_the_report_outputs_and_query_cs_and_nothing_else` and
+  `MergeWritesTheRunOutputsTests.Publish_artifacts_on_azure_devops_uploads_every_output_query_cs_included`, both red
+  on the extension-only rule.
+- `QueryScriptAdviceTests`: ten surfaces name `query.cs`, every `query.cs -- verb` they show is a verb with flags
+  it reads, none runs it without `--file`, the instructions beside every report and the skill lead with it (red: both
+  led with the tool), and `FailuresDigestGenerator.Generate` keeps its public signature.
+- `MergeWritesTheRunOutputsTests.A_query_cs_that_cannot_be_read_stops_nothing`: the merge's side of the same fix, red
+  with the merge failing whole.
+- `RunEndPointerTests`, `RunRotationTests`, `MergeWritesTheRunOutputsTests`, `TestRunReportSchemaContractTests`,
+  `SkillDriftTests` and `CommandTableTests` follow the file and the engine's new home.
+
 ## [3.31.10] - 2026-09-27
 
 **Patch - a `#sid-` link, *Next Failure* and a failure-cluster link land on their scenario (`plans/DOORSTEP_PLAN.md`

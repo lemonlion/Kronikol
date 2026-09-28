@@ -29,7 +29,12 @@ internal sealed class LoopbackFileServer : IAsyncDisposable
     /// <summary>How many files it has answered with a 200.</summary>
     public int Served => Volatile.Read(ref _served);
 
-    public string UrlOf(string fileName) => $"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/{Uri.EscapeDataString(fileName)}";
+    /// <summary>
+    /// The file's address. <paramref name="host"/> is any name the browser resolves to the loopback address (a test browser
+    /// can map one with <c>--host-resolver-rules</c>): a name other than <c>localhost</c> is not a secure context.
+    /// </summary>
+    public string UrlOf(string fileName, string host = "127.0.0.1") =>
+        $"http://{host}:{((IPEndPoint)_listener.LocalEndpoint).Port}/{Uri.EscapeDataString(fileName)}";
 
     private async Task AcceptLoop()
     {

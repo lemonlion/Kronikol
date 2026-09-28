@@ -2066,7 +2066,8 @@ also takes the drawn component diagram.
 export keeps its link styling and loses its listeners (F14, `INTERNAL_FLOW_BLOB_PLAN.md` §11.1). P5 R2 fixes it in the
 export alone, which resets each drawn diagram so the exported page draws it again with every hook; this release's
 markers on a diagram that arrives drawn (`data-iflow-bound`, and an expando guard that does not survive the export)
-need nothing from it.
+need nothing from it. (Wrong in the default mode, `ShowLinkOnHover`, which no fact of this release used: the export of
+a `NodeJs` page bound none of its links. Fixed in 3.32.3, §12.7.)
 
 **Not fixed, with the reason:**
 - A backslash in an arrow label (§12.5, Appendix C): still the only difference on the pin in the second audit's corpus.
@@ -2094,3 +2095,106 @@ need nothing from it.
 - On 3.31.7, all green: StepTracking 43; AssertionTracking 97, 111 and 125 on net8.0, net9.0 and net10.0; search engine
   (Jint) 212; MSTest 51; xUnit2 12; xUnit3 15; LightBDD.xUnit3 26; TUnit 18; LightBDD.TUnit 25. Example.Api: xUnit3 5;
   LightBDD.xUnit3 6; BDDfy.xUnit3 2; ReqNRoll.xUnit3 8; NUnit4 2.
+
+### 12.7 The fourth audit, 3.32.3 (patch)
+
+Asked for on 2026-09-28: was anything missed from the plan or lacking in the implementation; fix it. The third audit
+(§12.6) added the most code of any pass: the views a report drawn when it was written (`NodeJs`, `Server`, `Local`) had
+left blank, and the binding of a `NodeJs` diagram's links. So this one checked each renderer's page as a reader meets it:
+in the default configuration, on the page and in its Export Filtered HTML, with the Java engine's own SVG and not a
+hand-written one, and with a real report next to the fixtures. The work was done in its own worktree from `e7e85044`
+(3.31.10), rebased on 3.32.1 (`863e7b81`); the P4 audit (kronikol-50) and the P5 audit (kronikol-c0) ran beside it, and
+the numbering followed the rule that the first on `main` takes the next number.
+
+**The error class.** Every fact 3.31.8 wrote for a page's links set `InternalFlowHasDataBehavior.ShowLink`, and the
+default is `ShowLinkOnHover`. The Local facts drew a hand-written stand-in for the Java engine's SVG, and only its link.
+Each finding below sits in the space between what the facts set up and what a default report is.
+
+**Checked, and sound:** `kronikol merge` writes a `BrowserJs` page with the plain component syntax, the specifications
+report carries no component panel, and `kronikol ingest --render` goes through the same pipeline as a run.
+`ReplaceXmlInvalidCharacters` covers every writer of diagram source (the sequence builder's `Append`, the step bar, the
+activity and Gantt escapers, the component diagram, the placeholder); the page's YAML view writes a control as `\xNN`
+in a quoted scalar. The Java engine (IKVM) draws the generated C4 component source (its includes resolve). Every note
+pattern in `collapsible-notes-script.js` and `context-menu-script.js` requires `left` or `right`. A shown inline
+diagram always binds once it stays in view: under `content-visibility: auto` the first one on the page took up to
+1.2 s to settle into view in a probe that scrolled every 100 ms, the others 0.1 to 0.2 s.
+
+**Found, and fixed in 3.32.3:**
+- **A filtered export of a `NodeJs` page lost every internal-flow link in the default mode.** Under `ShowLinkOnHover`
+  the page repaints a bound link in the ink of the text beside it. The export copies that paint without the listeners,
+  and `bindInlineSvg` in the exported page looks for text in the link colour, finds none, and binds nothing. §12.6 said
+  the markers of a diagram that arrives drawn needed nothing from P5's export fix; in the default mode they did. On the
+  example project's LightBDD suite written under `NodeJs` (`default-mode-links-probe.js`): on 3.31.10, 58 links show on
+  hover and open their popups on the page, and none does in the export; on this release, 58 and 58. `bindIflowLinks`
+  now keeps the fill it painted a link in (`data-iflow-fill`) and reads it back, both to find link text and as the
+  highlight, and `bindInlineSvg` looks for that attribute too, so a copy of a bound diagram binds again as the page did.
+  A text is bound once in a page (an expando, which no copy carries); no path binds one diagram twice today.
+  kronikol-c0's P5 audit found the same defect and left the fix here; its patch drops the copied `data-iflow-bound`
+  attribute from the export, so that marker means "bound in this page". The facts written here do not rely on it.
+- **Under `Server` and `Local` the default `ShowLinkOnHover` was never applied, and a link with no flow still looked
+  like one.** The Java engine draws a link as an `<a>` round its text. `bindInlineSvg` (3.31.8) left any diagram
+  holding an `<a>` to the popup script, which opens the link and never touches its look, so every link of a `Server` or
+  `Local` report rested blue and underlined. `bindIflowLinks`' anchor half had never run in a shipped page (the
+  JavaScript engine draws no `<a>`, and until 3.31.8 no `Server` or `Local` page carried the script), and was wrong
+  for it: in the hover mode it took the link's href away and added a class whose CSS paints `#0000EE` on hover, leaving
+  the text blue at rest. P5 R2's `unlinkDead` (3.31.9) takes the href of a link whose segment has no data, so such a
+  link opens nothing, but it kept the paint of one. The anchor half now groups each segment's `<a>` elements (a label
+  wrapped onto lines is several), reads the segment from the href, or from the title the Java engine also writes once
+  the href is gone, and binds the texts with the text half's own rules (S2): at rest the ink beside the link, on hover
+  the painted fill and an underline, no flow the ink and no underline. The `iflow-link-hover` rules in
+  `internal-flow-popup-styles.css` no longer match anything; they are left, as report output. A behaviour change:
+  such links now show on hover only, as the option's documentation always said.
+- **Under `Server` with inline SVG, the run report's component panel was an image of the server's address.** Internal-
+  flow tracking turns inline SVG on, and every sequence diagram of such a report is fetched when the report is written,
+  so the page needs no server to show it. `DrawEmbedded` (3.31.8) gave the panel alone the server's address, so it drew
+  only where the reader could reach that server, though its own summary and the wiki's Inline SVG Rendering page said
+  it was inlined. It now fetches the server's SVG as the sequence diagrams are fetched
+  (`DefaultDiagramsFetcher.FetchServerSvg`, shared by both), and a fetch that fails says why in the panel and records a
+  `RenderFailure`. Without inline SVG the panel is still the server's address, as `ComponentDiagram.html` shows it.
+- **The fragment splitter took a service called "Note" for a note (from 3.31.8).** A participant's alias is its
+  service's name camelized, and both engines draw `Note -> OrdersAPI: …` as a message (checked on the pin through the
+  Node renderer, and under IKVM). §12.6's note pattern, `^[hr]?note\b` in any case, took the line for a note statement,
+  so that service's calls went uncounted: the diagram of twelve such calls was not split at all, and a split one numbers
+  its later fragments too low. The statement-length check had read such a line as a note since 3.0.48 (its own
+  `^[hrn]?note\b`), so it never named an over-long message from that service. A note statement now needs where it goes
+  after the keyword and any stereotype (`left`, `right`, `over`, `across`), which every note header Kronikol writes has,
+  and the length check reads notes by the splitter's functions, so the page has one note rule.
+- **No fact held what an on-demand page shows when the engine cannot be fetched.** §12.6 and the wiki promise that the
+  view says so, offline, where it was blank; it does (`Render error: PlantUML engine unavailable: …`), and a fact now
+  holds it, with the engine's address rewritten to one that refuses the connection. Green before and after.
+
+**Also taken:** the wiki's telemetry sentences (PlantUML Browser Rendering, Diagnostics and Debugging) said `mode`
+starts as `'starting'`; on an on-demand page it is `'idle'` until a view first asks for the engine (3.31.8). Found by
+kronikol-50's P4 audit, which left it to this one.
+
+**Not fixed, with the reason:**
+- The page's YAML view writes a U+FFFE or U+FFFF that a JSON escape named (`￿`) as the character: `yamlQuote`
+  escapes C0 controls only. A browser draws the inline SVG anyway, and the context menu's copy replaces it (3.31.8);
+  a payload that names a noncharacter is not worth a byte of every report.
+- The leftovers of §12.5 and §12.6 stand (Appendix C).
+
+**Tests.** Each new fact was red on the code before its fix, apart from the controls, in a worktree at `e7e85044` with
+the new tests copied in:
+- E2E `OnDemandRenderingTests`, the default mode: under `NodeJs`, a link at rest, hovered, released and clicked
+  (green before: the page itself was right), the same in a filtered export (red), and a `ShowLink` export (a control,
+  green). Under `Local`, with the Java engine's SVG of the facts' own source drawn by `ikvm-render.cs`: a link at rest
+  and hovered (red), a link with no flow in both modes (red, 2 rows), and the export (red). The on-demand view offline
+  (green, coverage).
+- E2E `CapturedTextSplitTests.A_service_named_Note_draws_messages_the_splitter_counts` (red): the count, the fragments'
+  numbering, the over-long message, and every note header Kronikol writes still a note.
+- Unit `OnDemandRenderingReportTests`: the `Server` panel inline from a local server, and its reason when the server
+  cannot be reached (both red). The local server answers over a bare socket: `HttpListener` refuses a path segment
+  longer than 260 characters with a 400, and an encoded C4 diagram is longer.
+- Mutations, each restored after: the recorded fill ignored (2 facts red, both exports), the export's lookup for it
+  dropped (1, the `NodeJs` export), the title not read (3), the Java links' look left alone (4), the length check's old
+  note pattern (1).
+
+**The suites** on 3.32.2 plus this release:
+- Core unit project: 6,075 passed, 1 skipped, and 1 failed: `Ledger_for_5000_scenarios_over_50_runs_stays_under_the_budget`
+  (2,086 ms against a figure of about 100 ms, while other sessions' suites ran on the machine); it passed three runs
+  of three alone, as it had on 3.32.1 (6,042 passed there, the same fact failing at 2,261 ms).
+- E2E (the full project less the wiki GIF, screenshot and showcase classes): 957 passed (7 min 41 s). On 3.32.1, before
+  the rebase: 950 of 950, then 949 of 950 with a `release.slnf` Release build running beside it; the one was
+  `ExportFilteredHtmlRenderingTests.An_arrow_opens_its_popup_in_the_export(True)` waiting 30 s for a popup's diagram,
+  which passed four runs of four alone.
+- `release.slnf` builds in Release for every target framework (0 errors).

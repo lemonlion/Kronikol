@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tool;
-using Kronikol.Tool.Query;
 
 namespace Kronikol.Tests.Tool;
 
@@ -130,6 +130,9 @@ public class SkillDriftTests
             // type to kronikol. Only that one program is exempt, by name - a bare `--flag` anywhere else
             // in a code context is still held to the parser.
             .Select(c => Regex.Replace(c, @"dotnet test\b[^\n`]*", ""))
+            // The same for `dotnet run --file query.cs --`, the no-install form: `--file` is dotnet's, and
+            // everything after the `--` is kronikol's, so it stays held to the parser.
+            .Select(c => Regex.Replace(c, @"dotnet run --file \S*query\.cs --", ""))
             .SelectMany(c => Regex.Matches(c, @"--[a-z][a-z-]*").Select(m => m.Value))
             .Distinct(StringComparer.Ordinal)
             .OrderBy(f => f, StringComparer.Ordinal)
@@ -158,7 +161,7 @@ public class SkillDriftTests
     public void Every_flag_the_parser_accepts_is_documented_in_the_reference()
     {
         var parsed = Regex.Matches(
-                File.ReadAllText(Path.Combine(RepoRoot, "src", "Kronikol.Tool", "Query", "QueryOptions.cs")),
+                File.ReadAllText(Path.Combine(RepoRoot, "src", "Kronikol", "Query", "QueryOptions.cs")),
                 @"case ""(--[a-z][a-z-]*)""")
             .Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.Ordinal);
@@ -206,7 +209,7 @@ public class SkillDriftTests
         // list from falling behind the switch, which would drop a real flag out of the legality table and
         // so refuse it on every verb.
         var cases = Regex.Matches(
-                File.ReadAllText(Path.Combine(RepoRoot, "src", "Kronikol.Tool", "Query", "QueryOptions.cs")),
+                File.ReadAllText(Path.Combine(RepoRoot, "src", "Kronikol", "Query", "QueryOptions.cs")),
                 @"case ""(--[a-z][a-z-]*)""")
             .Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.Ordinal);
@@ -283,9 +286,12 @@ public class SkillDriftTests
         // shape the banners happened to be written in - left a banner invisible the moment one was
         // written as a switch arm rather than as the direct argument of the call, which is precisely the
         // drift this fact exists to catch.
-        // Recursively: `Query/` is a subdirectory, so a top-directory-only enumeration could not see
-        // QueryWriter or QueryOptions - two files that between them hold the pager's own caveats.
-        foreach (var file in Directory.GetFiles(Path.Combine(RepoRoot, "src", "Kronikol.Tool"), "*.cs", SearchOption.AllDirectories))
+        // The tool's own commands, and the query engine, which lives in the library (src/Kronikol/Query)
+        // so the query.cs beside every report can run it: QueryWriter and QueryOptions there hold the
+        // pager's own caveats, so a scan of the tool alone would guard an almost empty list.
+        var sources = Directory.GetFiles(Path.Combine(RepoRoot, "src", "Kronikol.Tool"), "*.cs", SearchOption.AllDirectories)
+            .Concat(Directory.GetFiles(Path.Combine(RepoRoot, "src", "Kronikol", "Query"), "*.cs", SearchOption.AllDirectories));
+        foreach (var file in sources)
         foreach (Match match in Regex.Matches(File.ReadAllText(file), @"\$?""! (.*)$", RegexOptions.Multiline))
             phrases.Add(Anchor(match.Groups[1].Value));
 

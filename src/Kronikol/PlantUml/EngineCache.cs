@@ -19,6 +19,39 @@ internal sealed class EngineCache(string directory, Func<string, byte[]> downloa
     /// <summary>The V8 code cache <c>plantuml-render.js</c> keeps beside the engine.</summary>
     internal const string CodeCacheFileName = EngineFileName + ".v8cache";
 
+    private readonly object _readyLock = new();
+    private bool _ready;
+
+    /// <summary>The directory the files are kept in.</summary>
+    internal string DirectoryPath => directory;
+
+    /// <summary>
+    /// Makes the render script and the engine files present and verified (<see cref="EnsureScript"/>,
+    /// <see cref="EnsureFiles"/>) and returns the script's path. The first call checks everything; later calls only check
+    /// that each file is still there, so a process hashes the engine once, and a directory deleted while it runs (the
+    /// remedy a failed check names) is filled again on the next render, where every render used to fail until the process
+    /// ended.
+    /// </summary>
+    internal string Ready(string scriptName, byte[] scriptBytes)
+    {
+        var script = Path.Combine(directory, ScriptFileName(scriptName, scriptBytes));
+        if (Volatile.Read(ref _ready) && AllPresent(script))
+            return script;
+        lock (_readyLock)
+        {
+            if (_ready && AllPresent(script))
+                return script;
+            _ready = false;
+            EnsureScript(scriptName, scriptBytes);
+            EnsureFiles();
+            Volatile.Write(ref _ready, true);
+            return script;
+        }
+    }
+
+    private bool AllPresent(string script) =>
+        File.Exists(script) && expectedIntegrity.Keys.All(file => File.Exists(Path.Combine(directory, file)));
+
     /// <summary>
     /// Makes every file present and verified: a file that matches its hash is kept, one that does not is replaced,
     /// a download that does not match is tried once more, and a second mismatch throws.
@@ -26,8 +59,28 @@ internal sealed class EngineCache(string directory, Func<string, byte[]> downloa
     public void EnsureFiles()
     {
         Directory.CreateDirectory(directory);
+        DeleteAbandonedTemporaryFiles();
         foreach (var (file, expected) in expectedIntegrity)
             EnsureFile(file, expected);
+    }
+
+    /// <summary>How old a temporary file is before a check deletes it: each is renamed within moments of being written.</summary>
+    internal static readonly TimeSpan AbandonedTemporaryFileAge = TimeSpan.FromHours(1);
+
+    // A download here and node's code cache (<cache>.<pid>.tmp) are written under temporary names and renamed into place, so
+    // a process killed in between left its file, up to 4 MB, for good. One an hour old belongs to no running process.
+    private void DeleteAbandonedTemporaryFiles()
+    {
+        var before = DateTime.UtcNow - AbandonedTemporaryFileAge;
+        foreach (var temp in Directory.EnumerateFiles(directory, "*.tmp"))
+        {
+            try
+            {
+                if (File.GetLastWriteTimeUtc(temp) < before)
+                    File.Delete(temp);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { /* the next check tries again */ }
+        }
     }
 
     /// <summary>

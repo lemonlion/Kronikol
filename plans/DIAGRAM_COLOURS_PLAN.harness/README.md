@@ -461,3 +461,25 @@ ENGINE=1.2026.8 node plans/DIAGRAM_COLOURS_PLAN.harness/cand-probe.js plans/DIAG
 (cd plans/DIAGRAM_COLOURS_PLAN.harness && dotnet fsi split-page.fsx split-page.html && node split-probe.js && node split-hnote-sweep.js && node split-else-probe.js)
 node plans/DIAGRAM_COLOURS_PLAN.harness/nodejs-links-probe.js <reports>/TestRunReport.html
 ```
+
+## The fourth audit (3.32.3, 2026-09-28): each renderer's page in the default mode, and its export
+
+Plan §12.7. The same tools as the third audit, plus:
+
+- **`default-mode-links-probe.js <TestRunReport.html>`** keeps each shown inline diagram in view until the page starts
+  binding it, then counts the link texts blue at rest and those that turn blue on hover, and clicks up to 20 of each
+  to see whether a popup opens; then it clicks Export Filtered HTML, opens the export as a reader opens the file, and
+  counts again. It reads behaviour, not markup, so it measures any build the same way. `default-mode-links.txt` is its
+  output on the example project's LightBDD.xUnit3 suite written under `NodeJs` in the default mode, on 3.31.10 and on
+  this release: 58 hover links on the page on both, and 0 of 58 in the export on 3.31.10 (every link dead), 58 of 58
+  on this release.
+- **`ikvm-render.cs`**, as before, drew the Java engine's SVG of the E2E facts' own sequence source (two linked calls,
+  one with no segment); `OnDemandRenderingTests.JavaSvg` is that output. It also drew the component generator's C4
+  source (`GeneratePlantUml(..., useC4: true)`): the includes resolve under IKVM.
+
+To repeat, from the repository root (the E2E project built; the example suite writes the report):
+
+```bash
+KRONIKOL_INTEGRATION_MODE=true KRONIKOL_PLANTUML_RENDERING=NodeJs dotnet test examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3
+node plans/DIAGRAM_COLOURS_PLAN.harness/default-mode-links-probe.js examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3/bin/Debug/net10.0/Reports/TestRunReport.html
+```

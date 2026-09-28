@@ -49,8 +49,15 @@ public static class NodeJsPlantUmlRenderer
     /// </summary>
     public static string? LastCodeCacheStatus { get; private set; }
 
-    private static bool _initialized;
-    private static readonly object InitLock = new();
+    // The machine's engine files, checked once per process and again whenever one has gone (EngineCache.Ready). Lazy, so
+    // the fields it reads are set before it is built.
+    private static readonly Lazy<EngineCache> MachineEngine = new(() => new EngineCache(CacheDir, Download, CdnBase, ExpectedIntegrity));
+
+    private static byte[] Download(string url)
+    {
+        using var http = new HttpClient();
+        return http.GetByteArrayAsync(url).GetAwaiter().GetResult();
+    }
 
     /// <summary>One diagram's outcome from <see cref="RenderMany"/>: the SVG, or the engine's error for that diagram alone.</summary>
     public sealed record NodeRenderResult(string? Svg, string? Error)
@@ -63,8 +70,6 @@ public static class NodeJsPlantUmlRenderer
         if (format is not (PlantUmlImageFormat.Svg or PlantUmlImageFormat.Base64Svg))
             throw new InvalidOperationException(
                 $"NodeJs rendering only supports SVG output. Got: {format}");
-
-        EnsureInitialized();
 
         var svg = RenderSvg(plantUml);
         var svgBytes = Encoding.UTF8.GetBytes(svg);
@@ -85,13 +90,14 @@ public static class NodeJsPlantUmlRenderer
     /// Throws only when the process itself cannot run (no <c>node</c> on PATH, engine download failure, a
     /// crash before any output).
     /// </summary>
-    public static IReadOnlyList<NodeRenderResult> RenderMany(IReadOnlyList<string> plantUmls)
+    public static IReadOnlyList<NodeRenderResult> RenderMany(IReadOnlyList<string> plantUmls) => RenderMany(plantUmls, MachineEngine.Value);
+
+    /// <summary><see cref="RenderMany(IReadOnlyList{string})"/> on the engine files <paramref name="engine"/> keeps.</summary>
+    internal static IReadOnlyList<NodeRenderResult> RenderMany(IReadOnlyList<string> plantUmls, EngineCache engine)
     {
         if (plantUmls.Count == 0) return [];
 
-        EnsureInitialized();
-
-        using var process = StartNode(batch: true);
+        using var process = StartNode(engine, batch: true);
         var stdoutTask = process.StandardOutput.ReadToEndAsync();
         var stderrTask = process.StandardError.ReadToEndAsync();
 
@@ -155,7 +161,7 @@ public static class NodeJsPlantUmlRenderer
 
     private static string RenderSvg(string plantUml)
     {
-        using var process = StartNode(batch: false);
+        using var process = StartNode(MachineEngine.Value, batch: false);
 
         process.StandardInput.Write(plantUml);
         process.StandardInput.Close();
@@ -192,15 +198,19 @@ public static class NodeJsPlantUmlRenderer
     /// </summary>
     internal static string RenderScriptPath => Path.Combine(CacheDir, EngineCache.ScriptFileName(RenderScriptName, RenderScript.Value));
 
-    private static Process StartNode(bool batch) =>
-        Process.Start(NodeStartInfo(batch))
+    private static Process StartNode(EngineCache engine, bool batch) =>
+        Process.Start(NodeStartInfo(engine, batch))
             ?? throw new InvalidOperationException("Failed to start Node.js process. Ensure 'node' is available on PATH.");
 
-    internal static ProcessStartInfo NodeStartInfo(bool batch)
+    /// <summary>
+    /// Node started on this build's render script in <paramref name="engine"/>'s directory, once the script and the engine
+    /// files are there and verified (<see cref="EngineCache.Ready"/>).
+    /// </summary>
+    internal static ProcessStartInfo NodeStartInfo(EngineCache engine, bool batch)
     {
-        var renderScriptPath = RenderScriptPath;
-        var vizPath = Path.Combine(CacheDir, VizFileName);
-        var plantumlJsPath = Path.Combine(CacheDir, PlantUmlFileName);
+        var renderScriptPath = engine.Ready(RenderScriptName, RenderScript.Value);
+        var vizPath = Path.Combine(engine.DirectoryPath, VizFileName);
+        var plantumlJsPath = Path.Combine(engine.DirectoryPath, PlantUmlFileName);
 
         var psi = new ProcessStartInfo
         {
@@ -232,27 +242,6 @@ public static class NodeJsPlantUmlRenderer
         var rest = stderr[(idx + marker.Length)..];
         var end = rest.IndexOfAny(['\r', '\n']);
         LastCodeCacheStatus = (end >= 0 ? rest[..end] : rest).Trim();
-    }
-
-    private static void EnsureInitialized()
-    {
-        if (_initialized) return;
-
-        lock (InitLock)
-        {
-            if (_initialized) return;
-
-            // Every file is verified on each start in a process, written when missing or wrong, and renamed into
-            // place only once it verified (EngineCache).
-            var cache = new EngineCache(CacheDir, url =>
-            {
-                using var http = new HttpClient();
-                return http.GetByteArrayAsync(url).GetAwaiter().GetResult();
-            }, CdnBase, ExpectedIntegrity);
-            cache.EnsureScript(RenderScriptName, RenderScript.Value);
-            cache.EnsureFiles();
-            _initialized = true;
-        }
     }
 
     private static byte[] ReadRenderScript()

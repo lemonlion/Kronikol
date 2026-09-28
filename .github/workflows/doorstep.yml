@@ -1,0 +1,50 @@
+# The repository's homepage field points at the live demo (plans/DOORSTEP_PLAN.md S4, roadmap 2.1).
+# The demo is BreakfastProvider's Pages site, which another repository's CI rebuilds, so a renamed lane,
+# a moved path, a red report or a renamed scenario would reach a visitor before anyone here noticed.
+# Weekly, and off the start of the hour, when GitHub delays scheduled runs and under load drops some.
+name: Doorstep
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      homepage:
+        description: "An address to check instead of the repository's homepage field, to see the check fail"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  homepage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: The repository's homepage answers, the reports it links are green, and its deep links resolve
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HOMEPAGE_OVERRIDE: ${{ inputs.homepage }}
+        run: |
+          url="${HOMEPAGE_OVERRIDE:-$(gh api "repos/${{ github.repository }}" --jq .homepage)}"
+          test -n "$url" || { echo "::error::The homepage field is empty"; exit 1; }
+          echo "Checking $url"
+          code=$(curl -sS -L -o page.html -w '%{http_code}' "$url")
+          test "$code" = 200 || { echo "::error::$url answered $code"; exit 1; }
+          grep -qi kronikol page.html || { echo "::error::$url answered, but not with a Kronikol page"; exit 1; }
+          while read -r report; do
+            digest="${url%/}/${report%TestRunReport.html}Failures.md"
+            curl -sS -f -o digest.md "$digest" || { echo "::error::$digest did not answer"; exit 1; }
+            first=$(head -n 1 digest.md)
+            test "$first" = "# No failures" || { echo "::error::$digest reads: $first"; exit 1; }
+            echo "$digest: $first"
+          done < <(grep -oE 'href="reports/[^"#]+/TestRunReport\.html"' page.html | sed -E 's/^href="//; s/"$//')
+          while read -r link; do
+            report="${link%%#*}"
+            sid="${link#*#sid-}"
+            curl -sS -f --compressed -o report.html "${url%/}/$report" || { echo "::error::$report did not answer"; exit 1; }
+            grep -q "data-stable-id=\"$sid\"" report.html || { echo "::error::$link names a scenario the report does not have"; exit 1; }
+            echo "$link: found"
+          done < <(grep -oE 'href="reports/[^"#]+/TestRunReport\.html#sid-[0-9a-f]+"' page.html | sed -E 's/^href="//; s/"$//')

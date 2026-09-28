@@ -58,6 +58,34 @@ public class CopyScenarioNameReportTests
     }
 
     [Fact]
+    public void Report_copy_button_copies_through_the_shared_writer_which_works_without_a_secure_context()
+    {
+        // navigator.clipboard exists only in a secure context: on a report served over plain http from another machine the
+        // button threw. The writer it calls falls back to a selection copy (NonSecureOriginTests clicks it there).
+        var content = GenerateReport(MakeFeatures(("t1", "Create order", ExecutionResult.Passed)), "CopyScenarioWriter.html");
+        Assert.Contains("function copyTextToClipboard(text)", content);
+        Assert.Contains("document.execCommand('copy')", content);
+        Assert.Contains("copyTextToClipboard(name).then(", content);
+    }
+
+    [Fact]
+    public void No_report_script_writes_the_clipboard_except_through_the_shared_writer()
+    {
+        // A copy made with navigator.clipboard.writeText directly throws where the page has no secure context.
+        var assembly = typeof(ReportGenerator).Assembly;
+        var direct = assembly.GetManifestResourceNames()
+            .Where(n => n.EndsWith(".js", StringComparison.OrdinalIgnoreCase) && !n.EndsWith("report-copy-text-function.js", StringComparison.OrdinalIgnoreCase))
+            .Where(n =>
+            {
+                using var reader = new StreamReader(assembly.GetManifestResourceStream(n)!);
+                return reader.ReadToEnd().Contains("navigator.clipboard.writeText", StringComparison.Ordinal);
+            })
+            .ToList();
+        Assert.Empty(direct);
+        Assert.Contains("function copyTextToClipboard(text)", DiagramContextMenu.GetContextMenuScript());
+    }
+
+    [Fact]
     public void Report_copy_button_has_title_attribute()
     {
         var features = MakeFeatures(("t1", "Create order", ExecutionResult.Passed));

@@ -19,20 +19,32 @@ embedded PlantUML diagram of **663 KB ≈ 166,000 tokens**: a single diagram lar
 windows. Opening the file is not a slow way to answer the question, it is a way to end the session with
 the question unanswered.
 
-Use `kronikol query` instead. Every command prints an answer plus the addresses that fetch the next thing.
+Use `kronikol query` instead; the `query.cs` beside every report runs it with nothing installed. Every
+command prints an answer plus the addresses that fetch the next thing.
 
 ```
-dotnet tool install -g Kronikol.Tool      # once, if `kronikol` is not on PATH
-kronikol query summary .logs/kronikol/TestRunReport.json
+dotnet run --file .logs/kronikol/query.cs -- summary .logs/kronikol   # nothing to install, no network: the report's own query.cs
+kronikol query summary .logs/kronikol/TestRunReport.json              # the same, where the tool is installed
+dotnet tool install -g Kronikol.Tool      # once, for `kronikol` on PATH in every repository
 dnx Kronikol.Tool query summary .logs/kronikol/TestRunReport.json   # no install: the .NET 10 SDK runs the last published version
 ```
+
+**`query.cs` needs nothing installed and no network.** Every run writes it beside its report, and it runs
+the same engine as `kronikol query` (the Kronikol that wrote the report, from the test run's output or the
+NuGet cache), so it takes every verb and flag and prints the same answer, with nothing installed, restored
+or downloaded. It needs the .NET 10 SDK. The first run compiles it in a few seconds; later runs start at
+once. Keep `--file`: from a folder holding a project, a bare `dotnet run` runs that project instead. Where a
+`global.json` pins an older SDK, run it from outside that folder with full paths. A reports directory inside
+a C# project's folder, outside its `bin`, `obj` and dot-folders, has no `query.cs`, because the project
+would compile it, and the report's diagnostics say so.
 
 `dnx` is for a one-off: it fetches from the feed on every call with no offline fallback, costs 3-5x per
 command, and answers its own help and version flags rather than the tool's. For a session, install.
 
 `<report>` can be the directory holding the report; the tool finds it, and says so if there are several.
-If the tool is genuinely unavailable, use `scripts/query.py` in this skill — it degrades to a smaller set
-of commands, not to reading the file.
+On a machine without the .NET 10 SDK, where neither the tool nor `query.cs` can run, use
+`scripts/query.py` in this skill under Python: it degrades to a smaller set of commands, not to reading
+the file.
 
 ## Rung zero: read the directory before querying it
 
@@ -46,6 +58,8 @@ A run writes more than the report, and two of the files are meant to be read who
 - `Failures.jsonl` — the same failures, one JSON object per line, for scripts. Each line opens with
   `formatVersion`.
 - `CLAUDE.md` and `AGENTS.md` — byte-identical instructions generated beside that particular run.
+- `query.cs` — `kronikol query` with nothing installed: `dotnet run --file query.cs -- summary .` from the
+  directory, as above.
 
 Everything below is for the questions the digest does not answer.
 

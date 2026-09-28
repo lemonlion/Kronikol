@@ -76,7 +76,14 @@ public static class DiagramContextMenu
             .Replace("__PLANTUML_ON_DEMAND__", onDemand ? "true" : "false");
     }
 
-    public static string GetContextMenuScript() => WithDecompressHelper(LoadResource("context-menu-script.js"));
+    public static string GetContextMenuScript() => WithDecompressHelper(WithCopyTextHelper(LoadResource("context-menu-script.js")));
+
+    /// <summary>
+    /// The shared clipboard writer (<c>copyTextToClipboard</c>, and whether the page can copy an image), which the context
+    /// menu's copies call: the report's own script block carries it too, and the component diagram page has only this.
+    /// </summary>
+    private static string WithCopyTextHelper(string scriptBlock) =>
+        $"<script>{LoadResource("report-copy-text-function.js")}</script>{scriptBlock}";
 
     /// <summary>
     /// The shared gzip+base64 decompressor (defines <c>window.decompressGzipBase64</c>). Raw JS,

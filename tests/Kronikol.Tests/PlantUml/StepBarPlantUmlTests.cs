@@ -28,6 +28,9 @@ namespace Kronikol.Tests.PlantUml;
 /// A table row is also only recognised when the physical display line starts with <c>|</c> and ends with
 /// <c>|</c> — trailing whitespace kills the row — so lines are joined with a bare <c>\n</c> escape.
 /// </summary>
+// Three facts read the bar StepCollector logs back from the process-global request log, which an ingest in this
+// collection empties (ProcessGlobalStoreTests); from another collection they could read it empty.
+[Collection("DiagramsFetcher")]
 public class StepBarPlantUmlTests
 {
     private const string LegacyPrefix = "hnote across <<stepDelimiter>> #black:<color:white>";

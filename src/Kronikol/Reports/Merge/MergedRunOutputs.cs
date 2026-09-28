@@ -22,9 +22,6 @@ namespace Kronikol.Reports.Merge;
 /// </remarks>
 public static class MergedRunOutputs
 {
-    /// <summary>The report-shaped files an artifact publish picks up from the output directory.</summary>
-    private static readonly string[] PublishedExtensions = [".html", ".yml", ".md", ".json", ".jsonl", ".xml"];
-
     /// <summary>
     /// Writes the run outputs beside <paramref name="htmlPath"/>, then says where it all is. Returns the
     /// names of the files written, so a caller can tell a partial tail from a full one.
@@ -32,7 +29,7 @@ public static class MergedRunOutputs
     /// <param name="report">The merged report.</param>
     /// <param name="htmlPath">Where the merged HTML was written. Every other file lands in its directory, and takes its base name wherever a name is derived from the report's.</param>
     /// <param name="dataFilePath">Where the merged data file was written, or null when it was not - in which case there is nothing for a schema to describe and nothing for <c>kronikol query</c> to open.</param>
-    /// <param name="options">The switches a run honours for the same outputs: <see cref="ReportConfigurationOptions.GenerateFailuresDigest"/>, <see cref="ReportConfigurationOptions.WriteAgentInstructions"/>, <see cref="ReportConfigurationOptions.GenerateTestRunReportSchema"/>, <see cref="ReportConfigurationOptions.WriteCiSummary"/>, <see cref="ReportConfigurationOptions.WriteCiDebugSection"/>, <see cref="ReportConfigurationOptions.PublishCiArtifacts"/> and <see cref="ReportConfigurationOptions.WriteRunSummaryToConsole"/>.</param>
+    /// <param name="options">The switches a run honours for the same outputs: <see cref="ReportConfigurationOptions.GenerateFailuresDigest"/>, <see cref="ReportConfigurationOptions.WriteAgentInstructions"/>, <see cref="ReportConfigurationOptions.WriteQueryScript"/>, <see cref="ReportConfigurationOptions.GenerateTestRunReportSchema"/>, <see cref="ReportConfigurationOptions.WriteCiSummary"/>, <see cref="ReportConfigurationOptions.WriteCiDebugSection"/>, <see cref="ReportConfigurationOptions.PublishCiArtifacts"/> and <see cref="ReportConfigurationOptions.WriteRunSummaryToConsole"/>.</param>
     /// <param name="output">Where the pointer and any CI workflow commands go: the merge's stdout, which a CI step owns in a way the library under a test runner never does.</param>
     /// <param name="error">Where an output that could not be written is reported.</param>
     /// <param name="getEnvironmentVariable">The environment the CI detection and the CI writers read; the process's own when null.</param>
@@ -66,6 +63,12 @@ public static class MergedRunOutputs
             }
         }
 
+        // Settled before anything is written, because the digest - written first - tells its reader about
+        // query.cs: planned, not yet written, and never a query.cs somebody else put here.
+        var queryScriptBlockedBy = options.WriteQueryScript && dataFilePath is not null ? QueryScriptGenerator.CompilingProject(directory) : null;
+        var queryScriptPlanned = options.WriteQueryScript && dataFilePath is not null && queryScriptBlockedBy is null
+                                 && !QueryScriptGenerator.IsForeign(directory);
+
         if (options.GenerateFailuresDigest)
         {
             // The step paths are carried, not derived: the derivation walks diagram markers the shards no
@@ -76,6 +79,7 @@ public static class MergedRunOutputs
                 report.Interactions.Length > 0 ? report.Interactions : null,
                 baseName,
                 report.KronikolVersion,
+                queryScriptPlanned,
                 report.Diagnostics,
                 report.Suite,
                 report.StepPaths,
@@ -92,6 +96,17 @@ public static class MergedRunOutputs
             var block = AgentInstructionsBlock.Wrap(AgentInstructionsGenerator.Build(baseName));
             foreach (var name in new[] { AgentInstructionsGenerator.ClaudeFileName, AgentInstructionsGenerator.AgentsFileName })
                 Attempt(name, () => WriteInstructionFile(Path.Combine(directory, name), block));
+        }
+
+        // The run's own rule: beside a data file, and never where a C# project would compile it. The engine it
+        // names is the one this merge ran, so a merged report is queried by what wrote it.
+        if (options.WriteQueryScript && dataFilePath is not null)
+        {
+            if (queryScriptBlockedBy is { } project)
+                error.WriteLine("⚠ WARNING: " + QueryScriptGenerator.NotApplied(project));
+            else
+                Attempt(QueryScriptGenerator.FileName, () => QueryScriptGenerator.Write(directory, QueryScriptGenerator.Build(directory),
+                    text => File.WriteAllText(Path.Combine(directory, QueryScriptGenerator.FileName), text)));
         }
 
         if (options.GenerateTestRunReportSchema && dataFilePath is not null)
@@ -121,7 +136,10 @@ public static class MergedRunOutputs
             queryTarget: QueryTarget(dataFilePath),
             history: history is not null && (history.HasAnything || report.Features.Any(f => (f.Scenarios ?? []).Any(s => s.Result == ExecutionResult.Failed)))
                 ? "history: " + History.HistorySummary.Line(history)
-                : null);
+                : null) with
+        {
+            QueryScriptWritten = written.Contains(QueryScriptGenerator.FileName)
+        };
 
         var ci = CiEnvironmentDetector.Detect(getEnv);
 
@@ -152,11 +170,7 @@ public static class MergedRunOutputs
 
         if (options.PublishCiArtifacts)
         {
-            var files = Directory.GetFiles(directory)
-                .Where(f => PublishedExtensions.Any(e => f.EndsWith(e, StringComparison.OrdinalIgnoreCase)))
-                .OrderBy(f => f, StringComparer.Ordinal)
-                .ToArray();
-            CiArtifactPublisher.Publish(files, ci, options.CiArtifactName, options.CiArtifactRetentionDays,
+            CiArtifactPublisher.Publish(CiArtifactPublisher.ReportFiles(directory), ci, options.CiArtifactName, options.CiArtifactRetentionDays,
                 getEnv, File.AppendAllText, output.WriteLine, File.Exists);
         }
 

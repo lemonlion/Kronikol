@@ -18,7 +18,7 @@ in CI is noise; this exists so before/after comparisons and any future regressio
 |---|---|
 | `gen/` | Synthesizes the benchmark report: 200 scenarios × 60 request/response pairs (24,000 interaction entries), every body distinct (dedup wins nothing), responses ~8 KB — ≈140 MB. |
 | `bench.ps1` | CLI wall-clock: `summary` (the index-only floor), `values --path $.status`, `grep 4173 --number --count`. |
-| `internals/` | Per-stage steady-state (warmed, in-process): scan time+alloc, raw-read-all, parse-all, path-eval — via the `InternalsVisibleTo("Kronikol.Tests")` grant (`AssemblyName` trick). |
+| `internals/` | Per-stage steady-state (warmed, in-process): scan time+alloc, raw-read-all, parse-all, path-eval — via `Kronikol`'s `InternalsVisibleTo("Kronikol.Tests")` grant (`AssemblyName` trick): the engine has lived in `Kronikol` (`src/Kronikol/Query`) since 3.32.0, and this project reaches it through the tool's reference. |
 | `retok/` | BCL-only minimal re-tokenization of the same file (property names materialized, content strings unescaped + SHA-1-hashed) — the scan's honest floor; scan minus this is walker overhead. |
 
 ## Running

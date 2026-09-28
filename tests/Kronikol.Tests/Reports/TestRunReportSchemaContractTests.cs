@@ -56,6 +56,8 @@ public class TestRunReportSchemaContractTests
         var comment = schema.RootElement.GetProperty("$comment").GetString();
         Assert.Contains("kronikol query", comment);
         Assert.Contains("megabytes", comment);
+        // With nothing installed: the query.cs a run writes beside the file (plans/QUERY_FALLBACK_PLAN.md).
+        Assert.Contains("dotnet run --file query.cs --", comment);
     }
 
     [Fact]

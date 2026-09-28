@@ -5,6 +5,11 @@
 `<report>` is a `TestRunReport.json`, or a directory holding one. When a directory holds several the tool
 lists them and stops rather than guessing.
 
+Everything here also runs with nothing installed, from a reports directory:
+`dotnet run --file query.cs -- <command> <report> [args]` takes the same commands, addresses and flags and
+prints the same answer, because the `query.cs` a run writes beside its report runs the same engine. It needs
+the .NET 10 SDK.
+
 ## Addressing
 
 | Thing | Address | Notes |

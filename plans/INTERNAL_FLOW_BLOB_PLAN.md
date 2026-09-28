@@ -4,7 +4,8 @@
 and the consumer's published reports) · **Repo version:** 3.27.2 (`2843018a`), where the cited line
 numbers hold; the harness's `check-anchors.py` re-derives them at any revision ·
 **Status: executed 2026-09-27** (green-lit that day: the owner asked for P5 in full, so Q1 to Q8
-are taken as recommended). **R1 shipped as 3.31.4** (§11.1), **R2 as 3.31.9** (§11.2). This is P5 of
+are taken as recommended). **R1 shipped as 3.31.4** (§11.1), **R2 as 3.31.9** (§11.2), and an audit as
+**3.32.4** (§11.4). This is P5 of
 [`STAGE_1_PLAN.md`](STAGE_1_PLAN.md), roadmap items 1.9 and 1.12. §10 is the assumption ledger: what was RUN, what was only READ, and what is taken
 from the issue. The scripts behind every number are in
 [`INTERNAL_FLOW_BLOB_PLAN.harness/`](INTERNAL_FLOW_BLOB_PLAN.harness/README.md), with their output.
@@ -1198,6 +1199,78 @@ scenarios the page lists (every read of `diagramsByTestId` is by a scenario's id
 logs four calls under a test the run does not name, red on 3.31.9. A consumer's report changes only when
 its process logged tests its features do not name. 3.31.10 was published on 2026-09-28 (`DOORSTEP_PLAN.md`
 Appendix B), and the Kronikol4J ledger has the entry drafted in that plan's Appendix A (`8001eba`).
+
+### 11.4 Audit (2026-09-28): what the execution missed (3.32.4)
+
+The owner asked whether anything was missed from the plan or lacking in the implementation. Every item of §3 to §8 was
+checked against the code at `e7e85044` (3.31.10), §7's and §8.5's tests fact by fact, each changelog sentence of 3.31.4
+and 3.31.9 for a test, and each record against its target. Five findings:
+
+- **A1. The popup's failure message never appeared for the failure §3.4 and §3.5 name first.** `decompressGzipBase64`
+  calls `atob` and builds its `DecompressionStream` before it returns a promise. In a browser without
+  `DecompressionStream` (Chrome and Edge before 80, Firefox before 113, Safari before 16.4), or on a blob `atob`
+  refuses, it threw out of `loadSegments` instead of rejecting. The popup stayed on "Loading…" for good, and the
+  console got an uncaught error in place of the message. 3.31.9's fact handed the page valid base64 of text that is
+  not gzip, which rejects later, so it could not see this. `loadSegments` now turns the throw into the same rejection.
+  It matters where nothing else needs `DecompressionStream`: `CallTree` popups under Server or Local rendering, the one
+  configuration §3.5 says worked without it before 3.31.9.
+- **A2. A filtered export of a NodeJs page lost the popups of the inline diagrams bound before it.** This is F14's
+  class, which §11.2 closed for `BrowserJs` diagrams and flame charts only. Under the default `ShowLinkOnHover`,
+  binding repaints a live link in the ink around it. No listener survives the copy, and in the export the binder
+  finds no link-coloured text to bind again. The fourth `DIAGRAM_COLOURS_PLAN` audit (kronikol-fe) found it at the
+  same time, and the binder is that plan's (3.31.8's N3), so the fix is its release, 3.32.3. This release carries the
+  one line that fix asked of `export_undrawn`: the export's copy of an inline diagram goes without
+  `data-iflow-bound`, which means "bound in this page". Every NodeJs page in `OnDemandRenderingTests` was built with
+  `ShowLink`, so no test exercised the default.
+- **A3. The wiki did not say what the popup shows when the map cannot be decoded**, which §3.5 asked for. The Content
+  Strategy section of Internal-Flow-Tracking now does.
+- **A4. Tests the plan lists, or a changelog sentence needs, were missing:**
+  - §8.5's paint-level fact for Q7's attribute round trip. The unit fact decodes the attribute with
+    `WebUtility.HtmlDecode`, not a browser. `A_popup_draws_a_span_whose_name_holds_attribute_markup` reads the
+    attribute back through Chromium (a span named with `"`, `<`, `&&`, a tab and a literal `&lt`, which a browser
+    decodes even without its semicolon) and checks that the engine drew the name. Leaving `&` unescaped turns it red.
+  - 3.31.9's changelog says a server-drawn link added after the page loaded opens nothing, and nothing clicked one.
+    `A_server_drawn_link_added_after_the_page_loaded_is_checked_when_it_is_clicked`: opening every clicked link turns
+    it red.
+  - §7.4's "the two emit sites produce the same element for the same inputs": the fact built the live site's string
+    by hand. `The_run_report_and_a_merge_of_its_data_file_carry_the_same_element` writes a real run and merges its own
+    data file, with another test's calls in the process (§11.3's case). Counting the list over every diagram the
+    process logged, as 3.31.9 did, turns it red.
+  - A1's theory (both causes) and A2's export fact are red on 3.31.10.
+- **A5. A hand-off made and not delivered.** F3 hands #86's re-measure to roadmap 5.2. #86's figures come from reports
+  written by v3.20.0, when every step marker and assertion note had a segment of its own (F8, fixed in 3.31.4: 1,499
+  of 2,786 segments on the consumer's 3.31.3 run), and it counted duplicates in content whose shape has changed since
+  (Q7). ROADMAP 5.2 now says so, and so does a comment on #86. The plan's leftovers had no row in ROADMAP Appendix C
+  either; it has one now.
+
+Checked and found as the plan says:
+
+- The element and its list at both emit sites: the tie, the first-seen order, the ids through the serializer and `z`
+  written raw.
+- The popup: its order, the memoised decode, the legacy global and a page with no element.
+- S3, at load and on a click. S1b's attribute, on the map's diagrams only.
+- F14's reset of `BrowserJs` diagrams and flame charts. The merge path's list, over the merged diagrams.
+- 3.31.10's count: every diagram a page shows is a scenario's own, or the embedded component diagram.
+- The render script's two membership lines and 3.31.8's inline binder, both through `hasSegment`.
+- The doc comments on `GenerateSegmentDataScript`, both `WrapSegmentData`s, `BuildSegmentData` and
+  `MergeableReport.InternalFlowSegments`.
+- The wiki pages of §8.3 and the browser floor.
+- R1's check: every request record but a marker or a user action is written with a link.
+- #89 and #100 closed. ROADMAP 1.9, 1.12 and 12.1, the STAGE_1 and PLANS_STATUS rows, and the three Kronikol4J
+  ledger entries.
+
+**Left open, for the owner** (ROADMAP Appendix C). With `CollapseConsecutiveIdenticalCalls` or `MaxArrowsPerDiagram`
+on (both are off by default), a call the diagram does not draw keeps its segment, and no arrow opens it. That covers a
+collapsed run's later calls and the pairs past the cap: F8's dead weight, under an option. Dropping those segments, or
+giving the run's arrow the whole run's spans, is a design choice, not a fix.
+
+**Published 2026-09-28.** 3.32.4 is `6d756a59`, green on CI, CodeQL and CI Summary Preview. It landed on top of four
+untagged releases (3.32.0 and 3.32.1 from cloud sessions, 3.32.2 and 3.32.3 from the P4 and P3 audits), and any tag
+publishes everything below it, so the owner was asked and chose to publish them in order. This session tagged
+`v3.32.0` (on `2709d08`, as `QUERY_FALLBACK_PLAN.md` §11.7 says) to `v3.32.4`, each after the one before it had
+released, and the P4 and P3 sessions applied their own wiki and ledger edits at their tags. `v3.32.4`'s Release run
+`36458242835` pushed all 62 packages and made the GitHub release. The wiki's sentence is `d631272`, the Kronikol4J
+ledger entry `8508409`, and #86 has the hand-off comment.
 
 ## Appendix A. Re-taking the numbers
 

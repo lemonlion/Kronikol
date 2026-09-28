@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tool;
-using Kronikol.Tool.Query;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tool;

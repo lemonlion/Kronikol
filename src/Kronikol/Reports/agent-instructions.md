@@ -47,10 +47,22 @@ part of one, the folder name, `last-failed` or `previous`.
 ## 2. `kronikol query` — everything else
 
 ```bash
-dotnet tool install -g Kronikol.Tool     # once; needs the .NET 10 runtime
-kronikol query summary .                 # the run, its failures, the slowest scenarios
-dnx Kronikol.Tool query summary .        # no install: the .NET 10 SDK runs the last published version (needs the feed each call, slower)
+dotnet run --file query.cs -- summary .   # the run, its failures, the slowest scenarios: nothing to install, no network
+kronikol query summary .                  # the same, where the tool is installed
 ```
+
+`query.cs`, beside this file, runs the engine that wrote this report and takes exactly what `kronikol query`
+takes, so every `kronikol query` command in this file also works as `dotnet run --file query.cs -- <verb> . …`.
+It needs the .NET 10 SDK and nothing else: no install and no network. The first run compiles it in a few
+seconds; later runs start at once. Keep `--file`: from a folder holding a project, a bare `dotnet run` runs
+that project instead. Where a `global.json` pins an older SDK, `dotnet run` fails under it: run the file from
+outside that folder with full paths, or use the tool. There is no `query.cs` when the run turned it off, or
+when this directory is inside a C# project's folder (outside its `bin`, `obj` and dot-folders), which would
+compile it.
+
+The tool itself is `dotnet tool install -g Kronikol.Tool` (once; the .NET 10 runtime), for `kronikol` on PATH
+in every repository. `dnx Kronikol.Tool query summary .` needs no install either, but fetches the published
+tool from the feed on every call.
 
 `.` works: every command takes the report file or the directory holding it.
 
