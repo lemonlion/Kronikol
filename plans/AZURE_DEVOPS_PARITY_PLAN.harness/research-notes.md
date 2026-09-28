@@ -329,3 +329,142 @@ under `https://learn.microsoft.com/en-us/rest/api/azure/devops/` with `?view=azu
 - `NODE_PORT_PLAN.md` 508-511 mirrors this repository's detection, summary and artifact paths for Node.
 - `ROADMAP.md` (line numbers after this plan's rows were added): the bar's "both forges first-class" at 68;
   2.1 to 2.4 at 245-248; 9.4 at 354; 13.2 at 415; track C at 459.
+
+## 4. The second pass (2026-09-28)
+
+What the second pass read, beyond §1 to §3. Source files were read from `raw.githubusercontent.com` at
+their default branch on 2026-09-28; line numbers are those files'.
+
+### 4.1 Azure Pipelines: the agent, the tasks, the images
+
+- **Summary attachments** [TCE] 249-273: `uploadSummaryProperties.Add(TaskAddAttachmentEventProperties.Type,
+  CoreAttachmentType.Summary); var fileName = Path.GetFileName(data);
+  uploadSummaryProperties.Add(TaskAddAttachmentEventProperties.Name, fileName);`, so the name is the file
+  name with its extension. `AddAttachment` (304-361) refuses a name holding `Path.GetInvalidFileNameChars()`
+  of the agent's OS, needs the file to exist (`MissingAttachmentFile`), and calls
+  `context.QueueAttachFile(type, name, filePath)`; [EC] 821-833 queues it as
+  `_jobServerQueue.QueueFileUpload(_mainTimelineId, _record.Id, type, name, filePath, deleteSource: false)`,
+  on the posting step's own record. [LOG]: uploadsummary "is a short hand form for the command
+  `##vso[task.addattachment type=Distributedtask.Core.Summary;name=testsummaryname;]c:\testsummary.md`".
+  How the Extensions tab titles a section: UNVERIFIED (S0 A4).
+- **Restricted mode** [TCE]: `[CommandRestriction(AllowedInRestrictedMode = true)]` marks `logdetail`,
+  `logissue`, `complete`, `setprogress`, `setsecret`, `setvariable`, `debug`, `settaskvariable` and
+  `prependpath`, and not `uploadsummary`, `uploadfile`, `addattachment` or `setendpoint`. A blocked command
+  logs a warning: `context.Warning(StringUtil.Loc("CommandNotAllowed", command.Area, command.Event))`
+  (`Agent.Worker/TaskRestrictionsChecker.cs`, [TRC]).
+- **The checkout's credential** [GSP]: "handle expose creds" writes `http.{repositoryUrl.AbsoluteUri}.extraheader`
+  only `if (gitSupportAuthHeader && exposeCred)` (1215-1231), where `exposeCred` is the `persistCredentials`
+  input (358); `PostJobCleanupAsync` removes it after the job (1481-1512); every checkout first removes any
+  extraheader left behind (785-805).
+- **`##[` in the agent**: only the agent's own output prefixes (`ExecutionContext` constants `##[section]`,
+  `##[command]`, `##[error]`, `##[warning]`, `##[debug]`) and the paging logger's
+  `message.Contains(groupStartTag, StringComparison.OrdinalIgnoreCase)` for `##[group]`
+  (`Microsoft.VisualStudio.Services.Agent/Logging.cs`). The agent does not turn `##[error]` into an issue.
+- **Which bash** [BASHSRC] `Tasks/BashV3/bash.ts`: `let bashPath: string = tl.which('bash', true);` (108); on
+  `win32` it translates the script's path by running `bash -c pwd` in its folder (113-114, 170-171), which
+  works for either bash. [IMG] `images/windows/scripts/build/Install-Git.ps1:51`:
+  `Add-MachinePathItem "C:\Program Files\Git\bin"`; `scripts/helpers/PathHelpers.ps1:92-94`:
+  `$newPath = $PathItem + ';' + $currentPath` (it prepends); `scripts/build/Install-WSL2.ps1`:
+  `wsl.exe --install --no-distribution`; `scripts/build/Install-Msys2.ps1:110-132` puts msys2 on the path
+  for its own install only and restores it; `scripts/build/Configure-Shell.ps1` links `C:\shells\gitbash.exe`
+  and `wslbash.exe`. `Windows2025-Readme.md`, image 20260922.270.2: "Bash 5.3.15(2)-release", "Git
+  2.55.0.windows.5", "Windows Subsystem for Linux (Default, WSLv2): 2.7.14.0". [BASH3]'s prose ("runs bash
+  from the WSL default distribution") is contradicted by these. The plan reads A20 as Git Bash, INFERRED.
+- **Pull-request iterations**: `System.PullRequest.SourceCommitId`, "The commit that is being reviewed in a
+  pull request. (This variable is initialized only if the build ran because of a Git PR affected by a
+  branch policy)" (`pipelines/build/includes/variables-hosted.md:143`, [VARS]); iterations list
+  `sourceRefCommit`, `targetRefCommit`, `commonRefCommit` [ITL]; "Posting status to a specific iteration of
+  a PR guarantees that status applies only to the code that was evaluated and none of the future updates"
+  [PRSD]; "Microsoft Entra ID token with the **Code (status)** scope to have permission to change PR status"
+  [PRSS]. Neither status page names a repository permission.
+- **Reruns** [RNSS] (2024 roadmap): "In YAML pipelines, you can rerun a successful stage, but it triggers all
+  stages that depend on it to rerun as well … We plan to give you the ability to rerun a single stage,
+  without causing following stages to rerun too." [STG] (REST 7.1) documents `forceRetryAllJobs` and
+  `state` (`cancel`, `retry`) only; [EXTAPI] `UpdateStageParameters` adds `retryDependencies`, undescribed.
+- **`DownloadPipelineArtifact@2`** [DPA]: `artifactName` "If the value is left empty, the task downloads all
+  artifacts associated with the pipeline run"; `targetPath` "If the multi-download option is applied (by
+  leaving an empty artifact name), a sub-directory will be created for each download"; `itemPattern`
+  "Unlike other tasks, this task will download a file that matches any pattern. Exclude patterns cannot
+  be used to exclude previously included files"; aliases `path | downloadPath` for `targetPath`,
+  `patterns` for `itemPattern`, `artifact` for `artifactName`.
+- **`Build.Repository.Uri`** [VARS]: "The URL for the triggering repository. For example: Git:
+  `https://fabrikamfiber@dev.azure.com/fabrikamfiber/_git/Scripts`"; available in templates. That it is set
+  in a job with `checkout: none` is INFERRED (S0 prints it).
+- **The schema** [VSC], measured by `schema_check.sh`: draft-07, `$comment` "v1.261.1", 1,640,523 bytes,
+  86,347 gzipped at `-9`; 119 definitions; a boolean is `anyOf` strings matching `^true$`, `^y$`, `^yes$`,
+  `^on$` and the rest; `stepTarget` has `container`, `commands` (`any`, `restricted`) and
+  `settableVariables`; task inputs are listed by canonical name only (`DownloadPipelineArtifact@2`:
+  `targetPath`, `itemPattern`, `artifactName`, …, `additionalProperties: false`); a non-standard
+  `ignoreCase` keyword.
+
+### 4.2 GitHub
+
+- **The runner's legacy commands** [GHR]: `Runner.Common/ActionCommand.cs`: `public const string Prefix =
+  "##[";` (35); `TryParse` begins `int prefixIndex = message.IndexOf(Prefix);` (132), anywhere in the line,
+  for any registered command. `Runner.Worker/ActionCommandManager.cs`: `if
+  (!ActionCommand.TryParseV2(input, _registeredCommands, out actionCommand) && !ActionCommand.TryParse(input,
+  _registeredCommands, out actionCommand))` (70-71); `TryParseV2` requires `::` at the start after
+  `TrimStart()` (`ActionCommand.cs:62-63`). `SetOutputCommandExtension` (308-351) warns only when
+  `DistributedTask.DeprecateStepOutputCommands` is set, then sets the output; `set-env` and `add-path` are
+  refused unless `ACTIONS_ALLOW_UNSECURE_COMMANDS`; `stop-commands` pauses all processing until its token.
+- **Skip markers** [GHSKIP]: "Workflows that would otherwise be triggered using `on: push` or `on:
+  pull_request` won't be triggered if you add any of the following strings to the commit message in a
+  push, or the HEAD commit of a pull request: `[skip ci]`, `[ci skip]`, `[no ci]`, `[skip actions]`,
+  `[actions skip]`".
+- **git's header precedence** (RUN, `record_script.sh` G1 to G10, git 2.43.0): with
+  `http.<host>/.extraheader` or `http.<repository URL>.extraheader` in `.git/config`, a command-line `-c
+  http.extraheader=<token>` is not sent, and `-c http.extraheader=` does not clear it; `-c
+  http.<host>/.extraheader=<token>` adds a second header. `actions/checkout` persists
+  `http.https://github.com/.extraheader` ("AUTHORIZATION: basic" of `x-access-token:<token>`).
+
+### 4.3 This repository and its neighbours (READ)
+
+- The tool's console: `Program.cs` ends `return Commands.Dispatch(args, Console.Out, Console.Error);`, so
+  every verb writes through those two writers. `MergedRunOutputs.cs` hands `output.WriteLine` to
+  `CiSummaryWriter.Write` (139) and `CiArtifactPublisher.Publish` (159), the writer everything else uses.
+- Run-derived text the first pass did not list: `HistoryCommand.Maintenance.cs:129` (`history gate`:
+  `{scenario.Address}  {scenario.FeatureName} › {scenario.Name}  {verdict} — {QueryWriter.OneLine(evidence,
+  160)}`, the names unflattened); `HistoryCommand.cs:322`, `:331` (rename suggestions with names);
+  `HistoryCommand.Maintenance.cs:477-479` (`history import` labels).
+- JSON the tool writes uses System.Text.Json's default encoder, which leaves `#` alone:
+  `Query/QueryWriter.cs:32`, `:91`; `Query/PathEngine.cs:22`, `:413`; `Query/PayloadReader.cs:197` (a JSON
+  body, pretty-printed); `QueryCommand.Describe.cs:8`. `--json` is a query flag (`QueryOptions.cs:279`).
+- `history record`: `FragmentFiles` searches each input folder recursively
+  (`SearchOption.AllDirectories`, `HistoryCommand.cs:454`); `Attempts` (386-432) folds a fragment under
+  `runs/` with the same id as an earlier attempt and leaves one of another run alone; `LastFullRoster` and
+  the partial heuristic read the ledger as it stands (304-345). `history verify` reports "a header that is
+  not the first line"; `history show`, `record` and `doctor` still read such a ledger.
+- `ReportConfigurationOptions.cs:265-270`: "measured on .NET 10, every VSTest-hosted runner under
+  <c>dotnet test</c> swallows what a library writes from a run-end hook unless the verbosity is
+  <c>detailed</c>, and TUnit's runner suppresses it at any verbosity".
+- Wiki `Cross-Run-History` 95-150 at `86a77c1`: the printed fold step (`git worktree add
+  "$RUNNER_TEMP/history-branch" origin/kronikol-history   # or --orphan on the first run`, one retry) under
+  "This is the recipe Kronikol's own repository runs … so it is executed, not merely written".
+- Kronikol4J at `34120a7` (a public repository, read through the session's git proxy): `CiEnvironment.java:30`
+  detects `TF_BUILD`; `ReportFinalizer.java:184` and `:189` call `CiSummaryWriter.write` (46:
+  `writeLine.accept("##vso[task.uploadsummary]" + tempPath)`) and `CiArtifactPublisher.publish` (51: one
+  `##vso[artifact.upload …]` per file) with `System.out::println`, from the test JVM. No `runAttempt`, run
+  id, `History.run.json`, run-end pointer, `::notice` or query verb was found in its main sources.
+
+### 4.4 Beside `HISTORY_ACTION_PLAN.md` (2.3), read on `main` at `a9713c5`
+
+- It was written the same days for 2.3 and designs the history scripts for both forges: four composite
+  actions in `templates/github-actions/kronikol-history/` over bash scripts that keep their own repository
+  under `RUNNER_TEMP` and take a token (its §4.1 to §4.5); git's settings in `scripts/git.sh` (§4.9: no
+  prompt, no credential helper, `core.autocrlf=false`, no machine hook, the token as
+  `http.<server>/.extraheader` through `GIT_CONFIG_COUNT`); its §4.2 interface is "what 2.4 builds to", and
+  its §9 hands 2.4 byte-identical copies held by a drift fact.
+- Its findings this plan's harness confirms independently: the wiki's recipe fails as printed (its F1;
+  here W1, W2); record again rather than rebase (its §4.5; here v2). Its findings this plan does not have:
+  F4 (the dogfood's loop lost 9 of 60 runs with six folds racing, ten times), F9 (under `actions/checkout`
+  v6.0.0 the dogfood's worktree push fails), F15 (a wrong token and the machine's credential helpers), F16
+  (CRLF scripts on Windows). This plan's that it does not have: S6b (a failed read starts a second ledger
+  that `verify` rejects), S7 (a kept workspace fails every fold after the first), G2 to G4 and G11 (which
+  header git sends, and the empty-then-token reset), S12.
+- Its S0 rewrites the wiki's recipe now (no code); its S4 moves `ci-summary-preview.yml` onto the action.
+  Its decision is D26; `main`'s D24 is the doorstep and D25 #72's landing, so this plan's decision is D27.
+- `PR_REPORT_LINK_PLAN.md` (2.2) hands 2.4 three questions for the pull-request link: whose identity writes,
+  which permission the build identity needs on threads, how the thread is found again.
+- G11 (RUN, git 2.43.0): global `http.<host>/.extraheader` STALE; `-c http.extraheader=GOOD` sends STALE;
+  `-c http.<host>/.extraheader=GOOD` sends STALE and GOOD; `-c http.<host>/.extraheader=` then
+  `-c http.<host>/.extraheader=GOOD` sends GOOD, and so does the same pair through `GIT_CONFIG_COUNT`.

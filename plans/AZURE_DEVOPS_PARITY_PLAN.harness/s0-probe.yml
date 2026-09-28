@@ -1,6 +1,8 @@
 # S0 of plans/AZURE_DEVOPS_PARITY_PLAN.md: every Azure Pipelines claim the plan rests on that could not be
 # run without an Azure DevOps organisation, exercised in one throwaway pipeline. Each step is named after
-# the ledger row (§9) it settles; write what each printed into results-s0.txt beside this file.
+# the ledger row (§9) it settles; write what each printed into results-s0.txt beside this file. The history
+# scripts themselves are not here: record_script.sh already runs them against a git server that behaves as
+# both forges' git endpoints do. What is here is what only the service can answer.
 #
 # How to run it (about half a day, most of it waiting and reading):
 #   1. A scratch project in any organisation. Import this repository into its Azure Repos, or commit this
@@ -8,19 +10,24 @@
 #   2. Create a pipeline from this file. Leave the build identity's repository permissions at their
 #      defaults for the first run: A12 records what the default identity is refused.
 #   3. Queue it. Shard a fails its first attempt on purpose (A10).
-#   4. On the finished run, "Rerun failed jobs". Record which jobs ran again (A10) and what A2, A7 and A8
-#      printed on the second attempt.
+#   4. On the finished run, "Rerun failed jobs" on stage probe. Record which jobs ran again (the fold job, a
+#      dependent in the same stage), whether stage after ran again (a dependent stage), and what A2, A7 and
+#      A8 printed on the second attempt (A10).
 #   5. Grant the build identity Contribute on the repository (then, for A13, on the probe branch only) and
 #      queue it again: A12 should push.
 #   6. Open a pull request against main with a build-validation policy running this pipeline: A2 prints the
-#      pull-request variables (A5).
-#   7. For A14: in a second pipeline whose YAML has no trigger section (every branch triggers), push one
-#      commit to the probe branch with ***NO_CI*** in its message and one without; record which queued a run.
+#      pull-request variables (A5, A26).
+#   7. For A14: in a second pipeline whose YAML has no trigger section (every branch triggers), push three
+#      commits to the probe branch, one with [skip ci] in its message, one with ***NO_CI***, one with
+#      neither; record which queued a run.
 #   8. The same file in a GitHub repository connected through the Azure Pipelines app, runs 3 to 6 again:
-#      A5's target-branch format and whether A12 can push with the persisted credentials (§4.6).
+#      A5's target-branch format, and whether the app's token (set persistCredentials on a checkout and read
+#      it back) can push, for §4.6.
 #   9. On the pull-request build of step 6, A21 posts one iteration status and one thread with the build
-#      identity: record whether each is refused, and what the pull request shows.
-#  10. Once on windows-latest (pool below): A20 records which bash a `bash` step runs there, WSL's or Git's.
+#      identity: record whether each is refused, which iteration the status landed on, and what the pull
+#      request shows. Push once more to the pull request while that build runs, to see an older build's
+#      status on an older iteration.
+#  10. Once on windows-latest (pool below): A20 records which bash a `bash` step runs there.
 # Nothing here reads a secret. The one token, System.AccessToken, is mapped into the A11, A12 and A21 steps
 # only. Delete the branch kronikol-history-probe afterwards.
 
@@ -47,14 +54,15 @@ stages:
       fetchDepth: 1
 
     - bash: env | sort | grep -E '^(TF_BUILD|BUILD_|SYSTEM_|AGENT_JOB|AGENT_OS|PIPELINE_)' | grep -v -i -E 'token|secret'
-      displayName: 'A2 A5 F11 the predefined variables: attempts, pull-request target, both server URIs, provider'
+      displayName: 'A2 A5 A26 F11 the predefined variables: attempts, pull-request target and source commit, both server URIs'
 
     - bash: |
         uname -a
-        command -v bash git
-        bash --version | head -1
+        echo "running: $BASH $BASH_VERSION"
+        type -a bash
+        command -v git
         git --version
-      displayName: 'A20 which bash and which git a bash step runs (WSL or Git Bash on Windows; 3.2 on macOS)'
+      displayName: 'A20 which bash and which git a bash step runs (Git Bash expected on Windows; 3.2 on macOS)'
 
     - bash: |
         echo "some text first ##vso[task.setvariable variable=PROBE_MIDLINE]set-from-mid-line"
@@ -101,7 +109,22 @@ stages:
         MARKDOWN
         echo "##vso[task.uploadsummary]$f"
         echo "##vso[task.uploadsummary]$f"
-      displayName: 'A4 what the Extensions tab renders, and whether one file posted twice shows twice'
+        echo "##vso[task.addattachment type=Distributedtask.Core.Summary;name=Kronikol probe $SHARD]$f"
+      displayName: 'A4 what the Extensions tab renders, how it titles a section, and one file posted twice by one step'
+    - bash: echo "##vso[task.uploadsummary]$(Agent.TempDirectory)/CiSummary.md"
+      displayName: 'A4 the same file posted again, from a second step (a second timeline record)'
+
+    - bash: |
+        echo "##vso[task.uploadsummary]$(Agent.TempDirectory)/CiSummary.md"
+        echo "##vso[artifact.upload containerfolder=Restricted;artifactname=Restricted]$(Agent.TempDirectory)/CiSummary.md"
+        echo "##vso[task.setvariable variable=PROBE_RESTRICTED]set"
+        echo "##vso[task.logissue type=warning]A28 a warning from a restricted step"
+      displayName: 'A28 A9 restricted mode: which of these land, what it logs, and whether the step turns orange'
+      target:
+        commands: restricted
+        settableVariables: none
+    - bash: echo "PROBE_RESTRICTED=${PROBE_RESTRICTED:-unset}"
+      displayName: 'A28 read back'
 
     - bash: echo "##vso[task.logissue type=warning]A9 a warning annotation from shard $SHARD"
       displayName: 'A9 where a warning annotation surfaces'
@@ -118,13 +141,12 @@ stages:
       displayName: 'A8 a pipeline artifact name the re-run of this job publishes again'
 
     - bash: |
-        if git -c http.extraheader="AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN" fetch --depth=1 origin "$PROBE_BRANCH"; then
-          git show FETCH_HEAD:probe.txt
-        else
-          echo "no $PROBE_BRANCH yet (expected on the first run)"
-        fi
-        git config --get-regexp 'http.*extraheader' || echo "no credential persisted in .git/config (expected: persistCredentials is off in this job)"
-      displayName: 'A11 read a data branch with a step-scoped token, without persisting it'
+        repo="$(Agent.TempDirectory)/probe-read"
+        git init -q --bare "$repo"
+        git -C "$repo" -c http.extraheader="AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN" ls-remote --exit-code "$(Build.Repository.Uri)" "refs/heads/$PROBE_BRANCH"
+        echo "ls-remote exit $? (0: the branch exists, 2: it does not)"
+        git config --get-regexp 'http.*extraheader' || echo "no credential persisted in the checkout (expected: persistCredentials is off)"
+      displayName: 'A11 read a data branch from a repository of its own, with a step-scoped token'
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -139,15 +161,18 @@ stages:
         set -u
         api="$(System.CollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.ID)/pullRequests/$(System.PullRequest.PullRequestId)"
         auth="Authorization: Bearer $SYSTEM_ACCESSTOKEN"
-        iteration=$(curl -sS -H "$auth" "$api/iterations?api-version=7.1" | python3 -c 'import json,sys; print(json.load(sys.stdin)["value"][-1]["id"])')
-        echo "iteration $iteration"
+        curl -sS -H "$auth" "$api/iterations?api-version=7.1" > "$(Agent.TempDirectory)/iterations.json"
+        latest=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["value"][-1]["id"])' "$(Agent.TempDirectory)/iterations.json")
+        iteration=$(python3 -c 'import json,sys; v=json.load(open(sys.argv[1]))["value"]; m=[i["id"] for i in v if i.get("sourceRefCommit",{}).get("commitId")==sys.argv[2]]; print(m[-1] if m else "none")' \
+          "$(Agent.TempDirectory)/iterations.json" "$(System.PullRequest.SourceCommitId)")
+        echo "latest iteration $latest; the iteration whose source commit this build ran: $iteration"
         curl -sS -o /dev/null -w "iteration status: HTTP %{http_code}\n" -H "$auth" -H "Content-Type: application/json" \
           -d '{"state":"succeeded","description":"Kronikol probe: 2 scenarios, 0 failed","context":{"name":"probe-'"$SHARD"'","genre":"kronikol"},"targetUrl":"$(System.CollectionUri)$(System.TeamProjectId)/_build/results?buildId=$(Build.BuildId)&view=artifacts&pathAsName=false&type=publishedArtifacts"}' \
           "$api/iterations/$iteration/statuses?api-version=7.1"
         curl -sS -o /dev/null -w "thread: HTTP %{http_code}\n" -H "$auth" -H "Content-Type: application/json" \
           -d '{"comments":[{"parentCommentId":0,"content":"Kronikol probe thread from shard '"$SHARD"'","commentType":1}],"status":"closed","properties":{"kronikol":"probe"}}' \
           "$api/threads?api-version=7.1"
-      displayName: 'A21 the build identity posts an iteration status and a thread (pull-request builds only)'
+      displayName: 'A21 A26 the build identity posts an iteration status (to its own iteration) and a thread (pull-request builds only)'
       condition: eq(variables['Build.Reason'], 'PullRequest')
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -156,24 +181,43 @@ stages:
     dependsOn: shard
     condition: succeededOrFailed()
     steps:
-    - checkout: self
-      persistCredentials: true
-      fetchDepth: 1
+    - checkout: none
     - bash: |
         echo "fold: job attempt $(System.JobAttempt), stage attempt $(System.StageAttempt)"
-        git config user.name "Kronikol probe"
-        git config user.email "probe@example.invalid"
-        if git fetch --depth=1 origin "$PROBE_BRANCH" 2>/dev/null; then
-          git switch -q -c "$PROBE_BRANCH" FETCH_HEAD
-        else
-          git switch -q --orphan "$PROBE_BRANCH"
+        echo "Build.Repository.Uri in a job with checkout: none: $(Build.Repository.Uri)"
+        repo="$(Agent.TempDirectory)/probe-ledger"
+        auth=(-c "http.extraheader=AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN")
+        git init -q "$repo"
+        git -C "$repo" symbolic-ref HEAD "refs/heads/$PROBE_BRANCH"
+        git -C "$repo" remote add origin "$(Build.Repository.Uri)"
+        git -C "$repo" config user.name "Kronikol probe"
+        git -C "$repo" config user.email "probe@example.invalid"
+        git -C "$repo" "${auth[@]}" ls-remote --exit-code origin "refs/heads/$PROBE_BRANCH" > /dev/null
+        found=$?
+        echo "ls-remote exit $found (0: the branch exists, 2: it does not)"
+        if [ "$found" -eq 0 ]; then
+          git -C "$repo" "${auth[@]}" fetch -q --depth=1 origin "+refs/heads/$PROBE_BRANCH:refs/remotes/origin/$PROBE_BRANCH"
+          git -C "$repo" reset -q --hard "refs/remotes/origin/$PROBE_BRANCH"
         fi
-        echo "build $(Build.BuildId), fold job attempt $(System.JobAttempt)" >> probe.txt
-        git add probe.txt
-        git commit -q -m "Probe $(Build.BuildId):$(System.JobAttempt) ***NO_CI***"
-        if git push origin "HEAD:refs/heads/$PROBE_BRANCH"; then
+        echo "build $(Build.BuildId), fold job attempt $(System.JobAttempt)" >> "$repo/probe.txt"
+        git -C "$repo" add -A
+        git -C "$repo" commit -q -m "Probe $(Build.BuildId):$(System.JobAttempt) [skip ci]"
+        if git -C "$repo" "${auth[@]}" push origin "HEAD:refs/heads/$PROBE_BRANCH"; then
           echo "pushed"
         else
           echo "push refused: record the message above, it names the missing permission"
         fi
-      displayName: 'A12 A13 the build identity creates, then appends to, an orphan branch'
+      displayName: 'A12 A13 A14 the scripts'' git shape with the build identity: a repository of its own, ls-remote, a depth-1 fetch, [skip ci], a push'
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- stage: after
+  dependsOn: probe
+  condition: succeededOrFailed()
+  jobs:
+  - job: after
+    steps:
+    - checkout: none
+    - bash: |
+        echo "stage after: job attempt $(System.JobAttempt), stage attempt $(System.StageAttempt)"
+      displayName: 'A10 a stage that depends on stage probe: does "Rerun failed jobs" there run it again?'

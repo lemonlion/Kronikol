@@ -13,7 +13,8 @@
 #      downloaded the second time, one directory per artifact);
 #   B. today, the fold ran once, after the re-run;
 #   C. the same two folds as A, with the second fragment's id carrying its attempt (ado:5000:2), which is
-#      what S1 makes the library write and what GitHub Actions' gh:<run>:<attempt> has always done.
+#      what S1 makes the library write and what GitHub Actions' gh:<run>:<attempt> has always done;
+#   D. the same one fold as B, with that id.
 #
 # Usage: f2_rerun_fold.sh   (run from the repository root; needs the .NET 10 SDK)
 set -euo pipefail
@@ -78,3 +79,8 @@ echo "C. With the attempt in the id (ado:5000:2 for the re-run): the same two fo
 kronikol history record "$work/attempt1" --history "$work/c.jsonl" | sed 's/^/    record: /'
 kronikol history record "$work/attempt1" "$work/attempt2" --history "$work/c.jsonl" | sed 's/^/    record: /'
 show "$work/c.jsonl"
+
+echo
+echo "D. With the attempt in the id: one fold, after the re-run, over both fragments (the second pass's addition)"
+kronikol history record "$work/attempt1" "$work/attempt2" --history "$work/d.jsonl" | sed 's/^/    record: /'
+show "$work/d.jsonl"
