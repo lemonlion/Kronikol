@@ -5,6 +5,9 @@
 with this record's commit after it). **Owed to the owner**, because this environment cannot push either: the wiki patch
 beside this file (`CI_FLAKE_SWEEP_2026-09-28.wiki.patch`, one paragraph of `Integration-TcpTap-Extension.md`, made on
 the wiki at `5bc9589`; `git am` it in the wiki checkout), and the tag `v3.32.1` once CI is green on the release.
+Both done on 2026-09-28 by a local session at the owner's word: the wiki patch as `7da25b1`, and the tag `v3.32.1` on
+`1109e7b`, a head carrying the audited 3.32.0 too (`QUERY_FALLBACK_PLAN.md` §11.7), whose Release run `36454930897`
+pushed all 62 packages, all listed on nuget.org.
 
 ## Method
 

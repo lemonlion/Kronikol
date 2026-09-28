@@ -503,8 +503,10 @@ ran every test project, since `ci.yml` runs only on `main` and on pull requests 
   seen; each would show in the first run's output, not later. (Its `Directory.Build.targets` no longer reaches it,
   §11.7.)
 - **No .NET 10 SDK:** neither the tool nor `query.cs` runs; `query.py` does, for 6 verbs (M4, held).
-- **The Kronikol4J ledger entry**, below, for the owner to add: this session could not reach that repository.
-- **The wiki patch**, for the owner to apply (§11.4).
+- **The Kronikol4J ledger entry**, below, for the owner to add: this session could not reach that repository. Added
+  on 2026-09-28 as Kronikol4J `733ac18`, when a local session published 3.32.0 at the owner's word: the tag `v3.32.0`
+  on `2709d08` (§11.7), Release run `36453976567`, 62 packages, all listed on nuget.org.
+- **The wiki patch**, for the owner to apply (§11.4). Applied with `git am` the same day, as wiki `9411b40`.
 
 ### 11.7 Audit before the tag (2026-09-28)
 

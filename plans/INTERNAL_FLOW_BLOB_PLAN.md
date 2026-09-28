@@ -1264,6 +1264,14 @@ on (both are off by default), a call the diagram does not draw keeps its segment
 collapsed run's later calls and the pairs past the cap: F8's dead weight, under an option. Dropping those segments, or
 giving the run's arrow the whole run's spans, is a design choice, not a fix.
 
+**Published 2026-09-28.** 3.32.4 is `6d756a59`, green on CI, CodeQL and CI Summary Preview. It landed on top of four
+untagged releases (3.32.0 and 3.32.1 from cloud sessions, 3.32.2 and 3.32.3 from the P4 and P3 audits), and any tag
+publishes everything below it, so the owner was asked and chose to publish them in order. This session tagged
+`v3.32.0` (on `2709d08`, as `QUERY_FALLBACK_PLAN.md` §11.7 says) to `v3.32.4`, each after the one before it had
+released, and the P4 and P3 sessions applied their own wiki and ledger edits at their tags. `v3.32.4`'s Release run
+`36458242835` pushed all 62 packages and made the GitHub release. The wiki's sentence is `d631272`, the Kronikol4J
+ledger entry `8508409`, and #86 has the hand-off comment.
+
 ## Appendix A. Re-taking the numbers
 
 Everything is in [`INTERNAL_FLOW_BLOB_PLAN.harness/`](INTERNAL_FLOW_BLOB_PLAN.harness/README.md), with
