@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Everything <c>kronikol query</c> knows about a report without having read its payloads.
@@ -49,7 +49,7 @@ internal sealed class ReportIndex
     public bool OnCi => CiProvider is not null and not "None";
 
     public List<ScenarioEntry> Scenarios { get; } = [];
-    public List<DiagnosticEntry> Diagnostics { get; } = [];
+    public List<ReportDiagnosticEntry> Diagnostics { get; } = [];
 
     /// <summary>Every distinct body in the file, keyed by its <c>b:</c> address.</summary>
     public Dictionary<string, BodyEntry> Bodies { get; } = [];
@@ -293,7 +293,12 @@ internal sealed class AttachmentEntry
         System.IO.Path.GetFullPath(System.IO.Path.Combine(reportDirectory, RelativePath));
 }
 
-internal sealed class DiagnosticEntry
+/// <summary>
+/// One entry of the report's <c>diagnostics</c> array, as the index reads it. Not
+/// <see cref="Kronikol.Reports.DiagnosticEntry"/>, the record the run writes it from: the engine lives in the
+/// same assembly, and one simple name for both made every file that uses the two namespaces ambiguous.
+/// </summary>
+internal sealed class ReportDiagnosticEntry
 {
     public string Kind { get; set; } = "";
     public string Message { get; set; } = "";

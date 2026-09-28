@@ -1,3 +1,4 @@
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Reports.Merge;
 
@@ -124,7 +125,7 @@ internal static class MergeCommand
             error.WriteLine("A report file is not valid JSON: " + ex.Message);
             return 1;
         }
-        catch (Exception ex) when (Query.QueryWriter.IsAWriteFailure(ex))
+        catch (Exception ex) when (QueryWriter.IsAWriteFailure(ex))
         {
             error.WriteLine($"Could not write {output}: {ex.Message}");
             return 1;
@@ -263,7 +264,7 @@ internal static class MergeCommand
     {
         var destination = Path.GetFullPath(Path.ChangeExtension(writtenHtml, ".json"));
 
-        if (!Query.QueryWriter.TryWriteFile(destination, MergeableReportRenderer.Serialize(merged), error, "-o"))
+        if (!QueryWriter.TryWriteFile(destination, MergeableReportRenderer.Serialize(merged), error, "-o"))
             return null;
 
         @out.WriteLine($"Wrote merged data to {destination}");

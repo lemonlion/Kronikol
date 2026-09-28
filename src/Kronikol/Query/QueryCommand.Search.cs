@@ -1,6 +1,5 @@
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Search and comparison. <c>grep</c> answers the question a passing test suite still leaves open — "the
@@ -8,7 +7,7 @@ namespace Kronikol.Tool;
 /// <c>compare</c> uses a passing neighbour as an oracle for a failing scenario, and <c>diff</c> does the
 /// same across two runs.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     /// <summary>What <c>grep --in</c> accepts. The first four are the default set.</summary>
     internal static readonly string[] GrepTargets = ["bodies", "uris", "steps", "assertions", "names", "errors", "headers", "notes"];

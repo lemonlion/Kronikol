@@ -1,7 +1,6 @@
 using System.Globalization;
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// <c>values</c> — projection with aggregation: <c>SELECT value, COUNT(*) … GROUP BY value</c> where the
@@ -9,7 +8,7 @@ namespace Kronikol.Tool;
 /// system see", so counting is per occurrence, not per distinct body — while each distinct body is parsed
 /// and evaluated exactly once through the <see cref="BodyCache"/>.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     private static int Values(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {

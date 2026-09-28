@@ -1,12 +1,11 @@
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Infrastructure shared by every command that walks the run: exact request/response pairing, run-wide
 /// iteration, and the one error classifier — one answer to "is this an error", however a command asks.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     /// <summary>
     /// Every request in scope with its exactly-paired response — null when the call is genuinely

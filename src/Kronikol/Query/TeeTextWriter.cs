@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Writes to two sinks at once. Used for one thing: under <c>--json</c> the tool's error prose still has

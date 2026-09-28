@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// What <c>--json</c> has to state before the first row: which file was read, by which Kronikol, to

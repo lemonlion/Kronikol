@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 using Kronikol.Tool;

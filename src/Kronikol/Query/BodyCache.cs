@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Parses each distinct body once per command, however many interactions carried it. Grep established the

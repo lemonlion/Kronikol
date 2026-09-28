@@ -1,9 +1,8 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// <c>grep --number</c> — numeric-aware search. The number the user quotes is the *formatted* one; the
@@ -12,7 +11,7 @@ namespace Kronikol.Tool;
 /// (comma-as-thousands and comma-as-decimal), because <c>4.173,00</c> is European for <c>4173.00</c> and
 /// a false negative here costs more than two parses per token.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     private static readonly Regex NumericToken = new(@"[-+]?\d[\d,._]*(\.\d+)?", RegexOptions.Compiled);
 

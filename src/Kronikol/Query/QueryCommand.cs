@@ -1,7 +1,6 @@
 using Kronikol.Reports;
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Implements <c>kronikol query</c>: answers questions about a <c>TestRunReport.json</c> without anyone
@@ -11,9 +10,29 @@ namespace Kronikol.Tool;
 /// 160,000 — so reading it is not a slow way to debug a test run, it is an impossible one. Every command
 /// here prints an answer plus the addresses that fetch the next thing, and the payloads that make up the
 /// bulk of the file are fetched only when they are named.</para>
+///
+/// <para>It lives in the <c>Kronikol</c> package rather than in the tool so that every report can carry its
+/// own way of being queried: the <c>query.cs</c> written beside a report loads the <c>Kronikol</c> that wrote
+/// it and calls <see cref="Run(IReadOnlyList{string}, TextWriter, TextWriter)"/>, so an agent that may not
+/// install the tool, or has no network, still gets the same answers. <c>kronikol query</c> calls the same
+/// method. Compiled for .NET 10 and later only.</para>
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
+    /// <summary>
+    /// Runs one <c>kronikol query</c> invocation — <paramref name="args"/> are everything after
+    /// <c>query</c>, e.g. <c>["failures", "TestRunReport.json"]</c> — and returns its exit code: 0 for an
+    /// answer, 2 for a usage error, 1 for anything else that stopped it.
+    ///
+    /// <para>This signature is what the <c>query.cs</c> beside every report binds to by reflection, so it
+    /// does not change within a major version.</para>
+    /// </summary>
+    /// <param name="args">The verb, the report (a <c>TestRunReport.json</c> or the directory holding one), then addresses and flags.</param>
+    /// <param name="out">Where the answer goes. UTF-8, without a BOM, is what the tool's own stdout uses.</param>
+    /// <param name="error">Where diagnostics and usage errors go.</param>
+    public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error) =>
+        Run(args, @out, error, getEnv: null, workingDirectory: null);
+
     /// <summary>
     /// Dispatches one <c>kronikol query</c> invocation and returns its exit code.
     ///
@@ -22,7 +41,7 @@ internal static partial class QueryCommand
     /// parallel xunit process as the rest of the suite. The repo convention, cf.
     /// <c>CiMetadataDetector.Detect</c>.</para>
     /// </summary>
-    public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?>? getEnv = null, string? workingDirectory = null)
+    internal static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?>? getEnv, string? workingDirectory = null)
     {
         getEnv ??= Environment.GetEnvironmentVariable;
         // Injected for the same reason as getEnv: the history verb walks up from the working directory
@@ -489,6 +508,8 @@ internal static partial class QueryCommand
         return null;
     }
 
+    /// <summary>Writes the <c>kronikol query</c> help: every verb, by group, with the flags it accepts.</summary>
+    /// <param name="writer">Where the help goes.</param>
     public static void PrintUsage(TextWriter writer)
     {
         writer.WriteLine("kronikol query <command> <report> [args]   Debug a test run without reading the report.");

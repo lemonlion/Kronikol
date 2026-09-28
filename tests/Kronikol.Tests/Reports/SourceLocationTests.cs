@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Xml.Linq;
 using Kronikol.ComponentDiagram;
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Reports.Merge;
 
@@ -168,7 +169,7 @@ public class SourceLocationTests
                 $"SourceLoc_{Guid.NewGuid():N}.json", DataFormat.Json), report, overwrite: true);
 
             var output = new StringWriter();
-            Assert.Equal(0, Kronikol.Tool.QueryCommand.Run(["failures", report], output, new StringWriter()));
+            Assert.Equal(0, Kronikol.Query.QueryCommand.Run(["failures", report], output, new StringWriter()));
 
             // The line an agent needs before it can open anything: which file, which line.
             Assert.Contains("Features/Checkout.feature:42", output.ToString());

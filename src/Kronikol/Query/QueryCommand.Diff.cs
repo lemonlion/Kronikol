@@ -1,8 +1,7 @@
 using System.Text;
 using System.Text.Json;
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Structural body diff — the most common debugging move, "this call succeeded in the passing scenario,
@@ -10,7 +9,7 @@ namespace Kronikol.Tool;
 /// payloads. Works inside one report (<c>diff s3/i47 s7/i47</c>, <c>diff b:a b:b</c>) and across two
 /// runs (<c>diff old.json new.json --body s3/i47</c>, matched by stableId).
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     private readonly record struct BodyRef(string Label, string Hash, int Length, string? Content);
 

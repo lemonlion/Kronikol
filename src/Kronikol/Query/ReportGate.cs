@@ -1,4 +1,4 @@
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// The checks that stand between opening a file and answering questions about it: is this a Kronikol

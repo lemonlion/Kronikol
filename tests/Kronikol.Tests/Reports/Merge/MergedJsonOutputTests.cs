@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Kronikol.Query;
 using Kronikol.Tracking;
 using Kronikol.ComponentDiagram;
 using Kronikol.Reports;

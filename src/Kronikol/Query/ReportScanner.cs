@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Builds a <see cref="ReportIndex"/> in one forward pass over the file, without ever holding the whole
@@ -162,7 +162,7 @@ internal static class ReportScanner
         private InteractionEntry? _interaction;
         private AnnotationEntry? _annotation;
         private AttachmentEntry? _attachment;
-        private DiagnosticEntry? _diagnostic;
+        private ReportDiagnosticEntry? _diagnostic;
         private string _featureName = "";
         private string[] _featureLabels = [];
         private readonly List<string> _pendingFeatureLabels = [];
@@ -378,7 +378,7 @@ internal static class ReportScanner
             }
             else if (At("diagnostics", "#"))
             {
-                _diagnostic = new DiagnosticEntry();
+                _diagnostic = new ReportDiagnosticEntry();
             }
             else if (InStepArray())
             {

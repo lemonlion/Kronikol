@@ -1,8 +1,7 @@
 using System.Globalization;
 using System.Text;
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// The commands that reach past the index into the file. A payload is the critical thing when debugging —
@@ -10,7 +9,7 @@ namespace Kronikol.Tool;
 /// print one that was not asked for by name, offer the cheap views first (keys, a path, a line range), and
 /// hand the whole thing to a file when it is big enough that reading it would cost more than it is worth.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     private static int Interactions(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {

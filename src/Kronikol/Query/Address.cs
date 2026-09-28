@@ -1,4 +1,4 @@
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Parses the addresses every command prints and every command accepts.

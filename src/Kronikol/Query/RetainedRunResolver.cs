@@ -1,7 +1,7 @@
 using System.Globalization;
 using Kronikol.Reports;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>How <c>--run</c> ended against a reports directory.</summary>
 internal enum RetainedRunOutcome

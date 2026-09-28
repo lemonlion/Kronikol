@@ -1,14 +1,13 @@
 using System.Globalization;
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// <c>trace</c> — follows a W3C trace id (exported on every interaction since 3.0.47) across the whole
 /// run: the chain in chronological order with offsets, and the one smell nothing else in the tool can
 /// see — a trace id that leaks across scenarios, the classic flaky-test signature.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     private static int Trace(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {

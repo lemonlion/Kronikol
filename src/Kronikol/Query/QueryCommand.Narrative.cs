@@ -1,14 +1,13 @@
 using Kronikol.Reports;
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// The narrative layer — steps, assertions, failures, the flow of one scenario. It is 0.4% of a report by
 /// size, which is why these commands hand back whole trees rather than pages of them: the expensive thing
 /// in a report is never the story, it is the payloads.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     private static int Failures(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error, Func<string, string?> getEnv)
     {

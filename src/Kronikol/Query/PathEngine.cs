@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// The one place path semantics live: parsing the dotted grammar, walking a body, rendering concrete

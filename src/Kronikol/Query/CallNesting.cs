@@ -1,4 +1,4 @@
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// Which call each call ran inside: made while that call was still waiting for its answer, by the service

@@ -1,6 +1,6 @@
 using System.Text;
+using Kronikol.Query;
 using Kronikol.Reports;
-using Kronikol.Tool.Query;
 
 namespace Kronikol.Tests.Reports;
 

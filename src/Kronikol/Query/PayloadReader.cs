@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using Kronikol.PlantUml;
 using System.Text.Json;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// The report is not the file that was scanned any more: a run finished and replaced it while the query

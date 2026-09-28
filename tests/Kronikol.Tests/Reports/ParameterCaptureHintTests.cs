@@ -1,4 +1,5 @@
 using Kronikol.Constants;
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
@@ -129,7 +130,7 @@ public class ParameterCaptureHintTests
                 trackedLogs: SqlCall("h3", "SELECT * FROM orders WHERE id = @p0")), report, overwrite: true);
 
             var output = new StringWriter();
-            Assert.Equal(0, Kronikol.Tool.QueryCommand.Run(["failures", report], output, new StringWriter()));
+            Assert.Equal(0, Kronikol.Query.QueryCommand.Run(["failures", report], output, new StringWriter()));
             Assert.Contains("LogParameters", output.ToString());
 
             // A green run must not pay for the check at all - the statement is never read.
@@ -144,7 +145,7 @@ public class ParameterCaptureHintTests
                 trackedLogs: SqlCall("h4", "SELECT * FROM orders WHERE id = @p0")), greenReport, overwrite: true);
 
             var greenOutput = new StringWriter();
-            Assert.Equal(0, Kronikol.Tool.QueryCommand.Run(["failures", greenReport], greenOutput, new StringWriter()));
+            Assert.Equal(0, Kronikol.Query.QueryCommand.Run(["failures", greenReport], greenOutput, new StringWriter()));
             Assert.Contains("nothing failed", greenOutput.ToString());
             Assert.DoesNotContain("LogParameters", greenOutput.ToString());
         }

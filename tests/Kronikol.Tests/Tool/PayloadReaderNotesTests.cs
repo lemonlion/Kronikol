@@ -1,4 +1,4 @@
-using Kronikol.Tool.Query;
+using Kronikol.Query;
 
 namespace Kronikol.Tests.Tool;
 

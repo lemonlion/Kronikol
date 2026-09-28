@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// One <c>--where</c> predicate: <c>[req:]PATH OP LITERAL</c>. Repeated clauses compose as AND — OR is

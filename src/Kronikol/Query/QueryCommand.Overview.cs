@@ -1,13 +1,12 @@
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// The commands that answer "what happened" before anything is fetched: the run header, the scenario list,
 /// and the per-service view — the only one that answers a negative question, which is why it earns its
 /// place beside the others.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     private static int Summary(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {

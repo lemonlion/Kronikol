@@ -1,9 +1,8 @@
 using System.Text.Json;
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     private static readonly JsonSerializerOptions DescribeJson = new() { WriteIndented = true };
 
@@ -30,7 +29,9 @@ internal static partial class QueryCommand
         {
             formatVersion = QueryWriter.JsonFormatVersion,
             command = "describe",
-            toolVersion = Commands.Version,
+            // The engine's own version, without build metadata: what `kronikol --version` prints, since every
+            // package ships at one version, and still true when query.cs runs this without the tool.
+            toolVersion = Kronikol.Reports.ReportGenerator.KronikolVersion.Split('+')[0],
             usage = "kronikol query <verb> <report> [addresses] [flags]",
             report = "A TestRunReport.json, or the directory holding one. A directory holding several reports is refused, and they are listed.",
             envelope = new

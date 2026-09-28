@@ -21,6 +21,14 @@
 		<InternalsVisibleTo Include="formatter-probe" />
 	</ItemGroup>
 
+	<!-- The query engine behind `kronikol query` and the query.cs written beside every report
+	     (plans/QUERY_FALLBACK_PLAN.md). Compiled for .NET 10 and later only: query.cs loads the net10.0
+	     build, which every consumer's NuGet cache holds whatever it targets, so the net8.0 and net9.0
+	     builds carry none of it and are unchanged by it. -->
+	<ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
+		<Compile Remove="Query\**" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<EmbeddedResource Include="PlantUml\plantuml-render.js" />
 		<EmbeddedResource Include="Reports\advanced-search.js" />

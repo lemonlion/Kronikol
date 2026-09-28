@@ -1,4 +1,5 @@
 using System.Net;
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tool;
 using Kronikol.Tracking;

@@ -1,6 +1,5 @@
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// <c>interactions --group-by</c> — generic bucketing over the index: any combination of dimensions, a
@@ -8,7 +7,7 @@ namespace Kronikol.Tool;
 /// answerer of negative questions; this is the general form. Index-only unless combined with
 /// <c>--where</c>.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     /// <summary>The dimensions <c>interactions --group-by</c> accepts. Internal so SkillDriftTests can pin
     /// the help text and the skill's reference to the one list the tool actually validates against.</summary>

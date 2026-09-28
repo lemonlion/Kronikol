@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>
 /// The flags every <c>kronikol query</c> command shares, plus the positional arguments each one reads for

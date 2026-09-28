@@ -1,9 +1,8 @@
 using System.Globalization;
 using Kronikol.History;
 using Kronikol.Reports;
-using Kronikol.Tool.Query;
 
-namespace Kronikol.Tool;
+namespace Kronikol.Query;
 
 /// <summary>
 /// <c>kronikol query history</c>: what the last runs say about this one, from the cross-run ledger
@@ -11,7 +10,7 @@ namespace Kronikol.Tool;
 /// itself performed when it wrote its digest — read again here against the ledger as it stands now, so
 /// a report downloaded from CI answers "has this been flaky?" without the run that wrote it.
 /// </summary>
-internal static partial class QueryCommand
+public static partial class QueryCommand
 {
     private static int History(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error, Func<string, string?> getEnv)
     {

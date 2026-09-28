@@ -1,4 +1,4 @@
-namespace Kronikol.Tool.Query;
+namespace Kronikol.Query;
 
 /// <summary>One flag <c>kronikol query</c> reads, as the help and <c>--describe</c> state it.</summary>
 /// <param name="Name">The flag, with its dashes.</param>
