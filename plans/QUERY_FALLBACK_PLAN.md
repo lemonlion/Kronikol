@@ -559,6 +559,13 @@ Checked and sound: the public surface is `QueryCommand.Run` and `PrintUsage` onl
 `OptionNotApplied` as a `!` line; every CI upload path carries `query.cs`; `ProjectAssetTrackingTests` needed nothing,
 since the file is generated, not an embedded asset. `Kronikol.Tests` after the audit is in the changelog's entry.
 
+The audit is `2709d08`, green on its pull request's CI (28 of 28, `Kronikol.Tests` 6,062 passed). While it was in
+review, 3.32.1 (the CI flake sweep, `CI_FLAKE_SWEEP_2026-09-28.md`) landed on `main` at `863e7b8`, green there; it
+was merged into this branch (`e0af209`, clean). `release.yml` takes the version from the tag's name and builds the
+tagged commit, so `v3.32.0` goes on `2709d08`, the audited 3.32.0, and `v3.32.1` on a head carrying both stays the
+owner's, as the sweep's record says. 3.32.1's template pins stay at 3.31.10: they may move to 3.32.0 once it is on
+nuget.org, and not before, or the template job cannot restore them.
+
 ### 11.6 Kronikol4J divergence ledger entry (draft)
 
 > **3.32.0 — `query.cs` beside the report; not ported.** .NET writes `query.cs` into the reports directory beside a
