@@ -1,0 +1,49 @@
+SYSTEM_JOBATTEMPT=1: the fragment's run id is ado:5000:1
+SYSTEM_JOBATTEMPT=2: the fragment's run id is ado:5000:1
+kept beside the second attempt's report, as an earlier attempt of the same run: ado_5000_1 
+
+A. Today: a fold after the first attempt, then a fold after the re-run over both fragments
+    record: recorded   ado:5000:1  Example.Api.Tests.CiPreview.AllPassing  11 scenarios
+    record: 1 run(s) recorded, 0 already there, 0 failed, from 1 fragment(s) → <work>/a.jsonl
+    record: duplicate  ado:5000:1  Example.Api.Tests.CiPreview.AllPassing  22 scenarios from 2 shards  (already in the ledger)
+    record: 0 run(s) recorded, 1 already there, 0 failed, from 2 fragment(s) → <work>/a.jsonl
+    ledger   <work>/a.jsonl
+    format   v1 · written by Kronikol 3.31.9 · 4 lines, 1 rosters
+    
+    suite    Example.Api.Tests.CiPreview.AllPassing
+      runs   1 in the window of 50 · streams: refs/heads/main (1)
+      last   ado:5000:1 · 2026-09-28T07:20:03Z · refs/heads/main · 11 scenarios: 10 passed, 1 failed
+
+B. Today: one fold, after the re-run, over both fragments
+    record: recorded   ado:5000:1  Example.Api.Tests.CiPreview.AllPassing  22 scenarios from 2 shards
+    record: 1 run(s) recorded, 0 already there, 0 failed, from 2 fragment(s) → <work>/b.jsonl
+    ledger   <work>/b.jsonl
+    format   v1 · written by Kronikol 3.31.9 · 4 lines, 1 rosters
+    
+    suite    Example.Api.Tests.CiPreview.AllPassing
+      runs   1 in the window of 50 · streams: refs/heads/main (1)
+      last   ado:5000:1 · 2026-09-28T07:20:08Z · refs/heads/main · 22 scenarios: 21 passed, 1 failed
+
+C. With the attempt in the id (ado:5000:2 for the re-run): the same two folds as A
+    record: recorded   ado:5000:1  Example.Api.Tests.CiPreview.AllPassing  11 scenarios
+    record: 1 run(s) recorded, 0 already there, 0 failed, from 1 fragment(s) → <work>/c.jsonl
+    record: duplicate  ado:5000:1  Example.Api.Tests.CiPreview.AllPassing  11 scenarios  (already in the ledger)
+    record: recorded   ado:5000:2  Example.Api.Tests.CiPreview.AllPassing  11 scenarios
+    record: 1 run(s) recorded, 1 already there, 0 failed, from 2 fragment(s) → <work>/c.jsonl
+    ledger   <work>/c.jsonl
+    format   v1 · written by Kronikol 3.31.9 · 5 lines, 1 rosters
+    
+    suite    Example.Api.Tests.CiPreview.AllPassing
+      runs   2 in the window of 50 · streams: refs/heads/main (2)
+      last   ado:5000:2 · 2026-09-28T07:20:08Z · refs/heads/main · 11 scenarios: 11 passed, 0 failed
+
+D. With the attempt in the id: one fold, after the re-run, over both fragments (the second pass's addition)
+    record: recorded   ado:5000:1  Example.Api.Tests.CiPreview.AllPassing  11 scenarios
+    record: recorded   ado:5000:2  Example.Api.Tests.CiPreview.AllPassing  11 scenarios
+    record: 2 run(s) recorded, 0 already there, 0 failed, from 2 fragment(s) → <work>/d.jsonl
+    ledger   <work>/d.jsonl
+    format   v1 · written by Kronikol 3.31.9 · 5 lines, 1 rosters
+    
+    suite    Example.Api.Tests.CiPreview.AllPassing
+      runs   2 in the window of 50 · streams: refs/heads/main (2)
+      last   ado:5000:2 · 2026-09-28T07:20:08Z · refs/heads/main · 11 scenarios: 11 passed, 0 failed

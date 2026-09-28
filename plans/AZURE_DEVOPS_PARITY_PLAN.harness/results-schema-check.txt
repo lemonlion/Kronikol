@@ -1,0 +1,8 @@
+schema: http://json-schema.org/draft-07/schema# v1.261.1, 1640523 bytes, 86347 gzipped, sha256 f00a9630f6550204…
+appendix-a-1.yml: valid
+appendix-a-2.yml: valid
+s0-probe.yml: valid
+must-fail-input-alias.yml: INVALID
+    at steps/0/inputs: Additional properties are not allowed ('path' was unexpected)
+must-fail-misspelt-key.yml: INVALID
+    at steps/0: Additional properties are not allowed ('checkout', 'persistCredential' were unexpected)

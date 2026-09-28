@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-13 · **Repo version:** 3.3.0 (released) · **Target:** 3.4.0 (MINOR)
 · **Status: EXECUTED 2026-09-28 as 3.32.0 (M1 to M3, M5, M6; green-lit by the owner that day, `ROADMAP.md`
-D25). M4 held: `query.py` stays, for a machine without the .NET 10 SDK. §11 is the log, and says where execution
+D28). M4 held: `query.py` stays, for a machine without the .NET 10 SDK. §11 is the log, and says where execution
 departed from this plan, on measurements: `query.cs` restores nothing and loads `Kronikol.dll` itself.**
 
 **Re-checked 2026-09-27, at 3.31.10. Nothing past M0 is built.** The owner moved this plan from
@@ -10,7 +10,7 @@ departed from this plan, on measurements: `query.cs` restores nothing and loads 
 an agent whose session may not install a tool or reach the feed can meet Kronikol on any new
 install. The text beside every report offers only `dotnet tool install -g` and `dnx`, and past
 `Failures.md` its only route is `query.py`, which needs Python and exists only where the skill was
-installed. The green light is `ROADMAP.md` D25. What changed under the plan since it was written:
+installed. The green light is `ROADMAP.md` D28. What changed under the plan since it was written:
 
 - **The engine is 27 files and 9,484 lines**, not 20 and 6,568 (§1.1, §2.1); `QueryCommand.History.cs`
   alone is 1,111. The dependency direction holds. Beyond the BCL the engine reads `Kronikol.Reports`,
@@ -24,7 +24,7 @@ installed. The green light is `ROADMAP.md` D25. What changed under the plan sinc
 - **§5's premise is the owner's reason, reversed.** It says a missing tool is "almost never" a
   permissions problem. This plan moved forward for exactly that case, so the rewritten sentence
   names it.
-- **M4 is now a question (D25).** §5 says a machine without the .NET 10 SDK "has no option under any
+- **M4 is now a question (D28).** §5 says a machine without the .NET 10 SDK "has no option under any
   design". `query.py` needs only Python, so on that machine it is the one option there is.
 - **The query verbs number 20, not 18**, and `query.py` still implements 6 of them.
 - **The target is the next minor.** "3.4.0" was overtaken long ago.
@@ -389,7 +389,7 @@ cheap.
 
 ## 11. Execution log (2026-09-28, 3.32.0)
 
-Green-lit by the owner on 2026-09-28 (`ROADMAP.md` D25, as recommended: M1 to M3, M5 and M6; M4 held). Shipped as
+Green-lit by the owner on 2026-09-28 (`ROADMAP.md` D28, as recommended: M1 to M3, M5 and M6; M4 held). The decision was drafted as D25 on this plan's session branch, and its commit messages say D25; it lands as D28 because D25 to D27 went to roadmap 2.2, 2.3 and 2.4 on `main` the same days. Shipped as
 one minor, 3.32.0, in three commits on `claude/focused-gauss-ztr0zm`: M1 `1adc750`, M2 `3d79c5a`, M3 `4cae42e`,
 then the release. All measurements on SDK 10.0.401 in a Linux container.
 
@@ -468,7 +468,7 @@ its flag extraction as it exempts `dotnet test`.
 
 ### 11.4 M4, M5, M6
 
-M4 held (D25): `query.py`, `FallbackScriptTests` and `PythonProbe` stay, the skill names the script for a machine
+M4 held (D28): `query.py`, `FallbackScriptTests` and `PythonProbe` stay, the skill names the script for a machine
 without the .NET 10 SDK, where it is the one option there is. M5: the README and the changelog, and the wiki's
 `Querying-Reports`, `Report-Configuration`, `Generated-Reports`, `Diagnostics-and-Debugging` and
 `CI-Summary-Integration`, written and held as `QUERY_FALLBACK_PLAN.wiki.patch` (made on wiki `cbc0e95`; apply with

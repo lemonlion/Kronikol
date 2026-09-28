@@ -1,0 +1,6 @@
+quarantined 97dd85d9115293c4: flaky since the DB upgrade until 2026-12-31 → <person>/quarantine.json
+It still runs and still records; it carries the quarantined verdict and does not trip the gate. Commit the file.
+== the read step as the wiki and ci-summary-preview.yml write it
+nothing is quarantined
+== the read step with the companions (BreakfastProvider's copy, and the action)
+97dd85d9115293c4  flaky since the DB upgrade  by person  since 2026-09-27  until 2026-12-31

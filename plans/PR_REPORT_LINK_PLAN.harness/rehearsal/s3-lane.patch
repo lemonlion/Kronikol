@@ -1,0 +1,113 @@
+diff --git a/.github/workflows/pr-report-link.yml b/.github/workflows/pr-report-link.yml
+new file mode 100644
+index 00000000..3b154f43
+--- /dev/null
++++ b/.github/workflows/pr-report-link.yml
+@@ -0,0 +1,62 @@
++name: PR report link
++
++# Runs the kronikol-pr-report-link action for real, on the pull requests that change it. The in-memory GitHub of
++# PrReportLinkActionTests cannot hold permissions, the bot's identity, re-runs or concurrency. Not a required
++# check: a workflow its paths filter skips never reports, and a required check would wait for it.
++on:
++  pull_request:
++    branches: [ main ]
++    paths:
++      - 'templates/github-actions/kronikol-pr-report-link/**'
++      - '.github/workflows/pr-report-link.yml'
++
++permissions:
++  contents: read
++
++jobs:
++  test:
++    name: CI Preview, with its reports uploaded
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v7
++
++      - uses: actions/setup-dotnet@v6
++        with:
++          dotnet-version: 10.0.x
++
++      - name: Test
++        id: test
++        run: dotnet test examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing --configuration Release
++
++      # `error`, where the README's example says `ignore`: here a reports path that went missing must fail the lane.
++      - name: Upload the Kronikol reports
++        if: ${{ !cancelled() }}
++        uses: actions/upload-artifact@v7
++        with:
++          name: ci-preview-reports
++          path: ${{ steps.test.outputs.reports-path }}
++          retention-days: ${{ steps.test.outputs.reports-retention-days }}
++          if-no-files-found: error
++
++  report-link:
++    name: Link the Kronikol report on the PR
++    needs: [test]
++    if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
++    runs-on: ubuntu-latest
++    permissions:
++      contents: read
++      actions: read
++      pull-requests: write
++    concurrency:
++      group: kronikol-report-link-${{ github.event.pull_request.number }}
++      queue: max
++    steps:
++      # The checkout form, not `$/`, because this lane proves what the README tells a consumer to copy.
++      - uses: actions/checkout@v7
++        with:
++          sparse-checkout: templates/github-actions
++
++      - uses: ./templates/github-actions/kronikol-pr-report-link
++        with:
++          artifact-name: ci-preview-reports
++          label: CI Preview (all passing)
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/Infrastructure/TestRun.cs b/examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/Infrastructure/TestRun.cs
+index 6a0a5a73..cdc71376 100644
+--- a/examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/Infrastructure/TestRun.cs
++++ b/examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/Infrastructure/TestRun.cs
+@@ -27,7 +27,10 @@ public void Dispose()
+                 // The second real shard. Together with CiPreview.FailingWithSteps this is the first
+                 // sharded run the repository has ever produced: every previous assertion about
+                 // `kronikol merge` was made against hand-built JSON, because no project turned this on.
+-                GenerateMergeableData = true
++                GenerateMergeableData = true,
++                // The reports the PR report link lane uploads (.github/workflows/pr-report-link.yml): the step's
++                // reports-path and reports-retention-days outputs. Elsewhere on GitHub the two lines go unread.
++                PublishCiArtifacts = true
+             });
+     }
+ 
+diff --git a/tests/Kronikol.Tests/Templates/PrReportLinkActionTests.cs b/tests/Kronikol.Tests/Templates/PrReportLinkActionTests.cs
+index 82fb167d..c176aecb 100644
+--- a/tests/Kronikol.Tests/Templates/PrReportLinkActionTests.cs
++++ b/tests/Kronikol.Tests/Templates/PrReportLinkActionTests.cs
+@@ -460,6 +460,24 @@ public void The_readme_workflow_calls_the_action_as_it_is_declared_from_a_job_th
+         Assert.True(calls > 0, "the README has no workflow that calls the action, so nothing here checked it.");
+     }
+ 
++    /// <summary>
++    /// The workflow that runs the action for real, on the pull requests that change it, calls it the way the README
++    /// tells a consumer to, and runs whenever the action changes.
++    /// </summary>
++    [Fact]
++    public void The_live_lane_calls_the_action_as_it_is_declared()
++    {
++        var action = ActionDefinition.Load(ActionDir);
++        var lane = ActionDefinition.LoadYaml(File.ReadAllText(Path.Combine(RepoRoot, ".github", "workflows", "pr-report-link.yml")));
++
++        Assert.Equal(1, CallsOfTheAction(lane, action));
++
++        var pullRequest = (YamlMappingNode)((YamlMappingNode)lane["on"])["pull_request"];
++        var paths = ((YamlSequenceNode)pullRequest["paths"]).Children.Select(p => ((YamlScalarNode)p).Value).ToList();
++        Assert.Contains("templates/github-actions/kronikol-pr-report-link/**", paths);
++        Assert.Contains(".github/workflows/pr-report-link.yml", paths);
++    }
++
+     /// <summary>Holds each job of a workflow that calls the action to the rules above, and counts the calls.</summary>
+     private static int CallsOfTheAction(YamlMappingNode root, ActionDefinition action)
+     {

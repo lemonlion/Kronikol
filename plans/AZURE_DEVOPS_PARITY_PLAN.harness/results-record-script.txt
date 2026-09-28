@@ -1,0 +1,315 @@
+# The history-record script: v0 dogfooded (e4c9e36), v1 the plan's draft (bbbcdb1), v2 the revision
+# 2026-09-28, git 2.43.0, shells: 3.2.57 5.2.21 
+
+## G. What git sends: Authorization headers per request, by where the credential is
+G1 persisted for the host, nothing passed:                       exit 128; sent: tokens=PERSISTED 
+G2 persisted for the host, -c http.extraheader=<token>:          exit 128; sent: tokens=PERSISTED 
+G3 persisted for the host, -c http.extraheader= (empty):         exit 128; sent: tokens=PERSISTED 
+G3b persisted for the repository URL (the agent's key), -c http.extraheader=<token>: exit 128; sent: tokens=PERSISTED 
+G4 persisted for the host, -c http.<host>/.extraheader=<token>:  exit 128; sent: tokens=PERSISTED,PASSED 
+G5 nothing persisted, -c http.extraheader=<token>:               exit 0; sent: tokens=TOKEN-6f2a 
+G6 ls-remote --exit-code, a branch that does not exist:         exit 2; sent: tokens=TOKEN-6f2a 
+G7 ls-remote --exit-code, the wrong token:                      exit 128; sent: tokens=WRONG 
+G7b a URL carrying a user name, the header passed:              exit 0; sent: tokens=TOKEN-6f2a 
+G8 ls-remote --exit-code, the server fails once (500):          exit 128; sent: tokens=TOKEN-6f2a 
+G9 fetch, a branch that does not exist:                          exit 128; sent: tokens=TOKEN-6f2a 
+G10 fetch, the wrong token:                                      exit 128; sent: tokens=WRONG 
+G11 the machine's global configuration holds a stale header for the host (a self-hosted machine's can):
+    -c http.extraheader=<token> (no URL):                         exit 128; sent: tokens=STALE 
+    -c http.<host>/.extraheader=<token>:                          exit 0; sent: tokens=STALE,TOKEN-6f2a 
+    the same key set empty, then to <token>:                      exit 0; sent: tokens=TOKEN-6f2a 
+    the same two through GIT_CONFIG_COUNT (the environment):      exit 0; sent: tokens=TOKEN-6f2a 
+    the remote's own URL as the key, set empty, then to <token>:  exit 0; sent: tokens=TOKEN-6f2a 
+
+## S. The facts of plan §6 (S1 to S5, S8), and the ones it did not list, per version and shell
+   (runs: the run numbers on the branch, x2 when a run is there twice)
+
+### S1 first run: creates the branch
+S1  v0     github         bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S1  v1     ado            bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S1  v2     ado            bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S1  v2     github         bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S1  v0     github         bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S1  v1     ado            bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S1  v2     ado            bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S1  v2     github         bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+
+### S2 second run: appends
+S2  v0     github         bash 3.2.57 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S2  v1     ado            bash 3.2.57 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S2  v2     ado            bash 3.2.57 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S2  v2     github         bash 3.2.57 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S2  v0     github         bash 5.2.21 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S2  v1     ado            bash 5.2.21 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S2  v2     ado            bash 5.2.21 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S2  v2     github         bash 5.2.21 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+
+### S3 the same fragments again: records nothing
+S3  v0     github         bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+      nothing new to record
+S3  v1     ado            bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+      nothing new to record
+S3  v2     ado            bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+      nothing new to record
+S3  v2     github         bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+      nothing new to record
+S3  v0     github         bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+      nothing new to record
+S3  v1     ado            bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+      nothing new to record
+S3  v2     ado            bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+      nothing new to record
+S3  v2     github         bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+      nothing new to record
+
+### S4 another run lands between the fetch and the push
+S4  v0     github         bash 3.2.57 exit 0   runs 6001 6003 6004; 1 header; verify ok; 3 commits
+       ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      push 1 lost the race; rebasing onto the branch as it is now
+S4  v1     ado            bash 3.2.57 exit 0   runs 6001 6003 6004; 1 header; verify ok; 3 commits
+       ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      push 1 lost the race; rebasing onto the branch as it is now
+S4  v2     ado            bash 3.2.57 exit 0   runs 6001 6003 6004; 1 header; verify ok; 3 commits
+       ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      push 1 lost the race; folding again onto kronikol-history as it is now
+S4  v2     github         bash 3.2.57 exit 0   runs 6001 6003 6004; 1 header; verify ok; 3 commits
+       ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      push 1 lost the race; folding again onto kronikol-history as it is now
+S4  v0     github         bash 5.2.21 exit 0   runs 6001 6003 6004; 1 header; verify ok; 3 commits
+       ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      push 1 lost the race; rebasing onto the branch as it is now
+S4  v1     ado            bash 5.2.21 exit 0   runs 6001 6003 6004; 1 header; verify ok; 3 commits
+       ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      push 1 lost the race; rebasing onto the branch as it is now
+S4  v2     ado            bash 5.2.21 exit 0   runs 6001 6003 6004; 1 header; verify ok; 3 commits
+       ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      push 1 lost the race; folding again onto kronikol-history as it is now
+S4  v2     github         bash 5.2.21 exit 0   runs 6001 6003 6004; 1 header; verify ok; 3 commits
+       ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      push 1 lost the race; folding again onto kronikol-history as it is now
+
+### S5 a refusal that never clears: gives up, says so
+S5  v0     github         bash 3.2.57 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      (x5)  ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      could not push the ledger after 5 attempts
+      push 1 lost the race; rebasing onto the branch as it is now
+      push 2 lost the race; rebasing onto the branch as it is now
+      push 3 lost the race; rebasing onto the branch as it is now
+S5  v1     ado            bash 3.2.57 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      (x5)  ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      could not push the ledger after 5 attempts
+      push 1 lost the race; rebasing onto the branch as it is now
+      push 2 lost the race; rebasing onto the branch as it is now
+      push 3 lost the race; rebasing onto the branch as it is now
+S5  v2     ado            bash 3.2.57 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      (x5)  ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      could not push the ledger after 5 attempts
+      push 1 lost the race; folding again onto kronikol-history as it is now
+      push 2 lost the race; folding again onto kronikol-history as it is now
+      push 3 lost the race; folding again onto kronikol-history as it is now
+S5  v2     github         bash 3.2.57 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      (x5)  ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      could not push the ledger after 5 attempts
+      push 1 lost the race; folding again onto kronikol-history as it is now
+      push 2 lost the race; folding again onto kronikol-history as it is now
+      push 3 lost the race; folding again onto kronikol-history as it is now
+S5  v0     github         bash 5.2.21 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      (x5)  ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      could not push the ledger after 5 attempts
+      push 1 lost the race; rebasing onto the branch as it is now
+      push 2 lost the race; rebasing onto the branch as it is now
+      push 3 lost the race; rebasing onto the branch as it is now
+S5  v1     ado            bash 5.2.21 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      (x5)  ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      could not push the ledger after 5 attempts
+      push 1 lost the race; rebasing onto the branch as it is now
+      push 2 lost the race; rebasing onto the branch as it is now
+      push 3 lost the race; rebasing onto the branch as it is now
+S5  v2     ado            bash 5.2.21 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      (x5)  ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      could not push the ledger after 5 attempts
+      push 1 lost the race; folding again onto kronikol-history as it is now
+      push 2 lost the race; folding again onto kronikol-history as it is now
+      push 3 lost the race; folding again onto kronikol-history as it is now
+S5  v2     github         bash 5.2.21 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      (x5)  ! [remote rejected] HEAD -> kronikol-history (pre-receive hook declined)
+      could not push the ledger after 5 attempts
+      push 1 lost the race; folding again onto kronikol-history as it is now
+      push 2 lost the race; folding again onto kronikol-history as it is now
+      push 3 lost the race; folding again onto kronikol-history as it is now
+
+### S6 the remote fails the first read once
+S6  v0     github         bash 3.2.57 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+       ! [rejected]        HEAD -> kronikol-history (fetch first)
+      fatal: unable to access 'http://<server>/o41.git/': The requested URL returned error: 500
+      push 1 lost the race; rebasing onto the branch as it is now
+S6  v1     ado            bash 3.2.57 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+       ! [rejected]        HEAD -> kronikol-history (fetch first)
+      fatal: unable to access 'http://<server>/o42.git/': The requested URL returned error: 500
+      push 1 lost the race; rebasing onto the branch as it is now
+S6  v2     ado            bash 3.2.57 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      could not read kronikol-history from the remote (git ls-remote exit 128); nothing recorded
+      fatal: unable to access 'http://<server>/o43.git/': The requested URL returned error: 500
+S6  v2     github         bash 3.2.57 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      could not read kronikol-history from the remote (git ls-remote exit 128); nothing recorded
+      fatal: unable to access 'http://<server>/o44.git/': The requested URL returned error: 500
+S6  v0     github         bash 5.2.21 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+       ! [rejected]        HEAD -> kronikol-history (fetch first)
+      fatal: unable to access 'http://<server>/o45.git/': The requested URL returned error: 500
+      push 1 lost the race; rebasing onto the branch as it is now
+S6  v1     ado            bash 5.2.21 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+       ! [rejected]        HEAD -> kronikol-history (fetch first)
+      fatal: unable to access 'http://<server>/o46.git/': The requested URL returned error: 500
+      push 1 lost the race; rebasing onto the branch as it is now
+S6  v2     ado            bash 5.2.21 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      could not read kronikol-history from the remote (git ls-remote exit 128); nothing recorded
+      fatal: unable to access 'http://<server>/o47.git/': The requested URL returned error: 500
+S6  v2     github         bash 5.2.21 exit 1   runs 6001; 1 header; verify ok; 1 commits
+      could not read kronikol-history from the remote (git ls-remote exit 128); nothing recorded
+      fatal: unable to access 'http://<server>/o48.git/': The requested URL returned error: 500
+
+### S6b the same, on a ledger an earlier release started
+S6b v0     github         bash 3.2.57 exit 0   runs 6001 6002; 2 headers; VERIFY FAILS (line 5: a header that is not the first line); 3 commits
+       ! [rejected]        HEAD -> kronikol-history (fetch first)
+      fatal: unable to access 'http://<server>/o49.git/': The requested URL returned error: 500
+      push 1 lost the race; rebasing onto the branch as it is now
+S6b v1     ado            bash 3.2.57 exit 0   runs 6001 6002; 2 headers; VERIFY FAILS (line 5: a header that is not the first line); 3 commits
+       ! [rejected]        HEAD -> kronikol-history (fetch first)
+      fatal: unable to access 'http://<server>/o50.git/': The requested URL returned error: 500
+      push 1 lost the race; rebasing onto the branch as it is now
+S6b v2     ado            bash 3.2.57 exit 1   runs 6001; 1 header; verify ok; 2 commits
+      could not read kronikol-history from the remote (git ls-remote exit 128); nothing recorded
+      fatal: unable to access 'http://<server>/o51.git/': The requested URL returned error: 500
+S6b v2     github         bash 3.2.57 exit 1   runs 6001; 1 header; verify ok; 2 commits
+      could not read kronikol-history from the remote (git ls-remote exit 128); nothing recorded
+      fatal: unable to access 'http://<server>/o52.git/': The requested URL returned error: 500
+S6b v0     github         bash 5.2.21 exit 0   runs 6001 6002; 2 headers; VERIFY FAILS (line 5: a header that is not the first line); 3 commits
+       ! [rejected]        HEAD -> kronikol-history (fetch first)
+      fatal: unable to access 'http://<server>/o53.git/': The requested URL returned error: 500
+      push 1 lost the race; rebasing onto the branch as it is now
+S6b v1     ado            bash 5.2.21 exit 0   runs 6001 6002; 2 headers; VERIFY FAILS (line 5: a header that is not the first line); 3 commits
+       ! [rejected]        HEAD -> kronikol-history (fetch first)
+      fatal: unable to access 'http://<server>/o54.git/': The requested URL returned error: 500
+      push 1 lost the race; rebasing onto the branch as it is now
+S6b v2     ado            bash 5.2.21 exit 1   runs 6001; 1 header; verify ok; 2 commits
+      could not read kronikol-history from the remote (git ls-remote exit 128); nothing recorded
+      fatal: unable to access 'http://<server>/o55.git/': The requested URL returned error: 500
+S6b v2     github         bash 5.2.21 exit 1   runs 6001; 1 header; verify ok; 2 commits
+      could not read kronikol-history from the remote (git ls-remote exit 128); nothing recorded
+      fatal: unable to access 'http://<server>/o56.git/': The requested URL returned error: 500
+
+### S7 a self-hosted agent: the next job reuses the sources folder
+S7  v0     github         bash 3.2.57 exit 128 runs 6001; 1 header; verify ok; 1 commits
+      fatal: 'kronikol-history' is already used by worktree at '<work>/ws57.tmp/history-branch'
+S7  v1     ado            bash 3.2.57 exit 128 runs 6001; 1 header; verify ok; 1 commits
+      fatal: 'kronikol-history' is already used by worktree at '<work>/ws58.tmp/history-branch'
+S7  v2     ado            bash 3.2.57 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S7  v2     github         bash 3.2.57 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S7  v0     github         bash 5.2.21 exit 128 runs 6001; 1 header; verify ok; 1 commits
+      fatal: 'kronikol-history' is already used by worktree at '<work>/ws61.tmp/history-branch'
+S7  v1     ado            bash 5.2.21 exit 128 runs 6001; 1 header; verify ok; 1 commits
+      fatal: 'kronikol-history' is already used by worktree at '<work>/ws62.tmp/history-branch'
+S7  v2     ado            bash 5.2.21 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+S7  v2     github         bash 5.2.21 exit 0   runs 6001 6002; 1 header; verify ok; 2 commits
+
+### S8 four pipeline runs fold at once
+S8  v0     github         bash 3.2.57 exit 0   runs 6001 6005 6006 6007 6008; 1 header; verify ok; 5 commits
+      (x4)  ! [rejected]        HEAD -> kronikol-history (fetch first)
+      (x2)  ! [remote rejected] HEAD -> kronikol-history (failed to update ref)
+      (x3) push 1 lost the race; rebasing onto the branch as it is now
+      (x2) push 2 lost the race; rebasing onto the branch as it is now
+      push 3 lost the race; rebasing onto the branch as it is now
+S8  v1     ado            bash 3.2.57 exit 0   runs 6001 6005 6006 6007 6008; 1 header; verify ok; 5 commits
+      (x6)  ! [remote rejected] HEAD -> kronikol-history (failed to update ref)
+      (x3) push 1 lost the race; rebasing onto the branch as it is now
+      (x2) push 2 lost the race; rebasing onto the branch as it is now
+      push 3 lost the race; rebasing onto the branch as it is now
+S8  v2     ado            bash 3.2.57 exit 0   runs 6001 6005 6006 6007 6008; 1 header; verify ok; 5 commits
+      (x2)  ! [rejected]        HEAD -> kronikol-history (fetch first)
+      (x4)  ! [remote rejected] HEAD -> kronikol-history (failed to update ref)
+      (x3) push 1 lost the race; folding again onto kronikol-history as it is now
+      (x2) push 2 lost the race; folding again onto kronikol-history as it is now
+      push 3 lost the race; folding again onto kronikol-history as it is now
+S8  v2     github         bash 3.2.57 exit 0   runs 6001 6005 6006 6007 6008; 1 header; verify ok; 5 commits
+      (x4)  ! [rejected]        HEAD -> kronikol-history (fetch first)
+      (x2)  ! [remote rejected] HEAD -> kronikol-history (failed to update ref)
+      (x3) push 1 lost the race; folding again onto kronikol-history as it is now
+      (x2) push 2 lost the race; folding again onto kronikol-history as it is now
+      push 3 lost the race; folding again onto kronikol-history as it is now
+S8  v0     github         bash 5.2.21 exit 0   runs 6001 6005 6006 6007 6008; 1 header; verify ok; 5 commits
+      (x4)  ! [rejected]        HEAD -> kronikol-history (fetch first)
+      (x2)  ! [remote rejected] HEAD -> kronikol-history (failed to update ref)
+      (x3) push 1 lost the race; rebasing onto the branch as it is now
+      (x2) push 2 lost the race; rebasing onto the branch as it is now
+      push 3 lost the race; rebasing onto the branch as it is now
+S8  v1     ado            bash 5.2.21 exit 0   runs 6001 6005 6006 6007 6008; 1 header; verify ok; 5 commits
+      (x6)  ! [remote rejected] HEAD -> kronikol-history (failed to update ref)
+      (x3) push 1 lost the race; rebasing onto the branch as it is now
+      (x2) push 2 lost the race; rebasing onto the branch as it is now
+      push 3 lost the race; rebasing onto the branch as it is now
+S8  v2     ado            bash 5.2.21 exit 0   runs 6001 6005 6006 6007 6008; 1 header; verify ok; 5 commits
+      (x6)  ! [remote rejected] HEAD -> kronikol-history (failed to update ref)
+      (x3) push 1 lost the race; folding again onto kronikol-history as it is now
+      (x2) push 2 lost the race; folding again onto kronikol-history as it is now
+      push 3 lost the race; folding again onto kronikol-history as it is now
+S8  v2     github         bash 5.2.21 exit 0   runs 6001 6005 6006 6007 6008; 1 header; verify ok; 5 commits
+       ! [rejected]        HEAD -> kronikol-history (fetch first)
+      (x5)  ! [remote rejected] HEAD -> kronikol-history (failed to update ref)
+      (x3) push 1 lost the race; folding again onto kronikol-history as it is now
+      (x2) push 2 lost the race; folding again onto kronikol-history as it is now
+      push 3 lost the race; folding again onto kronikol-history as it is now
+
+### S9 the first draft run on GitHub, where actions/checkout persisted the token and the wrapper passes none
+S9  v1     github-empty   bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S9  v1     github-unset   bash 3.2.57 exit 1   no branch
+      <work>/v1.sh: line 4: KRONIKOL_GIT_AUTH: unbound variable
+S9  v1     github-empty   bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S9  v1     github-unset   bash 5.2.21 exit 1   no branch
+      <work>/v1.sh: line 4: KRONIKOL_GIT_AUTH: unbound variable
+
+### S11 the checkout persisted a credential the remote no longer accepts; the wrapper passes a good one
+S11 v1     ado-persisted  bash 3.2.57 exit 128 no branch
+      (x3) fatal: could not read Username for 'http://<server>': terminal prompts disabled
+      push 1 lost the race; rebasing onto the branch as it is now
+S11 v2     ado-persisted  bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S11 v1     ado-persisted  bash 5.2.21 exit 128 no branch
+      (x3) fatal: could not read Username for 'http://<server>': terminal prompts disabled
+      push 1 lost the race; rebasing onto the branch as it is now
+S11 v2     ado-persisted  bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+
+### S12 the machine's global configuration persisted a stale header for the server; the wrapper passes a good one
+S12 v1     ado-global     bash 3.2.57 exit 128 no branch
+      (x3) fatal: could not read Username for 'http://<server>': terminal prompts disabled
+      push 1 lost the race; rebasing onto the branch as it is now
+S12 v2     ado-global     bash 3.2.57 exit 0   runs 6001; 1 header; verify ok; 1 commits
+S12 v1     ado-global     bash 5.2.21 exit 128 no branch
+      (x3) fatal: could not read Username for 'http://<server>': terminal prompts disabled
+      push 1 lost the race; rebasing onto the branch as it is now
+S12 v2     ado-global     bash 5.2.21 exit 0   runs 6001; 1 header; verify ok; 1 commits
+
+### S10 what an Azure DevOps macro or template expression could touch in each script
+v0: $(identifier) 0; ${{ 0
+v1: $(identifier) 0; ${{ 0
+v2: $(identifier) 0; ${{ 0
+read: $(identifier) 0; ${{ 0
+
+## R. The read step before the tests (kronikol-history-read.sh beside this file), per shell
+R1 bash 3.2.57 no branch yet:                                   exit 0; no file; said: no kronikol-history branch yet: this run has no history, and its record starts the branch
+R2 bash 3.2.57 a ledger on the branch:                          exit 0; the branch's ledger, byte for byte; said: ledger: 4 lines from kronikol-history
+R3 bash 3.2.57 the remote fails the read once (500):            exit 3; no file; said: could not read kronikol-history from the remote: the tests run without history
+R4 bash 3.2.57 the wrong token:                                 exit 3; no file; said: could not read kronikol-history from the remote: the tests run without history
+R5 bash 3.2.57 run inside a checkout holding a stale credential: exit 0; the branch's ledger, byte for byte; said: ledger: 4 lines from kronikol-history
+R6 bash 3.2.57 a stale header in the global configuration:         exit 0; the branch's ledger, byte for byte; said: ledger: 4 lines from kronikol-history
+R1 bash 5.2.21 no branch yet:                                   exit 0; no file; said: no kronikol-history branch yet: this run has no history, and its record starts the branch
+R2 bash 5.2.21 a ledger on the branch:                          exit 0; the branch's ledger, byte for byte; said: ledger: 4 lines from kronikol-history
+R3 bash 5.2.21 the remote fails the read once (500):            exit 3; no file; said: could not read kronikol-history from the remote: the tests run without history
+R4 bash 5.2.21 the wrong token:                                 exit 3; no file; said: could not read kronikol-history from the remote: the tests run without history
+R5 bash 5.2.21 run inside a checkout holding a stale credential: exit 0; the branch's ledger, byte for byte; said: ledger: 4 lines from kronikol-history
+R6 bash 5.2.21 a stale header in the global configuration:         exit 0; the branch's ledger, byte for byte; said: ledger: 4 lines from kronikol-history
+
+## W. The wiki's printed fold step (Cross-Run-History, "The recommended shape", wiki 86a77c1), copied as
+##    printed into a checkout made the way actions/checkout makes one, run with GitHub's default bash -e
+W1 bash 3.2.57 as printed, onto a branch that exists:            exit 128; runs 6001; 1 header; verify ok; 1 commits; said: fatal: invalid reference: origin/kronikol-history
+W2 bash 3.2.57 with the dogfood's fetch line put before it:        exit 128; runs 6001; 1 header; verify ok; 1 commits; said: Author identity unknown
+W1 bash 5.2.21 as printed, onto a branch that exists:            exit 128; runs 6001; 1 header; verify ok; 1 commits; said: fatal: invalid reference: origin/kronikol-history
+W2 bash 5.2.21 with the dogfood's fetch line put before it:        exit 128; runs 6001; 1 header; verify ok; 1 commits; said: Author identity unknown

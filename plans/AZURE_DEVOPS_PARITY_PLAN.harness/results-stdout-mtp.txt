@@ -1,0 +1,17 @@
+dotnet 10.0.401; marker: "Kronikol: reports written to"
+
+project                                       how it was run                                             pointer lines reaching the console
+Example.Api.Tests.Component.LightBDD.TUnit    dotnet test, Microsoft.Testing.Platform mode (exit 0)      0
+Example.Api.Tests.Component.LightBDD.TUnit    dotnet test, Microsoft.Testing.Platform mode --output Detailed (exit 0) 1
+Example.Api.Tests.Component.ReqNRoll.TUnit    dotnet test, Microsoft.Testing.Platform mode (exit 0)      0
+Example.Api.Tests.Component.ReqNRoll.TUnit    dotnet test, Microsoft.Testing.Platform mode --output Detailed (exit 0) 1
+Example.Api.Tests.Component.TUnit             dotnet test, Microsoft.Testing.Platform mode (exit 0)      0
+Example.Api.Tests.Component.TUnit             dotnet test, Microsoft.Testing.Platform mode --output Detailed (exit 0) 1
+Example.Api.Tests.Component.BDDfy.xUnit3      dotnet test, Microsoft.Testing.Platform mode (exit 0)      0
+Example.Api.Tests.Component.BDDfy.xUnit3      dotnet test, Microsoft.Testing.Platform mode --output Detailed (exit 0) 0
+Example.Api.Tests.Component.LightBDD.xUnit3   dotnet test, Microsoft.Testing.Platform mode (exit 134)    0  (did not start: System.IO.FileNotFoundException: The configuration file 'appsettings.json' was not found and is not optional. )
+Example.Api.Tests.Component.LightBDD.xUnit3   dotnet test, Microsoft.Testing.Platform mode --output Detailed (exit 134) 0  (did not start: System.IO.FileNotFoundException: The configuration file 'appsettings.json' was not found and is not optional. )
+Example.Api.Tests.Component.ReqNRoll.xUnit3   dotnet test, Microsoft.Testing.Platform mode (exit 0)      0
+Example.Api.Tests.Component.ReqNRoll.xUnit3   dotnet test, Microsoft.Testing.Platform mode --output Detailed (exit 0) 0
+Example.Api.Tests.Component.xUnit3            dotnet test, Microsoft.Testing.Platform mode (exit 0)      0
+Example.Api.Tests.Component.xUnit3            dotnet test, Microsoft.Testing.Platform mode --output Detailed (exit 0) 0

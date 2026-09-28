@@ -56,7 +56,7 @@ nuget.org: 3.31.10 was committed and never tagged, so it was never published.
   project instead. That is the `CLAUDE.md`/`AGENTS.md` beside every report, `Failures.md`'s command blocks (only
   where the directory has Kronikol's `query.cs`), the schema's `$comment`, the agent block `kronikol init-agents`
   installs, both copies of the skill and its flag reference, `README.md`, `templates/README.md` and the NuGet
-  readme. The skill's `scripts/query.py` stays, named for a machine without the .NET 10 SDK (roadmap D25).
+  readme. The skill's `scripts/query.py` stays, named for a machine without the .NET 10 SDK (roadmap D28).
 - **Behaviour change:** a reports directory inside a C# project's folder, outside that project's `bin` and `obj`,
   gets no `query.cs`, because the project would compile it and its `#:` directives are error CS9298 in a project
   build. The run prints a `⚠ WARNING` and records an `OptionNotApplied` diagnostic naming the project file, on every
@@ -131,6 +131,15 @@ reach that repository. Template pins move to 3.31.9.
   that, rightly, since other classes read the log in parallel; this fix leaves the log alone.
 - `OnDemandRenderingTests`' Node case ran the whole pipeline outside `ReportTestHelper.WholePipeline`, which every
   such fixture holds because the pipeline memoises its diagrams process-wide. It holds it now, from a fresh cache.
+- The code-cache fact (`Code_cache_is_created_on_first_run_reused_afterwards_and_regenerated_when_v8_rejects_it`)
+  moved from `NodeJsPlantUmlRendererTests` to `NodeJsCodeCacheTests`, in `NodeCodeCacheCollection`, which is declared
+  with `DisableParallelization` and so runs after every parallel collection. The fact deletes and then corrupts the
+  machine's one V8 code cache, which every class that renders through Node reads and writes back. In CI's Core Tests
+  on `5ca0878`, a plan-only commit, another class's render rebuilt the file between the delete and the fact's own
+  render, which read `hit` where `miss` is right. `SharedCodeCacheTests` scans the test sources and keeps any test that
+  deletes or writes the cache in that collection; it was red on the fact's old home. Six local runs of the
+  Node-rendering classes never lost the race, which is why the guard is a source scan. `Kronikol.Tests` after it:
+  5,945 passed and 5 skipped, and the same 3 read-only-file failures as root. Test-only, so the version stays 3.31.10.
 - In this container: `Kronikol.Tests` 5,943 passed and 5 skipped, with 3 failures that fail the same on 3.31.9 (they
   need a read-only file, and the container runs as root). The 14 end-to-end classes that follow a link, jump to a
   failure, read the URL hash or lay the page out at a phone's width, run on 3.31.9 and on this release: each of the

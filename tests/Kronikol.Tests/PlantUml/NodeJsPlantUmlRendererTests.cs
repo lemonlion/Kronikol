@@ -7,7 +7,7 @@ namespace Kronikol.Tests.PlantUml;
 
 public class NodeJsPlantUmlRendererTests
 {
-    private static bool IsNodeAvailable()
+    internal static bool IsNodeAvailable()
     {
         try
         {
@@ -78,7 +78,7 @@ public class NodeJsPlantUmlRendererTests
     // Batch mode (one node process per report) + V8 code cache
     // ═══════════════════════════════════════════════════════════
 
-    private static string Seq(string a, string b) => $"@startuml\nparticipant {a}\nparticipant {b}\n{a} -> {b} : hello from {a}\n@enduml";
+    internal static string Seq(string a, string b) => $"@startuml\nparticipant {a}\nparticipant {b}\n{a} -> {b} : hello from {a}\n@enduml";
 
     [Fact]
     [Trait("Category", "Integration")]
@@ -148,38 +148,6 @@ public class NodeJsPlantUmlRendererTests
         }
 
         Assert.Fail("The batch was not faster in any of three attempts: " + string.Join("; ", attempts));
-    }
-
-    [Fact]
-    [Trait("Category", "Integration")]
-    public void Code_cache_is_created_on_first_run_reused_afterwards_and_regenerated_when_v8_rejects_it()
-    {
-        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
-
-        var cachePath = NodeJsPlantUmlRenderer.CodeCachePath;
-        NodeJsPlantUmlRenderer.Render(Seq("Warm", "Up"), PlantUmlImageFormat.Svg); // makes sure the engine is downloaded
-        if (File.Exists(cachePath)) File.Delete(cachePath);
-
-        NodeJsPlantUmlRenderer.Render(Seq("Cold", "One"), PlantUmlImageFormat.Svg);
-        Assert.True(File.Exists(cachePath), "code cache should be written on the first run");
-        Assert.Equal("miss", NodeJsPlantUmlRenderer.LastCodeCacheStatus);
-        var written = new FileInfo(cachePath).Length;
-        Assert.True(written > 1024, $"code cache is suspiciously small: {written} bytes");
-
-        NodeJsPlantUmlRenderer.Render(Seq("Warm", "Two"), PlantUmlImageFormat.Svg);
-        Assert.Equal("hit", NodeJsPlantUmlRenderer.LastCodeCacheStatus);
-
-        // A cache that fails its checksum (here: garbage) or that V8 refuses (a node upgrade) is rebuilt, and the
-        // render still works.
-        File.WriteAllBytes(cachePath, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
-        var svg = System.Text.Encoding.UTF8.GetString(NodeJsPlantUmlRenderer.Render(Seq("Rejected", "Three"), PlantUmlImageFormat.Svg));
-        Assert.Contains("<svg", svg);
-        Assert.Equal("rejected", NodeJsPlantUmlRenderer.LastCodeCacheStatus);
-        Assert.True(new FileInfo(cachePath).Length > 1024, "a rejected code cache should be regenerated");
-
-        var batch = NodeJsPlantUmlRenderer.RenderMany([Seq("Batch", "Four")]);
-        Assert.True(batch[0].Succeeded, batch[0].Error);
-        Assert.Equal("hit", NodeJsPlantUmlRenderer.LastCodeCacheStatus);
     }
 
     // ── The engine's script loader (DIAGRAM_COLOURS_PLAN S3a) ─────────────────────────────────────
