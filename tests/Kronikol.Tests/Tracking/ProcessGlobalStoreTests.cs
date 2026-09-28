@@ -41,6 +41,41 @@ public class ProcessGlobalStoreTests
             + ". Pass the logs to the generator instead, or put the class in a DisableParallelization collection.");
     }
 
+    /// <summary>
+    /// An in-process ingest clears the log as well (<c>IngestRequest.ClearExistingLogs</c> defaults to true), and a
+    /// scan for the call cannot see a clear made inside the product. Every ingest here runs in the DiagramsFetcher
+    /// collection, one class at a time, so a class that reads the log back has to run there too: from any other
+    /// collection it can read at the moment an ingest has just emptied it, which is how <c>StepBarPlantUmlTests</c>
+    /// failed on CI on 2026-09-14 ("the collection was empty") when the clear was still an explicit one.
+    /// </summary>
+    [Fact]
+    public void Every_class_that_reads_the_request_log_back_runs_beside_the_ingests_that_clear_it()
+    {
+        var sources = Directory.EnumerateFiles(Path.Combine(TestsRoot, "Kronikol.Tests"), "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                        && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Select(f => (Path: f, Code: WithoutComments(File.ReadAllText(f))))
+            .ToList();
+
+        var readers = sources.Where(s => Regex.IsMatch(s.Code, @"RequestResponseLogger\s*\.\s*RequestAndResponseLogs\b")).ToList();
+        // The pipeline itself, or the ingest command, which runs it in process.
+        var ingests = sources.Where(s => Regex.IsMatch(s.Code, @"\b(?:IngestPipeline|IngestCommand)\s*\.\s*Run\s*\(")).ToList();
+        Assert.True(readers.Count >= 10 && ingests.Count >= 10,
+            $"the scan found {readers.Count} readers and {ingests.Count} ingests, too few for it to be looking at the right thing");
+
+        var elsewhere = readers.Concat(ingests)
+            .Where(s => !Regex.IsMatch(s.Code, @"\[Collection\(""DiagramsFetcher""\)\]"))
+            .Select(s => Path.GetRelativePath(TestsRoot, s.Path).Replace('\\', '/'))
+            .Distinct()
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .ToList();
+
+        Assert.True(elsewhere.Count == 0,
+            "these test sources read the process-global request log back, or run an ingest that clears it, outside the "
+            + "DiagramsFetcher collection: " + string.Join(", ", elsewhere)
+            + ". Put the class in [Collection(\"DiagramsFetcher\")], or read something only this test writes.");
+    }
+
     private static string WithoutComments(string source) =>
         Regex.Replace(Regex.Replace(source, @"/\*.*?\*/", "", RegexOptions.Singleline), @"//.*", "");
 }

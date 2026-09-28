@@ -262,10 +262,13 @@ public class TcpTap : IAsyncDisposable
     }
 
     /// <summary>
-    /// Copies one direction. Bytes are written downstream <em>before</em> the copy is queued for decoding, and
-    /// the queue write is non-blocking — the pump is never slowed by capture.
+    /// Copies one direction. Each read is queued for decoding <em>before</em> it is written downstream: both
+    /// directions share one queue, and the far side cannot answer bytes it has not been sent, so a reply is always
+    /// queued after the command it answers. Written downstream first, a fast reply could be queued ahead of its
+    /// command, and the decoder paired it with nothing and left the command unanswered until the reaper closed a
+    /// healthy connection. The queue write is non-blocking, so the pump is never slowed by capture.
     /// </summary>
-    private async Task PumpAsync(
+    internal async Task PumpAsync(
         Stream source, Stream destination, Socket destinationSocket, TapDirection direction,
         ChannelWriter<TapSegment> writer, ConnectionPumpState state, CancellationToken ct)
     {
@@ -287,6 +290,10 @@ public class TcpTap : IAsyncDisposable
                 if (read == 0)
                     break;
 
+                var copy = buffer.AsSpan(0, read).ToArray();
+                if (!writer.TryWrite(new TapSegment(direction, copy, DateTimeOffset.UtcNow)))
+                    CountDrop(direction, state);
+
                 try
                 {
                     await destination.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
@@ -302,10 +309,6 @@ public class TcpTap : IAsyncDisposable
                     Interlocked.Add(ref _bytesServerToClient, read);
                 Interlocked.Add(ref _bytesSinceLastInteraction, read);
                 Volatile.Write(ref state.LastActivityTicks, Environment.TickCount64);
-
-                var copy = buffer.AsSpan(0, read).ToArray();
-                if (!writer.TryWrite(new TapSegment(direction, copy, DateTimeOffset.UtcNow)))
-                    CountDrop(direction, state);
             }
         }
         finally
@@ -715,9 +718,9 @@ public class TcpTap : IAsyncDisposable
         GC.SuppressFinalize(this);
     }
 
-    private readonly record struct TapSegment(TapDirection Direction, byte[] Data, DateTimeOffset Timestamp);
+    internal readonly record struct TapSegment(TapDirection Direction, byte[] Data, DateTimeOffset Timestamp);
 
-    private sealed class ConnectionPumpState(long connectionId)
+    internal sealed class ConnectionPumpState(long connectionId)
     {
         public long ConnectionId { get; } = connectionId;
 

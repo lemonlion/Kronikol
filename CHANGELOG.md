@@ -4,6 +4,61 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.32.1] - 2026-09-28
+
+**Patch - `Kronikol.Extensions.TcpTap` records every command with its own reply on a busy connection, found in a sweep
+of `main`'s red CI runs for flaky tests.** A bug fix with nothing new for a consumer to call, so the patch part moved.
+Capture output changes on a busy connection (a reply is no longer recorded against the wrong command), not report
+rendering, so no Kronikol4J ledger entry is owed. Template pins stay at 3.31.10, the newest published release.
+
+### Fixed
+
+- **TcpTap: a reply could be decoded ahead of the command it answered, and every exchange after it on the connection
+  was mis-paired.** Both directions of a connection feed one decode queue, and each pump wrote a read downstream
+  before it queued the copy. A server that answered at once could have its reply queued before the pump carrying the
+  command had queued the command, so the decoder saw an answer to nothing and then a command nothing answered. The
+  Redis decoder matches replies to commands in order, so from there on every command on the connection was recorded
+  with the next command's reply, and the last was left unanswered; with `ReapStuckConnectionsAfter` set, that command
+  made the reaper close a healthy connection. Measured through a `RedisTap` with 16 connections of 1,500 GETs each,
+  against a local stub that answered every GET with its own key: on 3.32.0, 6,785 of the 23,991 exchanges recorded
+  carried another command's reply, and the last exchange was lost on 9 of the 16 connections; on 3.32.1, none and
+  none. Each read is now queued before it is forwarded: the far side cannot answer bytes it has not been sent, so a
+  reply is always queued after its command. Forwarding is unchanged, and the queue write still never blocks. CI had
+  shown it as two flaky tests on commits that did not touch the tap, `AnIdleConnectionWithNothingUnansweredIsNeverReaped`
+  (one connection reaped where none may be, 2026-09-13) and `TheNdjsonSinkWritesReplayableRecords` (fewer than its two
+  records, 2026-09-15). **Behaviour change:** a Redis capture made through the tap before this release may hold
+  mis-paired exchanges on any busy connection.
+
+### Tests
+
+- `PumpOrderTests.A_read_is_queued_for_decoding_before_it_is_forwarded`, in both directions: the pump is handed a
+  destination that notes, at each write, whether the queue already holds what it is given. Red on 3.32.0 in both
+  directions. `TcpTap`'s `PumpAsync`, its segment and its per-connection state are now internal for it.
+- `BusyConnectionTests.On_busy_connections_every_command_is_recorded_with_its_own_reply`: 8 connections of 1,000 GETs
+  against the key-echoing stub. Red on 3.32.0 in 2 of 2 runs (7,999 and 7,993 of 8,000 exchanges recorded), green on
+  3.32.1 in under half a second. It cannot fail on a correct tap, since the fix leaves no ordering to chance.
+- **Three classes read the process-global request log back while an ingest could clear it.** `IngestPipeline.Run`
+  clears the log by default (`IngestRequest.ClearExistingLogs`), a clear the source scan in `ProcessGlobalStoreTests`
+  cannot see, and all 17 classes that run one, through the pipeline or `IngestCommand`, are in the DiagramsFetcher
+  collection. `StepBarPlantUmlTests`,
+  `TestDelimiterTests` and `CapturedTextEscapeTests` read the log from outside it. `StepBarPlantUmlTests` failed on CI
+  with "the collection was empty" on 2026-09-14, which was put down to an explicit clear since removed; the ingests'
+  clears could do the same. The first two join the collection (they take 0.02 s between them). `CapturedTextEscapeTests`
+  (174 tests, 9 s, which would have lengthened the collection that is already the suite's critical path) instead reads
+  the delimiter's statement from `DefaultTrackingDiagramOverride.TestDelimiterStatement`, a new internal function
+  `InsertTestDelimiter` now calls, and no longer reads the log; its fact about a null name moved to
+  `TestDelimiterTests`, with a new fact that the bar written is the statement the function names.
+  `ProcessGlobalStoreTests.Every_class_that_reads_the_request_log_back_runs_beside_the_ingests_that_clear_it` holds it:
+  red before, naming the three.
+- The sweep: 22 of `main`'s 135 CI runs since 2026-09-12 failed, and two more failed on their first attempt and passed
+  on a re-run. Every failing test in them was a regression a later commit fixed, or a flake already fixed
+  (`StaleOutputTests`' pointer read from another run's output, `MongoDbTrackingSubscriberTests`' correlation store
+  cleared by `ChangeStreamCorrelationTests`, `OtlpExporterTests`' reused port, and the code-cache fact fixed earlier
+  today), apart from the two above. Six local runs of `Kronikol.Tests` on 3.32.0 failed nothing but the three tests
+  that expect a refused write and run as root.
+- Kronikol.Tests: 6,042 tests, 6,034 passed, 5 skipped and those 3 root-only failures. Kronikol.Tests.TcpTap: 261
+  passed and 4 skipped (the Docker end-to-end tests).
+
 ## [3.32.0] - 2026-09-28
 
 **Minor - every run writes `query.cs` beside its report: `kronikol query` with nothing installed and no network
