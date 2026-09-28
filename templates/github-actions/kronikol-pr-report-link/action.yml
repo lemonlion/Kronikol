@@ -110,8 +110,14 @@ runs:
           // marker is a prefix of another's, because each ends in " -->", so nothing needs to follow it; a comment
           // re-saved in the web editor continues with "\r\n".
           const existing = comments.find(c => c.user?.login === 'github-actions[bot]' && c.body?.startsWith(marker));
+          // Everything after the end marker belongs to a later version or another writer: it is kept as it is, and
+          // no line is read from it.
+          const end = `<!-- ${key}:end -->`;
+          const endAt = existing?.body?.indexOf(end) ?? -1;
+          const ownPart = endAt >= 0 ? existing.body.slice(0, endAt) : (existing?.body ?? '');
+          const kept = endAt >= 0 ? existing.body.slice(endAt + end.length) : '';
           // Saving an edit in GitHub's web editor stores CRLF line endings, so split on either.
-          const lines = (existing?.body ?? '').split(/\r?\n/).filter(l => l.startsWith('- ') && l.includes(`<!-- ${key}:`));
+          const lines = ownPart.split(/\r?\n/).filter(l => l.startsWith('- ') && l.includes(`<!-- ${key}:`));
 
           const own = lines.find(l => l.includes(tag(artifactName)));
           // The run id is the digits straight after the line's own tag, whatever follows them: whitespace a hand edit
@@ -135,7 +141,8 @@ runs:
             `> 💡 Each link downloads a zip of the latest reports. Open \`${reportFile}\` inside it.`,
             '',
             '<sub>🤖 CI rewrites this comment every time a linked workflow runs.</sub>',
-          ].join('\n');
+            end,
+          ].join('\n') + kept;
 
           if (existing) {
             await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
