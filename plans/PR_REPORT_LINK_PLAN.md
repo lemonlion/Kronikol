@@ -731,9 +731,12 @@ One validated push beats three speculative ones.
   node beside it (eight more test files name the node renderer, and the class has no collection to hold them
   apart). A render from another
   class between the delete and the fact's own render writes the cache back, and the fact reads "hit"
-  (INFERRED from the code; not reproduced). Not the PR's. A test-only fix, putting the fact in the collection
-  that owns the renderer's process-wide state or giving it a cache path of its own, belongs to whoever next
-  touches the renderer's tests; until then S1 and S5 treat it as `main`'s.
+  (INFERRED from the code; not reproduced). Not the PR's. **Fixed on `main` the next morning** (`28e44604`,
+  2026-09-28): the fact moved to `NodeJsCodeCacheTests`, in a collection that runs after every parallel one, and
+  `SharedCodeCacheTests` keeps any test that rewrites the cache there. A sweep of `main`'s red CI runs the same day
+  found two more flakes and fixed them in 3.32.1: a real TcpTap bug that mis-paired Redis replies on a busy
+  connection, and three classes that read the request log while an ingest could clear it (the changelog's 3.32.1
+  entry). S1 and S5 still read the PR's CI against `main`'s own run (F17).
 - **CodeQL analyses C# only** (§1.10). Adding `actions` to `codeql.yml`'s languages would scan every workflow and
   composite action, the S3 lane and this action included. What 2.2 adds should pass its default suite: both
   workflows declare `permissions`, and the action passes its inputs through `env` as `actions/code-injection`

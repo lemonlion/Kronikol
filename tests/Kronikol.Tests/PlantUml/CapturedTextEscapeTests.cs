@@ -483,29 +483,12 @@ public class CapturedTextEscapeTests
     [Fact]
     public void A_test_name_holding_a_line_break_stays_one_statement()
     {
-        // Read by this test's own id: the store is process-wide and other classes write to it in parallel.
-        var id = $"CapturedTextEscapeTests.{Guid.NewGuid():N}";
-        DefaultTrackingDiagramOverride.InsertTestDelimiter(id, "Parses(\"a\nb\r\nc\rd\")");
+        // The statement alone: the process-global log it is written to is TestDelimiterTests' to read.
+        var bar = DefaultTrackingDiagramOverride.TestDelimiterStatement("Parses(\"a\nb\r\nc\rd\")");
 
-        var bar = RequestResponseLogger.RequestAndResponseLogs
-            .Where(l => l.TestId == id && l.PlantUml is not null)
-            .Select(l => l.PlantUml!)
-            .Single(p => p.Contains("hnote across"));
         Assert.Contains("Test Parses(\"a b c d\")", bar);
-    }
-
-    [Fact]
-    public void A_test_delimiter_for_a_null_name_is_still_written()
-    {
-        // The escaper returns a null name as it is, so a null name wrote "Test " before the line breaks were folded.
-        var id = $"CapturedTextEscapeTests.{Guid.NewGuid():N}";
-        DefaultTrackingDiagramOverride.InsertTestDelimiter(id, null!);
-
-        var bar = RequestResponseLogger.RequestAndResponseLogs
-            .Where(l => l.TestId == id && l.PlantUml is not null)
-            .Select(l => l.PlantUml!)
-            .Single(p => p.Contains("hnote across"));
-        Assert.Contains("<color:white>Test ", bar);
+        Assert.DoesNotContain('\n', bar);
+        Assert.DoesNotContain('\r', bar);
     }
 
     // Two arrows carry captured text the first audit did not follow: a GraphQL request's operation name, read from the
@@ -595,10 +578,7 @@ public class CapturedTextEscapeTests
     /// </summary>
     internal static string XmlHazardDiagram()
     {
-        var id = $"CapturedTextEscapeTests.{Guid.NewGuid():N}";
-        DefaultTrackingDiagramOverride.InsertTestDelimiter(id, "Reads \u001B[1m <U+0000> &#9999999;");
-        var delimiter = RequestResponseLogger.RequestAndResponseLogs
-            .Where(l => l.TestId == id && l.PlantUml is not null).Select(l => l.PlantUml!).Single(p => p.Contains("hnote across"));
+        var delimiter = DefaultTrackingDiagramOverride.TestDelimiterStatement("Reads \u001B[1m <U+0000> &#9999999;");
         RequestResponseLog Marker(string plantUml) => new(
             TestName: "Escapes", TestId: "escapes-1", Method: "", Content: "", Uri: new Uri("http://override.com"), Headers: [],
             ServiceName: "", CallerName: "", Type: RequestResponseType.Request, TraceId: Guid.NewGuid(),
@@ -667,11 +647,7 @@ public class CapturedTextEscapeTests
         Assert.Contains(written, StepBarPlantUml.Build(@"Given the file C:\temp\new.txt"), StringComparison.Ordinal);
         Assert.Contains(written, PlantUmlCreator.EscapeOneLineMarkup(@"C:\temp\new.txt"), StringComparison.Ordinal);
 
-        var id = $"CapturedTextEscapeTests.{Guid.NewGuid():N}";
-        DefaultTrackingDiagramOverride.InsertTestDelimiter(id, @"Reads(C:\temp\new.txt)");
-        var delimiter = RequestResponseLogger.RequestAndResponseLogs
-            .Where(l => l.TestId == id && l.PlantUml is not null).Select(l => l.PlantUml!).Single(p => p.Contains("hnote across"));
-        Assert.Contains(written, delimiter, StringComparison.Ordinal);
+        Assert.Contains(written, DefaultTrackingDiagramOverride.TestDelimiterStatement(@"Reads(C:\temp\new.txt)"), StringComparison.Ordinal);
 
         var action = new RequestResponseLog("Escapes", "escapes-1", "Fill #path with C:\\temp\\new.txt\nthen Tab", null,
             new Uri("http://localhost:4000/form"), [], "web", "User", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)

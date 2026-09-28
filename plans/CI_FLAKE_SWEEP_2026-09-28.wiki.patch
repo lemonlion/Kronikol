@@ -1,0 +1,29 @@
+From 6f7934107b2c61bf20da3692b1365627a2cb7e65 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 28 Sep 2026 12:48:17 +0000
+Subject: [PATCH] 3.32.1: TcpTap queues each read for decoding before it
+ forwards it, so a reply is always decoded after its command
+ (Integration-TcpTap-Extension, How it works, step 2). Before 3.32.1 a fast
+ reply could overtake its command, and every later command on a Redis
+ connection was recorded with the next one's reply
+
+---
+ Integration-TcpTap-Extension.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Integration-TcpTap-Extension.md b/Integration-TcpTap-Extension.md
+index a27635a..a870a73 100644
+--- a/Integration-TcpTap-Extension.md
++++ b/Integration-TcpTap-Extension.md
+@@ -29,7 +29,7 @@ myDotnetService ──► redis tap :6499 ──► redis :6379
+ Per connection the tap:
+ 
+ 1. **Accepts** the connection and opens one upstream connection to the real server.
+-2. **Copies bytes both ways, unmodified and first.** Each pump writes downstream *before* it queues the copy for decoding, and the queue write never blocks: the queue is bounded and a full queue drops the copy and increments `SegmentsDropped`. Capture can degrade; forwarding cannot stall. Half-close is propagated, so a client that shuts down its send side still receives the reply.
++2. **Copies bytes both ways, unmodified.** Each pump queues a copy of what it read for decoding, then writes it downstream. The queue write never blocks: the queue is bounded, and a full queue drops the copy and increments `SegmentsDropped`. Capture can degrade; forwarding cannot stall. Because a copy is queued before its bytes are sent, and the far side cannot answer bytes it has not been sent, a reply is always decoded after the command it answers. (Before 3.32.1 each pump wrote downstream first, so a fast reply could overtake its command, and every later command on a Redis connection was recorded with the next one's reply.) Half-close is propagated, so a client that shuts down its send side still receives the reply.
+ 3. **Decodes on a separate task**, in wire order, into command/reply pairs — RESP2/RESP3 for Redis, OP_MSG for MongoDB.
+ 4. **Filters the handshake at the decoder, not at render** (see [Security](#security) below): authentication and topology chatter never reach a sink.
+ 5. **Attributes** each pair (see [Attribution](#attribution)) and **logs** a `Request` and a `Response` entry with the real command and reply timestamps, so the existing call-tree ordering nests the DB calls under the HTTP request that was in flight, and `CollapseConsecutiveIdenticalCalls` folds cache bursts into `loop ×N`.
+-- 
+2.43.0
+
