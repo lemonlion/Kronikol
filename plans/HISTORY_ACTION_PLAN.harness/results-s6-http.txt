@@ -1,0 +1,40 @@
+== H1: the token, prompts and the machine's credential helpers
+a. no token:                          exit 128 in 0.0 s: fatal: could not read Username for 'http://127.0.0.1:<port>': terminal prompts disabled  [ 1 401 - auth-headers=0;]
+b. no token, prompts allowed, no tty: exit 128 in 0.0 s: fatal: could not read Username for 'http://127.0.0.1:<port>': No such device or address
+c. the token as checkout's header:   exit 0 in 0.1 s:   [ 2 200 token auth-headers=1;]
+d. a wrong token:                     exit 128 in 0.0 s: fatal: could not read Username for 'http://127.0.0.1:<port>': terminal prompts disabled  [ 1 401 - auth-headers=1;]
+e. a wrong token, the machine stores another identity:               exit 128 in 0.1 s: fatal: Authentication failed for 'http://127.0.0.1:<port>/h1/origin.git/'  [ 2 401 - auth-headers=1;]; the machine's store afterwards: 0 credential(s)
+f. the same, with credential.helper reset as the prototype does:      exit 128 in 0.0 s: fatal: could not read Username for 'http://127.0.0.1:<port>': terminal prompts disabled  [ 1 401 - auth-headers=1;]; the machine's store afterwards: 1 credential(s)
+g. a wrong token, the machine's helper takes 8 s (a credential window): exit 128 in 8.0 s: fatal: could not read Username for 'http://127.0.0.1:<port>': terminal prompts disabled
+h. the same, with credential.helper reset:                            exit 128 in 0.0 s: fatal: could not read Username for 'http://127.0.0.1:<port>': terminal prompts disabled
+
+== H2: ls-remote --exit-code over HTTP
+branch present: 0; branch absent: 2; wrong token (401): 128; no such repository (404): 128; read-only token: 0; server down: 128
+
+== H3: 6 writers racing over HTTP with the token, 3 races on a first run and 3 on an existing branch
+first run: runs lost 0 of 18; duplicate roster lines 0; jobs failed 0; lost races recorded again 33
+existing run: runs lost 0 of 18; duplicate roster lines 0; jobs failed 0; lost races recorded again 31
+push refusals the server logged in H3: 0 (401 or 403 on receive-pack)
+
+== H4: refusals over HTTP
+a. a read-only token (a fork's pull request): exit 1, pushes tried 1: ::error::origin refused the push and kronikol-history did not move, so this was not a race: remote: Write access to repository not granted.
+b. a pre-receive hook refusing the branch:    exit 1, pushes tried 1: ::error::origin refused the push and kronikol-history did not move, so this was not a race: remote: refusing refs/heads/kronikol-history: protected by a ruleset        
+branch after H4: 1 run(s)
+
+== H5: the token and its header in outputs and files
+42 jobs: lines of their output holding the token or its header, other than the ::add-mask:: line: 0; files under their RUNNER_TEMP holding either (step env, outputs, summary, the action's repositories and their .git/config): 0
+
+== H6: the read, when the tip holds more than the ledger (a 25 MB file beside it, as 9.4's views would be)
+depth-1: 3 requests, 3403213 bytes served; history.jsonl read: 159566 bytes
+blobless: 5 requests, 31533 bytes served; history.jsonl read: 159566 bytes
+
+== H7 (F9): the dogfood's fold, whose push runs in a worktree of the job's checkout, made as each checkout makes it
+v5, run 901 (first run): exit 0; pushes tried 1
+v5, run 902 (the branch exists): exit 0; pushes tried 1
+   branch: 2 run(s)
+v6.0.0, run 901 (first run): exit 128; pushes tried 2; last error: fatal: could not read Username for 'http://127.0.0.1:<port>': terminal prompts disabled
+v6.0.0, run 902 (the branch exists): exit 128; pushes tried 2; last error: fatal: could not read Username for 'http://127.0.0.1:<port>': terminal prompts disabled
+   branch: 1 run(s)
+v6.0.1, run 901 (first run): exit 0; pushes tried 1
+v6.0.1, run 902 (the branch exists): exit 0; pushes tried 1
+   branch: 2 run(s)

@@ -1,0 +1,30 @@
+== ledger 7112729 bytes (7 MB), 628 run lines, gzip -6 1024062 bytes
+  record, 1 suite(s): exit 0, 0.58 s, peak 117 MB
+  record, 6 suite(s): exit 0, 2.30 s, peak 148 MB
+  record, 18 suite(s): exit 0, 4.59 s, peak 168 MB
+  gate, one suite's report: exit 1, 0.56 s, peak 107 MB
+  show: exit 0, 0.39 s, peak 97 MB
+== ledger 25005860 bytes (25 MB), 2438 run lines, gzip -6 3368330 bytes
+  record, 1 suite(s): exit 0, 1.85 s, peak 282 MB
+  record, 6 suite(s): exit 0, 3.24 s, peak 294 MB
+  record, 18 suite(s): exit 0, 7.54 s, peak 293 MB
+  gate, one suite's report: exit 1, 0.81 s, peak 155 MB
+  show: exit 0, 0.64 s, peak 146 MB
+== ledger 50005794 bytes (50 MB), 4956 run lines, gzip -6 6657476 bytes
+  record, 1 suite(s): exit 0, 1.92 s, peak 347 MB
+  record, 6 suite(s): exit 0, 5.59 s, peak 434 MB
+  record, 18 suite(s): exit 0, 10.87 s, peak 438 MB
+  gate, one suite's report: exit 1, 0.87 s, peak 201 MB
+  show: exit 0, 0.77 s, peak 191 MB
+== ledger 100008381 bytes (100 MB), 9992 run lines, gzip -6 13238001 bytes
+  record, 1 suite(s): exit 0, 3.58 s, peak 564 MB
+  record, 6 suite(s): exit 0, 6.11 s, peak 639 MB
+  record, 18 suite(s): exit 0, 17.77 s, peak 654 MB
+  gate, one suite's report: exit 1, 1.09 s, peak 297 MB
+  show: exit 0, 0.88 s, peak 287 MB
+== ledger 180002125 bytes (180 MB), 18060 run lines, gzip -6 23751667 bytes
+  record, 1 suite(s): exit 0, 5.43 s, peak 997 MB
+  record, 6 suite(s): exit 0, 12.65 s, peak 1087 MB
+  record, 18 suite(s): exit 0, 30.45 s, peak 1021 MB
+  gate, one suite's report: exit 1, 1.41 s, peak 454 MB
+  show: exit 0, 1.01 s, peak 441 MB

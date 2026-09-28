@@ -1,0 +1,12 @@
+prune --window 50 of 180002125 bytes: exit 0, 12.37 s, peak 1636 MB
+window: 10067291 bytes, 900 run lines, gzip -6 1345762 bytes; full: gzip -6 23751667 bytes
+gate against full: exit 1, 1.41 s, peak 451 MB
+gate against window: exit 1, 0.79 s, peak 123 MB
+gate output: identical (9 lines)
+history: 1 broke (against 50 earlier runs on main)
+new-failures: 1
+  s0  Apple Cinnamon Muffins › Different muffin recipes should produce the expected batch [recipeName: "Classic", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Plain Flour, Apples = Granny Smith, Cinnamon = Ceylon }, Toppings = System.Collections.Generic.List`1[Breakf…]  broke — passed in gh:9000017423:1 (d87efa3), failing now
+pack, bp-history.jsonl, ledger-only: 1001 KB before, 1286 KB after ten runs (28 KB a run); tip: 9083339 bytes
+pack, bp-history.jsonl, with-window: 1002 KB before, 1292 KB after ten runs (29 KB a run); tip: 9083339 bytes, window 9083951 bytes
+pack, grown.jsonl, ledger-only: 3292 KB before, 3584 KB after ten runs (29 KB a run); tip: 26976470 bytes
+pack, grown.jsonl, with-window: 3298 KB before, 3604 KB after ten runs (30 KB a run); tip: 26976470 bytes, window 10086212 bytes
