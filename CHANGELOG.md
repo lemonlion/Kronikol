@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [3.33.0] - 2026-09-29
 
-**No version change: a GitHub Actions template in the repository.** The action ships in no package; the
-`Kronikol.Templates` package README gains a paragraph that points at it. The action first appears in the tag of the
-release that follows, and from that tag its inputs, the calling workflow its README gives and the comment's format
-are public surface under this file's semantic versioning.
+**Minor - the first release whose tag carries the GitHub Actions template for pull-request report links
+([#72](https://github.com/lemonlion/Kronikol/issues/72), roadmap 2.2, merged as PR #73 with no version change),
+new surface a workflow can call; with it, the twelve project templates are named for Kronikol, and the templates
+package's README opens with the live demo (`plans/DOORSTEP_PLAN.md` §14, an audit the owner asked for).** The
+action ships in no package; the `Kronikol.Templates` package README gains a paragraph that points at it. From this
+tag its inputs, the calling workflow its README gives and the comment's format are public surface under this file's
+semantic versioning. No public API and no generated report changes, so there is no Kronikol4J ledger entry: the
+minor is the action's, and the rest would each be a patch or documentation. Template pins move to 3.32.4.
 
 ### Added
 
@@ -46,9 +50,24 @@ are public surface under this file's semantic versioning.
 
 - **The README every package shows on nuget.org opens with a link to a live report** (`plans/DOORSTEP_PLAN.md` S3,
   roadmap 2.1): "See a live report from a sample service's test run", pointing at BreakfastProvider's published
-  reports. The repository's README opens with the same line, and its example image now opens those reports instead
-  of a plantuml.com page. Documentation only, so no version change; `DemoLinkTests` holds both lines and the image's
-  link.
+  reports. That README is `nuget-readme.md` for every package but `Kronikol.Templates`, which ships
+  `templates/README.md` and opens with the same line (the plan's audit found it). The repository's README opens with
+  the line too, and its example image now opens those reports instead of a plantuml.com page. `DemoLinkTests` holds
+  the three lines and the image's link.
+
+### Fixed
+
+- **The project templates are named for Kronikol.** `dotnet new list`, an IDE's new-project dialog and the templates
+  package's README named all twelve "TTD Component Tests (...)", the initials of the old name, TestTrackingDiagrams.
+  Each is now "Kronikol Component Tests (...)", with the framework in the brackets as before. Only the display name
+  moved: `identity` and `shortName` are unchanged, so an installed template updates in place and every
+  `dotnet new kronikol-*` command works as it did. `TemplateNameTests` (new) holds the names and the README's table
+  to them.
+- **The doorstep check fails when it has nothing to check** (`.github/workflows/doorstep.yml`, the repository
+  only). A landing page that linked no report, or no deep link into one, left the weekly check green with nothing
+  read; it now fails, since the repository's homepage is the demo's root. A failed fetch is tried three more times,
+  10 seconds apart, so a bad minute on GitHub Pages sends no false alarm, and an address that does not answer is
+  named in the run's error.
 
 ## [3.32.4] - 2026-09-28
 

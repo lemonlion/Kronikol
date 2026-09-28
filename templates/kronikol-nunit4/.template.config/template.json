@@ -3,7 +3,7 @@
   "author": "Aryeh Citron",
   "classifications": ["Test", "NUnit", "Kronikol", "Component Test"],
   "identity": "Kronikol.NUnit4.CSharp",
-  "name": "TTD Component Tests (NUnit 4)",
+  "name": "Kronikol Component Tests (NUnit 4)",
   "shortName": "kronikol-nunit4",
   "description": "A component test project using NUnit 4 with Kronikol for automatic sequence diagram and report generation.",
   "tags": { "language": "C#", "type": "project" },

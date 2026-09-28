@@ -3,7 +3,7 @@
   "author": "Aryeh Citron",
   "classifications": ["Test", "LightBDD", "TUnit", "Kronikol", "Component Test", "BDD"],
   "identity": "Kronikol.LightBDD.TUnit.CSharp",
-  "name": "TTD Component Tests (LightBDD + TUnit)",
+  "name": "Kronikol Component Tests (LightBDD + TUnit)",
   "shortName": "kronikol-lightbdd-tunit",
   "description": "A component test project using LightBDD with TUnit and Kronikol for automatic sequence diagram and report generation.",
   "tags": { "language": "C#", "type": "project" },

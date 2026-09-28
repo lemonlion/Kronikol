@@ -2,6 +2,9 @@
 # The demo is BreakfastProvider's Pages site, which another repository's CI rebuilds, so a renamed lane,
 # a moved path, a red report or a renamed scenario would reach a visitor before anyone here noticed.
 # Weekly, and off the start of the hour, when GitHub delays scheduled runs and under load drops some.
+# The homepage is the demo's root (the plan's H1), so a page that links no report or no deep link into one fails
+# too: otherwise a reworded landing page would leave the check with nothing to check, and it would pass. A fetch
+# that fails is tried three more times, 10 seconds apart, so one bad minute on Pages sends no false alarm.
 name: Doorstep
 
 on:
@@ -31,20 +34,27 @@ jobs:
           url="${HOMEPAGE_OVERRIDE:-$(gh api "repos/${{ github.repository }}" --jq .homepage)}"
           test -n "$url" || { echo "::error::The homepage field is empty"; exit 1; }
           echo "Checking $url"
-          code=$(curl -sS -L -o page.html -w '%{http_code}' "$url")
+          fetch() { curl -sS -L --retry 3 --retry-delay 10 --retry-all-errors --max-time 60 "$@"; }
+          code=$(fetch -o page.html -w '%{http_code}' "$url") || { echo "::error::$url did not answer"; exit 1; }
           test "$code" = 200 || { echo "::error::$url answered $code"; exit 1; }
           grep -qi kronikol page.html || { echo "::error::$url answered, but not with a Kronikol page"; exit 1; }
+          reports=0
           while read -r report; do
             digest="${url%/}/${report%TestRunReport.html}Failures.md"
-            curl -sS -f -o digest.md "$digest" || { echo "::error::$digest did not answer"; exit 1; }
+            fetch -f -o digest.md "$digest" || { echo "::error::$digest did not answer"; exit 1; }
             first=$(head -n 1 digest.md)
             test "$first" = "# No failures" || { echo "::error::$digest reads: $first"; exit 1; }
             echo "$digest: $first"
+            reports=$((reports + 1))
           done < <(grep -oE 'href="reports/[^"#]+/TestRunReport\.html"' page.html | sed -E 's/^href="//; s/"$//')
+          test "$reports" -gt 0 || { echo "::error::$url links no report, so no report was checked"; exit 1; }
+          links=0
           while read -r link; do
             report="${link%%#*}"
             sid="${link#*#sid-}"
-            curl -sS -f --compressed -o report.html "${url%/}/$report" || { echo "::error::$report did not answer"; exit 1; }
+            fetch -f --compressed -o report.html "${url%/}/$report" || { echo "::error::$report did not answer"; exit 1; }
             grep -q "data-stable-id=\"$sid\"" report.html || { echo "::error::$link names a scenario the report does not have"; exit 1; }
             echo "$link: found"
+            links=$((links + 1))
           done < <(grep -oE 'href="reports/[^"#]+/TestRunReport\.html#sid-[0-9a-f]+"' page.html | sed -E 's/^href="//; s/"$//')
+          test "$links" -gt 0 || { echo "::error::$url has no deep link into a report, so a visitor is three taps from a diagram"; exit 1; }

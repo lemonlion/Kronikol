@@ -3,7 +3,7 @@
   "author": "Aryeh Citron",
   "classifications": ["Test", "MSTest", "Kronikol", "Component Test"],
   "identity": "Kronikol.MSTest.CSharp",
-  "name": "TTD Component Tests (MSTest)",
+  "name": "Kronikol Component Tests (MSTest)",
   "shortName": "kronikol-mstest",
   "description": "A component test project using MSTest with Kronikol for automatic sequence diagram and report generation.",
   "tags": { "language": "C#", "type": "project" },

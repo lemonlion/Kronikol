@@ -4,9 +4,10 @@ using Kronikol.Tests.Tool;
 namespace Kronikol.Tests.Packaging;
 
 /// <summary>
-/// The README a visitor reads on GitHub and the one nuget.org shows both point at the live demo in their
-/// first line, and the README's one picture of the product opens the demo rather than a plantuml.com
-/// server page (<c>plans/DOORSTEP_PLAN.md</c> S3, F7 and F33; roadmap 2.1).
+/// The README a visitor reads on GitHub and the ones nuget.org shows (<c>nuget-readme.md</c> for every package but
+/// Kronikol.Templates, which ships <c>templates/README.md</c>) all point at the live demo in their first line, and
+/// the README's one picture of the product opens the demo rather than a plantuml.com server page
+/// (<c>plans/DOORSTEP_PLAN.md</c> S3, F7 and F33; roadmap 2.1).
 /// </summary>
 public class DemoLinkTests
 {
@@ -25,6 +26,7 @@ public class DemoLinkTests
     [Theory]
     [InlineData("README.md")]
     [InlineData("nuget-readme.md")]
+    [InlineData("templates/README.md")]
     public void The_first_line_under_the_title_links_the_live_demo(string file)
     {
         var line = FirstLineAfterTitle(Read(file));

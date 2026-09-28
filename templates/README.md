@@ -1,5 +1,7 @@
 # Kronikol Project Templates
 
+**[See a live report](https://lemonlion.github.io/BreakfastProvider/)** from a sample service's test run.
+
 Project templates for creating test projects pre-configured with [Kronikol](https://github.com/lemonlion/Kronikol) dependency tracking and automatic report generation.
 
 ## Installation
@@ -12,18 +14,18 @@ dotnet new install Kronikol.Templates
 
 | Template | Short Name | Description |
 |----------|-----------|-------------|
-| TTD Component Tests (xUnit v3) | `kronikol-xunit3` | xUnit v3 test project with TTD |
-| TTD Component Tests (xUnit v2) | `kronikol-xunit2` | xUnit v2 test project with TTD |
-| TTD Component Tests (TUnit) | `kronikol-tunit` | TUnit test project with TTD |
-| TTD Component Tests (NUnit 4) | `kronikol-nunit4` | NUnit 4 test project with TTD |
-| TTD Component Tests (MSTest) | `kronikol-mstest` | MSTest test project with TTD |
-| TTD Component Tests (LightBDD + xUnit v3) | `kronikol-lightbdd-xunit3` | LightBDD with xUnit v3 and TTD |
-| TTD Component Tests (LightBDD + xUnit v2) | `kronikol-lightbdd-xunit2` | LightBDD with xUnit v2 and TTD |
-| TTD Component Tests (LightBDD + TUnit) | `kronikol-lightbdd-tunit` | LightBDD with TUnit and TTD |
-| TTD Component Tests (BDDfy + xUnit v3) | `kronikol-bddfy-xunit3` | BDDfy with xUnit v3 and TTD |
-| TTD Component Tests (ReqNRoll + xUnit v3) | `kronikol-reqnroll-xunit3` | ReqNRoll (Gherkin) with xUnit v3 and TTD |
-| TTD Component Tests (ReqNRoll + xUnit v2) | `kronikol-reqnroll-xunit2` | ReqNRoll (Gherkin) with xUnit v2 and TTD |
-| TTD Component Tests (ReqNRoll + TUnit) | `kronikol-reqnroll-tunit` | ReqNRoll (Gherkin) with TUnit and TTD |
+| Kronikol Component Tests (xUnit v3) | `kronikol-xunit3` | xUnit v3 test project with Kronikol |
+| Kronikol Component Tests (xUnit v2) | `kronikol-xunit2` | xUnit v2 test project with Kronikol |
+| Kronikol Component Tests (TUnit) | `kronikol-tunit` | TUnit test project with Kronikol |
+| Kronikol Component Tests (NUnit 4) | `kronikol-nunit4` | NUnit 4 test project with Kronikol |
+| Kronikol Component Tests (MSTest) | `kronikol-mstest` | MSTest test project with Kronikol |
+| Kronikol Component Tests (LightBDD + xUnit v3) | `kronikol-lightbdd-xunit3` | LightBDD with xUnit v3 and Kronikol |
+| Kronikol Component Tests (LightBDD + xUnit v2) | `kronikol-lightbdd-xunit2` | LightBDD with xUnit v2 and Kronikol |
+| Kronikol Component Tests (LightBDD + TUnit) | `kronikol-lightbdd-tunit` | LightBDD with TUnit and Kronikol |
+| Kronikol Component Tests (BDDfy + xUnit v3) | `kronikol-bddfy-xunit3` | BDDfy with xUnit v3 and Kronikol |
+| Kronikol Component Tests (ReqNRoll + xUnit v3) | `kronikol-reqnroll-xunit3` | ReqNRoll (Gherkin) with xUnit v3 and Kronikol |
+| Kronikol Component Tests (ReqNRoll + xUnit v2) | `kronikol-reqnroll-xunit2` | ReqNRoll (Gherkin) with xUnit v2 and Kronikol |
+| Kronikol Component Tests (ReqNRoll + TUnit) | `kronikol-reqnroll-tunit` | ReqNRoll (Gherkin) with TUnit and Kronikol |
 
 ## Usage
 
