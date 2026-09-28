@@ -2,6 +2,15 @@
 
 **Status:** ❌ Not started (plan only) · **Written:** 2026-08-30, last revised 2026-08-31 (upstream PRs merged) · **Repo version at writing:** 3.0.69
 
+> **The pin this plan waited on has moved (noted 2026-09-28, `ENGINE_PIN_PLAN.md` §7 and §10.5).** Since 3.31.1 the
+> engine is the published npm `@plantuml/core@1.2026.8` on `https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8`,
+> which carries #2848 and #2849, and the `maxSvgSize` fork is retired: the lines below that name the
+> `v1.2026.6-patched` pin and "hold Phase 2 onward until the pin can actually move" describe 2026-08-31, not now. The
+> page checks every engine file it fetches against a known hash. If this plan ever fetches `themes.js` (§6 decision 1 says it
+> never will), it carries that file's hash, `sha256-1vUIcEsna2ZjHP/wUpHeMBOreAeXK3yyt3oU1L6rLC0=` (326,396 bytes,
+> verified against the registry tarball), and answers the engine's `PLANTUML_STDLIB_LOADER` with a fetch that passes
+> it; it never sets `PLANTUML_STDLIB_BASE`, which loads the file by a script tag with no hash.
+
 > **Upstream [plantuml#2848](https://github.com/plantuml/plantuml/pull/2848) and
 > [plantuml#2849](https://github.com/plantuml/plantuml/pull/2849) MERGED 2026-08-31**
 > (`3ec0b614`, `0b312d52`). They move work that earlier revisions of this plan carried in Kronikol into

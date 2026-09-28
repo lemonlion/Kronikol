@@ -68,7 +68,7 @@ grows). GitHub posting is via `gh` (authenticated as `lemonlion`, the same accou
   (`src/Kronikol/PlantUml/PlantUmlCreator.cs`, `CreatePlantUmlPrefix`, ~line 538). Any Puma-vs-Teoz
   comparison on 1.2026.6 is controlled by that pragma; from 1.2026.7 Teoz is the only engine
   (commit `7d1d71800d` "migrate default sequence diagram engine from Puma to Teoz" removed the escape hatch).
-- Kronikol currently pins fork tag `lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.6-patched`
+- Kronikol pinned (2026-08-27; since 3.31.1 the pin is npm `@plantuml/core@1.2026.8`) fork tag `lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.6-patched`
   (= npm `@plantuml/core` 1.2026.6 with the hardcoded `4096.0` SVG size limit raised to `98304.0`, 2 patch
   points + 1 message string). Upstream master has a `maxSvgSize` render option (from issue #2832) which
   retires the fork; decision on record: upgrade Kronikol when npm 1.2026.8 ships, not before
@@ -316,9 +316,14 @@ family as the posted LiveBoxes change.
 - Upgrade to npm 1.2026.8 when it ships: drop the fork, consume `@plantuml/core` directly, pass
   `maxSvgSize: 98304` through worker host / main-thread fallback / Node renderer; re-measure
   `PlantUmlStatementLimits`; re-pin golden fixtures (Teoz Real-Y migration changed layout vs 1.2026.6);
-  playbook and gotchas in auto-memory `browser-render-workers.md`.
+  playbook and gotchas in auto-memory `browser-render-workers.md`. **Done in 3.31.1** (`ENGINE_PIN_PLAN.md` S1, noted
+  here 2026-09-28): the pin is `@plantuml/core@1.2026.8` on jsDelivr's `/npm/` route, `maxSvgSize` is passed at every
+  render site, the statement limits were re-measured on it (§1.11), and no golden moved, since every diagram Kronikol
+  emits draws byte-identical on it and on the `0e4f452e` build before it.
 - After upgrade, add a perf budget assertion to `BrowserRenderWorkerTests`/`LargeReportFixture` so engine
-  regressions fail CI here.
+  regressions fail CI here. **Done in 3.31.1** (`ENGINE_PIN_PLAN.md` S4): two contention-scaled budgets in
+  `Large_report_renders_off_the_main_thread_within_budget`, per-render time on the note-heavy fixture (600 ms times the
+  stretch) and a warm 200-arrow render (1,500 ms times the stretch, median 247 ms per stretch, D17's baseline).
 - Keep per-engine-version result snapshots in `tools/render-bench/results/`.
 
 ## Sequencing and effort

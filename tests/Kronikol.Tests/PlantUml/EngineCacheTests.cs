@@ -96,6 +96,9 @@ public sealed class EngineCacheTests : IDisposable
         Assert.Contains(Sri(Wrong), e.Message);
         Assert.Contains(_dir, e.Message);
         Assert.Contains($"{Wrong.Length:N0} bytes", e.Message);
+        // Both remedies of plan §3.3 item 3: a proxy to look for, and the directory to delete.
+        Assert.Contains("proxy", e.Message);
+        Assert.Contains($"delete {_dir}", e.Message);
         Assert.Equal(2, calls[Base + "/plantuml.js"]);
         Assert.False(File.Exists(PathOf("plantuml.js")));
         Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
@@ -238,6 +241,83 @@ public sealed class EngineCacheTests : IDisposable
         Assert.Equal(written, File.GetLastWriteTimeUtc(path));
         Assert.Equal(ScriptOne, File.ReadAllBytes(path));
         Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
+    }
+
+    [Fact]
+    public void A_temporary_file_a_killed_process_left_is_deleted_once_it_is_an_hour_old()
+    {
+        // A download is written under a temporary name and renamed into place, and so is node's code cache
+        // (<cache>.<pid>.tmp): a process killed in between left its file, up to 4 MB, in the directory for good (plan
+        // §10.4). Each is renamed within moments of being written, so a fresh one may still be another process's.
+        Directory.CreateDirectory(_dir);
+        var download = PathOf("plantuml.js.a1b2c3d4.e5f.tmp");
+        var codeCache = PathOf("plantuml.js.v8cache.4242.tmp");
+        var fresh = PathOf("viz-global.js.f6g7h8i9.j0k.tmp");
+        foreach (var file in new[] { download, codeCache, fresh }) File.WriteAllBytes(file, [1, 2, 3]);
+        File.SetLastWriteTimeUtc(download, DateTime.UtcNow.AddHours(-2));
+        File.SetLastWriteTimeUtc(codeCache, DateTime.UtcNow.AddMinutes(-61));
+
+        Cache(Serving(new Dictionary<string, int>())).EnsureFiles();
+
+        Assert.False(File.Exists(download));
+        Assert.False(File.Exists(codeCache));
+        Assert.True(File.Exists(fresh));
+    }
+
+    [Fact]
+    public void A_ready_cache_is_checked_once_while_its_files_stay()
+    {
+        // The renderer asks before every node start. The first time the files are checked in full; after that only whether
+        // each one is still there, so a process hashes the engine once.
+        var calls = new Dictionary<string, int>();
+        var cache = Cache(Serving(calls));
+
+        var script = cache.Ready("plantuml-render.js", ScriptOne);
+        File.WriteAllBytes(PathOf("plantuml.js"), Wrong);
+
+        Assert.Equal(script, cache.Ready("plantuml-render.js", ScriptOne));
+        Assert.Equal(ScriptOne, File.ReadAllBytes(script));
+        Assert.Equal(Wrong, File.ReadAllBytes(PathOf("plantuml.js")));
+        Assert.Equal(1, calls[Base + "/plantuml.js"]);
+        Assert.Equal(1, calls[Base + "/viz-global.js"]);
+    }
+
+    [Fact]
+    public void A_cache_whose_directory_was_deleted_is_filled_again_on_its_next_use()
+    {
+        // Deleting the directory is the remedy a failed check names. A process that had checked the files once never
+        // looked again, so every later render started node on a script that was gone, until the process ended (plan
+        // §10.4): the test host an IDE keeps between runs, a long kronikol run.
+        var calls = new Dictionary<string, int>();
+        var cache = Cache(Serving(calls));
+        var script = cache.Ready("plantuml-render.js", ScriptOne);
+
+        Directory.Delete(_dir, recursive: true);
+
+        Assert.Equal(script, cache.Ready("plantuml-render.js", ScriptOne));
+        Assert.Equal(ScriptOne, File.ReadAllBytes(script));
+        Assert.Equal(Engine, File.ReadAllBytes(PathOf("plantuml.js")));
+        Assert.Equal(Viz, File.ReadAllBytes(PathOf("viz-global.js")));
+        Assert.Equal(2, calls[Base + "/plantuml.js"]);
+        Assert.Equal(2, calls[Base + "/viz-global.js"]);
+    }
+
+    [Fact]
+    public void A_cache_missing_one_file_puts_it_back_on_its_next_use()
+    {
+        var calls = new Dictionary<string, int>();
+        var cache = Cache(Serving(calls));
+        var script = cache.Ready("plantuml-render.js", ScriptOne);
+
+        File.Delete(script);
+        cache.Ready("plantuml-render.js", ScriptOne);
+        Assert.Equal(ScriptOne, File.ReadAllBytes(script));
+
+        File.Delete(PathOf("viz-global.js"));
+        cache.Ready("plantuml-render.js", ScriptOne);
+        Assert.Equal(Viz, File.ReadAllBytes(PathOf("viz-global.js")));
+        Assert.Equal(2, calls[Base + "/viz-global.js"]);
+        Assert.Equal(1, calls[Base + "/plantuml.js"]);
     }
 
     [Fact]

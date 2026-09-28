@@ -391,14 +391,14 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     // The known-hash check (plans/ENGINE_PIN_PLAN.md S2)
     // ═══════════════════════════════════════════════════════════
 
-    private const string WrongHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    internal const string WrongHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
     /// <summary>
     /// Replaces one known hash in a written report's render script. The browser then sees what a proxy's rewrite
     /// of that file would show it: bytes that do not match. The script sits in the page as plain text, and no
     /// request is touched.
     /// </summary>
-    private static string WithWrongHash(string reportUrl, string rightHash)
+    internal static string WithWrongHash(string reportUrl, string rightHash)
     {
         var path = new Uri(reportUrl).LocalPath;
         var html = File.ReadAllText(path);
@@ -426,14 +426,14 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         return errors;
     }
 
-    private static void AssertTheConsoleNamesTheRefusedEngine(List<string> errors)
+    internal static void AssertTheConsoleNamesTheRefusedEngine(List<string> errors)
     {
         lock (errors)
             Assert.Contains(errors, e => e.StartsWith("Kronikol: PlantUML engine unavailable: engine integrity check failed: plantuml.js from "
                                                       + $"{Constants.TrackingDefaults.PlantUmlJsCdnBase}/plantuml.js does not match {WrongHash}", StringComparison.Ordinal));
     }
 
-    private static void AssertEveryDiagramNamesTheRefusedEngine(string[] diagrams)
+    internal static void AssertEveryDiagramNamesTheRefusedEngine(string[] diagrams)
     {
         Assert.NotEmpty(diagrams);
         Assert.All(diagrams, text =>
@@ -458,10 +458,93 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         AssertTheConsoleNamesTheRefusedEngine(errors);
         var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
         Assert.Equal("mismatch", r.GetProperty("engineIntegrity").GetString());
-        Assert.NotEqual("worker", r.GetProperty("mode").GetString());
         Assert.Equal(0, r.GetProperty("workers").GetInt32());
         Assert.Equal(0, r.GetProperty("renders").GetInt32());
         Assert.Equal(0, await Page.Locator(".plantuml-browser svg").CountAsync());
+        // No fallback either: its tags would fetch the same bytes and fail the same check. The telemetry reads as the wiki
+        // documents it: mode stays 'starting', and fallbackReason carries the refusal.
+        Assert.Equal("starting", r.GetProperty("mode").GetString());
+        Assert.Contains("engine integrity check failed: plantuml.js", r.GetProperty("fallbackReason").GetString());
+        Assert.Equal(0, await Page.EvaluateAsync<int>("() => document.querySelectorAll('script[src*=\"plantuml.js\"]').length"));
+    }
+
+    /// <summary>
+    /// Points a written report's two engine URLs at <paramref name="engineBase"/>, as a mirror or a proxy in jsDelivr's
+    /// place would serve them. The render script sits in the page as plain text, and no request is touched.
+    /// </summary>
+    internal static string WithEngineBase(string reportUrl, string engineBase)
+    {
+        var path = new Uri(reportUrl).LocalPath;
+        var html = File.ReadAllText(path);
+        foreach (var file in new[] { "viz-global.js", "plantuml.js" })
+        {
+            var quoted = $"'{Constants.TrackingDefaults.PlantUmlJsCdnBase}/{file}'";
+            var at = html.IndexOf(quoted, StringComparison.Ordinal);
+            Assert.True(at >= 0 && html.IndexOf(quoted, at + 1, StringComparison.Ordinal) < 0, $"the render script should carry {quoted} exactly once");
+            html = html.Replace(quoted, $"'{engineBase}/{file}'");
+        }
+        File.WriteAllText(path, html);
+        return reportUrl;
+    }
+
+    /// <summary>
+    /// What a page shows when the engine could not be fetched at all: the fallback was tried, every diagram says the file
+    /// did not load, and nothing calls it a failed integrity check, since no file was there to check.
+    /// </summary>
+    private async Task AssertTheEngineCouldNotBeLoaded(string[] diagrams, List<string> errors, string engineUrl)
+    {
+        Assert.NotEmpty(diagrams);
+        Assert.All(diagrams, text =>
+        {
+            Assert.Contains($"PlantUML engine unavailable: failed to load {engineUrl}", text);
+            Assert.DoesNotContain("integrity", text);
+        });
+        lock (errors)
+        {
+            Assert.Contains(errors, e => e.StartsWith($"Kronikol: PlantUML engine unavailable: failed to load {engineUrl}", StringComparison.Ordinal));
+            Assert.DoesNotContain(errors, e => e.Contains("integrity check failed", StringComparison.Ordinal));
+        }
+        var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
+        Assert.Equal("main-thread", r.GetProperty("mode").GetString());
+        Assert.StartsWith("engine fetch failed: ", r.GetProperty("fallbackReason").GetString());
+        Assert.Equal(JsonValueKind.Null, r.GetProperty("engineIntegrity").ValueKind);
+        Assert.Equal(JsonValueKind.Null, r.GetProperty("vizIntegrity").ValueKind);
+        Assert.Equal(0, await Page.Locator(".plantuml-browser svg").CountAsync());
+    }
+
+    [Fact]
+    public async Task An_engine_host_that_refuses_the_connection_is_a_network_failure_not_a_refusal()
+    {
+        // A refused fetch fails with the same generic TypeError whether the hash was wrong or the network was, so the shim
+        // asks again without the hash (plans/ENGINE_PIN_PLAN.md §3.2). Here that fetch fails too: the page takes the
+        // main-thread fallback as it always did for an engine it cannot fetch (offline, a proxy that blocks the CDN), the
+        // fallback fails the same way, and no diagram blames the engine's hash.
+        using var closed = new ClosedPort();
+        var engineBase = $"http://127.0.0.1:{closed.Port}/npm/engine";
+        var errors = ConsoleErrors();
+        await Page.GotoAsync(WithEngineBase(GenerateReport("EngineUnreachable.html"), engineBase));
+
+        var diagrams = await RenderEveryDiagramAndReadIt();
+
+        await AssertTheEngineCouldNotBeLoaded(diagrams, errors, $"{engineBase}/plantuml.js");
+    }
+
+    [Fact]
+    public async Task An_engine_url_that_answers_404_is_a_network_failure_not_a_refusal()
+    {
+        // A mirror that does not hold the file answers, but not with it: a response that is not OK means the file is not
+        // served (§10.2), where a 200 whose bytes fail the check means a proxy rewrote it. The report and the missing
+        // engine come from one loopback server, so the 404 reaches the page as a 404 and not as a CORS failure.
+        var file = new Uri(GenerateReport("EngineNotFound.html")).LocalPath;
+        await using var server = LoopbackFileServer.Start(Path.GetDirectoryName(file)!);
+        var engineBase = server.UrlOf("no-engine-here");
+        WithEngineBase(new Uri(file).AbsoluteUri, engineBase);
+        var errors = ConsoleErrors();
+        await Page.GotoAsync(server.UrlOf(Path.GetFileName(file)));
+
+        var diagrams = await RenderEveryDiagramAndReadIt();
+
+        await AssertTheEngineCouldNotBeLoaded(diagrams, errors, $"{engineBase}/plantuml.js");
     }
 
     [Fact]

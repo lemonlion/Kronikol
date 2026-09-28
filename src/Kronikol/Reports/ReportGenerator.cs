@@ -1204,8 +1204,8 @@ public static class ReportGenerator
 
 
 
-        // Copy scenario name
-        var copyScenarioNameFunction = LoadResource("report-copy-scenario-name-function.js");
+        // Copy scenario name, through the shared clipboard writer (a page without a secure context has no navigator.clipboard)
+        var copyScenarioNameFunction = LoadResource("report-copy-text-function.js") + "\n" + LoadResource("report-copy-scenario-name-function.js");
 
         // Toggle examples detail row
         var toggleExamplesDetailFunction = LoadResource("report-toggle-examples-detail-function.js");

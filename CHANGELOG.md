@@ -4,6 +4,58 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.32.2] - 2026-09-28
+
+**Patch - a second audit of the engine pin plan (`plans/ENGINE_PIN_PLAN.md` §10.5, stage 1 P4, roadmap 1.8), at the
+owner's request, and the copies of a report served over plain http from another machine.** Every change is a fix or a
+test, and nothing new is public, so the patch part moved. Template pins stay at 3.31.10, the last release on NuGet.
+
+### Fixed
+
+- **Every copy in a report served over plain http from another machine did nothing.** A browser gives its clipboard API
+  only to a secure context (`https://`, `localhost`, `file://`), and a report a team hosts at a LAN address or an
+  internal host name has none. There each copy of the diagram menu (the source, the SVG, a box's text, highlighted
+  text, the request payloads) and the scenario name's copy button threw a TypeError and copied nothing. Where the API
+  is missing, text is now copied through the page's own selection. An image reaches the clipboard only through that
+  API, so there the menu leaves out Copy as PNG and Copy as PNG (no transparency), and a flame chart's or call tree's
+  Copy as PNG; Save as PNG and the Open items still work. The same holds in Firefox before 127, which has no
+  `ClipboardItem` on any page.
+- **Deleting the Node renderer's cache directory broke a process that was still running.** Deleting it is the remedy
+  the renderer's own messages name, but a process that had checked its engine files once never looked again: every
+  later render of a test host an IDE keeps alive, or of a long `kronikol` run, started node on files that were gone,
+  and every diagram became a placeholder until the process ended. Before each render the renderer now checks that its
+  files are still there, and checks them in full again when one is gone.
+- **A process killed mid-download left its temporary file for good.** A download and node's code cache are written
+  under temporary names and renamed into place, and a process killed in between left up to 4 MB in
+  `%LOCALAPPDATA%/Kronikol/plantuml-js/<version>/` that nothing removed. A full check now deletes any temporary file
+  there once it is an hour old.
+
+### Tests
+
+- The page tells an engine file the browser refused from one it could not fetch by fetching it again without the
+  hash, and a response that is not OK counts as not fetched. No test pointed a report at an engine that did not
+  answer or answered 404, and three mutations of that rule passed every test. Two facts now do, and see the fallback
+  taken and every diagram say it could not load the file, with no mention of the hash.
+- A refused engine's telemetry as the wiki documents it (`mode` stays `'starting'`, `fallbackReason` carries the
+  refusal) and the rule that no fallback runs are asserted.
+- `NonSecureOriginTests` opens reports from a non-secure origin, the LAN address the plan's acceptance names, which
+  no test had opened (3.31.7 added `http://127.0.0.1`, a secure context). The report renders in the workers with both
+  engine files verified, refuses a wrong hash, and its copies work.
+- The V8 code cache in the directory every Kronikol version on one engine shares is right for all of them only
+  because each rewrites the engine's tail to the same text, unchanged since 3.0.50, and V8 checks a cache against the
+  source's length only. A fact pins those lines.
+- Every new fact was red on 3.31.10 or is a guard proved by a mutation: 11 mutations, each red on its own facts only.
+  Suites on the release tree: unit 6,049 passed and 1 skipped (Release), E2E 948 passed and 28 skipped, IKVM 55; `release.slnf` built in Release for every target framework.
+
+### Documentation
+
+- Wiki: `Inline-SVG-Rendering` (the copies on a page without a secure context) and `PlantUML-Browser-Rendering` (a
+  file that cannot be fetched is not a failed check; the Node cache looks for its files again before each render).
+- `THEME_PLAN.md` and `TEOZ_PERF_PLAN.md` carry the notes the engine pin plan handed them: their index rows had them,
+  but the plans themselves still said the fork was the pin and the budget was to come. `tools/render-bench/README.md`
+  named the wrong release for the npm pin and a cache path without its version.
+- Kronikol4J: the report page's copy code changed; a ledger entry, not mirrored.
+
 ## [3.32.1] - 2026-09-28
 
 **Patch - `Kronikol.Extensions.TcpTap` records every command with its own reply on a busy connection, found in a sweep

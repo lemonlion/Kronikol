@@ -8,6 +8,8 @@ with the departures (§10.2: a refused `viz-global.js` loses no Kronikol diagram
 Smetana; the default fragment height is the fastest measured). **§10.1's `--jitless` leftover was fixed as 3.31.3**
 (2026-09-27, §10.3), with the other ways WebAssembly is off and the Node renderer. **Audited 2026-09-27, follow-ups as
 3.31.6, published as 3.31.7** (§10.4): the Node renderer's script is named for its own bytes, and what the plan's own steps missed.
+**Audited again 2026-09-28, released as 3.32.2** (§10.5): an engine that cannot be fetched, the LAN origin and the copies
+there, and §10.4's two leftovers.
 
 **Re-checked 2026-09-25 against 3.29.3 (`b74c8ddc`):** every source, test and render-bench file this plan
 cites is unchanged since `2843018a` except `ReportGenerator.cs` (the fragment-height parameter moved
@@ -1426,6 +1428,73 @@ Release for every target framework before its tag. The tag `v3.31.6` stays, as `
 **Not done.** Firefox and WebKit stay measured by probes, not guarded by the E2E suite. A process whose cache directory
 is deleted by hand while it runs keeps its first check until it restarts (the documented remedy follows a failed check,
 and a failed check runs again). A process killed mid-download leaves its temporary file in the directory.
+
+### 10.5 The second audit, released as 3.32.2 (2026-09-28)
+
+The owner asked again whether anything in P4 had been missed. Worktree `C:/Code/Kronikol-p4audit2`, branch
+`p4/second-audit`, from `e7e85044`; the number agreed with kronikol-fe (a fourth P3 audit) and kronikol-c0 (a P5 audit),
+after two cloud releases, 3.32.0 and 3.32.1, reached main untagged. Each claim of §3, §5, the changelog entries of
+3.31.1, 3.31.3 and 3.31.7 and the wiki was matched to a test that fails without it, and each new guard was proved by a
+mutation.
+
+**Found in the tests.**
+- **An engine that cannot be fetched was never exercised.** The shim tells a refused file from a network failure by
+  fetching it again without the hash (§3.2), and counts a response that is not OK as a network failure (§10.2). No test
+  pointed the page at an engine URL that did not answer or answered 404, so three mutations passed every test: the
+  second fetch ignoring `r.ok`, a network failure reported as a mismatch, and a second fetch that failed counted as
+  served. Two facts now point a report's engine URLs at a closed loopback port and at a 404 on the report's own loopback
+  server: the fallback is taken, every diagram says `failed to load <url>`, and nothing names the hash.
+- **A refused engine's telemetry was not pinned.** The wiki says `mode` stays `'starting'` and `fallbackReason` carries
+  the refusal, and §3.2 says no fallback runs. The fact asserted only that `mode` was not `'worker'`, so a refusal that
+  took the fallback anyway passed. It now asserts all three.
+- **§5's third origin was not guarded.** §10.4 added `http://127.0.0.1`, which is a secure context. The LAN address §5
+  names is not, and it is the case the design was chosen for (no `crypto.subtle` there, §1.7). `NonSecureOriginTests`
+  launches a Chromium that maps `kronikol-lan.test` to the loopback server (`--host-resolver-rules`): a report there
+  renders in the workers with both files verified, and refuses a wrong hash.
+
+**Found in the report page, outside the plan** (`CLAUDE.md`: a bug found along the way is fixed). On that origin
+`navigator.clipboard` does not exist, so every copy of the diagram menu and the scenario's copy button threw a TypeError
+and copied nothing. Text is now copied through the page's selection there (`copyTextToClipboard`, one file that the
+report's script block and the context-menu script both carry), and the PNG copies, which only the clipboard API can
+make, are left out of the menu where the page has none. Firefox before 127 has no `ClipboardItem` on any page (MDN
+browser-compat-data), below the report's floor of 113, so the menu leaves them out there too.
+
+**Found in the code: §10.4's two leftovers.**
+- A process that had checked the engine files once never looked again. Deleting the directory, the remedy the refusal
+  messages name, made every later render of a running process fail until it ended (an IDE's test host, a long
+  `kronikol` run). `EngineCache.Ready` checks in full once, then only that each file is still there, and checks in full
+  again when one is gone.
+- A process killed between writing a temporary file and renaming it (a download, or node's code cache) left the file
+  for good. A full check deletes any `*.tmp` in the directory once it is an hour old.
+
+**Found as a hazard, and pinned.** The code cache is shared by every Kronikol version on the engine, and V8 checks a
+cache against the source's length only (§1.12). It is right for all of them only because each rewrites the engine's
+trailing `export` to the same text, unchanged since 3.0.50. A version that rewrote it to other text of the same length
+would run another version's compiled code. A fact pins the two lines, and the script's comment says to give the cache a
+file of its own before changing them.
+
+**Found in the docs.** §7's hand-offs to `THEME_PLAN.md` and `TEOZ_PERF_PLAN.md` were ticked on their index rows only:
+the first still said the fork was the pin and held its Phase 2 for the move, the second still listed the move and the
+budget as work to do. Both carry dated notes. `tools/render-bench/README.md` said the npm pin came in 3.30.5 (it was
+3.31.1) and named the cache directory without its version, and a test comment cited `DownloadJsFiles`, gone since 3.31.1.
+
+**Tests.** `NonSecureOriginTests`, 5 new (two guards; the copy fact and the diagram-menu fact red on 3.31.10, the flame-chart
+menu fact red with 3.31.10's ungated item put back);
+`BrowserRenderWorkerTests`, 2 new (unreachable, 404) and 1 strengthened; `EngineCacheTests`, 4 new (the sweep, one full
+check, a deleted directory filled again, one missing file put back) and the proxy remedy asserted;
+`NodeJsPlantUmlRendererTests`, 1 rewritten (node is started through the engine cache, checked on a directory of its
+own), 2 new (the rewrite pin; a render after its directory was deleted, Integration, on a temp directory filled from the
+machine's verified files, since the machine's directory is shared by every class that renders);
+`CopyScenarioNameReportTests`, 2 new (the report carries the writer; no report script writes the clipboard around it).
+Mutations, each red on its own facts only: the shim's second fetch ignoring `r.ok` (the 404 fact), a network failure
+reported as a mismatch on the worker path (both network facts) and on the fallback's tags (both), a failed second fetch
+counted as served (the unreachable fact), a refusal taking the fallback (the refusal fact), each image-copy gate removed
+(its menu fact), `Ready` never looking again (3 facts), `Ready` checking in full every time (1), the sweep ignoring age
+(1), node started on a fixed name (2).
+
+**Not done.** Firefox and WebKit stay measured by probes, not by the E2E suite, which runs Chromium. A `viz-global.js`
+the network cannot deliver sends the page to the main thread, where a refused one drops Graphviz only: a fetch failure
+has always done this, so it is recorded, not changed. The CDN override waits for a consumer's ask (ROADMAP Appendix C).
 
 ---
 

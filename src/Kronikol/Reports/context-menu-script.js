@@ -506,15 +506,15 @@
                     _currentNoteText = currentText;
                     menu.appendChild(createSubMenu('Copy box text', [
                         createMenuItem('Copy full box text', function() {
-                            navigator.clipboard.writeText(noteText);
+                            copyTextToClipboard(noteText);
                         }),
                         createMenuItem('Copy current box text', function() {
-                            navigator.clipboard.writeText(currentText);
+                            copyTextToClipboard(currentText);
                         })
                     ]));
                 } else {
                     menu.appendChild(createMenuItem('Copy box text', function() {
-                        navigator.clipboard.writeText(noteText);
+                        copyTextToClipboard(noteText);
                     }));
                 }
                 menu.appendChild(createSeparator());
@@ -549,7 +549,7 @@
         }
         if (selectedText) {
             menu.appendChild(createMenuItem('Copy Highlighted Text', function() {
-                navigator.clipboard.writeText(
+                copyTextToClipboard(
                     window._stripZeroWidth ? window._stripZeroWidth(selectedText) : selectedText);
             }));
             menu.appendChild(createSeparator());
@@ -557,7 +557,9 @@
 
         if (svg) {
             // Full SVG menu — grouped into submenus
-            menu.appendChild(createSubMenu('Copy image', [
+            // A PNG reaches the clipboard only where the page can copy an image (window.canCopyImagesToClipboard): not on a
+            // report served over plain http from another machine. Copy as SVG is text, copied everywhere.
+            menu.appendChild(createSubMenu('Copy image', (window.canCopyImagesToClipboard ? [
                 createMenuItem('Copy as PNG', function() {
                     svgToCanvas(svg, function(canvas) {
                         canvas.toBlob(function(blob) {
@@ -571,25 +573,26 @@
                             navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
                         }, 'image/png');
                     });
-                }),
-                createMenuItem('Copy as SVG', function() {
-                    navigator.clipboard.writeText(serializeSvg(svg));
                 })
-            ]));
+            ] : []).concat([
+                createMenuItem('Copy as SVG', function() {
+                    copyTextToClipboard(serializeSvg(svg));
+                })
+            ])));
             if (source) {
                 var origSource = container._noteOriginalSource || source;
                 if (origSource !== source) {
                     menu.appendChild(createSubMenu('Copy ' + typeLabel + ' source', [
                         createMenuItem('Copy full ' + typeLabel + ' source', function() {
-                            navigator.clipboard.writeText(origSource);
+                            copyTextToClipboard(origSource);
                         }),
                         createMenuItem('Copy current ' + typeLabel + ' source', function() {
-                            navigator.clipboard.writeText(source);
+                            copyTextToClipboard(source);
                         })
                     ]));
                 } else {
                     menu.appendChild(createMenuItem('Copy ' + typeLabel + ' source', function() {
-                        navigator.clipboard.writeText(source);
+                        copyTextToClipboard(source);
                     }));
                 }
             }
@@ -686,8 +689,8 @@
                 }
             }
         } else {
-            // HTML content (flame chart, call tree) — PNG only
-            menu.appendChild(createMenuItem('Copy as PNG', function() {
+            // HTML content (flame chart, call tree) — PNG only, copied where the page can copy an image
+            if (window.canCopyImagesToClipboard) menu.appendChild(createMenuItem('Copy as PNG', function() {
                 htmlToCanvas(container, function(canvas) {
                     canvas.toBlob(function(blob) {
                         navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
@@ -712,7 +715,7 @@
             var payloads = extractCallerPayloads(callerSource);
             if (payloads) {
                 menu.appendChild(createMenuItem('Copy all caller request payloads', function() {
-                    navigator.clipboard.writeText(payloads);
+                    copyTextToClipboard(payloads);
                     showToast('Copied ' + payloads.split('\n\n').length + ' request payload(s)');
                 }));
             }

@@ -293,7 +293,11 @@ function loadEngineWithCodeCache(filePath) {
     var code = fs.readFileSync(filePath, 'utf8');
     // An ES-module engine build (the npm @plantuml/core line) ends in `export { X as render,
     // Y as renderToString }` — vm.Script cannot evaluate an export statement, so rewrite the tail into
-    // an assignment. The rewrite is deterministic, so the V8 code cache stays valid across runs.
+    // an assignment. The rewrite is deterministic, so the V8 code cache stays valid across runs, and across
+    // Kronikol versions: the cache sits in the directory every version on this engine shares, and V8 checks it
+    // against the source's length only, so every version must rewrite to this same text. A rewrite of the same
+    // length but other text would run another version's compiled code; change it only with a cache file of its
+    // own (NodeJsPlantUmlRendererTests pins these lines; plans/ENGINE_PIN_PLAN.md §10.5).
     var tail = code.slice(-300);
     var em = /export\s*\{\s*([A-Za-z_$][\w$]*)\s+as\s+render\s*,\s*([A-Za-z_$][\w$]*)\s+as\s+renderToString\s*\}\s*;?\s*$/.exec(tail);
     if (em) {

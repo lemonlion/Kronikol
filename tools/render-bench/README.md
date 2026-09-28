@@ -15,8 +15,8 @@ Prerequisites
 - Build `tests/Kronikol.Tests.EndToEnd` once (the scripts use its Playwright driver at
   `tests/Kronikol.Tests.EndToEnd/bin/Debug/net10.0/.playwright/package` and the installed Chromium).
 - Engine builds next to these scripts (not committed — large):
-  `old-plantuml.js` + `viz-global.js` = copy of `%LOCALAPPDATA%/Kronikol/plantuml-js/{plantuml.js,viz-global.js}`
-  (or download from `TrackingDefaults.PlantUmlJsCdnBase`, the npm package `@plantuml/core@1.2026.8` from 3.30.5); optional `core-1.2026.6-patched.js` =
+  `old-plantuml.js` + `viz-global.js` = copy of `%LOCALAPPDATA%/Kronikol/plantuml-js/<engine version>/{plantuml.js,viz-global.js}`
+  (or download from `TrackingDefaults.PlantUmlJsCdnBase`, the npm package `@plantuml/core@1.2026.8` from 3.31.1); optional `core-1.2026.6-patched.js` =
   `https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.6/plantuml.js` with every `4096.0` → `98304.0`.
 - `polyfill.js` is the DOM-polyfill half of `src/Kronikol/PlantUml/plantuml-render.js` (regenerate if that changes).
 
