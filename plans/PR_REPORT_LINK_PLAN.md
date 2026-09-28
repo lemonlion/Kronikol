@@ -1,9 +1,9 @@
 # PR report link plan (`ROADMAP.md` 2.2, #72, PR #73)
 
 **Date:** 2026-09-27 · **Repo version:** 3.31.10 (`5ca0878a`; first written at 3.31.9, `e4c9e360`) · **PR head:**
-`e31b42fa` on `pr-report-link-template`, one commit on `49f5ea87` (the tree of 2026-09-15, 3.19.0) · **Status:** a
-plan, **not green-lit**. It needs the owner's answers to Q1 to Q5 (`ROADMAP.md` D25), then about a day of work,
-then the owner's go-ahead to merge. §1 is what was RUN, READ and read on the web today, §2 the findings, §3 the
+`e31b42fa` on `pr-report-link-template`, one commit on `49f5ea87` (the tree of 2026-09-15, 3.19.0) · **Status:**
+**executed 2026-09-28** (§10): the owner asked for the plan in full, which took D25 as recommended, and PR #73
+merged. The rest of this header is the plan as written. §1 is what was RUN, READ and read on the web today, §2 the findings, §3 the
 questions, §4 the slices, §9 the assumption ledger. The probes, the rehearsals and their output are in
 `PR_REPORT_LINK_PLAN.harness/`.
 
@@ -831,4 +831,113 @@ One validated push beats three speculative ones.
 
 ## 10. Execution log
 
-Empty until the plan is green-lit.
+**Executed 2026-09-28** by a local Claude Code session, at the owner's request to carry out this plan in full,
+which took D25 as recommended: yes to Q1 to Q5. PR #73 merged as `683f1d6e` to `d82ee484`, by rebase. No version change (Q1).
+
+### S0
+
+- The PR's head was still `e31b42fa`, with no review or comment. The majors were unchanged (`checkout` v7.0.1,
+  `setup-dotnet` v6.0.0, `upload-artifact` v7.0.1, `download-artifact` v8.0.1, `github-script` v9.0.0).
+- actionlint's newest release was still 1.7.12, and its `main` (`011a6d1`) still parses only `group` and
+  `cancel-in-progress`, so F16 holds and the README keeps its ignore line.
+- `main`'s CI was green on its last eight runs (at `1b74a561`, run 36459435536), so F17's baseline held.
+- The rehearsal's patches applied as they stood, and `probe.js` on the rebased action reproduced P1 to P6.
+- **F9 could not be done.** Nothing names the consumer: PR #73 and #72 say only "a consumer repository". It is not
+  BreakfastProvider, whose workflows write no comment. GitHub's code search finds the comment's heading only in
+  this plan's own files. The session that wrote PR #73 did not run on the machine that executed this plan, and the
+  owner could not reach the repository either. So there was no second copy to diff, and Q4 has nothing to move
+  onto a tag until the owner names the repository.
+
+### S1 to S4
+
+- **S1.** Rebased onto `1b74a561`. `CHANGELOG.md` was the only conflict, resolved as step 2 says: `main`'s 7,568
+  lines whole, with the PR's 18-line `[Unreleased]` block above 3.32.4. The 17 facts: 17 passed, none skipped.
+  `Kronikol.Tests` (Windows, Release): 6,094 passed, 1 skipped, 0 failed. The session ran unprivileged, so §1.2's
+  three root-only failures did not arise. A local Claude Code session could push the branch (A15), with
+  `--force-with-lease=pr-report-link-template:e31b42fa`. CI on that head (`2bd1b3cc`, run 36488194293): green.
+- **S2.** `s2-1` alone failed exactly the five facts §1.9 names, each for its reason: the default queue, no
+  `markdown` sample, two writes where one is right (twice), and the relative link. With `s2-2`, 22 of 22. Q5's fact
+  alone failed because the section after the marker was dropped; with its script, 23 of 23.
+- **S3.** The lane's fact alone failed on the missing workflow; with the workflow and the example's option, 24 of
+  24. The lane's test step, run locally with `GITHUB_ACTIONS` and `GITHUB_OUTPUT` set: 11 of 11, both outputs, and a
+  reports directory of **14** files, §1.9's 13 and `query.cs` (the query fallback's script, since 3.32.0).
+  actionlint 1.7.12 found only the `queue` key in the lane and in the README's workflow; `-ignore` cleared both,
+  the repository's workflows passed, and a mistyped input failed against the action's declared inputs.
+- **S4.** The `[Unreleased]` entry reworded as §4.4 says, and the stale `[Unreleased]` definition deleted.
+
+The PR's commit, S2, Q5, S3, S4 and the live proof's commit (below) stayed separate commits.
+
+### The live proof on PR #73
+
+1. **Run 36488194363.** One comment (5879351914) by `github-actions[bot]`, opening with the marker, its line linking
+   `…/runs/36488194363/artifacts/10999439765`. The rendered body carries `markdown-alert-tip` (A7) and the footer,
+   and the end marker follows the lines.
+2. The artifacts endpoint gave id 10999439765, created 21:46:54Z, expiring 2026-09-29T21:46:53Z: the line's 21:46
+   and 21:46 UTC. **The expiry counts from the upload** (retention-days 1), not from the run's creation (21:45:24Z).
+   That corrects §1.10 and A14 for an artifact given `retention-days`: every upload measured here expired its
+   retention after its own upload.
+3. The zip held the 14 files (`TestRunReport.html`, `Failures.md` and `Run.json` among them), 1,711,255 bytes, and
+   its SHA-256 equals the API's digest. Fetched signed out, the comment's link redirects (307) to a
+   `/suites/…/artifacts/…` address, so a reader must sign in, as the README says.
+4. The link job re-run alone (attempt 2) edited the same comment. Still one comment.
+5. **F13 settled.** Re-running all jobs (attempt 3): the same-name upload succeeded and replaced the first attempt's
+   artifact (10999439765 then answered 404, and the run listed one, 11001010120), and the line moved to it.
+   Re-running failed jobs of run 36490823119 (a scratch commit whose test step fails after writing its reports):
+   the upload succeeded, the run listed both attempts' artifacts, and the second attempt's had the **lower** id
+   (11000208931 against 11000248501). The action linked the second, by upload time. No upload failed, so the
+   README's upload step needs no `overwrite: true`. Each re-run's artifact expired its retention after its own
+   upload. The README's re-run sentence says this. A new fact,
+   `A_rerun_links_the_newer_upload_even_when_its_artifact_id_is_the_lower`, holds the lower-id case: the one
+   re-run fact gave the newer upload the higher id, so a script that took the highest id passed every fact, and
+   with that mutation the new fact alone fails.
+6. Each new push moved the line to the new run (36490823119, then 36491733264).
+7. The older run's link job, re-run (36488194363, attempt 4), logged "Run 36490823119 is newer and already linked
+   its report, so this run leaves the comment alone." The comment kept its `updated_at`.
+8. **F1, run rather than read.** A scratch lane put three matrix link jobs in one group, queued at once. With the
+   PR's original block (the default queue, run 36488843310), lane a was cancelled within the second, c and b ran,
+   the run read cancelled, and the comment gained lines for b and c only. With `queue: max` (run 36489054967), all
+   three ran, in the order b, c, a, and the comment held all three lines (A5, A12). That run's first attempt was
+   cancelled before any link job started, by a mistake in the executing session's own script, so the result is
+   its second attempt, a full re-run with the three jobs queued at once again. The three matrix lines stay in
+   #73's comment, since the action removes no other artifact's line.
+9. **§8 measured.** A scratch step uploaded `TestRunReport.html` with `archive: false` (artifact 11000392636, named
+   by its file, 621,340 bytes). The endpoint's download redirects (302) to Azure blob storage
+   (`productionresultssa10.blob.core.windows.net`), which serves the file as `text/html` with
+   `Content-Disposition: inline` and no content security policy. Opened there in Chromium: 11 scenarios, the
+   render worker running with WebAssembly and a verified engine hash, 12 diagrams drawn and none an error picture,
+   the search working ("cake" 6 of 11 scenarios, a word in none 0, cleared 11), and an empty console. Not seen: the
+   hop a signed-in browser takes from the artifact's page on github.com, which the session could not make. So a
+   Kronikol report works where GitHub serves an unzipped artifact, as §8 hoped, and the roadmap row it asks for is
+   added (2.5), not built.
+
+A3 was settled the same evening: on a run holding five artifacts, the `name` filter returned `matrix-a` alone for
+`matrix-a`, and nothing for `matrix`, `MATRIX-A`, `matrix-a.zip` or `TestRunReport`. It is exact and
+case-sensitive.
+
+The scratch commits for checks 5, 8 and 9 were dropped by a force-push with lease back to the clean head, rather
+than reverted, so none reached `main`. The branch was then rebased onto `main` at `524221c2` (the doorstep plan's
+`07d0a189` and the Go plan, neither touching the PR's files): `Kronikol.Tests` 6,105 passed, 1 skipped, 0 failed.
+It was pushed as `07b71de9`: the lane green (run 36491733264), CI 28 of 28 (run 36491733269), CodeQL green (run 36491733296).
+
+### S5 and S6
+
+- **S5.** With the owner's word ("Merge to main"), once CI (28 of 28), CodeQL and the lane were green on `07b71de9` (32
+  checks), PR #73 merged at 22:40:54Z by **rebase and merge**, as `683f1d6e` (the PR's commit), `3da5f159` (S2),
+  `2fafc8f2` (Q5), `a8d20eb7` (S3), `818d4614` (S4) and `d82ee484` (the live proof), on `ecd8dc52`. `main` requires
+  one approving review, code owners' included, and an author cannot approve their own pull request, so the merge
+  took the administrator's bypass (§1.10 said `main` required no status check, which holds; it did not mention the
+  review). The merge closed #72. `main` equals the tested head plus `ecd8dc52`'s plan files, checked by diff. S4's
+  PR body was brought up to date first, in the owner's words where they still held. `main`'s own CI on `d82ee484`
+  (run 36493826269) passed 27 of 28 jobs: Remaining Unit Tests failed on
+  `TcpTapTests.EveryByteIsForwardedUnchangedInBothDirections` (256 expected, 0 read), which the same job had passed
+  on the PR's head. A race in that test, not this change: the tap counts a read once its write downstream completes,
+  so the client held the reply before `BytesServerToClient` moved. A 200 ms delay before the count reproduced it on
+  demand; the test now waits for both counters, as it waited for the server, and passes with the delay in place.
+  Fixed in the commit before this log, with no bump (test code only).
+- **S6.** Step 1: the wiki's `CI-Artifact-Upload.md` gained "Link the report on the pull request" (`a0cb281`), with
+  check 5's sentence where `wiki-draft.md` marked it and "the release after 3.32.4" for the tag. Its example moved
+  to the current majors and to `!cancelled()`, with GitHub's reason, and gained F12's paragraph. `tools/wiki-links`
+  finds no dead link. Step 2 waits for that release: whoever cuts it folds the `[Unreleased]` section into its own
+  and records its tag in `ROADMAP.md` 2.2 as the first that carries the action. Steps 3 and 4 are the commit that
+  adds this log: 2.2 done, D25 taken, a row 2.5 for §8's finding, and this plan's row in `PLANS_STATUS.md`.
+  Step 5 (Q4) is not done, for the reason F9 gives above.
