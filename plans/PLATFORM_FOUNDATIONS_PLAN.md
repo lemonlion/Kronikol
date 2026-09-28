@@ -15,14 +15,15 @@ possible. Three follow-on plans — `JAVA_PLATFORM_PLAN.md`, `NODE_PLATFORM_PLAN
 > in-process rendering path on .NET. Its §12.7 amends F1–F9; its §12.5 is the fidelity accounting.
 
 > **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** a fifth platform, Go, planned as a §9 instance after
-> Python (roadmap 14.16, D28), and the first §9 instance written. It asks two things of this plan. (1)
-> Seven questions for the contract, to be decided in F2, F3 and F5 before `captureFormatVersion 1`
-> freezes (its §4): a per-process `seq` beside the timestamp, SQL parameters as data rather than the
-> `\n-- Parameters: ` text block, `attributionSource` on the wire with platform values, the raw test name
-> and its framework, the tests stream as a directory, and two renderer rules. Five of them meet every
-> other platform too. (2) An exception to F9's CI shape: Go's tags are `go/v*`, because the Go toolchain
-> resolves a subdirectory module's versions only from tags prefixed with its directory. It also measured
-> that no maintained Go WebAssembly runtime hosts F6's Preview 2 component, so Go's shim execs.
+> Python (roadmap 14.16; D28, taken the same day), and the first §9 instance written. It asks two things
+> of this plan. (1) Seven questions for the contract, to be decided in F2, F3 and F5 before
+> `captureFormatVersion 1` freezes, now §4.8 below: a per-process `seq` beside the timestamp, SQL
+> parameters as data rather than the `\n-- Parameters: ` text block, `attributionSource` on the wire with
+> platform values, the raw test name and its framework, the tests stream as a directory, and two renderer
+> rules. Five of them meet every other platform too. (2) An exception to F9's CI shape: Go's tags are
+> `go/v*`, because the Go toolchain resolves a subdirectory module's versions only from tags prefixed with
+> its directory. It also measured that no maintained Go WebAssembly runtime hosts F6's Preview 2
+> component, so Go's shim execs.
 
 **Where it contradicts an existing plan, this one wins.** §5 lists every supersession explicitly.
 `MONOREPO_MIGRATION_PLAN.md` is adopted whole as F0. `KRONIKOL4J_PORTABILITY_PLAN.md`,
@@ -392,6 +393,23 @@ sections of the options file F4 carries, not stream records (that plan's Q7 reco
 They must be in before `captureFormatVersion 1` freezes (§8.1, roadmap 14.5): a reader that cannot tell a
 stub's answer from a dependency's, or join one report's `payments` to another's `Payments API`, is the
 class of lie a frozen contract would carry for a version. Not green-lit; roadmap D23.
+
+### 4.8 Go's asks (added 2026-09-28)
+
+`GO_PLATFORM_PLAN.md` §4 asks the contract for five things and the renderer for two, each found by
+running a Go capturer through today's `kronikol ingest` (that plan's harness, H7 to H11). Its D28 was
+taken on 2026-09-28, so they are this plan's to decide, each in or out of `captureFormatVersion 1` with a
+reason, at 14.5 (§8.1; roadmap rule 6). The first five meet every platform, not only Go.
+
+| # | Ask | Why | Decided in |
+|---|---|---|---|
+| C1 | A per-producer-process `seq` on every record of both streams, and the renderer ordering one process's records by it | Inside `testing/synctest`'s fake time every stamp is 2000-01-01 plus fake time, and Go's documentation steers tests there; fake clocks exist on other platforms too | F2 |
+| C2 | SQL parameters as data (`parameters: [{name, value}]`), not the `\n-- Parameters: ` text block | The renderer recognises captured values only by that literal .NET string (`ParameterCaptureHint`); any other capturer gets a false warning with .NET-only advice | F2, F3 |
+| C3 | `attributionSource` on the wire (a member 14.1 already pins as lost), its values open to a platform, and window attribution marked as inferred | Go adds a level, `GoroutineLabel`; without it the time window filed one parallel test's calls under another's on every rendered run | F1, F5, F2 |
+| C4 | The raw test name and the framework as facts, with casing and de-mangling as renderer rules keyed by framework | Ingest capitalised a Go import path; `t.Run` mangles names (spaces, `#01`, `/`) | F3 |
+| C5 | The tests stream as a directory of fragments (§4.2 applied to `--tests`), or a record kind that lets one directory hold both streams | One process per package writes one fragment each; ingest takes one `--tests` file, and a second fragment among its inputs is read as 17 malformed interactions | F2, §4.2 |
+| C6 | *(a renderer rule)* Go's failure dialects (`got X, want Y`, testify's `expected:` and `actual:`) parsed into `Failures.md`'s expected and actual | Shown verbatim today | F3 |
+| C7 | *(a renderer rule)* Diagnostics worded by producer, from G11's `producer` and `platform` | The placeholder hint names .NET settings to a Go user | F2's header record |
 
 ---
 

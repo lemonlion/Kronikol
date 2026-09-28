@@ -42,7 +42,10 @@ defect), classifies SQL by its first keyword because pre-F3 ingest will not, and
 two contract fields the contract does not have yet (`attributionSource`, `seq`). It appends SQL
 arguments as `-- $1 = …` rather than the `\n-- Parameters: ` block .NET's trackers write, which is the
 only form `ParameterCaptureHint` recognises: that is how the false "placeholders and no values" hint in
-`results-h11-prototype.txt` arises (plan K20), and it is left so the result reproduces. Its size is a floor for the plan's cost model, never an estimate.
+`results-h11-prototype.txt` arises (plan K20), and it is left so the result reproduces. Its
+goroutine-label level is opt-in (`KRONIKOL_GOROUTINE_LABELS=1`), which is what let H11 measure the
+cascade with and without it; the plan's decided design (Q2, taken 2026-09-28) turns it on by default,
+behind a self-test. Its size is a floor for the plan's cost model, never an estimate.
 
 ## Re-running
 

@@ -1,14 +1,15 @@
 # GO_PLATFORM_PLAN.md — Kronikol for Go: a fifth platform, after Java, Node and Python
 
 **Date:** 2026-09-28 · **.NET repo:** 3.31.10 (`e7e8504`) · **Kronikol4J:** 0.1.25-SNAPSHOT · **Go:** 1.27.1 current, 1.24.7 on the machine
-· **Status: design record, investigation run, nothing implemented, NOT green-lit.** Answers the owner's
+· **Status: design record, investigation run, nothing implemented. Green-lit 2026-09-28: D28 and Q1 to Q8 taken as recommended (§7, §11).** Answers the owner's
 question of 2026-09-28: "Can you come up with a plan to have Kronikol also support Go after it supports
 python, js and java".
 
-**The decision it needs is D28 in `ROADMAP.md` §3.** The platform is stage 14.16, after 14.9's Python.
-One part of it is not after anything: §4 is seven questions for the capture contract, and rule 6 says
-the five format changes among them cost nothing before 14.5 freezes the format and a format version
-after.
+**The decision was D28 in `ROADMAP.md` §3, taken 2026-09-28 as recommended.** The platform is stage
+14.16, after 14.9's Python. One part of it is not after anything: §4 is seven questions for the capture
+contract, and rule 6 says the five format changes among them cost nothing before 14.5 freezes the format
+and a format version after. With D28 taken they are `PLATFORM_FOUNDATIONS_PLAN.md` §4.8, decided in or
+out at 14.5 (M0).
 
 **What it is.** The Go instance of `PLATFORM_FOUNDATIONS_PLAN.md` §9's template, the eleven items every
 platform plan fills in, in that order (§3). That plan names four platforms and says it "does not
@@ -48,7 +49,7 @@ first, in the milestones of §5; give it its own launch at its own bar (D18).
 
 **Three things up front.**
 
-1. **Re-open Go** (D28). The deferral was right that nothing can be injected into a running Go binary
+1. **Re-open Go** (D28, taken 2026-09-28). The deferral was right that nothing can be injected into a running Go binary
    and wrong about what follows: the wrap sites of a Go component test are in the test's own wiring,
    and the two cases where they are not have answers (§1).
 2. **The contract asks are the only urgent part** (§4): an ordering key that is not the clock, SQL
@@ -176,7 +177,7 @@ next; with its label it resolves to its own scenario, as `Expired`.
 
 **Level 4 is what made the prototype's parallel tests correct (K19)**, and it has costs, so:
 
-- **On by default, off two ways**: `KRONIKOL_GOROUTINE_LABELS=0` at run time, and a build tag
+- **On by default** (Q2, taken), **off two ways**: `KRONIKOL_GOROUTINE_LABELS=0` at run time, and a build tag
   (`kronikol_nolinkname`) that compiles the linkname out for a future Go whose linker refuses it.
 - **A self-test at the first `Start`**: set a label, start a goroutine, read it back. If it fails, the
   level turns itself off and the run says so in a diagnostic. A runtime change becomes a degraded
@@ -265,7 +266,8 @@ holding the id (foundations L2), stamped by every wrapped client and producer.
   its result; franz-go's hooks see records with their context; kafka-go's `RoundTripper` wraps the
   protocol; the AWS SDK is HTTP through `aws.HTTPClient`, so the HTTP adapter and a service classifier
   cover it. sarama's interceptor has no context, so identity crosses in the message headers.
-- **gRPC joins HTTP and SQL in the first cut.** Go is gRPC's home ground, and a Go service's
+- **gRPC joins HTTP and SQL in the first cut** (Q4, taken; A6's falsifier is asked before M5 builds
+  it). Go is gRPC's home ground, and a Go service's
   dependencies are as often gRPC as HTTP. This departs from `NEXT_LANGUAGE_PLAN.md`'s 80/20 on a claim
   with no evidence (A6), and its falsifier is that plan's B7, asked of Go users.
 
@@ -285,7 +287,7 @@ verdict's text in the wrapper:
 | Attachment | in the process, into `T.ArtifactDir()` under `-artifacts` (K14) | the files go where go test already keeps a test's artifacts |
 | Run end, render | the wrapper, after the last package | only the wrapper knows when every process has ended (K7) |
 
-**The wrapper, `kronikol-go test <go test args>`**, is the one thing Go needs that no other platform
+**The wrapper, `kronikol-go test <go test args>`** (named by Q3, taken), is the one thing Go needs that no other platform
 does. It runs `go test -json` with a fresh run directory; prints go test's own lines; names any package
 that was cached (K8) or did not build (K9), since either means scenarios missing from the report; joins
 go test's verdicts and failure text onto the scenarios; writes the `end` a timed-out or killed test
@@ -334,7 +336,7 @@ cache (INFERRED from the esbuild and protoc-jar patterns `QUERY_PORTABILITY_PLAN
 - **Render options**: a Go struct generated from `render-options.schema.json` (foundations L7), with
   pointer fields and `omitempty` so that only non-defaults are written. The wrapper writes
   `kronikol.render.json` once per run, from its flags and an optional `kronikol.json` beside `go.mod`
-  (Q7). Never per process: twenty packages must not write twenty options files.
+  (Q7, taken). Never per process: twenty packages must not write twenty options files.
 - **Capture options** at the wrap site as functional options (`Service`, `Caller`, `Category`, the
   redaction list, the body cap), and run-wide switches as environment variables the wrapper passes down.
 
@@ -354,9 +356,9 @@ cache (INFERRED from the esbuild and protoc-jar patterns `QUERY_PORTABILITY_PLAN
 - **Where**: a `go/` subtree, as F0 added `py/`. Not the repository root: the proxy already serves the
   root as `v3.31.10+incompatible` (K24), so a root module would start life colliding with a history the
   proxy never forgets.
-- **Module path** (Q1): `github.com/lemonlion/kronikol/go`, lower case and spelled one way forever,
-  since both spellings resolve and one build must never see two (K24); or a vanity path, if a domain is
-  being kept anyway. The root package is `kronikol` (no package can be called `go`). Integrations with
+- **Module path** (Q1, taken): `github.com/lemonlion/kronikol/go`, lower case and spelled one way
+  forever, since both spellings resolve and one build must never see two (K24). A vanity path was the
+  alternative, worth it only for a domain kept anyway. The root package is `kronikol` (no package can be called `go`). Integrations with
   third-party dependencies are modules of their own (`go/pgx`, `go/grpc`, `go/otel`, `go/godog`,
   `go/ginkgo`), so a user's `go.sum` carries only what they use; the core imports the standard library
   only, which K17 shows is possible. The wrapper is `go/cmd/kronikol-go`, installed with `go install` or
@@ -364,8 +366,8 @@ cache (INFERRED from the esbuild and protoc-jar patterns `QUERY_PORTABILITY_PLAN
 - **Tags**: `go/v0.1.0`, and `go/pgx/v0.1.0` for each nested module. The Go toolchain finds a
   subdirectory module's versions only under tags prefixed with its directory (Arrow's `go/v17.0.0`,
   K25), so **foundations F9's `<lang>-v*` shape cannot hold for Go**: a `go-v0.1.0` tag is invisible to
-  `go get`. This is the one place this plan overrides the foundations, and banners there and in
-  `MONOREPO_MIGRATION_PLAN.md` §5a say so.
+  `go get`. This is the one place this plan overrides the foundations (Q8, taken), and banners there
+  and in `MONOREPO_MIGRATION_PLAN.md` §5a say so.
 - **Versions**: independent, from v0.1.0 (`MONOREPO_MIGRATION_PLAN.md` §5b: one version per language
   stack). **Never the .NET number**: v2 and later need `/vN` in the import path, so a lockstep 3.x would
   put `/v3` in every import and change it at each .NET major. Arrow's Go module tracked its monorepo's
@@ -373,7 +375,7 @@ cache (INFERRED from the esbuild and protoc-jar patterns `QUERY_PORTABILITY_PLAN
 - **Releasing is pushing the tag**: nothing is uploaded. The proxy and the checksum database keep every
   version they have fetched, so a wrong release cannot be withdrawn, only retracted in a later
   `go.mod`. The release job warms the proxy with `go list -m` and checks pkg.go.dev.
-- **Minimum Go**: the oldest supported release at each release (1.26 today, K1). At that floor `T.Attr`
+- **Minimum Go** (Q6, taken): the oldest supported release at each release (1.26 today, K1). At that floor `T.Attr`
   and `T.ArtifactDir` are always there, and `NewTestServer` and `RowsColumnScanner` only from 1.27
   (K12); newer APIs sit behind build tags, as the prototype does for `T.Attr` (H11).
 - **CI**: `go-ci.yml` on `go/**` and `parity/**`, membership in `parity.yml`, and `go-release.yml` on
@@ -423,7 +425,7 @@ Each is a slice with the test that says it is done. M0 is now; the rest start af
 
 | # | What | Done when |
 |---|---|---|
-| **M0** | §4's asks into F2, F3 and F5: a banner on the foundations plan (done with this plan), then a decision on each before 14.5 | Each of C1 to C7 is in or out of `captureFormatVersion 1`, with its reason |
+| **M0** | §4's asks into F2, F3 and F5: a banner on the foundations plan (done with this plan) and, with D28 taken, its §4.8 (done 2026-09-28); then a decision on each at 14.5 | Each of C1 to C7 is in or out of `captureFormatVersion 1`, with its reason |
 | **M1** | The skeleton, from F9's generator (`kronikol new-platform go`): the `go/` tree, the core module, the writers, levels 1, 2, 3 and 5 of §3.1, `Start`, `Step`, `Main`, CI | The conformance tests run, red, in `go-ci.yml` on the first commit |
 | **M2** | HTTP (§3.3) | `parity/capture/`'s HTTP fixtures green; the in-memory server, streaming and redaction cases green |
 | **M3** | SQL (§3.4): the connector with generated forwarding, rows and parameters; the pgx module | The Postgres and MySQL fixtures green; an interface-parity test per supported driver green |
@@ -449,17 +451,21 @@ SQL forwarding are the parts no other platform has. Plan capacity from the order
 | M7 | §6, "Deliberately not scheduled" | 8 | A spike with a trigger: M6 shipped, or a user asks for zero wiring |
 
 **What this does to the order.** Nothing before 14.5; one row beside it (M0) and one after 14.9. D18
-stands: Go gets its own launch at its own bar. **Go before or after iOS** (`MOBILE_PLAN.md` M4, the other
-fifth platform) is the owner's (Q5). The recommendation is Go first: iOS is already served at the edge
-by 12b, and a Go service's component test is the product's own shape.
+stands: Go gets its own launch at its own bar. **Go comes before iOS** (`MOBILE_PLAN.md` M4): Q5, taken
+2026-09-28, for the reason the recommendation gave: iOS is already served at the edge by 12b, and a Go
+service's component test is the product's own shape. Go is the fifth platform and in-app iOS the sixth;
+`MOBILE_PLAN.md`, `NEXT_LANGUAGE_PLAN.md` and the roadmap's 12b say so.
 
 ---
 
-## 7. Decisions needed before green-lighting
+## 7. Decisions, all taken 2026-09-28 as recommended
 
-| # | Decision | Recommendation |
+The owner took every recommendation below on 2026-09-28 ("Can we go with the recommended decisions");
+§11 records what that set moving.
+
+| # | Decision | Recommendation, taken |
 |---|---|---|
-| **D28** (roadmap §3) | Re-open Go: M0 now, the platform at 14.16 | **Yes.** M0 costs a banner and seven answers, and only costs that little before 14.5 |
+| **D28** (roadmap §3) | Re-open Go: M0 now, the platform at 14.16 | **Yes.** M0 costs a banner and seven answers, and only costs that little before 14.5. **Taken 2026-09-28** |
 | Q1 | The module path | `github.com/lemonlion/kronikol/go`, lower case; a vanity path only if a domain is being kept anyway |
 | Q2 | The goroutine-label level (§3.1) | **On by default**, with the environment switch, the build tag and the self-test. K19 is the case for it |
 | Q3 | The wrapper's name | **`kronikol-go`**, not `kronikol`: the .NET tool already answers to `kronikol` on the same `PATH`. Its `query` verb execs the shared artifact's (foundations F7), so a Go user needs one binary |
@@ -504,7 +510,6 @@ small tax or a different product.
 - It revises the foundations only in §3.10's tag rule and §4's asks, both by banner there, and the
   monorepo plan's tag scheme by a note in its §5a.
 - It does not promise the .NET tail in Go.
-- It does not decide the order of Go and iOS (Q5).
 - Its prototype (`GO_PLATFORM_PLAN.harness/h11_prototype`) is evidence, not a starting point: the
   harness README lists what it lacks.
 
@@ -518,3 +523,23 @@ small tax or a different product.
 - `PLANS_STATUS.md` and `ROADMAP.md` rows, and banners on `NEXT_LANGUAGE_PLAN.md`,
   `PLATFORM_FOUNDATIONS_PLAN.md`, `KRONIKOL4J_PORTABILITY_PLAN.md` and `MONOREPO_MIGRATION_PLAN.md`
   (all done with this plan).
+
+## 11. Decision log
+
+**2026-09-28.** The owner took D28 and Q1 to Q8 as recommended. What that moved, the same day:
+
+- **M0 began.** §4's seven asks are now `PLATFORM_FOUNDATIONS_PLAN.md` §4.8, beside the fleet plan's
+  §4.7, and roadmap 14.5 decides each in or out of `captureFormatVersion 1`. The foundations plan is
+  still not green-lit: D28 commits to asking before the freeze, not to the answers.
+- **The order.** Go is the fifth platform, stage 14.16, and in-app iOS (`MOBILE_PLAN.md` M4) the sixth,
+  after it (Q5). `MOBILE_PLAN.md`, `NEXT_LANGUAGE_PLAN.md` and the roadmap's 12b carry the change;
+  Android (M3) is the Java port's work and does not move.
+- **§3's open choices are settled**: the module path `github.com/lemonlion/kronikol/go` (Q1); the
+  goroutine-label level on by default, with its switch, build tag and self-test (Q2); the wrapper named
+  `kronikol-go` (Q3); gRPC in the first cut, once A6's falsifier has been asked (Q4); the two supported
+  Go releases as the floor (Q6); flags and an optional `kronikol.json` for run-level options (Q7);
+  `go/v*` tags (Q8).
+- **What does not move.** M1 to M6 still wait for 14.9 and the foundations they build on (F6's shared
+  renderer, F9's generator); nothing is built in Go before then. The two checks the ledger ranks first,
+  A1 (where a Go component test's wrap sites are) and A2 (how often a call drops its context), can run
+  at any time; their answers size M1 to M5, not whether Go happens.

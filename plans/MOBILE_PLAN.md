@@ -8,6 +8,10 @@ Android, Xamarin etc. Where would that fit into the roadmap, and what would it i
 **The decision it needs is D20 in `ROADMAP.md` §3.** Its milestones are placed there as stage 12b
 (M1), 14.1 (M2) and after 14.7 (M3, M4). `NEXT_LANGUAGE_PLAN.md` §3 gains three rows from it.
 
+> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** its D28 and Q5 were taken as recommended, so Go is the
+> fifth platform, stage 14.16, and M4 (in-app iOS) the sixth, after it. M3 is the Java port's work and
+> does not move. §4's M3/M4 row says so; nothing else changed.
+
 **How far each fact was checked** follows the roadmap's marks: RUN (a command was executed today),
 READ (the source, plan or wiki page was read today), PLAN (another plan says so, not re-checked),
 ASSUMED (general knowledge of a third-party tool, not verified against its documentation today; every
@@ -197,7 +201,7 @@ ranking and nothing else here.
 |---|---|---|---|
 | M1 | **12b**, a new stage between 12 and 13, numbered so no existing citation moves | 9, then 8 | Rule 9 puts anything the bar does not need after the launch, and D18 recommends a .NET launch. A MAUI developer is a .NET developer arriving through the front door, and section 0's own worry is the visitor who finds their case missing and never returns. M1 makes "mobile end-to-end" true on every platform for the cost of a page, an importer, three converters and a sample. Rule 8: it is small, and its parts are measured or measurable in days. It depends on nothing and can run beside every track (§5 of the roadmap: track D plus one tool verb) |
 | M2 | **14.1** | 6, 8 | The capture-only split is the foundations' own first foundation seen from the other side. Doing it twice would be the mistake rule 6 exists to prevent |
-| M3, M4 | **after 14.7**, as §9 template instances | 6 | Neither port should write a rendering half, which is the shared renderer's whole point (`NEXT_LANGUAGE_PLAN` §4, PLAN). Android first: the OkHttp interceptor exists and the JVM port covers Kotlin |
+| M3, M4 | **after 14.7**, as §9 template instances | 6 | Neither port should write a rendering half, which is the shared renderer's whole point (`NEXT_LANGUAGE_PLAN` §4, PLAN). Android first: the OkHttp interceptor exists and the JVM port covers Kotlin. M4 after Go's 14.16 since 2026-09-28 (`GO_PLATFORM_PLAN.md` Q5) |
 | Flutter | `NEXT_LANGUAGE_PLAN` §3, a row | 8 | No plan asks for it yet |
 
 **What this does to D18.** Nothing. The launch stays a .NET launch; M1 is not a second language, it is

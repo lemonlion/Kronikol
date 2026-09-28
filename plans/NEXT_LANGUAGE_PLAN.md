@@ -10,13 +10,14 @@
 > **Amended 2026-09-22 by `MOBILE_PLAN.md`:** §3's table gains three mobile rows (Android, Swift/iOS,
 > Dart/Flutter) and a paragraph, and §5 gains B19 to B21. Nothing else changed.
 
-> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** Go is re-opened, after Python (roadmap 14.16, D28).
-> §3's deferral was right that nothing can be injected into a running Go binary and wrong about what
-> follows: that plan's harness found three runtime-level hooks that need no injection, a component test's
-> wrap sites in the test's own wiring, zero-code compile-time instrumentation now stable (OpenTelemetry's
-> `otelc` v1.1.0), and a Go capturer whose output the shipped `kronikol ingest` renders. What Go costs
-> instead is a run wrapper for `go test`'s process model. §3's Go row and paragraph, B10 and §6's bullet
-> carry the change; the ranking of the other rows stands.
+> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** Go is re-opened, after Python (roadmap 14.16; D28,
+> taken the same day). §3's deferral was right that nothing can be injected into a running Go binary and
+> wrong about what follows: that plan's harness found three runtime-level hooks that need no injection, a
+> component test's wrap sites in the test's own wiring, zero-code compile-time instrumentation now stable
+> (OpenTelemetry's `otelc` v1.1.0), and a Go capturer whose output the shipped `kronikol ingest` renders.
+> What Go costs instead is a run wrapper for `go test`'s process model. §3's Go row and paragraph, B10 and
+> §6's bullet carry the change, and the Swift/iOS row and the mobile paragraph now put in-app iOS after Go
+> (that plan's Q5); the ranking of the other rows stands.
 
 
 **Fourth of four plans from the 2026-09-13 investigation.** `QUERY_FALLBACK_PLAN.md` (the .NET
@@ -265,7 +266,7 @@ answered by the table, not by its absence.
 | Ruby | Small | RSpec + Cucumber | monkeypatching trivial | Strong BDD culture, small pool |
 | PHP | Mid | PHPUnit | OTel zero-code exists | Weak test-reporting culture |
 | **Android (Kotlin, Java)** | Top tier: the larger mobile platform | JUnit 4 under `AndroidJUnitRunner` for instrumented tests, JUnit 5 for JVM unit tests, Kotest | OkHttp interceptor exists in Kronikol4J; no JDBC, so Room's query callback is the SQL seam; ART lacks `java.net.http` and runs no agents; the port has no NDJSON writer | **The Java port's problem, after F1 and F9.** `MOBILE_PLAN.md` M3 |
-| **Swift / iOS** | Top tier: the other mobile platform | XCTest (observation and activities), Swift Testing (traits) | `URLProtocol` on `URLSession` captures bodies; `sqlite3_trace_v2` and GRDB for SQL; Core Data and SwiftData have no statement seam; `@TaskLocal` for identity | **A fifth platform, after the shared renderer.** `MOBILE_PLAN.md` M4 |
+| **Swift / iOS** | Top tier: the other mobile platform | XCTest (observation and activities), Swift Testing (traits) | `URLProtocol` on `URLSession` captures bodies; `sqlite3_trace_v2` and GRDB for SQL; Core Data and SwiftData have no statement seam; `@TaskLocal` for identity | **A fifth platform, after the shared renderer.** `MOBILE_PLAN.md` M4. *The sixth since 2026-09-28: after Go (`GO_PLATFORM_PLAN.md` Q5, D28)* |
 | **Dart / Flutter** | Mid, growing | `flutter_test`, `integration_test` | `HttpOverrides` and `dio` interceptors; its networking does not ride the native stacks, so M3 and M4 do not cover it | **Not planned.** Served at the edge by `MOBILE_PLAN.md` M1 only |
 | *C/C++* | *Top tier by size* | *GoogleTest, loosely* | *no runtime instrumentation; no OTel zero-code* | *not a candidate — §3.2* |
 | *Rust* | *Small but growing fast* | *stdlib `#[test]`* | *no runtime instrumentation; no OTel zero-code* | *not a candidate — §3.2* |
@@ -305,7 +306,8 @@ iOS and Android were absent. The answer is in `MOBILE_PLAN.md`: every mobile pla
 *at the edge*, with no code in the app, by the taps, a HAR importer and converters for the files the
 mobile runners already write (its M1, before the launch); Android in-app capture is then the Java
 port's work, because its adapters are JVM-level and its OkHttp interceptor already exists (M3); iOS is
-a new Swift capturer and the first port outside the four platforms the foundations plan names (M4);
+a new Swift capturer and the first port outside the four platforms the foundations plan names (M4; the
+second since 2026-09-28, after Go: `GO_PLATFORM_PLAN.md` Q5);
 Flutter is a Dart capturer nobody has asked for. React Native needs no row: its networking rides
 OkHttp and `NSURLSession`, so M3 and M4 cover it. The ranking's rule holds for all three: no port
 before the shared renderer, so that none writes a rendering half.
