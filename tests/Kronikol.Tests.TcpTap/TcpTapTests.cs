@@ -156,6 +156,10 @@ public class TcpTapTests
         Assert.True(await Wait.UntilAsync(() => server.Received.Length == payload.Length));
         Assert.Equal(payload, server.Received);
         Assert.Equal(1, tap.ConnectionsAccepted);
+        // The pump counts a read once its write downstream has completed, so each end can hold the bytes a moment
+        // before the counter moves: read straight after the reply arrived, BytesServerToClient was 0 on CI.
+        Assert.True(await Wait.UntilAsync(() =>
+            tap.BytesClientToServer == payload.Length && tap.BytesServerToClient == reply.Length));
         Assert.Equal(payload.Length, tap.BytesClientToServer);
         Assert.Equal(reply.Length, tap.BytesServerToClient);
     }
