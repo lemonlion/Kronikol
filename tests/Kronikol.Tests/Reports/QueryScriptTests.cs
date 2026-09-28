@@ -107,6 +107,19 @@ public class QueryScriptTests : IDisposable
     }
 
     /// <summary>
+    /// On Windows a path to another drive has no relative form, and <see cref="Path.GetRelativePath"/> hands the
+    /// path back whole: absolute, with a home directory in it. Such a copy is not named, and the file looks in
+    /// the NuGet cache alone.
+    /// </summary>
+    [Fact]
+    public void A_copy_with_no_relative_path_is_not_named()
+    {
+        Assert.Equal("../Kronikol.dll", QueryScriptGenerator.Portable("..\\Kronikol.dll"));
+        Assert.Equal("../../bin/Debug/net10.0/Kronikol.dll", QueryScriptGenerator.Portable("../../bin/Debug/net10.0/Kronikol.dll"));
+        Assert.Null(QueryScriptGenerator.Portable("/home/someone/src/Shop.Tests/bin/Debug/net10.0/Kronikol.dll"));
+    }
+
+    /// <summary>
     /// Where a run's reports go by default - <c>Reports</c> in the test project's output - the engine is the
     /// <c>Kronikol.dll</c> one folder up, so the path says exactly that and nothing more about the machine.
     /// </summary>
@@ -154,7 +167,7 @@ public class QueryScriptTests : IDisposable
                  {
                      "PublishAot=false", "TargetFramework=net$(BundledNETCoreAppTargetFrameworkVersion)", "OutputType=Exe",
                      "LangVersion=latest", "TreatWarningsAsErrors=false", "WarningsAsErrors=", "WarningLevel=0",
-                     "RunAnalyzers=false", "NuGetAudit=false", "TieredCompilationQuickJitForLoops=false"
+                     "RunAnalyzers=false", "NuGetAudit=false", "ImportDirectoryBuildTargets=false", "TieredCompilationQuickJitForLoops=false"
                  })
             Assert.Contains($"\n#:property {property}\n", script, StringComparison.Ordinal);
     }
@@ -202,6 +215,28 @@ public class QueryScriptTests : IDisposable
         Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.json")));
     }
 
+    /// <summary>
+    /// Whose the <c>query.cs</c> already there is gets asked before the outputs, outside what keeps one failed
+    /// output from stopping the rest. One that cannot be read is taken as somebody else's: left as it is,
+    /// never named, and every other output written.
+    /// </summary>
+    [Fact]
+    public void A_query_cs_that_cannot_be_read_stops_nothing()
+    {
+        var dir = Dir("Reports");
+        Directory.CreateDirectory(dir);
+        const string earlier = "// Written by Kronikol 0.0.1 beside the report in this directory\n";
+        var path = Path.Combine(dir, "query.cs");
+        File.WriteAllText(path, earlier);
+
+        using (new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            Run(Options(dir));
+
+        Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.json")));
+        Assert.DoesNotContain("query.cs", File.ReadAllText(Path.Combine(dir, "Failures.md")), StringComparison.Ordinal);
+        Assert.Equal(earlier, File.ReadAllText(path));
+    }
+
     [Fact]
     public void Its_own_earlier_query_cs_is_replaced()
     {
@@ -242,6 +277,7 @@ public class QueryScriptTests : IDisposable
         var message = entry.GetProperty("message").GetString()!;
         Assert.Contains("WriteQueryScript", message, StringComparison.Ordinal);
         Assert.Contains("Checkout.Tests.csproj", message, StringComparison.Ordinal);
+        Assert.Contains("a folder whose name starts with a dot", message, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -255,6 +291,7 @@ public class QueryScriptTests : IDisposable
     [InlineData("<ItemGroup><Compile Remove=\"**\\*\" /></ItemGroup>")]
     [InlineData("<PropertyGroup><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>")]
     [InlineData("<PropertyGroup><EnableDefaultItems>false</EnableDefaultItems></PropertyGroup>")]
+    [InlineData("<PropertyGroup><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup><ItemGroup><Compile Include=\"..\\Shared\\**\\*.cs\" /></ItemGroup>")]
     public void A_project_that_already_leaves_the_folder_out_does_not_stop_it(string body)
     {
         File.WriteAllText(Dir("Packs.csproj"), $"<Project Sdk=\"Microsoft.NET.Sdk\">{body}</Project>");
@@ -271,10 +308,46 @@ public class QueryScriptTests : IDisposable
     [InlineData("<ItemGroup><Compile Remove=\"**\\*\" /><Compile Include=\"**\\*.cs\" /></ItemGroup>")]
     [InlineData("<ItemGroup><Compile Remove=\"Other\\**\" /></ItemGroup>")]
     [InlineData("<ItemGroup><Compile Remove=\"Reports\\**\" /><ItemGroup>")]
+    [InlineData("<PropertyGroup><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup><ItemGroup><Compile Include=\"**\\*.cs\" Exclude=\"bin\\**;obj\\**\" /></ItemGroup>")]
     public void A_removal_that_may_not_apply_is_not_trusted(string body)
     {
         File.WriteAllText(Dir("Packs.csproj"), $"<Project Sdk=\"Microsoft.NET.Sdk\">{body}</Project>");
         var dir = Dir("Reports");
+
+        Run(Options(dir));
+
+        Assert.False(File.Exists(Path.Combine(dir, "query.cs")));
+    }
+
+    /// <summary>
+    /// A folder whose name starts with a dot is in no project's default items: the SDK leaves <c>**/.*/**</c>
+    /// out, for <c>.git</c> and <c>.vs</c>. So <c>.logs/kronikol/</c> in a test project's folder takes the file,
+    /// as <c>bin</c> does; <c>QueryScriptEndToEndTests</c> builds such a project.
+    /// </summary>
+    [Theory]
+    [InlineData(".logs", "kronikol")]
+    [InlineData("TestResults", ".kronikol")]
+    public void In_a_dot_folder_of_that_project_it_is_written(string outer, string inner)
+    {
+        File.WriteAllText(Dir("Checkout.Tests.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+        var dir = Dir(outer, inner);
+
+        Run(Options(dir));
+
+        Assert.True(File.Exists(Path.Combine(dir, "query.cs")));
+        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "TestRunReport.json")));
+        Assert.DoesNotContain(report.RootElement.GetProperty("diagnostics").EnumerateArray(),
+            d => d.GetProperty("kind").GetString() == "OptionNotApplied");
+    }
+
+    /// <summary>The dot-folder rule is the default items'. A glob the project writes itself takes the file back.</summary>
+    [Fact]
+    public void A_dot_folder_the_project_globs_itself_is_not_trusted()
+    {
+        File.WriteAllText(Dir("Checkout.Tests.csproj"),
+            "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>"
+            + "<ItemGroup><Compile Include=\"**\\*.cs\" Exclude=\"bin\\**;obj\\**\" /></ItemGroup></Project>");
+        var dir = Dir(".logs", "kronikol");
 
         Run(Options(dir));
 
@@ -313,5 +386,20 @@ public class QueryScriptTests : IDisposable
         Assert.DoesNotContain("System.IO.Path.Combine(here, @\"", script, StringComparison.Ordinal);
         // NuGet's folders are lower case, and a case-sensitive file system holds it to that.
         Assert.Contains("\"kronikol\", \"3.32.0-beta.1\", \"lib\", \"net10.0\", \"Kronikol.dll\"", script, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Where NUGET_PACKAGES and the default miss, NuGet itself says where its cache is: a NuGet.config can move
+    /// it. Only then, since asking costs a process; and both the question and the folder it names are in the file.
+    /// </summary>
+    [Fact]
+    public void When_the_cache_is_not_where_it_usually_is_it_asks_NuGet()
+    {
+        var script = QueryScriptGenerator.Build("3.32.0", "3.32.0.0", ownCopy: null);
+
+        Assert.Contains("\"nuget locals global-packages --list\"", script, StringComparison.Ordinal);
+        Assert.True(script.IndexOf("QueryScript.NuGetCache(here)", StringComparison.Ordinal)
+                    > script.IndexOf("foreach (string candidate in candidates)", StringComparison.Ordinal),
+            "NuGet is asked only after every other place has missed");
     }
 }

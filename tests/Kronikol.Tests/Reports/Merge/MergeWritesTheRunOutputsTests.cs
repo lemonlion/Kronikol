@@ -100,6 +100,28 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         Assert.StartsWith("// Written by Kronikol ", File.ReadAllText(Out("query.cs")), StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Whose the <c>query.cs</c> already there is gets asked before the outputs, outside what keeps one failed
+    /// output from stopping the rest. One that cannot be read is taken as somebody else's: left as it is,
+    /// never named, and every other output written.
+    /// </summary>
+    [Fact]
+    public void A_query_cs_that_cannot_be_read_stops_nothing()
+    {
+        WriteShard("runner1.json", "0-1002", "Discount is applied", "Failed", error: "expected 10 but was 12");
+        File.WriteAllText(Out("query.cs"), "// Written by Kronikol 0.0.1 beside the report in this directory\n");
+
+        int exit;
+        string error;
+        using (new FileStream(Out("query.cs"), FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            (exit, _, error) = Merge();
+
+        Assert.True(exit == 0, error);
+        Assert.True(File.Exists(Out("Combined.json")));
+        Assert.DoesNotContain("query.cs", File.ReadAllText(Out("Failures.md")), StringComparison.Ordinal);
+        Assert.Equal("// Written by Kronikol 0.0.1 beside the report in this directory\n", File.ReadAllText(Out("query.cs")));
+    }
+
     [Fact]
     public void An_existing_instruction_file_beside_the_output_keeps_its_own_text()
     {

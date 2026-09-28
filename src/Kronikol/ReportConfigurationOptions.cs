@@ -297,8 +297,9 @@ public record ReportConfigurationOptions
     /// <c>dotnet run --file query.cs -- summary .</c> prints what <c>kronikol query summary .</c> prints,
     /// because it runs the same engine: the <c>Kronikol</c> that wrote the report, loaded from the test
     /// run's output or from the NuGet cache. It restores and downloads nothing, and needs the .NET 10 SDK.
-    /// It is never written into a folder a C# project would compile (one holding a <c>.csproj</c>, outside
-    /// that project's <c>bin</c> and <c>obj</c>); there the run records a
+    /// It is never written into a folder a C# project would compile (below one holding a <c>.csproj</c>,
+    /// outside that project's <c>bin</c>, its <c>obj</c> and any folder whose name starts with a dot, which no
+    /// project compiles by default); there the run records a
     /// <see cref="Reports.DiagnosticKind.OptionNotApplied"/> instead. A <c>query.cs</c> that Kronikol did not
     /// write is left as it is. Default: <c>true</c>.
     /// </summary>

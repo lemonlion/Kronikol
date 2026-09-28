@@ -28,13 +28,17 @@ plan's log because this session could not reach that repository. Template pins m
   whose restore fetches a package no consumer has, and a net8.0 or net9.0 project never restored the net10.0
   dependency group), so the file restores nothing: it loads the test run's own `Kronikol.dll` when that is a .NET 10
   build, else `lib/net10.0` from the NuGet cache, which every consumer holds whatever it targets, either only at
-  exactly the version that wrote the report. Where neither is on the machine it says where it looked, exits 1 and
+  exactly the version that wrote the report. The cache is where `NUGET_PACKAGES` or the default puts it, and where
+  neither holds the engine the file asks NuGet (`dotnet nuget locals global-packages --list`, from its own folder),
+  since a `NuGet.config` can move it. Where the engine is nowhere on the machine it says where it looked, exits 1 and
   prints the `dnx Kronikol.Tool@<version>` line. It carries `#:property` lines that keep a repository's own
   `Directory.Build.props` from breaking it or printing into its answer (native AOT, a pinned `TargetFramework`,
-  warnings as errors, analyzers, NuGet audit). It names the engine by a path relative to itself, never an absolute
-  one, which would carry a home directory into a folder that is often published. A `query.cs` Kronikol did not write
-  is left alone, and like `CLAUDE.md` the file describes the directory, not the run: it is not in `Run.json` and never
-  moves into `runs/`. `kronikol merge`, and so `kronikol ingest`, write it too. A CI artifact carries it: GitHub
+  warnings as errors, analyzers, NuGet audit), and it imports no `Directory.Build.targets`, which would come after
+  them. It names the engine by a path relative to itself, never an absolute one, which would carry a home directory
+  into a folder that is often published; where no relative path reaches it (on Windows, another drive), it names only
+  the cache. A `query.cs` Kronikol did not write, or that cannot be read, is left alone and never named, and like
+  `CLAUDE.md` the file describes the directory, not the run: it is not in `Run.json` and never moves into `runs/`.
+  `kronikol merge`, and so `kronikol ingest`, write it too. A CI artifact carries it: GitHub
   Actions uploads the directory, and the Azure DevOps upload, which names each file and picked them by extension
   alone, names `query.cs` too. The run and the merge now pick the files by one rule, where each had its own copy of
   the extension list (the run's matched case-sensitively; both now ignore case).
@@ -58,28 +62,42 @@ plan's log because this session could not reach that repository. Template pins m
   project instead. That is the `CLAUDE.md`/`AGENTS.md` beside every report, `Failures.md`'s command blocks (only
   where the directory has Kronikol's `query.cs`), the schema's `$comment`, the agent block `kronikol init-agents`
   installs, both copies of the skill and its flag reference, `README.md`, `templates/README.md`, the NuGet
-  readme and the plugin's marketplace description. The skill's `scripts/query.py` stays, named for a machine without the .NET 10 SDK (roadmap D28).
-- **Behaviour change:** a reports directory inside a C# project's folder, outside that project's `bin` and `obj`,
-  gets no `query.cs`, because the project would compile it and its `#:` directives are error CS9298 in a project
-  build. The run prints a `⚠ WARNING` and records an `OptionNotApplied` diagnostic naming the project file, on every
-  run. A project that already leaves the folder out (default compile items off, or an unconditioned
-  `Compile Remove` of that folder or of everything) does not count. Set `WriteQueryScript = false` to silence it.
+  readme and the plugin's marketplace description. The instructions beside every report and the skill's rule lead
+  with it, the tool second, as the plan has it: an agent that may not install anything reads them first, and its
+  first command should be one it can run. The skill's `scripts/query.py` stays, named for a machine without the .NET 10 SDK (roadmap D28).
+- **Behaviour change:** a reports directory inside a C# project's folder, outside that project's `bin`, its `obj`
+  and any folder whose name starts with a dot, gets no `query.cs`, because the project would compile it and its `#:`
+  directives are error CS9298 in a project build. A dot-folder such as `.logs/kronikol/` does get one: the SDK's
+  default items leave `**/.*/**` out, and a project built with `query.cs` there builds clean. The run prints a
+  `⚠ WARNING` and records an `OptionNotApplied` diagnostic naming the project file, on every run, and the warning
+  names both ways out. A project that already leaves the folder out (default compile items off, or an unconditioned
+  `Compile Remove` of that folder or of everything) does not count, unless it globs `**` below its own folder itself.
+  Set `WriteQueryScript = false` to silence it.
 
 ### Tests
 
 - `QueryEngineHomeTests`: the engine is in `Kronikol`, the tool keeps no copy, and `QueryCommand` is the only public
   type it brings, with `Run` and `PrintUsage` its only public members.
-- `QueryScriptTests` (27): the file's text, the version pins, the relative path, the binding, the properties, the
-  switch, a JSON data file, ownership, the project-folder rule and its exceptions, and the merge.
-- `QueryScriptEndToEndTests` (25): 22 invocations through `dotnet run --file query.cs` and through the built tool,
+- `QueryScriptTests` (35): the file's text, the version pins, the relative path and a copy no relative path
+  reaches, the binding, the properties, when it asks NuGet, the switch, a JSON data file, ownership and a `query.cs`
+  that cannot be read (red: its `IOException` escaped and no output was written), the project-folder rule, its dot-folder
+  exception and its exceptions (red: a dot-folder was refused, and a project with default items off that globs `**`
+  itself was trusted), and the merge.
+- `QueryScriptEndToEndTests` (28): 22 invocations through `dotnet run --file query.cs` and through the built tool,
   with exit code, stdout bytes and stderr identical, offline with an empty NuGet cache; the engine from a cache holding
-  `Kronikol.dll` alone; no engine anywhere; a strict `Directory.Build.props`. Skipped, visibly, without a .NET 10
-  SDK. Mutation-checked: a wrong type name fails 24 of 25, and dropping `PublishAot=false` fails all 25.
+  `Kronikol.dll` alone; the engine from a cache a `NuGet.config` moved; no engine anywhere; a strict
+  `Directory.Build.props` and a `Directory.Build.targets` with a policy target; and a real project built with
+  `query.cs` in its `.logs/kronikol/` (clean) and in its `TestResults/` (CS9298), with the file answering from the
+  former. The last four were red on the file before them. Skipped, visibly, without a .NET 10 SDK.
+  Mutation-checked on the first 25: a wrong type name fails 24 of them, and dropping `PublishAot=false` fails all 25.
 - `CiArtifactPublisherTests.ReportFiles_takes_the_report_outputs_and_query_cs_and_nothing_else` and
   `MergeWritesTheRunOutputsTests.Publish_artifacts_on_azure_devops_uploads_every_output_query_cs_included`, both red
   on the extension-only rule.
-- `QueryScriptAdviceTests`: seven surfaces name `query.cs`, every `query.cs -- verb` they show is a verb with flags
-  it reads, none runs it without `--file`, and `FailuresDigestGenerator.Generate` keeps its public signature.
+- `QueryScriptAdviceTests`: ten surfaces name `query.cs`, every `query.cs -- verb` they show is a verb with flags
+  it reads, none runs it without `--file`, the instructions beside every report and the skill lead with it (red: both
+  led with the tool), and `FailuresDigestGenerator.Generate` keeps its public signature.
+- `MergeWritesTheRunOutputsTests.A_query_cs_that_cannot_be_read_stops_nothing`: the merge's side of the same fix, red
+  with the merge failing whole.
 - `RunEndPointerTests`, `RunRotationTests`, `MergeWritesTheRunOutputsTests`, `TestRunReportSchemaContractTests`,
   `SkillDriftTests` and `CommandTableTests` follow the file and the engine's new home.
 

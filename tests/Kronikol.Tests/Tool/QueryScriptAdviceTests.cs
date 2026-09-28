@@ -33,7 +33,10 @@ public class QueryScriptAdviceTests
         "the skill",
         "the skill's flag reference",
         "the agent block init-agents installs",
+        "this repository's own agent block",
         "README.md",
+        "the NuGet readme",
+        "the templates' README",
         "Failures.md, failing",
         "Failures.md, green",
     ];
@@ -44,7 +47,10 @@ public class QueryScriptAdviceTests
         "the skill" => Read("templates", "skills", "kronikol-test-debugging", "SKILL.md"),
         "the skill's flag reference" => Read("templates", "skills", "kronikol-test-debugging", "references", "commands.md"),
         "the agent block init-agents installs" => Read("templates", "agents", "CLAUDE.md"),
+        "this repository's own agent block" => Read("CLAUDE.md"),
         "README.md" => Read("README.md"),
+        "the NuGet readme" => Read("nuget-readme.md"),
+        "the templates' README" => Read("templates", "README.md"),
         "Failures.md, failing" => FailuresDigestGenerator.Generate(OneFailure, null, "TestRunReport", "3.32.0", queryScript: true).Markdown,
         "Failures.md, green" => FailuresDigestGenerator.Generate(
             [new Feature { DisplayName = "Checkout", Scenarios = [new Scenario { Id = "t1", DisplayName = "Pay", Result = ExecutionResult.Passed }] }],
@@ -89,6 +95,27 @@ public class QueryScriptAdviceTests
         var bare = Regex.Matches(Text(surface), @"dotnet run (?!--file )[^\n`]*query\.cs").Select(m => m.Value).ToList();
 
         Assert.True(bare.Count == 0, $"{surface} runs query.cs without --file, which runs a neighbouring project instead:\n  " + string.Join("\n  ", bare));
+    }
+
+    /// <summary>
+    /// The plan's order (§3, §4.2): beside every report and in the skill's rule, the first command is the one
+    /// that needs nothing installed, and the installed tool comes after it. An agent that may not install
+    /// anything reads the directory's instructions first, and its first command should be one it can run.
+    /// </summary>
+    [Theory]
+    [InlineData("the instructions beside every report", "dotnet run --file query.cs -- summary .", "kronikol query summary .")]
+    [InlineData("the instructions beside every report", "dotnet run --file query.cs -- summary .", "dotnet tool install -g Kronikol.Tool")]
+    [InlineData("the skill", "dotnet run --file .logs/kronikol/query.cs -- summary", "kronikol query summary .logs/kronikol")]
+    [InlineData("the skill", "dotnet run --file .logs/kronikol/query.cs -- summary", "dotnet tool install -g Kronikol.Tool")]
+    public void It_leads_with_the_way_that_needs_nothing_installed(string surface, string first, string after)
+    {
+        var text = Text(surface);
+        var script = text.IndexOf(first, StringComparison.Ordinal);
+        var tool = text.IndexOf(after, StringComparison.Ordinal);
+
+        Assert.True(script >= 0, $"{surface} does not show {first}");
+        Assert.True(tool >= 0, $"{surface} does not show {after}");
+        Assert.True(script < tool, $"{surface} shows `{after}` before `{first}`");
     }
 
     [Fact]

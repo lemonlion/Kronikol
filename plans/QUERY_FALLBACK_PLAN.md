@@ -3,7 +3,8 @@
 **Date:** 2026-09-13 · **Repo version:** 3.3.0 (released) · **Target:** 3.4.0 (MINOR)
 · **Status: EXECUTED 2026-09-28 as 3.32.0 (M1 to M3, M5, M6; green-lit by the owner that day, `ROADMAP.md`
 D28). M4 held: `query.py` stays, for a machine without the .NET 10 SDK. §11 is the log, and says where execution
-departed from this plan, on measurements: `query.cs` restores nothing and loads `Kronikol.dll` itself.**
+departed from this plan, on measurements: `query.cs` restores nothing and loads `Kronikol.dll` itself. §11.7 is the
+audit before the tag: what was missed or lacking, and fixed in the same release.**
 
 **Re-checked 2026-09-27, at 3.31.10. Nothing past M0 is built.** The owner moved this plan from
 `ROADMAP.md` 14.10, after the launch, to stage 1b, before it, and into the launch bar. The reason:
@@ -429,7 +430,8 @@ build, whose `query.cs` names only the cache; with the network cut, `dotnet run 
 `lib/net10.0` from that cache and matched the built tool byte for byte, on stdout and stderr.
 
 Every `#:property` answers a failure seen in a probe under a consumer's `Directory.Build.props`, which a file-based
-app imports and which `#:property` can override but not switch off (`ImportDirectoryBuildProps=false` lands too late):
+app imports and which `#:property` can override but not switch off (`ImportDirectoryBuildProps=false` lands too late),
+or under its `Directory.Build.targets`, which comes after the properties and so is switched off (§11.7):
 
 | Property | The failure without it |
 |---|---|
@@ -437,14 +439,16 @@ app imports and which `#:property` can override but not switch off (`ImportDirec
 | `TargetFramework=net$(BundledNETCoreAppTargetFrameworkVersion)` | `<TargetFramework>net8.0</TargetFramework>` retargeted the app; it built and then could not run ("You must install or update .NET") |
 | `TreatWarningsAsErrors=false`, `WarningsAsErrors=`, `WarningLevel=0` | a warning became an error and the build failed, printing to stdout |
 | `RunAnalyzers=false`, `NuGetAudit=false`, `LangVersion=latest`, `OutputType=Exe` | analyzers, an offline audit (NU1900), an old language version or a library output type from the consumer's props |
+| `ImportDirectoryBuildTargets=false` | added by §11.7: a `Directory.Build.targets` overrides every property above, and a policy target in one failed the build |
 | `TieredCompilationQuickJitForLoops=false` | none: the tool's own setting, for the same speed |
 
 Two hazards §2 did not have: **a `.cs` file inside a C# project's folder is compiled by that project**, and `#:` is
-error CS9298 there, so a `query.cs` written into a project folder breaks the consumer's build (a dot-folder does not
-help). It is never written where a `.csproj` above the directory would take it in (outside that project's `bin` and
-`obj`, unless the project plainly leaves the folder out: default compile items off, or an unconditioned
-`Compile Remove` of the folder or of everything; this repository's template pack and one test project's fixtures are
-both that case). The run records `OptionNotApplied` instead, naming the project file and no path. And **a bare
+error CS9298 there, so a `query.cs` written into a project folder breaks the consumer's build. This log first said a
+dot-folder does not help; it does, since the SDK's default items leave `**/.*/**` out, and §11.7 has the measurement
+and the fix. It is never written where a `.csproj` above the directory would take it in (outside that project's
+`bin`, its `obj` and its dot-folders, unless the project plainly leaves the folder out: default compile items off, or
+an unconditioned `Compile Remove` of the folder or of everything, with no `**` glob of its own that reaches below its
+folder; this repository's template pack and one test project's fixtures are both that case). The run records `OptionNotApplied` instead, naming the project file and no path. And **a bare
 `dotnet run query.cs`, from a folder holding a project, runs that project** with a one-line warning, so every
 instruction uses `--file`. Found with them: a comment may precede `#:` directives, so the file's first line is its
 ownership marker, and a `query.cs` Kronikol did not write is never replaced. `EntryPointFilePath` gives the file's
@@ -463,8 +467,10 @@ All of §3's ten and the NuGet readme. §5's replacement sentence was rewritten:
 on a failing run whose directory has one (`RunSummary.QueryScriptWritten`), and `Failures.md`'s two command blocks
 gain one line through an internal overload of `FailuresDigestGenerator.Generate`: a new parameter on the public
 method would have removed the signature compiled callers bind to. `QueryScriptAdviceTests` is §6.4's
-`InstallAdviceTests`, over seven surfaces; `SkillDriftTests` exempts the `dotnet run --file …query.cs --` prefix from
-its flag extraction as it exempts `dotnet test`.
+`InstallAdviceTests`, over seven surfaces (ten since §11.7); `SkillDriftTests` exempts the `dotnet run --file …query.cs --` prefix from
+its flag extraction as it exempts `dotnet test`. The order §3 (row 1) and §4.2 (edit 1) asked for, the line that needs
+nothing installed first and the tool second, was missed here: every surface named `query.cs` after the tool. §11.7
+applies it.
 
 ### 11.4 M4, M5, M6
 
@@ -489,13 +495,69 @@ ran every test project, since `ci.yml` runs only on `main` and on pull requests 
 
 - **A report away from its build.** A downloaded CI artifact on a machine that never restored that `Kronikol` version
   has no engine for `query.cs`; it says so and prints the `dnx` line, which needs the feed.
-- **A NuGet `globalPackagesFolder` set in a `NuGet.config`** and not in `NUGET_PACKAGES` is not looked in.
-- **A consumer's `Directory.Build.targets`** is imported after the properties and could still reach the file, and the
-  first build prints any NuGet warning the consumer's own props cause. Neither was seen; both would show in its first
-  run's output, not later.
+- **A cache moved by `RestorePackagesPath`** in a repository's MSBuild files, rather than by `NUGET_PACKAGES` or a
+  `NuGet.config` (both looked in since §11.7), is not looked in: `dotnet nuget locals` reads NuGet's settings, not
+  MSBuild's. It matters only where the run's own `Kronikol.dll` carries no engine (a net8.0 or net9.0 test project).
+- **Items a consumer's `Directory.Build.props` adds** (a `Compile` or `Using` item, a package reference) still reach
+  the file, since a property cannot remove an item, and its first build prints any NuGet warning they cause. None was
+  seen; each would show in the first run's output, not later. (Its `Directory.Build.targets` no longer reaches it,
+  §11.7.)
 - **No .NET 10 SDK:** neither the tool nor `query.cs` runs; `query.py` does, for 6 verbs (M4, held).
 - **The Kronikol4J ledger entry**, below, for the owner to add: this session could not reach that repository.
 - **The wiki patch**, for the owner to apply (§11.4).
+
+### 11.7 Audit before the tag (2026-09-28)
+
+`main` was green on the merge (`2abd88a`) and the tag not yet pushed when the owner asked whether anything was missed
+from the plan or lacking in what was built. Walked item by item against §2 to §9, with the code, the docs and the tests,
+and each finding measured before it was fixed. It stays the one release, 3.32.0, still untagged, so there is no bump.
+
+Missed from the plan:
+
+- **The order (§3 row 1, §4.2 edit 1).** The instructions beside every report and the skill's rule now lead with
+  `dotnet run --file query.cs -- summary …` and put the tool second, with the install line after both.
+  `QueryScriptAdviceTests.It_leads_with_the_way_that_needs_nothing_installed`, red on both. The instructions also gain
+  the `global.json` caveat the skill had, since their first command is now `dotnet run`.
+- **§6.4 over §3's surfaces.** `QueryScriptAdviceTests` read seven; it now reads ten, adding this repository's own
+  agent block, the NuGet readme and `templates/README.md` (the skill's second copy is held to the first by
+  `SkillDriftTests.The_two_copies_of_the_skill_are_the_same_files`, M0's sync test, the pointer and the CI summary by
+  `RunEndPointerTests`, the `$comment` by the schema test).
+
+Wrong in this log, and so in the code:
+
+- **A dot-folder.** §11.2 said a dot-folder does not help. Measured here: in a net10.0 library project, a `query.cs`
+  in `.logs/kronikol/` builds clean and one in `TestResults/kronikol/` is CS9298, because the SDK's default items
+  exclude `**/.*/**` (`Microsoft.NET.Sdk.DefaultItems.targets`, `DefaultExcludesInProjectFolder`). So a run whose
+  reports went to `.logs/kronikol/` inside a test project, a layout the skill names, got no `query.cs` and a warning on
+  every run. A folder on the way whose name starts with a dot now counts as left out, unless the project globs `**`
+  below its folder itself, and the warning names that way out beside `bin` and `obj`.
+  `QueryScriptEndToEndTests.A_project_builds_with_query_cs_in_its_dot_folder_and_breaks_with_it_elsewhere` builds
+  both projects for real, and the file answers from the first.
+
+Lacking in what was built:
+
+- **A `query.cs` that could not be read stopped the whole run, and the whole merge.** Whose the file is, is asked
+  before the outputs, outside the isolation that keeps one failed output from stopping the rest, and the read's
+  `IOException` escaped: no report, no digest. It is now taken as somebody else's (left alone, never named). Red first
+  in `QueryScriptTests` and `MergeWritesTheRunOutputsTests`, with the file held open without sharing.
+- **A project with default compile items off that globs `**` itself was trusted** to leave the folder out, because the
+  switch was read before the glob that takes the file back. The glob is now read first; one that starts above the
+  project's folder (`..\Shared\**`) does not count.
+- **§11.5's `Directory.Build.targets`.** It comes after the file's properties, so it overrides them, and its targets
+  run in the file's build. `#:property ImportDirectoryBuildTargets=false` lands before the import and switches it off
+  (measured). The strict repository of `QueryScriptEndToEndTests` gains one with a policy target, red on the file
+  before.
+- **§11.5's `NuGet.config`.** Where `NUGET_PACKAGES` and `~/.nuget/packages` miss, the file asks NuGet
+  (`dotnet nuget locals global-packages --list`, 0.25 s, only then) from its own folder, which reads the settings the
+  test run restored under. `QueryScriptEndToEndTests.The_cache_a_NuGet_config_moved_is_looked_in`, with an empty user
+  profile and `NUGET_PACKAGES` unset, red before.
+- **A copy on another drive.** On Windows `Path.GetRelativePath` hands back an absolute path where no relative one
+  exists, which is the home directory the relative path exists to keep out. Such a copy is now not named, and the file
+  looks in the cache alone. `QueryScriptTests.A_copy_with_no_relative_path_is_not_named`.
+
+Checked and sound: the public surface is `QueryCommand.Run` and `PrintUsage` only; the engine surfaces no
+`OptionNotApplied` as a `!` line; every CI upload path carries `query.cs`; `ProjectAssetTrackingTests` needed nothing,
+since the file is generated, not an embedded asset. `Kronikol.Tests` after the audit is in the changelog's entry.
 
 ### 11.6 Kronikol4J divergence ledger entry (draft)
 
