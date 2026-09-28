@@ -1,0 +1,8 @@
+record of 18 fragments into the 7309790-byte ledger: 4.78 s
+record of 18 fragments into the 7506851-byte ledger: 4.88 s
+record of 18 fragments into the 7703912-byte ledger: 5.04 s
+record of 18 fragments into the 7900973-byte ledger: 5.21 s
+record of 18 fragments into the 8098034-byte ledger: 5.24 s
+packed objects: 1032 KB before, 1172 KB after five recorded runs: 28 KB per run of eighteen lanes
+tip blob: 8098034 bytes raw, 1146950 gzipped
+history show on it: 0.51 s
