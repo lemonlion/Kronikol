@@ -1142,6 +1142,23 @@ is untouched, and it agreed.
 86), every popup drawn, one decode of the map, and no console error. On the exports, 3.31.4's first
 diagram opens nothing (F14) and R2's all open, with one decode.
 
+### 11.3 After R2: the list was counted over tests the page does not show (3.31.10, 2026-09-27)
+
+Found in CI, not by the release's own run. The (2, 1) case of `ArrowLinkOpensPopupTests`'
+`An_arrow_is_bound_when_drawn_exactly_when_it_has_a_segment` read `has` where `hidden` is right in
+`E2E (Popups & Flows)` on every main run from the 3.31.9 release itself (`e4c9e36`) on, though the
+release's local suite had passed it. `ReportGenerator` counted the element's lists over every diagram the
+fetcher made, and the fetcher makes one for every test the process has logged. The E2E fixtures share a
+process, so each report counted earlier fixtures' arrows, and which list it carried depended on which
+theory case ran first; CI ran them the other way round from a local run. Each list stayed exact for the
+page's own links, so no page bound a link wrongly. 3.31.10 counts the lists over the diagrams of the
+scenarios the page lists (every read of `diagramsByTestId` is by a scenario's id), which is what
+`WrapSegmentData`'s own comment says it is given ("every PlantUML source the page embeds").
+`InternalFlowSegmentMapReportTests.The_element_list_is_chosen_over_the_links_of_the_scenarios_the_page_shows`
+logs four calls under a test the run does not name, red on 3.31.9. A consumer's report changes only when
+its process logged tests its features do not name. The Kronikol4J ledger entry is drafted in
+`DOORSTEP_PLAN.md` Appendix A.
+
 ## Appendix A. Re-taking the numbers
 
 Everything is in [`INTERNAL_FLOW_BLOB_PLAN.harness/`](INTERNAL_FLOW_BLOB_PLAN.harness/README.md), with

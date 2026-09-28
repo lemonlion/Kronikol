@@ -243,6 +243,11 @@ public class OnDemandRenderingTests : PlaywrightTestBase
         var reportsDir = Path.Combine(TempDir, "nodejs-run-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(reportsDir);
         var order = "od-order-" + Guid.NewGuid().ToString("N");
+        // The whole pipeline memoises its diagrams process-wide, so it runs as every such fixture does: one at a time,
+        // from a fresh cache (ReportTestHelper.WholePipeline).
+        lock (ReportTestHelper.WholePipeline)
+        {
+        DefaultDiagramsFetcher.Reset();
         RequestResponseLogger.LogPair("Order", order, HttpMethod.Post, new Uri("http://orders-api/orders"), "OrdersApi", "Test", statusCode: HttpStatusCode.Created);
         RequestResponseLogger.LogPair("Order", order, HttpMethod.Get, new Uri("http://stock-api/stock"), "StockApi", "OrdersApi");
 
@@ -257,6 +262,8 @@ public class OnDemandRenderingTests : PlaywrightTestBase
                 GenerateSpecificationsReport = false,
                 GenerateSpecificationsData = false,
             });
+        DefaultDiagramsFetcher.Reset();
+        }
         var html = Path.Combine(reportsDir, "TestRunReport.html");
         File.Copy(html, Path.Combine(OutputDir, "OnDemand_component_panel.html"), true);
 

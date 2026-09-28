@@ -1,0 +1,110 @@
+diff --git a/templates/github-actions/kronikol-pr-report-link/README.md b/templates/github-actions/kronikol-pr-report-link/README.md
+index f565298c..6631eb45 100644
+--- a/templates/github-actions/kronikol-pr-report-link/README.md
++++ b/templates/github-actions/kronikol-pr-report-link/README.md
+@@ -16,6 +16,7 @@ report is always one click from the PR. With two lanes, component tests and unit
+ > 💡 Each link downloads a zip of the latest reports. Open `TestRunReport.html` inside it.
+ 
+ <sub>🤖 CI rewrites this comment every time a linked workflow runs.</sub>
++<!-- kronikol-report-link:end -->
+ ```
+ 
+ GitHub shows the heading, one line per lane with its tag hidden, a Tip box and a small footer.
+@@ -149,8 +150,9 @@ own `artifact-name` and `label`.
+ 
+ - **`GITHUB_TOKEN` only.** The action writes with the workflow token and recognises its comment by the
+   `github-actions[bot]` author, so it has no token input.
+-- **The comment is the action's.** The next run of any lane rewrites it whole, so anything else written into it
+-  is dropped. Other content takes a comment of its own, with its own `comment-key`.
++- **The comment is the action's, down to its end marker.** The next run of any lane rewrites everything above
++  `<!-- <comment-key>:end -->` and keeps everything after it as it is. Other content goes after the marker, or in
++  a comment of its own with its own `comment-key`.
+ - **Links download a zip, for a signed-in reader.** The reports directory is uploaded as one zip, which the reader
+   downloads to open the report. GitHub serves an artifact only to a signed-in user who can read the repository.
+   Viewing reports without a download means publishing them somewhere, for example GitHub Pages.
+diff --git a/templates/github-actions/kronikol-pr-report-link/action.yml b/templates/github-actions/kronikol-pr-report-link/action.yml
+index 57dbd261..2dab9d4c 100644
+--- a/templates/github-actions/kronikol-pr-report-link/action.yml
++++ b/templates/github-actions/kronikol-pr-report-link/action.yml
+@@ -110,8 +110,14 @@ runs:
+           // marker is a prefix of another's, because each ends in " -->", so nothing needs to follow it; a comment
+           // re-saved in the web editor continues with "\r\n".
+           const existing = comments.find(c => c.user?.login === 'github-actions[bot]' && c.body?.startsWith(marker));
++          // Everything after the end marker belongs to a later version or another writer: it is kept as it is, and
++          // no line is read from it.
++          const end = `<!-- ${key}:end -->`;
++          const endAt = existing?.body?.indexOf(end) ?? -1;
++          const ownPart = endAt >= 0 ? existing.body.slice(0, endAt) : (existing?.body ?? '');
++          const kept = endAt >= 0 ? existing.body.slice(endAt + end.length) : '';
+           // Saving an edit in GitHub's web editor stores CRLF line endings, so split on either.
+-          const lines = (existing?.body ?? '').split(/\r?\n/).filter(l => l.startsWith('- ') && l.includes(`<!-- ${key}:`));
++          const lines = ownPart.split(/\r?\n/).filter(l => l.startsWith('- ') && l.includes(`<!-- ${key}:`));
+ 
+           const own = lines.find(l => l.includes(tag(artifactName)));
+           // The run id is the digits straight after the line's own tag, whatever follows them: whitespace a hand edit
+@@ -135,7 +141,8 @@ runs:
+             `> 💡 Each link downloads a zip of the latest reports. Open \`${reportFile}\` inside it.`,
+             '',
+             '<sub>🤖 CI rewrites this comment every time a linked workflow runs.</sub>',
+-          ].join('\n');
++            end,
++          ].join('\n') + kept;
+ 
+           if (existing) {
+             await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+diff --git a/tests/Kronikol.Tests/Templates/PrReportLinkActionTests.cs b/tests/Kronikol.Tests/Templates/PrReportLinkActionTests.cs
+index 38aeb24b..82fb167d 100644
+--- a/tests/Kronikol.Tests/Templates/PrReportLinkActionTests.cs
++++ b/tests/Kronikol.Tests/Templates/PrReportLinkActionTests.cs
+@@ -238,6 +238,31 @@ public void A_line_break_in_an_input_keeps_the_line_whole()
+         Assert.Contains("Open `TestRun Report.html` inside it.", body, StringComparison.Ordinal);
+     }
+ 
++    [Fact]
++    public void What_follows_the_end_marker_survives_every_rewrite_and_holds_no_line()
++    {
++        SkipWithoutNode();
++
++        // The first release tag freezes what a lane on it does with the comment. A later version, or another
++        // writer, adds to the comment after the end marker, so a lane still on this version keeps it. A line
++        // there, even one carrying this lane's tag and a newer run, is not read as one of the comment's.
++        var outcome = new PullRequest()
++            .Upload(101, 9001, Unit, "2026-09-15T12:34:09Z", "2026-09-16T12:34:07Z")
++            .Run(101, Unit)
++            .EditComments("section-after-end")
++            .Upload(201, 9003, Unit, "2026-09-15T13:00:00Z", "2026-09-16T13:00:00Z")
++            .Run(201, Unit)
++            .Go();
++
++        var body = Assert.Single(outcome.BotComments).Body;
++        Assert.EndsWith(
++            "<!-- kronikol-report-link:end -->\n### Changed scenarios\n\n- a later section's line <!-- kronikol-report-link:unit-test-reports run:999 -->\n",
++            body, StringComparison.Ordinal);
++        Assert.Contains("runs/201/artifacts/9003",
++            Assert.Single(LaneLines(body[..body.IndexOf("<!-- kronikol-report-link:end -->", StringComparison.Ordinal)])),
++            StringComparison.Ordinal);
++    }
++
+     [Fact]
+     public void Outside_a_pull_request_it_fails_naming_the_event_and_writes_nothing()
+     {
+@@ -593,7 +618,8 @@ public PullRequest Run(long runId, string artifactName, Dictionary<string, strin
+ 
+         /// <summary>
+         /// A person editing the bot's comment, <c>crlf</c> or <c>trailing-whitespace</c>, or a later version of the
+-        /// action writing a field after each line's run id, <c>tag-field</c>.
++        /// action writing a field after each line's run id, <c>tag-field</c>, or a section after the end marker,
++        /// <c>section-after-end</c>.
+         /// </summary>
+         public PullRequest EditComments(string how)
+         {
+@@ -664,6 +690,9 @@ public Outcome Go()
+               for (const c of state.comments.filter(c => c.user.login === bot)) c.body = c.body.replace(/\r?\n/g, '\r\n');
+             } else if (step.edit === 'tag-field') {
+               for (const c of state.comments.filter(c => c.user.login === bot)) c.body = c.body.replace(/( run:\d+)( -->)/g, '$1 x:1$2');
++            } else if (step.edit === 'section-after-end') {
++              for (const c of state.comments.filter(c => c.user.login === bot))
++                c.body += '\n### Changed scenarios\n\n- a later section\'s line <!-- kronikol-report-link:unit-test-reports run:999 -->\n';
+             } else if (step.edit === 'trailing-whitespace') {
+               for (const c of state.comments.filter(c => c.user.login === bot))
+                 c.body = c.body.split('\n').map(l => l.startsWith('- ') ? l + ' \t ' : l).join('\n');

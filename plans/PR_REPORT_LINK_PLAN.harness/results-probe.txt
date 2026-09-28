@@ -1,0 +1,35 @@
+# node probe.js action.yml, on 2026-09-27, node v22.22.2
+# 1. action.yml: git show origin/pr-report-link-template:templates/github-actions/kronikol-pr-report-link/action.yml (PR #73 head e31b42fa)
+{
+  "p1_body": "<!-- kronikol-report-link -->\n## 📊 Kronikol test reports\n\n- 🧪 **Component tests** — 📦 [component-test-reports](https://github.com/octo/app/actions/runs/101/artifacts/9001) 🕒 _(last updated 2026-09-15 13:58 UTC)_ ⏳ _(expires on 2026-09-16 13:58 UTC)_ <!-- kronikol-report-link:component-test-reports run:101 -->\n- 🧪 **Unit tests** — 📦 [unit-test-reports](https://github.com/octo/app/actions/runs/102/artifacts/9002) 🕒 _(last updated 2026-09-15 14:05 UTC)_ ⏳ _(expires on 2026-09-16 14:05 UTC)_ <!-- kronikol-report-link:unit-test-reports run:102 -->\n\n> [!TIP]\n> 💡 Each link downloads a zip of the latest reports. Open `TestRunReport.html` inside it.\n\n<sub>🤖 CI rewrites this comment every time a linked workflow runs.</sub>",
+  "p2_older_run_wrote": 1,
+  "p2_body_links_run": "400",
+  "p3_writes": 2,
+  "p3_links_run": "runs/550/",
+  "p4_section_kept": false,
+  "p5_tip_and_heading_after_each_run": [
+    "TestRunReport.html | 📊 Kronikol test reports",
+    "UiReport.html | UI reports",
+    "TestRunReport.html | 📊 Kronikol test reports"
+  ],
+  "p6_writes": 1,
+  "p6_lines_for_unit": 2
+}
+
+# 2. action.yml with the S2 rehearsal's fixes (rehearsal/s2-2-fixes.patch; results-s2-s3-rehearsal.txt): P2 and P3 no longer let the older run write.
+#    P5 and P6 are unchanged by design: the README documents P5, and P6's field order is the rule the tag now keeps. P4's section sits
+#    above any end marker, so it is dropped with Q5's patch too; the fact What_follows_the_end_marker_survives_every_rewrite_and_holds_no_line covers the other side.
+{
+  "p2_older_run_wrote": 0,
+  "p2_body_links_run": "unchanged (500)",
+  "p3_writes": 1,
+  "p3_links_run": "runs/600/",
+  "p4_section_kept": false,
+  "p5_tip_and_heading_after_each_run": [
+    "TestRunReport.html | 📊 Kronikol test reports",
+    "UiReport.html | UI reports",
+    "TestRunReport.html | 📊 Kronikol test reports"
+  ],
+  "p6_writes": 1,
+  "p6_lines_for_unit": 2
+}

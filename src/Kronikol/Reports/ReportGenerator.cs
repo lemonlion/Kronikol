@@ -387,8 +387,12 @@ public static class ReportGenerator
         if (perBoundarySegments is not null)
         {
             // The segment map's id list is computed over every diagram source a page can show, so it needs the
-            // component diagram, which is why the popup data is built here rather than with the segments.
-            var linkSources = diagrams.Select(d => (string?)d.CodeBehind)
+            // component diagram, which is why the popup data is built here rather than with the segments. A page shows
+            // a diagram only for a scenario it lists (every read of diagramsByTestId is by a scenario's id), so a test
+            // the process logged that these features do not name is left out: counted in, its links, none of which the
+            // page shows, could outnumber the page's own and tip the list's choice.
+            var shownTestIds = features.SelectMany(f => f.Scenarios).Select(s => s.Id).ToHashSet(StringComparer.Ordinal);
+            var linkSources = diagrams.Where(d => shownTestIds.Contains(d.TestRuntimeId)).Select(d => (string?)d.CodeBehind)
                 .Append(ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null)
                 .ToArray();
 
@@ -1779,8 +1783,11 @@ public static class ReportGenerator
                 {
                     var anchorId = scenarioAnchorIds[s.Id];
                     var featureName = scenarioFeatureLookup.GetValueOrDefault(s.Id, "");
+                    // The link jumps rather than scrolls smoothly: a smooth scroll across features the browser
+                    // has never drawn is aimed at their content-visibility placeholders, and ends past the
+                    // scenario (jump_into_view, in report-url-hash-function.js, says why).
                     var prefix = featureName.Length > 0 ? $"<span style=\"color:rgb(100,100,100);font-size:0.85em\">{System.Net.WebUtility.HtmlEncode(featureName)} &rsaquo;</span> " : "";
-                    return $"<li>{prefix}<a class=\"failure-cluster-scenario-link\" href=\"#{anchorId}\" onclick=\"event.preventDefault();var el=document.getElementById('{anchorId}');if(el){{var p=el;while(p){{if(p.tagName==='DETAILS')p.setAttribute('open','');p=p.parentElement;}}if(el.tagName==='TR')el.click();else el.setAttribute('open','');el.scrollIntoView({{behavior:'smooth',block:'start'}});history.replaceState(null,'',location.pathname+location.search+'#{anchorId}');}}\">{System.Net.WebUtility.HtmlEncode(s.DisplayName)}</a></li>";
+                    return $"<li>{prefix}<a class=\"failure-cluster-scenario-link\" href=\"#{anchorId}\" onclick=\"event.preventDefault();var el=document.getElementById('{anchorId}');if(el){{var p=el;while(p){{if(p.tagName==='DETAILS')p.setAttribute('open','');p=p.parentElement;}}if(el.tagName==='TR')el.click();else el.setAttribute('open','');jump_into_view(el,'start');history.replaceState(null,'',location.pathname+location.search+'#{anchorId}');}}\">{System.Net.WebUtility.HtmlEncode(s.DisplayName)}</a></li>";
                 }));
                 body.Append($"<details class=\"failure-cluster\"><summary>{System.Net.WebUtility.HtmlEncode(cluster.ClusterKey)}<span class=\"failure-cluster-count\">{cluster.Scenarios.Length} scenarios</span></summary>");
                 body.Append($"<ul class=\"failure-cluster-scenarios\">{anchorLinks}</ul></details>");

@@ -69,7 +69,13 @@ public class DeepLinkReportTests
         Assert.Contains("reveal_url_anchor(anchor)", parse);
         var reveal = ExtractFunctionBody(content, "reveal_url_anchor");
         Assert.Contains("setAttribute('open', '')", reveal);
-        Assert.Contains("scrollIntoView", reveal);
+        Assert.Contains("jump_into_view(target, 'center')", reveal);
+        // At once, never smoothly: a smooth scroll is aimed at the content-visibility placeholders of the
+        // features it crosses and ends past the scenario (plans/DOORSTEP_PLAN.md F28; the browser facts
+        // are StableIdDeepLinkTests in the end-to-end project).
+        var jump = ExtractFunctionBody(content, "jump_into_view");
+        Assert.Contains("behavior: 'instant'", jump);
+        Assert.DoesNotContain("'smooth'", jump);
     }
 
     [Fact]

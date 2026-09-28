@@ -274,4 +274,39 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
             $"() => {{ var r = document.getElementById('{slug}'); return r && r.closest('details.scenario-parameterized').hasAttribute('open'); }}",
             null, new() { PollingInterval = 200 });
     }
+
+    [Fact]
+    public async Task A_sid_link_far_down_a_long_report_lands_on_its_scenario()
+    {
+        // A feature has content-visibility: auto, so until the browser first draws one it counts as a
+        // 500 px placeholder, where a closed feature is about 60 px. A smooth scroll aimed across such
+        // features is aimed too far: they shrink to their true size as it passes them, and it ends at the
+        // bottom of the page with the scenario far above the screen (plans/DOORSTEP_PLAN.md F28).
+        var url = GenerateLongReport("SidDeepLinkFarDown.html");
+        var wanted = Sid("Feature 30", "Scenario 30.2");
+
+        await Page.GotoAsync(url + "#sid-" + wanted);
+        await WaitForScrollToSettleAsync();
+
+        Assert.True(await SummaryIsOnScreenAsync($"[data-stable-id='{wanted}']"),
+            "The linked scenario's title should be on screen once the page has stopped scrolling");
+    }
+
+    [Fact]
+    public async Task At_a_phone_width_a_sid_link_lands_on_the_page_the_folded_filters_leave()
+    {
+        // At 768 px and below the report folds its filter panel away as it loads. The link's scroll has
+        // to be aimed at the page that fold leaves: aimed before it, the scroll ends the panel's height
+        // too far down, with the scenario above the screen (plans/DOORSTEP_PLAN.md F28). The scenario is
+        // in the first feature, so no placeholder lies between it and the top of the page.
+        await Page.SetViewportSizeAsync(390, 844);
+        var url = GenerateLongReport("SidDeepLinkPhone.html");
+        var wanted = Sid("Feature 01", "Scenario 01.2");
+
+        await Page.GotoAsync(url + "#sid-" + wanted);
+        await WaitForScrollToSettleAsync();
+
+        Assert.True(await SummaryIsOnScreenAsync($"[data-stable-id='{wanted}']"),
+            "The linked scenario's title should be on screen once the page has stopped scrolling");
+    }
 }
