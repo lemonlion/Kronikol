@@ -274,11 +274,17 @@ internal static class QueryScriptGenerator
     /// </summary>
     internal static void Write(string directory, string text, Action<string> write)
     {
-        var path = Path.Combine(directory, FileName);
-        if (File.Exists(path) && !IsOurs(path))
+        if (IsForeign(directory))
             throw new InvalidOperationException($"the {FileName} there was not written by Kronikol, so it is left as it is");
 
         write(text);
+    }
+
+    /// <summary>Whether <paramref name="directory"/> holds a <c>query.cs</c> that Kronikol did not write.</summary>
+    internal static bool IsForeign(string directory)
+    {
+        var path = Path.Combine(directory, FileName);
+        return File.Exists(path) && !IsOurs(path);
     }
 
     private static bool IsOurs(string path)

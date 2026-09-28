@@ -130,6 +130,9 @@ public class SkillDriftTests
             // type to kronikol. Only that one program is exempt, by name - a bare `--flag` anywhere else
             // in a code context is still held to the parser.
             .Select(c => Regex.Replace(c, @"dotnet test\b[^\n`]*", ""))
+            // The same for `dotnet run --file query.cs --`, the no-install form: `--file` is dotnet's, and
+            // everything after the `--` is kronikol's, so it stays held to the parser.
+            .Select(c => Regex.Replace(c, @"dotnet run --file \S*query\.cs --", ""))
             .SelectMany(c => Regex.Matches(c, @"--[a-z][a-z-]*").Select(m => m.Value))
             .Distinct(StringComparer.Ordinal)
             .OrderBy(f => f, StringComparer.Ordinal)

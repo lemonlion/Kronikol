@@ -111,6 +111,14 @@ public static class FailuresDigestGenerator
     private const int JsonlFieldLimit = 4000;
 
     /// <summary>
+    /// Every command the digest shows is <c>kronikol query</c>, which an agent that may not install a tool
+    /// cannot run: the line that says the <c>query.cs</c> in the directory takes the same arguments.
+    /// </summary>
+    private static string NoToolLine(string verb) =>
+        $"No `kronikol` here? `dotnet run --file query.cs -- {verb} .` in this directory takes the same arguments, "
+        + "with nothing to install and no network.\n";
+
+    /// <summary>
     /// Builds both files. <paramref name="trackedLogs"/> may be null (no capture); the digest then reports
     /// the failures without their calls rather than nothing at all.
     /// </summary>
@@ -121,11 +129,14 @@ public static class FailuresDigestGenerator
     /// none - they are dropped when a shard is written and <c>stepPath</c> is carried instead - so a
     /// digest built from a merge attributed every call to <c>scenario</c> rather than to the step that
     /// made it. Null derives them, which is right for a live run.
+    /// <para><paramref name="queryScript"/> says the directory holds a <c>query.cs</c>, and the digest then says
+    /// how to ask its questions without the tool: every command it shows is <c>kronikol query</c>, which an
+    /// agent that may not install anything cannot run.</para>
     /// </remarks>
     public static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string? htmlFileName,
         string kronikolVersion, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null,
         IReadOnlyDictionary<string, List<string?>>? stepPaths = null, HistoryVerdicts? history = null,
-        FailuresDigestEarlierAttempt? earlierAttempt = null)
+        FailuresDigestEarlierAttempt? earlierAttempt = null, bool queryScript = false)
     {
         ArgumentNullException.ThrowIfNull(features);
 
@@ -154,7 +165,7 @@ public static class FailuresDigestGenerator
                              && ParameterCaptureHint.Applies(l.DependencyCategory, l.Content)));
 
         return new FailuresDigest(
-            BuildMarkdown(entries, scenarios.Length, scenarios.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql, history, earlierAttempt),
+            BuildMarkdown(entries, scenarios.Length, scenarios.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql, history, earlierAttempt, queryScript),
             BuildJsonl(entries, scenarios.Length, kronikolVersion, suite));
     }
 
@@ -470,7 +481,7 @@ public static class FailuresDigestGenerator
     // ─── Markdown ──────────────────────────────────────────────
 
     private static string BuildMarkdown(IReadOnlyList<Entry> entries, int scenarioCount, int passedCount, string kronikolVersion,
-        IReadOnlyList<DiagnosticEntry>? diagnostics, bool unparameterisedSql, HistoryVerdicts? history, FailuresDigestEarlierAttempt? earlierAttempt)
+        IReadOnlyList<DiagnosticEntry>? diagnostics, bool unparameterisedSql, HistoryVerdicts? history, FailuresDigestEarlierAttempt? earlierAttempt, bool queryScript)
     {
         var markdown = new StringBuilder();
 
@@ -525,6 +536,8 @@ public static class FailuresDigestGenerator
             markdown.Append("This file is written on every run, so its absence means the run did not finish — not that\n");
             markdown.Append("nothing broke. To look around anyway, without opening the report:\n\n");
             markdown.Append("```bash\nkronikol query summary .\nkronikol query services .\n```\n");
+            if (queryScript)
+                markdown.Append("\n" + NoToolLine("summary"));
             return markdown.ToString();
         }
 
@@ -541,6 +554,8 @@ public static class FailuresDigestGenerator
         markdown.Append("kronikol query steps . s3           # one scenario's whole tree\n");
         markdown.Append("kronikol query flow . s3            # its calls, in order, instead of the diagram\n");
         markdown.Append("kronikol query http . s3/i0 --body  # one payload, once you have named it\n```\n\n");
+        if (queryScript)
+            markdown.Append(NoToolLine("failures") + "\n");
 
         // What the last runs say about this one, before any failure is read: a regression reads
         // differently from the fifth day of the same red, and the entries below are ordered accordingly.

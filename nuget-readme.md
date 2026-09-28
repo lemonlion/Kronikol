@@ -77,6 +77,8 @@ kronikol query failures ./Reports --json            # the same answer as one env
 kronikol ctrf           ./Reports --out ctrf-report.json  # the run in Common Test Report Format, for CI tooling
 ```
 
+With nothing installed and no network, every run's `query.cs` answers the same: from the reports directory, `dotnet run --file query.cs -- failures .` runs the engine that wrote the report (it needs the .NET 10 SDK).
+
 ## Teach your agents to use it
 
 An agent asked to debug a failing test will reach for `Read` and spend its whole context on the report.

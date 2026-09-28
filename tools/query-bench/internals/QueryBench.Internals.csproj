@@ -3,8 +3,9 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
-    <!-- Rides the InternalsVisibleTo("Kronikol.Tests") grant that Kronikol.Tool already carries,
-         so this harness can call ReportScanner/BodyCache/PathEngine directly. -->
+    <!-- Rides the InternalsVisibleTo("Kronikol.Tests") grant that Kronikol already carries, so this
+         harness can call ReportScanner/BodyCache/PathEngine directly: the query engine lives in
+         Kronikol (src/Kronikol/Query) and reaches this project through the tool's reference. -->
     <AssemblyName>Kronikol.Tests</AssemblyName>
     <RootNamespace>QueryBench.Internals</RootNamespace>
   </PropertyGroup>

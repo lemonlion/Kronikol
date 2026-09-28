@@ -66,6 +66,12 @@ public static class MergedRunOutputs
             }
         }
 
+        // Settled before anything is written, because the digest - written first - tells its reader about
+        // query.cs: planned, not yet written, and never a query.cs somebody else put here.
+        var queryScriptBlockedBy = options.WriteQueryScript && dataFilePath is not null ? QueryScriptGenerator.CompilingProject(directory) : null;
+        var queryScriptPlanned = options.WriteQueryScript && dataFilePath is not null && queryScriptBlockedBy is null
+                                 && !QueryScriptGenerator.IsForeign(directory);
+
         if (options.GenerateFailuresDigest)
         {
             // The step paths are carried, not derived: the derivation walks diagram markers the shards no
@@ -79,7 +85,8 @@ public static class MergedRunOutputs
                 report.Diagnostics,
                 report.Suite,
                 report.StepPaths,
-                history: history));
+                history: history,
+                queryScript: queryScriptPlanned));
 
             Attempt(ReportGenerator.FailuresDigestFileName,
                 () => File.WriteAllText(Path.Combine(directory, ReportGenerator.FailuresDigestFileName), digest.Value.Markdown));
@@ -98,7 +105,7 @@ public static class MergedRunOutputs
         // names is the one this merge ran, so a merged report is queried by what wrote it.
         if (options.WriteQueryScript && dataFilePath is not null)
         {
-            if (QueryScriptGenerator.CompilingProject(directory) is { } project)
+            if (queryScriptBlockedBy is { } project)
                 error.WriteLine("⚠ WARNING: " + QueryScriptGenerator.NotApplied(project));
             else
                 Attempt(QueryScriptGenerator.FileName, () => QueryScriptGenerator.Write(directory, QueryScriptGenerator.Build(directory),
@@ -132,7 +139,10 @@ public static class MergedRunOutputs
             queryTarget: QueryTarget(dataFilePath),
             history: history is not null && (history.HasAnything || report.Features.Any(f => (f.Scenarios ?? []).Any(s => s.Result == ExecutionResult.Failed)))
                 ? "history: " + History.HistorySummary.Line(history)
-                : null);
+                : null) with
+        {
+            QueryScriptWritten = written.Contains(QueryScriptGenerator.FileName)
+        };
 
         var ci = CiEnvironmentDetector.Detect(getEnv);
 

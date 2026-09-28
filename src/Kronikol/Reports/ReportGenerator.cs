@@ -434,6 +434,11 @@ public static class ReportGenerator
         // when reports are uploaded to GitHub Pages or CI artifacts.
         var reportsDir = CurrentReportsDirectory;
         Directory.CreateDirectory(reportsDir);
+
+        // Decided before the outputs run in parallel, because the digest tells its reader about query.cs and is
+        // written beside it: planned, not yet written. A query.cs someone else put here is not Kronikol's to
+        // replace, and the digest must not send anyone to run it.
+        var queryScriptPlanned = WritesQueryScript(options) && queryScriptBlockedBy is null && !QueryScriptGenerator.IsForeign(reportsDir);
         CopyAttachmentsToReportsFolder(features, reportsDir);
 
         // The run report's component diagram, drawn now by the report's renderer where the page will not draw it
@@ -538,7 +543,8 @@ public static class ReportGenerator
                         : rotation is { KeptDirectory: { } keptRun, Kept: { Failed: > 0 } keptManifest }
                             ? new FailuresDigestEarlierAttempt(
                                 Path.GetRelativePath(reportsDir, keptRun).Replace('\\', '/'), keptManifest.Failed, keptManifest.Scenarios, SameRun: false)
-                            : null));
+                            : null,
+                    queryScript: queryScriptPlanned));
 
             Add(FailuresDigestFileName, () => WriteFile(digest.Value.Markdown, FailuresDigestFileName));
             Add(FailuresDigestJsonlFileName, () => WriteFile(digest.Value.Jsonl, FailuresDigestJsonlFileName));
@@ -632,7 +638,8 @@ public static class ReportGenerator
                 // green run rotated is a line people learn to skip.
                 PreviousRun = rotation is { KeptDirectory: { } keptDirectory, Kept.Failed: > 0 }
                     ? new RunSummaryPreviousRun(keptDirectory, rotation.Kept.Failed)
-                    : null
+                    : null,
+                QueryScriptWritten = written.Contains(QueryScriptGenerator.FileName)
             };
 
         if (options.WriteCiSummary)
@@ -5993,7 +6000,7 @@ public static class ReportGenerator
         var schema = new Dictionary<string, object?>
         {
             ["$schema"] = "https://json-schema.org/draft/2020-12/schema",
-            ["$comment"] = "A real TestRunReport.json runs to megabytes, with single embedded diagrams past 600 KB, so do not read it whole: `kronikol query <command> <report>` (dotnet tool install -g Kronikol.Tool) answers questions about it under a byte budget — summary, failures, steps sN, services, flow sN, http sN/iN. This schema is the field-level contract of that file.",
+            ["$comment"] = "A real TestRunReport.json runs to megabytes, with single embedded diagrams past 600 KB, so do not read it whole: `kronikol query <command> <report>` (dotnet tool install -g Kronikol.Tool) answers questions about it under a byte budget — summary, failures, steps sN, services, flow sN, http sN/iN — and with nothing installed, `dotnet run --file query.cs -- <command> <report>` from the reports directory answers the same, with the engine that wrote it. This schema is the field-level contract of that file.",
             ["title"] = "TestRunReport",
             ["description"] = "Schema for Kronikol test run report data",
             ["type"] = "object",

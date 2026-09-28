@@ -24,15 +24,26 @@ Use `kronikol query` instead. Every command prints an answer plus the addresses 
 ```
 dotnet tool install -g Kronikol.Tool      # once, if `kronikol` is not on PATH
 kronikol query summary .logs/kronikol/TestRunReport.json
+dotnet run --file .logs/kronikol/query.cs -- summary .logs/kronikol   # no install, no network: the report's own query.cs
 dnx Kronikol.Tool query summary .logs/kronikol/TestRunReport.json   # no install: the .NET 10 SDK runs the last published version
 ```
+
+**When you may not install the tool, or have no network,** use the `query.cs` every run writes beside its
+report. It runs the same engine as `kronikol query` (the Kronikol that wrote the report, from the test run's
+output or the NuGet cache), so it takes every verb and flag and prints the same answer, with nothing
+installed, restored or downloaded. It needs the .NET 10 SDK. The first run compiles it in a few seconds;
+later runs start at once. Keep `--file`: from a folder holding a project, a bare `dotnet run` runs that
+project instead. Where a `global.json` pins an older SDK, run it from outside that folder with full paths.
+A reports directory inside a C# project's folder has no `query.cs`, because the project would compile it,
+and the report's diagnostics say so.
 
 `dnx` is for a one-off: it fetches from the feed on every call with no offline fallback, costs 3-5x per
 command, and answers its own help and version flags rather than the tool's. For a session, install.
 
 `<report>` can be the directory holding the report; the tool finds it, and says so if there are several.
-If the tool is genuinely unavailable, use `scripts/query.py` in this skill — it degrades to a smaller set
-of commands, not to reading the file.
+On a machine without the .NET 10 SDK, where neither the tool nor `query.cs` can run, use
+`scripts/query.py` in this skill under Python: it degrades to a smaller set of commands, not to reading
+the file.
 
 ## Rung zero: read the directory before querying it
 
@@ -46,6 +57,8 @@ A run writes more than the report, and two of the files are meant to be read who
 - `Failures.jsonl` — the same failures, one JSON object per line, for scripts. Each line opens with
   `formatVersion`.
 - `CLAUDE.md` and `AGENTS.md` — byte-identical instructions generated beside that particular run.
+- `query.cs` — `kronikol query` with nothing installed: `dotnet run --file query.cs -- summary .` from the
+  directory, as above.
 
 Everything below is for the questions the digest does not answer.
 

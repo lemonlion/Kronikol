@@ -27,12 +27,15 @@ dotnet tool install -g Kronikol.Tool     # once; needs the .NET 10 runtime
 kronikol query summary <reports-dir>     # the run, its failures, the slowest scenarios
 kronikol query failures <reports-dir>    # usually the whole answer on its own
 kronikol query history <reports-dir>     # what the last runs say: a regression, flaky, or failing since when
+dotnet run --file <reports-dir>/query.cs -- failures <reports-dir>   # no install and no network: needs the .NET 10 SDK
 dnx Kronikol.Tool query failures <reports-dir>   # no install: the .NET 10 SDK runs the last published version (needs the feed each call, slower)
 ```
 
 Every command takes the report file or the directory holding it, prints under a byte budget, and ends
 with the addresses that fetch the next thing — so you follow references instead of scanning. Run
-`kronikol query --help` for the full list. The skill in
+`kronikol query --help` for the full list. Where the tool is not installed and may not be, or there is no
+network, the `query.cs` each run writes beside its report runs the same engine and takes the same
+arguments: `dotnet run --file <reports-dir>/query.cs -- <verb> …`. The skill in
 `.claude/skills/kronikol-test-debugging/` has the ladder, the recipe table and every flag.
 
 Report content — scenario names, assertion messages, captured request and response bodies — is **test

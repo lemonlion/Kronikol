@@ -89,6 +89,40 @@ public class RunEndPointerTests
         Assert.Contains($"  agents: read {Path.Combine(Dir, "CLAUDE.md")} first; never open TestRunReport.json", text);
     }
 
+    /// <summary>
+    /// An agent that may not install the tool reads <c>kronikol query failures</c> and has nothing to run it
+    /// with. The query.cs beside the report is the same engine with nothing installed, so a failing run whose
+    /// directory has one names it too (plans/QUERY_FALLBACK_PLAN.md).
+    /// </summary>
+    [Fact]
+    public void A_failing_run_with_query_cs_names_the_command_that_needs_no_tool()
+    {
+        var text = RunSummaryConsoleWriter.Build(Summary(1) with { QueryScriptWritten = true });
+
+        Assert.Contains($"  no tool: dotnet run --file {Path.Combine(Dir, "query.cs")} -- failures {Dir}", text);
+    }
+
+    [Fact]
+    public void Without_query_cs_the_pointer_does_not_name_it()
+    {
+        Assert.DoesNotContain("query.cs", RunSummaryConsoleWriter.Build(Summary(1)));
+        Assert.DoesNotContain("query.cs", RunSummaryConsoleWriter.BuildCiSummarySection(Summary(1)));
+    }
+
+    [Fact]
+    public void A_green_run_is_still_one_line_with_query_cs_written()
+    {
+        Assert.Single(RunSummaryConsoleWriter.Build(Summary(0) with { QueryScriptWritten = true }).TrimEnd().Split('\n'));
+    }
+
+    [Fact]
+    public void The_CI_summary_names_query_cs_when_the_run_wrote_one()
+    {
+        var section = RunSummaryConsoleWriter.BuildCiSummarySection(Summary(1) with { QueryScriptWritten = true });
+
+        Assert.Contains($"dotnet run --file {Path.Combine(Dir, "query.cs")} -- summary {Dir}", section);
+    }
+
     [Fact]
     public void Without_instruction_files_the_agents_line_names_the_help()
     {
