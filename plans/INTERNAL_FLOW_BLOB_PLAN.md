@@ -1142,6 +1142,46 @@ is untouched, and it agreed.
 86), every popup drawn, one decode of the map, and no console error. On the exports, 3.31.4's first
 diagram opens nothing (F14) and R2's all open, with one decode.
 
+**Released (2026-09-27).** 3.31.9 is `e4c9e360`, on top of the slices `7498a148` (S1), `049572a8`
+(S1b), `645cb90b` (S3) and `3538a7ec` (F14). Each slice builds on its own.
+
+- **Release and CodeQL were green; CI was not.** One fact failed in its Popups & Flows group
+  (run `36323047132`): the binding theory expected its page to carry `hidden` and found `has`. The
+  list was counted over every diagram the process had logged, and CI runs that group after other
+  fixtures, whose link ids made the other list the shorter one. Each list stayed exact for the page,
+  so no link bound wrongly. `ebcf0df8` (test only, no bump) writes the form each case names into a
+  copy of the page, from the page's own sources and keys, and the group passed 47 of 47 locally on
+  3.31.9. It landed after 3.31.10, a peer's patch that fixed the cause in the product meanwhile: the
+  list is now counted over the scenarios the page shows (§11.3). CI was green on the two together.
+- **NuGet** listed all 62 packages. #89 is closed, the wiki is at `cbc0e95` and the Kronikol4J ledger
+  at `5aab86a`.
+
+**S5, the consumer on 3.31.9.** All 30 sites moved in `fbec5ab`. The restore (`--no-cache`) was clean,
+and the xUnit lane passed 203 of 203 locally, with a report of 2,586,935 bytes, the same bound counts,
+one decode and the list exact.
+
+- **`CI: Main`** (`36389857355`): all 58 jobs green. The history gates read "nothing changed" on the
+  six in-memory lanes and five of the external-SUT lanes. The docker lanes show the known "3 still
+  failing" (§11.1).
+- **BDDfy external SUT** reads "1 behaviour changed". The Reporting scenario that polls for batch
+  completions made its calls 6 times instead of 5. The count moved on 3.31.4's second run
+  (`36316716498`), before this release existed, and a poll loop's count is timing. 3.31.9 changes
+  nothing that is captured.
+- **The published site, all 18 lanes on 3.31.9:**
+
+| | 3.29.0 | 3.31.4 (R1) | 3.31.9 (R1 + R2) | Predicted, R1 + S1 + Q7 (§1.5) |
+|---|---:|---:|---:|---:|
+| Files | 111.5 MB | 73.6 MB | 52.0 MB | 51.1 MB |
+| Downloaded | 21.13 MB | 19.86 MB | 17.28 MB | 16.57 MB |
+
+  `popup-smoke.js` over https on the six in-memory lanes and the xUnit docker lane drew every popup
+  from the element, with one decode each and no console error.
+- **The second run** (dispatched, `36391450279`, on the same commit): all 58 jobs green. The history
+  gates read "nothing changed" on all twelve in-memory and external-SUT lanes, BDDfy external SUT
+  included, and the same "3 still failing" on the six docker lanes.
+
+  R2 is accepted.
+
 ### 11.3 After R2: the list was counted over tests the page does not show (3.31.10, 2026-09-27)
 
 Found in CI, not by the release's own run. The (2, 1) case of `ArrowLinkOpensPopupTests`'

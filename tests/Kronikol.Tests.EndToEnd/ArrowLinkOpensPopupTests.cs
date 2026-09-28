@@ -33,10 +33,11 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
         """, pathPart);
 
     /// <summary>
-    /// The report as written, its segment element rewritten to carry <paramref name="list"/>. The generator picks the
-    /// shorter list over every diagram the process has logged, which other tests change (CI ran this group after other
-    /// fixtures and got <c>has</c> where a lone run gets <c>hidden</c>), so the form is forced here from the page's own
-    /// diagram sources and map keys; the choice itself is <c>InternalFlowSegmentBlobTests</c>'. Both lists are exact.
+    /// The report as written, its segment element rewritten to carry <paramref name="list"/>, from the page's own diagram
+    /// sources and map keys. Which list the generator picks is <c>InternalFlowSegmentBlobTests</c>' and
+    /// <c>InternalFlowSegmentMapReportTests</c>'; this theory is about binding under each form, so it writes the form
+    /// rather than relying on that choice (3.31.9's CI read <c>has</c> where a lone run read <c>hidden</c>, until 3.31.10
+    /// counted the list over the scenarios the page shows). Both lists are exact.
     /// </summary>
     private static string WithList(string uri, string list)
     {
