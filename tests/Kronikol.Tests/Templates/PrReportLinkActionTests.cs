@@ -144,6 +144,24 @@ public class PrReportLinkActionTests
     }
 
     [Fact]
+    public void A_rerun_links_the_newer_upload_even_when_its_artifact_id_is_the_lower()
+    {
+        SkipWithoutNode();
+
+        // Run 36490823119 of the live lane, after "Re-run failed jobs": the run listed both attempts' artifacts of
+        // one name, in this order, and the second attempt's upload had the lower id. Artifact ids do not follow
+        // upload order, so only the upload time tells the newer one.
+        var outcome = new PullRequest()
+            .Upload(36490823119, 11000248501, Unit, "2026-09-28T22:11:44Z", "2026-09-29T22:11:43Z")
+            .Upload(36490823119, 11000208931, Unit, "2026-09-28T22:12:51Z", "2026-09-29T22:12:51Z")
+            .Run(36490823119, Unit)
+            .Go();
+
+        var line = LineFor(Assert.Single(outcome.BotComments).Body, Unit);
+        Assert.Contains("runs/36490823119/artifacts/11000208931) 🕒 _(last updated 2026-09-28 22:12 UTC)_", line, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_comment_saved_with_CRLF_line_endings_still_stops_an_older_run_and_the_next_rewrite_restores_LF()
     {
         SkipWithoutNode();

@@ -127,9 +127,11 @@ own `artifact-name` and `label`.
 
 ## How it behaves
 
-- **Links the newest upload.** It lists this run's artifacts with that name and takes the newest, since a
-  re-run keeps its run id and uploads again. The link is `…/actions/runs/<run>/artifacts/<id>`, the URL
-  `actions/upload-artifact` reports.
+- **Links the newest upload.** It lists this run's artifacts with that name and takes the one uploaded last,
+  because a re-run keeps its run id and uploads again. Re-running all jobs replaces the earlier attempt's artifact
+  of that name; re-running failed jobs keeps both, and artifact ids do not follow upload order, so the upload time
+  decides. Either way the line moves to the re-run's report, which expires a retention period after its own
+  upload. The link is `…/actions/runs/<run>/artifacts/<id>`, the URL `actions/upload-artifact` reports.
 - **Shows upload and expiry times.** "last updated" is the artifact's upload time and "expires on" its expiry,
   both in UTC. The API documents both as nullable, so a missing one is left out.
 - **Never lets an older run replace a newer link.** Each line ends in a hidden

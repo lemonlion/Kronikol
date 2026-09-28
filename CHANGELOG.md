@@ -36,7 +36,7 @@ are public surface under this file's semantic versioning.
 - **A live lane, `.github/workflows/pr-report-link.yml`.** On a pull request that changes the action, it runs the CI
   Preview all-passing example with `PublishCiArtifacts = true`, uploads its reports and calls the action by path,
   so GitHub itself writes the comment. It is not a required check: a workflow its paths filter skips never reports.
-- Tests: `PrReportLinkActionTests` (22 facts) runs the script out of `action.yml` under node against a GitHub held
+- Tests: `PrReportLinkActionTests` (23 facts) runs the script out of `action.yml` under node against a GitHub held
   in memory, and holds the README's example workflow and the live lane to the inputs the action declares.
   `PackageReadmeLinkTests` reads every package README `dotnet pack` ships and fails on a link nuget.org would
   render with an empty address (anything but `http(s)://` or a `#fragment`), which the new paragraph's relative
