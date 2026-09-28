@@ -1,0 +1,167 @@
+=== h1_defaulttransport (go1.24.7)
+H1 clients after `http.DefaultTransport = wrapper`:
+  http.Get                                                           captured=true  err=<nil>
+  http.DefaultClient.Get                                             captured=true  err=<nil>
+  (&http.Client{Timeout: 5s}).Get  (Transport left nil)              captured=true  err=<nil>
+  (&http.Client{Transport: http.DefaultTransport}).Get  (built after the swap) captured=true  err=<nil>
+  package-level client built at init with Transport: http.DefaultTransport captured=false err=<nil>
+  (&http.Client{Transport: &http.Transport{}}).Get  (own transport)  captured=false err=<nil>
+  srv.Client().Get  (httptest's own transport)                       captured=false err=<nil>
+H1 code that type-asserts the default transport:
+  http.DefaultTransport.(*http.Transport).Clone(): panic = interface conversion: http.RoundTripper is *main.recorder, not *http.Transport
+  t, ok := http.DefaultTransport.(*http.Transport): ok = false, t == nil = true (the caller silently takes its fallback)
+=== h2_registerprotocol (go1.24.7)
+H2 RegisterProtocol on the untouched default transport:
+  RegisterProtocol("http", recorder): err = <nil>
+  http.Get(http://...)                                       captured=true  err=<nil>
+  (&http.Client{}).Get(http://...)                           captured=true  err=<nil>
+  package-level client built at init (same *http.Transport)  captured=true  err=<nil>
+  http.DefaultTransport.(*http.Transport) still ok = true
+  client on dt.Clone() taken after registration              captured=false err=<nil>
+  RegisterProtocol("https", recorder): err = panic: protocol https already registered
+  on a fresh &http.Transport{} (never used): RegisterProtocol("https"): err = <nil>
+  on &http.Transport{ForceAttemptHTTP2: true} after Clone(): RegisterProtocol("https"): err = panic: protocol https already registered
+=== h3_bodies (go1.24.7)
+H3 mode=eager
+  POST /echo: caller got "order-42"; record req="order-42" resp="order-42"
+  POST /redirect307 (body replayed through GetBody): status=200 caller got "order-43"; records=3
+  GET /sse (event 2 comes 1.5 s after event 1): RoundTrip returned after 1.5s, caller read "data: first\n\n" after 1.5s
+  GET /big (1 MiB): caller read 1048576 bytes; record kept 65536 bytes, capped=true
+  POST /echo, body never read or closed: records still pending = 0
+H3 mode=tee
+  POST /echo: caller got "order-42"; record req="order-42" resp="order-42"
+  POST /redirect307 (body replayed through GetBody): status=200 caller got "order-43"; records=3
+  GET /sse (event 2 comes 1.5 s after event 1): RoundTrip returned after 0s, caller read "data: first\n\n" after 0s
+  GET /big (1 MiB): caller read 1048576 bytes; record kept 65536 bytes, capped=true
+  POST /echo, body never read or closed: records still pending = 1
+=== h5_labels (go1.24.7)
+H5 go1.24.7
+  test goroutine after enter(T1):                       T1
+  child goroutine (no ctx passed):                      T1
+  grandchild goroutine (no ctx passed):                 T1
+  worker started before enter(T1), fed by channel:      <no labels>
+  handler of a server started under T1, request from T2: T1 (stale)
+  same handler after the middleware re-labels from headers: T2
+  inside the user's own pprof.Do:                       <labels not registered by kronikol>
+  after pprof.Do returns:                               T1
+=== h6_sql (go1.24.7)
+H6 sql.Register("fake-min", wrapper) a second time: panic = sql: Register called twice for driver fake-min
+H6 driver=min: what the wrapper saw
+  stmt.Exec        test=T1     "INSERT INTO orders(sku, qty) VALUES ($1, $2)" args=[SKU-9, 2]
+  stmt.Query       test=T1     "SELECT id, sku FROM orders WHERE qty > $1" args=[1]
+  rows.Close       rows kept for the record: [[1 SKU-1] [2 SKU-2] [3 SKU-3]]
+  stmt.Query       test=T1     "SELECT id, sku FROM orders WHERE id = $1" args=[7]
+  rows.Close       rows kept for the record: [[1 SKU-1]]
+  stmt.Exec        test=T2     "UPDATE orders SET qty = $1 WHERE id = $2" args=[5, 7]
+  conn.BeginTx     test=T1     "BEGIN" args=[]
+  stmt.Exec        test=T1     "DELETE FROM orders WHERE id = $1" args=[7]
+  stmt.Exec        test=<none> "SELECT 1 /* no context */" args=[]
+H6 driver=full: what the wrapper saw
+  conn.Exec        test=T1     "INSERT INTO orders(sku, qty) VALUES ($1, $2)" args=[SKU-9, 2]
+  conn.Query       test=T1     "SELECT id, sku FROM orders WHERE qty > $1" args=[1]
+  rows.Close       rows kept for the record: [[1 SKU-1] [2 SKU-2] [3 SKU-3]]
+  conn.Query       test=T1     "SELECT id, sku FROM orders WHERE id = $1" args=[7]
+  rows.Close       rows kept for the record: [[1 SKU-1]]
+  stmt.Exec        test=T2     "UPDATE orders SET qty = $1 WHERE id = $2" args=[5, 7]
+  conn.BeginTx     test=T1     "BEGIN" args=[]
+  conn.Exec        test=T1     "DELETE FROM orders WHERE id = $1" args=[7]
+  conn.Exec        test=<none> "SELECT 1 /* no context */" args=[]
+H6 optional Rows interfaces through the naive wrapper (driver=full):
+  wrapped=false DatabaseTypeName(col 0)="INT8" NextResultSet()=true
+  wrapped=true  DatabaseTypeName(col 0)=""     NextResultSet()=false
+=== h1_defaulttransport (go1.27.1)
+H1 clients after `http.DefaultTransport = wrapper`:
+  http.Get                                                           captured=true  err=<nil>
+  http.DefaultClient.Get                                             captured=true  err=<nil>
+  (&http.Client{Timeout: 5s}).Get  (Transport left nil)              captured=true  err=<nil>
+  (&http.Client{Transport: http.DefaultTransport}).Get  (built after the swap) captured=true  err=<nil>
+  package-level client built at init with Transport: http.DefaultTransport captured=false err=<nil>
+  (&http.Client{Transport: &http.Transport{}}).Get  (own transport)  captured=false err=<nil>
+  srv.Client().Get  (httptest's own transport)                       captured=false err=<nil>
+H1 code that type-asserts the default transport:
+  http.DefaultTransport.(*http.Transport).Clone(): panic = interface conversion: http.RoundTripper is *main.recorder, not *http.Transport
+  t, ok := http.DefaultTransport.(*http.Transport): ok = false, t == nil = true (the caller silently takes its fallback)
+=== h2_registerprotocol (go1.27.1)
+H2 RegisterProtocol on the untouched default transport:
+  RegisterProtocol("http", recorder): err = <nil>
+  http.Get(http://...)                                       captured=true  err=<nil>
+  (&http.Client{}).Get(http://...)                           captured=true  err=<nil>
+  package-level client built at init (same *http.Transport)  captured=true  err=<nil>
+  http.DefaultTransport.(*http.Transport) still ok = true
+  client on dt.Clone() taken after registration              captured=false err=<nil>
+  RegisterProtocol("https", recorder): err = panic: protocol https already registered
+  on a fresh &http.Transport{} (never used): RegisterProtocol("https"): err = <nil>
+  on &http.Transport{ForceAttemptHTTP2: true} after Clone(): RegisterProtocol("https"): err = panic: protocol https already registered
+=== h3_bodies (go1.27.1)
+H3 mode=eager
+  POST /echo: caller got "order-42"; record req="order-42" resp="order-42"
+  POST /redirect307 (body replayed through GetBody): status=200 caller got "order-43"; records=3
+  GET /sse (event 2 comes 1.5 s after event 1): RoundTrip returned after 1.5s, caller read "data: first\n\n" after 1.5s
+  GET /big (1 MiB): caller read 1048576 bytes; record kept 65536 bytes, capped=true
+  POST /echo, body never read or closed: records still pending = 0
+H3 mode=tee
+  POST /echo: caller got "order-42"; record req="order-42" resp="order-42"
+  POST /redirect307 (body replayed through GetBody): status=200 caller got "order-43"; records=3
+  GET /sse (event 2 comes 1.5 s after event 1): RoundTrip returned after 0s, caller read "data: first\n\n" after 0s
+  GET /big (1 MiB): caller read 1048576 bytes; record kept 65536 bytes, capped=true
+  POST /echo, body never read or closed: records still pending = 1
+=== h5_labels (go1.27.1)
+H5 go1.27.1
+  test goroutine after enter(T1):                       T1
+  child goroutine (no ctx passed):                      T1
+  grandchild goroutine (no ctx passed):                 T1
+  worker started before enter(T1), fed by channel:      <no labels>
+  handler of a server started under T1, request from T2: T1 (stale)
+  same handler after the middleware re-labels from headers: T2
+  inside the user's own pprof.Do:                       <labels not registered by kronikol>
+  after pprof.Do returns:                               T1
+=== h6_sql (go1.27.1)
+H6 sql.Register("fake-min", wrapper) a second time: panic = sql: Register called twice for driver fake-min
+H6 driver=min: what the wrapper saw
+  stmt.Exec        test=T1     "INSERT INTO orders(sku, qty) VALUES ($1, $2)" args=[SKU-9, 2]
+  stmt.Query       test=T1     "SELECT id, sku FROM orders WHERE qty > $1" args=[1]
+  rows.Close       rows kept for the record: [[1 SKU-1] [2 SKU-2] [3 SKU-3]]
+  stmt.Query       test=T1     "SELECT id, sku FROM orders WHERE id = $1" args=[7]
+  rows.Close       rows kept for the record: [[1 SKU-1]]
+  stmt.Exec        test=T2     "UPDATE orders SET qty = $1 WHERE id = $2" args=[5, 7]
+  conn.BeginTx     test=T1     "BEGIN" args=[]
+  stmt.Exec        test=T1     "DELETE FROM orders WHERE id = $1" args=[7]
+  stmt.Exec        test=<none> "SELECT 1 /* no context */" args=[]
+H6 driver=full: what the wrapper saw
+  conn.Exec        test=T1     "INSERT INTO orders(sku, qty) VALUES ($1, $2)" args=[SKU-9, 2]
+  conn.Query       test=T1     "SELECT id, sku FROM orders WHERE qty > $1" args=[1]
+  rows.Close       rows kept for the record: [[1 SKU-1] [2 SKU-2] [3 SKU-3]]
+  conn.Query       test=T1     "SELECT id, sku FROM orders WHERE id = $1" args=[7]
+  rows.Close       rows kept for the record: [[1 SKU-1]]
+  stmt.Exec        test=T2     "UPDATE orders SET qty = $1 WHERE id = $2" args=[5, 7]
+  conn.BeginTx     test=T1     "BEGIN" args=[]
+  conn.Exec        test=T1     "DELETE FROM orders WHERE id = $1" args=[7]
+  conn.Exec        test=<none> "SELECT 1 /* no context */" args=[]
+H6 optional Rows interfaces through the naive wrapper (driver=full):
+  wrapped=false DatabaseTypeName(col 0)="INT8" NextResultSet()=true
+  wrapped=true  DatabaseTypeName(col 0)=""     NextResultSet()=false
+=== the label layout each toolchain's runtime/pprof uses (H5 reads none of it)
+-- go1.24.7
+20:type LabelSet struct {
+21-	list []label
+22-}
+38:type labelMap struct {
+39-	LabelSet
+40-}
+47:// Notable members of the hall of shame include:
+48-//   - github.com/cloudwego/localsession
+49-//
+50-// Do not remove or change the type signature.
+51-// See go.dev/issue/67401.
+-- go1.27.1
+16:type LabelSet struct {
+17-	list []label.Label
+18-}
+34:type labelMap struct {
+35-	label.Set
+36-}
+47:// Notable members of the hall of shame include:
+48-//   - github.com/cloudwego/localsession
+49-//
+50-// Do not remove or change the type signature.
+51-// See go.dev/issue/67401.

@@ -14,6 +14,16 @@ possible. Three follow-on plans — `JAVA_PLATFORM_PLAN.md`, `NODE_PLATFORM_PLAN
 > generated option types, processors as a rule list (with the one Java regression named), and a single
 > in-process rendering path on .NET. Its §12.7 amends F1–F9; its §12.5 is the fidelity accounting.
 
+> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** a fifth platform, Go, planned as a §9 instance after
+> Python (roadmap 14.16, D28), and the first §9 instance written. It asks two things of this plan. (1)
+> Seven questions for the contract, to be decided in F2, F3 and F5 before `captureFormatVersion 1`
+> freezes (its §4): a per-process `seq` beside the timestamp, SQL parameters as data rather than the
+> `\n-- Parameters: ` text block, `attributionSource` on the wire with platform values, the raw test name
+> and its framework, the tests stream as a directory, and two renderer rules. Five of them meet every
+> other platform too. (2) An exception to F9's CI shape: Go's tags are `go/v*`, because the Go toolchain
+> resolves a subdirectory module's versions only from tags prefixed with its directory. It also measured
+> that no maintained Go WebAssembly runtime hosts F6's Preview 2 component, so Go's shim execs.
+
 **Where it contradicts an existing plan, this one wins.** §5 lists every supersession explicitly.
 `MONOREPO_MIGRATION_PLAN.md` is adopted whole as F0. `KRONIKOL4J_PORTABILITY_PLAN.md`,
 `QUERY_PORTABILITY_PLAN.md`, `QUERY_FALLBACK_PLAN.md` and `NEXT_LANGUAGE_PLAN.md` are absorbed
@@ -314,7 +324,7 @@ goldens are green in the new shape.
 - **A skeleton generator** — `kronikol new-platform <lang>` — that writes the `py/` (or next) tree:
   the two writers, the shim, one adapter stub, the conformance test wired to `parity/`, CI file,
   CLAUDE.md. Opinionated, so the fourth platform looks like the third.
-- **CI shape**: `<lang>-ci.yml` path-filtered on `<lang>/**` + `parity/**`, `<lang>-v*` tags, and
+- **CI shape** (Go's tags are `go/v*`, not `go-v*`: `GO_PLATFORM_PLAN.md` §3.10): `<lang>-ci.yml` path-filtered on `<lang>/**` + `parity/**`, `<lang>-v*` tags, and
   membership in `parity.yml`.
 
 **Why a foundation.** The user's requirement is that adding a platform creates as little

@@ -186,6 +186,12 @@ Update each `release.yml` trigger to its own prefix and its version-extraction s
 breaks the `v{version}` convention recorded in `CLAUDE.md` — update that text in the same commit. Existing
 `v*` tags stay as historical artefacts; do not rewrite them.
 
+> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md` §3.10:** a Go module in `go/` takes `go/v0.1.0`, with a
+> slash, not `go-v0.1.0`: the Go toolchain finds a subdirectory module's versions only under tags prefixed
+> with its directory, and nested modules take `go/pgx/v0.1.0`. A `go-release.yml` triggers on `go/v*`.
+> Meanwhile the root's `v*` tags are already served by the Go module proxy as `v3.31.10+incompatible`
+> versions of the repository root, which is why no Go module may ever live at the root.
+
 ### 5b. Versions stay independent
 
 .NET is at 3.0.46, Java at 0.1.25-SNAPSHOT. The `CLAUDE.md` rule "all packages must use the same version

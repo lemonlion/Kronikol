@@ -10,6 +10,14 @@
 > **Amended 2026-09-22 by `MOBILE_PLAN.md`:** §3's table gains three mobile rows (Android, Swift/iOS,
 > Dart/Flutter) and a paragraph, and §5 gains B19 to B21. Nothing else changed.
 
+> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** Go is re-opened, after Python (roadmap 14.16, D28).
+> §3's deferral was right that nothing can be injected into a running Go binary and wrong about what
+> follows: that plan's harness found three runtime-level hooks that need no injection, a component test's
+> wrap sites in the test's own wiring, zero-code compile-time instrumentation now stable (OpenTelemetry's
+> `otelc` v1.1.0), and a Go capturer whose output the shipped `kronikol ingest` renders. What Go costs
+> instead is a run wrapper for `go test`'s process model. §3's Go row and paragraph, B10 and §6's bullet
+> carry the change; the ranking of the other rows stands.
+
 
 **Fourth of four plans from the 2026-09-13 investigation.** `QUERY_FALLBACK_PLAN.md` (the .NET
 fallback), `QUERY_PORTABILITY_PLAN.md` (shipping `kronikol query` beyond .NET),
@@ -253,7 +261,7 @@ answered by the table, not by its absence.
 | *Java/JVM* | *Top tier* | *JUnit5, TestNG, Cucumber, Spock — built* | *33 modules, capture half incomplete* | ***in flight, pre-1.0** — Kronikol4J 0.1.25-SNAPSHOT. Covers Kotlin, Scala and Groovy on the same adapters. §2 applies to it directly.* |
 | **Python** | Biggest mover, SO 2025 (+7pp) | **1** — pytest near-monopoly | monkeypatching trivial; OTel mature for the tail | **Best return** |
 | **JS/TS** | **Largest** — 66%, #1 since 2011 | 3+ — Playwright (~45% E2E), Vitest, Jest, Cucumber.js | module interception; good | Biggest pool, worse ratio |
-| **Go** | Mid, high growth | **1** — stdlib `testing` | **the blocker** — see below | Best fit, worst mechanics |
+| **Go** | Mid, high growth | **1** — stdlib `testing` | **the blocker** — see below | Best fit, worst mechanics. **Re-opened 2026-09-28: after Python, `GO_PLATFORM_PLAN.md`** ("best fit, different mechanics") |
 | Ruby | Small | RSpec + Cucumber | monkeypatching trivial | Strong BDD culture, small pool |
 | PHP | Mid | PHPUnit | OTel zero-code exists | Weak test-reporting culture |
 | **Android (Kotlin, Java)** | Top tier: the larger mobile platform | JUnit 4 under `AndroidJUnitRunner` for instrumented tests, JUnit 5 for JVM unit tests, Kotest | OkHttp interceptor exists in Kronikol4J; no JDBC, so Room's query callback is the SQL seam; ART lacks `java.net.http` and runs no agents; the port has no NDJSON writer | **The Java port's problem, after F1 and F9.** `MOBILE_PLAN.md` M3 |
@@ -288,7 +296,9 @@ runtime to instrument Go applications."* Capture means explicit wrapping (`http.
 `database/sql` driver wrapper) — which is idiomatic in Go but puts the burden on the user's code, a
 different product. The eBPF route needs Linux and elevated privileges, awkward inside a test process,
 and reportedly shows *"generic DB operations rather than detailed statements"* — §1's no-body failure
-in its sharpest form. **Defer until the instrumentation story changes.**
+in its sharpest form. **Defer until the instrumentation story changes.** *(Amended 2026-09-28:
+`GO_PLATFORM_PLAN.md` §1 finds the story changed at compile time and the wrapping burden mostly in test
+wiring, and plans Go after Python.)*
 
 **Mobile (added 2026-09-22).** The three rows above were missing, so the table could not answer why
 iOS and Android were absent. The answer is in `MOBILE_PLAN.md`: every mobile platform is served first
@@ -387,7 +397,7 @@ Python is the right language after Node; neither is the right next task.
 | B7 | A 5–6k-line first-cut port is sufficient to be useful | **reasoned, not validated.** The 80/20 claim rests on HTTP and SQL dominating real usage; no telemetry backs it. **Falsifier: ask three existing users which extensions they actually enable.** |
 | B8 | pytest is a near-monopoly in Python testing | **sourced, not measured** — "pytest leads the Python category"; no share figure found |
 | B9 | JS/TS test frameworks are fragmented enough to need 3+ adapters | **sourced** — Playwright ~45% E2E, Vitest for unit, Jest and Cucumber.js beside them |
-| B10 | Go cannot be instrumented at runtime; eBPF loses statement detail | **sourced** — OTel Go docs and Dash0's eBPF guide |
+| B10 | Go cannot be instrumented at runtime; eBPF loses statement detail | **sourced** — OTel Go docs and Dash0's eBPF guide. **Amended 2026-09-28:** no code can be injected at run time, but three runtime-level hooks need none, and compile-time instrumentation is stable (`GO_PLATFORM_PLAN.md` K2 to K5, K23, measured and read) |
 | B11 | Allure does not capture service interactions or render them as diagrams | **reasoned from its documented feature set**, not verified by using it |
 | B12 | OTel zero-code covers Go, .NET, PHP, Python, Java, JavaScript — and **not** C++ or Rust | **sourced** — OTel's own zero-code language list |
 | B13 | Java/JVM is not a candidate because Kronikol4J already serves it, Kotlin/Scala/Groovy included | **measured** — the port exists; its adapters are JVM-level, not Java-language-level |
@@ -409,7 +419,8 @@ headline claim here with no evidence behind it.
 
 - **It does not propose building capture on OTel.** §1 — that was proposed in conversation and is
   withdrawn on the evidence.
-- **It does not propose a Go port.** §3 — deferred on instrumentation, not on audience.
+- **It does not propose a Go port.** §3 — deferred on instrumentation, not on audience. *(Superseded
+  2026-09-28: `GO_PLATFORM_PLAN.md` proposes one, after Python.)*
 - **It does not propose starting any port before E1.** §4.
 - **It does not revisit the rendering half.** `KRONIKOL4J_PORTABILITY_PLAN.md` owns that.
 - **It does not propose reaching .NET's 41-module capture surface in any other language.** §2 — that

@@ -1,0 +1,97 @@
+== testing: 9 added, 0 removed (go1.24.7 -> go1.27.1)
+  + func (c *B) ArtifactDir() string
+  + func (c *B) Attr(key, value string)
+  + func (c *B) Output() io.Writer
+  + func (c *F) ArtifactDir() string
+  + func (c *F) Attr(key, value string)
+  + func (c *F) Output() io.Writer
+  + func (c *T) ArtifactDir() string
+  + func (c *T) Attr(key, value string)
+  + func (c *T) Output() io.Writer
+== testing/synctest: 3 added, 0 removed (go1.24.7 -> go1.27.1)
+  + func Sleep(d time.Duration)
+  + func Test(t *testing.T, f func(*testing.T))
+  + func Wait()
+== net/http: 17 added, 0 removed (go1.24.7 -> go1.27.1)
+  + func (c *CrossOriginProtection) AddInsecureBypassPattern(pattern string)
+  + func (c *CrossOriginProtection) AddTrustedOrigin(origin string) error
+  + func (c *CrossOriginProtection) Check(req *Request) error
+  + func (c *CrossOriginProtection) Handler(h Handler) Handler
+  + func (c *CrossOriginProtection) SetDenyHandler(h Handler)
+  + func (cc *ClientConn) Available() int
+  + func (cc *ClientConn) Close() error
+  + func (cc *ClientConn) Err() error
+  + func (cc *ClientConn) InFlight() int
+  + func (cc *ClientConn) Release()
+  + func (cc *ClientConn) Reserve() error
+  + func (cc *ClientConn) RoundTrip(req *Request) (*Response, error)
+  + func (cc *ClientConn) SetStateHook(f func(*ClientConn))
+  + func (t *Transport) NewClientConn(ctx context.Context, scheme, address string) (*ClientConn, error)
+  + func NewCrossOriginProtection() *CrossOriginProtection
+  + type ClientConn struct
+  + type CrossOriginProtection struct
+== net/http/httptest: 1 added, 0 removed (go1.24.7 -> go1.27.1)
+  + func NewTestServer(t testing.TB, handler http.Handler) *Server
+== net/http/httptrace: 0 added, 0 removed (go1.24.7 -> go1.27.1)
+== database/sql: 1 added, 0 removed (go1.24.7 -> go1.27.1)
+  + func ConvertAssign(scanCtx driver.ScanContext, dest any, src driver.Value) error
+== database/sql/driver: 2 added, 0 removed (go1.24.7 -> go1.27.1)
+  + type RowsColumnScanner interface
+  + type ScanContext internal.ScanContext
+== runtime/pprof: 0 added, 0 removed (go1.24.7 -> go1.27.1)
+== context: 0 added, 0 removed (go1.24.7 -> go1.27.1)
+== log/slog: 8 added, 0 removed (go1.24.7 -> go1.27.1)
+  + func (h *MultiHandler) Enabled(ctx context.Context, l Level) bool
+  + func (h *MultiHandler) Handle(ctx context.Context, r Record) error
+  + func (h *MultiHandler) WithAttrs(attrs []Attr) Handler
+  + func (h *MultiHandler) WithGroup(name string) Handler
+  + func (r Record) Source() *Source
+  + func GroupAttrs(key string, attrs ...Attr) Attr
+  + func NewMultiHandler(handlers ...Handler) *MultiHandler
+  + type MultiHandler struct
+== which release added each API the plan uses
+  testing.T.Attr: first in go1.25.0
+  testing.T.Output: first in go1.25.0
+  testing.T.ArtifactDir: first in go1.26.0
+  testing/synctest.Test: first in go1.25.0
+  testing/synctest.Sleep: first in go1.27.0
+  net/http/httptest.NewTestServer: first in go1.27.0
+  database/sql/driver.RowsColumnScanner: first in go1.27.0
+  net/http.Transport.NewClientConn: first in go1.26.0
+== testing.T's methods on go1.27.1 (none returns what the test logged)
+  (c *T) ArtifactDir() string
+  (c *T) Attr(key, value string)
+  (t *T) Chdir(dir string)
+  (c *T) Cleanup(f func())
+  (c *T) Context() context.Context
+  (t *T) Deadline() (deadline time.Time, ok bool)
+  (c *T) Error(args ...any)
+  (c *T) Errorf(format string, args ...any)
+  (c *T) Fail()
+  (c *T) FailNow()
+  (c *T) Failed() bool
+  (c *T) Fatal(args ...any)
+  (c *T) Fatalf(format string, args ...any)
+  (c *T) Helper()
+  (c *T) Log(args ...any)
+  (c *T) Logf(format string, args ...any)
+  (c *T) Name() string
+  (c *T) Output() io.Writer
+  (t *T) Parallel()
+  (t *T) Run(name string, f func(t *T)) bool
+  (t *T) Setenv(key, value string)
+  (c *T) Skip(args ...any)
+  (c *T) SkipNow()
+  (c *T) Skipf(format string, args ...any)
+  (c *T) Skipped() bool
+  (c *T) TempDir() string
+=== H9b go1.27.1: T.Attr, T.ArtifactDir under -artifacts, httptest.NewTestServer
+{"Time":"2026-09-28T11:01:43.589145563Z","Action":"attr","Package":"kronikolprobe/h9_go127","Test":"TestAttrAndArtifacts","Key":"kronikol.testId","Value":"4bf92f3577b34da6a3ce929d0e0e4736"}
+{"Time":"2026-09-28T11:01:43.58916941Z","Action":"artifacts","Package":"kronikolprobe/h9_go127","Test":"TestAttrAndArtifacts","Path":"<tmp>/_artifacts/h9_go127/TestAttrAndArtifacts/1239738304"}
+{"Time":"2026-09-28T11:01:43.589301334Z","Action":"artifacts","Package":"kronikolprobe/h9_go127","Test":"TestAttrAndArtifacts/sub_case","Path":"<tmp>/_artifacts/h9_go127/TestAttrAndArtifacts__sub_case/993230464"}
+./_artifacts/h9_go127/TestAttrAndArtifacts/1239738304/interactions.ndjson
+    go127_test.go:20: ArtifactDir = <tmp-artifacts>
+    go127_test.go:21: subtest ArtifactDir = <tmp-artifacts>
+    go127_test.go:26: URL = http://example.com, srv.Client().Transport is *http.Transport
+    go127_test.go:30: srv.Client().Get: "ok"
+    go127_test.go:37: http.Get(srv.URL) through the default transport: status 200, body starts "<!doctype html><html lang=\"en\"><head><ti"

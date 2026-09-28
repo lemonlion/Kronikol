@@ -228,6 +228,14 @@ wasmer). That is leverage a per-platform native binary cannot match: a RID matri
 platforms chosen in advance, a wasm module reaches every host anyone ever writes. §5's option B
 should be read as "a shared renderer for every non-.NET language", not "a Java tactic".
 
+> **Corrected 2026-09-28 by `GO_PLATFORM_PLAN.md` (its K16, measured):** for Go this holds only for a WASI
+> Preview 1 core module, which .NET 10 does not emit (the correction at the head of §4, and foundations
+> §11). wazero v1.12.0, the pure-Go host, refuses a component, .NET 10's real `dotnet.wasm` included, with
+> `invalid version header`, and defers wasip2 until "the design settles"; wasmtime-go v49.0.0 compiles the
+> component and cannot instantiate it, since its Go API has no WASI Preview 2 definer. No maintained Go
+> runtime hosts the shared renderer in-process (wasmer-go last released in 2021); Go's host shim execs a
+> binary instead (that plan's §3.7).
+
 ### 4.2 Preview 1 is the right tier, and should be chosen deliberately
 
 An earlier draft of this reasoning warned that P1 is a frozen spec and that targeting it means

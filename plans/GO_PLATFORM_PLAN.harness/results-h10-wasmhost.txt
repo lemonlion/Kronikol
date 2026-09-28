@@ -1,0 +1,28 @@
+=== H10 wazero: a WASI Preview 1 guest, then the component preamble
+guest read 3 lines, argv [/work]
+H10 wazero, WASI Preview 1 guest (2593 KB): compile 1.066s, run 8ms, err=<nil>, wrote "3 lines\n"
+H10 wazero, the component preamble 00 61 73 6d 0d 00 01 00: err = invalid version header
+=== wazero v1.12.0 RATIONALE.md on wasip2
+Most notably WASI "Preview 2" is not implemented in a way compatible with
+wasip1. Its start function is likely to be different, and defined in the
+wasi-cli "world". When the design settles, and it is implemented by compilers,
+wazero will attempt to support "wasip2". However, it won't do so in a way that
+breaks existing compilers.
+=== wasmtime-go v49.0.0: size in the module cache, and its component linker
+280M	<wasmtime-go>
+29:func (l *ComponentLinker) ptr() *C.wasmtime_component_linker_t {
+40:func (l *ComponentLinker) Instantiate(store Storelike, component *Component) (*ComponentInstance, error) {
+62:func (l *ComponentLinker) DefineUnknownImportsAsTraps(component *Component) error {
+81:// TODO: WASIp2 / wasi:http integration via `wasmtime_component_linker_add_*`.
+86:func (l *ComponentLinker) Close() {
+=== H10b the .NET 10 wasi-wasm output under both Go hosts
+H10b dotnet.wasm: 12465086 bytes, preamble 00 61 73 6d 0d 00 01 00
+  wazero v1.12.0 CompileModule: err = invalid version header
+  wasmtime-go v49 NewComponent: err = <nil>
+  wasmtime-go v49 ComponentLinker.Instantiate with nothing defined: err = component imports instance `wasi:cli/environment@0.2.0`, but a matching implementation was not found in the linker
+
+Caused by:
+    0: instance export `get-environment` has the wrong type
+    1: function implementation is...
+  the ComponentLinker's methods at v49.0.0: Instantiate, DefineUnknownImportsAsTraps, Close;
+  no WASI Preview 2 definer (component_linker_feat_component_model.go:81, "TODO: WASIp2 / wasi:http integration")

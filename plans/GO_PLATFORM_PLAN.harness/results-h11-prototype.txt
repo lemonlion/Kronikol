@@ -1,0 +1,131 @@
+=== H11 the prototype end to end, goroutine labels off
+PASS h11/orders TestPlaceOrder
+PASS h11/orders TestOrderValidation/valid_order
+PASS h11/orders TestOrderValidation/zero_quantity
+PASS h11/orders TestOrderValidation
+PASS h11/orders TestParallelCustomers/BOB-22
+PASS h11/orders TestParallelCustomers/ALICE-1
+PASS h11/orders TestParallelCustomers
+FAIL h11/orders TestRefundIsIssued
+
+kronikol-go: 6 scenarios in <tmp>/run-labels-off/tests.ndjson; 0 end records written from go test's stream (a timeout never runs t.Cleanup)
+kronikol-go: 2 tests ran without kgo.Start and are not in the report
+Ingesting 1 capture file(s):
+  <tmp>/run-labels-off/interactions/2007-1790593309552005144.ndjson
+Tests file: <tmp>/run-labels-off/tests.ndjson
+Report diagnostics: 68 log entries across 6 test(s).
+Replayed 68 interaction record(s) into 6 scenario(s).
+  UnattributedInteractions: 8 interaction record(s) attributed to a test by time window.
+Specifications.html and Specifications.yml are blank: 1 of 6 scenario(s) failed, and the specification is only published from a green run.
+Kronikol: reports written to <tmp>/run-labels-off/Reports  (TestRunReport.html · TestRunReport.json 119.6 KB · Failures.md)
+  1 failed — kronikol query failures <tmp>/run-labels-off/Reports
+    294a3fe8e62ed040  H11/orders › TestRefundIsIssued
+  agents: read <tmp>/run-labels-off/Reports/CLAUDE.md first; never open TestRunReport.json
+attribution sources of request records: {'TestContext': 6, 'RequestHeader': 15, 'GlobalFallback': 6, 'None': 4}
+context-less calls by (caller, source): {('Caller', 'GlobalFallback'): 6, ('Caller', 'None'): 4}
+parallel customers' calls not stamped with their own scenario: [('GET', 'audit?sku=BOB-22', 'None'), ('GET', 'audit?sku=ALICE-1', 'None'), ('POST', 'notify', 'None'), ('POST', 'notify', 'None')]
+--- kronikol query scenarios
+! 8 interaction record(s) attributed to a test by time window.
+s0    pass      0s    12 calls  TestPlaceOrder
+s1    pass      0s    12 calls  TestOrderValidation/valid_order
+s2    pass      0s     2 calls  TestOrderValidation/zero_quantity
+s3    pass      0s     8 calls  TestParallelCustomers/ALICE-1
+s4    pass      0s    16 calls  TestParallelCustomers/BOB-22
+s5    FAIL      0s    12 calls  TestRefundIsIssued
+        orders_test.go:110: POST /orders = 201, want 200
+6 scenarios
+--- kronikol query grep sku=ALICE-1 --in uris
+! 8 interaction record(s) attributed to a test by time window.
+s4/i10    uri        http://127.0.0.1:41795/audit?sku=ALICE-1
+s4/i11    uri        http://127.0.0.1:41795/audit?sku=ALICE-1
+2 hits
+--- kronikol query failures
+! 8 interaction record(s) attributed to a test by time window.
+s5  H11/orders › TestRefundIsIssued
+  open: TestRunReport.html#sid-294a3fe8e62ed040
+  orders_test.go:110: POST /orders = 201, want 200
+
+! some SQL was captured with placeholders and no values (@p0, $1, :name, ?) — the arguments are not in this report. Set both LogParameters = true and Verbosity = Raw on the tracker and re-run; the EF Core interceptor captures no parameters at all, so its statements stay as they are.
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number
+--- kronikol query services
+! 8 interaction record(s) attributed to a test by time window.
+service                  calls errors     bytes      p50      max  statuses
+Payments                    15      0     257 B     0 ms     1 ms  NoContent×10 OK×5
+orders-db                   10      0     913 B     0 ms     0 ms  OK×10
+Orders API                   6      1     365 B     1 ms     3 ms  Created×5 BadRequest×1
+3 services · a service missing here was never called
+=== H11 the prototype end to end, goroutine labels on
+PASS h11/orders TestPlaceOrder
+PASS h11/orders TestOrderValidation/valid_order
+PASS h11/orders TestOrderValidation/zero_quantity
+PASS h11/orders TestOrderValidation
+PASS h11/orders TestParallelCustomers/ALICE-1
+PASS h11/orders TestParallelCustomers/BOB-22
+PASS h11/orders TestParallelCustomers
+FAIL h11/orders TestRefundIsIssued
+
+kronikol-go: 6 scenarios in <tmp>/run-labels-on/tests.ndjson; 0 end records written from go test's stream (a timeout never runs t.Cleanup)
+kronikol-go: 2 tests ran without kgo.Start and are not in the report
+Ingesting 1 capture file(s):
+  <tmp>/run-labels-on/interactions/2155-1790593311624594634.ndjson
+Tests file: <tmp>/run-labels-on/tests.ndjson
+Report diagnostics: 68 log entries across 6 test(s).
+Replayed 68 interaction record(s) into 6 scenario(s).
+Specifications.html and Specifications.yml are blank: 1 of 6 scenario(s) failed, and the specification is only published from a green run.
+Kronikol: reports written to <tmp>/run-labels-on/Reports  (TestRunReport.html · TestRunReport.json 125.8 KB · Failures.md)
+  1 failed — kronikol query failures <tmp>/run-labels-on/Reports
+    294a3fe8e62ed040  H11/orders › TestRefundIsIssued
+  agents: read <tmp>/run-labels-on/Reports/CLAUDE.md first; never open TestRunReport.json
+attribution sources of request records: {'TestContext': 6, 'RequestHeader': 15, 'GoroutineLabel': 10}
+context-less calls by (caller, source): {('Orders API', 'GoroutineLabel'): 10}
+parallel customers' calls not stamped with their own scenario: none
+--- kronikol query scenarios
+s0    pass      0s    12 calls  TestPlaceOrder
+s1    pass   0.01s    12 calls  TestOrderValidation/valid_order
+s2    pass      0s     2 calls  TestOrderValidation/zero_quantity
+s3    pass      0s    12 calls  TestParallelCustomers/ALICE-1
+s4    pass      0s    12 calls  TestParallelCustomers/BOB-22
+s5    FAIL      0s    12 calls  TestRefundIsIssued
+        orders_test.go:110: POST /orders = 201, want 200
+6 scenarios
+--- kronikol query grep sku=ALICE-1 --in uris
+s3/i7     uri        http://127.0.0.1:33037/audit?sku=ALICE-1
+s3/i8     uri        http://127.0.0.1:33037/audit?sku=ALICE-1
+2 hits
+--- kronikol query failures
+s5  H11/orders › TestRefundIsIssued
+  open: TestRunReport.html#sid-294a3fe8e62ed040
+  orders_test.go:110: POST /orders = 201, want 200
+
+! some SQL was captured with placeholders and no values (@p0, $1, :name, ?) — the arguments are not in this report. Set both LogParameters = true and Verbosity = Raw on the tracker and re-run; the EF Core interceptor captures no parameters at all, so its statements stay as they are.
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number
+--- kronikol query services
+service                  calls errors     bytes      p50      max  statuses
+Payments                    15      0     257 B     0 ms     1 ms  NoContent×10 OK×5
+orders-db                   10      0     913 B     0 ms     0 ms  OK×10
+Orders API                   6      1     365 B     2 ms     5 ms  Created×5 BadRequest×1
+3 services · a service missing here was never called
+=== H11 ingest's --tests file and a second tests fragment among its inputs (plan K21)
+Ingesting 2 capture file(s):
+  <tmp>/both-streams/captures/2155-1790593311624594634.ndjson
+  <tmp>/both-streams/captures/tests-fragment.ndjson
+Tests file: <tmp>/both-streams/captures/tests.ndjson
+17 malformed line(s) skipped:
+  <tmp>/both-streams/captures/tests-fragment.ndjson:1: JSON deserialization for type 'Kronikol.Ingestion.InteractionRecord' was missing required properties including: 'type', 'uri', 'serviceName', 'callerName'. — {"event":"testrun","testId":"__run__","timestamp":"2026-09-28T11:01:51.624294276…
+=== H11 the test cache: a run directory read inside the test is part of go test's cache key
+--- KRONIKOL_RUN_DIR=cache-a
+kronikol-go: 1 scenarios in <tmp>/cache-a/tests.ndjson; 0 end records written from go test's stream (a timeout never runs t.Cleanup)
+--- KRONIKOL_RUN_DIR=cache-a
+kronikol-go: 1 scenarios in <tmp>/cache-a/tests.ndjson; 0 end records written from go test's stream (a timeout never runs t.Cleanup)
+kronikol-go: WARNING h11/orders was cached: its tests did not run, so nothing was captured for them. Run with -count=1.
+--- KRONIKOL_RUN_DIR=cache-b
+kronikol-go: 1 scenarios in <tmp>/cache-b/tests.ndjson; 0 end records written from go test's stream (a timeout never runs t.Cleanup)
+=== H11 prototype size (lines; non-blank, non-comment in brackets)
+h11_prototype/kgo/attr_go124.go 12 [7]
+h11_prototype/kgo/attr_go125.go 14 [7]
+h11_prototype/kgo/http.go 287 [230]
+h11_prototype/kgo/identity.go 127 [99]
+h11_prototype/kgo/record.go 146 [115]
+h11_prototype/kgo/sql.go 232 [197]
+h11_prototype/kgo/testing.go 90 [70]
+h11_prototype/cmd/kronikol-go/main.go 190 [170]

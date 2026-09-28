@@ -1,0 +1,50 @@
+=== zero-code routes (module proxy, @latest)
+  github.com/open-telemetry/opentelemetry-go-compile-instrumentation  v1.1.0 2026-08-24
+  github.com/!data!dog/orchestrion  v1.13.1 2026-09-16
+  github.com/alibaba/loongsuite-go-agent  v1.15.0 2026-09-28
+  go.opentelemetry.io/auto  v0.24.0 2026-04-27
+=== Go WebAssembly runtimes (module proxy, @latest)
+  github.com/tetratelabs/wazero  v1.12.0 2026-05-28
+  github.com/bytecodealliance/wasmtime-go/v49  v49.0.0 2026-09-21
+  github.com/wasmerio/wasmer-go  v1.0.4 2021-08-12
+=== prior art a Go capturer stands beside
+  go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp  v0.71.0 2026-08-26
+  github.com/!x!s!a!m/otelsql  v0.44.0 2026-09-06
+  github.com/ngrok/sqlmw  v0.0.0-20220520173518-97c9c04efc79 2022-05-20
+  github.com/cloudwego/localsession  v0.2.2 2026-09-09
+=== opentelemetry-go-compile-instrumentation v1.1.0: README overview
+## Overview
+This project provides a tool to automatically instrument Go applications with [OpenTelemetry](https://opentelemetry.io/) at compile-time.
+It modifies the Go build process to inject OpenTelemetry code into the application **without requiring manual changes to the source code**.
+Highlights:
+- **Zero Runtime Overhead[^1]** - Instrumentation is baked into your binary at compile time
+- **Zero Code Changes** - Automatically instrument entire applications and dependencies
+- **Third-Party Library Support** - Instrument libraries you don't control
+- **Complete Decoupling** - Keep your codebase free from instrumentation concerns
+- **Flexible Deployment** - Integrate at development time or in your CI/CD pipeline
+## Quick Start
+=== its rule kinds (tool/internal/rule) and the -toolexec entry point
+type InstBaseRule struct {
+type InstCallRule struct {
+type InstDeclRule struct {
+type InstDirectiveRule struct {
+type InstFileRule struct {
+type InstFuncRule struct {
+type InstLitRule struct {
+type InstRawRule struct {
+type InstStructRule struct {
+cmd_toolexec.go
+=== its instrumentation manifest: 28 entries; targets:
+  database/sql, github.com/anthropics/anthropic-sdk-go, github.com/aws/aws-sdk-go-v2/config, github.com/gin-gonic/gin, github.com/linode/linodego/v2, github.com/openai/openai-go, github.com/openai/openai-go/v2, github.com/openai/openai-go/v3, github.com/redis/go-redis/v9, github.com/segmentio/kafka-go, github.com/sirupsen/logrus, go.mongodb.org/mongo-driver/mongo, go.mongodb.org/mongo-driver/v2/mongo, go.opentelemetry.io/otel, go.opentelemetry.io/otel/sdk/trace, go.opentelemetry.io/otel/trace, google.golang.org/grpc, k8s.io/client-go/tools/cache, log, log/slog, main, net/http, runtime
+=== what the module proxy already serves for this repository (its root v* tags carry no go.mod)
+  v3.31.8+incompatible
+  v3.31.9+incompatible
+  v3.31.10+incompatible
+  github.com/lemonlion/kronikol  @latest v3.31.10+incompatible 2026-09-28
+  github.com/lemonlion/Kronikol  @latest v3.31.10+incompatible 2026-09-28
+=== Go's release policy (go.dev/doc/devel/release)
+  Each major Go release is supported until there are two newer major releases.
+=== a precedent: Apache Arrow's Go module in its polyglot monorepo, then in its own repository
+  github.com/apache/arrow/go/v17  v17.0.0 2024-07-11 refs/tags/go/v17.0.0
+  github.com/apache/arrow/go/v18  v18.0.0-20241007013041-ab95a4d25142 2024-10-07 (no tag)
+  github.com/apache/arrow-go/v18  v18.8.0 2026-09-04 refs/tags/v18.8.0

@@ -1,0 +1,219 @@
+go version go1.24.7 linux/amd64
+== S1 first run: go test -json ./a ./b ./e ./f
+        a -                                  start
+        b -                                  start
+        b TestBeforePanic                    run
+        b TestBeforePanic                    pass
+        b TestPanics                         run
+        b TestPanics                         output  --- FAIL: TestPanics (0.00s)
+        b TestPanics                         output  panic: assignment to entry in nil map [recovered]
+        b TestPanics                         output  panic: assignment to entry in nil map
+        b TestPanics                         output  panic({0x550ee0?, 0x6a26e0?})
+        b TestPanics                         output  <goroot>/src/runtime/panic.go:792 +0x132
+        b TestPanics                         fail
+        b -                                  output  FAIL	h7/b	0.009s
+        b -                                  fail elapsed=0.013
+        a TestPass                           run
+        a TestPass                           pass
+        a TestSkip                           run
+        a TestSkip                           skip
+        a TestTable                          run
+        a TestTable/valid_order              run
+        a TestTable/valid_order              output  a_test.go:19: t.Name() = "TestTable/valid_order"
+        a TestTable/valid_order              pass
+        a TestTable/dup                      run
+        a TestTable/dup                      output  a_test.go:19: t.Name() = "TestTable/dup"
+        a TestTable/dup                      pass
+        a TestTable/dup#01                   run
+        a TestTable/dup#01                   output  a_test.go:19: t.Name() = "TestTable/dup#01"
+        a TestTable/dup#01                   pass
+        a TestTable/a/b                      run
+        a TestTable/a/b                      output  a_test.go:19: t.Name() = "TestTable/a/b"
+        a TestTable/a/b                      pass
+        a TestTable/émoji_✓                  run
+        a TestTable/émoji_✓                  output  a_test.go:19: t.Name() = "TestTable/émoji_✓"
+        a TestTable/émoji_✓                  pass
+        a TestTable                          pass
+        a TestParallel                       run
+        a TestParallel/left                  run
+        a TestParallel/left                  pause
+        a TestParallel/right                 run
+        a TestParallel/right                 pause
+        a TestParallel/left                  cont
+        a TestParallel/right                 cont
+        e -                                  start
+        e -                                  output  TestMain enter pid=31429
+        e TestSlowish                        run
+        f -                                  start
+        f TestFail                           run
+        f TestFail                           output  f_test.go:10: Total() = 3, want 4
+        f TestFail                           output  --- FAIL: TestFail (0.00s)
+        f TestFail                           fail
+        f -                                  output  FAIL
+        f -                                  output  FAIL	h7/f	0.002s
+        f -                                  fail elapsed=0.002
+        a TestParallel/right                 pass
+        a TestParallel/left                  pass
+        a TestParallel                       pass
+        a TestContextBeforeCleanup           run
+        a TestContextBeforeCleanup           output  cleanup: ctx.Err() = context canceled, ctx.Value = T1, t.Failed() = false
+        a TestContextBeforeCleanup           pass
+        a TestReadsEnv                       run
+        a TestReadsEnv                       output  a_test.go:43: H7_RUN_ID = "run-1", pid 31415
+        a TestReadsEnv                       pass
+        a -                                  pass elapsed=0.216
+        e TestSlowish                        output  e_test.go:19: pid 31429
+        e TestSlowish                        pass
+        e -                                  output  TestMain exit code=0
+        e -                                  pass elapsed=0.312
+  markers: b-cleanup-ran 
+== S2 the same command again
+        a -                                  start
+        a -                                  pass elapsed=0
+        b -                                  start
+        e -                                  start
+        e -                                  pass elapsed=0
+        f -                                  start
+        b -                                  fail elapsed=0.005
+        f -                                  fail elapsed=0.003
+== S3 H7_RUN_ID changed (package a reads it, package e does not)
+        a -                                  start
+        e -                                  start
+        e -                                  output  TestMain enter pid=31429
+        e -                                  output  TestMain exit code=0
+        e -                                  output  ok  	h7/e	(cached)
+        e -                                  pass elapsed=0
+        a -                                  pass elapsed=0.209
+== S4 -count=1
+        a -                                  start
+        e -                                  start
+        e -                                  output  TestMain enter pid=31744
+        a -                                  pass elapsed=0.205
+        e -                                  output  TestMain exit code=0
+        e -                                  pass elapsed=0.304
+== S5 -timeout 1s ./c
+        c -                                  start
+        c TestSlow                           run
+        c TestSlow                           output  panic: test timed out after 1s
+        c -                                  output  FAIL	h7/c	1.006s
+        c -                                  fail elapsed=1.007
+  markers: 
+== S6 a package that does not compile
+  broken.test] -                                  build-output
+  broken.test] -                                  build-output
+  broken.test] -                                  build-fail
+   broken -                                  start
+   broken -                                  output  FAIL	h7/broken [build failed]
+   broken -                                  fail elapsed=0 FailedBuild=h7/broken [h7/broken.test]
+== S7 two packages at once: do their processes overlap in time?
+    a first event 11:01:36.379  last event 11:01:36.585
+    e first event 11:01:36.389  last event 11:01:36.694
+go version go1.27.1 linux/amd64
+== S1 first run: go test -json ./a ./b ./e ./f
+        a -                                  start
+        b -                                  start
+        e -                                  start
+        f -                                  start
+        b TestBeforePanic                    run
+        b TestBeforePanic                    pass
+        b TestPanics                         run
+        b TestPanics                         output  --- FAIL: TestPanics (0.00s)
+        e -                                  output  TestMain enter pid=32099
+        e TestSlowish                        run
+        a TestPass                           run
+        a TestPass                           pass
+        a TestSkip                           run
+        a TestSkip                           skip
+        a TestTable                          run
+        a TestTable/valid_order              run
+        a TestTable/valid_order              output  a_test.go:19: t.Name() = "TestTable/valid_order"
+        a TestTable/valid_order              pass
+        a TestTable/dup                      run
+        a TestTable/dup                      output  a_test.go:19: t.Name() = "TestTable/dup"
+        f TestFail                           run
+        f TestFail                           output  f_test.go:10: Total() = 3, want 4
+        f TestFail                           output  --- FAIL: TestFail (0.00s)
+        f TestFail                           fail
+        f -                                  output  FAIL
+        a TestTable/dup                      pass
+        a TestTable/dup#01                   run
+        a TestTable/dup#01                   output  a_test.go:19: t.Name() = "TestTable/dup#01"
+        a TestTable/dup#01                   pass
+        a TestTable/a/b                      run
+        a TestTable/a/b                      output  a_test.go:19: t.Name() = "TestTable/a/b"
+        a TestTable/a/b                      pass
+        a TestTable/émoji_✓                  run
+        a TestTable/émoji_✓                  output  a_test.go:19: t.Name() = "TestTable/émoji_✓"
+        a TestTable/émoji_✓                  pass
+        a TestTable                          pass
+        a TestParallel                       run
+        a TestParallel/left                  run
+        a TestParallel/left                  pause
+        a TestParallel/right                 run
+        a TestParallel/right                 pause
+        a TestParallel/left                  cont
+        f -                                  output  FAIL	h7/f	0.004s
+        a TestParallel/right                 cont
+        f -                                  fail elapsed=0.004
+        b TestPanics                         output  panic: assignment to entry in nil map [recovered, repanicked]
+        b TestPanics                         output  panic({0x6be3c0?, 0x6f5fc0?})
+        b TestPanics                         output  <modcache>/golang.org/toolchain@v0.0.1-go1.27.1.linux-amd64/src/runtime/panic.go:859 +0x125
+        b TestPanics                         fail
+        b -                                  output  FAIL	h7/b	0.005s
+        b -                                  fail elapsed=0.006
+        a TestParallel/right                 pass
+        a TestParallel/left                  pass
+        a TestParallel                       pass
+        a TestContextBeforeCleanup           run
+        a TestContextBeforeCleanup           output  cleanup: ctx.Err() = context canceled, ctx.Value = T1, t.Failed() = false
+        a TestContextBeforeCleanup           pass
+        a TestReadsEnv                       run
+        a TestReadsEnv                       output  a_test.go:43: H7_RUN_ID = "run-1", pid 32100
+        a TestReadsEnv                       pass
+        a -                                  pass elapsed=0.208
+        e TestSlowish                        output  e_test.go:19: pid 32099
+        e TestSlowish                        pass
+        e -                                  output  TestMain exit code=0
+        e -                                  pass elapsed=0.307
+  markers: b-cleanup-ran 
+== S2 the same command again
+        a -                                  start
+        a -                                  pass elapsed=0
+        b -                                  start
+        e -                                  start
+        e -                                  pass elapsed=0
+        b -                                  fail elapsed=0.013
+        f -                                  start
+        f -                                  fail elapsed=0.003
+== S3 H7_RUN_ID changed (package a reads it, package e does not)
+        a -                                  start
+        e -                                  start
+        e -                                  output  TestMain enter pid=32099
+        e -                                  output  TestMain exit code=0
+        e -                                  output  ok  	h7/e	(cached)
+        e -                                  pass elapsed=0
+        a -                                  pass elapsed=0.208
+== S4 -count=1
+        a -                                  start
+        e -                                  start
+        e -                                  output  TestMain enter pid=32280
+        a -                                  pass elapsed=0.205
+        e -                                  output  TestMain exit code=0
+        e -                                  pass elapsed=0.304
+== S5 -timeout 1s ./c
+        c -                                  start
+        c TestSlow                           run
+        c TestSlow                           output  panic: test timed out after 1s
+        c -                                  output  FAIL	h7/c	1.005s
+        c -                                  fail elapsed=1.006
+  markers: 
+== S6 a package that does not compile
+  broken.test] -                                  build-output
+  broken.test] -                                  build-output
+  broken.test] -                                  build-fail
+   broken -                                  start
+   broken -                                  output  FAIL	h7/broken [build failed]
+   broken -                                  fail elapsed=0 FailedBuild=h7/broken [h7/broken.test]
+== S7 two packages at once: do their processes overlap in time?
+    a first event 11:01:40.207  last event 11:01:40.414
+    e first event 11:01:40.208  last event 11:01:40.514

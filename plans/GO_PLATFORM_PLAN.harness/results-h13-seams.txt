@@ -1,0 +1,231 @@
+module github.com/jackc/pgx/v5  latest v5.11.0 2026-09-07
+module github.com/redis/go-redis/v9  latest v9.22.0 2026-08-03
+module go.mongodb.org/mongo-driver/v2  latest v2.9.1 2026-09-10
+module google.golang.org/grpc  latest v1.84.0 2026-09-17
+module github.com/IBM/sarama  latest 
+module github.com/twmb/franz-go  latest v1.22.1 2026-09-27
+module github.com/segmentio/kafka-go  latest v0.4.51 2026-04-23
+module github.com/aws/aws-sdk-go-v2  latest v1.47.1 2026-09-24
+module github.com/cucumber/godog  latest v0.16.0 2026-07-31
+module github.com/onsi/ginkgo/v2  latest v2.33.0 2026-09-17
+module github.com/stretchr/testify  latest v1.12.1 2026-08-17
+module go.opentelemetry.io/otel/sdk  latest v1.46.0 2026-08-25
+module gorm.io/driver/postgres  latest v1.6.3 2026-09-14
+module github.com/testcontainers/testcontainers-go  latest v0.44.0 2026-08-07
+---- go doc github.com/jackc/pgx/v5.QueryTracer
+package pgx // import "github.com/jackc/pgx/v5"
+type QueryTracer interface {
+	// TraceQueryStart is called at the beginning of Query, QueryRow, and Exec calls. The returned context is used for the
+	// rest of the call and will be passed to TraceQueryEnd.
+	TraceQueryStart(ctx context.Context, conn *Conn, data TraceQueryStartData) context.Context
+	TraceQueryEnd(ctx context.Context, conn *Conn, data TraceQueryEndData)
+}
+    QueryTracer traces Query, QueryRow, and Exec.
+---- go doc github.com/jackc/pgx/v5.TraceQueryStartData
+package pgx // import "github.com/jackc/pgx/v5"
+type TraceQueryStartData struct {
+	SQL  string
+	Args []any
+}
+---- go doc github.com/jackc/pgx/v5.ConnConfig
+package pgx // import "github.com/jackc/pgx/v5"
+type ConnConfig struct {
+	pgconn.Config
+	Tracer QueryTracer
+	// StatementCacheCapacity is maximum size of the statement cache used when executing a query with "cache_statement"
+	// query exec mode.
+	StatementCacheCapacity int
+	// DescriptionCacheCapacity is the maximum size of the description cache used when executing a query with
+	// "cache_describe" query exec mode.
+	DescriptionCacheCapacity int
+	// DefaultQueryExecMode controls the default mode for executing queries. By default pgx uses the extended protocol
+	// and automatically prepares and caches prepared statements. This may be incompatible with proxies such as PgBouncer
+	// unless they are configured to support protocol-level prepared statements. In an incompatible configuration it may
+	// be preferable to use [QueryExecModeExec] or [QueryExecModeSimpleProtocol]. The same functionality can be controlled
+	// on a per query basis by passing a [QueryExecMode] as the first query argument.
+	DefaultQueryExecMode QueryExecMode
+	// Has unexported fields.
+}
+    ConnConfig contains all the options used to establish a connection.
+    It must be created by ParseConfig and then it can be modified. A manually
+---- go doc github.com/redis/go-redis/v9.Hook
+package redis // import "github.com/redis/go-redis/v9"
+type Hook interface {
+	DialHook(next DialHook) DialHook
+	ProcessHook(next ProcessHook) ProcessHook
+	ProcessPipelineHook(next ProcessPipelineHook) ProcessPipelineHook
+}
+---- go doc go.mongodb.org/mongo-driver/v2/event.CommandMonitor
+package event // import "go.mongodb.org/mongo-driver/v2/event"
+type CommandMonitor struct {
+	Started   func(context.Context, *CommandStartedEvent)
+	Succeeded func(context.Context, *CommandSucceededEvent)
+	Failed    func(context.Context, *CommandFailedEvent)
+}
+    CommandMonitor represents a monitor that is triggered for different events.
+---- go doc go.mongodb.org/mongo-driver/v2/event.CommandStartedEvent
+package event // import "go.mongodb.org/mongo-driver/v2/event"
+type CommandStartedEvent struct {
+	Command      bson.Raw
+	DatabaseName string
+	CommandName  string
+	RequestID    int64
+	ConnectionID string
+	// ServerConnectionID64 contains the connection ID from the server of the operation. If the server does not
+	// return this value (e.g. on MDB < 4.2), it is unset.
+	ServerConnectionID *int64
+	// ServiceID contains the ID of the server to which the command was sent if it is running behind a load balancer.
+	// Otherwise, it is unset.
+---- go doc go.mongodb.org/mongo-driver/v2/event.CommandSucceededEvent
+package event // import "go.mongodb.org/mongo-driver/v2/event"
+type CommandSucceededEvent struct {
+	CommandFinishedEvent
+	Reply bson.Raw
+}
+    CommandSucceededEvent represents an event generated when a command's
+    execution succeeds.
+---- go doc google.golang.org/grpc.UnaryClientInterceptor
+package grpc // import "google.golang.org/grpc"
+type UnaryClientInterceptor func(ctx context.Context, method string, req, reply any, cc *ClientConn, invoker UnaryInvoker, opts ...CallOption) error
+    UnaryClientInterceptor intercepts the execution of a unary RPC on
+    the client. Unary interceptors can be specified as a DialOption,
+    using WithUnaryInterceptor() or WithChainUnaryInterceptor(), when creating
+    a ClientConn. When a unary interceptor(s) is set on a ClientConn,
+---- go doc google.golang.org/grpc.WithChainUnaryInterceptor
+package grpc // import "google.golang.org/grpc"
+func WithChainUnaryInterceptor(interceptors ...UnaryClientInterceptor) DialOption
+    WithChainUnaryInterceptor returns a DialOption that specifies the chained
+    interceptor for unary RPCs. The first interceptor will be the outer most,
+    while the last interceptor will be the inner most wrapper around the
+    real call. All interceptors added by this method will be chained, and the
+---- go doc google.golang.org/grpc.UnaryServerInterceptor
+package grpc // import "google.golang.org/grpc"
+type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error)
+    UnaryServerInterceptor provides a hook to intercept the execution of a
+    unary RPC on the server. info contains all the information of this RPC
+    the interceptor can operate on. And handler is the wrapper of the service
+    method implementation. It is the responsibility of the interceptor to invoke
+---- go doc github.com/IBM/sarama.ProducerInterceptor
+package sarama // import "github.com/IBM/sarama"
+type ProducerInterceptor interface {
+	// OnSend is called when the producer message is intercepted. Please avoid
+	// modifying the message until it's safe to do so, as this is _not_ a copy
+	// of the message.
+	OnSend(*ProducerMessage)
+}
+    ProducerInterceptor allows you to intercept (and
+---- go doc github.com/twmb/franz-go/pkg/kgo.HookProduceRecordBuffered
+package kgo // import "github.com/twmb/franz-go/pkg/kgo"
+type HookProduceRecordBuffered interface {
+	// OnProduceRecordBuffered is passed a record that is buffered.
+	//
+	// This hook is called immediately after Produce is called, after the
+	// function potentially sets the default topic.
+	OnProduceRecordBuffered(*Record)
+}
+---- go doc github.com/segmentio/kafka-go.RoundTripper
+package kafka // import "github.com/segmentio/kafka-go"
+type RoundTripper interface {
+	// RoundTrip sends a request to a kafka broker and returns the response that
+	// was received, or a non-nil error.
+	//
+	// The context passed as first argument can be used to asynchronnously abort
+	// the call if needed.
+	RoundTrip(context.Context, net.Addr, Request) (Response, error)
+---- go doc github.com/aws/aws-sdk-go-v2/aws.HTTPClient
+package aws // import "github.com/aws/aws-sdk-go-v2/aws"
+type HTTPClient interface {
+	Do(*http.Request) (*http.Response, error)
+}
+    HTTPClient provides the interface to provide custom HTTPClients. Generally
+    *http.Client is sufficient for most use cases. The HTTPClient should not
+---- go doc github.com/cucumber/godog.ScenarioContext
+package godog // import "github.com/cucumber/godog"
+type ScenarioContext struct {
+	// Has unexported fields.
+}
+    ScenarioContext allows various contexts to register steps and event
+    handlers.
+    When running a scenario, the instance of ScenarioContext is passed to all
+    functions (contexts), which have it as a first and only argument.
+    Note that all event hooks does not catch panic errors in order to have a
+    trace information. Only step executions are catching panic error since it
+    may be a context specific error.
+func (ctx ScenarioContext) After(h AfterScenarioHook)
+func (ctx ScenarioContext) AfterScenario(fn func(sc *Scenario, err error))
+func (ctx ScenarioContext) AfterStep(fn func(st *Step, err error))
+func (ctx ScenarioContext) Before(h BeforeScenarioHook)
+func (ctx ScenarioContext) BeforeScenario(fn func(sc *Scenario))
+func (ctx ScenarioContext) BeforeStep(fn func(st *Step))
+func (ctx ScenarioContext) Given(expr, stepFunc interface{})
+func (ctx ScenarioContext) Step(expr, stepFunc interface{})
+func (ctx ScenarioContext) StepContext() StepContext
+func (ctx ScenarioContext) Then(expr, stepFunc interface{})
+func (ctx ScenarioContext) When(expr, stepFunc interface{})
+---- go doc github.com/cucumber/godog.TestSuite
+package godog // import "github.com/cucumber/godog"
+type TestSuite struct {
+	Name                 string
+	TestSuiteInitializer func(*TestSuiteContext)
+	ScenarioInitializer  func(*ScenarioContext)
+	Options              *Options
+}
+    TestSuite allows for configuration of the Test Suite Execution
+func (ts TestSuite) RetrieveFeatures() ([]*models.Feature, error)
+func (ts TestSuite) Run() int
+---- go doc github.com/onsi/ginkgo/v2.ReportAfterEach
+package ginkgo // import "github.com/onsi/ginkgo/v2"
+func ReportAfterEach(body any, args ...any) bool
+    ReportAfterEach nodes are run for each spec, even if the spec is skipped or
+    pending. ReportAfterEach nodes take a function that receives a SpecReport
+    or both SpecContext and Report for interruptible behavior. They are called
+    after the spec has completed and receive the final report for the spec.
+    Example:
+        ReportAfterEach(func(report SpecReport) { // process report  })
+---- go doc github.com/stretchr/testify/assert.TestingT
+package assert // import "github.com/stretchr/testify/assert"
+type TestingT interface {
+	Errorf(format string, args ...interface{})
+}
+    TestingT is an interface wrapper around *testing.T
+---- go doc github.com/stretchr/testify/suite.Suite
+package suite // import "github.com/stretchr/testify/suite"
+type Suite struct {
+	*assert.Assertions
+	// Has unexported fields.
+}
+    Suite is a basic testing suite with methods for storing and retrieving the
+    current *testing.T context.
+func (suite *Suite) Assert() *assert.Assertions
+func (suite *Suite) Require() *require.Assertions
+func (suite *Suite) Run(name string, subtest func()) bool
+func (suite *Suite) SetS(s TestingSuite)
+func (suite *Suite) SetT(t *testing.T)
+---- go doc go.opentelemetry.io/otel/sdk/trace.SpanExporter
+package trace // import "go.opentelemetry.io/otel/sdk/trace"
+type SpanExporter interface {
+	// ExportSpans exports a batch of spans.
+	//
+	// This function is called synchronously, so there is no concurrency
+	// safety requirement. However, due to the synchronous calling pattern,
+	// it is critical that all timeouts and cancellations contained in the
+	// passed context must be honored.
+	//
+	// Any retry logic must be contained in this function. The SDK that
+---- go doc gorm.io/driver/postgres.Config
+package postgres // import "gorm.io/driver/postgres"
+type Config struct {
+	DriverName           string
+	DSN                  string
+	WithoutQuotingCheck  bool
+	PreferSimpleProtocol bool
+	WithoutReturning     bool
+	Conn                 gorm.ConnPool
+	OptionOpenDB         []stdlib.OptionOpenDB
+}
+---- godog's formatters (none writes Cucumber Messages, which kronikol ingest reads)
+formatters.Format("cucumber", "Produces cucumber JSON format output.", CucumberFormatterFunc)
+formatters.Format("events", fmt.Sprintf("Produces JSON event stream, based on spec: %s.", spec), EventsFormatterFunc)
+formatters.Format("junit", "Prints junit compatible xml to stdout", JUnitFormatterFunc)
+formatters.Format("pretty", "Prints every feature with runtime statuses.", PrettyFormatterFunc)
+formatters.Format("progress", "Prints a character per step.", ProgressFormatterFunc)

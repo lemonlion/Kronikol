@@ -1,0 +1,14 @@
+=== H8 go1.24.7, GOEXPERIMENT=synctest
+    go124_test.go:13: outside the bubble:                      2026-09-28T11:01:40.832985241Z
+    go124_test.go:17: inside, first capture stamp:             2000-01-01T00:00:00Z
+    go124_test.go:20: inside, after a 5 s sleep:               2000-01-01T00:00:05Z
+    go124_test.go:21: second stamp rebased onto the wall clock: 2026-09-28T11:01:45.833013639Z
+    go124_test.go:23: real time the bubble took:               0s
+ok  	kronikolprobe/h8_synctest	0.003s
+=== H8 go1.27.1
+    go125_test.go:13: outside the bubble:                      2026-09-28T11:01:41.10156806Z
+    go125_test.go:17: inside, first capture stamp:             2000-01-01T00:00:00Z
+    go125_test.go:20: inside, after a 5 s sleep:               2000-01-01T00:00:05Z
+    go125_test.go:21: second stamp rebased onto the wall clock: 2026-09-28T11:01:46.101607767Z
+    go125_test.go:23: real time the bubble took:               0s
+ok  	kronikolprobe/h8_synctest	0.003s
