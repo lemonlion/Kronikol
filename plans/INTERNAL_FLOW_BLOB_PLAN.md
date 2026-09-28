@@ -1196,8 +1196,8 @@ scenarios the page lists (every read of `diagramsByTestId` is by a scenario's id
 `WrapSegmentData`'s own comment says it is given ("every PlantUML source the page embeds").
 `InternalFlowSegmentMapReportTests.The_element_list_is_chosen_over_the_links_of_the_scenarios_the_page_shows`
 logs four calls under a test the run does not name, red on 3.31.9. A consumer's report changes only when
-its process logged tests its features do not name. The Kronikol4J ledger entry is drafted in
-`DOORSTEP_PLAN.md` Appendix A.
+its process logged tests its features do not name. 3.31.10 was published on 2026-09-28 (`DOORSTEP_PLAN.md`
+Appendix B), and the Kronikol4J ledger has the entry drafted in that plan's Appendix A (`8001eba`).
 
 ## Appendix A. Re-taking the numbers
 
