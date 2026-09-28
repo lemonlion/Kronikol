@@ -1,0 +1,92 @@
+# S1 rehearsed locally on 2026-09-27 (plan §1.2, §1.4). Nothing was pushed to PR #73.
+# Tree: PR #73 (e31b42fa) rebased onto origin/main 2de961ec in a scratch worktree; CHANGELOG.md resolved as S1 step 2 says
+#   (main's file whole, the PR's [Unreleased] block above ## [3.31.9]). Result: detached HEAD bd15b9f7.
+# Toolchain: .NET SDK 10.0.401 (dotnet-install.sh --channel 10.0), node v22.22.2, uid 0 (root).
+
+## 1. dotnet test tests/Kronikol.Tests -c Release --filter FullyQualifiedName~PrReportLinkActionTests
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.The_readme_workflow_calls_the_action_as_it_is_declared_from_a_job_that_can_use_it
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.Only_its_own_comment_is_ever_edited
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.Label_defaults_to_the_artifact_name_and_icon_to_a_test_tube
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.A_comment_saved_with_CRLF_line_endings_still_stops_an_older_run_and_the_next_rewrite_restores_LF
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.A_newer_run_replaces_only_its_own_line
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.Whitespace_left_after_a_lines_tag_still_stops_an_older_run
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.A_run_that_uploaded_no_artifact_warns_and_writes_nothing
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.A_comment_key_that_could_break_out_of_its_marker_is_refused
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.The_first_run_creates_one_comment_linking_its_artifact_with_when_it_was_uploaded_and_when_it_expires
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.Missing_or_unparseable_artifact_dates_are_left_out_of_the_line
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.A_second_artifact_adds_its_own_line_to_the_same_comment_and_lines_are_ordered_by_label
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.Every_declared_input_is_passed_to_the_script
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.An_older_run_that_finishes_after_a_newer_one_leaves_the_newer_link_alone
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.Outside_a_pull_request_it_fails_naming_the_event_and_writes_nothing
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.A_different_comment_key_keeps_a_separate_comment_that_runs_under_the_default_key_never_touch
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.Heading_icon_and_report_file_inputs_appear_in_the_comment
+  Passed Kronikol.Tests.Templates.PrReportLinkActionTests.A_rerun_links_the_newest_upload_of_its_artifact
+Total tests: 17
+     Passed: 17
+
+## 2. dotnet test tests/Kronikol.Tests -c Release --no-build (the whole project, same tree)
+Failed!  - Failed:     3, Passed:  5959, Skipped:     5, Total:  5967, Duration: 54 s - Kronikol.Tests.dll (net10.0)
+
+### The three failures (each expects a refused write; root is never refused)
+  Failed Kronikol.Tests.Tool.InitAgentsCommandTests.A_file_that_cannot_be_written_is_reported_rather_than_thrown
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+--
+  Failed Kronikol.Tests.Reports.RunRotationTests.A_read_only_previous_report_stops_the_rotation_and_never_the_run
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "Kronikol: reports written to /tmp/kronikol-rotatio"···
+Not found: "could not write TestRunReport.json"
+--
+  Failed Kronikol.Tests.Reports.StaleOutputTests.The_pointer_does_not_name_the_previous_runs_file_when_this_run_could_not_replace_it
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "Kronikol: reports written to /tmp/kronikol-stale-0"···
+Not found: "could not write TestRunReport.json"
+
+### The five skips, with their reasons (from the TRX)
+counters: {'total': '5967', 'executed': '5962', 'passed': '5959', 'failed': '3'}
+- Kronikol.Tests.Reports.RunRotationTests.A_later_file_held_open_puts_the_staged_files_back_where_they_were | only Windows refuses to move a file that a reader holds (plan §11.1b)
+- Kronikol.Tests.Reports.RunRotationTests.A_report_held_open_by_a_reader_abandons_the_rotation_whole | only Windows refuses to move a file that a reader holds (plan §11.1b)
+- Kronikol.Tests.PlantUml.EngineCacheTests.A_rename_refused_over_a_copy_that_does_not_verify_names_the_directory_to_delete | only Windows refuses to rename over a file another handle holds open
+- Kronikol.Tests.PlantUml.EngineCacheTests.A_rename_refused_while_another_process_holds_a_verified_copy_keeps_that_copy | only Windows refuses to rename over a file another handle holds open
+- Kronikol.Tests.Tool.QueryStreamingTests.A_hundred_megabyte_report_answers_from_the_index_without_being_read_into_memory | no query-bench corpus on this machine - generate it with: dotnet run -c Release --project tools/query-bench/gen
+
+## 3. The same three tests on origin/main 2de961ec, without the PR (fresh worktree, same machine, as root)
+Failed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3, Duration: 757 ms - Kronikol.Tests.dll (net10.0)
+  Failed Kronikol.Tests.Tool.InitAgentsCommandTests.A_file_that_cannot_be_written_is_reported_rather_than_thrown
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+--
+  Failed Kronikol.Tests.Reports.StaleOutputTests.The_pointer_does_not_name_the_previous_runs_file_when_this_run_could_not_replace_it
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "Kronikol: reports written to /tmp/kronikol-stale-9"···
+Not found: "could not write TestRunReport.json"
+--
+  Failed Kronikol.Tests.Reports.RunRotationTests.A_read_only_previous_report_stops_the_rotation_and_never_the_run
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "Kronikol: reports written to /tmp/kronikol-rotatio"···
+Not found: "could not write TestRunReport.json"
+
+## 4. dotnet pack templates/Kronikol.Templates.csproj -c Release (the rehearsed tree)
+package: Kronikol.Templates.3.31.9.nupkg
+entries: 161 files; under github-actions/: 0
+root files:
+  Kronikol.Templates.nuspec
+  LICENSE
+  README.md
+  icon.png
+  nuget-readme.md
+  [Content_Types].xml
+nuspec readme: <readme>README.md</readme>
+README.md lines naming the action:
+  62:## GitHub Actions: link the report on the pull request
+  64:[`github-actions/kronikol-pr-report-link/`](github-actions/kronikol-pr-report-link) is a composite action, not
+pack warning (seen on the console, not logged): NU5118, File '.../LICENSE' is not added because the package
+  already contains one: LICENSE is packed by Directory.Build.props:29 and by the project's own line 65 (plan §6).
