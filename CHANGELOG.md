@@ -42,6 +42,14 @@ are public surface under this file's semantic versioning.
   render with an empty address (anything but `http(s)://` or a `#fragment`), which the new paragraph's relative
   link did.
 
+### Changed
+
+- **The README every package shows on nuget.org opens with a link to a live report** (`plans/DOORSTEP_PLAN.md` S3,
+  roadmap 2.1): "See a live report from a sample service's test run", pointing at BreakfastProvider's published
+  reports. The repository's README opens with the same line, and its example image now opens those reports instead
+  of a plantuml.com page. Documentation only, so no version change; `DemoLinkTests` holds both lines and the image's
+  link.
+
 ## [3.32.4] - 2026-09-28
 
 **Patch - an audit of `plans/INTERNAL_FLOW_BLOB_PLAN.md` (stage 1 P5, releases 3.31.4 and 3.31.9), asked for by the
