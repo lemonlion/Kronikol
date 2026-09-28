@@ -13,11 +13,12 @@ namespace Kronikol.Tests.TcpTap;
 /// the reaper closed a healthy connection and the capture lost the exchange.
 /// </summary>
 /// <remarks>
-/// CI lost it twice, on commits that did not touch the tap: <c>AnIdleConnectionWithNothingUnansweredIsNeverReaped</c>
-/// reaped one connection where none may be (2026-09-13), and <c>TheNdjsonSinkWritesReplayableRecords</c> waited
-/// for two lines and got fewer (2026-09-15). The window is a few instructions wide, so it is pinned where it opens
-/// rather than raced through sockets: a read is queued before it is forwarded, and the far side cannot answer
-/// bytes it has not been sent.
+/// CI showed it as <c>TheNdjsonSinkWritesReplayableRecords</c> waiting for two lines and getting fewer (2026-09-15),
+/// and most likely as <c>AnIdleConnectionWithNothingUnansweredIsNeverReaped</c> reaping one connection where none may
+/// be (2026-09-13), which 3.4.1 put down to a dropped segment; a single exchange cannot fill the queue. The window is
+/// a few instructions wide, so it is pinned where it opens rather than raced through sockets (see
+/// <see cref="BusyConnectionTests"/> for the race itself): a read is queued before it is forwarded, and the far side
+/// cannot answer bytes it has not been sent.
 /// </remarks>
 public class PumpOrderTests
 {

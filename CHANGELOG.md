@@ -24,10 +24,12 @@ rendering, so no Kronikol4J ledger entry is owed. Template pins stay at 3.31.10,
   carried another command's reply, and the last exchange was lost on 9 of the 16 connections; on 3.32.1, none and
   none. Each read is now queued before it is forwarded: the far side cannot answer bytes it has not been sent, so a
   reply is always queued after its command. Forwarding is unchanged, and the queue write still never blocks. CI had
-  shown it as two flaky tests on commits that did not touch the tap, `AnIdleConnectionWithNothingUnansweredIsNeverReaped`
-  (one connection reaped where none may be, 2026-09-13) and `TheNdjsonSinkWritesReplayableRecords` (fewer than its two
-  records, 2026-09-15). **Behaviour change:** a Redis capture made through the tap before this release may hold
-  mis-paired exchanges on any busy connection.
+  shown it as flaky tests. `TheNdjsonSinkWritesReplayableRecords` waited for its two records and got fewer
+  (2026-09-15). `AnIdleConnectionWithNothingUnansweredIsNeverReaped` reaped one connection where none may be
+  (2026-09-13); 3.4.1 put that down to a dropped segment and made the reaper stand down after one, a real gap, but a
+  test of one exchange cannot fill a 1,024-segment queue, and the race fits it as it fits the 2026-09-15 failure,
+  which came after 3.4.1 (INFERRED; neither CI failure can be replayed). **Behaviour change:** a Redis capture made
+  through the tap before this release may hold mis-paired exchanges on any busy connection.
 
 ### Tests
 
