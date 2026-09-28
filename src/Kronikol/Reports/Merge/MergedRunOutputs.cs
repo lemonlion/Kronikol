@@ -32,7 +32,7 @@ public static class MergedRunOutputs
     /// <param name="report">The merged report.</param>
     /// <param name="htmlPath">Where the merged HTML was written. Every other file lands in its directory, and takes its base name wherever a name is derived from the report's.</param>
     /// <param name="dataFilePath">Where the merged data file was written, or null when it was not - in which case there is nothing for a schema to describe and nothing for <c>kronikol query</c> to open.</param>
-    /// <param name="options">The switches a run honours for the same outputs: <see cref="ReportConfigurationOptions.GenerateFailuresDigest"/>, <see cref="ReportConfigurationOptions.WriteAgentInstructions"/>, <see cref="ReportConfigurationOptions.GenerateTestRunReportSchema"/>, <see cref="ReportConfigurationOptions.WriteCiSummary"/>, <see cref="ReportConfigurationOptions.WriteCiDebugSection"/>, <see cref="ReportConfigurationOptions.PublishCiArtifacts"/> and <see cref="ReportConfigurationOptions.WriteRunSummaryToConsole"/>.</param>
+    /// <param name="options">The switches a run honours for the same outputs: <see cref="ReportConfigurationOptions.GenerateFailuresDigest"/>, <see cref="ReportConfigurationOptions.WriteAgentInstructions"/>, <see cref="ReportConfigurationOptions.WriteQueryScript"/>, <see cref="ReportConfigurationOptions.GenerateTestRunReportSchema"/>, <see cref="ReportConfigurationOptions.WriteCiSummary"/>, <see cref="ReportConfigurationOptions.WriteCiDebugSection"/>, <see cref="ReportConfigurationOptions.PublishCiArtifacts"/> and <see cref="ReportConfigurationOptions.WriteRunSummaryToConsole"/>.</param>
     /// <param name="output">Where the pointer and any CI workflow commands go: the merge's stdout, which a CI step owns in a way the library under a test runner never does.</param>
     /// <param name="error">Where an output that could not be written is reported.</param>
     /// <param name="getEnvironmentVariable">The environment the CI detection and the CI writers read; the process's own when null.</param>
@@ -92,6 +92,17 @@ public static class MergedRunOutputs
             var block = AgentInstructionsBlock.Wrap(AgentInstructionsGenerator.Build(baseName));
             foreach (var name in new[] { AgentInstructionsGenerator.ClaudeFileName, AgentInstructionsGenerator.AgentsFileName })
                 Attempt(name, () => WriteInstructionFile(Path.Combine(directory, name), block));
+        }
+
+        // The run's own rule: beside a data file, and never where a C# project would compile it. The engine it
+        // names is the one this merge ran, so a merged report is queried by what wrote it.
+        if (options.WriteQueryScript && dataFilePath is not null)
+        {
+            if (QueryScriptGenerator.CompilingProject(directory) is { } project)
+                error.WriteLine("⚠ WARNING: " + QueryScriptGenerator.NotApplied(project));
+            else
+                Attempt(QueryScriptGenerator.FileName, () => QueryScriptGenerator.Write(directory, QueryScriptGenerator.Build(directory),
+                    text => File.WriteAllText(Path.Combine(directory, QueryScriptGenerator.FileName), text)));
         }
 
         if (options.GenerateTestRunReportSchema && dataFilePath is not null)

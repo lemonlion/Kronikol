@@ -85,6 +85,21 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         }
     }
 
+    /// <summary>
+    /// A merged report is queried by the engine that wrote it, with nothing installed: the query.cs a run
+    /// writes beside its report, written beside a merged one (plans/QUERY_FALLBACK_PLAN.md).
+    /// </summary>
+    [Fact]
+    public void Merge_writes_query_cs_beside_the_merged_report()
+    {
+        WriteShard("runner1.json", "0-1002", "Cart is priced", "Passed");
+
+        var (exit, _, error) = Merge();
+
+        Assert.True(exit == 0, error);
+        Assert.StartsWith("// Written by Kronikol ", File.ReadAllText(Out("query.cs")), StringComparison.Ordinal);
+    }
+
     [Fact]
     public void An_existing_instruction_file_beside_the_output_keeps_its_own_text()
     {

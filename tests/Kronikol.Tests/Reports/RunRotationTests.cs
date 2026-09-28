@@ -168,6 +168,9 @@ public class RunRotationTests : IDisposable
         Assert.Equal(["local_first_1"], RetainedNames());
         foreach (var (name, bytes) in first)
             Assert.True(bytes.AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(retained, name))), $"{name} under runs/ is not what the first run wrote");
+        // query.cs describes the directory, and in runs/<run>/ it would name the engine by a path one folder
+        // too shallow: the retained run is queried with the top-level one's --run.
+        Assert.False(File.Exists(Path.Combine(retained, "query.cs")), "query.cs was rotated with the run");
         Assert.Equal("local:first:1", Manifest(retained).Run);
         Assert.Equal(1, Manifest(retained).Failed);
         Assert.Equal(2, Manifest(retained).Scenarios);
@@ -178,7 +181,7 @@ public class RunRotationTests : IDisposable
         Assert.Equal("local:second:1", Manifest().Run);
         Assert.Equal(0, Manifest().Failed);
         Assert.Equal(
-            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.json", "TestRunReport.schema.json"],
+            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.json", "TestRunReport.schema.json", "query.cs"],
             TopLevel(Reports));
     }
 
@@ -366,7 +369,7 @@ public class RunRotationTests : IDisposable
 
         Assert.False(Directory.Exists(Runs), "nothing is rotated at KeepRuns = 0");
         Assert.Equal(
-            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.json", "TestRunReport.schema.json"],
+            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.json", "TestRunReport.schema.json", "query.cs"],
             TopLevel(Reports));
         Assert.Equal(LocalId(2), Manifest().Run);
     }
@@ -689,7 +692,8 @@ public class RunRotationTests : IDisposable
         var manifest = Manifest();
         var onDisk = Directory.GetFiles(Reports, "*", SearchOption.AllDirectories)
             .Select(f => Path.GetRelativePath(Reports, f).Replace('\\', '/'))
-            .Where(f => f is not ("CLAUDE.md" or "AGENTS.md" or "Run.json"))
+            // The files that describe the directory rather than the run, which are never in its manifest.
+            .Where(f => f is not ("CLAUDE.md" or "AGENTS.md" or "Run.json" or "query.cs"))
             .Order(StringComparer.Ordinal).ToArray();
 
         Assert.Equal(onDisk, manifest.Files.Concat(manifest.Attachments).Order(StringComparer.Ordinal).ToArray());

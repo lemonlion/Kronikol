@@ -291,6 +291,20 @@ public record ReportConfigurationOptions
     public bool WriteAgentInstructions { get; set; } = true;
 
     /// <summary>
+    /// When <c>true</c>, writes <c>query.cs</c> into the reports directory beside a JSON data file:
+    /// <c>kronikol query</c> for a machine where the tool is not installed and cannot be, such as an AI
+    /// agent's session that may not install tools or reach the NuGet feed. From the reports directory,
+    /// <c>dotnet run --file query.cs -- summary .</c> prints what <c>kronikol query summary .</c> prints,
+    /// because it runs the same engine: the <c>Kronikol</c> that wrote the report, loaded from the test
+    /// run's output or from the NuGet cache. It restores and downloads nothing, and needs the .NET 10 SDK.
+    /// It is never written into a folder a C# project would compile (one holding a <c>.csproj</c>, outside
+    /// that project's <c>bin</c> and <c>obj</c>); there the run records a
+    /// <see cref="Reports.DiagnosticKind.OptionNotApplied"/> instead. A <c>query.cs</c> that Kronikol did not
+    /// write is left as it is. Default: <c>true</c>.
+    /// </summary>
+    public bool WriteQueryScript { get; set; } = true;
+
+    /// <summary>
     /// When <c>true</c>, writes <c>ctrf-report.json</c> next to the report: the run in the Common Test
     /// Report Format, for the CI tooling that already speaks it — annotation actions, PR comment bots,
     /// flaky-test dashboards. One test per scenario with its status, duration, failure message and trace,

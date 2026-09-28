@@ -246,6 +246,16 @@ public static class ReportGenerator
                 group.ScenarioId);
         RecordOptionDiagnostics(options);
 
+        // Decided here rather than with the outputs, so the diagnostic reaches the data files: a reports
+        // directory inside a C# project's folder takes no query.cs, because that project would compile it.
+        var queryScriptBlockedBy = WritesQueryScript(options) ? QueryScriptGenerator.CompilingProject(CurrentReportsDirectory) : null;
+        if (queryScriptBlockedBy is not null)
+        {
+            var message = QueryScriptGenerator.NotApplied(queryScriptBlockedBy);
+            ReportDiagnosticsScope.Record(DiagnosticKind.OptionNotApplied, message);
+            Console.WriteLine("⚠ WARNING: " + message);
+        }
+
         if (options.ExpectedTestCount != null)
         {
             var scenarioCount = features.SelectMany(f => f.Scenarios).Count();
@@ -569,6 +579,15 @@ public static class ReportGenerator
             });
         }
 
+        // `kronikol query` without the tool (plans/QUERY_FALLBACK_PLAN.md). Never the run's: like the two
+        // instruction files it describes the directory, and in runs/<run>/ it would name an engine by a path
+        // one folder too shallow.
+        if (WritesQueryScript(options) && queryScriptBlockedBy is null)
+        {
+            Add(QueryScriptGenerator.FileName, () => QueryScriptGenerator.Write(reportsDir, QueryScriptGenerator.Build(reportsDir),
+                text => WriteFile(text, QueryScriptGenerator.FileName, partOfTheRun: false)));
+        }
+
         var written = RunOutputs(actions);
 
         // After every output is on disk: a run whose report failed to write still has its fragment, and a
@@ -820,6 +839,13 @@ public static class ReportGenerator
             RecordThemeNotApplied($"{nameof(ReportConfigurationOptions.ComponentDiagramOptions)}.{nameof(ComponentDiagram.ComponentDiagramOptions.PlantUmlTheme)}",
                 componentTheme, options.PlantUmlRendering);
     }
+
+    /// <summary>
+    /// Whether this run writes <c>query.cs</c>: asked for, and with a JSON data file for it to query, since the
+    /// engine reads JSON only. Where it goes is <see cref="QueryScriptGenerator.CompilingProject"/>'s call.
+    /// </summary>
+    private static bool WritesQueryScript(ReportConfigurationOptions options) =>
+        options.WriteQueryScript && options.GenerateTestRunReportData && options.TestRunReportDataFormat == DataFormat.Json;
 
     private static void RecordThemeNotApplied(string option, string theme, PlantUmlRendering mode)
     {

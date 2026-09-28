@@ -28,27 +28,6 @@ namespace Kronikol.Tests.Tool;
 /// </summary>
 public class ToolStdoutEncodingTests
 {
-    private static readonly string RepoRoot = Path.GetFullPath(
-        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-
-    /// <summary>
-    /// The built tool, not a project reference: the defect lives in the process's own stdout stream, which
-    /// only exists when a process owns it.
-    /// </summary>
-    private static string ToolDll()
-    {
-        var bin = Path.Combine(RepoRoot, "src", "Kronikol.Tool", "bin");
-        Assert.True(Directory.Exists(bin), $"the tool has not been built — no {bin}");
-
-        var candidates = Directory.EnumerateFiles(bin, "Kronikol.Tool.dll", SearchOption.AllDirectories)
-            .Where(f => File.Exists(Path.ChangeExtension(f, ".runtimeconfig.json")))
-            .OrderByDescending(File.GetLastWriteTimeUtc)
-            .ToArray();
-
-        Assert.True(candidates.Length > 0, $"no runnable Kronikol.Tool.dll under {bin}");
-        return candidates[0];
-    }
-
     [Fact]
     public void Tool_stdout_round_trips_through_strict_UTF8()
     {
@@ -60,7 +39,7 @@ public class ToolStdoutEncodingTests
             // Read the raw bytes, not .NET's decode of them: the question is what reached the pipe.
             StandardOutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true)
         };
-        start.ArgumentList.Add(ToolDll());
+        start.ArgumentList.Add(BuiltTool.Dll());
         start.ArgumentList.Add("query");
         start.ArgumentList.Add("--help");
 
