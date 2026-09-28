@@ -14,6 +14,21 @@ public static class CiArtifactPublisher
         => Publish(reportFilePaths, environment, artifactName, retentionDays,
             Environment.GetEnvironmentVariable, File.AppendAllText, Console.WriteLine, File.Exists);
 
+    private static readonly string[] PublishedExtensions = [".html", ".yml", ".md", ".json", ".jsonl", ".xml"];
+
+    /// <summary>
+    /// The files at the top of a reports directory that a run or a merge hands the upload: the report outputs
+    /// by extension, and <c>query.cs</c> by name. An Azure DevOps upload names every file, so a file this
+    /// leaves out is missing from the artifact there, while GitHub Actions uploads the whole directory. Any
+    /// other <c>.cs</c> file in the folder is somebody else's.
+    /// </summary>
+    internal static string[] ReportFiles(string reportsDirectory) =>
+        Directory.GetFiles(reportsDirectory)
+            .Where(f => PublishedExtensions.Any(e => f.EndsWith(e, StringComparison.OrdinalIgnoreCase))
+                || Path.GetFileName(f) == QueryScriptGenerator.FileName)
+            .OrderBy(f => f, StringComparer.Ordinal)
+            .ToArray();
+
     /// <summary>
     /// Every file of the runs kept under <c>runs/</c>, with the folder it sits in relative to the reports
     /// directory (<c>runs/gh_7_1</c>, <c>runs/gh_7_1/attachments</c>). Without them a retried job's failing

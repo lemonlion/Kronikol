@@ -22,9 +22,6 @@ namespace Kronikol.Reports.Merge;
 /// </remarks>
 public static class MergedRunOutputs
 {
-    /// <summary>The report-shaped files an artifact publish picks up from the output directory.</summary>
-    private static readonly string[] PublishedExtensions = [".html", ".yml", ".md", ".json", ".jsonl", ".xml"];
-
     /// <summary>
     /// Writes the run outputs beside <paramref name="htmlPath"/>, then says where it all is. Returns the
     /// names of the files written, so a caller can tell a partial tail from a full one.
@@ -173,11 +170,7 @@ public static class MergedRunOutputs
 
         if (options.PublishCiArtifacts)
         {
-            var files = Directory.GetFiles(directory)
-                .Where(f => PublishedExtensions.Any(e => f.EndsWith(e, StringComparison.OrdinalIgnoreCase)))
-                .OrderBy(f => f, StringComparer.Ordinal)
-                .ToArray();
-            CiArtifactPublisher.Publish(files, ci, options.CiArtifactName, options.CiArtifactRetentionDays,
+            CiArtifactPublisher.Publish(CiArtifactPublisher.ReportFiles(directory), ci, options.CiArtifactName, options.CiArtifactRetentionDays,
                 getEnv, File.AppendAllText, output.WriteLine, File.Exists);
         }
 

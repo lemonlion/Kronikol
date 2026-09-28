@@ -600,8 +600,10 @@ first is F28's; the second is a fault CI found in 3.31.9 while this release was 
    in CI's Core Tests on a plan-only commit), so it builds the same packages, and its CI passed all 34 checks,
    Core Tests and CodeQL included (2026-09-28):
    `git fetch origin && git tag v3.31.10 28e4460 && git push origin v3.31.10`.
-2. **The wiki note.** In `Generated-Reports.md`, section "Deep links (`#scenario-` and `#sid-`)", after the
-   paragraph that ends "resolves to the first match in document order.", add:
+2. **The wiki note.** *(2026-09-28: the first of the two commits in `plans/QUERY_FALLBACK_PLAN.wiki.patch` adds it,
+   word for word, so applying that patch does this item; do not add it twice.)* In `Generated-Reports.md`, section
+   "Deep links (`#scenario-` and `#sid-`)", after the paragraph that ends "resolves to the first match in document
+   order.", add:
 
    > Following a link opens every section around the scenario and puts the scenario in the middle of the screen at
    > once. Before 3.31.10 the report scrolled there smoothly, and in a report longer than a few features the scroll

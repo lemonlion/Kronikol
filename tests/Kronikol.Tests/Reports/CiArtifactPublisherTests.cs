@@ -4,6 +4,32 @@ namespace Kronikol.Tests.Reports;
 
 public class CiArtifactPublisherTests
 {
+    /// <summary>
+    /// What a run and a merge hand the upload: the report outputs by extension, and <c>query.cs</c> by name.
+    /// Picked by extension alone, <c>query.cs</c> never reached an Azure DevOps artifact, where every file is
+    /// named to the agent, while GitHub Actions uploads the whole directory and so carried it. Only that name:
+    /// any other <c>.cs</c> file in the folder is somebody else's.
+    /// </summary>
+    [Fact]
+    public void ReportFiles_takes_the_report_outputs_and_query_cs_and_nothing_else()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "kronikol-artifact-files-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(dir, "runs"));
+        try
+        {
+            foreach (var name in new[] { "TestRunReport.html", "TestRunReport.json", "Failures.jsonl", "CLAUDE.md", "query.cs", "Helper.cs", "notes.txt", "runs/inner.html" })
+                File.WriteAllText(Path.Combine(dir, name), "x");
+
+            var files = CiArtifactPublisher.ReportFiles(dir).Select(Path.GetFileName).ToArray();
+
+            Assert.Equal(["CLAUDE.md", "Failures.jsonl", "TestRunReport.html", "TestRunReport.json", "query.cs"], files);
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
     [Fact]
     public void Publish_AzureDevOps_emits_vso_upload_for_each_file()
     {

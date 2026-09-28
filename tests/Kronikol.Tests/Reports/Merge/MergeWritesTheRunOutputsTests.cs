@@ -249,6 +249,18 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         Assert.Contains("reports-retention-days=1", text);
     }
 
+    [Fact]
+    public void Publish_artifacts_on_azure_devops_uploads_every_output_query_cs_included()
+    {
+        WriteShard("runner1.json", "0-1002", "Cart is priced", "Failed");
+
+        var (exit, output, error) = Merge(name => name == "TF_BUILD" ? "True" : null, "--publish-artifacts");
+
+        Assert.True(exit == 0, error);
+        foreach (var name in new[] { "Combined.html", "Combined.json", "Failures.md", "CLAUDE.md", "query.cs" })
+            Assert.Contains($"##vso[artifact.upload containerfolder=TestReports;artifactname=TestReports]{Out(name)}", output);
+    }
+
     // ─── Helpers ───────────────────────────────────────────────
 
     private string Out(string name) => Path.Combine(_out, name);

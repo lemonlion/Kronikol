@@ -3,7 +3,7 @@
   "name": "kronikol",
   "displayName": "Kronikol",
   "version": "3.32.0",
-  "description": "Debug a dotnet test run from its Kronikol report without opening it: why the tests failed (the failures digest), what a service actually returned, where a wrong value came from, what changed between runs, what was slow. Reads the report an xUnit, NUnit, MSTest, TUnit, Reqnroll or LightBDD run wrote, through the kronikol query CLI, so a 10 MB TestRunReport.json costs an agent a few hundred tokens instead of its whole context.",
+  "description": "Debug a dotnet test run from its Kronikol report without opening it: why the tests failed (the failures digest), what a service actually returned, where a wrong value came from, what changed between runs, what was slow. Reads the report an xUnit, NUnit, MSTest, TUnit, Reqnroll or LightBDD run wrote, through the kronikol query CLI, or with no tool installed through the query.cs each run writes beside it, so a 10 MB TestRunReport.json costs an agent a few hundred tokens instead of its whole context.",
   "author": {
     "name": "Aryeh Citron",
     "url": "https://github.com/lemonlion"

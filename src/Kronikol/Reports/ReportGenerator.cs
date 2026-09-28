@@ -681,10 +681,7 @@ public static class ReportGenerator
             var ciReportsDir = CurrentReportsDirectory;
             if (Directory.Exists(ciReportsDir))
             {
-                var reportFiles = Directory.GetFiles(ciReportsDir)
-                    .Where(f => f.EndsWith(".html") || f.EndsWith(".yml") || f.EndsWith(".md") || f.EndsWith(".json") || f.EndsWith(".jsonl") || f.EndsWith(".xml"))
-                    .ToArray();
-                CiArtifactPublisher.Publish(reportFiles, ciEnv, options.CiArtifactName, options.CiArtifactRetentionDays,
+                CiArtifactPublisher.Publish(CiArtifactPublisher.ReportFiles(ciReportsDir), ciEnv, options.CiArtifactName, options.CiArtifactRetentionDays,
                     Environment.GetEnvironmentVariable, File.AppendAllText, Console.WriteLine, File.Exists,
                     CiArtifactPublisher.RetainedFiles(ciReportsDir));
             }

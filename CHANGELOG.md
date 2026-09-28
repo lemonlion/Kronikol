@@ -35,7 +35,10 @@ nuget.org: 3.31.10 was committed and never tagged, so it was never published.
   warnings as errors, analyzers, NuGet audit). It names the engine by a path relative to itself, never an absolute
   one, which would carry a home directory into a folder that is often published. A `query.cs` Kronikol did not write
   is left alone, and like `CLAUDE.md` the file describes the directory, not the run: it is not in `Run.json` and never
-  moves into `runs/`. `kronikol merge`, and so `kronikol ingest`, write it too.
+  moves into `runs/`. `kronikol merge`, and so `kronikol ingest`, write it too. A CI artifact carries it: GitHub
+  Actions uploads the directory, and the Azure DevOps upload, which names each file and picked them by extension
+  alone, names `query.cs` too. The run and the merge now pick the files by one rule, where each had its own copy of
+  the extension list (the run's matched case-sensitively; both now ignore case).
 - **`ReportConfigurationOptions.WriteQueryScript`**, default `true`. Written only beside a JSON data file, which is
   all the engine reads.
 - **`Kronikol.Query.QueryCommand`**, public: `Run(IReadOnlyList<string> args, TextWriter out, TextWriter error)` and
@@ -55,8 +58,8 @@ nuget.org: 3.31.10 was committed and never tagged, so it was never published.
   `dotnet run --file query.cs -- …`: without `--file`, from a folder holding a project, `dotnet run` runs that
   project instead. That is the `CLAUDE.md`/`AGENTS.md` beside every report, `Failures.md`'s command blocks (only
   where the directory has Kronikol's `query.cs`), the schema's `$comment`, the agent block `kronikol init-agents`
-  installs, both copies of the skill and its flag reference, `README.md`, `templates/README.md` and the NuGet
-  readme. The skill's `scripts/query.py` stays, named for a machine without the .NET 10 SDK (roadmap D28).
+  installs, both copies of the skill and its flag reference, `README.md`, `templates/README.md`, the NuGet
+  readme and the plugin's marketplace description. The skill's `scripts/query.py` stays, named for a machine without the .NET 10 SDK (roadmap D28).
 - **Behaviour change:** a reports directory inside a C# project's folder, outside that project's `bin` and `obj`,
   gets no `query.cs`, because the project would compile it and its `#:` directives are error CS9298 in a project
   build. The run prints a `⚠ WARNING` and records an `OptionNotApplied` diagnostic naming the project file, on every
@@ -73,6 +76,9 @@ nuget.org: 3.31.10 was committed and never tagged, so it was never published.
   with exit code, stdout bytes and stderr identical, offline with an empty NuGet cache; the engine from a cache holding
   `Kronikol.dll` alone; no engine anywhere; a strict `Directory.Build.props`. Skipped, visibly, without a .NET 10
   SDK. Mutation-checked: a wrong type name fails 24 of 25, and dropping `PublishAot=false` fails all 25.
+- `CiArtifactPublisherTests.ReportFiles_takes_the_report_outputs_and_query_cs_and_nothing_else` and
+  `MergeWritesTheRunOutputsTests.Publish_artifacts_on_azure_devops_uploads_every_output_query_cs_included`, both red
+  on the extension-only rule.
 - `QueryScriptAdviceTests`: seven surfaces name `query.cs`, every `query.cs -- verb` they show is a verb with flags
   it reads, none runs it without `--file`, and `FailuresDigestGenerator.Generate` keeps its public signature.
 - `RunEndPointerTests`, `RunRotationTests`, `MergeWritesTheRunOutputsTests`, `TestRunReportSchemaContractTests`,
