@@ -1,18 +1,29 @@
 # The doorstep: the repository's homepage and description
 
-**Date:** 2026-09-27 · **Repo version:** 3.31.3 (`fa866f8`) when written, 3.31.5 (`4aa1e1e`) at the first
-same-day update, 3.31.9 (`e4c9e36`) at the second · **Status: plan written, NOT green-lit; S0 run as far as
+**Date:** 2026-09-27, third pass finished 2026-09-28 · **Repo version:** 3.31.3 (`fa866f8`) when written,
+3.31.5 (`4aa1e1e`) at the first same-day update, 3.31.9 (`e4c9e36`) at the second, 3.31.10 (`28e4460`) at the
+third · **Status: plan written, NOT green-lit; S0 run as far as
 a session can reach; the defect it found (F28) fixed in 3.31.10.** 3.31.10 is on `main` with CI green
-(`571a98d`, 28 of 28 jobs) but not published: this environment refused to push the tag `v3.31.10` and the wiki
-commit (HTTP 403, where branch pushes worked), so both are the owner's (Appendix B). It needs D24, and most of D24 is the owner's own words: the roadmap gives this text to
-"the owner's hand". Roadmap item **2.1** (stage 2, track C). No package changes, so **no version bump**, and
+(`571a98d`: all 34 checks, CodeQL's included; `28e4460` adds a test fix, and is the commit to tag once its own CI
+is green) but not
+published: this environment refused to push the tag `v3.31.10` and the wiki commit (HTTP 403, where branch pushes
+worked), so both are the owner's (Appendix B). It needs D24, and most of D24 is the owner's own words: the
+roadmap gives this text to "the owner's hand". Roadmap item **2.1** (stage 2, track C). No package changes, so **no version bump**, and
 nothing in it is outreach (rule 9).
 
-**Updated twice the same day.** Once GitHub was reconnected, a session ran the parts of S0 it could reach
+**Updated three times.** Once GitHub was reconnected, a session ran the parts of S0 it could reach
 through GitHub's API and BreakfastProvider's source. Once the environment had full network access, a session
 reached the live demo, the card image and nuget.org's search (§3, §12). Between the two, BreakfastProvider
 moved to 3.31.4 (`INTERNAL_FLOW_BLOB_PLAN.md` S5, deployed 11:57 UTC), so S1 now waits only on D24 and the
-owner's traffic reading.
+owner's traffic reading. After 3.31.10, a third pass (2026-09-27 and 28):
+- matched the drafts against what the demo draws (F29);
+- made Q5's deep link concrete and proved it (F30);
+- timed the first diagram without the network (F31);
+- predicted each draft on the card (F32);
+- read the package README nuget.org shows (F33);
+- checked the plan's REFERENCE rows against GitHub's documentation (F34) and, where that is silent, GitHub's
+  shipped script (F23);
+- linted and extended S4's guard (§7).
 
 The roadmap's row, whole: "**The doorstep.** The repository's homepage field is empty (RUN): point it at
 the live BreakfastProvider report. Rewrite the description from mechanism to outcome; the direction
@@ -30,7 +41,8 @@ two here and put the third into 13.1, the README as a landing page. What this pl
 - **The description is read in more places than the About box.** GitHub puts it in the repository page's
   title, which is the line a search engine shows, in the link card's tags, and in the card's image, which
   prints it whole (RUN, F15; a web search returns the title word for word, F17). About 35 characters of it
-  survive a search result's cut (F26), so the outcome has to lead (§2).
+  survive a search result's cut (F26), so the outcome has to lead (§2). On a phone, GitHub's script draws it in
+  the page's header, above the file list (READ, F23), and every draft prints whole on the card (F32).
 - **The demo is another repository's output, and it is live.** BreakfastProvider's CI rebuilds the site on
   every push and every night: a landing page, 18 reports and two API viewers. All of it answered on
   2026-09-27, the six reports the landing page links are green, and the six docker reports it does not link
@@ -46,7 +58,13 @@ two here and put the third into 13.1, the README as a landing page. What this pl
   could use (Q5). **Found on the way, and fixed in 3.31.10:** that link, Next Failure and a failure-cluster
   link landed past their scenario. A smooth scroll aimed across features the browser had not drawn yet ran
   to the bottom of any long report, and on a phone the report folded its filters away after the scroll had
-  started (RUN, F28).
+  started (RUN, F28). Q5's link is now concrete. It opens a scenario whose diagram is one HTTP call, one SQL insert
+  and one message, and it lands there once the demo is on 3.31.10 (RUN, F30). Without the network, the diagram
+  is drawn 2.1 to 3.5 s after the link on a desktop and 3.5 to 3.7 s at phone width. Reached by the three taps,
+  it is drawn 0.1 to 0.5 s after the last one, because the engine loads while the visitor looks (RUN, F31).
+- **The demo shows what the drafts say.** The xUnit lane's 203 diagrams draw 540 HTTP calls, 255 SQL queries,
+  214 other database queries and 258 messages, and 53 of them hold all three of draft B's nouns. So every noun
+  B, C and D use is on the screens the homepage leads to (RUN, F29).
 - **The draft over-claims by one word.** "Every HTTP call" holds only for calls through a tracked client
   that are attributed to a test, and section 0 of the roadmap rules out a document that states a
   falsehood (F9). "Self-contained", the direction report's word for the file, is not true of the default
@@ -55,17 +73,27 @@ two here and put the third into 13.1, the README as a landing page. What this pl
 - **The old name is a larger doorstep on nuget.org than the new one.** The TestTrackingDiagrams packages
   have 2.5 million downloads to Kronikol's 0.9 million, rank above Kronikol's on every search they share,
   are not deprecated, and send their project link to the old repository address (RUN, F24, F25).
-  Deprecating them is already 13.4's; this plan only records it.
+  Deprecating them is already 13.4's; this plan only records it. The README Kronikol's own packages carry to
+  nuget.org links no demo and opens with "Effortlessly" (READ, F33).
 - **Fixed in this plan's commit:** the README's link to the BreakfastProvider repository had a doubled
   slash, and both links in that sentence spelt the name "BreakFastProvider" (F11).
-- **What a session can check, and what only the owner can.** A session read the repository's fields, page
-  and card, BreakfastProvider's source, nuget.org's records and search, and the live demo, and drew copies
-  of two live reports in Chromium at both widths (§12). Left for the owner: traffic (the API refuses the
-  session's token), GitHub's own search (outside the session's repository scope), where GitHub puts the
-  About block on a phone (its script draws it, and the browser here cannot load GitHub's pages, F23), the
-  time to the first diagram (the same browser cannot fetch the engine from jsDelivr), and the glance for
-  anything private (not run by a session). The session's GitHub tools have no call that edits a
-  repository's settings, so S1 and S2 are the owner's hands whatever D24 says.
+- **What a session can check, and what only the owner can.** A session:
+  - read the repository's fields, page, card and script;
+  - read GitHub's documentation;
+  - read BreakfastProvider's source;
+  - read nuget.org's records and search;
+  - read the live demo;
+  - drew copies of two live reports in Chromium at both widths, and timed one (§12).
+
+  Left for the owner:
+  - traffic (the traffic API needs a permission the session's token does not have, F12, F34);
+  - GitHub's own search (outside the session's repository scope);
+  - a look at the About block on a phone (GitHub's script says what it holds and where, F23);
+  - the first diagram's time on a real phone and network (the browser's own part is measured, F31);
+  - the glance for anything private (not run by a session).
+
+  The session's GitHub tools have no call that edits a repository's settings, so S1 and S2 are the owner's
+  hands whatever D24 says.
 
 ---
 
@@ -79,7 +107,7 @@ Two repository fields change. Nothing in `src/`, no package, no report byte, no 
 | S1 | Set the homepage | owner | 2 min | Q1, and S0's traffic reading first (F12). The demo's version is no longer a condition: it is 3.31.4 (F5) |
 | S2 | Write and set the description | owner | 30 min | Q2, and S0 step 5's look at a phone first (F23) |
 | S3 | *Optional.* The README's first line points at the demo | the owner's words, a session's commit | 10 min | Q3 |
-| S4 | *Optional.* A weekly check that the homepage answers and the reports it links are green | a session | 45 min | Q4, after S1 |
+| S4 | *Optional.* A weekly check that the homepage answers, the reports it links are green, and a deep link on it names a scenario its report has | a session | 45 min | Q4, after S1 |
 | S5 | Record the before and after, strike the roadmap row, update the index | a session | 10 min | S1, S2 |
 
 The roadmap's hour is S0, S1, S2 and S5. S3 and S4 are proposals, each a yes or no in D24. The demo's
@@ -91,27 +119,34 @@ of its own, 3.31.10, the same day. The demo gets it with its next pin move, and 
 ## 1. What was checked
 
 Basis marks as in the roadmap, plus **REFERENCE**: GitHub's documented or well-known behaviour, not
-checked today. Every REFERENCE row that the plan leans on is checked in S0.
+checked today. Every REFERENCE row that the plan leans on is checked in S0. The third pass checked them
+against GitHub's documentation (F34) and, where that is silent, against GitHub's shipped script (F23). The
+rows those settle now say READ. What stays REFERENCE is either documented nowhere or not GitHub's to document:
+- that Pages keeps a site after a failed deploy (F6);
+- where a search engine cuts a title (F26);
+- how long an unfurler keeps a card (§2).
 
 Pages over https were read with `curl`, which trusts this environment's proxy. Chromium does not, so the
 reports were drawn from copies fetched with `curl` and opened from `file://`. That draws the page as a
-visitor gets it, except that the engine from jsDelivr cannot load, so no diagram is drawn and no timing is
-a network's.
+visitor gets it, except that the engine from jsDelivr cannot load, so no diagram is drawn. For the timing
+(F31), a copy was served at the report's own address and the engine at jsDelivr's, from memory, through
+Playwright's request interception with the bytes and headers jsDelivr sent (its integrity check passed). No
+request left the machine, so those times are the browser's own work, without a network's.
 
 | # | Finding | Basis |
 |---|---|---|
 | F1 | The homepage field is empty. `has_pages` is false: Kronikol has no Pages site of its own, so the homepage can only point elsewhere. The dashboard plan's `lemonlion.github.io/Kronikol/` is not built (roadmap 9.3; it answers 404) | RUN: `api.github.com/repos/lemonlion/Kronikol`, 2026-09-27, again after 3.31.9 |
 | F2 | The description is `A mechanism for tracking the request-responses in your tests and converting them into PlantUML diagrams.`, 104 characters. It names a mechanism, uses a word nobody searches for ("request-responses") and gives the drawing tool as the outcome. It does not say .NET, that the result is an interactive report, that capture is automatic, or that databases and message brokers are drawn as well as HTTP | RUN, same call |
-| F3 | Twenty topics, which is GitHub's maximum (REFERENCE). The direction report calls them "done right", and adding one means removing one, so this plan changes none. `plantuml`, `plantuml-diagrams`, `plantuml-generator` and `sequence-diagrams` keep those words findable if the description drops them | RUN, same call |
-| F4 | The demo is `https://lemonlion.github.io/BreakfastProvider/`, a Pages site built by the `deploy-pages` job of BreakfastProvider's `ci-main.yml` on every push to `main` and daily at 03:00 UTC. Its root is a landing page the job writes inline, titled `Breakfast Provider — Kronikol`: a hero ("Breakfast Provider", "Component Test Reports & API Documentation", a "Powered by Kronikol" badge), six cards linking `reports/<framework>/TestRunReport.html` (the in-memory lanes of ReqNRoll, LightBDD, BDDfy, xUnit, TUnit and NUnit), the OpenAPI and AsyncAPI viewers under `api/`, and the two source repositories. The twelve docker and external-SUT reports (`reports/docker/<framework>`, `reports/docker-sut/<framework>`) are published and linked from nowhere. The live root is the job's text byte for byte, bar a final newline | READ: BreakfastProvider's `ci-main.yml` at `9f242d4` (a clone). RUN: the live root |
+| F3 | Twenty topics, which is GitHub's maximum ("Add no more than 20 topics", F34). The direction report calls them "done right", and adding one means removing one, so this plan changes none. `plantuml`, `plantuml-diagrams`, `plantuml-generator` and `sequence-diagrams` keep those words findable if the description drops them | RUN, same call. READ: GitHub's docs |
+| F4 | The demo is `https://lemonlion.github.io/BreakfastProvider/`, a Pages site built by the `deploy-pages` job of BreakfastProvider's `ci-main.yml` on every push to `main` and daily at 03:00 UTC. Its root is a landing page the job writes inline, titled `Breakfast Provider — Kronikol`: a hero ("Breakfast Provider", "Component Test Reports & API Documentation", a "Powered by Kronikol" badge), six cards linking `reports/<framework>/TestRunReport.html` (the in-memory lanes of ReqNRoll, LightBDD, BDDfy, xUnit, TUnit and NUnit), the OpenAPI and AsyncAPI viewers under `api/`, and the two source repositories. The twelve docker and external-SUT reports (`reports/docker/<framework>`, `reports/docker-sut/<framework>`) are published and linked from nowhere. The live root is the job's text byte for byte, bar a final newline. The nightly is `cron: "0 3 * * *"`, but its runs have recorded between 08:04 and 08:49 UTC on each of the last four days, so the site changes then, not at 03:00. That fits GitHub delaying scheduled runs at the start of an hour (F34, INFERRED as the cause). At 07:05 UTC on 2026-09-28 the site was still the deploy of 11:57 the day before (`last-modified`) | READ: BreakfastProvider's `ci-main.yml` at `9f242d4` (a clone), and its `kronikol-history` branch. RUN: the live root and its headers |
 | F5 | The demo is on 3.31.4. On the morning of 2026-09-27 BreakfastProvider's `main` was `0d29537` (2026-09-23), with all 30 pins at 3.29.0 (27 package references and three `Kronikol.Tool --version` steps), seventeen releases back. `INTERNAL_FLOW_BLOB_PLAN.md` S5 moved all 30 to 3.31.4 in `9f242d4`, `CI: Main` went green twice, and the site redeployed at 11:57 UTC: each of the 18 reports carries `Kronikol v3.31.4`, and each digest names `Kronikol 3.31.4+81f77b58` (F20). So the fixes a visitor would meet on a first look are live: the toolbar at every width (3.29.2), parameter tables and detail panels at tablet and phone widths (3.29.3), long tokens scrolling the page sideways (3.29.4), the note header's contrast and a link's hover colour (3.30.0), and a report 37% smaller (3.31.4). The five releases since are fixes (3.31.5 to 3.31.8; 3.31.6 was tagged and never published) and a smaller file again (3.31.9: the xUnit lane's download 1.16 to 0.90 MB). Moving the demo to them is the next consumer release's business, not a condition of S1 | RUN: the clone, a `git grep` of the pins at both commits, the live site. PLAN: `INTERNAL_FLOW_BLOB_PLAN.md` §11.1. READ: CHANGELOG 3.31.5 to 3.31.9 |
-| F6 | Nothing watches the link. None of this repository's four workflows mentions `github.io`, and none of BreakfastProvider's ten does either: its `post-deployment-tests.yml` tests the API server, not the Pages site. `deploy-pages` needs all 18 lane jobs and both unit-test jobs, with no `always()`, so a lane job that fails holds the deploy back and the last site stays up (READ; that Pages keeps serving it is REFERENCE). A lane job fails only on a failure its history ledger has not seen before (`kronikol history gate` in `_tests.yml`): a failure that persists is known on its second run, and from then on it is published, as the docker lanes' three are (F20). A renamed lane, a moved path, a renamed repository or Pages switched off would send every visitor to a 404 | READ: both repositories' workflows, BreakfastProvider's `ci-main.yml` and `_tests.yml` at `9f242d4`; INFERRED for the failure modes |
-| F7 | The README links the demo twice, both inline: the first paragraph's words "rich interactive HTML reports" (`README.md:12`), and a bold sentence under Example Output (`:33`) saying the picture beneath it is "just a very simple static example". That picture is an image uploaded to GitHub, and it links to a plantuml.com server URL, so the README's one picture of the product sends a click to the site the ad audit measured (roadmap D.3) | READ |
+| F6 | Nothing watches the link. None of this repository's four workflows mentions `github.io`, and none of BreakfastProvider's ten does either: its `post-deployment-tests.yml` tests the API server, not the Pages site. `deploy-pages` needs all 18 lane jobs and both unit-test jobs, with no `always()`, so a lane job that fails holds the deploy back and the last site stays up (READ; that Pages keeps serving it is REFERENCE, and GitHub's docs do not say, F34). A lane job fails only on a failure its history ledger has not seen before (`kronikol history gate` in `_tests.yml`): a failure that persists is known on its second run, and from then on it is published, as the docker lanes' three are (F20). A renamed lane, a moved path, a renamed repository or Pages switched off would send every visitor to a 404. For the renamed repository GitHub's docs say so: a rename redirects "all existing information, with the exception of project site URLs" | READ: both repositories' workflows, BreakfastProvider's `ci-main.yml` and `_tests.yml` at `9f242d4`; GitHub's docs on renaming a repository. INFERRED for the other failure modes |
+| F7 | The README links the demo twice, both inline: the first paragraph's words "rich interactive HTML reports" (`README.md:12`), and a bold sentence under Example Output (`:33`) saying the picture beneath it is "just a very simple static example". That picture is an image uploaded to GitHub, and it links to a plantuml.com server URL, so the README's one picture of the product sends a click to the site the ad audit measured (roadmap D.3). GitHub renders both demo links, like 62 of the README's 77 links out of GitHub, with `rel="nofollow"`, so they lend the demo no search weight | READ. RUN for the `rel` values, on the repository page's HTML |
 | F8 | Tells are already at the door. The direction report's own draft has an em dash (`see what your integration test actually did — every HTTP call, SQL query and message, as a sequence diagram`; the roadmap's row already turned it into a colon). The README's opening paragraphs have three (`README.md:10`, `:14`, `:16`), and the demo's landing page title one (F4) | READ; RUN for the live title |
 | F9 | "Every" cannot be proved. A call is drawn when it goes through a client that has its extension and is attributed to a test. A client without one is not drawn, and identity-less background work that names no document still lands nowhere (roadmap Appendix C). The nouns can be proved (§5.4) | READ: `src/` (62 packages), `README.md:14`, roadmap Appendix C |
 | F10 | "Self-contained" is not true of the default report. The default rendering is `BrowserJs` (`ReportConfigurationOptions.cs:133`), and since 3.31.1 that page fetches the PlantUML engine from `cdn.jsdelivr.net` when it opens: `@plantuml/core@1.2026.8`'s `plantuml.js` (3,947,570 bytes, 1,078,370 as jsDelivr sends it) and `viz-global.js` (1,445,436 bytes, about 0.6 MB sent), which a browser then keeps for a year (`max-age=31536000, immutable`). A page that cannot fetch them shows, where each diagram would be, "Render error: PlantUML engine unavailable: failed to load https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8/plantuml.js". Keep the word, and "offline", out of the description | READ: `ReportConfigurationOptions.cs:133`, `TrackingDefaults.PlantUmlJsCdnBase`. RUN: the engine's sizes and headers; the render error, drawn by a copy of a live report in a browser that cannot reach jsDelivr |
 | F11 | `README.md:33` linked the BreakfastProvider repository as `https://github.com/lemonlion//BreakfastProvider/`, with a doubled slash, and spelt the name "BreakFastProvider" in both of its links. **Fixed in this plan's commit** (documentation only, no bump). Whether GitHub resolved the doubled slash is still unknown: this environment's proxy refuses to forward such a path (`Request path could not be canonicalized`), with full network access too. The corrected form is right either way | READ; RUN for the proxy's answer |
-| F12 | Traffic (views, unique visitors, referring sites, popular content) is shown only to people with push access, and only for the last 14 days (REFERENCE). The traffic API refuses the session's token (403, `Resource not accessible by integration`) and an anonymous call (403). The direction report's baseline, read 2026-09-12: 31 unique visitors in 14 days; referrers GitHub 7, NuGet 2, Google 1, DuckDuckGo 1, ChatGPT 1. A before-reading has to be taken by the owner on the day of S1, or it is gone | PLAN (the report); REFERENCE; RUN for the refusals |
+| F12 | Traffic (views, unique visitors, referring sites, popular content) is shown to people with push access, for the last 14 days. Referring sites and popular content update daily, and the API returns only the top ten of each (READ, F34). The traffic API refuses the session's token (403, `Resource not accessible by integration`) and an anonymous call (403). Its endpoints need the Administration permission (read) from an app's or a fine-grained token (READ, F34), which this session's evidently lacks (INFERRED). The direction report's baseline, read 2026-09-12: 31 unique visitors in 14 days; referrers GitHub 7, NuGet 2, Google 1, DuckDuckGo 1, ChatGPT 1. A before-reading has to be taken by the owner on the day of S1, or it is gone | PLAN (the report). READ: GitHub's docs. RUN for the refusals |
 | F13 | A search across all of GitHub is outside this session's repository scope, so the GitHub half of the search baseline is the owner's. The web half was taken with the session's search tool (F17). A second engine, DuckDuckGo's HTML page, answered with a bot challenge, and a session does not go round one. nuget.org's half is F24 | RUN |
 | F14 | A GitHub release is published for each tag (the latest, v3.31.9, at 13:46 UTC on 2026-09-27), so the About column's release box is current. Recorded so nobody re-checks it | RUN: `api.github.com/repos/lemonlion/Kronikol/releases/latest` |
 | F15 | The repository page's title is `GitHub - lemonlion/Kronikol: <description> · GitHub`; `og:title` and `twitter:title` are the same without ` · GitHub`, and `og:description`, `twitter:description`, `og:image:alt` and the meta description are `<description> - lemonlion/Kronikol`. `og:image` is GitHub's generated card (`opengraph.githubassets.com/<hash>/lemonlion/Kronikol`, `twitter:card` `summary_large_image`), so no custom social preview is set, which answers S0 step 2. The card itself is a 1200 × 600 PNG: the name, the whole description on three lines of 44 to 49 characters, the owner's avatar, and four counts (2 contributors, 1 "used by", 17 stars, 1 fork) | RUN: the page's HTML and the card image, 2026-09-27 |
@@ -120,32 +155,39 @@ a network's.
 | F18 | The landing page's first look, drawn from its source (the text the job writes, which is the live page, F4) in Chromium through Playwright: nothing scrolls sideways at 1280 × 800 or at 390 × 844, and the first report card's top sits at 367 px and 468 px, inside the first screen at both. Kronikol appears only in the "Powered by Kronikol" badge, the source card and the footer, and the first paragraph is insider language (the history ledger, a sparkline, `$flaky`, `Failures.md`, `ctrf-report.json`) | RUN |
 | F19 | A trap for whoever measures at phone width: headless Chromium's `--window-size` lays a page out no narrower than 500 px and crops the screenshot, so a 390 px check needs a real viewport (Playwright's, or DevTools' device mode). The first attempt here showed the landing page clipped at 390 px; measured with a real viewport, nothing overflows | RUN |
 | F20 | The live site, 2026-09-27, as `CI: Main` run `36316716498` left it (11:57 UTC). The root (6,206 bytes, `max-age=600`) and all 18 reports answer 200 over https with no cookies. The root without its final slash answers 301 to the slash form; `lemonlion.github.io/` and `.../BreakfastProvider/demo/` answer 404. The six linked in-memory reports are 3.9 to 5.5 MB, 0.91 to 1.23 MB as Pages sends them (xUnit 4,962,030 and 1,179,176 bytes); the docker ones 3.5 to 6.2 MB (1.0 to 2.1 MB), the external-SUT ones 1.7 to 2.4 MB (0.40 to 0.48 MB). Beside each report sit its `Failures.md`, `Failures.jsonl`, `CLAUDE.md`, `AGENTS.md`, `TestRunReport.json` (6.4 MB for xUnit) and `ctrf-report.json`. The digests open `# No failures` on the six in-memory and the six external-SUT lanes, and `# Failures` with 3 of 178 to 205 scenarios on each docker lane: the three Orders scenarios the consumer's Azure emulator has failed since `7a0fb9b` (PLAN: `INTERNAL_FLOW_BLOB_PLAN.md` §11.1). The API viewers, the icon and the Kronikol link on the root answer 200; its two BreakfastProvider links are outside what this environment's proxy serves | RUN |
-| F21 | A report's first look, drawn from copies of the live xUnit and ReqNRoll reports in Chromium through Playwright (1280 × 800; and 390 × 844 as a phone, with the CPU slowed four times): nothing scrolls sideways at either width (a wide parameter table scrolls inside its own box). The first screen is the title, the folded Features Summary and the execution summary ("Passed", 67 features, 203 scenarios) at 390 px, with the CI box and the filters beside them at 1280 px. All 67 features start collapsed, and so does each scenario, so no diagram is on a report's first screen at either width. The first diagram is three taps from the landing page (a report, a feature, a scenario), and at 390 px the first feature is a screen below the top. How long it takes to draw is the owner's to time: the browser here cannot fetch the engine (F10) | RUN |
+| F21 | A report's first look, drawn from copies of the live xUnit and ReqNRoll reports in Chromium through Playwright (1280 × 800; and 390 × 844 as a phone, with the CPU slowed four times): nothing scrolls sideways at either width (a wide parameter table scrolls inside its own box). The first screen is the title, the folded Features Summary and the execution summary ("Passed", 67 features, 203 scenarios) at 390 px, with the CI box and the filters beside them at 1280 px. All 67 features start collapsed, and so does each scenario, so no diagram is on a report's first screen at either width. The first diagram is three taps from the landing page (a report, a feature, a scenario), and at 390 px the first feature is a screen below the top. How long it takes to draw was measured without the network (F31), since the browser here cannot fetch the engine from jsDelivr (F10); over a real network it is the owner's to time | RUN |
 | F22 | Deep links. A report opened at `TestRunReport.html#sid-<stableId>` (or `#scenario-<slug>`) opens every section around that scenario and scrolls it to the middle of the screen, the scenario opened (`report-url-hash-function.js`). On a copy of the live xUnit report at 1280 × 800, `#sid-83cb467c01ca1187` landed with the scenario's title and diagram box in the first screen. The id hashes the suite, the feature and scenario names, the outline and the example values (`ScenarioStableId.Compute`), so it survives reruns and releases and moves on a rename; an id that matches nothing leaves the visitor at the top of the report | READ; RUN for the landing. At 390 px, and far down a long report, see F28 |
-| F23 | The About block on a phone. The repository page's HTML holds one visible copy of the description, in the sidebar's About section, which carries `hide-sm hide-md`: GitHub's stylesheet hides those at 543.98 px and below and from 544 to 767.98 px, so below 768 px. The HTML served to a phone's user agent is the same and holds no other copy, so whatever a phone shows is drawn by the page's script, which the browser here cannot load. §2's "above the file list" is therefore unconfirmed, and S0 step 5's phone look is the owner's | RUN: the page's HTML for a desktop and a phone user agent, GitHub's stylesheets |
+| F23 | The About block on a phone. The repository page's HTML holds one visible copy of the description, in the sidebar's About section, which carries `hide-sm hide-md`: GitHub's stylesheet hides those at 543.98 px and below and from 544 to 767.98 px, so below 768 px. The HTML served to a phone's user agent is the same and holds no other copy, so whatever a phone shows is drawn by the page's script, which the browser here cannot load. **The script says what it draws** (its `code-view` bundle, read 2026-09-27, when the sidebar had become GitHub's React one and the page carried its data as `sidebarAbout`). Below 768 px, the overview's header draws a block of its own, `repo-mobile-details`, in the header's `show-whenNarrow` part, above the file list. It holds the description, cut at 350 characters with an ellipsis, then the licence, then the website. Both blocks show the website as its address without `https://` (the final slash stays), in bold beside a link icon. Both open it with `rel="noopener noreferrer"`, and the sidebar's adds `nofollow`, so a visitor it sends arrives with no referrer. §2's "above the file list" is read, not seen: the owner's phone look in S0 step 5 confirms it | RUN: the page's HTML for a desktop and a phone user agent, GitHub's stylesheets. READ: GitHub's shipped script |
 | F24 | nuget.org's search, before (its search API, stable versions, 2026-09-27). The three problem phrasings find nothing at all: its search matches words, not questions. "integration test diagram" and "sequence diagram tests" return the old name's package first and Kronikol's second; "plantuml" has `TestTrackingDiagrams.PlantUml.Ikvm` second; the first Kronikol or TestTrackingDiagrams package is sixth for "sequence diagram", ninth for "reqnroll report" and fortieth for "test report html"; "living documentation" has neither in its first hundred | RUN |
-| F25 | The old name on nuget.org. The 56 `TestTrackingDiagrams` packages have 2,520,149 downloads against the 62 Kronikol packages' 893,458 (the main packages 463,560 and 127,720). Their last version is 2.37.4 (2026-05-17), none is deprecated, and their project URL is `github.com/lemonlion/TestTrackingDiagrams`, which reaches this repository only through GitHub's redirect for a renamed repository (REFERENCE: this environment's proxy answers only for the session's own repositories, so the redirect was not checked). Deprecating them is 13.4's (`LLM_FIRST_PLAN.md` §14.3's outward steps) | RUN: nuget.org's search API and registration index |
+| F25 | The old name on nuget.org. The 56 `TestTrackingDiagrams` packages have 2,520,149 downloads against the 62 Kronikol packages' 893,458 (the main packages 463,560 and 127,720). Their last version is 2.37.4 (2026-05-17), none is deprecated, and their project URL is `github.com/lemonlion/TestTrackingDiagrams`, which reaches this repository only through GitHub's redirect for a renamed repository. GitHub's docs describe that redirect, and the one thing that ends it: a new repository created under the old name (READ). This environment's proxy answers only for the session's own repositories, so the redirect itself was not followed. Deprecating them is 13.4's (`LLM_FIRST_PLAN.md` §14.3's outward steps) | RUN: nuget.org's search API and registration index. READ: GitHub's docs on renaming a repository |
 | F26 | How much of the description a search result keeps. Measured with Arial's metrics at 20 px (the metric-compatible Liberation Sans here), a title cut at 600 px (REFERENCE: the width a desktop result is commonly cut at) holds the 29-character prefix (255 px) and 34 to 38 characters of each draft, then an ellipsis. Today's keeps "A mechanism for tracking the reques", and draft B "See what your .NET integration tests". A phone result wraps the title onto a second line instead (REFERENCE) | RUN for the measurement; REFERENCE for the cut |
 | F27 | The README's links, 2026-09-27: 119 of its 152 answered 200 (59 badges, none drawing an error; 57 nuget.org pages; ctrf.io; the plantuml.com link; the demo). The 29 wiki links name a page and a heading that exist in the wiki at `86a77c1`. The CI badge and workflow link are refused by this environment's proxy (the workflow is `.github/workflows/ci.yml`), and the image and the BreakfastProvider link are outside what it serves. Nothing is broken | RUN |
 | F28 | **A defect, fixed in 3.31.10: a `#sid-` link, Next Failure and a failure-cluster link landed past their scenario.** Two causes. Every feature and scenario is drawn with `content-visibility: auto`, whose placeholder is 500 px for a feature (about 532 px with its padding, where a closed feature is about 60) and 150 px for a scenario, until the browser first draws it. The three jumps scrolled smoothly, and a smooth scroll is aimed once, across those placeholders: as it passed them they were drawn at their true size, and it ran on to the bottom of the page. On the live xUnit report a link into the 40th of 67 features ended with the scenario 1,766 px above the screen at 1280 px and 1,267 px at 390 px. And at 768 px and below, `report-init-script.js` called `parse_url_hash()` first and only then folded the filter panel (559 px there) away, so even a link into the first feature ended 220 px above the screen at 390 × 844; `parse_url_hash` itself reveals its anchor last so that "the scroll has to land on the layout the filters produced", and the init script broke that rule. 3.31.10 routes the three jumps through `jump_into_view(target, block)` in `report-url-hash-function.js`, which jumps (`behavior: 'instant'`) and re-aims for up to ten frames while the target's top moves (the features it lands among are drawn in the frames after it, and Safari has no scroll anchoring to absorb that), and calls `parse_url_hash()` last in the init handler. On a copy of the live report with the change, links into the first, 40th and last features land with the scenario's title on screen, -15 to 85 px from the middle, at both widths. The keyboard and table-reference jumps move a short way and stay smooth. Tests: four Playwright facts, each red on 3.31.9 (a link into the 30th of 60 features; a link into the first feature at 390 px; Next Failure and a cluster link into the 30th feature). Report output changes, so the Kronikol4J ledger owes the entry of Appendix A | RUN: copies of the live report, as found and with the change; the new facts on 3.31.9 and 3.31.10. READ: `stylesheets.css`, `report-init-script.js`, `report-url-hash-function.js` |
+| F29 | **What the demo draws, against the drafts' nouns.** The xUnit lane's 67 features hold 203 scenarios, each with a diagram, making 1,315 calls. HTTP: 540, the tests' requests to the service and its calls to four downstream services (Cow, Goat, Supplier, Kitchen). SQL: 255, that is EF Core's inserts, selects, updates and deletes against two databases the diagrams label SQL Server (220), then Spanner 12, ClickHouse 12 and BigQuery 11. Other databases: 214 (Cosmos DB 198, MongoDB 16). gRPC: 48. Messages: 258, publishes to Pub/Sub, Kafka and Event Grid and consumes from Kafka, Event Hubs and Pub/Sub. 53 of the 203 diagrams hold an HTTP call, a SQL query and a message, and 30 hold all five kinds. The ReqNRoll lane is the same service under another framework (205 scenarios, 1,277 calls, 51 with B's three nouns). So every noun B, C and D use is on the screens the homepage leads to, and "SQL queries" is as safe there as "queries" | RUN: both lanes' `TestRunReport.json`, read with `kronikol query interactions --group-by` and a script that counts per scenario (neither file was opened). READ: BreakfastProvider's package references at `9f242d4` |
+| F30 | **Q5's deep link, chosen and proved.** `reports/xunit/TestRunReport.html#sid-fb8c79cbd78d82b0` opens "Adding a new inventory item should return the created item": the test's `POST /inventory`, the service's insert into the Breakfast Database, and its `InventoryItemAddedEvent` published to Pub/Sub. That is three calls among four participants, which reads on a phone, and B's three nouns in one picture. It is in the 30th of 67 features, far enough down for F28. On the demo's 3.31.4 the link ends at the bottom of the page, the title 2,673 px above the screen at 1280 px and 2,029 px at 390 px. With 3.31.10's change the title lands 274 px and 347 px from the top, and the diagram's box starts on screen, at both widths. Drawn by the engine's real bytes, its diagram holds the four participants and both calls, and no error (F31). The id is the lane's: the ReqNRoll lane's copy of the scenario is `f57238fb856d675a`, because the id hashes the suite. It moves if the feature or the scenario is renamed, which leaves a visitor at the top of the report (F22), so S4's guard checks it (§7). For breadth instead, 30 scenarios draw all five kinds, the smallest in 22 calls among 11 participants ("Valid order should be created and an event published", `#sid-a02ed988a93eb069`), too wide for a first look on a phone | RUN: `kronikol query flow` on the lane's data; copies of the live report, as found and with 3.31.10's change, in Chromium at 1280 × 800 and 390 × 844 |
+| F31 | **The first diagram's time, without the network.** The xUnit report was served at its own address and the engine's two files with the bytes and headers jsDelivr sent, all from memory (§1). The deep link used the copy with 3.31.10's change, the taps the live bytes. Deep link at 1280 × 800, four runs: first paint 0.27 to 0.51 s, page loaded 1.07 to 1.60 s, engine ready 1.13 to 2.41 s, the scenario's diagram 2.05 to 3.52 s after the link was opened. Deep link at 390 × 844 with the CPU slowed four times, three runs: first paint 0.68 to 0.71 s, loaded 2.05 to 2.37 s, engine ready 2.20 to 2.51 s, the diagram 3.50 to 3.67 s. The three taps (a feature opened, then the scenario scrolled to and tapped): the diagram 0.11 to 0.47 s after the tap at 1280 px and 0.20 to 0.24 s at 390 px, because the engine starts loading when the page opens and is ready before a visitor has found a scenario. The engine ran in its worker, as a visitor's does, and its integrity check passed. Two things this leaves out. The phone profile slows the page, not the engine's worker (0.8 to 1.3 s for a run's three diagrams under either profile), so a real phone draws later. And the network adds the report (1.18 MB as sent) and, on a first visit, the engine (about 1.7 MB): at least 2.3 s at 10 Mbit/s, and at least 14 s at the 1.6 Mbit/s of Lighthouse's slow-4G profile (REFERENCE for the profile). The owner's S0 reading is that network part, on a real phone | RUN: Playwright's Chromium 1194 on this machine's four cores. INFERRED for the network's share, from the sizes |
+| F32 | **Each draft on the card, predicted.** The card's description is set in Inter, at about 31.6 px on a 48 px line pitch: of six sans-serif faces, Inter reproduces today's three line widths (765, 683 and 145 px, measured on the card) within 4 px. Today's breaks put the text box between 765 and 838 px wide. At either width every draft prints whole, A in two or three lines and B, C and D in three, as today's does, so no draft needs a fourth line, which the card has not been seen to draw | RUN: the card's pixels; the metrics of Google Fonts' Inter, Mona Sans, Hubot Sans, Noto Sans and Roboto, and of Liberation Sans. INFERRED: the wrap |
+| F33 | **The README nuget.org shows.** Every package ships `nuget-readme.md` (`Directory.Build.props:17`), not `README.md`, so F11's fix does not reach nuget.org, and no demo link does either. The file links the wiki eleven times and the demo not at all. It opens with the old name's note and then "Effortlessly autogenerate **PlantUML sequence diagrams**", a word §5.3's check flags, and it holds 14 em dashes. NuGet sent 2 of the 12 referrals on 2026-09-12 (F12), and the `Kronikol` package has 127,720 downloads (F16) | READ |
+| F34 | **GitHub's documentation, checked** (docs.github.com and the gh manual, 2026-09-27). Topics: "Add no more than 20 topics" (F3). Search: "When you omit this qualifier, only the repository name, description, and topics are searched" (§2). Traffic: push access, 14 days, referring sites and popular content updated daily and listed ten at most, and the API needs the Administration permission (read) (F12). Scheduled workflows run only on the default branch. They "can be delayed during periods of high loads", which "include the start of every hour", and under enough load some are dropped. The shortest interval is 5 minutes. A failure is notified to the user who created the workflow, or to whoever last changed its cron line or re-enabled it. "In a public repository, scheduled workflows are automatically disabled when no repository activity has occurred in 60 days" (§7). `gh repo edit` takes `--homepage` (`-h`, which is not help there) and `--description` (`-d`) (§4, §5.5). A description has no documented length limit: the REST and GraphQL references give none (§5.1). Pages documents no redirect but GitHub's own (HTTP to HTTPS, and a custom domain's `www`), and no analytics (H3, §8). A renamed repository redirects everything but its Pages site (F6, F25). Nothing documented counts clicks on the homepage link, and no documented notification covers a settings edit (§8, §9). A custom social preview is best at 1280 × 640 px, under 1 MB (§10). Documented nowhere: whether Pages keeps a site after a failed deploy (F6) | READ: GitHub's docs and the gh manual |
 
 ## 2. Where the two fields show
 
 The case for writing the description carefully is that it is read in five places, and in two of them it is
 cut short. The title, the card's tags and the card's image were read on 2026-09-27 (F15), and the cut was
-measured (F26). The rest is REFERENCE, which S0 step 5 checks before S2.
+measured (F26). The phone's block was read from GitHub's script (F23), and the search fields from its docs (F34);
+S0 step 5 looks at the phone before S2.
 
 | Where | Homepage | Description | Note |
 |---|---|---|---|
-| The About column (desktop) or its phone form | yes, as the bare URL with a link icon | yes, whole | The desktop copy is in the sidebar, which GitHub hides below 768 px; where a phone shows it is drawn by GitHub's script and unconfirmed (F23) |
+| The About column (desktop) or its phone form | yes, as the address without `https://`, in bold beside a link icon (READ, F23) | yes, whole: the phone's block cuts at 350 characters (READ, F23) | The desktop copy is in the sidebar, which GitHub hides below 768 px. Below that, GitHub's script draws a block in the page's header, above the file list, with the description, the licence and the website (READ, F23; the owner's look confirms it). Either link opens the homepage with `rel="noopener noreferrer"` |
 | The page title: browser tab, bookmarks, search engine result | no | yes: `GitHub - lemonlion/Kronikol: <description> · GitHub` (RUN, F15) | 29 characters go to the prefix, and about 35 of the description survive a desktop result's cut (F26) |
 | The link card GitHub draws for a shared repository link (Slack, Teams, X, LinkedIn) | no | yes, unless a custom social preview is set, and none is (RUN, F15) | The tags carry it, and the image prints it whole on three lines beside the owner's avatar and four counts (RUN, F15). Unfurlers cache cards for days, so a change shows late |
-| GitHub's repository search results and profile lists | the direction report says the homepage shows in search results (PLAN) | yes | Default repository search matches the name, the description and the topics |
+| GitHub's repository search results and profile lists | the direction report says the homepage shows in search results (PLAN) | yes | Default repository search matches the name, the description and the topics (READ, F34) |
 | The REST API | `homepage` | `description` | RUN. How S1, S2 and S4 are verified |
 
-What the homepage display means for the URL: the About column shows the address itself, so
-`lemonlion.github.io/BreakfastProvider` reads as a project's site and a lane report's path reads as a file
-path. Nothing in the About column says "demo", which is one argument for S3.
+What the homepage display means for the URL: the About column shows the address itself, less its scheme
+(F23), so `lemonlion.github.io/BreakfastProvider/` reads as a project's site and a lane report's path reads as
+a file path. Nothing in the About column says "demo", which is one argument for S3.
 
 nuget.org shows neither field. A package page shows the package's own description and project URL, which
 ship in a package and so in a release (§10). The old name's packages send theirs to the old address (F25).
@@ -155,9 +197,10 @@ ship in a package and so in a release (§10). The old name's packages send their
 In a logged-out browser window unless the step says otherwise. Each step writes one row of §12.
 
 **Run by a session on 2026-09-27, as far as it could reach:** step 2 whole; step 3's web and nuget.org
-halves; step 4 but for the first diagram's time and the glance for anything private; step 5's title, card
-tags and card image. **Left for the owner:** step 1, step 3's GitHub half, step 4's time and glance, and
-step 5's About block on a phone.
+halves; step 4 but for the glance for anything private, with the first diagram timed without the network
+(F31); step 5's title, card tags and card image, with what the phone's About block holds read from GitHub's
+script (F23). **Left for the owner:** step 1, step 3's GitHub half, step 4's time on a real phone and
+network and its glance, and a look at step 5's About block on a phone.
 
 1. **Traffic, before** (logged in, Insights → Traffic). The 14-day unique visitors and views, the
    referring sites, and the popular content. F12: this is the only day it can be read.
@@ -178,16 +221,17 @@ step 5's About block on a phone.
    | It answers | 200 over https, logged out | **Yes:** the root and all 18 reports, with no cookies. Use the address with its final slash; the other form costs a 301 (F20) |
    | It says what it is | the first screen names Kronikol and says what the page holds | In part. The hero reads "Breakfast Provider", "Component Test Reports & API Documentation" and "Powered by Kronikol": Kronikol is named, but not as what the page shows, and the first paragraph is insider language (F18) |
    | It shows breadth | the root names the test frameworks, so a visitor finds their own (roadmap §0: a visitor who finds their case missing does not return) | Yes: six framework cards. MSTest, which Kronikol supports, has no lane, and the twelve docker and external-SUT reports are linked from nowhere, which suits the docker six while they carry their three failures (F20) |
-   | It reaches a diagram | a report in one click from the root; a drawn diagram on a report's first screen, with the time it took on the owner's connection noted | Half. A report is one click away (F18), but its first screen holds no diagram at either width, and the first is two taps further in, a feature and a scenario (F21). A `#sid-` link lands on one (F22), at a phone's width and far down a long report only from 3.31.10 (F28), which the demo does not have yet. The time is the owner's: the first diagram costs the report (1.18 MB for xUnit) and, once, the engine (about 1.7 MB) |
-   | Nothing is broken | no failing scenario, no render-error picture, nothing clipped or scrolling sideways at 390 px | The six linked reports are green, and the two drawn scroll nothing sideways at either width (F20, F21). `popup-smoke.js` drew every popup, with no console error, on the six in-memory lanes and the xUnit docker lane of the published 3.31.4 site (PLAN: `INTERNAL_FLOW_BLOB_PLAN.md` §11.1). A drawn diagram needs a browser that reaches jsDelivr: the owner's |
+   | It reaches a diagram | a report in one click from the root; a drawn diagram on a report's first screen, with the time it took on the owner's connection noted | Half. A report is one click away (F18), but its first screen holds no diagram at either width, and the first is two taps further in, a feature and a scenario (F21). A `#sid-` link lands on one (F22), at a phone's width and far down a long report only from 3.31.10 (F28), which the demo does not have yet; F30 names the link. Without the network, the first diagram is drawn 2.1 to 3.5 s after that link at 1280 px and 3.5 to 3.7 s at 390 px, and 0.1 to 0.5 s after the last of the three taps (F31). The network's part is the owner's: the report (1.18 MB for xUnit) and, once, the engine (about 1.7 MB) |
+   | Nothing is broken | no failing scenario, no render-error picture, nothing clipped or scrolling sideways at 390 px | The six linked reports are green, and the two drawn scroll nothing sideways at either width (F20, F21). `popup-smoke.js` drew every popup, with no console error, on the six in-memory lanes and the xUnit docker lane of the published 3.31.4 site (PLAN: `INTERNAL_FLOW_BLOB_PLAN.md` §11.1). With the engine's real bytes served from memory, F30's scenario drew its four participants and both calls, with no error (F31). Over a real network, a drawn diagram needs a browser that reaches jsDelivr: the owner's |
    | It is current | the version the lane's `Failures.md` names (`Kronikol <version>.` on a green run, `Written by Kronikol <version>.` when something failed), which sits beside the report | **Yes, since 11:57 UTC: 3.31.4** (F5, F20) |
    | Nothing leaks | open two notes and the headers of one request. The site is already public and linked from the README, so this is a glance, not an audit | Not run by a session. The owner's glance |
 
 5. **Where the description shows** (§2): the tab title, the About column at both widths, and the card
    (paste the repository URL into any unfurling chat box, or read the page's `og:image`). If any row of
    §2 is wrong, correct §2 before S2, because the brief leans on it. **Done 2026-09-27:** the title, the
-   card's tags and image (F15), and where the desktop copy sits (F23). **Left:** the About block on a
-   phone, which GitHub's script draws (F23).
+   card's tags and image (F15), where the desktop copy sits, and what GitHub's script draws on a phone
+   (F23). **Left:** a look at a phone, where the script puts the description in the page's header, above
+   the file list, with the licence and the website under it (F23).
 
 ## 4. S1: the homepage (the owner, about 2 minutes)
 
@@ -195,7 +239,7 @@ step 5's About block on a phone.
 |---|---|---|
 | **H1. The site's root**, `https://lemonlion.github.io/BreakfastProvider/` | The URL that already exists and is linked from the README. It survives lanes being renamed or added. It reads well in the About column. It names the frameworks, so it shows breadth before the first click, which is section 0's worry (F18) | One click short of the artifact, and three taps short of a diagram (F21). Its title carries an em dash, and its hero names Kronikol only as "Powered by" (F4, F18, Q5) |
 | **H2. One lane's report** | Lands inside the artifact: the direction report's "thirty seconds inside a real report and it is obvious". It lands on the summary, though, not a diagram, unless the URL carries a `#sid-` fragment (F21, F22) | A long URL that reads as a file path, longer with a fragment. It is tied to a lane path that BreakfastProvider's CI owns, so it is the first thing to break (F6). About 1.2 MB before the page shows and 1.7 MB more for the first diagram, on a phone's network (F10, F20). One framework, when the visitor may use another |
-| **H3. A stable alias**, such as `https://lemonlion.github.io/BreakfastProvider/demo/`, written by BreakfastProvider's deploy job as a page that forwards to the chosen lane | H2's landing with H1's stability. The lane can change without the homepage changing | A change in another repository's workflow; Pages serves no redirects of its own (REFERENCE), so the alias is a page. `/demo/` answers 404 today (F20) |
+| **H3. A stable alias**, such as `https://lemonlion.github.io/BreakfastProvider/demo/`, written by BreakfastProvider's deploy job as a page that forwards to the chosen lane | H2's landing with H1's stability. The lane can change without the homepage changing | A change in another repository's workflow. Pages documents no redirect but its own (F34), and the demo is uploaded by `actions/upload-pages-artifact` and published by `actions/deploy-pages` (READ: `ci-main.yml:1027`, `:1033`), so no Jekyll plugin runs and the alias is a page the job writes. `/demo/` answers 404 today (F20) |
 | H4. The wiki, or nuget.org | | The direction report's whole point is the artifact, not more prose. Rejected |
 
 **Recommended: H1, if the root passes S0's first look** (it answers, it says what it is, it names the
@@ -215,7 +259,8 @@ curl -s https://api.github.com/repos/lemonlion/Kronikol | python3 -c "import jso
 ```
 
 Or the gear beside About on the repository page → Website. Kronikol has no Pages site of its own (F1), so
-the dialog's option to use one does not apply. Keep the final slash (F20).
+the dialog's option to use one does not apply. Keep the final slash (F20). Both flags are the gh manual's
+(READ, F34); its short form of `--homepage` is `-h`, which is not help there, so the long form is safer.
 
 **Order.** S1 need not wait for S2. The link changes no words, and the 31 visitors are better off with a link
 than without one while the owner writes the description. S4, if taken, comes after S1: with the field empty,
@@ -237,9 +282,10 @@ The row says "from mechanism to outcome". Turned into tests a draft can pass or 
 4. **Every word is true of the product today** (§5.4). No universal quantifier without a proof (F9), no
    "self-contained" or "offline" (F10).
 5. **No tells** (§5.3). The owner's list governs; §5.3 is a starting list and a check for it.
-6. **Short.** GitHub's own cap (350 characters, REFERENCE, not checked) is far above every draft. The limit
-   that matters is the card and the phone block; the drafts below run 107 to 124 characters, and the card
-   prints today's 104 whole on three lines (F15).
+6. **Short.** GitHub documents no cap on a description (F34), and its phone block cuts one at 350 characters
+   (F23), far above every draft. The limit that matters is the card and the phone block; the drafts below run
+   107 to 124 characters, the card prints today's 104 whole on three lines (F15), and it would print each
+   draft whole in two or three (F32).
 
 ### 5.2 Raw material
 
@@ -263,8 +309,13 @@ in §5.3 (RUN), and what a search title keeps by the width measurement of F26 (R
   diagrams") but gives up the contrast the direction report and 13.1 build on: your tests pass, and here
   is what they did.
 
+The demo keeps each draft's promise. Its xUnit lane draws 540 HTTP calls, 255 SQL queries, 214 queries to other
+databases and 258 messages, and 53 of its 203 diagrams hold all three of B's nouns (F29). On the card, each
+draft prints whole (F32).
+
 A choice inside every draft: "SQL queries" is concrete and is what people type; "queries" or "database
-queries" is true of Cosmos DB, MongoDB, DynamoDB, Redis and the rest as well (§5.4).
+queries" is true of Cosmos DB, MongoDB, DynamoDB, Redis and the rest as well (§5.4). The demo draws both
+kinds (F29), so either is true of what the homepage shows.
 
 ### 5.3 The tells check
 
@@ -300,20 +351,20 @@ the row gives the text to the owner.
 
 ### 5.4 The truth check
 
-Every noun a draft uses, and what makes it true today.
+Every noun a draft uses, what makes it true today, and where the demo the homepage links shows it.
 
-| Word | True because | Basis |
-|---|---|---|
-| .NET | Every package in `src/` is .NET. The Java port is Kronikol4J, another repository | READ |
-| tests, integration tests | The core package and the adapters for xUnit 2 and 3, NUnit 4, MSTest, TUnit, ReqNRoll, LightBDD and BDDfy. The README says "integration/component test" | READ: `src/`, `README.md:12` |
-| HTTP calls | The first thing the README lists among what is tracked | READ: `README.md:14` |
-| SQL queries | `SqlClient`, `Npgsql`, `MySqlConnector`, `Oracle`, `Sqlite`, `EfCore.Relational`, `Dapper`, three ClickHouse drivers, `BigQuery`, `Spanner` | READ: `src/` |
-| queries, database queries | The above, and `CosmosDB`, `MongoDB` (two), `DynamoDB`, `Redis`, `Elasticsearch`, `Bigtable`, `AtlasDataApi` | READ: `src/` |
-| messages | `ServiceBus`, `EventHubs`, `Kafka`, `SQS`, `SNS`, `EventBridge`, `PubSub`, `MassTransit`, `StorageQueues` | READ: `src/` |
-| sequence diagrams | Each scenario's diagram is a PlantUML sequence diagram; activity and component diagrams are drawn as well | READ: `README.md:12` |
-| HTML report, interactive | "rich interactive HTML reports" | READ: `README.md:12` |
-| every, each, all | Not provable (F9) | |
-| self-contained, offline | False by default (F10) | |
+| Word | True because | Basis | On the demo's xUnit lane (RUN, F29) |
+|---|---|---|---|
+| .NET | Every package in `src/` is .NET. The Java port is Kronikol4J, another repository | READ | A .NET service's tests |
+| tests, integration tests | The core package and the adapters for xUnit 2 and 3, NUnit 4, MSTest, TUnit, ReqNRoll, LightBDD and BDDfy. The README says "integration/component test" | READ: `src/`, `README.md:12` | 203 scenarios; five more frameworks in the other linked lanes |
+| HTTP calls | The first thing the README lists among what is tracked | READ: `README.md:14` | 540 |
+| SQL queries | `SqlClient`, `Npgsql`, `MySqlConnector`, `Oracle`, `Sqlite`, `EfCore.Relational`, `Dapper`, three ClickHouse drivers, `BigQuery`, `Spanner` | READ: `src/` | 255 (EF Core, Spanner, ClickHouse, BigQuery) |
+| queries, database queries | The above, and `CosmosDB`, `MongoDB` (two), `DynamoDB`, `Redis`, `Elasticsearch`, `Bigtable`, `AtlasDataApi` | READ: `src/` | 469 (the above, Cosmos DB and MongoDB) |
+| messages | `ServiceBus`, `EventHubs`, `Kafka`, `SQS`, `SNS`, `EventBridge`, `PubSub`, `MassTransit`, `StorageQueues` | READ: `src/` | 258 (Pub/Sub, Kafka, Event Grid, Event Hubs) |
+| sequence diagrams | Each scenario's diagram is a PlantUML sequence diagram; activity and component diagrams are drawn as well | READ: `README.md:12` | One for each of the 203 scenarios |
+| HTML report, interactive | "rich interactive HTML reports" | READ: `README.md:12` | The page itself |
+| every, each, all | Not provable (F9) | | |
+| self-contained, offline | False by default (F10) | | |
 
 ### 5.5 Setting it, and checking it
 
@@ -339,13 +390,19 @@ invites no more), it is documentation only, and 13.1 replaces it. A second, smal
 yes: point the example image's link at the demo instead of plantuml.com, so the README's one picture of
 the product no longer sends a click to a third-party ad site.
 
+The same line fits `nuget-readme.md`, the README the packages carry to nuget.org, which links no demo today
+(F33). It is documentation, so it needs no version bump of its own; it reaches nuget.org with the next
+release. Its opening tells ("Effortlessly", the em dashes) are the README's twin and go with 13.1.
+
 The line points at the root, not at a scenario. A `#sid-` link (F22) would land the reader on a diagram,
 but the root survives a renamed scenario and a renamed lane, and before 3.31.10 the deep link landed past
 its scenario (F28). The landing page is where a deep link belongs (Q5).
 
 S3 and S4 are the only parts of 2.1 that touch a file (the roadmap's §5 counts 2.1 as settings alone). S3
-edits `README.md`, which 2.2's PR #73 edits as well; the roadmap found that branch merging clean with
-`main` on 2026-09-27, so whichever lands second takes a one-line merge.
+edits `README.md`, which 2.2's PR #73 edits as well. On 2026-09-27 the roadmap found the PR's `README.md`
+merging clean with `main`, with only `CHANGELOG.md` in conflict. Against 3.31.10 that still holds (RUN:
+`git merge-tree`; GitHub calls the PR unmergeable for the changelog). So whichever lands second takes a
+one-line merge in `README.md`.
 
 ## 7. S4, optional: the guard (Q4)
 
@@ -354,7 +411,7 @@ this repository changing anything.
 
 | Where | Catches | Cost |
 |---|---|---|
-| **A scheduled workflow in this repository** | Everything in F6; an emptied or mistyped homepage field, because it reads the field from the API each time; and a red report on the page the homepage links (F20) | One file, about 30 lines. A failed scheduled run is emailed to whoever last edited the schedule (REFERENCE) |
+| **A scheduled workflow in this repository** | Everything in F6; an emptied or mistyped homepage field, because it reads the field from the API each time; a red report on the page the homepage links (F20); and a deep link there that names a scenario its report no longer has (F30) | One file, about 35 lines. GitHub notifies a failure to the user who created the workflow, or to whoever last changed its cron line or re-enabled it (READ, F34) |
 | A step after `deploy-pages` in BreakfastProvider's `ci-main.yml` | A deploy that drops or moves the lane, in the same run that caused it | Another repository's workflow; it misses Pages switched off or a repository renamed |
 | None | | The first sign is a visitor's 404 |
 
@@ -372,7 +429,7 @@ jobs:
   homepage:
     runs-on: ubuntu-latest
     steps:
-      - name: The repository's homepage answers, and the reports it links are green
+      - name: The repository's homepage answers, the reports it links are green, and its deep links resolve
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -382,19 +439,46 @@ jobs:
           code=$(curl -sS -L -o page.html -w '%{http_code}' "$url")
           test "$code" = 200 || { echo "::error::$url answered $code"; exit 1; }
           grep -qi kronikol page.html || { echo "::error::$url answered, but not with a Kronikol page"; exit 1; }
-          for report in $(grep -oE 'href="reports/[^"]+/TestRunReport\.html"' page.html | sed -E 's/^href="//; s/"$//'); do
+          while read -r report; do
             digest="${url%/}/${report%TestRunReport.html}Failures.md"
             curl -sS -f -o digest.md "$digest" || { echo "::error::$digest did not answer"; exit 1; }
             first=$(head -n 1 digest.md)
             test "$first" = "# No failures" || { echo "::error::$digest reads: $first"; exit 1; }
-          done
+          done < <(grep -oE 'href="reports/[^"#]+/TestRunReport\.html"' page.html | sed -E 's/^href="//; s/"$//')
+          while read -r link; do
+            report="${link%%#*}"
+            sid="${link#*#sid-}"
+            curl -sS -f --compressed -o report.html "${url%/}/$report" || { echo "::error::$report did not answer"; exit 1; }
+            grep -q "data-stable-id=\"$sid\"" report.html || { echo "::error::$link names a scenario the report does not have"; exit 1; }
+          done < <(grep -oE 'href="reports/[^"#]+/TestRunReport\.html#sid-[0-9a-f]+"' page.html | sed -E 's/^href="//; s/"$//')
 ```
 
-**Dry run, 2026-09-27** (RUN: the step's commands under `set -eo pipefail`, with the URL passed in, since the
-field is still empty). Against the live root it passed, reading `# No failures` from all six linked
-digests. Against `.../BreakfastProvider/demo/` it failed with 404. Given a page that links the docker xUnit
-lane, it failed on that digest's `# Failures` line. Given a page that links no report, as a lane URL under
-H2 or H3 would be, it passed on the page alone.
+The second loop reads the landing page's `#sid-` links, which it has none of until Q5's is added. A report
+marks each scenario with `data-stable-id` (`ReportGenerator.cs`), so a renamed scenario is caught the week
+it moves, where a visitor would otherwise land at the top of the report (F22).
+
+**Dry run, 2026-09-27** (RUN: the step's commands under `set -eo pipefail`, as GitHub's `bash` shell runs
+them, with the URL passed in, since the field is still empty). The sketch above:
+- against the live root, passed, reading `# No failures` from all six linked digests;
+- against `.../BreakfastProvider/demo/`, failed with 404;
+- given the root with F30's link added, passed, finding the scenario in the xUnit report;
+- given the same link with an id no scenario has, failed ("names a scenario the report does not have");
+- given a page that links the docker xUnit lane, failed on that digest's `# Failures` line;
+- given a page that links no report, as a lane URL under H2 or H3 would be, passed on the page alone.
+
+Re-run on 2026-09-28 at 07:05 UTC against the live root, and against the root with F30's link: both passed.
+
+actionlint 1.7.12, with shellcheck 0.11.0, passes it. The first sketch's `for report in $(grep ...)` drew
+shellcheck's SC2013, which the `while read` loops replace.
+
+Its schedule, against GitHub's documented rules (F34):
+- **Timing.** Monday 06:17 UTC keeps it off the start of the hour, when GitHub delays scheduled runs and,
+  under enough load, drops some; a dropped run costs one week.
+- **Disabling.** In a public repository GitHub disables a scheduled workflow after 60 days without repository
+  activity, which Kronikol's pace of releases makes moot. `gh workflow enable` turns it back on.
+- **Who is told.** A failure is told to the user who created the workflow or last changed its cron line, so
+  that should be the owner: commit it from the owner's account, or change its cron line once after a session
+  commits it.
 
 Before it is committed: run it once by `workflow_dispatch` against the real field, then once with the
 URL swapped for a path that does not exist, and see it fail. A check that has never failed has not been
@@ -418,9 +502,10 @@ and 390 px; the homepage answers 200, and a report it links draws a diagram at b
 and a scenario are opened (F21); the final text has passed §5.3 and every noun in it has a line in §5.4;
 and §12 holds the before-readings.
 
-**What cannot be measured, said plainly.** GitHub does not count clicks on the homepage link, and a Pages
-site has no analytics (REFERENCE), so whether visitors follow the link is not observable from either
-repository. The item's success is binary: the two fields are set, true, free of tells, and the link is
+**What cannot be measured, said plainly.** GitHub documents no count of clicks on the homepage link and no
+analytics for a Pages site (READ, F34). The About link also sends no referrer (`noreferrer`, F23), so even an
+analytics tool on the demo would count a visitor it sends as a direct one. Whether visitors follow the link
+is not observable from either repository. The item's success is binary: the two fields are set, true, free of tells, and the link is
 alive.
 
 ## 9. Risks
@@ -428,14 +513,14 @@ alive.
 | Risk | Answer |
 |---|---|
 | The demo shows fixed defects to every visitor (F5) | It did until 11:57 UTC on 2026-09-27; since then it is 3.31.4. The releases since change the file's size, not the first look |
-| The link breaks later (F6) | S4, or at worst the next time someone opens the About column |
+| The link breaks later (F6) | S4, which also catches a deep link on the landing page that stops resolving (F30), or at worst the next time someone opens the About column |
 | A bad night: the demo shows a failing run | A new failure holds the deploy back, so the last site stays up; a failure that persists is published from its second run, as the docker lanes' three are (F6, F20). The six linked reports are green today, and S4's digest step would catch one that is not within a week |
 | The description over-claims (F9, F10) | §5.4, and the check's words to prove |
 | The description reads as generated | §5.3, and the owner's hand |
-| It becomes outreach | Nothing here announces anything. Editing a repository's fields notifies nobody (REFERENCE). The topics stay as they are |
-| A phone visitor waits on a large download | Measured by size: a linked report is 0.91 to 1.23 MB as sent, and the first diagram adds the engine, about 1.7 MB once and then kept for a year (F10, F20). Under H1 the visitor picks a report before paying for one. The time is the owner's |
+| It becomes outreach | Nothing here announces anything. No notification GitHub documents covers a settings edit (READ, F34). The topics stay as they are |
+| A phone visitor waits on a large download | Measured by size, and without the network by time. A linked report is 0.91 to 1.23 MB as sent, and the first diagram adds the engine, about 1.7 MB once and then kept for a year (F10, F20). The browser's own work to the first diagram is 2.1 to 3.7 s after a deep link (F31). Under H1 the visitor picks a report before paying for one. The network's time is the owner's |
 | A visitor's network blocks jsDelivr | Every diagram becomes a render error naming the engine's address (F10). Accepted for the homepage: it is the product's default, and the page says what failed. Drawing the demo without the CDN is BreakfastProvider's configuration, not this plan |
-| A visitor finds no diagram on the first screen | Three taps to the first one (F21). Q5's deep link on the landing page makes it one, once the demo is on 3.31.10 or later (F28) |
+| A visitor finds no diagram on the first screen | Three taps to the first one (F21). Q5's deep link on the landing page (F30 names it) makes it one, once the demo is on 3.31.10 or later (F28) |
 | Something private in the demo | It is public today and linked from the README, so pointing the homepage at it adds visitors, not exposure. The owner glances anyway (S0 step 4) |
 
 ## 10. Out of scope, and where it lives
@@ -443,9 +528,9 @@ alive.
 | Item | Where |
 |---|---|
 | The README as a landing page: twenty-five words, one screenshot of the new look, depth below the fold, and the em dashes of its opening | 13.1 |
-| A custom social preview image. A screenshot now would show the look that stage 6 and 12.1 replace; until then GitHub's own card carries the new description | 13.1 |
+| A custom social preview image. A screenshot now would show the look that stage 6 and 12.1 replace; until then GitHub's own card carries the new description. GitHub's size for it: 1280 × 640 px for best display, under 1 MB (F34) | 13.1 |
 | The topics | Unchanged: at the maximum, and "done right" (F3) |
-| nuget.org's package description and project URL | Package metadata, so it ships in a release. The project URL already points here, and the description is mechanism-first and opens with the old name (F16). If the owner wants the new words there too, they ride along with the next release; they are not a reason for one |
+| nuget.org's package description, project URL and README | Package metadata and packaged documentation, so they ship in a release. The project URL already points here. The description is mechanism-first and opens with the old name (F16). The README links no demo and opens with a tell (F33). If the owner wants the new words there too, they ride along with the next release, and S3's line can go into the README the same way (§6); none is a reason for a release |
 | The old name's packages on nuget.org: their deprecation, and the old address they send people to (F25) | 13.4, `LLM_FIRST_PLAN.md` §14.3's outward steps |
 | The deep-link defect (F28) | Fixed in 3.31.10. The demo gets it with BreakfastProvider's next pin move, and this plan's Q5 deep link waits for that |
 | A report that opens a scenario on arrival | Not proposed. The demo gets it from a `#sid-` link (F22), with no change to the product |
@@ -461,8 +546,8 @@ alive.
 | Q1 | Which URL? | H1, the root, with its final slash. Live, it passes every check a session can run, the demo is on 3.31.4 since 2026-09-27, and what it lacks is the landing page's to fix (Q5), not a reason to wait (§4). Otherwise H2 with the best lane, then H3 so the homepage never holds a lane path |
 | Q2 | Which words? | The owner's. Start from B (".NET" early, no claim about every call, a kept part that ends on a whole phrase) and rewrite it by hand; run §5.3 on the result (§5) |
 | Q3 | Does the README's first line point at the demo now, or wait for 13.1? | Now, as one line to the root, with the example image linking to the demo. It is as passive as the homepage, and the rewrite and screenshot stay in 13.1 (§6) |
-| Q4 | A guard on the homepage? | Yes, the weekly workflow in this repository, reading the reports the homepage links as well as the page (§7). Dry-run on 2026-09-27; proved by one failing run before it is kept, and committed after S1 |
-| Q5 | If H1: the landing page's title (`Breakfast Provider — Kronikol`), a line on that page saying what it is to someone arriving from Kronikol, and a link to one scenario by `#sid-` so a diagram is one tap from the root rather than three (F21, F22). And BreakfastProvider's own description, which still names Kronikol by its old initials (F17) | All of it, in BreakfastProvider (its workflow and its settings), in a commit of its own, in the owner's words as for S2; the deep link once the demo is on 3.31.10 or later (F28). The title is the browser tab's text for every visitor the homepage sends (F8), the hero names Kronikol only as "Powered by" (F18), and the landing page's source card leads to that description |
+| Q4 | A guard on the homepage? | Yes, the weekly workflow in this repository, reading the reports the homepage links, and any deep link on it, as well as the page (§7). Linted, and dry-run in six cases on 2026-09-27; proved by one failing run before it is kept, and committed after S1 from the owner's account, so its failures reach the owner (F34) |
+| Q5 | If H1: the landing page's title (`Breakfast Provider — Kronikol`), a line on that page saying what it is to someone arriving from Kronikol, and a link to one scenario by `#sid-` so a diagram is one tap from the root rather than three (F21, F22). And BreakfastProvider's own description, which still names Kronikol by its old initials (F17) | All of it, in BreakfastProvider (its workflow and its settings), in a commit of its own, in the owner's words as for S2. The deep link once the demo is on 3.31.10 or later (F28): `reports/xunit/TestRunReport.html#sid-fb8c79cbd78d82b0`, one HTTP call, one SQL insert and one message in a diagram that reads on a phone (F30). The title is the browser tab's text for every visitor the homepage sends (F8), the hero names Kronikol only as "Powered by" (F18), and the landing page's source card leads to that description |
 
 ## 12. Results (filled in at execution)
 
@@ -475,9 +560,10 @@ alive.
 | Search positions (S0 step 3) | The web (F17): "Kronikol" second, behind Kronikol4J; the five phrasings, absent; the demo, not found by name. nuget.org (F24): the three questions find nothing; "plantuml" second, "sequence diagram" sixth, "reqnroll report" ninth, and the old name ahead of the new on every query they share. GitHub's search: the owner's | |
 | Social preview | GitHub's generated card, no custom image; it prints the whole description on three lines (RUN, F15) | |
 | Public counts | 17 stars, 1 fork, 2 watchers, 2 contributors, 1 "used by" (RUN). nuget.org: `Kronikol` 127,720 downloads, the 62 Kronikol packages 893,458, the 56 TestTrackingDiagrams packages 2,520,149 (RUN, F16, F25) | |
-| The demo (S0 step 4) | 3.31.4 since 11:57 UTC, 3.29.0 before (RUN, F5). The root and all 18 reports answer 200; the six linked reports are green (F20); nothing scrolls sideways at either width; no diagram on a report's first screen, the first three taps from the root (F21). The first diagram's time and the glance: the owner's | |
-| nuget.org | 3.31.9 latest; the project URL is the repository; the description is mechanism-first (RUN, F16) | |
-| S3 and S4 | S4's check dry-run on the live site (RUN, §7) | |
+| The demo (S0 step 4) | 3.31.4 since 11:57 UTC, 3.29.0 before (RUN, F5). The root and all 18 reports answer 200; the six linked reports are green (F20); nothing scrolls sideways at either width; no diagram on a report's first screen, the first three taps from the root (F21). Without the network, the first diagram 2.1 to 3.5 s after a deep link at 1280 px, 3.5 to 3.7 s at 390 px with the CPU slowed, and 0.1 to 0.5 s after the last tap (RUN, F31). On a real phone and network, and the glance: the owner's | |
+| What the demo draws | The xUnit lane: 540 HTTP calls, 255 SQL queries, 214 other database queries and 258 messages; 53 of its 203 diagrams hold all three of B's nouns (RUN, F29). Q5's link: `#sid-fb8c79cbd78d82b0`, landing on 3.31.10 and not on the demo's 3.31.4 (RUN, F30) | |
+| nuget.org | 3.31.9 latest; the project URL is the repository; the description is mechanism-first (RUN, F16); the README it shows links no demo (READ, F33) | |
+| S3 and S4 | S4's check linted and dry-run in six cases, the deep-link step among them (RUN, §7) | |
 
 ## Appendix A. The Kronikol4J ledger entries 3.31.10 owes
 
@@ -509,8 +595,11 @@ first is F28's; the second is a fault CI found in 3.31.9 while this release was 
 ## Appendix B. What 3.31.10 left for the owner (2026-09-27)
 
 1. **Publish it.** The tag starts `release.yml`, which builds, runs `Kronikol.Tests`, pushes the packages to NuGet
-   and makes the GitHub release. Tag the commit CI passed, not a later one:
-   `git fetch origin && git tag v3.31.10 571a98d && git push origin v3.31.10`.
+   and makes the GitHub release with generated notes. Tag `28e4460`, the last commit 3.31.10 needs. It adds to
+   `571a98d` only a test fix and its changelog line (2026-09-28: the code-cache fact lost a race to parallel renders
+   in CI's Core Tests on a plan-only commit), so it builds the same packages. Its CI was queued when this was
+   written; tag it once that is green, or tag `571a98d`, whose CI passed and which builds the same packages:
+   `git fetch origin && git tag v3.31.10 28e4460 && git push origin v3.31.10`.
 2. **The wiki note.** In `Generated-Reports.md`, section "Deep links (`#scenario-` and `#sid-`)", after the
    paragraph that ends "resolves to the first match in document order.", add:
 
