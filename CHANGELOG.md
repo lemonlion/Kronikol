@@ -6,8 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
-**No version change - a GitHub Actions template in the repository.** No package contains it, so nothing a
-release ships changes.
+**No version change: a GitHub Actions template in the repository.** The action ships in no package; the
+`Kronikol.Templates` package README gains a paragraph that points at it. The action first appears in the tag of the
+release that follows, and from that tag its inputs, the calling workflow its README gives and the comment's format
+are public surface under this file's semantic versioning.
 
 ### Added
 
@@ -15,12 +17,30 @@ release ships changes.
   A composite action that keeps one pull-request comment linking the Kronikol report artifact each workflow run
   uploads, with the time it was uploaded and when it expires. The comment is created on the first run and each
   artifact owns a line of it, so several lanes can share one comment.
-  - An older run that finishes after a newer one never replaces the newer link.
+  - An older run that finishes after a newer one never replaces the newer link. A line's hidden tag is read up to
+    its run id whatever follows it, and a later version adds fields only after the run id, so a lane still on this
+    version keeps reading the lines a newer one writes.
+  - An input given over several lines is written on one, each run of whitespace as one space, so a line keeps the
+    identity the next run looks for.
+  - The comment ends in a hidden `<!-- <comment-key>:end -->` marker. Whatever follows it is kept as it is on every
+    rewrite and never read as a line; anything else written into the comment is dropped by the next run.
   - Only the action's own comment is edited, and a hand edit (CRLF line endings, trailing whitespace) still
     parses.
-  - Inputs: `artifact-name`, `label`, `icon`, `heading`, `report-file` and `comment-key`.
-  - `PrReportLinkActionTests` runs the script out of `action.yml` under node against a GitHub held in memory,
-    and holds the README's example workflow to the inputs the action declares.
+  - Inputs: `artifact-name`, `label`, `icon`, `heading`, `report-file` and `comment-key`. `heading` and
+    `report-file` belong to the comment, so the lanes that share it pass the same ones.
+  - The README's calling job waits in a per-pull-request concurrency group with `queue: max`. With the default
+    queue a group holds one waiting job, and a third job cancels it, leaving its lane's line on an older link.
+    actionlint 1.7.12 does not know `queue` yet, and the README gives the line that ignores it. The README's
+    example uses `actions/checkout@v7`, `actions/setup-dotnet@v6` and `actions/upload-artifact@v7`, and shows the
+    comment exactly as the action writes it.
+- **A live lane, `.github/workflows/pr-report-link.yml`.** On a pull request that changes the action, it runs the CI
+  Preview all-passing example with `PublishCiArtifacts = true`, uploads its reports and calls the action by path,
+  so GitHub itself writes the comment. It is not a required check: a workflow its paths filter skips never reports.
+- Tests: `PrReportLinkActionTests` (22 facts) runs the script out of `action.yml` under node against a GitHub held
+  in memory, and holds the README's example workflow and the live lane to the inputs the action declares.
+  `PackageReadmeLinkTests` reads every package README `dotnet pack` ships and fails on a link nuget.org would
+  render with an empty address (anything but `http(s)://` or a `#fragment`), which the new paragraph's relative
+  link did.
 
 ## [3.32.4] - 2026-09-28
 
@@ -7580,7 +7600,6 @@ from four `kronikol query` verbs. The bug fixes travel with it and do not lower 
 ### Notes
 - Initial release series. See [GitHub Releases](https://github.com/lemonlion/Kronikol/releases) for detailed history.
 
-[Unreleased]: https://github.com/lemonlion/Kronikol/compare/v2.0.139-beta...HEAD
 [2.0.139-beta]: https://github.com/lemonlion/Kronikol/compare/v2.0.138-beta...v2.0.139-beta
 [2.0.138-beta]: https://github.com/lemonlion/Kronikol/compare/v2.0.137-beta...v2.0.138-beta
 [2.0.137-beta]: https://github.com/lemonlion/Kronikol/releases/tag/v2.0.137-beta
