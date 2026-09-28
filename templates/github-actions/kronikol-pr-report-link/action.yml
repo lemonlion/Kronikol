@@ -44,8 +44,15 @@ runs:
         COMMENT_KEY: ${{ inputs.comment-key }}
       with:
         script: |
-          const { ARTIFACT_NAME: artifactName, LABEL, ICON: icon, HEADING: heading, REPORT_FILE: reportFile, COMMENT_KEY: key } = process.env;
-          const label = LABEL || artifactName;
+          const { ARTIFACT_NAME: artifactName, COMMENT_KEY: key } = process.env;
+          // A `with:` value can span lines in YAML, and a line of the comment has to stay one line or the next run
+          // cannot find it. So the text the inputs put into the comment is flattened, each run of whitespace to one
+          // space.
+          const oneLine = value => (value ?? '').replace(/\s+/g, ' ').trim();
+          const label = oneLine(process.env.LABEL) || artifactName;
+          const icon = oneLine(process.env.ICON);
+          const heading = oneLine(process.env.HEADING);
+          const reportFile = oneLine(process.env.REPORT_FILE);
           const { owner, repo } = context.repo;
           const runId = context.runId;
 
@@ -107,8 +114,9 @@ runs:
           const lines = (existing?.body ?? '').split(/\r?\n/).filter(l => l.startsWith('- ') && l.includes(`<!-- ${key}:`));
 
           const own = lines.find(l => l.includes(tag(artifactName)));
-          // Read the run id from the tag wherever it sits, so whitespace a hand edit leaves after it doesn't hide it.
-          const ownRun = Number(own?.match(/ run:(\d+) -->/)?.[1] ?? 0);
+          // The run id is the digits straight after the line's own tag, whatever follows them: whitespace a hand edit
+          // leaves, or a field a later version adds. A later version adds fields only after the run id.
+          const ownRun = Number(own?.slice(own.indexOf(tag(artifactName)) + tag(artifactName).length).match(/^\d+/)?.[0] ?? 0);
           // Run ids only grow, so a larger one means a newer push's run already wrote this line.
           if (ownRun > runId) {
             core.info(`Run ${ownRun} is newer and already linked its report, so this run leaves the comment alone.`);
