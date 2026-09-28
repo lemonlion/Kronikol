@@ -6,12 +6,31 @@
 # partial heuristic, the rename suggestions, later the view) against the ledger it is appended to.
 # A push that failed while the branch did not move, checked after the pause, is not a race (a ruleset,
 # a hook, a read-only token), and is not retried.
-# Usage: prototype_record.sh <fragments-dir> <origin-url>
+# Usage: prototype_record.sh <fragments-dir> <origin-url>   (KRONIKOL_TOKEN: the token, for an http(s) origin)
 set -euo pipefail
 FRAGMENTS=$(cd "$1" && pwd) ORIGIN=$2
 BRANCH=${KRONIKOL_BRANCH:-kronikol-history}
 ATTEMPTS=${KRONIKOL_PUSH_ATTEMPTS:-8}
 REPO="$RUNNER_TEMP/kronikol-history-record"
+
+# Git settings for this script's own git calls, passed in the environment so they reach no file and no
+# command line: never ask for anything (no terminal prompt, no credential manager window), never hand the
+# machine's credential helpers a failed token (git would erase what they store), no line-ending conversion,
+# and no hook of the machine's (a policy hook meant for people's commits). The rest of the machine's
+# configuration stands: proxies, CA bundles and signing keep working. The token goes in as checkout's
+# header, scoped to the origin's server, and is masked before its first use.
+export GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=Never
+cfg=(credential.helper "" core.autocrlf false core.hooksPath "$RUNNER_TEMP/kronikol-history-no-hooks")
+if [ -n "${KRONIKOL_TOKEN:-}" ]; then
+  basic=$(printf 'x-access-token:%s' "$KRONIKOL_TOKEN" | base64 | tr -d '\n')
+  echo "::add-mask::$basic"
+  server=$(printf '%s\n' "$ORIGIN" | sed -E 's#^(https?://[^/]+)/.*#\1/#')
+  cfg+=("http.$server.extraheader" "AUTHORIZATION: basic $basic")
+fi
+export GIT_CONFIG_COUNT=$(( ${#cfg[@]} / 2 ))
+for ((i = 0; i < ${#cfg[@]} / 2; i++)); do
+  export "GIT_CONFIG_KEY_$i=${cfg[2 * i]}" "GIT_CONFIG_VALUE_$i=${cfg[2 * i + 1]}"
+done
 
 if [ -z "$(find "$FRAGMENTS" -name History.run.json -not -path '*/runs/.incoming-*' -print -quit)" ]; then
   echo "no History.run.json under $FRAGMENTS: nothing to record"
@@ -52,8 +71,8 @@ for attempt in $(seq 1 "$ATTEMPTS"); do
     echo "nothing new to record"
     exit 0
   fi
-  git -C "$REPO" commit -q -m "Record run ${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT} (${GITHUB_SHA::7})"
-  if git -C "$REPO" push -q "$ORIGIN" "HEAD:refs/heads/$BRANCH" 2> "$RUNNER_TEMP/push.err"; then
+  git -C "$REPO" commit -q --no-verify -m "Record run ${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT} (${GITHUB_SHA::7})"
+  if git -C "$REPO" push -q --no-verify "$ORIGIN" "HEAD:refs/heads/$BRANCH" 2> "$RUNNER_TEMP/push.err"; then
     echo "pushed on attempt $attempt"
     exit 0
   fi

@@ -1,0 +1,10 @@
+five green runs of one suite recorded: 5 run lines
+A. attempt 1 (gh:6:1), gated before its fold: exit 1; new-failures: 1 gate: FAILED (new-failures 1 > 0)
+      s0  Apple Cinnamon Muffins › Different muffin recipes should produce the expected batch [recipeName: "Classic", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Plain Flour, Apples = Granny Smith, Cinnamon = Ceylon }, Toppings = System.Collections.Generic.List`1[Breakf…]  broke — passed in gh:5:1 (9f242d4), failing now
+attempt 1 folded: 6 run lines, the last gh:6:1 F
+B. attempt 2 (gh:6:2), the re-run, the same failure: exit 0; new-failures: 0 already-failing: 1 gate: passed
+      s0  Apple Cinnamon Muffins › Different muffin recipes should produce the expected batch [recipeName: "Classic", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Plain Flour, Apples = Granny Smith, Cinnamon = Ceylon }, Toppings = System.Collections.Generic.List`1[Breakf…]  failing — failing since gh:6:1 (9f242d4), 2 runs
+C. attempt 1's report gated again after its fold: exit 1; new-failures: 1 gate: FAILED (new-failures 1 > 0)
+      s0  Apple Cinnamon Muffins › Different muffin recipes should produce the expected batch [recipeName: "Classic", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Plain Flour, Apples = Granny Smith, Cinnamon = Ceylon }, Toppings = System.Collections.Generic.List`1[Breakf…]  broke — passed in gh:5:1 (9f242d4), failing now
+D. attempt 2 against the ledger without gh:6:1's line: exit 1; new-failures: 1 gate: FAILED (new-failures 1 > 0)
+      s0  Apple Cinnamon Muffins › Different muffin recipes should produce the expected batch [recipeName: "Classic", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Plain Flour, Apples = Granny Smith, Cinnamon = Ceylon }, Toppings = System.Collections.Generic.List`1[Breakf…]  broke — passed in gh:5:1 (9f242d4), failing now
