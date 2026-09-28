@@ -35,6 +35,7 @@ After every session of work is complete and the full test suite has passed:
 
 - Increment the version in **all** packages (not just the main one), per the rule above.
 - Update the Change Log with a clear description of the changes: new features, bug fixes, breaking changes. **State which part of the version moved and why**, so the number can be checked against the release.
+- If the Change Log opens with an `## [Unreleased]` section, fold it into the release's section. It holds changes merged without a release (documentation, a CI template), and this release is the first to carry them, so they count toward its bump; a plan may also ask for the tag to be recorded (`plans/ROADMAP.md` 2.2 did).
 - Commit, create a git tag (`v{version}`), and push both the commit and the tag to origin.
 
 ## Documentation
