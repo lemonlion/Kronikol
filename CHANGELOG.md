@@ -4,6 +4,77 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.32.3] - 2026-09-28
+
+**Patch - a fourth audit of `plans/DIAGRAM_COLOURS_PLAN.md` (stage 1 P3, plan §12.7), mostly of 3.31.8's views for a
+report drawn when it was written.** Bug fixes with nothing new for a consumer to call, so the patch part moved. Report
+output changes (the page script that binds internal-flow links and splits diagrams, and the run report's component
+panel under `Server`), recorded in the Kronikol4J divergence ledger. Template pins stay at 3.31.10, the newest published
+release.
+
+Every fact 3.31.8 wrote for a page's links set `InternalFlowHasDataBehavior.ShowLink`, and the default is
+`ShowLinkOnHover`; its `Local` facts drew a hand-written stand-in for the Java engine's SVG. The first three fixes sit
+in that gap.
+
+### Fixed
+
+- **Export Filtered HTML lost every internal-flow link of a `NodeJs` report in the default mode.** Under
+  `ShowLinkOnHover` the page repaints a bound link in the ink of the text beside it. The export copies that paint and
+  none of the listeners, and the exported page found no link-coloured text to bind. On the example project's LightBDD
+  suite written under `NodeJs`: 58 links showed on hover and opened their popups on the page, and none did in the export
+  (3.31.10); on this release, 58 and 58. The page now keeps the fill it painted a link in (`data-iflow-fill`) and reads
+  it back when it binds, so a copy of a bound diagram binds again. The 3.31.8 record said such a diagram needed nothing
+  from 3.31.9's export fix; in the default mode it did.
+- **Under `Server` and `Local`, the default `ShowLinkOnHover` was never applied, and a link with no flow still looked like
+  one.** The Java engine draws a link as an `<a>`, which the page left to the popup script: that opens the link but
+  never touched its look, so every link rested blue and underlined, and one whose segment had no data, which 3.31.9 made
+  open nothing, kept the blue and the underline. Such a link now rests in the text's ink and shows blue and underlined on
+  hover, as under `BrowserJs` and `NodeJs`; one with no flow rests in that ink without an underline, in either mode. A
+  label wrapped onto several lines highlights as one link. **Behaviour change:** a `Server` or `Local` report's links no
+  longer show until hovered, which is what the option's documentation always said.
+- **Under `Server` with inline SVG (the default with internal-flow tracking), the run report's component panel was an
+  image of the server's address.** Every sequence diagram of such a report is fetched when the report is written, so the
+  page needs no server to show it; the panel alone drew only where the reader could reach the server, though its own
+  documentation and the wiki said it was inlined. It is fetched with the rest now (`DefaultDiagramsFetcher.FetchServerSvg`,
+  shared by both), and a fetch that fails says why in the panel and records a `RenderFailure`.
+- **The fragment splitter took a service called "Note" for a note (from 3.31.8).** A participant's alias is its service's
+  name, so such a service's calls read `Note -> OrdersAPI: …`, which both engines draw as messages. 3.31.8's note pattern
+  took any line starting with `note`, `hnote` or `rnote`, in any case, for a note statement, so none of those calls was
+  counted: a long diagram of them was not split, and a split one numbered its later fragments too low. The
+  statement-length check had read such a line as a note since 3.0.48, and so never named one that was too long. A note
+  statement now needs where it goes (`left`, `right`, `over`, `across`) after the keyword and any stereotype, and the
+  check reads notes by the splitter's rule.
+
+### Documentation
+
+- The wiki's telemetry sentences (PlantUML Browser Rendering, Diagnostics and Debugging) name `mode` `'idle'`, which a page
+  drawn when it was written shows until a view first asks for the engine (3.31.8). Internal Flow Tracking says when
+  `ShowLinkOnHover` and `HideLink`'s look began to hold under `Server` and `Local`; Inline SVG Rendering, when the
+  `Server` panel began to be inlined.
+
+### Tests
+
+- `OnDemandRenderingTests`, in the default mode, which none of the 3.31.8 facts used. Under `NodeJs`: a link at rest,
+  hovered, released and clicked; the same in a filtered export (red before the fix); a `ShowLink` export (a control).
+  Under `Local`, with the Java engine's SVG of the facts' own source (drawn by the plan harness's `ikvm-render.cs`): a
+  link at rest and hovered (red), a link with no flow in both modes (red), and the export (red). An on-demand page whose
+  engine address refuses the connection says in the Activity view that the engine is unavailable: the 3.31.8 promise
+  for a reader offline, which no fact held.
+- `CapturedTextSplitTests.A_service_named_Note_draws_messages_the_splitter_counts` (red): the count, the fragments'
+  numbering, the over-long message, and every note header Kronikol writes still read as a note.
+- `OnDemandRenderingReportTests`: the `Server` panel inline from a local server, and its reason when the server cannot be
+  reached (both red). The local server speaks HTTP over a socket: `HttpListener` refuses a path segment longer than 260
+  characters, and an encoded C4 diagram is longer.
+- Red means red on 3.31.10's code (`e7e85044`; 3.32.0 and 3.32.1 do not touch it) with the new tests copied in. Five
+  mutations, each restored after, each turned its own facts red: the recorded fill ignored (both exports), the export's
+  lookup for it dropped (the `NodeJs` export), the anchor's title not read (3), the Java links' look left alone (4), the
+  length check's old note pattern (1).
+- Suites on 3.32.2 with this release: core unit 6,075 passed, 1 skipped, and 1 timing fact that failed under other
+  sessions' load and passed three runs of three alone; E2E 957 passed (the project less the wiki GIF, screenshot and
+  showcase classes). Before the rebase, on 3.32.1: E2E 950 of 950, then 949 of 950 with a Release build running beside
+  it, the one a 30-second wait for a popup's diagram in `ExportFilteredHtmlRenderingTests`, which passed four runs of
+  four alone.
+
 ## [3.32.2] - 2026-09-28
 
 **Patch - a second audit of the engine pin plan (`plans/ENGINE_PIN_PLAN.md` §10.5, stage 1 P4, roadmap 1.8), at the

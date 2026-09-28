@@ -76,17 +76,20 @@ public static class ComponentDiagramReportGenerator
     internal sealed record DrawnDiagram(string? InlineSvg, string? ImageSource, string? Failure);
 
     /// <summary>
-    /// Draws the run report's embedded component diagram the way this page draws the standalone one, for a report whose
+    /// Draws the run report's embedded component diagram as the report draws its sequence diagrams, for a report whose
     /// diagrams are drawn when it is written: the Node renderer's SVG under <c>NodeJs</c>, the delegate's image under
     /// <c>Local</c>, the server's under <c>Server</c>. Null under <c>BrowserJs</c>, where the page draws it. Inline SVG
-    /// when <see cref="ReportConfigurationOptions.InlineSvgRendering"/> is on (internal-flow tracking turns it on), else
-    /// an image source, never a file of its own. A render that fails costs the panel its picture and not the report: it
-    /// comes back as the reason, and the run records a <see cref="DiagnosticKind.RenderFailure"/>.
+    /// when <see cref="ReportConfigurationOptions.InlineSvgRendering"/> is on (internal-flow tracking turns it on), the
+    /// server's fetched now as each sequence diagram's is; else an image source (under <c>Server</c> the server's address,
+    /// as <c>ComponentDiagram.html</c> shows it), never a file of its own. A render that fails costs the panel its picture
+    /// and not the report: it comes back as the reason, and the run records a <see cref="DiagnosticKind.RenderFailure"/>.
     /// </summary>
     /// <remarks>
     /// Until 3.31.8 the run report embedded the diagram for the browser to draw under every renderer, and only a
     /// <c>BrowserJs</c> page carries the engine, so the panel opened blank; under <c>NodeJs</c> it was also written with
-    /// the C4 library, which neither JavaScript engine can load (DIAGRAM_COLOURS_PLAN §12.6).
+    /// the C4 library, which neither JavaScript engine can load (DIAGRAM_COLOURS_PLAN §12.6). From 3.31.8 until 3.32.3 an
+    /// inline report under <c>Server</c> still gave the panel the server's address, so it drew only where the reader could
+    /// reach that server (§12.7).
     /// </remarks>
     internal static DrawnDiagram? DrawEmbedded(string plantUml, ReportConfigurationOptions options)
     {
@@ -117,7 +120,12 @@ public static class ComponentDiagramReportGenerator
                 }
                 default:
                 {
-                    var format = inline || options.PlantUmlImageFormat is PlantUmlImageFormat.Svg or PlantUmlImageFormat.Base64Svg ? "svg" : "png";
+                    if (inline)
+                    {
+                        using var httpClient = new HttpClient();
+                        return new DrawnDiagram(DefaultDiagramsFetcher.FetchServerSvg(httpClient, options.PlantUmlServerBaseUrl, plantUml), null, null);
+                    }
+                    var format = options.PlantUmlImageFormat is PlantUmlImageFormat.Svg or PlantUmlImageFormat.Base64Svg ? "svg" : "png";
                     return new DrawnDiagram(null, $"{options.PlantUmlServerBaseUrl}/{format}/{PlantUmlTextEncoder.Encode(plantUml)}", null);
                 }
             }

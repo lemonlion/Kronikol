@@ -134,6 +134,100 @@ public class OnDemandRenderingReportTests : IDisposable
         Assert.Contains($"<img src=\"{src}\"", standalone);
     }
 
+    /// <summary>
+    /// A PlantUML server on a free local port that answers every request with <see cref="Served"/>, as a real server
+    /// answers <c>/svg/</c>, XML declaration first. It speaks HTTP over a bare socket: <see cref="HttpListener"/> refuses a
+    /// path segment longer than 260 characters with a 400, and an encoded C4 diagram is longer than that.
+    /// </summary>
+    private sealed class LocalPlantUmlServer : IDisposable
+    {
+        public const string Served = "<svg xmlns=\"http://www.w3.org/2000/svg\" data-drawn-by=\"the-server\"></svg>";
+        private readonly System.Net.Sockets.TcpListener _listener = new(IPAddress.Loopback, 0);
+        public string BaseUrl { get; }
+
+        public LocalPlantUmlServer()
+        {
+            _listener.Start();
+            BaseUrl = $"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/plantuml";
+            _ = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    System.Net.Sockets.TcpClient client;
+                    try { client = await _listener.AcceptTcpClientAsync(); }
+                    catch { return; }
+                    _ = Task.Run(async () =>
+                    {
+                        using (client)
+                        {
+                            var stream = client.GetStream();
+                            var request = new StringBuilder();
+                            var buffer = new byte[8192];
+                            while (!request.ToString().Contains("\r\n\r\n", StringComparison.Ordinal))
+                            {
+                                var read = await stream.ReadAsync(buffer);
+                                if (read == 0) return;
+                                request.Append(Encoding.ASCII.GetString(buffer, 0, read));
+                            }
+                            var body = Encoding.UTF8.GetBytes("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" + Served);
+                            var head = Encoding.ASCII.GetBytes($"HTTP/1.1 200 OK\r\nContent-Type: image/svg+xml\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n");
+                            await stream.WriteAsync(head);
+                            await stream.WriteAsync(body);
+                        }
+                    });
+                }
+            });
+        }
+
+        public void Dispose() => _listener.Stop();
+    }
+
+    [Fact]
+    public void Under_server_rendering_with_inline_svg_the_panel_is_the_servers_svg_fetched_when_the_report_is_written()
+    {
+        // Internal-flow tracking (the default) inlines every diagram the server draws, fetched when the report is written, so
+        // the page needs no server to show them. Until 3.32.3 the component panel alone stayed an <img> of the server's
+        // address, drawn only where the reader could reach that server, although DrawEmbedded's own summary and the wiki's
+        // Inline SVG Rendering page said it was inlined with the rest.
+        using var server = new LocalPlantUmlServer();
+        var html = RunReport(o =>
+        {
+            o.PlantUmlRendering = PlantUmlRendering.Server;
+            o.PlantUmlServerBaseUrl = server.BaseUrl;
+        });
+
+        var panel = Panel(html);
+        Assert.False(panel.Contains("component-diagram-failure", StringComparison.Ordinal), panel);
+        Assert.Contains($"<div class=\"plantuml-inline-svg\" id=\"puml-", panel);
+        Assert.Contains(LocalPlantUmlServer.Served, panel);
+        Assert.DoesNotContain("<?xml", panel);
+        Assert.DoesNotContain("<img", panel);
+    }
+
+    [Fact]
+    public void Under_server_rendering_a_panel_the_server_cannot_draw_says_why_and_the_run_records_it()
+    {
+        // Nothing listens on the address: the fetch fails when the report is written, as a sequence diagram's does.
+        var collector = new ReportDiagnosticsCollector();
+        ComponentDiagramReportGenerator.DrawnDiagram? drawn;
+        using (ReportDiagnosticsScope.Begin(collector))
+        {
+            drawn = ComponentDiagramReportGenerator.DrawEmbedded(ComponentSource, new ReportConfigurationOptions
+            {
+                PlantUmlRendering = PlantUmlRendering.Server,
+                PlantUmlServerBaseUrl = "http://127.0.0.1:9/plantuml",
+                InlineSvgRendering = true,
+            });
+        }
+
+        Assert.NotNull(drawn);
+        Assert.Null(drawn.InlineSvg);
+        Assert.Null(drawn.ImageSource);
+        Assert.StartsWith("The component diagram could not be drawn: HttpRequestException", drawn.Failure);
+        var entry = Assert.Single(collector.Entries, e => e.Kind == DiagnosticKind.RenderFailure);
+        Assert.Contains("Drawing the embedded component diagram failed", entry.Message);
+    }
+
     [Fact]
     public void Under_nodejs_the_panel_is_the_node_renderers_svg_of_the_plain_syntax()
     {

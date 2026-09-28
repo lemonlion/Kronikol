@@ -135,4 +135,42 @@ public class CapturedTextSplitTests : DiagramNotePlaywrightBase
 
         Assert.Equal("OK", result);
     }
+
+    [Fact]
+    public async Task A_service_named_Note_draws_messages_the_splitter_counts()
+    {
+        // A participant's alias is its service's name camelized (SanitizePlantUmlAlias), so a service called "Note" draws its
+        // calls as `Note -[#…]> OrdersAPI: …`, which both engines draw as a message. From 3.31.8 the splitter took any
+        // line starting with note, hnote or rnote, in any case, for a note statement, so it counted none of that service's
+        // calls: every later fragment was numbered too low. The statement-length check read such a line as a note too,
+        // and never named one that was too long.
+        await OpenPage();
+
+        var result = await Page.EvaluateAsync<string>($$"""
+            () => {
+                {{SequenceJs}}
+                var errors = [];
+                var counted = window._countArrows(['Note -[#438DD5]> OrdersAPI: GET: /orders/1', 'OrdersAPI -[#438DD5]-> Note: 200']);
+                if (counted !== 2) errors.push('counted ' + counted + ' of 2 messages');
+                var frags = window._splitDiagramSource(sequence(12, ['{"id": 1}']).replace(/\bCaller\b/g, 'Note'), 400);
+                if (frags.length < 3) errors.push('not split: ' + frags.length);
+                var expected = 1;
+                frags.forEach(function (f, k) {
+                    var start = +(f.match(/autonumber (\d+)/) || [])[1];
+                    if (start !== expected) errors.push('fragment ' + (k + 1) + ' starts at ' + start + ', expected ' + expected);
+                    expected += realArrows(f);
+                });
+                var long = window._findOverLongStatement('@startuml\nNote -[#438DD5]> OrdersAPI: ' + 'x'.repeat(2100) + '\n@enduml');
+                if (!long || long.kind !== 'message statement') errors.push('the over-long message was ' + JSON.stringify(long));
+                // Every note Kronikol writes is still a note: a request note with its class, an assertion note, a bar.
+                var notes = ['note<<requestNote>> left', 'note right', 'hnote across <<assertionNote>> #pink', 'note over OrdersAPI'];
+                notes.forEach(function (n) {
+                    if (window._countArrows([n, 'a -> b', 'end note']) !== 0) errors.push('the lines of "' + n + '" were counted');
+                });
+                return errors.length ? errors.join('; ') : 'OK';
+            }
+        """);
+
+        Assert.Equal("OK", result);
+    }
 }
