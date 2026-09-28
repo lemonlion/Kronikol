@@ -1,7 +1,8 @@
 name: PR report link
 
-# Runs the kronikol-pr-report-link action for real, on the pull requests that change it. The in-memory GitHub of
-# PrReportLinkActionTests cannot hold permissions, the bot's identity, re-runs or concurrency. Not a required
+# Runs the kronikol-pr-report-link action for real, on the pull requests that change it or the chain it links: the
+# project this lane tests, and the code that writes the reports-path output the upload reads. The in-memory GitHub
+# of PrReportLinkActionTests cannot hold permissions, the bot's identity, re-runs or concurrency. Not a required
 # check: a workflow its paths filter skips never reports, and a required check would wait for it.
 on:
   pull_request:
@@ -9,6 +10,8 @@ on:
     paths:
       - 'templates/github-actions/kronikol-pr-report-link/**'
       - '.github/workflows/pr-report-link.yml'
+      - 'examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/**'
+      - 'src/Kronikol/Reports/CiArtifactPublisher.cs'
 
 permissions:
   contents: read
@@ -60,3 +63,45 @@ jobs:
         with:
           artifact-name: ci-preview-reports
           label: CI Preview (all passing)
+
+      # The action only warns when it finds nothing to link, so without this step the lane would pass while the
+      # comment went stale. It reads the comment back: the line must link this run's newest upload, unless a newer
+      # run has already linked the report.
+      - name: Check the comment links this run's report
+        uses: actions/github-script@v9
+        env:
+          ARTIFACT_NAME: ci-preview-reports
+        with:
+          script: |
+            const name = process.env.ARTIFACT_NAME;
+            const { owner, repo } = context.repo;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: context.payload.pull_request.number, per_page: 100,
+            });
+            const comment = comments.find(c => c.user?.login === 'github-actions[bot]' && c.body?.startsWith('<!-- kronikol-report-link -->'));
+            const tag = `<!-- kronikol-report-link:${name} run:`;
+            const line = comment?.body.split(/\r?\n/).find(l => l.startsWith('- ') && l.includes(tag));
+            if (!line) {
+              core.setFailed(`The pull request's report comment has no line for ${name}.`);
+              return;
+            }
+            const run = Number(line.slice(line.indexOf(tag) + tag.length).match(/^\d+/)?.[0] ?? 0);
+            if (run > context.runId) {
+              core.info(`Run ${run} is newer and linked ${name}, so this run's line was rightly left alone.`);
+              return;
+            }
+            if (run < context.runId) {
+              core.setFailed(`The line for ${name} still links run ${run}, not this run, ${context.runId}.`);
+              return;
+            }
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner, repo, run_id: context.runId, name, per_page: 100,
+            });
+            const newest = artifacts
+              .filter(a => !a.expired)
+              .sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0))[0];
+            if (!newest || !line.includes(`/actions/runs/${context.runId}/artifacts/${newest.id})`)) {
+              core.setFailed(`The line for ${name} does not link this run's newest upload, ${newest?.id}: ${line}`);
+              return;
+            }
+            core.info(`The comment links this run's ${name}: ${line}`);

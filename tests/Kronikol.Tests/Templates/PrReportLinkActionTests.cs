@@ -36,6 +36,8 @@ public class PrReportLinkActionTests
     private static string ActionDir =>
         Path.Combine(RepoRoot, "templates", "github-actions", "kronikol-pr-report-link");
 
+    private static string LanePath => Path.Combine(RepoRoot, ".github", "workflows", "pr-report-link.yml");
+
     private static void SkipWithoutNode() =>
         Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
 
@@ -124,6 +126,25 @@ public class PrReportLinkActionTests
         Assert.Equal(0, outcome.Writes);
         Assert.Empty(outcome.BotComments);
         Assert.Contains(Unit, Assert.Single(outcome.Warnings), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_expired_upload_is_never_linked_and_the_warning_says_it_expired()
+    {
+        SkipWithoutNode();
+
+        // A link job re-run after its run's artifact expired finds the upload listed with `expired: true`. A line
+        // written then would link a download that is already gone.
+        var outcome = new PullRequest()
+            .Upload(301, 9020, Unit, "2026-09-15T12:00:00Z", "2026-09-16T12:00:00Z", expired: true)
+            .Run(301, Unit)
+            .Go();
+
+        Assert.Equal(0, outcome.Writes);
+        Assert.Empty(outcome.BotComments);
+        var warning = Assert.Single(outcome.Warnings);
+        Assert.Contains(Unit, warning, StringComparison.Ordinal);
+        Assert.Contains("expired", warning, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -480,20 +501,117 @@ public class PrReportLinkActionTests
 
     /// <summary>
     /// The workflow that runs the action for real, on the pull requests that change it, calls it the way the README
-    /// tells a consumer to, and runs whenever the action changes.
+    /// tells a consumer to, checks what it wrote, and runs whenever a link of the chain it proves changes: the
+    /// action, the lane, the project it tests and the code that writes the reports' outputs.
     /// </summary>
     [Fact]
     public void The_live_lane_calls_the_action_as_it_is_declared()
     {
         var action = ActionDefinition.Load(ActionDir);
-        var lane = ActionDefinition.LoadYaml(File.ReadAllText(Path.Combine(RepoRoot, ".github", "workflows", "pr-report-link.yml")));
+        var laneText = File.ReadAllText(LanePath);
+        var lane = ActionDefinition.LoadYaml(laneText);
 
         Assert.Equal(1, CallsOfTheAction(lane, action));
+
+        var check = LaneCheck.Load();
+        Assert.True(check.Env.TryGetValue("ARTIFACT_NAME", out var checkedName) && checkedName == check.ArtifactName,
+            $"the lane's check reads the comment for \"{checkedName}\", but the lane links \"{check.ArtifactName}\"");
 
         var pullRequest = (YamlMappingNode)((YamlMappingNode)lane["on"])["pull_request"];
         var paths = ((YamlSequenceNode)pullRequest["paths"]).Children.Select(p => ((YamlScalarNode)p).Value).ToList();
         Assert.Contains("templates/github-actions/kronikol-pr-report-link/**", paths);
         Assert.Contains(".github/workflows/pr-report-link.yml", paths);
+
+        var tested = Regex.Match(laneText, @"dotnet test (\S+)").Groups[1].Value;
+        Assert.False(string.IsNullOrEmpty(tested), "the lane runs no `dotnet test <project>` step");
+        Assert.Contains(tested + "/**", paths);
+
+        var writers = Directory.EnumerateFiles(Path.Combine(RepoRoot, "src"), "*.cs", SearchOption.AllDirectories)
+            .Where(file => File.ReadAllText(file).Contains("reports-path=", StringComparison.Ordinal))
+            .Select(file => Path.GetRelativePath(RepoRoot, file).Replace('\\', '/'))
+            .ToList();
+        Assert.NotEmpty(writers);
+        Assert.True(writers.All(paths.Contains),
+            "the lane does not run when the code that writes the reports-path output changes: " + string.Join(", ", writers.Where(w => !paths.Contains(w))));
+    }
+
+    /// <summary>
+    /// The live lane runs the README's workflow on GitHub, so it proves the README's actions at the versions the lane
+    /// itself uses. One bumped without the other leaves the README's version unproven.
+    /// </summary>
+    [Fact]
+    public void The_readme_workflow_uses_its_actions_at_the_versions_the_live_lane_runs()
+    {
+        var readme = File.ReadAllText(Path.Combine(ActionDir, "README.md")).ReplaceLineEndings("\n");
+        var workflows = string.Concat(Regex.Matches(readme, @"^```ya?ml\n(.*?)^```", RegexOptions.Singleline | RegexOptions.Multiline)
+            .Select(block => block.Groups[1].Value));
+
+        var inReadme = ActionsUsed(workflows);
+        var inLane = ActionsUsed(File.ReadAllText(LanePath));
+
+        Assert.NotEmpty(inReadme);
+        var unproven = inReadme.Where(use => !inLane.Contains(use)).ToList();
+        Assert.True(unproven.Count == 0,
+            "the README's workflow uses actions the live lane does not run at that version: " + string.Join(", ", unproven));
+    }
+
+    private static HashSet<string> ActionsUsed(string yaml) =>
+        Regex.Matches(yaml, @"uses:\s*(actions/[A-Za-z0-9_.-]+@\S+)").Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The action only warns when it finds nothing to link, so the live lane reads the comment back after it, and
+    /// would otherwise pass while the comment went stale. The check runs here against the same in-memory GitHub.
+    /// </summary>
+    [Fact]
+    public void The_live_lanes_check_fails_when_the_comment_does_not_link_this_runs_newest_upload()
+    {
+        SkipWithoutNode();
+        var check = LaneCheck.Load();
+        var name = check.ArtifactName;
+
+        // Nothing uploaded: the action warns and writes no comment.
+        var none = new PullRequest().Run(101, name).Check(101, check).Go();
+        Assert.Contains(name, Assert.Single(none.Failures), StringComparison.Ordinal);
+
+        // This run uploaded nothing, so the line still links the previous run's report.
+        var stale = new PullRequest()
+            .Upload(101, 9001, name, "2026-09-15T12:00:00Z", "2026-09-16T12:00:00Z")
+            .Run(101, name)
+            .Run(102, name)
+            .Check(102, check)
+            .Go();
+        Assert.Contains("run 101", Assert.Single(stale.Failures), StringComparison.Ordinal);
+
+        // An upload the link did not follow: the line names this run, but not its newest upload.
+        var behind = new PullRequest()
+            .Upload(201, 9003, name, "2026-09-15T13:00:00Z", "2026-09-16T13:00:00Z")
+            .Run(201, name)
+            .Upload(201, 9004, name, "2026-09-15T14:05:00Z", "2026-09-16T14:05:00Z")
+            .Check(201, check)
+            .Go();
+        Assert.Contains("9004", Assert.Single(behind.Failures), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_live_lanes_check_passes_when_this_run_or_a_newer_one_linked_the_report()
+    {
+        SkipWithoutNode();
+        var check = LaneCheck.Load();
+        var name = check.ArtifactName;
+
+        var outcome = new PullRequest()
+            .Upload(101, 9001, name, "2026-09-15T12:00:00Z", "2026-09-16T12:00:00Z")
+            .Run(101, name)
+            .Check(101, check)
+            .Upload(102, 9002, name, "2026-09-15T12:30:00Z", "2026-09-16T12:30:00Z")
+            .Run(102, name)
+            // Run 101's link job, re-run after run 102's: the action leaves the newer line alone, and so does the check.
+            .Run(101, name)
+            .Check(101, check)
+            .Go();
+
+        Assert.Empty(outcome.Failures);
+        Assert.Contains("runs/102/artifacts/9002", LineFor(Assert.Single(outcome.BotComments).Body, name), StringComparison.Ordinal);
     }
 
     /// <summary>Holds each job of a workflow that calls the action to the rules above, and counts the calls.</summary>
@@ -502,6 +620,16 @@ public class PrReportLinkActionTests
         var calls = 0;
         if (!root.Children.TryGetValue(new YamlScalarNode("jobs"), out var jobs))
             return 0;
+
+        // The action links this run's upload of `artifact-name`, so the same workflow has to upload that name, or the
+        // action finds nothing and only warns.
+        var uploaded = ((YamlMappingNode)jobs).Children.Values.Cast<YamlMappingNode>()
+            .SelectMany(job => job.Children.TryGetValue(new YamlScalarNode("steps"), out var steps)
+                ? ((YamlSequenceNode)steps).Children.Cast<YamlMappingNode>()
+                : [])
+            .Where(step => ActionDefinition.Scalar(step, "uses")?.StartsWith("actions/upload-artifact@", StringComparison.Ordinal) == true)
+            .Select(step => step.Children.TryGetValue(new YamlScalarNode("with"), out var with) ? ActionDefinition.Scalar((YamlMappingNode)with, "name") : null)
+            .ToList();
 
         foreach (var (jobName, jobNode) in ((YamlMappingNode)jobs).Children)
         {
@@ -521,6 +649,9 @@ public class PrReportLinkActionTests
                     : [];
                 Assert.Empty(passed.Where(p => !action.Inputs.ContainsKey(p)));
                 Assert.Empty(action.Inputs.Where(i => i.Value.Required && !passed.Contains(i.Key)).Select(i => i.Key));
+
+                var linked = ActionDefinition.Scalar((YamlMappingNode)with!, "artifact-name");
+                Assert.True(uploaded.Contains(linked), $"job {jobName} links \"{linked}\", which no step of the workflow uploads");
 
                 var concurrency = job.Children.TryGetValue(new YamlScalarNode("concurrency"), out var node)
                     ? (YamlMappingNode)node
@@ -611,6 +742,38 @@ public class PrReportLinkActionTests
         }
     }
 
+    /// <summary>The live lane's step after its call of the action, which reads the comment back, and the name it links.</summary>
+    private sealed record LaneCheck(string Script, Dictionary<string, string> Env, string ArtifactName)
+    {
+        public static LaneCheck Load()
+        {
+            var lane = ActionDefinition.LoadYaml(File.ReadAllText(LanePath));
+            foreach (var job in ((YamlMappingNode)lane["jobs"]).Children.Values.Cast<YamlMappingNode>())
+            {
+                if (!job.Children.TryGetValue(new YamlScalarNode("steps"), out var stepsNode))
+                    continue;
+
+                var steps = ((YamlSequenceNode)stepsNode).Children.Cast<YamlMappingNode>().ToList();
+                var call = steps.FindIndex(s => ActionDefinition.Scalar(s, "uses")?.Contains("kronikol-pr-report-link", StringComparison.Ordinal) == true);
+                if (call < 0)
+                    continue;
+
+                Assert.True(call + 1 < steps.Count, "the live lane's job ends with the action, so nothing checks what it wrote");
+                var check = steps[call + 1];
+                Assert.StartsWith("actions/github-script@", ActionDefinition.Scalar(check, "uses") ?? "", StringComparison.Ordinal);
+                var env = check.Children.TryGetValue(new YamlScalarNode("env"), out var envNode)
+                    ? ((YamlMappingNode)envNode).Children.ToDictionary(kv => ((YamlScalarNode)kv.Key).Value!, kv => ((YamlScalarNode)kv.Value).Value!, StringComparer.Ordinal)
+                    : new Dictionary<string, string>(StringComparer.Ordinal);
+                return new LaneCheck(
+                    ActionDefinition.Scalar((YamlMappingNode)check["with"], "script")!,
+                    env,
+                    ActionDefinition.Scalar((YamlMappingNode)steps[call]["with"], "artifact-name")!);
+            }
+
+            throw new InvalidOperationException("the live lane calls the action in no job");
+        }
+    }
+
     private sealed record Comment(long Id, string Login, string Body);
 
     private sealed record Outcome(
@@ -636,9 +799,9 @@ public class PrReportLinkActionTests
             return this;
         }
 
-        public PullRequest Upload(long runId, long id, string name, string? createdAt, string? expiresAt)
+        public PullRequest Upload(long runId, long id, string name, string? createdAt, string? expiresAt, bool expired = false)
         {
-            _steps.Add(new { upload = new { runId, id, name, createdAt, expiresAt } });
+            _steps.Add(new { upload = new { runId, id, name, createdAt, expiresAt, expired } });
             return this;
         }
 
@@ -649,6 +812,13 @@ public class PrReportLinkActionTests
                 ["artifact-name"] = artifactName,
             };
             _steps.Add(new { run = new { runId, eventName, env = _action.EnvironmentFor(given) } });
+            return this;
+        }
+
+        /// <summary>The live lane's check, run as the step after the action in run <paramref name="runId"/>.</summary>
+        public PullRequest Check(long runId, LaneCheck check)
+        {
+            _steps.Add(new { run = new { runId, eventName = "pull_request", env = check.Env, script = check.Script } });
             return this;
         }
 
@@ -721,7 +891,7 @@ public class PrReportLinkActionTests
           for (const step of input.steps) {
             if (step.upload) {
               const u = step.upload;
-              (state.artifacts[u.runId] ??= []).push({ id: u.id, name: u.name, created_at: u.createdAt, expires_at: u.expiresAt, expired: false });
+              (state.artifacts[u.runId] ??= []).push({ id: u.id, name: u.name, created_at: u.createdAt, expires_at: u.expiresAt, expired: u.expired });
             } else if (step.edit === 'crlf') {
               for (const c of state.comments.filter(c => c.user.login === bot)) c.body = c.body.replace(/\r?\n/g, '\r\n');
             } else if (step.edit === 'tag-field') {
@@ -734,7 +904,9 @@ public class PrReportLinkActionTests
                 c.body = c.body.split('\n').map(l => l.startsWith('- ') ? l + ' \t ' : l).join('\n');
             } else if (step.run) {
               const r = step.run;
-              await script(
+              // A step of its own, the live lane's check, or else the action.
+              const run = r.script ? new AsyncFunction('github', 'context', 'core', 'process', r.script) : script;
+              await run(
                 github,
                 {
                   repo: { owner: 'octo', repo: 'app' },

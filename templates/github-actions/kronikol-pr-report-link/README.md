@@ -145,8 +145,8 @@ own `artifact-name` and `label`.
   edited.
 - **Tolerates hand edits.** A comment saved in GitHub's web editor (CRLF line endings), or left with trailing
   whitespace, still parses. The next rewrite puts it back.
-- **Leaves the comment alone when there is no artifact.** If the run uploaded no artifact of that name, the
-  action warns and changes nothing.
+- **Leaves the comment alone when there is no artifact.** If the run uploaded no artifact of that name, or only
+  one that has since expired, the action warns and changes nothing.
 
 ## Limits
 
@@ -157,9 +157,11 @@ own `artifact-name` and `label`.
   a comment of its own with its own `comment-key`.
 - **Links download a zip, for a signed-in reader.** The reports directory is uploaded as one zip, which the reader
   downloads to open the report. GitHub serves an artifact only to a signed-in user who can read the repository.
-  Viewing reports without a download means publishing them somewhere, for example GitHub Pages.
+  `actions/upload-artifact@v7` can upload a single file unzipped instead (`archive: false`), and GitHub serves an
+  HTML file uploaded that way to the browser, where a Kronikol report works. The comment's tip describes the zip,
+  so it does not fit such a link.
 - **Inputs are written as Markdown.** `label`, `icon` and `heading` go into the comment as they are, so pass fixed
   text, never something a pull request controls, such as its branch name or title. No code can be injected: the
   inputs reach the script as environment variables.
 - **Links expire with the artifact.** `CiArtifactRetentionDays` defaults to 1, so a link stops working a day
-  after its run unless the workflow runs again. The "expires on" time shows when.
+  after its upload unless the workflow runs again. The "expires on" time shows when.

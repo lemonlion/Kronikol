@@ -79,7 +79,10 @@ runs:
             .filter(a => !a.expired)
             .sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0))[0];
           if (!artifact) {
-            core.warning(`This run uploaded no "${artifactName}" artifact, so the PR comment is left as it was.`);
+            // An expired upload is still listed, and a line linking it would point at a download that is gone.
+            core.warning(artifacts.length > 0
+              ? `This run's "${artifactName}" artifact has expired, so the PR comment is left as it was.`
+              : `This run uploaded no "${artifactName}" artifact, so the PR comment is left as it was.`);
             return;
           }
 

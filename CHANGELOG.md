@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+**No version change: the PR report link template and its live lane.** Nothing a package ships changes, so none of
+this moves the version on its own; the next release carries it.
+
+### Fixed
+
+- **`templates/github-actions/kronikol-pr-report-link/`**: a run whose only upload of the artifact had expired warned
+  that it "uploaded no" artifact. It now says the artifact expired, and still links nothing. The README's limits said
+  that viewing a report without a download meant publishing it somewhere else; an HTML file uploaded with
+  `archive: false` (`actions/upload-artifact@v7`) opens in the browser, where a Kronikol report works, and the README
+  says so. A link expires a day after its upload, not after its run.
+- **The live lane, `.github/workflows/pr-report-link.yml`, could pass when the action linked nothing**, because the
+  action only warns then. A step after the action reads the comment back and fails unless the line links this run's
+  newest upload, or a newer run has linked the report. The lane also runs on pull requests that change the project it
+  tests or `CiArtifactPublisher.cs`, which writes the `reports-path` output.
+- Tests: `PrReportLinkActionTests` goes from 23 to 27 facts: the expired upload, the lane's check run against the
+  in-memory GitHub (one fact where it must fail, one where it must pass), and the README's action versions held to the
+  ones the lane runs. The workflow facts now also require a workflow to upload the artifact name it links.
+
 ## [3.33.0] - 2026-09-29
 
 **Minor - the first release whose tag carries the GitHub Actions template for pull-request report links
