@@ -186,7 +186,7 @@ Update each `release.yml` trigger to its own prefix and its version-extraction s
 breaks the `v{version}` convention recorded in `CLAUDE.md` — update that text in the same commit. Existing
 `v*` tags stay as historical artefacts; do not rewrite them.
 
-> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md` §3.10 (its Q8, taken with D28):** a Go module in `go/`
+> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md` §3.10 (its Q8, taken with D29):** a Go module in `go/`
 > takes `go/v0.1.0`, with a slash, not `go-v0.1.0`: the Go toolchain finds a subdirectory module's
 > versions only under tags prefixed with its directory, and nested modules take `go/pgx/v0.1.0`. A
 > `go-release.yml` triggers on `go/v*`. Meanwhile the root's `v*` tags are already served by the Go module

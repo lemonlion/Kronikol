@@ -15,7 +15,7 @@ possible. Three follow-on plans — `JAVA_PLATFORM_PLAN.md`, `NODE_PLATFORM_PLAN
 > in-process rendering path on .NET. Its §12.7 amends F1–F9; its §12.5 is the fidelity accounting.
 
 > **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** a fifth platform, Go, planned as a §9 instance after
-> Python (roadmap 14.16; D28, taken the same day), and the first §9 instance written. It asks two things
+> Python (roadmap 14.16; D29, taken the same day), and the first §9 instance written. It asks two things
 > of this plan. (1) Seven questions for the contract, to be decided in F2, F3 and F5 before
 > `captureFormatVersion 1` freezes, now §4.8 below: a per-process `seq` beside the timestamp, SQL
 > parameters as data rather than the `\n-- Parameters: ` text block, `attributionSource` on the wire with
@@ -397,7 +397,7 @@ class of lie a frozen contract would carry for a version. Not green-lit; roadmap
 ### 4.8 Go's asks (added 2026-09-28)
 
 `GO_PLATFORM_PLAN.md` §4 asks the contract for five things and the renderer for two, each found by
-running a Go capturer through today's `kronikol ingest` (that plan's harness, H7 to H11). Its D28 was
+running a Go capturer through today's `kronikol ingest` (that plan's harness, H7 to H11). Its D29 was
 taken on 2026-09-28, so they are this plan's to decide, each in or out of `captureFormatVersion 1` with a
 reason, at 14.5 (§8.1; roadmap rule 6). The first five meet every platform, not only Go.
 

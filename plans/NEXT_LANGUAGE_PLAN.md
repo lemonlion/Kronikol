@@ -10,7 +10,7 @@
 > **Amended 2026-09-22 by `MOBILE_PLAN.md`:** §3's table gains three mobile rows (Android, Swift/iOS,
 > Dart/Flutter) and a paragraph, and §5 gains B19 to B21. Nothing else changed.
 
-> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** Go is re-opened, after Python (roadmap 14.16; D28,
+> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** Go is re-opened, after Python (roadmap 14.16; D29,
 > taken the same day). §3's deferral was right that nothing can be injected into a running Go binary and
 > wrong about what follows: that plan's harness found three runtime-level hooks that need no injection, a
 > component test's wrap sites in the test's own wiring, zero-code compile-time instrumentation now stable
@@ -266,7 +266,7 @@ answered by the table, not by its absence.
 | Ruby | Small | RSpec + Cucumber | monkeypatching trivial | Strong BDD culture, small pool |
 | PHP | Mid | PHPUnit | OTel zero-code exists | Weak test-reporting culture |
 | **Android (Kotlin, Java)** | Top tier: the larger mobile platform | JUnit 4 under `AndroidJUnitRunner` for instrumented tests, JUnit 5 for JVM unit tests, Kotest | OkHttp interceptor exists in Kronikol4J; no JDBC, so Room's query callback is the SQL seam; ART lacks `java.net.http` and runs no agents; the port has no NDJSON writer | **The Java port's problem, after F1 and F9.** `MOBILE_PLAN.md` M3 |
-| **Swift / iOS** | Top tier: the other mobile platform | XCTest (observation and activities), Swift Testing (traits) | `URLProtocol` on `URLSession` captures bodies; `sqlite3_trace_v2` and GRDB for SQL; Core Data and SwiftData have no statement seam; `@TaskLocal` for identity | **A fifth platform, after the shared renderer.** `MOBILE_PLAN.md` M4. *The sixth since 2026-09-28: after Go (`GO_PLATFORM_PLAN.md` Q5, D28)* |
+| **Swift / iOS** | Top tier: the other mobile platform | XCTest (observation and activities), Swift Testing (traits) | `URLProtocol` on `URLSession` captures bodies; `sqlite3_trace_v2` and GRDB for SQL; Core Data and SwiftData have no statement seam; `@TaskLocal` for identity | **A fifth platform, after the shared renderer.** `MOBILE_PLAN.md` M4. *The sixth since 2026-09-28: after Go (`GO_PLATFORM_PLAN.md` Q5, D29)* |
 | **Dart / Flutter** | Mid, growing | `flutter_test`, `integration_test` | `HttpOverrides` and `dio` interceptors; its networking does not ride the native stacks, so M3 and M4 do not cover it | **Not planned.** Served at the edge by `MOBILE_PLAN.md` M1 only |
 | *C/C++* | *Top tier by size* | *GoogleTest, loosely* | *no runtime instrumentation; no OTel zero-code* | *not a candidate — §3.2* |
 | *Rust* | *Small but growing fast* | *stdlib `#[test]`* | *no runtime instrumentation; no OTel zero-code* | *not a candidate — §3.2* |

@@ -8,7 +8,7 @@ Android, Xamarin etc. Where would that fit into the roadmap, and what would it i
 **The decision it needs is D20 in `ROADMAP.md` §3.** Its milestones are placed there as stage 12b
 (M1), 14.1 (M2) and after 14.7 (M3, M4). `NEXT_LANGUAGE_PLAN.md` §3 gains three rows from it.
 
-> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** its D28 and Q5 were taken as recommended, so Go is the
+> **Amended 2026-09-28 by `GO_PLATFORM_PLAN.md`:** its D29 and Q5 were taken as recommended, so Go is the
 > fifth platform, stage 14.16, and M4 (in-app iOS) the sixth, after it. M3 is the Java port's work and
 > does not move. §4's M3/M4 row says so; nothing else changed.
 

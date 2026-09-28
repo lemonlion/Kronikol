@@ -1,14 +1,15 @@
 # GO_PLATFORM_PLAN.md — Kronikol for Go: a fifth platform, after Java, Node and Python
 
 **Date:** 2026-09-28 · **.NET repo:** 3.31.10 (`e7e8504`) · **Kronikol4J:** 0.1.25-SNAPSHOT · **Go:** 1.27.1 current, 1.24.7 on the machine
-· **Status: design record, investigation run, nothing implemented. Green-lit 2026-09-28: D28 and Q1 to Q8 taken as recommended (§7, §11).** Answers the owner's
+· **Status: design record, investigation run, nothing implemented. Green-lit 2026-09-28: D29 and Q1 to Q8 taken as recommended (§7, §11).** Answers the owner's
 question of 2026-09-28: "Can you come up with a plan to have Kronikol also support Go after it supports
 python, js and java".
 
-**The decision was D28 in `ROADMAP.md` §3, taken 2026-09-28 as recommended.** The platform is stage
+**The decision was D29 in `ROADMAP.md` §3, taken 2026-09-28 as recommended** (drafted as D28 on this
+plan's branch; it lands as D29 because D28 went to the query fallback, stage 1b). The platform is stage
 14.16, after 14.9's Python. One part of it is not after anything: §4 is seven questions for the capture
 contract, and rule 6 says the five format changes among them cost nothing before 14.5 freezes the format
-and a format version after. With D28 taken they are `PLATFORM_FOUNDATIONS_PLAN.md` §4.8, decided in or
+and a format version after. With D29 taken they are `PLATFORM_FOUNDATIONS_PLAN.md` §4.8, decided in or
 out at 14.5 (M0).
 
 **What it is.** The Go instance of `PLATFORM_FOUNDATIONS_PLAN.md` §9's template, the eleven items every
@@ -49,7 +50,7 @@ first, in the milestones of §5; give it its own launch at its own bar (D18).
 
 **Three things up front.**
 
-1. **Re-open Go** (D28, taken 2026-09-28). The deferral was right that nothing can be injected into a running Go binary
+1. **Re-open Go** (D29, taken 2026-09-28). The deferral was right that nothing can be injected into a running Go binary
    and wrong about what follows: the wrap sites of a Go component test are in the test's own wiring,
    and the two cases where they are not have answers (§1).
 2. **The contract asks are the only urgent part** (§4): an ordering key that is not the clock, SQL
@@ -425,7 +426,7 @@ Each is a slice with the test that says it is done. M0 is now; the rest start af
 
 | # | What | Done when |
 |---|---|---|
-| **M0** | §4's asks into F2, F3 and F5: a banner on the foundations plan (done with this plan) and, with D28 taken, its §4.8 (done 2026-09-28); then a decision on each at 14.5 | Each of C1 to C7 is in or out of `captureFormatVersion 1`, with its reason |
+| **M0** | §4's asks into F2, F3 and F5: a banner on the foundations plan (done with this plan) and, with D29 taken, its §4.8 (done 2026-09-28); then a decision on each at 14.5 | Each of C1 to C7 is in or out of `captureFormatVersion 1`, with its reason |
 | **M1** | The skeleton, from F9's generator (`kronikol new-platform go`): the `go/` tree, the core module, the writers, levels 1, 2, 3 and 5 of §3.1, `Start`, `Step`, `Main`, CI | The conformance tests run, red, in `go-ci.yml` on the first commit |
 | **M2** | HTTP (§3.3) | `parity/capture/`'s HTTP fixtures green; the in-memory server, streaming and redaction cases green |
 | **M3** | SQL (§3.4): the connector with generated forwarding, rows and parameters; the pgx module | The Postgres and MySQL fixtures green; an interface-parity test per supported driver green |
@@ -465,7 +466,7 @@ The owner took every recommendation below on 2026-09-28 ("Can we go with the rec
 
 | # | Decision | Recommendation, taken |
 |---|---|---|
-| **D28** (roadmap §3) | Re-open Go: M0 now, the platform at 14.16 | **Yes.** M0 costs a banner and seven answers, and only costs that little before 14.5. **Taken 2026-09-28** |
+| **D29** (roadmap §3) | Re-open Go: M0 now, the platform at 14.16 | **Yes.** M0 costs a banner and seven answers, and only costs that little before 14.5. **Taken 2026-09-28** |
 | Q1 | The module path | `github.com/lemonlion/kronikol/go`, lower case; a vanity path only if a domain is being kept anyway |
 | Q2 | The goroutine-label level (§3.1) | **On by default**, with the environment switch, the build tag and the self-test. K19 is the case for it |
 | Q3 | The wrapper's name | **`kronikol-go`**, not `kronikol`: the .NET tool already answers to `kronikol` on the same `PATH`. Its `query` verb execs the shared artifact's (foundations F7), so a Go user needs one binary |
@@ -526,11 +527,13 @@ small tax or a different product.
 
 ## 11. Decision log
 
-**2026-09-28.** The owner took D28 and Q1 to Q8 as recommended. What that moved, the same day:
+**2026-09-28.** The owner took D29 and Q1 to Q8 as recommended. What that moved, the same day (the
+decision was drafted as D28 and renumbered D29 when the plan landed on `main`, where D28 had gone to the
+query fallback):
 
 - **M0 began.** §4's seven asks are now `PLATFORM_FOUNDATIONS_PLAN.md` §4.8, beside the fleet plan's
   §4.7, and roadmap 14.5 decides each in or out of `captureFormatVersion 1`. The foundations plan is
-  still not green-lit: D28 commits to asking before the freeze, not to the answers.
+  still not green-lit: D29 commits to asking before the freeze, not to the answers.
 - **The order.** Go is the fifth platform, stage 14.16, and in-app iOS (`MOBILE_PLAN.md` M4) the sixth,
   after it (Q5). `MOBILE_PLAN.md`, `NEXT_LANGUAGE_PLAN.md` and the roadmap's 12b carry the change;
   Android (M3) is the Java port's work and does not move.
