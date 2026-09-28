@@ -16,6 +16,7 @@ report is always one click from the PR. With two lanes, component tests and unit
 > 💡 Each link downloads a zip of the latest reports. Open `TestRunReport.html` inside it.
 
 <sub>🤖 CI rewrites this comment every time a linked workflow runs.</sub>
+<!-- kronikol-report-link:end -->
 ```
 
 GitHub shows the heading, one line per lane with its tag hidden, a Tip box and a small footer.
@@ -149,8 +150,9 @@ own `artifact-name` and `label`.
 
 - **`GITHUB_TOKEN` only.** The action writes with the workflow token and recognises its comment by the
   `github-actions[bot]` author, so it has no token input.
-- **The comment is the action's.** The next run of any lane rewrites it whole, so anything else written into it
-  is dropped. Other content takes a comment of its own, with its own `comment-key`.
+- **The comment is the action's, down to its end marker.** The next run of any lane rewrites everything above
+  `<!-- <comment-key>:end -->` and keeps everything after it as it is. Other content goes after the marker, or in
+  a comment of its own with its own `comment-key`.
 - **Links download a zip, for a signed-in reader.** The reports directory is uploaded as one zip, which the reader
   downloads to open the report. GitHub serves an artifact only to a signed-in user who can read the repository.
   Viewing reports without a download means publishing them somewhere, for example GitHub Pages.
