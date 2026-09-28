@@ -13,8 +13,7 @@ type `Kronikol.Query.QueryCommand`, the option `ReportConfigurationOptions.Write
 (`FailuresDigestGenerator.Generate` keeps its own, pinned by a test), so it is not a major. Report output changes (a
 new file beside the report, a line in `Failures.md`, the instruction files, the data file schema's `$comment`, a line
 in a failing run's pointer and in the CI summary): the Kronikol4J divergence ledger owes an entry, drafted in the
-plan's log because this session could not reach that repository. Template pins stay at 3.31.9, the newest version on
-nuget.org: 3.31.10 was committed and never tagged, so it was never published.
+plan's log because this session could not reach that repository. Template pins move to 3.31.10.
 
 ### Added
 

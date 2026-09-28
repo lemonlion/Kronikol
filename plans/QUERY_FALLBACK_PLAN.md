@@ -473,15 +473,15 @@ without the .NET 10 SDK, where it is the one option there is. M5: the README, th
 marketplace description, the changelog, and ten wiki pages: `Querying-Reports`, `Report-Configuration`,
 `Generated-Reports`, `Diagnostics-and-Debugging`, `CI-Summary-Integration`, `CI-Artifact-Upload`,
 `Merging-Parallel-Reports`, `API-Reference`, `Home` and `AI-Integration-Prompt`. The wiki change is
-`QUERY_FALLBACK_PLAN.wiki.patch`, two commits made on wiki `cbc0e95`: 3.31.10's deep-link note (`DOORSTEP_PLAN.md`
-Appendix B, item 2), then 3.32.0's pages. This session could not push it, because the git proxy does not authorize the
+`QUERY_FALLBACK_PLAN.wiki.patch`, one commit on wiki `5bc9589`, the 3.31.10 note the owner applied the same
+morning (a first commit carrying that note, word for word, was dropped when it landed). This session could not push it, because the git proxy does not authorize the
 wiki, so the owner applies it: `git -C ../Kronikol.wiki am ../Kronikol/plans/QUERY_FALLBACK_PLAN.wiki.patch`, then
 push. Found checking the docs: an Azure DevOps upload names every file and picked them by extension, so `query.cs`
 never reached the artifact there, while GitHub Actions uploads the whole directory. `CiArtifactPublisher.ReportFiles`
 now picks the files for the run and the merge, `query.cs` by name, and each test of it was red first. M6:
 `Kronikol.Tests` 6,032 passed after the merge of `main` and the upload fix, failing only the 3 read-only-file tests that cannot fail as root; versions 3.32.0 in
-`Directory.Build.props` and both `.claude-plugin` manifests; template pins stay at 3.31.9, the newest version on
-nuget.org (3.31.10 was never tagged). Merged to `main` at the owner's word (2026-09-28) after a pull request's CI
+`Directory.Build.props` and both `.claude-plugin` manifests; template pins move to 3.31.10, which the owner
+published the same morning (all twelve templates restore at it from nuget.org). Merged to `main` at the owner's word (2026-09-28) after a pull request's CI
 ran every test project, since `ci.yml` runs only on `main` and on pull requests to it. The tag `v3.32.0`, on which
 `release.yml` publishes to nuget.org, follows `main`'s CI, the rule 3.31.10's release followed.
 
@@ -496,8 +496,6 @@ ran every test project, since `ci.yml` runs only on `main` and on pull requests 
 - **No .NET 10 SDK:** neither the tool nor `query.cs` runs; `query.py` does, for 6 verbs (M4, held).
 - **The Kronikol4J ledger entry**, below, for the owner to add: this session could not reach that repository.
 - **The wiki patch**, for the owner to apply (§11.4).
-- **3.31.10's own tag** (`DOORSTEP_PLAN.md` Appendix B, item 1) stays the owner's call: 3.32.0 publishes its changes,
-  so the tag would add the version to NuGet's history and nothing a consumer lacks.
 
 ### 11.6 Kronikol4J divergence ledger entry (draft)
 
