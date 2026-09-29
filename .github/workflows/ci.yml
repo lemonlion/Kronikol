@@ -9,9 +9,6 @@ on:
 permissions:
   contents: read
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   release-build:
     name: Release Build (packable projects)
@@ -22,10 +19,10 @@ jobs:
           sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/swift || true
           df -h /
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x
@@ -192,10 +189,10 @@ jobs:
           sudo rm -rf /usr/share/dotnet/shared/Microsoft.AspNetCore.App/7.* || true
           df -h /
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x

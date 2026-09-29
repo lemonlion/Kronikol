@@ -12,16 +12,13 @@ permissions:
   security-events: write
   contents: read
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   analyze:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Free disk space
         run: |
@@ -33,7 +30,7 @@ jobs:
                       /opt/ghc || true
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x
@@ -41,7 +38,7 @@ jobs:
             10.0.x
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           # actions: the workflows and the composite actions under templates/github-actions/, whose default
           # queries found nothing on 2026-09-29 (plans/PR_REPORT_LINK_PLAN.md §10).
@@ -54,4 +51,4 @@ jobs:
         run: dotnet build release.slnf --no-restore
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
