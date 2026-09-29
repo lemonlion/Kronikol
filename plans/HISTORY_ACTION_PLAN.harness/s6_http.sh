@@ -57,7 +57,11 @@ echo "branch present: $(H2 "$TOKEN" "$URL" refs/heads/main); branch absent: $(H2
 job() { # $1 name, $2 run, $3 token
   checkout "$W/$1/ws"
   python3 "$H/make_fragments.py" "$H/bp-history.jsonl" "$W/$1/ws/fragments" "$2" --suites 3 > /dev/null
-  ( job_env "$W/$1" "$2"; cd "$W/$1/ws"; KRONIKOL_TOKEN=$3 bash "$H/prototype_record.sh" fragments "$URL" ) > "$W/$1/out.txt" 2>&1
+  case "${RECORD:-prototype}" in
+    manual) ( job_env "$W/$1" "$2"; cd "$W/$1/ws"; TOKEN=$3 SERVER=$HTTP REMOTE=$URL FRAGMENTS="$W/$1/ws/fragments" bash --noprofile --norc -eo pipefail "$H/recipe_manual_record.sh" ) > "$W/$1/out.txt" 2>&1 ;;
+    action) ( job_env "$W/$1" "$2"; cd "$W/$1/ws"; KRONIKOL_TOKEN=$3 bash "$H/action_record.sh" fragments "$URL" ) > "$W/$1/out.txt" 2>&1 ;;
+    *) ( job_env "$W/$1" "$2"; cd "$W/$1/ws"; KRONIKOL_TOKEN=$3 bash "$H/prototype_record.sh" fragments "$URL" ) > "$W/$1/out.txt" 2>&1 ;;
+  esac
   echo $? > "$W/$1/exit"
 }
 count() { # the runs the branch holds against the runs that were folded, and duplicate roster lines
@@ -72,7 +76,7 @@ for line in sys.stdin:
 print(len(runs), sum(v - 1 for v in rosters.values()))'
 }
 
-echo; echo "== H3: $N writers racing over HTTP with the token, $TRIALS races on a first run and $TRIALS on an existing branch"
+echo; echo "== H3 (record: ${RECORD:-prototype}): $N writers racing over HTTP with the token, $TRIALS races on a first run and $TRIALS on an existing branch"
 for kind in first existing; do
   lost=0 dup=0 failed=0 retries=0
   for t in $(seq 1 "$TRIALS"); do
@@ -154,7 +158,20 @@ world h7
 for layout in v5 v6.0.0 v6.0.1; do
   world "h7-$layout"
   fold_as "$layout" 901 "first run"
-  git ls-remote --exit-code "file://$W/origin.git" refs/heads/kronikol-history > /dev/null || job seed 900 "$TOKEN" > /dev/null
+  git ls-remote --exit-code "file://$W/origin.git" refs/heads/kronikol-history > /dev/null || RECORD=prototype job seed 900 "$TOKEN" > /dev/null  # the prototype's seed, as before RECORD existed
   fold_as "$layout" 902 "the branch exists"
   echo "   branch: $(count | awk '{print $1 " run(s)"}')"
 done
+
+if [ "${RECORD:-prototype}" = manual ]; then
+  echo; echo "== H8: the manual recipe's read step over HTTP: a blobless fetch whose blobs are fetched later, with the header"
+  world h8
+  job seed 950 "$TOKEN" > /dev/null
+  for which in right wrong; do
+    J=$W/read-$which; mkdir -p "$J"; tok=$TOKEN; [ $which = right ] || tok=wrong-token
+    ( job_env "$J" 951; checkout "$J/ws"; cd "$J/ws"; TOKEN=$tok SERVER=$HTTP REMOTE=$URL bash --noprofile --norc -eo pipefail "$H/recipe_manual_read.sh" ) > "$J/out.txt" 2>&1
+    x=$?
+    echo "$which token: exit $x; KRONIKOL_HISTORY named: $(grep -c '^KRONIKOL_HISTORY=' "$J/runner-temp/env"); read: $(ls "$J/runner-temp/kronikol-history" 2> /dev/null | tr '\n' ' ')$(grep -m1 '::warning::' "$J/out.txt" | sed 's/^/; /')"
+  done
+  echo "the token or its header in H8's output or files: $(grep -rl -F -e "$TOKEN" -e "$(basic "$TOKEN")" "$W"/read-* 2> /dev/null | grep -v -c '/out.txt$' || true) file(s); output lines other than ::add-mask::: $(cat "$W"/read-*/out.txt | grep -F -e "$TOKEN" -e "$(basic "$TOKEN")" | grep -vc '^::add-mask::' || true)"
+fi

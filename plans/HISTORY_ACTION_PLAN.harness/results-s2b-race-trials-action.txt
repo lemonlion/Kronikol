@@ -1,0 +1,2 @@
+action (branch exists): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 0 duplicate roster lines, 80 lost races recorded again
+action (first run    ): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 0 duplicate roster lines, 91 lost races recorded again

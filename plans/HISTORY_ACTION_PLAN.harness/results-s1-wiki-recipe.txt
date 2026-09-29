@@ -26,3 +26,32 @@ fold job: exit 0
 W4: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 6}; runs by id {'gh:100:1': 3, 'gh:101:1': 3}; duplicate roster lines 0
 W4: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
 W4: commits on the branch: 2
+
+== W5: the manual recipe of the new text (Without the action), its two run: blocks extracted from the page
+a. the first run, no branch yet. read: exit 0 (No kronikol-history branch yet: the first record starts it); KRONIKOL_HISTORY named: 0
+a. record: exit 0
+W5a: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 3}; runs by id {'gh:101:1': 3}; duplicate roster lines 0
+W5a: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+W5a: commits on the branch: 1
+W5a: the branch holds: .gitattributes history.jsonl ; its .gitattributes: # The Kronikol history ledger is append-only: two branches that both appended merge without a conflict history.jsonl merge=union text eol=lf 
+W5a: the commit: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>: Record run 101:1 (8d06dfc) [skip ci]
+b. a later run. read: exit 0; KRONIKOL_HISTORY named: 1; read: history.jsonl 
+b. record: exit 0
+W5b: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 6}; runs by id {'gh:101:1': 3, 'gh:102:1': 3}; duplicate roster lines 0
+W5b: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+W5b: commits on the branch: 2
+c. run 102's record step again, as a re-run of the record job: exit 0 (0 run(s) recorded, 3 already there, 0 failed, from 3 fragment(s) → $RUNNER_TEMP/kronikol-history-record/history.jsonl)
+W5c: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 6}; runs by id {'gh:101:1': 3, 'gh:102:1': 3}; duplicate roster lines 0
+W5c: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+W5c: commits on the branch: 2
+d. a person quarantines a scenario on the branch; run 103's read: exit 0; read: history.jsonl quarantine.json 
+d. what run 103 reads as quarantined: 97dd85d9115293c4  flaky since the DB upgrade  by person  since 2026-09-29  until 2026-12-31
+d. record: exit 0
+W5d: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 9}; runs by id {'gh:101:1': 3, 'gh:102:1': 3, 'gh:103:1': 3}; duplicate roster lines 0
+W5d: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+W5d: commits on the branch: 4
+W5d: the branch holds: .gitattributes history.jsonl quarantine.json 
+e. a record job with nothing downloaded (every test job stopped before its report): exit 0 (No History.run.json to record)
+W5e: lines {'header': 1, 'roster': 3, 'shapes': 3, 'run': 9}; runs by id {'gh:101:1': 3, 'gh:102:1': 3, 'gh:103:1': 3}; duplicate roster lines 0
+W5e: history verify exit 0 (verified <tmp>/history.jsonl: no findings)
+W5e: commits on the branch: 4

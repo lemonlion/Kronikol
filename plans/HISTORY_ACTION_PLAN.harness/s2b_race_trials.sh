@@ -9,6 +9,8 @@ run_job() {
       dogfood) bash "$H/recipe_dogfood.sh" ;;
       dogfood_fair) bash "$H/recipe_dogfood_fair.sh" ;;
       prototype) bash "$H/prototype_record.sh" fragments "file://$W/origin.git" ;;
+      action) bash "$H/action_record.sh" fragments "file://$W/origin.git" ;;
+      manual) TOKEN= SERVER=file:// REMOTE="file://$W/origin.git" FRAGMENTS="$PWD/fragments" bash --noprofile --norc -eo pipefail "$H/recipe_manual_record.sh" ;;
     esac ) > "$W/$1/out.txt" 2>&1
   echo $? > "$W/$1/exit"
 }
@@ -25,9 +27,9 @@ for l in open('$tmp/h'):
 print(len([i for i in ids if not i.startswith('gh:100:')]), sum(v-1 for v in r.values()))"
   rm -rf "$tmp"
 }
-for recipe in dogfood dogfood_fair prototype; do
+for recipe in ${RECIPES:-dogfood dogfood_fair prototype}; do
   for first in yes no; do
-    lost=0; dup=0; failed=0
+    lost=0; dup=0; failed=0; retries=0
     for t in $(seq 1 "$TRIALS"); do
       new_world "$T/$recipe-$first-$t"
       if [ "$first" = yes ]; then prepare_job seed 100; run_job seed 100 dogfood; fi
@@ -35,11 +37,12 @@ for recipe in dogfood dogfood_fair prototype; do
       for i in $(seq 1 "$N"); do run_job "job$i" $((200 + i)) "$recipe" & done
       wait
       for i in $(seq 1 "$N"); do [ "$(cat "$W/job$i/exit")" = 0 ] || failed=$((failed + 1)); done
+      for i in $(seq 1 "$N"); do retries=$((retries + $(grep -c "lost the race" "$W/job$i/out.txt" || true))); done
       read -r recorded d < <(count)
       lost=$((lost + N - recorded)); dup=$((dup + d))
       rm -rf "$W"
     done
     label=$([ "$first" = yes ] && echo "branch exists" || echo "first run    ")
-    echo "$recipe ($label): $TRIALS races of $N writers: $failed jobs failed, $lost runs lost, $dup duplicate roster lines"
+    echo "$recipe ($label): $TRIALS races of $N writers: $failed jobs failed, $lost runs lost, $dup duplicate roster lines, $retries lost races recorded again"
   done
 done

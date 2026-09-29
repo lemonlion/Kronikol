@@ -1,0 +1,4 @@
+prototype (branch exists): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 0 duplicate roster lines, 88 lost races recorded again
+prototype (first run    ): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 0 duplicate roster lines, 93 lost races recorded again
+manual (branch exists): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 0 duplicate roster lines, 78 lost races recorded again
+manual (first run    ): 10 races of 6 writers: 0 jobs failed, 0 runs lost, 0 duplicate roster lines, 92 lost races recorded again
