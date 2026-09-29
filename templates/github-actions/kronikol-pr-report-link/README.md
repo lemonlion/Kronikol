@@ -57,7 +57,7 @@ jobs:
         run: dotnet test
 
       - name: Upload the Kronikol reports
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.test.outputs.reports-path != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: component-test-reports
@@ -88,8 +88,13 @@ jobs:
           label: Component tests
 ```
 
-Instead of copying the folder, you can reference it from a Kronikol release tag that contains it, and drop the
-checkout step: `uses: lemonlion/Kronikol/templates/github-actions/kronikol-pr-report-link@<tag>`. Pin a tag or
+The upload runs only when the test step wrote `reports-path`. A test step that stops before Kronikol writes its
+report, for example on a build error, leaves the output empty, and `upload-artifact` fails on an empty `path`
+whatever `if-no-files-found` says. Skipped instead, the upload leaves nothing to link, and the link job warns and
+leaves the comment as it was.
+
+Instead of copying the folder, you can reference it from a Kronikol release tag that contains it, `v3.33.0` or
+later, and drop the checkout step: `uses: lemonlion/Kronikol/templates/github-actions/kronikol-pr-report-link@<tag>`. Pin a tag or
 commit rather than `main`, because the action holds `pull-requests: write`. On github.com the copied folder also
 runs without a checkout step, from the commit being tested: `uses: $/.github/actions/kronikol-pr-report-link`
 (runner 2.336.0 or later, not on GitHub Enterprise Server). The example keeps the checkout, which works everywhere.

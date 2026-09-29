@@ -43,7 +43,9 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: csharp
+          # actions: the workflows and the composite actions under templates/github-actions/, whose default
+          # queries found nothing on 2026-09-29 (plans/PR_REPORT_LINK_PLAN.md §10).
+          languages: csharp, actions
 
       - name: Restore
         run: dotnet restore release.slnf

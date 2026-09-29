@@ -494,9 +494,46 @@ public class PrReportLinkActionTests
 
         var calls = 0;
         foreach (Match block in Regex.Matches(readme, @"^```ya?ml\n(.*?)^```", RegexOptions.Singleline | RegexOptions.Multiline))
-            calls += CallsOfTheAction(ActionDefinition.LoadYaml(block.Groups[1].Value), action);
+        {
+            var workflow = ActionDefinition.LoadYaml(block.Groups[1].Value);
+            calls += CallsOfTheAction(workflow, action);
+            UploadsSkipAMissingReportsPath(workflow);
+        }
 
         Assert.True(calls > 0, "the README has no workflow that calls the action, so nothing here checked it.");
+    }
+
+    /// <summary>
+    /// A test step that stopped before Kronikol wrote its report, a build that failed first, leaves the
+    /// <c>reports-path</c> output empty, and <c>actions/upload-artifact</c> fails on an empty <c>path</c> ("Input
+    /// required and not supplied: path", run 36538531187), whatever <c>if-no-files-found</c> says. So the README's
+    /// upload runs only when the output is there, and the link job then warns that nothing was uploaded. The live lane
+    /// leaves this out on purpose: there a missing reports path must fail.
+    /// </summary>
+    private static void UploadsSkipAMissingReportsPath(YamlMappingNode workflow)
+    {
+        if (!workflow.Children.TryGetValue(new YamlScalarNode("jobs"), out var jobs))
+            return;
+
+        foreach (var job in ((YamlMappingNode)jobs).Children.Values.Cast<YamlMappingNode>())
+        {
+            if (!job.Children.TryGetValue(new YamlScalarNode("steps"), out var steps))
+                continue;
+
+            foreach (var step in ((YamlSequenceNode)steps).Children.Cast<YamlMappingNode>())
+            {
+                if (ActionDefinition.Scalar(step, "uses")?.StartsWith("actions/upload-artifact@", StringComparison.Ordinal) != true
+                    || !step.Children.TryGetValue(new YamlScalarNode("with"), out var with))
+                    continue;
+
+                var reads = Regex.Match(ActionDefinition.Scalar((YamlMappingNode)with, "path") ?? "", @"steps\.([A-Za-z0-9_-]+)\.outputs\.reports-path");
+                if (!reads.Success)
+                    continue;
+
+                Assert.Contains($"steps.{reads.Groups[1].Value}.outputs.reports-path != ''",
+                    ActionDefinition.Scalar(step, "if") ?? "", StringComparison.Ordinal);
+            }
+        }
     }
 
     /// <summary>
