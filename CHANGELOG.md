@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+**The next release is a patch: two fixes a package ships, `Kronikol`'s report rotation under root and what the
+`Kronikol.Templates` package holds.** The rest moves no version: the workflows, CI and tests.
+
+### Fixed
+
+- **A previous report marked read-only no longer costs root the previous run.** Since 3.27.0 such a report stops
+  the rotation, so that a run which cannot replace the file never has it moved away. Root on Linux and macOS writes
+  a read-only file, so under root the run then overwrote the report anyway, and the previous run, which the
+  rotation had declined to keep, was lost for a mark that changed nothing at the top level. The rotation now stops
+  only when the mark refuses this process; under root a read-only report moves to `runs/` like any other file. For
+  every other user nothing changes.
+- **`Kronikol.Templates` packed `LICENSE` twice** (`dotnet pack` warned NU5118 and kept one) **and carried
+  `nuget-readme.md`**, a readme its nuspec does not name: it names `README.md`. `Directory.Build.props` now packs
+  `nuget-readme.md` only into a package that names it. Packed before and after, the 62 packages hold the same
+  files but for that one.
+- Tests: three `Kronikol.Tests` facts failed when the suite ran as root, because a read-only mark does not refuse
+  root a write. `InitAgentsCommandTests`' fact is about any refused write, so it now refuses one in two ways that
+  refuse every user, a file held open and a directory where the file should be. `StaleOutputTests`' access-denied
+  fact needs an existing file this process is refused, which nothing a test can set up gives root, and the code is
+  the same for every user, so it skips as root. The rotation's fact skips as root, and a new fact covers root's
+  case, red as root on 3.34.0. `ReadOnlyProbe` tells the two apart. `ComponentDiagramReportTests`' Node fact
+  skips where node is absent, and the class no longer fails a fact run alone.
+
+### Changed
+
+- **Workflows** (no package): CI, CodeQL, CI Summary Preview and Release use `actions/checkout` v7,
+  `actions/setup-dotnet` v6, `github/codeql-action` v4 and `softprops/action-gh-release` v3, the majors the live
+  lanes already used, and drop `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`, since every action they run is on node24. A
+  fact holds each action to one major across the workflows, the composite actions and their READMEs' workflows.
+- **CI** (no package): a job runs `Kronikol.Tests` as root in the .NET SDK container, and the template-pack step
+  fails on NU5118 and on a package root other than `LICENSE`, `README.md` and `icon.png`.
+
 ## [3.34.0] - 2026-09-29
 
 **Minor - the first release whose tag carries the GitHub Actions template for cross-run history
