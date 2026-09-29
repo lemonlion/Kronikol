@@ -152,8 +152,8 @@ jobs:
         run: |
           fragment=$(find "$RUNNER_TEMP/legs" -name History.run.json | sort | head -n 1)
           mkdir -p racer/Reports
-          sed -E "s/\"id\":\"gh:[0-9]+:[0-9]+\"/\"id\":\"gh:${RUN}0${RACER}:${ATTEMPT}\"/" "$fragment" > racer/Reports/History.run.json
-          grep -o "\"id\":\"gh:${RUN}0${RACER}:${ATTEMPT}\"" racer/Reports/History.run.json
+          sed -E "s/(\"id\": *)\"gh:[0-9]+:[0-9]+\"/\1\"gh:${RUN}0${RACER}:${ATTEMPT}\"/" "$fragment" > racer/Reports/History.run.json
+          grep -Eo "\"id\": *\"gh:${RUN}0${RACER}:${ATTEMPT}\"" racer/Reports/History.run.json
 
       - id: record
         uses: ./templates/github-actions/kronikol-history/record

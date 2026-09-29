@@ -284,6 +284,56 @@ public class HistoryActionStaticTests
     }
 
     [Fact]
+    public void The_lanes_racers_give_a_real_fragment_a_run_id_of_their_own()
+    {
+        // S3b's race is six runs only if each racer's copy of a leg's fragment carries a run id of its own. A pattern
+        // that missed the writer's layout would fail the step on github.com, which no other fact runs.
+        Assert.SkipWhen(!BashProbe.IsAvailable, "bash not available");
+        var workflow = ActionDefinition.LoadYaml(File.ReadAllText(Path.Combine(HistoryWorld.RepoRoot, ".github", "workflows", "history-action.yml")));
+        var steps = (YamlSequenceNode)((YamlMappingNode)((YamlMappingNode)workflow["jobs"])["race"])["steps"];
+        var step = steps.Children.Cast<YamlMappingNode>().Single(s => ActionDefinition.Scalar(s, "name") == "A fragment of a run of its own");
+        var root = Directory.CreateTempSubdirectory("kh-racer-").FullName;
+        try
+        {
+            var temp = Path.Combine(root, "temp");
+            var original = File.ReadAllText(HistoryFixtures.Fragment(Path.Combine(temp, "legs", "kronikol-history-test-1-0a1b2c3d", "examples", "Reports"), "Suite", "gh:123:1", "PF"));
+            var script = Path.Combine(root, "step.sh");
+            File.WriteAllText(script, ActionDefinition.Scalar(step, "run"));
+            var gitConfig = Path.Combine(root, "gitconfig");
+            File.WriteAllText(gitConfig, "");
+            var environment = ChildProcess.BaseEnvironment(root, temp, gitConfig);
+            environment["PATH"] = string.Join(Path.PathSeparator, ChildProcess.SystemPath());
+            environment["RUNNER_TEMP"] = ChildProcess.Slashes(temp);
+            environment["RACER"] = "4";
+            environment["RUN"] = "987";
+            environment["ATTEMPT"] = "2";
+            var workspace = Directory.CreateDirectory(Path.Combine(root, "ws")).FullName;
+
+            var result = ChildProcess.Run(BashProbe.Executable!, ["--noprofile", "--norc", "-e", ChildProcess.Slashes(script)], environment, workspace);
+
+            Assert.True(result.ExitCode == 0, $"exit {result.ExitCode}: {result.Stdout}{result.Stderr}");
+            var written = File.ReadAllText(Path.Combine(workspace, "racer", "Reports", "History.run.json"));
+            Assert.Equal("gh:98704:2", RunId(written));
+            Assert.Equal(original.Replace("\"gh:123:1\"", "\"gh:98704:2\""), written);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    private static string? RunId(string fragment)
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(fragment);
+        foreach (var property in document.RootElement.EnumerateObject())
+        {
+            if (property.Value.ValueKind == System.Text.Json.JsonValueKind.Object && property.Value.TryGetProperty("t", out var kind) && kind.GetString() == "run")
+                return property.Value.GetProperty("id").GetString();
+        }
+        return null;
+    }
+
+    [Fact]
     public void The_dogfood_runs_every_phase_by_path_with_the_tool_built_from_source()
     {
         // plans/HISTORY_ACTION_PLAN.md S4: CI Summary Preview records its runs through the action, on the branch its
