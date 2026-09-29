@@ -89,6 +89,11 @@ public class StaleOutputTests : IDisposable
     [Fact]
     public void The_pointer_does_not_name_the_previous_runs_file_when_this_run_could_not_replace_it()
     {
+        // The access-denied mode needs an existing file this process is refused, and root on Linux and macOS is
+        // refused no file for its mode, nor for anything else a test can set up. The code under test is the same
+        // whoever runs it, so a run as any other user covers it; the held mode has its own fact below.
+        Assert.SkipUnless(ReadOnlyProbe.RefusesThisProcess, "a read-only file does not refuse this process (root), so the write this fact needs cannot fail");
+
         var stale = Path.Combine(_dir, "TestRunReport.json");
         File.WriteAllText(stale, "{\"from\":\"an earlier run\"}");
         File.SetAttributes(stale, FileAttributes.ReadOnly);

@@ -309,21 +309,38 @@ internal static class RunRotation
     }
 
     /// <summary>
-    /// A file that will not move is an exception; so, deliberately, is one marked read-only. NTFS and
-    /// every POSIX file system rename a read-only file without complaint (RUN), so without this a
-    /// read-only report would be rotated away and the run would then succeed where today it cannot
-    /// replace the file — a change to what happens at the top level, made on the word of nobody. The
+    /// A file that will not move is an exception; so, deliberately, is one marked read-only that this process
+    /// cannot write. NTFS and every POSIX file system rename a read-only file without complaint (RUN), so
+    /// without this a read-only report would be rotated away and the run would then succeed where today it
+    /// cannot replace the file — a change to what happens at the top level, made on the word of nobody. The
     /// owner said "do not touch"; the rotation stops, says which file, and the run does what it always did.
+    /// Root on Linux and macOS writes a read-only file, so for root the run replaces the report whether or
+    /// not it was rotated: the mark changes nothing at the top level there, and the file moves like any other.
+    /// Stopping for it would only drop the previous run, which is what happened until 3.34.1.
     /// </summary>
     private static void Move(string from, string to, List<(string From, string To)> moved)
     {
         if (!File.Exists(from))
             return;
-        if ((File.GetAttributes(from) & FileAttributes.ReadOnly) != 0)
+        if ((File.GetAttributes(from) & FileAttributes.ReadOnly) != 0 && !CanWrite(from))
             throw new IOException($"{Path.GetFileName(from)} is read-only");
 
         File.Move(from, to);
         moved.Add((from, to));
+    }
+
+    /// <summary>Whether this process could open the file to write it where it is, as the run's writers do. Nothing is written.</summary>
+    private static bool CanWrite(string path)
+    {
+        try
+        {
+            using var _ = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+            return true;
+        }
+        catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
+        {
+            return false;
+        }
     }
 
     /// <summary>Moves what was staged back, newest first, and removes what was copied. Returns the names that would not go back.</summary>

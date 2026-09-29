@@ -313,6 +313,9 @@ public class RunRotationTests : IDisposable
     [Fact]
     public void A_read_only_previous_report_stops_the_rotation_and_never_the_run()
     {
+        Assert.SkipUnless(ReadOnlyProbe.RefusesThisProcess,
+            "this process writes read-only files (root on Linux and macOS), so a read-only report is not one it cannot replace: the next fact covers it");
+
         Run(ExecutionResult.Failed);
         var report = Path.Combine(Reports, "TestRunReport.json");
         File.SetAttributes(report, FileAttributes.ReadOnly);
@@ -328,6 +331,30 @@ public class RunRotationTests : IDisposable
         Assert.Contains("# No failures", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
         Assert.Contains("could not write TestRunReport.json", console);
         Assert.DoesNotContain("TestRunReport.json", Manifest().Files);
+    }
+
+    [Fact]
+    public void A_read_only_previous_report_this_process_can_write_is_kept_like_any_other()
+    {
+        // Root writes a read-only file, so for root the run replaces the report whether or not it was rotated.
+        // Until 3.34.1 the rotation stopped for the mark anyway, and the run then overwrote the file: the
+        // previous run was dropped for a mark that changed nothing at the top level.
+        Assert.SkipWhen(ReadOnlyProbe.RefusesThisProcess,
+            "a read-only file refuses this process a write, so it has no read-only report it can write: the fact above covers it");
+
+        Run(ExecutionResult.Failed);
+        var first = Snapshot(Reports, "TestRunReport.json", "Failures.md");
+        File.SetAttributes(Path.Combine(Reports, "TestRunReport.json"), FileAttributes.ReadOnly);
+
+        var (console, diagnostics) = Run(ExecutionResult.Passed);
+
+        Assert.DoesNotContain(diagnostics, d => d.Kind == DiagnosticKind.ReportRotationFailed);
+        Assert.Equal([LocalName(1)], RetainedNames());
+        foreach (var (name, bytes) in first)
+            Assert.True(bytes.AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(Runs, LocalName(1), name))), $"{name} under runs/ is not what the first run wrote");
+        Assert.Contains("# No failures", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
+        Assert.DoesNotContain("could not write", console);
+        Assert.Contains("TestRunReport.json", Manifest().Files);
     }
 
     // ─── 9. History off ────────────────────────────────────────

@@ -280,24 +280,31 @@ public class InitAgentsCommandTests : IDisposable
         Assert.Equal(original, File.ReadAllText(Path.Combine(_directory, "CLAUDE.md")));
     }
 
-    [Fact]
-    public void A_file_that_cannot_be_written_is_reported_rather_than_thrown()
+    [Theory]
+    [InlineData("held")]
+    [InlineData("a directory")]
+    public void A_file_that_cannot_be_written_is_reported_rather_than_thrown(string how)
     {
-        // A read-only working copy and a file locked by an editor are ordinary conditions, and the rest of
-        // this tool answers them with a message and an exit code rather than a stack trace.
+        // A file an editor has locked and a directory sitting where a file should be are ordinary conditions,
+        // and the rest of this tool answers them with a message and an exit code rather than a stack trace.
+        // Both refuse every user. A file marked read-only does not refuse root on Linux and macOS, so it
+        // tested nothing there (ReadOnlyProbe).
         var path = Path.Combine(_directory, "CLAUDE.md");
-        File.WriteAllText(path, "# My repo\n");
-        File.SetAttributes(path, FileAttributes.ReadOnly);
-        try
+        if (how == "a directory")
         {
-            var (_, error, exit) = Run();
-
-            Assert.Equal(1, exit);
-            Assert.Contains("CLAUDE.md", error, StringComparison.Ordinal);
+            Directory.CreateDirectory(path);
+            AssertReported(Run());
+            return;
         }
-        finally
+
+        File.WriteAllText(path, "# My repo\n");
+        using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
+            AssertReported(Run());
+
+        static void AssertReported((string Out, string Error, int Exit) result)
         {
-            File.SetAttributes(path, FileAttributes.Normal);
+            Assert.Equal(1, result.Exit);
+            Assert.Contains("CLAUDE.md", result.Error, StringComparison.Ordinal);
         }
     }
 
