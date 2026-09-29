@@ -100,8 +100,12 @@ jobs:
             const newest = artifacts
               .filter(a => !a.expired)
               .sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0))[0];
-            if (!newest || !line.includes(`/actions/runs/${context.runId}/artifacts/${newest.id})`)) {
-              core.setFailed(`The line for ${name} does not link this run's newest upload, ${newest?.id}: ${line}`);
+            if (!newest) {
+              core.setFailed(`This run's ${name} has expired, so the line links a download that is gone: ${line}`);
+              return;
+            }
+            if (!line.includes(`/actions/runs/${context.runId}/artifacts/${newest.id})`)) {
+              core.setFailed(`The line for ${name} does not link this run's newest upload, ${newest.id}: ${line}`);
               return;
             }
             core.info(`The comment links this run's ${name}: ${line}`);

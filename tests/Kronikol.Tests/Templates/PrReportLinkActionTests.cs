@@ -590,6 +590,16 @@ public class PrReportLinkActionTests
             .Check(201, check)
             .Go();
         Assert.Contains("9004", Assert.Single(behind.Failures), StringComparison.Ordinal);
+
+        // The link job re-run after the upload expired: the action leaves the line, which links a download that is gone.
+        var expired = new PullRequest()
+            .Upload(301, 9020, name, "2026-09-15T12:00:00Z", "2026-09-16T12:00:00Z")
+            .Run(301, name)
+            .Expire(301)
+            .Run(301, name)
+            .Check(301, check)
+            .Go();
+        Assert.Contains("expired", Assert.Single(expired.Failures), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -647,7 +657,7 @@ public class PrReportLinkActionTests
                 var passed = step.Children.TryGetValue(new YamlScalarNode("with"), out var with)
                     ? ((YamlMappingNode)with).Children.Keys.Select(k => ((YamlScalarNode)k).Value!).ToList()
                     : [];
-                Assert.Empty(passed.Where(p => !action.Inputs.ContainsKey(p)));
+                Assert.DoesNotContain(passed, p => !action.Inputs.ContainsKey(p));
                 Assert.Empty(action.Inputs.Where(i => i.Value.Required && !passed.Contains(i.Key)).Select(i => i.Key));
 
                 var linked = ActionDefinition.Scalar((YamlMappingNode)with!, "artifact-name");
@@ -764,6 +774,13 @@ public class PrReportLinkActionTests
             return this;
         }
 
+        /// <summary>Every upload of run <paramref name="runId"/> passes its retention and is listed as expired.</summary>
+        public PullRequest Expire(long runId)
+        {
+            _steps.Add(new { expire = runId });
+            return this;
+        }
+
         /// <summary>
         /// A person editing the bot's comment, <c>crlf</c> or <c>trailing-whitespace</c>, or a later version of the
         /// action writing a field after each line's run id, <c>tag-field</c>, or a section after the end marker,
@@ -834,6 +851,8 @@ public class PrReportLinkActionTests
             if (step.upload) {
               const u = step.upload;
               (state.artifacts[u.runId] ??= []).push({ id: u.id, name: u.name, created_at: u.createdAt, expires_at: u.expiresAt, expired: u.expired });
+            } else if (step.expire) {
+              for (const a of state.artifacts[step.expire] ?? []) a.expired = true;
             } else if (step.edit === 'crlf') {
               for (const c of state.comments.filter(c => c.user.login === bot)) c.body = c.body.replace(/\r?\n/g, '\r\n');
             } else if (step.edit === 'tag-field') {
