@@ -1031,3 +1031,47 @@ in the README's workflow. CI on that rebase failed only the history action's new
 `action.yml` files among what it read, no result). It merged by rebase at 2026-09-29T09:15:49Z as `e58fc848` to
 `0e418805`, with the administrator's bypass, as #73 and #108 did. `main`'s own runs on it passed: CI 30 of 30 (run
 36548030555), CodeQL (run 36548030574) and CI Summary Preview (run 36548030585).
+
+### §6's leftovers (2026-09-29, released as 3.34.1)
+
+The owner asked for the workflows' old majors and the two packing leftovers to be fixed, and asked whether the facts
+that failed as root should skip there or be fixed. Done in PR #112 (merged by rebase as `669cd116` to `43f94b82`) and
+released as 3.34.1 (`a8abc614`), a patch.
+
+- **The facts that failed as root.** Run as root in a Linux container (`mcr.microsoft.com/dotnet/sdk:10.0` under
+  podman), each failed as §1.2 said, and the rotation's said more: it failed only at its last two assertions, so the
+  rotation had stopped for the read-only mark and kept nothing of the previous run, and the run had then overwritten
+  the file anyway. The mark stands for "the run cannot replace this file", which is false for root, so that was a
+  product defect. The rotation now stops only when the mark refuses this process (`RunRotation.CanWrite`), and a new
+  fact covers root, red as root on 3.34.0 and green with the fix. Of the three facts, init-agents' is about any
+  refused write and now refuses one in two ways that refuse every user, a file held open and a directory in the file's
+  place, so it runs everywhere. The stale-output fact's access-denied case needs an existing file this process is
+  refused, which nothing a test can set up gives root, and the code under test does not depend on who runs it, so it
+  skips as root; the held-file case has its own fact. The rotation's skips as root beside the new fact, which skips
+  everywhere else. `ReadOnlyProbe` tells the two apart. All of `Kronikol.Tests` as root then passed but for one fact
+  that needed node and did not skip without it; it skips now, and its class's `Dispose`, which failed any of its facts
+  run alone, was fixed with it. A CI job, "Core Tests as root (Linux container)", runs the suite that way.
+- **The workflows.** CI, CodeQL, CI Summary Preview and Release moved to `actions/checkout` v7, `actions/setup-dotnet`
+  v6, `github/codeql-action` v4 (v3 is deprecated in December 2026) and `softprops/action-gh-release` v3, and dropped
+  `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`. The majors' breaking changes, checkout's persisted credentials in a file of
+  their own and its refusal of fork code under `pull_request_target` and `workflow_run`, touch none of them: the
+  history record step pushes with its own token. `WorkflowActionVersionTests` holds each action to one major across
+  the workflows, the composite actions and their READMEs' workflows; it failed first on checkout and setup-dotnet. The
+  wiki's two pages still on v5 moved too (download-artifact to v8, whose changes to downloads by id and to digest
+  mismatches touch neither), and two of their examples gained `!cancelled()`: Merging Parallel Reports uploaded no
+  report from a shard whose tests failed, and skipped the merge whenever one did.
+- **The packing leftovers.** `Directory.Build.props` packs `nuget-readme.md` only into a package that names it, and
+  `Kronikol.Templates` no longer packs `LICENSE` a second time. `release.slnf` packed before and after gave 62
+  packages holding the same files but for the one `nuget-readme.md`, and no NU5118. CI's template-pack step fails on
+  NU5118 and on a package root other than `LICENSE`, `README.md` and `icon.png`; both checks failed on the old
+  package.
+
+Verification: `Kronikol.Tests` on Windows passed 6,270 with 2 skipped, the corpus fact and the new fact for root; as
+root in the container everything passed or skipped for want of node, python or git history. PR #112's head,
+`5831e53c`: CI 31 of 31 (run 36602582342; its root job passed 6,179 with 93 skipped) and CodeQL on v4 over C# and
+`actions` (run 36602582302: 69 rules, no result). It merged by rebase at 2026-09-29T17:23:55Z with the administrator's
+bypass. The release commit, `a8abc614`: CI 31 of 31 (run 36605191376), CI Summary Preview 5 of 5 (run 36605191373, its
+first run on the new majors, the history job included) and CodeQL (run 36605191274). `v3.34.1` was tagged on it; the
+Release run (36608012631) passed on checkout v7, setup-dotnet v6 and action-gh-release v3, NuGet listed all 62
+packages by 18:13 UTC, and the published `Kronikol.Templates` 3.34.1 holds `LICENSE`, `README.md` and `icon.png` at
+its root and no `nuget-readme.md`. The wiki is `4610921`.
