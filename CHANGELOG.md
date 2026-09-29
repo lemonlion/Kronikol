@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.35.3] - 2026-09-30
+
+**Patch - a report no longer carries internal-flow segments that no drawn arrow opens.** `plans/V4_PLAN.md` R6
+(roadmap 1c.7; Q4 taken 2026-09-29: drop them). Nothing new to call. The segment map in the page and in the mergeable
+data file loses entries, which is report output, so there is a Kronikol4J ledger entry. The history action's `VERSION`
+installs `Kronikol.Tool` 3.35.3. Template pins move to 3.35.2.
+
+### Changed
+
+- **The segment map holds only the segments an arrow of the report links.** The builder makes a segment of every
+  call, but a segment no arrow links can never be opened: a call an arrow cap (`MaxArrowsPerDiagram`) leaves
+  undrawn, and every call of a test the report does not show, among others. The page keeps the segments its
+  diagrams link and the mergeable data file those its scenarios' diagrams link, so a merge renders what the run's
+  page did. On BreakfastProvider's lanes, run on local builds, 3 of about 1,300 segments and 3 of about 820 were unlinked on 3.35.2 (4,101 and 3,735 decoded bytes), and none are on 3.35.3; in the repo's own report fixture, whose process had logged other tests, 19 of the page's 21 segments were.
+
 ## [3.35.2] - 2026-09-30
 
 **Patch - performance: an internal-flow flow that several arrows open is stored in the report once (#86).**

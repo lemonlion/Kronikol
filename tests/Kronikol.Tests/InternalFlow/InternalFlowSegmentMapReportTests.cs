@@ -174,6 +174,50 @@ public class InternalFlowSegmentMapReportTests : IDisposable
     }
 
     [Fact]
+    public void Every_segment_the_page_and_the_data_file_carry_is_one_their_diagrams_link()
+    {
+        // V4_PLAN.md R6 (Q4: drop): a segment no drawn arrow links can never be opened. A test this run does not name
+        // made calls with spans of their own, so the builder made segments of them, which neither output shows.
+        var elsewhere = "iflow-map-elsewhere-" + Guid.NewGuid().ToString("N");
+        var at = DateTimeOffset.UtcNow.AddSeconds(-40);
+        for (var i = 0; i < 3; i++)
+        {
+            var id = Guid.NewGuid();
+            var trace = ActivityTraceId.CreateRandom();
+            Log(Call(elsewhere, HttpMethod.Get, id, trace, RequestResponseType.Request, at.AddMilliseconds(i * 20)));
+            Log(Call(elsewhere, HttpMethod.Get, id, trace, RequestResponseType.Response, at.AddMilliseconds(i * 20 + 5)));
+            Span("elsewhere.root", trace, at.AddMilliseconds(i * 20 + 1), 2);
+        }
+
+        var run = Generate(InternalFlowNoDataBehavior.HideLink);
+
+        var linkedInPage = LinkedIds(DiagramSourcesInPage(run.Html));
+        Assert.Contains($"iflow-{run.First}", linkedInPage);
+        Assert.All(SegmentKeysInPage(run.Html), key => Assert.Contains(key, linkedInPage));
+
+        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        var root = data.RootElement;
+        var linkedInData = LinkedIds(root.GetProperty("features").EnumerateArray()
+            .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
+            .SelectMany(s => s.TryGetProperty("diagrams", out var d) ? d.EnumerateArray().Select(x => x.GetString() ?? "") : []));
+        Assert.All(root.GetProperty("internalFlowSegments").EnumerateObject(), p => Assert.Contains(p.Name, linkedInData));
+    }
+
+    [Fact]
+    public void A_call_the_arrow_cap_leaves_undrawn_has_no_segment()
+    {
+        // With one arrow a diagram, the second call is not drawn, so no arrow links its segment.
+        var run = Generate(InternalFlowNoDataBehavior.HideLink, configure: o => o.MaxArrowsPerDiagram = 1);
+
+        Assert.DoesNotContain($"iflow-{run.Second}", LinkedIds(DiagramSourcesInPage(run.Html)));
+        Assert.Contains($"iflow-{run.First}", SegmentKeysInPage(run.Html));
+        Assert.DoesNotContain($"iflow-{run.Second}", SegmentKeysInPage(run.Html));
+        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        Assert.False(data.RootElement.GetProperty("internalFlowSegments").TryGetProperty($"iflow-{run.Second}", out _),
+            "the data file carries no segment for the undrawn call");
+    }
+
+    [Fact]
     public void A_scenario_that_made_no_call_has_no_whole_test_flow()
     {
         var run = Generate(InternalFlowNoDataBehavior.HideLink);
@@ -209,7 +253,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
 
     private sealed record Run(string Html, HashSet<string> Own, Guid First, Guid Second, string CallsScenarioId, string QuietScenarioId, Guid Nested);
 
-    private Run Generate(InternalFlowNoDataBehavior noData, bool nestedCall = false)
+    private Run Generate(InternalFlowNoDataBehavior noData, bool nestedCall = false, Action<ReportConfigurationOptions>? configure = null)
     {
         var callsId = "iflow-map-" + Guid.NewGuid().ToString("N");
         var quietId = "iflow-map-quiet-" + Guid.NewGuid().ToString("N");
@@ -269,6 +313,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
             GenerateComponentDiagram = false,
             WriteRunSummaryToConsole = false,
         };
+        configure?.Invoke(options);
 
         DefaultDiagramsFetcher.Reset();
         try

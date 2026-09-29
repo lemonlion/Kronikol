@@ -91,6 +91,19 @@ public static class InternalFlowHtmlGenerator
     /// Every internal-flow link id (<c>[[#iflow-… …]]</c>) in the sources, once each, in first-seen order. The id
     /// ends at whitespace or a bracket, as the report's own link reader (<c>extractIflowMap</c>) reads it.
     /// </summary>
+    /// <summary>
+    /// The segments some arrow of <paramref name="linkSources"/> links (<c>plans/V4_PLAN.md</c> R6). The builder makes
+    /// a segment of every call, but a segment no drawn arrow links can never be opened: the calls an arrow cap or a
+    /// collapsed run leaves undrawn, those a <c>Skip</c> phase variant hides or an override block holds, and every
+    /// call of a test the page does not show. Before 3.35.3 a report carried them all.
+    /// </summary>
+    internal static Dictionary<string, InternalFlowSegment> LinkedSegments(
+        Dictionary<string, InternalFlowSegment> segments, IEnumerable<string?> linkSources)
+    {
+        var linked = LinkedIds(linkSources).ToHashSet(StringComparer.Ordinal);
+        return segments.Where(s => linked.Contains(s.Key)).ToDictionary(s => s.Key, s => s.Value, StringComparer.Ordinal);
+    }
+
     internal static List<string> LinkedIds(IEnumerable<string?> sources)
     {
         var seen = new HashSet<string>(StringComparer.Ordinal);

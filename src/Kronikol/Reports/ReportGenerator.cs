@@ -405,12 +405,13 @@ public static class ReportGenerator
             var linkSources = diagrams.Where(d => shownTestIds.Contains(d.TestRuntimeId)).Select(d => (string?)d.CodeBehind)
                 .Append(ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null)
                 .ToArray();
+            var linkedSegments = InternalFlowHtmlGenerator.LinkedSegments(perBoundarySegments, linkSources);
 
             string BuildFlowScript(InternalFlowTab startTab) =>
                 DiagramContextMenu.GetInternalFlowConfigScript(options.InternalFlowHasDataBehavior)
                 + InternalFlowHtmlGenerator.WrapSegmentData(
                     InternalFlowHtmlGenerator.StoreFlowsOnce(InternalFlowHtmlGenerator.BuildSegmentData(
-                        perBoundarySegments,
+                        linkedSegments,
                         options.InternalFlowDiagramStyle,
                         options.InternalFlowShowFlameChart,
                         options.InternalFlowFlameChartPosition,
@@ -4616,9 +4617,13 @@ public static class ReportGenerator
         Dictionary<string, object>? internalFlowSegmentData = null;
         if (perBoundarySegments is not null)
         {
-            // The page's map, stored the same way, so a merge renders what the run's page did.
+            // The page's map, filtered and stored the same way, so a merge renders what the run's page did: the
+            // segments the diagrams this file carries link, which are its scenarios' own.
+            var linkSources = features.SelectMany(f => f.Scenarios)
+                .SelectMany(s => diagramLookup?[s.Id] ?? [])
+                .Select(source => (string?)source);
             internalFlowSegmentData = InternalFlowHtmlGenerator.StoreFlowsOnce(InternalFlowHtmlGenerator.BuildSegmentData(
-                perBoundarySegments,
+                InternalFlowHtmlGenerator.LinkedSegments(perBoundarySegments, linkSources),
                 options.InternalFlowDiagramStyle,
                 options.InternalFlowShowFlameChart,
                 options.InternalFlowFlameChartPosition,

@@ -13,6 +13,8 @@ is safe to read in an agent session.
 | `mutate_r2.py` | R2: breaks each of twelve guards in turn in a checkout, runs the facts that should catch it and restores the file; prints CAUGHT or SURVIVED per guard |
 | `dedup.py` | R4 and R5: #86's measure of a page's segment map (GUIDs normalised, each distinct `content` and `flameData` counted once), and its size stored once, decoded and gzipped |
 | `mutate_r5.py` | R5: the same as `mutate_r3.py` for seven guards of the stored-once layout, one through a Playwright fact |
+| `unlinked.py` | R6: the segments a page's map carries that no diagram of the page links, with their decoded bytes |
+| `mutate_r6.py` | R6: the same as `mutate_r3.py` for four guards of the filter |
 | `mutate_r3.py` | R3: the same for thirteen guards of #87's rule, its note and title, the message under `HideLink` and the encoded diagnostic |
 
 ```bash
