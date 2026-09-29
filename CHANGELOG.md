@@ -4,10 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [3.34.1] - 2026-09-29
 
-**The next release is a patch: two fixes a package ships, `Kronikol`'s report rotation under root and what the
-`Kronikol.Templates` package holds.** The rest moves no version: the workflows, CI and tests.
+**Patch - two bug fixes a package ships: `Kronikol`'s report rotation under root, and what the `Kronikol.Templates`
+package holds. Nothing new for a consumer to call, so a patch; the workflows, CI and tests beside them move no
+version.** No public API and no generated report changes, so there is no Kronikol4J ledger entry. The history
+action's `VERSION` installs `Kronikol.Tool` 3.34.1. Template pins move to 3.34.0.
 
 ### Fixed
 
