@@ -282,4 +282,32 @@ public class HistoryActionStaticTests
         }
         Assert.Equal(Phases.Order(), phases.Order());
     }
+
+    [Fact]
+    public void The_dogfood_runs_every_phase_by_path_with_the_tool_built_from_source()
+    {
+        // plans/HISTORY_ACTION_PLAN.md S4: CI Summary Preview records its runs through the action, on the branch its
+        // old fold job wrote, with the tool built from the commit under test; only the history job can push.
+        var text = File.ReadAllText(Path.Combine(HistoryWorld.RepoRoot, ".github", "workflows", "ci-summary-preview.yml"));
+        var workflow = ActionDefinition.LoadYaml(text);
+        var phases = new HashSet<string>();
+        foreach (var (job, node, step, phase) in Calls(workflow))
+        {
+            phases.Add(phase);
+            Assert.Equal($"./templates/github-actions/kronikol-history/{phase}", ActionDefinition.Scalar(step, "uses"));
+            var with = step.Children.TryGetValue(new YamlScalarNode("with"), out var inputs) ? (YamlMappingNode)inputs : new YamlMappingNode();
+            var passed = with.Children.Keys.Select(k => ((YamlScalarNode)k).Value!).ToList();
+            var declared = Phase(phase).Inputs;
+            Assert.Empty(passed.Where(p => !declared.ContainsKey(p)));
+            Assert.Empty(declared.Where(i => i.Value.Required && !passed.Contains(i.Key)).Select(i => i.Key));
+            Assert.DoesNotContain("branch", passed);
+            if (phase is "gate" or "record")
+                Assert.StartsWith("dotnet run --no-build --project src/Kronikol.Tool/Kronikol.Tool.csproj ", ActionDefinition.Scalar(with, "tool-command") ?? "(none: the released tool)");
+            if (phase != "read")
+                Assert.Contains("!cancelled()", (ActionDefinition.Scalar(step, "if") ?? "") + (phase == "record" ? ActionDefinition.Scalar(node, "if") : ""));
+            Assert.Equal(phase == "record" ? "write" : "read", Permission(node, workflow, "contents"));
+        }
+        Assert.Equal(Phases.Order(), phases.Order());
+        Assert.DoesNotContain("git worktree", text);
+    }
 }
