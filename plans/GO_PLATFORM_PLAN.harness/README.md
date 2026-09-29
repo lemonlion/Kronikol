@@ -1,11 +1,13 @@
 # GO_PLATFORM_PLAN harness
 
 The probes behind every RUN mark in [`../GO_PLATFORM_PLAN.md`](../GO_PLATFORM_PLAN.md), with the output
-they printed on 2026-09-28. Go 1.24.7 (the machine's toolchain) and Go 1.27.1 (the current release,
-fetched through `GOTOOLCHAIN`), on linux/amd64. Everything but H11's render and H10b is the Go
-standard library plus two modules fetched from the public proxy (wazero, wasmtime-go). H11 renders
-with `Kronikol.Tool` built from this repository at `e7e8504` (3.31.10) on .NET SDK 10.0.401; H10b uses
-the `dotnet.wasm` a .NET 10.0.401 `wasi-experimental` publish writes.
+they printed on 2026-09-28, and H15's on 2026-09-29. Go 1.24.7 (the machine's toolchain) and Go 1.27.1
+(the current release, fetched through `GOTOOLCHAIN`), on linux/amd64. Everything but H11's render, H10b
+and H15 is the Go standard library plus two modules fetched from the public proxy (wazero,
+wasmtime-go). H11 renders with `Kronikol.Tool` built from this repository at `e7e8504` (3.31.10) on .NET
+SDK 10.0.401; H10b uses the `dotnet.wasm` a .NET 10.0.401 `wasi-experimental` publish writes. H15 builds
+pgx v5.11.0 on Go 1.27.1 and runs against PostgreSQL 16.13 (Ubuntu's package, with TLS on through its
+snakeoil certificate); H15b resolves pgx v5.5.0, v5.6.0, v5.8.0 and v5.11.0 from the proxy.
 
 `./run.sh` regenerates every `results-*.txt`. Paths in the results are replaced by `<tmp>`,
 `<modcache>`, `<goroot>` and `<harness>`. Timings and the counts in H11's labels-off run move from run
@@ -14,7 +16,7 @@ every run.
 
 ## The probes
 
-The numbers run H1 to H14 with two gaps: H4 (the identity carried through a served request) and H12
+The numbers run H1 to H15 with two gaps: H4 (the identity carried through a served request) and H12
 (a capture core built on the standard library alone) were folded into the prototype, H11, which
 answers both.
 
@@ -33,6 +35,8 @@ answers both.
 | `h11_prototype/` | A throwaway capturer (`kgo/`, about 900 lines, standard library only) and run wrapper (`cmd/kronikol-go/`, about 190) around an orders service with a payments dependency and a fake PostgreSQL; the NDJSON rendered by today's `kronikol ingest` and read back with `kronikol query`; attribution with and without the goroutine-label fallback; the test cache | K17 to K21, §3 | `results-h11-prototype.txt` |
 | `h13_seams.sh` | The hooks pgx, go-redis, the MongoDB driver, gRPC, sarama, franz-go, kafka-go, the AWS SDK, godog, Ginkgo, testify, the OTel SDK and GORM's Postgres driver expose, read with `go doc` at the proxy's latest version | K22, §3.4, §3.5 | `results-h13-seams.txt` |
 | `h14_instrumentation.sh` | Whether Go's zero-code story changed after `NEXT_LANGUAGE_PLAN` deferred Go: the versions of OpenTelemetry's compile-time instrumenter, Orchestrion, loongsuite and the eBPF agent, and what the compile-time instrumenter ships (its rule kinds, its `-toolexec` entry, its 28 targets) | K23 to K25, §1, §3.10, §3.11 | `results-h14-instrumentation.txt` |
+| `h15_pgx/` | pgx's own API on a real PostgreSQL: what each of its tracers (query, batch, copy, prepare, connect, and the pool's acquire and release) hands a capturer, and which calls none of them sees; whether a protocol tap in `AfterNetConnect`, joined to the tracer by connection, recovers the rows, the COPY data and a failing batched statement, with TLS off and on; the same through `BuildFrontend`; a `DialFunc` wrapper for contrast | K27, K28, §3.4 | `results-h15-pgx.txt` |
+| `h15_pgxfloor.sh` | H15b: what a capture module's pgx requirement does to its user's production build, and one module source that takes `AfterNetConnect` by reflection where the user's pgx has it | K28, §3.4 | same |
 
 ## What the prototype is not
 
@@ -47,6 +51,13 @@ goroutine-label level is opt-in (`KRONIKOL_GOROUTINE_LABELS=1`), which is what l
 cascade with and without it; the plan's decided design (Q2, taken 2026-09-28) turns it on by default,
 behind a self-test. Its size is a floor for the plan's cost model, never an estimate.
 
+`h15_pgx`'s tap is the same kind of evidence. It keeps every row it sees (no cap), has no check that it
+still follows the protocol, holds a COPY's whole stream until the copy ends, finds a COPY's column types
+by the statement text pgx describes first, and decodes only the types and paths its workload uses. Its
+join, results in order between a callback's start and end on the same connection, is sound only because
+a `pgx.Conn` serves one caller at a time (pgx's documentation says it is not safe for concurrent use).
+About 300 of its lines are the decoder; the rest is the tracer and the printing.
+
 ## Re-running
 
 ```bash
@@ -56,7 +67,12 @@ behind a self-test. Its size is a floor for the plan's cost model, never an esti
 dotnet build ../../src/Kronikol.Tool/Kronikol.Tool.csproj -c Release -f net10.0 -o /tmp/kt
 DOTNET=$(command -v dotnet) KRONIKOL_TOOL=/tmp/kt/Kronikol.Tool.dll \
 DOTNET_WASM=<a wasi-wasm publish>/dotnet.wasm ./run.sh
+# With H15 (a throwaway database; the probe creates and drops h15_orders in it):
+PGURL=postgres://user:password@127.0.0.1:5432/scratch ./run.sh
 ```
+
+H15 needs a server that accepts both `sslmode=disable` and `sslmode=require`; without `PGURL` it is
+skipped and H15b still runs.
 
 H11's `kronikol-go` passes `--attribute-by-window --run-window` to ingest, sets `KRONIKOL_HISTORY=off`
 through the environment the script gives it, and never opens a report file: every fact about the

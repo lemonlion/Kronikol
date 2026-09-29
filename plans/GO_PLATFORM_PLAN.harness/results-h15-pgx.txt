@@ -1,0 +1,195 @@
+H15 go1.27.1, github.com/jackc/pgx/v5 v5.11.0
+=== H15 pgxpool, tracer + AfterNetConnect tap, sslmode=disable
+  -- Exec, and QueryRow with RETURNING
+  T1      connect  127.0.0.1:5432 database=kprobe
+  T1      ...end   conn#1 server_version=16.13 (Ubuntu 16.13-0ubuntu0.24.04.1) tls=false err=nil
+  T1      query    conn#1 sql="drop table if exists h15_orders" args=[]
+  T1      ...end   tag="DROP TABLE" err=nil
+          wire:   DROP TABLE
+  T1      query    conn#1 sql="create table h15_orders (id bigint generated always as identity prima..." args=[]
+  T1      ...end   tag="CREATE TABLE" err=nil
+          wire:   CREATE TABLE
+  T1      query    conn#1 sql="insert into h15_orders (sku, qty, price, meta) values ($1, $2, $3, $4..." args=[ALICE-1 2 12.50 map[gift:true]]
+  T1      prepare  conn#1 name="stmtcache_b0d8f337901a9b42a3c9f5fca3af54cbef520ee043d1998d" sql="insert into h15_orders (sku, qty, price, meta) values ($1, $2, $3, $4..."
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="INSERT 0 1" err=nil
+          wire:   INSERT 0 1 columns [id int8/binary] rows (1); columns from the statement described earlier on this connection
+  T1      query    conn#1 sql="insert into h15_orders (sku, qty, price) values ($1, $2, $3)" args=[ALICE-2 5 3.10]
+  T1      prepare  conn#1 name="stmtcache_7e2a288734c4f937e257528daa560b940280fb79648143a1" sql="insert into h15_orders (sku, qty, price) values ($1, $2, $3)"
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="INSERT 0 1" err=nil
+          wire:   INSERT 0 1
+  -- Query twice: the second takes pgx's statement cache, so no RowDescription crosses the wire
+  T1      query    conn#1 sql="select id, sku, qty, price, meta from h15_orders where qty > $1 order..." args=[1]
+  T1      prepare  conn#1 name="stmtcache_c494cfc5593c54376f5f0d26f0906018cf1268577fc52568" sql="select id, sku, qty, price, meta from h15_orders where qty > $1 order..."
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="SELECT 2" err=nil
+          wire:   SELECT 2 columns [id int8/binary, sku text/text, qty int4/binary, price numeric/binary, meta jsonb/text] rows (1, ALICE-1, 2, 12.50, map[gift:true]) (2, ALICE-2, 5, 3.10, NULL); columns from the statement described earlier on this connection
+  T1      query    conn#1 sql="select id, sku, qty, price, meta from h15_orders where qty > $1 order..." args=[1]
+  T1      ...end   tag="SELECT 2" err=nil
+          wire:   SELECT 2 columns [id int8/binary, sku text/text, qty int4/binary, price numeric/binary, meta jsonb/text] rows (1, ALICE-1, 2, 12.50, map[gift:true]) (2, ALICE-2, 5, 3.10, NULL); columns from the statement described earlier on this connection
+  -- NamedArgs, and the simple protocol
+  T1      query    conn#1 sql="select sku, qty from h15_orders where sku = @sku" args=[NamedArgsmap[sku:ALICE-1]]
+  T1      prepare  conn#1 name="stmtcache_e41019092bc9ba4d124c0e05b06a169e065b896c405d28a5" sql="select sku, qty from h15_orders where sku = $1"
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="SELECT 1" err=nil
+          wire:   SELECT 1 columns [sku text/text, qty int4/binary] rows (ALICE-1, 2); columns from the statement described earlier on this connection
+  T1      query    conn#1 sql="select sku, price from h15_orders where qty >= $1 order by sku" args=[QueryExecMode(simple protocol) 2]
+  T1      ...end   tag="SELECT 2" err=nil
+          wire:   SELECT 2 columns [sku text/text, price numeric/text] rows (ALICE-1, 12.50) (ALICE-2, 3.10); columns from its own RowDescription
+  -- SendBatch, one query of it failing
+  T2      batch    conn#1 3 queued
+  T2      ...query sql="insert into h15_orders (sku, qty) values ($1, $2)" args=[BOB-22 1] tag="INSERT 0 1" err=nil
+          wire:   INSERT 0 1
+  T2      ...query sql="select sku, qty from h15_orders where sku like $1 order by sku" args=[ALICE-%] tag="SELECT 2" err=nil
+          wire:   SELECT 2 columns [sku text/text, qty int4/binary] rows (ALICE-1, 2) (ALICE-2, 5); columns from the statement described earlier on this connection
+  T2      ...end   err=PgError 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+  T2      wire, in no tracer callback (found at release; the pool had lent conn#1 to T2): error 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+  -- CopyFrom
+  T1      copy     conn#1 table="h15_orders" columns=[sku qty]
+  T1      prepare  conn#1 name="stmtcache_d84227ea3e18a0b9d1bbcc8d93b4bd1590dc1b0a4a5c126f" sql="select \"sku\", \"qty\" from \"h15_orders\""
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="COPY 2" err=nil
+          wire:   the COPY data: columns [sku text/binary, qty int4/binary] rows (CAROL-3, 4) (CAROL-4, 6)
+          wire:   COPY 2
+  -- Prepare on an acquired connection; then pgconn directly and Ping, which no tracer sees
+  T2      prepare  conn#1 name="by_sku" sql="select id, qty from h15_orders where sku = $1"
+  T2      ...end   alreadyPrepared=false err=nil
+  T2      query    conn#1 sql="by_sku" args=[CAROL-3]
+  T2      ...end   tag="SELECT 1" err=nil
+          wire:   SELECT 1 columns [id int8/binary, qty int4/binary] rows (5, 4); columns from the statement described earlier on this connection
+  T2      wire, in no tracer callback (found at release; the pool had lent conn#1 to T2): SELECT 1 columns [answer int4/text, note text/text] rows (42, below pgx); columns from its own RowDescription
+  -- a transaction
+  T1      query    conn#1 sql="begin" args=[]
+  T1      ...end   tag="BEGIN" err=nil
+          wire:   BEGIN
+  T1      query    conn#1 sql="delete from h15_orders where sku = $1" args=[BOB-22]
+  T1      prepare  conn#1 name="stmtcache_70fb24ed270c2c7c49dfea0277d248b49eb70bb7be1d5058" sql="delete from h15_orders where sku = $1"
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="DELETE 0" err=nil
+          wire:   DELETE 0
+  T1      query    conn#1 sql="commit" args=[]
+  T1      ...end   tag="COMMIT" err=nil
+          wire:   COMMIT
+  -- a call whose context carries no test
+  (none)  query    conn#1 sql="select count(*) as n from h15_orders" args=[]
+  (none)  prepare  conn#1 name="stmtcache_1a5385ca35c6f099c445bec768cedeecdf5a22c02cfe44cc" sql="select count(*) as n from h15_orders"
+  (none)  ...end   alreadyPrepared=false err=nil
+  (none)  ...end   tag="SELECT 1" err=nil
+          wire:   SELECT 1 columns [n int8/binary] rows (4); columns from the statement described earlier on this connection
+  -- an error
+  T1      query    conn#1 sql="insert into h15_orders (sku, qty) values ($1, $2)" args=[ALICE-1 1]
+  T1      prepare  conn#1 name="stmtcache_3da4f0338ac639e717293deb4d0b43cd7ab73572b99b1181" sql="insert into h15_orders (sku, qty) values ($1, $2)"
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="" err=PgError 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+          wire:   error 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+          returned to the caller: PgError 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+  summary: rows decoded from the wire inside tracer callbacks 14 (in 17 statements); outside every callback 2 statement(s) with 1 row(s); pool acquires 14 (each with the caller's context), releases 14 (no context)
+=== H15 pgxpool, tracer + AfterNetConnect tap, sslmode=require
+  -- Exec, and QueryRow with RETURNING
+  T1      connect  127.0.0.1:5432 database=kprobe
+  T1      ...end   conn#1 server_version=16.13 (Ubuntu 16.13-0ubuntu0.24.04.1) tls=true err=nil
+  T1      query    conn#1 sql="drop table if exists h15_orders" args=[]
+  T1      ...end   tag="DROP TABLE" err=nil
+          wire:   DROP TABLE
+  T1      query    conn#1 sql="create table h15_orders (id bigint generated always as identity prima..." args=[]
+  T1      ...end   tag="CREATE TABLE" err=nil
+          wire:   CREATE TABLE
+  T1      query    conn#1 sql="insert into h15_orders (sku, qty, price, meta) values ($1, $2, $3, $4..." args=[ALICE-1 2 12.50 map[gift:true]]
+  T1      prepare  conn#1 name="stmtcache_b0d8f337901a9b42a3c9f5fca3af54cbef520ee043d1998d" sql="insert into h15_orders (sku, qty, price, meta) values ($1, $2, $3, $4..."
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="INSERT 0 1" err=nil
+          wire:   INSERT 0 1 columns [id int8/binary] rows (1); columns from the statement described earlier on this connection
+  T1      query    conn#1 sql="insert into h15_orders (sku, qty, price) values ($1, $2, $3)" args=[ALICE-2 5 3.10]
+  T1      prepare  conn#1 name="stmtcache_7e2a288734c4f937e257528daa560b940280fb79648143a1" sql="insert into h15_orders (sku, qty, price) values ($1, $2, $3)"
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="INSERT 0 1" err=nil
+          wire:   INSERT 0 1
+  -- Query twice: the second takes pgx's statement cache, so no RowDescription crosses the wire
+  T1      query    conn#1 sql="select id, sku, qty, price, meta from h15_orders where qty > $1 order..." args=[1]
+  T1      prepare  conn#1 name="stmtcache_c494cfc5593c54376f5f0d26f0906018cf1268577fc52568" sql="select id, sku, qty, price, meta from h15_orders where qty > $1 order..."
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="SELECT 2" err=nil
+          wire:   SELECT 2 columns [id int8/binary, sku text/text, qty int4/binary, price numeric/binary, meta jsonb/text] rows (1, ALICE-1, 2, 12.50, map[gift:true]) (2, ALICE-2, 5, 3.10, NULL); columns from the statement described earlier on this connection
+  T1      query    conn#1 sql="select id, sku, qty, price, meta from h15_orders where qty > $1 order..." args=[1]
+  T1      ...end   tag="SELECT 2" err=nil
+          wire:   SELECT 2 columns [id int8/binary, sku text/text, qty int4/binary, price numeric/binary, meta jsonb/text] rows (1, ALICE-1, 2, 12.50, map[gift:true]) (2, ALICE-2, 5, 3.10, NULL); columns from the statement described earlier on this connection
+  -- NamedArgs, and the simple protocol
+  T1      query    conn#1 sql="select sku, qty from h15_orders where sku = @sku" args=[NamedArgsmap[sku:ALICE-1]]
+  T1      prepare  conn#1 name="stmtcache_e41019092bc9ba4d124c0e05b06a169e065b896c405d28a5" sql="select sku, qty from h15_orders where sku = $1"
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="SELECT 1" err=nil
+          wire:   SELECT 1 columns [sku text/text, qty int4/binary] rows (ALICE-1, 2); columns from the statement described earlier on this connection
+  T1      query    conn#1 sql="select sku, price from h15_orders where qty >= $1 order by sku" args=[QueryExecMode(simple protocol) 2]
+  T1      ...end   tag="SELECT 2" err=nil
+          wire:   SELECT 2 columns [sku text/text, price numeric/text] rows (ALICE-1, 12.50) (ALICE-2, 3.10); columns from its own RowDescription
+  -- SendBatch, one query of it failing
+  T2      batch    conn#1 3 queued
+  T2      ...query sql="insert into h15_orders (sku, qty) values ($1, $2)" args=[BOB-22 1] tag="INSERT 0 1" err=nil
+          wire:   INSERT 0 1
+  T2      ...query sql="select sku, qty from h15_orders where sku like $1 order by sku" args=[ALICE-%] tag="SELECT 2" err=nil
+          wire:   SELECT 2 columns [sku text/text, qty int4/binary] rows (ALICE-1, 2) (ALICE-2, 5); columns from the statement described earlier on this connection
+  T2      ...end   err=PgError 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+  T2      wire, in no tracer callback (found at release; the pool had lent conn#1 to T2): error 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+  -- CopyFrom
+  T1      copy     conn#1 table="h15_orders" columns=[sku qty]
+  T1      prepare  conn#1 name="stmtcache_d84227ea3e18a0b9d1bbcc8d93b4bd1590dc1b0a4a5c126f" sql="select \"sku\", \"qty\" from \"h15_orders\""
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="COPY 2" err=nil
+          wire:   the COPY data: columns [sku text/binary, qty int4/binary] rows (CAROL-3, 4) (CAROL-4, 6)
+          wire:   COPY 2
+  -- Prepare on an acquired connection; then pgconn directly and Ping, which no tracer sees
+  T2      prepare  conn#1 name="by_sku" sql="select id, qty from h15_orders where sku = $1"
+  T2      ...end   alreadyPrepared=false err=nil
+  T2      query    conn#1 sql="by_sku" args=[CAROL-3]
+  T2      ...end   tag="SELECT 1" err=nil
+          wire:   SELECT 1 columns [id int8/binary, qty int4/binary] rows (5, 4); columns from the statement described earlier on this connection
+  T2      wire, in no tracer callback (found at release; the pool had lent conn#1 to T2): SELECT 1 columns [answer int4/text, note text/text] rows (42, below pgx); columns from its own RowDescription
+  -- a transaction
+  T1      query    conn#1 sql="begin" args=[]
+  T1      ...end   tag="BEGIN" err=nil
+          wire:   BEGIN
+  T1      query    conn#1 sql="delete from h15_orders where sku = $1" args=[BOB-22]
+  T1      prepare  conn#1 name="stmtcache_70fb24ed270c2c7c49dfea0277d248b49eb70bb7be1d5058" sql="delete from h15_orders where sku = $1"
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="DELETE 0" err=nil
+          wire:   DELETE 0
+  T1      query    conn#1 sql="commit" args=[]
+  T1      ...end   tag="COMMIT" err=nil
+          wire:   COMMIT
+  -- a call whose context carries no test
+  (none)  query    conn#1 sql="select count(*) as n from h15_orders" args=[]
+  (none)  prepare  conn#1 name="stmtcache_1a5385ca35c6f099c445bec768cedeecdf5a22c02cfe44cc" sql="select count(*) as n from h15_orders"
+  (none)  ...end   alreadyPrepared=false err=nil
+  (none)  ...end   tag="SELECT 1" err=nil
+          wire:   SELECT 1 columns [n int8/binary] rows (4); columns from the statement described earlier on this connection
+  -- an error
+  T1      query    conn#1 sql="insert into h15_orders (sku, qty) values ($1, $2)" args=[ALICE-1 1]
+  T1      prepare  conn#1 name="stmtcache_3da4f0338ac639e717293deb4d0b43cd7ab73572b99b1181" sql="insert into h15_orders (sku, qty) values ($1, $2)"
+  T1      ...end   alreadyPrepared=false err=nil
+  T1      ...end   tag="" err=PgError 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+          wire:   error 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+          returned to the caller: PgError 23505 duplicate key value violates unique constraint "h15_orders_sku_key"
+  summary: rows decoded from the wire inside tracer callbacks 14 (in 17 statements); outside every callback 2 statement(s) with 1 row(s); pool acquires 14 (each with the caller's context), releases 14 (no context)
+=== H15 the BuildFrontend route (pgx before 5.8), sslmode=require
+  T3      connect  127.0.0.1:5432 database=kprobe
+  T3      ...end   conn#1 server_version=16.13 (Ubuntu 16.13-0ubuntu0.24.04.1) tls=true err=nil
+  T3      query    conn#1 sql="select sku, qty from h15_orders where qty > $1 order by sku" args=[3]
+  T3      prepare  conn#1 name="stmtcache_c682092c3bf9d548afc45fee88c89ede950403fc0308e851" sql="select sku, qty from h15_orders where qty > $1 order by sku"
+  T3      ...end   alreadyPrepared=false err=nil
+  T3      ...end   tag="SELECT 3" err=nil
+          wire:   SELECT 3 columns [sku text/text, qty int4/binary] rows (ALICE-2, 5) (CAROL-3, 4) (CAROL-4, 6); columns from the statement described earlier on this connection
+  T3      query    conn#1 sql="select sku, qty from h15_orders where qty > $1 order by sku" args=[3]
+  T3      ...end   tag="SELECT 3" err=nil
+          wire:   SELECT 3 columns [sku text/text, qty int4/binary] rows (ALICE-2, 5) (CAROL-3, 4) (CAROL-4, 6); columns from the statement described earlier on this connection
+=== H15 for contrast: a DialFunc wrapper sits below TLS
+  sslmode=disable first bytes the DialFunc conn wrote: 00 00 00 25 00 03 00 00 75 73 65 72 ... a StartupMessage: decodable
+  sslmode=require first bytes the DialFunc conn wrote: 00 00 00 08 04 d2 16 2f 16 03 01 05 ... an SSLRequest, then byte 0x16 (a TLS handshake record): ciphertext from here on
+=== H15 done: h15_orders dropped
+=== H15b (a) a capture module requiring pgx v5.8.0, added to a service on v5.5.0
+  the service alone builds with: github.com/jackc/pgx/v5 v5.5.0
+  with the module in its tests only:  github.com/jackc/pgx/v5 v5.8.0
+  and its production binary links:   v5.8.0
+=== H15b (b) one capture-module source requiring v5.6.0, AfterNetConnect set by reflection
+  service on github.com/jackc/pgx/v5 v5.6.0: no AfterNetConnect in this pgx: BuildFrontend
+  service on github.com/jackc/pgx/v5 v5.11.0: AfterNetConnect set

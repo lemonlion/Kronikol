@@ -3,7 +3,9 @@
 #
 # Needs: Go (any 1.24+; the script fetches go1.27.1 through GOTOOLCHAIN), network to the Go module
 # proxy, python3. Optional: KRONIKOL_TOOL=<path to Kronikol.Tool.dll built from this repository> and
-# DOTNET=<dotnet executable> for H11's render; DOTNET_WASM=<a .NET 10 wasi-wasm dotnet.wasm> for H10b.
+# DOTNET=<dotnet executable> for H11's render; DOTNET_WASM=<a .NET 10 wasi-wasm dotnet.wasm> for H10b;
+# PGURL=<a throwaway PostgreSQL database accepting sslmode=disable and require> for H15, which creates
+# and drops a table named h15_orders there.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
 cd "$here"
@@ -131,4 +133,13 @@ EOF
 
 bash ./h13_seams.sh 2>&1 | anon > results-h13-seams.txt
 bash ./h14_instrumentation.sh 2>&1 | anon > results-h14-instrumentation.txt
+
+{
+  if [ -n "${PGURL:-}" ]; then
+    (cd h15_pgx && GOTOOLCHAIN=$NEW go build -o "$scratch/h15" . && "$scratch/h15")
+  else
+    echo "=== H15 skipped: set PGURL to a throwaway PostgreSQL database"
+  fi
+  NEW=$NEW bash ./h15_pgxfloor.sh
+} 2>&1 | anon > results-h15-pgx.txt
 echo "done: $(ls results-*.txt | tr '\n' ' ')"

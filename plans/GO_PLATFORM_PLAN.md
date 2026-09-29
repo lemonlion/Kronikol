@@ -3,7 +3,8 @@
 **Date:** 2026-09-28 · **.NET repo:** 3.31.10 (`e7e8504`) · **Kronikol4J:** 0.1.25-SNAPSHOT · **Go:** 1.27.1 current, 1.24.7 on the machine
 · **Status: design record, investigation run, nothing implemented. Green-lit 2026-09-28: D29 and Q1 to Q8 taken as recommended (§7, §11).** Answers the owner's
 question of 2026-09-28: "Can you come up with a plan to have Kronikol also support Go after it supports
-python, js and java".
+python, js and java". **Amended 2026-09-29** at the owner's request: pgx's own API gets its rows through
+a protocol tap joined to its tracer (§3.4, K27 to K29, H15; §11).
 
 **The decision was D29 in `ROADMAP.md` §3, taken 2026-09-28 as recommended** (drafted as D28 on this
 plan's branch; it lands as D29 because D28 went to the query fallback, stage 1b). The platform is stage
@@ -25,8 +26,8 @@ what did not, and that plan now carries a banner pointing here.
 (the source, plan or document was read today), PLAN (another plan says so, not re-checked), INFERRED
 (reasoned from two facts, stated by neither), ASSUMED (general knowledge, not verified today; every
 ASSUMED row a milestone depends on is a check before that milestone starts). Every RUN has its probe in
-[`GO_PLATFORM_PLAN.harness/`](GO_PLATFORM_PLAN.harness/), numbered H1 to H14 (H4 and H12 folded into
-H11) and run on Go 1.24.7 and 1.27.1; its README maps each probe to the facts it supports, and `run.sh` regenerates every result.
+[`GO_PLATFORM_PLAN.harness/`](GO_PLATFORM_PLAN.harness/), numbered H1 to H15 (H4 and H12 folded into
+H11) and run on Go 1.24.7 and 1.27.1 (H15 on 1.27.1, against PostgreSQL 16.13); its README maps each probe to the facts it supports, and `run.sh` regenerates every result.
 Every fact about a rendered report came from `kronikol query`; no report file was opened.
 
 ---
@@ -89,7 +90,7 @@ capture record (K11, K15).
 
 ---
 
-## 2. Where Go stands today (checked 2026-09-28)
+## 2. Where Go stands today (checked 2026-09-28; K27 to K29 on 2026-09-29)
 
 | # | Fact | Basis |
 |---|---|---|
@@ -119,6 +120,9 @@ capture record (K11, K15).
 | K24 | The module proxy already serves this repository: `github.com/lemonlion/kronikol` has versions up to `v3.31.10+incompatible`, because the release tags carry no `go.mod`, under both spellings of the name | RUN (H14) |
 | K25 | Apache Arrow's Go module lived in its polyglot monorepo's `go/` directory with `go/vN.x.y` tags and a major version tracking Arrow's; the last tag there is `go/v17.0.0` (2024-07-11), and it now ships from its own repository as `github.com/apache/arrow-go/v18` (v18.8.0, 2026-09-04) | READ (H14, the module proxy) |
 | K26 | On .NET the identity headers are `test-tracking-current-test-name`, `-current-test-id`, `-caller-name` and `-trace-id`; resolution has four levels and a detached flow (`TestInfoResolver`), and a call nothing names is not recorded unless background capture is on; `AttributionSource` has nine values; a test id is 32 hex digits, the W3C trace id of its `traceparent` (`TestTrackingIdentity`); SQL keeps 10 rows by default (`MaxResponseRows`) | READ |
+| K27 | pgx v5.11.0 against PostgreSQL 16.13: its tracers (`QueryTracer`, `BatchTracer`, `CopyFromTracer`, `PrepareTracer`, `ConnectTracer`, and from 5.6.0 the pool's `AcquireTracer` and `ReleaseTracer`) hand a capturer the SQL, the arguments as the caller passed them (a `NamedArgs` map and `@sku`, where the prepared statement reads `$1`), the caller's context, and the command tag (`SELECT 2`) or the error with its SQLSTATE. They carry no result rows (a `RETURNING` id included), no COPY data (the table and column names only), nothing for a batched statement that fails (its error reaches `TraceBatchEnd` alone: `Exec()` returns before tracing at `batch.go:309-313`, where `Query()` traces the same error at `batch.go:365`), and nothing below pgx (`PgConn().Exec`, `Ping`). `ConnConfig.Tracer` is one slot; `multitracer` (5.7.0) combines several. pgx v4 (last release v4.18.3, 2024-03-09) has no tracer, only `ConnConfig.Logger` | RUN (H15), READ (pgx v5.11.0 and v4.18.3 source and changelog) |
+| K28 | A tap on the connection recovers all of it. Wrapping the `net.Conn` that `pgconn.Config.AfterNetConnect` (5.8.0, 2025-12-26) hands over after TLS, decoding the protocol with pgx's own `pgproto3` and `pgtype`, and joined to the tracer by connection (a `pgx.Conn` is not safe for concurrent use, so a connection has one caller at a time), the probe recovered, with TLS off and on: every result's columns and rows (int4, int8, text, numeric, jsonb and NULL; binary and text formats; statements served from pgx's statement cache, whose columns cross the wire only when first described), the `RETURNING` row, each batched statement's result and the failing one's error, the COPY rows, and a `PgConn().Exec` with its rows, attributed through the pool's acquire tracer, which receives the caller's context. `BuildFrontend` (pgx 5.0.0 on) did the same under TLS; it misses only what pgconn writes to the connection directly, the client half of `QueryExecModeExec` batches (`pgconn.go:2107`). A `DialFunc` wrapper sees ciphertext under TLS. The decoder is about 300 lines. A module requiring pgx v5.8.0, imported from a service's tests only, moved the service's production binary from v5.5.0 to v5.8.0; one requiring v5.6.0 set `AfterNetConnect` by reflection on v5.11.0 and fell back to `BuildFrontend` on v5.6.0 | RUN (H15, H15b), READ (pgx v5.11.0 and v5.0.0 source) |
+| K29 | Importers on pkg.go.dev (public packages, internal ones left out, counted across every version ever published): lib/pq 54,638; GORM's Postgres driver, which runs on pgx's `database/sql` adapter, 16,201; pgx v5's pool `pgxpool` 8,512 and its adapter `stdlib` 3,233; v4's 3,402 and 2,130; go-pg 1,056. The `database/sql` routes outnumber pgx's own pool about 6 to 1; among pgx v5's importers the pool leads the adapter 2.6 to 1. lib/pq is maintained again (v1.12.3, 2026-04-03). go-pg speaks the protocol itself, is in maintenance mode by its README, and has its own `QueryHook` (the context, the query, its parameters, and a `Result` with row counts and the model scanned into) | READ (pkg.go.dev, the module proxy, both READMEs and changelogs, `go doc`) |
 
 ---
 
@@ -248,13 +252,47 @@ holding the id (foundations L2), stamped by every wrapped client and producer.
   capture reads the destination after the driver has written it.
 - **Rows**: the first ten, with column names, as .NET keeps (K26). **Parameters** as data (§4 C2); until
   then in the `\n-- Parameters: ` block the renderer recognises (K20).
-- **pgx's own interface is the one exception**, as Prisma is Node's: `ConnConfig.Tracer` sees SQL,
-  arguments and the context, not rows (K22). A module of its own.
+- **pgx's own API is the second route**, in a module of its own (`go/pgx`): code on `pgxpool.Pool` or
+  `pgx.Conn` never reaches `database/sql`, and among pgx v5's importers it is the more common way in
+  (K29). Its tracers alone carry the statement, the arguments, the context and a command tag; not the
+  rows, the COPY data, a batched statement that fails, or anything below pgx (K27). So the module is
+  two halves joined by connection. **The tracer** gives the identity (its callbacks run on the caller's
+  goroutine, so §3.1's cascade applies unchanged), the statement as written and the arguments. **A
+  protocol tap** gives what the server returned: it wraps the connection `AfterNetConnect` hands over
+  after TLS, decodes it with pgx's own `pgproto3` and `pgtype`, and keeps rows by the connector's rule.
+  With both, a record carries what the connector's does, and COPY rows, every batched statement and the
+  calls below pgx besides (K28).
+- **Wiring is one call where the pool is built**: `kronikolpgx.Instrument(cfg, opts…)` on a
+  `pgxpool.Config` or a `pgx.ConnConfig` sets the tap and the tracer, and the tracer passes every
+  callback on to one the service had already set: what pgx's `multitracer` does from 5.7.0 (K27), done
+  in the module so that its floor stays at 5.6.0.
+- **The module requires pgx 5.6.0, not 5.8.0**, because its requirement becomes the production
+  build's (K28): it compiles against 5.6.0 (the pool's acquire tracer), sets `AfterNetConnect` by
+  reflection where the service's pgx has it, and falls back to `BuildFrontend`, whose one gap is
+  `QueryExecModeExec` batches.
+- **The tap only observes.** It never blocks, alters or fails a read or a write; a tap that loses its
+  place in the protocol stops decoding that connection and says so in a diagnostic, and the record
+  keeps the tracer's half. A degraded record, never a wrong one, as §3.1's self-test has it.
+- **Not F10.** Foundations F10's tap decodes the same protocol out of process, with the window's
+  inferred attribution; this one runs per connection in the process, with the tracer's identity. They
+  are separate decoders: F10's is .NET.
+- **Out of scope**: pgx v4, which has no tracer and has not released since 2024 (K27); go-pg, in
+  maintenance mode, by demand through its own `QueryHook` (K29).
 - **The ORMs need nothing further**: GORM takes a wrapped `*sql.DB` through `Config.Conn` (K22); sqlx,
   ent and sqlc sit on `database/sql` or pgx (ASSUMED for those three; a conformance case each).
 - **A fixed driver name inside the service** is the case wrapping cannot reach (K6): the recipe names
   the one-line change (the driver name read from configuration, or a connector passed in), and F10's
   Postgres and MySQL wire decoders serve a service that will not change.
+
+What a SQL record carries, by route:
+
+| Route | Who takes it | What the record carries | Basis |
+|---|---|---|---|
+| `database/sql` through `Connector` or `Register` | every `database/sql` driver: lib/pq, pgx's `stdlib` (GORM's way in), MySQL's | statement, arguments, context, the first ten rows, the error | K6, on fake drivers; M3's fixtures make it live |
+| pgx's own API, tracer and tap | `pgxpool`, `pgx.Conn` | the same, and COPY rows, every batched statement, calls below pgx | K27, K28 |
+| pgx's own API, tracer only (the tap off, or lost its place) | the same | statement as written, arguments, context, command tag, error | K27 |
+| go-pg | go-pg's users | nothing unless built by demand | K29 |
+| A driver name fixed inside the service | a service that will not change | F10's tap: rows, attribution inferred | K6, foundations L1 |
 
 ### 3.5 OTel bridge and the tail (item 5)
 
@@ -429,7 +467,7 @@ Each is a slice with the test that says it is done. M0 is now; the rest start af
 | **M0** | §4's asks into F2, F3 and F5: a banner on the foundations plan (done with this plan) and, with D29 taken, its §4.8 (done 2026-09-28); then a decision on each at 14.5 | Each of C1 to C7 is in or out of `captureFormatVersion 1`, with its reason |
 | **M1** | The skeleton, from F9's generator (`kronikol new-platform go`): the `go/` tree, the core module, the writers, levels 1, 2, 3 and 5 of §3.1, `Start`, `Step`, `Main`, CI | The conformance tests run, red, in `go-ci.yml` on the first commit |
 | **M2** | HTTP (§3.3) | `parity/capture/`'s HTTP fixtures green; the in-memory server, streaming and redaction cases green |
-| **M3** | SQL (§3.4): the connector with generated forwarding, rows and parameters; the pgx module | The Postgres and MySQL fixtures green; an interface-parity test per supported driver green |
+| **M3** | SQL (§3.4): the connector with generated forwarding, rows and parameters; the pgx module, its tracer and its protocol tap (K28) | The Postgres and MySQL fixtures green; an interface-parity test per supported driver green; through pgx's own API, the Postgres fixtures' rows, a failing batched statement and a COPY green with TLS off and on, on pgx 5.6.0 (`BuildFrontend`) and the newest pgx (`AfterNetConnect`); a tap fed a protocol it cannot follow keeps the tracer's record and says so |
 | **M4** | The wrapper and the shim (§3.6 to §3.8) | `parity/corpus/` renders byte-identical through the Go path; the cached, timeout, panic and build-failure cases are permanent tests |
 | **M5** | Level 4 of §3.1; the OTel exporter module; the gRPC module | K19's parallel case green with every call in its own scenario; the gRPC fixtures green |
 | **M6** | testify assertions, attachments through `ArtifactDir`, godog; then Go's launch at its own bar (D18) | A Go demo beside BreakfastProvider's, rendered by the shared renderer and walked as 13.0 walks the .NET one |
@@ -439,7 +477,9 @@ Each is a slice with the test that says it is done. M0 is now; the rest start af
 the fidelity work, no options channel and no tail (K17). Kronikol4J's core, HTTP and JDBC modules are
 5,471 lines (PLAN, `NEXT_LANGUAGE_PLAN.md` §2). Go's consolidated seams (one HTTP interface, one SQL
 interface) put it with Python at the low end of that plan's 6 to 9k range; the wrapper and the generated
-SQL forwarding are the parts no other platform has. Plan capacity from the order, not the numbers (A14).
+SQL forwarding are the parts no other platform has. The pgx module's tap adds a protocol decoder, about
+300 lines in H15 with no row cap, no check that it still follows the protocol and six types (K28).
+Plan capacity from the order, not the numbers (A14).
 
 ---
 
@@ -497,6 +537,8 @@ The owner took every recommendation below on 2026-09-28 ("Can we go with the rec
 | A13 | Later Go releases keep what K12 lists | **assumed**; H9's API diff is re-run at each Go release |
 | A14 | §5's size | **a floor and an analogy**, not an estimate. Plan capacity from the order |
 | A15 | Arrow left its monorepo because of lockstep majors | **inferred** from its tags (K25); its own stated reasons were not read. §3.10's advice stands on Go's `/vN` rule alone |
+| A16 | The pgx tap's decoder follows every protocol path and type a suite exercises | **measured** for six types, pgx's default cached statements and its simple protocol, a batch and a COPY, on one server, 16.13 (K28); **not** for pgx's other query modes, arrays, enums, composite and custom types, COPY TO, pgconn driven directly beyond one `Exec`, protocol 3.2 (PostgreSQL 18), CockroachDB, or its cost at run time. Falsifier: M3's fixtures in every query mode on every PostgreSQL release pgx supports (14 and later) |
+| A17 | pgx's own API is a large minority of Go services on PostgreSQL, larger among new ones | **inferred** from K29, whose counts span every version ever published and leave out internal packages, where services keep their code; not measured on services. It sizes M3's pgx half, not whether it is built |
 
 **A1 and A2 are the ones to attack first**: together they decide whether Go's different mechanics are a
 small tax or a different product.
@@ -546,3 +588,20 @@ query fallback):
   renderer, F9's generator); nothing is built in Go before then. The two checks the ledger ranks first,
   A1 (where a Go component test's wrap sites are) and A2 (how often a call drops its context), can run
   at any time; their answers size M1 to M5, not whether Go happens.
+
+**2026-09-29.** The owner asked what pgx is, how much it is used and what the plan misses there, then
+asked for the answer in the plan. H15 ran pgx against a real PostgreSQL (K27, K28) and pkg.go.dev's
+counts were read (K29). What moved:
+
+- **§3.4's pgx route**: from the tracer alone, with no rows, to the tracer joined to a protocol tap on
+  the connection, which recovered the rows, the COPY data, the failing batched statement and the calls
+  below pgx that the tracer misses. pgx stops being the SQL exception; go-pg is the gap left, by
+  demand. §3.4 now tabulates what each route's record carries.
+- **The module's pgx floor**: 5.6.0, with `AfterNetConnect` found by reflection, because a
+  requirement of 5.8.0 would upgrade its users' production pgx (K28).
+- **M3** grows by the decoder and its fixtures, and §5's size says so; A16 and A17 are new.
+- **Found on the way**: pgx's batch tracer never reports a batched statement that fails when its
+  results are read through `Exec()`, which is how `Close()` reads them (K27). No upstream report was
+  filed; with the tap, Kronikol's record does not depend on it.
+- **What does not move**: the decisions (§7), the order (§6) and M0's asks. C2, parameters as data,
+  applies to the pgx module as to the connector.
