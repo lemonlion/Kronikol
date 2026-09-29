@@ -36,7 +36,7 @@ release carries; until then, the action keeps its own guard against it.
   path, with the tool built from the commit under test, on the branch its old fold step wrote. CI also runs the
   action's facts on `windows-latest` and `macos-latest`.
 - Tests: the facts in `tests/Kronikol.Tests/Templates/` run each phase's `action.yml` the way the runner does,
-  against origins on disk and over smart HTTP with a token, under a machine's own git configuration (151
+  against origins on disk and over smart HTTP with a token, under a machine's own git configuration (152
   facts). Each of the 25 guards, broken in turn, fails the facts written for it
   (`plans/HISTORY_ACTION_PLAN.harness/mutations.py`).
 

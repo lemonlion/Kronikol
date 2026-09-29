@@ -1,8 +1,8 @@
 # History action plan: cross-run history on CI without copied YAML (roadmap 2.3)
 
 **Date:** 2026-09-27, second pass 2026-09-28 · **Repo version:** 3.31.9 (`main` at `dc619d35`); the
-second pass re-read against 3.31.10 (`main` at `5ca0878a`), which changed no history code · **Status: a
-plan. Nothing built, NOT green-lit; needs D26** (the owner's questions are §10). Roadmap item **2.3**,
+second pass re-read against 3.31.10 (`main` at `5ca0878a`), which changed no history code · **Status:
+EXECUTED 2026-09-29, but for S5's consumer switch** (D26 taken as §10 recommends; the log is §14). Roadmap item **2.3**,
 stage 2, track C. It comes after 2.2 (PR #73), whose branch it starts from, and before 2.4 (Azure
 DevOps), which builds to the interface in §4.2. It changes no package, so it bumps nothing (§7). The
 scripts behind every RUN mark are in [`HISTORY_ACTION_PLAN.harness/`](HISTORY_ACTION_PLAN.harness/README.md),
@@ -1158,6 +1158,123 @@ library behaviour (F10 is Q6). It does not prune a ledger.
 | The tool's package is 7.5 MB and installs from nuget.org in 9.7 s into an empty cache | RUN (this container, not a runner) | §4.7 |
 | `github-action-benchmark` re-applies on the new tip since v1.6.0, after rebases conflicted; none of seven actions reads the tip to tell a race from a refusal | VERIFIED (their source and changelogs) | §4.5, Appendix B |
 | GitHub documents no read-after-push guarantee for another client | VERIFIED as far as the Spokes posts go | §11 |
+
+---
+
+## 14. Execution log (2026-09-29)
+
+The owner asked for this plan "in full", on a worktree: the form D25 took, so D26 was taken as §10
+recommends. Q1 (c): the logic is scripts in the action. Q2: pull requests are not recorded by default. Q3
+(a): no pruning, and a warning from 50 MB, so S6 was not built. Q4: no floating tag. Q5: the actions it
+calls are pinned to commits, with the version in a comment. Q6 stays apart from 2.3. Q7: quarantine and
+aliases live on the data branch. Q8: fragments are kept seven days. Q9: no `export-ignore`. The owner then
+asked for the work to go into `main` without a pull request. No version moved (§7): the changelog entry is
+under `[Unreleased]`.
+
+### 14.1 What was built
+
+| Slice | What |
+|---|---|
+| S0 | The wiki's Cross-Run-History: "On CI" and "The recommended shape" rewritten around the action, and the manual recipe below it as "Without the action", run verbatim through the harness (§14.4) |
+| S1 | `tests/Kronikol.Tests/Templates/`: `ActionDefinition` taken out of `PrReportLinkActionTests` with its API unchanged, then `BashProbe`, `GitProbe`, `ChildProcess`, `WorkflowExpression`, `ArtifactStore`, `CompositeActionRunner` (a composite `action.yml` run step by step, as the runner does), `BareOrigin`, `HttpOrigin` (`git http-backend` behind basic authentication, with a read-only token answered 403) and `MachineConfig`, each with facts of its own |
+| S2, S3 | `templates/github-actions/kronikol-history/`: `read`, `gate`, `save` and `record`, the scripts under `scripts/`, `VERSION`, `.gitattributes` and the README (§8); the facts of §5.3 and §5.4 (`HistoryAction*Tests`, on the `HistoryWorld` fixture), each red before its script existed |
+| §5.5 | Each of the 25 guards broken in turn fails the facts written for it: `HISTORY_ACTION_PLAN.harness/mutations.py`, the table in `results-mutations.txt` |
+| S3b | `.github/workflows/history-action.yml`: the four phases on Ubuntu, Windows and macOS, one example project each, with `record-pull-requests: true`; six `record` calls racing on the lane's branch with copies of a leg's fragment under run ids of their own; the saved artifacts folded on a second branch; then `history verify` and a count of each branch's lines. It deletes both scratch branches first and writes nothing else. A static fact holds its calls to the phases' declared inputs |
+| S4 | `ci-summary-preview.yml` reads, gates, saves and records through the phases by path, with `tool-command` running the tool built from the commit, on `kronikol-history` as before. `ci.yml` runs `Kronikol.Tests.Templates` on `windows-latest` and `macos-latest` as well (`runs-on: ${{ matrix.os \|\| 'ubuntu-latest' }}`, and `shell: bash` on its test step). A static fact holds the dogfood |
+| S5 | This log, the changelog, `templates/README.md`, `README.md`, the wiki's CI-Artifact-Upload, roadmap 2.3, D26 and Appendix C, `PLANS_STATUS.md` and `CROSS_RUN_HISTORY_PLAN.md` §11. BreakfastProvider's switch waits for the first release tag that holds the folder (§6), which the owner has not asked for |
+
+Also done here, because `PR_REPORT_LINK_PLAN.md` left it for the second template under
+`templates/github-actions/`: CI's template-pack step fails when the package carries that folder. Proved
+on a pack with a wildcard `Content` item, which it names.
+
+### 14.2 Where the build differs from §4, and why
+
+- **The tool needs a .NET 10 SDK, and §4.7's private runtime is gone.** Measured: an SDK 8 cannot
+  `dotnet tool install` `Kronikol.Tool`, which targets `net10.0` only ("Settings file
+  'DotnetToolSettings.xml' was not found", in the `sdk:8.0` image). So `tool.sh` looks for an SDK of 10
+  or later in `dotnet --list-sdks` and, when there is none, fails naming `actions/setup-dotnet` and
+  `tool-command`. It installs with `--tool-path` under `RUNNER_TEMP` and runs the tool with
+  `DOTNET_ROOT` set to that SDK's root for its own calls only, so the job's `PATH` and environment do not
+  change.
+- **The scripts know no forge but through `lib.sh`.** They read neutral `KRONIKOL_HISTORY_*` variables,
+  which each `action.yml` sets from its inputs and `github` context. `scripts/lib.sh` is the one file that
+  writes workflow commands, `GITHUB_ENV`, `GITHUB_OUTPUT` and `GITHUB_STEP_SUMMARY`, masks, and wraps the
+  tool's output in stop-commands. That is `AZURE_DEVOPS_PARITY_PLAN.md` §4.5's ask of 2.3's interface, and
+  2.4 replaces one file.
+- **From D27's asks, built in although D27 is not taken:** `[skip ci]` in every ledger commit
+  (`Record run <id>:<attempt> (<sha>) [skip ci]`), and the header key emptied before the token is set
+  (its F13), because both cost a line and hold on GitHub as well.
+- **`record` gained `warn-ledger-mb`** (default 50, Q3 (a)), and its job summary gives the ledger's size.
+- **`save` takes directories, not a glob.** `path` is one directory per line (default `.`). The script
+  stages each `History.run.json` under its path below the workspace, leaving out `.git` and
+  `runs/.incoming-*`, so `upload-artifact` gets one plain tree (`include-hidden-files: true`) and
+  `record` can still tell reports directories apart.
+- **`record` asks the remote which branch is its default** (`ls-remote --symref origin HEAD`) and
+  refuses to write to it, rather than taking an input that could be wrong.
+- **The token-on-a-command-line fact reads git's trace2 events.** Git for Windows' `bin/bash.exe`
+  puts `/mingw64/bin` and `/usr/bin` first on `PATH`, so a `git` shim never wins there.
+  `GIT_TRACE2_EVENT` records each git process's whole argv, `-c` included, on every platform.
+- **Origins in the facts allow filters.** A blobless read fetches blobs lazily, which needs
+  `uploadpack.allowFilter` and `uploadpack.allowAnySHA1InWant` on the origin; github.com allows both.
+- **S3b ran after the merge.** Its done-when puts the lane on the pull request that adds the action,
+  before anything merges. The owner asked for `main` without a pull request, so the lane was dispatched
+  on `main` right after the push (§14.5).
+
+### 14.3 Found on the way
+
+- **F17. `kronikol history record` folded the files of a rotation a killed process left behind.**
+  (RUN, fixed in the tool, `[Unreleased]`.) A rotation stages a retained run in
+  `runs/.incoming-<name>/` and renames it when it is whole, and `ReportFolders`' contract is that such a
+  folder is never a retained run. Given a directory, `record` read every `History.run.json` under it,
+  those folders included, so a staged copy of the run on top was folded as an earlier attempt: every
+  scenario read two attempts ("22" for "--"), and a directory holding only a staged folder was recorded.
+  A search now leaves what it finds under such a folder alone and says how many files it left; a staged
+  folder named as an input is still read, as `kronikol merge` reads a retained run it is named. Facts:
+  three in `HistoryCommandTests`, two red on the old code and one control. `record.sh` and `save.sh`
+  keep their own exclusion, because `VERSION` (3.33.0) predates the fix.
+- **An apostrophe inside `${VAR:?message}` opens a quote in bash.** `bash -n` caught one before any fact
+  ran; `Every_script_parses_under_bash` now parses each script, and the mutation table breaks one.
+- **The mutation driver misread its own runs twice.** It looked for xUnit's `[FAIL]` marker, which the
+  console logger prints only at normal verbosity, so every row read "not held"; then it missed a theory
+  case's arguments after the fact's name. Both were fixed and the affected row re-run alone before the
+  table was read.
+- **The lane's race step would have failed on github.com.** It gave each racer's copy of a fragment its own
+  run id with a pattern for `"id":"gh:..."`, and the writer indents, writing `"id": "gh:..."`, so `grep`
+  found nothing and the step exited 1. No fact ran the step. One now does, on a fragment the library writes
+  (`The_lanes_racers_give_a_real_fragment_a_run_id_of_their_own`, red on the old pattern), and the pattern
+  allows the space and keeps the rest of the file byte for byte.
+- **`download-artifact` v8.0.1 with a pattern that matches nothing succeeds and creates nothing,** so
+  `record` checks for the directory rather than trusting the step's outcome.
+
+### 14.4 Verification
+
+- **Facts.** 152 facts under `tests/Kronikol.Tests/Templates/` besides 2.2's, green on Windows (Git for
+  Windows' bash and git 2.53.0.windows.3, 1 min 47 s). On Linux, in the `dotnet/sdk:10.0` image (git
+  2.43.0, bash 5.2.21), the folder's facts and `HistoryCommandTests` passed, 177 of them, with 23 of
+  2.2's skipped because the image has no Node; the static facts for the dogfood and the lane's race step
+  came later and ran on Windows. The whole of `Kronikol.Tests` passed on Windows: 6,266 facts, one skipped.
+- **Mutations** (§5.5): 25 of 25 guards held (`results-mutations.txt`).
+- **S0's recipe and the action's record script through the harness:** run by the session that took S0 (kronikol-2d) in the `dotnet/sdk:10.0` container, against the released
+  Kronikol.Tool 3.33.0 (the version `VERSION` pins). The manual recipe's two `run:` blocks were extracted from the
+  page's own text (`extract_recipe.py`, and the page and `recipe_manual_read.sh` and `recipe_manual_record.sh`
+  agree), and the action's `record.sh` ran through `action_record.sh`, which sets what `record/action.yml` sets.
+  - `s1` W5, the manual recipe: a first run made the branch with the ledger and `merge=union`
+    (`Record run 101:1 (8d06dfc) [skip ci]`); a later run's read named `KRONIKOL_HISTORY` and its record appended;
+    the record job re-run recorded nothing and committed nothing; a quarantine a person put on the branch was read
+    by the next run and kept by its record; a record job with nothing downloaded passed; `history verify` was clean
+    throughout. W1 to W4 printed what the first pass printed.
+  - `s2b`, ten races of six writers on an existing branch and ten on a first run, for each recipe: the manual
+    recipe, the prototype and the action's `record.sh` each lost no run, failed no job and duplicated no roster
+    line, after recording again on 78 and 92, 88 and 93, and 80 and 91 lost races.
+  - `s6` over smart HTTP with a token: the manual recipe and the action each lost 0 of 18 runs racing on a first
+    run and 0 of 18 on an existing branch, with no duplicate; a read-only token (403) and a refusing hook each
+    stopped them after one push, the action's error quoting the server's refusal; no token or header reached an
+    output line or a file of 42 jobs (H5); and the manual read step read the ledger through the blobless fetch
+    with the right token, and with a wrong one warned and let the tests run without history (H8).
+
+### 14.5 On GitHub
+
+The live lane, CI and the dogfood's runs on the pushed commit are recorded here once they have run.
 
 ---
 
