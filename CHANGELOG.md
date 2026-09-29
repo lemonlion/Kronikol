@@ -6,10 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
-**No version change: the PR report link template and its live lane.** Nothing a package ships changes, so none of
-this moves the version on its own; the next release carries it.
+**No version change: the PR report link template and its live lane, and one fix to `kronikol history record`.**
+The templates ship in no package, so they move no version. The fix to `Kronikol.Tool` is a patch the next release
+carries; until then, the history action keeps its own guard against it.
 
 ### Fixed
+
+- **`kronikol history record` folded the files of a report rotation a killed process left behind**
+  (`plans/HISTORY_ACTION_PLAN.md` F17). A rotation stages the retained run under `runs/.incoming-<name>/` and
+  renames the folder when it is whole, and a folder still carrying that prefix is never a retained run. Given a
+  reports directory, record read every `History.run.json` under it, those folders included. A staged copy of the run
+  on top was folded as an earlier attempt of the same run, so every scenario read as two attempts, and a directory
+  holding nothing but a staged folder was recorded. A search of a directory now leaves those folders alone and says
+  how many files it left (`kronikol history doctor` names the folders). A `.incoming-` folder named as an input is
+  still read, as `kronikol merge` reads a retained run it is named.
 
 - **`templates/github-actions/kronikol-pr-report-link/`**: a run whose only upload of the artifact had expired warned
   that it "uploaded no" artifact. It now says the artifact expired, and still links nothing. The README's limits said
