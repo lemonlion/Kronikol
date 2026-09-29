@@ -684,64 +684,6 @@ public class PrReportLinkActionTests
     private static string LineFor(string body, string artifactName) =>
         Assert.Single(LaneLines(body), l => l.Contains($":{artifactName} run:", StringComparison.Ordinal));
 
-    private sealed record ActionDefinition(
-        IReadOnlyDictionary<string, (bool Required, string Default)> Inputs,
-        IReadOnlyDictionary<string, string> StepEnv,
-        string Script)
-    {
-        public static ActionDefinition Load(string directory)
-        {
-            var root = LoadYaml(File.ReadAllText(Path.Combine(directory, "action.yml")));
-
-            var inputs = ((YamlMappingNode)root["inputs"]).Children.ToDictionary(
-                kv => ((YamlScalarNode)kv.Key).Value!,
-                kv =>
-                {
-                    var input = (YamlMappingNode)kv.Value;
-                    return (Required: Scalar(input, "required") == "true", Default: Scalar(input, "default") ?? "");
-                },
-                StringComparer.Ordinal);
-
-            var step = (YamlMappingNode)Assert.Single(((YamlSequenceNode)((YamlMappingNode)root["runs"])["steps"]).Children);
-            var env = ((YamlMappingNode)step["env"]).Children.ToDictionary(
-                kv => ((YamlScalarNode)kv.Key).Value!,
-                kv => ((YamlScalarNode)kv.Value).Value!,
-                StringComparer.Ordinal);
-
-            return new ActionDefinition(inputs, env, Scalar((YamlMappingNode)step["with"], "script")!);
-        }
-
-        public static YamlMappingNode LoadYaml(string text)
-        {
-            var stream = new YamlStream();
-            stream.Load(new StringReader(text));
-            return (YamlMappingNode)stream.Documents[0].RootNode;
-        }
-
-        public static string? Scalar(YamlMappingNode node, string key) =>
-            node.Children.TryGetValue(new YamlScalarNode(key), out var value) ? ((YamlScalarNode)value).Value : null;
-
-        /// <summary>What the runner would put in the step's environment for these inputs.</summary>
-        public Dictionary<string, string> EnvironmentFor(IReadOnlyDictionary<string, string> given)
-        {
-            foreach (var (name, (required, _)) in Inputs)
-                Assert.True(!required || given.ContainsKey(name), $"the runner refuses a call without the required input {name}");
-
-            var environment = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (var (variable, expression) in StepEnv)
-            {
-                var match = InputExpression.Match(expression);
-                Assert.True(match.Success, $"env {variable} is `{expression}`, which is not an input this test can supply");
-
-                var input = match.Groups[1].Value;
-                Assert.True(Inputs.ContainsKey(input), $"env {variable} reads inputs.{input}, which action.yml does not declare");
-                environment[variable] = given.TryGetValue(input, out var value) ? value : Inputs[input].Default;
-            }
-
-            return environment;
-        }
-    }
-
     /// <summary>The live lane's step after its call of the action, which reads the comment back, and the name it links.</summary>
     private sealed record LaneCheck(string Script, Dictionary<string, string> Env, string ArtifactName)
     {
