@@ -158,11 +158,14 @@ public static class InternalFlowHtmlGenerator
                     };
                 }
 
+                // Above whatever the popup shows, in each of its layouts.
+                content = LeftOutNote(segment) + content;
+
                 if (flameData is InternalFlowRenderer.FlameChartData { Spans.Length: > 0 } fd)
                 {
                     data[key] = new
                     {
-                        title = $"Internal Flow ({segment.Spans.Length} span{(segment.Spans.Length == 1 ? "" : "s")})",
+                        title = Title(segment),
                         content,
                         flameData = new { s = fd.Sources, f = fd.Spans }
                     };
@@ -171,10 +174,19 @@ public static class InternalFlowHtmlGenerator
                 {
                     data[key] = new
                     {
-                        title = $"Internal Flow ({segment.Spans.Length} span{(segment.Spans.Length == 1 ? "" : "s")})",
+                        title = Title(segment),
                         content
                     };
                 }
+            }
+            else if (segment.SpansLeftOut > 0)
+            {
+                // Spans did start during this call, and none could be told from another test's: say so whatever the
+                // setting, since a hidden link would read as "nothing happened" (#87).
+                data[key] = new
+                {
+                    message = LeftOutNote(segment)
+                };
             }
             else
             {
@@ -194,6 +206,22 @@ public static class InternalFlowHtmlGenerator
         return data;
     }
 
+    private static string Title(InternalFlowSegment segment) =>
+        $"Internal Flow ({segment.Spans.Length} span{(segment.Spans.Length == 1 ? "" : "s")}"
+        + (segment.SpansLeftOut > 0 ? $", {segment.SpansLeftOut} left out)" : ")");
+
+    /// <summary>
+    /// What a popup says when spans that started during its call were left out, because a call of another test running
+    /// at the same time would have taken them too and nothing in them says whose they are (#87,
+    /// <c>plans/SPAN_ATTRIBUTION_PLAN.md</c>). Empty when none were.
+    /// </summary>
+    private static string LeftOutNote(InternalFlowSegment segment) =>
+        segment.SpansLeftOut == 0
+            ? ""
+            : $"<p class=\"iflow-left-out\" style=\"font-size:0.85em;color:#666;margin:0 0 8px\">{segment.SpansLeftOut} span{(segment.SpansLeftOut == 1 ? "" : "s")} "
+              + $"that started during this call {(segment.SpansLeftOut == 1 ? "is" : "are")} left out: a request of another test ran at the same time, "
+              + "and neither the trace nor the span tree says which of the two they belong to.</p>";
+
     private static string BuildEmptyDiagnosticMessage(
         int totalSpansInStore,
         InternalFlowSpanGranularity granularity,
@@ -206,7 +234,7 @@ public static class InternalFlowHtmlGenerator
         sb.Append($"<li>Granularity: {granularity}</li>");
 
         if (configuredActivitySources is { Length: > 0 })
-            sb.Append($"<li>Configured activity sources: {string.Join(", ", configuredActivitySources)}</li>");
+            sb.Append($"<li>Configured activity sources: {System.Net.WebUtility.HtmlEncode(string.Join(", ", configuredActivitySources))}</li>");
         else if (granularity == InternalFlowSpanGranularity.Manual)
             sb.Append("<li>⚠ Granularity is Manual but no InternalFlowActivitySources configured</li>");
 

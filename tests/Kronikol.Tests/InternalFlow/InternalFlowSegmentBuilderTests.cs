@@ -590,22 +590,27 @@ public class InternalFlowSegmentBuilderTests : IDisposable
     [Fact]
     public void BuildWholeTestSegments_multiple_tests_get_separate_segments()
     {
+        // Each test's calls record their own trace. Until 3.35.1 this fact gave both calls no trace id, and passed
+        // because each test's flow then held every span of the run, the other test's included (#87): two tests at
+        // one time with nothing to tell their spans apart now keep none (SpanAttributionTests).
         var baseTime = new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        const string trace1 = "0af7651916cd43dd8448eb211c80319c";
+        const string trace2 = "1bf7651916cd43dd8448eb211c80319d";
 
-        var span1 = CreateSpan("test1-op", baseTime.UtcDateTime.AddMilliseconds(10), TimeSpan.FromMilliseconds(5));
-        var span2 = CreateSpan("test2-op", baseTime.UtcDateTime.AddMilliseconds(10), TimeSpan.FromMilliseconds(5));
+        var span1 = CreateSpan("test1-op", baseTime.UtcDateTime.AddMilliseconds(10), TimeSpan.FromMilliseconds(5), traceId: trace1);
+        var span2 = CreateSpan("test2-op", baseTime.UtcDateTime.AddMilliseconds(10), TimeSpan.FromMilliseconds(5), traceId: trace2);
 
         var logs = new[]
         {
-            MakeRequest(testId: "test-1", timestamp: baseTime, activityTraceId: null),
-            MakeRequest(testId: "test-2", timestamp: baseTime, activityTraceId: null)
+            MakeRequest(testId: "test-1", timestamp: baseTime, activityTraceId: trace1),
+            MakeRequest(testId: "test-2", timestamp: baseTime, activityTraceId: trace2)
         };
 
         var result = InternalFlowSegmentBuilder.BuildWholeTestSegments(logs, [span1, span2]);
 
         Assert.Equal(2, result.Count);
-        Assert.True(result.ContainsKey("iflow-test-test-1"));
-        Assert.True(result.ContainsKey("iflow-test-test-2"));
+        Assert.Equal(["test1-op"], result["iflow-test-test-1"].Spans.Select(s => s.OperationName));
+        Assert.Equal(["test2-op"], result["iflow-test-test-2"].Spans.Select(s => s.OperationName));
     }
 
     [Fact]

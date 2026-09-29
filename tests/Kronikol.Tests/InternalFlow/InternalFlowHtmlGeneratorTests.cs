@@ -342,4 +342,25 @@ public class InternalFlowHtmlGeneratorTests : IDisposable
         // The div should not contain "Loading..." text since CSS ::before handles loading messages
         Assert.DoesNotContain(">Loading...</div>", result.Value.ActivityHtml);
     }
+
+    [Fact]
+    public void The_empty_segment_message_is_markup_with_the_configured_sources_encoded()
+    {
+        // The popup renders a segment's message as markup (the diagnostic is a <details> list), so a value the user
+        // configured goes in encoded.
+        var segments = new Dictionary<string, InternalFlowSegment>
+        {
+            ["iflow-empty"] = new(Guid.NewGuid(), RequestResponseType.Request, "t", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, [])
+        };
+
+        var data = InternalFlowHtmlGenerator.BuildSegmentData(segments, InternalFlowDiagramStyle.ActivityDiagram,
+            noDataBehavior: InternalFlowNoDataBehavior.ShowMessage, granularity: InternalFlowSpanGranularity.Manual,
+            configuredActivitySources: ["Orders<b>"]);
+
+        var message = System.Text.Json.JsonDocument.Parse(System.Text.Json.JsonSerializer.Serialize(data["iflow-empty"]))
+            .RootElement.GetProperty("message").GetString()!;
+        Assert.Contains("<details", message, StringComparison.Ordinal);
+        Assert.Contains("Orders&lt;b&gt;", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Orders<b>", message, StringComparison.Ordinal);
+    }
 }

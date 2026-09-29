@@ -76,6 +76,42 @@ public class ProcessGlobalStoreTests
             + ". Put the class in [Collection(\"DiagramsFetcher\")], or read something only this test writes.");
     }
 
+    /// <summary>
+    /// <c>InternalFlowSpanStore</c> is process-global too, and every report generated with internal flow on reads it. A
+    /// clear landing between a test's spans and its report leaves the test's calls with no spans:
+    /// <c>InternalFlowSegmentMapReportTests</c> then found no segment element under <c>HideLink</c>, in about one run
+    /// of the internal-flow tests in three, because <c>InternalFlowSpanStoreTests</c>' clear ran in a parallel
+    /// collection. A test that has to clear the store runs in <see cref="InternalFlow.SpanStoreClearCollection"/>.
+    /// </summary>
+    [Fact]
+    public void No_test_clears_the_process_global_span_store_while_other_classes_are_reading_it()
+    {
+        var clearers = Directory.EnumerateFiles(TestsRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                        && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Select(f => (Path: f, Code: WithoutComments(File.ReadAllText(f))))
+            .Where(s => Regex.IsMatch(s.Code, @"\b(?:InternalFlowSpanStore|TestTrackingSpanStore)\s*\.\s*Clear\s*\("))
+            .ToList();
+        // Not vacuous: the store's own clear has a fact.
+        Assert.NotEmpty(clearers);
+
+        var offenders = clearers
+            .Where(s => !Regex.IsMatch(s.Code, @"\[Collection\(SpanStoreClearCollection\.Name\)\]"))
+            .Select(s => Path.GetRelativePath(TestsRoot, s.Path).Replace('\\', '/'))
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .ToList();
+        Assert.True(offenders.Count == 0,
+            "these test sources clear the process-global span store outside SpanStoreClearCollection, while every "
+            + "report generated with internal flow on reads it: " + string.Join(", ", offenders)
+            + ". Read back only the spans this test made, or put the class in [Collection(SpanStoreClearCollection.Name)].");
+
+        var definition = typeof(InternalFlow.SpanStoreClearCollection)
+            .GetCustomAttributes(typeof(CollectionDefinitionAttribute), false)
+            .Cast<CollectionDefinitionAttribute>()
+            .Single();
+        Assert.True(definition.DisableParallelization, "SpanStoreClearCollection runs after every parallel collection");
+    }
+
     private static string WithoutComments(string source) =>
         Regex.Replace(Regex.Replace(source, @"/\*.*?\*/", "", RegexOptions.Singleline), @"//.*", "");
 }

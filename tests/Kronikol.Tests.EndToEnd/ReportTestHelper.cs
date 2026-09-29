@@ -4215,6 +4215,98 @@ public static class ReportTestHelper
         return (new Uri(html).AbsoluteUri, reportsDir);
     }
 
+    /// <summary>Each contested report sits 10 s after the last, so no two claim each other's spans.</summary>
+    private static int _contestedReports;
+
+    /// <summary>
+    /// A run report written by the whole pipeline with internal-flow tracking on and its defaults (<c>HideLink</c>, the
+    /// flame chart behind a toggle): two scenarios whose calls record no trace id and ran at the same time (#87,
+    /// <c>plans/SPAN_ATTRIBUTION_PLAN.md</c> §4.6). Scenario A calls <c>/contested-a</c> for 300 ms and scenario B
+    /// calls <c>/contested-b</c> for its first 100; one query starts in A's time alone and two in both. So A's popup
+    /// shows one span and leaves two out, and B's shows none and says why. Placed two hours back, where no other
+    /// fixture's calls could claim its spans.
+    /// </summary>
+    public static (string Uri, string ReportsDir) GenerateRunReportWithContestedSpans(string tempDir, string outputDir, string fileName)
+    {
+        var reportsDir = Path.Combine(tempDir, "contested-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(reportsDir);
+        var testA = "contested-a-" + Guid.NewGuid().ToString("N");
+        var testB = "contested-b-" + Guid.NewGuid().ToString("N");
+        var sourceName = "Kronikol.Tests.Contested.E2E." + Guid.NewGuid().ToString("N");
+        using var source = new System.Diagnostics.ActivitySource(sourceName);
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = s => s.Name == sourceName,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+        var spans = new List<System.Diagnostics.Activity>();
+        var at = DateTimeOffset.UtcNow.AddHours(-2).AddSeconds(10 * Interlocked.Increment(ref _contestedReports));
+
+        void Call(string testId, string path, int milliseconds)
+        {
+            var id = Guid.NewGuid();
+            RequestResponseLogger.Log(new RequestResponseLog(testId, testId, HttpMethod.Get, null, new Uri("http://orders" + path), [],
+                "Orders", "Caller", RequestResponseType.Request, Guid.NewGuid(), id, false) { Timestamp = at });
+            RequestResponseLogger.Log(new RequestResponseLog(testId, testId, HttpMethod.Get, "{}", new Uri("http://orders" + path), [],
+                "Orders", "Caller", RequestResponseType.Response, Guid.NewGuid(), id, false, System.Net.HttpStatusCode.OK)
+                { Timestamp = at.AddMilliseconds(milliseconds) });
+        }
+
+        void Span(string name, int startMs)
+        {
+            // A trace of its own, which no call records: the spans a call with no trace id may take.
+            System.Diagnostics.Activity.Current = null;
+            var span = source.StartActivity(name, System.Diagnostics.ActivityKind.Internal,
+                new System.Diagnostics.ActivityContext(System.Diagnostics.ActivityTraceId.CreateRandom(),
+                    System.Diagnostics.ActivitySpanId.CreateRandom(), System.Diagnostics.ActivityTraceFlags.Recorded))!;
+            span.SetStartTime(at.UtcDateTime.AddMilliseconds(startMs));
+            span.SetEndTime(at.UtcDateTime.AddMilliseconds(startMs + 10));
+            spans.Add(span);
+        }
+
+        lock (WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            Call(testA, "/contested-a", 300);
+            Call(testB, "/contested-b", 100);
+            Span("SELECT a-only", 200);
+            Span("SELECT either 1", 20);
+            Span("SELECT either 2", 40);
+            foreach (var span in spans)
+                Kronikol.InternalFlow.InternalFlowSpanStore.Add(span);
+
+            ReportGenerator.CreateStandardReportsWithDiagrams(
+                [new Feature
+                {
+                    DisplayName = "Contested spans",
+                    Scenarios =
+                    [
+                        new Scenario { Id = testA, DisplayName = "Scenario A", Result = ExecutionResult.Passed },
+                        new Scenario { Id = testB, DisplayName = "Scenario B", Result = ExecutionResult.Passed },
+                    ]
+                }],
+                at.UtcDateTime.AddSeconds(-1), at.UtcDateTime.AddSeconds(1),
+                new ReportConfigurationOptions
+                {
+                    ReportsFolderPath = reportsDir,
+                    PlantUmlRendering = PlantUmlRendering.BrowserJs,
+                    InternalFlowTracking = true,
+                    InternalFlowSpanGranularity = InternalFlowSpanGranularity.Full,
+                    GenerateComponentDiagram = false,
+                    GenerateSpecificationsReport = false,
+                    GenerateSpecificationsData = false,
+                });
+            DefaultDiagramsFetcher.Reset();
+        }
+        foreach (var span in spans) span.Dispose();
+
+        var html = Path.Combine(reportsDir, "TestRunReport.html");
+        File.Copy(html, Path.Combine(outputDir, fileName), true);
+        return (new Uri(html).AbsoluteUri, reportsDir);
+    }
+
     /// <summary>
     /// A run report written by the whole pipeline (<see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>)
     /// with <c>PlantUmlTheme = "cerulean"</c> under <c>BrowserJs</c>, the default (DIAGRAM_COLOURS_PLAN S3b): two

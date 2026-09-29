@@ -160,9 +160,10 @@
         } else {
             var noData = document.createElement('div');
             noData.className = 'iflow-no-data';
-            noData.textContent = segment && segment.message
-                ? segment.message
-                : 'No internal flow data available for this segment.';
+            // A segment's message is markup the report generator wrote (the diagnostic's list, the note on spans left
+            // out), like its content; set as text, its tags showed as text.
+            if (segment && segment.message) noData.innerHTML = segment.message;
+            else noData.textContent = 'No internal flow data available for this segment.';
             popup.appendChild(noData);
         }
 

@@ -7,7 +7,7 @@ namespace Kronikol.Tests.InternalFlow;
 /// Tests for <see cref="InternalFlowSpanStore"/>.
 /// All tests use unique source names and filter assertions by source
 /// to avoid contamination from parallel test execution.
-/// Serialized via collection because <see cref="Clear_removes_all_spans"/> wipes the global store.
+/// The clear, which wipes the global store, is <see cref="InternalFlowSpanStoreClearTests"/>'s, in a serial collection.
 /// </summary>
 [Collection("InternalFlowSpanStore")]
 public class InternalFlowSpanStoreTests : IDisposable
@@ -59,19 +59,6 @@ public class InternalFlowSpanStoreTests : IDisposable
         InternalFlowSpanStore.Add(a2);
 
         Assert.Equal(countBefore, snapshot.Count(s => s.Source.Name == _sourceName));
-    }
-
-    [Fact]
-    public void Clear_removes_all_spans()
-    {
-        using var activity = _source.StartActivity("clear-op")!;
-        activity.Stop();
-        InternalFlowSpanStore.Add(activity);
-
-        InternalFlowSpanStore.Clear();
-
-        Assert.DoesNotContain(InternalFlowSpanStore.GetSpans(),
-            s => s.DisplayName == "clear-op" && s.Source.Name == _sourceName);
     }
 
     [Fact]

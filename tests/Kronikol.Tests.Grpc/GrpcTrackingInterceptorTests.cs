@@ -581,7 +581,6 @@ public class GrpcTrackingInterceptorTests
     [Fact]
     public async Task AsyncUnaryCall_activity_is_captured_in_SpanStore_with_nonzero_duration()
     {
-        InternalFlowSpanStore.Clear();
         var interceptor = new GrpcTrackingInterceptor(MakeOptions());
         var context = CreateContext();
 
@@ -614,7 +613,6 @@ public class GrpcTrackingInterceptorTests
     [Fact]
     public async Task AsyncUnaryCall_activity_spans_from_request_to_response()
     {
-        InternalFlowSpanStore.Clear();
         var interceptor = new GrpcTrackingInterceptor(MakeOptions());
         var context = CreateContext();
 
@@ -650,7 +648,6 @@ public class GrpcTrackingInterceptorTests
     [Fact]
     public async Task AsyncUnaryCall_gRPC_spans_pass_AutoInstrumentation_filter()
     {
-        InternalFlowSpanStore.Clear();
         var interceptor = new GrpcTrackingInterceptor(MakeOptions());
         var context = CreateContext();
 

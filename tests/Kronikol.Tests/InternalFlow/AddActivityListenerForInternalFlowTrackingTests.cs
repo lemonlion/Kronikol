@@ -7,7 +7,7 @@ namespace Kronikol.Tests.InternalFlow;
 /// <summary>
 /// Tests for <c>AddActivityListenerForInternalFlowTracking</c> IServiceCollection extension.
 /// All assertions filter by unique source/operation name for parallel safety.
-/// Serialized via collection to avoid race with <see cref="InternalFlowSpanStoreTests.Clear_removes_all_spans"/>.
+/// The store's clear runs in <see cref="SpanStoreClearCollection"/>, after every parallel collection, so it cannot race these.
 /// </summary>
 [Collection("InternalFlowSpanStore")]
 public class AddActivityListenerForInternalFlowTrackingTests : IDisposable

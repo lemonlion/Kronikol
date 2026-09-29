@@ -109,6 +109,9 @@ public class IflowPopupTests : PlaywrightTestBase
         var noData = Page.Locator(".iflow-popup .iflow-no-data");
         await Expect(noData).ToBeVisibleAsync();
         await Expect(noData).ToContainTextAsync("No internal activity");
+        // The diagnostic is markup, a list under a summary: shown as text, its tags read as "<br/><br/><details …".
+        await Expect(noData.Locator("details summary")).ToHaveTextAsync("Diagnostic info");
+        Assert.DoesNotContain("<br", await noData.TextContentAsync());
     }
 
     [Fact]

@@ -13,4 +13,11 @@ public record InternalFlowSegment(
     string TestId,
     DateTimeOffset? StartTime,
     DateTimeOffset? EndTime,
-    Activity[] Spans);
+    Activity[] Spans)
+{
+    /// <summary>
+    /// Spans that started during this call and that a call of another test would take too, so neither holds them:
+    /// nothing in them says whose they are (#87, <c>plans/SPAN_ATTRIBUTION_PLAN.md</c>). The popup says how many.
+    /// </summary>
+    internal int SpansLeftOut { get; init; }
+}

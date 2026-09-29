@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.35.1] - 2026-09-29
+
+**Patch - bug fixes: an internal-flow popup no longer shows other requests' spans as its own call's (#87), and a
+test that failed about one run in three is steady.** `plans/V4_PLAN.md` R3 (roadmap 1c.4), designed in
+`plans/SPAN_ATTRIBUTION_PLAN.md`. Nothing new to call: the count of spans a popup leaves out is internal. Popups
+and whole-test flows change where tests ran at the same time, which is report output, so there is a Kronikol4J
+ledger entry. The history action's `VERSION` installs `Kronikol.Tool` 3.35.1. Template pins move to 3.35.0.
+
+### Fixed
+
+- **A call's internal-flow popup holds only the spans its trace, its place in the span tree and its time say are
+  its own (#87).** A call that recorded no trace id, as no database tracker does, took every span of the run that
+  started in its time, and calls under one ambient `Activity` around several tests were told apart by time alone.
+  So with tests running at the same time, one request's popup showed every concurrent request's queries as its own
+  (#87's report: about sixty). Now a call that records no trace id takes what its test's traced calls could take,
+  or, where they record none, the spans of traces no call records; a call whose trace other tests' calls record too
+  takes its own span and what descends from it; and a span that calls of two tests would both take goes to neither.
+  A popup that left spans out says how many and why, and its title counts them ("Internal Flow (3 spans, 2 left
+  out)"). A call that lost every span keeps a popup saying so, under `HideLink` too, since a hidden link would read
+  as "nothing happened". Calls with a trace of their own (the handler mints one when there is no ambient
+  `Activity`) and suites that run one test at a time get the popups they had. On BreakfastProvider's xUnit lane,
+  run on a local build (203 of 203 passing), 6 popups leave 12 spans out and 3 calls keep a popup that only says
+  why; 1,294 popups show spans against 1,302 on 3.35.0, and 200 scenarios have a whole-test flow against 204.
+  Building the segments costs what it did.
+- **The whole-test flow of a test whose calls record no trace id** held every span of the run. It holds the spans its
+  calls kept, and a trace other tests' calls record too adds only what its calls kept.
+- **A `ShowMessage` popup showed its diagnostic's tags as text** (`No internal activity captured for this
+  segment.<br/><br/><details style=…`): the popup script has set a segment's message as text since internal flow
+  tracking shipped, while the generator writes it as markup. It renders the message as markup now, so the
+  diagnostic shows as its "Diagnostic info" list, and the configured activity source names in it are encoded.
+- Tests: `InternalFlowSegmentMapReportTests` failed about one run in three (on 3.35.0 too).
+  `InternalFlowSpanStoreTests` cleared the process-wide span store from a parallel collection, so a report could be
+  generated after its spans were gone and, under `HideLink`, carry no segment element. The clear runs after every
+  parallel collection now (`SpanStoreClearCollection`), a fact scans the test sources for any other clear, and
+  three clears in the gRPC tests that protected nothing are gone.
+
 ## [3.35.0] - 2026-09-29
 
 **Minor - a new option, `ReportConfigurationOptions.CompressTestRunReportPayloads` (#85), and a flag for it on
