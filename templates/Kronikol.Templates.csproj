@@ -61,8 +61,8 @@
     </ItemGroup>
   </Target>
 
+  <!-- LICENSE and icon.png come from Directory.Build.props, as for every package. -->
   <ItemGroup>
-    <None Include="..\LICENSE" Pack="true" PackagePath="\" Link="LICENSE" />
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 

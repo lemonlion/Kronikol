@@ -24,10 +24,11 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
-  <!-- Include LICENSE, README, and icon in all NuGet packages -->
+  <!-- Include LICENSE, README, and icon in all NuGet packages. A project that names a readme of its own
+       (Kronikol.Templates names README.md) packs that one instead; items see the project's final properties. -->
   <ItemGroup Condition="'$(IsPackable)' != 'false' AND '$(IsTestProject)' != 'true'">
     <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="\" Link="LICENSE" />
-    <None Include="$(MSBuildThisFileDirectory)nuget-readme.md" Pack="true" PackagePath="\" Link="nuget-readme.md" />
+    <None Include="$(MSBuildThisFileDirectory)nuget-readme.md" Pack="true" PackagePath="\" Link="nuget-readme.md" Condition="'$(PackageReadmeFile)' == 'nuget-readme.md'" />
     <None Include="$(MSBuildThisFileDirectory)icon.png" Pack="true" PackagePath="\" Link="icon.png" />
   </ItemGroup>
 

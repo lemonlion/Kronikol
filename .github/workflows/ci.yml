@@ -292,7 +292,7 @@ jobs:
           # groupIdentity made every short name unresolvable; a sourceName colliding with the
           # PackageReference text mangled the package pin into the user's project name), and it
           # produces false failures when a scaffold identity overlaps a referenced package.
-          dotnet pack templates/Kronikol.Templates.csproj --configuration Release
+          dotnet pack templates/Kronikol.Templates.csproj --configuration Release 2>&1 | tee "$RUNNER_TEMP/tpl-pack.log"
           PKG=$(ls templates/bin/Release/Kronikol.Templates.*.nupkg | head -n 1)
 
           # The pack and the instantiation both have to be INSPECTED, not just exercised. Packing and
@@ -310,6 +310,18 @@ jobs:
           PACKED=$(cd "$RUNNER_TEMP/tpl-pkg" && find . -path '*github-actions*' | head -n 3)
           if [ -n "$PACKED" ]; then
             echo "::error::the package carries the GitHub Actions templates: $(echo $PACKED)"
+            exit 1
+          fi
+          # The package's root holds the files its nuspec names, once each. Directory.Build.props packs LICENSE,
+          # icon.png and nuget-readme.md into every package: a project that packs one of them again gets NU5118
+          # and one copy, and this package names README.md as its readme, so a nuget-readme.md is read by nothing.
+          if grep -q "NU5118" "$RUNNER_TEMP/tpl-pack.log"; then
+            echo "::error::the pack added a file twice: $(grep -o 'NU5118: [^[]*' "$RUNNER_TEMP/tpl-pack.log" | head -n 1)"
+            exit 1
+          fi
+          ROOT=$(cd "$RUNNER_TEMP/tpl-pkg" && ls -p | grep -v / | grep -v -e '\.nuspec$' -e '^\[Content_Types\]\.xml$' | LC_ALL=C sort | tr '\n' ' ')
+          if [ "$ROOT" != "LICENSE README.md icon.png " ]; then
+            echo "::error::the package's root holds $ROOT where the nuspec names LICENSE, README.md and icon.png"
             exit 1
           fi
           for dir in templates/kronikol-*/; do
