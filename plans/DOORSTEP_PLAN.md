@@ -662,13 +662,23 @@ The owner asked whether anything was missed or could be better. Five things were
    without the deep link, an id no scenario has, a red digest, a page linking no report, a 404 and a refused
    connection (after 38 s of retries) failed; live, the root passed, a missing path failed with 404, and a lane
    report failed as a page linking no report. actionlint 1.7.12 with shellcheck 0.11.0 passes it, and flags SC2013 on
-   a copy with the first sketch's loop.
+   a copy with the first sketch's loop. On GitHub, `36499537830` passed against the field, reading six green
+   digests and finding F30's link, and `36499545627`, given a lane report, failed as a page that links no report.
 4. **BreakfastProvider's README linked Kronikol at a dead address**, `lemonlion.github.io/Kronikol`, which answers
    404 (F1). `8550978` points it at the repository. **Its homepage field was empty** although it has a Pages site;
-   it is the demo's root now (set 2026-09-28, about 23:30 UTC).
+   it is the demo's root now (set 2026-09-28, about 23:30 UTC). The push of `8550978` turned CI: Main `36498320415`
+   red on one job: the ReqNRoll in-memory coverage job made and uploaded its report, then its cleanup step's delete
+   answered after 27 s and the action's retry found the artifact gone (404); the deploy still ran. `c1f377e` makes
+   both cleanup deletes best-effort (`failOnError: false`), and CI: Main `36499265607` passed all 58 jobs and
+   deployed.
 5. **The record had not caught up.** `ROADMAP.md` Appendix C had no row for this plan's leftovers, and has one. F33,
    Appendix B's step 4, §2's phone note and the header's phone and card sentences are corrected against §13, F35
    and F36.
+
+**3.33.0** is `ce167b8c`, a minor because its tag is the first to carry `PR_REPORT_LINK_PLAN`'s action. CI (28 jobs),
+CodeQL and CI Summary Preview passed on it, and `Kronikol.Tests` on net10.0 passed 6,108 with 1 skipped. The tag's
+Release run `36501520289` passed, pushed all 62 packages and made the GitHub release, and NuGet listed all 62 at
+3.33.0 by 00:23 UTC on 2026-09-29. The wiki's CI-Artifact-Upload.md names 3.33.0 as the action's first tag (`ccd6963`).
 
 ## Appendix A. The Kronikol4J ledger entries 3.31.10 owes
 
