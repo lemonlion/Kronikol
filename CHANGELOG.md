@@ -55,14 +55,24 @@ release carries; until then, the action keeps its own guard against it.
   that it "uploaded no" artifact. It now says the artifact expired, and still links nothing. The README's limits said
   that viewing a report without a download meant publishing it somewhere else; an HTML file uploaded with
   `archive: false` (`actions/upload-artifact@v7`) opens in the browser, where a Kronikol report works, and the README
-  says so. A link expires a day after its upload, not after its run.
+  says so. A link expires a day after its upload, not after its run. The README's upload step failed a second time
+  when the test step stopped before Kronikol wrote a report, a build error for example: `reports-path` was empty, and
+  `actions/upload-artifact` fails on an empty `path` ("Input required and not supplied: path") whatever
+  `if-no-files-found` says. The upload now runs only when the output is there. The README names `v3.33.0` as the
+  first tag to reference, and both ways it gives to reference the action without copying the folder, a release tag
+  and `$/`, were run on GitHub for the first time.
 - **The live lane, `.github/workflows/pr-report-link.yml`, could pass when the action linked nothing**, because the
   action only warns then. A step after the action reads the comment back and fails unless the line links this run's
   newest upload, or a newer run has linked the report. The lane also runs on pull requests that change the project it
-  tests or `CiArtifactPublisher.cs`, which writes the `reports-path` output.
+  tests or `CiArtifactPublisher.cs`, which writes the `reports-path` output. When a link job was re-run after this
+  run's upload expired, the check failed naming an artifact `undefined`; it now says the upload expired.
 - Tests: `PrReportLinkActionTests` goes from 23 to 27 facts: the expired upload, the lane's check run against the
   in-memory GitHub (one fact where it must fail, one where it must pass), and the README's action versions held to the
-  ones the lane runs. The workflow facts now also require a workflow to upload the artifact name it links.
+  ones the lane runs. The workflow facts now also require a workflow to upload the artifact name it links. The check's
+  failing fact gains the expired case, and an assertion that raised xUnit2029 in CI's build is written as it advises.
+  The README's fact requires its upload to skip an empty `reports-path`.
+- **CodeQL analyses `actions` as well as C#**, so the workflows and the composite actions under
+  `templates/github-actions/` are scanned. Its 18 default queries found nothing in either on 2026-09-29.
 
 ## [3.33.0] - 2026-09-29
 
