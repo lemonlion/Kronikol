@@ -1274,7 +1274,11 @@ on a pack with a wildcard `Content` item, which it names.
 
 ### 14.5 On GitHub
 
-The live lane, CI and the dogfood's runs on the pushed commit are recorded here once they have run.
+The push of `118a3481` to `main` started no workflow. Its message named the action's ledger commit marker,
+in square brackets, and GitHub skips the push workflows when a pushed commit's message holds that marker
+anywhere, not only as a directive. So a commit message here never quotes it; the push after it started them.
+The live lane, dispatched on `118a3481`, and CI and the dogfood on the push after it are recorded here once
+they have run.
 
 ---
 
