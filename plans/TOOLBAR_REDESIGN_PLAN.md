@@ -1,5 +1,9 @@
 # TOOLBAR_REDESIGN_PLAN — Option B now, Option C at v4, tri-state filtering everywhere
 
+**2026-09-29: Option C and the `--kron-*` token layer are now v5** (`ROADMAP.md` D30, stages 11 and 12). The owner
+gave v4 to the size of `TestRunReport.json` and two default flips (`V4_PLAN.md`). Read "v4" and "4.0.0" below as v5
+and 5.0.0.
+
 **Status: DRAFT — nothing implemented.** Investigation and design are complete; this file is the implementation
 spec. Work starts only on explicit go, TDD per CLAUDE.md (red → green → refactor, Playwright for every UI
 behaviour). Design authority: the live comparison artifact

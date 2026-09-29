@@ -1,249 +1,294 @@
-# V4 Plan — Mermaid CI Summaries, No Server-Side Rendering, New Report Defaults
-
-Version 4.0.0. Four coordinated changes, all breaking:
-
-1. **CI summaries switch to Mermaid** (autonumber sequence diagram + numbered payload legend) — no more plantuml.com image URLs.
-2. **All server-side rendering is removed**: `PlantUmlRendering.Server`, `PlantUmlRendering.Local`, the `Kronikol.PlantUml.Ikvm` package, and every option that exists only for them. Surviving renderers: `BrowserJs` (default) and `NodeJs`.
-3. **Headers hidden by default** in HTML reports (new option, configurable).
-4. **YAML notes by default** in HTML reports (existing `NotePayloadFormat` option, default flipped).
-
-Investigated 2026-08-30. All file:line references verified against the working tree at that date.
-
----
-
-## Why (recorded for the changelog / migration guide)
-
-- The CI summary is the **only** remaining consumer of server-side rendering: it emits
-  `![diagram](https://plantuml.com/plantuml/svg/{encoded})` ([CiSummaryGenerator.cs:183](src/Kronikol/Reports/CiSummaryGenerator.cs)) regardless of `PlantUmlRendering`. GitHub markdown cannot display locally-rendered images (no data URIs, no inline SVG, no auth-gated artifact URLs — Camo only proxies anonymous http(s)), so the fix is to stop needing an image: GitHub renders ```` ```mermaid ```` fences natively in step summaries.
-- Removing the plantuml.com URLs also closes a quiet data leak: today every summary encodes captured request/response content into URLs fetched by plantuml.com and cached by GitHub Camo.
-- IKVM exists only to power `PlantUmlRendering.Local`. Its PNG capability has no JS replacement (the TeaVM `@plantuml/core` build is SVG-only — the old CheerpJ `plantuml-core` had `convertPng` but is discontinued; the "PNG" strings in the TeaVM bundle are vestigial `FileFormat` enum constants with no raster pipeline). v4 accepts SVG-only; canvas/`resvg-js` rasterisation is the documented escape hatch if PNG demand ever returns.
-
----
-
-## Phase 0 — Spikes (before any code)
-
-**0a. Prove Mermaid in a real step summary — RUN, awaiting eyeball (2026-08-31).** Sample summary at `tools/mermaid-spike/sample-summary.md` (6 labelled probes: fence rendering with `autonumber`/`rect`/`loop`/`Note over`; numbered `<details>`+```` ```json ```` legend with one `open`; bare & four-backtick fences; `autonumber 15` continuation; label edge characters; ~120-arrow size probe), emitted by `.github/workflows/mermaid-spike.yml` on branch `v4-mermaid-spike`. Run: https://github.com/lemonlion/Kronikol/actions/runs/33308470844 — **eyeball each probe on the run page** (summaries aren't fetchable via API). Gotcha found: `workflow_dispatch` needs the workflow on the default branch, hence the branch-scoped push trigger. Local pre-validation via `@mermaid-js/mermaid-cli` (latest mermaid, Edge): all 4 diagram blocks parse and render; `autonumber 15` numbers arrows 15/16; the 120-arrow diagram renders completely (~3.4 KB source, far under mermaid's 50 000-char default `maxTextSize`); quotes in participant display names render *literally* (emitter must not emit surrounding quotes); `&`/unicode fine. GitHub pins its own mermaid version, so the run page remains the authoritative check. Delete the spike branch + workflow after Phase 1 lands.
-
-**0b. Component-diagram C4 decision — RESOLVED (2026-08-30): drop C4 in v4.** Spiked against the production pipeline (cached `v1.2026.6-patched` engine via `plantuml-render.js`): `!include <C4/C4_Component>` hangs to the script's 20 s timeout with no SVG, while the plain component syntax renders fine — the TeaVM engine bundles no stdlib, confirming the existing comment at ComponentDiagramReportGenerator.cs:43 on the current build. C4 was only reachable via Server/Local (the modes being deleted; [ComponentDiagramReportTests.cs:277](tests/Kronikol.Tests/ComponentDiagram/ComponentDiagramReportTests.cs) is the sole C4 test and asserts a server URL), and BrowserJs/NodeJs already use plain component syntax, so no surviving mode loses anything. Actions: delete `useC4` plumbing + the C4 branch of `ComponentDiagramGenerator.GeneratePlantUml`, delete the :277 test, list "C4-flavoured component diagrams removed" as a breaking change.
-
----
-
-## Phase 1 — Mermaid emitter (new code, TDD)
-
-### Architecture
-
-There is **no intermediate diagram model** to reuse: `PlantUmlCreator.CreatePlantUml` ([PlantUmlCreator.cs:111](src/Kronikol/PlantUml/PlantUmlCreator.cs)) is a monolithic `StringBuilder` emitter switching on `trace.Type`. The Mermaid emitter is therefore a **parallel emitter from `RequestResponseLog[]`** — new class, suggested `src/Kronikol/PlantUml/MermaidCiSequenceCreator.cs` (internal; CI-summary-only, not a general `DiagramFormat`).
-
-Do NOT translate emitted PlantUML. Two reasons pinned by investigation:
-- Note content at PlantUML-emit time is already PlantUML-flavoured (creole escaping, `<color:gray>` header lines, `WrapUnbreakableRuns` hard breaks). For clean fences, call the structured formatters directly: `TryFormatAsJson` (:869), `TryFormatTruncatedJson` (:896), `GraphQlBodyFormatter.TryFormat`, `JsonFocusFormatter` — and skip `EscapeCreoleMarkup` / `WrapUnbreakableRuns` / `BatchGray`.
-- User-injected raw PlantUML (`RequestResponseLog.PlantUml`, spliced verbatim at :199/:226 — step bars from `StepCollector.cs:81`, assertion bars from `Track.cs:447`, tabular bands, test delimiters, `InsertPlantUml`) cannot be translated. Re-render from the structured fields, keyed by `DiagramMarkerKind` ([RequestResponseLog.cs:129](src/Kronikol/Tracking/RequestResponseLog.cs)). Truly opaque user PlantUML (no marker kind) is dropped from the mermaid diagram (documented limitation; the HTML report keeps it).
-
-Reusable as-is: `SequenceCollapser.Apply` (collapse runs + `MaxArrowsPerDiagram` cap), `DependencyPalette` (participant categorisation), the pre/mid/post formatting processors.
-
-### Output contract
-
-Per test, the emitter returns:
-
-```
-MermaidCiDiagram(
-    string MermaidSource,                  // sequenceDiagram + autonumber + participants + arrows + notes
-    IReadOnlyList<MermaidPayload> Payloads // (int Number, string From, string To, string Label, string? Body, bool IsJson)
-)
-```
-
-`DiagramAsCode` has no payload field — return this new type from a sibling of `GetCiSummaryDiagrams` rather than widening `DiagramAsCode`.
-
-**Numbering invariant (the critical correctness detail):** Mermaid `autonumber` numbers *every arrow line* in source order. The legend must be numbered by counting the emitter's own emitted arrow lines — never by reusing PlantUML's `_stepNumber` or trace indices. Markers become `Note`/`rect` lines (not arrows) so they consume no number, same as PlantUML today (markers `continue` before the increment at :363). A unit test must pin: for a fixture with markers + collapsed loops interleaved, legend numbers == rendered autonumber for first/middle/last arrows.
-
-### Statement mapping (complete inventory from the CI path)
-
-| PlantUML (CI path emits) | Mermaid |
-|---|---|
-| `!theme`, `!pragma teoz`, `skinparam wrapWidth`, `<style>` blocks | omit (no equivalent needed) |
-| `autonumber N` (reseeded per part) | `autonumber` (per-part reseed: `autonumber N` is supported) |
-| `entity/database/collections/queue/control/actor/participant "X" as x` (shape from `DependencyPalette.GetSequenceShape`) | **1:1 via mermaid typed participants**: `actor` for User; `participant x@{ "type": "entity" \| "database" \| "collections" \| "queue" \| "control", "alias": "X" }` for HttpApi/Database/Cache/MessageQueue/AI; plain `participant` for Unknown. Verified rendering on latest mermaid (PROBE 7, spike run 33309938739 — stickman + distinct symbols); **if GitHub's pinned mermaid rejects the `@{}` syntax the whole block errors, so gate on the PROBE 7 eyeball**: fallback = plain participants. Display names must be emitted *unquoted* (quotes render literally) |
-| participant colour suffix (`#E74C3C`, off by default) | omit (mermaid participant colour needs init-directive theming; not worth it) |
-| Request arrow `a -[#438DD5]> b: POST: /x` | `a->>b: POST /x` (colours dropped; GitHub theme provides contrast) |
-| Response arrow `b -[#438DD5]-> a: Created` | `b-->>a: 201 Created` — prefer status-code+text if available; `(Redirect)` suffix kept |
-| User action `user -[#7D3C98]> web: Click "…"` | `user->>web: Click "…"` |
-| Internal-flow link-wrapped label `[[#iflow-… GET: /x]]` | plain label (links don't work in summary SVG) |
-| `note left/right` + body (payload) | **no note emitted** — payload goes to the legend, keyed by arrow number |
-| Step bar `hnote across <<stepDelimiter>> #black:...` | `Note over <firstParticipant>,<lastParticipant>: <step text>` |
-| Assertion bar `hnote across <<assertionNote>> #ccffcc / ✓ …` | `Note over <first>,<last>: ✓ …` (✅/❌ prefix by pass/fail colour) |
-| Tabular row band / test delimiter hnotes | `Note over` first,last with the row/test text |
-| Setup `partition #F6F6F6 Setup` … `end` | `rect rgb(246,246,246)` … `end` |
-| Collapsed run `loop ×5 · 12–48 ms` … `end` | `loop x5 - 12-48 ms` … `end` (mermaid has native `loop`) |
-| Arrow-cap `...+7 more calls omitted...` | `Note over <first>,<last>: +7 more calls omitted` |
-| Render-error placeholder diagram | single-participant diagram + `Note over` with the ⚠ message |
-| Assertion source-location comment `'__^*__:…` | omit |
-
-**Escaping rules for mermaid text** (unit-test each): strip/replace `;` and `#` in labels (`#` starts an entity, `#59;` emits `;` if ever needed); no raw newlines in a message (use `<br/>` only if a label must wrap — normally labels are one line); participant aliases restricted to `[A-Za-z0-9_]` (generate `p1…pN`, display names carry the real text); display names containing mermaid-reserved tokens get quoted-safe handling. `EscapeHtml` (exists in CiSummaryGenerator) still applies to anything landing inside `<summary>`.
-
-### Payloads (legend content)
-
-- Source: the same content that becomes `noteContent` today, but formatted via the JSON/GraphQL formatters directly — **no creole escaping, no wrap-runs, no header lines** (headers excluded from CI summaries entirely; matches both today's truncated CI variant and v4's headers-hidden philosophy).
-- Fence language: ```` ```json ```` when `TryFormatAsJson` succeeded, bare fence otherwise. If a body contains ```` ``` ````, use a four-backtick fence.
-- Truncation: cap each payload at `truncateNotesAfterLines` real lines (default stays 10 via the existing parameter; now they're *JSON* lines, not wrapped display lines — an improvement worth a changelog sentence) with a `… (+N more lines — see full report)` trailer.
-- **The truncated/full dual-pass dies.** It existed because notes lived inside the rendered image. v4: one pass, one diagram, one legend. `GetCiSummaryDiagrams`'s two-pass shape, the `wasTruncated` content-comparison heuristic (:170-171), and the `Truncated/Full Sequence Diagram` details structure all go.
-- Size guard: `GITHUB_STEP_SUMMARY` caps at 1 MiB. Track emitted bytes; when the budget (say 768 KiB) is exhausted, stop emitting payload bodies (keep the numbered summaries with a "budget exceeded — see full report" line) and finally stop emitting scenarios (existing `*N more not shown*` line).
-
-### Splitting
-
-- URL-length splitting (`maxEncodedDiagramLength`, `EncodedDiagramExceedsMaxLength`) is irrelevant to fenced mermaid — not carried over. `PlantUmlTextEncoder` itself **stays** (the HTML report path still uses encoded length as its splitting heuristic at PlantUmlCreator.cs:1294).
-- Keep a simple per-part **arrow cap** for GitHub's mermaid renderer limits, threshold from spike 0a (expect ~100+ arrows fine; pick conservatively). Parts continue `autonumber <next>` and the legend runs continuously across parts.
-
-### Tests (red first, per TDD)
-
-New `tests/Kronikol.Tests/PlantUml/MermaidCiSequenceCreatorTests.cs`: participant mapping per category; request/response/user-action arrows; status titleising + redirect suffix; marker mapping (step/assertion/tabular/delimiter → Note over); setup rect; collapsed loop; arrow-cap note; numbering invariant with interleaved markers; escaping (`;`, `#`, newline, backticks-in-payload → 4-fence); JSON vs non-JSON fence choice; per-payload truncation; part splitting + autonumber reseed; render-error placeholder; opaque user PlantUML dropped.
-
----
-
-## Phase 2 — CiSummaryGenerator rewrite
-
-### Shape of the new markdown
-
-Unchanged: `# Diagrammed Test Run Summary`, the metric table, failed-scenario `<details>` with `**Error:**` + stack trace, `## ❌ Failed Scenarios (N)` / `## Sequence Diagrams` split, `MaxCiSummaryDiagrams` cap, `*N more not shown*` lines.
-
-Replaced (`AppendDiagramImages`, :159-255): per scenario →
-
-````
-```mermaid
-sequenceDiagram
-    autonumber
-    ...
-```
-
-<details><summary><strong>3</strong> Orders → Inventory · POST /inventory/reservations</summary>
-
-```json
-{ ... }
-```
-
-</details>
-...
-````
-
-For a **failed** scenario, emit the payload `<details>` nearest the failure `<details open>` (heuristic: the last arrows before the failure, or all when ≤4) — restores the "failure at a glance" value the old `<details open>` truncated image had.
-
-Dropped: `![diagram]` images, `PlantUmlTextEncoder.Encode` calls, `plantUmlServerBaseUrl` parameter, the dead `diagramFormat` + `localDiagramRenderer` parameters (never read — confirmed), `DeactivateUrls` + `UrlProtocolRegex` + the `partial` keyword + `System.Text.RegularExpressions`/`Kronikol.PlantUml` usings, the ```` ```plantuml ```` source fences (mermaid fence is the source; full fidelity lives in the HTML report artifact). Kept: `EscapeHtml` (summaries), `EscapeMarkdown` (error line), `FormatDuration`.
-
-### Azure DevOps
-
-Verified 2026-08-30: Azure DevOps **does** support Mermaid, but per surface, and the pipeline summary tab is the one surface with no evidence of support:
-
-- **Wiki**: long-standing support; both `::: mermaid` containers and standard ```` ```mermaid ```` fences render (current markdown-guidance doc). Sequence diagrams supported, with "limited syntax support" caveats (most HTML tags unsupported, etc.).
-- **Repo markdown file previews** (README/ADRs): native Mermaid since the December 2025 release (previously wiki-only / third-party extensions).
-- **Pipeline run summary tab** (`##vso[task.uploadsummary]`): Microsoft's logging-commands doc says this tab's markdown rendering "is different from wiki rendering" and documents only a limited subset; no documentation or community report shows Mermaid rendering there.
-
-**Design consequence — no environment seam needed.** Emit standard ```` ```mermaid ```` fences unconditionally: GitHub renders them; Azure wiki/file surfaces render them; on the Azure summary tab they degrade gracefully to a plain code block (readable source, not breakage), and they light up automatically if Microsoft extends Mermaid to that surface — the December 2025 expansion suggests the direction of travel. This is simpler than the environment-branching alternative (today Detect() runs *after* generation anyway — ReportGenerator.cs:305 vs :312 — and the identical markdown already goes to both targets, HTML `<details>` included). If Azure summary fidelity ever matters, the fix is a rendering check on a real org first (Azure's Mermaid syntax subset — e.g. `autonumber` — should be verified where it *does* render before assuming parity with GitHub).
-
-### Wiki screenshot blocker
-
-`WikiGifTests.Feature09_CI_Summary_Screenshot` ([WikiGifTests.cs:1103-1165](tests/Kronikol.Tests.EndToEnd/WikiGifTests.cs)) renders the summary via `marked.min.js` and scrolls to the first `<img>`. Fix when regenerating assets: add `mermaid.min.js` from jsDelivr to the preview page (it already loads marked from jsDelivr), run `mermaid.run()` over rendered `code.language-mermaid` blocks, scroll target → the first `.mermaid svg` / rendered diagram. Regenerate `whats-new-ci-summary.png`.
-
-### Test changes
-
-- Rewrite the URL-coupled facts in `CiSummaryGeneratorTests` (:40, :60, :107, :137, :156, :231 — assert mermaid fence content / legend entries instead of `Encoded(...)`); delete :289/:301 (`DeactivateUrls`); rewrite the fence-structure facts (:311-:382) for the new single-pass shape; keep the format-agnostic facts (:29-:278) as-is.
-- `CiSummaryWriterTests`, `ReportGeneratorCiSummaryTests`, `ReportGeneratorCiArtifactTests`, `ReportsFolderPathTests:59` — unaffected (verified format-agnostic).
-- New facts: failed-scenario payload `<details open>`; 1 MiB budget guard.
-- **Close a discovered coverage gap:** `GetCiSummaryDiagrams` has exactly one caller (ReportGenerator.cs:304) and no direct tests — every existing test hand-builds `DiagramAsCode` arrays for `GenerateMarkdown`, so nothing pins `truncateNotesAfterLines: 10`, `excludeAllHeaders: true`, or the encoded-length budget at the fetcher layer. The replacement fetcher method (the Mermaid sibling) gets direct unit coverage for payload production, truncation default, and header exclusion — a regression there today would land silently.
-- CiPreview example projects unchanged (they only set `WriteCiSummary = true`); push and eyeball via `ci-summary-preview.yml` — this is the real acceptance test.
-
----
-
-## Phase 3 — Remove Server + Local/IKVM
-
-### Enum & options (public API breaks)
-
-- `PlantUmlRendering`: delete `Server` (ordinal 0!) and `Local` → `BrowserJs` becomes ordinal 0, so `default(PlantUmlRendering)` lands on the v4 default. Current defaults are already `BrowserJs` everywhere (DiagramsFetcherOptions.cs:28, ReportConfigurationOptions.cs:86, IngestPipeline.cs:283, IngestCommand.cs:23, ReportGenerator.cs:415) — no default changes needed.
-- Delete options: `PlantUmlServerBaseUrl`, `LocalDiagramRenderer`, `LocalDiagramImageDirectory`, **`PlantUmlImageFormat` (entire enum + both options)**. Verified: Png/Base64Png are unreachable without Server/Local; NodeJs and BrowserJs ignore the option entirely; the sole internal use (component diagram base64-vs-file choice, ComponentDiagramReportGenerator.cs:31-33/76-95) becomes a bool or hard-coded file output. `NodeJsPlantUmlRenderer.Render`'s format parameter → drop or reduce to a bool base64 flag.
-- Keep `InlineSvgRendering` (NodeJs-only semantic; the `InternalFlowTracking` force-set at ReportGenerator.cs:135-142 simplifies to NodeJs-only).
-
-### Code deletions/edits
-
-- `DefaultDiagramsFetcher`: delete `GetServerRenderedDiagrams` (:181), `GetServerRenderedInlineSvgDiagrams` (:201, the file's only HttpClient), `GetLocallyRenderedDiagrams` (:217), `RenderLocally` (:291), `RenderLocallyAsInlineSvg` (:418). Switch (:39-45): `BrowserJs` / `NodeJs` arms + default→BrowserJs. `maxEncodedDiagramLength` ternary (:235) → unconditional 8000.
-- `ComponentDiagramReportGenerator`: delete the server-URL branch (:97-103) + `plantUmlServerBaseUrl` param; `useJsEngine` → `!useBrowserJs`; apply the Phase-0b C4 decision.
-- `PlantUmlCreator`: delete the dead `ImageTags` machinery (`GetPlantUmlImageTag` :1339, record member :1350, `plantUmlServerRendererUrl` :34 — produced but consumed only by tests).
-- CLI: `--render` accepts `browserjs|nodejs` only (IngestCommand.cs:68-73, :391-400, help :405/:416). Removing `local` fixes a latent bug (`--render local` currently throws — CLI never sets the delegate). Env hook `KRONIKOL_PLANTUML_SERVER_BASE_URL` (Example.Api.Tests.Component.Shared/IntegrationTestConfiguration.cs:38-42) dies.
-- Stale user-facing strings: plantuml-browser-render-script.js:110 & :1012 ("Use PlantUmlRendering.Server or .Local for large diagrams" → rewrite advice, keep the first sentence — DiagramContextMenuTests:973 and BrowserRenderWorkerTests:329 pin it); DefaultDiagramsFetcher.cs:185/:221 IKVM install hints (methods die anyway); internal-flow-popup-script.js:124 comment; ReportConfigurationOptions.cs:76; PlantUmlRendering.cs:8; PlantUmlCreator.cs:399/:638 comments.
-
-### IKVM package removal
-
-- Delete `src/Kronikol.PlantUml.Ikvm/` (incl. `PlantUml/plantuml-mit-1.2024.6.jar`) and `tests/Kronikol.Tests.PlantUml.Ikvm/`.
-- `Kronikol.sln` (:32, :34, config blocks :396-419), `release.slnf:53` (drops it from `dotnet pack`/push in release.yml).
-- `ci.yml`: delete the `PlantUml IKVM Tests` matrix entry (:77-79), the `Free disk space (IKVM)` step (:172-180, exists solely for this job), and the `Kronikol.Tests.PlantUml.Ikvm` entry in the auto-discovery SKIP list (:244). Leave the unrelated disk-space steps in release.yml/codeql.yml.
-- **Statement-limit ground truth**: `IkvmStatementLimitTests` is the executable evidence behind `PlantUmlStatementLimits` (which caps are real PlantUML's vs TeaVM-build artifacts). Preserve as documentation: copy the four findings (2,000-char message limit is PlantUML's own; block-opener ~1,476 and coloured-note-bar ~1,458 are JS-build artifacts; long-note behaviour) into `PlantUmlStatementLimits.cs` XML docs (fixing the :68 citation) and the wiki. If re-verification is ever needed, a plain `java -jar plantuml.jar` script beats resurrecting IKVM — note this in the doc comment.
-
-### Test changes
-
-- Delete: `LocalDiagramRenderingTests` (9 facts), `DefaultDiagramsFetcherTests` (3 server-URL facts), `ComponentDiagramReportTests` server/local facts (:127, :157, :170, :183, :238; :277 per Phase-0b), `ConfigurationOverrideTests.CustomPlantUmlServerBaseUrl_AppearsInDiagramImgSrc` (:188-210), IngestCommandTests `server` parse assert (:137), PlantUmlCreatorTests ImageTags/server-URL block (:915-:971, :1518-:1533, :2701-:2724).
-- Re-point `DiagramFailureIsolationTests` (:64-98): it uses a throwing `LocalDiagramRenderer` as the cheap failing-renderer seam. The per-scenario isolation behaviour must survive — replace with a NodeJs-path seam (e.g. an internal render-func hook on `RenderNodeBatchIsolated`, or an unrenderable diagram fixture).
-- Swap the `PlantUmlServerBaseUrl = "http://custom-server.com"` smoke values in the four LightBDD options tests for another property.
-
----
-
-## Phase 4 — Report default flips
-
-### 4a. Headers hidden by default (new option)
-
-No option exists today — `window._headersHidden = false` is a hardcoded literal (collapsible-notes-script.js:1630) and hiding is a source-rewrite + re-render, not CSS. Follow the `NotePayloadFormat` plumbing pattern exactly:
-
-1. `ReportConfigurationOptions.HideHeadersByDefault` — `bool`, **default `true`** in v4. XML-doc it as BrowserJs-only (like NotePayloadFormat's doc at :307).
-2. Thread as `GenerateHtmlReport` parameter beside `notePayloadFormat` (ReportGenerator.cs:439), callers :250/:255, merge path `MergeableReportRenderer.cs:70`.
-3. New `__HEADERS_HIDDEN_DEFAULT__` token at collapsible-notes-script.js:1630, substituted in `DiagramContextMenu.GetCollapsibleNotesScript` (:90-92).
-4. Toolbar buttons must match the default or the UI lies: hoist the six copy-pasted `Headers Shown` literals (ReportGenerator.cs:920, 1290, 1306, 1331, 2176, 2192) into one built variable (the `noteFormatOptions` pattern at :579-586) emitting `data-shown`/label/`details-active` from the option.
-5. Optional polish: a `hasHttpHeaders` content probe (mirror `hasJsonNotePayloads` :571-573) so the button is suppressed when no note has gray lines.
-6. CLI: `kronikol ingest --headers shown|hidden` beside `--note-format` (IngestCommand.cs:109-119).
-
-Interaction check: header-only notes vanish from the SVG when hidden — the `sourceIndexMap` remapping (:711-741) and `isLongNote` gray-line skipping (:202-216) already handle a hidden initial state (they key off `container._headersHidden`, seeded from the global at :1895/:2100), but E2E must prove the *initial* hidden render, not just toggle-to-hidden.
-
-Tests: flip `ReportToolbarTests.Headers_shown_is_active_by_default` (:155) and `DiagramContextMenuTests.Globals_headersHidden_defaults_to_false` (:342 — becomes a token-substitution test like `NoteFormatToggleScriptTests:87-98`); `HeadersDetailsInterferenceTests` clicks `[data-shown='true']` throughout — either generate those fixtures with `HideHeadersByDefault = false` (testing the toggle mechanics unchanged) or update selectors; also touched: `NoteButtonsAfterHeaderHideTests`, `NoteExpandArrowHeaderHiddenTests`, `DiagramNoteBasicTests:110-125`, `ToggleButtonPendingTests`, `MobileResponsiveTests:234`. New E2E: default-hidden initial render (headers absent, note buttons/indices correct, toggle to shown works).
-
-### 4b. YAML by default (default flip only)
-
-The option shipped in 3.0.66 and is fully plumbed (`ReportConfigurationOptions.NotePayloadFormat`, `--note-format`, `__NOTE_FORMAT_DEFAULT__` token, dropdown `selected`, single init point at collapsible-notes-script.js:1874). v4 changes:
-
-1. `ReportConfigurationOptions.cs:312` → `= NotePayloadFormat.Yaml`.
-2. Align mirrored defaults: `ReportGenerator.cs:439` param default, `MergeableReportRenderer.cs:70`, `IngestCommand.cs:28`.
-3. `DiagramContextMenu.GetCollapsibleNotesScript()` parameterless overload (:83) hardcodes Json — make it follow the v4 default so it doesn't lie, and update the ~40 structural assertions in `NoteFormatToggleScriptTests`/`DiagramContextMenuTests` that ride on it.
-4. Do **not** touch the `|| 'json'` fallbacks in JS — "unset means JSON" is load-bearing for ineligible notes; YAML-default works by explicit `setAllNoteFormats` stamping (already proven end-to-end by `NoteFormatDefaultTests`).
-
-Tests: flip `ReportConfigurationOptionsDefaultsTests.NotePayloadFormat_defaults_to_Json` (:26-31); `NoteFormatDefaultTests` inverts into a Json-override suite; close the known gap (PLANS_STATUS.md:90): add `IngestCommandTests` coverage for `--note-format` (and the new `--headers`) parsing.
-
----
-
-## Phase 5 — Docs, versioning, release
-
-**Wiki (`../Kronikol.wiki`)** — no page mentions "mermaid" today:
-- `CI-Summary-Integration.md`: full rewrite (it currently documents behaviour that never existed — NodeJs/Local inline-base64 summaries at :56/:105/:112-137/:140-149, `PlantUmlRendering` as a CI knob at :189, plantuml URL examples at :213/:219, `darkred` markup at :242-266, the Azure "content is the same" claim at :279 which becomes actively wrong).
-- Delete/redirect: `Integration-PlantUML-IKVM.md`, `PlantUml-Server-Configuration.md`. Consistency pass: `PlantUML-Browser-Rendering.md` (references a nonexistent `CiSummaryPlantUmlRendering` option at :182), `Inline-SVG-Rendering.md`, `Large-Response-and-Diagram-Handling.md`, `Component-Diagrams.md`, `Generated-Reports.md` (:13, :446-464), `Report-Configuration.md`, `API-Reference.md` (:86 stale signature), `FAQ.md`, `Diagram-Customisation.md`, ~15 `Integration-*.md` quick-starts naming plantuml.com, `Home.md`/`_Sidebar.md`/`How-To-Guides.md` nav.
-- New page: **Migrating to v4** (table: removed API → replacement; default flips + how to restore v3 behaviour: `HideHeadersByDefault = false`, `NotePayloadFormat = NotePayloadFormat.Json`).
-- README.md (:102, :134-140, :284 package table, :311 wiki link), nuget-readme.md (:47 row).
-- Regenerate `whats-new-ci-summary.png` (Phase 2).
-
-**Kronikol4J**: report-asset byte-compat diverges further (already diverged since 3.0.45); the Java port keeps its own summary/rendering. Note in its README parity section — no code action in this repo.
-
-**Release**: bump **all** packages to 4.0.0 (same number everywhere per project convention), CHANGELOG with an explicit **Breaking changes** section (removed: `PlantUmlRendering.Server/.Local`, `PlantUmlServerBaseUrl`, `LocalDiagramRenderer`, `LocalDiagramImageDirectory`, `PlantUmlImageFormat`, `Kronikol.PlantUml.Ikvm` package, `--render server|local`, `KRONIKOL_PLANTUML_SERVER_BASE_URL`; changed: CI summary format, headers hidden, YAML default; possibly C4 per Phase 0b), full test suite, commit, tag `v4.0.0`, push commit + tag.
-
----
-
-## Open questions (decide during implementation)
-
-1. ~~Phase 0b outcome — C4 component diagrams~~: resolved, drop (see Phase 0b).
-2. ~~Participant category signalling~~: resolved pending PROBE 7 eyeball — mermaid typed participants (`@{ "type": "database" }` etc.) map 1:1 onto Kronikol's PlantUML shape set; fallback to plain participants only if GitHub's mermaid version rejects the syntax (the error takes down the whole block, so this is all-or-nothing per GitHub's version).
-3. Failed-scenario `<details open>` payload heuristic — last-N-before-failure vs all-when-few.
-4. Azure DevOps summary-tab fidelity: fences are emitted unconditionally (degrade to code blocks there today) — if an Azure user reports wanting rendered diagrams, options are an Azure wiki-publish step or waiting on Microsoft extending Mermaid to the summary tab (wiki + file previews already render it as of Dec 2025).
-5. Whether the parameterless `GetCollapsibleNotesScript()` overload should exist at all post-v4 (it exists for tests; consider deleting in favour of the explicit overload).
-6. **Toggle-defaults unification (from TOGGLE_DEFAULTS_PLAN, shipped 3.0.80).** Two candidates:
-   (a) fold the flat `NotePayloadFormat` option into the `ReportToggleDefaults` group (breaking —
-   today the group value wins when set and the flat property stays the simple both-reports knob);
-   note items 3/4 above become one-liners via the group built-ins once folded. (b) Unify the two
-   coexisting Specifications conventions: the old flat pairs (`SpecificationsShowStepNumbers`,
-   `SpecificationsDataFormat`, …) are independent values that do NOT inherit, while
-   `SpecificationsToggleDefaults` inherits-unless-overridden — converting the flat pairs to the
-   inheriting group model is a breaking change deferred to v4.
-7. **The monospace note control (from NOTE_APPEARANCE_CONTROLS_PLAN, 3.22.0).** Shipped default-visible in
-   3.0.85 on a plan recommendation, withdrawn to opt-in behind `ShowNoteFontControls` in 3.22.0. Two candidates:
-   drop it outright (removes `ShowNoteFontControls`, `NoteFontFamily`, `ReportToggleDefaults.NoteFont`, the
-   `kronNoteMono` class and both handlers; breaking, so only here), or keep it opt-in as it is. Decide on
-   whether anyone has set the option by then. No recommendation yet.
+# V4 plan: TestRunReport.json size, two default flips, the monospace control removed
+
+**Written:** 2026-09-29, at 3.34.1 (`a8abc614`), first as `JSON_SIZE_PLAN.md` and made the v4 plan the same day.
+**Status: green-lit 2026-09-29** (the owner: "implement V4_PLAN.md in full"); executing from R1, each release
+recorded in §7. **Decided by the owner on 2026-09-29:** the scope in §0 (`ROADMAP.md` D30), compression in place
+(D7), the JSON keeps its indentation (Q1; dropping it is a maybe for v5), R6 drops what no arrow links (Q4),
+the internal-flow track proceeds on in-repo evidence without waiting for the reporter (Q5), and 4.0.0 is
+published once its gate holds. Evidence labels as elsewhere: **RUN** (measured here), **READ** (in the source, `file:line`), **INFERRED**.
+
+**About the name.** Until 2026-09-29 `V4_PLAN.md` was the plan for Mermaid CI summaries and removing Server and
+Local rendering. That plan is now [`V5_PLAN.md`](V5_PLAN.md). A plan written before that date that names
+`V4_PLAN.md`, or puts Mermaid CI summaries, the Server and Local removal, toolbar Option C, the `--kron-*` tokens or
+the internal-flow options no report reads "in v4" or "at 4.0.0", means v5.
+
+## 0. Scope
+
+4.0.0 is four breaking changes and a wiki page:
+
+1. #85's payload compression, in place, on by default.
+2. Headers hidden in notes by default.
+3. Notes in YAML by default.
+4. The opt-in monospace note control removed.
+5. A "Migrating to v4" wiki page.
+
+The rest of this plan ships before it, in 3.x: the relaxed encoder, the #85 option, the internal-flow size fixes
+(#87, #86 and the segments no arrow links) and one preparation minor. Everything else the old v4 held is v5
+(`V5_PLAN.md`, `ROADMAP.md` stages 11 and 12): Mermaid CI summaries; the Server, Local, IKVM and C4 removal; the
+five internal-flow options no report reads; toolbar Option C with `--kron-*` as the theming contract; the
+toggle-default unification; and, as maybes, numeric HTTP status in the data file, the dead `.examples-*` CSS
+rules and dropping the JSON's indentation.
+
+Why this is a major: #85 reaches a default report only when its default flips, and flipping a default is a major
+(`ROADMAP.md` rule 7). The owner made the size of `TestRunReport.json` the temporary top priority, so the major
+that flips it comes first.
+
+## 1. What the file is made of
+
+Two BreakfastProvider reports, measured with scripts that print sizes only (**RUN**,
+[`V4_PLAN.harness/`](V4_PLAN.harness/README.md)):
+
+| | xUnit lane, 3.32.4 | Docker lane, 3.27.1 |
+|---|---:|---:|
+| Scenarios | 203 | 202 |
+| File as written | 6,579,291 | 18,972,302 |
+| `diagrams` strings (PlantUML source) | 1,379,374 (21.0%) | 5,801,245 (30.6%) |
+| `content` strings (bodies) | 779,301 (11.8%) | 5,334,111 (28.1%) |
+| `\uXXXX` escapes in the file | 154,392, of which `\u0022` 141,470 | 888,319, of which `\u0022` 869,298 |
+| Line ends | CRLF (87,993) | LF |
+| The same data, indent 2, quotes as `\"`, LF | 5,862,812 (89.1%) | 15,401,997 (81.2%) |
+| Same, no indentation | 4,488,524 (68.2%) | 14,189,497 (74.8%) |
+| #85 option 1 on the indent-2 form | 4,252,419 (64.6%) | 5,915,462 (31.2%) |
+| #85 option 1, no indentation | 2,860,529 (43.5%) | 4,683,838 (24.7%) |
+
+Four findings follow.
+
+- **F1. A fifth of the Docker report is escaped quotes.** The writer serializes with the default encoder and
+  `WriteIndented = true` (READ, `ReportGenerator.cs:4467`, `:4497`), and the default encoder writes every `"`
+  inside a string as `\u0022` (six bytes where JSON needs two), and `<`, `>`, `'`, `&`, `+` as six-byte
+  escapes. JSON bodies and PlantUML are full of quotes. The relaxed encoder, which `PlantUmlCreator.cs:1538` and
+  `TrackingDbDataReader.cs:158` already use, writes the same JSON value in fewer bytes: 7.0% to 18.8% on seven
+  BreakfastProvider lanes, most of them 8% to 10%, the Docker lane 18.8% (**RUN**, `encoder_saving.py`, which
+  counts every escape the relaxed encoder would not write). The row "indent 2, quotes as `\"`" is a second model of
+  it, which also drops CRLF, and it matches the written file to within 77 bytes once the escapes and CRLF are
+  added back. **RUN** on .NET 10: the relaxed encoder writes `\"` and leaves `<`, `&`, `'`, `+` and `✓` as they
+  are. No roadmap item or issue had this.
+- **F2. Indentation is a fifth of what is left** (indent 2 against none: 1,374,288 bytes on the xUnit report,
+  8% to 30% after R1 across the seven lanes), but a file without line breaks is one line, and `grep` on it prints
+  the whole file: the failure mode the agent-facing docs exist to prevent. **Decided (Q1): kept in v4; a maybe for
+  v5.**
+- **F3. #85 is the large lever, and it reaches a default report only at 4.0.0.** With R1 under it, it takes the
+  Docker report to 31% of today's size and the xUnit one to 65% (indent kept): 38% and 73% of R1's.
+- **F4. #86, #87 and the segments no arrow links shrink the JSON only when `GenerateMergeableData` is on.** A
+  default report carries no internal-flow segments; the mergeable file adds `internalFlowSegments` (READ,
+  `ReportGenerator.cs:488`, `:4711`). #86 and #87 were measured on the HTML's copy of the map. No mergeable report
+  with segments was on this machine to measure.
+
+## 2. The releases
+
+| # | Release | Bump | Shrinks | Blocked on |
+|---|---|---|---|---|
+| R0 | The measuring harness, `V4_PLAN.harness/` | none | nothing | done with this plan |
+| R1 | `TestRunReport.json` written with the relaxed encoder (F1) | patch | every report, by default: 7.0% to 18.8% | nothing |
+| R2 | #85: payload fields as `$z`, in place, behind an option (off) | minor | reports that opt in: to 38% (Docker) and 73% (xUnit) of R1's size | §3.2's design points |
+| R3 | #87: a popup holds only its own request's spans | patch | mergeable reports' segments (and the HTML) | a plan for it; both causes fixed (§3.3, Q5) |
+| R4 | Re-measure #86 on reports written after R3 | none | nothing | a synthetic suite that runs requests concurrently (§3.3, Q5) |
+| R5 | #86: each distinct flow stored once, if R4 supports it | patch | mergeable reports | R4's numbers |
+| R6 | Segments no drawn arrow links (the blob plan's leftover) | patch | mergeable reports with collapse, the cap, `Skip` variants or override blocks | nothing (Q4: drop) |
+| R7 | Preparation: `--headers shown\|hidden` on `kronikol ingest`, and `[Obsolete]` on the monospace members | minor | nothing | nothing |
+| R8 | **4.0.0:** #85 on, headers hidden, YAML notes, the monospace control removed, "Migrating to v4" | **major** | every report: R2's figures | R1, R2 and R7 released, and R2 run on BreakfastProvider |
+
+The order:
+
+- **R1 first:** the only change that shrinks every report without a major, and small. It must precede R2: R2
+  proves its option-off output byte-identical, and that proof should be taken against R1's bytes rather than be
+  broken by R1 a release later. And with the default encoder, base64's `+` is written `\u002B`, which inflates
+  every `$z` string by about 7.8% (READ, `InternalFlowHtmlGenerator.cs:65-66` notes the same); after R1 it is not
+  escaped.
+- **R2 next,** with R3 to R6 beside it in a separate worktree once R1 is on `main`. The two tracks share little code
+  (R2 is the JSON writer, `Query/`, `Merge/` and the skill scripts; R3 to R6 are `InternalFlow/`). Both touch
+  `ReportGenerator.cs`: merge, do not overlap edits.
+- **R3 before R4 and R5,** by rule 4: pooled spans make N concurrent requests' segments carry the same pooled flow,
+  which is exactly the duplication #86 counts, so #86 measured before R3 measures #87.
+- **R6 whenever there is a gap:** with Q4's recommended "drop" it depends on nothing.
+- **R7 any time before R8.**
+- **R8 waits for R1, R2 and R7, not for R3 to R6.** Those are patches with no default to flip; whatever of them is
+  not out by 4.0.0 ships in 4.x. (Q5 took the reporter's reports off R4's path, so all of them can precede it.)
+
+## 3. Blockers and decisions
+
+### 3.1 R1
+
+None. Points to settle in the release itself: every writer of the file moves together, the standard one
+(`ReportGenerator.cs:4465-4498`), the mergeable one (`:4649-4730`) and merge's `MergeableReportRenderer.Serialize`
+(`:138-166`), with ingest following the standard one; the relaxed encoder is unsafe only for text embedded in
+HTML, and no reader found in §3.2 embeds this file's text in a page (the segment element has its own encoder,
+`InternalFlowHtmlGenerator.cs:57-72`); the XML and YAML writers are separate (READ, `ReportGenerator.cs:4910`,
+`:5173`) and out of scope; it is a patch by the repo's rule (performance, the same JSON value), and the changelog
+says the bytes change; `b:` addresses do not move, because the index hashes the decoded string (READ,
+`ReportScanner.cs:798-803`); every reader is a standard JSON parser. No golden pin of the file exists, so R1 adds
+one (it becomes R2's option-off baseline). Kronikol4J writes the 3.0.4x shape of this file with its own writer,
+so R1 is a ledger entry, not a port (READ, `Kronikol4J/docs/REMAINING_PARITY.md:1877`).
+
+### 3.2 R2 (#85)
+
+- **D7, taken 2026-09-29: in place.** The file stays JSON.
+- **The index cannot seek past a bare `{"$z"}`.** #85 says `ReportIndex` needs no change; it does. The scanner
+  records a hash and a length for every body at scan time and indexes string tokens only (READ,
+  `ReportScanner.cs:644-686`, `:749-750`), so a wrapper holding only `$z` either makes every verb inflate every
+  body (`summary`, `ctrf` and `history gate` included) or loses the body. The wrapper has to carry the decoded
+  hash and length itself, under `$`-prefixed keys (an older scanner reads a plain key such as `type` or `name`
+  inside an interaction as the interaction's own field, READ `:555-570`).
+- **Version gating.** `ReportGate` accepts `formatVersion` equal to 1 only (READ, `ReportGate.cs:42`), and merge
+  likewise (`MergeableReportReader.cs:62`); the constant is shared with XML and YAML (`ReportGenerator.cs:36`).
+  A compressed file must declare a new version, so that an older tool refuses it rather than answering wrong:
+  without the bump an older `query` reports "body: none" and a false "not in bodies", and an older `merge`
+  crashes on `GetString()` (READ, `MergeableReportReader.cs:89`). Readers accept both values; an uncompressed file
+  keeps writing 1.
+- **`query.py` in the field.** Both copies load the file with `json.load` and have no version gate (READ,
+  `templates/skills/.../query.py:36-52`), so a copy already in a consumer's repository crashes on a compressed
+  report. The new copy can inflate with the standard library; old copies cannot be reached. Under R2 only those
+  who opt in meet it; at 4.0.0 everyone does (§3.4).
+- **Smaller points for the plan of R2:** gzip's header carries an OS byte, so tests compare decoded text; a size
+  threshold (only large bodies compressed) means the schema can allow the wrapper but not require it; `kronikol
+  merge` and `kronikol ingest` have no way to choose the encoding (READ, `MergeableReportRenderer.cs:138-166`,
+  `IngestCommand.cs:273-291`); `internalFlowSegments` is left alone in R2 (R3 and R5 reshape it, and merge would
+  have to inflate it before `WrapSegmentData`).
+- **There is no plan file for #85.** R2 starts by writing one (its design is in the issue body and above).
+
+### 3.3 R3 to R6
+
+- **How a segment picks its spans today** (READ, `InternalFlowSegmentBuilder.cs:26-92`, `:173-186`): per call,
+  the spans of the call's W3C trace that start between the request (less 50 ms) and its own response. Nothing
+  reads span parentage, although one path records an exact join key: with no ambient `Activity`, the handler
+  injects a `traceparent` with a fresh span id, stores that id as the log's `activitySpanId`, and the server span's
+  parent is that id (READ, `TestTrackingMessageHandler.cs:161-169`).
+- **#87 has two possible causes, and they need different fixes.** (a) A call that records no trace id takes every
+  span of the run in its window, from every concurrent test (READ, `InternalFlowSegmentBuilder.cs:81`,
+  `:180-181`). (b) Calls or tests sharing one trace id through an ambient `Activity` are separated by the window
+  alone (READ, `TestTrackingMessageHandler.cs:156-160`). Minted per-call traces cannot produce #87's 547 spans.
+  **Blocker: which one produced the reporter's popup.** `kronikol query trace` on that report flags a trace shared
+  by several scenarios (READ, `QueryCommand.Trace.cs:97-104`) and settles it without opening the file. Without that
+  report, R3 reproduces and fixes both.
+- **Nothing in the repo exercises it.** No test or example makes concurrent calls. The xUnit example lanes run
+  serially; the TUnit lanes run in parallel but nothing asserts on their segments. The one concurrency fact
+  separates two different traces (READ, `InternalFlowSegmentBuilderTests.cs:795`). R3 writes the reproduction
+  first: #87's own suggestion, two scenarios calling one endpoint at once with a known, different number of
+  queries each, once per cause.
+- **#87 has no plan, so R3 starts by writing one.** It decides: selection by the call's own span subtree where the
+  join key exists; an anchor for calls with no trace id other than "every span of the run"; the whole-test flow
+  (`BuildWholeTestSegments`, `:128-148`), which has no window at all; keeping the rule that the handler never
+  creates or changes `Activity.Current` (pinned, `TestTrackingMessageHandlerTests.cs:1765`, `:1778`). Four builder
+  facts turn red on purpose (`InternalFlowSegmentBuilderTests.cs:423`, `:442`, `:675`, `:828`).
+- **R3 decides what R5 would remove.** Today's byte-identical copies come from several calls on one trace
+  selecting the same spans in overlapping windows (READ, `InternalFlowSegmentBuilder.cs:79-92`). Select by subtree
+  and most of them go, which is why R4 re-measures before R5 is sized.
+- **R4 needs reports from a suite where the problem shows.** The mergeable JSON's map and the HTML element are one
+  map rendered twice (READ, `ReportGenerator.cs:329`; equality pinned by
+  `InternalFlowSegmentMapReportTests.cs:127`), so R4 can measure the decoded HTML element and needs no mergeable
+  report. But #86's and #87's numbers come from the reporter's ClickHouse and BigQuery lanes at 3.20.0, and no
+  suite on this machine runs requests concurrently. **Blocker: fresh reports from the reporter's suite, written
+  after R3.** Without them, R5 is sized on a synthetic parallel suite, which rule 4 treats as weaker evidence.
+- **R5's constraints:** flow keys must be content hashes, because merge keeps the first value per key across
+  shards (READ, `MergeableReportMerger.cs:376-388`); shards written before R5 must still render
+  (`internal-flow-popup-script.js:95-104`); Kronikol4J mirrors the popup script, so a ledger entry.
+- **R6 is one filter, and it covers more than the blob plan's leftover names.** The segment builder never sees
+  what the diagram drew (READ, `ReportGenerator.cs:307-312`, `:329`). Keeping only the keys the shown diagrams link
+  (`InternalFlowHtmlGenerator.LinkedIds`), after the diagrams exist and before both `BuildSegmentData` calls
+  (`ReportGenerator.cs:409-421`, `:4596-4608`), covers collapse and the cap, and also calls a `Skip` phase variant
+  hides, calls inside an override block and tests the page does not show. Its gain on BreakfastProvider is small:
+  3 unlinked segments of 1,296 on its xUnit lane at 3.31.4 (READ, release commit `81f77b58`). "Give the run's arrow
+  the whole run's spans" instead needs the collapser to export run membership, which `SequenceCollapser.cs:24`
+  discards, and it needs R3's selection first.
+
+### 3.4 R7 and 4.0.0
+
+- **#85 on by default reaches everyone.** Every report 4.0.0 writes is compressed. `query.py` copies already in
+  consumers' repositories crash on it, so the migration page tells them to refresh those copies (`kronikol
+  init-agents`, or the template's copy). A `kronikol` older than R2 refuses the file by its `formatVersion`, and
+  the page names the version to upgrade to. `kronikol merge` takes 3.x and 4.0.0 shards together (R2 reads both
+  forms). `kronikol ingest` writes the compressed form by default. The history action's `VERSION` installs a tool
+  from R2 on by then, since it moves with every release. Kronikol4J writes its own older shape and is not
+  affected.
+- **Headers hidden.** The option already exists: `ReportToggleDefaults.HeadersShown` (READ,
+  `ReportToggleDefaults.cs:24`), whose baseline is `true` (`ReportToggleDefaultsResolver.cs:16`), and the toolbar
+  buttons and the script's start state already follow it (`ReportGenerator.cs:983`, `:1723`;
+  `DiagramContextMenu.cs:134`). What the old plan's phase 4a asked for is therefore down to three things: flip the
+  baseline; add `--headers` to ingest (R7; ingest has `--note-format` and no `--headers`, READ
+  `IngestCommand.cs:122`); and prove the initial hidden render end to end. Tests that assume headers shown pin
+  `TestRunReportToggleDefaults.HeadersShown = true` in their fixtures, so toolbar Option B's first step
+  (`ROADMAP.md` 6.2) still migrates the `[data-shown]` tests only once, as the roadmap wanted.
+- **YAML notes.** Flip `ReportConfigurationOptions.NotePayloadFormat` (READ, `ReportConfigurationOptions.cs:482`),
+  the resolver's baseline (`ReportToggleDefaultsResolver.cs:20`) and the mirrored parameter defaults
+  (`ReportGenerator.cs:1052`, `:1147`, and the others the old phase 4b listed, in `V5_PLAN.md`'s history, checked
+  again). The script's `|| 'json'` fallbacks stay: "unset means JSON" carries notes that cannot be YAML. The
+  parameterless `GetCollapsibleNotesScript()` overload follows the new default or goes (the old plan's question 5).
+- **The monospace control.** What goes: `ReportConfigurationOptions.ShowNoteFontControls` (READ, `:511`),
+  `ReportToggleDefaults.NoteFont` (`ReportToggleDefaults.cs:51`), the `NoteFontFamily` enum (`NoteAppearance.cs:17`),
+  the resolver's two fields (`ReportToggleDefaultsResolver.cs:21`, `:30`), the script's `kronNoteMono` class and
+  controls (`collapsible-notes-script.js:1640`, `:2207`), the two script tokens (`DiagramContextMenu.cs:131-132`)
+  and the toolbar markup (`ReportGenerator.cs:1338-1347`). The note width control stays; it shares
+  `NoteAppearance.cs`. R7 marks the public members `[Obsolete]` first: the roadmap's rule is no major that removes
+  API without a deprecation release behind it (`ROADMAP.md` 11.1).
+- **Report output.** R1, R2, the three flips and the monospace removal each change report bytes: a Kronikol4J
+  divergence-ledger entry each (`Kronikol4J/docs/REMAINING_PARITY.md:1877`).
+
+### 3.5 Questions for the owner
+
+- **Q4.** R6: drop every segment no shown diagram links (recommended: smaller, one filter, independent), or give
+  a collapsed run's arrow the whole run's spans (more information; after R3, and its title must say "×N" or it
+  reads like #87). **Taken 2026-09-29: drop.**
+- **Q5.** Whether the reporter of #85 to #87 can run `kronikol query trace` on the #87 report, and rerun that
+  suite after R3 (§3.3). Both are the internal-flow track's only outside dependencies. **Taken 2026-09-29: do not
+  wait.** R3 reproduces and fixes both causes in the repo; R4 measures a synthetic concurrent suite and R5 is sized
+  on it, and the record says that is the weaker evidence rule 4 names.
+
+Decided on 2026-09-29: Q1, the indentation stays (a maybe for v5); Q2, D7 in place; Q3, whether #85's default
+flips before v4, is answered by making that flip v4; Q4 and Q5 as above.
+
+## 4. How each release is proved
+
+Every release follows the repo's TDD rule: a fact red on the release before it, for its own reason, before the
+change.
+
+- **R0:** done. Every later release takes its before and after numbers from the harness, run on the same
+  BreakfastProvider lane.
+- **R1:** a byte pin of a rich generated report (the corpus of `TestRunReportSchemaContractTests`, with
+  `kronikolVersion` normalised); a fact that a body holding quotes, `<`, `+` and non-ASCII round-trips through
+  `kronikol query body` with the same `b:` address as on 3.34.1; the size measured on BreakfastProvider.
+- **R2:** option-off output byte-identical to R1's pin; every verb that reads payload text (`http --body`,
+  `body`, `diff`, `values`, `interactions --where`, `grep` in all modes, `note`, `diagram`, the SQL hint in
+  `failures`) answers the same on a compressed and an uncompressed copy of one run; an older-version refusal; merge
+  of a compressed shard; the schema validator on both forms; `query.py` agreement (`FallbackScriptTests`).
+- **R3:** the test #87 suggests, once per cause: two scenarios hitting one endpoint concurrently with a known,
+  different number of queries each; each popup holds only its own.
+- **R4 and R5:** #86's own script on the decoded map, before and after.
+- **R6:** a scenario with each option on: no segment without an arrow (or the arrow's segment holds the run).
+- **R7:** `IngestCommandTests` parse `--headers` (and `--note-format`, if it still has no parsing fact); the
+  monospace members still work and carry the attribute.
+- **R8:** each flipped default pinned, the old default tests turned round; an end-to-end fact for the first render
+  with headers hidden and one with YAML notes; a report written with no options is compressed, and every
+  payload-reading verb answers as on its uncompressed copy; a 3.x shard merged with a 4.0.0 shard; no monospace
+  control on a generated page.
+
+## 5. The "Migrating to v4" page
+
+- **Compression:** what changed and the option that turns it off (named in R2); refresh `query.py`; the lowest
+  `kronikol` that reads the files.
+- **Headers:** `TestRunReportToggleDefaults.HeadersShown = true` restores them (`SpecificationsToggleDefaults` too
+  where it is set on its own); `kronikol ingest --headers shown`.
+- **YAML notes:** `NotePayloadFormat = NotePayloadFormat.Json`; `kronikol ingest --note-format json`.
+- **Monospace control:** the removed members, with no replacement.
+
+With it at 4.0.0, as for any release: every package at 4.0.0, a changelog with a breaking-changes section, the
+template pins and the history action's `VERSION`, the wiki pages for the options that changed, and the Kronikol4J
+ledger entries.
+
+## 6. Not in this plan
+
+- **v5** (`V5_PLAN.md`, `ROADMAP.md` stages 11 and 12): Mermaid CI summaries; the Server, Local, IKVM and C4
+  removal; the five internal-flow options no report reads; toolbar Option C and `--kron-*`; the toggle-default
+  unification; the maybes (numeric HTTP status, the `.examples-*` CSS, the JSON's indentation).
+- Whole-file gzip (D7's other option) and a cached index, both argued in #85.
+- Dropping `diagrams` from the JSON (the bodies are stored twice, once in `content` and once inside the diagram
+  notes); `kronikol query diagram` and `note` read them. Recorded, not proposed.
+- The XML and YAML data formats, and Kronikol4J's writer.
+- One wiki sentence still says v4 where it now means v5 (`Internal-Flow-Tracking.md:198`, on the internal-flow
+  options no report reads): changed with the next wiki push.
+
+## 7. Execution log
+
+Each release adds its entry here when it is tagged: what shipped, the numbers measured with the harness, and what
+the release found that the plan did not say.
+
+- **2026-09-29, the plan committed** (no bump) with the owner's answers to Q4 and Q5 and the green light.
