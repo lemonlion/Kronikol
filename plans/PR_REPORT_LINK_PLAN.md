@@ -3,7 +3,8 @@
 **Date:** 2026-09-27 · **Repo version:** 3.31.10 (`5ca0878a`; first written at 3.31.9, `e4c9e360`) · **PR head:**
 `e31b42fa` on `pr-report-link-template`, one commit on `49f5ea87` (the tree of 2026-09-15, 3.19.0) · **Status:**
 **executed 2026-09-28** (§10): the owner asked for the plan in full, which took D25 as recommended, and PR #73
-merged. The rest of this header is the plan as written. §1 is what was RUN, READ and read on the web today, §2 the findings, §3 the
+merged; a follow-up audit the next day fixed what the execution missed (§10, PR #108).
+The rest of this header is the plan as written. §1 is what was RUN, READ and read on the web today, §2 the findings, §3 the
 questions, §4 the slices, §9 the assumption ledger. The probes, the rehearsals and their output are in
 `PR_REPORT_LINK_PLAN.harness/`.
 
@@ -941,3 +942,48 @@ It was pushed as `07b71de9`: the lane green (run 36491733264), CI 28 of 28 (run 
   and records its tag in `ROADMAP.md` 2.2 as the first that carries the action. Steps 3 and 4 are the commit that
   adds this log: 2.2 done, D25 taken, a row 2.5 for §8's finding, and this plan's row in `PLANS_STATUS.md`.
   Step 5 (Q4) is not done, for the reason F9 gives above.
+
+### Follow-up (2026-09-29)
+
+The owner asked whether anything was missed. An audit against this plan, the checklist earlier audits built and the
+live checks found the following, all fixed in PR #108 except where it says otherwise.
+
+- **F14 was half fixed.** The template README's limits still said that viewing a report without a download meant
+  publishing it elsewhere, the PR's own sentence. Check 9 had measured the opposite for an HTML file uploaded with
+  `archive: false`. The README now says so, and that a link expires a day after its upload (check 2), not its run.
+- **The live lane could not fail when the action did nothing.** The action only warns when it finds no artifact, so a
+  lane that linked nothing stayed green. A step after the action now reads the comment back and fails unless the line
+  links this run's newest upload, or a newer run has linked the report. Its script also runs in
+  `PrReportLinkActionTests` against the in-memory GitHub.
+- **The filter that skips an expired upload had no fact**: the in-memory GitHub marked every artifact live, so
+  removing it passed every fact. Its warning also said the run "uploaded no" artifact. A fact now holds both.
+- **Nothing held the README's action versions to the lane's**, which §4.2 said proves them. A fact does, and the
+  workflow facts now require the workflow to upload the artifact name it links.
+- **The lane ran only when the action or the lane changed.** It also runs when the project it tests or
+  `CiArtifactPublisher.cs` changes, and its fact requires every file under `src/` that writes `reports-path=`. `main`
+  moves by push, so this reaches only pull requests.
+- **§7's hand-offs.** Row 7.4 did not say its section goes after the end marker; it does now. The plan of row 2.4,
+  `AZURE_DEVOPS_PARITY_PLAN.md`, already carried its three questions, and rows 2.3 and 13.2 had theirs.
+- **No Appendix C row** held this plan's leftovers (§6, Q4, A8, the actionlint line); there is one now.
+- **The `[Unreleased]` fold** was written only in this plan, the roadmap and one session's notes. `CLAUDE.md`'s
+  release steps now say it. 3.33.0 (`ce167b8c`, released the same night by the session that executed the doorstep
+  plan) folded the section and recorded `v3.33.0` in 2.2 as the first tag that carries the action.
+- The remote `pr-report-link-template` branch (`07b71de9`, which differed from `main` only by the doorstep plan's
+  `ecd8dc52` under the merged commits) was deleted.
+
+Tests: `PrReportLinkActionTests` has 27 facts. The expired fact failed first on the warning's text and the two check
+facts on the missing step; the version fact and the upload-name rule held on the old tree and failed with the README
+broken on purpose; six mutations of the action and the check, and two of the lane's paths, each turned their own fact
+red. `Kronikol.Tests`: 6,112 passed, 1 skipped, 0 failed on the head rebased onto 3.33.0 (6,109 and 1 before the
+rebase). actionlint 1.7.12 still finds only `queue`.
+
+**Live, on PR #108.** Run 36499371993, on the head before the rebase: the action linked artifact 11004428563, and the
+check read the line back ("The comment links this run's ci-preview-reports"). A scratch commit gave the action an
+artifact name nothing uploads (run 36500270923): the action warned that the run uploaded no such artifact, and the
+check failed the job ("The line for ci-preview-reports still links run 36499371993, not this run"). Before this change
+that run would have passed. The scratch commit was dropped by a force-push with lease. A first scratch push, on the
+old base, ran nothing: the pull request conflicted with 3.33.0, and GitHub runs no `pull_request` workflow for a pull
+request that conflicts. The final head, `a4833715`, rebased onto 3.33.0: the lane (run 36500423363; the action linked
+artifact 11004619978, and the check read the line back), CI 28 of 28 (run 36500423459) and CodeQL (run 36500423360).
+It merged by rebase at 2026-09-29T00:15:13Z as `d1a33b01`, with the administrator's bypass, as #73 did. `main`'s own
+runs on it passed: CI 28 of 28 (run 36502170987), CodeQL (run 36502170795) and CI Summary Preview (run 36502170836).
