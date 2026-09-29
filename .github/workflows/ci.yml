@@ -39,6 +39,22 @@ jobs:
       - name: Build
         run: dotnet build release.slnf --configuration Release --no-restore
 
+  # Kronikol.Tests as root, the way a container or a cloud agent runs it. Root on Linux writes a file marked
+  # read-only, so a fact that makes a write fail that way cannot fail it here (ReadOnlyProbe), and
+  # RunRotationTests has a fact only a process that writes read-only files can run. The image has no node or
+  # python, so the facts that need them skip here and run in Core Tests.
+  test-as-root:
+    name: Core Tests as root (Linux container)
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/dotnet/sdk:10.0
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Test
+        run: |
+          test "$(id -u)" = 0
+          dotnet test tests/Kronikol.Tests --configuration Release
+
   test:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
