@@ -12,7 +12,9 @@ public class ComponentDiagramReportTests : IDisposable
 
     public void Dispose()
     {
-        // Cleanup generated test files
+        // Cleanup generated test files. A fact that writes elsewhere, run alone, leaves no Reports folder here.
+        if (!Directory.Exists(_reportDir))
+            return;
         foreach (var file in Directory.GetFiles(_reportDir, "ComponentDiagram*"))
             File.Delete(file);
     }
@@ -59,6 +61,7 @@ public class ComponentDiagramReportTests : IDisposable
     {
         // The Node renderer is SVG-only and the per-scenario diagrams already honour that; the component
         // diagram used to ask it for the configured PNG and throw after the rest of the report was written.
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
         var dir = Path.Combine(Path.GetTempPath(), "kronikol-cd-node-" + Guid.NewGuid().ToString("N"));
         try
         {
