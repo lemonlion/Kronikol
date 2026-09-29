@@ -140,6 +140,55 @@ public class HistoryCommandTests : IDisposable
         Assert.Equal("gh:8:1", run.Id);
     }
 
+    // An interrupted rotation leaves runs/.incoming-<name>/, never a retained run whatever it holds
+    // (ReportFolders.IncomingPrefix; kronikol history doctor names it). A rotation that failed and could
+    // not delete its copy leaves the run on top in it a second time, which record folded as an earlier
+    // attempt: one run of one failure became two attempts (plans/HISTORY_ACTION_PLAN.md F17).
+
+    [Fact]
+    public void Record_leaves_a_staged_rotation_alone()
+    {
+        var roster = Roster("Suite", "id1", "id2");
+        WriteFragment("Reports", roster, RunLine(roster, "gh:7:1", "PF"));
+        WriteFragment(Path.Combine("Reports", "runs", ".incoming-gh_7_1"), roster, RunLine(roster, "gh:7:1", "PF"));
+
+        var (output, error, exit) = Run(null, "record", Path.Combine(_dir, "Reports"), "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        var run = Assert.Single(HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("Suite"));
+        Assert.Equal(("PF", "--"), (run.Results, run.Attempts));
+        Assert.Contains("1 fragment(s) of an unfinished rotation left alone", output);
+        Assert.Contains("from 1 fragment(s)", output);
+    }
+
+    [Fact]
+    public void Record_reads_a_staged_rotation_it_is_given_by_name()
+    {
+        // What a sweep finds, never what it is given, as merge does: a person may fold what doctor named.
+        var roster = Roster("Suite", "id1");
+        var staged = WriteFragment(Path.Combine("Reports", "runs", ".incoming-gh_6_1"), roster, RunLine(roster, "gh:6:1", "F"));
+
+        var (output, error, exit) = Run(null, "record", staged, "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Equal("gh:6:1", Assert.Single(HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("Suite")).Id);
+        Assert.DoesNotContain("unfinished rotation", output);
+    }
+
+    [Fact]
+    public void Record_of_only_a_staged_rotation_finds_nothing_and_says_why()
+    {
+        var roster = Roster("Suite", "id1");
+        WriteFragment(Path.Combine("Reports", "runs", ".incoming-gh_6_1"), roster, RunLine(roster, "gh:6:1", "F"));
+
+        var (output, error, exit) = Run(null, "record", Path.Combine(_dir, "Reports"), "--history", Ledger);
+
+        Assert.Equal(2, exit);
+        Assert.Contains("1 fragment(s) of an unfinished rotation left alone", output);
+        Assert.Contains("No History.run.json found", error);
+        Assert.False(File.Exists(Ledger));
+    }
+
     [Fact]
     public void Record_still_folds_shards_that_each_kept_an_attempt()
     {

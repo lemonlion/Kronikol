@@ -260,7 +260,8 @@ internal static partial class HistoryCommand
 
         var fragments = new List<(string Path, HistoryFragment Fragment)>();
         var unreadable = 0;
-        foreach (var file in FragmentFiles(inputs, error))
+        var files = FragmentFiles(inputs, error, out var staged);
+        foreach (var file in files)
         {
             try
             {
@@ -272,6 +273,9 @@ internal static partial class HistoryCommand
                 unreadable++;
             }
         }
+
+        if (staged > 0)
+            @out.WriteLine($"{staged} fragment(s) of an unfinished rotation left alone (under {RunsFolderName}/{ReportFolders.IncomingPrefix}*, which kronikol history doctor names)");
 
         if (fragments.Count == 0)
         {
@@ -432,8 +436,16 @@ internal static partial class HistoryCommand
         return result;
     }
 
-    private static IEnumerable<string> FragmentFiles(IReadOnlyList<string> inputs, TextWriter error)
+    /// <summary>
+    /// The fragments under the inputs, in path order. A sweep leaves alone what it finds inside a rotation still
+    /// being staged (<c>runs/.incoming-*</c>), never a retained run whatever it holds: a copy a failed rotation
+    /// could not delete is the run on top a second time, and read as an earlier attempt it made every scenario
+    /// of the run two attempts. What a sweep finds, never what it is given, as for merge: a staging directory
+    /// named as an input is read.
+    /// </summary>
+    private static IEnumerable<string> FragmentFiles(IReadOnlyList<string> inputs, TextWriter error, out int staged)
     {
+        staged = 0;
         var files = new SortedSet<string>(StringComparer.Ordinal);
         foreach (var input in inputs)
         {
@@ -452,7 +464,12 @@ internal static partial class HistoryCommand
             else if (Directory.Exists(full))
             {
                 foreach (var file in Directory.EnumerateFiles(full, HistoryFormat.FragmentFileName, SearchOption.AllDirectories))
-                    files.Add(file);
+                {
+                    if (InAStagedRotation(full, file))
+                        staged++;
+                    else
+                        files.Add(file);
+                }
             }
             else
             {
@@ -461,6 +478,10 @@ internal static partial class HistoryCommand
         }
         return files;
     }
+
+    private static bool InAStagedRotation(string root, string file) =>
+        Path.GetRelativePath(root, file).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).SkipLast(1)
+            .Any(segment => segment.StartsWith(ReportFolders.IncomingPrefix, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The previous roster with every aliased id replaced by its current one, so a rename is not a missing scenario.</summary>
     private static HistoryRoster WithAliases(HistoryRoster previous, HistoryAliases aliases) =>
