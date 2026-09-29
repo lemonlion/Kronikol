@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-27, second pass 2026-09-28 · **Repo version:** 3.31.9 (`main` at `dc619d35`); the
 second pass re-read against 3.31.10 (`main` at `5ca0878a`), which changed no history code · **Status:
-EXECUTED 2026-09-29, but for S5's consumer switch** (D26 taken as §10 recommends; the log is §14). Roadmap item **2.3**,
+EXECUTED 2026-09-29, but for S5's consumer switch; released as 3.34.0** (D26 taken as §10 recommends; the log is §14). Roadmap item **2.3**,
 stage 2, track C. It comes after 2.2 (PR #73), whose branch it starts from, and before 2.4 (Azure
 DevOps), which builds to the interface in §4.2. It changes no package, so it bumps nothing (§7). The
 scripts behind every RUN mark are in [`HISTORY_ACTION_PLAN.harness/`](HISTORY_ACTION_PLAN.harness/README.md),
@@ -1168,8 +1168,9 @@ recommends. Q1 (c): the logic is scripts in the action. Q2: pull requests are no
 (a): no pruning, and a warning from 50 MB, so S6 was not built. Q4: no floating tag. Q5: the actions it
 calls are pinned to commits, with the version in a comment. Q6 stays apart from 2.3. Q7: quarantine and
 aliases live on the data branch. Q8: fragments are kept seven days. Q9: no `export-ignore`. The owner then
-asked for the work to go into `main` without a pull request. No version moved (§7): the changelog entry is
-under `[Unreleased]`.
+asked for the work to go into `main` without a pull request. No version moved at the merge (§7): the
+changelog entry went under `[Unreleased]`. The owner then asked for the release, and 3.34.0, a minor, folded
+it and is the first tag that holds the folder.
 
 ### 14.1 What was built
 
@@ -1181,7 +1182,7 @@ under `[Unreleased]`.
 | §5.5 | Each of the 25 guards broken in turn fails the facts written for it: `HISTORY_ACTION_PLAN.harness/mutations.py`, the table in `results-mutations.txt` |
 | S3b | `.github/workflows/history-action.yml`: the four phases on Ubuntu, Windows and macOS, one example project each, with `record-pull-requests: true`; six `record` calls racing on the lane's branch with copies of a leg's fragment under run ids of their own; the saved artifacts folded on a second branch; then `history verify` and a count of each branch's lines. It deletes both scratch branches first and writes nothing else. A static fact holds its calls to the phases' declared inputs |
 | S4 | `ci-summary-preview.yml` reads, gates, saves and records through the phases by path, with `tool-command` running the tool built from the commit, on `kronikol-history` as before. `ci.yml` runs `Kronikol.Tests.Templates` on `windows-latest` and `macos-latest` as well (`runs-on: ${{ matrix.os \|\| 'ubuntu-latest' }}`, and `shell: bash` on its test step). A static fact holds the dogfood |
-| S5 | This log, the changelog, `templates/README.md`, `README.md`, the wiki's CI-Artifact-Upload, roadmap 2.3, D26 and Appendix C, `PLANS_STATUS.md` and `CROSS_RUN_HISTORY_PLAN.md` §11. BreakfastProvider's switch waits for the first release tag that holds the folder (§6), which the owner has not asked for |
+| S5 | This log, the changelog, `templates/README.md`, `README.md`, the wiki's CI-Artifact-Upload, roadmap 2.3, D26 and Appendix C, `PLANS_STATUS.md` and `CROSS_RUN_HISTORY_PLAN.md` §11. BreakfastProvider's switch waits for the first release tag that holds the folder (§6): 3.34.0 |
 
 Also done here, because `PR_REPORT_LINK_PLAN.md` left it for the second template under
 `templates/github-actions/`: CI's template-pack step fails when the package carries that folder. Proved

@@ -132,8 +132,8 @@ price of downloading every report to reach it.
 
 ### Copy it, or reference it
 
-Instead of copying the folder you can reference it from a Kronikol release tag that contains it (the first is the
-release after 3.33.0) and drop the `history` job's checkout, for example
+Instead of copying the folder you can reference it from a Kronikol release tag that contains it (the first is
+`v3.34.0`) and drop the `history` job's checkout, for example
 `uses: lemonlion/Kronikol/templates/github-actions/kronikol-history/record@<tag>`. That is 11 lines of workflow in
 two jobs, and 7 in one. Two costs come with it:
 

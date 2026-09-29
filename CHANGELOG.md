@@ -4,13 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [3.34.0] - 2026-09-29
 
-**No version change: a GitHub Actions template for cross-run history (roadmap 2.3), the PR report link template's
-README and live lane, CodeQL over the workflows, and one fix to `kronikol history record`.** The templates ship in no package, so they move no version.
-The next release is the first tag a workflow can reference the history action from, and from that tag its inputs
-and outputs are public surface under this file's semantic versioning. The fix to `Kronikol.Tool` is a patch that
-release carries; until then, the action keeps its own guard against it.
+**Minor - the first release whose tag carries the GitHub Actions template for cross-run history
+(`templates/github-actions/kronikol-history/`, roadmap 2.3, merged to `main` with no version change), new surface a
+workflow can call; with it, a fix to `kronikol history record` (F17), which alone would be a patch, the PR report
+link template's second follow-up, and CodeQL over the workflows.** The action ships in no package. From this tag its four phases' inputs and
+outputs, and the workflows its README gives, are public surface under this file's semantic versioning, and its
+`VERSION` file installs `Kronikol.Tool` 3.34.0, the first with F17's fix. No public API and no generated report
+changes, so there is no Kronikol4J ledger entry: the minor is the action's, and the rest would each be a patch or
+documentation. Template pins move to 3.33.0.
 
 ### Added
 
