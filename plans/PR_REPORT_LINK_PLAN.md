@@ -3,7 +3,7 @@
 **Date:** 2026-09-27 · **Repo version:** 3.31.10 (`5ca0878a`; first written at 3.31.9, `e4c9e360`) · **PR head:**
 `e31b42fa` on `pr-report-link-template`, one commit on `49f5ea87` (the tree of 2026-09-15, 3.19.0) · **Status:**
 **executed 2026-09-28** (§10): the owner asked for the plan in full, which took D25 as recommended, and PR #73
-merged; a follow-up audit the next day fixed what the execution missed (§10, PR #108).
+merged; a follow-up audit the next day fixed what the execution missed (§10, PR #108), and a second audit what that one missed (§10, PR #109).
 The rest of this header is the plan as written. §1 is what was RUN, READ and read on the web today, §2 the findings, §3 the
 questions, §4 the slices, §9 the assumption ledger. The probes, the rehearsals and their output are in
 `PR_REPORT_LINK_PLAN.harness/`.
@@ -987,3 +987,47 @@ request that conflicts. The final head, `a4833715`, rebased onto 3.33.0: the lan
 artifact 11004619978, and the check read the line back), CI 28 of 28 (run 36500423459) and CodeQL (run 36500423360).
 It merged by rebase at 2026-09-29T00:15:13Z as `d1a33b01`, with the administrator's bypass, as #73 did. `main`'s own
 runs on it passed: CI 28 of 28 (run 36502170987), CodeQL (run 36502170795) and CI Summary Preview (run 36502170836).
+
+### Second follow-up (2026-09-29)
+
+The owner asked again whether anything was missed. A second audit read the plan, the action, the lane, the 27 facts,
+CI's log and the wiki against `main` at `5946cb60`, and ran on GitHub what had only been read. Fixed in PR #109:
+
+- **The README's upload failed on a build error.** A test step that stops before Kronikol writes its report leaves
+  `reports-path` empty, and `actions/upload-artifact` fails on an empty `path` ("Input required and not supplied:
+  path", job 109308142955 of run 36538531187), whatever `if-no-files-found` says. The README's upload now runs only
+  when the output is there, and its fact requires that, red first. The lane keeps its upload without the condition,
+  because there a missing path must fail. The wiki's example takes the same condition (wiki `db4fcd2`, which also
+  carried another session's unfinished edit of the page's `History.run.json` row; `1010209` put that row back two
+  minutes later).
+- **The README's two ways to reference the action without copying it had never run.** Both work.
+  `lemonlion/Kronikol/templates/github-actions/kronikol-pr-report-link@v3.33.0` linked artifact 11019337358 (run
+  36538531187). `$/templates/github-actions/kronikol-pr-report-link`, with no checkout, ran the pull request's merge
+  commit `fae7e2ee` and linked artifact 11019198488 (run 36538531169). Each wrote a comment under its own
+  `comment-key` on #109, where they stay. The README names `v3.33.0` as the first tag.
+- **The lane's check named an artifact `undefined`** when a link job was re-run after this run's upload expired. It
+  says the upload expired now, and the check's failing fact gains that case, red first.
+- **CodeQL.** §6 left `actions` to the workflow sweep because nobody had read the existing workflows with it. A
+  scratch workflow ran CodeQL 2.27.1's default `actions` suite (18 queries, results not uploaded) over the six
+  workflows and the action's `action.yml`, and found nothing, so `codeql.yml` analyses `csharp, actions`. The same run
+  warned that `github/codeql-action@v3` is deprecated in December 2026, which joins the sweep's row in Appendix C.
+- **CI runs the facts.** §5 asks CI's log to show that the node facts ran: `main`'s Core Tests job on `d1a33b01`
+  (109195305695) passed all 27, none skipped. Its build warned xUnit2029 on one assertion of the workflow facts, which
+  is now written as the analyzer advises.
+- **A8** was probed through the owner's notifications and stays open: the thread for PR #108 moved again at the merge,
+  which hides whether the edits before it notified anyone.
+
+Left as they were, in Appendix C: Q4, the facts that fail as root, the old workflow majors and the two packing
+leftovers. The pack check §6 left for 2.3 is in `ci.yml`'s template-pack step, where 2.3 put it, so the row no longer
+lists it.
+
+Tests: `PrReportLinkActionTests` keeps its 27 facts; the lane-check fact and the README workflow fact each gained a
+case, red first. `Kronikol.Tests`: 6,112 passed, 1 skipped, 0 failed on the first head, and 6,267 passed, 1 skipped, 0
+failed once rebased onto the history action (`7682990e`). actionlint 1.7.12 still finds only `queue`, in the lane and
+in the README's workflow. CI on that rebase failed only the history action's new Windows job, as `main`'s own CI did
+(run 36543617415), and the pull request was rebased onto its two fixes (`18d86af5`, `e97de55d`). The final head,
+`69bcd8f3`: the lane (run 36545415600; the action linked artifact 11021983167, and the check read the line back), CI
+30 of 30 (run 36545415588) and CodeQL over C# and `actions` (run 36545415594: 69 rules, the history action's four
+`action.yml` files among what it read, no result). It merged by rebase at 2026-09-29T09:15:49Z as `e58fc848` to
+`0e418805`, with the administrator's bypass, as #73 and #108 did. `main`'s own runs on it passed: CI 30 of 30 (run
+36548030555), CodeQL (run 36548030574) and CI Summary Preview (run 36548030585).
