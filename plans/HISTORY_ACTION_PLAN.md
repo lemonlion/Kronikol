@@ -1301,8 +1301,19 @@ anywhere, not only as a directive. So a commit message here never quotes it; the
   top of the old fold job's commits. One line per suite per run, 464 run lines in all, none duplicated,
   `history verify` clean, and `history show` reads each suite's last 50 runs in one stream, the old recipe's
   and the action's together.
-- **CodeQL** passed on `7682990e`. It analyses C# only on `main` today; PR #109 adds the `actions` language,
-  whose queries will read this folder and the lane when it merges.
+- **CodeQL** passed on `7682990e`, analysing C# only. PR #109 (on `main` as `0e418805`) added the `actions`
+  language: its queries read the folder's four `action.yml` files and the lane, and raised no alert.
+
+### 14.6 The release
+
+The owner asked for the release the same day. 3.34.0 is a minor: its tag is the first that holds the folder,
+new surface a workflow can call, and it carries F17's patch to the tool, the PR report link template's second
+follow-up and CodeQL over the workflows. The release commit (`313cd1d9`) folded `[Unreleased]`, moved the
+folder's `VERSION` to 3.34.0 (so the tag installs the tool with F17's fix) and the template pins to 3.33.0, and
+was tagged once CI passed on it. Release run 36551658752 built, tested, packed and pushed the 62 packages and
+made the GitHub release; NuGet listed all 62 by 10:14 UTC. The wiki names `v3.34.0` as the first tag
+(`11047df`). What S5 leaves, BreakfastProvider on the action from `v3.34.0` and a week of its runs, waits for
+the owner.
 
 ---
 
