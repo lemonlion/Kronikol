@@ -1,0 +1,46 @@
+name: Kronikol history - read
+description: >
+  Before the tests: fetches the cross-run history ledger, with its quarantine and aliases, from the data branch and
+  names it in KRONIKOL_HISTORY, so the run's own report, Failures.md and job summary carry the verdicts. Never fails
+  the job. See README.md.
+
+inputs:
+  branch:
+    description: The data branch the ledger lives on.
+    required: false
+    default: kronikol-history
+  repository:
+    description: The repository that holds the branch, as owner/name.
+    required: false
+    default: ${{ github.repository }}
+  token:
+    description: A token that can read the repository's contents.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  found:
+    description: true when a ledger was found and named in KRONIKOL_HISTORY, else false.
+    value: ${{ steps.read.outputs.found }}
+  ledger:
+    description: The ledger's path, or empty.
+    value: ${{ steps.read.outputs.ledger }}
+  bytes:
+    description: The ledger's size in bytes, or 0.
+    value: ${{ steps.read.outputs.bytes }}
+
+runs:
+  using: composite
+  steps:
+    # Inputs reach the script as environment variables, never written into it, so no input can inject code.
+    - id: read
+      if: ${{ !cancelled() }}
+      shell: bash
+      env:
+        KRONIKOL_HISTORY_FORGE: github
+        KRONIKOL_HISTORY_TEMP: ${{ runner.temp }}
+        KRONIKOL_HISTORY_REMOTE: ${{ github.server_url }}/${{ inputs.repository }}.git
+        KRONIKOL_HISTORY_BRANCH: ${{ inputs.branch }}
+        KRONIKOL_HISTORY_TOKEN: ${{ inputs.token }}
+        KRONIKOL_HISTORY_AUTH: basic
+      run: bash "$GITHUB_ACTION_PATH/../scripts/read.sh"

@@ -1,0 +1,3 @@
+# The scripts must keep LF line endings in any checkout: a copy of this folder in a repository cloned with
+# core.autocrlf=true, as on a Windows runner, would otherwise get CRLF scripts bash cannot run.
+*.sh text eol=lf

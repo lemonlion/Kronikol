@@ -1,0 +1,54 @@
+name: Kronikol history - save
+description: >
+  After the tests: uploads every History.run.json fragment this job's test runs wrote as one artifact of its own, for
+  the record phase to fold. A reports directory in a hidden folder is included and a staged rotation is not. Run it
+  with if: !cancelled(). See README.md.
+
+inputs:
+  path:
+    description: Where to look for fragments, one directory per line, relative to the workspace.
+    required: false
+    default: '.'
+  name:
+    description: Part of the artifact's name, kronikol-history-<name>-<attempt>-<random>. Defaults to the job's id.
+    required: false
+    default: ${{ github.job }}
+  retention-days:
+    description: How long the artifact is kept. The record phase reads it minutes later; the week covers a record job re-run after a fix.
+    required: false
+    default: '7'
+
+outputs:
+  artifact:
+    description: The artifact's name, or empty when there were no fragments.
+    value: ${{ steps.stage.outputs.artifact }}
+  files:
+    description: The number of fragments saved.
+    value: ${{ steps.stage.outputs.files }}
+
+runs:
+  using: composite
+  steps:
+    # Inputs reach the script as environment variables, never written into it, so no input can inject code.
+    - id: stage
+      if: ${{ !cancelled() }}
+      shell: bash
+      env:
+        KRONIKOL_HISTORY_FORGE: github
+        KRONIKOL_HISTORY_TEMP: ${{ runner.temp }}
+        KRONIKOL_HISTORY_WORKSPACE: ${{ github.workspace }}
+        KRONIKOL_HISTORY_PATH: ${{ inputs.path }}
+        KRONIKOL_HISTORY_NAME: ${{ inputs.name }}
+        KRONIKOL_HISTORY_ATTEMPT: ${{ github.run_attempt }}
+      run: bash "$GITHUB_ACTION_PATH/../scripts/save.sh"
+
+    # The staged directory, uploaded as it is: its tree is the workspace's, and a reports directory under a hidden
+    # folder (.logs/kronikol) needs include-hidden-files.
+    - if: ${{ !cancelled() && steps.stage.outcome == 'success' && steps.stage.outputs.files != '0' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ steps.stage.outputs.artifact }}
+        path: ${{ steps.stage.outputs.staged }}
+        include-hidden-files: true
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: error

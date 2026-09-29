@@ -1,0 +1,63 @@
+name: Kronikol history - gate
+description: >
+  After the tests: gates each report against the ledger the read phase fetched, failing on what the ledger says is
+  new (kronikol history gate), with each reading in the job summary. Without a ledger it fails only when the tests
+  did. Run it with if: !cancelled(). See README.md.
+
+inputs:
+  reports:
+    description: The reports to gate, one per line, each a TestRunReport.json or the directory holding it.
+    required: true
+  test-outcome:
+    description: The test step's outcome (steps.<id>.outcome). Without a ledger, the phase fails only when this is failure.
+    required: false
+    default: ''
+  fail-on:
+    description: What trips the gate, a comma list of new-failures, flaky, duration-regression and behaviour-change.
+    required: false
+    default: 'new-failures'
+  min-runs:
+    description: Runs of history the statistical verdicts need before they trip the gate. The tool's default when empty.
+    required: false
+    default: ''
+  max-new-failures:
+    description: New failures allowed before the gate trips. The tool's default when empty.
+    required: false
+    default: ''
+  min-pass-rate:
+    description: The pass rate below which the gate trips, from 0 to 1. The tool's default when empty.
+    required: false
+    default: ''
+  version:
+    description: The Kronikol.Tool version to install. Defaults to the release this folder ships in.
+    required: false
+    default: ''
+  tool-command:
+    description: A shell command line that runs the Kronikol tool, in place of installing it.
+    required: false
+    default: ''
+
+outputs:
+  result:
+    description: passed, failed, or no-ledger.
+    value: ${{ steps.gate.outputs.result }}
+
+runs:
+  using: composite
+  steps:
+    # Inputs reach the script as environment variables, never written into it, so no input can inject code.
+    - id: gate
+      if: ${{ !cancelled() }}
+      shell: bash
+      env:
+        KRONIKOL_HISTORY_FORGE: github
+        KRONIKOL_HISTORY_TEMP: ${{ runner.temp }}
+        KRONIKOL_HISTORY_REPORTS: ${{ inputs.reports }}
+        KRONIKOL_HISTORY_TEST_OUTCOME: ${{ inputs.test-outcome }}
+        KRONIKOL_HISTORY_FAIL_ON: ${{ inputs.fail-on }}
+        KRONIKOL_HISTORY_MIN_RUNS: ${{ inputs.min-runs }}
+        KRONIKOL_HISTORY_MAX_NEW_FAILURES: ${{ inputs.max-new-failures }}
+        KRONIKOL_HISTORY_MIN_PASS_RATE: ${{ inputs.min-pass-rate }}
+        KRONIKOL_HISTORY_VERSION: ${{ inputs.version }}
+        KRONIKOL_HISTORY_TOOL_COMMAND: ${{ inputs.tool-command }}
+      run: bash "$GITHUB_ACTION_PATH/../scripts/gate.sh"

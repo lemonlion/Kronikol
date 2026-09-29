@@ -1,0 +1,102 @@
+name: Kronikol history - record
+description: >
+  In a job after every test job: folds this run's History.run.json fragments into the cross-run history ledger on the
+  data branch and pushes it, recording again on the branch as it now is when another run's push lands first. Never
+  force-pushes. Needs contents: write. See README.md.
+
+inputs:
+  branch:
+    description: The data branch the ledger lives on. Made on the first run; never the repository's default branch.
+    required: false
+    default: kronikol-history
+  repository:
+    description: The repository that holds the branch, as owner/name.
+    required: false
+    default: ${{ github.repository }}
+  token:
+    description: A token that can push to the branch.
+    required: false
+    default: ${{ github.token }}
+  artifacts:
+    description: The artifacts holding the fragments, as a pattern. The save phase's by default.
+    required: false
+    default: 'kronikol-history-*'
+  path:
+    description: A directory to fold instead of downloading artifacts, such as '.' in a workflow with one test job.
+    required: false
+    default: ''
+  version:
+    description: The Kronikol.Tool version to install. Defaults to the release this folder ships in.
+    required: false
+    default: ''
+  tool-command:
+    description: A shell command line that runs the Kronikol tool, in place of installing it.
+    required: false
+    default: ''
+  record-pull-requests:
+    description: Record a pull request's run too, under a stream of its own. Off by default.
+    required: false
+    default: 'false'
+  attempts:
+    description: How many pushes to try when other runs' pushes land first.
+    required: false
+    default: '8'
+  accept-renames:
+    description: Alias the scenarios kronikol history record finds renamed.
+    required: false
+    default: 'false'
+  warn-ledger-mb:
+    description: Warn when the ledger reaches this many megabytes, since every read fetches it whole. 0 never warns.
+    required: false
+    default: '50'
+
+outputs:
+  recorded:
+    description: The number of runs appended to the ledger.
+    value: ${{ steps.record.outputs.recorded }}
+  duplicates:
+    description: The number of runs that were in the ledger already.
+    value: ${{ steps.record.outputs.duplicates }}
+  pushed:
+    description: true when a commit was pushed to the branch.
+    value: ${{ steps.record.outputs.pushed }}
+  commit:
+    description: The commit pushed, or empty.
+    value: ${{ steps.record.outputs.commit }}
+  ledger-bytes:
+    description: The ledger's size in bytes after the fold.
+    value: ${{ steps.record.outputs.ledger-bytes }}
+
+runs:
+  using: composite
+  steps:
+    # Without merge-multiple, since merging is last-writer-wins on paths that every lane's fragment shares.
+    - id: download
+      if: ${{ !cancelled() && inputs.path == '' }}
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        pattern: ${{ inputs.artifacts }}
+        path: ${{ runner.temp }}/kronikol-history-fragments
+
+    # Inputs reach the script as environment variables, never written into it, so no input can inject code.
+    - id: record
+      if: ${{ !cancelled() && (inputs.path != '' || steps.download.outcome == 'success') }}
+      shell: bash
+      env:
+        KRONIKOL_HISTORY_FORGE: github
+        KRONIKOL_HISTORY_TEMP: ${{ runner.temp }}
+        KRONIKOL_HISTORY_REMOTE: ${{ github.server_url }}/${{ inputs.repository }}.git
+        KRONIKOL_HISTORY_BRANCH: ${{ inputs.branch }}
+        KRONIKOL_HISTORY_TOKEN: ${{ inputs.token }}
+        KRONIKOL_HISTORY_AUTH: basic
+        KRONIKOL_HISTORY_PATH: ${{ inputs.path }}
+        KRONIKOL_HISTORY_RUN: ${{ github.run_id }}:${{ github.run_attempt }}
+        KRONIKOL_HISTORY_SHA: ${{ github.sha }}
+        KRONIKOL_HISTORY_PULL_REQUEST: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
+        KRONIKOL_HISTORY_RECORD_PULL_REQUESTS: ${{ inputs.record-pull-requests }}
+        KRONIKOL_HISTORY_ATTEMPTS: ${{ inputs.attempts }}
+        KRONIKOL_HISTORY_ACCEPT_RENAMES: ${{ inputs.accept-renames }}
+        KRONIKOL_HISTORY_WARN_LEDGER_MB: ${{ inputs.warn-ledger-mb }}
+        KRONIKOL_HISTORY_VERSION: ${{ inputs.version }}
+        KRONIKOL_HISTORY_TOOL_COMMAND: ${{ inputs.tool-command }}
+      run: bash "$GITHUB_ACTION_PATH/../scripts/record.sh"
