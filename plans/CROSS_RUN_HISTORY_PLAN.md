@@ -1904,7 +1904,10 @@ M5, M6, M7. Two finished beat six open.
    ledger would have made both deflake sessions evidence-driven rather than inferential. First real
    user, and the honest test of the commit-back recipe — **and it should dogfood §6.3d2's orphan data
    branch, not `main`**, because that is what the plan now recommends and an untested recommendation
-   is the thing §11 exists to prevent.
+   is the thing §11 exists to prevent. **2026-09-29:** the recipe `ci-summary-preview.yml` ran here
+   (a fetch, an upload, a fold job with a worktree and a rebase loop) was replaced by the four phases
+   of `templates/github-actions/kronikol-history/`, called by path, on the same branch
+   (`HISTORY_ACTION_PLAN.md` S4).
 2. **`examples/Example.Api/tests/…CiPreview.{Mixed,AllFailing}`** — already the skill's worked
    examples; a seeded multi-run history makes the history verbs demonstrable in the docs.
 3. **The BreakfastProvider demo report.** A live report showing *"flaky — failed 4 of the last 10"* on

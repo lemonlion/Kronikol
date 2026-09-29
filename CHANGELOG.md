@@ -6,9 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
-**No version change: the PR report link template and its live lane, and one fix to `kronikol history record`.**
-The templates ship in no package, so they move no version. The fix to `Kronikol.Tool` is a patch the next release
-carries; until then, the history action keeps its own guard against it.
+**No version change: a GitHub Actions template for cross-run history (roadmap 2.3), the PR report link template's
+live lane, and one fix to `kronikol history record`.** The templates ship in no package, so they move no version.
+The next release is the first tag a workflow can reference the history action from, and from that tag its inputs
+and outputs are public surface under this file's semantic versioning. The fix to `Kronikol.Tool` is a patch that
+release carries; until then, the action keeps its own guard against it.
+
+### Added
+
+- **`templates/github-actions/kronikol-history/`** (roadmap 2.3, `plans/HISTORY_ACTION_PLAN.md`): cross-run
+  history on GitHub Actions in four composite actions, so a workflow no longer copies the steps from the wiki.
+  `read` fetches the ledger from the `kronikol-history` data branch, with its quarantine and aliases, before the
+  tests and names it in `KRONIKOL_HISTORY`, so each run's report, `Failures.md` and job summary carry the verdicts.
+  `gate` runs `kronikol history gate` on each report and puts each reading in the job summary. `save` uploads each
+  run's `History.run.json` fragments as an artifact of their own, kept seven days. `record`, in one job after
+  every test job, folds them into the ledger and pushes it. It makes the branch on the first run, and only a remote
+  that answers "no such branch" starts one. It never rebases: when another run's push lands first, it records
+  again on the branch as it now is, up to eight times. A push refused while the branch stands still fails at once,
+  naming the refusal. Pull requests are recorded only with `record-pull-requests: true`, and it warns when the
+  ledger reaches 50 MB (`warn-ledger-mb`). Its git works in a repository of its own, with the token as a header
+  through the environment, no credential helper, no line-ending conversion and no hook of the machine's, and every
+  ledger commit says `[skip ci]`. It needs a .NET 10 SDK to install the tool, or `tool-command`. The two actions it
+  calls are pinned to commits. The wiki's manual recipe, which failed on a new repository's first run, lost runs
+  in a race and dropped the quarantine, is rewritten as the route without the action.
+- **The live lane, `.github/workflows/history-action.yml`**, runs the four phases on github.com's Linux, Windows
+  and macOS runners on each pull request that changes the folder, has six `record` calls race on one branch and
+  folds the saved artifacts on another. It writes only those two scratch branches and deletes them first.
+- **Kronikol's own CI uses it.** `ci-summary-preview.yml` reads, gates, saves and records through the action by
+  path, with the tool built from the commit under test, on the branch its old fold step wrote. CI also runs the
+  action's facts on `windows-latest` and `macos-latest`.
+- Tests: the facts in `tests/Kronikol.Tests/Templates/` run each phase's `action.yml` the way the runner does,
+  against origins on disk and over smart HTTP with a token, under a machine's own git configuration (151
+  facts). Each of the 25 guards, broken in turn, fails the facts written for it
+  (`plans/HISTORY_ACTION_PLAN.harness/mutations.py`).
 
 ### Fixed
 

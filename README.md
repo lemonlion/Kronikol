@@ -195,6 +195,8 @@ kronikol query diff     ./Reports s3/i47 s5/i47      # two bodies, only the path
 kronikol query http     ./Reports s3/i47 --keys      # a payload's shape, then --path $.x for one value
 ```
 
+On GitHub Actions, the [`kronikol-history` action](https://github.com/lemonlion/Kronikol/tree/main/templates/github-actions/kronikol-history) keeps the ledger that `query history` and `history gate` read on a data branch of the repository: it reads the ledger before the tests, can gate the run, and records the run after.
+
 For the CI tooling that speaks somebody else's format rather than Kronikol's, `kronikol ctrf ./Reports --out ctrf-report.json` converts a finished report into a [Common Test Report Format](https://ctrf.io) document — or set `GenerateCtrfReport` and the run writes it itself. Each CTRF test carries the `sN` address, so an annotation action that finds a failure can hand it straight back to `kronikol query`.
 
 A green re-run no longer destroys the failing run's report: the reports directory keeps the last three runs, whole, under `runs/` (the newest one that failed is never the one pruned), and `--run last-failed` on any verb opens it - `kronikol query failures ./Reports --run last-failed`. When only the ledger survived, `kronikol query history --run last-failed` still answers, with no report at all. See [Generated Reports](https://github.com/lemonlion/Kronikol/wiki/Generated-Reports#earlier-runs-runjson-and-runs).

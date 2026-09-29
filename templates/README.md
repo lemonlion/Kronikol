@@ -69,6 +69,15 @@ part of the `dotnet new` package. It keeps one comment on a pull request that li
 artifact from each workflow run, with the time it was uploaded and when it expires. Copy it into
 `.github/actions/`. Its README has the workflow to call it from.
 
+## GitHub Actions: keep cross-run history
+
+[`github-actions/kronikol-history/`](https://github.com/lemonlion/Kronikol/tree/main/templates/github-actions/kronikol-history) is four composite actions, not
+part of the `dotnet new` package. They keep the
+[cross-run history](https://github.com/lemonlion/Kronikol/wiki/Cross-Run-History) ledger on a data branch of your
+repository: `read` fetches it before the tests, so each report says what is new, `gate` can fail the job on what
+is new, `save` uploads each run's fragment, and `record` folds the fragments into the ledger after every test job.
+Copy the folder into `.github/actions/`, keeping its `.gitattributes`. Its README has the workflows to call it from.
+
 ## After Scaffolding
 
 1. Add a `<ProjectReference>` to your API project in the generated `.csproj`
