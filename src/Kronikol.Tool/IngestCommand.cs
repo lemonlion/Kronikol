@@ -26,6 +26,8 @@ internal static class IngestCommand
         int? maxArrows = null;
         int? browserRenderWorkers = null;
         var notePayloadFormat = Kronikol.Reports.NotePayloadFormat.Json;
+        // The library's default until the flag says otherwise (#85: off in 3.x, on from 4.0.0).
+        bool? compressPayloads = null;
         var componentDiagram = true;
         var diagnosticsSection = false;
         var redact = true;
@@ -129,6 +131,15 @@ internal static class IngestCommand
                     notePayloadFormat = args[i] == "yaml"
                         ? Kronikol.Reports.NotePayloadFormat.Yaml
                         : Kronikol.Reports.NotePayloadFormat.Json;
+                    break;
+                case "--payloads":
+                    if (++i >= args.Count ||
+                        (args[i] != "plain" && args[i] != "compressed"))
+                    {
+                        error.WriteLine("--payloads needs plain or compressed");
+                        return 2;
+                    }
+                    compressPayloads = args[i] == "compressed";
                     break;
                 case "--no-component-diagram":
                     componentDiagram = false;
@@ -283,6 +294,8 @@ internal static class IngestCommand
         if (browserRenderWorkers is not null)
             options.BrowserRenderWorkers = browserRenderWorkers.Value;
         options.NotePayloadFormat = notePayloadFormat;
+        if (compressPayloads is { } compress)
+            options.CompressTestRunReportPayloads = compress;
         options.GenerateComponentDiagram = componentDiagram;
         options.ShowReportDiagnosticsSection = diagnosticsSection;
         options.CapitaliseStepText = capitalise;
@@ -501,6 +514,9 @@ internal static class IngestCommand
         w.WriteLine("                           the viewer's CPU count); 0 renders on the main thread as before 3.0.45.");
         w.WriteLine("  --note-format <json|yaml>  Initial display format for JSON note payloads in the browserjs report");
         w.WriteLine("                           (default: json); readers can still switch either way in the report.");
+        w.WriteLine("  --payloads <plain|compressed>  How TestRunReport.json holds a body or diagram of 512 characters or");
+        w.WriteLine("                           more: as text, or compressed in place (formatVersion 2, read by kronikol");
+        w.WriteLine("                           3.35.0 and later). Default: plain.");
         w.WriteLine("  --no-component-diagram   Skip ComponentDiagram.html.");
         w.WriteLine("  --no-redact              Do not redact credential headers at ingest (default: redact).");
         w.WriteLine("  --redact-header <name>   Additional header to redact (repeatable).");

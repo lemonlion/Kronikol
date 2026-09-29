@@ -45,6 +45,9 @@ internal static partial class PayloadReader
         var raw = new byte[slice.Length];
         stream.ReadExactly(raw);
 
+        if (raw.Length > 0 && raw[0] == (byte)'{')
+            return Unwrap(raw);
+
         try
         {
             return JsonSerializer.Deserialize<string>(raw);
@@ -53,6 +56,34 @@ internal static partial class PayloadReader
         {
             return Encoding.UTF8.GetString(raw);
         }
+    }
+
+    /// <summary>
+    /// The text of a compressed payload (#85, <see cref="Kronikol.Reports.ReportPayloads"/>): the slice is the whole
+    /// <c>{"$h", "$n", "$z"}</c> object, and <c>$z</c> is the base64 of the gzip of the text. An object that is not
+    /// one comes back as it stands in the file.
+    /// </summary>
+    private static string Unwrap(byte[] raw)
+    {
+        try
+        {
+            var reader = new Utf8JsonReader(raw);
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.PropertyName && reader.CurrentDepth == 1 && reader.ValueTextEquals("$z"))
+                {
+                    reader.Read();
+                    if (reader.TokenType == JsonTokenType.String)
+                        return Kronikol.Reports.ReportPayloads.Inflate(reader.GetString()!);
+                    break;
+                }
+            }
+        }
+        catch (Exception e) when (e is JsonException or FormatException or InvalidDataException)
+        {
+        }
+
+        return Encoding.UTF8.GetString(raw);
     }
 
     /// <summary>Every payload open comes through here so <see cref="ReportIndex.PayloadOpens"/> counts them all.</summary>

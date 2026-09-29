@@ -199,6 +199,37 @@ public class FallbackScriptTests : IDisposable
             Assert.Contains(service, fallback, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// A report written with <c>CompressTestRunReportPayloads</c> (#85) holds a large body as
+    /// <c>{"$h", "$n", "$z"}</c>. The script inflates it as it loads the file, so a body reads as it does in a plain
+    /// report and carries the address the tool prints for it; before, the script saw a dictionary where it expected
+    /// text and failed on it.
+    /// </summary>
+    [Fact]
+    public void It_reads_a_compressed_payload_as_the_tool_does()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        // Longer than the 6,000 bytes the script prints whole, so its listing names the address instead.
+        var body = Kronikol.Tests.Reports.PayloadCompressionTests.Json(7000);
+        var report = ReportGenerator.GenerateTestRunReportData(
+            Kronikol.Tests.Reports.PayloadCompressionTests.Features(),
+            Kronikol.Tests.Reports.PayloadCompressionTests.Start, Kronikol.Tests.Reports.PayloadCompressionTests.End,
+            Path.Combine(_directory, "TestRunReport.json"), DataFormat.Json, null,
+            Kronikol.Tests.Reports.PayloadCompressionTests.Logs(body, "{\"ok\":true}"),
+            diagnostics: null, fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null,
+            compressPayloads: true);
+        Assert.Contains("\"$z\"", File.ReadAllText(report), StringComparison.Ordinal);
+
+        var listing = PythonProbe.Run(ScriptPath, "http", report, "s0/i0");
+        var keys = PythonProbe.Run(ScriptPath, "http", report, "s0/i0", "--keys");
+        var found = PythonProbe.Run(ScriptPath, "grep", report, "abcdefgabcdefg");
+
+        Assert.Contains(Kronikol.Tests.Reports.PayloadCompressionTests.Address(body), listing, StringComparison.Ordinal);
+        Assert.Contains(Kronikol.Tests.Reports.PayloadCompressionTests.Address(body), Tool("http", report, "s0/i0"), StringComparison.Ordinal);
+        Assert.Contains("note", keys, StringComparison.Ordinal);
+        Assert.Contains("s0/i0", found, StringComparison.Ordinal);
+    }
+
     // ─── Harness ───────────────────────────────────────────────
 
     private string Tool(string command, string report, params string[] args)

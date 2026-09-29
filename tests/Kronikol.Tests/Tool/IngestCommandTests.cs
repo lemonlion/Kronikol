@@ -133,6 +133,54 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("--note-format <json|yaml>", usage.ToString());
     }
 
+    /// <summary>
+    /// <c>--payloads compressed</c> writes a large body compressed in place (#85, <c>CompressTestRunReportPayloads</c>);
+    /// without the flag ingest writes what the library writes by default. Ingest takes a curated set of flags, so
+    /// without this one an ingested report could not have them.
+    /// </summary>
+    [Fact]
+    public void Payloads_option_is_validated_and_reaches_the_report()
+    {
+        var err = new StringWriter();
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--payloads", "zip"], new StringWriter(), err));
+        Assert.Contains("--payloads needs plain or compressed", err.ToString());
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--payloads"], new StringWriter(), new StringWriter()));
+
+        const string testId = "2b2c3d4e5f60718293a4b5c6d7e8f90a";
+        var captures = Path.Combine(_dir, "captures-payloads");
+        Directory.CreateDirectory(captures);
+        var large = "{\"items\":[" + string.Join(",", Enumerable.Range(0, 60).Select(i => $"{{\"sku\":\"W-{i}\",\"qty\":{i}}}")) + "]}";
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/stock", "web", "web",
+            requestContent: "", responseContent: large, statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › payloads", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+
+        var compressed = Path.Combine(_dir, "out-compressed");
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", compressed, "--payloads", "compressed"], new StringWriter(), err));
+        var compressedJson = File.ReadAllText(Path.Combine(compressed, "TestRunReport.json"));
+        Assert.Contains("\"$z\"", compressedJson, StringComparison.Ordinal);
+        Assert.Contains("\"formatVersion\": 2", compressedJson, StringComparison.Ordinal);
+
+        foreach (var (folder, flag) in new[] { ("out-plain", new[] { "--payloads", "plain" }), ("out-unset", Array.Empty<string>()) })
+        {
+            var plain = Path.Combine(_dir, folder);
+            Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", plain, .. flag], new StringWriter(), err));
+            var plainJson = File.ReadAllText(Path.Combine(plain, "TestRunReport.json"));
+            Assert.DoesNotContain("\"$z\"", plainJson, StringComparison.Ordinal);
+            Assert.Contains("\"formatVersion\": 1", plainJson, StringComparison.Ordinal);
+        }
+
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("--payloads <plain|compressed>", usage.ToString());
+    }
+
     [Fact]
     public void Ingest_command_usage_errors()
     {

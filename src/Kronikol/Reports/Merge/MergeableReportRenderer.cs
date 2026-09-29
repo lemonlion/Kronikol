@@ -162,7 +162,9 @@ public static class MergeableReportRenderer
             // And the shards' environment, for the same reason. Null here means "the shards did not
             // agree, or did not say", and the key is left out rather than filled in with the
             // environment of whatever machine happens to be collecting the artifacts.
-            environment: report.Environment ?? RunEnvironment.Unrecorded);
+            environment: report.Environment ?? RunEnvironment.Unrecorded,
+            // Compressed when any shard was (MergeableReport.PayloadsCompressed).
+            compressPayloads: report.PayloadsCompressed);
     }
 
     /// <summary>

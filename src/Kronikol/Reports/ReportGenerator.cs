@@ -496,7 +496,7 @@ public static class ReportGenerator
             }
             else
             {
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment, attribution.Value));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment, attribution.Value, options.CompressTestRunReportPayloads));
             }
         }
 
@@ -4246,7 +4246,7 @@ public static class ReportGenerator
     /// The <c>background</c> object of the data files: the count, the expired calls by the scenario they
     /// were taken from, and the interactions themselves in the shape a scenario's <c>httpInteractions</c> use.
     /// </summary>
-    private static object MapBackgroundJson(BackgroundCalls background, IReadOnlyDictionary<Guid, double>? durations) => new Dictionary<string, object?>
+    private static object MapBackgroundJson(BackgroundCalls background, IReadOnlyDictionary<Guid, double>? durations, ReportPayloads? payloads = null) => new Dictionary<string, object?>
     {
         ["calls"] = background.Calls,
         ["afterScenarioEnd"] = background.AfterScenarioEnd.Select(g => (object)new Dictionary<string, object?>
@@ -4256,7 +4256,7 @@ public static class ReportGenerator
             ["calls"] = g.Calls,
             ["lastAt"] = g.LastAt is { } at ? FormatInstant(at) : null
         }).ToArray(),
-        ["interactions"] = background.Interactions.Select(l => MapLogJson(l, durations)).ToArray()
+        ["interactions"] = background.Interactions.Select(l => MapLogJson(l, durations, payloads: payloads)).ToArray()
     };
 
     /// <summary>The <c>diagnostics</c> array of the data files: <c>{kind, message, scenarioId}</c> per entry.</summary>
@@ -4278,7 +4278,8 @@ public static class ReportGenerator
     /// once and shares it with Failures.md; deriving records the mismatch diagnostic). Null derives it.
     /// </summary>
     internal static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams, RequestResponseLog[]? trackedLogs, IReadOnlyList<DiagnosticEntry>? diagnostics, bool fullStepDetail, CiMetadata? ciMetadata, string? suite, RunEnvironment? environment,
-        (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution)
+        (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution,
+        bool compressPayloads = false)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         // Diagram markers belong to the diagram, not the interaction list: exported as-is they read as
@@ -4289,7 +4290,7 @@ public static class ReportGenerator
 
         return format switch
         {
-            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment), fileName),
+            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads), fileName),
             DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment), fileName),
             DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
@@ -4479,8 +4480,9 @@ public static class ReportGenerator
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
+    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false)
     {
+        var payloads = new ReportPayloads(compressPayloads);
         // Resolved ONCE and used for both the key and the ids under it. Writing `suite ?? RunSuite.Current`
         // at the key while passing the un-defaulted `suite` to the model made the file disagree with
         // itself: it named a suite its own stableIds had not been computed under.
@@ -4506,9 +4508,11 @@ public static class ReportGenerator
         if (MapEnvironmentJson(environment) is { } environmentJson)
             data["environment"] = environmentJson;
 
-        data["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, resolvedSuite);
-        data["background"] = MapBackgroundJson(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations);
+        data["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, resolvedSuite, payloads);
+        data["background"] = MapBackgroundJson(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations, payloads);
         data["diagnostics"] = MapDiagnosticsJson(diagnostics);
+        // Known only once every payload is written; the key keeps its place at the top of the file.
+        data["formatVersion"] = payloads.FormatVersion;
 
         return JsonSerializer.Serialize(data, TestRunReportJsonOptions);
     }
@@ -4518,7 +4522,7 @@ public static class ReportGenerator
     /// and the enriched "mergeable" JSON. Keeping a single source of truth ensures the mergeable
     /// format remains a strict superset that the merge reader can parse.
     /// </summary>
-    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, string? suite = null)
+    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, string? suite = null, ReportPayloads? payloads = null)
     {
         Func<ScenarioStep, object> stepMapper = fullStepDetail ? MapStepJsonFull : MapStepJson;
         return features.OrderBy(f => f.DisplayName).Select(f => (object)new Dictionary<string, object?>
@@ -4564,13 +4568,13 @@ public static class ReportGenerator
                 };
 
                 if (diagramLookup != null)
-                    scenario["diagrams"] = diagramLookup[s.Id].ToArray();
+                    scenario["diagrams"] = diagramLookup[s.Id].Select(d => payloads is null ? d : payloads.Write(d)).ToArray();
 
                 if (logLookup != null)
                 {
                     var paths = stepPaths is not null && stepPaths.TryGetValue(s.Id, out var p) ? p : null;
                     scenario["httpInteractions"] = logLookup[s.Id]
-                        .Select((l, i) => MapLogJson(l, durations, paths is not null && i < paths.Count ? paths[i] : null))
+                        .Select((l, i) => MapLogJson(l, durations, paths is not null && i < paths.Count ? paths[i] : null, payloads))
                         .ToArray();
                     scenario["annotations"] = (annotations is not null && annotations.TryGetValue(s.Id, out var a) ? a : [])
                         .Select(x => (object)new { x.Index, Kind = x.Kind.ToString(), x.Text })
@@ -4645,7 +4649,7 @@ public static class ReportGenerator
             relationships, internalFlowSegmentData, wholeTestFlow,
             options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs,
             stepPathsOverride: attribution?.StepPaths, annotationsOverride: attribution?.Annotations,
-            suite: suite, environment: environment);
+            suite: suite, environment: environment, compressPayloads: options.CompressTestRunReportPayloads);
     }
 
     /// <summary>
@@ -4678,8 +4682,11 @@ public static class ReportGenerator
         IReadOnlyDictionary<string, List<string?>>? stepPathsOverride = null,
         IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotationsOverride = null,
         string? suite = null,
-        RunEnvironment? environment = null)
+        RunEnvironment? environment = null,
+        bool compressPayloads = false)
     {
+        var payloads = new ReportPayloads(compressPayloads);
+
         // The same derivation the standard writer does. Without it the "superset" was missing the one
         // thing that dominates a report - every captured call - so a merged run could be read but not
         // debugged, and `kronikol query services|interactions|body|values|flow|trace` all came back empty.
@@ -4710,7 +4717,7 @@ public static class ReportGenerator
             ["suite"] = suite,
             ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail: true, durations, stepPaths, annotations, suite),
+            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail: true, durations, stepPaths, annotations, suite, payloads),
             ["wholeTestVisualization"] = wholeTestVisualization.ToString(),
             ["componentRelationships"] = (componentRelationships ?? []).Select(r => new
             {
@@ -4731,9 +4738,10 @@ public static class ReportGenerator
                     kvp.Value.SpanCount
                 }),
             ["ciMetadata"] = MapCiMetadataJson(ciMetadata),
-            ["background"] = MapBackgroundJson(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations),
+            ["background"] = MapBackgroundJson(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations, payloads),
             ["diagnostics"] = MapDiagnosticsJson(diagnostics)
         };
+        data["formatVersion"] = payloads.FormatVersion;
 
         // Left out rather than written as null: a merged report whose shards disagreed has no
         // environment, and a null would read as "unknown" rather than "this file does not record one".
@@ -4783,14 +4791,14 @@ public static class ReportGenerator
         _ => null
     };
 
-    private static object MapLogJson(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null) => new
+    private static object MapLogJson(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null, ReportPayloads? payloads = null) => new
     {
         Type = log.Type.ToString(),
         Method = MethodText(log.Method),
         Uri = log.Uri.ToString(),
         log.ServiceName,
         log.CallerName,
-        log.Content,
+        Content = payloads is null ? log.Content : payloads.Write(log.Content),
         Headers = log.Headers.Select(h => new { h.Key, h.Value }).ToArray(),
         StatusCode = InteractionStatus.Split(log.StatusCode).Code,
         StatusText = InteractionStatus.Split(log.StatusCode).Text,
@@ -6019,7 +6027,7 @@ public static class ReportGenerator
             ["required"] = new[] { "formatVersion", "startTime", "endTime", "features", "background" },
             ["properties"] = new Dictionary<string, object?>
             {
-                ["formatVersion"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Version of the report SHAPE, as distinct from the Kronikol build that wrote it. Bumped when a key changes meaning or type, not when one is added." },
+                ["formatVersion"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Version of the report SHAPE, as distinct from the Kronikol build that wrote it. Bumped when a key changes meaning or type, not when one is added. 2 means the same shape with at least one payload (a content or a diagrams entry) written as a compressedPayload object; a file with none says 1." },
                 ["kronikolVersion"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Version of Kronikol that generated this report" },
                 ["suite"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The test suite this run belongs to. Every stableId in the file is scoped to it, which is what stops two suites that name a feature and a scenario the same way from minting the same id. Null when it could not be resolved, in which case ids are unscoped." },
                 ["startTime"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["description"] = "UTC start time of the test run" },
@@ -6194,8 +6202,15 @@ public static class ReportGenerator
                                         ["diagrams"] = new Dictionary<string, object?>
                                         {
                                             ["type"] = "array",
-                                            ["description"] = "Raw PlantUML source of each sequence diagram rendered for the scenario: hundreds of kilobytes each, never needed to answer a question (kronikol query flow sN tells the same story in a couple of KB)",
-                                            ["items"] = new Dictionary<string, object?> { ["type"] = "string" }
+                                            ["description"] = "The PlantUML source of each sequence diagram rendered for the scenario: hundreds of kilobytes each, never needed to answer a question (kronikol query flow sN tells the same story in a couple of KB). With CompressTestRunReportPayloads, a source of 512 characters or more is a compressedPayload object instead of its text",
+                                            ["items"] = new Dictionary<string, object?>
+                                            {
+                                                ["oneOf"] = new object[]
+                                                {
+                                                    new Dictionary<string, object?> { ["type"] = "string" },
+                                                    new Dictionary<string, object?> { ["$ref"] = "#/$defs/compressedPayload" }
+                                                }
+                                            }
                                         },
                                         ["httpInteractions"] = new Dictionary<string, object?>
                                         {
@@ -6227,6 +6242,18 @@ public static class ReportGenerator
             },
             ["$defs"] = new Dictionary<string, object?>
             {
+                ["compressedPayload"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "object",
+                    ["description"] = "A payload (a body or a diagram's PlantUML source) written compressed in place of its text, by CompressTestRunReportPayloads (#85). kronikol query, kronikol merge and query.py read it as they read the text; to read it yourself, base64-decode $z and gunzip it, which gives the text's UTF-8",
+                    ["properties"] = new Dictionary<string, object?>
+                    {
+                        ["$h"] = new Dictionary<string, object?> { ["type"] = "string", ["pattern"] = "^b:[0-9a-f]{8}$", ["description"] = "The text's b: address, the one kronikol query prints for it: the first eight hex digits of the SHA-1 of its UTF-8", ["examples"] = new[] { "b:4bdea521" } },
+                        ["$n"] = new Dictionary<string, object?> { ["type"] = "integer", ["minimum"] = 0, ["description"] = "The text's length in UTF-16 code units" },
+                        ["$z"] = new Dictionary<string, object?> { ["type"] = "string", ["contentEncoding"] = "base64", ["contentMediaType"] = "application/gzip", ["description"] = "The base64 of the gzip of the text's UTF-8" }
+                    },
+                    ["required"] = new[] { "$h", "$n", "$z" }
+                },
                 ["wholeTestFlowFragment"] = new Dictionary<string, object?>
                 {
                     ["type"] = "object",
@@ -6397,7 +6424,15 @@ public static class ReportGenerator
                         ["uri"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uri", ["description"] = "The request URI; for non-HTTP dependencies a synthetic scheme://service/path the tracker built" },
                         ["serviceName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The dependency (callee), as named in the diagram" },
                         ["callerName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The caller: the system under test, or the test itself" },
-                        ["content"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The body as captured, after capture-time redaction and any MaxContentLength cap (a capped body ends with an ...truncated (N chars total) marker); null when there was none" },
+                        ["content"] = new Dictionary<string, object?>
+                        {
+                            ["description"] = "The body as captured, after capture-time redaction and any MaxContentLength cap (a capped body ends with an ...truncated (N chars total) marker); null when there was none. With CompressTestRunReportPayloads, a body of 512 characters or more is a compressedPayload object instead of its text",
+                            ["oneOf"] = new object[]
+                            {
+                                new Dictionary<string, object?> { ["type"] = new[] { "string", "null" } },
+                                new Dictionary<string, object?> { ["$ref"] = "#/$defs/compressedPayload" }
+                            }
+                        },
                         ["headers"] = new Dictionary<string, object?>
                         {
                             ["type"] = "array",

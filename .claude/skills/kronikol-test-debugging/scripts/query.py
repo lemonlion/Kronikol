@@ -6,7 +6,8 @@ same addressing, so a machine without the tool degrades to a smaller set of answ
 reading a 10 MB file.
 
 It is a fallback in one important respect: it parses the report with `json.load`, so it holds the document
-in the *process*. That is fine — the process is not the context window, and the point of this script is
+in the *process*. A report whose payloads were written compressed (`formatVersion` 2) is inflated as it is
+loaded, so every command reads one form. That is fine — the process is not the context window, and the point of this script is
 that the report never reaches the model. What it cannot do is a report larger than available RAM; for
 those, install the tool:
 
@@ -25,6 +26,8 @@ Only in the real tool (not missing from the report — missing from this fallbac
     diagram, compare, diff, and the extended --path grammar ([*], ['a.b'], .length()).
 """
 
+import base64
+import gzip
 import hashlib
 import json
 import os
@@ -49,7 +52,31 @@ def load(path):
         path = candidate
 
     with open(path, encoding="utf-8") as handle:
-        return path, json.load(handle)
+        return path, inflate(json.load(handle))
+
+
+def inflate(report):
+    """Payloads written compressed (CompressTestRunReportPayloads, formatVersion 2): {"$h", "$n", "$z"}, where
+    $z is the base64 of the gzip of the text's UTF-8, back to the text."""
+
+    def text(value):
+        if isinstance(value, dict) and isinstance(value.get("$z"), str):
+            return gzip.decompress(base64.b64decode(value["$z"])).decode("utf-8")
+        return value
+
+    def interactions(holder):
+        for interaction in holder.get("httpInteractions") or holder.get("interactions") or []:
+            if isinstance(interaction, dict) and "content" in interaction:
+                interaction["content"] = text(interaction["content"])
+
+    for feature in report.get("features") or []:
+        for scenario in feature.get("scenarios") or []:
+            if isinstance(scenario.get("diagrams"), list):
+                scenario["diagrams"] = [text(d) for d in scenario["diagrams"]]
+            interactions(scenario)
+    if isinstance(report.get("background"), dict):
+        interactions(report["background"])
+    return report
 
 
 def scenarios(report):

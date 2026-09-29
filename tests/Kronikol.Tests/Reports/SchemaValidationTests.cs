@@ -42,6 +42,47 @@ public class SchemaValidationTests
     }
 
     /// <summary>
+    /// A report written with <c>CompressTestRunReportPayloads</c> holds both forms of a payload, a string below 512
+    /// characters and a <c>compressedPayload</c> object from there on (#85), and validates as it stands.
+    /// </summary>
+    [Fact]
+    public void A_report_with_compressed_payloads_validates_against_its_own_schema()
+    {
+        var (reportPath, schemaPath) = WriteCompressed();
+
+        var errors = Validate(schemaPath, reportPath);
+
+        Assert.Contains("\"$z\"", File.ReadAllText(reportPath), StringComparison.Ordinal);
+        Assert.True(errors.Count == 0, $"{errors.Count} schema violations:\n  " + string.Join("\n  ", errors.Take(25)));
+    }
+
+    /// <summary>A wrapper that lost its text is not a payload, and the schema says so.</summary>
+    [Fact]
+    public void A_compressed_payload_without_its_text_fails_the_schema()
+    {
+        var (reportPath, schemaPath) = WriteCompressed();
+        var report = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(reportPath))!;
+        var content = report["features"]![0]!["scenarios"]![0]!["httpInteractions"]![0]!["content"]!.AsObject();
+        content.Remove("$z");
+        File.WriteAllText(reportPath, report.ToJsonString());
+
+        Assert.NotEmpty(Validate(schemaPath, reportPath));
+    }
+
+    private static (string Report, string Schema) WriteCompressed()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var big = "@startuml\n" + string.Concat(Enumerable.Range(0, 60).Select(i => $"A -> B : call {i}\n")) + "@enduml";
+        var reportPath = ReportGenerator.GenerateTestRunReportData(
+            PayloadCompressionTests.Features(), PayloadCompressionTests.Start, PayloadCompressionTests.End,
+            $"SchemaCompressed_{suffix}.json", DataFormat.Json, PayloadCompressionTests.Diagrams([big, "@startuml\nA -> B\n@enduml"]),
+            PayloadCompressionTests.Logs(PayloadCompressionTests.Json(2000), PayloadCompressionTests.Json(40)),
+            diagnostics: null, fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null,
+            compressPayloads: true);
+        return (reportPath, ReportGenerator.GenerateTestRunReportSchema($"SchemaCompressed_{suffix}.schema.json", DataFormat.Json));
+    }
+
+    /// <summary>
     /// The mechanism, pinned on its own so a regression says which of the two halves broke. `nullable` is
     /// not a 2020-12 keyword; a validator ignores it and enforces the `type` beside it.
     /// </summary>
@@ -95,7 +136,7 @@ public class SchemaValidationTests
 
         var result = schema.Evaluate(instance.RootElement, new EvaluationOptions
         {
-            OutputFormat = OutputFormat.List,
+            OutputFormat = OutputFormat.Hierarchical,
             RequireFormatValidation = false
         });
 
@@ -104,9 +145,18 @@ public class SchemaValidationTests
         return errors;
     }
 
+    /// <summary>
+    /// The errors of a hierarchical evaluation, read only below the nodes that failed. A node that passed is
+    /// skipped whole: a <c>oneOf</c> the instance satisfies keeps the branch it did not take as a failed child, and
+    /// reading that child as an error reported every payload under the compressed-payload union (#85) as a
+    /// violation. (The flat list format loses which failures sit under a passing node, so it cannot be used.)
+    /// </summary>
     internal static void Collect(EvaluationResults results, List<string> errors)
     {
-        if (results is { IsValid: false, Errors: { } found })
+        if (results.IsValid)
+            return;
+
+        if (results.Errors is { } found)
             foreach (var (keyword, message) in found)
                 errors.Add($"{results.InstanceLocation} [{keyword}] {message}");
 

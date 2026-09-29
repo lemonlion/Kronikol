@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.35.0] - 2026-09-29
+
+**Minor - a new option, `ReportConfigurationOptions.CompressTestRunReportPayloads` (#85), and a flag for it on
+`kronikol ingest`; off by default until 4.0.0.** `plans/V4_PLAN.md` R2 (roadmap 1c.2), designed in
+`plans/PAYLOAD_COMPRESSION_PLAN.md`. With the option off the file is byte for byte what 3.34.2 wrote (the pin 3.34.2
+added holds it). With it on the report output changes, so there is a Kronikol4J ledger entry. The history action's
+`VERSION` installs `Kronikol.Tool` 3.35.0. Template pins move to 3.34.2.
+
+### Added
+
+- **`CompressTestRunReportPayloads`** (default `false`, `true` from 4.0.0): a captured body or a diagram's PlantUML
+  source of 512 characters or more is written in `TestRunReport.json` as `{"$h": "b:…", "$n": length, "$z": "…"}`
+  in place of its text, unless that would not make it smaller. `$z` is the base64 of the gzip of the text's UTF-8,
+  `$h` its `b:` address and `$n` its length, so `kronikol query` builds its index without inflating anything and an
+  address does not move with the option. The file stays JSON. A file holding a compressed payload declares
+  `formatVersion` 2 (one without keeps 1), which a `kronikol` older than 3.35.0 refuses with a message to upgrade,
+  rather than reading every body as missing. **On BreakfastProvider's xUnit lane the file went from
+  5,855,252 bytes to 4,344,734 (74%)**, the same 203 scenarios. The threshold was read off two of its lanes'
+  reports (`plans/V4_PLAN.harness/threshold.py`): the saving is flat from 256 to 1,024 characters and best near 512.
+- **`kronikol ingest --payloads plain|compressed`**: the same choice for an ingested report (default: plain).
+- `kronikol query`, `kronikol merge`, the `query.cs` beside each report and the skill's `query.py` read both forms.
+  Every verb that reads a payload (`http`, `body`, `values`, `interactions --where`, `grep` in each mode, `note`,
+  `diagram`, `diff`, `compare`, the SQL hint in `failures`) answers the same over a compressed and a plain copy of
+  one run, which a fact holds verb by verb. `kronikol merge` takes compressed and plain shards together and writes
+  the merge compressed when any shard was, so a merge of plain shards stays readable by the tools that read them.
+- `TestRunReport.schema.json` declares `compressedPayload` and allows it for `content` and each `diagrams` entry.
+
+### Fixed
+
+- Tests: the schema facts collected errors from every node of a flat evaluation, including the branch of a `oneOf`
+  an instance did not take, so the first union in the schema read as violations under every payload. They read a
+  hierarchical evaluation now, below the nodes that failed.
+
 ## [3.34.2] - 2026-09-29
 
 **Patch - `TestRunReport.json` is written with the relaxed JSON encoder, the same JSON value in fewer bytes, and

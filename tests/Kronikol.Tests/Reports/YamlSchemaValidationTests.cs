@@ -51,7 +51,7 @@ public class YamlSchemaValidationTests
         using var document = JsonDocument.Parse(instance.ToJsonString());
         var result = schema.Evaluate(document.RootElement, new EvaluationOptions
         {
-            OutputFormat = OutputFormat.List,
+            OutputFormat = OutputFormat.Hierarchical,
             RequireFormatValidation = false
         });
 

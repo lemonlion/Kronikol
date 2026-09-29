@@ -240,6 +240,19 @@ public record ReportConfigurationOptions
     public bool GenerateMergeableData { get; set; }
 
     /// <summary>
+    /// When <c>true</c>, a large payload in <c>TestRunReport.json</c>, a captured body or a diagram's PlantUML
+    /// source of 512 characters or more, is written compressed in its place:
+    /// <c>{"$h": "b:…", "$n": length, "$z": "…"}</c>, where <c>$z</c> is the base64 of the gzip of the text's
+    /// UTF-8, <c>$h</c> its <c>b:</c> address and <c>$n</c> its length. A payload that would not get smaller stays
+    /// text, and a file holding a compressed payload declares <c>formatVersion</c> 2, which a
+    /// <c>kronikol</c> older than 3.35.0 refuses rather than half-reads. The file stays JSON, and
+    /// <c>kronikol query</c>, <c>kronikol merge</c> and the <c>query.py</c> of this release read it as they read an
+    /// uncompressed one (#85). Default: <c>false</c>; <c>true</c> from 4.0.0. Only honoured when the format is
+    /// JSON.
+    /// </summary>
+    public bool CompressTestRunReportPayloads { get; set; }
+
+    /// <summary>
     /// When <c>true</c>, every step in the test run report data file carries its full detail: parameters
     /// (inline values, data tables, tree values), text segments, doc string, comments and bypass reason.
     /// This is what makes a parameterised failure legible from the data file alone — without it the inputs

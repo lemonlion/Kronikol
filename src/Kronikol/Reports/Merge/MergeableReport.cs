@@ -91,6 +91,13 @@ public sealed record MergeableReport
     /// without which a scenario defaulted to Passed is indistinguishable from a real pass.</summary>
     public IReadOnlyList<DiagnosticEntry> Diagnostics { get; init; } = [];
 
+    /// <summary>
+    /// Whether the report held a payload written compressed (#85): a merge whose shards did is written compressed
+    /// too, since a reader that cannot read such a shard cannot read the run anyway, and a merge of uncompressed
+    /// shards stays readable by the tools that read them.
+    /// </summary>
+    internal bool PayloadsCompressed { get; init; }
+
     /// <summary>Exported diagram annotations per scenario id.</summary>
     internal IReadOnlyDictionary<string, List<ReportGenerator.ScenarioAnnotation>> Annotations { get; init; } =
         new Dictionary<string, List<ReportGenerator.ScenarioAnnotation>>(StringComparer.Ordinal);

@@ -59,10 +59,11 @@ public static class MergeableReportReader
             if (formatVersion.ValueKind != JsonValueKind.Number || !formatVersion.TryGetInt32(out var shape))
                 throw new FormatException("This report declares a formatVersion that is not a number.");
 
-            if (shape != ReportGenerator.ReportFormatVersion)
+            // 2 is 1 with payloads that may be compressed in place (ReportPayloads), inflated below.
+            if (shape != ReportGenerator.ReportFormatVersion && shape != ReportPayloads.CompressedFormatVersion)
                 throw new FormatException(
                     $"This report declares formatVersion {shape}; this build of Kronikol understands " +
-                    $"{ReportGenerator.ReportFormatVersion}. Upgrade Kronikol to merge it.");
+                    $"{ReportGenerator.ReportFormatVersion} and {ReportPayloads.CompressedFormatVersion}. Upgrade Kronikol to merge it.");
         }
 
         var features = new List<Feature>();
@@ -86,7 +87,7 @@ public static class MergeableReportReader
 
                 if (se.TryGetProperty("diagrams", out var diags) && diags.ValueKind == JsonValueKind.Array)
                     foreach (var d in diags.EnumerateArray())
-                        diagrams.Add(new DiagramAsCode(scenario.Id, "", d.GetString() ?? ""));
+                        diagrams.Add(new DiagramAsCode(scenario.Id, "", Payload(d, notes) ?? ""));
 
                 ReadInteractions(se, scenario, interactions, stepPaths, notes);
                 ReadAnnotations(se, scenario.Id, annotations, notes);
@@ -120,6 +121,7 @@ public static class MergeableReportReader
             Interactions = interactions.ToArray(),
             StepPaths = stepPaths,
             Annotations = annotations,
+            PayloadsCompressed = notes.CompressedPayloads,
             Diagnostics = [.. ReadDiagnostics(root), .. DefaultedResultDiagnostics(defaultedResults), .. notes.Diagnostics()]
         };
     }
@@ -139,6 +141,9 @@ public static class MergeableReportReader
     /// </remarks>
     private sealed class ParseNotes
     {
+        /// <summary>Whether the shard held a compressed payload, so that its merge is written compressed too.</summary>
+        public bool CompressedPayloads { get; set; }
+
         public List<string> StepStatuses { get; } = [];
         public List<string> AnnotationKinds { get; } = [];
         public List<string> InteractionTypes { get; } = [];
@@ -495,7 +500,7 @@ public static class MergeableReportReader
                 TestName: scenario.DisplayName,
                 TestId: scenario.Id,
                 Method: parsedMethod,
-                Content: GetString(element, "content"),
+                Content: element.TryGetProperty("content", out var content) ? Payload(content, notes) : null,
                 Uri: Uri.TryCreate(GetString(element, "uri"), UriKind.RelativeOrAbsolute, out var uri) ? uri : new Uri("about:blank"),
                 Headers: ReadHeaders(element),
                 ServiceName: GetString(element, "serviceName") ?? "",
@@ -632,6 +637,28 @@ public static class MergeableReportReader
 
     private static int? ReadInt(JsonElement parent, string name) =>
         parent.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : null;
+
+    /// <summary>
+    /// A payload, a body or a diagram, as the run captured it: the string, or a compressed one (#85,
+    /// <see cref="ReportPayloads"/>) inflated. Anything else reads as no payload, as a non-string did before.
+    /// </summary>
+    private static string? Payload(JsonElement value, ParseNotes notes)
+    {
+        if (value.ValueKind == JsonValueKind.String)
+            return value.GetString();
+        if (value.ValueKind != JsonValueKind.Object || !value.TryGetProperty("$z", out var z) || z.ValueKind != JsonValueKind.String)
+            return null;
+
+        notes.CompressedPayloads = true;
+        try
+        {
+            return ReportPayloads.Inflate(z.GetString()!);
+        }
+        catch (InvalidDataException e)
+        {
+            throw new FormatException("A compressed payload in this report is not gzip: " + e.Message, e);
+        }
+    }
 
     private static string? GetString(JsonElement parent, string name) =>
         parent.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;

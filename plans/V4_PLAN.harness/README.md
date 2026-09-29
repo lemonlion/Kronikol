@@ -9,6 +9,8 @@ is safe to read in an agent session.
 | `encoder_saving.py` | What the relaxed encoder (R1) would save: every escape it would not write, counted in the file; the indentation's share of what is left; whether the file is mergeable and the size of its segment map |
 | `escapes.py` | Every `\uXXXX` escape in the file by kind, and the CRLF count |
 | `encoders.cs` | What the default encoder and the relaxed one write for quotes, `<`, `&`, `'`, `+` and a non-ASCII character |
+| `threshold.py` | R2: for each size threshold, how many payloads a report would hold compressed and the bytes saved at gzip levels 6 and 9 (the source of `PAYLOAD_COMPRESSION_PLAN.md`'s 512) |
+| `mutate_r2.py` | R2: breaks each of twelve guards in turn in a checkout, runs the facts that should catch it and restores the file; prints CAUGHT or SURVIVED per guard |
 
 ```bash
 PYTHONUTF8=1 python composition.py <TestRunReport.json>...

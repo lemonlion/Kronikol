@@ -57,6 +57,7 @@ public static class MergeableReportMerger
             // deliberately share one RequestResponseId. A scenario the merge was given twice has already
             // lost its second copy's traffic above, which is the only duplication there ever was.
             Interactions = reports.SelectMany(r => r.Interactions).ToArray(),
+            PayloadsCompressed = reports.Any(r => r.PayloadsCompressed),
             StepPaths = MergeByScenario(reports.Select(r => r.StepPaths)),
             Annotations = MergeByScenario(reports.Select(r => r.Annotations)),
             Diagnostics = [.. reports.SelectMany(r => r.Diagnostics), .. duplicateDiagnostics, .. DisagreementDiagnostics(reports)]

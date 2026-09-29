@@ -152,6 +152,17 @@ internal static class ReportScanner
     /// names and array indices — so a value can be dispatched on where it sits rather than on how it was
     /// reached, which is what lets the walk survive the window being refilled underneath it.
     /// </summary>
+    /// <summary>
+    /// The <c>b:</c> address of a body: the first four bytes of the SHA-1 of its UTF-8 form. A body's identity
+    /// is its content. Eight hex characters of SHA-1 name it in five tokens and collide at a rate no report
+    /// reaches; the point is that two identical bodies get one address, so an agent that has read one has read
+    /// all of them. Takes the bytes rather than a string because the caller usually has them already, and they
+    /// are the same bytes the old string overload encoded, so every address a shipped report contains still
+    /// resolves. The function itself lives with the report writer, which puts the same address on a compressed
+    /// payload (<see cref="Kronikol.Reports.ReportPayloads.Address"/>).
+    /// </summary>
+    internal static string HashBody(ReadOnlySpan<byte> utf8) => Kronikol.Reports.ReportPayloads.Address(utf8);
+
     private sealed class Walker(ReportIndex index)
     {
         private readonly List<Container> _containers = [];
@@ -169,6 +180,23 @@ internal static class ReportScanner
         private string? _featureSourceFile;
         private int _scenarioOrdinal;
         private int _interactionOrdinal;
+        private Wrapper? _wrapper;
+
+        /// <summary>
+        /// A compressed payload being read (#85, <see cref="Kronikol.Reports.ReportPayloads"/>): an interaction's
+        /// <c>content</c> or a scenario's <c>diagrams</c> entry written as <c>{"$h", "$n", "$z"}</c>. The object's
+        /// byte range becomes the payload's slice, which <see cref="PayloadReader"/> inflates when a command reads
+        /// it; the address and the length come from the wrapper's own keys, so building the index inflates nothing.
+        /// </summary>
+        private sealed class Wrapper
+        {
+            public long Start;
+            public int Depth;
+            public bool IsDiagram;
+            public string? Hash;
+            public int? Length;
+            public string? Z;
+        }
 
         private struct Container
         {
@@ -194,6 +222,8 @@ internal static class ReportScanner
                         // rule that keeps the schema file's nested `properties.features` invisible.
                         if (_path.Count == 1 && reader.TokenType == JsonTokenType.StartArray && CurrentSegment() == "features")
                             index.HasFeatures = true;
+                        if (reader.TokenType == JsonTokenType.StartObject && _wrapper is null && StartsWrapper() is { } isDiagram)
+                            _wrapper = new Wrapper { Start = windowStart + reader.TokenStartIndex, Depth = _containers.Count + 1, IsDiagram = isDiagram };
                         _path.Add(CurrentSegment());
                         _containers.Add(new Container { IsArray = reader.TokenType == JsonTokenType.StartArray });
                         Enter();
@@ -201,6 +231,8 @@ internal static class ReportScanner
 
                     case JsonTokenType.EndObject:
                     case JsonTokenType.EndArray:
+                        if (_wrapper is not null && _containers.Count == _wrapper.Depth)
+                            EndWrapper(windowStart + reader.BytesConsumed);
                         Leave();
                         _containers.RemoveAt(_containers.Count - 1);
                         _path.RemoveAt(_path.Count - 1);
@@ -269,6 +301,8 @@ internal static class ReportScanner
                 // sees these on every report and an uninterned name allocates per document.
                 "ciMetadata", "environment", "provider", "buildNumber", "branch", "commitSha",
                 "pipelineUrl", "repository", "runId", "runAttempt", "os", "runtime",
+                // A compressed payload's keys (#85).
+                "$h", "$n", "$z",
             ];
             var known = new Dictionary<string, string>(names.Length, StringComparer.Ordinal);
             foreach (var name in names)
@@ -446,6 +480,69 @@ internal static class ReportScanner
         private bool InStepArray() =>
             At("steps", "#") || At("backgroundSteps", "#") || At("subSteps", "#");
 
+        /// <summary>
+        /// Whether the object starting here is a compressed payload: null when it is not, else whether it is a
+        /// diagram. Only the two places a writer puts one are recognised, an interaction's <c>content</c> and an
+        /// entry of its scenario's <c>diagrams</c>.
+        /// </summary>
+        private bool? StartsWrapper()
+        {
+            if (_interaction is not null && At("httpInteractions", "#") && Key == "content")
+                return false;
+            if (_scenario is not null && _interaction is null && At("scenarios", "#", "diagrams"))
+                return true;
+            return null;
+        }
+
+        private static void WrapperValue(Wrapper wrapper, string key, ref Utf8JsonReader reader)
+        {
+            switch (key)
+            {
+                case "$h": wrapper.Hash = reader.TokenType == JsonTokenType.String ? reader.GetString() : null; break;
+                case "$n": wrapper.Length = reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var n) ? n : null; break;
+                case "$z":
+                    // Kronikol writes $h and $n first. Kept only when they did not come, which a wrapper written by
+                    // something else may do, so that EndWrapper can work them out.
+                    if ((wrapper.Hash is null || wrapper.Length is null) && reader.TokenType == JsonTokenType.String)
+                        wrapper.Z = reader.GetString();
+                    break;
+            }
+        }
+
+        private void EndWrapper(long end)
+        {
+            var wrapper = _wrapper!;
+            _wrapper = null;
+            var slice = new Slice(wrapper.Start, (int)(end - wrapper.Start));
+
+            if (wrapper.IsDiagram)
+            {
+                _scenario?.Diagrams.Add(slice);
+                return;
+            }
+
+            if (_interaction is null)
+                return;
+
+            if ((wrapper.Hash is null || wrapper.Length is null) && wrapper.Z is not null)
+            {
+                try
+                {
+                    var text = Kronikol.Reports.ReportPayloads.Inflate(wrapper.Z);
+                    wrapper.Hash ??= HashBody(Encoding.UTF8.GetBytes(text));
+                    wrapper.Length ??= text.Length;
+                }
+                catch (Exception e) when (e is FormatException or InvalidDataException)
+                {
+                    // Not base64 of gzip: the body is recorded without an address, as a body that is not text is.
+                }
+            }
+
+            _interaction.Body = slice;
+            _interaction.BodyHash = wrapper.Hash;
+            _interaction.BodyLength = wrapper.Length ?? 0;
+        }
+
         private void RecordBody(InteractionEntry interaction, ScenarioEntry scenario)
         {
             if (interaction.BodyHash is null)
@@ -465,6 +562,13 @@ internal static class ReportScanner
         private void Value(ref Utf8JsonReader reader, long windowStart)
         {
             var key = Key;
+
+            if (_wrapper is not null)
+            {
+                if (_containers.Count == _wrapper.Depth)
+                    WrapperValue(_wrapper, key, ref reader);
+                return;
+            }
 
             if (_path.Count == 1)
             {
@@ -785,21 +889,5 @@ internal static class ReportScanner
         private static Slice TokenSlice(ref Utf8JsonReader reader, long windowStart) =>
             new(windowStart + reader.TokenStartIndex, (int)(reader.BytesConsumed - reader.TokenStartIndex));
 
-        /// <summary>
-        /// A body's identity is its content. Eight hex characters of SHA-1 name it in five tokens and
-        /// collide at a rate no report reaches; the point is that two identical bodies get one address, so
-        /// an agent that has read one has read all of them.
-        /// </summary>
-        /// <summary>
-        /// The <c>b:</c> address of a body: the first four bytes of the SHA-1 of its UTF-8 form. Takes the
-        /// bytes rather than a string because the caller usually has them already — but they are the same
-        /// bytes the old string overload encoded, so every address a shipped report contains still resolves.
-        /// </summary>
-        private static string HashBody(ReadOnlySpan<byte> utf8)
-        {
-            Span<byte> hash = stackalloc byte[SHA1.HashSizeInBytes];
-            SHA1.HashData(utf8, hash);
-            return "b:" + Convert.ToHexString(hash)[..8].ToLowerInvariant();
-        }
     }
 }
