@@ -307,6 +307,14 @@ jobs:
           SKILL=".claude/skills/kronikol-test-debugging"
           AGENT_FILES="$SKILL/SKILL.md $SKILL/references/commands.md $SKILL/scripts/query.py CLAUDE.md AGENTS.md"
           unzip -o -q "$PKG" -d "$RUNNER_TEMP/tpl-pkg"
+          # templates/ is also the home of the GitHub Actions templates, which are copied or referenced and ship
+          # in no package. Only the csproj's list of folders keeps them out, so a wildcard Content item would
+          # pack them (plans/PR_REPORT_LINK_PLAN.md, due with the second of them, HISTORY_ACTION_PLAN.md).
+          PACKED=$(cd "$RUNNER_TEMP/tpl-pkg" && find . -path '*github-actions*' | head -n 3)
+          if [ -n "$PACKED" ]; then
+            echo "::error::the package carries the GitHub Actions templates: $(echo $PACKED)"
+            exit 1
+          fi
           for dir in templates/kronikol-*/; do
             short=$(basename "$dir")
             for f in $AGENT_FILES; do
