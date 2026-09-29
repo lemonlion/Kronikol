@@ -2,7 +2,8 @@
 
 **Date:** 2026-09-27, second pass 2026-09-28 · **Repo version:** 3.31.9 (`main` at `dc619d35`); the
 second pass re-read against 3.31.10 (`main` at `5ca0878a`), which changed no history code · **Status:
-EXECUTED 2026-09-29, but for S5's consumer switch; released as 3.34.0** (D26 taken as §10 recommends; the log is §14). Roadmap item **2.3**,
+EXECUTED 2026-09-29 and released as 3.34.0; the consumer switched the same day, and S5's week of its runs
+follows** (D26 taken as §10 recommends; the log is §14). Roadmap item **2.3**,
 stage 2, track C. It comes after 2.2 (PR #73), whose branch it starts from, and before 2.4 (Azure
 DevOps), which builds to the interface in §4.2. It changes no package, so it bumps nothing (§7). The
 scripts behind every RUN mark are in [`HISTORY_ACTION_PLAN.harness/`](HISTORY_ACTION_PLAN.harness/README.md),
@@ -1182,7 +1183,7 @@ it and is the first tag that holds the folder.
 | §5.5 | Each of the 25 guards broken in turn fails the facts written for it: `HISTORY_ACTION_PLAN.harness/mutations.py`, the table in `results-mutations.txt` |
 | S3b | `.github/workflows/history-action.yml`: the four phases on Ubuntu, Windows and macOS, one example project each, with `record-pull-requests: true`; six `record` calls racing on the lane's branch with copies of a leg's fragment under run ids of their own; the saved artifacts folded on a second branch; then `history verify` and a count of each branch's lines. It deletes both scratch branches first and writes nothing else. A static fact holds its calls to the phases' declared inputs |
 | S4 | `ci-summary-preview.yml` reads, gates, saves and records through the phases by path, with `tool-command` running the tool built from the commit, on `kronikol-history` as before. `ci.yml` runs `Kronikol.Tests.Templates` on `windows-latest` and `macos-latest` as well (`runs-on: ${{ matrix.os \|\| 'ubuntu-latest' }}`, and `shell: bash` on its test step). A static fact holds the dogfood |
-| S5 | This log, the changelog, `templates/README.md`, `README.md`, the wiki's CI-Artifact-Upload, roadmap 2.3, D26 and Appendix C, `PLANS_STATUS.md` and `CROSS_RUN_HISTORY_PLAN.md` §11. BreakfastProvider's switch waits for the first release tag that holds the folder (§6): 3.34.0 |
+| S5 | This log, the changelog, `templates/README.md`, `README.md`, the wiki's CI-Artifact-Upload, roadmap 2.3, D26 and Appendix C, `PLANS_STATUS.md` and `CROSS_RUN_HISTORY_PLAN.md` §11. BreakfastProvider switched to the action at `v3.34.0` the same day (§14.7); S5's week of its runs follows |
 
 Also done here, because `PR_REPORT_LINK_PLAN.md` left it for the second template under
 `templates/github-actions/`: CI's template-pack step fails when the package carries that folder. Proved
@@ -1312,8 +1313,30 @@ follow-up and CodeQL over the workflows. The release commit (`313cd1d9`) folded 
 folder's `VERSION` to 3.34.0 (so the tag installs the tool with F17's fix) and the template pins to 3.33.0, and
 was tagged once CI passed on it. Release run 36551658752 built, tested, packed and pushed the 62 packages and
 made the GitHub release; NuGet listed all 62 by 10:14 UTC. The wiki names `v3.34.0` as the first tag
-(`11047df`). What S5 leaves, BreakfastProvider on the action from `v3.34.0` and a week of its runs, waits for
-the owner.
+(`11047df`). The owner then asked for S5's switch (§14.7).
+
+### 14.7 The consumer
+
+BreakfastProvider moved onto the action at `v3.34.0` in `eb6e020`, and its Kronikol packages from 3.32.4 to
+3.34.0 with it. In each of its two lane workflows, `read` and `gate` (`min-runs: '3'`, the test step's outcome
+passed in) replace the fetch, the gate and the step that failed a red run with no ledger, and `save`, skipped on
+pull requests, gives each lane's fragment an artifact of its own. The fold job is one `record` step with the
+token it used before, so it no longer downloads every lane's report to reach the fragments. Its three
+`Kronikol.Tool` installs are gone. The change removes 166 lines of workflow and adds 56, comments included.
+Before the push, the xUnit lane in memory passed 203 of 203 locally on 3.34.0, and actionlint found nothing.
+
+- **CI: Main on the push** (36598687954) passed all 58 jobs. Each of the 18 lanes' gates read the ledger and
+  passed with no new failure, as all 18 had on the run before (36547927640). The only readings that moved were
+  a behaviour change on BDDfy in docker and a duration regression on xUnit external SUT, 1 each before and 0
+  after, which is the run-to-run noise these counts carry.
+- **The history job** recorded `Record run 36598687954:1 (eb6e020) [skip ci]` by `github-actions[bot]` on the
+  branch the old job wrote: one line for each of the 18 lanes, 772 run lines in all, none duplicated, and
+  `history verify` clean on the 8.7 MB ledger.
+- **The demo** deployed, and Kronikol's doorstep check (36599851300) found the six reports the landing page
+  links green, written by 3.34.0, and its deep link resolving.
+
+S5's done-when is a week of these runs, from this one: every run recorded once per lane, counted against the
+Actions run list, and the gate's readings as before. The schedule runs it daily at 03:00 UTC.
 
 ---
 
