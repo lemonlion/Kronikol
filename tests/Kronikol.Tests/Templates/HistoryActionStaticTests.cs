@@ -259,4 +259,27 @@ public class HistoryActionStaticTests
                 Assert.False(((YamlMappingNode)job).Children.ContainsKey(new YamlScalarNode("concurrency")));
         }
     }
+
+    [Fact]
+    public void The_live_lane_calls_every_phase_by_path_as_declared_and_writes_only_its_scratch_branches()
+    {
+        // plans/HISTORY_ACTION_PLAN.md S3b: the lane proves the folder on github.com's runners, so it runs when the
+        // folder changes, calls each phase as the phase declares its inputs, and never touches kronikol-history.
+        var text = File.ReadAllText(Path.Combine(HistoryWorld.RepoRoot, ".github", "workflows", "history-action.yml"));
+        Assert.Contains("- 'templates/github-actions/kronikol-history/**'", text);
+        var phases = new HashSet<string>();
+        foreach (var (_, _, step, phase) in Calls(ActionDefinition.LoadYaml(text)))
+        {
+            phases.Add(phase);
+            Assert.Equal($"./templates/github-actions/kronikol-history/{phase}", ActionDefinition.Scalar(step, "uses"));
+            var with = step.Children.TryGetValue(new YamlScalarNode("with"), out var node) ? (YamlMappingNode)node : new YamlMappingNode();
+            var passed = with.Children.Keys.Select(k => ((YamlScalarNode)k).Value!).ToList();
+            var declared = Phase(phase).Inputs;
+            Assert.Empty(passed.Where(p => !declared.ContainsKey(p)));
+            Assert.Empty(declared.Where(i => i.Value.Required && !passed.Contains(i.Key)).Select(i => i.Key));
+            if (phase is "read" or "record")
+                Assert.Matches(@"^\$\{\{ env\.LANE(_ARTIFACTS)? \}\}$", ActionDefinition.Scalar(with, "branch") ?? "(the default, kronikol-history)");
+        }
+        Assert.Equal(Phases.Order(), phases.Order());
+    }
 }

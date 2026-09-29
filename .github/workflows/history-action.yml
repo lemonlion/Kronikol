@@ -1,0 +1,233 @@
+name: History action
+
+# Runs the kronikol-history action for real, on the pull requests that change it (plans/HISTORY_ACTION_PLAN.md S3b):
+# github.com's git and artifact service and the hosted Windows and macOS runners, none of which the facts in
+# tests/Kronikol.Tests/Templates can hold. It writes to two scratch branches it deletes first, never to
+# kronikol-history. Not a required check: a workflow its paths filter skips never reports, and a required check would
+# wait for it.
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'templates/github-actions/kronikol-history/**'
+      - '.github/workflows/history-action.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One lane at a time: each starts by deleting the scratch branches.
+concurrency:
+  group: history-action-lane
+  cancel-in-progress: true
+
+env:
+  LANE: kronikol-history-lane
+  LANE_ARTIFACTS: kronikol-history-lane-artifacts
+
+jobs:
+  reset:
+    name: Delete the scratch branches
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          for branch in "$LANE" "$LANE_ARTIFACTS"; do
+            gh api -X DELETE "repos/$REPOSITORY/git/refs/heads/$branch" > /dev/null 2>&1 && echo "deleted $branch" || echo "no $branch to delete"
+          done
+
+  # Each leg runs its own example project, so each is a suite of its own and records one line; the three race each
+  # other to the branch, the first of them making it.
+  test:
+    name: Read, test, gate, save and record (${{ matrix.os }})
+    needs: reset
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing
+          - os: windows-latest
+            project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.Mixed
+          - os: macos-latest
+            project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.FailingWithSteps
+    steps:
+      # The checkout form, not $/, because this lane proves what the README tells a consumer to copy.
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - id: read
+        uses: ./templates/github-actions/kronikol-history/read
+        with:
+          branch: ${{ env.LANE }}
+
+      - id: test
+        continue-on-error: true
+        shell: bash
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: dotnet test "$PROJECT" --configuration Release
+
+      - id: gate
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: ./templates/github-actions/kronikol-history/gate
+        with:
+          reports: ${{ matrix.project }}/bin/Release/net10.0/Reports
+          test-outcome: ${{ steps.test.outcome }}
+
+      - id: save
+        if: ${{ !cancelled() }}
+        uses: ./templates/github-actions/kronikol-history/save
+
+      - id: record
+        if: ${{ !cancelled() }}
+        uses: ./templates/github-actions/kronikol-history/record
+        with:
+          branch: ${{ env.LANE }}
+          path: .
+          record-pull-requests: 'true'
+
+      - id: again
+        uses: ./templates/github-actions/kronikol-history/read
+        with:
+          branch: ${{ env.LANE }}
+
+      - name: Check what each phase said
+        shell: bash
+        env:
+          GATE: ${{ steps.gate.outputs.result }}
+          FILES: ${{ steps.save.outputs.files }}
+          ARTIFACT: ${{ steps.save.outputs.artifact }}
+          RECORDED: ${{ steps.record.outputs.recorded }}
+          PUSHED: ${{ steps.record.outputs.pushed }}
+          FOUND: ${{ steps.again.outputs.found }}
+        run: |
+          echo "gate: $GATE; save: $FILES fragment(s) as $ARTIFACT; record: $RECORDED recorded, pushed $PUSHED; read again: found $FOUND"
+          fail=0
+          case "$GATE" in passed | failed | no-ledger) ;; *) echo "::error::the gate gave no result"; fail=1 ;; esac
+          [ "$FILES" = 1 ] || { echo "::error::save saved $FILES fragments, not 1"; fail=1; }
+          [ "$RECORDED" = 1 ] && [ "$PUSHED" = true ] || { echo "::error::record recorded $RECORDED and pushed $PUSHED, not 1 and true"; fail=1; }
+          [ "$FOUND" = true ] || { echo "::error::read found no ledger after record"; fail=1; }
+          exit $fail
+
+  # Six folds of six workflow runs finishing together: copies of one leg's real fragment, each under a run id of its
+  # own, recorded by six jobs at once on the branch the legs made.
+  race:
+    name: Race ${{ matrix.racer }}
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        racer: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: templates/github-actions
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: kronikol-history-*
+          path: ${{ runner.temp }}/legs
+
+      - name: A fragment of a run of its own
+        env:
+          RACER: ${{ matrix.racer }}
+          RUN: ${{ github.run_id }}
+          ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          fragment=$(find "$RUNNER_TEMP/legs" -name History.run.json | sort | head -n 1)
+          mkdir -p racer/Reports
+          sed -E "s/\"id\":\"gh:[0-9]+:[0-9]+\"/\"id\":\"gh:${RUN}0${RACER}:${ATTEMPT}\"/" "$fragment" > racer/Reports/History.run.json
+          grep -o "\"id\":\"gh:${RUN}0${RACER}:${ATTEMPT}\"" racer/Reports/History.run.json
+
+      - id: record
+        uses: ./templates/github-actions/kronikol-history/record
+        with:
+          branch: ${{ env.LANE }}
+          path: racer
+          record-pull-requests: 'true'
+
+      - env:
+          RECORDED: ${{ steps.record.outputs.recorded }}
+        run: '[ "$RECORDED" = 1 ] || { echo "::error::racer recorded $RECORDED runs, not 1"; exit 1; }'
+
+  # The artifact route: the three legs' saved fragments downloaded and folded by one job, onto a branch of its own.
+  artifacts:
+    name: Record from the saved artifacts
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: templates/github-actions
+
+      - id: record
+        uses: ./templates/github-actions/kronikol-history/record
+        with:
+          branch: ${{ env.LANE_ARTIFACTS }}
+          record-pull-requests: 'true'
+
+      - env:
+          RECORDED: ${{ steps.record.outputs.recorded }}
+        run: '[ "$RECORDED" = 3 ] || { echo "::error::recorded $RECORDED runs from the artifacts, not 3"; exit 1; }'
+
+  check:
+    name: Check the scratch branches
+    needs: [test, race, artifacts]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - env:
+          RUN: ${{ github.run_id }}
+          ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          dotnet tool install Kronikol.Tool --version "$(tr -d ' \r\n' < templates/github-actions/kronikol-history/VERSION)" --tool-path "$RUNNER_TEMP/tool" > /dev/null
+          fail=0
+          for branch in "$LANE" "$LANE_ARTIFACTS"; do
+            git fetch -q --depth=1 origin "$branch"
+            git show FETCH_HEAD:history.jsonl > "$RUNNER_TEMP/$branch.jsonl"
+            "$RUNNER_TEMP/tool/kronikol" history verify --history "$RUNNER_TEMP/$branch.jsonl" || fail=1
+          done
+          python3 - "$RUNNER_TEMP/$LANE.jsonl" "$RUNNER_TEMP/$LANE_ARTIFACTS.jsonl" "$RUN" "$ATTEMPT" <<'PY' || fail=1
+          import collections, json, sys
+          lane, artifacts, run, attempt = sys.argv[1:]
+          def read(path):
+              lines = [json.loads(l) for l in open(path, encoding='utf-8') if l.strip()]
+              runs = collections.Counter((l['id'], l.get('suite')) for l in lines if l['t'] == 'run')
+              rosters = collections.Counter(l['hash'] for l in lines if l['t'] == 'roster')
+              return lines, runs, sum(n - 1 for n in rosters.values())
+          ok = True
+          lines, runs, duplicates = read(lane)
+          legs = [k for k in runs if k[0] == f'gh:{run}:{attempt}']
+          racers = [k for k in runs if k[0] != f'gh:{run}:{attempt}']
+          print(f'{lane}: {len(legs)} leg lines, {len(racers)} racer lines, {duplicates} duplicate roster lines, runs {dict(runs)}')
+          ok &= len(legs) == 3 and len(racers) == 6 and duplicates == 0 and all(n == 1 for n in runs.values())
+          lines, runs, duplicates = read(artifacts)
+          print(f'{artifacts}: {dict(runs)}, {duplicates} duplicate roster lines')
+          ok &= len(runs) == 3 and duplicates == 0 and all(n == 1 for n in runs.values())
+          sys.exit(0 if ok else 1)
+          PY
+          exit $fail
