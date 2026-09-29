@@ -4462,9 +4462,25 @@ public static class ReportGenerator
         return durations;
     }
 
+    /// <summary>
+    /// How every form of <c>TestRunReport.json</c> is serialized: the standard file, the mergeable one and a merge's
+    /// output, which all go through the two writers below. The relaxed encoder writes a quote inside a string as
+    /// <c>\"</c> and leaves <c>&lt;</c>, <c>&gt;</c>, <c>&amp;</c>, <c>'</c>, <c>+</c> and non-ASCII text as they
+    /// are, where the default encoder wrote each as a six-byte escape: captured bodies and PlantUML source are full
+    /// of quotes, and on one measured report the escaped quotes alone were a fifth of the file. The JSON value is the
+    /// same. The relaxed encoder is unsafe only for text pasted into an HTML page, and nothing pastes this file into
+    /// one: every reader parses it (the page's own copy of the internal-flow map has its own encoder,
+    /// <see cref="InternalFlowHtmlGenerator"/>).
+    /// </summary>
+    private static readonly JsonSerializerOptions TestRunReportJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
     private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
     {
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
         // Resolved ONCE and used for both the key and the ids under it. Writing `suite ?? RunSuite.Current`
         // at the key while passing the un-defaulted `suite` to the model made the file disagree with
         // itself: it named a suite its own stableIds had not been computed under.
@@ -4494,7 +4510,7 @@ public static class ReportGenerator
         data["background"] = MapBackgroundJson(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations);
         data["diagnostics"] = MapDiagnosticsJson(diagnostics);
 
-        return JsonSerializer.Serialize(data, options);
+        return JsonSerializer.Serialize(data, TestRunReportJsonOptions);
     }
 
     /// <summary>
@@ -4664,8 +4680,6 @@ public static class ReportGenerator
         string? suite = null,
         RunEnvironment? environment = null)
     {
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
-
         // The same derivation the standard writer does. Without it the "superset" was missing the one
         // thing that dominates a report - every captured call - so a merged run could be read but not
         // debugged, and `kronikol query services|interactions|body|values|flow|trace` all came back empty.
@@ -4726,7 +4740,7 @@ public static class ReportGenerator
         if (MapEnvironmentJson(environment) is { } environmentJson)
             data["environment"] = environmentJson;
 
-        return JsonSerializer.Serialize(data, options);
+        return JsonSerializer.Serialize(data, TestRunReportJsonOptions);
     }
 
     /// <summary>

@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.34.2] - 2026-09-29
+
+**Patch - `TestRunReport.json` is written with the relaxed JSON encoder, the same JSON value in fewer bytes, and
+`kronikol query` prints a body's characters as they were captured. Performance work and a bug fix, nothing new for a
+consumer to call, so a patch.** The first release of `plans/V4_PLAN.md` (R1, roadmap 1c.1). The file's bytes change
+and its values do not, so there is a Kronikol4J ledger entry and no API change. The history action's `VERSION`
+installs `Kronikol.Tool` 3.34.2. Template pins move to 3.34.1.
+
+### Changed
+
+- **`TestRunReport.json` is smaller: 9.4% on BreakfastProvider's xUnit lane** (6,461,200 bytes on 3.34.0, 5,855,252
+  on this release, the same 203 scenarios), and 7.0% to 18.8% by the escapes counted in seven of its lanes' reports.
+  Every form of the file, the standard one, the mergeable one (`GenerateMergeableData`) and `kronikol merge`'s
+  output, is written with the relaxed encoder: a quote inside a string is written `\"`, and `<`, `>`, `&`, `'`,
+  `+` and non-ASCII text are written as they are. The default encoder wrote each as a six-byte `\uXXXX` escape,
+  and captured bodies and PlantUML source are full of quotes: on that lane 134,734 of them. Any JSON parser reads the
+  same values, and every `b:` address `kronikol query` prints is unchanged, since it hashes the decoded text. A
+  script that searched the raw file for `\u0022` finds `\"` instead. Characters outside the Basic Multilingual
+  Plane (emoji) are still written as escapes. The XML and YAML data files, `Specifications.json`, `Failures.jsonl`
+  and the CTRF file are written as before.
+
+### Fixed
+
+- **`kronikol query` printed a body with characters the capture never held.** `http --body` and `body`, what
+  `--out` writes, and a `--path` value that is an object or an array went through the default encoder, so a quote
+  inside a string printed as `\u0022`, and so did `<`, `&`, `'`, `+` and non-ASCII text (`Zoë` as
+  `Zo\u00EB`): a search of the output for the captured text missed it. They print through the relaxed encoder
+  now. An emoji still prints as an escape, since every encoder the runtime offers escapes characters outside the
+  Basic Multilingual Plane.
+- Tests: a pin of the whole file for a report that exercises every emitter (`TestData/Reports/TestRunReport.pin.json`,
+  the baseline #85's option must leave untouched when it is off), a fact per writer, one for the tool's printing, and
+  one that each body keeps the `b:` address 3.34.1 printed for it. All six were red on 3.34.1, the address fact only
+  through the `body` verb's printing, since its addresses are 3.34.1's. `QueryStreamingTests`' allocation
+  guard measures the scan against the file, and the smaller file took its fixture from 30% to 35% against a bound
+  of a third while the scan's cost stayed at 1.9 MB; its bodies are larger now.
+
+### Documentation
+
+- The wiki's Generated Reports page says how the file escapes strings since 3.34.2, and Internal-Flow-Tracking says
+  v5 where the options no report reads are decided (`plans/ROADMAP.md` D30).
+
 ## [3.34.1] - 2026-09-29
 
 **Patch - two bug fixes a package ships: `Kronikol`'s report rotation under root, and what the `Kronikol.Templates`

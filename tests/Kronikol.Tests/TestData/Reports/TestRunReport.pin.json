@@ -1,0 +1,387 @@
+{
+  "formatVersion": 1,
+  "kronikolVersion": "(normalised)",
+  "suite": "encoding-pin",
+  "startTime": "2026-01-01T10:00:00Z",
+  "endTime": "2026-01-01T10:05:00Z",
+  "ciMetadata": {
+    "provider": "None",
+    "buildNumber": null,
+    "branch": null,
+    "commitSha": null,
+    "pipelineUrl": null,
+    "repository": null,
+    "runId": null,
+    "runAttempt": null
+  },
+  "features": [
+    {
+      "name": "Orders",
+      "endpoint": "/api/orders",
+      "description": "Everything about placing an order.",
+      "sourceFile": null,
+      "labels": [
+        "orders",
+        "smoke"
+      ],
+      "scenarios": [
+        {
+          "id": "schema-t1",
+          "stableId": "9d65b55780cab0ec",
+          "name": "Place an order for <item>",
+          "description": "The happy path.",
+          "result": "Failed",
+          "durationSeconds": 2.5,
+          "endedAt": null,
+          "isHappyPath": true,
+          "errorMessage": "Expected: 4173\nActual: 3902",
+          "errorStackTrace": "   at OrderTests.Place() in OrderTests.cs:line 42",
+          "failureCause": null,
+          "labels": [
+            "checkout"
+          ],
+          "categories": [
+            "API"
+          ],
+          "rule": "Totals are exact",
+          "attempt": null,
+          "sourceFile": null,
+          "sourceLine": null,
+          "outlineId": "Place an order for <item>",
+          "examplesBlockName": "Standard items",
+          "examplesBlockDescription": "Items every shop stocks",
+          "examplesBlockIndex": 0,
+          "exampleValues": {
+            "item": "Widget"
+          },
+          "exampleFlatValues": {
+            "item": "Widget"
+          },
+          "exampleDisplayName": "Place an order for Widget",
+          "attachments": [
+            {
+              "name": "receipt.png",
+              "relativePath": "attachments/receipt.png",
+              "mediaType": "image/png"
+            }
+          ],
+          "backgroundSteps": [
+            {
+              "keyword": "Given",
+              "text": "the shop is open",
+              "status": "Passed",
+              "durationSeconds": 0.005,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ],
+          "steps": [
+            {
+              "keyword": "When",
+              "text": "I order a Widget",
+              "status": "Passed",
+              "durationSeconds": 0.12,
+              "bypassReason": null,
+              "docString": "{ \"item\": \"Widget\" }",
+              "docStringMediaType": "application/json",
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [
+                "# the order body"
+              ],
+              "subSteps": [],
+              "attachments": [
+                {
+                  "name": "request.json",
+                  "relativePath": "attachments/request.json",
+                  "mediaType": "application/json"
+                }
+              ],
+              "parameters": [
+                {
+                  "name": "item",
+                  "kind": "Inline",
+                  "inlineValue": {
+                    "value": "Widget",
+                    "expectation": "Widget",
+                    "status": "Success"
+                  },
+                  "tabularValue": null,
+                  "treeValue": null
+                },
+                {
+                  "name": "lines",
+                  "kind": "Tabular",
+                  "inlineValue": null,
+                  "tabularValue": {
+                    "columns": [
+                      {
+                        "name": "sku",
+                        "isKey": true
+                      },
+                      {
+                        "name": "qty",
+                        "isKey": false
+                      }
+                    ],
+                    "rows": [
+                      {
+                        "type": "Matching",
+                        "values": [
+                          {
+                            "value": "W-1",
+                            "expectation": "W-1",
+                            "status": "Success"
+                          },
+                          {
+                            "value": "2",
+                            "expectation": null,
+                            "status": "NotApplicable"
+                          }
+                        ]
+                      }
+                    ],
+                    "isLinkedOutput": true
+                  },
+                  "treeValue": null
+                },
+                {
+                  "name": "receipt",
+                  "kind": "Tree",
+                  "inlineValue": null,
+                  "tabularValue": null,
+                  "treeValue": {
+                    "root": {
+                      "path": "$",
+                      "node": "receipt",
+                      "value": "",
+                      "expectation": null,
+                      "status": "NotApplicable",
+                      "children": [
+                        {
+                          "path": "$.total",
+                          "node": "total",
+                          "value": "4173",
+                          "expectation": "4173",
+                          "status": "Success",
+                          "children": null
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "textSegments": [
+                {
+                  "text": "I order a ",
+                  "parameterName": null,
+                  "parameter": null,
+                  "tableReference": null,
+                  "tableReferenceFormattedValue": null
+                },
+                {
+                  "text": null,
+                  "parameterName": "item",
+                  "parameter": {
+                    "value": "Widget",
+                    "expectation": null,
+                    "status": "NotApplicable"
+                  },
+                  "tableReference": null,
+                  "tableReferenceFormattedValue": null
+                },
+                {
+                  "text": null,
+                  "parameterName": null,
+                  "parameter": null,
+                  "tableReference": "lines",
+                  "tableReferenceFormattedValue": "2 rows"
+                }
+              ]
+            },
+            {
+              "keyword": "Then",
+              "text": "the total is right",
+              "status": "Failed",
+              "durationSeconds": 0.003,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": "Expected 4173 but found 3902",
+              "sourceFile": "OrderTests.cs",
+              "sourceLine": 42,
+              "comments": [],
+              "subSteps": [
+                {
+                  "keyword": null,
+                  "text": "total == 4173",
+                  "status": "Failed",
+                  "durationSeconds": null,
+                  "bypassReason": null,
+                  "docString": null,
+                  "docStringMediaType": null,
+                  "failureMessage": "Expected 4173 but found 3902",
+                  "sourceFile": "OrderTests.cs",
+                  "sourceLine": 42,
+                  "comments": [],
+                  "subSteps": [],
+                  "attachments": [],
+                  "parameters": [],
+                  "textSegments": null
+                }
+              ],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "And",
+              "text": "an email is sent",
+              "status": "Bypassed",
+              "durationSeconds": null,
+              "bypassReason": "no SMTP in this environment",
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            },
+            {
+              "keyword": "And",
+              "text": "the ledger is updated",
+              "status": null,
+              "durationSeconds": null,
+              "bypassReason": null,
+              "docString": null,
+              "docStringMediaType": null,
+              "failureMessage": null,
+              "sourceFile": null,
+              "sourceLine": null,
+              "comments": [],
+              "subSteps": [],
+              "attachments": [],
+              "parameters": [],
+              "textSegments": null
+            }
+          ],
+          "diagrams": [
+            "@startuml\nA -> B : POST \"/api/orders\" <&lock>\nnote left\n{\"note\":\"a \\\"quoted\\\" <b>tag</b> & 'apos' + plus\",\"path\":\"C:\\\\tmp\",\"name\":\"Zoë ✓ \uD83D\uDE00\"}\nend note\n@enduml"
+          ],
+          "httpInteractions": [
+            {
+              "type": "Request",
+              "method": "POST",
+              "uri": "http://orders/api/orders?q=a+b&r='c'",
+              "serviceName": "orders",
+              "callerName": "test",
+              "content": "{\"note\":\"a \\\"quoted\\\" <b>tag</b> & 'apos' + plus\",\"path\":\"C:\\\\tmp\",\"name\":\"Zoë ✓ \uD83D\uDE00\"}",
+              "headers": [
+                {
+                  "key": "accept",
+                  "value": "application/json"
+                },
+                {
+                  "key": "x-note",
+                  "value": "say \"hi\" <now> & 'then' + more"
+                },
+                {
+                  "key": "x-empty",
+                  "value": null
+                }
+              ],
+              "statusCode": null,
+              "statusText": null,
+              "traceId": "6a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0a02",
+              "requestResponseId": "6a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0a01",
+              "timestamp": "2026-01-01T10:00:01.000Z",
+              "metaType": "Default",
+              "dependencyCategory": "http",
+              "callerDependencyCategory": "test",
+              "phase": "Action",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+              "activitySpanId": "00f067aa0ba902b7",
+              "capturedBy": "wire",
+              "durationMs": 35,
+              "stepPath": null
+            },
+            {
+              "type": "Response",
+              "method": "POST",
+              "uri": "http://orders/api/orders",
+              "serviceName": "orders",
+              "callerName": "test",
+              "content": "{\"total\":3902,\"note\":\"<ok> & 'fine' + \\\"done\\\"\"}",
+              "headers": [],
+              "statusCode": 201,
+              "statusText": "Created",
+              "traceId": "6a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0a02",
+              "requestResponseId": "6a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0a01",
+              "timestamp": "2026-01-01T10:00:01.035Z",
+              "metaType": "Default",
+              "dependencyCategory": null,
+              "callerDependencyCategory": null,
+              "phase": "Unknown",
+              "attributionSource": null,
+              "expiredFrom": null,
+              "error": null,
+              "isUserAction": false,
+              "activityTraceId": null,
+              "activitySpanId": null,
+              "capturedBy": null,
+              "durationMs": 35,
+              "stepPath": null
+            }
+          ],
+          "annotations": [
+            {
+              "index": 0,
+              "kind": "Row",
+              "text": "note over A: row \"1\""
+            },
+            {
+              "index": 2,
+              "kind": "Custom",
+              "text": "note over A: custom <b>bold</b>"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "background": {
+    "calls": 0,
+    "afterScenarioEnd": [],
+    "interactions": []
+  },
+  "diagnostics": [
+    {
+      "kind": "RenderFailure",
+      "message": "Building the diagram failed: TimeoutException: no answer",
+      "scenarioId": "schema-t1"
+    },
+    {
+      "kind": "Other",
+      "message": "host says hello",
+      "scenarioId": null
+    }
+  ]
+}

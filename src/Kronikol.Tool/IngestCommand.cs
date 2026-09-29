@@ -77,7 +77,7 @@ internal static class IngestCommand
                     {
                         // Local rendering runs a delegate the caller sets on ReportConfigurationOptions,
                         // which a command line cannot do. Accepted by the parser (removing an accepted
-                        // value is v4's) and refused here, before anything is read or written: through
+                        // value is v5's) and refused here, before anything is read or written: through
                         // the pipeline it was an unhandled InvalidOperationException from the diagram
                         // fetcher, printed after the "Ingesting …" lines with a crash exit status and a
                         // message telling the user to set a delegate.

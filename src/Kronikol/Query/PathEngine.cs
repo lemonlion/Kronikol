@@ -19,8 +19,6 @@ internal static class PathEngine
 {
     internal readonly record struct Segment(string? Name, int? Index, bool Wildcard = false, bool Length = false);
 
-    private static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
-
     public static bool TryParse(string path, out List<Segment> segments, out string? error)
     {
         segments = [];
@@ -410,7 +408,7 @@ internal readonly struct PathValue
         : _element.ValueKind switch
         {
             JsonValueKind.Object or JsonValueKind.Array =>
-                JsonSerializer.Serialize(_element, new JsonSerializerOptions { WriteIndented = true }),
+                JsonSerializer.Serialize(_element, PayloadReader.PrettyJson),
             JsonValueKind.True or JsonValueKind.False or JsonValueKind.Null => _element.GetRawText(),
             _ => _element.ToString()
         };

@@ -58,7 +58,7 @@ public class QueryStreamingTests : IDisposable
         // Bodies dominate this file by design: 8 KB responses against an index entry of a few dozen bytes.
         // A scanner that materialised the file would allocate more than the file itself - a UTF-16 string
         // is two bytes per ASCII character before anything is parsed out of it.
-        var report = Synthesize("Streamed.json", scenarios: 30, callsEach: 20);
+        var report = Synthesize("Streamed.json", scenarios: 30, callsEach: 20, fillerFields: 150);
         var size = new FileInfo(report).Length;
         Assert.True(size > 4L * 1024 * 1024, $"the fixture is only {size / 1024} KB - too small to tell a streamed scan from a loaded one");
 
@@ -67,9 +67,11 @@ public class QueryStreamingTests : IDisposable
         var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
 
         Assert.Equal(30, index.Scenarios.Count);
-        // Measured at about a sixth of the file. The bound is a third: loose enough not to fail on a GC
-        // detail, tight enough that the defect this found - a UTF-16 copy of every body, which put the
-        // figure at 2.2x the file - cannot come back unnoticed.
+        // Measured at about a quarter of the file: 1.9 MB against 7.6 MB. The bound is a third: loose enough
+        // not to fail on a GC detail, tight enough that the defect this found - a UTF-16 copy of every body,
+        // which put the figure at 2.2x the file - cannot come back unnoticed. The bodies are 150 fields: with
+        // 100, the relaxed encoder of 3.34.2 took the file from 6.5 MB to 5.5 MB (each quote in a body two
+        // bytes instead of six) while the scan's cost stayed at 1.9 MB, and 30% of the file became 35%.
         Assert.True(allocated < size / 3,
             $"scanning a {size / (1024 * 1024)} MB report allocated {allocated / (1024 * 1024)} MB - the scan is not streaming");
     }

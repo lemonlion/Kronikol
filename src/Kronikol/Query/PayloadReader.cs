@@ -186,6 +186,19 @@ internal static partial class PayloadReader
     }
 
     /// <summary>
+    /// How the tool prints JSON it read from a report (a body, a value under <c>--path</c>): indented, and with the
+    /// relaxed encoder, so a quote inside a string prints as <c>\"</c> and <c>&lt;</c>, <c>&amp;</c> or <c>ë</c> as
+    /// themselves. The default encoder printed each as a six-byte escape, text the capture never held, which a search
+    /// of the output for the captured text then missed. Characters outside the Basic Multilingual Plane (emoji) are
+    /// still escaped: every encoder the runtime offers escapes them.
+    /// </summary>
+    internal static readonly JsonSerializerOptions PrettyJson = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
+    /// <summary>
     /// Pretty-prints a JSON body, leaving anything else as it was. Report bodies are usually captured
     /// minified, and a line range is only addressable once there are lines.
     /// </summary>
@@ -194,7 +207,7 @@ internal static partial class PayloadReader
         try
         {
             using var document = JsonDocument.Parse(body);
-            return JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(document.RootElement, PrettyJson);
         }
         catch (JsonException)
         {
