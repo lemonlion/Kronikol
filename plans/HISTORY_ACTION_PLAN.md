@@ -1277,8 +1277,26 @@ on a pack with a wildcard `Content` item, which it names.
 The push of `118a3481` to `main` started no workflow. Its message named the action's ledger commit marker,
 in square brackets, and GitHub skips the push workflows when a pushed commit's message holds that marker
 anywhere, not only as a directive. So a commit message here never quotes it; the push after it started them.
-The live lane, dispatched on `118a3481`, and CI and the dogfood on the push after it are recorded here once
-they have run.
+- **The live lane** (dispatched on `118a3481`, run 36540907767) passed every job. Each leg, on Ubuntu,
+  Windows and macOS, read no ledger (the lane deletes its branch first, so the gate read `no-ledger`), saved
+  one fragment as an artifact of its own, recorded it, pushed, and read the ledger back. Six racers then
+  recorded copies of a leg's fragment, each under a run id of its own, at once, and a job folded the three
+  legs' saved artifacts onto a second branch. The lane's branch held 3 leg lines and 6 racer lines, the
+  artifact branch 3 runs, neither a duplicate roster line, and `history verify` found nothing on either.
+- **CI** on `7682990e` (36540978909) passed every job but one of its first run of the template facts on
+  Windows: 1 of 179 failed. It compared the folder's `VERSION` byte for byte, and a Windows runner checks the
+  folder out with CRLF line endings (F16's checkout, here on a file that is not a script). The action
+  reads the file as `tr -d ' \r\n'` does, so only the fact changed (`18d86af5`: red on a CRLF file, green on
+  both). The facts passed on the macOS runner the first time. CI on `18d86af5` (36542137563) passed every job.
+- **The dogfood.** Three runs of CI Summary Preview on `main`, two pushes and a dispatch (36540978851 on
+  `7682990e`, 36542137552 and 36543298003 on `18d86af5`), each read the ledger from `kronikol-history`
+  (909,313 bytes at the first), gated its four suites (the Mixed and All Failing suites' failures were known,
+  `new-failures: 0`) and recorded them: `Record run <run>:1 (<sha>) [skip ci]` by `github-actions[bot]`, on
+  top of the old fold job's commits. One line per suite per run, 464 run lines in all, none duplicated,
+  `history verify` clean, and `history show` reads each suite's last 50 runs in one stream, the old recipe's
+  and the action's together.
+- **CodeQL** passed on `7682990e`. It analyses C# only on `main` today; PR #109 adds the `actions` language,
+  whose queries will read this folder and the lane when it merges.
 
 ---
 
