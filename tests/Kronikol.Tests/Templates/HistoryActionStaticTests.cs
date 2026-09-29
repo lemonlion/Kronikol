@@ -114,9 +114,13 @@ public class HistoryActionStaticTests
     [Fact]
     public void The_version_the_folder_installs_is_the_repositorys()
     {
+        // As tool.sh reads it (tr -d ' \r\n'): a Windows runner checks the folder out with CRLF line endings, and a
+        // copy of it reads the same version.
         var props = XDocument.Load(Path.Combine(HistoryWorld.RepoRoot, "Directory.Build.props"));
         var version = props.Descendants("Version").First().Value.Trim();
-        Assert.Equal(version + "\n", File.ReadAllText(Path.Combine(HistoryWorld.Folder, "VERSION")));
+        var text = File.ReadAllText(Path.Combine(HistoryWorld.Folder, "VERSION"));
+        Assert.Equal(version, string.Concat(text.Where(c => c is not (' ' or '\r' or '\n'))));
+        Assert.Matches(@"^\S+\r?\n$", text);
     }
 
     [Fact]
