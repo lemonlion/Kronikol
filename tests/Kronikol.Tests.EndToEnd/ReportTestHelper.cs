@@ -4215,6 +4215,85 @@ public static class ReportTestHelper
         return (new Uri(html).AbsoluteUri, reportsDir);
     }
 
+    /// <summary>
+    /// A run report written by the whole pipeline with internal-flow tracking on and its defaults: one scenario whose
+    /// call to <c>/shared-outer</c> (300 ms) holds its call to <c>/shared-inner</c> (from 50 to 150 ms), neither
+    /// recording a trace id, and two queries inside both. The two popups show the same flow, which the segment map
+    /// stores once (#86, <c>plans/V4_PLAN.md</c> R5). Placed like the contested reports, where no other fixture's calls
+    /// could claim its spans.
+    /// </summary>
+    public static (string Uri, string ReportsDir, Guid Outer, Guid Inner) GenerateRunReportWithSharedFlow(string tempDir, string outputDir, string fileName)
+    {
+        var reportsDir = Path.Combine(tempDir, "shared-flow-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(reportsDir);
+        var testId = "shared-flow-" + Guid.NewGuid().ToString("N");
+        var sourceName = "Kronikol.Tests.SharedFlow.E2E." + Guid.NewGuid().ToString("N");
+        using var source = new System.Diagnostics.ActivitySource(sourceName);
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = s => s.Name == sourceName,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+        var spans = new List<System.Diagnostics.Activity>();
+        var at = DateTimeOffset.UtcNow.AddHours(-2).AddSeconds(10 * Interlocked.Increment(ref _contestedReports));
+
+        Guid Call(string path, int fromMs, int toMs)
+        {
+            var id = Guid.NewGuid();
+            RequestResponseLogger.Log(new RequestResponseLog("Shared flow", testId, HttpMethod.Get, null, new Uri("http://orders" + path), [],
+                "Orders", "Caller", RequestResponseType.Request, Guid.NewGuid(), id, false) { Timestamp = at.AddMilliseconds(fromMs) });
+            RequestResponseLogger.Log(new RequestResponseLog("Shared flow", testId, HttpMethod.Get, "{}", new Uri("http://orders" + path), [],
+                "Orders", "Caller", RequestResponseType.Response, Guid.NewGuid(), id, false, System.Net.HttpStatusCode.OK)
+                { Timestamp = at.AddMilliseconds(toMs) });
+            return id;
+        }
+
+        void Span(string name, int startMs)
+        {
+            System.Diagnostics.Activity.Current = null;
+            var span = source.StartActivity(name, System.Diagnostics.ActivityKind.Internal,
+                new System.Diagnostics.ActivityContext(System.Diagnostics.ActivityTraceId.CreateRandom(),
+                    System.Diagnostics.ActivitySpanId.CreateRandom(), System.Diagnostics.ActivityTraceFlags.Recorded))!;
+            span.SetStartTime(at.UtcDateTime.AddMilliseconds(startMs));
+            span.SetEndTime(at.UtcDateTime.AddMilliseconds(startMs + 10));
+            spans.Add(span);
+        }
+
+        Guid outer, inner;
+        lock (WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            outer = Call("/shared-outer", 0, 300);
+            inner = Call("/shared-inner", 50, 150);
+            Span("SELECT orders", 60);
+            Span("SELECT lines", 80);
+            foreach (var span in spans)
+                Kronikol.InternalFlow.InternalFlowSpanStore.Add(span);
+
+            ReportGenerator.CreateStandardReportsWithDiagrams(
+                [new Feature { DisplayName = "Shared flow", Scenarios = [new Scenario { Id = testId, DisplayName = "Shared flow", Result = ExecutionResult.Passed }] }],
+                at.UtcDateTime.AddSeconds(-1), at.UtcDateTime.AddSeconds(1),
+                new ReportConfigurationOptions
+                {
+                    ReportsFolderPath = reportsDir,
+                    PlantUmlRendering = PlantUmlRendering.BrowserJs,
+                    InternalFlowTracking = true,
+                    InternalFlowSpanGranularity = InternalFlowSpanGranularity.Full,
+                    GenerateComponentDiagram = false,
+                    GenerateSpecificationsReport = false,
+                    GenerateSpecificationsData = false,
+                });
+            DefaultDiagramsFetcher.Reset();
+        }
+        foreach (var span in spans) span.Dispose();
+
+        var html = Path.Combine(reportsDir, "TestRunReport.html");
+        File.Copy(html, Path.Combine(outputDir, fileName), true);
+        return (new Uri(html).AbsoluteUri, reportsDir, outer, inner);
+    }
+
     /// <summary>Each contested report sits 10 s after the last, so no two claim each other's spans.</summary>
     private static int _contestedReports;
 

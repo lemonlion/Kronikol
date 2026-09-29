@@ -11,6 +11,8 @@ is safe to read in an agent session.
 | `encoders.cs` | What the default encoder and the relaxed one write for quotes, `<`, `&`, `'`, `+` and a non-ASCII character |
 | `threshold.py` | R2: for each size threshold, how many payloads a report would hold compressed and the bytes saved at gzip levels 6 and 9 (the source of `PAYLOAD_COMPRESSION_PLAN.md`'s 512) |
 | `mutate_r2.py` | R2: breaks each of twelve guards in turn in a checkout, runs the facts that should catch it and restores the file; prints CAUGHT or SURVIVED per guard |
+| `dedup.py` | R4 and R5: #86's measure of a page's segment map (GUIDs normalised, each distinct `content` and `flameData` counted once), and its size stored once, decoded and gzipped |
+| `mutate_r5.py` | R5: the same as `mutate_r3.py` for seven guards of the stored-once layout, one through a Playwright fact |
 | `mutate_r3.py` | R3: the same for thirteen guards of #87's rule, its note and title, the message under `HideLink` and the encoded diagnostic |
 
 ```bash

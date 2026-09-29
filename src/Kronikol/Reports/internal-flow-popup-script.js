@@ -79,7 +79,7 @@
         loadSegments().then(function(map) {
             if (!overlay.isConnected) return; // closed, or replaced by another popup, while the map decoded
             loading.remove();
-            fill(popup, map[segmentId]);
+            fill(popup, resolve(map, segmentId));
         }, function(error) {
             if (!overlay.isConnected) return;
             loading.remove();
@@ -90,6 +90,15 @@
             popup.appendChild(failed);
             if (window.console && console.error) console.error('Kronikol: internal flow data could not be decompressed', error);
         });
+    }
+
+    // A flow that several segments show is stored once, in the first of them, and each later one names that segment
+    // under 'sameAs' and keeps its own title (#86). A map written before 3.35.2 has every flow inline.
+    function resolve(map, segmentId) {
+        var segment = map[segmentId];
+        if (!segment || !segment.sameAs) return segment;
+        var holder = map[segment.sameAs];
+        return holder ? { title: segment.title, content: holder.content, flameData: holder.flameData } : undefined;
     }
 
     function fill(popup, segment) {

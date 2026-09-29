@@ -159,6 +159,21 @@ public class InternalFlowSegmentMapReportTests : IDisposable
     }
 
     [Fact]
+    public void A_flow_two_calls_show_is_stored_once_in_the_page_and_in_the_data_file()
+    {
+        // #86 (V4_PLAN.md R5): the first call and the call nested in it show the same span, so both maps the run writes
+        // hold that flow once, in the first call's segment, and the nested call's segment names it.
+        var run = Generate(InternalFlowNoDataBehavior.HideLink, nestedCall: true);
+
+        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        foreach (var map in new[] { PageMap(run.Html), data.RootElement.GetProperty("internalFlowSegments") })
+        {
+            Assert.Contains("first.root", map.GetProperty($"iflow-{run.First}").GetProperty("content").GetString(), StringComparison.Ordinal);
+            Assert.Equal($"iflow-{run.First}", map.GetProperty($"iflow-{run.Nested}").GetProperty("sameAs").GetString());
+        }
+    }
+
+    [Fact]
     public void A_scenario_that_made_no_call_has_no_whole_test_flow()
     {
         var run = Generate(InternalFlowNoDataBehavior.HideLink);
@@ -192,9 +207,9 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         Assert.Equal([$"GET: /iflow-map/{run.First}", $"POST: /iflow-map/{run.Second}"], Assert.Single(pageFlames));
     }
 
-    private sealed record Run(string Html, HashSet<string> Own, Guid First, Guid Second, string CallsScenarioId, string QuietScenarioId);
+    private sealed record Run(string Html, HashSet<string> Own, Guid First, Guid Second, string CallsScenarioId, string QuietScenarioId, Guid Nested);
 
-    private Run Generate(InternalFlowNoDataBehavior noData)
+    private Run Generate(InternalFlowNoDataBehavior noData, bool nestedCall = false)
     {
         var callsId = "iflow-map-" + Guid.NewGuid().ToString("N");
         var quietId = "iflow-map-quiet-" + Guid.NewGuid().ToString("N");
@@ -218,6 +233,13 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         Log(Call(callsId, HttpMethod.Get, first, firstTrace, RequestResponseType.Response, at.AddMilliseconds(-300)));
         Log(Call(callsId, HttpMethod.Post, second, secondTrace, RequestResponseType.Request, at.AddMilliseconds(300)));
         Log(Call(callsId, HttpMethod.Post, second, secondTrace, RequestResponseType.Response, at.AddMilliseconds(400)));
+        // A call the first one's service made inside it, on the first call's trace: its popup shows first.root too.
+        var nested = Guid.NewGuid();
+        if (nestedCall)
+        {
+            Log(Call(callsId, HttpMethod.Get, nested, firstTrace, RequestResponseType.Request, at.AddMilliseconds(-390)));
+            Log(Call(callsId, HttpMethod.Get, nested, firstTrace, RequestResponseType.Response, at.AddMilliseconds(-340)));
+        }
 
         Span("first.root", firstTrace, at.AddMilliseconds(-401), 98);
         // Work the first call's service went on with after it answered: it falls in the step bar's window.
@@ -264,7 +286,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
             .Where(l => l.TestId == callsId || l.TestId == quietId)
             .Select(l => $"iflow-{l.RequestResponseId}")
             .ToHashSet();
-        return new Run(File.ReadAllText(Path.Combine(_directory, "TestRunReport.html")), own, first, second, callsId, quietId);
+        return new Run(File.ReadAllText(Path.Combine(_directory, "TestRunReport.html")), own, first, second, callsId, quietId, nested);
     }
 
     private static void Log(RequestResponseLog log) => RequestResponseLogger.Log(log);
@@ -300,6 +322,18 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         using var element = JsonDocument.Parse(html[start..end]);
         using var map = JsonDocument.Parse(Gunzip(element.RootElement.GetProperty("z").GetString()!));
         return map.RootElement.EnumerateObject().Select(p => p.Name).ToArray();
+    }
+
+    /// <summary>The page's segment map, decoded from its element's <c>z</c>.</summary>
+    private static JsonElement PageMap(string html)
+    {
+        const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
+        var at = html.IndexOf(head, StringComparison.Ordinal);
+        Assert.True(at >= 0, "the page carries a segment element");
+        var start = at + head.Length;
+        using var element = JsonDocument.Parse(html[start..html.IndexOf("</script>", start, StringComparison.Ordinal)]);
+        using var map = JsonDocument.Parse(Gunzip(element.RootElement.GetProperty("z").GetString()!));
+        return map.RootElement.Clone();
     }
 
     /// <summary>Every diagram source the page embeds in its <c>puml-data</c> block, decoded.</summary>

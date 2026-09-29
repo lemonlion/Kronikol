@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.35.2] - 2026-09-30
+
+**Patch - performance: an internal-flow flow that several arrows open is stored in the report once (#86).**
+`plans/V4_PLAN.md` R5 (roadmap 1c.6), sized by R4's measurement, which moved no version and is recorded in the plan.
+Nothing new to call. The segment map in the page and in the mergeable data file changes shape, which is report
+output, so there is a Kronikol4J ledger entry. The history action's `VERSION` installs `Kronikol.Tool` 3.35.2.
+Template pins move to 3.35.1.
+
+### Changed
+
+- **A flow that more than one segment shows is stored once** in the report's segment map (#86). A call and the calls
+  nested in it show the same spans, and each carried a whole copy of the flow, which differed from the others only
+  in the call's id inside it (#86's report: 702 copies of one flow). The first segment that shows a flow keeps it;
+  each later one keeps its own title and names that segment under `sameAs`, and the popup follows the name. No key
+  is added, so `kronikol merge` keeps every copy a segment names, and a shard written before, with every flow
+  inline, merges and renders beside newer ones. On BreakfastProvider's lanes, run on local builds, the map a browser
+  decodes on the first popup, which a mergeable data file carries as JSON, went from 2,418,029 to 1,583,452 bytes
+  on the xUnit lane and from 1,659,007 to 1,039,491 on the TUnit lane, whose tests run in parallel; the page's
+  compressed copy of it went from 152,528 to 145,616 bytes and from 90,384 to 84,848.
+- The activity diagram in a popup is named for its flow rather than for its call, which was the one difference
+  between two copies of a flow.
+
 ## [3.35.1] - 2026-09-29
 
 **Patch - bug fixes: an internal-flow popup no longer shows other requests' spans as its own call's (#87), and a

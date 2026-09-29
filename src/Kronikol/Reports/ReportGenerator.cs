@@ -409,7 +409,7 @@ public static class ReportGenerator
             string BuildFlowScript(InternalFlowTab startTab) =>
                 DiagramContextMenu.GetInternalFlowConfigScript(options.InternalFlowHasDataBehavior)
                 + InternalFlowHtmlGenerator.WrapSegmentData(
-                    InternalFlowHtmlGenerator.BuildSegmentData(
+                    InternalFlowHtmlGenerator.StoreFlowsOnce(InternalFlowHtmlGenerator.BuildSegmentData(
                         perBoundarySegments,
                         options.InternalFlowDiagramStyle,
                         options.InternalFlowShowFlameChart,
@@ -417,7 +417,7 @@ public static class ReportGenerator
                         options.InternalFlowNoDataBehavior,
                         options.InternalFlowSpanGranularity,
                         options.InternalFlowActivitySources,
-                        startTab),
+                        startTab)),
                     linkSources);
 
             // The popup data script is shared by both HTML reports; only a Specifications
@@ -4616,7 +4616,8 @@ public static class ReportGenerator
         Dictionary<string, object>? internalFlowSegmentData = null;
         if (perBoundarySegments is not null)
         {
-            internalFlowSegmentData = InternalFlowHtmlGenerator.BuildSegmentData(
+            // The page's map, stored the same way, so a merge renders what the run's page did.
+            internalFlowSegmentData = InternalFlowHtmlGenerator.StoreFlowsOnce(InternalFlowHtmlGenerator.BuildSegmentData(
                 perBoundarySegments,
                 options.InternalFlowDiagramStyle,
                 options.InternalFlowShowFlameChart,
@@ -4624,7 +4625,7 @@ public static class ReportGenerator
                 options.InternalFlowNoDataBehavior,
                 options.InternalFlowSpanGranularity,
                 options.InternalFlowActivitySources,
-                ReportToggleDefaultsResolver.Resolve(options, specifications: false).InternalFlowTab);
+                ReportToggleDefaultsResolver.Resolve(options, specifications: false).InternalFlowTab));
         }
 
         Dictionary<string, Merge.WholeTestFlowFragment>? wholeTestFlow = null;
@@ -6130,7 +6131,7 @@ public static class ReportGenerator
                 // it read, which a different Kronikol version may have written, so pinning what is inside
                 // them would make `kronikol merge` emit a file that fails its own schema with no code
                 // change on either side.
-                ["internalFlowSegments"] = new Dictionary<string, object?> { ["type"] = "object", ["description"] = "Mergeable only: precomputed internal-flow payloads keyed by segment id. The values are rendering data carried through a merge unchanged, and are deliberately not described here - a merged file may hold shapes written by another version." },
+                ["internalFlowSegments"] = new Dictionary<string, object?> { ["type"] = "object", ["description"] = "Mergeable only: precomputed internal-flow payloads keyed by segment id. From 3.35.2 a flow several segments show is held by the first of them, and each later one names it under sameAs. The values are rendering data carried through a merge unchanged, and are deliberately not described here - a merged file may hold shapes written by another version." },
                 ["wholeTestFlow"] = new Dictionary<string, object?>
                 {
                     ["type"] = "object",

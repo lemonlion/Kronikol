@@ -206,6 +206,46 @@ public static class InternalFlowHtmlGenerator
         return data;
     }
 
+    /// <summary>
+    /// The segment map a report writes, with each flow that more than one segment shows stored once (#86,
+    /// <c>plans/V4_PLAN.md</c> R5): the first segment in the map that shows it keeps it, and each later one keeps its
+    /// title and names that segment under <c>sameAs</c>. No key is added, so a merge, which keeps the first value it
+    /// meets for a key and meets each call's key once, keeps every copy a segment names; and the copy stays where the
+    /// flow is first shown, beside the flows like it that gzip compresses it against. A message stays with its segment.
+    /// The popup follows <c>sameAs</c>, and a map with every flow inline, as written before 3.35.2, renders as it did.
+    /// </summary>
+    internal static Dictionary<string, object> StoreFlowsOnce(Dictionary<string, object> data)
+    {
+        var stored = new Dictionary<string, object>(data.Count);
+        var holders = new Dictionary<(string Content, string Flame), string>();
+        foreach (var (key, value) in data)
+        {
+            var entry = JsonSerializer.SerializeToElement(value);
+            if (!entry.TryGetProperty("content", out var content))
+            {
+                stored[key] = value;
+                continue;
+            }
+
+            var flow = (content.GetString() ?? "", entry.TryGetProperty("flameData", out var flame) ? flame.GetRawText() : "");
+            if (holders.TryAdd(flow, key))
+            {
+                stored[key] = value;
+                continue;
+            }
+
+            stored[key] = entry.TryGetProperty("title", out var title)
+                ? new { title = title.GetString(), sameAs = holders[flow] }
+                : new { sameAs = holders[flow] };
+        }
+
+        return stored;
+    }
+
+    /// <summary>The first 16 hex digits of the SHA-256 of <paramref name="text"/>'s UTF-8: the name of a flow.</summary>
+    private static string FlowHash(string text) =>
+        Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(text)), 0, 8).ToLowerInvariant();
+
     private static string Title(InternalFlowSegment segment) =>
         $"Internal Flow ({segment.Spans.Length} span{(segment.Spans.Length == 1 ? "" : "s")}"
         + (segment.SpansLeftOut > 0 ? $", {segment.SpansLeftOut} left out)" : ")");
@@ -249,7 +289,9 @@ public static class InternalFlowHtmlGenerator
     private static string RenderActivityDiagramHtml(InternalFlowSegment segment, Dictionary<string, string>? diagramDataMap = null, bool rawSource = false)
     {
         var plantuml = InternalFlowRenderer.RenderActivityDiagram(segment);
-        var id = $"iflow-puml-{segment.RequestResponseId}-{segment.BoundaryType.ToString().ToLowerInvariant()}";
+        // Named for the flow, not the call: two calls that show the same spans get the same markup, which the report's
+        // segment map then stores once (#86). One popup is open at a time, so the id is still one element's.
+        var id = $"iflow-puml-{FlowHash(plantuml)}";
         // A popup's diagram inside the segment map, which is gzipped whole: gzip cannot shrink an island that is gzip
         // already, and base64 had grown it by a third (INTERNAL_FLOW_BLOB_PLAN §3.7, Q7). The popup renders the
         // attribute as it is; line breaks stay literal, which an attribute returns as written.
