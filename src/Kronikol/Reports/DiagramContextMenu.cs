@@ -128,8 +128,10 @@ public static class DiagramContextMenu
     public static string GetCollapsibleNotesScript(ResolvedToggleDefaults toggleDefaults) =>
         LoadResource("collapsible-notes-script.js")
             .Replace("__NOTE_FORMAT_DEFAULT__", toggleDefaults.NotePayloadFormat == NotePayloadFormat.Yaml ? "yaml" : "json")
+#pragma warning disable CS0618 // the monospace note control is obsolete until 4.0.0 removes it (V4_PLAN.md R7)
             .Replace("__NOTE_FONT_DEFAULT__", toggleDefaults.NoteFont == NoteFontFamily.Monospace ? "mono" : "default")
             .Replace("__NOTE_FONT_CONTROLS__", toggleDefaults.ShowNoteFontControls ? "true" : "false")
+#pragma warning restore CS0618
             .Replace("__NOTE_WIDTH_DEFAULT__", toggleDefaults.NoteWidth == NoteWidthMode.Full ? "full" : "default")
             .Replace("__HEADERS_HIDDEN_DEFAULT__", toggleDefaults.HeadersShown ? "false" : "true")
             .Replace("__TRUNCATE_LINES_DEFAULT__", ((int)toggleDefaults.TruncateLines).ToString(System.Globalization.CultureInfo.InvariantCulture))

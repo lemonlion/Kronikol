@@ -14,6 +14,7 @@ namespace Kronikol.Reports;
 /// monospace font put every one of them at the same x. No amount of extra width fixes that.
 /// </para>
 /// </summary>
+[Obsolete(NoteFontDeprecation.Message)]
 public enum NoteFontFamily
 {
     /// <summary>The engine's own proportional note font (the default).</summary>
@@ -50,4 +51,15 @@ public enum NoteWidthMode
     /// dropdown. Only a note that wraps changes size; one that already fits stays as it is.
     /// </summary>
     Full
+}
+
+/// <summary>
+/// What every public member of the opt-in monospace note control says in 3.x: 4.0.0 removes the control
+/// (<c>plans/V4_PLAN.md</c> R8), and the roadmap allows no major that removes API without a release that deprecated
+/// it first.
+/// </summary>
+internal static class NoteFontDeprecation
+{
+    internal const string Message =
+        "The opt-in monospace note control is removed in 4.0.0: notes keep the diagram's own font. The note width control stays.";
 }

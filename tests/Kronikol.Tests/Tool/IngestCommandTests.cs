@@ -133,6 +133,55 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("--note-format <json|yaml>", usage.ToString());
     }
 
+    [Fact]
+    public void Headers_option_is_validated_and_reaches_the_report()
+    {
+        // plans/V4_PLAN.md R7: 4.0.0 starts reports with headers hidden, and ingest had no way to choose either.
+        var err = new StringWriter();
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--headers", "maybe"], new StringWriter(), err));
+        Assert.Contains("--headers needs shown or hidden", err.ToString());
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--headers"], new StringWriter(), new StringWriter()));
+
+        const string testId = "2c3d4e5f60718293a4b5c6d7e8f90a1b";
+        var captures = Path.Combine(_dir, "captures-headers");
+        Directory.CreateDirectory(captures);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/health", "web", "web",
+            requestContent: "", responseContent: "{\"ok\":true}", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › headers", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+
+        // The flag seeds the page's starting state: the script's flag and every headers button, which say the same.
+        string Run(string name, params string[] flag)
+        {
+            var output = Path.Combine(_dir, name);
+            Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", output, .. flag], new StringWriter(), err));
+            return File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        }
+        static string[] Buttons(string html) => System.Text.RegularExpressions.Regex
+            .Matches(html, "data-toggle=\"headers\" data-shown=\"(true|false)\"").Select(m => m.Groups[1].Value).ToArray();
+
+        var hidden = Run("out-headers-hidden", "--headers", "hidden");
+        Assert.Contains("window._headersHidden = true;", hidden);
+        Assert.NotEmpty(Buttons(hidden));
+        Assert.All(Buttons(hidden), shown => Assert.Equal("false", shown));
+
+        foreach (var shownHtml in new[] { Run("out-headers-shown", "--headers", "shown"), Run("out-headers-unset") })
+        {
+            Assert.Contains("window._headersHidden = false;", shownHtml);
+            Assert.All(Buttons(shownHtml), shown => Assert.Equal("true", shown));
+        }
+
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("--headers <shown|hidden>", usage.ToString());
+    }
+
     /// <summary>
     /// <c>--payloads compressed</c> writes a large body compressed in place (#85, <c>CompressTestRunReportPayloads</c>);
     /// without the flag ingest writes what the library writes by default. Ingest takes a curated set of flags, so

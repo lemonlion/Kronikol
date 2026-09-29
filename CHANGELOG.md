@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.36.0] - 2026-09-30
+
+**Minor - `kronikol ingest --headers`, and the opt-in monospace note control marked obsolete.** `plans/V4_PLAN.md`
+R7 (roadmap 1c.3). A new flag is new public surface, so the release is a minor. Marking members obsolete changes
+nothing a consumer's code does; it adds a compiler warning where the code uses them. Report output changes only when
+`--headers` is given, and then to what `TestRunReportToggleDefaults.HeadersShown` always wrote, so there is no
+Kronikol4J ledger entry. The history action's `VERSION` installs `Kronikol.Tool` 3.36.0. Template pins move to
+3.35.3.
+
+### Added
+
+- **`kronikol ingest --headers shown|hidden`.** Whether the browserjs report's diagrams start with request and
+  response headers in their notes, as `ReportConfigurationOptions.TestRunReportToggleDefaults.HeadersShown` sets it
+  for a report a test run writes; readers can still switch either way. Without the flag ingest keeps the library's
+  default, shown in 3.x. 4.0.0 starts reports with headers hidden, so a pipeline that wants them shown then can say
+  so now. A value other than `shown` or `hidden` is a usage error (exit 2).
+
+### Deprecated
+
+- **The opt-in monospace note control.** `ReportConfigurationOptions.ShowNoteFontControls`,
+  `ReportToggleDefaults.NoteFont`, `ResolvedToggleDefaults.NoteFont`, `ResolvedToggleDefaults.ShowNoteFontControls`
+  and the `NoteFontFamily` enum are `[Obsolete]`, and 4.0.0 removes them: notes keep the diagram's own font. They
+  work as before in 3.x. Code that uses them gets warning CS0618 when it builds, which fails a build that treats
+  warnings as errors until the code stops using them. The note width control stays.
+
 ## [3.35.3] - 2026-09-30
 
 **Patch - a report no longer carries internal-flow segments that no drawn arrow opens.** `plans/V4_PLAN.md` R6
@@ -19,7 +44,7 @@ installs `Kronikol.Tool` 3.35.3. Template pins move to 3.35.2.
   diagrams link and the mergeable data file those its scenarios' diagrams link, so a merge renders what the run's
   page did. On BreakfastProvider's lanes, run on local builds, 3 of about 1,300 segments and 3 of about 820 were unlinked on 3.35.2 (4,101 and 3,735 decoded bytes), and none are on 3.35.3; in the repo's own report fixture, whose process had logged other tests, 19 of the page's 21 segments were.
 
-## [3.35.2] - 2026-09-30
+## [3.35.2] - 2026-09-29
 
 **Patch - performance: an internal-flow flow that several arrows open is stored in the report once (#86).**
 `plans/V4_PLAN.md` R5 (roadmap 1c.6), sized by R4's measurement, which moved no version and is recorded in the plan.

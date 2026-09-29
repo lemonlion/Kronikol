@@ -1338,14 +1338,18 @@ public static class ReportGenerator
             diagrams.Any(d => d.CodeBehind.Contains("\nnote left") || d.CodeBehind.Contains("\nnote right")));
         // The monospace controls are opt-in (ShowNoteFontControls). A configured NoteFont still
         // seeds the script either way, so "every note monospace, no toggle" is reachable.
+#pragma warning disable CS0618 // the monospace note control is obsolete until 4.0.0 removes it (V4_PLAN.md R7)
         var hasNoteFontControls = hasDiagramNotes && toggles.ShowNoteFontControls;
+#pragma warning restore CS0618
         (string, string)[] noteFontOptions = [("default", "Aa"), ("mono", "Mono")];
         // "Wrap" is the start state (notes wrap at DiagramNoteWrapWidth); "Wide" lifts the ceiling to
         // the diagram's width. The option VALUES are what the handlers and NoteWidthMode key on.
         (string, string)[] noteWidthOptions = [("default", "Wrap"), ("full", "Wide")];
         const string noteFontTitle = "Note font. Aa: the diagram's own font. Mono: payloads in a monospace font.";
         const string noteWidthTitle = "Note width. Wrap: notes wrap at the report's note width. Wide: notes widen to fill the diagram.";
+#pragma warning disable CS0618 // the monospace note control is obsolete until 4.0.0 removes it (V4_PLAN.md R7)
         var fontSelected = toggles.NoteFont == NoteFontFamily.Monospace ? "mono" : "default";
+#pragma warning restore CS0618
         var widthSelected = toggles.NoteWidth == NoteWidthMode.Full ? "full" : "default";
         var reportNoteFontSelect = hasNoteFontControls
             ? BuildNoteAppearanceSelect("note-font-select", "Note font", noteFontTitle, "_setNoteFont", noteFontOptions, fontSelected)

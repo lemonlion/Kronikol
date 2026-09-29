@@ -521,6 +521,7 @@ public record ReportConfigurationOptions
     /// is honoured either way; with the controls hidden it makes every note monospace with no way to
     /// switch in the report, which is a legitimate configuration.
     /// </summary>
+    [Obsolete(Kronikol.Reports.NoteFontDeprecation.Message)]
     public bool ShowNoteFontControls { get; set; }
 
     /// <summary>

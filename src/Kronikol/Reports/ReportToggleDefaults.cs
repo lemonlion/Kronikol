@@ -48,6 +48,7 @@ public record ReportToggleDefaults
     /// applies either way, so <see cref="NoteFontFamily.Monospace"/> without the controls draws every
     /// note monospace with nothing in the report to switch it back.
     /// </summary>
+    [Obsolete(NoteFontDeprecation.Message)]
     public NoteFontFamily? NoteFont { get; set; }
 
     /// <summary>

@@ -18,6 +18,7 @@ public record ResolvedToggleDefaults
     public bool StepsShown { get; init; } = true;
     public bool DatabasesShown { get; init; } = true;
     public NotePayloadFormat NotePayloadFormat { get; init; } = NotePayloadFormat.Json;
+    [Obsolete(NoteFontDeprecation.Message)]
     public NoteFontFamily NoteFont { get; init; } = NoteFontFamily.Default;
     public NoteWidthMode NoteWidth { get; init; } = NoteWidthMode.Default;
 
@@ -27,6 +28,7 @@ public record ResolvedToggleDefaults
     /// flat <see cref="ReportConfigurationOptions.ShowNoteFontControls"/> option alone; neither
     /// <see cref="ReportToggleDefaults"/> group can change it.
     /// </summary>
+    [Obsolete(NoteFontDeprecation.Message)]
     public bool ShowNoteFontControls { get; init; }
 
     public bool FeaturesExpanded { get; init; }
@@ -56,6 +58,7 @@ public record ResolvedToggleDefaults
 /// treats the flat <see cref="ReportConfigurationOptions.NotePayloadFormat"/> option as its
 /// built-in, so the flat property keeps working and a group value wins when set.
 /// </summary>
+#pragma warning disable CS0618 // the monospace note control is obsolete until 4.0.0 removes it (V4_PLAN.md R7)
 public static class ReportToggleDefaultsResolver
 {
     public static ResolvedToggleDefaults Resolve(ReportConfigurationOptions options, bool specifications)
@@ -115,3 +118,4 @@ public static class ReportToggleDefaultsResolver
         return value;
     }
 }
+#pragma warning restore CS0618

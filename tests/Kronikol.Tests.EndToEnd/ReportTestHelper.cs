@@ -1,4 +1,5 @@
-﻿using Kronikol.ComponentDiagram;
+﻿#pragma warning disable CS0618 // pins the monospace note control, obsolete until 4.0.0 removes it
+using Kronikol.ComponentDiagram;
 using Kronikol.InternalFlow;
 using Kronikol.PlantUml;
 using Kronikol.Reports;

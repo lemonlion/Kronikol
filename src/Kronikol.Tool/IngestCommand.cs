@@ -28,6 +28,8 @@ internal static class IngestCommand
         var notePayloadFormat = Kronikol.Reports.NotePayloadFormat.Json;
         // The library's default until the flag says otherwise (#85: off in 3.x, on from 4.0.0).
         bool? compressPayloads = null;
+        // The library's default until the flag says otherwise (shown in 3.x, hidden from 4.0.0).
+        bool? headersShown = null;
         var componentDiagram = true;
         var diagnosticsSection = false;
         var redact = true;
@@ -140,6 +142,15 @@ internal static class IngestCommand
                         return 2;
                     }
                     compressPayloads = args[i] == "compressed";
+                    break;
+                case "--headers":
+                    if (++i >= args.Count ||
+                        (args[i] != "shown" && args[i] != "hidden"))
+                    {
+                        error.WriteLine("--headers needs shown or hidden");
+                        return 2;
+                    }
+                    headersShown = args[i] == "shown";
                     break;
                 case "--no-component-diagram":
                     componentDiagram = false;
@@ -296,6 +307,8 @@ internal static class IngestCommand
         options.NotePayloadFormat = notePayloadFormat;
         if (compressPayloads is { } compress)
             options.CompressTestRunReportPayloads = compress;
+        if (headersShown is { } shown)
+            options.TestRunReportToggleDefaults.HeadersShown = shown;
         options.GenerateComponentDiagram = componentDiagram;
         options.ShowReportDiagnosticsSection = diagnosticsSection;
         options.CapitaliseStepText = capitalise;
@@ -517,6 +530,8 @@ internal static class IngestCommand
         w.WriteLine("  --payloads <plain|compressed>  How TestRunReport.json holds a body or diagram of 512 characters or");
         w.WriteLine("                           more: as text, or compressed in place (formatVersion 2, read by kronikol");
         w.WriteLine("                           3.35.0 and later). Default: plain.");
+        w.WriteLine("  --headers <shown|hidden>  Whether the browserjs report's diagrams start with request and response");
+        w.WriteLine("                           headers in their notes (default: shown); readers can still switch either way.");
         w.WriteLine("  --no-component-diagram   Skip ComponentDiagram.html.");
         w.WriteLine("  --no-redact              Do not redact credential headers at ingest (default: redact).");
         w.WriteLine("  --redact-header <name>   Additional header to redact (repeatable).");
