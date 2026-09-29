@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 **No version change: a GitHub Actions template for cross-run history (roadmap 2.3), the PR report link template's
-live lane, and one fix to `kronikol history record`.** The templates ship in no package, so they move no version.
+README and live lane, CodeQL over the workflows, and one fix to `kronikol history record`.** The templates ship in no package, so they move no version.
 The next release is the first tag a workflow can reference the history action from, and from that tag its inputs
 and outputs are public surface under this file's semantic versioning. The fix to `Kronikol.Tool` is a patch that
 release carries; until then, the action keeps its own guard against it.
@@ -72,7 +72,8 @@ release carries; until then, the action keeps its own guard against it.
   failing fact gains the expired case, and an assertion that raised xUnit2029 in CI's build is written as it advises.
   The README's fact requires its upload to skip an empty `reports-path`.
 - **CodeQL analyses `actions` as well as C#**, so the workflows and the composite actions under
-  `templates/github-actions/` are scanned. Its 18 default queries found nothing in either on 2026-09-29.
+  `templates/github-actions/` are scanned. Its 18 default queries found nothing in the workflows or in
+  `kronikol-pr-report-link` on 2026-09-29, the morning before the history action landed.
 
 ## [3.33.0] - 2026-09-29
 
