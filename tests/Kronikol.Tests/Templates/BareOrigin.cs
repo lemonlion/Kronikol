@@ -110,13 +110,23 @@ internal sealed class BareOrigin
         return result.Stdout;
     }
 
+    // The fixture's own git home, made once per test process in a directory of its own. Test classes run in parallel,
+    // and one shared file that the first calls each created was refused on Windows ("being used by another process").
+    private static readonly Lazy<(string Home, string Config)> FixtureHome = new(() =>
+    {
+        var home = Directory.CreateTempSubdirectory("kronikol-origin-home-").FullName;
+        var empty = Path.Combine(home, "empty.gitconfig");
+        File.WriteAllText(empty, "");
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+        {
+            try { Directory.Delete(home, recursive: true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+        };
+        return (home, empty);
+    });
+
     public static ChildProcess.Result TryGit(string workingDirectory, params string[] arguments)
     {
-        var home = Path.Combine(Path.GetTempPath(), "kronikol-origin-home");
-        Directory.CreateDirectory(home);
-        var empty = Path.Combine(home, "empty.gitconfig");
-        if (!File.Exists(empty))
-            File.WriteAllText(empty, "");
+        var (home, empty) = FixtureHome.Value;
         var environment = ChildProcess.BaseEnvironment(home, Path.GetTempPath(), empty);
         environment["PATH"] = string.Join(Path.PathSeparator, ChildProcess.SystemPath());
         environment["GIT_AUTHOR_NAME"] = environment["GIT_COMMITTER_NAME"] = "fixture";

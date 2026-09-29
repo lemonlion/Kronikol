@@ -23,6 +23,23 @@ public class GitOriginTests : IDisposable
     internal static string Basic(string user, string password) =>
         "AUTHORIZATION: basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(user + ":" + password));
 
+    [Fact]
+    public void The_fixtures_own_git_starts_many_times_at_once()
+    {
+        // Test classes run in parallel, so on a fresh runner the fixtures' first git calls start together. A file they
+        // all shared and created at once was refused on Windows, "being used by another process" (CI 36543617415).
+        SkipWithoutGit();
+        var results = new ChildProcess.Result?[32];
+        var errors = new Exception?[results.Length];
+        Parallel.For(0, results.Length, new ParallelOptions { MaxDegreeOfParallelism = results.Length }, i =>
+        {
+            try { results[i] = BareOrigin.TryGit(_dir, "--version"); }
+            catch (Exception exception) { errors[i] = exception; }
+        });
+        Assert.Empty(errors.Where(e => e is not null).Select(e => e!.Message));
+        Assert.All(results, r => Assert.Equal(0, r!.ExitCode));
+    }
+
     private ChildProcess.Result Git(string? machineConfig, string workingDirectory, params string[] arguments)
     {
         var home = Path.Combine(_dir, "home");

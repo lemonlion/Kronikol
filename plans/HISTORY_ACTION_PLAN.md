@@ -1288,6 +1288,11 @@ anywhere, not only as a directive. So a commit message here never quotes it; the
   folder out with CRLF line endings (F16's checkout, here on a file that is not a script). The action
   reads the file as `tr -d ' \r\n'` does, so only the fact changed (`18d86af5`: red on a CRLF file, green on
   both). The facts passed on the macOS runner the first time. CI on `18d86af5` (36542137563) passed every job.
+  CI on `33aa2c3b` (36543617415) failed one fact on Windows for a reason of the facts' own: the fixture's git
+  kept one config file in the machine's temp directory and created it on first use, so on a fresh runner the
+  test classes running in parallel created it at once, and Windows refused one of them. Each test process now
+  makes its own, once. A fact that starts the fixture's git 32 times at once was red three times out of three
+  on the old code with a fresh temp directory, and is green.
 - **The dogfood.** Three runs of CI Summary Preview on `main`, two pushes and a dispatch (36540978851 on
   `7682990e`, 36542137552 and 36543298003 on `18d86af5`), each read the ledger from `kronikol-history`
   (909,313 bytes at the first), gated its four suites (the Mixed and All Failing suites' failures were known,
