@@ -1,0 +1,100 @@
+Plan section 5.5, run on 2026-09-29 on Windows 11 (Git for Windows 2.53.0, its bash 5.2.37, .NET SDK 10.0.300,
+Python 3.14): python plans/HISTORY_ACTION_PLAN.harness/mutations.py, against the action folder as committed in
+0d059991, with Record_folds_a_workspace_path_without_artifacts sharpened (see below). Each guard broken in turn, the
+facts named for it run with dotnet test --no-build, the file restored.
+
+Two corrections to the driver, not to the guards:
+- The first full run read every row NOT HELD: it looked for xUnit's "[FAIL]" lines, which the console logger prints
+  only at normal verbosity. It reads the logger's "Failed <fact> [<time>]" lines now.
+- The run below read "An input interpolated into a run: body" NOT HELD: a theory's case prints its arguments after
+  the name, which the parser missed, although both facts had failed (the output is kept below the table). The
+  parser takes a case's arguments now, and the row re-run alone reads held, 2 of 2.
+
+One fact sharpened before the run: with the .incoming- exclusion removed from record, nothing failed, because the
+staged rotation in the fact carried another run id, and the tool records a run once whatever else is beside it. The
+staged fragment now carries the run's own id, so folding it would add an attempt: the fact asserts the run line's
+attempts read "--" (one attempt), and the row fails it (plan F17 is the tool's side of the same case).
+
+held      Companions not copied: 2 of 2 named facts failed
+held      Rebase in place of recording again: 1 of 1 named facts failed
+held      The "branch did not move" check removed: 3 of 3 named facts failed
+held      ls-remote exit 2 no longer required for a new branch: 1 of 1 named facts failed
+held      The random part left out of the artifact name: 1 of 1 named facts failed
+held      include-hidden-files removed: 1 of 1 named facts failed
+held      The .incoming- exclusion removed from save: 1 of 1 named facts failed
+held      The .incoming- exclusion removed from record: 1 of 1 named facts failed
+held      The pull-request guard removed: 2 of 2 named facts failed
+held      The default-branch guard removed: 1 of 1 named facts failed
+NOT HELD  An input interpolated into a run: body: 1 of 5 named facts failed; still passing: Every_run_step_declares_bash_and_writes_no_expression_into_its_script
+Test run for <repo>\tests\Kronikol.Tests\bin\Debug\net10.0\Kronikol.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Failed Kronikol.Tests.Templates.HistoryActionStaticTests.Every_run_step_declares_bash_and_writes_no_expression_into_its_script(phase: "read") [4 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Sub-string found
+                                         ↓ (pos 47)
+String: ···"ON_PATH/../scripts/read.sh" "${{ inputs.branch }}""
+Found:  "${{"
+  Stack Trace:
+     at Kronikol.Tests.Templates.HistoryActionStaticTests.Every_run_step_declares_bash_and_writes_no_expression_into_its_script(String phase) in <repo>\tests\Kronikol.Tests\Templates\HistoryActionStaticTests.cs:line 37
+   at InvokeStub_HistoryActionStaticTests.Every_run_step_declares_bash_and_writes_no_expression_into_its_script(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Templates.HistoryActionReadTests.Read_copies_the_ledger_and_both_companions_side_by_side_and_names_the_ledger [1 s]
+  Error Message:
+   System.NotSupportedException : a run step of read writes an expression into its script; inputs reach a script through env:
+  Stack Trace:
+     at Kronikol.Tests.Templates.CompositeActionRunner.RunScript(RunnerJob job, ActionDefinition action, ActionStep step, Dictionary`2 stepEnv, StringBuilder log, List`1 annotations, List`1 masks) in <repo>\tests\Kronikol.Tests\Templates\CompositeActionRunner.cs:line 125
+   at Kronikol.Tests.Templates.CompositeActionRunner.Run(RunnerJob job, String actionDirectory, IReadOnlyDictionary`2 with) in <repo>\tests\Kronikol.Tests\Templates\CompositeActionRunner.cs:line 93
+   at Kronikol.Tests.Templates.HistoryWorld.Read(RunnerJob job, Dictionary`2 with) in <repo>\tests\Kronikol.Tests\Templates\HistoryWorld.cs:line 72
+   at Kronikol.Tests.Templates.HistoryActionReadTests.Read_copies_the_ledger_and_both_companions_side_by_side_and_names_the_ledger() in <repo>\tests\Kronikol.Tests\Templates\HistoryActionReadTests.cs:line 43
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     2, Passed:     3, Skipped:     0, Total:     5, Duration: 1 s - Kronikol.Tests.dll (net10.0)
+
+held      credential.helper no longer reset: 2 of 2 named facts failed
+held      --filter=blob:none removed from read: 1 of 1 named facts failed
+held      The token passed with git -c: 2 of 2 named facts failed
+held      core.hooksPath and --no-verify removed: 1 of 1 named facts failed
+held      The folder's .gitattributes removed: 2 of 2 named facts failed
+held      The header key not emptied first: 1 of 1 named facts failed
+held      An apostrophe in a ${VAR:?message}: 2 of 2 named facts failed
+held      The tool installed --global: 1 of 1 named facts failed
+held      The SDK check removed: 1 of 1 named facts failed
+held      save's stage step without !cancelled(): 1 of 1 named facts failed
+held      The gate stops at the first trip: 1 of 1 named facts failed
+held      An unreadable report read as a pass: 1 of 1 named facts failed
+held      Without a ledger, a red run passes: 1 of 1 named facts failed
+held      [skip ci] left out of the commit message: 1 of 1 named facts failed
+
+| Guard broken | Facts named for it | Failed |
+|---|---|---|
+| Companions not copied | 2 | 2 of 2 |
+| Rebase in place of recording again | 1 | 1 of 1 |
+| The "branch did not move" check removed | 3 | 3 of 3 |
+| ls-remote exit 2 no longer required for a new branch | 1 | 1 of 1 |
+| The random part left out of the artifact name | 1 | 1 of 1 |
+| include-hidden-files removed | 1 | 1 of 1 |
+| The .incoming- exclusion removed from save | 1 | 1 of 1 |
+| The .incoming- exclusion removed from record | 1 | 1 of 1 |
+| The pull-request guard removed | 2 | 2 of 2 |
+| The default-branch guard removed | 1 | 1 of 1 |
+| An input interpolated into a run: body | 2 | 1 of 2 NOT HELD |
+| credential.helper no longer reset | 2 | 2 of 2 |
+| --filter=blob:none removed from read | 1 | 1 of 1 |
+| The token passed with git -c | 2 | 2 of 2 |
+| core.hooksPath and --no-verify removed | 1 | 1 of 1 |
+| The folder's .gitattributes removed | 2 | 2 of 2 |
+| The header key not emptied first | 1 | 1 of 1 |
+| An apostrophe in a ${VAR:?message} | 2 | 2 of 2 |
+| The tool installed --global | 1 | 1 of 1 |
+| The SDK check removed | 1 | 1 of 1 |
+| save's stage step without !cancelled() | 1 | 1 of 1 |
+| The gate stops at the first trip | 1 | 1 of 1 |
+| An unreadable report read as a pass | 1 | 1 of 1 |
+| Without a ledger, a red run passes | 1 | 1 of 1 |
+| [skip ci] left out of the commit message | 1 | 1 of 1 |
+
+Re-run of the one row after the parser fix:
+
+held      An input interpolated into a run: body: 2 of 5 named facts failed
+| An input interpolated into a run: body | 2 | 2 of 2 |

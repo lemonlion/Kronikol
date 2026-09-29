@@ -44,6 +44,7 @@ line).
 | `s8_scaling.sh` | Plan F6, F7. The consumer's ledger grown to 25, 50, 100 and 180 MB (`grow_ledger.py`): `record` of 1, 6 and 18 suites, `gate` and `show`, each timed with its peak memory (`measure.py`) | `results-s8-scaling.txt` |
 | `s9_read_window.sh` | Plan F7, Q3 (d). `prune --window 50` of a 180 MB copy (its cost and size); one suite's failing report gated against the ledger and the window, the outputs compared; then ten runs recorded with and without a window file committed beside the ledger, and what each costs the pack | `results-s9-read-window.txt` |
 | `s10_machine_config.sh` | Plan F16, §4.9. A machine's own git configuration: the folder copied into a repository and checked out with `core.autocrlf=true`, with and without the folder's `.gitattributes` (M1); a machine-wide hook that refuses every commit (M2); a machine that signs every commit with no key it can use (M3) | `results-s10-machine-config.txt` |
+| `mutations.py` | Plan §5.5, after S3 (2026-09-29): each guard of the action broken in turn (25 of them: the record loop, the refusal check, `ls-remote` exit 2, the artifact name, the staging exclusions, both guards, the git settings, the tool install, the gate's rules), the facts in `tests/Kronikol.Tests/Templates` named for it run with `dotnet test --no-build`, the file restored. Run on Windows, where the facts were written | `results-mutations.txt` |
 | `make_report.py` | Writes the `TestRunReport.json` a fragment stands beside, with only what the gate reads (the shape `HistoryGateTests` writes by hand) | (used by `s7` to `s9`) |
 | `grow_ledger.py` | Grows a ledger to a size the way time grows it: copies of its own run lines, each with a new id and a later time; no roster or shapes line repeated | (used by `s8`, `s9`) |
 | `measure.py` | Runs one command and prints its wall time and its peak resident memory: the largest of any process it waited for, here the tool's own (`ru_maxrss`) | (used by `s8`, `s9`) |
@@ -81,6 +82,8 @@ N=6 TRIALS=3 ./s6_http.sh /tmp/kh/s6 > results-s6-http.txt 2>&1     # needs bc, 
 ./s8_scaling.sh /tmp/kh/s8 > results-s8-scaling.txt 2>&1             # about 4 GB of disk, a few minutes
 ./s9_read_window.sh /tmp/kh/s9 > results-s9-read-window.txt 2>&1
 ./s10_machine_config.sh /tmp/kh/s10 > results-s10-machine-config.txt 2>&1
+cd ../..; dotnet build tests/Kronikol.Tests -f net10.0
+python plans/HISTORY_ACTION_PLAN.harness/mutations.py > plans/HISTORY_ACTION_PLAN.harness/results-mutations.txt
 ```
 
 `bp-history.jsonl` is ignored here (`.gitignore`): it is the consumer's data, and 7 MB.

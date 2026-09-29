@@ -357,13 +357,16 @@ public class HistoryActionRecordTests
         HistoryWorld.SkipWithoutBashOrGit();
         using var world = new HistoryWorld();
         var job = JobWithFragments(world, 1, "A");
-        HistoryFixtures.Fragment(Path.Combine(job.Workspace, "tests", "A", "bin", "Reports", "runs", ".incoming-gh_0_1"), "A", "gh:0:1", "F");
+        // A rotation a killed run left half-done, holding this run's own id: read as a kept attempt, it would fold in.
+        HistoryFixtures.Fragment(Path.Combine(job.Workspace, "tests", "A", "bin", "Reports", "runs", ".incoming-gh_1_1"), "A", "gh:1:1", "FF",
+            at: new DateTimeOffset(2026, 9, 29, 9, 0, 0, TimeSpan.Zero));
 
         var record = HistoryWorld.Record(job, FromWorkspace);
 
         Assert.True(record.Succeeded, record.ToString());
         Assert.Empty(job.Artifacts.Names);
-        Assert.Equal(["gh:1:1 A"], world.Ledger().RunKeys);
+        var line = Assert.Single(world.Ledger().Runs);
+        Assert.Equal(("PP", "--"), (line.GetProperty("results").GetString(), line.GetProperty("attempts").GetString()));
     }
 
     [Fact]
