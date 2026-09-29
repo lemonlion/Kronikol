@@ -44,7 +44,7 @@ jobs:
 
   test:
     name: ${{ matrix.name }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -121,6 +121,16 @@ jobs:
             projects: tests/Kronikol.Tests.EndToEnd
             filter-exclude: IflowPopupTests|ComponentFlowPopupTests|WholeTestFlowTests|ArrowLinkOpensPopupTests|UrlHashFilterHighlightTests|FilterPerformanceTests|AdvancedSearchTests|DeepSearchTests|DependencyColoringTests|ReportToolbarTests|MobileResponsiveTests|LoadingMessageTests|JumpToFailureTests|ViewportSweepTests|ToolbarStylingTests|ScenarioContentWidthTests|ReportSectionWidthTests|ScenarioInteractionTests|ParameterizedGroupTests|FailureClusterLinkTests|DiagramNoteBasicTests|DiagramNoteLongNoteTests|DiagramNoteSplitTests|DiagramNotePartitionTests|NoteButtonIndexTests|DiagramZoomTests|ContextMenuExtendedTests|HeadersDetailsInterferenceTests|NoteButtonsAfterHeaderHideTests|ZoomNoteInteractionTests|BackgroundRenderingTests|SeparatedBackgroundRenderingTests|LongStatementRenderingTests|NoteYamlToggleTests|NoteYamlInternalsTests|WikiGifTests|WikiScreenshotTests|ShowcaseReportTests
             needs-playwright: true
+          # The history action's facts on the two other hosted images (plans/HISTORY_ACTION_PLAN.md section 5.6):
+          # their git, bash and line endings are not Ubuntu's. Core Tests runs the same facts on Ubuntu.
+          - name: Template Actions (Windows)
+            os: windows-latest
+            projects: tests/Kronikol.Tests
+            filter: Kronikol.Tests.Templates
+          - name: Template Actions (macOS)
+            os: macos-latest
+            projects: tests/Kronikol.Tests
+            filter: Kronikol.Tests.Templates
           - name: Assertion Tracking Tests
             projects: tests/Kronikol.Tests.AssertionTracking
           - name: Example.Api xUnit Tests
@@ -216,6 +226,7 @@ jobs:
 
       - name: Build & Test
         if: ${{ !matrix.mtp-run && !matrix.discover-remaining && !matrix.templates-build }}
+        shell: bash
         run: |
           FILTER_ARG=""
           if [ -n "${{ matrix.filter }}" ]; then
