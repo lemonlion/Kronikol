@@ -18,7 +18,9 @@ HEAD = '<script id="iflow-segments" type="application/json">'
 
 def segment_map(path):
     html = open(path, encoding='utf-8').read()
-    at = html.find(HEAD)
+    # The popup script names the element in a comment, so the element is the one whose content is JSON: a page with
+    # none, such as an external-SUT lane's, has no internal flow.
+    at = html.find(HEAD + '{')
     if at < 0:
         raise SystemExit(f'{path}: no segment element')
     start = at + len(HEAD)

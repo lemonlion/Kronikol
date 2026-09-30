@@ -18,6 +18,7 @@ is safe to read in an agent session.
 | `mutate_r8.py` | R8: puts one 3.x default back at a time (six, one through a Playwright fact) and runs the facts that should catch it |
 | `diagram_once.py` | 4.0.1: resolves every segment of a page as the popup does (fails on a name or place that leads nowhere) and compares its segment element with 4.0.0's layout of the same run |
 | `mutate_401.py` | 4.0.1: the same as `mutate_r3.py` for eight guards of the table, three through a Playwright fact |
+| `zip_cost.py` | After 4.0.0: a written report's bytes and its deflate at level 6 (a zipped CI artifact, a gzip-serving host) with no payload wrapped and under each threshold up to 32,768, modelled by inflating its wrappers; `threshold.py` measured the file alone |
 | `mutate_r3.py` | R3: the same for thirteen guards of #87's rule, its note and title, the message under `HideLink` and the encoded diagnostic |
 
 ```bash
@@ -30,3 +31,7 @@ dotnet run encoders.cs
 Measured 2026-09-29 on BreakfastProvider reports copied from earlier sessions (the xUnit lane at 3.32.4, the Docker
 lane at 3.27.1, and for `encoder_saving.py` five more lanes at 3.0.83 and 3.30.0); the results are in the plan's §1. Before and after numbers for R1 and R2 come
 from rerunning these on the same lane.
+
+`zip_cost.py` was run on 2026-09-30 on three BreakfastProvider reports written by 4.0.x: the in-memory xUnit lane on a
+local 4.0.1 build, and the Docker and external-SUT xUnit lanes as published by 4.0.0 (downloaded from the site); the
+results are in the plan's §7, after the 4.0.1 follow-up.
