@@ -529,7 +529,7 @@ internal static class IngestCommand
         w.WriteLine("                           the viewer's CPU count); 0 renders on the main thread as before 3.0.45.");
         w.WriteLine("  --note-format <json|yaml>  Initial display format for JSON note payloads in the browserjs report");
         w.WriteLine("                           (default: yaml); readers can still switch either way in the report.");
-        w.WriteLine("  --payloads <plain|compressed>  How TestRunReport.json holds a body or diagram of 512 characters or");
+        w.WriteLine("  --payloads <plain|compressed>  How TestRunReport.json holds a body or diagram of 8,192 characters or");
         w.WriteLine("                           more: as text, or compressed in place (formatVersion 2, read by kronikol");
         w.WriteLine("                           3.35.0 and later). Default: compressed.");
         w.WriteLine("  --headers <shown|hidden>  Whether the browserjs report's diagrams start with request and response");

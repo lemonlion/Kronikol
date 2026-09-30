@@ -241,7 +241,7 @@ public record ReportConfigurationOptions
 
     /// <summary>
     /// When <c>true</c>, a large payload in <c>TestRunReport.json</c>, a captured body or a diagram's PlantUML
-    /// source of 512 characters or more, is written compressed in its place:
+    /// source of 8,192 characters or more (512 through 4.0.1), is written compressed in its place:
     /// <c>{"$h": "b:…", "$n": length, "$z": "…"}</c>, where <c>$z</c> is the base64 of the gzip of the text's
     /// UTF-8, <c>$h</c> its <c>b:</c> address and <c>$n</c> its length. A payload that would not get smaller stays
     /// text, and a file holding a compressed payload declares <c>formatVersion</c> 2, which a

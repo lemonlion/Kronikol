@@ -12,10 +12,11 @@ namespace Kronikol.Tests.Reports;
 
 /// <summary>
 /// <c>ReportConfigurationOptions.CompressTestRunReportPayloads</c> (#85, <c>plans/PAYLOAD_COMPRESSION_PLAN.md</c>): a
-/// captured body or a diagram's PlantUML source of 512 characters or more is written as
+/// captured body or a diagram's PlantUML source of <see cref="ReportPayloads.Threshold"/> characters or more is written as
 /// <c>{"$h": address, "$n": length, "$z": base64 of gzip}</c> in place of its string, unless that would not make it
 /// smaller, and a file holding one declares <c>formatVersion</c> 2. These facts hold the writer to that rule; the
-/// readers' facts are in <c>CompressedReportReadingTests</c>.
+/// readers' facts are in <c>CompressedReportQueryTests</c> (<c>kronikol query</c>, and a file written before 4.0.2),
+/// <c>CompressedMergeTests</c> and <c>FallbackScriptTests</c> (<c>query.py</c>).
 /// </summary>
 [Collection("DiagramsFetcher")]
 public class PayloadCompressionTests : IDisposable
@@ -34,9 +35,11 @@ public class PayloadCompressionTests : IDisposable
     public void The_option_is_on_by_default() => Assert.True(new ReportConfigurationOptions().CompressTestRunReportPayloads);
 
     [Fact]
-    public void A_payload_of_512_characters_is_written_compressed_and_one_of_511_is_not()
+    // 512 through 4.0.1. Zipped, as a CI artifact is, or served gzipped, a report of payloads under a few kilobytes came
+    // out larger than with none compressed (plans/V4_PLAN.md section 7, after 4.0.1), so 4.0.2 compresses from 8,192.
+    public void A_payload_of_8192_characters_is_written_compressed_and_one_of_8191_is_not()
     {
-        using var report = Write(compress: true, Json(511), Json(512));
+        using var report = Write(compress: true, Json(8191), Json(8192));
 
         var (short_, long_) = Contents(report.RootElement);
         Assert.Equal(JsonValueKind.String, short_.ValueKind);
@@ -47,7 +50,7 @@ public class PayloadCompressionTests : IDisposable
     [Fact]
     public void Nothing_is_compressed_with_the_option_off()
     {
-        using var report = Write(compress: false, Json(4000), Json(512));
+        using var report = Write(compress: false, Json(ReportPayloads.Threshold * 2), Json(ReportPayloads.Threshold));
 
         var (request, response) = Contents(report.RootElement);
         Assert.Equal(JsonValueKind.String, request.ValueKind);
@@ -58,7 +61,8 @@ public class PayloadCompressionTests : IDisposable
     [Fact]
     public void A_payload_compression_would_not_shrink_stays_a_string_and_the_file_stays_version_1()
     {
-        var bytes = new byte[900];
+        // Over the threshold once encoded, so it is the rule's second half that keeps it a string.
+        var bytes = new byte[ReportPayloads.Threshold];
         new Random(7).NextBytes(bytes);
         var noise = Convert.ToBase64String(bytes);
 
@@ -73,7 +77,7 @@ public class PayloadCompressionTests : IDisposable
     [Fact]
     public void The_wrapper_carries_the_address_and_the_length_of_the_text_and_inflates_to_it()
     {
-        var text = Json(3000) + " Zoë ✓";
+        var text = Json(ReportPayloads.Threshold + 3000) + " Zoë ✓";
 
         using var report = Write(compress: true, text, Json(20));
 
@@ -87,7 +91,7 @@ public class PayloadCompressionTests : IDisposable
     [Fact]
     public void A_diagram_is_compressed_by_the_same_rule()
     {
-        var big = "@startuml\n" + string.Concat(Enumerable.Range(0, 80).Select(i => $"A -> B : call {i}\n")) + "@enduml";
+        var big = "@startuml\n" + string.Concat(Enumerable.Range(0, ReportPayloads.Threshold / 10).Select(i => $"A -> B : call {i}\n")) + "@enduml";
 
         using var report = Write(compress: true, Json(20), Json(20), diagrams: [big, "@startuml\nA -> B\n@enduml"]);
 
@@ -105,7 +109,7 @@ public class PayloadCompressionTests : IDisposable
             Diagrams(["@startuml\nA -> B\n@enduml"]).ToLookup(d => d.TestRuntimeId, d => d.CodeBehind),
             [new ComponentRelationship("Test", "Orders", "HTTP", new HashSet<string> { "POST /orders" }, 1, 1, "http")],
             internalFlowSegmentData: null, wholeTestFlow: null, WholeTestFlowVisualization.None, ciMetadata: null,
-            diagnostics: null, trackedLogs: Logs(Json(2000), Json(20)), suite: "payloads", environment: RunEnvironment.Unrecorded,
+            diagnostics: null, trackedLogs: Logs(Json(ReportPayloads.Threshold + 2000), Json(20)), suite: "payloads", environment: RunEnvironment.Unrecorded,
             compressPayloads: true);
 
         using var report = JsonDocument.Parse(json);
@@ -121,7 +125,7 @@ public class PayloadCompressionTests : IDisposable
     {
         // The logger is process-wide, so this test's calls carry an id of their own.
         var testId = "payload-run-" + Guid.NewGuid().ToString("N");
-        foreach (var log in Logs(Json(2000), Json(20), testId))
+        foreach (var log in Logs(Json(ReportPayloads.Threshold + 2000), Json(20), testId))
             RequestResponseLogger.Log(log);
 
         ReportGenerator.CreateStandardReportsWithDiagrams(Features(testId), Start, End, new ReportConfigurationOptions

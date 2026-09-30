@@ -1,5 +1,9 @@
+using System.IO.Compression;
 using System.Net;
+using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tests.Reports;
@@ -174,7 +178,7 @@ public class CompressedReportQueryTests : IDisposable
             id = 4173,
             customer = "Zoë",
             note = "a \"quoted\" <b>note</b> & more",
-            items = Enumerable.Range(1, 12).Select(i => new { sku = $"W-{i}", name = "Widget", qty = i % 3 + 1 }).ToArray()
+            items = Enumerable.Range(1, ReportPayloads.Threshold / 30).Select(i => new { sku = $"W-{i}", name = "Widget", qty = i % 3 + 1 }).ToArray()
         }
     });
 
@@ -183,19 +187,99 @@ public class CompressedReportQueryTests : IDisposable
         id = 4173,
         total = 3902,
         status = "Placed",
-        lines = Enumerable.Range(1, 12).Select(i => new { sku = $"W-{i}", price = 100 + i, currency = "GBP" }).ToArray()
+        lines = Enumerable.Range(1, ReportPayloads.Threshold / 30).Select(i => new { sku = $"W-{i}", price = 100 + i, currency = "GBP" }).ToArray()
     });
 
-    private static readonly string Statement =
+    // Exactly the threshold long, so the compressed copy holds it compressed and `failures` still reads it: the verb
+    // reads a statement of up to 8,192 characters, and a file written before 4.0.2 compressed them from 512.
+    private static readonly string Statement = PadTo(
         "INSERT INTO orders (id, customer, status, total, currency, created_at, updated_at, channel, region, warehouse) VALUES "
         + "(@id, @customer, @status, @total, @currency, @created_at, @updated_at, @channel, @region, @warehouse); "
-        + string.Concat(Enumerable.Range(1, 12).Select(i => $"INSERT INTO order_lines (order_id, sku, qty) VALUES (@id, @sku{i}, @qty{i}); "));
+        + string.Concat(Enumerable.Range(1, 12).Select(i => $"INSERT INTO order_lines (order_id, sku, qty) VALUES (@id, @sku{i}, @qty{i}); ")),
+        ReportPayloads.Threshold);
+
+    private static string PadTo(string sql, int length) => sql + "-- " + new string('x', length - sql.Length - 3);
 
     private static readonly string Diagram =
         "@startuml\nactor Test\nparticipant Orders\nTest -> Orders : POST /api/orders\nnote left\n" + RequestBody
         + "\nend note\nOrders --> Test : 201 Created\nnote right\nPlaced order 4173 for Zoë\n" + ResponseBody + "\nend note\n@enduml";
 
-    private string Write(string name, bool compress)
+    /// <summary>
+    /// 4.0.0 and 4.0.1 compressed a payload from 512 characters, 4.0.2 from 8,192, and a reader takes a wrapper at any
+    /// length, so the files those releases wrote answer as they did. The writer no longer makes such a file, so it is
+    /// made here from a plain copy whose payloads are shorter than 8,192, by wrapping each of 512 characters or more
+    /// the way their writer did. <c>failures</c> is among the verbs compared: its SQL hint reads a statement of up to
+    /// 8,192 characters, the one reader with a length bound, and the statement here is compressed.
+    /// </summary>
+    [Fact]
+    public void A_file_that_compressed_payloads_from_512_characters_answers_as_its_plain_copy()
+    {
+        var plain = Write("short-plain", compress: false, requestBody: ShortRequestBody, statement: ShortStatement);
+        var older = WrapFrom(plain, 512, Path.Combine(_root, "short-older"));
+
+        using (var document = JsonDocument.Parse(File.ReadAllText(older)))
+        {
+            var scenarios = document.RootElement.GetProperty("features")[0].GetProperty("scenarios");
+            Assert.Equal(JsonValueKind.Object, scenarios[0].GetProperty("httpInteractions")[0].GetProperty("content").ValueKind);
+            Assert.Equal(JsonValueKind.Object, scenarios[1].GetProperty("httpInteractions")[0].GetProperty("content").ValueKind);
+        }
+        Assert.InRange(ShortRequestBody.Length, 512, ReportPayloads.Threshold - 1);
+        Assert.InRange(ShortStatement.Length, 512, ReportPayloads.Threshold - 1);
+        Assert.Contains("captured with placeholders and no values", Query(["failures", older]), StringComparison.Ordinal);
+        foreach (var command in new[] { new[] { "http", "s0/i0", "--body" }, new[] { "failures" }, new[] { "grep", "Widget", "--in", "bodies" } })
+            Assert.Equal(Run(command, plain).Output, Run(command, older).Output);
+    }
+
+    private static readonly string ShortRequestBody = JsonSerializer.Serialize(new
+    {
+        order = new { id = 4173, customer = "Zoë", items = Enumerable.Range(1, 12).Select(i => new { sku = $"W-{i}", name = "Widget", qty = i % 3 + 1 }).ToArray() }
+    });
+
+    private static readonly string ShortStatement =
+        "INSERT INTO orders (id, customer, status, total) VALUES (@id, @customer, @status, @total); "
+        + string.Concat(Enumerable.Range(1, 12).Select(i => $"INSERT INTO order_lines (order_id, sku, qty) VALUES (@id, @sku{i}, @qty{i}); "));
+
+    /// <summary>A copy of a plain report with every body and diagram of <paramref name="from"/> characters or more wrapped.</summary>
+    private static string WrapFrom(string plainReport, int from, string directory)
+    {
+        var report = JsonNode.Parse(File.ReadAllText(plainReport))!;
+        foreach (var scenario in report["features"]!.AsArray().SelectMany(f => f!["scenarios"]!.AsArray()))
+        {
+            foreach (var interaction in scenario!["httpInteractions"]?.AsArray() ?? [])
+            {
+                if (interaction!["content"] is JsonValue content && content.TryGetValue<string>(out var text) && text.Length >= from)
+                    interaction["content"] = Wrapper(text);
+            }
+
+            var diagrams = scenario["diagrams"]?.AsArray() ?? [];
+            for (var i = 0; i < diagrams.Count; i++)
+            {
+                if (diagrams[i] is JsonValue diagram && diagram.TryGetValue<string>(out var source) && source.Length >= from)
+                    diagrams[i] = Wrapper(source);
+            }
+        }
+
+        report["formatVersion"] = 2;
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "TestRunReport.json");
+        File.WriteAllText(path, report.ToJsonString(new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
+        return path;
+    }
+
+    private static JsonObject Wrapper(string text)
+    {
+        using var buffer = new MemoryStream();
+        using (var gzip = new GZipStream(buffer, CompressionLevel.Optimal))
+            gzip.Write(Encoding.UTF8.GetBytes(text));
+        return new JsonObject
+        {
+            ["$h"] = PayloadCompressionTests.Address(text),
+            ["$n"] = text.Length,
+            ["$z"] = Convert.ToBase64String(buffer.ToArray())
+        };
+    }
+
+    private string Write(string name, bool compress, string? requestBody = null, string? statement = null)
     {
         var directory = Path.Combine(_root, name);
         Directory.CreateDirectory(directory);
@@ -220,13 +304,13 @@ public class CompressedReportQueryTests : IDisposable
 
         RequestResponseLog[] logs =
         [
-            new("Place an order", "place", HttpMethod.Post, RequestBody, new Uri("http://orders/api/orders"), [("accept", "application/json")],
+            new("Place an order", "place", HttpMethod.Post, requestBody ?? RequestBody, new Uri("http://orders/api/orders"), [("accept", "application/json")],
                 "Orders", "Test", RequestResponseType.Request, new Guid("8a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0c01"), new Guid("8a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0c02"), false)
             { Timestamp = at },
             new("Place an order", "place", HttpMethod.Post, ResponseBody, new Uri("http://orders/api/orders"), [],
                 "Orders", "Test", RequestResponseType.Response, new Guid("8a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0c01"), new Guid("8a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0c02"), false, HttpStatusCode.Created)
             { Timestamp = at.AddMilliseconds(40) },
-            new("Save the order", "save", "Execute", Statement, new Uri("sql://orders-db/orders"), [],
+            new("Save the order", "save", "Execute", statement ?? Statement, new Uri("sql://orders-db/orders"), [],
                 "Orders DB", "Orders", RequestResponseType.Request, new Guid("8a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0c03"), new Guid("8a1b3a6e-0d1c-4f55-9a53-5c8c3c1f0c04"), false,
                 DependencyCategory: DependencyCategories.SqlServer)
             { Timestamp = at.AddSeconds(1) },

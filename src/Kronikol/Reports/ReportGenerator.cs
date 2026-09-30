@@ -6194,7 +6194,7 @@ public static class ReportGenerator
                                         ["diagrams"] = new Dictionary<string, object?>
                                         {
                                             ["type"] = "array",
-                                            ["description"] = "The PlantUML source of each sequence diagram rendered for the scenario: hundreds of kilobytes each, never needed to answer a question (kronikol query flow sN tells the same story in a couple of KB). With CompressTestRunReportPayloads, a source of 512 characters or more is a compressedPayload object instead of its text",
+                                            ["description"] = "The PlantUML source of each sequence diagram rendered for the scenario: hundreds of kilobytes each, never needed to answer a question (kronikol query flow sN tells the same story in a couple of KB). With CompressTestRunReportPayloads, a source of 8,192 characters or more (512 through 4.0.1) is a compressedPayload object instead of its text",
                                             ["items"] = new Dictionary<string, object?>
                                             {
                                                 ["oneOf"] = new object[]
@@ -6418,7 +6418,7 @@ public static class ReportGenerator
                         ["callerName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The caller: the system under test, or the test itself" },
                         ["content"] = new Dictionary<string, object?>
                         {
-                            ["description"] = "The body as captured, after capture-time redaction and any MaxContentLength cap (a capped body ends with an ...truncated (N chars total) marker); null when there was none. With CompressTestRunReportPayloads, a body of 512 characters or more is a compressedPayload object instead of its text",
+                            ["description"] = "The body as captured, after capture-time redaction and any MaxContentLength cap (a capped body ends with an ...truncated (N chars total) marker); null when there was none. With CompressTestRunReportPayloads, a body of 8,192 characters or more (512 through 4.0.1) is a compressedPayload object instead of its text",
                             ["oneOf"] = new object[]
                             {
                                 new Dictionary<string, object?> { ["type"] = new[] { "string", "null" } },

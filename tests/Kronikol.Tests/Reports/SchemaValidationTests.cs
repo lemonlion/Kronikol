@@ -42,8 +42,9 @@ public class SchemaValidationTests
     }
 
     /// <summary>
-    /// A report written with <c>CompressTestRunReportPayloads</c> holds both forms of a payload, a string below 512
-    /// characters and a <c>compressedPayload</c> object from there on (#85), and validates as it stands.
+    /// A report written with <c>CompressTestRunReportPayloads</c> holds both forms of a payload, a string below
+    /// <see cref="ReportPayloads.Threshold"/> characters and a <c>compressedPayload</c> object from there on (#85), and
+    /// validates as it stands.
     /// </summary>
     [Fact]
     public void A_report_with_compressed_payloads_validates_against_its_own_schema()
@@ -72,11 +73,11 @@ public class SchemaValidationTests
     private static (string Report, string Schema) WriteCompressed()
     {
         var suffix = Guid.NewGuid().ToString("N")[..8];
-        var big = "@startuml\n" + string.Concat(Enumerable.Range(0, 60).Select(i => $"A -> B : call {i}\n")) + "@enduml";
+        var big = "@startuml\n" + string.Concat(Enumerable.Range(0, ReportPayloads.Threshold / 10).Select(i => $"A -> B : call {i}\n")) + "@enduml";
         var reportPath = ReportGenerator.GenerateTestRunReportData(
             PayloadCompressionTests.Features(), PayloadCompressionTests.Start, PayloadCompressionTests.End,
             $"SchemaCompressed_{suffix}.json", DataFormat.Json, PayloadCompressionTests.Diagrams([big, "@startuml\nA -> B\n@enduml"]),
-            PayloadCompressionTests.Logs(PayloadCompressionTests.Json(2000), PayloadCompressionTests.Json(40)),
+            PayloadCompressionTests.Logs(PayloadCompressionTests.Json(ReportPayloads.Threshold + 2000), PayloadCompressionTests.Json(40)),
             diagnostics: null, fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null,
             compressPayloads: true);
         return (reportPath, ReportGenerator.GenerateTestRunReportSchema($"SchemaCompressed_{suffix}.schema.json", DataFormat.Json));

@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.0.2] - 2026-09-30
+
+**Patch - `TestRunReport.json` compresses a payload from 8,192 characters, not 512.** Performance work, nothing new to
+call: the threshold is internal, and `CompressTestRunReportPayloads` keeps its name and its default. The owner took it
+on 2026-09-30, once it had been measured on the published site (`plans/V4_PLAN.md` section 7). Which payloads a file
+holds compressed changes, which is report output, so there is a Kronikol4J ledger entry. The history action's
+`VERSION` installs `Kronikol.Tool` 4.0.2. Template pins move to 4.0.1.
+
+### Changed
+
+- **A body or a diagram's PlantUML source is written compressed from 8,192 characters.** 512 was chosen by the bytes
+  the file saves. But a CI artifact is a zip and a host such as GitHub Pages serves the file gzipped, and there
+  payloads that had compressed against each other stopped doing so once each was gzipped on its own and written as
+  base64. On BreakfastProvider's published site 4.0.0 halved its 18 `TestRunReport.json` files, but 12 of them grew by
+  20% to 70% as served, and the report artifacts of its in-memory and external-SUT lanes grew by 1% to 12%. Modelled on
+  three of its xUnit lanes against the same report with nothing compressed, 512 made the zip 44% and 78% larger on the
+  in-memory and external-SUT lanes and 24% smaller on the Docker lane; 8,192 makes it 9% larger, 9% larger and 33%
+  smaller, while the file keeps 17%, 18% and 61% of its saving where 512 kept 22%, 26% and 62%. On BreakfastProvider's in-memory xUnit lane, on a local build with 203 of 203 passing and nothing configured, `TestRunReport.json` came to 4,603,856 bytes with 47 payloads compressed, 20% less than the same run with none compressed, and its deflate at level 6, what a zip spends, to 546,519 bytes, 8.5% more than with none; the lane's 4.0.1 run had come to 20% less and 44.6% more (4,278,126 bytes with 319 payloads compressed, deflate 653,779), and the run's own `query.cs` read the new file. A file written by
+  4.0.0 or 4.0.1, whose shorter payloads are compressed, reads as it did: `kronikol query`, `kronikol merge` and
+  `query.py` take a compressed payload at any length, and a fact now reads such a file, the SQL hint of `failures`
+  among its verbs.
+- `kronikol ingest --help`, the option's documentation and the schema's descriptions of `content` and `diagrams` say
+  8,192 where they said 512.
+
 ## [4.0.1] - 2026-09-30
 
 **Patch - each distinct internal-flow diagram and flame chart is stored once, in a table at the end of the segment

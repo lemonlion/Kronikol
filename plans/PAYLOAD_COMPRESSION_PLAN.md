@@ -12,7 +12,7 @@ on 2026-09-29); D7 (in place) is taken. Roadmap row 1c.2. Evidence labels as els
 - **Payloads:** each entry of a scenario's `diagrams`, and each interaction's `content` (in `httpInteractions` and
   `background`). Not `internalFlowSegments` or `wholeTestFlow` in the mergeable file (§3.2 of the V4 plan: R3 and R5
   reshape the first, and merge would have to inflate it before `WrapSegmentData`).
-- **The rule:** a payload of 512 characters or more is stored compressed, unless that would not make it smaller.
+- **The rule:** a payload of 512 characters or more is stored compressed, unless that would not make it smaller. (8,192 from 4.0.2: at 512 a report of small payloads came out larger once zipped, `V4_PLAN.md` section 7.)
   **RUN** (`V4_PLAN.harness/threshold.py`, level 6): on BreakfastProvider's xUnit lane (R1's report) the saving is
   1,517,571 bytes at 512 against a best of 1,519,192 at 384; on its Docker lane (3.27.1's data) 9,605,262 against
   9,606,967; flat from 256 to 1,024 on both. Six payloads per lane are larger compressed at 512, which the "smaller"

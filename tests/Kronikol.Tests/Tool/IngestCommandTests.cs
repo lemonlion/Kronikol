@@ -201,7 +201,7 @@ public class IngestCommandTests : IDisposable
         const string testId = "2b2c3d4e5f60718293a4b5c6d7e8f90a";
         var captures = Path.Combine(_dir, "captures-payloads");
         Directory.CreateDirectory(captures);
-        var large = "{\"items\":[" + string.Join(",", Enumerable.Range(0, 60).Select(i => $"{{\"sku\":\"W-{i}\",\"qty\":{i}}}")) + "]}";
+        var large = "{\"items\":[" + string.Join(",", Enumerable.Range(0, ReportPayloads.Threshold / 20).Select(i => $"{{\"sku\":\"W-{i}\",\"qty\":{i}}}")) + "]}";
         var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/stock", "web", "web",
             requestContent: "", responseContent: large, statusCode: "200",
             requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));

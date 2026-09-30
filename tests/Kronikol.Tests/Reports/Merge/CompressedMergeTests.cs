@@ -85,10 +85,10 @@ public class CompressedMergeTests : IDisposable
     // ─── Fixture ───────────────────────────────────────────────
 
     private static string Body(string service) =>
-        JsonSerializer.Serialize(new { service, lines = Enumerable.Range(1, 30).Select(i => new { sku = $"{service}-{i}", qty = i }).ToArray() });
+        JsonSerializer.Serialize(new { service, lines = Enumerable.Range(1, ReportPayloads.Threshold / 20).Select(i => new { sku = $"{service}-{i}", qty = i }).ToArray() });
 
     private static string Diagram(string service) =>
-        "@startuml\n" + string.Concat(Enumerable.Range(1, 40).Select(i => $"Test -> {service} : call {i}\n")) + "@enduml";
+        "@startuml\n" + string.Concat(Enumerable.Range(1, ReportPayloads.Threshold / 20).Select(i => $"Test -> {service} : call {i}\n")) + "@enduml";
 
     private void WriteShard(string name, string scenarioId, string service, string body, bool compress)
     {

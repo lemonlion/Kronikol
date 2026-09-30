@@ -209,8 +209,9 @@ public class FallbackScriptTests : IDisposable
     public void It_reads_a_compressed_payload_as_the_tool_does()
     {
         Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
-        // Longer than the 6,000 bytes the script prints whole, so its listing names the address instead.
-        var body = Kronikol.Tests.Reports.PayloadCompressionTests.Json(7000);
+        // Long enough to be compressed, and longer than the 6,000 bytes the script prints whole, so its listing names
+        // the address instead.
+        var body = Kronikol.Tests.Reports.PayloadCompressionTests.Json(Math.Max(ReportPayloads.Threshold, 6000) + 1000);
         var report = ReportGenerator.GenerateTestRunReportData(
             Kronikol.Tests.Reports.PayloadCompressionTests.Features(),
             Kronikol.Tests.Reports.PayloadCompressionTests.Start, Kronikol.Tests.Reports.PayloadCompressionTests.End,

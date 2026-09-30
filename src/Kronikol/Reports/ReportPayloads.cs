@@ -14,8 +14,14 @@ namespace Kronikol.Reports;
 /// <remarks>
 /// <para>A payload of <see cref="Threshold"/> characters or more is written
 /// <c>{"$h": "b:…", "$n": length, "$z": "base64 of the gzip of its UTF-8"}</c>, unless that would not make it
-/// smaller. Measured on two BreakfastProvider lanes, the saving is flat from 256 to 1,024 characters and best near
-/// 512; below that each small body stops being readable text in the file for a few kilobytes.</para>
+/// smaller. Through 4.0.1 the threshold was 512, where the file saves the most (measured on two BreakfastProvider
+/// lanes, the saving is flat from 256 to 1,024 characters). But a CI artifact is a zip and a host such as GitHub Pages
+/// serves the file gzipped, and there payloads that were compressing against each other stop doing so once each is
+/// gzipped on its own and written as base64: at 512 the zip of an in-memory lane's report came to 44% more than with
+/// nothing compressed, and an external-SUT lane's to 78% more. At 8,192 those are 9% and 9%, the file keeps 17% and
+/// 18% of its saving where it had 22% and 26%, and a report of large payloads, a Docker lane's, keeps 61% where it had
+/// 62% while its zip falls by 33% where it fell by 24% (<c>plans/V4_PLAN.md</c> section 7, after 4.0.1;
+/// <c>plans/V4_PLAN.harness/zip_cost.py</c>).</para>
 /// <para><c>$h</c> is the <c>b:</c> address <c>kronikol query</c> gives the text and <c>$n</c> its length as the
 /// query index counts it (UTF-16 code units), so the index is built without inflating anything and an address does
 /// not move when the option does. The keys start with <c>$</c> because a scanner that predates them reads a plain
@@ -26,7 +32,7 @@ namespace Kronikol.Reports;
 internal sealed class ReportPayloads(bool compress)
 {
     /// <summary>The shortest payload, in characters, that is written compressed.</summary>
-    internal const int Threshold = 512;
+    internal const int Threshold = 8192;
 
     /// <summary>
     /// The <c>formatVersion</c> of a file that holds at least one wrapper. A file without one keeps
