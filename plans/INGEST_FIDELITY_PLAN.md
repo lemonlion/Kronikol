@@ -655,3 +655,8 @@ record at the same instant that came before it (a Setup call's response) stays o
 places it at the front as planned. To run Playwright in the plan's container, Chromium needed the proxy's CA in its
 NSS store and a browsers folder mapping Playwright 1.59's expected build onto the installed one (no repository
 change).
+
+Not done from the session, for want of access: the tag `v4.1.0` (on `03b52b7c`) was refused by the session's git
+proxy (HTTP 403 on `refs/tags/*`; the push of `main` went through), so the Release workflow, which runs on a tag, has
+not published 4.1.0; and the wiki commit could not be pushed (`lemonlion/Kronikol.wiki` is not in the session's
+repositories). It is `INGEST_FIDELITY_PLAN.harness/wiki/0001-…patch`, with how to apply it.
