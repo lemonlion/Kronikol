@@ -89,7 +89,8 @@ Five slices, four releases:
   `IngestPipeline.Run` raw NDJSON lines as an external capturer writes them. **P4**
   (`IngestFidelitySpanProbeTests.cs`) ran the same way in `tests/Kronikol.Tests.Otlp/`. Output:
   `probe-results.txt`.
-- **READ** claims come from four passes over the code at `00abca6`, one per item, and were spot-checked where this
+- **READ** claims come from four passes over the code at `00abca6`, one per item (their full notes, with the tests that
+  will flip and the insertion points, are the harness's `research-notes.md`), and were spot-checked where this
   plan leans on them (the exporter's failure words, the merge reader, the component diagram's error count, one SDK
   handler, the TCP tap's connect path, the implicit action start, the Cucumber retry labels, the digest's
   `written at` line).

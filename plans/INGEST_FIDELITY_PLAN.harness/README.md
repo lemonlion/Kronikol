@@ -2,6 +2,9 @@
 
 What `INGEST_FIDELITY_PLAN.md` measured before it was written, on 2026-09-30, at 4.0.0 (`00abca6`).
 
+`research-notes.md` holds the four code-reading passes the plan summarises (file and line maps per item, the tests
+that will flip, the insertion points) and how to set up a container to execute a slice.
+
 ## `otel-jest/`: S0, OpenTelemetry under Jest
 
 The question item 5 of the plan was gated on: can a test harness get a Node service's internal spans when the
