@@ -1,0 +1,53 @@
+{
+  "body": {
+    "data": {
+      "charge": {
+        "id": "c1",
+        "amount": 1250,
+        "fee": 66,
+        "status": "SETTLED",
+        "receipt": {
+          "number": "R-c1"
+        }
+      }
+    }
+  },
+  "seen": [
+    {
+      "at": "fastify onRequest (harness hook)",
+      "url": "/graphql",
+      "activeTraceId": null,
+      "activeSpanId": null,
+      "activeSpanName": null,
+      "testId": "T-V1",
+      "wallClockMs": 1790755299683,
+      "spanStartMs": null
+    },
+    {
+      "at": "msw request:start",
+      "url": "https://psp.example.test/charges/c1",
+      "activeTraceId": null,
+      "activeSpanName": null,
+      "testId": "T-V1"
+    },
+    {
+      "at": "msw request:start",
+      "url": "http://127.0.0.1:43821/score/c1",
+      "activeTraceId": null,
+      "activeSpanName": null,
+      "testId": "T-V1"
+    }
+  ],
+  "spans": [
+    {
+      "name": "GET",
+      "scope": "@opentelemetry/instrumentation-undici",
+      "kind": 2,
+      "traceId": "bb40dfc8eeff4b1878f6165aa910c27e",
+      "spanId": "86a519cad9accd0b",
+      "parentSpanId": null,
+      "testId": "T-V1",
+      "durationMs": 7.72
+    }
+  ]
+}

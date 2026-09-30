@@ -25,6 +25,13 @@ possible. Three follow-on plans — `JAVA_PLATFORM_PLAN.md`, `NODE_PLATFORM_PLAN
 > its directory. It also measured that no maintained Go WebAssembly runtime hosts F6's Preview 2
 > component, so Go's shim execs.
 
+> **Amended 2026-09-30 by `INGEST_FIDELITY_PLAN.md`** (roadmap stage 1d, placed next at the owner's word, D31):
+> G4's span stream is designed there and scheduled ahead of F1, as OTLP/JSON lines read by the existing
+> `OtlpTraceReader` (§11's Decision 5, "write the SDK's spans to an OTLP-JSON file"), feeding internal flow
+> through a neutral span record; `Error` leaves 14.1's pinned members; and two of §11 P8's rows (`Scenario.Attempt`
+> and the source locations) are filled from the tests records. F2 freezes what it builds. It also measured that
+> `--phase-from-steps` never drew the Setup partition §12.4 says it drives: the partition needs a `Phase` marker.
+
 **Where it contradicts an existing plan, this one wins.** §5 lists every supersession explicitly.
 `MONOREPO_MIGRATION_PLAN.md` is adopted whole as F0. `KRONIKOL4J_PORTABILITY_PLAN.md`,
 `QUERY_PORTABILITY_PLAN.md`, `QUERY_FALLBACK_PLAN.md` and `NEXT_LANGUAGE_PLAN.md` are absorbed

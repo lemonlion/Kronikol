@@ -1,0 +1,392 @@
+{
+  "a": {
+    "data": {
+      "charge": {
+        "id": "a1",
+        "amount": 1250,
+        "fee": 66,
+        "status": "SETTLED",
+        "receipt": {
+          "number": "R-a1"
+        }
+      }
+    }
+  },
+  "b": {
+    "data": {
+      "charge": {
+        "id": "b1",
+        "amount": 1250,
+        "fee": 66,
+        "status": "SETTLED",
+        "receipt": {
+          "number": "R-b1"
+        }
+      }
+    }
+  },
+  "seen": [
+    {
+      "at": "fastify onRequest (harness hook)",
+      "url": "/graphql",
+      "activeTraceId": "7704edeca809db5d4fa987217960193d",
+      "activeSpanId": "8364776bf05c8414",
+      "activeSpanName": "onRequest - <spike>/node_modules/mercurius/lib/routes.js",
+      "testId": "T-A",
+      "wallClockMs": 1790755299061,
+      "spanStartMs": 1790755299061
+    },
+    {
+      "at": "fastify onRequest (harness hook)",
+      "url": "/graphql",
+      "activeTraceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "activeSpanId": "7b654366da855af4",
+      "activeSpanName": "onRequest - <spike>/node_modules/mercurius/lib/routes.js",
+      "testId": "T-B",
+      "wallClockMs": 1790755299062,
+      "spanStartMs": 1790755299062
+    },
+    {
+      "at": "msw request:start",
+      "url": "https://psp.example.test/charges/a1",
+      "activeTraceId": "7704edeca809db5d4fa987217960193d",
+      "activeSpanName": "graphql.resolve charge",
+      "testId": "T-A"
+    },
+    {
+      "at": "msw request:start",
+      "url": "http://127.0.0.1:35637/score/a1",
+      "activeTraceId": "7704edeca809db5d4fa987217960193d",
+      "activeSpanName": "graphql.resolve charge",
+      "testId": "T-A"
+    },
+    {
+      "at": "msw request:start",
+      "url": "https://psp.example.test/charges/b1",
+      "activeTraceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "activeSpanName": "graphql.resolve charge",
+      "testId": "T-B"
+    },
+    {
+      "at": "msw request:start",
+      "url": "http://127.0.0.1:35637/score/b1",
+      "activeTraceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "activeSpanName": "graphql.resolve charge",
+      "testId": "T-B"
+    }
+  ],
+  "mixedTraces": 0,
+  "traces": 3,
+  "spans": [
+    {
+      "name": "graphql.parseSchema",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "dcf98b67422aeae6a147207f95ec54ed",
+      "spanId": "82c7281fedeebda8",
+      "parentSpanId": null,
+      "testId": null,
+      "durationMs": 2.59
+    },
+    {
+      "name": "onRequest - <spike>/node_modules/mercurius/lib/routes.js",
+      "scope": "@fastify/otel",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "8364776bf05c8414",
+      "parentSpanId": "f0c3faa6719e025f",
+      "testId": "T-A",
+      "durationMs": 1.64
+    },
+    {
+      "name": "onRequest - <spike>/node_modules/mercurius/lib/routes.js",
+      "scope": "@fastify/otel",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "7b654366da855af4",
+      "parentSpanId": "187648d6949050f9",
+      "testId": "T-B",
+      "durationMs": 0.36
+    },
+    {
+      "name": "onRequest - onRequest",
+      "scope": "@fastify/otel",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "1741cd6dbf1262e5",
+      "parentSpanId": "f0c3faa6719e025f",
+      "testId": "T-A",
+      "durationMs": 0.22
+    },
+    {
+      "name": "onRequest - onRequest",
+      "scope": "@fastify/otel",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "4a8183c5b0a9be8a",
+      "parentSpanId": "187648d6949050f9",
+      "testId": "T-B",
+      "durationMs": 0.1
+    },
+    {
+      "name": "graphql.parse",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "7ff45b378fec46b6",
+      "parentSpanId": "4f0e776aab4562a9",
+      "testId": "T-A",
+      "durationMs": 1.22
+    },
+    {
+      "name": "graphql.validate",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "47a7af6fa20edcd4",
+      "parentSpanId": "4f0e776aab4562a9",
+      "testId": "T-A",
+      "durationMs": 6.2
+    },
+    {
+      "name": "graphql.parse",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "a403157c13a60ce6",
+      "parentSpanId": "dee3cb42c484e971",
+      "testId": "T-B",
+      "durationMs": 0.46
+    },
+    {
+      "name": "graphql.validate",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "a19caa2c7aa57d91",
+      "parentSpanId": "dee3cb42c484e971",
+      "testId": "T-B",
+      "durationMs": 2.87
+    },
+    {
+      "name": "GET",
+      "scope": "@opentelemetry/instrumentation-undici",
+      "kind": 2,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "dd69c393a2d59dae",
+      "parentSpanId": "8e9fa7854aebdc03",
+      "testId": "T-A",
+      "durationMs": 15.32
+    },
+    {
+      "name": "GET",
+      "scope": "@opentelemetry/instrumentation-undici",
+      "kind": 2,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "583526816f8d7cec",
+      "parentSpanId": "ebf6a9cb0efe8943",
+      "testId": "T-B",
+      "durationMs": 8.46
+    },
+    {
+      "name": "graphql.resolve charge",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "8e9fa7854aebdc03",
+      "parentSpanId": "89d7d0d8c5e693dc",
+      "testId": "T-A",
+      "durationMs": 36.78
+    },
+    {
+      "name": "graphql.resolve charge.id",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "80393d6f0d5d8dc5",
+      "parentSpanId": "8e9fa7854aebdc03",
+      "testId": "T-A",
+      "durationMs": 0.11
+    },
+    {
+      "name": "graphql.resolve charge.amount",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "9f830625767cc3c9",
+      "parentSpanId": "8e9fa7854aebdc03",
+      "testId": "T-A",
+      "durationMs": 0.04
+    },
+    {
+      "name": "graphql.resolve charge.fee",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "2472db9b34ccd6cd",
+      "parentSpanId": "8e9fa7854aebdc03",
+      "testId": "T-A",
+      "durationMs": 0.04
+    },
+    {
+      "name": "graphql.resolve charge.status",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "e9e053f2feec3447",
+      "parentSpanId": "8e9fa7854aebdc03",
+      "testId": "T-A",
+      "durationMs": 0.04
+    },
+    {
+      "name": "graphql.resolve charge",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "ebf6a9cb0efe8943",
+      "parentSpanId": "fdf7304df3a1b2e9",
+      "testId": "T-B",
+      "durationMs": 20.37
+    },
+    {
+      "name": "graphql.resolve charge.id",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "d3c557e760414b83",
+      "parentSpanId": "ebf6a9cb0efe8943",
+      "testId": "T-B",
+      "durationMs": 0.09
+    },
+    {
+      "name": "graphql.resolve charge.amount",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "e343a8a12c32f95e",
+      "parentSpanId": "ebf6a9cb0efe8943",
+      "testId": "T-B",
+      "durationMs": 0.05
+    },
+    {
+      "name": "graphql.resolve charge.fee",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "9eac8ca30bd87972",
+      "parentSpanId": "ebf6a9cb0efe8943",
+      "testId": "T-B",
+      "durationMs": 0.11
+    },
+    {
+      "name": "graphql.resolve charge.status",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "01490528413f3297",
+      "parentSpanId": "ebf6a9cb0efe8943",
+      "testId": "T-B",
+      "durationMs": 0.04
+    },
+    {
+      "name": "graphql.resolve charge.receipt",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "527ce08a724929bd",
+      "parentSpanId": "8e9fa7854aebdc03",
+      "testId": "T-A",
+      "durationMs": 4.59
+    },
+    {
+      "name": "graphql.resolve charge.receipt.number",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "b5791a6eb2af0c91",
+      "parentSpanId": "527ce08a724929bd",
+      "testId": "T-A",
+      "durationMs": 0.05
+    },
+    {
+      "name": "query Charge",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "89d7d0d8c5e693dc",
+      "parentSpanId": "4f0e776aab4562a9",
+      "testId": "T-A",
+      "durationMs": 46.17
+    },
+    {
+      "name": "handler - <spike>/node_modules/mercurius/lib/routes.js",
+      "scope": "@fastify/otel",
+      "kind": 0,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "4f0e776aab4562a9",
+      "parentSpanId": "f0c3faa6719e025f",
+      "testId": "T-A",
+      "durationMs": 56.21
+    },
+    {
+      "name": "request",
+      "scope": "@fastify/otel",
+      "kind": 1,
+      "traceId": "7704edeca809db5d4fa987217960193d",
+      "spanId": "f0c3faa6719e025f",
+      "parentSpanId": null,
+      "testId": "T-A",
+      "durationMs": 71.09
+    },
+    {
+      "name": "graphql.resolve charge.receipt",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "cd1ee51a4f35df86",
+      "parentSpanId": "ebf6a9cb0efe8943",
+      "testId": "T-B",
+      "durationMs": 5.06
+    },
+    {
+      "name": "graphql.resolve charge.receipt.number",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "89c7af1c9544c35c",
+      "parentSpanId": "cd1ee51a4f35df86",
+      "testId": "T-B",
+      "durationMs": 0.04
+    },
+    {
+      "name": "query Charge",
+      "scope": "@opentelemetry/instrumentation-graphql",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "fdf7304df3a1b2e9",
+      "parentSpanId": "dee3cb42c484e971",
+      "testId": "T-B",
+      "durationMs": 27.59
+    },
+    {
+      "name": "handler - <spike>/node_modules/mercurius/lib/routes.js",
+      "scope": "@fastify/otel",
+      "kind": 0,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "dee3cb42c484e971",
+      "parentSpanId": "187648d6949050f9",
+      "testId": "T-B",
+      "durationMs": 31.54
+    },
+    {
+      "name": "request",
+      "scope": "@fastify/otel",
+      "kind": 1,
+      "traceId": "9371a03ff5bf55e41389d4eadba1f87b",
+      "spanId": "187648d6949050f9",
+      "parentSpanId": null,
+      "testId": "T-B",
+      "durationMs": 71.36
+    }
+  ]
+}

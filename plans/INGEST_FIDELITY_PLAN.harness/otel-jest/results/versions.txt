@@ -1,0 +1,15 @@
+jest 30.5.2
+fastify 5.12.5
+mercurius 16.10.1
+graphql 16.14.2
+msw 2.11.0 (2.12 and later depend on rettime, which is ESM-only: Jest on Node 22 cannot require it)
+@fastify/otel 0.21.0
+@opentelemetry/api 1.9.1
+@opentelemetry/sdk-trace-base 2.11.0
+@opentelemetry/instrumentation 0.222.0
+@opentelemetry/instrumentation-graphql 0.70.0
+@opentelemetry/instrumentation-undici 0.32.0
+@opentelemetry/instrumentation-http 0.222.0
+@opentelemetry/otlp-transformer 0.222.0
+content-disposition 0.5.4 (package.json override: 3.0.0, what @fastify/static 10 pulls, is ESM-only)
+v22.22.2

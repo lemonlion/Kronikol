@@ -1,0 +1,30 @@
+{
+  "name": "kronikol-otel-under-jest-spike",
+  "private": true,
+  "version": "0.0.0",
+  "description": "INGEST_FIDELITY_PLAN S0: does OpenTelemetry produce a Fastify + GraphQL service's internal spans when the service runs in-process under Jest?",
+  "scripts": {
+    "test": "bash run.sh"
+  },
+  "devDependencies": {
+    "@fastify/otel": "0.21.0",
+    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/context-async-hooks": "2.11.0",
+    "@opentelemetry/instrumentation": "0.222.0",
+    "@opentelemetry/instrumentation-graphql": "0.70.0",
+    "@opentelemetry/instrumentation-http": "0.222.0",
+    "@opentelemetry/instrumentation-undici": "0.32.0",
+    "@opentelemetry/otlp-transformer": "0.222.0",
+    "@opentelemetry/resources": "2.11.0",
+    "@opentelemetry/sdk-trace-base": "2.11.0",
+    "@opentelemetry/sdk-trace-node": "2.11.0",
+    "fastify": "5.12.5",
+    "graphql": "16.14.2",
+    "jest": "30.5.2",
+    "mercurius": "16.10.1",
+    "msw": "2.11.0"
+  },
+  "overrides": {
+    "content-disposition": "0.5.4"
+  }
+}

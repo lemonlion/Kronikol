@@ -1,0 +1,43 @@
+# IngestFidelityProbeTests (P1 to P3, tests/Kronikol.Tests) and IngestFidelitySpanProbeTests (P4, tests/Kronikol.Tests.Otlp)
+# Run 2026-09-30 at 4.0.0 (00abca6) with the .NET 10.0.401 SDK on Linux. Output as printed, grouped by probe.
+
+P1 p1-separate-only: SeparateSetup=True PhaseFromSteps=False -> partition=False phases=[Unknown,Unknown,Unknown,Unknown]
+P1 p1-separate-and-phase-from-steps: SeparateSetup=True PhaseFromSteps=True -> partition=False phases=[Setup,Setup,Action,Action]
+P1 p1-separate-and-phase-marker: SeparateSetup=True PhaseFromSteps=False -> partition=True phases=[Unknown,Unknown,Unknown,Unknown]
+P1 p1-phase-from-steps-cli-defaults: SeparateSetup=False PhaseFromSteps=True -> partition=False phases=[Setup,Setup,Action,Action]
+
+P2 Request http://localhost:5000/charges: statusCode=null statusText=null error=null
+P2 Response http://localhost:5000/charges: statusCode=null statusText="!TypeError" error=null
+P2 Request http://localhost:5000/risk/1: statusCode=null statusText=null error=null
+P2 Response http://localhost:5000/risk/1: statusCode=null statusText=null error=null
+  diagram draws '!TypeError': True
+  Failures.md names '!TypeError': True; names 'ECONNREFUSED': False
+  diagnostics: 
+
+P3 retried test: scenarios with id=1
+  durationSeconds=2 attempt=null sourceFile=null sourceLine=null failureCause=null exampleDisplayName=null
+  result=Passed duration=? steps=[Attempt one | Attempt two] httpInteractions=4 error=expected SETTLED, received PENDING
+  members: id,stableId,name,description,result,durationSeconds,endedAt,isHappyPath,errorMessage,errorStackTrace,failureCause,labels,categories,rule,attempt,sourceFile,sourceLine,outlineId,examplesBlockName,examplesBlockDescription,examplesBlockIndex,exampleValues,exampleFlatValues,exampleDisplayName,attachments,backgroundSteps,steps,diagrams,httpInteractions,annotations
+  Failures.md first line: # No failures
+  diagnostics: 
+P3 split ids: scenarios=2 results=[Charges a card:Failed,Charges a card:Passed]
+  Failures.md first line: # Failures — 1 of 2 scenarios
+
+P4 spans read: 16 from v2-spans.otlp.jsonl
+  05d475c3 975b5cdc730c0bf3 parent=- kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.parseSchema" ms=2.195 test=- service=unknown_service:node
+  eb7b7561 50d3989e0b177afe parent=- kind=Server scope=@fastify/otel name="request" ms=85.354 test=T-V2 service=unknown_service:node
+  eb7b7561 c6103b1e3b3c954e parent=50d3989e0b177afe kind=Internal scope=@fastify/otel name="onRequest - <spike>/node_modules/mercurius/lib/routes.js" ms=0.325 test=T-V2 service=unknown_service:node
+  eb7b7561 b81d988a5fe451b9 parent=50d3989e0b177afe kind=Internal scope=@fastify/otel name="onRequest - onRequest" ms=0.155 test=T-V2 service=unknown_service:node
+  eb7b7561 4934135d007b982d parent=50d3989e0b177afe kind=Internal scope=@fastify/otel name="handler - <spike>/node_modules/mercurius/lib/routes.js" ms=77.817 test=T-V2 service=unknown_service:node
+  eb7b7561 db9bd125cf07c229 parent=4934135d007b982d kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.parse" ms=1.108 test=T-V2 service=unknown_service:node
+  eb7b7561 b12e654b2c9cd8a5 parent=4934135d007b982d kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.validate" ms=5.883 test=T-V2 service=unknown_service:node
+  eb7b7561 61125bf9491f6609 parent=4934135d007b982d kind=Internal scope=@opentelemetry/instrumentation-graphql name="query Charge" ms=68.698 test=T-V2 service=unknown_service:node
+  eb7b7561 8b7f9746a6a508c9 parent=61125bf9491f6609 kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.resolve charge" ms=63.29 test=T-V2 service=unknown_service:node
+  eb7b7561 9cfbdd5902302f82 parent=8b7f9746a6a508c9 kind=Client scope=@opentelemetry/instrumentation-undici name="GET" ms=15.333 test=T-V2 service=unknown_service:node
+  eb7b7561 3a795d49eab5bfa5 parent=8b7f9746a6a508c9 kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.resolve charge.id" ms=0.067 test=T-V2 service=unknown_service:node
+  eb7b7561 a5f260ea0cbcfe87 parent=8b7f9746a6a508c9 kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.resolve charge.amount" ms=0.051 test=T-V2 service=unknown_service:node
+  eb7b7561 119c8b71a7767574 parent=8b7f9746a6a508c9 kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.resolve charge.fee" ms=0.033 test=T-V2 service=unknown_service:node
+  eb7b7561 aaf6f2388b81ef0c parent=8b7f9746a6a508c9 kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.resolve charge.status" ms=0.033 test=T-V2 service=unknown_service:node
+  eb7b7561 4968a2d00728978b parent=8b7f9746a6a508c9 kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.resolve charge.receipt" ms=1.57 test=T-V2 service=unknown_service:node
+  eb7b7561 62290a588d713fd0 parent=4968a2d00728978b kind=Internal scope=@opentelemetry/instrumentation-graphql name="graphql.resolve charge.receipt.number" ms=0.046 test=T-V2 service=unknown_service:node
+P4 the tail mapper would draw 1 arrow(s) from them: GET http://127.0.0.1:45053/score/c2 (unknown_service:node -> 127.0.0.1:45053)

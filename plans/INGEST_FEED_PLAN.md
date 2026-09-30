@@ -10,6 +10,11 @@ the same evening a throwaway prototype of S2 was built in a detached worktree an
 sources, their outputs and the prototype patch are kept in
 [`INGEST_FEED_PLAN.harness/`](INGEST_FEED_PLAN.harness/); §1 says which claim rests on which.
 
+> **2026-09-30:** Q4 (`Error`) and Q11 (`--separate-setup`) are taken up by `INGEST_FIDELITY_PLAN.md` (roadmap 1d.3
+> and 1d.1). That plan also found that §3.2's `Error` row overstates what the field feeds (the diagram and the
+> fingerprint read the status, which the wire already carries), and that §6.1's statement that `InternalFlowTracking`
+> changed no byte looks wrong (its §8, item 11).
+
 **Revised 2026-09-22 (evening) against 3.27.3 (`25a0773a`), the gap audit the owner asked for.** It
 added F7, a shipped defect the first pass missed (the ingest path never classifies a marker, so no
 ingested run has ever carried a `stepPath`), and F8, a warning every ingest prints for a feature it
