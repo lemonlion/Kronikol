@@ -153,23 +153,28 @@ public class ReportToolbarTests : PlaywrightTestBase
     // ── Headers shown / hidden ──
 
     [Fact]
-    public async Task Headers_shown_is_active_by_default()
+    public async Task Headers_hidden_is_the_start_state()
     {
+        // 4.0.0 (plans/V4_PLAN.md R8); headers started shown through 3.x.
         await Page.GotoAsync(GenerateReport("ToolbarHeaderDefault.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var headersBtn = Page.Locator(".toolbar-row .toggle-btn[data-toggle='headers']");
-        await Expect(headersBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
-        await Expect(headersBtn).ToHaveTextAsync("Headers Shown");
+        await Expect(headersBtn).ToHaveTextAsync("Headers Hidden");
+        await Expect(headersBtn).Not.ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
     }
 
     [Fact]
-    public async Task Clicking_headers_toggle_hides_headers_and_updates_text()
+    public async Task Clicking_headers_toggle_shows_then_hides_headers_and_updates_text()
     {
         await Page.GotoAsync(GenerateReport("ToolbarHiddenHeaders.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var headersBtn = Page.Locator(".toolbar-row .toggle-btn[data-toggle='headers']");
+
+        await headersBtn.ClickAsync();
+        await Expect(headersBtn).ToHaveTextAsync("Headers Shown");
+        await Expect(headersBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
 
         await headersBtn.ClickAsync();
         await Expect(headersBtn).ToHaveTextAsync("Headers Hidden");

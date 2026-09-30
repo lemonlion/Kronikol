@@ -394,9 +394,10 @@ public class DiagramContextMenuTests
     // ─── Globals ────────────────────────────────────────────
 
     [Fact]
-    public void Globals_headersHidden_defaults_to_false()
+    public void Globals_headersHidden_defaults_to_true()
     {
-        Assert.Contains("window._headersHidden = false", _notesScript);
+        // Headers start hidden from 4.0.0 (plans/V4_PLAN.md R8); shown through 3.x.
+        Assert.Contains("window._headersHidden = true", _notesScript);
     }
 
     [Fact]

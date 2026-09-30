@@ -1,11 +1,10 @@
-#pragma warning disable CS0618 // pins the monospace note control, obsolete until 4.0.0 removes it
 using Kronikol.Reports;
 
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
-/// The per-note appearance controls: monospace payload text and full-width notes
-/// (plans/NOTE_WRAP_AND_WIDTH_PLAN.md Part B). Every assertion here reads what the engine
+/// The per-note appearance control, full-width notes (plans/NOTE_WRAP_AND_WIDTH_PLAN.md Part B;
+/// 4.0.0 removed the opt-in monospace control beside it). Every assertion here reads what the engine
 /// <b>paints</b> — PlantUML emits one <c>&lt;text&gt;</c> element per word, so display rows are the
 /// distinct <c>y</c> values and a row's text is its elements ordered by <c>x</c>. Asserting on the
 /// source would pass for a source that draws nothing of the sort.
@@ -15,11 +14,9 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
 {
     public NoteAppearanceTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    private async Task NavigateToSqlNote(string fileName, bool showNoteFontControls = false,
-        NoteFontFamily noteFont = NoteFontFamily.Default, NoteWidthMode noteWidth = NoteWidthMode.Default)
+    private async Task NavigateToSqlNote(string fileName, NoteWidthMode noteWidth = NoteWidthMode.Default)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, fileName,
-            showNoteFontControls, noteFont, noteWidth));
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, fileName, noteWidth));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -134,7 +131,7 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
         await WaitForDiagramSvg();
         await WaitForNoteElements();
 
-        // Both notes keep the <<eventNote>> fill; only the classed one also takes the font.
+        // Both notes keep the <<eventNote>> fill; only the classed one is drawn wider.
         var fills = await Page.EvaluateAsync<string[]>("""
             () => {
                 var svg = document.querySelector('[data-diagram-type="plantuml"] svg');
@@ -146,8 +143,7 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
         Assert.Equal(2, fills.Length);
         Assert.Equal(fills[0], fills[1]);
 
-        Assert.DoesNotContain(await NoteFontFamilies(0), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(await NoteFontFamilies(1), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
+        Assert.True(await NoteWidth(1) > await NoteWidth(0), "the classed note should be drawn wider");
     }
 
     // ── The per-note controls ─────────────────────────────────────────────
@@ -194,133 +190,20 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
         Assert.Equal(original, await DiagramSource());
     }
 
-    // ── Monospace is opt-in (ShowNoteFontControls) ────────────────────────
+    // ── No monospace control (4.0.0 removed it) ──────────────────────────
 
     [Fact]
-    public async Task The_monospace_glyph_is_absent_by_default()
+    public async Task No_monospace_glyph_or_select_is_offered_and_notes_keep_the_diagram_font()
     {
-        await NavigateToSqlNote("NoteMonoGlyphAbsent.html");
+        await NavigateToSqlNote("NoteNoMonospace.html");
 
         Assert.Equal("NOT_VISIBLE", await ClickNoteButton("mono"));
-        // The width glyph takes the slot the monospace glyph would have had, and still works.
-        Assert.Equal("CLICKED", await ClickNoteButton("width"));
-    }
-
-    [Fact]
-    public async Task The_font_select_is_absent_by_default()
-    {
-        await NavigateToSqlNote("NoteFontSelectAbsent.html");
-
         Assert.Equal(0, await Page.Locator(".note-font-select").CountAsync());
         Assert.True(await Page.Locator(".note-width-select").CountAsync() > 0);
-    }
-
-    /// <summary>
-    /// A consumer who names <c>Monospace</c> asked for it, whether or not the report offers a way to
-    /// switch it. With the controls hidden the first paint is monospace with no click, nothing in the
-    /// report switches it back, and the width control still works on top of it: widening re-renders
-    /// the note, and the note has to come back both wide AND monospace.
-    /// </summary>
-    [Fact]
-    public async Task A_configured_monospace_default_paints_every_note_with_the_controls_hidden()
-    {
-        await NavigateToSqlNote("NoteMonoConfiguredHidden.html", noteFont: NoteFontFamily.Monospace);
-
-        Assert.Contains(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains("<<kronNoteMono>>", await DiagramSource());
-        Assert.Equal(0, await Page.Locator(".note-font-select").CountAsync());
-        Assert.Equal("NOT_VISIBLE", await ClickNoteButton("mono"));
-
+        Assert.DoesNotContain(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
+        // The width glyph takes the slot the monospace glyph had, and still works.
         Assert.Equal("CLICKED", await ClickNoteButton("width"));
-        await WaitForRenderIdle();
-        await WaitForNoteElements();
-
-        var widened = await DiagramSource();
-        Assert.Contains("kronNoteWide", widened);
-        Assert.Contains("kronNoteMono", widened);
-        Assert.Contains(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
     }
-
-    /// <summary>With the controls shown, a configured start state is also what the dropdown reads.</summary>
-    [Fact]
-    public async Task A_configured_monospace_default_seeds_the_font_select_when_it_is_shown()
-    {
-        await NavigateToSqlNote("NoteMonoConfiguredShown.html", showNoteFontControls: true,
-            noteFont: NoteFontFamily.Monospace);
-
-        Assert.Contains(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
-        Assert.Equal("mono", await Page.Locator(".note-font-select").First.InputValueAsync());
-        // The glyph offers the way BACK, which is the only thing it can usefully do from here.
-        Assert.Equal("CLICKED", await ClickNoteButton("mono"));
-        await WaitForRenderIdle();
-        await WaitForNoteElements();
-        Assert.DoesNotContain(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
-    }
-
-    [Fact]
-    public async Task Monospace_paints_the_note_text_in_courier_new()
-    {
-        await NavigateToSqlNote("NoteMonoPaint.html", showNoteFontControls: true);
-
-        Assert.DoesNotContain(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
-
-        Assert.Equal("CLICKED", await ClickNoteButton("mono"));
-        await WaitForRenderIdle();
-        await WaitForNoteElements();
-
-        // The name matters: the engine sizes the box and the browser paints the text, and measured
-        // across seven candidates Courier New is the only one both of them resolve.
-        Assert.Contains(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains("<<kronNoteMono>>", await DiagramSource());
-    }
-
-    /// <summary>
-    /// The measured reason monospace is the larger half of this feature: analytics SQL is written
-    /// with its clauses padded into columns, and a proportional font destroys that alignment however
-    /// wide the note is. Measured on the reported query, the same token's x scattered across 65.8px
-    /// in the proportional font and sat at one x in Courier New.
-    /// </summary>
-    [Fact]
-    public async Task Monospace_lines_up_text_that_the_proportional_font_scatters()
-    {
-        await NavigateToSqlNote("NoteMonoAlign.html", showNoteFontControls: true);
-
-        var spreadBefore = await AlignedTokenSpread("AS");
-        Assert.True(spreadBefore > 20,
-            $"the fixture must actually be misaligned to begin with (spread {spreadBefore}px)");
-
-        Assert.Equal("CLICKED", await ClickNoteButton("mono"));
-        await WaitForRenderIdle();
-        await WaitForNoteElements();
-
-        var spreadAfter = await AlignedTokenSpread("AS");
-
-        Assert.True(spreadAfter < 1,
-            $"the AS column should land at one x in monospace: {spreadBefore} -> {spreadAfter}");
-    }
-
-    /// <summary>
-    /// How far apart a token that sits in the SAME SOURCE COLUMN on several note lines is actually
-    /// drawn. PlantUML emits one element per word, so the token's own x is directly readable — this
-    /// is the measurement that showed the proportional font scattering an aligned column across
-    /// 65.8px. An interior token is the right probe: leading indentation alone does not move the
-    /// first word's x.
-    /// </summary>
-    private Task<double> AlignedTokenSpread(string token) =>
-        Page.EvaluateAsync<double>("""
-            (tok) => {
-                var svg = document.querySelector('[data-diagram-type="plantuml"] svg');
-                var groups = window._findNoteGroups(svg);
-                if (!groups[0]) return 0;
-                var xs = [];
-                groups[0].texts.forEach(function(t) {
-                    if ((t.textContent || '').trim() !== tok) return;
-                    xs.push(parseFloat(t.getAttribute('x') || '0'));
-                });
-                if (xs.length < 2) return -1;
-                return Math.max.apply(null, xs) - Math.min.apply(null, xs);
-            }
-            """, token);
 
     [Fact]
     public async Task The_width_button_is_absent_on_a_note_that_already_fits()
@@ -352,37 +235,22 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
 
     // ── The bulk controls ─────────────────────────────────────────────────
 
-    [Fact]
-    public async Task The_report_level_font_select_switches_every_note()
-    {
-        await NavigateToSqlNote("NoteMonoBulk.html", showNoteFontControls: true);
-
-        await Page.Locator(".note-font-select").First.SelectOptionAsync("mono");
-        await WaitForRenderIdle();
-        await Page.WaitForFunctionAsync(
-            "() => (document.querySelector('[data-diagram-type=\"plantuml\"]').getAttribute('data-plantuml') || '').indexOf('kronNoteMono') >= 0",
-            null, new() { PollingInterval = 200, Timeout = 30000 });
-        await WaitForNoteElements();
-
-        Assert.Contains(await NoteFontFamilies(), f => f.Contains("Courier", StringComparison.OrdinalIgnoreCase));
-    }
-
     /// <summary>
-    /// 3.0.85 shipped the width and font selects with no CSS rule, so they drew as bare browser
-    /// selects against a styled JSON/YAML one. Measured in ONE toolbar that holds all three, so the
-    /// comparison is between siblings and not between two contexts with different inherited fonts.
+    /// 3.0.85 shipped the width select with no CSS rule, so it drew as a bare browser select against
+    /// a styled JSON/YAML one. Measured in ONE toolbar that holds both, so the comparison is between
+    /// siblings and not between two contexts with different inherited fonts.
     /// </summary>
     [Fact]
-    public async Task The_width_and_font_selects_are_drawn_like_the_format_select()
+    public async Task The_width_select_is_drawn_like_the_format_select()
     {
-        await NavigateToSqlNote("NoteSelectStyling.html", showNoteFontControls: true);
+        await NavigateToSqlNote("NoteSelectStyling.html");
 
         var metrics = await Page.EvaluateAsync<string[]>("""
             () => {
                 var format = document.querySelector('.note-format-select');
                 if (!format) return ['NO_FORMAT_SELECT'];
                 var bar = format.parentElement;
-                return ['.note-format-select', '.note-width-select', '.note-font-select'].map(function(sel) {
+                return ['.note-format-select', '.note-width-select'].map(function(sel) {
                     var el = bar.querySelector(sel);
                     if (!el) return 'MISSING ' + sel;
                     var cs = getComputedStyle(el);
@@ -392,9 +260,8 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
             }
             """);
 
-        Assert.Equal(3, metrics.Length);
+        Assert.Equal(2, metrics.Length);
         Assert.Equal(metrics[0], metrics[1]);
-        Assert.Equal(metrics[0], metrics[2]);
     }
 
     [Fact]

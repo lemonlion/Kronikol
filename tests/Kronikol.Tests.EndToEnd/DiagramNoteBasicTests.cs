@@ -100,20 +100,21 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
-    public async Task Scenario_headers_shown_is_active_by_default()
+    public async Task Scenario_headers_hidden_is_the_start_state()
     {
+        // 4.0.0 (plans/V4_PLAN.md R8); headers started shown through 3.x.
         await Page.GotoAsync(GenerateReport("NoteHeadersDefault.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
         var headersBtn = Page.Locator(".diagram-toggle .toggle-btn[data-toggle='headers']").First;
-        await Expect(headersBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
-        await Expect(headersBtn).ToHaveTextAsync("Headers Shown");
+        await Expect(headersBtn).ToHaveTextAsync("Headers Hidden");
+        await Expect(headersBtn).Not.ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
     }
 
     [Fact]
-    public async Task Clicking_scenario_headers_hidden_activates_it()
+    public async Task Clicking_scenario_headers_shows_then_hides_them()
     {
         await Page.GotoAsync(GenerateReport("NoteHeadersHidden.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
@@ -121,6 +122,10 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await WaitForDiagramSvg();
 
         var headersBtn = Page.Locator(".diagram-toggle .toggle-btn[data-toggle='headers']").First;
+        await headersBtn.ClickAsync();
+        await Expect(headersBtn).ToHaveTextAsync("Headers Shown");
+        await Expect(headersBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
+
         await headersBtn.ClickAsync();
         await Expect(headersBtn).ToHaveTextAsync("Headers Hidden");
         var headersBtnClass = await headersBtn.GetAttributeAsync("class");

@@ -29,7 +29,8 @@ public class CompressedMergeTests : IDisposable
     [Fact]
     public void A_compressed_shard_merges_with_a_plain_one_and_the_merge_is_compressed()
     {
-        WriteShard("runner1.json", "a1", "Orders", Body("orders"), compress: true);
+        // A 4.0.0 shard, written with the default option, beside a 3.x shard, which was written plain.
+        WriteShard("runner1.json", "a1", "Orders", Body("orders"), compress: new ReportConfigurationOptions().CompressTestRunReportPayloads);
         WriteShard("runner2.json", "b1", "Payments", Body("payments"), compress: false);
 
         var combined = Merge();

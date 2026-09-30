@@ -115,8 +115,8 @@ public class IngestRoundTripTests : IDisposable
         var annotations = inProcess.GetProperty("annotations");
         Assert.Equal(annotations.GetRawText(), ingested.GetProperty("annotations").GetRawText());
         Assert.Equal(["Row", "Custom"], annotations.EnumerateArray().Select(x => x.GetProperty("kind").GetString()));
-        var diagramA = inProcess.GetProperty("diagrams")[0].GetString()!;
-        var diagramB = ingested.GetProperty("diagrams")[0].GetString()!;
+        var diagramA = ReportPayloadText.Of(inProcess.GetProperty("diagrams")[0])!;
+        var diagramB = ReportPayloadText.Of(ingested.GetProperty("diagrams")[0])!;
         Assert.Contains("<<stepDelimiter>>", diagramA);
         Assert.Contains("<<assertionNote>>", diagramA);
         Assert.Contains("cache warmed", diagramA);

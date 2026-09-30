@@ -443,20 +443,9 @@
                 buttons.push(gf);
             }
 
-            // Monospace and full-width toggles. Monospace comes FIRST, and is the larger measured
-            // readability win of the two: PlantUML draws note text in a proportional font, and
-            // analytics SQL is written with its AS clauses padded into columns — measured on five
-            // lines whose AS token sits in the same source column, sans-serif scattered them across
-            // 65.8px and Courier New put all of them at the same x. No width can fix that.
+            // The full-width toggle. (4.0.0 removed the opt-in monospace glyph that could sit before it.)
             if (appearanceInfo) {
                 var nextSlot = (state === 'expanded' && longNote) ? 4 : 3;
-                if (appearanceInfo.monoUseful) {
-                    buttons.push(glyphButton(nextSlot,
-                        appearanceInfo.font === 'mono' ? 'A' : 'M',
-                        appearanceInfo.font === 'mono' ? 'Show payload in the default font' : 'Show payload in a monospace font',
-                        function() { appearanceInfo.onToggleFont(); }, 'mono', false));
-                    nextSlot++;
-                }
                 widthBtn = glyphButton(nextSlot,
                     appearanceInfo.width === 'full' ? '\u2192\u2190' : '\u2194',
                     appearanceInfo.width === 'full' ? 'Back to the default note width' : 'Widen this note to fill the diagram',
@@ -588,7 +577,7 @@
                         var btnY = Math.max(bbox.y + pad, Math.min(visSvgY + pad, bbox.y + bbox.height - topSize * 2 - pad));
                         buttons.forEach(function(b) {
                             var btn = b.getAttribute('data-note-btn');
-                            if (btn === 'minus' || btn === 'plus' || btn === 'format' || btn === 'mono' || btn === 'width') {
+                            if (btn === 'minus' || btn === 'plus' || btn === 'format' || btn === 'width') {
                                 var rects = b.querySelectorAll('rect');
                                 var lines = b.querySelectorAll('line');
                                 var txts = b.querySelectorAll('text');
@@ -931,19 +920,11 @@
                 };
                 var appearanceInfo = {
                     width: noteWidthOf(owner, globalIdx),
-                    font: noteFontOf(owner, globalIdx),
-                    // Monospace is a display preference any multi-line payload can use; a one-line
-                    // note gains nothing from it and does not need the extra glyph. The glyph is
-                    // opt-in (ShowNoteFontControls); without it the width glyph takes this slot.
-                    monoUseful: window._noteFontControls && (noteBlocks[localIdx] ? noteBlocks[localIdx].contentLines.length : 0) > 1,
                     canWiden: function() {
                         // An already-widened note always keeps its button: that is the only way back.
                         if (noteWidthOf(owner, globalIdx) === 'full') return true;
                         var sourceLines = noteBlocks[localIdx] ? noteBlocks[localIdx].contentLines.length : 0;
                         return sourceLines > 0 && paintedRowCount(grp) > sourceLines;
-                    },
-                    onToggleFont: function() {
-                        setNoteFont(owner, globalIdx, noteFontOf(owner, globalIdx) === 'mono' ? 'default' : 'mono');
                     },
                     onToggleWidth: function() {
                         var next = noteWidthOf(owner, globalIdx) === 'full' ? 'default' : 'full';
@@ -1628,8 +1609,8 @@
         return changed;
     }
 
-    // ── Per-note appearance: full width and monospace ────────────────────────
-    // Both ride the SAME mechanism, which is the only per-note width handle PlantUML has:
+    // ── Per-note appearance: full width ──────────────────────────────────────
+    // It rides the only per-note width handle PlantUML has:
     // a `.className { … }` style block plus a stereotype on the note's header line.
     // Measured on the shipped engine AND on real Java PlantUML — the element selectors
     // (`note { … }`, `note<<x>> { … }`, `sequenceDiagram { note { … } }`) all silently ignore
@@ -1637,18 +1618,6 @@
     // the class and the style block exist only in the client-side re-render source, exactly as
     // the YAML view's spliced lines do.
     var NOTE_WIDE_CLASS = 'kronNoteWide';
-    var NOTE_MONO_CLASS = 'kronNoteMono';
-
-    // Courier New is the only name the ENGINE and the BROWSER both resolve. They size and paint
-    // independently — the engine measures the note box from its own metrics, the browser paints the
-    // text — so a name only one of them knows sizes a box for one font and paints another into it.
-    // Measured on one string: no font 665px engine / 221.7 browser; "Courier New" 765 / 280.8 (the
-    // only row that agrees); "monospace" 708 / 221.7 (browser paints sans); "Consolas" 708 / 257.3;
-    // unknown names 615 / 221.7 — note that an unresolved font is NOT a no-op, it resizes the box.
-    // document.fonts.check() is useless as a guard: it returned true for every name tried,
-    // including one that does not exist.
-    var NOTE_MONO_FONT = 'Courier New';
-
     // A note narrower than this is unreadable whatever the container says, and one wider than this
     // is past anything anyone asked for. The upper bound is a courtesy bound, not a correctness
     // requirement: PLANTUML_LIMIT_SIZE is raster-only (measured: the same source drew SVG at
@@ -1662,14 +1631,9 @@
         return (container._noteWidths && container._noteWidths[idx]) || 'default';
     }
 
-    function noteFontOf(container, idx) {
-        return (container._noteFonts && container._noteFonts[idx]) || 'default';
-    }
-
     function containerHasAppearance(container) {
         var k;
         if (container._noteWidths) for (k in container._noteWidths) if (container._noteWidths[k] === 'full') return true;
-        if (container._noteFonts) for (k in container._noteFonts) if (container._noteFonts[k] === 'mono') return true;
         return false;
     }
 
@@ -1679,8 +1643,7 @@
     function noteAppearanceStyle(widthPx) {
         var open = '<' + 'style>';
         var close = '</' + 'style>';
-        return open + '\n .' + NOTE_WIDE_CLASS + ' {\n     MaximumWidth ' + widthPx + '\n }\n .'
-            + NOTE_MONO_CLASS + ' {\n     FontName "' + NOTE_MONO_FONT + '"\n }\n' + close;
+        return open + '\n .' + NOTE_WIDE_CLASS + ' {\n     MaximumWidth ' + widthPx + '\n }\n' + close;
     }
 
     // Stamps each note's appearance stereotypes onto its header line and injects the style block
@@ -1706,7 +1669,6 @@
                 nIdx++;
                 var stereotypes = '';
                 if (noteWidthOf(container, nIdx) === 'full') stereotypes += '<<' + NOTE_WIDE_CLASS + '>>';
-                if (noteFontOf(container, nIdx) === 'mono') stereotypes += '<<' + NOTE_MONO_CLASS + '>>';
                 if (stereotypes) {
                     // `note<<a>><<b>> left` and `note left <<a>><<b>>` both work; stamping at the
                     // keyword keeps the header's shape identical for every downstream matcher.
@@ -1813,15 +1775,6 @@
         });
     }
 
-    function setNoteFont(container, noteIdx, font) {
-        if (container._noteRendering || window._plantumlRendering) return;
-        if (!container._noteFonts) container._noteFonts = {};
-        if (noteFontOf(container, noteIdx) === font) return;
-        var oldFont = container._noteFonts[noteIdx];
-        container._noteFonts[noteIdx] = font;
-        rerenderWithNoteStates(container, function() { container._noteFonts[noteIdx] = oldFont; });
-    }
-
     // Flips every note of one container, for the scenario- and report-level dropdowns. Returns
     // whether anything actually changed, so a bulk no-op skips its re-render.
     function setAllNoteWidths(container, mode) {
@@ -1840,23 +1793,6 @@
         for (var i = 0; i < noteBlocks.length; i++) {
             if (noteWidthOf(container, i) === mode) continue;
             container._noteWidths[i] = mode;
-            changed = true;
-        }
-        return changed;
-    }
-
-    function setAllNoteFonts(container, font) {
-        if (container.classList && container.classList.contains('puml-fragment')) return false;
-        if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
-        var source = container._noteOriginalSource;
-        if (!source) return false;
-        var noteBlocks = parseNoteBlocks(source);
-        if (noteBlocks.length === 0) return false;
-        if (!container._noteFonts) container._noteFonts = {};
-        var changed = false;
-        for (var i = 0; i < noteBlocks.length; i++) {
-            if (noteFontOf(container, i) === font) continue;
-            container._noteFonts[i] = font;
             changed = true;
         }
         return changed;
@@ -2203,10 +2139,6 @@
     window._stepsVisible = __STEPS_VISIBLE_DEFAULT__;
     window._databasesVisible = __DATABASES_VISIBLE_DEFAULT__;
     window._noteFormatDefault = '__NOTE_FORMAT_DEFAULT__';
-    window._noteFontDefault = '__NOTE_FONT_DEFAULT__';
-    // Whether the monospace controls exist at all (ShowNoteFontControls). Not a start state: a
-    // configured mono default still paints with the controls hidden.
-    window._noteFontControls = __NOTE_FONT_CONTROLS__;
     window._noteWidthDefault = '__NOTE_WIDTH_DEFAULT__';
 
     // The note ends at a line reading `end note`: its message can say "the end notes" mid-line, which ended the match
@@ -2462,11 +2394,9 @@
         // straight into YAML.
         var fmt = el._noteFormatPreference || window._noteFormatDefault;
         if (fmt === 'yaml') setAllNoteFormats(el, 'yaml');
-        // Same contract for the appearance defaults. A container decompressed after a bulk command
-        // (stamped by _setNoteFont / _setNoteWidth) or under a configured default renders straight
-        // into that appearance rather than flashing the default first.
-        var fontPref = el._noteFontPreference || window._noteFontDefault;
-        if (fontPref === 'mono') setAllNoteFonts(el, 'mono');
+        // Same contract for the width default. A container decompressed after a bulk command
+        // (stamped by _setNoteWidth) or under a configured default renders straight into that
+        // width rather than flashing the default first.
         var widthPref = el._noteWidthPreference || window._noteWidthDefault;
         if (widthPref === 'full' && setAllNoteWidths(el, 'full')) {
             // Nothing is drawn yet, so the target starts at the fallback and the correction pass
@@ -3077,28 +3007,6 @@
         });
         return queue;
     }
-
-    window._setNoteFont = function(sel) {
-        var font = sel.value === 'mono' ? 'mono' : 'default';
-        window._noteFontDefault = font;
-        document.querySelectorAll('.note-font-select').forEach(function(s) { s.value = font; });
-        document.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) { c._noteFontPreference = font; });
-        renderWithPending(
-            buildNoteAppearanceQueue(document.querySelectorAll('[data-plantuml]'),
-                function(c) { return setAllNoteFonts(c, font); }),
-            document.querySelectorAll('.note-font-select'));
-    };
-
-    window._setScenarioNoteFont = function(sel) {
-        var scenario = sel.closest('details.scenario');
-        if (!scenario) return;
-        var font = sel.value === 'mono' ? 'mono' : 'default';
-        scenario.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) { c._noteFontPreference = font; });
-        renderWithPending(
-            buildNoteAppearanceQueue(scenario.querySelectorAll('[data-plantuml]'),
-                function(c) { return setAllNoteFonts(c, font); }),
-            scenario.querySelectorAll('.note-font-select'));
-    };
 
     window._setNoteWidth = function(sel) {
         var mode = sel.value === 'full' ? 'full' : 'default';

@@ -17,7 +17,7 @@
 
 Kronikol follows **semantic versioning**. All packages must use the same version number.
 
-- **MAJOR** — a breaking change to the public API or to configuration: removing or renaming a public type, member or option, or changing a default so that existing code behaves differently without being touched. Reserved for the planned v4 and v5 (`plans/ROADMAP.md` D30); never bump it without asking first.
+- **MAJOR** — a breaking change to the public API or to configuration: removing or renaming a public type, member or option, or changing a default so that existing code behaves differently without being touched. Reserved for the planned v5 (`plans/ROADMAP.md` D30; v4 shipped as 4.0.0 on 2026-09-30); never bump it without asking first.
 - **MINOR** — anything new. A new option, public type or member; a new report control, diagram feature or integration; a new package. **A release that adds a feature is a minor bump even when it also fixes bugs** — the highest-ranking change in the release decides the bump.
 - **PATCH** — bug fixes, performance work and internal refactoring. Nothing new for a consumer to call.
 

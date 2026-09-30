@@ -67,7 +67,8 @@ public class NoteHeaderFormsTests : DiagramNotePlaywrightBase
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(TempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ReportTestHelper.ClassicStart);
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
 
         await Page.GotoAsync(new Uri(path).AbsoluteUri);

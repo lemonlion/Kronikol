@@ -1,4 +1,3 @@
-#pragma warning disable CS0618 // pins the monospace note control, obsolete until 4.0.0 removes it
 namespace Kronikol.Tests;
 
 public class ReportConfigurationOptionsDefaultsTests
@@ -24,18 +23,12 @@ public class ReportConfigurationOptionsDefaultsTests
         Assert.True(options.GenerateComponentDiagram);
     }
 
+    // 4.0.0 (plans/V4_PLAN.md R8): notes start as YAML; Json was the default through 3.x.
     [Fact]
-    public void NotePayloadFormat_defaults_to_Json()
+    public void NotePayloadFormat_defaults_to_Yaml()
     {
         var options = new ReportConfigurationOptions();
-        Assert.Equal(Kronikol.Reports.NotePayloadFormat.Json, options.NotePayloadFormat);
-    }
-
-    [Fact]
-    public void ShowNoteFontControls_defaults_to_false()
-    {
-        var options = new ReportConfigurationOptions();
-        Assert.False(options.ShowNoteFontControls);
+        Assert.Equal(Kronikol.Reports.NotePayloadFormat.Yaml, options.NotePayloadFormat);
     }
 
     [Fact]

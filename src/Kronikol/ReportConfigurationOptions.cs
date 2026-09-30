@@ -247,10 +247,10 @@ public record ReportConfigurationOptions
     /// text, and a file holding a compressed payload declares <c>formatVersion</c> 2, which a
     /// <c>kronikol</c> older than 3.35.0 refuses rather than half-reads. The file stays JSON, and
     /// <c>kronikol query</c>, <c>kronikol merge</c> and the <c>query.py</c> of this release read it as they read an
-    /// uncompressed one (#85). Default: <c>false</c>; <c>true</c> from 4.0.0. Only honoured when the format is
-    /// JSON.
+    /// uncompressed one (#85). Default: <c>true</c> from 4.0.0; <c>false</c> through 3.x. Only honoured when the
+    /// format is JSON.
     /// </summary>
-    public bool CompressTestRunReportPayloads { get; set; }
+    public bool CompressTestRunReportPayloads { get; set; } = true;
 
     /// <summary>
     /// When <c>true</c>, every step in the test run report data file carries its full detail: parameters
@@ -490,9 +490,10 @@ public record ReportConfigurationOptions
     /// <c>BrowserJs</c> only. The initial display format for JSON note payloads in sequence diagrams.
     /// <see cref="Reports.NotePayloadFormat.Yaml"/> starts every eligible JSON payload in the derived
     /// YAML view; readers can still switch any note — or all of them via the JSON/YAML toolbar
-    /// dropdowns — either way in the report itself. Default: <see cref="Reports.NotePayloadFormat.Json"/>.
+    /// dropdowns — either way in the report itself. Default: <see cref="Reports.NotePayloadFormat.Yaml"/> from
+    /// 4.0.0; <see cref="Reports.NotePayloadFormat.Json"/> through 3.x.
     /// </summary>
-    public NotePayloadFormat NotePayloadFormat { get; set; } = NotePayloadFormat.Json;
+    public NotePayloadFormat NotePayloadFormat { get; set; } = NotePayloadFormat.Yaml;
 
     /// <summary>
     /// How wide, in pixels, a sequence-diagram note body is drawn before PlantUML breaks it at a
@@ -512,17 +513,6 @@ public record ReportConfigurationOptions
     /// </para>
     /// </summary>
     public int DiagramNoteWrapWidth { get; set; } = PlantUml.PlantUmlCreator.DefaultNoteWrapWidth;
-
-    /// <summary>
-    /// <c>BrowserJs</c> only. When <c>true</c>, the report offers the monospace note controls: the
-    /// <c>M</c>/<c>A</c> glyph in a note's hover cluster and the note-font dropdowns at report and
-    /// scenario level. Default: <c>false</c>, so no monospace control appears anywhere in the report.
-    /// A configured <see cref="ReportToggleDefaults.NoteFont"/> of <see cref="NoteFontFamily.Monospace"/>
-    /// is honoured either way; with the controls hidden it makes every note monospace with no way to
-    /// switch in the report, which is a legitimate configuration.
-    /// </summary>
-    [Obsolete(Kronikol.Reports.NoteFontDeprecation.Message)]
-    public bool ShowNoteFontControls { get; set; }
 
     /// <summary>
     /// Default start states for the interactive report controls (Details radio, truncate lines,

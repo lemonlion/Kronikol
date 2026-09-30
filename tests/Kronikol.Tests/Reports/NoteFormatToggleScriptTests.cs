@@ -96,14 +96,14 @@ public class NoteFormatToggleScriptTests
     [Fact]
     public void Note_format_default_token_is_substituted()
     {
-        // Parameterless overload = json default; yaml overload flips it; the
-        // raw token never leaks into a generated page.
-        Assert.Contains("window._noteFormatDefault = 'json'", _script);
+        // Parameterless overload = the built-in default, yaml from 4.0.0; the json overload flips
+        // it; the raw token never leaks into a generated page.
+        Assert.Contains("window._noteFormatDefault = 'yaml'", _script);
         Assert.DoesNotContain("__NOTE_FORMAT_DEFAULT__", _script);
 
-        var yamlScript = DiagramContextMenu.GetCollapsibleNotesScript(NotePayloadFormat.Yaml);
-        Assert.Contains("window._noteFormatDefault = 'yaml'", yamlScript);
-        Assert.DoesNotContain("__NOTE_FORMAT_DEFAULT__", yamlScript);
+        var jsonScript = DiagramContextMenu.GetCollapsibleNotesScript(NotePayloadFormat.Json);
+        Assert.Contains("window._noteFormatDefault = 'json'", jsonScript);
+        Assert.DoesNotContain("__NOTE_FORMAT_DEFAULT__", jsonScript);
     }
 
     [Fact]

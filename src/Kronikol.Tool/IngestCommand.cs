@@ -25,7 +25,8 @@ internal static class IngestCommand
         var collapseThreshold = 2;
         int? maxArrows = null;
         int? browserRenderWorkers = null;
-        var notePayloadFormat = Kronikol.Reports.NotePayloadFormat.Json;
+        // The library's default until the flag says otherwise (JSON in 3.x, YAML from 4.0.0).
+        Kronikol.Reports.NotePayloadFormat? notePayloadFormat = null;
         // The library's default until the flag says otherwise (#85: off in 3.x, on from 4.0.0).
         bool? compressPayloads = null;
         // The library's default until the flag says otherwise (shown in 3.x, hidden from 4.0.0).
@@ -304,7 +305,8 @@ internal static class IngestCommand
         options.MaxArrowsPerDiagram = maxArrows;
         if (browserRenderWorkers is not null)
             options.BrowserRenderWorkers = browserRenderWorkers.Value;
-        options.NotePayloadFormat = notePayloadFormat;
+        if (notePayloadFormat is { } format)
+            options.NotePayloadFormat = format;
         if (compressPayloads is { } compress)
             options.CompressTestRunReportPayloads = compress;
         if (headersShown is { } shown)
@@ -526,12 +528,12 @@ internal static class IngestCommand
         w.WriteLine("  --browser-render-workers <n>  Web Workers the browserjs report renders diagrams on (default: 4, capped by");
         w.WriteLine("                           the viewer's CPU count); 0 renders on the main thread as before 3.0.45.");
         w.WriteLine("  --note-format <json|yaml>  Initial display format for JSON note payloads in the browserjs report");
-        w.WriteLine("                           (default: json); readers can still switch either way in the report.");
+        w.WriteLine("                           (default: yaml); readers can still switch either way in the report.");
         w.WriteLine("  --payloads <plain|compressed>  How TestRunReport.json holds a body or diagram of 512 characters or");
         w.WriteLine("                           more: as text, or compressed in place (formatVersion 2, read by kronikol");
-        w.WriteLine("                           3.35.0 and later). Default: plain.");
+        w.WriteLine("                           3.35.0 and later). Default: compressed.");
         w.WriteLine("  --headers <shown|hidden>  Whether the browserjs report's diagrams start with request and response");
-        w.WriteLine("                           headers in their notes (default: shown); readers can still switch either way.");
+        w.WriteLine("                           headers in their notes (default: hidden); readers can still switch either way.");
         w.WriteLine("  --no-component-diagram   Skip ComponentDiagram.html.");
         w.WriteLine("  --no-redact              Do not redact credential headers at ingest (default: redact).");
         w.WriteLine("  --redact-header <name>   Additional header to redact (repeatable).");

@@ -976,7 +976,7 @@ public static class ReportGenerator
     /// </summary>
     private static string BuildScenarioDiagramToolbar(ResolvedToggleDefaults toggles,
         bool includeAssertions, bool includeSteps, bool includeDatabases, string scenarioNoteFormatSelect,
-        string scenarioNoteFontSelect = "", string scenarioNoteWidthSelect = "")
+        string scenarioNoteWidthSelect = "")
     {
         var sb = new StringBuilder();
         sb.Append("<span class=\"diagram-toggle-spacer\"></span>");
@@ -989,7 +989,6 @@ public static class ReportGenerator
         if (includeDatabases)
             sb.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: true));
         sb.Append(scenarioNoteFormatSelect);
-        sb.Append(scenarioNoteFontSelect);
         sb.Append(scenarioNoteWidthSelect);
         return sb.ToString();
     }
@@ -1050,7 +1049,7 @@ public static class ReportGenerator
         int browserFragmentMaxHeight = Constants.TrackingDefaults.BrowserFragmentMaxHeight,
         bool separateBackgroundSteps = false,
         bool collapseRepeatedStepKeywords = true,
-        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json,
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Yaml,
         bool fullSearchIndex = true,
         SearchIndex.SearchIndexBuildCache? searchIndexCache = null,
         ResolvedToggleDefaults? toggleDefaults = null,
@@ -1145,7 +1144,7 @@ public static class ReportGenerator
         int browserFragmentMaxHeight = Constants.TrackingDefaults.BrowserFragmentMaxHeight,
         bool separateBackgroundSteps = false,
         bool collapseRepeatedStepKeywords = true,
-        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json,
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Yaml,
         bool fullSearchIndex = true,
         SearchIndex.SearchIndexBuildCache? searchIndexCache = null,
         ResolvedToggleDefaults? toggleDefaults = null,
@@ -1336,27 +1335,11 @@ public static class ReportGenerator
         var hasDiagramNotes = isPlantUmlBrowser && (
             (trackedLogs is not null && trackedLogs.Any(l => l.PlantUml is not null && l.PlantUml.Contains("\nnote "))) ||
             diagrams.Any(d => d.CodeBehind.Contains("\nnote left") || d.CodeBehind.Contains("\nnote right")));
-        // The monospace controls are opt-in (ShowNoteFontControls). A configured NoteFont still
-        // seeds the script either way, so "every note monospace, no toggle" is reachable.
-#pragma warning disable CS0618 // the monospace note control is obsolete until 4.0.0 removes it (V4_PLAN.md R7)
-        var hasNoteFontControls = hasDiagramNotes && toggles.ShowNoteFontControls;
-#pragma warning restore CS0618
-        (string, string)[] noteFontOptions = [("default", "Aa"), ("mono", "Mono")];
         // "Wrap" is the start state (notes wrap at DiagramNoteWrapWidth); "Wide" lifts the ceiling to
         // the diagram's width. The option VALUES are what the handlers and NoteWidthMode key on.
         (string, string)[] noteWidthOptions = [("default", "Wrap"), ("full", "Wide")];
-        const string noteFontTitle = "Note font. Aa: the diagram's own font. Mono: payloads in a monospace font.";
         const string noteWidthTitle = "Note width. Wrap: notes wrap at the report's note width. Wide: notes widen to fill the diagram.";
-#pragma warning disable CS0618 // the monospace note control is obsolete until 4.0.0 removes it (V4_PLAN.md R7)
-        var fontSelected = toggles.NoteFont == NoteFontFamily.Monospace ? "mono" : "default";
-#pragma warning restore CS0618
         var widthSelected = toggles.NoteWidth == NoteWidthMode.Full ? "full" : "default";
-        var reportNoteFontSelect = hasNoteFontControls
-            ? BuildNoteAppearanceSelect("note-font-select", "Note font", noteFontTitle, "_setNoteFont", noteFontOptions, fontSelected)
-            : "";
-        var scenarioNoteFontSelect = hasNoteFontControls
-            ? BuildNoteAppearanceSelect("note-font-select", "Note font", noteFontTitle, "_setScenarioNoteFont", noteFontOptions, fontSelected)
-            : "";
         var reportNoteWidthSelect = hasDiagramNotes
             ? BuildNoteAppearanceSelect("note-width-select", "Note width", noteWidthTitle, "_setNoteWidth", noteWidthOptions, widthSelected)
             : "";
@@ -1367,10 +1350,10 @@ public static class ReportGenerator
         // no-filters variant serves the flow-only branch, which has no sequence content to filter.
         var scenarioToolbarControls = BuildScenarioDiagramToolbar(toggles,
             hasAssertionNotes, hasStepDelimiters, hasDatabaseParticipants, scenarioNoteFormatSelect,
-            scenarioNoteFontSelect, scenarioNoteWidthSelect);
+            scenarioNoteWidthSelect);
         var scenarioToolbarControlsNoFilters = BuildScenarioDiagramToolbar(toggles,
             includeAssertions: false, includeSteps: false, includeDatabases: false, scenarioNoteFormatSelect,
-            scenarioNoteFontSelect, scenarioNoteWidthSelect);
+            scenarioNoteWidthSelect);
         // A report drawn when it was written (NodeJs, Server, Local) still has views only the page draws: the Activity
         // tab and the internal-flow popups, whose diagrams are one per scenario and one per call. It carries the engine
         // on demand for them, fetched the first time one is shown; until 3.31.8 it carried none and they stayed blank,
@@ -1733,7 +1716,6 @@ public static class ReportGenerator
             if (hasDatabaseParticipants)
                 body.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: false));
             body.Append(reportNoteFormatSelect);
-            body.Append(reportNoteFontSelect);
             body.Append(reportNoteWidthSelect);
         }
         body.Append("</div>");
@@ -6255,7 +6237,7 @@ public static class ReportGenerator
                 ["compressedPayload"] = new Dictionary<string, object?>
                 {
                     ["type"] = "object",
-                    ["description"] = "A payload (a body or a diagram's PlantUML source) written compressed in place of its text, by CompressTestRunReportPayloads (#85). kronikol query, kronikol merge and query.py read it as they read the text; to read it yourself, base64-decode $z and gunzip it, which gives the text's UTF-8",
+                    ["description"] = "A payload (a body or a diagram's PlantUML source) written compressed in place of its text, by CompressTestRunReportPayloads (#85), on by default from 4.0.0. kronikol query, kronikol merge and query.py read it as they read the text; to read it yourself, base64-decode $z and gunzip it, which gives the text's UTF-8",
                     ["properties"] = new Dictionary<string, object?>
                     {
                         ["$h"] = new Dictionary<string, object?> { ["type"] = "string", ["pattern"] = "^b:[0-9a-f]{8}$", ["description"] = "The text's b: address, the one kronikol query prints for it: the first eight hex digits of the SHA-1 of its UTF-8", ["examples"] = new[] { "b:4bdea521" } },

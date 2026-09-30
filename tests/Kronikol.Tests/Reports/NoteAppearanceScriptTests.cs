@@ -1,13 +1,12 @@
-#pragma warning disable CS0618 // pins the monospace note control, obsolete until 4.0.0 removes it
 using Kronikol.Reports;
 
 namespace Kronikol.Tests.Reports;
 
 /// <summary>
-/// Structural tests for the per-note appearance controls — monospace payload text and full-width
-/// notes (plans/NOTE_WRAP_AND_WIDTH_PLAN.md Part B). Behavioural coverage is in the Playwright suite
-/// (<c>NoteAppearanceTests</c>), which renders real diagrams and reads the painted SVG back; these
-/// pin the wiring that a refactor could quietly break.
+/// Structural tests for the per-note appearance control, full-width notes
+/// (plans/NOTE_WRAP_AND_WIDTH_PLAN.md Part B; 4.0.0 removed the opt-in monospace control beside it).
+/// Behavioural coverage is in the Playwright suite (<c>NoteAppearanceTests</c>), which renders real
+/// diagrams and reads the painted SVG back; these pin the wiring that a refactor could quietly break.
 /// </summary>
 public class NoteAppearanceScriptTests
 {
@@ -20,25 +19,13 @@ public class NoteAppearanceScriptTests
     /// class selector plus a stereotype on the note header carries it.
     /// </summary>
     [Fact]
-    public void Width_and_font_ride_a_class_style_block_and_a_note_stereotype()
+    public void Width_rides_a_class_style_block_and_a_note_stereotype()
     {
         Assert.Contains("MaximumWidth", _script);
-        Assert.Contains("FontName", _script);
         Assert.Contains("kronNoteWide", _script);
-        Assert.Contains("kronNoteMono", _script);
-    }
-
-    /// <summary>
-    /// Courier New is the only name the engine and the browser both resolve — the engine sizes the
-    /// note box from its own metrics and the browser paints the text, and every other candidate
-    /// measured (monospace, Consolas, DejaVu Sans Mono, Menlo) sized a box for one font and painted
-    /// another into it. An unresolved name is not a no-op: it has its own, third, metric.
-    /// </summary>
-    [Fact]
-    public void The_monospace_font_is_named_explicitly()
-    {
-        Assert.Contains("Courier New", _script);
-        Assert.DoesNotContain("FontName \"monospace\"", _script);
+        // 4.0.0 removed the monospace control, which rode the same mechanism.
+        Assert.DoesNotContain("FontName", _script);
+        Assert.DoesNotContain("kronNoteMono", _script);
     }
 
     /// <summary>
@@ -83,23 +70,23 @@ public class NoteAppearanceScriptTests
     }
 
     [Fact]
-    public void Both_appearances_have_a_dedicated_setter_beside_setNoteState()
+    public void The_width_has_a_dedicated_setter_beside_setNoteState()
     {
         Assert.Contains("function setNoteWidth(container, noteIdx, mode", _script);
-        Assert.Contains("function setNoteFont(container, noteIdx, font", _script);
+        Assert.DoesNotContain("setNoteFont", _script);
         Assert.Contains("rerenderWithNoteStates(container", _script);
     }
 
     [Fact]
-    public void Both_buttons_are_wired_into_the_hover_cluster()
+    public void The_width_button_is_wired_into_the_hover_cluster()
     {
         var singleQuoted = _script.Replace("\"", "'");
-        // Both are built by the shared glyph factory, which stamps data-note-btn from its btnName.
+        // It is built by the shared glyph factory, which stamps data-note-btn from its btnName.
         Assert.Contains("g.setAttribute('data-note-btn', btnName);", singleQuoted);
-        Assert.Contains("'mono', false)", singleQuoted);
         Assert.Contains("'width', appearanceInfo.width !== 'full')", singleQuoted);
-        // …and the tall-note repositioning sweep has to move them with the rest of the cluster.
-        Assert.Contains("btn === 'mono' || btn === 'width'", singleQuoted);
+        // …and the tall-note repositioning sweep has to move it with the rest of the cluster.
+        Assert.Contains("btn === 'format' || btn === 'width'", singleQuoted);
+        Assert.DoesNotContain("'mono'", singleQuoted);
     }
 
     /// <summary>
@@ -145,8 +132,6 @@ public class NoteAppearanceScriptTests
     [Fact]
     public void Bulk_controls_exist_at_report_and_scenario_level_and_reuse_the_pending_state()
     {
-        Assert.Contains("window._setNoteFont = function", _script);
-        Assert.Contains("window._setScenarioNoteFont = function", _script);
         Assert.Contains("window._setNoteWidth = function", _script);
         Assert.Contains("window._setScenarioNoteWidth = function", _script);
         // The report-wide command costs one re-render per container; the format dropdown already
@@ -170,37 +155,15 @@ public class NoteAppearanceScriptTests
     [Fact]
     public void Appearance_default_tokens_are_substituted()
     {
-        Assert.Contains("window._noteFontDefault = 'default'", _script);
         Assert.Contains("window._noteWidthDefault = 'default'", _script);
-        Assert.DoesNotContain("__NOTE_FONT_DEFAULT__", _script);
+        Assert.DoesNotContain("_noteFontDefault", _script);
         Assert.DoesNotContain("__NOTE_WIDTH_DEFAULT__", _script);
 
         var configured = DiagramContextMenu.GetCollapsibleNotesScript(ResolvedToggleDefaults.BuiltIn with
         {
-            NoteFont = NoteFontFamily.Monospace,
             NoteWidth = NoteWidthMode.Full
         });
-        Assert.Contains("window._noteFontDefault = 'mono'", configured);
         Assert.Contains("window._noteWidthDefault = 'full'", configured);
-    }
-
-    /// <summary>
-    /// The monospace glyph is opt-in (<c>ShowNoteFontControls</c>): the script is seeded with whether
-    /// the control exists, from the same resolved record the toolbar markup reads, and the glyph's
-    /// gate reads that seed. The handlers stay defined either way; the script is not forked by flag.
-    /// </summary>
-    [Fact]
-    public void The_monospace_glyph_is_gated_on_the_seeded_controls_flag()
-    {
-        Assert.DoesNotContain("__NOTE_FONT_CONTROLS__", _script);
-        Assert.Contains("window._noteFontControls = false;", _script);
-
-        var shown = DiagramContextMenu.GetCollapsibleNotesScript(
-            ResolvedToggleDefaults.BuiltIn with { ShowNoteFontControls = true });
-        Assert.DoesNotContain("__NOTE_FONT_CONTROLS__", shown);
-        Assert.Contains("window._noteFontControls = true;", shown);
-
-        Assert.Contains("monoUseful: window._noteFontControls && ", _script);
     }
 
     /// <summary>
@@ -213,9 +176,10 @@ public class NoteAppearanceScriptTests
     {
         var css = DiagramContextMenu.GetCollapsibleNotesStyles().ReplaceLineEndings("\n");
 
-        Assert.Contains(".note-format-select,\n.note-font-select,\n.note-width-select {\n    padding: 0.2em 0.3em;", css);
+        Assert.Contains(".note-format-select,\n.note-width-select {\n    padding: 0.2em 0.3em;", css);
+        Assert.DoesNotContain("note-font-select", css);
         Assert.Contains(
-            ".note-format-select.details-pending,\n.note-font-select.details-pending,\n.note-width-select.details-pending {\n    position: relative;",
+            ".note-format-select.details-pending,\n.note-width-select.details-pending {\n    position: relative;",
             css);
     }
 
@@ -229,9 +193,7 @@ public class NoteAppearanceScriptTests
         var idx = _script.IndexOf("window._preProcessSource", StringComparison.Ordinal);
         Assert.True(idx >= 0);
         var body = _script[idx.._script.IndexOf("function processRenderQueue(", idx, StringComparison.Ordinal)];
-        Assert.Contains("_noteFontPreference", body);
         Assert.Contains("_noteWidthPreference", body);
-        Assert.Contains("setAllNoteFonts(", body);
         Assert.Contains("setAllNoteWidths(", body);
     }
 

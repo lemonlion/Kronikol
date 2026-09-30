@@ -24,7 +24,9 @@ public class CompressedReportQueryTests : IDisposable
     public CompressedReportQueryTests()
     {
         _plain = Write("plain", compress: false);
-        _compressed = Write("compressed", compress: true);
+        // Compressed by the default option (on from 4.0.0), so the theory below is about a report written with no
+        // options, and a default turned back off fails the fixture fact.
+        _compressed = Write("compressed", compress: new ReportConfigurationOptions().CompressTestRunReportPayloads);
     }
 
     public void Dispose()

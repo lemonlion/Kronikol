@@ -29,7 +29,8 @@ public class PayloadCompressionTests : IDisposable
     }
 
     [Fact]
-    public void The_option_is_off_by_default() => Assert.False(new ReportConfigurationOptions().CompressTestRunReportPayloads);
+    // On from 4.0.0 (plans/V4_PLAN.md R8); off through 3.x.
+    public void The_option_is_on_by_default() => Assert.True(new ReportConfigurationOptions().CompressTestRunReportPayloads);
 
     [Fact]
     public void A_payload_of_512_characters_is_written_compressed_and_one_of_511_is_not()

@@ -226,6 +226,50 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     }
 
     // ═══════════════════════════════════════════════════════════
+    // 4.0.0 start states (plans/V4_PLAN.md R8)
+    // ═══════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task With_nothing_configured_the_first_render_hides_headers_and_draws_notes_as_yaml()
+    {
+        await NavigateWide("Toggle_V4Defaults.html", _ => { });
+
+        var text = await GetNormalizedSvgText();
+        Assert.DoesNotContain("traceparent", text);
+        Assert.Contains("customerId: d37d5aba2a244807b7fe008d01f6ba0f", text);
+        Assert.DoesNotContain("\"customerId\"", text);
+
+        var headers = Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']");
+        Assert.Equal("Headers Hidden", (await headers.TextContentAsync())!.Trim());
+        Assert.Equal("false", await headers.GetAttributeAsync("data-shown"));
+        Assert.Equal("yaml", await Page.Locator(".toolbar-right .note-format-select").InputValueAsync());
+
+        // Both switch back from the first render.
+        var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await Page.Locator("details.scenario .toggle-btn[data-toggle='headers'][data-shown='false']").ClickAsync();
+        await WaitForRenderCountIncrease(renderCount);
+        Assert.Contains("traceparent", await GetNormalizedSvgText());
+    }
+
+    [Fact]
+    public async Task Configuring_the_3_x_start_states_draws_headers_and_json_on_the_first_render()
+    {
+        await NavigateWide("Toggle_V3Defaults.html", t =>
+        {
+            t.HeadersShown = true;
+            t.NotePayloadFormat = Kronikol.Reports.NotePayloadFormat.Json;
+        });
+
+        var text = await GetNormalizedSvgText();
+        Assert.Contains("traceparent", text);
+        Assert.Contains("\"customerId\"", text);
+
+        var headers = Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']");
+        Assert.Equal("true", await headers.GetAttributeAsync("data-shown"));
+        Assert.Equal("json", await Page.Locator(".toolbar-right .note-format-select").InputValueAsync());
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // Controls 8–9 — Features / Scenarios expanded
     // ═══════════════════════════════════════════════════════════
 

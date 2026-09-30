@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.0.0] - 2026-09-30
+
+**Major - `TestRunReport.json` compresses large payloads by default, reports open with headers hidden and notes as
+YAML, and the opt-in monospace note control is removed.** `plans/V4_PLAN.md` R8 (roadmap 1c.8, D30). Three defaults
+change what unchanged code produces, and five public members are removed, so the major moves. Each default can be
+set back; the wiki's "Migrating to v4" page lists how, and what reads a compressed file. On BreakfastProvider's xUnit lane, run on local builds with nothing configured, TestRunReport.json came to 4,345,421 bytes with 325 payloads compressed, where 3.34.2 wrote 5,855,252 and 3.34.0 6,461,200; the suite built and passed 203 of 203 with no change to its code, and the query.cs its run wrote read the file. The history
+action's `VERSION` installs `Kronikol.Tool` 4.0.0. Template pins move to 3.36.0. Report output changes, so there are
+Kronikol4J ledger entries.
+
+### Breaking changes
+
+- **`ReportConfigurationOptions.CompressTestRunReportPayloads` defaults to `true` (#85).** A body or a diagram's
+  PlantUML source of 512 characters or more is written as `{"$h", "$n", "$z"}` in its place when that is smaller, and
+  a file holding one declares `formatVersion` 2. `kronikol` 3.35.0 and later, `kronikol merge` (which takes 3.x and
+  4.0.0 shards together) and the `query.py` Kronikol writes from 3.35.0 read it as they read a plain file. A
+  `kronikol` older than 3.35.0 refuses it by its `formatVersion`; a `query.py` copied into a repository before 3.35.0
+  fails on it and needs refreshing (`kronikol init-agents`); a workflow that pins the history action to a tag before
+  `v3.35.0` has to move it on. `CompressTestRunReportPayloads = false` writes the 3.x file.
+- **Headers start hidden.** `ReportToggleDefaults.HeadersShown` resolves to `false` when unset, and
+  `ResolvedToggleDefaults.BuiltIn.HeadersShown` is `false`: diagrams open without the request and response header
+  lines in their notes, and the **Headers** buttons read "Headers Hidden". Readers show them as before.
+  `TestRunReportToggleDefaults.HeadersShown = true` opens reports as 3.x did.
+- **Notes start as YAML.** `ReportConfigurationOptions.NotePayloadFormat` defaults to `NotePayloadFormat.Yaml`, and
+  so does `ResolvedToggleDefaults.BuiltIn.NotePayloadFormat` and the parameterless
+  `DiagramContextMenu.GetCollapsibleNotesScript()`: a JSON payload is drawn as YAML, and one that cannot be stays
+  JSON. `NotePayloadFormat = NotePayloadFormat.Json` opens reports as 3.x did. Where a report opens with its drawn
+  source different from the report's, which is now every report with such a note, the diagram menu's **Copy
+  PlantUML source** offers the full and the current source, as it did in 3.x once a reader switched a note.
+- **The opt-in monospace note control is removed** (obsolete since 3.36.0):
+  `ReportConfigurationOptions.ShowNoteFontControls`, `ReportToggleDefaults.NoteFont`, `ResolvedToggleDefaults.NoteFont`,
+  `ResolvedToggleDefaults.ShowNoteFontControls` and the `NoteFontFamily` enum, with the note's `M`/`A` glyph, the
+  note-font dropdowns and the `kronNoteMono` class. Code that sets them no longer builds: delete those lines. Notes
+  keep the diagram's own font; the note width control stays.
+- **`kronikol ingest` follows the library.** Without `--payloads`, `--headers` or `--note-format` it writes
+  compressed payloads, headers hidden and YAML notes; `--payloads plain`, `--headers shown` and
+  `--note-format json` write what 3.x wrote.
+
+### Changed
+
+- The JSON schema's description of the payload wrapper says it is on by default from 4.0.0.
+
 ## [3.36.0] - 2026-09-30
 
 **Minor - `kronikol ingest --headers`, and the opt-in monospace note control marked obsolete.** `plans/V4_PLAN.md`

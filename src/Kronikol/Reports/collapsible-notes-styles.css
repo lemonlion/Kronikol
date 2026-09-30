@@ -19,10 +19,9 @@
     margin-left: 0;
 }
 .truncate-lines-label { font-size: 0.85em; color: rgb(100, 100, 100); margin-left: 0; margin-right: 0.3em; }
-/* The note dropdowns: JSON ⇄ YAML payload format, note font, note width
-   (collapsible-notes-script.js _setNoteFormat, _setNoteFont, _setNoteWidth) */
+/* The note dropdowns: JSON ⇄ YAML payload format and note width
+   (collapsible-notes-script.js _setNoteFormat, _setNoteWidth) */
 .note-format-select,
-.note-font-select,
 .note-width-select {
     padding: 0.2em 0.3em;
     border: 1px solid rgb(180, 180, 180);
@@ -46,7 +45,6 @@
 .details-radio-btn.details-pending,
 .truncate-lines-select.details-pending,
 .note-format-select.details-pending,
-.note-font-select.details-pending,
 .note-width-select.details-pending {
     position: relative;
     cursor: progress;

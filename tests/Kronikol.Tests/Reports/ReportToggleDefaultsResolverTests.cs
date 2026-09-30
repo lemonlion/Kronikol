@@ -1,4 +1,3 @@
-#pragma warning disable CS0618 // pins the monospace note control, obsolete until 4.0.0 removes it
 using Kronikol.Reports;
 
 namespace Kronikol.Tests.Reports;
@@ -26,15 +25,15 @@ public class ReportToggleDefaultsResolverTests
         var b = ResolvedToggleDefaults.BuiltIn;
         Assert.Equal(ReportDetailsState.Truncated, b.Details);
         Assert.Equal(TruncateLineCount.Lines40, b.TruncateLines);
-        Assert.True(b.HeadersShown);
+        // 4.0.0 (plans/V4_PLAN.md R8): headers start hidden and notes start as YAML; through 3.x
+        // headers started shown and notes as JSON.
+        Assert.False(b.HeadersShown);
         Assert.False(b.AssertionsShown);
         Assert.True(b.StepsShown);
         Assert.True(b.DatabasesShown);
-        Assert.Equal(NotePayloadFormat.Json, b.NotePayloadFormat);
-        // A full-width or monospace START state changes every diagram's geometry on first paint,
-        // which is not something to impose: byte-identity for existing reports is the stronger
-        // constraint, so both built-ins are the states reports already had.
-        Assert.Equal(NoteFontFamily.Default, b.NoteFont);
+        Assert.Equal(NotePayloadFormat.Yaml, b.NotePayloadFormat);
+        // A full-width START state changes every diagram's geometry on first paint, which is not
+        // something to impose, so the built-in is the state reports already had.
         Assert.Equal(NoteWidthMode.Default, b.NoteWidth);
         Assert.False(b.FeaturesExpanded);
         Assert.False(b.ScenariosExpanded);
@@ -120,66 +119,42 @@ public class ReportToggleDefaultsResolverTests
     [Fact]
     public void Note_payload_format_group_value_wins_over_the_flat_option()
     {
-        var flatOnly = new ReportConfigurationOptions { NotePayloadFormat = NotePayloadFormat.Yaml };
-        Assert.Equal(NotePayloadFormat.Yaml,
+        // Each configured value is the one the default is not (YAML from 4.0.0), so every assertion
+        // sees a configured value win rather than the default showing through.
+        var flatOnly = new ReportConfigurationOptions { NotePayloadFormat = NotePayloadFormat.Json };
+        Assert.Equal(NotePayloadFormat.Json,
             ReportToggleDefaultsResolver.Resolve(flatOnly, specifications: false).NotePayloadFormat);
-        Assert.Equal(NotePayloadFormat.Yaml,
+        Assert.Equal(NotePayloadFormat.Json,
             ReportToggleDefaultsResolver.Resolve(flatOnly, specifications: true).NotePayloadFormat);
 
         var groupWins = new ReportConfigurationOptions
         {
-            NotePayloadFormat = NotePayloadFormat.Yaml,
-            TestRunReportToggleDefaults = { NotePayloadFormat = NotePayloadFormat.Json }
+            NotePayloadFormat = NotePayloadFormat.Json,
+            TestRunReportToggleDefaults = { NotePayloadFormat = NotePayloadFormat.Yaml }
         };
-        Assert.Equal(NotePayloadFormat.Json,
+        Assert.Equal(NotePayloadFormat.Yaml,
             ReportToggleDefaultsResolver.Resolve(groupWins, specifications: false).NotePayloadFormat);
 
         var specDiverges = new ReportConfigurationOptions
         {
-            SpecificationsToggleDefaults = { NotePayloadFormat = NotePayloadFormat.Yaml }
+            SpecificationsToggleDefaults = { NotePayloadFormat = NotePayloadFormat.Json }
         };
-        Assert.Equal(NotePayloadFormat.Json,
-            ReportToggleDefaultsResolver.Resolve(specDiverges, specifications: false).NotePayloadFormat);
         Assert.Equal(NotePayloadFormat.Yaml,
+            ReportToggleDefaultsResolver.Resolve(specDiverges, specifications: false).NotePayloadFormat);
+        Assert.Equal(NotePayloadFormat.Json,
             ReportToggleDefaultsResolver.Resolve(specDiverges, specifications: true).NotePayloadFormat);
     }
 
-    /// <summary>
-    /// <c>ShowNoteFontControls</c> says whether a control EXISTS, which is not a start state: it
-    /// rides the resolved record so the toolbar markup and the script seed read one value, and it
-    /// comes from the flat option alone.
-    /// </summary>
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void The_note_font_controls_flag_is_copied_from_the_flat_option(bool specifications)
-    {
-        Assert.False(ResolvedToggleDefaults.BuiltIn.ShowNoteFontControls);
-
-        var shown = new ReportConfigurationOptions { ShowNoteFontControls = true };
-        Assert.True(ReportToggleDefaultsResolver.Resolve(shown, specifications).ShowNoteFontControls);
-    }
-
     [Fact]
-    public void The_note_font_controls_flag_survives_both_overlays()
+    public void The_note_width_start_state_survives_both_overlays()
     {
         var options = new ReportConfigurationOptions
         {
-            ShowNoteFontControls = true,
-            TestRunReportToggleDefaults = { NoteFont = NoteFontFamily.Monospace },
             SpecificationsToggleDefaults = { NoteWidth = NoteWidthMode.Full }
         };
 
-        var specs = ReportToggleDefaultsResolver.Resolve(options, specifications: true);
-        Assert.True(specs.ShowNoteFontControls);
-        Assert.Equal(NoteFontFamily.Monospace, specs.NoteFont);
-        Assert.Equal(NoteWidthMode.Full, specs.NoteWidth);
-    }
-
-    [Fact]
-    public void Neither_toggle_default_group_can_name_the_note_font_controls_flag()
-    {
-        Assert.Null(typeof(ReportToggleDefaults).GetProperty(nameof(ReportConfigurationOptions.ShowNoteFontControls)));
+        Assert.Equal(NoteWidthMode.Full, ReportToggleDefaultsResolver.Resolve(options, specifications: true).NoteWidth);
+        Assert.Equal(NoteWidthMode.Default, ReportToggleDefaultsResolver.Resolve(options, specifications: false).NoteWidth);
     }
 
     [Fact]

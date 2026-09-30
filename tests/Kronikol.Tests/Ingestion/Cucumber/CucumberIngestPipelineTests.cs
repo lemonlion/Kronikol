@@ -243,7 +243,7 @@ public class CucumberIngestPipelineTests : IDisposable
             foreach (var scenario in feature.GetProperty("scenarios").EnumerateArray())
             {
                 if (scenario.GetProperty("id").GetString() == scenarioId)
-                    return scenario.GetProperty("diagrams")[0].GetString()!;
+                    return ReportPayloadText.Of(scenario.GetProperty("diagrams")[0])!;
             }
         }
 

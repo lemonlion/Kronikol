@@ -177,8 +177,10 @@ public class NonSecureOriginTests : PlaywrightTestBase
         var source = await svg.EvaluateAsync<string>("el => el.closest('[data-diagram-type]').getAttribute('data-plantuml')");
         Assert.StartsWith("@startuml", source);
 
+        // From 4.0.0 a report opens with headers hidden and notes as YAML, so the drawn source, which data-plantuml holds
+        // once drawn, differs from the report's, and the menu offers both: "current" is the drawn one.
         await SetClipboard(reader, "nothing copied yet");
-        await ClickMenuItem(lan.Page, svg, "Copy PlantUML source");
+        await ClickMenuItem(lan.Page, svg, "Copy PlantUML source", "Copy current PlantUML source");
         Assert.Equal(source, await ReadClipboard(reader));
 
         await SetClipboard(reader, "nothing copied yet");

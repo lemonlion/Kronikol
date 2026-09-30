@@ -14,6 +14,15 @@ namespace Kronikol.Tests.EndToEnd;
 /// </summary>
 public static class ReportTestHelper
 {
+    /// <summary>
+    /// The start states 3.x reports opened in: headers shown and notes as JSON. 4.0.0 opens a report with headers
+    /// hidden and notes as YAML (<c>plans/V4_PLAN.md</c> R8). A fixture whose facts drive the header or note-format
+    /// controls from the 3.x start pins these, so each fact starts where it was written to start; the 4.0.0 start
+    /// itself is pinned by <c>ToggleDefaultsTests</c>.
+    /// </summary>
+    public static readonly ResolvedToggleDefaults ClassicStart =
+        ResolvedToggleDefaults.BuiltIn with { HeadersShown = true, NotePayloadFormat = NotePayloadFormat.Json };
+
     private const string PlantUmlSource = """
         @startuml
         actor "Caller" as caller
@@ -348,7 +357,8 @@ public static class ReportTestHelper
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             internalFlowTracking: true,
-            componentDiagramPlantUml: componentSource);
+            componentDiagramPlantUml: componentSource,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -701,7 +711,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -1022,7 +1033,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -1106,7 +1118,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -1203,7 +1216,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -1295,7 +1309,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -1314,7 +1329,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -1371,7 +1387,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -1443,7 +1460,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -1532,7 +1550,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -2431,7 +2450,7 @@ public static class ReportTestHelper
     /// The viewport sweep's fixture: the widest header and the fullest scenario toolbar a reader can be
     /// given (plans/TOOLBAR_AT_EVERY_WIDTH_PLAN.md §4). Seventeen participants with the length spread of a
     /// real suite (three of them databases), six tags, a 69-character branch and a 52-character repository
-    /// in the CI box, a diagram carrying an assertion note and a step bar, the opt-in note font select,
+    /// in the CI box, a diagram carrying an assertion note and a step bar (4.0.0 removed the opt-in note font select),
     /// with flow tracking the whole-test flow views (the Sequence, Activity and Flame tabs), and on the
     /// run report the component diagram every default run report with dependencies embeds. Each is the
     /// measured worst case of its kind; the default fixture has none of them.
@@ -2548,7 +2567,7 @@ public static class ReportTestHelper
             wholeTestVisualization: WholeTestFlowVisualization.Both,
             ciMetadata: specifications ? null : ci,
             componentDiagramPlantUml: specifications ? null : ToggleDefaultsComponentDiagramSource,
-            toggleDefaults: ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions { ShowNoteFontControls = true }, specifications));
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions(), specifications));
 
         foreach (var span in spans)
             span.Dispose();
@@ -2973,7 +2992,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -3107,7 +3127,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -3353,7 +3374,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -3571,7 +3593,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -3649,7 +3672,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -3701,7 +3725,7 @@ public static class ReportTestHelper
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            notePayloadFormat: notePayloadFormat);
+            toggleDefaults: ClassicStart with { NotePayloadFormat = notePayloadFormat });
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -3745,7 +3769,7 @@ public static class ReportTestHelper
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            notePayloadFormat: notePayloadFormat);
+            toggleDefaults: ClassicStart with { NotePayloadFormat = notePayloadFormat });
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -3858,7 +3882,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -3922,7 +3947,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return "file://" + path.Replace("\\", "/");
@@ -4063,7 +4089,8 @@ public static class ReportTestHelper
     /// PlantUML source, so every part after the first carries <c>@startuml</c> and <c>@enduml</c> inside its
     /// lines. The splitter asked whether a part already had its header by searching the part for the text.
     /// </summary>
-    public static string GenerateReportWithPlantUmlQuotingLongNote(string tempDir, string outputDir, string fileName)
+    public static string GenerateReportWithPlantUmlQuotingLongNote(string tempDir, string outputDir, string fileName,
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json)
     {
         var (features, _) = CreateTestData();
         var body = "[" + string.Join(",", Enumerable.Range(0, 320).Select(i =>
@@ -4082,6 +4109,9 @@ public static class ReportTestHelper
         // A long note starts truncated to 40 lines, which the splitter never sees whole: start it expanded.
         var options = new ReportConfigurationOptions();
         options.TestRunReportToggleDefaults.Details = ReportDetailsState.Expanded;
+        // Headers shown, as in 3.x; the note format is the fact's to choose (JSON unless it says).
+        options.TestRunReportToggleDefaults.HeadersShown = true;
+        options.NotePayloadFormat = notePayloadFormat;
 
         var path = ReportGenerator.GenerateHtmlReport(
             [new DiagramAsCode("t1", "", plantUml)], features,
@@ -4124,7 +4154,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4521,7 +4552,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4564,7 +4596,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4610,7 +4643,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4652,7 +4686,8 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4682,9 +4717,6 @@ public static class ReportTestHelper
              .kronNoteWide {
                  MaximumWidth 2400
              }
-             .kronNoteMono {
-                 FontName "Courier New"
-             }
             </style>
             skinparam wrapWidth 800
             autonumber 1
@@ -4697,7 +4729,7 @@ public static class ReportTestHelper
             {{line}}
             end note
             caller -> svc : wide
-            note<<eventNote>><<kronNoteWide>><<kronNoteMono>> left
+            note<<eventNote>><<kronNoteWide>> left
             {{line}}
             end note
             @enduml
@@ -4731,12 +4763,10 @@ public static class ReportTestHelper
         """;
 
     /// <summary>
-    /// A report whose one request note carries <see cref="WideClickHouseQuery"/>. The monospace
-    /// controls are opt-in (<c>ShowNoteFontControls</c>), so a fact that drives them asks for them;
-    /// <paramref name="noteFont"/> and <paramref name="noteWidth"/> are the configured start states.
+    /// A report whose one request note carries <see cref="WideClickHouseQuery"/>;
+    /// <paramref name="noteWidth"/> is the configured start state.
     /// </summary>
     public static string GenerateReportWithWideSqlNote(string tempDir, string outputDir, string fileName,
-        bool showNoteFontControls = false, NoteFontFamily noteFont = NoteFontFamily.Default,
         NoteWidthMode noteWidth = NoteWidthMode.Default)
     {
         var (features, _) = CreateTestData();
@@ -4765,8 +4795,6 @@ public static class ReportTestHelper
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             toggleDefaults: ResolvedToggleDefaults.BuiltIn with
             {
-                ShowNoteFontControls = showNoteFontControls,
-                NoteFont = noteFont,
                 NoteWidth = noteWidth
             });
 

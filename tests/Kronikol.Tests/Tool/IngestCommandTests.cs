@@ -126,7 +126,8 @@ public class IngestCommandTests : IDisposable
 
         var unset = Path.Combine(_dir, "out-default");
         Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", unset], new StringWriter(), err));
-        Assert.Contains("window._noteFormatDefault = 'json'", File.ReadAllText(Path.Combine(unset, "TestRunReport.html")));
+        // Without the flag, ingest keeps the library's default: YAML from 4.0.0.
+        Assert.Contains("window._noteFormatDefault = 'yaml'", File.ReadAllText(Path.Combine(unset, "TestRunReport.html")));
 
         var usage = new StringWriter();
         IngestCommand.PrintUsage(usage);
@@ -166,16 +167,18 @@ public class IngestCommandTests : IDisposable
         static string[] Buttons(string html) => System.Text.RegularExpressions.Regex
             .Matches(html, "data-toggle=\"headers\" data-shown=\"(true|false)\"").Select(m => m.Groups[1].Value).ToArray();
 
-        var hidden = Run("out-headers-hidden", "--headers", "hidden");
-        Assert.Contains("window._headersHidden = true;", hidden);
-        Assert.NotEmpty(Buttons(hidden));
-        Assert.All(Buttons(hidden), shown => Assert.Equal("false", shown));
-
-        foreach (var shownHtml in new[] { Run("out-headers-shown", "--headers", "shown"), Run("out-headers-unset") })
+        // Without the flag, ingest keeps the library's default: hidden from 4.0.0.
+        foreach (var hidden in new[] { Run("out-headers-hidden", "--headers", "hidden"), Run("out-headers-unset") })
         {
-            Assert.Contains("window._headersHidden = false;", shownHtml);
-            Assert.All(Buttons(shownHtml), shown => Assert.Equal("true", shown));
+            Assert.Contains("window._headersHidden = true;", hidden);
+            Assert.NotEmpty(Buttons(hidden));
+            Assert.All(Buttons(hidden), shown => Assert.Equal("false", shown));
         }
+
+        var shownHtml = Run("out-headers-shown", "--headers", "shown");
+        Assert.Contains("window._headersHidden = false;", shownHtml);
+        Assert.NotEmpty(Buttons(shownHtml));
+        Assert.All(Buttons(shownHtml), shown => Assert.Equal("true", shown));
 
         var usage = new StringWriter();
         IngestCommand.PrintUsage(usage);
@@ -210,20 +213,21 @@ public class IngestCommandTests : IDisposable
             new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
         ]);
 
-        var compressed = Path.Combine(_dir, "out-compressed");
-        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", compressed, "--payloads", "compressed"], new StringWriter(), err));
-        var compressedJson = File.ReadAllText(Path.Combine(compressed, "TestRunReport.json"));
-        Assert.Contains("\"$z\"", compressedJson, StringComparison.Ordinal);
-        Assert.Contains("\"formatVersion\": 2", compressedJson, StringComparison.Ordinal);
-
-        foreach (var (folder, flag) in new[] { ("out-plain", new[] { "--payloads", "plain" }), ("out-unset", Array.Empty<string>()) })
+        // Without the flag, ingest keeps the library's default: compressed from 4.0.0.
+        foreach (var (folder, flag) in new[] { ("out-compressed", new[] { "--payloads", "compressed" }), ("out-unset", Array.Empty<string>()) })
         {
-            var plain = Path.Combine(_dir, folder);
-            Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", plain, .. flag], new StringWriter(), err));
-            var plainJson = File.ReadAllText(Path.Combine(plain, "TestRunReport.json"));
-            Assert.DoesNotContain("\"$z\"", plainJson, StringComparison.Ordinal);
-            Assert.Contains("\"formatVersion\": 1", plainJson, StringComparison.Ordinal);
+            var compressed = Path.Combine(_dir, folder);
+            Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", compressed, .. flag], new StringWriter(), err));
+            var compressedJson = File.ReadAllText(Path.Combine(compressed, "TestRunReport.json"));
+            Assert.Contains("\"$z\"", compressedJson, StringComparison.Ordinal);
+            Assert.Contains("\"formatVersion\": 2", compressedJson, StringComparison.Ordinal);
         }
+
+        var plain = Path.Combine(_dir, "out-plain");
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", plain, "--payloads", "plain"], new StringWriter(), err));
+        var plainJson = File.ReadAllText(Path.Combine(plain, "TestRunReport.json"));
+        Assert.DoesNotContain("\"$z\"", plainJson, StringComparison.Ordinal);
+        Assert.Contains("\"formatVersion\": 1", plainJson, StringComparison.Ordinal);
 
         var usage = new StringWriter();
         IngestCommand.PrintUsage(usage);

@@ -1,4 +1,3 @@
-#pragma warning disable CS0618 // pins the monospace note control, obsolete until 4.0.0 removes it
 using Kronikol.Reports;
 using Kronikol.Reports.Merge;
 
@@ -61,9 +60,9 @@ public class ToggleDefaultsMarkupTests
     ];
 
     private static string Generate(Action<ReportToggleDefaults>? configure = null, string? diagramSource = null,
-        Feature[]? features = null, bool showNoteFontControls = false)
+        Feature[]? features = null)
     {
-        var options = new ReportConfigurationOptions { ShowNoteFontControls = showNoteFontControls };
+        var options = new ReportConfigurationOptions();
         configure?.Invoke(options.TestRunReportToggleDefaults);
         var diagrams = new[] { new DefaultDiagramsFetcher.DiagramAsCode("s1", "", diagramSource ?? AllGatesDiagramSource) };
         var path = ReportGenerator.GenerateHtmlReport(
@@ -83,22 +82,22 @@ public class ToggleDefaultsMarkupTests
     [
         "__NOTE_FORMAT_DEFAULT__", "__HEADERS_HIDDEN_DEFAULT__", "__TRUNCATE_LINES_DEFAULT__",
         "__DETAILS_DEFAULT__", "__ASSERTIONS_VISIBLE_DEFAULT__", "__STEPS_VISIBLE_DEFAULT__",
-        "__DATABASES_VISIBLE_DEFAULT__", "__NOTE_FONT_DEFAULT__", "__NOTE_WIDTH_DEFAULT__",
-        "__NOTE_FONT_CONTROLS__"
+        "__DATABASES_VISIBLE_DEFAULT__", "__NOTE_WIDTH_DEFAULT__"
     ];
 
     [Fact]
     public void Script_tokens_substitute_to_the_builtin_globals()
     {
         var script = DiagramContextMenu.GetCollapsibleNotesScript(ResolvedToggleDefaults.BuiltIn);
-        Assert.Contains("window._headersHidden = false", script);
+        // 4.0.0 (plans/V4_PLAN.md R8): headers start hidden and notes as YAML.
+        Assert.Contains("window._headersHidden = true", script);
         Assert.Contains("window._truncateLinesDefault = 40", script);
         Assert.Contains("window._truncateLines = window._truncateLinesDefault", script);
         Assert.Contains("window._detailsDefault = 'truncated'", script);
         Assert.Contains("window._assertionsVisible = false", script);
         Assert.Contains("window._stepsVisible = true", script);
         Assert.Contains("window._databasesVisible = true", script);
-        Assert.Contains("window._noteFormatDefault = 'json'", script);
+        Assert.Contains("window._noteFormatDefault = 'yaml'", script);
         foreach (var token in ScriptTokens)
             Assert.DoesNotContain(token, script);
     }
@@ -259,14 +258,6 @@ public class ToggleDefaultsMarkupTests
     }
 
     [Fact]
-    public void Note_font_default_seeds_selects_and_script()
-    {
-        var content = Generate(t => t.NoteFont = NoteFontFamily.Monospace, showNoteFontControls: true);
-        Assert.Contains("<optgroup label=\"Note font\"><option value=\"default\">Aa</option><option value=\"mono\" selected>Mono</option></optgroup>", content);
-        Assert.Contains("window._noteFontDefault = 'mono'", content);
-    }
-
-    [Fact]
     public void Note_width_default_seeds_selects_and_script()
     {
         var content = Generate(t => t.NoteWidth = NoteWidthMode.Full);
@@ -290,25 +281,22 @@ public class ToggleDefaultsMarkupTests
     // The embedded script names both the class (in a selector) and the handler (in its own
     // definition), so every fact below anchors on an emitted ATTRIBUTE, never a bare name.
 
+    /// <summary>
+    /// 4.0.0 removed the opt-in monospace note control (<c>plans/V4_PLAN.md</c> R8): a page with notes
+    /// carries no font select, no handler for one, no seed and no monospace class, and keeps the width
+    /// control.
+    /// </summary>
     [Fact]
-    public void Note_font_select_is_absent_by_default()
+    public void No_monospace_control_is_on_a_generated_page()
     {
         var content = Generate();
-        Assert.DoesNotContain("class=\"note-font-select\"", content);
-        Assert.DoesNotContain("onchange=\"window._setNoteFont(this)\"", content);
-        Assert.DoesNotContain("onchange=\"window._setScenarioNoteFont(this)\"", content);
+        Assert.DoesNotContain("note-font-select", content);
+        Assert.DoesNotContain("_setNoteFont", content);
+        Assert.DoesNotContain("_setScenarioNoteFont", content);
+        Assert.DoesNotContain("_noteFontControls", content);
+        Assert.DoesNotContain("_noteFontDefault", content);
+        Assert.DoesNotContain("kronNoteMono", content);
         Assert.Contains("class=\"note-width-select\"", content);
-        Assert.Contains("window._noteFontControls = false;", content);
-    }
-
-    [Fact]
-    public void Note_font_select_is_emitted_when_the_controls_are_shown()
-    {
-        var content = Generate(showNoteFontControls: true);
-        Assert.Contains("class=\"note-font-select\"", content);
-        Assert.Contains("onchange=\"window._setNoteFont(this)\"", content);
-        Assert.Contains("onchange=\"window._setScenarioNoteFont(this)\"", content);
-        Assert.Contains("window._noteFontControls = true;", content);
     }
 
     [Fact]
@@ -320,22 +308,8 @@ public class ToggleDefaultsMarkupTests
     }
 
     /// <summary>
-    /// A consumer who names <c>Monospace</c> asked for it. With the controls hidden every note draws
-    /// monospace and nothing in the report switches it back, which is a legitimate configuration;
-    /// silently ignoring a configured value would be the surprising branch.
-    /// </summary>
-    [Fact]
-    public void A_configured_monospace_default_is_honoured_with_the_controls_hidden()
-    {
-        var content = Generate(t => t.NoteFont = NoteFontFamily.Monospace);
-        Assert.Contains("window._noteFontDefault = 'mono'", content);
-        Assert.DoesNotContain("class=\"note-font-select\"", content);
-    }
-
-    /// <summary>
-    /// Both controls re-render the diagram in the browser, which no other rendering mode can do.
-    /// The gate is the rendering mode, not the presence of interactive diagrams, and asking for the
-    /// font controls does not lift it.
+    /// The width control re-renders the diagram in the browser, which no other rendering mode can do.
+    /// The gate is the rendering mode, not the presence of interactive diagrams.
     /// </summary>
     [Fact]
     public void Note_appearance_selects_are_absent_outside_browser_rendering()
@@ -345,22 +319,19 @@ public class ToggleDefaultsMarkupTests
             diagrams, SimpleFeatures, DateTime.UtcNow, DateTime.UtcNow,
             null, $"ToggleMarkupNoBrowser_{Guid.NewGuid():N}.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Server,
-            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { ShowNoteFontControls = true });
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn);
         var content = File.ReadAllText(path);
 
-        Assert.DoesNotContain("note-font-select", content);
         Assert.DoesNotContain("note-width-select", content);
     }
 
     /// <summary>
-    /// The appearance controls need notes to act on. Asking for the font controls shows them where
-    /// the width control shows, and nowhere else.
+    /// The width control needs notes to act on.
     /// </summary>
     [Fact]
-    public void Note_appearance_selects_stay_absent_without_notes_even_when_the_font_controls_are_shown()
+    public void Note_appearance_selects_stay_absent_without_notes()
     {
-        var content = Generate(diagramSource: NoGatesDiagramSource, showNoteFontControls: true);
-        Assert.DoesNotContain("class=\"note-font-select\"", content);
+        var content = Generate(diagramSource: NoGatesDiagramSource);
         Assert.DoesNotContain("class=\"note-width-select\"", content);
     }
 

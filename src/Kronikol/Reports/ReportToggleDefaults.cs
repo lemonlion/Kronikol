@@ -20,7 +20,7 @@ public record ReportToggleDefaults
     /// <summary>The truncate-lines dropdown — one of its preset states. Default: <see cref="TruncateLineCount.Lines40"/>.</summary>
     public TruncateLineCount? TruncateLines { get; set; }
 
-    /// <summary>Note header lines (gray metadata) shown. Default: <c>true</c>.</summary>
+    /// <summary>Note header lines (gray metadata) shown. Default: <c>false</c> from 4.0.0; <c>true</c> through 3.x.</summary>
     public bool? HeadersShown { get; set; }
 
     /// <summary>Assertion notes shown in diagrams. Default: <c>false</c>.</summary>
@@ -38,18 +38,6 @@ public record ReportToggleDefaults
     /// the simple both-reports knob); a value set here wins over the flat option.
     /// </summary>
     public NotePayloadFormat? NotePayloadFormat { get; set; }
-
-    /// <summary>
-    /// The font note payloads start in. Default: <see cref="NoteFontFamily.Default"/> (the engine's
-    /// proportional note font). <see cref="NoteFontFamily.Monospace"/> starts every note in a
-    /// monospace font, so padded SQL columns and indented blocks line up as they were written.
-    /// The in-report controls that switch the font are hidden unless
-    /// <see cref="ReportConfigurationOptions.ShowNoteFontControls"/> is set; a value configured here
-    /// applies either way, so <see cref="NoteFontFamily.Monospace"/> without the controls draws every
-    /// note monospace with nothing in the report to switch it back.
-    /// </summary>
-    [Obsolete(NoteFontDeprecation.Message)]
-    public NoteFontFamily? NoteFont { get; set; }
 
     /// <summary>
     /// The width notes start at. Default: <see cref="NoteWidthMode.Default"/>.

@@ -8,28 +8,20 @@ namespace Kronikol.Reports;
 /// </summary>
 public record ResolvedToggleDefaults
 {
-    /// <summary>The built-in defaults — the states every report started in before configurability.</summary>
+    /// <summary>
+    /// The built-in defaults: the states a report starts in when nothing configures them. 4.0.0 moved two of them,
+    /// headers from shown to hidden and notes from JSON to YAML (<c>plans/V4_PLAN.md</c> R8).
+    /// </summary>
     public static ResolvedToggleDefaults BuiltIn { get; } = new();
 
     public ReportDetailsState Details { get; init; } = ReportDetailsState.Truncated;
     public TruncateLineCount TruncateLines { get; init; } = TruncateLineCount.Lines40;
-    public bool HeadersShown { get; init; } = true;
+    public bool HeadersShown { get; init; }
     public bool AssertionsShown { get; init; }
     public bool StepsShown { get; init; } = true;
     public bool DatabasesShown { get; init; } = true;
-    public NotePayloadFormat NotePayloadFormat { get; init; } = NotePayloadFormat.Json;
-    [Obsolete(NoteFontDeprecation.Message)]
-    public NoteFontFamily NoteFont { get; init; } = NoteFontFamily.Default;
+    public NotePayloadFormat NotePayloadFormat { get; init; } = NotePayloadFormat.Yaml;
     public NoteWidthMode NoteWidth { get; init; } = NoteWidthMode.Default;
-
-    /// <summary>
-    /// Not a start state: whether the monospace note controls exist at all. It rides this record so
-    /// the toolbar markup and the script seed that gates the glyph read one value. It comes from the
-    /// flat <see cref="ReportConfigurationOptions.ShowNoteFontControls"/> option alone; neither
-    /// <see cref="ReportToggleDefaults"/> group can change it.
-    /// </summary>
-    [Obsolete(NoteFontDeprecation.Message)]
-    public bool ShowNoteFontControls { get; init; }
 
     public bool FeaturesExpanded { get; init; }
     public bool ScenariosExpanded { get; init; }
@@ -58,15 +50,13 @@ public record ResolvedToggleDefaults
 /// treats the flat <see cref="ReportConfigurationOptions.NotePayloadFormat"/> option as its
 /// built-in, so the flat property keeps working and a group value wins when set.
 /// </summary>
-#pragma warning disable CS0618 // the monospace note control is obsolete until 4.0.0 removes it (V4_PLAN.md R7)
 public static class ReportToggleDefaultsResolver
 {
     public static ResolvedToggleDefaults Resolve(ReportConfigurationOptions options, bool specifications)
     {
         var resolved = ResolvedToggleDefaults.BuiltIn with
         {
-            NotePayloadFormat = options.NotePayloadFormat,
-            ShowNoteFontControls = options.ShowNoteFontControls
+            NotePayloadFormat = options.NotePayloadFormat
         };
         resolved = Overlay(resolved, options.TestRunReportToggleDefaults);
         if (specifications)
@@ -83,9 +73,7 @@ public static class ReportToggleDefaultsResolver
         StepsShown = overrides.StepsShown ?? baseline.StepsShown,
         DatabasesShown = overrides.DatabasesShown ?? baseline.DatabasesShown,
         NotePayloadFormat = Defined(overrides.NotePayloadFormat) ?? baseline.NotePayloadFormat,
-        NoteFont = Defined(overrides.NoteFont) ?? baseline.NoteFont,
         NoteWidth = Defined(overrides.NoteWidth) ?? baseline.NoteWidth,
-        ShowNoteFontControls = baseline.ShowNoteFontControls,
         FeaturesExpanded = overrides.FeaturesExpanded ?? baseline.FeaturesExpanded,
         ScenariosExpanded = overrides.ScenariosExpanded ?? baseline.ScenariosExpanded,
         DiagramTab = Defined(overrides.DiagramTab) ?? baseline.DiagramTab,
@@ -118,4 +106,3 @@ public static class ReportToggleDefaultsResolver
         return value;
     }
 }
-#pragma warning restore CS0618

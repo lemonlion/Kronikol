@@ -15,6 +15,7 @@ is safe to read in an agent session.
 | `mutate_r5.py` | R5: the same as `mutate_r3.py` for seven guards of the stored-once layout, one through a Playwright fact |
 | `unlinked.py` | R6: the segments a page's map carries that no diagram of the page links, with their decoded bytes |
 | `mutate_r6.py` | R6: the same as `mutate_r3.py` for four guards of the filter |
+| `mutate_r8.py` | R8: puts one 3.x default back at a time (six, one through a Playwright fact) and runs the facts that should catch it |
 | `mutate_r3.py` | R3: the same for thirteen guards of #87's rule, its note and title, the message under `HideLink` and the encoded diagnostic |
 
 ```bash

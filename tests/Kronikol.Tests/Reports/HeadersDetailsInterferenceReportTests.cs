@@ -151,7 +151,8 @@ public class HeadersDetailsInterferenceReportTests
         Assert.NotEmpty(buttons);
         Assert.All(buttons, button =>
         {
-            Assert.Contains("data-shown=\"true\"", button);
+            // Hidden is the start state from 4.0.0 (plans/V4_PLAN.md R8).
+            Assert.Contains("data-shown=\"false\"", button);
             Assert.DoesNotContain("data-state", button);
         });
     }

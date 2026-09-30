@@ -62,7 +62,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         var root = data.RootElement;
         var linkedInData = LinkedIds(root.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
-            .SelectMany(s => s.TryGetProperty("diagrams", out var d) ? d.EnumerateArray().Select(x => x.GetString() ?? "") : []));
+            .SelectMany(s => s.TryGetProperty("diagrams", out var d) ? d.EnumerateArray().Select(x => ReportPayloadText.Of(x) ?? "") : []));
         var inData = root.GetProperty("internalFlowSegments").EnumerateObject().Select(p => p.Name).Where(run.Own.Contains).ToArray();
         Assert.Contains($"iflow-{run.First}", inData);
         Assert.Contains($"iflow-{run.Second}", inData);
@@ -199,7 +199,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         var root = data.RootElement;
         var linkedInData = LinkedIds(root.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
-            .SelectMany(s => s.TryGetProperty("diagrams", out var d) ? d.EnumerateArray().Select(x => x.GetString() ?? "") : []));
+            .SelectMany(s => s.TryGetProperty("diagrams", out var d) ? d.EnumerateArray().Select(x => ReportPayloadText.Of(x) ?? "") : []));
         Assert.All(root.GetProperty("internalFlowSegments").EnumerateObject(), p => Assert.Contains(p.Name, linkedInData));
     }
 

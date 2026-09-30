@@ -284,7 +284,7 @@ public class IngestPipelineTests : IDisposable
         Assert.Contains("function hasDrawableBody", html);
         Assert.Contains("Nothing to draw with the current filters", html);
         using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
-        var diagram = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0].GetString()!;
+        var diagram = ReportPayloadText.Of(json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0])!;
         Assert.Contains("<<assertionNote>>", diagram);
         Assert.Contains("✓ The mock answers 200", diagram);
         // …and when the notes ARE shown (or the report is rendered server-side / with node), the
@@ -345,7 +345,7 @@ public class IngestPipelineTests : IDisposable
         Assert.True(result.Generated);
         using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
         var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
-        var diagram = scenario.GetProperty("diagrams")[0].GetString()!;
+        var diagram = ReportPayloadText.Of(scenario.GetProperty("diagrams")[0])!;
         var lines = diagram.Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
 
         // The user is the actor; web is an ordinary participant.
@@ -420,7 +420,7 @@ public class IngestPipelineTests : IDisposable
 
         Assert.True(result.Generated);
         using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
-        var diagram = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0].GetString()!;
+        var diagram = ReportPayloadText.Of(json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0])!;
 
         // The table-carrying bar takes the styled body form; the doc-string bar likewise; and the
         // diagram carries the .stepBody style that colours them.
@@ -652,7 +652,7 @@ public class IngestPipelineTests : IDisposable
         return (result,
             scenario.GetProperty("httpInteractions").EnumerateArray().ToArray(),
             scenario.GetProperty("annotations").EnumerateArray().Select(a => $"{a.GetProperty("kind").GetString()}: {a.GetProperty("text").GetString()}").ToArray(),
-            scenario.GetProperty("diagrams")[0].GetString()!);
+            ReportPayloadText.Of(scenario.GetProperty("diagrams")[0])!);
     }
 
     private static int Count(string text, string needle)

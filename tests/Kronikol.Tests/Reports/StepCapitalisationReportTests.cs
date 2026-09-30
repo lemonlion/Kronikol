@@ -165,7 +165,7 @@ public class StepCapitalisationReportTests : IDisposable
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Where(s => s.GetProperty("id").GetString() == scenarioId)
             .SelectMany(s => s.GetProperty("diagrams").EnumerateArray())
-            .Select(d => d.GetString()));
+            .Select(d => ReportPayloadText.Of(d)));
     }
     [Fact]
     public void Scenario_titles_read_as_sentences_in_every_view_and_the_rule_can_be_turned_off()

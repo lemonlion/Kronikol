@@ -249,4 +249,30 @@ public class CapturedTextEscapeTests : PlaywrightTestBase
         Assert.True(missing.Count == 0, $"{parts.Length} parts; not drawn: step {string.Join(", ", missing)}; "
             + $"first: {(at < 0 ? "(none)" : all.Substring(at, Math.Min(60, all.Length - at)))}; part lengths {string.Join("/", parts.Select(p => p.Length))}");
     }
+
+    /// <summary>
+    /// The same note in the YAML view, which reports start in from 4.0.0 (<c>plans/V4_PLAN.md</c> R8). YAML unfolds the
+    /// quoted diagram onto lines of their own, so <c>@startuml</c> and <c>@enduml</c> each begin a line of the note;
+    /// every part still draws, and every step is in it.
+    /// </summary>
+    [Fact]
+    public async Task A_note_split_by_the_browser_draws_every_part_in_the_yaml_view_when_its_text_quotes_a_diagram()
+    {
+        await OpenReport(ReportTestHelper.GenerateReportWithPlantUmlQuotingLongNote(TempDir, OutputDir, "CapturedTextHazards_SplitYaml.html",
+            Kronikol.Reports.NotePayloadFormat.Yaml));
+
+        var parts = await Page.EvaluateAsync<string[]>("""
+            () => Array.from(document.querySelectorAll('.plantuml-browser svg')).map(svg =>
+                (svg.closest('.plantuml-browser').querySelector('.engine-failure') ? 'failure:' : '')
+                + Array.from(svg.querySelectorAll('text')).map(t => t.textContent).join(' '))
+            """);
+        Assert.True(parts.Length > 1, "the note must be split");
+        Assert.DoesNotContain(parts, p => p.StartsWith("failure:", StringComparison.Ordinal) || p.Contains("Syntax Error", StringComparison.Ordinal));
+        var all = Collapse(string.Join(" ", parts));
+        Assert.Contains("@enduml", all, StringComparison.Ordinal);
+        Assert.DoesNotContain("step 0\\n", all, StringComparison.Ordinal);
+        var missing = new[] { 0, 100, 200, 319 }
+            .Where(i => !System.Text.RegularExpressions.Regex.IsMatch(all, $@"\bstep {i}\b")).ToList();
+        Assert.True(missing.Count == 0, $"{parts.Length} parts; not drawn: step {string.Join(", ", missing)}");
+    }
 }
