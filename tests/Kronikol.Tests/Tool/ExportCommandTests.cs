@@ -158,7 +158,7 @@ public class ExportCommandTests : IDisposable
         lock (received) body = Assert.Single(received);
         Assert.Single(OtlpTraceReader.ReadJson(body));
         Assert.Contains("Exported 1 span(s)", @out.ToString());
-        listener.Stop();
+        // No Stop() before the using's Dispose: on Linux that binds the port again (HttpListenerLifetimeTests).
     }
 
     [Fact]
