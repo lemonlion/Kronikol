@@ -6122,7 +6122,7 @@ public static class ReportGenerator
                 // it read, which a different Kronikol version may have written, so pinning what is inside
                 // them would make `kronikol merge` emit a file that fails its own schema with no code
                 // change on either side.
-                ["internalFlowSegments"] = new Dictionary<string, object?> { ["type"] = "object", ["description"] = "Mergeable only: precomputed internal-flow payloads keyed by segment id. From 3.35.2 a flow several segments show is held by the first of them, and each later one names it under sameAs. The values are rendering data carried through a merge unchanged, and are deliberately not described here - a merged file may hold shapes written by another version." },
+                ["internalFlowSegments"] = new Dictionary<string, object?> { ["type"] = "object", ["description"] = "Mergeable only: precomputed internal-flow payloads keyed by segment id. From 3.35.2 a flow several segments show is held by the first of them, and each later one names it under sameAs; from 4.0.1 the segment holding a flow names its diagram and flame chart by their places (contentAt, flameAt) in a table that ends the map under the first segment's key with a ~ before it, which holds each distinct diagram and flame chart once. The values are rendering data carried through a merge unchanged, and are deliberately not described here - a merged file may hold shapes written by another version." },
                 ["wholeTestFlow"] = new Dictionary<string, object?>
                 {
                     ["type"] = "object",

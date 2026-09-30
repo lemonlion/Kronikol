@@ -17,6 +17,7 @@ namespace Kronikol.Tests.Reports;
 /// smaller, and a file holding one declares <c>formatVersion</c> 2. These facts hold the writer to that rule; the
 /// readers' facts are in <c>CompressedReportReadingTests</c>.
 /// </summary>
+[Collection("DiagramsFetcher")]
 public class PayloadCompressionTests : IDisposable
 {
     private readonly string _directory = Path.Combine(Path.GetTempPath(), "kronikol-payloads-" + Guid.NewGuid().ToString("N"));

@@ -21,6 +21,14 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
     protected virtual int ViewportWidth => 1920;
     protected virtual int ViewportHeight => 1080;
 
+    /// <summary>
+    /// How long a page's first internal-flow popup may take to draw its diagram: the budget a page's own diagrams get.
+    /// The first activity diagram a page asks for waits for the engine's first use of that diagram type, where the
+    /// next is drawn from the cache: measured on 2026-09-30 with two facts running, the first popup of a page drew in
+    /// 4.4 to 14.7 s and the ones after it in 5 to 7 ms, and in full runs a popup fact waiting 30 s timed out.
+    /// </summary>
+    public const int PopupFirstDrawTimeout = 60000;
+
     protected PlaywrightTestBase(PlaywrightFixture fixture)
     {
         _fixture = fixture;

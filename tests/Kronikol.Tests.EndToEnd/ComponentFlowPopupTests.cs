@@ -76,7 +76,7 @@ public class ComponentFlowPopupTests : PlaywrightTestBase
 
         var popup = Page.Locator(".iflow-popup");
         await Expect(popup).ToBeVisibleAsync();
-        await popup.Locator(".iflow-diagram svg").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
+        await popup.Locator(".iflow-diagram svg").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = PopupFirstDrawTimeout });
 
         var attrs = await Page.EvaluateAsync<string>("""
             () => {

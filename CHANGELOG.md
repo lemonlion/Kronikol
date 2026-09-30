@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.0.1] - 2026-09-30
+
+**Patch - each distinct internal-flow diagram and flame chart is stored once, in a table at the end of the segment
+map.** Performance work, nothing new to call. It follows `plans/V4_PLAN.md` R5 (#86), which stored a flow once only
+when its diagram and its flame chart both repeated; the owner asked for it on 2026-09-30, after the measurement below.
+The segment map in the page and in the mergeable data file changes shape, which is report output, so there is a
+Kronikol4J ledger entry. The history action's `VERSION` installs `Kronikol.Tool` 4.0.1. Template pins move to 4.0.0.
+
+### Changed
+
+- **The segment that holds a flow names its diagram and its flame chart by their places in one table.** The table
+  ends the map, under the first segment's key with a `~` before it, and holds each distinct diagram and flame chart
+  once. The same calls starting at other moments draw one diagram, which gives each span's duration in whole
+  milliseconds, and flame charts of their own, which place each span in time; and diagrams beside diagrams and flame
+  charts beside flame charts compress better than the two interleaved. A segment that shows another's whole flow still
+  names it under `sameAs`. No other shard's map holds the table's key, so a merge keeps every shard's table beside
+  the segments that name it; a map written before renders as it did, and shards of either kind merge. Measured on
+  BreakfastProvider's 18 published 4.0.0 pages before the change, this layout came to 129,172 bytes of their segment
+  elements and 8% of the maps a browser decodes: 0.25% of the pages, under 0.8% of their gzip, and 1.0% to 1.7% of the
+  gzip of an in-memory lane's page. On BreakfastProvider's xUnit and TUnit lanes, on local builds with 203 of 203 passing on both, the segment element came to 133,128 and 77,240 bytes against 144,884 and 83,856 for 4.0.0's layout of the same runs (8.1% and 7.9% less), and the map a browser decodes to 1,416,035 and 862,459 bytes against 1,577,081 and 1,035,395 (10.2% and 16.7% less); every segment resolved.
+
 ## [4.0.0] - 2026-09-30
 
 **Major - `TestRunReport.json` compresses large payloads by default, reports open with headers hidden and notes as

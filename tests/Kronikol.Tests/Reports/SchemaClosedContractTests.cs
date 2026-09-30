@@ -25,6 +25,7 @@ namespace Kronikol.Tests.Reports;
 /// either side. <c>exampleValues</c> is a caller-supplied map of parameter names. Both are declared as
 /// objects; what is inside them is not this schema's to fix.</para>
 /// </summary>
+[Collection("DiagramsFetcher")]
 public class SchemaClosedContractTests : IDisposable
 {
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "kronikol-closed-" + Guid.NewGuid().ToString("N"));

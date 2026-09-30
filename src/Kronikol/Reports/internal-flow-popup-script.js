@@ -93,12 +93,22 @@
     }
 
     // A flow that several segments show is stored once, in the first of them, and each later one names that segment
-    // under 'sameAs' and keeps its own title (#86). A map written before 3.35.2 has every flow inline.
+    // under 'sameAs' and keeps its own title (#86). From 4.0.1 the segment holding a flow names its diagram and its flame
+    // chart by their places in the table the map ends in ('table' is its key), which holds each distinct diagram and
+    // flame chart once. A map written before 4.0.1 holds each flow inline, and one written before 3.35.2 every flow.
     function resolve(map, segmentId) {
         var segment = map[segmentId];
-        if (!segment || !segment.sameAs) return segment;
-        var holder = map[segment.sameAs];
-        return holder ? { title: segment.title, content: holder.content, flameData: holder.flameData } : undefined;
+        if (!segment || !(segment.sameAs || segment.table)) return segment;
+        var flow = segment.sameAs ? map[segment.sameAs] : segment;
+        if (!flow) return undefined;
+        if (!flow.table) return { title: segment.title, content: flow.content, flameData: flow.flameData };
+        var table = map[flow.table];
+        if (!table || !table.contents) return undefined;
+        return {
+            title: segment.title,
+            content: table.contents[flow.contentAt],
+            flameData: flow.flameAt === undefined ? undefined : table.flames[flow.flameAt]
+        };
     }
 
     function fill(popup, segment) {

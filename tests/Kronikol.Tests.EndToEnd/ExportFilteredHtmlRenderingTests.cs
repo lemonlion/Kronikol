@@ -150,7 +150,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
                 .dispatchEvent(new MouseEvent('click', { bubbles: true }))
             """);
         await Expect(Page.Locator(".iflow-popup h3")).ToHaveTextAsync("Internal Flow (2 spans)");
-        await Page.Locator(".iflow-popup .iflow-diagram svg").First.WaitForAsync(new() { Timeout = 30000 });
+        await Page.Locator(".iflow-popup .iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
     }
 
     [Fact]

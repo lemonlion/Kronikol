@@ -4251,10 +4251,13 @@ public static class ReportTestHelper
     /// A run report written by the whole pipeline with internal-flow tracking on and its defaults: one scenario whose
     /// call to <c>/shared-outer</c> (300 ms) holds its call to <c>/shared-inner</c> (from 50 to 150 ms), neither
     /// recording a trace id, and two queries inside both. The two popups show the same flow, which the segment map
-    /// stores once (#86, <c>plans/V4_PLAN.md</c> R5). Placed like the contested reports, where no other fixture's calls
-    /// could claim its spans.
+    /// stores once (#86, <c>plans/V4_PLAN.md</c> R5). Its call to <c>/shared-later</c> (from 400 to 700 ms) runs the
+    /// same queries, the second starting 40 ms after the first rather than 20: the same activity diagram, which the map
+    /// stores once too, and a flame chart of its own (4.0.1); its call to <c>/shared-later-inner</c> (from 450 to
+    /// 600 ms) shows the later call's flow, so its segment names a segment that names the diagram. Placed like the
+    /// contested reports, where no other fixture's calls could claim its spans.
     /// </summary>
-    public static (string Uri, string ReportsDir, Guid Outer, Guid Inner) GenerateRunReportWithSharedFlow(string tempDir, string outputDir, string fileName)
+    public static (string Uri, string ReportsDir, Guid Outer, Guid Inner, Guid Later, Guid LaterInner) GenerateRunReportWithSharedFlow(string tempDir, string outputDir, string fileName)
     {
         var reportsDir = Path.Combine(tempDir, "shared-flow-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(reportsDir);
@@ -4293,14 +4296,18 @@ public static class ReportTestHelper
             spans.Add(span);
         }
 
-        Guid outer, inner;
+        Guid outer, inner, later, laterInner;
         lock (WholePipeline)
         {
             DefaultDiagramsFetcher.Reset();
             outer = Call("/shared-outer", 0, 300);
             inner = Call("/shared-inner", 50, 150);
+            later = Call("/shared-later", 400, 700);
+            laterInner = Call("/shared-later-inner", 450, 600);
             Span("SELECT orders", 60);
             Span("SELECT lines", 80);
+            Span("SELECT orders", 460);
+            Span("SELECT lines", 500);
             foreach (var span in spans)
                 Kronikol.InternalFlow.InternalFlowSpanStore.Add(span);
 
@@ -4323,7 +4330,7 @@ public static class ReportTestHelper
 
         var html = Path.Combine(reportsDir, "TestRunReport.html");
         File.Copy(html, Path.Combine(outputDir, fileName), true);
-        return (new Uri(html).AbsoluteUri, reportsDir, outer, inner);
+        return (new Uri(html).AbsoluteUri, reportsDir, outer, inner, later, laterInner);
     }
 
     /// <summary>Each contested report sits 10 s after the last, so no two claim each other's spans.</summary>

@@ -231,7 +231,7 @@ public class NonSecureOriginTests : PlaywrightTestBase
         await using var lan = await OpenOnTheLanHost(new Uri(file).AbsoluteUri);
         await lan.Page.Locator("#trigger-seg-1").ClickAsync();
         await Assertions.Expect(lan.Page.Locator(".iflow-popup")).ToBeVisibleAsync();
-        await lan.Page.Locator(".iflow-diagram svg").First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 60000 });
+        await lan.Page.Locator(".iflow-diagram svg").First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = PopupFirstDrawTimeout });
         await lan.Page.Locator(".iflow-toggle-btn").Nth(1).ClickAsync();
         var bar = lan.Page.Locator(".iflow-flame-bar").First;
         await bar.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });

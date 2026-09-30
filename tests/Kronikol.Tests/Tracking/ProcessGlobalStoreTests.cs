@@ -112,6 +112,35 @@ public class ProcessGlobalStoreTests
         Assert.True(definition.DisableParallelization, "SpanStoreClearCollection runs after every parallel collection");
     }
 
+    /// <summary>
+    /// <c>DefaultDiagramsFetcher</c> keeps the diagrams it draws for the life of the process, whatever logs the next
+    /// report is given, and an ingest resets it before drawing its own. A report generated in a parallel collection
+    /// could read the log before an ingest replayed its run and keep what it drew after the ingest's reset, and the
+    /// ingest then took those diagrams, which hold none of its tests: <c>IngestPipelineTests</c> found its scenario
+    /// with no diagram in a full run on 2026-09-30, and passed alone. Every class that draws through the fetcher,
+    /// by generating a report with diagrams or asking for the fetcher itself, runs in the DiagramsFetcher collection.
+    /// </summary>
+    [Fact]
+    public void Every_class_that_draws_through_the_process_wide_diagram_cache_runs_beside_the_ingests_that_reset_it()
+    {
+        var drawers = Directory.EnumerateFiles(Path.Combine(TestsRoot, "Kronikol.Tests"), "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                        && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Select(f => (Path: f, Code: WithoutComments(File.ReadAllText(f))))
+            .Where(s => Regex.IsMatch(s.Code, @"\b(?:CreateStandardReportsWithDiagrams|CreateStandardReportsWithDiagramsInEnvironment|GetDiagramsFetcher)\s*\("))
+            .ToList();
+        Assert.True(drawers.Count >= 10, $"the scan found {drawers.Count} classes that draw diagrams, too few for it to be looking at the right thing");
+
+        var elsewhere = drawers
+            .Where(s => !Regex.IsMatch(s.Code, @"\[Collection\(""DiagramsFetcher""\)\]"))
+            .Select(s => Path.GetRelativePath(TestsRoot, s.Path).Replace('\\', '/'))
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .ToList();
+        Assert.True(elsewhere.Count == 0,
+            "these test sources draw diagrams through the process-wide cache outside the DiagramsFetcher collection, "
+            + "where an ingest resets it: " + string.Join(", ", elsewhere) + ". Put the class in [Collection(\"DiagramsFetcher\")].");
+    }
+
     private static string WithoutComments(string source) =>
         Regex.Replace(Regex.Replace(source, @"/\*.*?\*/", "", RegexOptions.Singleline), @"//.*", "");
 }

@@ -94,7 +94,7 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
         var popup = Page.Locator(".iflow-popup");
         await Expect(popup).ToBeVisibleAsync();
         await Expect(popup.Locator("h3")).ToHaveTextAsync("Internal Flow (2 spans)");
-        await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = 30000 });
+        await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
         Assert.Contains("GET /with-flow-0", await popup.Locator(".iflow-diagram svg").First.TextContentAsync());
     }
 
@@ -124,7 +124,7 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
             Assert.Equal("all", await texts.First.EvaluateAsync<string>("t => t.style.pointerEvents"));
             await texts.First.EvaluateAsync("t => t.dispatchEvent(new MouseEvent('click', { bubbles: true }))");
             await Expect(Page.Locator(".iflow-popup h3")).ToHaveTextAsync("Internal Flow (2 spans)");
-            await Page.Locator(".iflow-popup .iflow-diagram svg").First.WaitForAsync(new() { Timeout = 30000 });
+            await Page.Locator(".iflow-popup .iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
             Assert.Contains("GET " + path, await Page.Locator(".iflow-popup .iflow-diagram svg").First.TextContentAsync());
             await Page.Locator(".iflow-popup-close").ClickAsync();
         }

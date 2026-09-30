@@ -168,7 +168,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
         foreach (var map in new[] { PageMap(run.Html), data.RootElement.GetProperty("internalFlowSegments") })
         {
-            Assert.Contains("first.root", map.GetProperty($"iflow-{run.First}").GetProperty("content").GetString(), StringComparison.Ordinal);
+            Assert.Contains("first.root", SegmentMapText.Resolve(map, $"iflow-{run.First}").Content, StringComparison.Ordinal);
             Assert.Equal($"iflow-{run.First}", map.GetProperty($"iflow-{run.Nested}").GetProperty("sameAs").GetString());
         }
     }
@@ -200,7 +200,9 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         var linkedInData = LinkedIds(root.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .SelectMany(s => s.TryGetProperty("diagrams", out var d) ? d.EnumerateArray().Select(x => ReportPayloadText.Of(x) ?? "") : []));
-        Assert.All(root.GetProperty("internalFlowSegments").EnumerateObject(), p => Assert.Contains(p.Name, linkedInData));
+        var entries = root.GetProperty("internalFlowSegments").EnumerateObject().ToArray();
+        Assert.All(entries.Where(p => !p.Name.StartsWith('~')), p => Assert.Contains(p.Name, linkedInData));
+        Assert.All(entries.Where(p => p.Name.StartsWith('~')), p => Assert.True(p.Value.TryGetProperty("contents", out _), $"{p.Name} is the map's table"));
     }
 
     [Fact]
@@ -356,7 +358,8 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         InternalFlowSpanStore.Add(span);
     }
 
-    /// <summary>The segment map's keys, read from the page's segment element (its <c>z</c>, decoded).</summary>
+    /// <summary>The segment map's segment keys, read from the page's segment element (its <c>z</c>, decoded): every key
+    /// but the table's, which from 4.0.1 ends the map under the first segment's key with a '~' before it.</summary>
     internal static string[] SegmentKeysInPage(string html)
     {
         const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
@@ -366,7 +369,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         var end = html.IndexOf("</script>", start, StringComparison.Ordinal);
         using var element = JsonDocument.Parse(html[start..end]);
         using var map = JsonDocument.Parse(Gunzip(element.RootElement.GetProperty("z").GetString()!));
-        return map.RootElement.EnumerateObject().Select(p => p.Name).ToArray();
+        return map.RootElement.EnumerateObject().Select(p => p.Name).Where(name => !name.StartsWith('~')).ToArray();
     }
 
     /// <summary>The page's segment map, decoded from its element's <c>z</c>.</summary>

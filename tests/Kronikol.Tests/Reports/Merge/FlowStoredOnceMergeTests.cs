@@ -5,6 +5,7 @@ using System.Text.Json;
 using Kronikol.ComponentDiagram;
 using Kronikol.InternalFlow;
 using Kronikol.Reports;
+using Kronikol.Tests.InternalFlow;
 using Kronikol.Tool;
 using Kronikol.Tracking;
 using static Kronikol.DefaultDiagramsFetcher;
@@ -15,7 +16,8 @@ namespace Kronikol.Tests.Reports.Merge;
 /// <c>kronikol merge</c> over shards whose segment maps store each shared flow once (#86, <c>plans/V4_PLAN.md</c>
 /// R5): a segment names the copy by another segment's key, a call's id, which no other shard holds, so the merge,
 /// which keeps the first value per key, keeps every copy a segment names. A shard written before, with every flow
-/// inline, merges beside them.
+/// inline, merges beside them. From 4.0.1 each shard's map ends in a table of its diagrams and flame charts, under its
+/// first segment's key with a '~' before it, which no other shard holds, so the merge keeps every table as well.
 /// </summary>
 public class FlowStoredOnceMergeTests : IDisposable
 {
@@ -75,24 +77,49 @@ public class FlowStoredOnceMergeTests : IDisposable
         AssertEveryPointerResolves(merged);
     }
 
-    // ─── Fixture ───────────────────────────────────────────────
-
-    private static void AssertEveryPointerResolves(JsonElement map)
+    [Fact]
+    public void Shards_that_store_their_diagrams_in_a_table_merge_with_every_table_in_place()
     {
-        var pointers = map.EnumerateObject().Where(p => p.Value.TryGetProperty("sameAs", out _)).ToArray();
-        Assert.NotEmpty(pointers);
-        Assert.All(pointers, p => Assert.True(
-            map.TryGetProperty(p.Value.GetProperty("sameAs").GetString()!, out var copy) && copy.TryGetProperty("content", out _),
-            $"{p.Name} names a segment the map holds, with the copy"));
+        // The second call of each shard starts a span later: the first call's diagram, a flame chart of its own. Each
+        // shard's map ends in a table under its first segment's key, which the other shard does not hold (4.0.1).
+        var first = new[] { Span("SELECT orders", 60), Span("SELECT lines", 70) };
+        var later = new[] { Span("SELECT orders", 60), Span("SELECT lines", 90) };
+        var a = WriteShard("runner1.json", "a1", first, storeOnce: true, secondSpans: later);
+        var b = WriteShard("runner2.json", "b1", first, storeOnce: true, secondSpans: later);
+
+        var merged = Merge();
+
+        foreach (var shard in new[] { a, b })
+        {
+            Assert.Equal("~" + shard[0], merged.GetProperty(shard[1]).GetProperty("table").GetString());
+            Assert.Equal(merged.GetProperty(shard[0]).GetProperty("contentAt").GetInt32(), merged.GetProperty(shard[1]).GetProperty("contentAt").GetInt32());
+            Assert.NotEqual(SegmentMapText.Resolve(merged, shard[0]).FlameData, SegmentMapText.Resolve(merged, shard[1]).FlameData);
+        }
+        AssertEveryPointerResolves(merged);
+        AssertEveryPointerResolves(PageMap(File.ReadAllText(Path.Combine(_directory, "Combined.html"))));
     }
 
-    /// <summary>A shard of one scenario whose two calls, one nested in the other, show <paramref name="spans"/>.</summary>
-    private string[] WriteShard(string name, string scenarioId, Activity[] spans, bool storeOnce)
+    // ─── Fixture ───────────────────────────────────────────────
+
+    /// <summary>Every segment that names another or a table resolves, as the popup script resolves it, to a diagram.</summary>
+    private static void AssertEveryPointerResolves(JsonElement map)
+    {
+        var pointers = map.EnumerateObject()
+            .Where(p => p.Value.TryGetProperty("sameAs", out _) || p.Value.TryGetProperty("table", out _)).ToArray();
+        Assert.NotEmpty(pointers);
+        Assert.All(pointers, p => Assert.True(SegmentMapText.Resolve(map, p.Name).Content is { Length: > 0 },
+            $"{p.Name} resolves to a diagram the map holds"));
+    }
+
+    /// <summary>A shard of one scenario whose two calls, one nested in the other, show <paramref name="spans"/>, or the
+    /// second <paramref name="secondSpans"/> when given.</summary>
+    private string[] WriteShard(string name, string scenarioId, Activity[] spans, bool storeOnce, Activity[]? secondSpans = null)
     {
         var at = new DateTimeOffset(Start).AddSeconds(1);
         Guid[] calls = [Guid.NewGuid(), Guid.NewGuid()];
         var segments = calls.ToDictionary(id => $"iflow-{id}",
-            id => new InternalFlowSegment(id, RequestResponseType.Request, scenarioId, at, at.AddMilliseconds(200), spans));
+            id => new InternalFlowSegment(id, RequestResponseType.Request, scenarioId, at, at.AddMilliseconds(200),
+                id == calls[1] && secondSpans is not null ? secondSpans : spans));
         var data = InternalFlowHtmlGenerator.BuildSegmentData(segments, InternalFlowDiagramStyle.ActivityDiagram, showFlameChart: true);
         var logs = calls.SelectMany(id => new RequestResponseLog[]
         {

@@ -222,17 +222,33 @@ public static class InternalFlowHtmlGenerator
     /// <summary>
     /// The segment map a report writes, with each flow that more than one segment shows stored once (#86,
     /// <c>plans/V4_PLAN.md</c> R5): the first segment in the map that shows it keeps it, and each later one keeps its
-    /// title and names that segment under <c>sameAs</c>. No key is added, so a merge, which keeps the first value it
-    /// meets for a key and meets each call's key once, keeps every copy a segment names; and the copy stays where the
-    /// flow is first shown, beside the flows like it that gzip compresses it against. A message stays with its segment.
-    /// The popup follows <c>sameAs</c>, and a map with every flow inline, as written before 3.35.2, renders as it did.
+    /// title and names that segment under <c>sameAs</c>. No segment's key is added or moved, so a merge, which keeps
+    /// the first value it meets for a key and meets each call's key once, keeps every segment a segment names. A message
+    /// stays with its segment.
+    /// From 4.0.1 the segment that holds a flow keeps its title and names its diagram and its flame chart by their places
+    /// in one table, <c>{"contents": […], "flames": […]}</c>, which ends the map under the first segment's key with a
+    /// <c>~</c> before it: <c>{"title", "table", "contentAt", "flameAt"}</c>, <c>flameAt</c> left out with the flame chart
+    /// off. The table holds each distinct diagram and flame chart once, in the order the map first shows them. The same
+    /// calls starting at other moments draw one diagram, which gives each span's duration in whole milliseconds, and
+    /// flame charts of their own, which place each span in time, so a diagram repeats where its flow does not; and
+    /// diagrams beside diagrams and flame charts beside flame charts compress better than the two interleaved (on
+    /// BreakfastProvider's lanes the element's gzip fell 8.0% and 8.7%, where storing each diagram once in place took
+    /// 2.1% and 2.3%). The table's key is the first segment's, which no other shard holds, so a merge keeps every shard's
+    /// table beside the segments that name it. The popup follows <c>sameAs</c>, then the table, and a map with each flow
+    /// inline, as written before 4.0.1, or every flow, as written before 3.35.2, renders as it did.
     /// </summary>
     internal static Dictionary<string, object> StoreFlowsOnce(Dictionary<string, object> data)
     {
-        var stored = new Dictionary<string, object>(data.Count);
+        var stored = new Dictionary<string, object>(data.Count + 1);
         var holders = new Dictionary<(string Content, string Flame), string>();
+        var contentAt = new Dictionary<string, int>(StringComparer.Ordinal);
+        var flameAt = new Dictionary<string, int>(StringComparer.Ordinal);
+        var contents = new List<string>();
+        var flames = new List<JsonElement>();
+        string? table = null;
         foreach (var (key, value) in data)
         {
+            table ??= "~" + key;
             var entry = JsonSerializer.SerializeToElement(value);
             if (!entry.TryGetProperty("content", out var content))
             {
@@ -240,19 +256,42 @@ public static class InternalFlowHtmlGenerator
                 continue;
             }
 
-            var flow = (content.GetString() ?? "", entry.TryGetProperty("flameData", out var flame) ? flame.GetRawText() : "");
-            if (holders.TryAdd(flow, key))
+            var text = content.GetString() ?? "";
+            var hasFlame = entry.TryGetProperty("flameData", out var flame);
+            var flameText = hasFlame ? flame.GetRawText() : "";
+            var title = entry.TryGetProperty("title", out var t) ? t.GetString() : null;
+            var flow = (text, flameText);
+            if (!holders.TryAdd(flow, key))
             {
-                stored[key] = value;
+                stored[key] = title is null
+                    ? new { sameAs = holders[flow] }
+                    : new { title, sameAs = holders[flow] };
                 continue;
             }
 
-            stored[key] = entry.TryGetProperty("title", out var title)
-                ? new { title = title.GetString(), sameAs = holders[flow] }
-                : new { sameAs = holders[flow] };
+            var holder = new Dictionary<string, object>();
+            if (title is not null)
+                holder["title"] = title;
+            holder["table"] = table;
+            holder["contentAt"] = PlaceOf(text, contentAt, contents, text);
+            if (hasFlame)
+                holder["flameAt"] = PlaceOf(flameText, flameAt, flames, flame);
+            stored[key] = holder;
         }
 
+        if (contents.Count > 0)
+            stored[table!] = new { contents, flames };
         return stored;
+    }
+
+    /// <summary>Where <paramref name="item"/> sits in <paramref name="list"/>, added at the end the first time it is seen.</summary>
+    private static int PlaceOf<T>(string identity, Dictionary<string, int> places, List<T> list, T item)
+    {
+        if (places.TryGetValue(identity, out var at))
+            return at;
+        places[identity] = list.Count;
+        list.Add(item);
+        return list.Count - 1;
     }
 
     /// <summary>The first 16 hex digits of the SHA-256 of <paramref name="text"/>'s UTF-8: the name of a flow.</summary>

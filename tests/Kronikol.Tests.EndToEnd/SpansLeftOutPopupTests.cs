@@ -40,7 +40,7 @@ public class SpansLeftOutPopupTests : PlaywrightTestBase
         var note = popup.Locator(".iflow-left-out");
         await Expect(note).ToBeVisibleAsync();
         await Expect(note).ToHaveTextAsync("2 spans that started during this call are left out: a request of another test ran at the same time, and neither the trace nor the span tree says which of the two they belong to.");
-        await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = 30000 });
+        await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
         var diagram = await popup.Locator(".iflow-diagram svg").First.TextContentAsync();
         Assert.Contains("SELECT a-only", diagram);
         Assert.DoesNotContain("SELECT either", diagram);
