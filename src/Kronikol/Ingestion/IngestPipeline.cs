@@ -188,9 +188,16 @@ public sealed class IngestRequest
     /// <summary>
     /// Give interactions the phase of the top-level step they happened during — <c>Given</c>/<c>Context</c>
     /// becomes <see cref="TestPhase.Setup"/>, <c>When</c>/<c>Then</c> becomes <see cref="TestPhase.Action"/>,
-    /// <c>And</c>/<c>But</c> inherit — so <c>SeparateSetup</c> and <c>HighlightSetup</c> partition an
-    /// ingested diagram the way they partition an in-process one. Default <c>false</c>.
+    /// <c>And</c>/<c>But</c> inherit. The phase is each call's <c>phase</c> in the data files and for
+    /// <c>kronikol query</c>. Default <c>false</c>.
     /// </summary>
+    /// <remarks>
+    /// A phase draws nothing on its own. The Setup partition is <see cref="ReportConfigurationOptions.SeparateSetup"/>'s:
+    /// with it on, each test gets the Setup/Action boundary an in-process run draws, at the start of its first
+    /// <c>When</c>/<c>Then</c> step that follows a <c>Given</c> step whether or not this is set, else just before its
+    /// first call phased Action that follows one phased Setup, the phases this sets among them. Until 4.1.0 this option
+    /// was documented as partitioning the diagram, and never did.
+    /// </remarks>
     public bool PhaseFromSteps { get; init; }
 
     /// <summary>
@@ -340,6 +347,8 @@ public static class IngestPipeline
         records = DropOutsideRunWindow(records, testRecords, request, diagnostics);
         records = Attribute(records, testRecords, request, diagnostics);
         AddDiagramMarkers(records, testRecords);
+        if (options.SeparateSetup)
+            AddSetupBoundaries(records, testRecords);
 
         var reportsDirectory = ReportGenerator.ResolveReportsDirectory(options);
 
@@ -739,6 +748,98 @@ public static class IngestPipeline
                     table: record.Table, docString: record.DocString));
         }
     }
+
+    /// <summary>
+    /// Gives each test the Setup/Action boundary an in-process run would have drawn, so
+    /// <see cref="ReportConfigurationOptions.SeparateSetup"/> partitions an ingested diagram (the drawing needs the
+    /// boundary, a <see cref="DiagramMarkerKind.Phase"/> marker; a call's phase alone draws nothing). Called only when
+    /// that option is on: a marker also ends a run of identical calls the collapser would fold, so every ingest without
+    /// it stays as it was.
+    /// </summary>
+    /// <remarks>
+    /// <para>The boundary is the record <see cref="InteractionRecord.FromLog"/> writes for <c>StartAction()</c>. It goes
+    /// at the start of the test's first Action step that follows a Setup step (<see cref="IngestAttribution.BuildStepWindows"/>),
+    /// placed ahead of every record at that instant; when the steps place none, just before the test's first request
+    /// phased Action that follows one phased Setup (phases the capturer wrote, or <see cref="IngestRequest.PhaseFromSteps"/>
+    /// set). As in-process, only after something happened in setup: from the steps, a boundary with no call of the test
+    /// before it is not added.</para>
+    /// <para>A test whose capture carries its own boundary keeps it, and so does one whose capture draws its own step
+    /// bars: that is a store projected from an in-process run, which drew whatever boundary it had.</para>
+    /// </remarks>
+    private static void AddSetupBoundaries(List<InteractionRecord> records, List<TestRunRecord> testRecords)
+    {
+        // The kind as the replay reads it, as AddDiagramMarkers reads it.
+        var captureOwns = new HashSet<string>(
+            records
+                .Where(r => r.IsRawMarker && r.ResolvedMarkerKind is DiagramMarkerKind.Phase or DiagramMarkerKind.Step)
+                .Select(r => r.TestId),
+            StringComparer.Ordinal);
+
+        // Per test, the start of its first Action step that follows a Setup step.
+        var fromSteps = new Dictionary<string, DateTimeOffset>(StringComparer.Ordinal);
+        var afterSetup = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var window in IngestAttribution.BuildStepWindows(testRecords))
+        {
+            if (fromSteps.ContainsKey(window.TestId))
+                continue;
+            if (window.Phase == TestPhase.Setup)
+                afterSetup.Add(window.TestId);
+            else if (window.Phase == TestPhase.Action && afterSetup.Contains(window.TestId))
+                fromSteps[window.TestId] = window.Start;
+        }
+
+        // Where each boundary goes in the list: the sort that follows is stable, so a record sorts ahead of any other
+        // at its instant that comes after it in the list.
+        var boundaries = new List<(int Index, InteractionRecord Boundary)>();
+        var calls = records
+            .Select((record, index) => (Record: record, Index: index))
+            .Where(x => !x.Record.IsMarker && !string.IsNullOrWhiteSpace(x.Record.TestId))
+            .GroupBy(x => x.Record.TestId, StringComparer.Ordinal);
+        foreach (var test in calls)
+        {
+            if (captureOwns.Contains(test.Key))
+                continue;
+
+            if (fromSteps.TryGetValue(test.Key, out var at))
+            {
+                if (test.Any(x => (x.Record.Timestamp ?? DateTimeOffset.MinValue) < at))
+                    boundaries.Add((0, SetupBoundary(test.Key, at)));
+                continue;
+            }
+
+            var setupSeen = false;
+            foreach (var (record, index) in test.OrderBy(x => x.Record.Timestamp ?? DateTimeOffset.MinValue).ThenBy(x => x.Index))
+            {
+                if (string.Equals(record.Type, "Response", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var phase = record.ResolvedPhase;
+                if (phase == TestPhase.Setup)
+                    setupSeen = true;
+                else if (phase == TestPhase.Action && setupSeen)
+                {
+                    boundaries.Add((index, SetupBoundary(test.Key, record.Timestamp)));
+                    break;
+                }
+            }
+        }
+
+        // Latest place first, so each insertion leaves the places still to come where they were.
+        foreach (var (index, boundary) in boundaries.OrderByDescending(b => b.Index))
+            records.Insert(index, boundary);
+    }
+
+    /// <summary>The Setup/Action boundary as <see cref="InteractionRecord.FromLog"/> writes the one <c>StartAction()</c> logs.</summary>
+    private static InteractionRecord SetupBoundary(string testId, DateTimeOffset? at) => new()
+    {
+        Kind = InteractionRecord.Kinds.Marker,
+        MarkerKind = nameof(DiagramMarkerKind.Phase),
+        Type = "Request",
+        Uri = "http://override.com/",
+        ServiceName = "",
+        CallerName = "",
+        TestId = testId,
+        Timestamp = at,
+    };
 
     /// <summary>
     /// Stable sort by timestamp: entries without a timestamp keep their file order relative to each

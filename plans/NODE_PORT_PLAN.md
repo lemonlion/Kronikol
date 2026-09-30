@@ -1232,7 +1232,9 @@ byte-for-byte (full detail: wiki *Ingesting External Captures*):
   capturer's fallback marker) goes to the test whose `[start, end]` window contains its timestamp; overlapping
   windows → the **latest-started** one; a tie → the first window in the file; no window → left alone for
   `--fold-unknown`; a **response follows its request** by `requestResponseId` rather than its own timestamp.
-  Alongside it: `--phase-from-steps` (Given/Context → `Setup`, When/Then → `Action`, And/But inherit),
+  Alongside it: `--phase-from-steps` (Given/Context → `Setup`, When/Then → `Action`, And/But inherit; data
+  only, it draws nothing), `--separate-setup` (the Setup/Action boundary from the steps, else the calls' phases;
+  .NET 4.1.0, `INGEST_FIDELITY_PLAN.md` S4),
   `--strict` (a malformed line throws instead of being skipped and counted), and structured diagnostics —
   `IngestResult.Diagnostics` as `{kind, message, scenarioId?}`.
 

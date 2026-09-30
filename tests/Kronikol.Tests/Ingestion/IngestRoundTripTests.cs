@@ -125,6 +125,53 @@ public class IngestRoundTripTests : IDisposable
         Assert.Equal(diagramA, diagramB);
     }
 
+    [Fact]
+    public void A_store_whose_run_drew_no_boundary_ingests_without_one_when_SeparateSetup_is_on()
+    {
+        // plans/INGEST_FIDELITY_PLAN.md T4: the fixture without its Phase marker, as a run whose calls were phased but
+        // whose boundary was never logged (a client shared by several tests injects it once). Its calls are phased Setup
+        // then Action, so the boundary ingest synthesises from phases would draw a partition the in-process run did not:
+        // a capture that draws its own step bars is a projected store, and gets none.
+        var testId = "roundtrip-no-boundary-" + Guid.NewGuid().ToString("N");
+        TestRunRecord[] testRecords =
+        [
+            new() { Event = "start", TestId = testId, TestName = "Probe", Feature = "probe.feature", Timestamp = T0 },
+            new() { Event = "step", TestId = testId, Text = "a basket", Keyword = "Given", Status = "passed", DurationMs = 6000, Timestamp = T0.AddMilliseconds(1000) },
+            new() { Event = "end", TestId = testId, Status = "passed", DurationMs = 8000, Timestamp = T0.AddMilliseconds(8000) },
+        ];
+        var logs = Fixture(testId).Where(l => !l.IsActionStart).ToList();
+        Assert.Contains(logs, l => l.Phase == TestPhase.Setup);
+        Assert.Contains(logs, l => l.Phase == TestPhase.Action);
+
+        foreach (var log in logs)
+            RequestResponseLogger.Log(log);
+        var stored = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).ToArray();
+        var synthesised = FeatureSynthesizer.Build(testRecords, stored, "Ingested", ExecutionResult.Passed, null);
+        var inProcessDir = Path.Combine(_dir, "in-process-no-boundary");
+        DefaultDiagramsFetcher.Reset();
+        ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(synthesised.Features, synthesised.Start, synthesised.End,
+            Options(inProcessDir, separateSetup: true), RunEnvironment.Unrecorded, Environment.GetEnvironmentVariable);
+        DefaultDiagramsFetcher.Reset();
+        var diagramA = ReportPayloadText.Of(Scenario(inProcessDir, testId).GetProperty("diagrams")[0])!;
+
+        var capture = Path.Combine(_dir, "projected-no-boundary.ndjson");
+        using (var writer = new NdjsonInteractionWriter(capture))
+            foreach (var log in logs)
+                writer.Log(log);
+        var ingestDir = Path.Combine(_dir, "ingest-no-boundary");
+        Assert.True(IngestPipeline.Run(new IngestRequest
+        {
+            InteractionFiles = [capture],
+            TestRecords = testRecords,
+            Options = Options(ingestDir, separateSetup: true),
+            CallTreeOrdering = false,
+        }).Generated);
+        var diagramB = ReportPayloadText.Of(Scenario(ingestDir, testId).GetProperty("diagrams")[0])!;
+
+        Assert.DoesNotContain("partition", diagramA, StringComparison.Ordinal);
+        Assert.Equal(diagramA, diagramB);
+    }
+
     /// <summary>
     /// One scenario in enqueue order with strictly increasing, tick-aligned timestamps and no overlapping
     /// calls: a step bar, a pair with a measured duration, a row band, the phase boundary, a custom

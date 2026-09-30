@@ -165,6 +165,9 @@ public sealed record InteractionRecord
     /// </summary>
     internal DiagramMarkerKind ResolvedMarkerKind => ParseMember(MarkerKind, DiagramMarkerKind.Custom);
 
+    /// <summary><see cref="Phase"/> as the replay reads it: a member by name or number, else <see cref="TestPhase.Unknown"/>.</summary>
+    internal TestPhase ResolvedPhase => ParseMember(Phase, TestPhase.Unknown);
+
     /// <summary><see cref="Kind"/> is <c>ui</c>.</summary>
     [JsonIgnore] public bool IsUserAction => string.Equals(Kind, Kinds.Ui, StringComparison.OrdinalIgnoreCase);
 
@@ -266,7 +269,7 @@ public sealed record InteractionRecord
                 : StatusCode;
         }
 
-        var phase = ParseMember(Phase, TestPhase.Unknown);
+        var phase = ResolvedPhase;
         var metaType = ParseMember(MetaType, RequestResponseMetaType.Default);
 
         var uri = System.Uri.TryCreate(Uri, UriKind.Absolute, out var absolute)

@@ -716,8 +716,9 @@ before and after:
 ### 12.4 The no-adapter fallback (L5), precisely
 
 A `step` record with a timestamp drives five things: the step delimiter bar in the sequence diagram,
-phase tagging via `PhaseForStep`/`ApplyPhaseFromSteps` (which is what `SeparateSetup` and
-`HighlightSetup` act on), assertion nesting under the containing step, per-step attachments and
+phase tagging via `PhaseForStep`/`ApplyPhaseFromSteps`, the Setup/Action boundary that `SeparateSetup` and
+`HighlightSetup` draw at (synthesised from the steps from 4.1.0, `INGEST_FIDELITY_PLAN.md` S4; the phase
+tagging alone never drew it), assertion nesting under the containing step, per-step attachments and
 status, and "the calls made inside the failing step" in `Failures.md`. A reporter file gives per-test
 start and stop and, at best, step names with a status. In the fallback the step list still appears in
 the report, but the diagram is one undivided block per test, every interaction's phase is Unknown,

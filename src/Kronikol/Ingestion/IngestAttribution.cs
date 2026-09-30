@@ -462,10 +462,10 @@ public static class IngestAttribution
     }
 
     /// <summary>
-    /// Tags interactions with the phase of the step they happened during, so <c>SeparateSetup</c> and
-    /// <c>HighlightSetup</c> — until now reachable only from an in-process run, where
-    /// <c>TestPhaseContext</c> is ambient — work for ingested runs too. Only records whose own phase is
-    /// unset or <see cref="TestPhase.Unknown"/> are touched, so a capturer that knows better still wins.
+    /// Tags interactions with the phase of the step they happened during, as an in-process run's calls carry the
+    /// ambient <c>TestPhaseContext</c>. Only records whose own phase is unset or <see cref="TestPhase.Unknown"/> are
+    /// touched, so a capturer that knows better still wins. A phase draws nothing on its own: the Setup partition
+    /// needs the Setup/Action boundary, which the pipeline adds when <c>SeparateSetup</c> is on.
     /// </summary>
     /// <returns>The records with phases applied, in the same order, and how many were tagged.</returns>
     public static (List<InteractionRecord> Records, int Tagged) ApplyPhaseFromSteps(

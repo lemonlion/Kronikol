@@ -233,6 +233,58 @@ public class CucumberIngestPipelineTests : IDisposable
         }));
     }
 
+    [Fact]
+    public void A_german_features_steps_take_their_phase_from_the_gherkin_keyword_type()
+    {
+        // plans/INGEST_FIDELITY_PLAN.md T5: the step markers carried the keyword and not its type, so a phase was found
+        // only for an English keyword. "Angenommen" is a Given and "Wenn" a When, as the pickle's step types say.
+        var messages = Path_("de.ndjson");
+        File.WriteAllText(messages, GermanStream());
+        const string testId = "de-karte-belasten";
+        var start = DateTimeOffset.FromUnixTimeSeconds(1787393374);
+        var (setupRequest, setupResponse) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:5000/karten/1", "karten", "web",
+            responseContent: "{}", statusCode: "200", requestTimestamp: start.AddMilliseconds(500), responseTimestamp: start.AddMilliseconds(600));
+        var (actionRequest, actionResponse) = InteractionRecord.Pair(testId, null, "POST", "http://localhost:5000/zahlungen", "psp", "web",
+            responseContent: "{}", statusCode: "200", requestTimestamp: start.AddMilliseconds(1500), responseTimestamp: start.AddMilliseconds(1600));
+        var capture = Path_("de-calls.ndjson");
+        File.WriteAllLines(capture, [setupRequest.ToJson(), setupResponse.ToJson(), actionRequest.ToJson(), actionResponse.ToJson()]);
+        var output = Path_("German");
+        var options = OptionsFor(output);
+        options.SeparateSetup = true;
+
+        IngestPipeline.Run(new IngestRequest
+        {
+            CucumberMessagesFiles = [messages],
+            InteractionFiles = [capture],
+            PhaseFromSteps = true,
+            Options = options,
+        });
+
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        var scenario = json.RootElement.GetProperty("features").EnumerateArray().SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
+            .Single(s => s.GetProperty("id").GetString() == testId);
+        Assert.Equal(["Setup", "Setup", "Action", "Action"],
+            scenario.GetProperty("httpInteractions").EnumerateArray().Select(i => i.GetProperty("phase").GetString()));
+        var setup = Kronikol.Tests.Ingestion.IngestSetupBoundaryTests.PartitionOf(FindDiagram(json, testId));
+        Assert.Contains("/karten/1", setup);
+        Assert.DoesNotContain("/zahlungen", setup);
+    }
+
+    /// <summary>One German scenario, "Angenommen" then "Wenn", with the identity attachment its calls join on.</summary>
+    private static string GermanStream() =>
+        """
+        {"gherkinDocument":{"uri":"features/zahlung.feature","feature":{"language":"de","keyword":"Funktionalität","name":"Zahlungen","children":[{"scenario":{"id":"sc-1","keyword":"Szenario","name":"Eine Karte belasten","steps":[{"id":"st-1","keyword":"Angenommen ","keywordType":"Context","text":"eine gespeicherte Karte"},{"id":"st-2","keyword":"Wenn ","keywordType":"Action","text":"die Karte belastet wird"}]}}]}}}
+        {"pickle":{"id":"pk-1","uri":"features/zahlung.feature","astNodeIds":["sc-1"],"name":"Eine Karte belasten","language":"de","steps":[{"id":"ps-1","text":"eine gespeicherte Karte","type":"Context","astNodeIds":["st-1"]},{"id":"ps-2","text":"die Karte belastet wird","type":"Action","astNodeIds":["st-2"]}]}}
+        {"testCase":{"id":"tc-1","pickleId":"pk-1","testSteps":[{"id":"ts-1","pickleStepId":"ps-1"},{"id":"ts-2","pickleStepId":"ps-2"}]}}
+        {"testCaseStarted":{"id":"att-1","attempt":0,"testCaseId":"tc-1","timestamp":{"seconds":1787393374,"nanos":0}}}
+        {"attachment":{"testCaseStartedId":"att-1","mediaType":"text/plain","fileName":"kronikol-test-id","body":"de-karte-belasten","contentEncoding":"IDENTITY"}}
+        {"testStepStarted":{"testCaseStartedId":"att-1","testStepId":"ts-1","timestamp":{"seconds":1787393374,"nanos":100000000}}}
+        {"testStepFinished":{"testCaseStartedId":"att-1","testStepId":"ts-1","testStepResult":{"duration":{"seconds":1,"nanos":0},"status":"PASSED"},"timestamp":{"seconds":1787393375,"nanos":100000000}}}
+        {"testStepStarted":{"testCaseStartedId":"att-1","testStepId":"ts-2","timestamp":{"seconds":1787393375,"nanos":200000000}}}
+        {"testStepFinished":{"testCaseStartedId":"att-1","testStepId":"ts-2","testStepResult":{"duration":{"seconds":1,"nanos":0},"status":"PASSED"},"timestamp":{"seconds":1787393376,"nanos":200000000}}}
+        {"testCaseFinished":{"testCaseStartedId":"att-1","timestamp":{"seconds":1787393376,"nanos":500000000}}}
+        """;
+
     private static DateTimeOffset MidPoint(CucumberStepWindow window) =>
         window.Start + TimeSpan.FromTicks((window.End - window.Start).Ticks / 2);
 

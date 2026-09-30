@@ -40,9 +40,9 @@ public sealed class CucumberSynthesisOptions
 /// <param name="End">Where the next step's bar is drawn, or the scenario end — a step owns the diagram up to the next boundary.</param>
 /// <param name="KeywordType">
 /// The step's resolved phase from <see cref="CucumberPickleStep.Type"/>: <c>Context</c>, <c>Action</c>,
-/// <c>Outcome</c> or <c>Unknown</c> — an <c>And</c> carries the phase of the step it continues. This is what
-/// phase attribution reads to decide whether an interaction inside the window is <c>Setup</c> or <c>Action</c>;
-/// <c>null</c> for a hook step.
+/// <c>Outcome</c> or <c>Unknown</c> — an <c>And</c> carries the phase of the step it continues. The step's marker
+/// carries the same value as its <see cref="TestRunRecord.KeywordType"/>, which phase attribution and the Setup/Action
+/// boundary read, so a step in any Gherkin language gets its phase; <c>null</c> for a hook step.
 /// </param>
 public sealed record CucumberStepWindow(ScenarioStep Step, DateTimeOffset Start, DateTimeOffset End, string? KeywordType = null);
 
@@ -439,7 +439,8 @@ public static class CucumberFeatureSynthesizer
             if (started != default)
             {
                 windows.Add(new CucumberStepWindow(step, started, finishedAt ?? started, NullIfBlank(pickleStep.Type)));
-                markers.Add(StepMarkerRecord(scenarioId, step, started, duration, status, message));
+                // The pickle's resolved type, so a phase is found for a keyword in any language (Angenommen, Wenn).
+                markers.Add(StepMarkerRecord(scenarioId, step, started, duration, status, message, NullIfBlank(pickleStep.Type)));
             }
 
             if (status == ExecutionResult.Failed)
@@ -551,12 +552,13 @@ public static class CucumberFeatureSynthesizer
 
     private static TestRunRecord StepMarkerRecord(
         string scenarioId, ScenarioStep step, DateTimeOffset started, TimeSpan? duration,
-        ExecutionResult status, string? error) => new()
+        ExecutionResult status, string? error, string? keywordType = null) => new()
         {
             Event = "step",
             TestId = scenarioId,
             Text = step.Text,
             Keyword = step.Keyword,
+            KeywordType = keywordType,
             Timestamp = started,
             DurationMs = duration?.TotalMilliseconds,
             Status = status.ToString().ToLowerInvariant(),

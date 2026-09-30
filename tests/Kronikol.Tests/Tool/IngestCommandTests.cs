@@ -186,6 +186,56 @@ public class IngestCommandTests : IDisposable
     }
 
     /// <summary>
+    /// <c>--separate-setup</c> (plans/INGEST_FIDELITY_PLAN.md T1): the Setup partition was unreachable from the command
+    /// line, and <c>--phase-from-steps</c>, which said it gave it, only tagged the calls. A Given step with a call, then a
+    /// When step with a call: the flag draws the partition around the first, and without it nothing is drawn.
+    /// </summary>
+    [Fact]
+    public void Separate_setup_flag_reaches_the_report()
+    {
+        const string testId = "5e7a6d4c3b2a19087f6e5d4c3b2a1908";
+        var captures = Path.Combine(_dir, "captures-separate-setup");
+        Directory.CreateDirectory(captures);
+        var (cardRequest, cardResponse) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:5000/cards/1", "cards", "web",
+            responseContent: "{\"ok\":true}", statusCode: "200", requestTimestamp: T0.AddMilliseconds(1500), responseTimestamp: T0.AddMilliseconds(1600));
+        var (chargeRequest, chargeResponse) = InteractionRecord.Pair(testId, null, "POST", "http://localhost:5000/charges", "psp", "web",
+            responseContent: "{\"ok\":true}", statusCode: "200", requestTimestamp: T0.AddMilliseconds(3500), responseTimestamp: T0.AddMilliseconds(3600));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [cardRequest.ToJson(), cardResponse.ToJson(), chargeRequest.ToJson(), chargeResponse.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › charges a card", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "step", TestId = testId, Text = "a saved card", Keyword = "Given", Status = "passed", DurationMs = 2000, Timestamp = T0.AddMilliseconds(1000) }.ToJson(),
+            new TestRunRecord { Event = "step", TestId = testId, Text = "the card is charged", Keyword = "When", Status = "passed", DurationMs = 2000, Timestamp = T0.AddMilliseconds(3000) }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 6000, Timestamp = T0.AddMilliseconds(6000) }.ToJson(),
+        ]);
+
+        string Diagram(string name, params string[] flags)
+        {
+            var output = Path.Combine(_dir, name);
+            var err = new StringWriter();
+            Assert.True(0 == IngestCommand.Run([captures, "--tests", tests, "-o", output, .. flags], new StringWriter(), err), err.ToString());
+            using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+            return ReportPayloadText.Of(json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0])!;
+        }
+
+        var separated = Diagram("out-separate-setup", "--separate-setup");
+        Assert.Contains("partition #F6F6F6 Setup", separated);
+        var setup = Kronikol.Tests.Ingestion.IngestSetupBoundaryTests.PartitionOf(separated);
+        Assert.Contains("/cards/1", setup);
+        Assert.DoesNotContain("/charges", setup);
+
+        Assert.DoesNotContain("partition", Diagram("out-no-separate-setup"));
+        Assert.DoesNotContain("partition", Diagram("out-phase-from-steps-only", "--phase-from-steps"));
+
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("--separate-setup", usage.ToString());
+        // The usage said --phase-from-steps separates setup traffic; the partition is --separate-setup's.
+        Assert.DoesNotContain("so setup traffic can be separated", usage.ToString());
+    }
+
+    /// <summary>
     /// <c>--payloads compressed</c> writes a large body compressed in place (#85, <c>CompressTestRunReportPayloads</c>);
     /// without the flag ingest writes what the library writes by default. Ingest takes a curated set of flags, so
     /// without this one an ingested report could not have them.

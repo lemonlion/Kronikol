@@ -1,8 +1,9 @@
 # Ingest fidelity plan: what a hand-built capturer needs from the feed (stage 1d)
 
 **Written:** 2026-09-30, at 4.0.0 (`00abca6`), at the owner's request, after a conversation about a Node service
-tested under Jest. **Status: planned, nothing implemented.** Placed next in the roadmap at the owner's word (stage
-1d, `ROADMAP.md` D31); the questions in §11 carry recommendations and wait for the owner. Evidence labels: **RUN**
+tested under Jest. **Status: in progress. R1 shipped as 4.1.0 (2026-09-30); R2 to R4 follow** (§12). Placed next in
+the roadmap at the owner's word (stage 1d, `ROADMAP.md` D31). The questions in §11 were taken as recommended on
+2026-09-30, when the owner asked for the plan to be implemented in full. Evidence labels: **RUN**
 (measured here), **READ** (in the source, `file:line`, at `00abca6`), **INFERRED** (reasoned from two facts, stated
 by neither), **DOC** (a third party's documentation, not measured). The measurements and their sources are in
 [`INGEST_FIDELITY_PLAN.harness/`](INGEST_FIDELITY_PLAN.harness/).
@@ -625,5 +626,32 @@ Each is outside the five items and outside the ingest feed, or needs a measureme
 
 ## 12. Log
 
-Nothing executed yet. Each release records here what shipped, what the measurements were, and what differed from
-this plan.
+Each release records here what shipped, what the measurements were, and what differed from this plan.
+
+### R1: 4.1.0 (S4), 2026-09-30
+
+Shipped: `kronikol ingest --separate-setup`; `IngestPipeline` synthesises each test's Setup/Action boundary when
+`SeparateSetup` is on, from the steps first and the calls' phases second, skipping a test whose capture carries its
+own `Phase` marker or its own step bars, and adding none from the steps when no call of the test came before the
+boundary; the Cucumber lane's step markers carry the pickle step's type as `keywordType`; the false documentation
+corrected in the option's and `ApplyPhaseFromSteps`'s doc comments, `SeparateSetup`'s and `HighlightSetup`'s, the
+usage, four wiki pages (Ingesting External Captures, Phase Aware Tracking, Report Configuration, Diagram
+Customisation) and three plans (the foundations' §12.4, the Java plan's App. C, the Node plan's ingest appendix).
+
+Proofs, each red first: T1 (`IngestCommandTests.Separate_setup_flag_reaches_the_report`, red on the unknown option);
+T2 to T4 (`IngestSetupBoundaryTests`, four facts: from the steps, from the phases, a first When step, the capture's own
+marker; and `IngestRoundTripTests.A_store_whose_run_drew_no_boundary_…`); T5
+(`CucumberIngestPipelineTests.A_german_features_steps_…`, red on `Unknown` phases); T6 (Playwright,
+`IngestedSetupPartitionTests`, the `Setup` label and the `#F6F6F6` fill in the rendered SVG, red with the boundary
+step removed). Three mutations, each caught by the fact written for it: without the step-bar skip the round-trip
+fact goes red, without the `Phase`-marker skip the capture-wins fact, without the `SeparateSetup` gate the phases
+fact (two identical calls stop collapsing into `loop ×2`). Core suite: 6,359 passed, 7 skipped.
+
+What differed: T2 to T4 are in a file of their own, `Ingestion/IngestSetupBoundaryTests.cs`, rather than in
+`IngestPipelineTests.cs`. T4's round-trip half is a fact of its own (a store whose run drew no boundary, with phased
+calls and step bars), since the existing theory's fixture carries a `Phase` marker and would pass whatever the rule.
+The phases route places its boundary immediately before the chosen request in the list rather than at the front, so a
+record at the same instant that came before it (a Setup call's response) stays on the setup side; the steps route
+places it at the front as planned. To run Playwright in the plan's container, Chromium needed the proxy's CA in its
+NSS store and a browsers folder mapping Playwright 1.59's expected build onto the installed one (no repository
+change).

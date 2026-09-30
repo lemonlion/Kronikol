@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.1.0] - 2026-09-30
+
+**Minor - `kronikol ingest --separate-setup`, and an ingested test's Setup/Action boundary.**
+`plans/INGEST_FIDELITY_PLAN.md` R1 (S4, roadmap 1d.1). A new flag is new public surface, so the minor moves. The
+boundary is also a fix that changes output: `--phase-from-steps` and `IngestRequest.PhaseFromSteps` were documented
+from 3.0.45 as making `SeparateSetup` partition an ingested diagram, and never did. A library caller that set both now
+gets the partition. Without `SeparateSetup` every ingest draws what it drew before. The report changes only for ingested
+runs, which Kronikol4J does not have, so there is no ledger entry. The history action's `VERSION` installs
+`Kronikol.Tool` 4.1.0. Template pins move to 4.0.2.
+
+### Added
+
+- **`kronikol ingest --separate-setup`** sets `ReportConfigurationOptions.SeparateSetup`: each test's setup calls are
+  drawn inside the `Setup` partition, highlighted `#F6F6F6`, as an in-process run draws them. The partition was out
+  of the command line's reach.
+- **The Setup/Action boundary for ingested tests.** With `SeparateSetup` on, `IngestPipeline` gives each test the
+  boundary an in-process run draws (the marker `StartAction()` logs). It goes at the start of the test's first
+  `When`/`Then` step that follows a `Given` step. When the steps place none, it goes just before the first request
+  phased `Action` that follows one phased `Setup`: phases the capturer wrote, or the ones `--phase-from-steps` set.
+  As in-process, the steps give no boundary when no call of the test came before it, and a first step that is a
+  `When` draws none. A test whose capture carries its own boundary (a `kind: marker`, `markerKind: Phase` line) keeps
+  it. So does a test whose capture draws its own step bars, a store projected from an in-process run.
+
+### Fixed
+
+- **`--phase-from-steps` never drew the Setup partition it documented** (since 3.0.45). It sets each call's `phase`,
+  which the data files and `kronikol query` read. The partition is drawn at the boundary above, which ingest made only
+  from a hand-written `Phase` marker line. The option's documentation, `IngestAttribution.ApplyPhaseFromSteps`'s, the
+  command's usage and the wiki now say what it does. On a report of a Given step and a When step, each with a call,
+  ingested with `SeparateSetup` and `PhaseFromSteps` on, 4.0.2 drew no partition and 4.1.0 draws one around the Given
+  step's call.
+- **The Cucumber Messages lane's steps get a phase in any Gherkin language.** Its step markers carried the keyword
+  and not its type, so `Angenommen` and `Wenn` got no phase from `--phase-from-steps` and no boundary. Each marker now
+  carries the pickle step's type as `keywordType`. English keywords phase as they did.
+- `ReportConfigurationOptions.SeparateSetup` and `HighlightSetup` said they display "setup/teardown steps" in a
+  separate section. They draw a test's calls before its boundary in a partition, and colour that partition.
+
 ## [4.0.2] - 2026-09-30
 
 **Patch - `TestRunReport.json` compresses a payload from 8,192 characters, not 512.** Performance work, nothing new to

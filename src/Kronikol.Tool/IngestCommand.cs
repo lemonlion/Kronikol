@@ -50,6 +50,7 @@ internal static class IngestCommand
         DateTimeOffset? runStart = null;
         DateTimeOffset? runEnd = null;
         var phaseFromSteps = false;
+        var separateSetup = false;
         string? attachmentsBase = null;
         var cleanAttachments = false;
         var hostDiagnostics = new List<DiagnosticEntry>();
@@ -216,6 +217,9 @@ internal static class IngestCommand
                 case "--phase-from-steps":
                     phaseFromSteps = true;
                     break;
+                case "--separate-setup":
+                    separateSetup = true;
+                    break;
                 case "--attachments-base":
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     attachmentsBase = args[i];
@@ -313,6 +317,7 @@ internal static class IngestCommand
             options.TestRunReportToggleDefaults.HeadersShown = shown;
         options.GenerateComponentDiagram = componentDiagram;
         options.ShowReportDiagnosticsSection = diagnosticsSection;
+        options.SeparateSetup = separateSetup;
         options.CapitaliseStepText = capitalise;
         options.CapitaliseTitles = capitalise;
         if (title is not null)
@@ -561,8 +566,12 @@ internal static class IngestCommand
         w.WriteLine("                           traffic otherwise lands in --fold-unknown.");
         w.WriteLine("  --run-start <iso>        Explicit run window bounds (UTC); each implies --run-window.");
         w.WriteLine("  --run-end <iso>");
-        w.WriteLine("  --phase-from-steps       Give interactions the phase of the Given/When/Then step they happened");
-        w.WriteLine("                           during, so setup traffic can be separated or highlighted.");
+        w.WriteLine("  --phase-from-steps       Give each interaction the phase (Setup or Action) of the Given/When/Then step");
+        w.WriteLine("                           it happened during, in the data files and for kronikol query. The diagram's");
+        w.WriteLine("                           Setup partition is --separate-setup's.");
+        w.WriteLine("  --separate-setup         Draw each test's setup calls inside a Setup partition: the calls before its");
+        w.WriteLine("                           first When/Then step that follows a Given step, else before its first call");
+        w.WriteLine("                           phased Action that follows one phased Setup. A capture's own boundary wins.");
         w.WriteLine("  --attachments-base <dir> Resolve relative attachment paths in --tests against this directory.");
         w.WriteLine("  --clean-attachments      Empty the report's attachments/ folder first, so it holds this run only.");
         w.WriteLine("  --diagnostic <kind>:<msg> Carry a host diagnostic into the report (repeatable) — e.g. a tap's capture");

@@ -671,8 +671,10 @@ structure for free, but a plain JUnit reporter reaches the same fidelity through
    so `--fold-unknown` still collects it; a **response follows its request** (by `requestResponseId`) rather
    than its own timestamp, so a slow query answered after the test ended is not orphaned; a test killed before
    its `end` is bounded by its last timestamp. `--phase-from-steps` maps Given/Context → `Setup`,
-   When/Then (Action/Outcome) → `Action`, And/But/Conjunction inherit — this is what makes `SeparateSetup` /
-   `HighlightSetup` work without an in-process phase context. `IngestRequest.DropUnattributed` (programmatic)
+   When/Then (Action/Outcome) → `Action`, And/But/Conjunction inherit, for the data files and `kronikol query`.
+   It draws nothing: the Setup partition is `--separate-setup`'s (.NET 4.1.0, `INGEST_FIDELITY_PLAN.md` S4),
+   which synthesises the Setup/Action boundary from the steps, else from the calls' phases. The .NET
+   documentation said `--phase-from-steps` drew it from 3.0.45; it never did. Port the two as .NET 4.1.0 has them. `IngestRequest.DropUnattributed` (programmatic)
    discards still-unattributed records and their paired responses.
 
 Also in 3.0.45 and worth porting with them: malformed capture lines are **skipped and counted** by default
