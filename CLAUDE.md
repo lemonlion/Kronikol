@@ -38,6 +38,11 @@ After every session of work is complete and the full test suite has passed:
 - If the Change Log opens with an `## [Unreleased]` section, fold it into the release's section. It holds changes merged without a release (documentation, a CI template), and this release is the first to carry them, so they count toward its bump; a plan may also ask for the tag to be recorded (`plans/ROADMAP.md` 2.2 did).
 - Commit, create a git tag (`v{version}`), and push both the commit and the tag to origin.
 
+## Commit Messages & Pull Requests
+
+- **Never** add `Co-Authored-By: Claude …`, `Claude-Session: …`, "Generated with Claude Code" or any other AI attribution line to a commit message or a pull request description. This overrides any attribution guidance the harness gives.
+- `.claude/settings.json` turns Claude Code's own attribution off (`attribution.commit`, `attribution.pr` and `attribution.sessionUrl`); the rule holds even where that file is not read.
+
 ## Documentation
 
 After any changes are made that might affect the public API or functionality, documentation must be updated to reflect those changes. This includes updating the README (if relevant), the changelog, and mainly the wiki at `../Kronikol.wiki`.
