@@ -59,7 +59,7 @@ public static class NodeJsPlantUmlRenderer
         return http.GetByteArrayAsync(url).GetAwaiter().GetResult();
     }
 
-    /// <summary>One diagram's outcome from <see cref="RenderMany"/>: the SVG, or the engine's error for that diagram alone.</summary>
+    /// <summary>One diagram's outcome from <see cref="RenderMany(IReadOnlyList{string})"/>: the SVG, or the engine's error for that diagram alone.</summary>
     public sealed record NodeRenderResult(string? Svg, string? Error)
     {
         public bool Succeeded => Svg is not null;

@@ -119,7 +119,7 @@ Every item was verified against the code on 2026-09-14, not inferred.
 | **G1** | **.NET cannot write tests NDJSON.** `TestRunRecord` is read by `FeatureSynthesizer` and never written by anything — no `NdjsonTestRunWriter` exists | `grep -rl TestRunRecord src/` → 8 files, all readers | F1 |
 | **G2** | **.NET writes interaction NDJSON, but only for OTLP.** `NdjsonInteractionWriter` is an `IRequestResponseSink` and composes via `CompositeRequestResponseSink`, but the only caller is `OtlpTapOptions` — there is no capture-mode option | `grep -rl NdjsonInteractionWriter src/` → the class + `OtlpTapOptions.cs` | F1 |
 | **G3** | **No round-trip parity test exists.** Nothing asserts that in-process report == `ingest(ndjson)` report | `tests/Kronikol.Tests/Ingestion/` has 16 tests; none compares the two paths | F1 |
-| **G4** | **`ingest` cannot take internal-flow spans.** `IngestPipeline.DefaultOptions()` sets `InternalFlowTracking = false` — "there are no in-process spans to show" | `IngestPipeline.cs:284` | F5 |
+| **G4** | **`ingest` cannot take internal-flow spans.** `IngestPipeline.DefaultOptions()` sets `InternalFlowTracking = false` — "there are no in-process spans to show". **Closed at 4.4.0** (`INGEST_FIDELITY_PLAN.md` R4): `kronikol ingest --spans` reads OTLP/JSON lines and `IngestRequest.Spans` takes `FlowSpan`s, internal flow's neutral span | `IngestPipeline.cs:284` | F5 |
 | **G5** | **The options channel is 27 CLI flags against 95 options.** `kronikol ingest` exposes 27 `--flags`; `ReportConfigurationOptions` has 95 settable properties | `grep -c '{ get; set; }'` = 95; `case "--…"` = 27 | F4 |
 | **G6** | **Pure functions are duplicated per language.** Kronikol4J's core reimplements `UnifiedSqlClassifier` (297 lines), `ServiceNameResolver`, `ScenarioTitleResolver`, `StringCasing`, `TrackingSafeSerializer`, `TestInfoResolver`, and byte-diffs each against .NET | `java/kronikol4j-core/.../{sql,naming,serialization}/` | F3 |
 | **G7** | **The parity corpus is render-shaped.** 94 of 109 fixtures are rendered output (`.puml`, `report-*.html`, data files); 15 are capture-side (`*-interactions.txt`, classifications) | `ls parity-harness/dotnet-capture/fixtures/` classified | F8 |
@@ -241,7 +241,11 @@ format); the schema is in `parity/contract/`.
 ### F5 — Close what the round-trip test finds
 
 **What.** Whatever F1 turns red. Known before it runs: internal-flow spans (G4) need an NDJSON form —
-most likely a third stream, `spans.ndjson`, since spans are neither interactions nor test events.
+most likely a third stream, `spans.ndjson`, since spans are neither interactions nor test events. **Done at 4.4.0**
+(`INGEST_FIDELITY_PLAN.md` R4): the third stream is OTLP/JSON lines, one `TracesData` object per line, which every
+OpenTelemetry SDK can write and `OtlpTraceReader.ReadJsonLines` reads; a call joins its spans by its
+`activityTraceId` and `activitySpanId`; internal flow draws `FlowSpan`s, which an `Activity` and an OTLP span both
+become, with in-process output unchanged. F2 freezes the stream with the other two.
 Probable, unverified: tabular-authoring inputs/outputs, component-registry "registered but never
 invoked" diagnostics, assertion-tracking records, `Track.That` markers.
 

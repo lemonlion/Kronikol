@@ -27,10 +27,14 @@
 
   <ItemGroup>
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The OpenTelemetry-under-Jest spike's spans (plans/INGEST_FIDELITY_PLAN.md S0). -->
+    <Content Include="..\Kronikol.Tests\TestData\Ingest\otel-jest-v2.spans.jsonl" Link="TestData\otel-jest-v2.spans.jsonl" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol\Kronikol.csproj" />
+    <!-- The OTLP/JSON reader that kronikol ingest reads span files with (plans/INGEST_FIDELITY_PLAN.md T21). -->
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.Otlp\Kronikol.Extensions.Otlp.csproj" />
   </ItemGroup>
 
 </Project>

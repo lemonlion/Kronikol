@@ -61,3 +61,22 @@ was run alone with the .NET 10.0.401 SDK (`dotnet test <project> --filter "Fully
 | P4 | `otel-jest/results/v2-spans.otlp.jsonl` through `OtlpTraceReader.ReadJson` and `SpanToInteractionMapper` | all 16 spans with their parent tree, kinds, scopes and test ids; the tail mapper would draw one arrow, the call MSW passed through |
 
 To repeat: copy a probe back into its project, run the filter, read the output file, delete the probe.
+
+## R4's parity probe: internal flow on `FlowSpan`, in-process output unchanged
+
+R4 moved internal flow from `System.Diagnostics.Activity` to `FlowSpan`, and the plan asked for an in-process report
+that does not move a byte. `FlowSpanParityProbeTests.cs` was a temporary xUnit class in
+`tests/Kronikol.Tests/InternalFlow/` that, with `KRONIKOL_PROBE_OUT` set, writes two in-process reports with every
+internal-flow surface on: three tests of three traced calls each (nested spans, one call with no trace id per test, one
+span no call claims), Manual granularity with its own `ActivitySource`, the activity-diagram and call-tree styles, the
+flame chart, the whole-test flow as both, the component diagram and the mergeable data file, payloads uncompressed.
+
+`paritydiff.py <before> <after>` compares two such folders file by file, after inflating every gzip-and-base64 blob
+inside them and renaming the run's random values (GUIDs, trace and span ids, timestamps) by order of first
+appearance; the scenario search index, binary and holding the run's ids, is left out. Two runs of the probe on 4.3.0
+(`acb80f0`) diffed to nothing; a run on 4.3.0 against a run with the refactor diffed to nothing in all 24 files; a run
+with the span tree broken (no node a child) diffed in 6 of them, so the comparison sees a change in the drawing.
+
+To repeat: copy the probe back into its folder, run `dotnet test tests/Kronikol.Tests --filter
+"FullyQualifiedName~FlowSpanParityProbeTests"` once per build with `KRONIKOL_PROBE_OUT` naming a fresh folder, run the
+script on the two folders, delete the probe.

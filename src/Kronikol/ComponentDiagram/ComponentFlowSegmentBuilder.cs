@@ -53,29 +53,29 @@ public static class ComponentFlowSegmentBuilder
                 .Select(l => l.RequestResponseId)
                 .ToHashSet();
 
-            var allSpans = new List<Activity>();
-            var testSpans = new Dictionary<string, List<Activity>>();
+            var allSpans = new List<FlowSpan>();
+            var testSpans = new Dictionary<string, List<FlowSpan>>();
 
             foreach (var (segKey, segment) in perBoundarySegments)
             {
                 if (!matchingLogIds.Contains(segment.RequestResponseId))
                     continue;
 
-                allSpans.AddRange(segment.Spans);
+                allSpans.AddRange(segment.FlowSpans);
 
                 if (!testSpans.TryGetValue(segment.TestId, out var list))
                 {
                     list = [];
                     testSpans[segment.TestId] = list;
                 }
-                list.AddRange(segment.Spans);
+                list.AddRange(segment.FlowSpans);
             }
 
             if (allSpans.Count == 0)
                 continue;
 
             var ordered = allSpans.OrderBy(s => s.StartTimeUtc).ToArray();
-            var aggregated = new InternalFlowSegment(
+            var aggregated = InternalFlowSegment.Of(
                 Guid.Empty, RequestResponseType.Request, "aggregated",
                 new DateTimeOffset(ordered.Min(s => s.StartTimeUtc), TimeSpan.Zero),
                 new DateTimeOffset(ordered.Max(s => s.StartTimeUtc + s.Duration), TimeSpan.Zero),
@@ -114,14 +114,14 @@ public static class ComponentFlowSegmentBuilder
         Dictionary<string, InternalFlowSegment> wholeTestSegments)
     {
         var allSpans = wholeTestSegments.Values
-            .SelectMany(s => s.Spans)
+            .SelectMany(s => s.FlowSpans)
             .OrderBy(s => s.StartTimeUtc)
             .ToArray();
 
         if (allSpans.Length == 0)
             return new InternalFlowSegment(Guid.Empty, RequestResponseType.Request, "system", null, null, []);
 
-        return new InternalFlowSegment(
+        return InternalFlowSegment.Of(
             Guid.Empty, RequestResponseType.Request, "system",
             new DateTimeOffset(allSpans.Min(s => s.StartTimeUtc), TimeSpan.Zero),
             new DateTimeOffset(allSpans.Max(s => s.StartTimeUtc + s.Duration), TimeSpan.Zero),

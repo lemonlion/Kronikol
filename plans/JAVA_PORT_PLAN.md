@@ -678,7 +678,12 @@ structure for free, but a plain JUnit reporter reaches the same fidelity through
    .NET 4.2.0 (S3) adds `attempt`, `sourceFile` and `sourceLine` to the tests records, `--source-root`, and the
    retry rule (the last attempt is the scenario, each earlier one a `retry N` label, their calls left out), and a
    step's `error` becomes its `FailureMessage`: a JUnit reporter has each test's source, and a retry extension
-   its attempt. `IngestRequest.DropUnattributed` (programmatic)
+   its attempt. .NET 4.4.0 (S5) adds the span stream: `ingest --spans <file|dir|glob>` reads OTLP/JSON lines (one
+   `TracesData` object per line, as the Collector's file exporter writes them; which Java SDK exporter writes that
+   shape is to check at implementation), and `IngestRequest.Spans` takes the neutral span (`FlowSpan`: trace id, span
+   id, parent, name, source, start, duration, service) internal flow draws; a call joins its spans by
+   `activityTraceId` and `activitySpanId`, all spans are drawn unless `Manual` names sources, and the in-process
+   span store is neither read nor written. `IngestRequest.DropUnattributed` (programmatic)
    discards still-unattributed records and their paired responses.
 
 Also in 3.0.45 and worth porting with them: malformed capture lines are **skipped and counted** by default

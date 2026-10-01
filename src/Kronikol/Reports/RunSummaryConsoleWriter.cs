@@ -283,7 +283,7 @@ public static class RunSummaryConsoleWriter
     /// <summary>
     /// A run-derived string flattened onto the one line that holds it.
     ///
-    /// <para>The pointer is a one-line-per-thing channel — <see cref="Write"/> splits on newlines and
+    /// <para>The pointer is a one-line-per-thing channel — <see cref="Write(RunSummary, CiEnvironment, Action{string})"/> splits on newlines and
     /// writes one line per call — and three of the strings in it come from the run rather than from
     /// Kronikol: the reports directory, and every failing feature and scenario name. Producers take those
     /// names from feature files, theory arguments and parameterised titles, so a line ending in one is a

@@ -377,7 +377,7 @@ public static class DefaultDiagramsFetcher
 
     /// <summary>
     /// The batch counterpart of <see cref="RenderIsolated"/> for the Node renderer: every diagram of the
-    /// report goes through one <c>node</c> process (<see cref="NodeJsPlantUmlRenderer.RenderMany"/>), and
+    /// report goes through one <c>node</c> process (<see cref="NodeJsPlantUmlRenderer.RenderMany(IReadOnlyList{string})"/>), and
     /// the per-diagram isolation is kept — a diagram the engine refuses gets the placeholder note, which
     /// is itself rendered in a second (small) batch so an image-based report still shows it; if even that
     /// fails, the placeholder stands as code-behind. A process that cannot run at all (no node, no engine)

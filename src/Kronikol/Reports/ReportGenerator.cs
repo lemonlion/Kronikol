@@ -168,7 +168,9 @@ public static class ReportGenerator
     /// been rotated out of it and before this run writes its first byte into it — the one moment a host
     /// may safely delete from it. Not called for a pass with no scenarios, which writes nothing.</para>
     /// </remarks>
-    internal static void CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite = null)
+    // spans: the spans an ingest was handed (IngestRequest.Spans), drawn in place of this process's span store, which is
+    // then neither read nor written; null reads the store, as an in-process run always has.
+    internal static void CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite = null, IReadOnlyList<FlowSpan>? spans = null)
     {
         var previous = ActiveReportsDirectory.Value;
         ActiveReportsDirectory.Value = ResolveReportsDirectory(options);
@@ -183,7 +185,7 @@ public static class ReportGenerator
         var runFiles = RunFileCollector.Begin(ActiveReportsDirectory.Value);
         try
         {
-            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options, environment, getEnv, beforeFirstWrite);
+            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options, environment, getEnv, beforeFirstWrite, spans);
         }
         finally
         {
@@ -193,7 +195,7 @@ public static class ReportGenerator
         }
     }
 
-    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite)
+    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite, IReadOnlyList<FlowSpan>? suppliedSpans)
     {
         // Guard: skip report generation entirely when there are zero scenarios.
         // This prevents the xUnit v3 test-discovery pass (which triggers
@@ -322,15 +324,21 @@ public static class ReportGenerator
                 .Where(x => !(x?.TrackingIgnore ?? true))
                 .ToArray();
 
-            var spans = InternalFlowSpanCollector.CollectSpans(
-                options.InternalFlowSpanGranularity,
-                options.InternalFlowActivitySources);
+            // One span list for both builders, whatever recorded it: an ingest's spans are already FlowSpans, and this
+            // process's activities become them here, with nothing internal flow reads changed.
+            var spans = suppliedSpans is not null
+                ? InternalFlowSpanCollector.FilterSupplied(suppliedSpans, options.InternalFlowSpanGranularity, options.InternalFlowActivitySources)
+                : InternalFlowSpanCollector.CollectSpans(options.InternalFlowSpanGranularity, options.InternalFlowActivitySources)
+                    .Select(FlowSpan.From)
+                    .ToArray();
 
-            perBoundarySegments = InternalFlowSegmentBuilder.BuildSegments(trackedLogs, spans);
+            perBoundarySegments = InternalFlowSegmentBuilder.SegmentsOf(trackedLogs, spans);
+            if (suppliedSpans is not null)
+                SuppliedSpanDiagnostics.Record(trackedLogs, suppliedSpans, spans, perBoundarySegments);
 
             if (options.WholeTestFlowVisualization != WholeTestFlowVisualization.None)
             {
-                wholeTestSegments = InternalFlowSegmentBuilder.BuildWholeTestSegments(trackedLogs, spans);
+                wholeTestSegments = InternalFlowSegmentBuilder.WholeTestSegmentsOf(trackedLogs, spans);
             }
         }
 
@@ -418,7 +426,8 @@ public static class ReportGenerator
                         options.InternalFlowNoDataBehavior,
                         options.InternalFlowSpanGranularity,
                         options.InternalFlowActivitySources,
-                        startTab)),
+                        startTab,
+                        suppliedSpans?.Count)),
                     linkSources);
 
             // The popup data script is shared by both HTML reports; only a Specifications
@@ -492,7 +501,7 @@ public static class ReportGenerator
                 // shard written that way carried no interactions at all, the gap 3.8.0 closed for the
                 // standard file and this branch kept.
                 Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => WriteFile(
-                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, dataLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment, attribution.Value),
+                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, dataLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment, attribution.Value, suppliedSpans?.Count),
                     $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"));
             }
             else
@@ -603,12 +612,13 @@ public static class ReportGenerator
         var diagnostics = ReportDiagnostics.Analyse(
             runLogs, features,
             includeSourceDiscovery: options.ActivitySourceDiscovery,
-            internalFlowTracking: options.InternalFlowTracking);
+            internalFlowTracking: options.InternalFlowTracking,
+            suppliedSpans: suppliedSpans?.Count);
         foreach (var message in diagnostics)
             Console.WriteLine(message);
 
         if (options.DiagnosticMode)
-            DiagnosticReportGenerator.Generate(runLogs, features, options);
+            DiagnosticReportGenerator.Generate(runLogs, features, options, suppliedSpans?.Count);
 
         // Gathered once, from what THIS RUN actually wrote: an output the isolated list could not write is
         // never named by the pointer or offered in the CI summary. Existence alone is not the test — a
@@ -1739,8 +1749,8 @@ public static class ReportGenerator
         else if (wholeTestSegments is not null && wholeTestSegments.Count > 0)
         {
             var spanCounts = wholeTestSegments.Values
-                .Where(s => s.Spans.Length > 0)
-                .Select(s => s.Spans.Length)
+                .Where(s => s.FlowSpans.Length > 0)
+                .Select(s => s.FlowSpans.Length)
                 .OrderBy(c => c)
                 .ToArray();
             if (spanCounts.Length > 0)
@@ -4592,7 +4602,8 @@ public static class ReportGenerator
         IReadOnlyList<DiagnosticEntry>? diagnostics = null,
         string? suite = null,
         RunEnvironment? environment = null,
-        (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution = null)
+        (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution = null,
+        int? suppliedSpans = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
 
@@ -4616,7 +4627,8 @@ public static class ReportGenerator
                 options.InternalFlowNoDataBehavior,
                 options.InternalFlowSpanGranularity,
                 options.InternalFlowActivitySources,
-                ReportToggleDefaultsResolver.Resolve(options, specifications: false).InternalFlowTab));
+                ReportToggleDefaultsResolver.Resolve(options, specifications: false).InternalFlowTab,
+                suppliedSpans));
         }
 
         Dictionary<string, Merge.WholeTestFlowFragment>? wholeTestFlow = null;

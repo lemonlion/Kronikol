@@ -1,0 +1,726 @@
+From 48e0ea5b4f4a9697af0428434dc941d108f1216f Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 1 Oct 2026 01:09:14 +0000
+Subject: [PATCH] 4.4.0: Ingesting from Jest, a harness for a Node service
+ tested in-process under Jest that writes the tests NDJSON, the interactions
+ and the services' spans with no change to the service or the tests, run end
+ to end before it was written up; Ingesting External Captures gains Spans
+ (kronikol ingest --spans, the OTLP/JSON lines format, the join by
+ activityTraceId and activitySpanId, the rules and the diagnostics), the
+ --spans flag row and the id row; Internal Flow Tracking gains Ingested runs
+ and FlowSpan, and its correlation line, which still said spans were matched
+ by timestamp alone, now gives the 3.35.1 rule; the OTLP extension documents
+ ReadJsonLines and ToFlowSpan; the API reference lists FlowSpan and
+ InternalFlowSegment.FlowSpans; Home and the sidebar link the new page
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01J2t3gYVNVyokonFWxDXKhy
+---
+ API-Reference.md               |   3 +-
+ Home.md                        |   1 +
+ Ingesting-External-Captures.md |  78 +++++-
+ Ingesting-From-Jest.md         | 463 +++++++++++++++++++++++++++++++++
+ Integration-Otlp-Extension.md  |  18 ++
+ Internal-Flow-Tracking.md      |  31 ++-
+ _Sidebar.md                    |   1 +
+ 7 files changed, 591 insertions(+), 4 deletions(-)
+ create mode 100644 Ingesting-From-Jest.md
+
+diff --git a/API-Reference.md b/API-Reference.md
+index 9c33024..cf8126a 100644
+--- a/API-Reference.md
++++ b/API-Reference.md
+@@ -33,7 +33,8 @@
+ | `ScenarioTitleResolver` | Static utility: `FormatFeatureName(className)` titleizes a test class name; `FormatScenarioDisplayName(displayName)` humanizes a fully-qualified test name with parameter extraction; `ResolveScenarioTitle(...)` replaces BDDfy class-named titles with humanized method names. |
+ | `PlantUmlCreator` | Converts `RequestResponseLog` entries into PlantUML sequence diagram code. |
+ | `PlantUmlTextEncoder` | Encodes PlantUML text to URL-safe format for server rendering. |
+-| `InternalFlowSegment` | Record: `RequestResponseId`, `BoundaryType`, `TestId`, `StartTime`, `EndTime`, `Spans`. Represents a segment of internal flow between two consecutive HTTP boundaries. |
++| `InternalFlowSegment` | Record: `RequestResponseId`, `BoundaryType`, `TestId`, `StartTime`, `EndTime`, `Spans`. Represents a segment of internal flow between two consecutive HTTP boundaries. `FlowSpans` (4.4.0) is every span of the segment as internal flow draws it, whatever recorded it; `Spans` holds the ones that are activities of this process, and is empty for an ingest's spans. Setting `Spans` (a `with` expression) sets `FlowSpans` to them. |
++| `FlowSpan` | Record (4.4.0): `TraceId`, `SpanId`, `ParentSpanId`, `Name`, `Source`, `StartTimeUtc`, `Duration`, `Service`: a span as internal flow reads it. `FlowSpan.From(activity)` makes one of an `Activity`; `OtlpSpan.ToFlowSpan()` ([[Integration Otlp Extension]]) one of an exported span; `IngestRequest.Spans` takes them ([[Ingesting External Captures › Spans|Ingesting-External-Captures#spans-internal-flow-from-another-language-440]]). |
+ | `InternalFlowSegmentBuilder` | Static class; `BuildSegments(logs, spans)` correlates OTel spans with HTTP boundary timestamps to produce a dictionary of segments keyed by `iflow-{id}`, one per request that is a call: a diagram marker or a user action gets none, since no arrow links it (from 3.31.4). |
+ | `InternalFlowRenderer` | Static class; `RenderActivityDiagram(segment)` produces PlantUML activity diagram with swimlanes. `RenderCallTree(segment)` produces HTML nested list. |
+ | `InternalFlowHtmlGenerator` | Static class; `GenerateSegmentDataScript(segments, style)` produces the `<script id="iflow-segments" type="application/json">` element holding the segment map gzipped and base64-encoded, and `WrapSegmentData(map)` wraps a map built already (both set `window.__iflowSegments` before 3.31.9). |
+diff --git a/Home.md b/Home.md
+index 207106f..beea6fe 100644
+--- a/Home.md
++++ b/Home.md
+@@ -25,6 +25,7 @@ Kronikol was published as **TestTrackingDiagrams** until 3.0.0 (May 2026); it is
+ - [Playwright Adapter](Integration-Playwright) — browser-driven E2E: per-test identity headers on every request
+ - [ProxyTap Extension](Integration-ProxyTap-Extension) — out-of-process capture for backends you cannot instrument
+ - [Ingesting External Captures](Ingesting-External-Captures) — the NDJSON format and `kronikol ingest`
++- [Ingesting from Jest](Ingesting-From-Jest) — a Node service under Jest: its calls, steps, assertions, retries and its spans' internal flow, with no change to the service or the tests
+ - [OTLP Extension](Integration-Otlp-Extension) — capture the OpenTelemetry spans your services already export
+ - [Exporting to OpenTelemetry](Exporting-to-OpenTelemetry) — `kronikol export` pushes captured traffic to an OTLP collector as spans
+ - [CTRF output](Generated-Reports#ctrf-reportjson-optional) — `GenerateCtrfReport` and `kronikol ctrf` put the run in Common Test Report Format, for CI tooling that already reads it
+diff --git a/Ingesting-External-Captures.md b/Ingesting-External-Captures.md
+index eaee5a9..a11cffb 100644
+--- a/Ingesting-External-Captures.md
++++ b/Ingesting-External-Captures.md
+@@ -31,7 +31,7 @@ One line per **request** *or* **response**. The shape is the `httpInteraction` o
+ | `dependencyCategory` / `callerDependencyCategory` | | A `DependencyCategories` value (`BigQuery`, `AI`, `Redis`, …) for shape/colour. |
+ | `phase` | | `Setup` / `Action` / `Unknown`. |
+ | `metaType` | | `Default` or `Event` (fire-and-forget styling). |
+-| `activityTraceId` / `activitySpanId` | | W3C ids for cross-linking to Tempo/Jaeger. |
++| `activityTraceId` / `activitySpanId` | | W3C ids: the trace and the span the call was made under. With [spans](#spans-internal-flow-from-another-language-440) (`--spans`, 4.4.0) they join the call to the spans its internal flow is drawn from; otherwise they cross-link to Tempo or Jaeger. Read lowercased, an empty one as none (4.4.0). |
+ | `trackingIgnore` | | `true` to store but not draw. |
+ | `capturedBy` | | Which capture path produced the record — `wire` (a proxy/TCP tap that decoded the protocol) or `span` (an OTLP receiver). Only used by `--merge-duplicates` (see below). |
+ | `kind` | | `ui` for a **user action** (see below); `step` / `assertion` for diagram markers emitted by an interaction capturer (the tests NDJSON is the usual source of those); `marker` for one half of a **raw diagram marker** as the in-process store held it, what `NdjsonInteractionWriter` writes for a marker (3.29.0, see below). Absent = an ordinary request/response. |
+@@ -266,6 +266,7 @@ kronikol ingest ./captures --tests ./captures/tests.ndjson -o ./Reports -t "E2E
+ | `--separate-setup` | off | Draw each test's setup calls inside a `Setup` partition, as an in-process run with `SeparateSetup` does: the calls before its first `When`/`Then` step that follows a `Given` step, else before its first call phased `Action` that follows one phased `Setup`. A capture's own boundary wins. Sets `ReportConfigurationOptions.SeparateSetup` (4.1.0+) — see [The Setup partition](#the-setup-partition-410). |
+ | `--attachments-base <dir>` | cwd | Resolve relative `attachment` paths against this directory. |
+ | `--source-root <dir>` | cwd | Write a tests record's absolute `sourceFile` relative to this directory; one outside it is kept and counted (4.2.0+) — see [Retries and source locations](#retries-and-source-locations-420). |
++| `--spans <file\|dir\|glob>` | — | The services' spans as OTLP/JSON lines (repeatable), drawn as each call's internal flow: a popup on every arrow, a flame chart, the whole-test flow. Turns internal flow on. A file named is read; a directory or a glob gives the files in it that hold spans, so one folder can hold the captures, the tests file and the spans (4.4.0+) — see [Spans](#spans-internal-flow-from-another-language-440). |
+ | `--clean-attachments` | off | Empty the report's `attachments/` folder first, so it holds exactly this run's artefacts. |
+ | `--cucumber-messages <file>` | — | A Cucumber Messages NDJSON (repeatable) — the Gherkin structure of a BDD run. Wins over `--tests` for the scenarios it owns; see [Cucumber Messages](#cucumber-messages). |
+ | `--include-hooks` | off | Keep the Cucumber hook steps (`BeforeEach hook`, …) in the step list. |
+@@ -291,7 +292,7 @@ records came from the wire and how many from spans. See [[Querying Reports]].
+ ### Programmatic
+ 
+ ```csharp
+-var options = IngestPipeline.DefaultOptions();   // BrowserJs, no internal-flow, component diagram, collapse on
++var options = IngestPipeline.DefaultOptions();   // BrowserJs, no internal flow (Spans turns it on), component diagram, collapse on
+ options.ReportsFolderPath = ".logs/kronikol";
+ var result = IngestPipeline.Run(new IngestRequest
+ {
+@@ -334,6 +335,79 @@ Full mapping table, tag conventions and diagnostics: [[Integration Cucumber Mess
+ 
+ ---
+ 
++## Spans: internal flow from another language (4.4.0)
++
++An in-process .NET run shows what happened *inside* each call it drew: the popup on an arrow holds the spans the
++service recorded while handling it, as an activity diagram and a flame chart, and each scenario's whole flow is a tab
++beside its sequence diagram ([[Internal Flow Tracking]]). From 4.4.0 an ingest draws the same from the spans the
++services under test exported, whatever language they are in. [[Ingesting from Jest|Ingesting-From-Jest]] is a worked
++harness for a Node service.
++
++```bash
++kronikol ingest ./captures --tests ./captures/tests.ndjson --spans ./captures/spans.jsonl -o ./Reports
++```
++
++**The file.** OTLP/JSON lines: one `TracesData` object (`{"resourceSpans":[…]}`) per line, as OpenTelemetry JS's
++`JsonTraceSerializer` (what its OTLP/HTTP JSON exporter sends) and the Collector's file exporter write them; a file
++holding one such document over several lines is read too. Ids in hex or base64, times in nanoseconds as strings or
++numbers, kinds as numbers or names: what [[Integration Otlp Extension]]'s reader accepts. Each span becomes the seven
++things internal flow draws: its trace id, span id and parent, its name, its instrumentation scope (the diagram's
++swimlane, else its service), its start and its duration. A line that is not a `TracesData` object, or holds a span
++with no trace id or span id, is skipped and counted as a [torn line](#torn-lines-a-killed-capturer-must-not-cost-you-the-report)
++is, and `--strict` fails on it.
++
++**The join.** A call takes the spans of the trace its `activityTraceId` names that started from 50 ms before its
++request to its response, as an in-process call does (`plans/SPAN_ATTRIBUTION_PLAN.md`): a capturer stamps each call
++with the trace and span it was made under (in OpenTelemetry JS, `trace.getActiveSpan().spanContext()` where the call
++is seen). When calls of two tests share a trace, each takes only the spans under its own `activitySpanId`, and a span
++both would take goes to neither, its popup saying so. A test's whole flow is every span of the traces only its calls
++carry.
++
++**The rules.**
++
++- Spans given, internal flow is on for the run, whatever `InternalFlowTracking` says: an ingest turns it off only
++  because a capture holds no spans.
++- They are drawn instead of this process's span store, which is neither read nor written.
++- All of them are drawn. The default granularity's list of instrumentation is .NET's, and would drop every span of
++  another language; `InternalFlowSpanGranularity.Manual` with `InternalFlowActivitySources` naming scopes narrows them
++  to those.
++- Ids are lowercased, and a span given twice (the same trace id and span id) is drawn once.
++- A span naming itself as its parent is drawn as a root.
++
++**The diagnostics** ([Diagnostics](#diagnostics)), each a line of the command's output and an entry of the report's:
++
++- `Spans supplied to the ingest: N span(s).`, where an in-process run counts its span store.
++- `N call(s) carry an activityTraceId no supplied span has`: the likely harness mistake, a call stamped with a trace
++  the span files do not hold.
++- `N supplied span(s) are in no call's internal flow`, in two parts with the first names: spans of a trace no call
++  carries (a service's start-up, a left-out retry's calls), and spans of a carried trace that started outside the
++  time of every call carrying it (clocks apart, or work after the response) or that calls of two tests would both
++  take.
++- Spans supplied more than once, and spans with no ids.
++
++**The inputs.** A span file inside an input directory is not read as interactions; an OTLP file among the inputs
++that `--spans` did not name is skipped with one line saying to pass it with `--spans`, instead of a malformed line
++per span.
++
++**Programmatically**, `IngestRequest.Spans` takes the spans as `FlowSpan`s; [[Integration Otlp Extension]] reads
++the file:
++
++```csharp
++using Kronikol.Extensions.Otlp;
++
++var malformed = new List<MalformedLine>();
++var result = IngestPipeline.Run(new IngestRequest
++{
++    InteractionFiles = Directory.GetFiles("captures", "*.ndjson"),
++    TestsFile = "captures/tests.ndjson",
++    Options = options,
++    Spans = OtlpTraceReader.ReadJsonLines("captures/spans.jsonl", malformed).Select(s => s.ToFlowSpan()).ToList(),
++});
++```
++
++Null `Spans`, the default, ingests as before 4.4.0: no internal flow unless the options turn it on, and the report
++4.3.0 wrote.
++
+ ## Merging the wire and the span views
+ 
+ When a stack is captured from both sides — a [[proxy or TCP tap|Integration-ProxyTap-Extension]] that decodes the wire, and an [[OTLP tap|Integration-Otlp-Extension]] that reads the spans the services already export — the same call arrives twice: the wire record has the payload, the status and the hit/miss label but had to *guess* which test it belongs to; the span record carries the exact trace id but usually no payload. `kronikol ingest --merge-duplicates` (`IngestRequest.MergeDuplicateInteractions`, with `MergeOverlapThreshold`, default `0.8`) folds them into one arrow: the span's `testId`/`traceId`/`activityTraceId`/`activitySpanId` win, the wire's `content`/`statusCode`/label win, and the merged request carries an `x-kronikol-captured-by: wire + span` pseudo-header so the note says where the arrow came from.
+diff --git a/Ingesting-From-Jest.md b/Ingesting-From-Jest.md
+new file mode 100644
+index 0000000..a4520a6
+--- /dev/null
++++ b/Ingesting-From-Jest.md
+@@ -0,0 +1,463 @@
++## Ingesting from Jest
++
++A Node service tested in-process under Jest (the service built in the test, driven with `fastify.inject`, its
++dependencies faked with MSW) can have the report an in-process .NET run has, with no change to the service and none
++to the tests: sequence diagrams of every call the test made and every call the service made, step bars with the
++setup calls in a Setup partition, a note per `expect`, a retried test shown as its last attempt, and each call's
++**internal flow** from the service's OpenTelemetry spans (4.4.0). A harness of five files writes three kinds of
++file, and `kronikol ingest` makes the report from them.
++
++The worked example is a Fastify 5 and Mercurius 16 GraphQL service whose resolver calls a payment provider (faked by
++MSW) and a risk service (a local fake MSW passes through). Every file below ran as shown, and the report was checked,
++with Node 22.22, Jest 30.5, Fastify 5.12, Mercurius 16.10, MSW 2.11, the OpenTelemetry JS SDK 2.11,
++`@opentelemetry/instrumentation-graphql` 0.70, `@opentelemetry/instrumentation-undici` 0.32 and `@fastify/otel` 0.21
++(`plans/INGEST_FIDELITY_PLAN.harness/otel-jest/recipe` in the repository, run with Kronikol 4.4.0).
++
++> The pieces are the owner's to change: another web framework needs its own inbound capture point, another fake its
++> own outbound one. What has to hold is the contract each file writes, which [[Ingesting External Captures]]
++> documents.
++
++---
++
++## What the harness writes
++
++| File | Written by | What it holds |
++|---|---|---|
++| `kronikol-capture/tests.ndjson` | the Jest environment, and the `expect` wrapper | Each test's `start`, its steps, its assertions and its `end`, with `attempt` on each, from every worker ([the tests format](Ingesting-External-Captures#the-tests-format-optional)) |
++| `kronikol-capture/interactions-<worker>.ndjson` | the capture points | A request line and a response line per call, each stamped with the running test's id and with the trace and the span the call was made under ([the interaction format](Ingesting-External-Captures#the-interaction-format)) |
++| `kronikol-capture/spans-<worker>.jsonl` | the tracing setup, after each test file | The file's spans, one OTLP/JSON `TracesData` object per line ([Spans](Ingesting-External-Captures#spans-internal-flow-from-another-language-440)) |
++
++Not `.kronikol/`: that folder above the report holds Kronikol's [[history ledger|Cross-Run-History]], whose
++`history.jsonl` an input directory would take for a capture.
++
++## `jest.config.js`
++
++```js
++module.exports = {
++  testEnvironment: '<rootDir>/kronikol/environment.js',
++  setupFiles: ['<rootDir>/kronikol/setup.js'],
++  setupFilesAfterEnv: ['<rootDir>/kronikol/after-env.js'],
++  testMatch: ['<rootDir>/tests/*.test.js']
++}
++```
++
++## `kronikol/environment.js`: tests, steps and outcomes
++
++A custom environment sees every test event. Each test gets an id stable across runs (its file and full name), set
++on the test's global for the capture points; its `beforeEach` hooks are its `Given` step and its body its `When`
++step, written when the test ends so each carries its status; a retry (`jest.retryTimes`) is the next `attempt` of
++the same id, which the report shows as its last attempt with a `retry 1` label.
++
++```js
++'use strict'
++// Jest environment: one tests NDJSON line per test start, its steps and its end. Steps are kept until the
++// test ends so each carries its status: beforeEach is the Given step (setup), the test body the When step.
++const { TestEnvironment } = require('jest-environment-node')
++const crypto = require('node:crypto')
++const fs = require('node:fs')
++const path = require('node:path')
++
++const dir = process.env.KRONIKOL_DIR ?? 'kronikol-capture'
++
++function fullName (test) {
++  const names = [test.name]
++  for (let block = test.parent; block && block.name !== 'ROOT_DESCRIBE_BLOCK'; block = block.parent) names.unshift(block.name)
++  return names.join(' › ')
++}
++
++function message (error) {
++  const e = Array.isArray(error) ? error[0] : error
++  return e?.stack ?? e?.message ?? String(e)
++}
++
++class KronikolEnvironment extends TestEnvironment {
++  constructor (config, context) {
++    super(config, context)
++    this.file = path.relative(process.cwd(), context.testPath).split(path.sep).join('/')
++    this.steps = []
++    fs.mkdirSync(dir, { recursive: true })
++  }
++
++  write (record) {
++    // One line per append: lines this short are written whole even with every worker appending to the file.
++    fs.appendFileSync(path.join(dir, 'tests.ndjson'), JSON.stringify(record) + '\n')
++  }
++
++  step (keyword, text) {
++    this.steps.push({ keyword, text, started: Date.now(), timestamp: new Date().toISOString() })
++  }
++
++  async handleTestEvent (event, state) {
++    const test = event.test ?? state.currentlyRunningTest
++    if (!test) return
++    const name = fullName(test)
++    const testId = crypto.createHash('sha256').update(`${this.file}|${name}`).digest('hex').slice(0, 32)
++    const attempt = test.invocations
++    switch (event.name) {
++      case 'test_start':
++        this.steps = []
++        // The capture points stamp every record with it; the Fastify hook binds it to each request.
++        this.global.__kronikolTestId = testId
++        this.global.__kronikolAttempt = attempt
++        this.write({ event: 'start', testId, testName: name, feature: this.file, sourceFile: this.file, attempt, timestamp: new Date().toISOString() })
++        break
++      case 'hook_start':
++        // Every beforeEach hook of the test is the one Given step, timed from the first.
++        if (event.hook.type === 'beforeEach' && this.steps.length === 0) this.step('Given', 'the test is set up')
++        break
++      case 'test_fn_start':
++        this.step('When', 'the test runs')
++        break
++      case 'test_done': {
++        const failed = test.errors.length > 0
++        this.steps.forEach((step, i) => {
++          const last = i === this.steps.length - 1
++          const next = this.steps[i + 1]
++          this.write({
++            event: 'step', testId, keyword: step.keyword, text: step.text, attempt, timestamp: step.timestamp,
++            status: failed && last ? 'failed' : 'passed',
++            durationMs: (next?.started ?? Date.now()) - step.started,
++            error: failed && last ? message(test.errors[0]) : undefined
++          })
++        })
++        this.write({
++          event: 'end', testId, attempt, timestamp: new Date().toISOString(),
++          status: failed ? 'failed' : 'passed', durationMs: test.duration,
++          error: failed ? message(test.errors[0]) : undefined
++        })
++        this.global.__kronikolTestId = undefined
++        this.global.__kronikolAttempt = undefined
++        break
++      }
++    }
++  }
++}
++
++module.exports = KronikolEnvironment
++```
++
++Jest reports a test's `beforeEach` hooks one `hook_start` each (a test with one `beforeEach` of its own saw two), so
++the first opens the step.
++
++## `kronikol/capture.js`: the calls
++
++Inbound, Fastify announces every instance it creates on the `fastify.initialization` diagnostics channel, so the
++harness adds its hooks there and no test registers anything. The `onRequest` hook runs the rest of the request
++inside an `AsyncLocalStorage` scope holding the test the request arrived under, so a call the service makes after the
++test moved on keeps its test. Outbound, MSW's lifecycle events see every call the service makes, mocked or passed
++through.
++
++Each call is stamped with `trace.getActiveSpan()`'s trace id and span id: the join to the spans. Under MSW the
++listener runs inside the span the service made the call in (the resolver's), and in the Fastify hook inside the
++request's.
++
++```js
++'use strict'
++// Capture points: every inbound request Fastify serves and every outbound call MSW sees becomes a
++// request line and a response line of interactions-<worker>.ndjson, stamped with the running test's id and
++// with the trace and span the call was made under, which joins it to the spans kronikol ingest --spans reads.
++const { AsyncLocalStorage } = require('node:async_hooks')
++const crypto = require('node:crypto')
++const dc = require('node:diagnostics_channel')
++const fs = require('node:fs')
++const path = require('node:path')
++const { trace } = require('@opentelemetry/api')
++
++const dir = process.env.KRONIKOL_DIR ?? 'kronikol-capture'
++const file = path.join(dir, `interactions-${process.env.JEST_WORKER_ID ?? '1'}.ndjson`)
++const SERVICE = process.env.KRONIKOL_SERVICE ?? 'Service'
++const requestScope = new AsyncLocalStorage()
++
++/** The test the request being served arrived under, else the test running now. */
++const testId = () => requestScope.getStore()?.testId ?? globalThis.__kronikolTestId ?? 'outside-any-test'
++
++function write (record) {
++  fs.mkdirSync(dir, { recursive: true })
++  fs.appendFileSync(file, JSON.stringify(record) + '\n')
++}
++
++/** The ids of the call: its own, its test's, and the span it is made under. */
++function begin () {
++  const span = trace.getActiveSpan()?.spanContext()
++  return { requestResponseId: crypto.randomUUID(), testId: testId(), activityTraceId: span?.traceId, activitySpanId: span?.spanId }
++}
++
++// Inbound: Fastify announces every instance it creates on this channel, so no test registers anything.
++function onFastify ({ fastify }) {
++  const uri = request => `http://${request.hostname}${request.url}`
++  const writeRequest = request => {
++    if (request.kronikol.written) return
++    request.kronikol.written = true
++    const { written, at, ...call } = request.kronikol
++    write({ ...call, type: 'Request', method: request.method, uri: uri(request), serviceName: SERVICE, callerName: 'Test',
++      content: request.body === undefined ? undefined : JSON.stringify(request.body), timestamp: at })
++  }
++  fastify.addHook('onRequest', (request, reply, done) => {
++    // Everything the service does for this request keeps the test it arrived under, even past the test's end.
++    requestScope.run({ testId: testId() }, () => {
++      request.kronikol = { ...begin(), at: new Date().toISOString() }
++      done()
++    })
++  })
++  // Written once the body is parsed, at the time the request arrived; onResponse writes it for one that never got here.
++  fastify.addHook('preHandler', (request, reply, done) => { writeRequest(request); done() })
++  fastify.addHook('onSend', (request, reply, payload, done) => {
++    request.kronikolBody = typeof payload === 'string' ? payload : undefined
++    done()
++  })
++  fastify.addHook('onResponse', (request, reply, done) => {
++    writeRequest(request)
++    const { written, at, ...call } = request.kronikol
++    // Timed once the service's own onResponse hooks have run, so the spans of its response work are the call's.
++    setImmediate(() => write({ ...call, type: 'Response', method: request.method, uri: uri(request), serviceName: SERVICE, callerName: 'Test',
++      statusCode: String(reply.statusCode), content: request.kronikolBody, timestamp: new Date().toISOString() }))
++    done()
++  })
++}
++dc.subscribe('fastify.initialization', onFastify)
++
++// Outbound: what MSW sees, mocked or passed through. name maps a host to the service it stands for.
++function captureMsw (server, name = host => host) {
++  const calls = new Map()
++  server.events.on('request:start', async ({ request, requestId }) => {
++    const at = new Date().toISOString()
++    const call = { ...begin(), method: request.method, uri: request.url, serviceName: name(new URL(request.url).host), callerName: SERVICE }
++    calls.set(requestId, call)
++    const content = await request.clone().text()
++    write({ ...call, type: 'Request', content: content || undefined, timestamp: at })
++  })
++  const respond = async ({ response, requestId }) => {
++    const call = calls.get(requestId)
++    if (!call) return
++    calls.delete(requestId)
++    const at = new Date().toISOString()
++    const content = await response.clone().text()
++    write({ ...call, type: 'Response', statusCode: String(response.status), content: content || undefined, timestamp: at })
++  }
++  server.events.on('response:mocked', respond)
++  server.events.on('response:bypass', respond)
++}
++
++function stopCapture () {
++  dc.unsubscribe('fastify.initialization', onFastify)
++}
++
++module.exports = { captureMsw, stopCapture }
++```
++
++The response line is timed in `setImmediate`, once the service's own `onResponse` hooks have started: written in
++the hook itself, Mercurius's `onSend` and `onResponse` hook spans started after the call's end, and the ingest said
++so ("5 of a trace a call carries, which started outside the time of every call carrying it").
++
++A failed outbound call is a response line with the error's type behind a bang as its `statusCode`
++(`"!TypeError"`) and its message in `error` ([a failed call](Ingesting-External-Captures#the-interaction-format)).
++This recipe's fakes never failed; the shape is the in-process one.
++
++## `kronikol/tracing.js`: the service's spans under Jest
++
++OpenTelemetry's documented setup gives one span under Jest, the passed-through call's: its instrumentations hook
++Node's `require`, and Jest loads modules through its own registry. What works (`plans/INGEST_FIDELITY_PLAN.md` S0):
++
++- **Fastify**: `@fastify/otel` with `registerOnInitialization: true`, which adds its plugin to each instance Fastify
++  announces on the diagnostics channel. The channel is process-wide, so the subscription is undone after each test
++  file (`after-env.js`), or the next file in the worker fails with `FastifyError: The decorator 'opentelemetry' has
++  already been added!`.
++- **GraphQL**: the instrumentation's patches applied by hand, through `getModuleDefinitions()`, to the modules Jest's
++  own `require` returns, before the service loads: Mercurius takes `graphql`'s functions when it is required.
++- **fetch**: undici's instrumentation, which listens on diagnostics channels, as is.
++
++```js
++'use strict'
++// Spans: an in-memory tracer provider and the instrumentations, applied the way Jest needs. Loaded from a
++// setupFiles entry, so it runs in each test file's module registry before the file and the service load.
++const { trace, context } = require('@opentelemetry/api')
++const { AsyncLocalStorageContextManager } = require('@opentelemetry/context-async-hooks')
++const { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base')
++const { registerInstrumentations } = require('@opentelemetry/instrumentation')
++const { UndiciInstrumentation } = require('@opentelemetry/instrumentation-undici')
++const { GraphQLInstrumentation } = require('@opentelemetry/instrumentation-graphql')
++const { FastifyOtelInstrumentation } = require('@fastify/otel')
++
++// Spans need no test id: a call carries the trace it was made in, and that joins them.
++const exporter = new InMemorySpanExporter()
++const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] })
++const contextManager = new AsyncLocalStorageContextManager()
++contextManager.enable()
++context.setGlobalContextManager(contextManager)
++trace.setGlobalTracerProvider(provider)
++
++// Fastify announces each new instance on a diagnostics channel; registerOnInitialization adds the plugin to it.
++// The channel is process-wide, so the subscription is undone after each test file (after-env.js).
++const fastifyOtel = new FastifyOtelInstrumentation({ registerOnInitialization: true })
++// undici (global fetch) reports on diagnostics channels too, which Jest's module registry does not hide.
++registerInstrumentations({ tracerProvider: provider, instrumentations: [new UndiciInstrumentation(), fastifyOtel] })
++
++// The GraphQL instrumentation hooks Node's require, which Jest bypasses: apply its patches to the modules
++// Jest's own require returns, before the service is loaded (Mercurius takes graphql's functions when required).
++const graphql = new GraphQLInstrumentation({ mergeItems: true })
++graphql.setTracerProvider(provider)
++for (const definition of graphql.getModuleDefinitions()) {
++  const version = require(`${definition.name}/package.json`).version
++  if (definition.patch) definition.patch(require(definition.name), version)
++  for (const file of definition.files ?? []) file.patch(require(file.name), version)
++}
++
++module.exports = { exporter, fastifyOtel }
++```
++
++## `kronikol/setup.js` and `kronikol/after-env.js`
++
++`setupFiles` runs in each test file's module registry before the file. `setupFilesAfterEnv` has `afterAll` and
++`expect`: after each test file it writes the file's spans as one line (`JsonTraceSerializer` is what OpenTelemetry's
++OTLP/HTTP JSON exporter sends) and undoes the process-wide subscriptions, and it wraps `expect` so each matcher call
++is an `assertion` record whose text is the test's own line.
++
++```js
++'use strict'
++// Jest setupFiles: the spans first, so their instrumentation is in place before anything loads the service.
++require('./tracing')
++require('./capture')
++```
++
++```js
++'use strict'
++// Jest setupFilesAfterEnv: every expect becomes an assertion note; when the test file ends, its spans become one
++// OTLP/JSON line of spans-<worker>.jsonl, and the process-wide subscriptions are undone so the next file in this
++// worker starts clean.
++const fs = require('node:fs')
++const path = require('node:path')
++const { JsonTraceSerializer } = require('@opentelemetry/otlp-transformer')
++const { exporter, fastifyOtel } = require('./tracing')
++const { stopCapture } = require('./capture')
++
++const dir = process.env.KRONIKOL_DIR ?? 'kronikol-capture'
++
++afterAll(() => {
++  const spans = exporter.getFinishedSpans()
++  if (spans.length > 0) {
++    fs.mkdirSync(dir, { recursive: true })
++    const line = Buffer.from(JsonTraceSerializer.serializeRequest(spans)).toString('utf8')
++    fs.appendFileSync(path.join(dir, `spans-${process.env.JEST_WORKER_ID ?? '1'}.jsonl`), line + '\n')
++  }
++  exporter.reset()
++  fastifyOtel.disable()
++  stopCapture()
++})
++
++// Each matcher call an assertion: its text the test's own line (expect(…).toBe(…)), its place that line's.
++const plain = text => String(text).replace(/\u001b\[[0-9;]*m/g, '')
++
++function callSite () {
++  for (const frame of new Error().stack.split('\n').slice(2)) {
++    const at = /\(?([^()\s]+):(\d+):\d+\)?$/.exec(frame)
++    if (!at || at[1].includes('node_modules') || at[1] === __filename || at[1].startsWith('node:')) continue
++    const line = fs.readFileSync(at[1], 'utf8').split('\n')[Number(at[2]) - 1]?.trim()
++    return { text: line, sourceFile: path.relative(process.cwd(), at[1]).split(path.sep).join('/'), sourceLine: Number(at[2]) }
++  }
++  return { text: 'assertion' }
++}
++
++function note (site, error) {
++  if (!globalThis.__kronikolTestId) return
++  fs.appendFileSync(path.join(dir, 'tests.ndjson'), JSON.stringify({
++    event: 'assertion', testId: globalThis.__kronikolTestId, attempt: globalThis.__kronikolAttempt, ...site,
++    status: error ? 'failed' : 'passed', error: error ? plain(error.message) : undefined, timestamp: new Date().toISOString()
++  }) + '\n')
++}
++
++function noting (matchers, site) {
++  return new Proxy(matchers, {
++    get (target, property, receiver) {
++      const value = Reflect.get(target, property, receiver)
++      if (property === 'not' || property === 'resolves' || property === 'rejects') return noting(value, site)
++      if (typeof value !== 'function') return value
++      return (...args) => {
++        let result
++        try {
++          result = value.apply(target, args)
++        } catch (error) {
++          note(site, error)
++          throw error
++        }
++        if (typeof result?.then !== 'function') {
++          note(site)
++          return result
++        }
++        return result.then(r => { note(site); return r }, error => { note(site, error); throw error })
++      }
++    }
++  })
++}
++
++globalThis.expect = new Proxy(globalThis.expect, {
++  apply: (target, thisArg, args) => noting(Reflect.apply(target, thisArg, args), callSite())
++})
++```
++
++A test that imports `expect` from `@jest/globals` gets Jest's own, which the wrapper does not reach. Every `expect`
++becomes a note in the diagram; the report's Show/Hide Assertions toggle hides them, or `note` can write failures
++only.
++
++## Handing the capture your MSW server
++
++The one line outside the harness: wherever the suite's MSW server is set up, pass it to `captureMsw`, with the names
++the diagram gives each faked host.
++
++```js
++const { captureMsw } = require('../kronikol/capture')
++captureMsw(msw, host => ({ 'psp.example.test': 'PSP' })[host] ?? 'Risk')
++```
++
++Name the service under test in the environment (`KRONIKOL_SERVICE=Payments GraphQL`); it is `Service` otherwise.
++
++## The CI step
++
++```bash
++NODE_OPTIONS=--experimental-vm-modules npx jest
++kronikol ingest kronikol-capture --tests kronikol-capture/tests.ndjson --spans kronikol-capture --separate-setup -o Reports
++```
++
++`--spans` given a directory takes the files in it that hold spans, so one folder holds all three kinds; the
++interaction captures are the rest. `--separate-setup` draws the calls made in `beforeEach` inside a Setup
++partition. The recipe's run printed:
++
++```text
++Spans: 87 span(s) from 1 file(s):
++Spans supplied to the ingest: 87 span(s).
++Replayed 32 interaction record(s) into 2 scenario(s).
++  Other: 8 interaction record(s) of earlier attempts of retried tests left out: a retried test's scenario shows its last attempt, with a retry label for each earlier one.
++  Other: 31 supplied span(s) are in no call's internal flow: 31 of a trace no call carries (graphql.parseSchema, graphql.parse, graphql.validate, …).
++```
++
++The 31 spans are the retried test's first attempt's (its calls were left out with it) and the three Fastify
++instances' schema parses at start-up, which belong to no call.
++
++## What the report shows
++
++- Each scenario's sequence diagram: `Test` → the service → `PSP` and `Risk`, a step bar per step, the `beforeEach`
++  call in a Setup partition, a ✓ note per `expect`.
++- On every arrow the internal-flow link: the GraphQL call's popup holds the request's 17 spans (Fastify's hooks and
++  handler, the GraphQL parse, validate and operation, the resolver and every field), as an activity diagram with a
++  swimlane per instrumentation (`@fastify/otel`, `@opentelemetry/instrumentation-graphql`) and as a flame chart; the
++  call to `PSP` shows the spans that ran in its time.
++- The scenario's Activity Diagrams and Flame Chart tabs: the test's whole flow, every span of its traces.
++- The retried test as its second attempt, labelled `retry 1`, with its source file.
++
++## Notes
++
++- **Running the service under Jest on Node 22** needed three things unrelated to Kronikol, which a suite that already
++  runs has solved: MSW pinned to 2.11 (later versions depend on the ESM-only `rettime`), `content-disposition`
++  overridden to 0.5.4, and `--experimental-vm-modules` (Mercurius loads a dependency with a dynamic `import()`).
++- **Clocks.** The harness's `Date.now()` and the spans' start times agreed to within a millisecond; internal flow
++  takes a span from 50 ms before a call's request to its response.
++- **Concurrency.** Tests of one file run one at a time, so the test id on the global is the running test's; the
++  `AsyncLocalStorage` scope keeps a request's test however late its work runs. `test.concurrent` would need the id
++  in a scope of its own.
++- **Named steps** (`step('When the card is charged')` between sections of a test, closing one step and opening the
++  next) are the one addition that touches tests; this recipe's steps are the lifecycle's.
++
++## See also
++
++- [[Ingesting External Captures]]: the formats, `kronikol ingest`'s flags, and how spans join calls
++- [[Internal Flow Tracking]]: the popups and the whole-test flow, in-process and ingested
++- [[Integration Otlp Extension]]: the OTLP reader the command uses
+diff --git a/Integration-Otlp-Extension.md b/Integration-Otlp-Extension.md
+index 7d28cb8..c04c072 100644
+--- a/Integration-Otlp-Extension.md
++++ b/Integration-Otlp-Extension.md
+@@ -169,6 +169,24 @@ Run a proxy/TCP tap *and* an OTLP tap over the same hop and each call is capture
+ 
+ ---
+ 
++## Reading span files: internal flow for an ingest (4.4.0)
++
++The tap turns spans into *arrows*. A service's spans can also be drawn as what happened *inside* each arrow, its
++internal flow, when they are exported to a file: `kronikol ingest --spans <file|dir|glob>` reads OTLP/JSON lines
++with this package (see [[Ingesting External Captures › Spans|Ingesting-External-Captures#spans-internal-flow-from-another-language-440]]),
++and a library caller does the same:
++
++```csharp
++var malformed = new List<MalformedLine>();          // null instead: throw on the first bad line
++IReadOnlyList<OtlpSpan> spans = OtlpTraceReader.ReadJsonLines("spans.jsonl", malformed);
++var request = new IngestRequest { /* … */ Spans = spans.Select(s => s.ToFlowSpan()).ToList() };
++```
++
++`ReadJsonLines` reads one `TracesData` object (`{"resourceSpans":[…]}`) per line, as OpenTelemetry JS's
++`JsonTraceSerializer` and the Collector's file exporter write them, or one document over several lines; a line that
++is not one, or a span with no trace id or span id, is recorded in `malformed` and skipped. `ToFlowSpan()` keeps the
++span's ids, name, start and duration, with its instrumentation scope as its source (the swimlane), else its service.
++
+ ## Out of process?
+ 
+ `RequestResponseLogger` is a process-wide static store. A tap in the **same** process as report generation can log straight to it (the default sink). A tap in **another** process needs an `NdjsonInteractionWriter` sink and a replay with `kronikol ingest` — see [[Ingesting External Captures]]. Use both at once for a live report *and* a replayable artifact:
+diff --git a/Internal-Flow-Tracking.md b/Internal-Flow-Tracking.md
+index dbd07bc..3b2f276 100644
+--- a/Internal-Flow-Tracking.md
++++ b/Internal-Flow-Tracking.md
+@@ -268,6 +268,35 @@ A LightBDD run writes the same Kronikol report as every other framework, so it c
+ 
+ ---
+ 
++## Ingested runs (4.4.0)
++
++A run captured outside the test process and turned into a report by `kronikol ingest` has internal flow too when its
++services export their spans: `kronikol ingest --spans <file|dir|glob>` reads them as OTLP/JSON lines, and
++`IngestRequest.Spans` takes them in memory. Each call's popup, its flame chart and each scenario's whole flow are then
++drawn from those spans, by the rules above, and the report looks as an in-process one does.
++
++- **The join** is the call's: an ingested call names the trace and the span it was made under in its
++  `activityTraceId` and `activitySpanId`, and takes the spans of that trace that started in its time. The capturer
++  stamps them where it sees the call (OpenTelemetry JS's `trace.getActiveSpan()` in a Fastify hook or an MSW
++  listener).
++- **Every span is drawn**, unless `Manual` granularity names sources: the `AutoInstrumentation` list above is .NET's.
++  An OTLP span's instrumentation scope is its source, the swimlane (`@fastify/otel`,
++  `@opentelemetry/instrumentation-graphql`), else its service.
++- **The span store is not involved**: spans given to an ingest are drawn instead of it, and it is neither read nor
++  written, so an ingest in a process that recorded spans of its own neither shows them nor loses them. The
++  diagnostics count the spans supplied, the calls whose trace no span has, and the spans no call's popup holds.
++
++Internal flow reads seven things of a span: its trace id, span id and parent, its name, its source, its start and its
++duration. From 4.4.0 they are a `FlowSpan`, which an `Activity` becomes when the report is generated
++(`FlowSpan.From`) and an OTLP span when it is read (`OtlpSpan.ToFlowSpan()`); `InternalFlowSegment.FlowSpans` holds a
++segment's, and `Spans` still holds its activities, empty for ingested spans. An in-process report is the same, byte
++for byte, as before.
++
++[[Ingesting External Captures › Spans|Ingesting-External-Captures#spans-internal-flow-from-another-language-440]]
++has the file format and the rules; [[Ingesting from Jest|Ingesting-From-Jest]] a Node harness that writes the spans.
++
++---
++
+ ## Architecture
+ 
+ ```
+@@ -305,7 +334,7 @@ Test Execution                                    Report Generation
+ - **PlantUML only** — Internal Flow Tracking requires `DiagramFormat.PlantUml`.
+ - **Inline SVG required** — The feature relies on injecting `[[link]]` anchors into PlantUML arrows and intercepting them in the rendered SVG. This requires inline SVG rendering (automatically enabled).
+ - **Zero-config by default** — The `TestTrackingMessageHandler` auto-starts an `InternalFlowActivityListener` for well-known sources. `InternalFlowTracking` defaults to `true`. No extra packages, no extension methods needed for the standard case. Use `InternalFlowActivitySources` on `TestTrackingMessageHandlerOptions` for custom sources, or `AddActivityListenerForInternalFlowTracking()` for DI-based registration. The `Kronikol.Extensions.OpenTelemetry` package is only needed for manual OTel SDK exporter control via `AddTestTrackingExporter()`. The store deduplicates by reference, so both paths can be active without duplicates.
+-- **Span correlation by timestamp** — Spans are correlated with HTTP boundaries using timestamps, not parent-child span relationships. This means spans are grouped into the segment whose HTTP boundary immediately precedes them.
++- **Span correlation by trace, tree and time** — A call takes the spans of the trace it recorded that started in its time, from 50 ms before its request to its response; where calls of several scenarios record one trace, only the spans under its own span; a call with no trace id takes what its scenario's traced calls could take ([How It Works](#how-it-works), step 3). Before 3.35.1 spans were matched by timestamp alone, which is what this line said until 4.4.0.
+ 
+ ---
+ 
+diff --git a/_Sidebar.md b/_Sidebar.md
+index fa81a3a..e813f54 100644
+--- a/_Sidebar.md
++++ b/_Sidebar.md
+@@ -43,6 +43,7 @@
+ * [[Integration Otlp Extension]]
+ * [[Exporting to OpenTelemetry]]
+ * [[Ingesting External Captures]]
++* [[Ingesting from Jest|Ingesting-From-Jest]]
+ * [[Integration Cucumber Messages]]
+ * [[Capture-Time Redaction]]
+ 
+-- 
+2.43.0
+

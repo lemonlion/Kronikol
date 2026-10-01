@@ -1235,7 +1235,10 @@ byte-for-byte (full detail: wiki *Ingesting External Captures*):
   Alongside it: `--phase-from-steps` (Given/Context → `Setup`, When/Then → `Action`, And/But inherit; data
   only, it draws nothing), `--separate-setup` (the Setup/Action boundary from the steps, else the calls' phases;
   .NET 4.1.0, `INGEST_FIDELITY_PLAN.md` S4), the tests records' `attempt`, `sourceFile` and `sourceLine` with
-  `--source-root` (.NET 4.2.0, S3: a Jest reporter has `testPath`, `location` and `invocations`),
+  `--source-root` (.NET 4.2.0, S3: a Jest reporter has `testPath`, `location` and `invocations`), the span stream
+  `--spans` (.NET 4.4.0, S5: OTLP/JSON lines as `JsonTraceSerializer` writes them, joined to calls by
+  `activityTraceId`/`activitySpanId`; the wiki's Ingesting-From-Jest page is a harness that writes all three
+  streams under Jest, and what `@kronikol/jest` would package),
   `--strict` (a malformed line throws instead of being skipped and counted), and structured diagnostics —
   `IngestResult.Diagnostics` as `{kind, message, scenarioId?}`.
 

@@ -4,6 +4,68 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.4.0] - 2026-10-01
+
+**Minor - spans recorded in another language, drawn as internal flow: `kronikol ingest --spans`.**
+`plans/INGEST_FIDELITY_PLAN.md` R4 (S5, roadmap 1d.4). `FlowSpan`, `InternalFlowSegment.FlowSpans`,
+`IngestRequest.Spans`, `OtlpSpan.ToFlowSpan()`, `OtlpTraceReader.ReadJsonLines` and the `--spans` flag are new public
+surface, so the minor moves. Internal flow now draws `FlowSpan`s, which an `Activity` becomes when the report is
+generated, and an in-process report does not change: a probe report with every internal-flow surface on (popups in both
+styles, flame charts, whole-test flows, the component diagram, the mergeable data) came out the same in all 24 files,
+random ids aside. An ingest given no spans writes the report 4.3.0 wrote, measured against a 4.3.0 build. Report output
+changes only for an ingest given spans, which Kronikol4J does not have, so there is no ledger entry. The history
+action's `VERSION` installs `Kronikol.Tool` 4.4.0. Template pins stay at 4.0.2, as in 4.2.0 and 4.3.0: 4.1.0 to 4.3.0
+are not on NuGet until their tags are pushed.
+
+### Added
+
+- **`kronikol ingest --spans <file|dir|glob>`** (repeatable): the services' spans as OTLP/JSON lines, one `TracesData`
+  object (`{"resourceSpans":[…]}`) per line, as OpenTelemetry JS's `JsonTraceSerializer` and the Collector's file
+  exporter write them, or one document over several lines. Each call's popup, its flame chart and each scenario's
+  whole-test flow are drawn from them, as an in-process run draws its activities: a call takes the spans of the trace
+  its `activityTraceId` names that started from 50 ms before its request to its response, and only those under its
+  `activitySpanId` when calls of two tests share the trace. The flag turns internal flow on. A file named is read; a
+  directory or glob gives the files in it that hold spans, so one folder can hold the captures, the tests file and the
+  spans, and a span file inside an input directory is not read as interactions. A line that is not a `TracesData`
+  object, or holds a span with no trace id or span id, is skipped and counted as a torn capture line is, and
+  `--strict` fails on it. The command prints how many spans it read from how many files.
+- **`IngestRequest.Spans`**: the same for a library caller, as `FlowSpan`s. Given, the report draws internal flow from
+  them alone, on for the run whatever `InternalFlowTracking` says (an ingest turns it off only for want of spans; the
+  caller's options are not changed), and this process's span store is neither read nor written. All of them are drawn
+  unless `Manual` granularity names sources: the default's list of instrumentation is .NET's, and would drop every span
+  of another language. Ids are lowercased and a span given twice is drawn once.
+- **`FlowSpan`**, internal flow's span: trace id, span id, parent, name, source, start, duration and service, the seven
+  things the popups, flame charts, whole-test flows and component flows have always read off an `Activity`, plus the
+  exporter's service. `FlowSpan.From(activity)` makes one of an activity. **`InternalFlowSegment.FlowSpans`** holds a
+  segment's spans whatever recorded them; `Spans` still holds its activities, empty for ingested spans, and setting
+  `Spans` (a `with` expression) sets `FlowSpans` to them. The public builder, renderer and collector members keep their
+  `Activity` signatures.
+- **`OtlpTraceReader.ReadJsonLines`** and **`OtlpSpan.ToFlowSpan()`** in `Kronikol.Extensions.Otlp`: the span file
+  reader, with the interaction reader's rules for torn lines, and the span as internal flow draws it, its
+  instrumentation scope as its source (the diagram's swimlane), else its service.
+- **Diagnostics for the join**, which fails silently otherwise: the calls whose `activityTraceId` no supplied span has,
+  the supplied spans no call's internal flow holds (of a trace no call carries, or of a carried trace but outside every
+  call's time or wanted by calls of two tests, each with the first names), spans supplied twice and spans with no ids.
+  The report's span line counts the spans supplied (`Spans supplied to the ingest: N span(s).`) where an in-process run
+  counts its span store, and an empty popup's diagnostic names the join, not a listener, as the likely cause.
+- **The wiki's Ingesting from Jest**: a harness for a Node service tested in-process under Jest (a Jest environment,
+  capture points on Fastify's initialization channel and MSW's events, the OpenTelemetry setup that works under Jest's
+  module registry, an `expect` wrapper) that writes the tests NDJSON, the interactions and the spans with no change to
+  the service or the tests. It ran end to end against a Fastify and Mercurius GraphQL service before it was written up.
+
+### Changed
+
+- **An ingested call's `activityTraceId` and `activitySpanId` are read lowercased, and an empty one as none.** They
+  were copied as written. A call joins its spans by them, and an in-process run writes them lowercase; a producer that
+  wrote uppercase ids sees them lowercased in the data files.
+- **An OTLP/JSON file among `kronikol ingest`'s inputs is skipped with one line saying to pass it with `--spans`.** It
+  was read as interaction records, every line of it a malformed line.
+
+### Fixed
+
+- The wiki's Internal Flow Tracking said spans are matched to calls by timestamp alone; since 3.35.1 a call takes the
+  spans of its own trace and span tree that started in its time.
+
 ## [4.3.0] - 2026-10-01
 
 **Minor - a failed call's `error` on the ingest feed, carried by `kronikol merge` and `kronikol export`, and printed

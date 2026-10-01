@@ -30,7 +30,7 @@ namespace Kronikol.Ingestion.Cucumber;
 public static class CucumberFeatureMerger
 {
     /// <summary>
-    /// Merges a Cucumber synthesis into the model <see cref="FeatureSynthesizer.Build"/> produced from the
+    /// Merges a Cucumber synthesis into the model <see cref="FeatureSynthesizer.Build(IEnumerable{TestRunRecord}, IEnumerable{RequestResponseLog}, string, ExecutionResult, string)"/> produced from the
     /// tests file and the interaction logs.
     /// </summary>
     /// <param name="cucumber">What the messages file yielded.</param>

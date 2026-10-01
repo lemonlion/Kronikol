@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using Kronikol.Ingestion;
 
 namespace Kronikol.Extensions.Otlp;
 
@@ -105,6 +106,102 @@ public static class OtlpTraceReader
         }
 
         return spans;
+    }
+
+    /// <summary>
+    /// Reads a file of OTLP/JSON lines, one <c>TracesData</c> object (<c>{"resourceSpans":[…]}</c>) per line, as
+    /// OpenTelemetry JS's <c>JsonTraceSerializer</c> and the Collector's file exporter write them, or one such document
+    /// spread over several lines: the span stream of <c>kronikol ingest --spans</c> (<c>plans/INGEST_FIDELITY_PLAN.md</c> S5).
+    /// </summary>
+    /// <param name="path">The file.</param>
+    /// <param name="malformed">
+    /// Where a line that is not a <c>TracesData</c> object, or that holds a span with no trace id or span id, is recorded
+    /// and the rest read, as a torn interaction line is; null throws a <see cref="FormatException"/> naming the first
+    /// one instead (<c>--strict</c>).
+    /// </param>
+    public static IReadOnlyList<OtlpSpan> ReadJsonLines(string path, ICollection<MalformedLine>? malformed)
+    {
+        using var reader = new StreamReader(path);
+        return ReadJsonLines(reader, path, malformed);
+    }
+
+    /// <summary>
+    /// <see cref="ReadJsonLines(string, ICollection{MalformedLine})"/> over a reader, <paramref name="sourceName"/> naming it
+    /// in what is recorded or thrown.
+    /// </summary>
+    public static IReadOnlyList<OtlpSpan> ReadJsonLines(TextReader reader, string sourceName, ICollection<MalformedLine>? malformed)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        var text = reader.ReadToEnd();
+        var spans = new List<OtlpSpan>();
+
+        // A document spread over lines (pretty-printed, as one saved by hand is) is read as one. Lines of documents fail
+        // this at their second document, and are read a line at a time.
+        if (!string.IsNullOrWhiteSpace(text) && NotTracesData(text) is null)
+        {
+            var firstLine = text.TrimStart().Split('\n', 2)[0].TrimEnd('\r');
+            var firstLineNumber = text[..text.IndexOf(firstLine, StringComparison.Ordinal)].Count(c => c == '\n') + 1;
+            Report(TakeSpans(text, spans), sourceName, firstLineNumber, firstLine, malformed);
+            return spans;
+        }
+
+        var lineNumber = 0;
+        foreach (var raw in text.Split('\n'))
+        {
+            lineNumber++;
+            var line = raw.TrimEnd('\r');
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            Report(NotTracesData(line) ?? TakeSpans(line, spans), sourceName, lineNumber, line, malformed);
+        }
+
+        return spans;
+    }
+
+    private static void Report(string? problem, string sourceName, int lineNumber, string line, ICollection<MalformedLine>? malformed)
+    {
+        if (problem is null)
+            return;
+        if (malformed is null)
+            throw new FormatException($"{sourceName}:{lineNumber}: {problem}");
+        malformed.Add(new MalformedLine(sourceName, lineNumber, MalformedLine.MakeExcerpt(line), problem));
+    }
+
+    /// <summary>Why <paramref name="json"/> is not one OTLP/JSON <c>TracesData</c> object, or null when it is one.</summary>
+    private static string? NotTracesData(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            return root.ValueKind == JsonValueKind.Object
+                   && (root.TryGetProperty("resourceSpans", out var resourceSpans) || root.TryGetProperty("resource_spans", out resourceSpans))
+                   && resourceSpans.ValueKind == JsonValueKind.Array
+                ? null
+                : "not an OTLP/JSON TracesData object: it has no resourceSpans array";
+        }
+        catch (JsonException ex)
+        {
+            return ex.Message;
+        }
+    }
+
+    /// <summary>
+    /// Adds the spans of one <c>TracesData</c> object to <paramref name="into"/>, leaving out any with no trace id or span
+    /// id, which no call can join and no span can name as its parent; says how many it left out, or null.
+    /// </summary>
+    private static string? TakeSpans(string json, List<OtlpSpan> into)
+    {
+        var withoutIds = 0;
+        foreach (var span in ReadJson(Encoding.UTF8.GetBytes(json)))
+        {
+            if (span.TraceId.Length == 0 || span.SpanId.Length == 0)
+                withoutIds++;
+            else
+                into.Add(span);
+        }
+
+        return withoutIds == 0 ? null : $"{withoutIds} span(s) with no trace id or span id skipped";
     }
 
     private static OtlpSpan ReadJsonSpan(JsonElement span, IReadOnlyDictionary<string, string> resourceAttributes, string? scopeName)

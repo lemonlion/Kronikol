@@ -13,9 +13,20 @@ public static class DiagnosticReportGenerator
     public static void Generate(
         RequestResponseLog[] logs,
         Feature[] features,
-        ReportConfigurationOptions options)
+        ReportConfigurationOptions options) =>
+        Generate(logs, features, options, suppliedSpans: null);
+
+    /// <summary>
+    /// <see cref="Generate(RequestResponseLog[], Feature[], ReportConfigurationOptions)"/> for a report whose spans an
+    /// ingest was handed: <paramref name="suppliedSpans"/> is how many, said in place of this process's span store.
+    /// </summary>
+    internal static void Generate(
+        RequestResponseLog[] logs,
+        Feature[] features,
+        ReportConfigurationOptions options,
+        int? suppliedSpans)
     {
-        var html = BuildHtml(logs, features, options);
+        var html = BuildHtml(logs, features, options, suppliedSpans);
         var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, options.ReportsFolderPath);
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, "DiagnosticReport.html");
@@ -28,7 +39,8 @@ public static class DiagnosticReportGenerator
     internal static string BuildHtml(
         RequestResponseLog[] logs,
         Feature[] features,
-        ReportConfigurationOptions options)
+        ReportConfigurationOptions options,
+        int? suppliedSpans = null)
     {
         var sb = new StringBuilder();
         sb.AppendLine("<!DOCTYPE html><html><head><meta charset=\"utf-8\"/>");
@@ -142,8 +154,10 @@ public static class DiagnosticReportGenerator
         }
 
         // Activity span summary
-        var allSpans = InternalFlowSpanStore.GetSpans();
-        sb.AppendLine($"<h2>Activity Spans</h2><p>{allSpans.Length} total span(s) in InternalFlowSpanStore.</p>");
+        if (suppliedSpans is { } supplied)
+            sb.AppendLine($"<h2>Activity Spans</h2><p>{supplied} span(s) supplied to the ingest.</p>");
+        else
+            sb.AppendLine($"<h2>Activity Spans</h2><p>{InternalFlowSpanStore.GetSpans().Length} total span(s) in InternalFlowSpanStore.</p>");
 
         var sources = ActivitySourceDiscovery.GetDiscoveredSources();
         if (sources.Count > 0)

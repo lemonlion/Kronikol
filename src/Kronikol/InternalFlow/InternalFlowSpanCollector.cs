@@ -38,6 +38,25 @@ public static class InternalFlowSpanCollector
         return FilterSpans(spans, granularity, manualActivitySources);
     }
 
+    /// <summary>
+    /// The spans an ingest was handed (<c>IngestRequest.Spans</c>), filtered for <paramref name="granularity"/>:
+    /// all of them, unless <see cref="InternalFlowSpanGranularity.Manual"/> names sources, which narrows them to those.
+    /// <see cref="InternalFlowSpanGranularity.AutoInstrumentation"/>'s list is .NET's instrumentation, which would
+    /// drop every span another language recorded, and the capturer already chose what to export
+    /// (<c>plans/INGEST_FIDELITY_PLAN.md</c> Q3).
+    /// </summary>
+    internal static FlowSpan[] FilterSupplied(
+        IReadOnlyList<FlowSpan> spans,
+        InternalFlowSpanGranularity granularity,
+        string[]? manualActivitySources)
+    {
+        if (granularity != InternalFlowSpanGranularity.Manual || manualActivitySources is null or { Length: 0 })
+            return spans.ToArray();
+
+        var sourceSet = new HashSet<string>(manualActivitySources, StringComparer.OrdinalIgnoreCase);
+        return spans.Where(s => !string.IsNullOrEmpty(s.Source) && sourceSet.Contains(s.Source)).ToArray();
+    }
+
     private static Activity[] FilterSpans(
         Activity[] spans,
         InternalFlowSpanGranularity granularity,

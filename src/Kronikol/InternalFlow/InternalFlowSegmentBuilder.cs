@@ -24,6 +24,16 @@ public static class InternalFlowSegmentBuilder
     public static Dictionary<string, InternalFlowSegment> BuildSegments(
         RequestResponseLog[] logs,
         Activity[] spans) =>
+        SegmentsOf(logs, spans.Select(FlowSpan.From).ToArray());
+
+    /// <summary>
+    /// <see cref="BuildSegments"/> over <see cref="FlowSpan"/>s, whatever recorded them: the report's own path, which
+    /// reads an ingest's spans (<c>IngestRequest.Spans</c>) as it reads this process's. Each segment hands back the
+    /// spans that are activities as <see cref="InternalFlowSegment.Spans"/>.
+    /// </summary>
+    internal static Dictionary<string, InternalFlowSegment> SegmentsOf(
+        RequestResponseLog[] logs,
+        FlowSpan[] spans) =>
         Attribute(logs, spans).Segments;
 
     /// <summary>
@@ -37,7 +47,13 @@ public static class InternalFlowSegmentBuilder
     /// </remarks>
     public static Dictionary<string, InternalFlowSegment> BuildWholeTestSegments(
         RequestResponseLog[] logs,
-        Activity[] spans)
+        Activity[] spans) =>
+        WholeTestSegmentsOf(logs, spans.Select(FlowSpan.From).ToArray());
+
+    /// <summary><see cref="BuildWholeTestSegments"/> over <see cref="FlowSpan"/>s, whatever recorded them.</summary>
+    internal static Dictionary<string, InternalFlowSegment> WholeTestSegmentsOf(
+        RequestResponseLog[] logs,
+        FlowSpan[] spans)
     {
         var segments = new Dictionary<string, InternalFlowSegment>();
 
@@ -54,7 +70,7 @@ public static class InternalFlowSegmentBuilder
 
         foreach (var testGroup in logsByTest)
         {
-            var testSpans = new HashSet<Activity>(ReferenceEqualityComparer.Instance);
+            var testSpans = new HashSet<FlowSpan>(ReferenceEqualityComparer.Instance);
             foreach (var trace in testGroup.Where(l => l.ActivityTraceId is not null).Select(l => l.ActivityTraceId!).Distinct(StringComparer.Ordinal))
             {
                 if (attribution.TestsByTrace[trace].Count == 1 && attribution.SpansByTrace.TryGetValue(trace, out var ofTrace))
@@ -71,7 +87,7 @@ public static class InternalFlowSegmentBuilder
             var endTime = orderedSpans.Max(s => s.StartTimeUtc + s.Duration);
 
             var segmentKey = $"iflow-test-{testGroup.Key}";
-            segments[segmentKey] = new InternalFlowSegment(
+            segments[segmentKey] = InternalFlowSegment.Of(
                 Guid.Empty,
                 RequestResponseType.Request,
                 testGroup.Key,
@@ -91,19 +107,23 @@ public static class InternalFlowSegmentBuilder
         /// <summary>Per trace id, the tests whose calls record it.</summary>
         public Dictionary<string, HashSet<string>> TestsByTrace { get; } = new(StringComparer.Ordinal);
 
-        public Dictionary<string, Activity[]> SpansByTrace { get; init; } = new(StringComparer.Ordinal);
+        public Dictionary<string, FlowSpan[]> SpansByTrace { get; init; } = new(StringComparer.Ordinal);
 
         /// <summary>Per test, every span one of its calls kept.</summary>
-        public Dictionary<string, HashSet<Activity>> KeptByTest { get; } = new(StringComparer.Ordinal);
+        public Dictionary<string, HashSet<FlowSpan>> KeptByTest { get; } = new(StringComparer.Ordinal);
     }
 
-    private readonly record struct Selection(string Key, RequestResponseLog Log, DateTimeOffset Start, DateTimeOffset End, List<Activity> Spans);
+    private readonly record struct Selection(string Key, RequestResponseLog Log, DateTimeOffset Start, DateTimeOffset End, List<FlowSpan> Spans);
 
-    private static Attribution Attribute(RequestResponseLog[] logs, Activity[] spans)
+    /// <remarks>
+    /// Spans are told apart by reference, as activities always were: a span handed in twice is one span only when it
+    /// is one object, so a caller de-duplicates first (an ingest does, by trace and span id).
+    /// </remarks>
+    private static Attribution Attribute(RequestResponseLog[] logs, FlowSpan[] spans)
     {
         var attribution = new Attribution
         {
-            SpansByTrace = spans.GroupBy(s => s.TraceId.ToString()).ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.Ordinal)
+            SpansByTrace = spans.GroupBy(s => s.TraceId).ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.Ordinal)
         };
 
         if (spans.Length == 0)
@@ -120,16 +140,16 @@ public static class InternalFlowSegmentBuilder
         }
 
         // Spans of a trace no call claims: all a call with no trace id can take, when its test's calls claim none.
-        var unclaimed = spans.Where(s => !attribution.TestsByTrace.ContainsKey(s.TraceId.ToString())).ToArray();
+        var unclaimed = spans.Where(s => !attribution.TestsByTrace.ContainsKey(s.TraceId)).ToArray();
         var children = spans
-            .GroupBy(s => (Trace: s.TraceId.ToString(), Parent: s.ParentSpanId.ToString()))
+            .GroupBy(s => (Trace: s.TraceId, Parent: s.ParentSpanId))
             .ToDictionary(g => g.Key, g => g.ToArray());
-        var subtrees = new Dictionary<(string Trace, string Anchor), List<Activity>>();
+        var subtrees = new Dictionary<(string Trace, string Anchor), List<FlowSpan>>();
 
         // What a call recording this trace and span may take, at any time: the trace's spans, or, of a trace other
         // tests' calls record too (an ambient Activity around several tests), the call's span and what descends from
         // it, which tells the tests apart when each has a span of its own.
-        IReadOnlyCollection<Activity> ByTraceAndTree(string trace, string? spanId)
+        IReadOnlyCollection<FlowSpan> ByTraceAndTree(string trace, string? spanId)
         {
             if (attribution.TestsByTrace[trace].Count > 1 && spanId is not null)
             {
@@ -154,7 +174,7 @@ public static class InternalFlowSegmentBuilder
             // tracker records none), so that it never takes what the span tree gives to another test.
             var testSpans = testCalls
                 .SelectMany(call => ByTraceAndTree(call.Trace, call.Span))
-                .Distinct<Activity>(ReferenceEqualityComparer.Instance)
+                .Distinct<FlowSpan>(ReferenceEqualityComparer.Instance)
                 .ToArray();
 
             // Build a lookup from RequestResponseId → response timestamp
@@ -200,7 +220,7 @@ public static class InternalFlowSegmentBuilder
                 // The call's own trace and span tree; with no trace id, what its test's traced calls may take; with
                 // none of those either, the spans no call claims. Never every span of the run: that pooled the spans
                 // of every concurrent test (#87).
-                IEnumerable<Activity> candidateSpans = log.ActivityTraceId is { } callTrace
+                IEnumerable<FlowSpan> candidateSpans = log.ActivityTraceId is { } callTrace
                     ? ByTraceAndTree(callTrace, log.ActivitySpanId)
                     : testCalls.Length > 0 ? testSpans : unclaimed;
 
@@ -221,7 +241,7 @@ public static class InternalFlowSegmentBuilder
 
         // A span the calls of two tests both took belongs to one of them or to neither, and nothing says which.
         // Calls of one test may share spans: a call nested in another shows inside both.
-        var testsBySpan = new Dictionary<Activity, HashSet<string>>(ReferenceEqualityComparer.Instance);
+        var testsBySpan = new Dictionary<FlowSpan, HashSet<string>>(ReferenceEqualityComparer.Instance);
         foreach (var selection in selections)
         {
             foreach (var span in selection.Spans)
@@ -235,19 +255,17 @@ public static class InternalFlowSegmentBuilder
         foreach (var selection in selections)
         {
             var kept = selection.Spans.Where(s => testsBySpan[s].Count == 1).ToArray();
-            attribution.Segments[selection.Key] = new InternalFlowSegment(
+            attribution.Segments[selection.Key] = InternalFlowSegment.Of(
                 selection.Log.RequestResponseId,
                 selection.Log.Type,
                 selection.Log.TestId,
                 selection.Start,
                 selection.End,
-                kept)
-            {
-                SpansLeftOut = selection.Spans.Count - kept.Length
-            };
+                kept,
+                spansLeftOut: selection.Spans.Count - kept.Length);
 
             if (!attribution.KeptByTest.TryGetValue(selection.Log.TestId, out var testKept))
-                attribution.KeptByTest[selection.Log.TestId] = testKept = new HashSet<Activity>(ReferenceEqualityComparer.Instance);
+                attribution.KeptByTest[selection.Log.TestId] = testKept = new HashSet<FlowSpan>(ReferenceEqualityComparer.Instance);
             testKept.UnionWith(kept);
         }
 
@@ -256,17 +274,17 @@ public static class InternalFlowSegmentBuilder
 
     /// <summary>
     /// The span <paramref name="anchor"/> of <paramref name="trace"/>, when the store holds it, and every span that
-    /// descends from it by <see cref="Activity.ParentSpanId"/>.
+    /// descends from it by <see cref="FlowSpan.ParentSpanId"/>.
     /// </summary>
-    private static List<Activity> Subtree(
+    private static List<FlowSpan> Subtree(
         string trace,
         string anchor,
-        Dictionary<string, Activity[]> spansByTrace,
-        Dictionary<(string Trace, string Parent), Activity[]> children)
+        Dictionary<string, FlowSpan[]> spansByTrace,
+        Dictionary<(string Trace, string? Parent), FlowSpan[]> children)
     {
-        var found = new List<Activity>();
+        var found = new List<FlowSpan>();
         if (spansByTrace.TryGetValue(trace, out var ofTrace))
-            found.AddRange(ofTrace.Where(s => s.SpanId.ToString() == anchor));
+            found.AddRange(ofTrace.Where(s => s.SpanId == anchor));
 
         var seen = new HashSet<string>(StringComparer.Ordinal) { anchor };
         var pending = new Queue<string>();
@@ -277,7 +295,7 @@ public static class InternalFlowSegmentBuilder
                 continue;
             foreach (var kid in kids)
             {
-                var id = kid.SpanId.ToString();
+                var id = kid.SpanId;
                 if (seen.Add(id))
                 {
                     found.Add(kid);

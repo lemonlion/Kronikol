@@ -215,6 +215,29 @@ public sealed class IngestRequest
     public string? SourceRoot { get; init; }
 
     /// <summary>
+    /// The spans the services under test recorded, for internal flow: each call's popup, flame chart and whole-test flow
+    /// are drawn from these as an in-process run draws them from its activities. A call joins its spans by its
+    /// <see cref="InteractionRecord.ActivityTraceId"/> (the trace of the span it was made under) and
+    /// <see cref="InteractionRecord.ActivitySpanId"/> (that span), and a span must start inside the call's time, from
+    /// 50 ms before its request to its response. <c>kronikol ingest --spans</c> reads them from OTLP/JSON lines with
+    /// <c>Kronikol.Extensions.Otlp</c> (<c>OtlpTraceReader.ReadJsonLines</c>, then <c>OtlpSpan.ToFlowSpan()</c>).
+    /// </summary>
+    /// <remarks>
+    /// <para>Given (even empty), the report draws internal flow from these alone, with
+    /// <see cref="ReportConfigurationOptions.InternalFlowTracking"/> on for the run whatever the options say (an ingest
+    /// turns it off only because a capture holds no spans), and this process's span store
+    /// (<see cref="Kronikol.InternalFlow.InternalFlowSpanStore"/>) is neither read nor written. Ids are lowercased, a span
+    /// given twice (the same trace id and span id) is drawn once, and the spans are all drawn unless
+    /// <see cref="ReportConfigurationOptions.InternalFlowSpanGranularity"/> is
+    /// <see cref="Kronikol.InternalFlowSpanGranularity.Manual"/> with
+    /// <see cref="ReportConfigurationOptions.InternalFlowActivitySources"/> naming sources: the default's list is .NET's
+    /// instrumentation, and the capturer chose what to export. <see cref="IngestResult.Diagnostics"/> counts the calls
+    /// whose trace no span has and the spans no call's internal flow holds.</para>
+    /// <para>Null, the default, draws no internal flow unless the options turn it on, as before 4.4.0.</para>
+    /// </remarks>
+    public IReadOnlyList<Kronikol.InternalFlow.FlowSpan>? Spans { get; init; }
+
+    /// <summary>
     /// Empty the report's <c>attachments/</c> folder before generating, so it holds exactly this run's
     /// artefacts. Default <c>false</c> — nothing has ever removed stale copies, and a host that renders
     /// several runs into one folder relies on that.
@@ -291,8 +314,8 @@ public static class IngestPipeline
 {
     /// <summary>
     /// Defaults suited to externally captured traffic: browser-side PlantUML rendering, no internal-flow
-    /// tracking (there are no in-process spans to show), component diagram on, consecutive identical
-    /// calls collapsed.
+    /// tracking (a capture holds no spans; <see cref="IngestRequest.Spans"/> turns it on for the run), component
+    /// diagram on, consecutive identical calls collapsed.
     /// </summary>
     public static ReportConfigurationOptions DefaultOptions() => new()
     {
@@ -313,6 +336,10 @@ public static class IngestPipeline
     {
         ArgumentNullException.ThrowIfNull(request);
         var options = request.Options ?? DefaultOptions();
+        // An ingest turns internal flow off only for want of spans; given some, the run draws them, and the caller's
+        // options are left as they were.
+        if (request.Spans is not null && !options.InternalFlowTracking)
+            options = options with { InternalFlowTracking = true };
 
         // Step delimiter bars and ✓/✗ assertion notes are baked into PlantUML as the records are replayed,
         // by static emitters that know nothing about report options — so the diagram-side switch has to
@@ -458,7 +485,8 @@ public static class IngestPipeline
             // machine doing the reading and called it the machine that ran the tests.
             ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(synthesised.Features, synthesised.Start, synthesised.End, options, cucumber?.Environment ?? RunEnvironment.Unrecorded,
                 Environment.GetEnvironmentVariable,
-                beforeFirstWrite: request.CleanAttachments ? directory => CleanAttachmentsFolder(directory, diagnostics) : null);
+                beforeFirstWrite: request.CleanAttachments ? directory => CleanAttachmentsFolder(directory, diagnostics) : null,
+                spans: DistinctSpans(request.Spans, diagnostics));
         }
 
         DefaultDiagramsFetcher.Reset();
@@ -468,6 +496,51 @@ public static class IngestPipeline
             Diagnostics = diagnostics.Entries,
         };
     }
+
+    /// <summary>
+    /// The spans the report draws (<see cref="IngestRequest.Spans"/>): their ids lowercased, as a call's are, an empty
+    /// parent read as none, and each trace id and span id once, the first kept. A span with no trace id or span id is
+    /// left out, since no call can join it. Each is said in a diagnostic.
+    /// </summary>
+    private static Kronikol.InternalFlow.FlowSpan[]? DistinctSpans(IReadOnlyList<Kronikol.InternalFlow.FlowSpan>? spans, ReportDiagnosticsCollector diagnostics)
+    {
+        if (spans is null)
+            return null;
+
+        var seen = new HashSet<(string Trace, string Span)>();
+        var distinct = new List<Kronikol.InternalFlow.FlowSpan>(spans.Count);
+        var repeated = 0;
+        var withoutIds = 0;
+        foreach (var span in spans)
+        {
+            if (LowerHex(span.TraceId) is not { } trace || LowerHex(span.SpanId) is not { } id)
+            {
+                withoutIds++;
+                continue;
+            }
+
+            if (!seen.Add((trace, id)))
+            {
+                repeated++;
+                continue;
+            }
+
+            var parent = LowerHex(span.ParentSpanId);
+            distinct.Add(trace == span.TraceId && id == span.SpanId && parent == span.ParentSpanId
+                ? span
+                : span with { TraceId = trace, SpanId = id, ParentSpanId = parent });
+        }
+
+        if (repeated > 0)
+            diagnostics.Add(DiagnosticKind.Other,
+                $"{repeated} span(s) were supplied more than once (the same trace id and span id) and are drawn once.");
+        if (withoutIds > 0)
+            diagnostics.Add(DiagnosticKind.Other,
+                $"{withoutIds} supplied span(s) had no trace id or span id and were left out: no call can join them.");
+        return distinct.ToArray();
+    }
+
+    private static string? LowerHex(string? id) => string.IsNullOrWhiteSpace(id) ? null : id.Trim().ToLowerInvariant();
 
     /// <summary>Reads the interaction captures, tolerating (and counting) torn lines unless strict parsing was asked for.</summary>
     private static List<InteractionRecord> ReadInteractions(IngestRequest request, ReportDiagnosticsCollector diagnostics)

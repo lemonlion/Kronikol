@@ -373,7 +373,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
     }
 
     /// <summary>The page's segment map, decoded from its element's <c>z</c>.</summary>
-    private static JsonElement PageMap(string html)
+    internal static JsonElement PageMap(string html)
     {
         const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
         var at = html.IndexOf(head, StringComparison.Ordinal);

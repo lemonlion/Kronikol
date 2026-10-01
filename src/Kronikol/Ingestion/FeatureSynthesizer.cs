@@ -12,7 +12,7 @@ namespace Kronikol.Ingestion;
 /// </summary>
 public static class FeatureSynthesizer
 {
-    /// <summary>Result of <see cref="Build"/>.</summary>
+    /// <summary>Result of <see cref="Build(IEnumerable{TestRunRecord}, IEnumerable{RequestResponseLog}, string, ExecutionResult, string)"/>.</summary>
     /// <param name="Features">Features grouped by <see cref="TestRunRecord.Feature"/> (or the default feature name).</param>
     /// <param name="Start">Earliest timestamp observed (UTC) — the run start.</param>
     /// <param name="End">Latest timestamp observed (UTC) — the run end.</param>

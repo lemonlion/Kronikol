@@ -54,6 +54,8 @@ public class InternalFlowRendererTests : IDisposable
         return span;
     }
 
+    private static FlowSpan[] Flow(params Activity[] spans) => spans.Select(FlowSpan.From).ToArray();
+
     private static InternalFlowSegment MakeSegment(params Activity[] spans) =>
         new(Guid.NewGuid(), RequestResponseType.Request, "test-1",
             spans.Length > 0 ? spans.Min(s => s.StartTimeUtc) : null,
@@ -69,7 +71,7 @@ public class InternalFlowRendererTests : IDisposable
         // Use the same span twice to simulate duplicate SpanId
         var spans = new[] { span1, span1 };
 
-        var roots = InternalFlowRenderer.BuildSpanTree(spans);
+        var roots = InternalFlowRenderer.BuildSpanTree(Flow(spans));
 
         Assert.Single(roots);
     }
@@ -80,12 +82,12 @@ public class InternalFlowRendererTests : IDisposable
         var parent = CreateSpan("parent");
         var child = CreateSpan("child", parent);
 
-        var roots = InternalFlowRenderer.BuildSpanTree([parent, child]);
+        var roots = InternalFlowRenderer.BuildSpanTree(Flow(parent, child));
 
         Assert.Single(roots);
-        Assert.Equal("parent", roots[0].Span.OperationName);
+        Assert.Equal("parent", roots[0].Span.Name);
         Assert.Single(roots[0].Children);
-        Assert.Equal("child", roots[0].Children[0].Span.OperationName);
+        Assert.Equal("child", roots[0].Children[0].Span.Name);
     }
 
     [Fact]
@@ -109,11 +111,11 @@ public class InternalFlowRendererTests : IDisposable
         late.SetEndTime(lateTime.AddMilliseconds(10));
         _activities.Add(late);
 
-        var roots = InternalFlowRenderer.BuildSpanTree([late, early]);
+        var roots = InternalFlowRenderer.BuildSpanTree(Flow(late, early));
 
         Assert.Equal(2, roots.Count);
-        Assert.Equal("early", roots[0].Span.OperationName);
-        Assert.Equal("late", roots[1].Span.OperationName);
+        Assert.Equal("early", roots[0].Span.Name);
+        Assert.Equal("late", roots[1].Span.Name);
     }
 
     [Fact]
@@ -124,10 +126,10 @@ public class InternalFlowRendererTests : IDisposable
         var child = CreateSpan("child", parent);
 
         // Only include the child
-        var roots = InternalFlowRenderer.BuildSpanTree([child]);
+        var roots = InternalFlowRenderer.BuildSpanTree(Flow(child));
 
         Assert.Single(roots);
-        Assert.Equal("child", roots[0].Span.OperationName);
+        Assert.Equal("child", roots[0].Span.Name);
     }
 
     [Fact]

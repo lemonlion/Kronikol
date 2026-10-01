@@ -725,3 +725,50 @@ one, rather than in `QueryCommandTests`; the digest line puts the error in a cod
 of every run's JSONL is a change of its own (beside §8 item 10). Tag `v4.3.0` and the wiki commit, as before, wait on
 the owner; the patch is `INGEST_FIDELITY_PLAN.harness/wiki/0003-…patch`.
 
+
+### R4: 4.4.0 (S5), 2026-10-01
+
+Shipped: `FlowSpan`, the seven things internal flow reads plus the exporter's service; the segment builder, the
+renderer, the HTML generator and the component-flow builder draw `FlowSpan`s, an `Activity` becoming one when the
+report is generated; `InternalFlowSegment.FlowSpans`, with `Spans` holding a segment's activities as before (and a
+`with { Spans = … }` re-deriving `FlowSpans`); `IngestRequest.Spans`, drawn instead of the static store, which is
+neither read nor written, with internal flow on for the run, ids lowercased, duplicates drawn once and the .NET-only
+source list not applied unless `Manual` names sources; `OtlpTraceReader.ReadJsonLines` (the torn-line and `--strict`
+rules, a document over several lines read whole) and `OtlpSpan.ToFlowSpan()` (scope, else service, as the source);
+`kronikol ingest --spans <file|dir|glob>`, which turns internal flow on, takes from a directory only the files that hold
+spans, keeps span files out of the interaction inputs and skips a stray OTLP input with one line of advice; the join
+diagnostics (calls whose trace no span has, spans in no call's flow by reason, spans supplied twice or without ids) and
+a span line that counts the spans supplied; an ingested call's `activityTraceId` and `activitySpanId` lowercased, an
+empty one read as none; the wiki's `Ingesting-From-Jest`.
+
+Parity, the plan's condition for moving internal flow off `Activity`: `FlowSpanParityProbeTests.cs` and
+`paritydiff.py` (now in the harness, with how to repeat them) wrote an in-process report with every internal-flow
+surface on before the move and after it; the two diffed to nothing in all 24 files, as two runs before it did, and a
+run with the span tree broken diffed in 6. An ingest without spans, by a 4.3.0 build (a worktree at `acb80f0`) and by
+this one, differed only in what the tool's location salts (the run id's suffix, `query.cs`'s path to the tool).
+
+Proofs, each red first: T17 (`FlowSpanTests`, nine facts: an activity's seven fields, a segment's spans in order, the
+`with` re-derivation, a segment of foreign spans drawn as an activity diagram, a call tree, a flame chart and a
+whole-test flow, a span naming itself as its parent drawn as a root, foreign spans attributed by trace and tree; and
+`OtlpSpanLinesTests`, seven: the S0 file read whole, `ToFlowSpan`, the source fallback, torn and foreign lines, strict,
+spans without ids, a pretty-printed document), T18 and T19 (`IngestSpanTests`, eight: the GraphQL call's popup holding
+the resolver tree and the whole flow, no start-up span, the join diagnostics, an uppercase trace id, a span given twice,
+no spans no flow, the diagnostics' span line, `Manual` narrowing, the store neither read nor written), T18's CLI half and
+T20 (`IngestCommandTests`, six: the flag end to end, a span file inside an input directory, a spans directory holding
+everything, a stray OTLP input, a torn span line with and without `--strict`, the usage errors), T21
+(`IngestedSpansPopupTests`, two Playwright facts: the arrow's popup and its flame chart name the resolver, and the
+scenario's whole flow renders, red without the spans path). Mutations caught: three on T17 (no `with` reset, no
+self-parent guard, `FlowSpans` ignoring what it was given) and seven on the pipeline (spans not handed on, internal flow
+not turned on, no de-duplication, ids not lowercased, the store read, the .NET list applied, no join diagnostics).
+
+What differed: the plan had the tool read span files with `OtlpTraceReader.ReadJson` a line at a time; the line rules
+needed a reader of their own, `ReadJsonLines`, which a library caller can use too. A `--spans` directory had to give
+only the files that hold spans, found when the recipe wrote all three streams to one folder. The recipe was not only
+written from S0 but run: a Jest environment, capture points on Fastify's `fastify.initialization` channel and MSW's
+events, the S0 tracing setup and an `expect` wrapper, against the spike's service with a retried test
+(`otel-jest/recipe/`). Its report had a popup on every arrow (the GraphQL call's holding the resolver tree's 17 spans),
+the Setup partitions, an assertion note per `expect`, and the retried test as attempt 2 with its `retry 1` label. Two
+things it found are in the recipe: Kronikol's history ledger lives in `.kronikol/` above the report, so the captures go
+to `kronikol-capture/`; and a response line written in Fastify's `onResponse` hook is timed before Mercurius's own
+response hooks, whose spans then fell outside the call, so it is written in `setImmediate`. Tag `v4.4.0` and the wiki
+commit wait on the owner, as before; the patch is `INGEST_FIDELITY_PLAN.harness/wiki/0004-…patch`.

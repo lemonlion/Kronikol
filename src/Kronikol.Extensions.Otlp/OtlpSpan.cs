@@ -1,3 +1,5 @@
+using Kronikol.InternalFlow;
+
 namespace Kronikol.Extensions.Otlp;
 
 /// <summary>The OpenTelemetry span kind (the numbers are the OTLP enum values).</summary>
@@ -116,4 +118,12 @@ public sealed record OtlpSpan
 
     /// <summary>Converts nanoseconds since the Unix epoch to a <see cref="DateTimeOffset"/> (truncated to ticks).</summary>
     public static DateTimeOffset FromUnixNano(ulong nanos) => DateTimeOffset.UnixEpoch.AddTicks((long)(nanos / 100));
+
+    /// <summary>
+    /// The span as internal flow draws it (<see cref="FlowSpan"/>), for <c>kronikol ingest --spans</c> and
+    /// <c>IngestRequest.Spans</c>: its instrumentation scope is its source, the diagram's swimlane (<c>@fastify/otel</c>,
+    /// <c>@opentelemetry/instrumentation-graphql</c>), else its service, else none, which the diagram calls Unknown.
+    /// </summary>
+    public FlowSpan ToFlowSpan() =>
+        new(TraceId, SpanId, ParentSpanId, Name, ScopeName ?? ServiceName ?? "", StartTime.UtcDateTime, EndTime - StartTime, ServiceName);
 }

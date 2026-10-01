@@ -18,7 +18,16 @@ public static class ReportDiagnostics
         Analyse(logs, features, includeSourceDiscovery, internalFlowTracking: true);
 
     public static string[] Analyse(RequestResponseLog[] logs, Feature[] features,
-        bool includeSourceDiscovery = false, bool internalFlowTracking = true)
+        bool includeSourceDiscovery = false, bool internalFlowTracking = true) =>
+        Analyse(logs, features, includeSourceDiscovery, internalFlowTracking, suppliedSpans: null);
+
+    /// <summary>
+    /// <see cref="Analyse(RequestResponseLog[], Feature[], bool, bool)"/> for a report whose spans an ingest was handed:
+    /// the span line counts <paramref name="suppliedSpans"/>, the spans the report drew from, where an in-process run's
+    /// counts its span store (which an ingest neither reads nor writes). Null counts the store.
+    /// </summary>
+    internal static string[] Analyse(RequestResponseLog[] logs, Feature[] features,
+        bool includeSourceDiscovery, bool internalFlowTracking, int? suppliedSpans)
     {
         if (logs.Length == 0 && features.Length == 0)
             return [];
@@ -61,8 +70,16 @@ public static class ReportDiagnostics
         // Only a run that draws activity diagrams has anything to say about the span store: with the
         // feature off (kronikol ingest turns it off, there being no in-process spans to show) an empty
         // store is the expected state, and warning that the diagrams will be empty told every ingest
-        // about a feature it never had.
-        if (internalFlowTracking)
+        // about a feature it never had. An ingest handed spans (--spans) draws from those, never the store,
+        // so the line counts them.
+        if (internalFlowTracking && suppliedSpans is { } supplied)
+        {
+            if (supplied == 0)
+                warnings.Add("Warning: no spans were supplied to the ingest — activity diagrams will be empty.");
+            else
+                warnings.Add($"Spans supplied to the ingest: {supplied} span(s).");
+        }
+        else if (internalFlowTracking)
         {
             var totalSpans = InternalFlowSpanStore.GetSpans().Length;
             if (totalSpans == 0)

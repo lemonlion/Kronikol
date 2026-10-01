@@ -1,3 +1,4 @@
+using Kronikol.Extensions.Otlp;
 using Kronikol.Ingestion;
 using Kronikol.Reports;
 using Kronikol.Tracking;
@@ -13,6 +14,9 @@ namespace Kronikol.Tool;
 internal static class IngestCommand
 {
     private static readonly string[] InteractionPatterns = ["*.ndjson", "*.jsonl"];
+
+    /// <summary>What a <c>--spans</c> directory is searched for: the names OTLP/JSON lines files are given.</summary>
+    private static readonly string[] SpanPatterns = ["*.jsonl", "*.json", "*.ndjson"];
 
     public static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error)
     {
@@ -56,6 +60,7 @@ internal static class IngestCommand
         string? sourceRoot = null;
         var cleanAttachments = false;
         var hostDiagnostics = new List<DiagnosticEntry>();
+        var spanInputs = new List<string>();
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -233,6 +238,10 @@ internal static class IngestCommand
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     sourceRoot = args[i];
                     break;
+                case "--spans":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    spanInputs.Add(args[i]);
+                    break;
                 case "--diagnostic":
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     if (!TryParseDiagnostic(args[i], out var diagnostic))
@@ -289,6 +298,39 @@ internal static class IngestCommand
             cucumberMessages[i] = full;
         }
 
+        var spanFiles = new List<string>();
+        if (spanInputs.Count > 0)
+        {
+            // A file named is a span file; a directory or a glob gives the files in it that hold spans, so one folder can
+            // hold everything a harness writes.
+            foreach (var spanInput in spanInputs)
+            {
+                var named = File.Exists(spanInput);
+                foreach (var spanFile in CliInputs.Resolve([spanInput], SpanPatterns, error))
+                {
+                    if ((named || HoldsSpans(spanFile)) && !spanFiles.Contains(spanFile, StringComparer.OrdinalIgnoreCase))
+                        spanFiles.Add(spanFile);
+                }
+            }
+
+            if (spanFiles.Count == 0)
+            {
+                error.WriteLine($"No span files found (*.jsonl / *.json / *.ndjson): {string.Join(", ", spanInputs)}");
+                return 1;
+            }
+
+            foreach (var spanFile in spanFiles)
+                files.Remove(spanFile); // a span file inside an input directory is not an interaction capture
+        }
+
+        // OpenTelemetry's JSON among the captures, not passed with --spans: one line saying what it is, where reading it
+        // as interaction records skipped every one of its lines as malformed.
+        foreach (var file in files.Where(HoldsSpans).ToArray())
+        {
+            files.Remove(file);
+            @out.WriteLine($"Skipped {file}: it holds OpenTelemetry spans (resourceSpans), not interaction records; pass it with --spans to draw them as internal flow.");
+        }
+
         if (files.Count == 0 && cucumberMessages.Count == 0)
         {
             error.WriteLine("No matching capture files found (*.ndjson / *.jsonl).");
@@ -302,6 +344,31 @@ internal static class IngestCommand
             @out.WriteLine($"Tests file: {tests}");
         foreach (var messages in cucumberMessages)
             @out.WriteLine($"Cucumber messages: {messages}");
+
+        List<Kronikol.InternalFlow.FlowSpan>? spans = null;
+        if (spanFiles.Count > 0)
+        {
+            // Read here, where the OTLP reader is: torn lines are counted into the report's diagnostics as a capture's are,
+            // and --strict fails on the first.
+            var spanMalformed = strictParsing ? null : new List<MalformedLine>();
+            spans = [];
+            try
+            {
+                foreach (var spanFile in spanFiles)
+                    spans.AddRange(OtlpTraceReader.ReadJsonLines(spanFile, spanMalformed).Select(span => span.ToFlowSpan()));
+            }
+            catch (FormatException ex)
+            {
+                error.WriteLine("Failed to read a span file: " + ex.Message);
+                return 1;
+            }
+
+            foreach (var line in spanMalformed ?? [])
+                hostDiagnostics.Add(new DiagnosticEntry(DiagnosticKind.MalformedLine, line.ToString()));
+            @out.WriteLine($"Spans: {spans.Count} span(s) from {spanFiles.Count} file(s):");
+            foreach (var spanFile in spanFiles)
+                @out.WriteLine("  " + spanFile);
+        }
 
         var options = IngestPipeline.DefaultOptions();
         options.ReportsFolderPath = Path.GetFullPath(output);
@@ -365,6 +432,8 @@ internal static class IngestCommand
                 SourceRoot = sourceRoot,
                 CleanAttachments = cleanAttachments,
                 HostDiagnostics = hostDiagnostics,
+                // Given, they turn internal flow on: the pipeline draws them in place of this process's span store.
+                Spans = spans,
             });
 
             if (!result.Generated)
@@ -503,6 +572,32 @@ internal static class IngestCommand
     }
 
     /// <summary>Whether an argument looks like a capture input (a path) rather than an option's value.</summary>
+    /// <summary>
+    /// Whether <paramref name="path"/> is OTLP/JSON (<c>{"resourceSpans":…}</c>) rather than interaction records: its first
+    /// member, within the file's first few kilobytes, is <c>resourceSpans</c>.
+    /// </summary>
+    private static bool HoldsSpans(string path)
+    {
+        try
+        {
+            using var reader = new StreamReader(path);
+            var head = new char[4096];
+            var read = reader.ReadBlock(head, 0, head.Length);
+            return SpansHead.IsMatch(new string(head, 0, read));
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex SpansHead =
+        new(@"^\uFEFF?\s*\{\s*""resource_?[sS]pans""\s*:", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
     private static bool LooksLikeInput(string value) =>
         value.Contains('/') || value.Contains('\\') || File.Exists(value) || Directory.Exists(value);
 
@@ -582,6 +677,11 @@ internal static class IngestCommand
         w.WriteLine("  --attachments-base <dir> Resolve relative attachment paths in --tests against this directory.");
         w.WriteLine("  --source-root <dir>      Write a tests record's absolute sourceFile relative to this directory (default: the");
         w.WriteLine("                           current directory, which in CI is the checkout); one outside it is kept and counted.");
+        w.WriteLine("  --spans <file|dir|glob>  OTLP/JSON lines (one {\"resourceSpans\":…} object per line, as OpenTelemetry JS's");
+        w.WriteLine("                           JsonTraceSerializer and the Collector's file exporter write them; repeatable): the");
+        w.WriteLine("                           services' spans, drawn as each call's internal flow. A call joins its spans by its");
+        w.WriteLine("                           activityTraceId and activitySpanId. Turns internal flow on; all spans are drawn. A");
+        w.WriteLine("                           directory or glob gives only its files that hold spans, so one folder can hold all.");
         w.WriteLine("  --clean-attachments      Empty the report's attachments/ folder first, so it holds this run only.");
         w.WriteLine("  --diagnostic <kind>:<msg> Carry a host diagnostic into the report (repeatable) — e.g. a tap's capture");
         w.WriteLine("                           health: \"CaptureDegraded:tap-di-redis: decoding disabled on 1 connection\".");

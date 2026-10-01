@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text;
 
 namespace Kronikol.InternalFlow;
@@ -11,10 +10,10 @@ public static class InternalFlowRenderer
 {
     public static string RenderActivityDiagram(InternalFlowSegment segment)
     {
-        if (segment.Spans.Length == 0)
+        if (segment.FlowSpans.Length == 0)
             return string.Empty;
 
-        var roots = BuildSpanTree(segment.Spans);
+        var roots = BuildSpanTree(segment.FlowSpans);
         var sb = new StringBuilder();
         sb.AppendLine("@startuml");
         sb.AppendLine("skinparam ActivityBackgroundColor #f0f4ff");
@@ -35,13 +34,13 @@ public static class InternalFlowRenderer
 
     public static string[] RenderActivityDiagramBatched(InternalFlowSegment segment, int maxSpansPerBatch = 100)
     {
-        if (segment.Spans.Length == 0)
+        if (segment.FlowSpans.Length == 0)
             return [];
 
-        var roots = BuildSpanTree(segment.Spans);
+        var roots = BuildSpanTree(segment.FlowSpans);
 
         // If total spans fit in one batch, return a single diagram (no header label)
-        if (segment.Spans.Length <= maxSpansPerBatch)
+        if (segment.FlowSpans.Length <= maxSpansPerBatch)
             return [RenderActivityDiagram(segment)];
 
         // Split roots into batches — each root and all its descendants stay together
@@ -104,7 +103,7 @@ public static class InternalFlowRenderer
 
     private static void RenderActivityNode(StringBuilder sb, SpanNode node, ref string currentSwimlane, int depth)
     {
-        var source = string.IsNullOrEmpty(node.Span.Source.Name) ? "Unknown" : node.Span.Source.Name;
+        var source = string.IsNullOrEmpty(node.Span.Source) ? "Unknown" : node.Span.Source;
         if (source != currentSwimlane)
         {
             sb.AppendLine($"|{WrapForWidth(EscapePlantUml(source))}|");
@@ -113,7 +112,7 @@ public static class InternalFlowRenderer
 
         // wrapWidth breaks at whitespace only, and the labels that get long here are SQL text and
         // fully-qualified type names — the character budget is what bounds the ones that have none.
-        var label = WrapForWidth(EscapePlantUml(node.Span.DisplayName ?? node.Span.OperationName));
+        var label = WrapForWidth(EscapePlantUml(node.Span.Name));
         var duration = node.Span.Duration.TotalMilliseconds;
         sb.AppendLine(duration >= 1
             ? $":{label} ({duration:F0}ms);"
@@ -125,10 +124,10 @@ public static class InternalFlowRenderer
 
     public static string RenderCallTree(InternalFlowSegment segment)
     {
-        if (segment.Spans.Length == 0)
+        if (segment.FlowSpans.Length == 0)
             return string.Empty;
 
-        var roots = BuildSpanTree(segment.Spans);
+        var roots = BuildSpanTree(segment.FlowSpans);
         var sb = new StringBuilder();
         sb.AppendLine("<ul class=\"iflow-call-tree\" data-diagram-type=\"calltree\">");
         foreach (var root in roots)
@@ -141,8 +140,8 @@ public static class InternalFlowRenderer
     {
         var duration = node.Span.Duration.TotalMilliseconds;
         var durationText = duration >= 1 ? $" <span class=\"iflow-duration\">({duration:F0}ms)</span>" : "";
-        var source = string.IsNullOrEmpty(node.Span.Source.Name) ? "" : $"<span class=\"iflow-source\">[{System.Net.WebUtility.HtmlEncode(node.Span.Source.Name)}]</span> ";
-        var name = System.Net.WebUtility.HtmlEncode(node.Span.DisplayName ?? node.Span.OperationName);
+        var source = string.IsNullOrEmpty(node.Span.Source) ? "" : $"<span class=\"iflow-source\">[{System.Net.WebUtility.HtmlEncode(node.Span.Source)}]</span> ";
+        var name = System.Net.WebUtility.HtmlEncode(node.Span.Name);
 
         sb.AppendLine($"<li>{source}{name}{durationText}");
         if (node.Children.Count > 0)
@@ -155,18 +154,20 @@ public static class InternalFlowRenderer
         sb.AppendLine("</li>");
     }
 
-    internal static List<SpanNode> BuildSpanTree(Activity[] spans)
+    internal static List<SpanNode> BuildSpanTree(FlowSpan[] spans)
     {
         var nodesById = new Dictionary<string, SpanNode>(spans.Length);
         foreach (var span in spans)
-            nodesById.TryAdd(span.SpanId.ToString(), new SpanNode(span));
+            nodesById.TryAdd(span.SpanId, new SpanNode(span));
 
         var roots = new List<SpanNode>();
 
         foreach (var node in nodesById.Values)
         {
-            var parentId = node.Span.ParentSpanId.ToString();
-            if (parentId != null && nodesById.TryGetValue(parentId, out var parent))
+            // A span naming itself as its parent (an exporter's mistake; an activity cannot) is a root, not a span
+            // no root reaches, which would be counted in the title and drawn nowhere.
+            var parentId = node.Span.ParentSpanId;
+            if (parentId != null && parentId != node.Span.SpanId && nodesById.TryGetValue(parentId, out var parent))
                 parent.Children.Add(node);
             else
                 roots.Add(node);
@@ -202,12 +203,12 @@ public static class InternalFlowRenderer
     /// </summary>
     public static FlameChartData GetFlameChartData(InternalFlowSegment segment, int maxSpans = 2000)
     {
-        if (segment.Spans.Length == 0)
+        if (segment.FlowSpans.Length == 0)
             return FlameChartData.Empty;
 
-        var roots = BuildSpanTree(segment.Spans);
-        var earliest = segment.Spans.Min(s => s.StartTimeUtc);
-        var latest = segment.Spans.Max(s => s.StartTimeUtc + s.Duration);
+        var roots = BuildSpanTree(segment.FlowSpans);
+        var earliest = segment.FlowSpans.Min(s => s.StartTimeUtc);
+        var latest = segment.FlowSpans.Max(s => s.StartTimeUtc + s.Duration);
         var totalMs = (latest - earliest).TotalMilliseconds;
         if (totalMs <= 0) totalMs = 1;
 
@@ -218,7 +219,7 @@ public static class InternalFlowRenderer
 
         void FlattenNode(SpanNode node, int depth)
         {
-            var source = string.IsNullOrEmpty(node.Span.Source.Name) ? "Unknown" : node.Span.Source.Name;
+            var source = string.IsNullOrEmpty(node.Span.Source) ? "Unknown" : node.Span.Source;
             if (!sourceIndex.TryGetValue(source, out var srcIdx))
             {
                 srcIdx = sources.Count;
@@ -230,7 +231,7 @@ public static class InternalFlowRenderer
             var durationMs = node.Span.Duration.TotalMilliseconds;
             var leftPct = Math.Round((offsetMs / totalMs) * 100, 2);
             var widthPct = Math.Round(Math.Max((durationMs / totalMs) * 100, 0.5), 2);
-            var name = node.Span.DisplayName ?? node.Span.OperationName;
+            var name = node.Span.Name;
             var durMs = durationMs >= 1 ? (int)Math.Round(durationMs) : 0;
 
             // [srcIdx, name, leftPct, widthPct, depth, durationMs]
@@ -262,8 +263,8 @@ public static class InternalFlowRenderer
         if (data == FlameChartData.Empty)
             return data;
 
-        var earliest = segment.Spans.Min(s => s.StartTimeUtc);
-        var latest = segment.Spans.Max(s => s.StartTimeUtc + s.Duration);
+        var earliest = segment.FlowSpans.Min(s => s.StartTimeUtc);
+        var latest = segment.FlowSpans.Max(s => s.StartTimeUtc + s.Duration);
         var totalMs = (latest - earliest).TotalMilliseconds;
         if (totalMs <= 0) totalMs = 1;
 
@@ -296,7 +297,7 @@ public static class InternalFlowRenderer
 
         foreach (var (key, segment) in wholeTestSegments.OrderBy(kv => kv.Value.StartTime))
         {
-            if (segment.Spans.Length == 0) continue;
+            if (segment.FlowSpans.Length == 0) continue;
 
             var bandData = GetFlameChartData(segment);
             // Remap source indices to global list
@@ -328,12 +329,12 @@ public static class InternalFlowRenderer
     /// </summary>
     public static string RenderFlameChart(InternalFlowSegment segment)
     {
-        if (segment.Spans.Length == 0)
+        if (segment.FlowSpans.Length == 0)
             return string.Empty;
 
-        var roots = BuildSpanTree(segment.Spans);
-        var earliest = segment.Spans.Min(s => s.StartTimeUtc);
-        var latest = segment.Spans.Max(s => s.StartTimeUtc + s.Duration);
+        var roots = BuildSpanTree(segment.FlowSpans);
+        var earliest = segment.FlowSpans.Min(s => s.StartTimeUtc);
+        var latest = segment.FlowSpans.Max(s => s.StartTimeUtc + s.Duration);
         var totalMs = (latest - earliest).TotalMilliseconds;
         if (totalMs <= 0) totalMs = 1;
 
@@ -353,8 +354,8 @@ public static class InternalFlowRenderer
         var widthPct = Math.Max((durationMs / totalMs) * 100, 0.5); // min 0.5% so it's visible
 
         var source = System.Net.WebUtility.HtmlEncode(
-            string.IsNullOrEmpty(node.Span.Source.Name) ? "Unknown" : node.Span.Source.Name);
-        var name = System.Net.WebUtility.HtmlEncode(node.Span.DisplayName ?? node.Span.OperationName);
+            string.IsNullOrEmpty(node.Span.Source) ? "Unknown" : node.Span.Source);
+        var name = System.Net.WebUtility.HtmlEncode(node.Span.Name);
         var durationText = durationMs >= 1 ? $" ({durationMs:F0}ms)" : "";
 
         var hue = Math.Abs(source.GetHashCode()) % 360;
@@ -376,12 +377,12 @@ public static class InternalFlowRenderer
         InternalFlowSegment segment,
         (string Label, DateTimeOffset Timestamp)[] boundaryLogs)
     {
-        if (segment.Spans.Length == 0)
+        if (segment.FlowSpans.Length == 0)
             return string.Empty;
 
-        var roots = BuildSpanTree(segment.Spans);
-        var earliest = segment.Spans.Min(s => s.StartTimeUtc);
-        var latest = segment.Spans.Max(s => s.StartTimeUtc + s.Duration);
+        var roots = BuildSpanTree(segment.FlowSpans);
+        var earliest = segment.FlowSpans.Min(s => s.StartTimeUtc);
+        var latest = segment.FlowSpans.Max(s => s.StartTimeUtc + s.Duration);
         var totalMs = (latest - earliest).TotalMilliseconds;
         if (totalMs <= 0) totalMs = 1;
 
@@ -413,11 +414,11 @@ public static class InternalFlowRenderer
     [Obsolete("Gantt rendering is no longer used by the component diagram report. Use the flame chart approach instead.")]
     public static string RenderGantt(InternalFlowSegment segment)
     {
-        if (segment.Spans.Length == 0)
+        if (segment.FlowSpans.Length == 0)
             return string.Empty;
 
-        var roots = BuildSpanTree(segment.Spans);
-        var earliest = segment.Spans.Min(s => s.StartTimeUtc);
+        var roots = BuildSpanTree(segment.FlowSpans);
+        var earliest = segment.FlowSpans.Min(s => s.StartTimeUtc);
 
         var sb = new StringBuilder();
         sb.AppendLine("@startgantt");
@@ -434,7 +435,7 @@ public static class InternalFlowRenderer
 
     private static void RenderGanttNode(StringBuilder sb, SpanNode node, DateTime earliest, ref int taskIndex)
     {
-        var name = EscapeGantt(node.Span.DisplayName ?? node.Span.OperationName);
+        var name = EscapeGantt(node.Span.Name);
         var durationMs = node.Span.Duration.TotalMilliseconds;
         var offsetMs = (node.Span.StartTimeUtc - earliest).TotalMilliseconds;
         var durationDays = Math.Max(durationMs / 86400000.0, 0.001);
@@ -468,18 +469,18 @@ public static class InternalFlowRenderer
 
         foreach (var (key, segment) in wholeTestSegments.OrderBy(kv => kv.Value.StartTime))
         {
-            if (segment.Spans.Length == 0) continue;
+            if (segment.FlowSpans.Length == 0) continue;
 
             var testId = System.Net.WebUtility.HtmlEncode(segment.TestId);
             sb.AppendLine($"<div class=\"iflow-test-band\">");
             sb.AppendLine($"<div class=\"iflow-test-band-label\">{testId}</div>");
 
-            var earliest = segment.Spans.Min(s => s.StartTimeUtc);
-            var latest = segment.Spans.Max(s => s.StartTimeUtc + s.Duration);
+            var earliest = segment.FlowSpans.Min(s => s.StartTimeUtc);
+            var latest = segment.FlowSpans.Max(s => s.StartTimeUtc + s.Duration);
             var totalMs = (latest - earliest).TotalMilliseconds;
             if (totalMs <= 0) totalMs = 1;
 
-            var roots = BuildSpanTree(segment.Spans);
+            var roots = BuildSpanTree(segment.FlowSpans);
             foreach (var root in roots)
                 RenderFlameNode(sb, root, earliest, totalMs, 0);
 
@@ -507,7 +508,7 @@ public static class InternalFlowRenderer
         public static readonly SequentialFlameChartData Empty = new([], []);
     }
 
-    internal record SpanNode(Activity Span)
+    internal record SpanNode(FlowSpan Span)
     {
         public List<SpanNode> Children { get; } = [];
     }

@@ -135,13 +135,32 @@ public static class InternalFlowHtmlGenerator
         InternalFlowNoDataBehavior noDataBehavior = InternalFlowNoDataBehavior.HideLink,
         InternalFlowSpanGranularity granularity = InternalFlowSpanGranularity.AutoInstrumentation,
         string[]? configuredActivitySources = null,
-        InternalFlowTab startTab = InternalFlowTab.Activity)
+        InternalFlowTab startTab = InternalFlowTab.Activity) =>
+        BuildSegmentData(segments, diagramStyle, showFlameChart, flameChartPosition, noDataBehavior, granularity,
+            configuredActivitySources, startTab, suppliedSpans: null);
+
+    /// <summary>
+    /// <see cref="BuildSegmentData(Dictionary{string, InternalFlowSegment}, InternalFlowDiagramStyle, bool, InternalFlowFlameChartPosition, InternalFlowNoDataBehavior, InternalFlowSpanGranularity, string[], InternalFlowTab)"/>
+    /// for a report whose spans were handed to it: <paramref name="suppliedSpans"/> is how many an ingest was given
+    /// (<c>IngestRequest.Spans</c>), which an empty popup's diagnostic names in place of this process's span store;
+    /// null reads the store, as an in-process report always has.
+    /// </summary>
+    internal static Dictionary<string, object> BuildSegmentData(
+        Dictionary<string, InternalFlowSegment> segments,
+        InternalFlowDiagramStyle diagramStyle,
+        bool showFlameChart,
+        InternalFlowFlameChartPosition flameChartPosition,
+        InternalFlowNoDataBehavior noDataBehavior,
+        InternalFlowSpanGranularity granularity,
+        string[]? configuredActivitySources,
+        InternalFlowTab startTab,
+        int? suppliedSpans)
     {
         var data = new Dictionary<string, object>();
 
         foreach (var (key, segment) in segments)
         {
-            if (segment.Spans.Length > 0)
+            if (segment.FlowSpans.Length > 0)
             {
                 var mainContent = diagramStyle switch
                 {
@@ -206,8 +225,9 @@ public static class InternalFlowHtmlGenerator
                 if (noDataBehavior == InternalFlowNoDataBehavior.HideLink)
                     continue;
 
-                var totalSpans = InternalFlowSpanStore.GetSpans().Length;
-                var diagnosticHtml = BuildEmptyDiagnosticMessage(totalSpans, granularity, configuredActivitySources);
+                var diagnosticHtml = suppliedSpans is { } supplied
+                    ? BuildEmptySuppliedDiagnosticMessage(supplied, granularity, configuredActivitySources)
+                    : BuildEmptyDiagnosticMessage(InternalFlowSpanStore.GetSpans().Length, granularity, configuredActivitySources);
 
                 data[key] = new
                 {
@@ -299,7 +319,7 @@ public static class InternalFlowHtmlGenerator
         Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(text)), 0, 8).ToLowerInvariant();
 
     private static string Title(InternalFlowSegment segment) =>
-        $"Internal Flow ({segment.Spans.Length} span{(segment.Spans.Length == 1 ? "" : "s")}"
+        $"Internal Flow ({segment.FlowSpans.Length} span{(segment.FlowSpans.Length == 1 ? "" : "s")}"
         + (segment.SpansLeftOut > 0 ? $", {segment.SpansLeftOut} left out)" : ")");
 
     /// <summary>
@@ -334,6 +354,29 @@ public static class InternalFlowHtmlGenerator
         sb.Append("<li>ActivityListener not registered for the expected source</li>");
         sb.Append("<li>Activity.Stop() not called before InternalFlowSpanStore.Add()</li>");
         sb.Append("<li>Wrong InternalFlowSpanGranularity for your setup</li>");
+        sb.Append("</ul></details>");
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// What an empty popup says in a report whose spans an ingest was handed: how many, and what leaves a call with
+    /// none of them, which is the capture's join (the call's trace id and span id) or its clock, never a listener.
+    /// </summary>
+    private static string BuildEmptySuppliedDiagnosticMessage(
+        int suppliedSpans,
+        InternalFlowSpanGranularity granularity,
+        string[]? configuredActivitySources)
+    {
+        var sb = new StringBuilder();
+        sb.Append("No internal activity captured for this segment.");
+        sb.Append("<br/><br/><details style=\"font-size:0.85em;color:#666\"><summary>Diagnostic info</summary><ul>");
+        sb.Append($"<li>Spans supplied to the ingest: {suppliedSpans}</li>");
+        if (granularity == InternalFlowSpanGranularity.Manual && configuredActivitySources is { Length: > 0 })
+            sb.Append($"<li>Only the spans of these sources are drawn: {System.Net.WebUtility.HtmlEncode(string.Join(", ", configuredActivitySources))}</li>");
+        sb.Append("</ul><p>Common causes:</p><ul>");
+        sb.Append("<li>The call's activityTraceId names no trace in the span files, or the call carries none</li>");
+        sb.Append("<li>The trace is shared with another test's calls and the call's activitySpanId is not a span of it</li>");
+        sb.Append("<li>The spans started more than 50 ms before the request or after its response (clocks apart)</li>");
         sb.Append("</ul></details>");
         return sb.ToString();
     }
@@ -373,7 +416,7 @@ public static class InternalFlowHtmlGenerator
             return null;
 
         var segmentKey = $"iflow-test-{testId}";
-        if (!wholeTestSegments.TryGetValue(segmentKey, out var segment) || segment.Spans.Length == 0)
+        if (!wholeTestSegments.TryGetValue(segmentKey, out var segment) || segment.FlowSpans.Length == 0)
             return null;
 
         var activityHtml = "";
@@ -394,7 +437,7 @@ public static class InternalFlowHtmlGenerator
             flameHtml = $"<div class=\"iflow-flame\" data-diagram-type=\"flamechart\" data-flame-z=\"{compressedFlame}\"></div>";
         }
 
-        return (activityHtml, flameHtml, segment.Spans.Length);
+        return (activityHtml, flameHtml, segment.FlowSpans.Length);
     }
 
     /// <summary>
@@ -412,10 +455,10 @@ public static class InternalFlowHtmlGenerator
             return string.Empty;
 
         var segmentKey = $"iflow-test-{testId}";
-        if (!wholeTestSegments.TryGetValue(segmentKey, out var segment) || segment.Spans.Length == 0)
+        if (!wholeTestSegments.TryGetValue(segmentKey, out var segment) || segment.FlowSpans.Length == 0)
             return string.Empty;
 
-        var spanCount = segment.Spans.Length;
+        var spanCount = segment.FlowSpans.Length;
         var sb = new StringBuilder();
         sb.AppendLine($"<details class=\"whole-test-flow\">");
         sb.AppendLine($"<summary class=\"h4\">Whole Test Flow ({spanCount} span{(spanCount == 1 ? "" : "s")})</summary>");
@@ -501,7 +544,7 @@ public static class InternalFlowHtmlGenerator
         var sb = new StringBuilder();
 
         const int maxActivityDiagramSpans = 2000;
-        if (style == InternalFlowDiagramStyle.CallTree || flowData.AggregatedSegment.Spans.Length > maxActivityDiagramSpans)
+        if (style == InternalFlowDiagramStyle.CallTree || flowData.AggregatedSegment.FlowSpans.Length > maxActivityDiagramSpans)
             sb.Append(InternalFlowRenderer.RenderCallTree(flowData.AggregatedSegment));
         else
             sb.Append(RenderActivityDiagramHtml(flowData.AggregatedSegment));

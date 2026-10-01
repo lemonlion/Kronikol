@@ -613,4 +613,145 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("Report diagnostics:", console); // the capture saw this run's diagnostics at all
         Assert.DoesNotContain("InternalFlowSpanStore", console);
     }
+
+    // ─── --spans (plans/INGEST_FIDELITY_PLAN.md S5: T18, T20) ───
+
+    private const string SpikeTrace = "eb7b756166d44b0d1306973d5a79985f";
+    private static readonly DateTimeOffset SpikeSecond = DateTimeOffset.FromUnixTimeMilliseconds(1790755298000);
+    private static readonly string SpikeSpans = Path.Combine(AppContext.BaseDirectory, "TestData", "Ingest", "otel-jest-v2.spans.jsonl");
+
+    /// <summary>The spike's GraphQL call and its tests file, in <paramref name="name"/> under the test's directory.</summary>
+    private (string Captures, string Tests) SpikeCapture(string name)
+    {
+        const string testId = "c2a7e3d1b4f6058a9c1d2e3f4a5b6c7d";
+        var captures = Path.Combine(_dir, name);
+        Directory.CreateDirectory(captures);
+        var (request, response) = InteractionRecord.Pair(testId, null, "POST", "http://payments.local/graphql", "Payments GraphQL", "Jest",
+            responseContent: "{\"data\":{}}", statusCode: "200",
+            requestTimestamp: SpikeSecond.AddMilliseconds(365), responseTimestamp: SpikeSecond.AddMilliseconds(449),
+            activityTraceId: SpikeTrace, activitySpanId: "c6103b1e3b3c954e");
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [request.ToJson(), response.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "charges a card", Timestamp = SpikeSecond.AddMilliseconds(300) }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", Timestamp = SpikeSecond.AddMilliseconds(500) }.ToJson(),
+        ]);
+        return (captures, tests);
+    }
+
+    [Fact]
+    public void Spans_option_draws_internal_flow_from_otlp_json_lines()
+    {
+        var (captures, tests) = SpikeCapture("captures-spans");
+        var output = Path.Combine(_dir, "out-spans");
+        var @out = new StringWriter();
+        var err = new StringWriter();
+
+        string console;
+        using (var scoped = new Kronikol.Tests.Reports.ThreadScopedConsole())
+        {
+            Assert.True(0 == IngestCommand.Run([captures, "--tests", tests, "--spans", SpikeSpans, "-o", output], @out, err), err.ToString());
+            console = scoped.Text;
+        }
+
+        Assert.Contains("Spans: 16 span(s) from 1 file(s)", @out.ToString());
+        var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        Assert.Contains("id=\"iflow-segments\"", html);
+        Assert.Contains("Spans supplied to the ingest: 16 span(s).", console);
+        Assert.DoesNotContain("InternalFlowSpanStore", console);
+        // The start-up span is in no call's flow, and the command prints the diagnostic that says so.
+        Assert.Contains("1 supplied span(s) are in no call's internal flow", @out.ToString());
+
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("--spans <file|dir|glob>", usage.ToString());
+    }
+
+    [Fact]
+    public void A_spans_file_inside_an_input_directory_is_read_as_spans_only()
+    {
+        var (captures, tests) = SpikeCapture("captures-spans-inside");
+        var spans = Path.Combine(captures, "spans.jsonl");
+        File.Copy(SpikeSpans, spans);
+        var @out = new StringWriter();
+        var err = new StringWriter();
+
+        Assert.True(0 == IngestCommand.Run([captures, "--tests", tests, "--spans", spans, "-o", Path.Combine(_dir, "out-spans-inside")], @out, err), err.ToString());
+
+        Assert.Contains("Ingesting 1 capture file(s):", @out.ToString());
+        Assert.DoesNotContain("malformed line", @out.ToString());
+        Assert.Contains("Spans: 16 span(s) from 1 file(s)", @out.ToString());
+    }
+
+    [Fact]
+    public void A_spans_directory_gives_only_the_files_that_hold_spans()
+    {
+        // One folder for everything a Jest harness writes: --spans names it, and takes the OTLP/JSON files only, where its
+        // patterns alone would have taken the interaction captures and the tests file as span files too.
+        var (captures, tests) = SpikeCapture("captures-one-folder");
+        File.Copy(SpikeSpans, Path.Combine(captures, "spans-1.jsonl"));
+        var @out = new StringWriter();
+        var err = new StringWriter();
+
+        Assert.True(0 == IngestCommand.Run([captures, "--tests", tests, "--spans", captures, "-o", Path.Combine(_dir, "out-one-folder")], @out, err), err.ToString());
+
+        Assert.Contains("Ingesting 1 capture file(s):", @out.ToString());
+        Assert.Contains("Spans: 16 span(s) from 1 file(s)", @out.ToString());
+        Assert.DoesNotContain("malformed line", @out.ToString());
+        Assert.DoesNotContain("Skipped", @out.ToString());
+    }
+
+    [Fact]
+    public void A_stray_otlp_file_among_the_inputs_is_skipped_with_one_line_of_advice()
+    {
+        var (captures, tests) = SpikeCapture("captures-stray-spans");
+        var stray = Path.Combine(captures, "spans.jsonl");
+        File.Copy(SpikeSpans, stray);
+        var @out = new StringWriter();
+        var err = new StringWriter();
+
+        Assert.True(0 == IngestCommand.Run([captures, "--tests", tests, "-o", Path.Combine(_dir, "out-stray-spans")], @out, err), err.ToString());
+
+        var advice = @out.ToString().Split('\n').Where(l => l.Contains("--spans", StringComparison.Ordinal)).ToArray();
+        Assert.Equal($"Skipped {stray}: it holds OpenTelemetry spans (resourceSpans), not interaction records; pass it with --spans to draw them as internal flow.",
+            Assert.Single(advice).TrimEnd('\r'));
+        Assert.Contains("Ingesting 1 capture file(s):", @out.ToString());
+        Assert.DoesNotContain("malformed line", @out.ToString());
+    }
+
+    [Fact]
+    public void A_torn_span_line_is_counted_and_strict_fails_on_it()
+    {
+        var (captures, tests) = SpikeCapture("captures-torn-spans");
+        var spans = Path.Combine(_dir, "torn-spans.jsonl");
+        File.WriteAllLines(spans, [File.ReadAllText(SpikeSpans).TrimEnd(), "{\"resourceSpans\":[{\"scopeSpans\""]);
+
+        var @out = new StringWriter();
+        var err = new StringWriter();
+        Assert.True(0 == IngestCommand.Run([captures, "--tests", tests, "--spans", spans, "-o", Path.Combine(_dir, "out-torn")], @out, err), err.ToString());
+        Assert.Contains("1 malformed line(s) skipped:", @out.ToString());
+        Assert.Contains($"{spans}:2: ", @out.ToString());
+        Assert.Contains("Spans: 16 span(s) from 1 file(s)", @out.ToString());
+
+        err = new StringWriter();
+        Assert.Equal(1, IngestCommand.Run([captures, "--tests", tests, "--spans", spans, "--strict", "-o", Path.Combine(_dir, "out-torn-strict")], new StringWriter(), err));
+        Assert.Contains($"Failed to read a span file: {spans}:2: ", err.ToString());
+    }
+
+    [Fact]
+    public void Spans_option_usage_errors()
+    {
+        var (captures, _) = SpikeCapture("captures-spans-usage");
+
+        var err = new StringWriter();
+        Assert.Equal(2, IngestCommand.Run([captures, "--spans"], new StringWriter(), err));
+        Assert.Contains("Missing value for --spans", err.ToString());
+
+        var empty = Path.Combine(_dir, "no-spans-here");
+        Directory.CreateDirectory(empty);
+        err = new StringWriter();
+        Assert.Equal(1, IngestCommand.Run([captures, "--spans", empty, "-o", Path.Combine(_dir, "out-no-spans")], new StringWriter(), err));
+        Assert.Contains("No span files found", err.ToString());
+    }
 }

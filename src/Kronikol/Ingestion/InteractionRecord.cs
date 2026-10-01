@@ -187,10 +187,19 @@ public sealed record InteractionRecord
         || string.Equals(Kind, Kinds.Assertion, StringComparison.OrdinalIgnoreCase)
         || IsRawMarker;
 
-    /// <summary>W3C trace id of the distributed trace this call belongs to (cross-link to Tempo/Jaeger).</summary>
+    /// <summary>
+    /// W3C trace id of the distributed trace this call belongs to (cross-link to Tempo/Jaeger): for a capturer that also
+    /// exports spans (<see cref="IngestRequest.Spans"/>, <c>kronikol ingest --spans</c>), the trace of the span the call
+    /// was made under, which joins the call to the spans its internal flow is drawn from. 32 hex digits; read lowercased,
+    /// and an empty one as none.
+    /// </summary>
     [JsonPropertyName("activityTraceId")] public string? ActivityTraceId { get; init; }
 
-    /// <summary>W3C span id of this call.</summary>
+    /// <summary>
+    /// W3C span id of this call: the span it was made under (an MSW listener's active span, an HTTP server hook's), which
+    /// tells a call's spans from another test's when two tests' calls share a trace. 16 hex digits; read lowercased, and
+    /// an empty one as none.
+    /// </summary>
     [JsonPropertyName("activitySpanId")] public string? ActivitySpanId { get; init; }
 
     /// <summary>When true the entry is stored but excluded from diagrams (mirrors the <c>test-tracking-ignore</c> header).</summary>
@@ -315,14 +324,17 @@ public sealed record InteractionRecord
         {
             Timestamp = Timestamp,
             Phase = phase,
-            ActivityTraceId = ActivityTraceId,
-            ActivitySpanId = ActivitySpanId,
+            // Lowercase hex, as an activity writes them and as the spans a call joins are read; an empty one is none.
+            ActivityTraceId = LowerHexOrNull(ActivityTraceId),
+            ActivitySpanId = LowerHexOrNull(ActivitySpanId),
             IsUserAction = IsUserAction,
             CapturedBy = CapturedBy,
             DurationMs = DurationMs,
             Error = string.IsNullOrWhiteSpace(Error) ? null : Error,
         };
     }
+
+    private static string? LowerHexOrNull(string? id) => string.IsNullOrWhiteSpace(id) ? null : id.Trim().ToLowerInvariant();
 
     /// <summary>The status a response gets when it carries an <see cref="Error"/> and no <see cref="StatusCode"/>.</summary>
     public const string UnnamedFailureStatus = "!Error";

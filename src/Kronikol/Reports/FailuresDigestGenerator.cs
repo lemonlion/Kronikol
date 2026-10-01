@@ -183,7 +183,7 @@ public static class FailuresDigestGenerator
 
     private sealed record Located(Feature Feature, Scenario Scenario, int Ordinal);
 
-    /// <param name="Error">Why the call failed when it threw instead of answering: its response's message chain.</param>
+    // Error: why the call failed when it threw instead of answering, its response's message chain.
     private sealed record CallLine(string Address, string Service, string Summary, string? Status, double? DurationMs, string? Error = null);
 
     private sealed record StepLine(string Path, string Text, string? Status, double? DurationSeconds, string? Message, string? SourceFile, int? SourceLine);
