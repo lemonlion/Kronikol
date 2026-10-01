@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+**Nothing here needs a release of its own: the template pins and a date.**
+
+### Changed
+
+- **The project templates pin 4.4.0.** 4.1.0 to 4.4.0 were published on 2026-10-01, so the twelve templates move their
+  Kronikol package references from 4.0.2 to 4.4.0. The `Kronikol.Templates` package carries them from the next release.
+- **4.1.0 is dated 2026-10-01**, the local date of its release commit (00:40 BST) and the day it was published; its
+  heading gave the date in UTC.
+
 ## [4.4.0] - 2026-10-01
 
 **Minor - spans recorded in another language, drawn as internal flow: `kronikol ingest --spans`.**
@@ -165,7 +176,7 @@ version.
 - The schema's `Feature.sourceFile` description says a tests NDJSON can supply it, and `ScenarioStep.SourceLine` is
   documented as null, not zero, when unknown, which is what every writer stores.
 
-## [4.1.0] - 2026-09-30
+## [4.1.0] - 2026-10-01
 
 **Minor - `kronikol ingest --separate-setup`, and an ingested test's Setup/Action boundary.**
 `plans/INGEST_FIDELITY_PLAN.md` R1 (S4, roadmap 1d.1). A new flag is new public surface, so the minor moves. The

@@ -1,8 +1,8 @@
 # Ingest fidelity plan: what a hand-built capturer needs from the feed (stage 1d)
 
 **Written:** 2026-09-30, at 4.0.0 (`00abca6`), at the owner's request, after a conversation about a Node service
-tested under Jest. **Status: in progress. R1 shipped as 4.1.0 (2026-09-30), R2 as 4.2.0 and R3 as 4.3.0
-(2026-10-01); R4 follows** (§12). Placed next in
+tested under Jest. **Status: executed. R1 to R4 shipped as 4.1.0 to 4.4.0 and were published on
+2026-10-01** (§12). Placed next in
 the roadmap at the owner's word (stage 1d, `ROADMAP.md` D31). The questions in §11 were taken as recommended on
 2026-09-30, when the owner asked for the plan to be implemented in full. Evidence labels: **RUN**
 (measured here), **READ** (in the source, `file:line`, at `00abca6`), **INFERRED** (reasoned from two facts, stated
@@ -629,7 +629,7 @@ Each is outside the five items and outside the ingest feed, or needs a measureme
 
 Each release records here what shipped, what the measurements were, and what differed from this plan.
 
-### R1: 4.1.0 (S4), 2026-09-30
+### R1: 4.1.0 (S4), 2026-10-01
 
 Shipped: `kronikol ingest --separate-setup`; `IngestPipeline` synthesises each test's Setup/Action boundary when
 `SeparateSetup` is on, from the steps first and the calls' phases second, skipping a test whose capture carries its
@@ -779,3 +779,19 @@ Each release's push to `main` was read before the next began, as §5 asks; all f
 R2 `36794279269`, R3 `36795485095` (CodeQL and the summary preview green too), R4 `36800154119` (its 31 jobs). None
 of the four tags reached the remote (`git ls-remote` shows `v4.0.2` as the last), so none of 4.1.0 to 4.4.0 is on
 NuGet until the owner pushes `v4.1.0` to `v4.4.0`, each the `Release x.y.z` commit on `main`.
+
+### Published, 2026-10-01
+
+A local session pushed the four tags, annotated as the earlier release tags are and each on its `Release x.y.z`
+commit, in order, each only after the previous Release run had passed: `v4.1.0` on `03b52b7c` (Release run
+`36831768235`), `v4.2.0` on `b9334729` (`36832741723`), `v4.3.0` on `acb80f0f` (`36833724076`) and `v4.4.0` on
+`93c736da` (`36834698013`), all four on their first attempt. Each GitHub release carries 62 packages, and nuget.org
+lists all 62 ids at each of the four versions. The wiki took the four patches through `git am` as `0578835`,
+`ff6b4a3`, `20616e1` and `1f45b0e`, their pages as written and their trailer lines dropped, so
+`INGEST_FIDELITY_PLAN.harness/wiki/` is deleted, as its README asked (the patch paths above are in the history before
+this entry). `tools/wiki-links` passed on the result (191 anchored links, 644 page links). A check of the
+`[text](#fragment)` links, which it does not read, found eight dead anchors on pages these releases did not write;
+they are fixed in wiki `54c347f`. Kronikol4J's ledger has the two entries §5 named, 4.2.0's `Feature.sourceFile`
+description and 4.3.0's `Failures.md` line (`6a65e42`). The template pins move from 4.0.2 to 4.4.0 now that every
+pinned id lists it (the changelog's `[Unreleased]`), and 4.1.0 is dated 2026-10-01, the local date of its release
+commit (23:40 UTC on 2026-09-30) and the day it was published.
