@@ -31,5 +31,12 @@ MSYS_NO_PATHCONV=1 wsl -d podman-machine-default -u root -- sh /mnt/c/Code/Kroni
 Then run `dotnet run -c Release` in `probe/`. To remove the server afterwards, run
 `wsl -d podman-machine-default -u root -- podman rm -f ch126`.
 
+## The same probe on the release
+
+`dotnet run -c Release -p:KronikolVersion=4.5.0` builds the probe on the published 4.5.0 packages, and then it also
+wraps the data source's client with `WithClickHouseDriverTestTracking`, as an app would. Its output, against a fresh
+server, is in `probe-results-4.5.0.txt`: the issue's sequence records its four calls, and the rejected statement
+records a request and its `Error` response (plan section 6.6).
+
 On another machine, any ClickHouse 25.8 server works. Point the connection string at the top of
 `Program.cs` at it.

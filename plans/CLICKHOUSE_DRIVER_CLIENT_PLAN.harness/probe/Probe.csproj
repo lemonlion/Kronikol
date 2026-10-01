@@ -4,9 +4,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 4.4.0 measures the issue as filed; -p:KronikolVersion=4.5.0 (or later) also wraps the data source's client -->
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">4.4.0</KronikolVersion>
+    <DefineConstants Condition="'$(KronikolVersion)' != '4.4.0'">$(DefineConstants);TRACKED_CLIENT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Kronikol.Extensions.ClickHouse.Driver" Version="4.4.0" />
+    <PackageReference Include="Kronikol.Extensions.ClickHouse.Driver" Version="$(KronikolVersion)" />
     <PackageReference Include="ClickHouse.Driver" Version="1.5.0" />
   </ItemGroup>
 </Project>

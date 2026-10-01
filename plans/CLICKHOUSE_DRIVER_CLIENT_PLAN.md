@@ -397,3 +397,11 @@ shipped code and goes first. **D32** is the green light and the answers to Q1 to
     sequence drew its two calls). The section 5 mutations were all caught, with four more (no data-source decoration, no
     client decoration, the keyed branch removed, the request's time taken when it is logged): eleven of eleven. The
     request-time fact was strengthened before that, since its first form passed with the time taken late.
+- **2026-10-01, R2 published.** Release run 36914872538; CI 36914869316 and CodeQL 36914869481 passed on the same commit
+  (`d9d91605`). CI's remainder job ran the nine real-server facts against a server Testcontainers started, and passed
+  them, none skipped (`Kronikol.Tests.ClickHouse` 129 of 129). nuget.org lists all 62 ids at 4.5.0; wiki `e164dbc`;
+  Kronikol4J ledger `84132db`. Section 6.6: the issue's probe, built on the published 4.5.0 packages
+  (`-p:KronikolVersion=4.5.0`, which also wraps the data source's client), ran against a fresh ClickHouse 25.8 and
+  recorded the issue's four calls, the `INSERT INTO orders` carrying both rows, and the rejected statement's request and
+  response (`probe-results-4.5.0.txt`). The client's calls drew database `unknown`, as the connection's do, so Q8 stands
+  for both. What remains is the consumer: #126's reporter running 4.5.0 on the suite that filed it.

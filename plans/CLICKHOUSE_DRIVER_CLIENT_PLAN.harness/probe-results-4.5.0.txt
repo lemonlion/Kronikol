@@ -1,0 +1,14 @@
+InsertBinaryAsync returned 2; client ExecuteNonQueryAsync(DELETE) returned 0; SELECT count() = 1
+Issue sequence: 4 calls recorded
+  [ClickHouse/ClickHouse] CREATE TABLE orders clickhouse://localhost/unknown/orders | CREATE TABLE orders (id UInt32, item String) ENGINE = MergeTree ORDER BY id
+  [ClickHouse/ClickHouse] INSERT INTO orders clickhouse://localhost/unknown/orders | [{"id":1,"item":"toast"},{"id":2,"item":"eggs"}]
+  [ClickHouse/ClickHouse] DELETE FROM orders clickhouse://localhost/unknown/orders | DELETE FROM orders WHERE id = 1
+  [ClickHouse/ClickHouse] SELECT FROM orders clickhouse://localhost/unknown/orders | SELECT count() FROM orders
+client ExecuteNonQueryAsync(INSERT 2 rows VALUES) returned 0
+reused-buffer insert returned 3; ids stored: 12,12,12
+HTTP handler workaround: 3 calls recorded
+  [localhost:8123/] POST http://localhost:8123/?enable_http_compression=true&default_format=RowBinaryWithNamesAndTypes&query_id=0d9d7702-395f-437f-9cda-5e3adb9c98ab&output_format_binary_write_json_as_string=0&input_format_binary_read_json_as_string=1 | SELECT `id`,`item` FROM orders WHERE 1=0
+  [localhost:8123/] POST http://localhost:8123/?enable_http_compression=true&default_format=RowBinaryWithNamesAndTypes&query_id=744b726f-5639-4cc8-aca0-89bcbf2a0e1e-1&output_format_binary_write_json_as_string=0&input_format_binary_read_json_as_string=1 | [binary content]
+  [localhost:8123/] POST http://localhost:8123/?enable_http_compression=true&default_format=RowBinaryWithNamesAndTypes&query_id=46fb5f09-d7e6-4182-9def-2e39724101ad&output_format_binary_write_json_as_string=0&input_format_binary_read_json_as_string=1 | DELETE FROM orders WHERE id = 20
+server rejected it: ClickHouseServerException
+failed statement: 1 request(s), 1 response(s) recorded

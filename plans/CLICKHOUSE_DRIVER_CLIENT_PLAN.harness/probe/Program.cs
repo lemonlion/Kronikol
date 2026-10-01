@@ -8,7 +8,11 @@ var ds = new ClickHouseDataSource(cs);
 var options = new ClickHouseTrackingOptions { CurrentTestInfoFetcher = () => ("probe", "probe-1") };
 await using var tracked = ds.CreateConnection().WithClickHouseDriverTestTracking(options);
 await tracked.OpenAsync();
+#if TRACKED_CLIENT
+var client = ds.GetClient().WithClickHouseDriverTestTracking(options); // 4.5.0: the client's calls are recorded too
+#else
 var client = ds.GetClient();
+#endif
 
 async Task Run(System.Data.Common.DbConnection c, string sql) { await using var cmd = c.CreateCommand(); cmd.CommandText = sql; await cmd.ExecuteNonQueryAsync(); }
 async Task<object?> Scalar(System.Data.Common.DbConnection c, string sql) { await using var cmd = c.CreateCommand(); cmd.CommandText = sql; return await cmd.ExecuteScalarAsync(); }
