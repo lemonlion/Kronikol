@@ -306,7 +306,9 @@ public static class OtlpSpanMapper
 
     /// <summary>
     /// The span status for a record's <c>StatusCode</c>: numeric ≥ 400 is an error (the client-span
-    /// semconv rule), as is the string form of a failure (<c>Error</c>, <c>Failed</c>, <c>Timeout</c>…).
+    /// semconv rule), as is the string form of a failure (<c>Error</c>, <c>Failed</c>, <c>Timeout</c>…), and a call that
+    /// threw, whose status is the exception's type behind a bang (<c>!HttpRequestException</c>, 3.18.0), with the log's
+    /// <c>Error</c> as the message when it has one (from 4.3.0; it was exported Unset).
     /// Returns the numeric text (for <c>http.response.status_code</c>) and the status message to export.
     /// </summary>
     internal static (OtlpStatusCode Status, string? NumericText, string? Message) StatusOf(RequestResponseLog log)
@@ -321,6 +323,8 @@ public static class OtlpSpanMapper
             case var value:
             {
                 var text = value.ToString() ?? "";
+                if (text.StartsWith('!'))
+                    return (OtlpStatusCode.Error, null, string.IsNullOrWhiteSpace(log.Error) ? text : log.Error);
                 if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var numeric))
                     return (numeric >= 400 ? OtlpStatusCode.Error : OtlpStatusCode.Unset,
                         numeric.ToString(CultureInfo.InvariantCulture), null);

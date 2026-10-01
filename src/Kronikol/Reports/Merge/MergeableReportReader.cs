@@ -89,7 +89,7 @@ public static class MergeableReportReader
                     foreach (var d in diags.EnumerateArray())
                         diagrams.Add(new DiagramAsCode(scenario.Id, "", Payload(d, notes) ?? ""));
 
-                ReadInteractions(se, scenario, interactions, stepPaths, notes);
+                ReadInteractions(se, scenario.DisplayName, scenario.Id, interactions, stepPaths, notes);
                 ReadAnnotations(se, scenario.Id, annotations, notes);
             }
 
@@ -103,6 +103,12 @@ public static class MergeableReportReader
                 Scenarios = scenarios.ToArray()
             });
         }
+
+        // The calls of no scenario: the run's background block, expired calls among them. Read back as the store holds
+        // them, under the unknown test id, so the merged report writes its own block from them; until 4.3.0 a merged
+        // report had none.
+        if (root.TryGetProperty("background", out var background) && background.ValueKind == JsonValueKind.Object)
+            ReadInteractions(background, TestIdentityScope.UnknownTestName, TestIdentityScope.UnknownTestId, interactions, stepPaths: null, notes);
 
         return new MergeableReport
         {
@@ -470,10 +476,12 @@ public static class MergeableReportReader
     /// diagram markers are dropped at write time - so <c>stepPath</c> is read back rather than
     /// re-derived: the derivation walks the markers, which are gone.
     /// </summary>
-    private static void ReadInteractions(JsonElement se, Scenario scenario, List<RequestResponseLog> into,
-        Dictionary<string, List<string?>> stepPaths, ParseNotes notes)
+    private static void ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into,
+        Dictionary<string, List<string?>>? stepPaths, ParseNotes notes)
     {
-        if (!se.TryGetProperty("httpInteractions", out var array) || array.ValueKind != JsonValueKind.Array)
+        // A scenario holds its calls as httpInteractions, with their step paths; the background block as interactions.
+        var member = stepPaths is null ? "interactions" : "httpInteractions";
+        if (!se.TryGetProperty(member, out var array) || array.ValueKind != JsonValueKind.Array)
             return;
 
         var paths = new List<string?>();
@@ -497,8 +505,8 @@ public static class MergeableReportReader
                 status = bare.ToString(CultureInfo.InvariantCulture);
 
             var log = new RequestResponseLog(
-                TestName: scenario.DisplayName,
-                TestId: scenario.Id,
+                TestName: testName,
+                TestId: testId,
                 Method: parsedMethod,
                 Content: element.TryGetProperty("content", out var content) ? Payload(content, notes) : null,
                 Uri: Uri.TryCreate(GetString(element, "uri"), UriKind.RelativeOrAbsolute, out var uri) ? uri : new Uri("about:blank"),
@@ -520,15 +528,22 @@ public static class MergeableReportReader
                 ActivityTraceId = GetString(element, "activityTraceId"),
                 ActivitySpanId = GetString(element, "activitySpanId"),
                 CapturedBy = GetString(element, "capturedBy"),
-                DurationMs = ReadDouble(element, "durationMs")
+                DurationMs = ReadDouble(element, "durationMs"),
+                // Read back since 4.3.0: a merged report wrote null for all three.
+                Error = GetString(element, "error"),
+                AttributionSource = GetString(element, "attributionSource") is { } source
+                                    && Enum.TryParse<AttributionSource>(source, ignoreCase: true, out var parsedSource)
+                    ? parsedSource
+                    : null,
+                ExpiredFromTestId = GetString(element, "expiredFrom")
             };
 
             into.Add(log);
             paths.Add(GetString(element, "stepPath"));
         }
 
-        if (paths.Count > 0)
-            stepPaths[scenario.Id] = paths;
+        if (paths.Count > 0 && stepPaths is not null)
+            stepPaths[testId] = paths;
     }
 
     private static RequestResponseType ReadInteractionType(JsonElement element, ParseNotes notes)

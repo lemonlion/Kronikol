@@ -1,8 +1,8 @@
 # Ingest fidelity plan: what a hand-built capturer needs from the feed (stage 1d)
 
 **Written:** 2026-09-30, at 4.0.0 (`00abca6`), at the owner's request, after a conversation about a Node service
-tested under Jest. **Status: in progress. R1 shipped as 4.1.0 (2026-09-30), R2 as 4.2.0 (2026-10-01); R3 and R4
-follow** (§12). Placed next in
+tested under Jest. **Status: in progress. R1 shipped as 4.1.0 (2026-09-30), R2 as 4.2.0 and R3 as 4.3.0
+(2026-10-01); R4 follows** (§12). Placed next in
 the roadmap at the owner's word (stage 1d, `ROADMAP.md` D31). The questions in §11 were taken as recommended on
 2026-09-30, when the owner asked for the plan to be implemented in full. Evidence labels: **RUN**
 (measured here), **READ** (in the source, `file:line`, at `00abca6`), **INFERRED** (reasoned from two facts, stated
@@ -696,4 +696,32 @@ The release keeps the template pins at 4.0.2, where the rule moves them to the r
 until its tag is pushed, and the template build restores the pinned version. The tag `v4.2.0` and the wiki commit could
 not be pushed from the session either; the wiki patch is `INGEST_FIDELITY_PLAN.harness/wiki/0002-…patch`. A Kronikol4J
 ledger entry for the schema's `Feature.sourceFile` description follows the release (§5).
+
+### R3: 4.3.0 (S2), 2026-10-01
+
+Shipped: `InteractionRecord.Error` with a converter that reads any JSON value as text; `FromLog` writes
+`RequestResponseLog.Error` and `ToLog` restores it; `!Error` (`InteractionRecord.UnnamedFailureStatus`) for a response
+with an error and no status; a diagnostic for an error on a request half; the merge reader reads `error`,
+`attributionSource` and `expiredFrom`; `OtlpSpanMapper.StatusOf` exports a `!`-prefixed status as `ERROR` with the
+log's error as the message; `Failures.md` prints a failed call's error under the calls table.
+
+Found on the way and fixed in the release: the merge reader never read a shard's `background` block, so every merged
+report had lost its calls of no scenario, and with them the only place `expiredFrom` appears. F11's "merge keeps
+`expiredFrom`" could not hold without it, so the reader now reads `background.interactions` under the unknown test id
+and the merged report writes its own block. And the wiki's "A call that threw" addressed a failed call's error by its
+request half (`s3/i0`), where `query http` prints it for the response half.
+
+Proofs, each red first: T12 (the member guard: `Error` moved from `KnownGaps` to `Carried`, set on the fourth marker
+probe), T13 (`IngestRoundTripTests`: `Assert.Empty(differences)`), T14 (`InteractionRecordTests`, a theory over six
+JSON values and two facts; `IngestCallErrorTests`, the P2 input with an error on a request half, `query http` among
+it; `DigestIngestedFailureTests`, the digest line and its cap), T15 (`MergeKeepsCallErrorsTests`, two shards, the
+background block among it), T16 (`OtlpSpanMapperTests`). Two mutations caught: without the `!Error` default (two facts
+red), without the background read (one). Core suite 6,384 passed; the OTLP project 104; the merged-report and
+background Playwright classes pass.
+
+What differed: T14's `query http` assertion is in `IngestCallErrorTests`, where the report under test is an ingested
+one, rather than in `QueryCommandTests`; the digest line puts the error in a code span so its characters survive.
+`Failures.jsonl`'s calls do not carry the error: the plan named `Failures.md` only, and adding a member to every call
+of every run's JSONL is a change of its own (beside §8 item 10). Tag `v4.3.0` and the wiki commit, as before, wait on
+the owner; the patch is `INGEST_FIDELITY_PLAN.harness/wiki/0003-…patch`.
 

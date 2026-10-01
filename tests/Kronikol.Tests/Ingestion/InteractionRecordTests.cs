@@ -75,6 +75,65 @@ public class InteractionRecordTests
         Assert.Equal("Responded", InteractionRecord.FromLog(custom).ToLog().StatusCode!.Value);
     }
 
+    /// <summary>
+    /// <c>plans/INGEST_FIDELITY_PLAN.md</c> S2 (F7, T14): <c>error</c> was no member, so the reader ignored it whatever it
+    /// held; a member typed as a string would have rejected a whole line that held an object, which a capturer may have
+    /// written. Any JSON value is read: a string as it is, anything else as its JSON text.
+    /// </summary>
+    [Theory]
+    [InlineData("\"connect ECONNREFUSED 127.0.0.1:443\"", "connect ECONNREFUSED 127.0.0.1:443")]
+    [InlineData("{\"code\":\"ECONNRESET\",\"errno\":-104}", "{\"code\":\"ECONNRESET\",\"errno\":-104}")]
+    [InlineData("[\"first\",\"second\"]", "[\"first\",\"second\"]")]
+    [InlineData("42", "42")]
+    [InlineData("true", "true")]
+    [InlineData("null", null)]
+    public void An_error_of_any_json_value_is_read_and_its_line_is_not_malformed(string value, string? expected)
+    {
+        var line = $$"""{"type":"Response","uri":"http://psp/charges","serviceName":"psp","callerName":"web","testId":"t","statusCode":"!TypeError","error":{{value}}}""";
+        var malformed = new List<MalformedLine>();
+
+        var record = Assert.Single(NdjsonInteractionReader.Read(new StringReader(line), "capture.ndjson", malformed));
+
+        Assert.Empty(malformed);
+        Assert.Equal(expected, record.Error);
+        // Written back as text, so a line the writer produces reads back the same.
+        Assert.Equal(expected, InteractionRecord.FromJson(record.ToJson()).Error);
+    }
+
+    [Fact]
+    public void A_failed_send_keeps_its_error_through_the_writer_and_the_reader()
+    {
+        var failure = new HttpRequestException("boom", new IOException("connection reset"));
+        var log = new RequestResponseLog("Pays", "t", HttpMethod.Post, null, new Uri("http://psp/charges"), [], "psp", "web",
+            RequestResponseType.Response, Guid.NewGuid(), Guid.NewGuid(), false, FailedSend.Status(failure))
+        { Error = FailedSend.Describe(failure) };
+
+        var json = InteractionRecord.FromLog(log).ToJson();
+        var back = InteractionRecord.FromJson(json).ToLog();
+
+        Assert.Contains("\"error\":\"boom Caused by: connection reset\"", json);
+        Assert.Equal("boom Caused by: connection reset", back.Error);
+        Assert.Equal("!HttpRequestException", back.StatusCode?.Value);
+    }
+
+    [Fact]
+    public void A_response_with_an_error_and_no_status_reads_as_a_failure()
+    {
+        // The in-process path always writes the !Type status beside the error. A capturer that wrote only the error
+        // gets !Error, so every surface that reads the status (the diagram, the fingerprint, the digest's ranking,
+        // flow --errors-only) treats the call as the failure it says it is.
+        var response = new InteractionRecord { Type = "Response", Uri = "http://psp/charges", ServiceName = "psp", CallerName = "web", TestId = "t", Error = "socket hang up" };
+        var answered = response with { StatusCode = "502" };
+        var request = response with { Type = "Request" };
+
+        Assert.Equal("!Error", response.ToLog().StatusCode?.Value);
+        Assert.Equal("socket hang up", response.ToLog().Error);
+        Assert.Equal(HttpStatusCode.BadGateway, answered.ToLog().StatusCode?.Value);
+        // A request keeps its error where it was written, and gains no status.
+        Assert.Null(request.ToLog().StatusCode);
+        Assert.Equal("socket hang up", request.ToLog().Error);
+    }
+
     [Fact]
     public void Custom_method_labels_survive_and_http_verbs_become_HttpMethod()
     {

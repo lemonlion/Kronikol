@@ -339,6 +339,15 @@ public static class IngestPipeline
         var records = ReadInteractions(request, diagnostics);
         var testRecords = NormaliseSources(ReadTestRecords(request, diagnostics), request.SourceRoot, diagnostics);
 
+        // The contract puts a failed call's error on its response half, beside the error's type as the status; one on a
+        // request is kept where it was written, and the producer told.
+        var errorsOnRequests = records.Count(r => !string.Equals(r.Type, "Response", StringComparison.OrdinalIgnoreCase)
+                                                  && !r.IsMarker && !string.IsNullOrWhiteSpace(r.Error));
+        if (errorsOnRequests > 0)
+            diagnostics.Add(DiagnosticKind.Other,
+                $"{errorsOnRequests} request record(s) carried an error, kept on the request. Write a failed call's error on its "
+                + "response half, with the error's type behind a bang as the statusCode (!TypeError), so the call reads as failed.");
+
         // Cucumber Messages (playwright-bdd's cucumberReporter('message') and friends): synthesised into the
         // same start/step/end records the tests file uses, so the Gherkin steps travel the existing marker,
         // attribution and naming paths untouched; the reporter's own step events for the scenarios the

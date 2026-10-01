@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.3.0] - 2026-10-01
+
+**Minor - a failed call's `error` on the ingest feed, carried by `kronikol merge` and `kronikol export`, and printed
+in `Failures.md`.** `plans/INGEST_FIDELITY_PLAN.md` R3 (S2, roadmap 1d.3). `InteractionRecord.Error` and
+`InteractionRecord.UnnamedFailureStatus` are new public surface, so the minor moves. The rest are fixes, some of
+which change output: the digest prints a failed call's error for in-process runs too, a merged report keeps what its
+shards held, and an exported failed send is an error span. Report output changes (`Failures.md`, merged reports), so a
+Kronikol4J ledger entry follows the release. The history action's `VERSION` installs `Kronikol.Tool` 4.3.0. Template
+pins stay at 4.0.2, as in 4.2.0: 4.1.0 and 4.2.0 are not on NuGet until their tags are pushed.
+
+### Added
+
+- **`error` on interaction records** (`InteractionRecord.Error`): a call that threw instead of answering, its message
+  chain on the response half, beside the error's type behind a bang as the `statusCode` (`!TypeError`), the shape
+  the in-process tracker writes. It reaches `httpInteractions[].error`, `kronikol query http`, `Failures.md` and the
+  export. The NDJSON writer writes `RequestResponseLog.Error`, so a store projected through it ingests to the
+  report its run wrote with no difference left: `error` was the one the round-trip harness allowed, and the first of
+  the seven members roadmap 14.1 pinned as lost. Any JSON value is read, a string as it is and anything else as its
+  JSON text: a capturer that put an error object there has its line read, where a strict member would have rejected
+  the whole line. A response with an `error` and no `statusCode` reads as `!Error`
+  (`InteractionRecord.UnnamedFailureStatus`), so the diagram, the digest's ranking and the history fingerprint treat
+  it as the failure it is. An `error` on a request half is kept there, and a diagnostic says to write it on the
+  response half.
+- **`Failures.md` says why a call failed.** Under a failed scenario's calls table, each call whose response carries an
+  error gets one line: its address, its status and the message chain on one line, capped at 400 characters as
+  `kronikol query http` caps it. The table said only that the call failed; the error has been on in-process failed
+  sends since 3.18.0 and the digest never showed it.
+
+### Fixed
+
+- **`kronikol merge` keeps `error`, `attributionSource` and `expiredFrom`, and each shard's background calls.** The
+  merge reader read none of the three, so a merged report wrote nulls where every shard had them, and it never read
+  a shard's `background` block, so a merged report had no calls of no scenario, and no `expiredFrom` or
+  `afterScenarioEnd` group to say which scenario an expired call inherited. It reads them all now; the merged report
+  writes its background block from them.
+- **`kronikol export` and the live OTLP sink send a failed send as an `ERROR` span**, with its error as the status
+  message (the status itself when there is none). A status of the form `!HttpRequestException` was not one of the
+  failure words, so such a span was exported `UNSET` with no message.
+- The wiki's "A call that threw" gave `kronikol query http`'s address of a failed call as the request half's; the
+  error is on the response half, which is the next address.
+
 ## [4.2.0] - 2026-10-01
 
 **Minor - retries and source locations on the tests NDJSON, and a retried test reported as its last attempt.**

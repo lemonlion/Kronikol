@@ -29,6 +29,8 @@ public class RequestResponseLogRoundTripTests
         nameof(RequestResponseLog.DependencyCategory),
         // #94: dropped by FromLog until 3.27.4, so a measured duration was replaced by the timestamp delta.
         nameof(RequestResponseLog.DurationMs),
+        // plans/INGEST_FIDELITY_PLAN.md S2 (4.3.0): a failed send's message chain, the first of 14.1's pinned gaps closed.
+        nameof(RequestResponseLog.Error),
         nameof(RequestResponseLog.Headers),
         // #93 (3.29.0): the marker members. Every marker log was written as the same junk request line
         // (plan F2) until a marker became a kind: marker record, one per override half.
@@ -67,7 +69,6 @@ public class RequestResponseLogRoundTripTests
     /// </summary>
     private static readonly Dictionary<string, string> KnownGaps = new()
     {
-        [nameof(RequestResponseLog.Error)] = "evidence of a failed send (3.18.0), which httpInteractions[].error already exposes; a new contract field, so 14.1",
         [nameof(RequestResponseLog.AttributionSource)] = "provenance of how a call got its scenario: meaningless to an external capturer and not recomputable at replay; 14.1",
         [nameof(RequestResponseLog.ExpiredFromTestId)] = "the same provenance; 14.1",
         [nameof(RequestResponseLog.FocusFields)] = "author-supplied rendering intent, the note's focus; 14.1",
@@ -209,6 +210,7 @@ public class RequestResponseLogRoundTripTests
             ActivitySpanId = "b7ad6b7169203331",
             CapturedBy = "span",
             DurationMs = 4.5,
+            Error = "a redaction hook's note",
         },
     ];
 

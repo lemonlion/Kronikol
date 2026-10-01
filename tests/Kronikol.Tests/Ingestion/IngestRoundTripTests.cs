@@ -81,8 +81,8 @@ public class IngestRoundTripTests : IDisposable
         Assert.True(result.Generated);
         var ingested = Scenario(ingestDir, testId);
 
-        // httpInteractions, member by member. The one difference allowed is the pinned gap of plan §3.2:
-        // the failed send's error (RequestResponseLog.Error is not on the wire; 14.1).
+        // httpInteractions, member by member. The failed send's error was the one difference allowed until 4.3.0
+        // (plans/INGEST_FIDELITY_PLAN.md S2 put RequestResponseLog.Error on the wire); now there is none.
         var a = inProcess.GetProperty("httpInteractions").EnumerateArray().ToArray();
         var b = ingested.GetProperty("httpInteractions").EnumerateArray().ToArray();
         Assert.Equal(6, a.Length);
@@ -99,10 +99,8 @@ public class IngestRoundTripTests : IDisposable
                     differences.Add((i, name, x, y));
             }
         }
-        var difference = Assert.Single(differences);
-        Assert.Equal((5, "error"), (difference.Index, difference.Member));
-        Assert.Contains("boom", difference.InProcess);
-        Assert.Equal("null", difference.Ingested);
+        Assert.Empty(differences);
+        Assert.Contains("boom", b[5].GetProperty("error").GetString());
 
         // The measured durations were believed on both sides, and the step bar attributed on both.
         Assert.Equal(77, a[0].GetProperty("durationMs").GetDouble());

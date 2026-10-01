@@ -183,7 +183,8 @@ public static class FailuresDigestGenerator
 
     private sealed record Located(Feature Feature, Scenario Scenario, int Ordinal);
 
-    private sealed record CallLine(string Address, string Service, string Summary, string? Status, double? DurationMs);
+    /// <param name="Error">Why the call failed when it threw instead of answering: its response's message chain.</param>
+    private sealed record CallLine(string Address, string Service, string Summary, string? Status, double? DurationMs, string? Error = null);
 
     private sealed record StepLine(string Path, string Text, string? Status, double? DurationSeconds, string? Message, string? SourceFile, int? SourceLine);
 
@@ -314,7 +315,8 @@ public static class FailuresDigestGenerator
                 log.ServiceName,
                 Summarise(log),
                 response?.StatusCode?.Value?.ToString(),
-                Duration(log, response));
+                Duration(log, response),
+                response?.Error);
         }
 
         var requests = logs
@@ -730,6 +732,14 @@ public static class FailuresDigestGenerator
                 markdown.Append($"| `{call.Address}` | {Escape(call.Service)} | {Code(call.Summary)} | {Escape(call.Status ?? "")} | "
                                 + $"{(call.DurationMs is { } ms ? ms.ToString("0", CultureInfo.InvariantCulture) + " ms" : "")} |\n");
             markdown.Append('\n');
+
+            // Why a call failed, where the table says that it did (4.3.0): the message chain of a call that threw, on one
+            // line and capped as `kronikol query http` caps it, by the address the table gives the call.
+            var errored = entry.Calls.Where(c => !string.IsNullOrWhiteSpace(c.Error)).ToArray();
+            foreach (var call in errored)
+                markdown.Append($"- {Code(call.Address)} {Escape(call.Status ?? "")}: {Code(Truncate(FailureText.CollapseWhitespace(call.Error!), 400))}\n");
+            if (errored.Length > 0)
+                markdown.Append('\n');
         }
 
         if (entry.Attachments.Count > 0)

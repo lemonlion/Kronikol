@@ -57,6 +57,16 @@ public sealed record InteractionRecord
     /// <summary>Response status — an HTTP status number as text (<c>"200"</c>) or a custom label. Null on requests.</summary>
     [JsonPropertyName("statusCode")] public string? StatusCode { get; init; }
 
+    /// <summary>
+    /// Why the call failed when it threw instead of answering: the error's message chain (the outer message, then each
+    /// inner one after <c>Caused by:</c>, as <see cref="RequestResponseLog.Error"/> holds it in-process). Write it on the
+    /// response half, with the error's type behind a bang as the <see cref="StatusCode"/> (<c>!TypeError</c>); a response
+    /// with an error and no status reads as <c>!Error</c>.
+    /// </summary>
+    [JsonPropertyName("error")]
+    [JsonConverter(typeof(AnyJsonAsTextConverter))]
+    public string? Error { get; init; }
+
     /// <summary>Chain/trace correlation id shared by every hop of one call chain. Defaults to <see cref="RequestResponseId"/>.</summary>
     [JsonPropertyName("traceId")] public string? TraceId { get; init; }
 
@@ -225,6 +235,8 @@ public sealed record InteractionRecord
             HttpStatusCode code => ((int)code).ToString(),
             var other => other.ToString(),
         },
+        // A failed send's message chain (3.18.0); on the wire from 4.3.0, where it was the first of the gaps 14.1 pinned.
+        Error = log.Error,
         TraceId = log.TraceId.ToString(),
         RequestResponseId = log.RequestResponseId.ToString(),
         Timestamp = log.Timestamp,
@@ -268,6 +280,12 @@ public sealed record InteractionRecord
                 ? (HttpStatusCode)numeric
                 : StatusCode;
         }
+        else if (type == RequestResponseType.Response && !string.IsNullOrWhiteSpace(Error))
+        {
+            // The in-process path always writes the exception's type behind a bang beside the error. A response that
+            // says only that it failed is marked failed, so every surface that reads the status treats it as one.
+            status = UnnamedFailureStatus;
+        }
 
         var phase = ResolvedPhase;
         var metaType = ParseMember(MetaType, RequestResponseMetaType.Default);
@@ -302,8 +320,12 @@ public sealed record InteractionRecord
             IsUserAction = IsUserAction,
             CapturedBy = CapturedBy,
             DurationMs = DurationMs,
+            Error = string.IsNullOrWhiteSpace(Error) ? null : Error,
         };
     }
+
+    /// <summary>The status a response gets when it carries an <see cref="Error"/> and no <see cref="StatusCode"/>.</summary>
+    public const string UnnamedFailureStatus = "!Error";
 
     /// <summary>
     /// Maps this record to the log entries it stands for: one <see cref="RequestResponseLog"/> for requests,
@@ -577,3 +599,29 @@ public sealed record InteractionRecord
 public sealed record InteractionHeader(
     [property: JsonPropertyName("key")] string Key,
     [property: JsonPropertyName("value")] string? Value);
+
+/// <summary>
+/// Reads any JSON value as text: a string as it is, anything else (an object, an array, a number) as its JSON. A
+/// capturer may have put an error object where the contract asks for its message, and a member that took strings only
+/// would turn the whole line into a malformed one. Writes a string.
+/// </summary>
+internal sealed class AnyJsonAsTextConverter : JsonConverter<string?>
+{
+    /// <inheritdoc />
+    public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String)
+            return reader.GetString();
+        using var value = JsonDocument.ParseValue(ref reader);
+        return value.RootElement.ValueKind == JsonValueKind.Null ? null : value.RootElement.GetRawText();
+    }
+
+    /// <inheritdoc />
+    public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options)
+    {
+        if (value is null)
+            writer.WriteNullValue();
+        else
+            writer.WriteStringValue(value);
+    }
+}

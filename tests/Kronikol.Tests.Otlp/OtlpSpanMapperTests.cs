@@ -181,6 +181,28 @@ public class OtlpSpanMapperTests
         Assert.Equal(OtlpStatusCode.Unset, OtlpSpanMapper.Map(req2, resp2, Options(), ExportTime).Status);
     }
 
+    /// <summary>
+    /// <c>plans/INGEST_FIDELITY_PLAN.md</c> T16 (F11): a call that threw is logged with its exception's type behind a bang
+    /// as the status (3.18.0), which was not one of the failure words, so <c>kronikol export</c> and the live sink sent it
+    /// as an Unset span with no message. It is an error, with the message chain as its message.
+    /// </summary>
+    [Fact]
+    public void A_failed_send_marks_the_span_error_with_its_message_chain()
+    {
+        var failure = new HttpRequestException("boom", new IOException("connection reset"));
+        var (request, response) = Pair(status: FailedSend.Status(failure));
+        var span = OtlpSpanMapper.Map(request, response with { Error = FailedSend.Describe(failure) }, Options(), ExportTime);
+
+        Assert.Equal(OtlpStatusCode.Error, span.Status);
+        Assert.Equal("boom Caused by: connection reset", span.StatusMessage);
+        Assert.Null(span.Attribute("http.response.status_code"));
+
+        // A capturer that wrote the type and no message: the type is the message.
+        var withoutMessage = OtlpSpanMapper.Map(request, response, Options(), ExportTime);
+        Assert.Equal(OtlpStatusCode.Error, withoutMessage.Status);
+        Assert.Equal("!HttpRequestException", withoutMessage.StatusMessage);
+    }
+
     [Fact]
     public void Event_meta_type_maps_to_producer_kind()
     {
