@@ -772,3 +772,10 @@ things it found are in the recipe: Kronikol's history ledger lives in `.kronikol
 to `kronikol-capture/`; and a response line written in Fastify's `onResponse` hook is timed before Mercurius's own
 response hooks, whose spans then fell outside the call, so it is written in `setImmediate`. Tag `v4.4.0` and the wiki
 commit wait on the owner, as before; the patch is `INGEST_FIDELITY_PLAN.harness/wiki/0004-…patch`.
+
+### CI of the four releases
+
+Each release's push to `main` was read before the next began, as §5 asks; all four CI runs passed: R1 `36792276717`,
+R2 `36794279269`, R3 `36795485095` (CodeQL and the summary preview green too), R4 `36800154119` (its 31 jobs). None
+of the four tags reached the remote (`git ls-remote` shows `v4.0.2` as the last), so none of 4.1.0 to 4.4.0 is on
+NuGet until the owner pushes `v4.1.0` to `v4.4.0`, each the `Release x.y.z` commit on `main`.
