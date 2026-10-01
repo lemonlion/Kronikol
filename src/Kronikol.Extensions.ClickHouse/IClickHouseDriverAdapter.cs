@@ -3,8 +3,9 @@ using System.Data.Common;
 namespace Kronikol.Extensions.ClickHouse;
 
 /// <summary>
-/// Driver-specific hooks supplied by a pairing package (<c>Kronikol.Extensions.ClickHouse.Client</c>
-/// for ClickHouse.Client, <c>Kronikol.Extensions.ClickHouse.Octonica</c> for Octonica.ClickHouseClient).
+/// Driver-specific hooks supplied by a pairing package (<c>Kronikol.Extensions.ClickHouse.Driver</c> for
+/// ClickHouse.Driver, <c>Kronikol.Extensions.ClickHouse.Client</c> for ClickHouse.Client,
+/// <c>Kronikol.Extensions.ClickHouse.Octonica</c> for Octonica.ClickHouseClient).
 /// The main extension works purely against <see cref="DbConnection"/>; an adapter gives it
 /// compile-time access to what that abstraction hides — e.g. ClickHouse.Client reports rows
 /// written only via its <c>QueryStats</c> property, never via <c>ExecuteNonQuery</c>'s return value.

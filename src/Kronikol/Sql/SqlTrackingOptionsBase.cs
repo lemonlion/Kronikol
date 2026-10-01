@@ -46,20 +46,22 @@ public record SqlTrackingOptionsBase
     public bool LogResponseContent { get; set; } = true;
 
     /// <summary>
-    /// Maximum number of rows to include in response content.
+    /// Maximum number of rows to include in response content, and in the request of a bulk insert that
+    /// records the rows it sent (ClickHouse.Driver's <c>InsertBinaryAsync</c>).
     /// Default: 10. Set to 0 for row count only (overrides ResponseDetail for row data).
     /// Negative values are treated as 0.
     /// </summary>
     public int MaxResponseRows { get; set; } = 10;
 
     /// <summary>
-    /// Maximum display length for individual cell values in response content.
+    /// Maximum display length for individual cell values in response content, and in the rows of a bulk insert.
     /// Values exceeding this length are truncated. Default: 500.
     /// </summary>
     public int MaxValueDisplayLength { get; set; } = 500;
 
     /// <summary>
-    /// Level of detail for response content in diagram arrows.
+    /// Level of detail for response content in diagram arrows, and for the rows a bulk insert records as its
+    /// request (ClickHouse.Driver's <c>InsertBinaryAsync</c>).
     /// Default: <c>null</c> — the detail follows the effective verbosity: actual row data
     /// (<see cref="SqlResponseDetail.FullRows"/>) at Raw/Detailed, a count+columns summary
     /// (<see cref="SqlResponseDetail.RowCountAndColumns"/>) at Summarised.

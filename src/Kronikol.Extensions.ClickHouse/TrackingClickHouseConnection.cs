@@ -8,7 +8,7 @@ using Kronikol.Tracking;
 namespace Kronikol.Extensions.ClickHouse;
 
 /// <summary>
-/// Decorator wrapping a ClickHouse <see cref="DbConnection"/> (from ClickHouse.Client or
+/// Decorator wrapping a ClickHouse <see cref="DbConnection"/> (from ClickHouse.Driver, ClickHouse.Client or
 /// Octonica.ClickHouseClient) to intercept and track all SQL operations for test diagram generation.
 /// </summary>
 public class TrackingClickHouseConnection : DbConnection, ITrackingComponent

@@ -16,6 +16,8 @@
     <PackageReference Include="ClickHouse.Client" Version="7.*" />
     <PackageReference Include="ClickHouse.Driver" Version="1.*" />
     <PackageReference Include="Octonica.ClickHouseClient" Version="3.*" />
+    <!-- A real server for the client facts no fake can stand in for (ClickHouseServerFixture) -->
+    <PackageReference Include="Testcontainers.ClickHouse" Version="4.8.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse\Kronikol.Extensions.ClickHouse.csproj" />

@@ -3,7 +3,7 @@
     <TargetFramework />
     <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
     <Title>Test Tracking Diagrams ClickHouse Extension</Title>
-    <Description>ClickHouse tracking for test diagrams via DbConnection wrapping. Works with both ClickHouse.Client and Octonica.ClickHouseClient (any ADO.NET ClickHouse provider). Intercepts and classifies SQL operations — including ClickHouse mutations (ALTER TABLE ... UPDATE/DELETE), OPTIMIZE, RENAME, ATTACH/DETACH — with configurable verbosity. No hard dependency on a specific client package.</Description>
+    <Description>ClickHouse tracking for test diagrams via DbConnection wrapping. Works with ClickHouse.Driver, ClickHouse.Client and Octonica.ClickHouseClient (any ADO.NET ClickHouse provider); ClickHouse.Driver's IClickHouseClient is tracked through Kronikol.Extensions.ClickHouse.Driver. Intercepts and classifies SQL operations — including ClickHouse mutations (ALTER TABLE ... UPDATE/DELETE), OPTIMIZE, RENAME, ATTACH/DETACH — with configurable verbosity. No hard dependency on a specific client package.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>

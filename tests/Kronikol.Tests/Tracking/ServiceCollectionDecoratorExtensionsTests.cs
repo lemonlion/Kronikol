@@ -142,9 +142,64 @@ public class ServiceCollectionDecoratorExtensionsTests
         Assert.Equal("PREFIX: Hello", greeter.Greet());
     }
 
+    // A keyed descriptor throws from ImplementationFactory, ImplementationInstance and ImplementationType, and
+    // ClickHouse.Driver's AddClickHouseDataSource(serviceKey: ...) registers its DbConnection keyed.
+    [Theory]
+    [InlineData("instance", "HELLO")]
+    [InlineData("factory", "HELLO ANALYTICS")]
+    [InlineData("type", "DEFAULT")]
+    public void DecorateAll_wraps_a_keyed_registration_under_the_same_key_and_lifetime(string kind, string expected)
+    {
+        var services = new ServiceCollection();
+        switch (kind)
+        {
+            case "instance": services.AddKeyedSingleton<IGreeter>("analytics", new PlainGreeter("Hello")); break;
+            case "factory": services.AddKeyedScoped<IGreeter>("analytics", (_, key) => new PlainGreeter($"Hello {key}")); break;
+            case "type": services.AddKeyedTransient<IGreeter, DefaultGreeter>("analytics"); break;
+        }
+        var lifetime = Assert.Single(services).Lifetime;
+
+        services.DecorateAll<IGreeter>((_, inner) => new LoudGreeter(inner));
+
+        var descriptor = Assert.Single(services);
+        Assert.Equal("analytics", descriptor.ServiceKey);
+        Assert.Equal(lifetime, descriptor.Lifetime);
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        Assert.Equal(expected, scope.ServiceProvider.GetRequiredKeyedService<IGreeter>("analytics").Greet());
+        Assert.Null(scope.ServiceProvider.GetService<IGreeter>());
+    }
+
+    [Fact]
+    public void DecorateAll_wraps_keyed_and_unkeyed_registrations_of_one_type_each_under_its_own_key()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IGreeter>(new PlainGreeter("plain"));
+        services.AddKeyedSingleton<IGreeter>("analytics", new PlainGreeter("keyed"));
+
+        services.DecorateAll<IGreeter>((_, inner) => new LoudGreeter(inner));
+
+        using var provider = services.BuildServiceProvider();
+        Assert.Equal("PLAIN", provider.GetRequiredService<IGreeter>().Greet());
+        Assert.Equal("KEYED", provider.GetRequiredKeyedService<IGreeter>("analytics").Greet());
+    }
+
     #endregion
 
     #region DecorateAllOpen
+
+    [Fact]
+    public void DecorateAllOpen_wraps_a_keyed_registration_under_the_same_key()
+    {
+        var services = new ServiceCollection();
+        services.AddKeyedSingleton<IRepository<string>>("analytics", new InMemoryRepository<string>("data"));
+
+        services.DecorateAllOpen(typeof(IRepository<>), typeof(LoggingRepository<>));
+
+        Assert.Equal("analytics", Assert.Single(services).ServiceKey);
+        using var provider = services.BuildServiceProvider();
+        Assert.IsType<LoggingRepository<string>>(provider.GetRequiredKeyedService<IRepository<string>>("analytics"));
+    }
 
     [Fact]
     public void DecorateAllOpen_wraps_single_closed_generic()

@@ -12,7 +12,7 @@ public static class ClickHouseServiceCollectionExtensions
 {
     /// <summary>
     /// Decorates all registered <see cref="DbConnection"/> services whose runtime type is a ClickHouse
-    /// connection (from ClickHouse.Client or Octonica.ClickHouseClient) with a
+    /// connection (from ClickHouse.Driver, ClickHouse.Client or Octonica.ClickHouseClient) with a
     /// <see cref="TrackingClickHouseConnection"/>. Non-ClickHouse connections are left untouched.
     /// <para>
     /// An <see cref="IHttpContextAccessor"/> is resolved from DI (if registered) and wired
@@ -38,8 +38,8 @@ public static class ClickHouseServiceCollectionExtensions
 
     /// <summary>
     /// Determines whether the given connection is a ClickHouse connection from a supported client,
-    /// without taking a hard dependency on either client package. Both ClickHouse.Client and
-    /// Octonica.ClickHouseClient name their connection type <c>ClickHouseConnection</c>.
+    /// without taking a hard dependency on any client package. ClickHouse.Driver, ClickHouse.Client and
+    /// Octonica.ClickHouseClient all name their connection type <c>ClickHouseConnection</c>.
     /// </summary>
     internal static bool IsClickHouseConnection(DbConnection connection)
     {

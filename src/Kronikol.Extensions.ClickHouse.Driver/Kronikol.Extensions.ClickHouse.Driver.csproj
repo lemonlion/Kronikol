@@ -3,7 +3,7 @@
     <TargetFramework />
     <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
     <Title>Test Tracking Diagrams ClickHouse.Driver Pairing Extension</Title>
-    <Description>Pairs Kronikol.Extensions.ClickHouse with ClickHouse.Driver, the official ClickHouse .NET client (HTTP). Adds compile-time driver integration: accurate rows-affected counts for INSERTs (read from the driver's QueryStats, populated from the X-ClickHouse-Summary response header — its ExecuteNonQuery return value is always 0 for INSERTs) plus typed wrap/DI registration helpers.</Description>
+    <Description>Pairs Kronikol.Extensions.ClickHouse with ClickHouse.Driver, the official ClickHouse .NET client (HTTP). Adds compile-time driver integration: accurate rows-affected counts for INSERTs (read from the driver's QueryStats, populated from the X-ClickHouse-Summary response header — its ExecuteNonQuery return value is always 0 for INSERTs) plus typed wrap/DI registration helpers. Also tracks the driver's IClickHouseClient (InsertBinaryAsync drawn as one INSERT with its rows) and IClickHouseDataSource.GetClient(), wrapped or decorated through DI.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>

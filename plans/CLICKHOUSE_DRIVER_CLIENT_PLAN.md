@@ -2,7 +2,7 @@
 
 **Written:** 2026-10-01, at 4.4.0 (`a56c38e9`), the day #126 was filed. **Status: green-lit 2026-10-01**
 (`ROADMAP.md` D32, row 1.16): the owner asked for it to be implemented in full, which takes §9's recommendations for Q1
-to Q9, so Q4, Q8 and Q9 stay out of it. Being executed, R1 first (§11). Evidence labels: **RUN** (measured here, against
+to Q9, so Q4, Q8 and Q9 stay out of it. **EXECUTED 2026-10-01: R1 = 4.4.1, R2 = 4.5.0** (§11). Evidence labels: **RUN** (measured here, against
 ClickHouse 25.8.33.6), **READ** (in the source, `file:line`; Kronikol at `a56c38e9`, ClickHouse.Driver at its `1.5.0` tag,
 `95e38785`, the commit the issue links), **INFERRED** (reasoned from facts, stated by none), **DOC** (the driver's own
 documentation), **ISSUE** (taken from #126, not re-measured). The probe behind every RUN line is in
@@ -96,6 +96,7 @@ put a `DelegatingHandler` into the SDK's `HttpClient` (`CosmosClientOptionsExten
 | F11 | **Nothing in the repo executes a ClickHouse call.** `Kronikol.Tests.ClickHouse` is fakes only. The real driver types are built and never opened (`ClickHouseClientIntegrationTests.cs:272-273`), and `QueryStats` is built by hand (`:249`). F3 and F4 are driver behaviour that a fake would have to imitate. A fake that got them wrong would pass | READ | S1 |
 | F12 | **Disposing a tracked client disposes the data source's.** `GetClient()` returns the data source's own client. A decorator that forwards `Dispose`, as `TrackingClickHouseConnection` does, would close it for every later caller if a test wrote `using var client = ds.GetClient().WithClickHouseDriverTestTracking()`. That is the same outcome as disposing the client without Kronikol, but the wiki's example must not invite it | INFERRED | §4.1 |
 | F13 | **F10 is not ClickHouse's alone, and the plan's list of twins was short.** The R1 sweep (2026-10-01) found the same missing `catch` in all seven twins it named and in an eighth it did not, Dapper's `TrackingDbCommand`. Three more paths hid a failure: EF Core's `SqlTrackingInterceptor` had no `CommandFailed` override, so a failed command left a lone request and stayed in its pending map; the six transaction wrappers that draw `COMMIT` and `ROLLBACK` logged them only after the inner call returned, so a rejected one drew nothing; and Spanner's gRPC interceptor drew a failed call as an answer with no status and no content. All went into R1 (Q7) | READ, then red facts | R1 |
+| F14 | **DI decoration threw on a keyed registration.** `DecorateAll` and `DecorateAllOpen` read the unkeyed members of every descriptor of the decorated type, which a keyed descriptor refuses, so `AddClickHouseDriverTestTracking` threw `InvalidOperationException` at registration for an app that passed the driver's `AddClickHouseDataSource` a `serviceKey` (it registers `DbConnection` keyed), and so did the `Add*TestTracking` of nine more packages for a keyed registration of their type. T12 needs keyed decoration, so the fix went into R2 | READ, then red facts | R2 |
 
 ## 4. The design
 
@@ -131,8 +132,8 @@ The data source in the URI is `Settings.Host`, which matches what a tracked conn
 | `ExecuteReaderAsync` | the classified SQL | the SQL | status, logged when the reader is returned; no rows (F5b) |
 | `QueryAsync<T>` | the classified SQL, logged when enumeration starts (nothing is sent before) | the SQL | the rows read, as JSON of `T`, capped like a reader's; logged when enumeration ends or is disposed. Never enumerated, nothing recorded |
 | `ExecuteRawResultAsync` | the classified SQL | the SQL | status; the body belongs to the caller and is not read |
-| `InsertBinaryAsync(table, columns, rows)` | `INSERT INTO {table}` | `INSERT INTO {table} ({columns}) FORMAT {Format}`, then the rows (§4.3) | `{n} rows affected`, n the count returned |
-| `InsertBinaryAsync<T>(table, rows)` | `INSERT INTO {table}` | the statement, then the rows as JSON of `T` | `{n} rows affected` |
+| `InsertBinaryAsync(table, columns, rows)` | `INSERT INTO {table}` | the rows (§4.3); the label and the URI carry the statement (§11, R2) | `{n} rows affected`, n the count returned |
+| `InsertBinaryAsync<T>(table, rows)` | `INSERT INTO {table}` | the rows as JSON of `T` | `{n} rows affected` |
 | `InsertRawStreamAsync` | `INSERT INTO {table}` | `INSERT INTO {table} ({columns}) FORMAT {format}`; the stream is never read (the driver owns and disposes it) | `written_rows` from the returned response's `X-ClickHouse-Summary` when present, else status only |
 | `PostStreamAsync` (both) | the classified SQL, or `SQL` when the statement travels inside the stream | the SQL, or nothing | as `InsertRawStreamAsync` |
 | `PingAsync` | not recorded, as a connection's `Open` is not | | |
@@ -371,3 +372,28 @@ shipped code and goes first. **D32** is the green light and the answers to Q1 to
   transaction wrappers' projects (2 red each, two records where four were expected), and the Spanner interceptor's
   failed-call fact turned round (it pinned the old null content). T1's real-server half runs in R2's lane (S1).
   Kronikol4J's JDBC wrapper already recorded a failed statement's response, so its ledger entry records agreement.
+- **2026-10-01, R1 published.** Release run 36909632761 (CI 36909628546 and CodeQL 36909628582 passed on the same commit,
+  `56c675b9`); nuget.org lists all 62 ids at 4.4.1; wiki `d59529c` (nine integration pages); Kronikol4J ledger `a04e6b0`.
+- **2026-10-01, R2 = 4.5.0 (minor).** S1 to S4 as planned, with these decisions taken on the way:
+  - **The insert's request note is the rows document, not the statement and then the rows.** The renderer indents a body
+    only when it starts as JSON (`PlantUmlCreator.cs:1483-1484`), so a statement line before the rows would have drawn
+    them as one unindented line. The label (`INSERT INTO orders`) and the URI carry the statement. The rows show while
+    `LogResponseContent` is on, the gate a reader's rows have.
+  - **The insert's request is logged after the call, with the time the call started.** The rows can only be read then
+    (F4). `SqlDiagnosticTracker.LogRequestAfterCall` is internal, and so is `SqlRowFormatter`, the reader's formatting
+    moved out of `TrackingDbDataReader` for both to use: core grants `InternalsVisibleTo` to the `.Driver` package, as it
+    does to `Kronikol.Extensions.Grpc`, so R2's public surface is the plan's and nothing more.
+  - **F14**, keyed DI decoration, found while writing T12, fixed in core with four facts red first.
+  - `QueryAsync<T>`'s rows and a raw stream's `written_rows` follow the same gates: rows while `LogResponseContent` is on,
+    `written_rows` only for an insert.
+  - **The real-server lane** (`ClickHouseServerFixture`) uses the server `KRONIKOL_TEST_CLICKHOUSE` names, or starts
+    ClickHouse 25.8 through Testcontainers, and skips with the reason only when Testcontainers reports no Docker
+    endpoint (`DockerUnavailableException`); any other failure to start fails the facts. Run here against the harness's
+    podman server (129 of 129), and on Linux in a .NET SDK container with podman's Docker API socket mounted, where
+    Testcontainers started the server itself (the 9 real-server facts passed, none skipped).
+  - T12 is in a new `TrackingClickHouseDataSourceTests.cs`. T14 runs end to end in `TrackingClickHouseClientTests.cs`
+    (the client's own records rendered by `PlantUmlCreator`), so it was not added to the core's renderer facts.
+  - Proofs: the facts ran red on a forwarding-only client first (39 failures, each for want of a record; the issue's
+    sequence drew its two calls). The section 5 mutations were all caught, with four more (no data-source decoration, no
+    client decoration, the keyed branch removed, the request's time taken when it is logged): eleven of eleven. The
+    request-time fact was strengthened before that, since its first form passed with the time taken late.

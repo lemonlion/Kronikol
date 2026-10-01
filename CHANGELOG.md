@@ -4,6 +4,61 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.5.0] - 2026-10-01
+
+**Minor - calls through ClickHouse.Driver's `IClickHouseClient` are recorded (#126).**
+`plans/CLICKHOUSE_DRIVER_CLIENT_PLAN.md` R2 (S1 to S4, roadmap 1.16). `TrackingClickHouseClient`,
+`TrackingClickHouseDataSource` and a `WithClickHouseDriverTestTracking(IClickHouseClient)` overload are new public
+surface, so the minor part moves. `AddClickHouseDriverTestTracking` now also decorates `IClickHouseClient` and
+`IClickHouseDataSource` registrations, so an app that already calls it gains arrows for the client calls it was missing,
+with no change of its own. Report output changes only by those new calls, which Kronikol4J has no counterpart for, so
+its ledger gets a line. The history action's `VERSION` installs `Kronikol.Tool` 4.5.0.
+
+### Added
+
+- **ClickHouse.Driver's `IClickHouseClient` is tracked** (`Kronikol.Extensions.ClickHouse.Driver`, ClickHouse.Driver
+  1.4.0 to 1.5.0). `InsertBinaryAsync`, both overloads, is one call, `INSERT INTO <table>`, however `BatchSize` and
+  `MaxDegreeOfParallelism` split it, with the rows it sent as the request's body and the count it returned. The rows
+  follow the rules for rows a reader returns (`ResponseDetail`, `MaxResponseRows`, `MaxValueDisplayLength`, shown while
+  `LogResponseContent` is on). The tracker never enumerates them itself, and it formats them after the call from the
+  references the driver sent, since the driver serializes each row when it sends it: an iterator that reuses one array
+  is recorded as the server stored it. `ExecuteNonQueryAsync`, `ExecuteScalarAsync`, `ExecuteReaderAsync`,
+  `QueryAsync<T>` (recorded when it is enumerated, with the rows read), `ExecuteRawResultAsync` and the raw-stream
+  inserts (with the rows the server wrote, from `X-ClickHouse-Summary`) are recorded as a tracked connection records
+  its calls, and a call that fails gets an `Error` response with its message. Two things a connection shows cannot be:
+  the client reports no row count for writes (its `ExecuteNonQueryAsync` returns 0 for every `INSERT` and `DELETE`), so
+  none is shown, and the rows an `ExecuteReaderAsync` returns cannot be captured, since the driver's reader cannot be
+  wrapped. `QueryOptions.Database` on a call is the database its URI shows. Wrap a client with
+  `client.WithClickHouseDriverTestTracking(options)`; a tracked client is returned as it is. Measured against
+  ClickHouse 25.8: the issue's own sequence now draws its four calls, where 4.4.0 drew two.
+- **`TrackingClickHouseDataSource`**: `GetClient()` returns one tracked client, around the data source's own. Its
+  connections are handed out untracked, as the driver's connection takes only its own concrete commands; wrap one, or
+  take `DbConnection` from DI.
+- **`AddClickHouseDriverTestTracking` decorates every `IClickHouseClient` and `IClickHouseDataSource` registration**,
+  keyed ones included, sharing the options of the `DbConnection` decoration. The concrete `ClickHouseClient` and
+  `ClickHouseDataSource` are sealed, so a registration of either is left as it is; the wiki's new "What is not
+  tracked" section says what to do instead.
+
+### Fixed
+
+- **A keyed registration made DI decoration throw.** `DecorateAll` and `DecorateAllOpen`, which the `Add*TestTracking`
+  methods of ten packages use (ClickHouse, ClickHouse.Driver, Dapper, EventHubs, Kafka, Oracle, PubSub, Redis,
+  ServiceBus, Sqlite), read the unkeyed members of every descriptor of the decorated type, and a keyed descriptor has
+  none. So an app with a keyed registration of a decorated type, as ClickHouse.Driver's
+  `AddClickHouseDataSource(serviceKey: ...)` makes of its `DbConnection`, could not call them: they threw
+  `InvalidOperationException` at registration. A keyed registration is now decorated under its own key and lifetime.
+- **Doc comments named only ClickHouse.Client and Octonica.ClickHouseClient** on the ClickHouse package's options,
+  connection, adapter and DI helpers, on `DependencyCategories.ClickHouse` and in its package description; they name
+  ClickHouse.Driver too.
+- **The wiki said the Raw label is a ClickHouse statement's full SQL text.** It is the keyword, with the full text and
+  its parameters in the note.
+
+### Changed
+
+- **`ResponseDetail`, `MaxResponseRows` and `MaxValueDisplayLength` govern the rows an insert records as well as the
+  rows a reader returns**, so one rule covers rows whichever way they travel; their doc comments say so.
+- **The project templates pin 4.4.1**, the release before this one.
+
 ## [4.4.1] - 2026-10-01
 
 **Patch - a SQL statement that fails is drawn with its error.** `plans/CLICKHOUSE_DRIVER_CLIENT_PLAN.md` R1 (S0,

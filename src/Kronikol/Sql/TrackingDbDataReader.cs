@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Data.Common;
-using System.Text;
-using System.Text.Json;
 
 namespace Kronikol.Sql;
 
@@ -11,8 +9,6 @@ namespace Kronikol.Sql;
 /// </summary>
 public sealed class TrackingDbDataReader : DbDataReader
 {
-    private const int MaxDisplayedColumns = 20;
-
     private readonly DbDataReader _inner;
     private readonly SqlResponseDetail _detail;
     private readonly int _maxRows;
@@ -81,22 +77,10 @@ public sealed class TrackingDbDataReader : DbDataReader
             else
             {
                 var value = GetValue(i);
-                row[name] = FormatCellValue(value);
+                row[name] = SqlRowFormatter.FormatCellValue(value, _maxValueLen);
             }
         }
         _capturedRows.Add(row);
-    }
-
-    private object FormatCellValue(object value)
-    {
-        if (value is byte[] bytes)
-            return $"[bytes: {bytes.Length}]";
-
-        var str = value.ToString() ?? "";
-        if (str.Length > _maxValueLen)
-            return $"{str[.._maxValueLen]}... ({str.Length} chars)";
-
-        return value;
     }
 
     // ─── Logging ────────────────────────────────────────────
@@ -110,53 +94,17 @@ public sealed class TrackingDbDataReader : DbDataReader
 
     private string FormatContent()
     {
-        var rowLabel = _totalRowsRead == 1 ? "1 row" : $"{_totalRowsRead} rows";
-
-        if (_detail == SqlResponseDetail.RowCountOnly)
-            return rowLabel;
-
-        var columnNames = GetColumnNames();
-
-        if (_detail == SqlResponseDetail.RowCountAndColumns || _maxRows == 0)
-            return columnNames is not null ? $"{rowLabel} [{columnNames}]" : rowLabel;
-
-        // FullRows
-        var sb = new StringBuilder();
-
-        if (_capturedRows.Count > 0)
-            sb.Append(JsonSerializer.Serialize(_capturedRows, JsonOptions));
-        else
-            sb.Append(rowLabel);
-
-        if (_maxRows > 0 && _totalRowsRead > _maxRows)
-            sb.Append($"\n... ({_totalRowsRead - _maxRows} more rows not shown)");
-
-        return sb.ToString();
+        var columnNames = _detail is SqlResponseDetail.RowCountOnly ? null : GetColumnNames();
+        return SqlRowFormatter.Format(_detail, _maxRows, _totalRowsRead, _capturedRows, columnNames);
     }
 
     private string? GetColumnNames()
     {
-        if (FieldCount == 0) return null;
-
-        if (FieldCount <= MaxDisplayedColumns)
-        {
-            var names = new string[FieldCount];
-            for (var i = 0; i < FieldCount; i++)
-                names[i] = _inner.GetName(i);
-            return string.Join(", ", names);
-        }
-
-        var displayed = new string[MaxDisplayedColumns];
-        for (var i = 0; i < MaxDisplayedColumns; i++)
-            displayed[i] = _inner.GetName(i);
-        return $"{string.Join(", ", displayed)} ... (+{FieldCount - MaxDisplayedColumns} more)";
+        var names = new string[FieldCount];
+        for (var i = 0; i < FieldCount; i++)
+            names[i] = _inner.GetName(i);
+        return SqlRowFormatter.FormatColumnNames(names);
     }
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = false,
-        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-    };
 
     // ─── Close / Dispose ────────────────────────────────────
 

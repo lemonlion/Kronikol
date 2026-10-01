@@ -93,7 +93,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
-            v => BuildRequestVariant(commandText, dataSource, database, parameters, op, v));
+            v => BuildRequestVariant(commandText, dataSource, database, BuildRequestContent(commandText, parameters, v), op, v));
 
         RequestResponseLogger.Log(log);
     }
@@ -168,6 +168,26 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     /// </summary>
     protected internal (Guid TraceId, Guid RequestResponseId)? LogRequest(string? commandText, string? dataSource, string? database,
         System.Data.CommandType commandType = System.Data.CommandType.Text, string? parameters = null)
+        => LogRequestCore(commandText, dataSource, database, commandType,
+            v => BuildRequestContent(commandText, parameters, v), timestamp: null);
+
+    /// <summary>
+    /// Logs the request of a call whose body is known only once the call has returned, such as the rows a bulk insert
+    /// sent, which the driver reads when it sends them. <paramref name="body"/> builds the request's content at Raw and
+    /// Detailed verbosity (a SQL request has none at Summarised), and <paramref name="startedAt"/> is when the call
+    /// began, so the record keeps its place in time although it is logged after the call.
+    /// </summary>
+    internal (Guid TraceId, Guid RequestResponseId)? LogRequestAfterCall(string? commandText, string? dataSource, string? database,
+        Func<string?> body, DateTimeOffset startedAt)
+    {
+        // The body is built only for a record that is made, and once for the record and its variants.
+        var built = new Lazy<string?>(body);
+        return LogRequestCore(commandText, dataSource, database, System.Data.CommandType.Text,
+            v => v == SqlTrackingVerbosityLevel.Summarised ? null : built.Value, startedAt);
+    }
+
+    private (Guid TraceId, Guid RequestResponseId)? LogRequestCore(string? commandText, string? dataSource, string? database,
+        System.Data.CommandType commandType, Func<SqlTrackingVerbosityLevel, string?> contentFor, DateTimeOffset? timestamp)
     {
         Interlocked.Increment(ref _invocationCount);
 
@@ -198,7 +218,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             : label;
 
         var uri = BuildUri(dataSource, database, op, effectiveVerbosity);
-        var content = BuildRequestContent(commandText, parameters, effectiveVerbosity);
+        var content = contentFor(effectiveVerbosity);
 
         var log = new RequestResponseLog(
             testInfo.Value.Name,
@@ -216,11 +236,12 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             DependencyCategory: _options.DependencyCategory)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            Timestamp = timestamp
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
-            v => BuildRequestVariant(commandText, dataSource, database, parameters, op, v));
+            v => BuildRequestVariant(commandText, dataSource, database, contentFor(v), op, v));
 
         RequestResponseLogger.Log(log);
 
@@ -376,7 +397,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     }
 
     private PhaseVariant BuildRequestVariant(string? commandText, string? dataSource, string? database,
-        string? parameters, UnifiedSqlOperationInfo op, SqlTrackingVerbosityLevel verbosity)
+        string? content, UnifiedSqlOperationInfo op, SqlTrackingVerbosityLevel verbosity)
     {
         var skip = verbosity == SqlTrackingVerbosityLevel.Summarised && op.Operation == UnifiedSqlOperation.Other;
         var label = UnifiedSqlClassifier.GetDiagramLabel(op, verbosity);
@@ -384,7 +405,6 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             ? UnifiedSqlClassifier.GetRawKeyword(commandText) ?? "SQL"
             : label;
         var uri = BuildUri(dataSource, database, op, verbosity);
-        var content = BuildRequestContent(commandText, parameters, verbosity);
 
         return new PhaseVariant(method, uri, content, [], skip);
     }

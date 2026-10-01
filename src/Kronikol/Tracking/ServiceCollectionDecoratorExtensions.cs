@@ -10,7 +10,7 @@ public static class ServiceCollectionDecoratorExtensions
     /// <summary>
     /// Wraps <b>all</b> existing registrations of <typeparamref name="TService"/> with a decorator.
     /// Each original registration is removed and replaced with a decorated version that preserves
-    /// the original <see cref="ServiceLifetime"/>.
+    /// the original <see cref="ServiceLifetime"/>. A keyed registration stays keyed, under its own key.
     /// <para>No-op when no matching registrations exist.</para>
     /// </summary>
     /// <param name="services">The service collection to modify.</param>
@@ -31,6 +31,19 @@ public static class ServiceCollectionDecoratorExtensions
         {
             services.Remove(descriptor);
 
+            // A keyed registration stays keyed, under its own key: its implementation is read from the Keyed*
+            // members, since the unkeyed ones refuse a keyed descriptor.
+            if (descriptor.IsKeyedService)
+            {
+                var keyedInner = CreateKeyedInnerFactory(descriptor, typeof(TService));
+                services.Add(new ServiceDescriptor(
+                    typeof(TService),
+                    descriptor.ServiceKey,
+                    (sp, key) => decoratorFactory(sp, (TService)keyedInner(sp, key)),
+                    descriptor.Lifetime));
+                continue;
+            }
+
             var innerFactory = CreateInnerFactory<TService>(descriptor);
 
             services.Add(new ServiceDescriptor(
@@ -50,6 +63,7 @@ public static class ServiceCollectionDecoratorExtensions
     /// The decorator's constructor must accept the inner service as its first parameter.
     /// Any additional constructor parameters are resolved from DI via <see cref="ActivatorUtilities"/>.
     /// </para>
+    /// <para>A keyed registration stays keyed, under its own key.</para>
     /// <para>No-op when no matching registrations exist.</para>
     /// </summary>
     /// <param name="services">The service collection to modify.</param>
@@ -72,6 +86,17 @@ public static class ServiceCollectionDecoratorExtensions
             var serviceType = descriptor.ServiceType;
             var typeArgs = serviceType.GetGenericArguments();
             var closedDecoratorType = openGenericDecoratorType.MakeGenericType(typeArgs);
+
+            if (descriptor.IsKeyedService)
+            {
+                var keyedInner = CreateKeyedInnerFactory(descriptor, serviceType);
+                services.Add(new ServiceDescriptor(
+                    serviceType,
+                    descriptor.ServiceKey,
+                    (sp, key) => ActivatorUtilities.CreateInstance(sp, closedDecoratorType, keyedInner(sp, key)),
+                    descriptor.Lifetime));
+                continue;
+            }
 
             var innerFactory = CreateInnerFactory(descriptor, serviceType);
 
@@ -125,5 +150,21 @@ public static class ServiceCollectionDecoratorExtensions
         throw new InvalidOperationException(
             $"Cannot create inner factory for service {serviceType.Name}: " +
             "descriptor has no ImplementationFactory, ImplementationInstance, or ImplementationType.");
+    }
+
+    private static Func<IServiceProvider, object?, object> CreateKeyedInnerFactory(ServiceDescriptor descriptor, Type serviceType)
+    {
+        if (descriptor.KeyedImplementationFactory is { } factory)
+            return factory;
+
+        if (descriptor.KeyedImplementationInstance is { } instance)
+            return (_, _) => instance;
+
+        if (descriptor.KeyedImplementationType is { } implType)
+            return (sp, _) => ActivatorUtilities.CreateInstance(sp, implType);
+
+        throw new InvalidOperationException(
+            $"Cannot create inner factory for keyed service {serviceType.Name}: " +
+            "descriptor has no KeyedImplementationFactory, KeyedImplementationInstance, or KeyedImplementationType.");
     }
 }
