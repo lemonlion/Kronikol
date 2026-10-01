@@ -27,39 +27,48 @@ public class FakeDbCommand : DbCommand
     public object? ScalarResult { get; set; } = 42;
     public DbDataReader? ReaderResult { get; set; }
 
+    /// <summary>When set, every Execute* fails with it, as a driver does for a statement the server rejects.</summary>
+    public Exception? ThrowOnExecute { get; set; }
+
     protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
     {
         ExecuteReaderCallCount++;
+        if (ThrowOnExecute is { } e) throw e;
         return ReaderResult ?? new FakeDbDataReader();
     }
 
     protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
     {
         ExecuteReaderCallCount++;
+        if (ThrowOnExecute is { } e) return Task.FromException<DbDataReader>(e);
         return Task.FromResult(ReaderResult ?? (DbDataReader)new FakeDbDataReader());
     }
 
     public override int ExecuteNonQuery()
     {
         ExecuteNonQueryCallCount++;
+        if (ThrowOnExecute is { } e) throw e;
         return NonQueryResult;
     }
 
     public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
     {
         ExecuteNonQueryCallCount++;
+        if (ThrowOnExecute is { } e) return Task.FromException<int>(e);
         return Task.FromResult(NonQueryResult);
     }
 
     public override object? ExecuteScalar()
     {
         ExecuteScalarCallCount++;
+        if (ThrowOnExecute is { } e) throw e;
         return ScalarResult;
     }
 
     public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
     {
         ExecuteScalarCallCount++;
+        if (ThrowOnExecute is { } e) return Task.FromException<object?>(e);
         return Task.FromResult(ScalarResult);
     }
 

@@ -27,16 +27,36 @@ public class TrackingSqlTransaction : DbTransaction
 
     public override void Commit()
     {
-        _inner.Commit();
         var ids = _connection.Tracker.DoLogRequest("COMMIT", _connection.InnerConnection.DataSource, _connection.InnerConnection.Database);
+        try
+        {
+            _inner.Commit();
+        }
+        catch (Exception ex)
+        {
+            // A rejected commit or rollback is drawn with its error, not left out of the diagram.
+            if (ids is not null)
+                _connection.Tracker.DoLogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, exception: ex);
+            throw;
+        }
         if (ids is not null)
             _connection.Tracker.DoLogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
     }
 
     public override void Rollback()
     {
-        _inner.Rollback();
         var ids = _connection.Tracker.DoLogRequest("ROLLBACK", _connection.InnerConnection.DataSource, _connection.InnerConnection.Database);
+        try
+        {
+            _inner.Rollback();
+        }
+        catch (Exception ex)
+        {
+            // A rejected commit or rollback is drawn with its error, not left out of the diagram.
+            if (ids is not null)
+                _connection.Tracker.DoLogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, exception: ex);
+            throw;
+        }
         if (ids is not null)
             _connection.Tracker.DoLogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
     }

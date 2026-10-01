@@ -256,9 +256,9 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
             _tracker.LogResponse(opInfo, reqId, traceId, responseContent, rawContent);
             return response;
         }
-        catch (RpcException)
+        catch (RpcException ex)
         {
-            _tracker.LogResponse(opInfo, reqId, traceId, null);
+            _tracker.LogFailure(opInfo, reqId, traceId, ex);
             throw;
         }
     }

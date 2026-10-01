@@ -77,7 +77,16 @@ public class TrackingSpannerCommand : DbCommand
     protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
     {
         var ids = LogRequest();
-        var result = _inner.ExecuteReader(behavior);
+        DbDataReader result;
+        try
+        {
+            result = _inner.ExecuteReader(behavior);
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null)
         {
             if (_options.LogResponseContent)
@@ -91,7 +100,16 @@ public class TrackingSpannerCommand : DbCommand
         CommandBehavior behavior, CancellationToken cancellationToken)
     {
         var ids = LogRequest();
-        var result = await _inner.ExecuteReaderAsync(behavior, cancellationToken);
+        DbDataReader result;
+        try
+        {
+            result = await _inner.ExecuteReaderAsync(behavior, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null)
         {
             if (_options.LogResponseContent)
@@ -104,7 +122,16 @@ public class TrackingSpannerCommand : DbCommand
     public override int ExecuteNonQuery()
     {
         var ids = LogRequest();
-        var result = _inner.ExecuteNonQuery();
+        int result;
+        try
+        {
+            result = _inner.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, result);
         return result;
     }
@@ -112,7 +139,16 @@ public class TrackingSpannerCommand : DbCommand
     public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
     {
         var ids = LogRequest();
-        var result = await _inner.ExecuteNonQueryAsync(cancellationToken);
+        int result;
+        try
+        {
+            result = await _inner.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, result);
         return result;
     }
@@ -120,7 +156,16 @@ public class TrackingSpannerCommand : DbCommand
     public override object? ExecuteScalar()
     {
         var ids = LogRequest();
-        var result = _inner.ExecuteScalar();
+        object? result;
+        try
+        {
+            result = _inner.ExecuteScalar();
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null) LogResponseWithContent(ids.Value.TraceId, ids.Value.RequestResponseId, FormatScalar(result));
         return result;
     }
@@ -128,9 +173,25 @@ public class TrackingSpannerCommand : DbCommand
     public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
     {
         var ids = LogRequest();
-        var result = await _inner.ExecuteScalarAsync(cancellationToken);
+        object? result;
+        try
+        {
+            result = await _inner.ExecuteScalarAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null) LogResponseWithContent(ids.Value.TraceId, ids.Value.RequestResponseId, FormatScalar(result));
         return result;
+    }
+
+    // A statement that fails still gets its response, with the error: without one the diagram shows a call
+    // that never answered, and the failure appears nowhere in the report.
+    private void LogFailure((Guid TraceId, Guid RequestResponseId)? ids, Exception exception)
+    {
+        if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, exception: exception);
     }
 
     internal (Guid TraceId, Guid RequestResponseId)? LogRequest()
@@ -148,9 +209,15 @@ public class TrackingSpannerCommand : DbCommand
         return reqId == Guid.Empty ? null : (traceId, reqId);
     }
 
-    internal void LogResponse(Guid traceId, Guid requestResponseId, int? rowsAffected = null)
+    internal void LogResponse(Guid traceId, Guid requestResponseId, int? rowsAffected = null, Exception? exception = null)
     {
         var op = SpannerOperationClassifier.ClassifySql(CommandText, CommandType);
+
+        if (exception is not null)
+        {
+            _connection.Tracker.LogFailure(op, requestResponseId, traceId, exception);
+            return;
+        }
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
             _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);

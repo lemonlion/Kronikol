@@ -72,7 +72,16 @@ public class TrackingClickHouseCommand : DbCommand
     protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
     {
         var ids = LogRequest();
-        var result = _inner.ExecuteReader(behavior);
+        DbDataReader result;
+        try
+        {
+            result = _inner.ExecuteReader(behavior);
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null)
         {
             if (_connection.Options.LogResponseContent)
@@ -86,7 +95,16 @@ public class TrackingClickHouseCommand : DbCommand
         CommandBehavior behavior, CancellationToken cancellationToken)
     {
         var ids = LogRequest();
-        var result = await _inner.ExecuteReaderAsync(behavior, cancellationToken);
+        DbDataReader result;
+        try
+        {
+            result = await _inner.ExecuteReaderAsync(behavior, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null)
         {
             if (_connection.Options.LogResponseContent)
@@ -99,7 +117,16 @@ public class TrackingClickHouseCommand : DbCommand
     public override int ExecuteNonQuery()
     {
         var ids = LogRequest();
-        var result = _inner.ExecuteNonQuery();
+        int result;
+        try
+        {
+            result = _inner.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, ResolveRowsAffected(result));
         return result;
     }
@@ -107,7 +134,16 @@ public class TrackingClickHouseCommand : DbCommand
     public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
     {
         var ids = LogRequest();
-        var result = await _inner.ExecuteNonQueryAsync(cancellationToken);
+        int result;
+        try
+        {
+            result = await _inner.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null) LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, ResolveRowsAffected(result));
         return result;
     }
@@ -131,7 +167,16 @@ public class TrackingClickHouseCommand : DbCommand
     public override object? ExecuteScalar()
     {
         var ids = LogRequest();
-        var result = _inner.ExecuteScalar();
+        object? result;
+        try
+        {
+            result = _inner.ExecuteScalar();
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null) LogResponseWithContent(ids.Value.TraceId, ids.Value.RequestResponseId, FormatScalar(result));
         return result;
     }
@@ -139,9 +184,26 @@ public class TrackingClickHouseCommand : DbCommand
     public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
     {
         var ids = LogRequest();
-        var result = await _inner.ExecuteScalarAsync(cancellationToken);
+        object? result;
+        try
+        {
+            result = await _inner.ExecuteScalarAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ids, ex);
+            throw;
+        }
         if (ids is not null) LogResponseWithContent(ids.Value.TraceId, ids.Value.RequestResponseId, FormatScalar(result));
         return result;
+    }
+
+    // A statement that fails still gets its response, with the error: without one the diagram shows a call
+    // that never answered, and the failure appears nowhere in the report.
+    private void LogFailure((Guid TraceId, Guid RequestResponseId)? ids, Exception exception)
+    {
+        if (ids is not null)
+            _connection.Tracker.DoLogResponse(ids.Value.TraceId, ids.Value.RequestResponseId, exception: exception);
     }
 
     private (Guid TraceId, Guid RequestResponseId)? LogRequest()

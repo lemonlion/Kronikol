@@ -38,6 +38,70 @@ public class TrackingNpgsqlCommandResponseDetailTests : IDisposable
     private RequestResponseLog[] GetLogsForTest()
         => RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId).ToArray();
 
+    public static TheoryData<string> ExecutePaths => new()
+    {
+        "ExecuteNonQuery", "ExecuteNonQueryAsync", "ExecuteScalar", "ExecuteScalarAsync", "ExecuteReader", "ExecuteReaderAsync"
+    };
+
+    private static async Task Execute(System.Data.Common.DbCommand cmd, string path)
+    {
+        switch (path)
+        {
+            case "ExecuteNonQuery": cmd.ExecuteNonQuery(); break;
+            case "ExecuteNonQueryAsync": await cmd.ExecuteNonQueryAsync(); break;
+            case "ExecuteScalar": cmd.ExecuteScalar(); break;
+            case "ExecuteScalarAsync": await cmd.ExecuteScalarAsync(); break;
+            case "ExecuteReader": cmd.ExecuteReader().Dispose(); break;
+            case "ExecuteReaderAsync": await (await cmd.ExecuteReaderAsync()).DisposeAsync(); break;
+            default: throw new ArgumentOutOfRangeException(nameof(path), path, null);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(ExecutePaths))]
+    public async Task A_statement_that_fails_records_an_Error_response_with_its_message_and_rethrows_the_same_exception(string path)
+    {
+        var rejected = new InvalidOperationException("relation \"no_such_table_126\" does not exist");
+        using var cmd = new TrackingNpgsqlCommand(new RowReaderFakeDbCommand { ThrowOnExecute = rejected }, _trackingConnection);
+        cmd.CommandText = "SELECT * FROM no_such_table_126";
+
+        var thrown = await Record.ExceptionAsync(() => Execute(cmd, path));
+
+        Assert.Same(rejected, thrown);
+        var logs = GetLogsForTest();
+        Assert.Equal(2, logs.Length);
+        Assert.Equal(RequestResponseType.Request, logs[0].Type);
+        Assert.Equal(RequestResponseType.Response, logs[1].Type);
+        Assert.Equal(logs[0].RequestResponseId, logs[1].RequestResponseId);
+        Assert.Equal("Error", logs[1].StatusCode?.Value?.ToString());
+        Assert.Equal(rejected.Message, logs[1].Content);
+    }
+
+    [Theory]
+    [InlineData("Commit")]
+    [InlineData("Rollback")]
+    public void A_commit_or_rollback_that_fails_records_an_Error_response_with_its_message_and_rethrows_the_same_exception(string operation)
+    {
+        var rejected = new InvalidOperationException("the transaction was aborted by the server");
+        using var tx = new TrackingNpgsqlTransaction(new RejectingFakeDbTransaction(rejected), _trackingConnection);
+
+        var thrown = Record.Exception(() =>
+        {
+            if (operation == "Commit") tx.Commit();
+            else tx.Rollback();
+        });
+
+        Assert.Same(rejected, thrown);
+        var logs = GetLogsForTest();
+        // BEGIN TRANSACTION and its response, then the statement that failed and its response.
+        Assert.Equal(4, logs.Length);
+        Assert.Equal(RequestResponseType.Request, logs[2].Type);
+        Assert.Equal(RequestResponseType.Response, logs[3].Type);
+        Assert.Equal(logs[2].RequestResponseId, logs[3].RequestResponseId);
+        Assert.Equal("Error", logs[3].StatusCode?.Value?.ToString());
+        Assert.Equal(rejected.Message, logs[3].Content);
+    }
+
     private string? RunSelectAndGetResponseContent()
     {
         using var cmd = new TrackingNpgsqlCommand(new RowReaderFakeDbCommand(), _trackingConnection);
@@ -87,11 +151,17 @@ internal sealed class RowReaderFakeDbCommand : DbCommand
     protected override DbTransaction? DbTransaction { get; set; }
     protected override DbParameterCollection DbParameterCollection { get; } = new RowReaderFakeParameterCollection();
 
-    protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => new RowReaderFakeDataReader();
+    /// <summary>When set, every Execute* fails with it, as a driver does for a statement the server rejects.</summary>
+    public Exception? ThrowOnExecute { get; init; }
+
+    protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+        => ThrowOnExecute is { } e ? throw e : new RowReaderFakeDataReader();
     protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
-        => Task.FromResult<DbDataReader>(new RowReaderFakeDataReader());
-    public override int ExecuteNonQuery() => 1;
-    public override object? ExecuteScalar() => 1;
+        => ThrowOnExecute is { } e
+            ? Task.FromException<DbDataReader>(e)
+            : Task.FromResult<DbDataReader>(new RowReaderFakeDataReader());
+    public override int ExecuteNonQuery() => ThrowOnExecute is { } e ? throw e : 1;
+    public override object? ExecuteScalar() => ThrowOnExecute is { } e ? throw e : 1;
     public override void Prepare() { }
     public override void Cancel() { }
     protected override DbParameter CreateDbParameter() => throw new NotSupportedException();
@@ -159,4 +229,13 @@ internal sealed class RowReaderFakeDataReader : DbDataReader
     public override int GetOrdinal(string name) => name == "id" ? 0 : 1;
     public override int GetValues(object[] values) { values[0] = Rows[_index].Id; values[1] = Rows[_index].Name; return 2; }
     public override IEnumerator GetEnumerator() => Rows.GetEnumerator();
+}
+
+/// <summary>A transaction whose commit and rollback fail, as a driver's do when the server rejects them.</summary>
+internal sealed class RejectingFakeDbTransaction(Exception rejection) : System.Data.Common.DbTransaction
+{
+    public override System.Data.IsolationLevel IsolationLevel => System.Data.IsolationLevel.ReadCommitted;
+    protected override System.Data.Common.DbConnection? DbConnection => null;
+    public override void Commit() => throw rejection;
+    public override void Rollback() => throw rejection;
 }

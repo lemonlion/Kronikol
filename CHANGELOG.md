@@ -4,16 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [4.4.1] - 2026-10-01
 
-**Nothing here needs a release of its own: the template pins and a date.**
+**Patch - a SQL statement that fails is drawn with its error.** `plans/CLICKHOUSE_DRIVER_CLIENT_PLAN.md` R1 (S0,
+roadmap 1.16). A statement the database rejected left a request with no response through every tracked ADO.NET
+connection and through EF Core's interceptor, so the report drew a call that never answered and the error appeared
+nowhere in it; a rejected `COMMIT` or `ROLLBACK` drew nothing at all. These are bug fixes with nothing new for a
+consumer to call, so the patch part moves. Report output changes for a failed statement, which gains a response arrow,
+so Kronikol4J's ledger has an entry; its JDBC wrapper already drew one. The history action's `VERSION` installs
+`Kronikol.Tool` 4.4.1.
+
+### Fixed
+
+- **A statement the database rejects is drawn with its error, through every tracked ADO.NET connection.**
+  `ExecuteNonQuery`, `ExecuteScalar` and `ExecuteReader`, sync and async, had no `catch` in the command decorators of
+  ClickHouse, Npgsql, MySqlConnector, Oracle, SqlClient, Sqlite, Dapper and Spanner, so a failure logged its request
+  and nothing after it. Each now records a response with status `Error` and the exception's message as its content
+  (at `Summarised`, only with `LogResponseContent`, as for any response), and rethrows the same exception object.
+  Measured on ClickHouse 25.8 with 4.4.0: `SELECT * FROM no_such_table_126` through `TrackingClickHouseConnection`
+  recorded 1 request and 0 responses (the plan's F10, found while assessing #126).
+- **EF Core: a command that fails is drawn with its error.** `SqlTrackingInterceptor` had no `CommandFailed`
+  override, so a failed command kept its request alone, and the command stayed in the interceptor's pending map for
+  the life of the interceptor. `CommandFailed` and `CommandFailedAsync` now record the `Error` response. Proved through
+  a real relational provider (SQLite) for `ExecuteSqlRaw` and `SqlQueryRaw`, sync and async.
+- **A `COMMIT` or `ROLLBACK` the database rejects is drawn with its error.** The transaction wrappers of ClickHouse,
+  Npgsql, MySqlConnector, Oracle, SqlClient and Sqlite logged the statement only after the inner call returned, so a
+  failure left no trace in the diagram. The request is now logged before the call, so its time is when the commit
+  started, and a failure gets an `Error` response; the exception is rethrown unchanged. Dapper's and Spanner's
+  transaction wrappers draw no `COMMIT` or `ROLLBACK`, as before.
+- **Spanner's gRPC interceptor gives a failed call status `Error` and its message.** A call that ended in an
+  `RpcException` was drawn as an answer with no status and no content.
 
 ### Changed
 
-- **The project templates pin 4.3.0.** 4.1.0 to 4.4.0 were published on 2026-10-01, so the twelve templates move their
-  Kronikol package references from 4.0.2 to 4.3.0, the release before this repository's 4.4.0, where 4.4.0 itself
-  would have put them. A pin stays behind the repository's version (`PluginManifestTests` holds it), so 4.4.0 comes
-  with the next release. The `Kronikol.Templates` package carries them from the next release too.
+- **The project templates pin 4.4.0.** 4.1.0 to 4.4.0 were published on 2026-10-01, and the twelve templates' Kronikol
+  package references move from 4.3.0 to 4.4.0, the release before this one. A pin stays behind the repository's
+  version (`PluginManifestTests` holds it). The `Kronikol.Templates` package carries the new pins from this release.
 - **4.1.0 is dated 2026-10-01**, the local date of its release commit (00:40 BST) and the day it was published; its
   heading gave the date in UTC.
 

@@ -42,6 +42,45 @@ public class TrackingDbCommandTests : IDisposable
         return cmd;
     }
 
+    public static TheoryData<string> ExecutePaths => new()
+    {
+        "ExecuteNonQuery", "ExecuteNonQueryAsync", "ExecuteScalar", "ExecuteScalarAsync", "ExecuteReader", "ExecuteReaderAsync"
+    };
+
+    private static async Task Execute(System.Data.Common.DbCommand cmd, string path)
+    {
+        switch (path)
+        {
+            case "ExecuteNonQuery": cmd.ExecuteNonQuery(); break;
+            case "ExecuteNonQueryAsync": await cmd.ExecuteNonQueryAsync(); break;
+            case "ExecuteScalar": cmd.ExecuteScalar(); break;
+            case "ExecuteScalarAsync": await cmd.ExecuteScalarAsync(); break;
+            case "ExecuteReader": cmd.ExecuteReader().Dispose(); break;
+            case "ExecuteReaderAsync": await (await cmd.ExecuteReaderAsync()).DisposeAsync(); break;
+            default: throw new ArgumentOutOfRangeException(nameof(path), path, null);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(ExecutePaths))]
+    public async Task A_statement_that_fails_records_an_Error_response_with_its_message_and_rethrows_the_same_exception(string path)
+    {
+        using var cmd = CreateCommand("SELECT * FROM no_such_table_126");
+        var rejected = new InvalidOperationException("Invalid object name 'no_such_table_126'.");
+        _fakeConnection.LastCreatedCommand!.ThrowOnExecute = rejected;
+
+        var thrown = await Record.ExceptionAsync(() => Execute(cmd, path));
+
+        Assert.Same(rejected, thrown);
+        var logs = GetLogsForTest();
+        Assert.Equal(2, logs.Length);
+        Assert.Equal(RequestResponseType.Request, logs[0].Type);
+        Assert.Equal(RequestResponseType.Response, logs[1].Type);
+        Assert.Equal(logs[0].RequestResponseId, logs[1].RequestResponseId);
+        Assert.Equal("Error", logs[1].StatusCode?.Value?.ToString());
+        Assert.Equal(rejected.Message, logs[1].Content);
+    }
+
     // ─── Response detail follows verbosity ──────────────────────
     // Unset ResponseDetail follows the effective verbosity: actual row data at Raw/Detailed,
     // a count+columns summary at Summarised. An explicit setting always wins.

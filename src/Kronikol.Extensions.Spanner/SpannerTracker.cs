@@ -1,3 +1,4 @@
+using System.Net;
 using Kronikol.Constants;
 using Google.Cloud.Spanner.V1;
 using Google.Protobuf;
@@ -83,6 +84,18 @@ public class SpannerTracker : ITrackingComponent
     public void LogResponse(
         SpannerOperationInfo operation,
         Guid requestResponseId, Guid traceId, string? content, string? rawContent = null)
+        => LogResponseCore(operation, requestResponseId, traceId, content, rawContent, status: null);
+
+    /// <summary>
+    /// Logs the response of a call that failed: status <c>Error</c>, with the exception's message as its content.
+    /// Without it a failed call is drawn as an answer with nothing in it.
+    /// </summary>
+    internal void LogFailure(SpannerOperationInfo operation, Guid requestResponseId, Guid traceId, Exception exception)
+        => LogResponseCore(operation, requestResponseId, traceId, exception.Message, rawContent: null, status: "Error");
+
+    private void LogResponseCore(
+        SpannerOperationInfo operation,
+        Guid requestResponseId, Guid traceId, string? content, string? rawContent, OneOf<HttpStatusCode, string>? status)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
         if (_options.ExcludedOperations.Contains(operation.Operation)) return;
@@ -106,7 +119,7 @@ public class SpannerTracker : ITrackingComponent
             testInfo.Value.Name, testInfo.Value.Id,
             method, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
-            RequestResponseType.Response, traceId, requestResponseId, false,
+            RequestResponseType.Response, traceId, requestResponseId, false, status,
             DependencyCategory: DependencyCategories.Spanner)
         {
             AttributionSource = testInfo.Value.Source,

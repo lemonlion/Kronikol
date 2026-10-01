@@ -95,6 +95,7 @@ put a `DelegatingHandler` into the SDK's `HttpClient` (`CosmosClientOptionsExten
 | F10 | **A statement the server rejects leaves a request with no response, through the shipped ADO.NET wrapper.** `SELECT * FROM no_such_table_126` threw `ClickHouseServerException`, and the tracker recorded 1 request and 0 responses. `TrackingClickHouseCommand` has no `catch` around the inner call (`TrackingClickHouseCommand.cs:72-113`). `DoLogResponse` takes an `Exception` (`TrackingClickHouseConnection.cs:106-110`), but no caller passes one. ROADMAP 1.15's list of lone requests names only ten SDK HTTP handlers (`INGEST_FIDELITY_PLAN.md:561`) | RUN, READ | R1 |
 | F11 | **Nothing in the repo executes a ClickHouse call.** `Kronikol.Tests.ClickHouse` is fakes only. The real driver types are built and never opened (`ClickHouseClientIntegrationTests.cs:272-273`), and `QueryStats` is built by hand (`:249`). F3 and F4 are driver behaviour that a fake would have to imitate. A fake that got them wrong would pass | READ | S1 |
 | F12 | **Disposing a tracked client disposes the data source's.** `GetClient()` returns the data source's own client. A decorator that forwards `Dispose`, as `TrackingClickHouseConnection` does, would close it for every later caller if a test wrote `using var client = ds.GetClient().WithClickHouseDriverTestTracking()`. That is the same outcome as disposing the client without Kronikol, but the wiki's example must not invite it | INFERRED | §4.1 |
+| F13 | **F10 is not ClickHouse's alone, and the plan's list of twins was short.** The R1 sweep (2026-10-01) found the same missing `catch` in all seven twins it named and in an eighth it did not, Dapper's `TrackingDbCommand`. Three more paths hid a failure: EF Core's `SqlTrackingInterceptor` had no `CommandFailed` override, so a failed command left a lone request and stayed in its pending map; the six transaction wrappers that draw `COMMIT` and `ROLLBACK` logged them only after the inner call returned, so a rejected one drew nothing; and Spanner's gRPC interceptor drew a failed call as an answer with no status and no content. All went into R1 (Q7) | READ, then red facts | R1 |
 
 ## 4. The design
 
@@ -171,7 +172,7 @@ the same exception object. That is the path F10 shows the connection wrapper lac
   exception, `throw;`.
 - **The other SQL wrappers:** Npgsql, MySqlConnector, Oracle, SqlClient, Sqlite and Spanner are, by the 3.0.74 record,
   copy-paste twins of the ClickHouse wrapper. R1 reads each one. Any that share the gap gets the same fix and its own fact in
-  the same patch (Q7).
+  the same patch (Q7). All of them did, and so did four paths the list missed (F13).
 
 ### 4.5 DI and the data source
 
@@ -357,3 +358,16 @@ shipped code and goes first. **D32** is the green light and the answers to Q1 to
   - A rejected statement through the tracked connection recorded one request and no response.
 
   The driver was read at its `1.5.0` tag, the commit the issue links, and compared with `1.4.0`.
+- **2026-10-01, green-lit.** The owner asked for the plan to be implemented in full, which takes §9's recommendations
+  (D32). Worked in the worktree `Kronikol-ch126`.
+- **2026-10-01, R1 = 4.4.1 (patch).** A failed statement records an `Error` response with the exception's message and
+  rethrows the same exception, in the command decorators of ClickHouse, Npgsql, MySqlConnector, Oracle, SqlClient,
+  Sqlite, Dapper and Spanner; EF Core's interceptor gained `CommandFailed` and `CommandFailedAsync`; the six transaction
+  wrappers that draw `COMMIT` and `ROLLBACK` log the request first and the failure with its error; Spanner's gRPC
+  interceptor gives a failed call status `Error` (F13). Spanner's failure path is an internal method, so the patch adds no
+  public surface. Proofs, each red on the unfixed code first: T1 as a six-path theory in each of the eight wrappers' test
+  projects (6 failures each, one record where two were expected), an EF Core theory over `ExecuteSqlRaw` and
+  `SqlQueryRaw`, sync and async, through a real SQLite provider (4 red), a commit-or-rollback theory in the six
+  transaction wrappers' projects (2 red each, two records where four were expected), and the Spanner interceptor's
+  failed-call fact turned round (it pinned the old null content). T1's real-server half runs in R2's lane (S1).
+  Kronikol4J's JDBC wrapper already recorded a failed statement's response, so its ledger entry records agreement.

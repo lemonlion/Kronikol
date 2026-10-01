@@ -70,15 +70,23 @@ public class FakeDbCommand : DbCommand
     public object? ScalarResult { get; set; } = 42;
     public DbDataReader? ReaderResult { get; set; }
 
-    protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => ReaderResult ?? new FakeDbDataReader();
+    /// <summary>When set, every Execute* fails with it, as a driver does for a statement the server rejects.</summary>
+    public Exception? ThrowOnExecute { get; set; }
+
+    protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+        => ThrowOnExecute is { } e ? throw e : ReaderResult ?? new FakeDbDataReader();
 
     protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
-        => Task.FromResult(ReaderResult ?? (DbDataReader)new FakeDbDataReader());
+        => ThrowOnExecute is { } e
+            ? Task.FromException<DbDataReader>(e)
+            : Task.FromResult(ReaderResult ?? (DbDataReader)new FakeDbDataReader());
 
-    public override int ExecuteNonQuery() => NonQueryResult;
-    public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken) => Task.FromResult(NonQueryResult);
-    public override object? ExecuteScalar() => ScalarResult;
-    public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken) => Task.FromResult(ScalarResult);
+    public override int ExecuteNonQuery() => ThrowOnExecute is { } e ? throw e : NonQueryResult;
+    public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
+        => ThrowOnExecute is { } e ? Task.FromException<int>(e) : Task.FromResult(NonQueryResult);
+    public override object? ExecuteScalar() => ThrowOnExecute is { } e ? throw e : ScalarResult;
+    public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
+        => ThrowOnExecute is { } e ? Task.FromException<object?>(e) : Task.FromResult(ScalarResult);
 
     public override void Prepare() { }
     public override void Cancel() { }

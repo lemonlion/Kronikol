@@ -150,7 +150,73 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         RequestResponseLogger.Log(log);
     }
 
+    // A command that fails still gets its response, with the error: without one the diagram shows a call that
+    // never answered, and the command stayed in _pendingIds for the life of the interceptor.
+    private void LogCommandFailed(DbCommand command, Exception exception)
+    {
+        if (!_pendingIds.TryRemove(command, out var ids))
+            return;
+
+        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+            return;
+
+        var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var sqlOp = SqlOperationClassifier.Classify(command.CommandText, command.CommandType);
+
+        var testInfo = GetTestInfo();
+        if (testInfo is null)
+            return;
+
+        var label = SqlOperationClassifier.GetDiagramLabel(sqlOp, effectiveVerbosity);
+
+        OneOf<HttpMethod, string> method = effectiveVerbosity == SqlTrackingVerbosity.Raw
+            ? SqlOperationClassifier.GetRawKeyword(command.CommandText) ?? "SQL"
+            : label!;
+
+        var content = effectiveVerbosity == SqlTrackingVerbosity.Summarised && !_options.LogResponseContent
+            ? null
+            : exception.Message;
+
+        var log = new RequestResponseLog(
+            testInfo.Value.Name,
+            testInfo.Value.Id,
+            method,
+            content,
+            BuildUri(command, sqlOp, effectiveVerbosity),
+            [],
+            _options.ServiceName,
+            _options.CallerName,
+            RequestResponseType.Response,
+            ids.TraceId,
+            ids.RequestResponseId,
+            false,
+            (OneOf<System.Net.HttpStatusCode, string>)"Error",
+            DependencyCategory: DependencyCategories.SQL
+        )
+        {
+            AttributionSource = testInfo.Value.Source,
+            Phase = TestPhaseContext.Current
+        };
+
+        log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
+            v => BuildResponseVariantWithContent(command, sqlOp, v, exception.Message));
+
+        RequestResponseLogger.Log(log);
+    }
+
     // ─── EF Core DbCommandInterceptor overrides ────────────────
+
+    public override void CommandFailed(DbCommand command, CommandErrorEventData eventData)
+    {
+        LogCommandFailed(command, eventData.Exception);
+        base.CommandFailed(command, eventData);
+    }
+
+    public override Task CommandFailedAsync(DbCommand command, CommandErrorEventData eventData, CancellationToken cancellationToken = default)
+    {
+        LogCommandFailed(command, eventData.Exception);
+        return base.CommandFailedAsync(command, eventData, cancellationToken);
+    }
 
     public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
     {

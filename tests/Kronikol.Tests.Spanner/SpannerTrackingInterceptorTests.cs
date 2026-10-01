@@ -545,7 +545,7 @@ public class SpannerTrackingInterceptorTests
     }
 
     [Fact]
-    public async Task UnaryCall_RpcException_LogsNullContent()
+    public async Task UnaryCall_RpcException_LogsAnErrorResponseWithTheCallsMessage()
     {
         var options = MakeOptions();
         var interceptor = CreateInterceptor(options);
@@ -568,12 +568,14 @@ public class SpannerTrackingInterceptorTests
                 () => new Metadata(),
                 () => { }));
 
-        await Assert.ThrowsAsync<RpcException>(() => call.ResponseAsync);
+        var thrown = await Assert.ThrowsAsync<RpcException>(() => call.ResponseAsync);
 
+        Assert.Same(rpcEx, thrown);
         var logs = GetLogs();
         var responseLog = logs.Last();
         Assert.Equal(RequestResponseType.Response, responseLog.Type);
-        Assert.Null(responseLog.Content);
+        Assert.Equal("Error", responseLog.StatusCode?.Value?.ToString());
+        Assert.Equal(rpcEx.Message, responseLog.Content);
     }
 
     [Fact]
