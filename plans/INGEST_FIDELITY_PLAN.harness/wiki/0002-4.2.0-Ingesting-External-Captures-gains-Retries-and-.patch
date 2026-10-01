@@ -1,0 +1,131 @@
+From 3ffa6ca43c8b3651c4f8958c5e1a2d96312a87d4 Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Thu, 1 Oct 2026 00:01:48 +0000
+Subject: [PATCH] 4.2.0: Ingesting External Captures gains Retries and source
+ locations (attempt, sourceFile, sourceLine on tests records, the last attempt
+ as the scenario with a retry label per earlier one and its calls left out,
+ --source-root) and says a step's error is its FailureMessage; Integration
+ Cucumber Messages maps step locations, failure messages and the earlier
+ attempts' calls; Generated Reports documents attempt and the scenario and
+ feature sourceFile, and widens the step sourceFile row
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01J2t3gYVNVyokonFWxDXKhy
+---
+ Generated-Reports.md             |  4 +++-
+ Ingesting-External-Captures.md   | 37 ++++++++++++++++++++++++++++++++
+ Integration-Cucumber-Messages.md |  7 +++---
+ 3 files changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/Generated-Reports.md b/Generated-Reports.md
+index eade0f7..297d1af 100644
+--- a/Generated-Reports.md
++++ b/Generated-Reports.md
+@@ -247,6 +247,8 @@ The top-level structure contains the test run time window and a list of features
+ | `annotations` | Diagram markers carrying information found nowhere else in the file: which row of a [tabular input](Tabular-Attributes) was in flight (`kind: "Row"`), and fragments injected with `DefaultTrackingDiagramOverride.InsertPlantUml` (`kind: "Custom"`). `index` is the position in `httpInteractions` the marker preceded. Step and assertion markers are deliberately absent — those are already structured in `steps`. |
+ | `backgroundSteps` | The scenario's background steps (3.0.48+), shaped exactly like `steps`. Kept as a sibling of `steps` rather than merged, preserving the `b{i}`/`{i}` split that `stepPath` addresses and interaction attribution use. Always present in JSON (an empty array when the scenario has none); the YAML and XML writers omit it when empty. Declared in both the JSON schema and the XSD. |
+ | `endedAt` | When the scenario finished, millisecond UTC, as the framework recorded it (3.17.0); `null` when the adapter did not record one. A call that inherited this scenario's identity after this instant is background, not the scenario's. |
++| `attempt` | Which run of the scenario produced its result when the runner retries, 1-based: 2 is the first retry. Set by the Cucumber Messages lane and, from 4.2.0, by a tests NDJSON's `attempt` or its repeated `start` records ([Ingesting-External-Captures](Ingesting-External-Captures#retries-and-source-locations-420)); `null` where the runner reports nothing about attempts. |
++| `sourceFile`, `sourceLine` (scenario and feature) | Where the scenario is written: a project-relative path with forward slashes and the declaration's line. From the Gherkin document on the BDD lanes and, from 4.2.0, from a tests NDJSON `start` record's `sourceFile` and `sourceLine`; the feature's is the first one seen. `null` on the unit-test adapters. |
+ 
+ #### Interaction fields
+ 
+@@ -271,7 +273,7 @@ Everything the sequence diagram knows about a call travels with it in the data f
+ | Field | Description |
+ |---|---|
+ | `failureMessage` | Why the step or assertion failed. Present on both the standard and mergeable files regardless of `TestRunReportFullStepDetail` — the smaller file exists to save payload bytes, not to withhold why a test failed. |
+-| `sourceFile`, `sourceLine` | Where a tracked assertion lives, when the caller supplied it. See [Assertion-Tracking](Assertion-Tracking). |
++| `sourceFile`, `sourceLine` | Where a tracked assertion lives, when the caller supplied it (see [Assertion-Tracking](Assertion-Tracking)); from 4.2.0 also an ingested `step` or `assertion` record's call site, and a Gherkin step's line in its feature file. File name only. |
+ | `parameters`, `textSegments` | The step's inputs: inline values, data tables with columns and rows, tree values. Present unless [`TestRunReportFullStepDetail`](Report-Configuration) is turned off. |
+ | `docString`, `docStringMediaType`, `comments`, `bypassReason` | The rest of the step's Gherkin detail. |
+ 
+diff --git a/Ingesting-External-Captures.md b/Ingesting-External-Captures.md
+index 277d633..2cdfd5a 100644
+--- a/Ingesting-External-Captures.md
++++ b/Ingesting-External-Captures.md
+@@ -145,12 +145,48 @@ emits only `event`/`testId`/`text` still works exactly as before.
+ 
+ **`end`** gains `stackTrace` → `Scenario.ErrorStackTrace`.
+ 
++A `step`'s `error`, and a failed `assertion`'s, is also the step's `FailureMessage` (4.2.0), which `Failures.md`
++prints under the failing step and the data files carry; the comments the HTML renders are unchanged. Before
++4.2.0 an ingested failing step appeared in the digest with no reason under it.
++
+ ```json
+ {"event":"start","testId":"…","testName":"Overview renders for pro","feature":"overview.feature","featureDescription":"The overview summarises the account.","description":"A returning customer opens the overview.","rule":"Only signed-in customers see figures","tags":["@gemma","@category:smoke"],"outlineId":"Overview renders for <plan>","exampleValues":{"plan":"pro"},"examplesBlockName":"paying plans","examplesBlockIndex":0,"timestamp":"2026-08-22T10:00:00Z"}
+ {"event":"step","testId":"…","keyword":"Given","keywordType":"Context","background":true,"text":"the account exists","timestamp":"2026-08-22T10:00:00.2Z"}
+ {"event":"step","testId":"…","keyword":"When","keywordType":"Action","text":"these customers are seeded","table":[["name","plan"],["ada","pro"]],"durationMs":900,"timestamp":"2026-08-22T10:00:01Z"}
+ ```
+ 
++### Retries and source locations (4.2.0)
++
++Three optional fields, the ones a runner knows and the report model always had room for:
++
++| Field | On | Meaning |
++|---|---|---|
++| `attempt` | `start` (and optionally `end`, `step`, `assertion`) | Which run of the test this is, 1-based: 1 for the first run, 2 for the first retry, as the runner's own retries count it within one run (Jest's `retryTimes`, Playwright's `retries`). → `Scenario.Attempt`, which history reads as "passed on retry N" (Flaky) and CTRF as `retries`. A record other than a `start` that carries it belongs to that attempt, whatever its timestamp. |
++| `sourceFile` | `start` | The file the test is written in → `Scenario.SourceFile` (`Failures.md`'s "written at", CTRF's `filePath`, `kronikol query failures`), and the feature's source file when it has none yet (the first one seen wins). |
++| `sourceFile` | `step`, `assertion` | The call site's file → the step's `SourceFile`, of which the report keeps the file name (the step contract): `Failures.md` prints it beside a failing step. |
++| `sourceLine` | `start`, `step`, `assertion` | The test's declaration line, or the call site's line. 1-based. |
++
++**Retries.** Keep one `testId` per test across its retries, as the runners do, and write a `start` per attempt.
++The report shows the **last attempt**, the rule the [Cucumber Messages](#cucumber-messages) lane has always
++had: its verdict, error, duration, steps and attachments, `Scenario.Attempt` set, and a `retry N` label for
++each earlier attempt (N being that attempt's number). The earlier attempts' calls, every call of the test made
++before its last attempt started, are left out, and one diagnostic counts them. A second `start` without
++`attempt` is read as the next attempt, and a diagnostic says how many tests were read that way. Before 4.2.0 a
++retried test was one scenario holding both attempts' steps and calls, which kept the failed attempt's error
++under a passed verdict; a producer that gave each attempt its own `testId` got two scenarios, one failed, and a
++run that read as failed although the retry passed. Two ids for one test are still two scenarios: write one.
++
++**Paths.** `\` and `/` are both accepted, and a leading `./` or a `file://` scheme is dropped. An absolute path
++under `--source-root` (`IngestRequest.SourceRoot`; default: the directory the command runs in, which in CI is
++the checkout) is written relative to it. One outside it is kept as written, and a diagnostic counts them: a
++build machine's paths do not belong in a downloadable report. The root is a prefix, not a directory the
++ingesting machine must have, so a Windows runner's `D:\a\repo\repo` can be named on Linux.
++
++```json
++{"event":"start","testId":"…","testName":"charges a card","feature":"charge","sourceFile":"src/charge.test.ts","sourceLine":12,"attempt":2,"timestamp":"2026-09-30T10:00:03Z"}
++{"event":"step","testId":"…","text":"the card is charged","status":"failed","error":"expected 201, received 502","sourceFile":"src/charge.test.ts","sourceLine":18,"timestamp":"2026-09-30T10:00:04Z"}
++```
++
+ ### Attachments (`event: "attachment"`)
+ 
+ Screenshots, traces, videos and links a runner produced, carried into the report as scenario- or
+@@ -225,6 +261,7 @@ kronikol ingest ./captures --tests ./captures/tests.ndjson -o ./Reports -t "E2E
+ | `--phase-from-steps` | off | Give interactions the phase of the `Given`/`When`/`Then` step they happened during: each call's `phase` in the data files and for `kronikol query`. It draws nothing; the Setup partition is `--separate-setup`'s (before 4.1.0 this row said otherwise, and it never drew one) — see [Phases from steps](#phases-from-steps). |
+ | `--separate-setup` | off | Draw each test's setup calls inside a `Setup` partition, as an in-process run with `SeparateSetup` does: the calls before its first `When`/`Then` step that follows a `Given` step, else before its first call phased `Action` that follows one phased `Setup`. A capture's own boundary wins. Sets `ReportConfigurationOptions.SeparateSetup` (4.1.0+) — see [The Setup partition](#the-setup-partition-410). |
+ | `--attachments-base <dir>` | cwd | Resolve relative `attachment` paths against this directory. |
++| `--source-root <dir>` | cwd | Write a tests record's absolute `sourceFile` relative to this directory; one outside it is kept and counted (4.2.0+) — see [Retries and source locations](#retries-and-source-locations-420). |
+ | `--clean-attachments` | off | Empty the report's `attachments/` folder first, so it holds exactly this run's artefacts. |
+ | `--cucumber-messages <file>` | — | A Cucumber Messages NDJSON (repeatable) — the Gherkin structure of a BDD run. Wins over `--tests` for the scenarios it owns; see [Cucumber Messages](#cucumber-messages). |
+ | `--include-hooks` | off | Keep the Cucumber hook steps (`BeforeEach hook`, …) in the step list. |
+diff --git a/Integration-Cucumber-Messages.md b/Integration-Cucumber-Messages.md
+index 7842cec..c1e09ea 100644
+--- a/Integration-Cucumber-Messages.md
++++ b/Integration-Cucumber-Messages.md
+@@ -47,17 +47,18 @@ underneath it.
+ | `Pickle.astNodeIds` → outline + example row | `Scenario.OutlineId`, `ExampleValues`, `ExampleRawValues` |
+ | `Pickle.tags` | `Scenario.Labels` / `Categories` / `IsHappyPath` / `Feature.Endpoint` |
+ | Gherkin step `keyword` (`Given `, `And `, `But `…) | `ScenarioStep.Keyword` (as authored) |
+-| `PickleStep.type` (`Context`/`Action`/`Outcome`) | the phase an `And` inherits — used for phase attribution |
++| `PickleStep.type` (`Context`/`Action`/`Outcome`) | the step's phase, in any Gherkin language (an `And` carries the type it continues) — used for phase attribution and `--separate-setup`'s boundary (4.1.0+; before, only an English keyword got a phase) |
+ | `PickleStep.text` (placeholders expanded) | `ScenarioStep.Text` (+ `TextSegments` highlighting the substituted values) |
+ | step `dataTable` | a tabular `StepParameter` named `table`, and (v3.0.78+) a table drawn inside the step's delimiter bar. The pickle step's `argument.dataTable` — an outline row's placeholders already substituted — is preferred over the authored Gherkin table; older streams without it fall back to the authored one. |
+ | step `docString` | `ScenarioStep.DocString` / `DocStringMediaType`, and (v3.0.78+) lines inside the delimiter bar. `argument.docString` (substituted) preferred, authored fallback. |
+ | `TestStepFinished.testStepResult.status` | `ScenarioStep.Status` — see the table below |
+ | `…​.duration` | `ScenarioStep.Duration` |
+-| `…​.exception.message` / `.stackTrace` | step `Comments` + `Scenario.ErrorMessage` / `ErrorStackTrace` |
++| `…​.exception.message` / `.stackTrace` | step `Comments` + `Scenario.ErrorMessage` / `ErrorStackTrace`, and a failed step's `FailureMessage`, which `Failures.md` prints under it (4.2.0+) |
++| Gherkin step `location` | `ScenarioStep.SourceFile` (the feature file's name) and `SourceLine` (4.2.0+; parsed and dropped before) |
+ | `TestStepStarted.timestamp` | the `<<stepDelimiter>>` bar in the sequence diagram |
+ | hook test steps | dropped, or sub-steps named by the hook with `--include-hooks` |
+ | `Attachment` | `Scenario.Attachments` / `ScenarioStep.Attachments` |
+-| `TestCaseStarted.attempt` | retries — last attempt wins, earlier ones leave a `retry N` label |
++| `TestCaseStarted.attempt` | retries — last attempt wins (`Scenario.Attempt`), earlier ones leave a `retry N` label. From 4.2.0 an earlier attempt's calls are left out of the scenario and counted in a diagnostic: the `kronikol-test-id` stays the same across a test's retries, so before 4.2.0 they joined the scenario the last attempt built. An earlier attempt that minted an id of its own is left out by that id, where before its reporter records and calls made a scenario of their own |
+ | `TestRunStarted` / `TestRunFinished` | the run window in the report header |
+ 
+ Statuses map as `PASSED → Passed`, `SKIPPED`/`PENDING → Skipped`, `FAILED`/`UNDEFINED`/`AMBIGUOUS → Failed`.
+-- 
+2.43.0
+

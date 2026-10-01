@@ -57,8 +57,9 @@ public record Scenario
 
     /// <summary>
     /// Which run of this scenario produced the result, when the runner retries: 1 for the first, 2 for
-    /// the first retry. Null where the runner reports nothing about attempts, which is every lane but
-    /// Cucumber Messages today. <b>1-based deliberately</b>, matching the <c>retry N</c> label rendered
+    /// the first retry. Null where the runner reports nothing about attempts: every in-process lane today;
+    /// the ingest lanes set it from Cucumber Messages and from a tests NDJSON's <c>attempt</c> or its
+    /// repeated <c>start</c> records. <b>1-based deliberately</b>, matching the <c>retry N</c> label rendered
     /// beside it - Cucumber's own wire value is 0-based, and a field that disagreed with the label on
     /// the same scenario would be worse than no field.
     /// </summary>
@@ -93,7 +94,8 @@ public record Scenario
     /// <see cref="Feature.SourceFile"/>. Null on the lanes that cannot supply one. Deliberately NOT the
     /// bare-file-name contract of <see cref="ScenarioStep.SourceFile"/>: a step's path comes from
     /// <c>[CallerFilePath]</c> on the build machine and is reduced to a name, a scenario's comes from the
-    /// Gherkin document and is already relative.
+    /// Gherkin document and is already relative, or from a tests NDJSON's <c>sourceFile</c>, made relative
+    /// to <c>IngestRequest.SourceRoot</c>.
     /// </summary>
     public string? SourceFile { get; set; }
 

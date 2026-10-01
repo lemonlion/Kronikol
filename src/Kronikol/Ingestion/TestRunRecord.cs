@@ -153,6 +153,32 @@ public sealed record TestRunRecord
     /// <summary><c>attachment</c> only: the 0-based index of the top-level step the artefact belongs to. Absent = the scenario itself.</summary>
     [JsonPropertyName("step")] public int? Step { get; init; }
 
+    /// <summary>
+    /// <c>start</c> (and optionally <c>end</c>, <c>step</c>, <c>assertion</c>): which run of the test this is, 1-based —
+    /// 1 for the first run, 2 for the first retry — as the runner's own retries count it within one run (Jest's
+    /// <c>retryTimes</c>, Playwright's <c>retries</c>). Every <c>start</c> of one test id opens an attempt; the report shows
+    /// the last one, with a <c>retry N</c> label for each earlier one, and <see cref="Kronikol.Reports.Scenario.Attempt"/>
+    /// set, which history reads as "passed on retry" and CTRF as its <c>retries</c>. A second <c>start</c> without it is
+    /// read as the next attempt, and a diagnostic says so. A record other than a <c>start</c> that carries it belongs to
+    /// that attempt, whatever its timestamp. Not a CI re-run of the job: that is the history run id.
+    /// </summary>
+    [JsonPropertyName("attempt")] public int? Attempt { get; init; }
+
+    /// <summary>
+    /// <c>start</c>: the file the test is written in, which the report shows as the scenario's source (<c>Failures.md</c>'s
+    /// "written at", CTRF's <c>filePath</c>, the feature's source file when it has none yet). <c>step</c> and
+    /// <c>assertion</c>: the file of the call site, of which the report keeps the file name. A path relative to the
+    /// repository, with <c>/</c> or <c>\</c>; an absolute path under <see cref="IngestRequest.SourceRoot"/> is made
+    /// relative to it, and one outside it is kept as written, with a diagnostic.
+    /// </summary>
+    [JsonPropertyName("sourceFile")] public string? SourceFile { get; init; }
+
+    /// <summary>
+    /// <c>start</c>: the line the test is declared on; <c>step</c> and <c>assertion</c>: the call site's line. 1-based, in
+    /// <see cref="SourceFile"/>.
+    /// </summary>
+    [JsonPropertyName("sourceLine")] public int? SourceLine { get; init; }
+
     /// <summary>Event names (<see cref="Event"/>).</summary>
     public static class Events
     {

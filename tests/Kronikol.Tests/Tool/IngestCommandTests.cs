@@ -236,6 +236,56 @@ public class IngestCommandTests : IDisposable
     }
 
     /// <summary>
+    /// <c>--source-root</c> (plans/INGEST_FIDELITY_PLAN.md T9): a tests record's absolute <c>sourceFile</c> under it is
+    /// written relative to it, so the report carries the repository's path and not the runner's; the default is the
+    /// directory the command runs in. The root is a prefix, not a directory this machine must have: a Windows runner's
+    /// paths ingest on Linux.
+    /// </summary>
+    [Fact]
+    public void Source_root_option_is_validated_and_makes_source_paths_relative()
+    {
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--source-root"], new StringWriter(), new StringWriter()));
+
+        const string testId = "50c7e2a1b3d4f5a6978877665544332a";
+        var checkout = Path.Combine(_dir, "checkout");
+        var captures = Path.Combine(_dir, "captures-source-root");
+        Directory.CreateDirectory(captures);
+        Directory.CreateDirectory(checkout);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/health", "web", "web",
+            responseContent: "{\"ok\":true}", statusCode: "200", requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › sources", SourceFile = Path.Combine(checkout, "tests", "health.test.ts"), SourceLine = 7, Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        var output = Path.Combine(_dir, "out-source-root");
+
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", output, "--source-root", checkout], new StringWriter(), new StringWriter()));
+
+        using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
+        Assert.Equal("tests/health.test.ts", scenario.GetProperty("sourceFile").GetString());
+        Assert.Equal(7, scenario.GetProperty("sourceLine").GetInt32());
+
+        // A Windows runner's root, named on whichever machine ingests.
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › sources", SourceFile = @"D:\a\repo\repo\tests\health.test.ts", SourceLine = 7, Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        var windows = Path.Combine(_dir, "out-source-root-windows");
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", windows, "--source-root", @"D:\a\repo\repo"], new StringWriter(), new StringWriter()));
+        using var fromWindows = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(windows, "TestRunReport.json")));
+        Assert.Equal("tests/health.test.ts", fromWindows.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("sourceFile").GetString());
+
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("--source-root <dir>", usage.ToString());
+    }
+
+    /// <summary>
     /// <c>--payloads compressed</c> writes a large body compressed in place (#85, <c>CompressTestRunReportPayloads</c>);
     /// without the flag ingest writes what the library writes by default. Ingest takes a curated set of flags, so
     /// without this one an ingested report could not have them.

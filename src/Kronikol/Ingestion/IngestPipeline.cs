@@ -207,6 +207,14 @@ public sealed class IngestRequest
     public string? AttachmentsBase { get; init; }
 
     /// <summary>
+    /// The directory a tests record's absolute <see cref="TestRunRecord.SourceFile"/> is made relative to, so a
+    /// build machine's paths stay out of the report. Default: the current directory, which in CI is the checkout. An
+    /// absolute path outside it is kept as written, and a diagnostic counts them. Relative paths are taken as relative
+    /// to the repository already; backslashes become <c>/</c> either way.
+    /// </summary>
+    public string? SourceRoot { get; init; }
+
+    /// <summary>
     /// Empty the report's <c>attachments/</c> folder before generating, so it holds exactly this run's
     /// artefacts. Default <c>false</c> — nothing has ever removed stale copies, and a host that renders
     /// several runs into one folder relies on that.
@@ -329,7 +337,7 @@ public static class IngestPipeline
         diagnostics.AddRange(request.HostDiagnostics);
 
         var records = ReadInteractions(request, diagnostics);
-        var testRecords = ReadTestRecords(request, diagnostics);
+        var testRecords = NormaliseSources(ReadTestRecords(request, diagnostics), request.SourceRoot, diagnostics);
 
         // Cucumber Messages (playwright-bdd's cucumberReporter('message') and friends): synthesised into the
         // same start/step/end records the tests file uses, so the Gherkin steps travel the existing marker,
@@ -338,33 +346,58 @@ public static class IngestPipeline
         var cucumber = request.CucumberMessagesFiles.Count == 0 ? null
             : CucumberFeatureSynthesizer.BuildFromFiles(request.CucumberMessagesFiles,
                 new CucumberSynthesisOptions { IncludeHooks = request.IncludeHooks, DefaultFeatureName = request.DefaultFeatureName });
+        var earlierAttemptRecords = 0;
         if (cucumber is not null)
         {
             testRecords.RemoveAll(r => CucumberFeatureMerger.IsReplacedStep(r, cucumber));
             testRecords.AddRange(cucumber.Markers);
+            // An attempt that minted a test id of its own is not the scenario the messages built: its reporter records
+            // and its calls would make a scenario of their own, failed, of a test that passed on its retry.
+            if (cucumber.EarlierAttemptTestIds.Count > 0)
+            {
+                testRecords.RemoveAll(r => cucumber.EarlierAttemptTestIds.Contains(r.TestId));
+                earlierAttemptRecords += records.RemoveAll(r => cucumber.EarlierAttemptTestIds.Contains(r.TestId));
+            }
         }
 
+        // Every start of a test opens an attempt, and the report shows the last. For a scenario the messages own, only
+        // the messages' starts count, one per attempt: the reporter writes its own for the same attempts.
+        var cucumberStarts = cucumber is null ? null : new HashSet<TestRunRecord>(cucumber.Markers, ReferenceEqualityComparer.Instance);
+        var attempts = TestAttempts.Of(testRecords, cucumberStarts is null ? null
+            : start => !cucumber!.TestNames.ContainsKey(start.TestId) || cucumberStarts.Contains(start));
+        if (attempts.InferredRetries > 0)
+            diagnostics.Add(DiagnosticKind.Other,
+                $"{attempts.InferredRetries} test(s) had more than one start without an attempt number; each start after a test's first "
+                + "was read as a retry, and the report shows the test's last attempt with a retry label for each earlier one. "
+                + "Write attempt on start records to say which run each is.");
+        var current = attempts.Current(testRecords);
+
         records = DropOutsideRunWindow(records, testRecords, request, diagnostics);
-        records = Attribute(records, testRecords, request, diagnostics);
-        AddDiagramMarkers(records, testRecords);
+        records = Attribute(records, testRecords, current, request, diagnostics);
+        records = DropEarlierAttempts(records, attempts, ref earlierAttemptRecords);
+        if (earlierAttemptRecords > 0)
+            diagnostics.Add(DiagnosticKind.Other,
+                $"{earlierAttemptRecords} interaction record(s) of earlier attempts of retried tests left out: a retried test's "
+                + "scenario shows its last attempt, with a retry label for each earlier one.");
+        AddDiagramMarkers(records, current);
         if (options.SeparateSetup)
-            AddSetupBoundaries(records, testRecords);
+            AddSetupBoundaries(records, current);
 
         var reportsDirectory = ReportGenerator.ResolveReportsDirectory(options);
 
         if (request.ClearExistingLogs)
             RequestResponseLogger.Clear();
 
-        var ordered = Order(records, testRecords, request);
-        var logs = Replay(ordered, testRecords);
+        var ordered = Order(records, current, request);
+        var logs = Replay(ordered, current);
 
         var synthesised = FeatureSynthesizer.Build(
-            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, request.AttachmentsBase);
+            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, request.AttachmentsBase, attempts);
         if (cucumber is not null)
         {
             // Messages win for structure (feature/rule/background/outline/tags/tables/doc strings);
             // the tests file still contributes assertions, attachments and the identity join.
-            synthesised = CucumberFeatureMerger.Merge(cucumber, synthesised, testRecords);
+            synthesised = CucumberFeatureMerger.Merge(cucumber, synthesised, current);
         }
 
         if (request.FoldUnknownTestsInto is { } foldedInto)
@@ -581,7 +614,8 @@ public static class IngestPipeline
     /// say which twin is whose, and the merger pairs records that agree on their test first.
     /// </remarks>
     private static List<InteractionRecord> Attribute(
-        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
+        List<InteractionRecord> records, List<TestRunRecord> testRecords, List<TestRunRecord> currentAttempts,
+        IngestRequest request, ReportDiagnosticsCollector diagnostics)
     {
         if (request.AttributeByClaims)
         {
@@ -620,7 +654,9 @@ public static class IngestPipeline
 
         if (request.PhaseFromSteps)
         {
-            var stepWindows = IngestAttribution.BuildStepWindows(testRecords);
+            // A retried test's phases come from the attempt the report shows: an earlier attempt's last step would carry
+            // its phase into the next attempt's first And.
+            var stepWindows = IngestAttribution.BuildStepWindows(currentAttempts);
             var (phasedRecords, tagged) = IngestAttribution.ApplyPhaseFromSteps(records, stepWindows);
             records = phasedRecords;
             if (tagged > 0)
@@ -637,6 +673,72 @@ public static class IngestPipeline
             diagnostics.Add(DiagnosticKind.UnattributedInteractions, $"{stillUnattributed} interaction record(s) could not be attributed to a test.");
 
         return records;
+    }
+
+    /// <summary>
+    /// Leaves out the calls of a retried test's earlier attempts: every record of the test whose call began before the
+    /// test's last attempt started. A pair is judged on its earliest timestamp, as the run window judges it, so a late
+    /// response to an earlier attempt's request goes with it. Records without a timestamp stay.
+    /// </summary>
+    private static List<InteractionRecord> DropEarlierAttempts(List<InteractionRecord> records, TestAttempts attempts, ref int dropped)
+    {
+        var pairStart = new Dictionary<string, DateTimeOffset>(StringComparer.Ordinal);
+        foreach (var record in records)
+        {
+            if (record.RequestResponseId is { Length: > 0 } id && record.Timestamp is { } ts
+                && (!pairStart.TryGetValue(id, out var known) || ts < known))
+                pairStart[id] = ts;
+        }
+
+        var kept = new List<InteractionRecord>(records.Count);
+        foreach (var record in records)
+        {
+            var at = record.RequestResponseId is { Length: > 0 } id && pairStart.TryGetValue(id, out var ps) ? ps : record.Timestamp;
+            if (at is { } when && !string.IsNullOrWhiteSpace(record.TestId)
+                && attempts.LastAttemptStart(record.TestId) is { } lastStarted && when < lastStarted)
+            {
+                dropped++;
+                continue;
+            }
+
+            kept.Add(record);
+        }
+
+        return kept;
+    }
+
+    /// <summary>
+    /// The tests records' source paths as the report holds them (<see cref="IngestRequest.SourceRoot"/>): normalised, and
+    /// relative to the source root when under it. Absolute paths outside it are kept, and one diagnostic counts them.
+    /// </summary>
+    private static List<TestRunRecord> NormaliseSources(List<TestRunRecord> testRecords, string? sourceRoot, ReportDiagnosticsCollector diagnostics)
+    {
+        if (!testRecords.Any(r => r.SourceFile is not null))
+            return testRecords;
+
+        var root = SourcePaths.ResolveRoot(sourceRoot);
+        var outside = new HashSet<string>(StringComparer.Ordinal);
+        var result = new List<TestRunRecord>(testRecords.Count);
+        foreach (var record in testRecords)
+        {
+            if (record.SourceFile is null)
+            {
+                result.Add(record);
+                continue;
+            }
+
+            var path = SourcePaths.UnderRoot(SourcePaths.Normalise(record.SourceFile), root, out var isOutside);
+            if (isOutside)
+                outside.Add(path!);
+            result.Add(record with { SourceFile = path });
+        }
+
+        if (outside.Count > 0)
+            diagnostics.Add(DiagnosticKind.Other,
+                $"{outside.Count} source path(s) are absolute and outside the source root ({root}), and were kept as written, "
+                + $"so the report carries a build machine's paths (e.g. {outside.First()}). Pass --source-root (IngestRequest.SourceRoot) "
+                + "or write sourceFile relative to the repository.");
+        return result;
     }
 
     /// <summary>

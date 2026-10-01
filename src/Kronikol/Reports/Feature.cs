@@ -13,7 +13,9 @@ public record Feature
 
     /// <summary>
     /// Where the feature is written, as the runner reports it: a project-relative path with forward
-    /// slashes on the Gherkin lanes (<c>Features/Cake.feature</c>), null everywhere else. Not the same
+    /// slashes on the Gherkin lanes (<c>Features/Cake.feature</c>) and, from 4.2.0, on the tests NDJSON
+    /// lane, the first <c>sourceFile</c> one of its scenarios' <c>start</c> records gives; null everywhere
+    /// else. Not the same
     /// contract as <see cref="ScenarioStep.SourceFile"/>, which is deliberately a bare file name.
     /// <para>Features are grouped by display name throughout Kronikol, so two feature files sharing a
     /// <c>Feature:</c> title become one feature here and the first path seen wins.</para>

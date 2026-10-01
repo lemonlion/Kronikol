@@ -52,6 +52,8 @@ internal static class IngestCommand
         var phaseFromSteps = false;
         var separateSetup = false;
         string? attachmentsBase = null;
+        // Null: the directory the command runs in, which in CI is the checkout.
+        string? sourceRoot = null;
         var cleanAttachments = false;
         var hostDiagnostics = new List<DiagnosticEntry>();
 
@@ -227,6 +229,10 @@ internal static class IngestCommand
                 case "--clean-attachments":
                     cleanAttachments = true;
                     break;
+                case "--source-root":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    sourceRoot = args[i];
+                    break;
                 case "--diagnostic":
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     if (!TryParseDiagnostic(args[i], out var diagnostic))
@@ -356,6 +362,7 @@ internal static class IngestCommand
                 RunEndedAt = runEnd,
                 PhaseFromSteps = phaseFromSteps,
                 AttachmentsBase = attachmentsBase is null ? null : Path.GetFullPath(attachmentsBase),
+                SourceRoot = sourceRoot,
                 CleanAttachments = cleanAttachments,
                 HostDiagnostics = hostDiagnostics,
             });
@@ -573,6 +580,8 @@ internal static class IngestCommand
         w.WriteLine("                           first When/Then step that follows a Given step, else before its first call");
         w.WriteLine("                           phased Action that follows one phased Setup. A capture's own boundary wins.");
         w.WriteLine("  --attachments-base <dir> Resolve relative attachment paths in --tests against this directory.");
+        w.WriteLine("  --source-root <dir>      Write a tests record's absolute sourceFile relative to this directory (default: the");
+        w.WriteLine("                           current directory, which in CI is the checkout); one outside it is kept and counted.");
         w.WriteLine("  --clean-attachments      Empty the report's attachments/ folder first, so it holds this run only.");
         w.WriteLine("  --diagnostic <kind>:<msg> Carry a host diagnostic into the report (repeatable) — e.g. a tap's capture");
         w.WriteLine("                           health: \"CaptureDegraded:tap-di-redis: decoding disabled on 1 connection\".");

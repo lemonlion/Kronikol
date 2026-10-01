@@ -4,6 +4,64 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.2.0] - 2026-10-01
+
+**Minor - retries and source locations on the tests NDJSON, and a retried test reported as its last attempt.**
+`plans/INGEST_FIDELITY_PLAN.md` R2 (S3, roadmap 1d.2). New record members (`attempt`, `sourceFile`, `sourceLine`), a
+new request member (`IngestRequest.SourceRoot`), a new flag (`--source-root`) and a new result member
+(`CucumberSynthesisResult.EarlierAttemptTestIds`) are new public surface, so the minor moves. The retry rule is also a
+fix that changes output for every producer that writes two `start` records for one test, which today is every
+producer that retries: such a test was one passed scenario holding both attempts' steps and calls and the failed
+attempt's error. The schema's description of `Feature.sourceFile` changes, so a Kronikol4J ledger entry follows the
+release. The history action's `VERSION` installs `Kronikol.Tool` 4.2.0. Template pins stay at 4.0.2: 4.1.0 is not on
+NuGet yet, because the session that made it could not push its tag, and the template build restores the pinned
+version.
+
+### Added
+
+- **`attempt`, `sourceFile` and `sourceLine` on tests records.** `attempt` on a `start` says which run of the test it
+  is, 1-based, as the runner's own retries count it; it becomes `Scenario.Attempt`, which history reads as "passed on
+  retry N" (Flaky) and CTRF as `retries`. A record other than a `start` that carries it belongs to that attempt.
+  `sourceFile` and `sourceLine` on a `start` are where the test is written: `Scenario.SourceFile` and `SourceLine`,
+  `Failures.md`'s "written at", CTRF's `filePath` and `line`, `kronikol query failures`, and the feature's
+  `SourceFile` when it has none yet. On a `step` or `assertion` they are the call site, of which the step keeps the
+  file name.
+- **`kronikol ingest --source-root <dir>`** (`IngestRequest.SourceRoot`): an absolute `sourceFile` under it is written
+  relative to it; the default is the directory the command runs in, which in CI is the checkout. An absolute path
+  outside it is kept as written, and a diagnostic counts them. `\` and `/`, a leading `./` and a `file://` scheme are
+  all accepted. The root is a prefix, not a directory the ingesting machine must have.
+- **The Cucumber Messages lane maps each Gherkin step's location** (#76, on the ingest lane): the step's `SourceFile`
+  is its feature file's name and its `SourceLine` its own line. The lane parsed it and dropped it.
+
+### Fixed
+
+- **A retried test is reported as its last attempt.** Every `start` of a test id opens an attempt, and the scenario
+  is the last one: its verdict, error, duration, steps and attachments, with `Scenario.Attempt` and a `retry N` label
+  for each earlier attempt, the rule the Cucumber lane has always had. The calls of the test made before its last
+  attempt started are left out, and a diagnostic counts them. A second `start` without `attempt` is read as the next
+  attempt, and a diagnostic says how many tests were read that way. Measured on 4.1.0 (the plan's P3): one test id, a
+  failed attempt then a passing one, gave one passed scenario with `errorMessage` "expected SETTLED, received PENDING",
+  both attempts' steps and four calls, and `Failures.md` read `# No failures`; it now gives the second attempt's step,
+  its two calls, no error, `attempt: 2` and a `retry 1` label, and history calls it Flaky. A producer that gave each
+  attempt its own id still gets two scenarios.
+- **A retried Cucumber scenario draws only its last attempt's calls.** Its attempts share one `kronikol-test-id`, so the
+  first attempt's calls joined the scenario the last attempt built. The lane now writes a `start` per attempt and the
+  pipeline leaves the earlier attempts' calls out. The reporter's own `start` records for a scenario the messages own
+  are not attempts of their own. An earlier attempt that minted an id of its own
+  (`CucumberSynthesisResult.EarlierAttemptTestIds`) is left out by that id: its reporter records and calls had made a
+  second scenario, failed, so the run read as failed although the retry passed.
+- **An ingested failing step says why in `Failures.md`.** A `step`'s `error`, a failed `assertion`'s, and a failed
+  Gherkin step's message are also the step's `FailureMessage`, which the digest prints under the failing step and the
+  data files carry. They reached only the step's comments, which the HTML renders and the digest does not read. The
+  comments are unchanged.
+- `--phase-from-steps` takes a retried test's phases from the attempt the report shows, where an earlier attempt's
+  last step could carry its phase into the next attempt's first `And`.
+
+### Changed
+
+- The schema's `Feature.sourceFile` description says a tests NDJSON can supply it, and `ScenarioStep.SourceLine` is
+  documented as null, not zero, when unknown, which is what every writer stores.
+
 ## [4.1.0] - 2026-09-30
 
 **Minor - `kronikol ingest --separate-setup`, and an ingested test's Setup/Action boundary.**

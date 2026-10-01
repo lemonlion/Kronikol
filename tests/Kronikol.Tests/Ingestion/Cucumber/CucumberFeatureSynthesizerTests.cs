@@ -217,6 +217,24 @@ public class CucumberFeatureSynthesizerTests
         Assert.Contains("Deliberate failure: the widget did not appear", Assert.Single(scenario.Steps![1].Comments!));
     }
 
+    [Fact]
+    public void Each_gherkin_step_carries_its_feature_file_name_and_line_and_a_failed_one_its_failure_message()
+    {
+        // plans/INGEST_FIDELITY_PLAN.md T11 (#76 on the ingest lane): the lane parsed each step's location and never
+        // mapped it, and put a failure only into the comments, which the digest does not read.
+        var simple = Scenario(CucumberFixtures.DemoFeature, CucumberFixtures.SimpleScenario);
+        Assert.Equal([15, 16, 17, 18, 19], simple.Steps!.Select(s => s.SourceLine ?? 0));
+        Assert.All(simple.Steps!, s => Assert.Equal("kronikol-demo.feature", s.SourceFile));
+        var background = Assert.Single(simple.BackgroundSteps!);
+        Assert.Equal(("kronikol-demo.feature", 8), (background.SourceFile, background.SourceLine));
+        Assert.All(simple.Steps!, s => Assert.Null(s.FailureMessage));
+
+        var failing = Scenario(CucumberFixtures.DemoFeature, CucumberFixtures.FailingScenario);
+        Assert.Equal(38, failing.Steps![1].SourceLine);
+        Assert.Contains("Deliberate failure: the widget did not appear", failing.Steps[1].FailureMessage);
+        Assert.Null(failing.Steps[2].FailureMessage); // skipped after the failure
+    }
+
     [Theory]
     [InlineData("PASSED", ExecutionResult.Passed)]
     [InlineData("FAILED", ExecutionResult.Failed)]

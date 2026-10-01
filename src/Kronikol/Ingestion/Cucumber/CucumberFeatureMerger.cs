@@ -213,6 +213,10 @@ public static class CucumberFeatureMerger
             Status = passed ? ExecutionResult.Passed : ExecutionResult.Failed,
             Comments = passed || string.IsNullOrWhiteSpace(record.Error) ? null : [record.Error!],
             Duration = record.DurationMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null,
+            // As the tests lane builds an assertion: what Failures.md prints, and where it was written.
+            FailureMessage = passed || string.IsNullOrWhiteSpace(record.Error) ? null : record.Error,
+            SourceFile = SourcePaths.FileName(record.SourceFile),
+            SourceLine = record.SourceLine,
         };
     }
 

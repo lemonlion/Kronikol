@@ -674,7 +674,11 @@ structure for free, but a plain JUnit reporter reaches the same fidelity through
    When/Then (Action/Outcome) → `Action`, And/But/Conjunction inherit, for the data files and `kronikol query`.
    It draws nothing: the Setup partition is `--separate-setup`'s (.NET 4.1.0, `INGEST_FIDELITY_PLAN.md` S4),
    which synthesises the Setup/Action boundary from the steps, else from the calls' phases. The .NET
-   documentation said `--phase-from-steps` drew it from 3.0.45; it never did. Port the two as .NET 4.1.0 has them. `IngestRequest.DropUnattributed` (programmatic)
+   documentation said `--phase-from-steps` drew it from 3.0.45; it never did. Port the two as .NET 4.1.0 has them.
+   .NET 4.2.0 (S3) adds `attempt`, `sourceFile` and `sourceLine` to the tests records, `--source-root`, and the
+   retry rule (the last attempt is the scenario, each earlier one a `retry N` label, their calls left out), and a
+   step's `error` becomes its `FailureMessage`: a JUnit reporter has each test's source, and a retry extension
+   its attempt. `IngestRequest.DropUnattributed` (programmatic)
    discards still-unattributed records and their paired responses.
 
 Also in 3.0.45 and worth porting with them: malformed capture lines are **skipped and counted** by default

@@ -567,6 +567,8 @@ a relocation into the F6 artifact, not a spike. Per-platform residue: write the 
 **P8 — VERIFIED with a list.** `TestRunRecord` (34 fields) has no field for, and `FeatureSynthesizer` never
 sets: `Scenario.FailureCause`, `Scenario.Attempt`, `SourceFile`/`SourceLine` at Scenario, Step and Feature
 level, `Scenario.ExampleDisplayName`, `ScenarioStep.FailureMessage` (a failed step "becomes a step comment").
+**Closed at 4.2.0** (`INGEST_FIDELITY_PLAN.md` R2): `attempt`, `sourceFile` and `sourceLine` are tests-record
+members, and a step's `error` is also its `FailureMessage`; `FailureCause` and `ExampleDisplayName` remain.
 Non-model: `CiMetadata.Detect()` reads env at *render* time (`CiMetadata.cs:21`); `RunEnvironment` is
 `Unrecorded` on generic ingest (`IngestPipeline.cs:396` records the wrong-runtime bug this caused for the
 Cucumber path); `ReportDiagnostics.Analyse` reads `InternalFlowSpanStore` (`:47`) and

@@ -1234,7 +1234,8 @@ byte-for-byte (full detail: wiki *Ingesting External Captures*):
   `--fold-unknown`; a **response follows its request** by `requestResponseId` rather than its own timestamp.
   Alongside it: `--phase-from-steps` (Given/Context → `Setup`, When/Then → `Action`, And/But inherit; data
   only, it draws nothing), `--separate-setup` (the Setup/Action boundary from the steps, else the calls' phases;
-  .NET 4.1.0, `INGEST_FIDELITY_PLAN.md` S4),
+  .NET 4.1.0, `INGEST_FIDELITY_PLAN.md` S4), the tests records' `attempt`, `sourceFile` and `sourceLine` with
+  `--source-root` (.NET 4.2.0, S3: a Jest reporter has `testPath`, `location` and `invocations`),
   `--strict` (a malformed line throws instead of being skipped and counted), and structured diagnostics —
   `IngestResult.Diagnostics` as `{kind, message, scenarioId?}`.
 

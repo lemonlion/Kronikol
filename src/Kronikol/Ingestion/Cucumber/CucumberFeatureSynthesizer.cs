@@ -73,6 +73,14 @@ public sealed record CucumberSynthesisResult(
     public IEnumerable<string> ScenarioIds => TestNames.Keys;
 
     /// <summary>
+    /// The <c>kronikol-test-id</c> of each earlier attempt of a retried scenario that carried an id of its own, not its
+    /// scenario's: a fixture that mints an id per attempt. The pipeline leaves out every record and call with one, as it
+    /// leaves out an earlier attempt that shares its scenario's id, so a test that passed on its retry is one scenario.
+    /// Empty when every attempt carried its scenario's id, as the Kronikol fixture's do.
+    /// </summary>
+    public IReadOnlySet<string> EarlierAttemptTestIds { get; init; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
     /// What the producing run executed on, as the messages' own <c>meta</c> envelope reports it, or
     /// <see cref="RunEnvironment.Unrecorded"/> when it does not report it.
     /// </summary>
@@ -182,6 +190,7 @@ public static class CucumberFeatureSynthesizer
         var stepWindows = new Dictionary<string, IReadOnlyList<CucumberStepWindow>>(StringComparer.Ordinal);
         var joined = new HashSet<string>(StringComparer.Ordinal);
         var usedIds = new HashSet<string>(StringComparer.Ordinal);
+        var earlierIds = new HashSet<string>(StringComparer.Ordinal);
         DateTimeOffset? runStart = messages.TestRunStarted?.Timestamp?.ToInstant();
         DateTimeOffset? runEnd = messages.TestRunFinished?.Timestamp?.ToInstant();
 
@@ -222,6 +231,25 @@ public static class CucumberFeatureSynthesizer
 
             testNames[scenarioId] = built.Scenario.DisplayName;
             stepWindows[scenarioId] = built.Windows;
+            // Each earlier attempt that carried this scenario's id opens an attempt of its own, so the pipeline leaves
+            // out that attempt's calls (they carry the same id); one that minted another id is left out by that id.
+            foreach (var earlier in attempts.Take(attempts.Count - 1))
+            {
+                var earlierId = TestIdOf(earlier, attachmentsByAttempt, options);
+                if (earlierId is not null && earlierId != scenarioId)
+                    earlierIds.Add(earlierId);
+                else if (earlierId is not null && earlier.Timestamp?.ToInstant() is { } earlierStart)
+                    markers.Add(new TestRunRecord
+                    {
+                        Event = "start",
+                        TestId = scenarioId,
+                        TestName = built.Scenario.DisplayName,
+                        Feature = featureName,
+                        Timestamp = earlierStart,
+                        Attempt = earlier.Attempt + 1,
+                    });
+            }
+
             markers.AddRange(built.Markers);
 
             if (built.Start is { } s)
@@ -242,7 +270,8 @@ public static class CucumberFeatureSynthesizer
             joined,
             warnings)
         {
-            Environment = messages.Meta?.ToRunEnvironment() ?? RunEnvironment.Unrecorded
+            Environment = messages.Meta?.ToRunEnvironment() ?? RunEnvironment.Unrecorded,
+            EarlierAttemptTestIds = earlierIds,
         };
     }
 
@@ -325,6 +354,8 @@ public static class CucumberFeatureSynthesizer
             TestName = displayName,
             Feature = featureName,
             Timestamp = scenarioStart,
+            // 1-based, like the scenario's Attempt; an earlier attempt's start is written beside it by the caller.
+            Attempt = winner.Attempt + 1,
         });
 
         foreach (var testStep in testCase.TestSteps ?? [])
@@ -387,6 +418,7 @@ public static class CucumberFeatureSynthesizer
                     Duration = duration,
                     Attachments = stepAttachments,
                     Comments = message is null ? null : [message],
+                    FailureMessage = status == ExecutionResult.Failed ? message : null,
                 };
                 hookSteps.Add(hookStep);
                 if (started != default)
@@ -422,6 +454,11 @@ public static class CucumberFeatureSynthesizer
                 Duration = duration,
                 Attachments = stepAttachments,
                 Comments = message is null ? null : [message],
+                // What Failures.md prints under a failing step; the comments are what the HTML renders.
+                FailureMessage = status == ExecutionResult.Failed ? message : null,
+                // The step contract: the feature file's name, and the step's own line in it (#76).
+                SourceFile = SourcePaths.FileName(node?.Uri ?? pickle.Uri),
+                SourceLine = gherkinStep?.Location?.Line is > 0 and var line ? line : null,
                 // The pickle argument carries an outline row's placeholders already substituted — what
                 // the step actually received; the authored Gherkin argument is the fallback for older
                 // message streams that omit it.
@@ -638,6 +675,21 @@ public static class CucumberFeatureSynthesizer
         var minted = $"{pickle.Id}#{winner.Attempt}";
         usedIds.Add(minted);
         return minted;
+    }
+
+    /// <summary>The <c>kronikol-test-id</c> an attempt carried, or null.</summary>
+    private static string? TestIdOf(CucumberTestCaseStarted attempt, Dictionary<string, List<CucumberAttachment>> attachmentsByAttempt,
+        CucumberSynthesisOptions options)
+    {
+        if (attempt.Id is not { Length: > 0 } attemptId || !attachmentsByAttempt.TryGetValue(attemptId, out var list))
+            return null;
+        foreach (var attachment in list)
+        {
+            if (IsTestIdAttachment(attachment, options) && DecodeText(attachment)?.Trim() is { Length: > 0 } value)
+                return value;
+        }
+
+        return null;
     }
 
     private static bool IsTestIdAttachment(CucumberAttachment attachment, CucumberSynthesisOptions options) =>

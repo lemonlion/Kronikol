@@ -1,7 +1,8 @@
 # Ingest fidelity plan: what a hand-built capturer needs from the feed (stage 1d)
 
 **Written:** 2026-09-30, at 4.0.0 (`00abca6`), at the owner's request, after a conversation about a Node service
-tested under Jest. **Status: in progress. R1 shipped as 4.1.0 (2026-09-30); R2 to R4 follow** (§12). Placed next in
+tested under Jest. **Status: in progress. R1 shipped as 4.1.0 (2026-09-30), R2 as 4.2.0 (2026-10-01); R3 and R4
+follow** (§12). Placed next in
 the roadmap at the owner's word (stage 1d, `ROADMAP.md` D31). The questions in §11 were taken as recommended on
 2026-09-30, when the owner asked for the plan to be implemented in full. Evidence labels: **RUN**
 (measured here), **READ** (in the source, `file:line`, at `00abca6`), **INFERRED** (reasoned from two facts, stated
@@ -660,3 +661,39 @@ Not done from the session, for want of access: the tag `v4.1.0` (on `03b52b7c`) 
 proxy (HTTP 403 on `refs/tags/*`; the push of `main` went through), so the Release workflow, which runs on a tag, has
 not published 4.1.0; and the wiki commit could not be pushed (`lemonlion/Kronikol.wiki` is not in the session's
 repositories). It is `INGEST_FIDELITY_PLAN.harness/wiki/0001-…patch`, with how to apply it.
+
+### R2: 4.2.0 (S3), 2026-10-01
+
+Shipped: `attempt`, `sourceFile` and `sourceLine` on `TestRunRecord`; `IngestRequest.SourceRoot` and `--source-root`;
+`TestAttempts`, the split both `FeatureSynthesizer.Build` and the pipeline use (every start opens an attempt, the last
+is the scenario, each earlier one a `retry N` label, a record with an `attempt` going to that attempt); the pipeline
+leaves out every call of a retried test made before its last attempt started, with one diagnostic, and says when it
+read starts without numbers as retries; `--phase-from-steps` reads only the shown attempt's steps; a step's error is
+its `FailureMessage` on both lanes; the Cucumber lane's step locations; the schema text and the model docs.
+
+What the §9 check of the Cucumber lane found, and what changed for it: the golden fixture's two retried scenarios
+carry **one** `kronikol-test-id` across their attempts (the plan assumed one per attempt), so an earlier attempt's
+calls joined the scenario the last attempt built, the tests lane's defect on this lane too. And the reporter writes a
+`start` of its own beside the messages' for every scenario, so "every start opens an attempt" would have split every
+Cucumber scenario into two attempts: a mutation proved it (`CucumberIngestPipelineTests.Messages_win_…` goes red). So
+the Cucumber lane writes one `start` per attempt, numbered, only those count for a scenario the messages own, and an
+earlier attempt that minted an id of its own is left out by that id
+(`CucumberSynthesisResult.EarlierAttemptTestIds`), which fixed a second live defect: that attempt's reporter records
+and calls made a failed scenario of their own.
+
+Proofs, each red first: T7 (`FeatureSynthesizerTests`, three facts, and `IngestAttemptTests`' theory with and without
+numbers), T8 (`IngestAttemptTests.History_and_CTRF_…`: CTRF `retries: 1`, `flaky: true`; history Flaky "passed on retry
+2 in this run"), T9 (`FeatureSynthesizerTests.Source_locations_…`, `IngestAttemptTests.Source_paths_…`,
+`IngestCommandTests.Source_root_option_…`, a Windows root named on Linux among them), T10
+(`DigestIngestedFailureTests`), T11 (`CucumberFeatureSynthesizerTests.Each_gherkin_step_…`), and the two Cucumber
+attempt facts. Three mutations, each caught: without the call drop (three facts red), with every start counting (two,
+one of them an existing Cucumber fact), keeping the minted ids (one). Core suite: 6,373 passed, 7 skipped.
+
+What differed: T7 to T10's pipeline facts are in `Ingestion/IngestAttemptTests.cs`, and T8 there rather than in the
+history and CTRF test files, since what it proves is the path from ingest. The root is not checked to exist (a
+Windows runner's root is named on Linux). The earlier attempts' window is simply "before the last attempt's start".
+The release keeps the template pins at 4.0.2, where the rule moves them to the release before: 4.1.0 is not on NuGet
+until its tag is pushed, and the template build restores the pinned version. The tag `v4.2.0` and the wiki commit could
+not be pushed from the session either; the wiki patch is `INGEST_FIDELITY_PLAN.harness/wiki/0002-…patch`. A Kronikol4J
+ledger entry for the schema's `Feature.sourceFile` description follows the release (§5).
+

@@ -34,6 +34,10 @@ public static class FeatureSynthesizer
     /// <paramref name="resultWhenUnknown"/> is the verdict for tests that have interactions but no <c>end</c> record.
     /// <paramref name="attachmentsBase"/> resolves relative <c>attachment</c> paths (default: the current directory).
     /// </summary>
+    /// <remarks>
+    /// A test with several <c>start</c> records is one test retried (<see cref="TestRunRecord.Attempt"/>): its scenario is
+    /// its last attempt, with <see cref="Scenario.Attempt"/> set and a <c>retry N</c> label for each earlier attempt.
+    /// </remarks>
     public static Result Build(
         IEnumerable<TestRunRecord>? testRecords,
         IEnumerable<RequestResponseLog>? logs,
@@ -42,6 +46,22 @@ public static class FeatureSynthesizer
         string? attachmentsBase = null)
     {
         var records = (testRecords ?? []).ToList();
+        return Build(records, logs, defaultFeatureName, resultWhenUnknown, attachmentsBase, TestAttempts.Of(records));
+    }
+
+    /// <summary>
+    /// <see cref="Build(IEnumerable{TestRunRecord}?, IEnumerable{RequestResponseLog}?, string, ExecutionResult, string?)"/>
+    /// with the attempts the caller split <paramref name="records"/> into: the pipeline's, which count only the Cucumber
+    /// lane's starts for a scenario the messages own.
+    /// </summary>
+    internal static Result Build(
+        List<TestRunRecord> records,
+        IEnumerable<RequestResponseLog>? logs,
+        string defaultFeatureName,
+        ExecutionResult resultWhenUnknown,
+        string? attachmentsBase,
+        TestAttempts attempts)
+    {
         var logList = (logs ?? []).ToList();
 
         var byTest = new Dictionary<string, TestAccumulator>(StringComparer.Ordinal);
@@ -69,6 +89,9 @@ public static class FeatureSynthesizer
             // blanks the living documentation of an otherwise green run).
             if (!TestRunRecord.IsKnownEvent(record.Event))
                 continue;
+            // A retried test is its last attempt; the earlier ones leave a label, and the time the test began.
+            if (attempts.IsEarlier(record))
+                continue;
             var acc = Get(record.TestId);
             if (!string.IsNullOrWhiteSpace(record.TestName)) acc.Name = record.TestName;
             if (!string.IsNullOrWhiteSpace(record.Feature)) acc.Feature = record.Feature;
@@ -77,6 +100,8 @@ public static class FeatureSynthesizer
             {
                 case TestRunRecord.Events.Start:
                     acc.Start ??= record.Timestamp;
+                    acc.SourceFile ??= SourcePaths.Normalise(record.SourceFile);
+                    acc.SourceLine ??= record.SourceLine;
                     acc.Description ??= record.Description;
                     acc.FeatureDescription ??= record.FeatureDescription;
                     acc.Rule ??= record.Rule;
@@ -128,6 +153,7 @@ public static class FeatureSynthesizer
 
         var featureGroups = new Dictionary<string, List<Scenario>>(StringComparer.Ordinal);
         var featureDescriptions = new Dictionary<string, string>(StringComparer.Ordinal);
+        var featureSources = new Dictionary<string, string>(StringComparer.Ordinal);
         var featureEndpoints = new Dictionary<string, string>(StringComparer.Ordinal);
         var featureTags = new Dictionary<string, List<string[]>>(StringComparer.Ordinal);
         var featureOrder = new List<string>();
@@ -145,6 +171,8 @@ public static class FeatureSynthesizer
             names[testId] = name;
 
             var tags = ScenarioTags.Classify(acc.Tags);
+            // Earlier attempts are not shown as scenarios; a label keeps the flakiness visible (the Cucumber lane's words).
+            var labels = tags.Labels.Concat(attempts.EarlierNumbers(testId).Select(n => $"retry {n}")).ToArray();
             var steps = BuildStepTree(acc.Steps);
             var backgroundSteps = BuildStepTree(acc.BackgroundSteps);
 
@@ -172,8 +200,11 @@ public static class FeatureSynthesizer
                 ExampleFlatValues = acc.ExampleValues is null ? null : new Dictionary<string, string>(acc.ExampleValues, StringComparer.Ordinal),
                 ExampleRawValues = acc.ExampleValues?.ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value, StringComparer.Ordinal),
                 IsHappyPath = tags.IsHappyPath,
-                Labels = tags.Labels.Length > 0 ? tags.Labels : null,
+                Labels = labels.Length > 0 ? labels : null,
                 Categories = tags.Categories.Length > 0 ? tags.Categories : null,
+                Attempt = attempts.Number(testId),
+                SourceFile = acc.SourceFile,
+                SourceLine = acc.SourceLine,
             };
 
             ApplyAttachments(scenario, acc.Attachments, attachmentsBase);
@@ -191,10 +222,14 @@ public static class FeatureSynthesizer
             featureTags[feature].Add(tags.Labels);
             if (acc.FeatureDescription is { Length: > 0 } description)
                 featureDescriptions.TryAdd(feature, description);
+            // The first path seen wins, as on the ReqNRoll lane.
+            if (acc.SourceFile is { Length: > 0 } source)
+                featureSources.TryAdd(feature, source);
             if (tags.Endpoint is { Length: > 0 } endpoint)
                 featureEndpoints.TryAdd(feature, endpoint);
 
-            foreach (var candidate in new[] { acc.Start, acc.End, acc.FirstLog, acc.LastLog })
+            // The run began with a retried test's first attempt, not the one the report shows.
+            foreach (var candidate in new[] { attempts.FirstAttemptStart(testId), acc.Start, acc.End, acc.FirstLog, acc.LastLog })
             {
                 if (candidate is not { } c) continue;
                 runStart = runStart is null || c < runStart ? c : runStart;
@@ -214,6 +249,7 @@ public static class FeatureSynthesizer
                     Description = featureDescriptions.GetValueOrDefault(f),
                     Endpoint = featureEndpoints.GetValueOrDefault(f),
                     Labels = SharedLabels(featureTags[f]),
+                    SourceFile = featureSources.GetValueOrDefault(f),
                 };
             })
             .ToArray();
@@ -385,6 +421,10 @@ public static class FeatureSynthesizer
             Status = passed ? ExecutionResult.Passed : ExecutionResult.Failed,
             Comments = BuildComments(passed ? null : record.Error, record.StackTrace),
             Duration = record.DurationMs is { } ad ? TimeSpan.FromMilliseconds(ad) : null,
+            // What Failures.md prints under a failing step; the comments are what the HTML renders.
+            FailureMessage = passed ? null : NullIfBlank(record.Error),
+            SourceFile = SourcePaths.FileName(record.SourceFile),
+            SourceLine = record.SourceLine,
         };
     }
 
@@ -399,6 +439,10 @@ public static class FeatureSynthesizer
             Status = record.Status is null ? null : MapStatus(record.Status),
             Duration = record.DurationMs is { } d ? TimeSpan.FromMilliseconds(d) : null,
             Comments = BuildComments(record.Error, record.StackTrace),
+            // What Failures.md prints under a failing step; the comments are what the HTML renders.
+            FailureMessage = NullIfBlank(record.Error),
+            SourceFile = SourcePaths.FileName(record.SourceFile),
+            SourceLine = record.SourceLine,
             BypassReason = record.BypassReason,
             DocString = record.DocString,
             DocStringMediaType = record.DocStringMediaType,
@@ -410,6 +454,8 @@ public static class FeatureSynthesizer
                 : [StepTextSegment.Literal(text + " "), StepTextSegment.TableRef(TableParameterName)],
         };
     }
+
+    private static string? NullIfBlank(string? text) => string.IsNullOrWhiteSpace(text) ? null : text;
 
     private static string[]? BuildComments(string? error, string? stackTrace)
     {
@@ -481,6 +527,8 @@ public static class FeatureSynthesizer
         public List<string> Tags { get; } = [];
         public Dictionary<string, string>? ExampleValues { get; set; }
         public DateTimeOffset? Start { get; set; }
+        public string? SourceFile { get; set; }
+        public int? SourceLine { get; set; }
         public DateTimeOffset? End { get; set; }
         public string? Status { get; set; }
         public double? DurationMs { get; set; }

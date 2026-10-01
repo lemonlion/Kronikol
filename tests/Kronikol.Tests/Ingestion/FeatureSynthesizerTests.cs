@@ -141,6 +141,122 @@ public class FeatureSynthesizerTests
         Assert.Equal(record, back);
         Assert.Contains("\"event\":\"end\"", record.ToJson());
     }
+    /// <summary>
+    /// <c>plans/INGEST_FIDELITY_PLAN.md</c> P3 and T7: one test id, a failed attempt then a passing one. The scenario was
+    /// one passed scenario that kept the first attempt's error and both attempts' steps. It is the last attempt, as the
+    /// Cucumber lane has always built a retried scenario: its verdict, error, duration and steps, <c>Attempt</c> set, and a
+    /// <c>retry N</c> label for each earlier attempt.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void A_retried_test_is_its_last_attempt_with_a_retry_label_per_earlier_one(bool numbered)
+    {
+        var records = new List<TestRunRecord>
+        {
+            new() { Event = "start", TestId = "p3", TestName = "charges a card", Feature = "charge.test.ts", Tags = ["payments"], Attempt = numbered ? 1 : null, Timestamp = T0 },
+            new() { Event = "step", TestId = "p3", Text = "attempt one", Timestamp = T0.AddMilliseconds(500) },
+            new() { Event = "end", TestId = "p3", Status = "failed", Error = "expected SETTLED, received PENDING", DurationMs = 2000, Timestamp = T0.AddMilliseconds(2000) },
+            new() { Event = "start", TestId = "p3", TestName = "charges a card", Feature = "charge.test.ts", Tags = ["payments"], Attempt = numbered ? 2 : null, Timestamp = T0.AddMilliseconds(3000) },
+            new() { Event = "step", TestId = "p3", Text = "attempt two", Timestamp = T0.AddMilliseconds(3500) },
+            new() { Event = "end", TestId = "p3", Status = "passed", DurationMs = 1500, Timestamp = T0.AddMilliseconds(5000) },
+        };
+
+        var result = FeatureSynthesizer.Build(records, logs: null);
+
+        var scenario = Assert.Single(result.Features.SelectMany(f => f.Scenarios));
+        Assert.Equal(ExecutionResult.Passed, scenario.Result);
+        Assert.Null(scenario.ErrorMessage);
+        Assert.Equal(2, scenario.Attempt);
+        Assert.Equal(TimeSpan.FromMilliseconds(1500), scenario.Duration);
+        Assert.Equal(["attempt two"], scenario.Steps!.Select(s => s.Text));
+        // The tags are the winning start's, once; each earlier attempt is a label.
+        Assert.Equal(["payments", "retry 1"], scenario.Labels);
+        // The run began with the first attempt.
+        Assert.Equal(T0.UtcDateTime, result.Start);
+    }
+
+    [Fact]
+    public void An_attempt_number_on_a_record_places_it_in_that_attempt_whatever_its_timestamp()
+    {
+        // A worker that writes a failed attempt's verdict late, after the retry has started.
+        var records = new List<TestRunRecord>
+        {
+            new() { Event = "start", TestId = "t", TestName = "late verdict", Attempt = 1, Timestamp = T0 },
+            new() { Event = "start", TestId = "t", TestName = "late verdict", Attempt = 2, Timestamp = T0.AddSeconds(3) },
+            new() { Event = "end", TestId = "t", Status = "failed", Error = "first attempt", Attempt = 1, Timestamp = T0.AddSeconds(4) },
+            new() { Event = "end", TestId = "t", Status = "passed", Attempt = 2, Timestamp = T0.AddSeconds(5) },
+        };
+
+        var scenario = FeatureSynthesizer.Build(records, logs: null).Features.Single().Scenarios.Single();
+
+        Assert.Equal(ExecutionResult.Passed, scenario.Result);
+        Assert.Null(scenario.ErrorMessage);
+        Assert.Equal(2, scenario.Attempt);
+    }
+
+    [Fact]
+    public void A_test_that_ran_once_says_nothing_about_attempts_unless_its_start_does()
+    {
+        var records = new List<TestRunRecord>
+        {
+            new() { Event = "start", TestId = "once", TestName = "ran once", Timestamp = T0 },
+            new() { Event = "end", TestId = "once", Status = "passed", Timestamp = T0.AddSeconds(1) },
+            // A producer that reports only the attempt that counted: the number is kept, no label is invented.
+            new() { Event = "start", TestId = "third", TestName = "third time lucky", Attempt = 3, Timestamp = T0.AddSeconds(2) },
+            new() { Event = "end", TestId = "third", Status = "passed", Timestamp = T0.AddSeconds(3) },
+        };
+
+        var scenarios = FeatureSynthesizer.Build(records, logs: null).Features.Single().Scenarios;
+
+        Assert.Null(scenarios.Single(s => s.Id == "once").Attempt);
+        var third = scenarios.Single(s => s.Id == "third");
+        Assert.Equal(3, third.Attempt);
+        Assert.Null(third.Labels);
+    }
+
+    /// <summary>
+    /// <c>plans/INGEST_FIDELITY_PLAN.md</c> T9 and T10: where a test is written and why a step failed. The model had every
+    /// field (the digest's "written at" and failing step, CTRF's <c>filePath</c>, <c>kronikol query failures</c>); the
+    /// tests records carried none of it, and a step's error reached only its comments.
+    /// </summary>
+    [Fact]
+    public void Source_locations_and_a_failed_steps_message_reach_the_scenario_its_feature_and_its_steps()
+    {
+        var records = new List<TestRunRecord>
+        {
+            new() { Event = "start", TestId = "loc", TestName = "charges a card", Feature = "charge", SourceFile = @"src\charge\charge.test.ts", SourceLine = 12, Timestamp = T0 },
+            new() { Event = "step", TestId = "loc", Text = "a saved card", SourceFile = "./src/charge/charge.test.ts", SourceLine = 14, Status = "passed", Timestamp = T0.AddSeconds(1) },
+            new() { Event = "step", TestId = "loc", Text = "the card is charged", SourceFile = "src/charge/charge.test.ts", SourceLine = 18, Status = "failed", Error = "expected 201, received 502", StackTrace = "at charge.test.ts:18", Timestamp = T0.AddSeconds(2) },
+            new() { Event = "assertion", TestId = "loc", Text = "the charge settled", SourceFile = "src/charge/charge.test.ts", SourceLine = 19, Status = "failed", Error = "expected SETTLED", Timestamp = T0.AddSeconds(3) },
+            new() { Event = "end", TestId = "loc", Status = "failed", Error = "expected 201, received 502", Timestamp = T0.AddSeconds(4) },
+            new() { Event = "start", TestId = "loc2", TestName = "refunds a card", Feature = "charge", SourceFile = "src/charge/refund.test.ts", SourceLine = 5, Timestamp = T0.AddSeconds(5) },
+            new() { Event = "end", TestId = "loc2", Status = "passed", Timestamp = T0.AddSeconds(6) },
+        };
+
+        var feature = FeatureSynthesizer.Build(records, logs: null).Features.Single();
+
+        var scenario = feature.Scenarios.Single(s => s.Id == "loc");
+        Assert.Equal("src/charge/charge.test.ts", scenario.SourceFile);
+        Assert.Equal(12, scenario.SourceLine);
+        // The first path seen wins for the feature, as on the ReqNRoll lane.
+        Assert.Equal("src/charge/charge.test.ts", feature.SourceFile);
+        Assert.Equal("src/charge/refund.test.ts", feature.Scenarios.Single(s => s.Id == "loc2").SourceFile);
+
+        // A step keeps the file name only, the step contract.
+        var (given, when) = (scenario.Steps![0], scenario.Steps[1]);
+        Assert.Equal(("charge.test.ts", 14), (given.SourceFile, given.SourceLine));
+        Assert.Null(given.FailureMessage);
+        Assert.Equal(("charge.test.ts", 18), (when.SourceFile, when.SourceLine));
+        Assert.Equal("expected 201, received 502", when.FailureMessage);
+        // The comments the HTML renders stay as they were.
+        Assert.Equal(["expected 201, received 502", "at charge.test.ts:18"], when.Comments);
+
+        var assertion = Assert.Single(when.SubSteps!);
+        Assert.Equal(("charge.test.ts", 19), (assertion.SourceFile, assertion.SourceLine));
+        Assert.Equal("expected SETTLED", assertion.FailureMessage);
+    }
+
     [Fact]
     public void Unknown_events_never_create_a_phantom_scenario()
     {

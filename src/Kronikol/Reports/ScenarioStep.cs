@@ -24,10 +24,14 @@ public record ScenarioStep
     /// </summary>
     public string? FailureMessage { get; set; }
 
-    /// <summary>The file the assertion was written in, when the caller supplied it. File name only, not a full path.</summary>
+    /// <summary>
+    /// The file the step or assertion was written in, when the caller supplied it: an assertion's call site in-process,
+    /// a tests NDJSON <c>step</c> or <c>assertion</c> record's <c>sourceFile</c>, a Gherkin step's feature file. File name
+    /// only, not a full path.
+    /// </summary>
     public string? SourceFile { get; set; }
 
-    /// <summary>The line <see cref="SourceFile"/> holds the assertion on; zero when unknown.</summary>
+    /// <summary>The line <see cref="SourceFile"/> holds the step or assertion on; null when unknown.</summary>
     public int? SourceLine { get; set; }
 
     /// <summary>
