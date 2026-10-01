@@ -792,6 +792,10 @@ lists all 62 ids at each of the four versions. The wiki took the four patches th
 this entry). `tools/wiki-links` passed on the result (191 anchored links, 644 page links). A check of the
 `[text](#fragment)` links, which it does not read, found eight dead anchors on pages these releases did not write;
 they are fixed in wiki `54c347f`. Kronikol4J's ledger has the two entries §5 named, 4.2.0's `Feature.sourceFile`
-description and 4.3.0's `Failures.md` line (`6a65e42`). The template pins move from 4.0.2 to 4.4.0 now that every
-pinned id lists it (the changelog's `[Unreleased]`), and 4.1.0 is dated 2026-10-01, the local date of its release
-commit (23:40 UTC on 2026-09-30) and the day it was published.
+description and 4.3.0's `Failures.md` line (`6a65e42`). The template pins move from 4.0.2 to 4.3.0, the release before
+the repository's 4.4.0, where 4.4.0 would have put them (the changelog's `[Unreleased]`). The hand-off asked for
+4.4.0, and a first push with 4.4.0 pins (`be015005`) failed
+`PluginManifestTests.Every_template_pins_the_same_Kronikol_version_and_it_is_behind_this_one` in CI (`36836904579`,
+the core suite's one failure of 6,414 tests); a pin stays behind the repository's version, so 4.4.0 waits for the next
+release. 4.1.0 is dated 2026-10-01, the local date of its release commit (23:40 UTC on 2026-09-30) and the day it was
+published.

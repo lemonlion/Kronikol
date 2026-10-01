@@ -10,8 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Changed
 
-- **The project templates pin 4.4.0.** 4.1.0 to 4.4.0 were published on 2026-10-01, so the twelve templates move their
-  Kronikol package references from 4.0.2 to 4.4.0. The `Kronikol.Templates` package carries them from the next release.
+- **The project templates pin 4.3.0.** 4.1.0 to 4.4.0 were published on 2026-10-01, so the twelve templates move their
+  Kronikol package references from 4.0.2 to 4.3.0, the release before this repository's 4.4.0, where 4.4.0 itself
+  would have put them. A pin stays behind the repository's version (`PluginManifestTests` holds it), so 4.4.0 comes
+  with the next release. The `Kronikol.Templates` package carries them from the next release too.
 - **4.1.0 is dated 2026-10-01**, the local date of its release commit (00:40 BST) and the day it was published; its
   heading gave the date in UTC.
 
