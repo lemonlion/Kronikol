@@ -5,18 +5,21 @@ using static System.Net.WebUtility;
 namespace Kronikol.History;
 
 /// <summary>
-/// Renders cross-run history into the HTML report (plans/CROSS_RUN_HISTORY_PLAN.md §8.1): per scenario a
-/// verdict attribute the search box filters on (<c>$flaky</c>, <c>$broke</c>), a sparkline of the last
-/// runs beside the duration badge, and a verdict pill; and one History section beside the timeline with
-/// the run trend and the lists of what changed.
+/// Renders cross-run history as HTML (plans/CROSS_RUN_HISTORY_PLAN.md §8.1): per scenario a verdict attribute
+/// the search box filters on (<c>$flaky</c>, <c>$broke</c>), a sparkline of the last runs, and a verdict pill;
+/// and the History section, with the run trend and the lists of what changed. Since 4.6.0 the labs page beside
+/// the report (<see cref="Reports.LabsReportGenerator"/>) draws them by default, and a report draws them only
+/// where its opt-ins ask (<see cref="ReportConfigurationOptions.ShowScenarioHistory"/>,
+/// <see cref="ReportConfigurationOptions.ShowHistorySection"/>), through these same renderers, so the two
+/// cannot drift (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md).
 ///
 /// <para>Everything is rendered here, on the generation side, and the sparkline is ONE element whose
 /// background gradient carries a hard colour stop per run: two hundred scenarios cost two hundred nodes,
 /// not the two thousand an inline SVG per scenario would, and the report's filter and toggle budgets
 /// (which walk scenario elements) stay where they are. The section links each scenario by the same
-/// <c>#sid-</c> anchor <c>kronikol query</c> and <c>Failures.md</c> print. Sparklines live inside the
-/// scenario elements, so the filtered-HTML export carries them; the section lives beside the timeline,
-/// which the export leaves behind on purpose.</para>
+/// <c>#sid-</c> anchor <c>kronikol query</c> and <c>Failures.md</c> print: inside the report, or into it from
+/// the labs page. In a report, sparklines live inside the scenario elements, so the filtered-HTML export
+/// carries them; the section lives beside the timeline, which the export leaves behind on purpose.</para>
 /// </summary>
 internal static class HistoryHtml
 {
@@ -94,14 +97,45 @@ internal static class HistoryHtml
     }
 
     /// <summary>
-    /// The History section: the run's summary line, the trend of the last runs, and the lists of what
-    /// changed, each scenario linked by its stable id. Open when there is something to say.
+    /// The report's History section: the run's summary line, the trend of the last runs, and the lists of what
+    /// changed, each scenario linked in the page by its stable id. Open when there is something to say.
     /// </summary>
     public static string Section(HistoryVerdicts history)
     {
         ArgumentNullException.ThrowIfNull(history);
+        return Section(history, InPageLink, history.HasAnything);
+    }
+
+    /// <summary>
+    /// The labs page's History section: always open, since the page is where history is read, and each scenario
+    /// linked into the report by <c><paramref name="reportHref"/>#sid-&lt;id&gt;</c>, or named as text when no
+    /// report is written beside the page (<paramref name="reportHref"/> null).
+    /// </summary>
+    public static string Section(HistoryVerdicts history, string? reportHref)
+    {
+        ArgumentNullException.ThrowIfNull(history);
+        return Section(history, entry => ScenarioLink(entry.StableId, $"{HtmlEncode(entry.Feature)} &rsaquo; {HtmlEncode(entry.Name)}", reportHref), open: true);
+    }
+
+    /// <summary>
+    /// A scenario named on the labs page: a link into the report by its stable id, the address the report resolves
+    /// on load, or text when there is no report to link to. <paramref name="html"/> is already encoded.
+    /// </summary>
+    public static string ScenarioLink(string stableId, string html, string? reportHref) =>
+        reportHref is null
+            ? $"<span class=\"history-name\">{html}</span>"
+            : $"<a class=\"history-link\" href=\"{HtmlEncode(Uri.EscapeDataString(reportHref))}#sid-{HtmlEncode(stableId)}\">{html}</a>";
+
+    // Inside the report: the hash handler opens the scenario, and the address bar takes its anchor.
+    private static string InPageLink(ScenarioHistory entry)
+    {
+        var id = entry.StableId;
+        return $"<a class=\"history-link\" href=\"#sid-{id}\" onclick=\"event.preventDefault();if(window.reveal_url_anchor){{reveal_url_anchor('sid-{id}');}}history.replaceState(null,'',location.pathname+location.search+'#sid-{id}');\">{HtmlEncode(entry.Feature)} &rsaquo; {HtmlEncode(entry.Name)}</a>";
+    }
+
+    private static string Section(HistoryVerdicts history, Func<ScenarioHistory, string> link, bool open)
+    {
         var sb = new StringBuilder();
-        var open = history.HasAnything;
         sb.Append($"<details id=\"history-section\" class=\"history-section\"{(open ? " open" : "")}>");
         sb.Append($"<summary class=\"h2\">History <span class=\"history-summary-line\">{HtmlEncode(HistorySummary.Line(history))}</span></summary>");
         sb.Append("<div class=\"history-body\">");
@@ -128,14 +162,14 @@ internal static class HistoryHtml
         }
 
         var scenarios = history.Scenarios;
-        List(sb, "New failures", scenarios.Where(IsNewFailure));
-        List(sb, "Failing since", scenarios.Where(s => s.Primary is HistoryVerdictKind.Failing or HistoryVerdictKind.AlwaysFailing));
-        List(sb, "Flaky", scenarios.Where(s => s.Has(HistoryVerdictKind.Flaky)));
-        List(sb, "Newly fixed", scenarios.Where(s => s.Primary == HistoryVerdictKind.Fixed));
-        List(sb, "Slower", scenarios.Where(s => s.Has(HistoryVerdictKind.Slower)));
-        List(sb, "Behaviour changed", scenarios.Where(s => s.Has(HistoryVerdictKind.BehaviourChanged) || s.Has(HistoryVerdictKind.Reordered)));
-        List(sb, "New scenarios", scenarios.Where(s => s.Has(HistoryVerdictKind.New) && !IsNewFailure(s)));
-        List(sb, "Quarantined", scenarios.Where(s => s.Has(HistoryVerdictKind.Quarantined)));
+        List(sb, "New failures", scenarios.Where(IsNewFailure), link);
+        List(sb, "Failing since", scenarios.Where(s => s.Primary is HistoryVerdictKind.Failing or HistoryVerdictKind.AlwaysFailing), link);
+        List(sb, "Flaky", scenarios.Where(s => s.Has(HistoryVerdictKind.Flaky)), link);
+        List(sb, "Newly fixed", scenarios.Where(s => s.Primary == HistoryVerdictKind.Fixed), link);
+        List(sb, "Slower", scenarios.Where(s => s.Has(HistoryVerdictKind.Slower)), link);
+        List(sb, "Behaviour changed", scenarios.Where(s => s.Has(HistoryVerdictKind.BehaviourChanged) || s.Has(HistoryVerdictKind.Reordered)), link);
+        List(sb, "New scenarios", scenarios.Where(s => s.Has(HistoryVerdictKind.New) && !IsNewFailure(s)), link);
+        List(sb, "Quarantined", scenarios.Where(s => s.Has(HistoryVerdictKind.Quarantined)), link);
 
         if (history.Absent.Count > 0)
         {
@@ -163,7 +197,7 @@ internal static class HistoryHtml
         s.Current == HistoryFormat.Failed && !s.Has(HistoryVerdictKind.Flaky) && !s.Has(HistoryVerdictKind.Quarantined)
         && (s.Has(HistoryVerdictKind.Broke) || s.Has(HistoryVerdictKind.New) || s.Has(HistoryVerdictKind.Unknown));
 
-    private static void List(StringBuilder sb, string heading, IEnumerable<ScenarioHistory> items)
+    private static void List(StringBuilder sb, string heading, IEnumerable<ScenarioHistory> items, Func<ScenarioHistory, string> link)
     {
         var list = items.OrderBy(e => HistoryAnalyzer.Precedence(e.Primary)).ThenBy(e => e.Feature, StringComparer.Ordinal).ThenBy(e => e.Name, StringComparer.Ordinal).ToList();
         if (list.Count == 0)
@@ -171,8 +205,7 @@ internal static class HistoryHtml
         sb.Append($"<div class=\"history-list\"><h4>{heading} <span class=\"history-count\">{list.Count.ToString(CultureInfo.InvariantCulture)}</span></h4><ul>");
         foreach (var entry in list.Take(ListCap))
         {
-            var id = entry.StableId;
-            sb.Append($"<li><a class=\"history-link\" href=\"#sid-{id}\" onclick=\"event.preventDefault();if(window.reveal_url_anchor){{reveal_url_anchor('sid-{id}');}}history.replaceState(null,'',location.pathname+location.search+'#sid-{id}');\">{HtmlEncode(entry.Feature)} &rsaquo; {HtmlEncode(entry.Name)}</a>");
+            sb.Append("<li>").Append(link(entry));
             sb.Append(PillHtml(entry.Primary, entry.Evidence));
             sb.Append($" <span class=\"history-evidence\">{HtmlEncode(entry.Evidence)}</span> <code class=\"history-series\" title=\"the last runs, oldest first\">{entry.Series}</code></li>");
         }

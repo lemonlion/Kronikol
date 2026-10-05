@@ -69,17 +69,6 @@ public static class ReportGenerator
     /// <summary>Rendered in place of the diagram section for a scenario whose id matched no tracked interaction.</summary>
     internal const string NoInteractionsMarkerHtml =
         "<div class=\"no-interactions\" data-no-interactions=\"true\">No interactions captured for this scenario.</div>";
-    private static readonly Lazy<string> AdvancedSearchJs = new(() =>
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = assembly.GetManifestResourceNames()
-            .FirstOrDefault(n => n.EndsWith("advanced-search.js", StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException("Embedded resource advanced-search.js not found.");
-        using var stream = assembly.GetManifestResourceStream(resourceName)!;
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
-    });
-
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> ResourceCache = new();
 
     // Loads an embedded report asset (externalized inline JS/CSS, JAVA_PORT_PLAN 4.2) by file-name suffix.
@@ -93,6 +82,11 @@ public static class ReportGenerator
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     });
+
+    // A report script with its fenced $verdict lines (VerdictFences): kept when the report draws verdict attributes,
+    // replaced by the lines that stand in for them when it does not. Each variant is cached under its own key.
+    internal static string LoadScript(string name, bool verdicts) =>
+        ResourceCache.GetOrAdd($"{name}|{(verdicts ? "verdicts" : "plain")}", _ => VerdictFences.Variant(LoadResource(name), verdicts));
 
     // The output directory for the report generation currently in flight. Flows (via ExecutionContext)
     // into the Parallel.Invoke workers that call WriteFile, so every file of one run lands in the
@@ -493,7 +487,7 @@ public static class ReportGenerator
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, showScenarioHistory: options.ShowScenarioHistory));
         }
 
         if (options.GenerateSpecificationsData)
@@ -592,6 +586,20 @@ public static class ReportGenerator
             Add(HistoryFormat.FragmentFileName, () => WriteFile(history.Fragment(), HistoryFormat.FragmentFileName));
         }
 
+        // The labs page: the history and diagnostics views a default report no longer carries
+        // (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md). Written only when it has something to show, and linked to the
+        // report by name when the options say one is written, never by whether a sibling output reached disk.
+        var labsHistory = options.EmbedHistoryInReport ? history?.Verdicts : null;
+        if (options.GenerateLabsReport && LabsReportGenerator.HasContent(labsHistory, reportDiagnostics))
+        {
+            var labsFileName = LabsReportGenerator.FileName(options.HtmlTestRunReportFileName);
+            Add(labsFileName, () => WriteFile(
+                LabsReportGenerator.Build(new LabsPage(GetTestRunReportTitle(options), features, suite, labsHistory, reportDiagnostics,
+                    options.GenerateTestRunReport ? $"{options.HtmlTestRunReportFileName}.html" : null, runId, runEndedAt,
+                    options.CustomCss, options.CustomFaviconBase64, options.CustomLogoHtml)),
+                labsFileName));
+        }
+
         if (options.WriteAgentInstructions)
         {
             Add(AgentInstructionsGenerator.ClaudeFileName, () =>
@@ -641,7 +649,9 @@ public static class ReportGenerator
             {
                 $"{options.HtmlTestRunReportFileName}.html",
                 $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}",
-                FailuresDigestFileName
+                FailuresDigestFileName,
+                // After the report, so the pointer's first .html is still the report.
+                LabsReportGenerator.FileName(options.HtmlTestRunReportFileName)
             }.Where(written.Contains),
             agentInstructionsWritten: options.WriteAgentInstructions
                                       && File.Exists(Path.Combine(reportsDir, AgentInstructionsGenerator.ClaudeFileName)),
@@ -785,6 +795,10 @@ public static class ReportGenerator
             planned.Add(DiagnosticReportGenerator.FileName);
         if (options.WriteCiSummary)
             planned.Add(CiSummaryFileName);
+        // Whenever the switch is on: whether the page has anything to show is known only once the run is analysed,
+        // and a page an older run left behind is that run's to keep either way.
+        if (options.GenerateLabsReport)
+            planned.Add(LabsReportGenerator.FileName(options.HtmlTestRunReportFileName));
         return planned;
     }
 
@@ -1070,6 +1084,19 @@ public static class ReportGenerator
             $"<option value=\"{o.Value}\"{(o.Value == selected ? " selected" : "")}>{o.Text}</option>"))
         + "</optgroup></select>";
 
+    /// <summary>
+    /// Renders one HTML report from the diagrams and features handed to it, into the current reports directory under
+    /// <paramref name="fileName"/>, and returns the path written. A run calls it through
+    /// <c>CreateStandardReportsWithDiagrams</c>, with every option read from <see cref="ReportConfigurationOptions"/>.
+    /// </summary>
+    /// <remarks>
+    /// It draws what it is handed: verdicts in <paramref name="history"/> draw the per-scenario sparkline, verdict pill
+    /// and <c>data-history-verdicts</c> attribute, as they did before 4.6.0, and the History section with
+    /// <paramref name="showHistorySection"/>; <paramref name="diagnostics"/> draw the Report diagnostics section with
+    /// <paramref name="showReportDiagnostics"/>. Each brings its stylesheet rules and search code with it. A run
+    /// hands it history only when <see cref="ReportConfigurationOptions.ShowScenarioHistory"/> or
+    /// <see cref="ReportConfigurationOptions.ShowHistorySection"/> asks.
+    /// </remarks>
     public static string GenerateHtmlReport(DefaultDiagramsFetcher.DiagramAsCode[] diagrams,
         Feature[] features,
         DateTime startRunTime,
@@ -1158,7 +1185,9 @@ public static class ReportGenerator
             suite: suite,
             history: history,
             showHistorySection: showHistorySection,
-            showReportDiagnostics: showReportDiagnostics);
+            showReportDiagnostics: showReportDiagnostics,
+            // A caller that hands this method verdicts gets the per-scenario history, as before 4.6.0.
+            showScenarioHistory: history is not null);
 
     /// <summary>
     /// <see cref="GenerateHtmlReport"/> with the run report's component diagram as the report's renderer drew it
@@ -1209,7 +1238,8 @@ public static class ReportGenerator
         HistoryVerdicts? history = null,
         bool showHistorySection = false,
         bool showReportDiagnostics = false,
-        ComponentDiagramReportGenerator.DrawnDiagram? componentDiagramDrawn = null)
+        ComponentDiagramReportGenerator.DrawnDiagram? componentDiagramDrawn = null,
+        bool showScenarioHistory = false)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
@@ -1224,7 +1254,13 @@ public static class ReportGenerator
         // built-ins otherwise.
         var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn with { NotePayloadFormat = notePayloadFormat };
 
-        var scenarioFeatureMapHelper = LoadResource("report-scenario-feature-map-helper.js");
+        // The per-scenario history (sparkline, pill, verdict attribute) is drawn only when the report asks for it
+        // (ReportConfigurationOptions.ShowScenarioHistory); the section has a switch of its own. The $verdict search
+        // code ships only with the attributes it reads.
+        var scenarioHistory = showScenarioHistory ? history : null;
+        var drawsVerdicts = scenarioHistory is not null;
+
+        var scenarioFeatureMapHelper = LoadScript("report-scenario-feature-map-helper.js", drawsVerdicts);
 
         // Shared gzip+base64 decompressor — always included; several conditionally-emitted
         // scripts (context menu, internal-flow popup, deep search) call it in rendering modes
@@ -1232,11 +1268,11 @@ public static class ReportGenerator
         var decompressHelper = LoadResource("report-decompress-helper.js");
 
         var toggleHappyPathsFunction = LoadResource("report-toggle-happy-paths-function.js");
-        var searchFunction = LoadResource("report-search-function.js");
+        var searchFunction = LoadScript("report-search-function.js", drawsVerdicts);
 
         // Deep search ("search everything") client — always included; it no-ops when the
         // kron-search-index blob is absent (FullSearchIndex=false / older reports).
-        var searchIndexClientScript = LoadResource("report-search-index.js");
+        var searchIndexClientScript = LoadScript("report-search-index.js", drawsVerdicts);
 
         // The filter-mode scripts seed their AND/OR start mode from the resolved toggle defaults;
         // the substitution happens on the returned copy, never in the resource cache.
@@ -1350,7 +1386,11 @@ public static class ReportGenerator
         // component sheets in the <style> block below, so it wins at equal specificity. The trailing
         // newline is the line the custom sheet used to occupy here: kept, so a report without one keeps
         // its bytes.
-        var combinedStylesheet = Stylesheets.HtmlReportStyleSheet + "\n";
+        // The rules of the history views and of the diagnostics section ship only with the markup they style.
+        var combinedStylesheet = Stylesheets.HtmlReportStyleSheet
+                                 + (history is not null && (showHistorySection || drawsVerdicts) ? Stylesheets.HistoryStyleSheet : "")
+                                 + (includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 } ? Stylesheets.ReportDiagnosticsStyleSheet : "")
+                                 + "\n";
         var themeStyles = string.IsNullOrEmpty(stylesheet) ? "" : "\n" + stylesheet;
 
         var isPlantUmlBrowser = plantUmlRendering == PlantUmlRendering.BrowserJs;
@@ -1437,7 +1477,7 @@ public static class ReportGenerator
 
         var enrichSearchDataScript = "";
 
-        var advancedSearchScript = AdvancedSearchJs.Value;
+        var advancedSearchScript = LoadScript("advanced-search.js", drawsVerdicts);
 
         var html = $$"""
                     <!DOCTYPE html>
@@ -1870,7 +1910,8 @@ public static class ReportGenerator
 
         // Off unless asked for (ReportConfigurationOptions.ShowReportDiagnosticsSection): on a healthy run
         // the section is a line of noise above the features, and nothing is lost by leaving it out — every
-        // diagnostic is in TestRunReport.json's diagnostics array and in the run's own result either way.
+        // diagnostic is on the labs page beside the report, in TestRunReport.json's diagnostics array and in the
+        // run's own result either way.
         if (includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 })
             body.Append(RenderReportDiagnostics(diagnostics, toggles.DiagnosticsOpen));
 
@@ -1880,10 +1921,10 @@ public static class ReportGenerator
         // Cross-run history (plans/CROSS_RUN_HISTORY_PLAN.md §8.1): the section sits beside the timeline,
         // and the per-scenario entries are looked up by stable id as the scenarios render below. Null
         // when the run had no ledger, and then nothing about history reaches the file.
-        // The section itself is off unless asked for (ReportConfigurationOptions.ShowHistorySection): a run
-        // where nothing changed still has a section to say so. The per-scenario sparklines and pills below
-        // are not part of that — they sit beside the scenario they are about and stay.
-        var historySlots = history is null ? null : new Dictionary<string, int>(StringComparer.Ordinal);
+        // Each part is off unless asked for (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md): the section by
+        // ReportConfigurationOptions.ShowHistorySection, the sparklines, pills and verdict attributes by
+        // ShowScenarioHistory. A default report carries neither; the labs page beside it carries both.
+        var historySlots = scenarioHistory is null ? null : new Dictionary<string, int>(StringComparer.Ordinal);
         if (history is not null && showHistorySection)
             body.Append(HistoryHtml.Section(history));
 
@@ -2043,7 +2084,7 @@ public static class ReportGenerator
                         // scenario <details> around them computes with one, so one report carries two
                         // identity schemes and the deep link from a flat row resolves to nothing.
                         suite: suite,
-                        history: history,
+                        history: scenarioHistory,
                         historySlots: historySlots);
                     continue;
                 }
@@ -2119,7 +2160,7 @@ public static class ReportGenerator
                 // It goes BEFORE ` id=`: the cluster-link pins match `[^>]*id="([^"]+)"` greedily,
                 // and `data-stable-id="` ends in a word-boundary `id="` that would win that race.
                 var scenarioStableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
-                var historyEntry = history is null ? null : HistoryHtml.Entry(history, historySlots!, scenarioStableId);
+                var historyEntry = scenarioHistory is null ? null : HistoryHtml.Entry(scenarioHistory, historySlots!, scenarioStableId);
                 var historyAttr = historyEntry is null ? "" : HistoryHtml.VerdictAttribute(historyEntry);
                 var historyBadges = historyEntry is null ? "" : HistoryHtml.Sparkline(historyEntry) + HistoryHtml.Pill(historyEntry);
 
@@ -4156,11 +4197,12 @@ public static class ReportGenerator
     }
 
     /// <summary>
-    /// The "Report diagnostics" block of <c>TestRunReport.html</c>: a collapsed <c>&lt;details&gt;</c> listing
-    /// every <see cref="DiagnosticEntry"/> the generation (and the host, via
-    /// <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/>) recorded — kind, message, scenario —
-    /// so a dead tap or a skipped capture line is a line in the report, not only in a log. Empty input
-    /// renders nothing.
+    /// The "Report diagnostics" block: a <c>&lt;details&gt;</c> listing every <see cref="DiagnosticEntry"/> the
+    /// generation (and the host, via <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/>) recorded, by
+    /// kind, message and scenario, so a dead tap or a skipped capture line is a line on a page, not only in a log.
+    /// Drawn open on the labs page (<see cref="LabsReportGenerator"/>), and in <c>TestRunReport.html</c> when
+    /// <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> asks for it, collapsed unless
+    /// <see cref="ReportToggleDefaults.DiagnosticsOpen"/> says otherwise. Empty input renders nothing.
     /// </summary>
     internal static string RenderReportDiagnostics(IReadOnlyList<DiagnosticEntry> diagnostics, bool open = false)
     {

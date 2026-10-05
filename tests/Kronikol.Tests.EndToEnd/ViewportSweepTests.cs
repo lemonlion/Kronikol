@@ -128,6 +128,92 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
     public Task Run_report_with_every_section_fits_every_width_under_wcag_text_spacing() =>
         Sweep(ReportTestHelper.GenerateReportWithEverySection(_tempDir, OutputDir, "SweepEverySectionSpaced.html"), runReport: true, TextSpacing);
 
+    /// <summary>The labs page beside a report (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md section 7.3), from the same
+    /// history and diagnostics as the every-section report: a long scenario name in a history link, a long branch in
+    /// the History section's meta line, and a diagnostic message holding a long path. It has no toolbar or filtering
+    /// box, so it is swept by its own measure.</summary>
+    [Fact]
+    public Task Labs_page_fits_every_width() => SweepLabsPage("SweepLabs.html", null);
+
+    [Fact]
+    public Task Labs_page_fits_every_width_under_wcag_text_spacing() => SweepLabsPage("SweepLabsSpaced.html", TextSpacing);
+
+    /// <summary>WCAG 1.4.4's text resized to 200% without zooming the page (a browser's text-only zoom): the sparkline and
+    /// the verdict pills are sized in em, so the table of every scenario outgrows a narrow window, and its wrap scrolls it
+    /// rather than the page.</summary>
+    [Fact]
+    public Task Labs_page_fits_every_width_with_text_at_200_percent() => SweepLabsPage("SweepLabsLargeText.html", "html{font-size:200% !important}");
+
+    private async Task SweepLabsPage(string reportFileName, string? injectedCss)
+    {
+        var pageFileName = Path.GetFileNameWithoutExtension(reportFileName) + ".labs.html";
+        ReportTestHelper.GenerateReportWithEverySection(_tempDir, OutputDir, reportFileName, pageFileName);
+        var url = new Uri(Path.Combine(_tempDir, pageFileName)).AbsoluteUri;
+
+        await using var context = await _browser.Browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = Widths[0], Height = 900 }
+        });
+        var page = await context.NewPageAsync();
+        var problems = new List<string>();
+        var loaded = false;
+        foreach (var width in Widths)
+        {
+            await page.SetViewportSizeAsync(width, 900);
+            if (loaded) await page.ReloadAsync();
+            else { await page.GotoAsync(url); loaded = true; }
+            await page.WaitForFunctionAsync("() => document.querySelector('header.labs-header') !== null",
+                null, new() { Timeout = 30000, PollingInterval = 200 });
+            await page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
+            if (injectedCss is not null) await page.AddStyleTagAsync(new() { Content = injectedCss });
+            await page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))");
+
+            var json = await page.EvaluateAsync<string>(MeasureLabsPage);
+            using var result = JsonDocument.Parse(json);
+            foreach (var problem in result.RootElement.GetProperty("problems").EnumerateArray())
+                problems.Add($"{width} px: {problem.GetString()}");
+        }
+
+        Assert.True(problems.Count == 0, $"{problems.Count} problem(s):\n" + string.Join("\n", problems));
+    }
+
+    /// <summary>No sideways scroll, and nothing (element or text run) past the edge of the section holding it, unless a
+    /// container between them scrolls it, as the table of every scenario does inside its wrap.</summary>
+    private const string MeasureLabsPage = """
+        () => {
+            const problems = [];
+            const de = document.documentElement;
+            if (de.scrollWidth > de.clientWidth + 1)
+                problems.push(`the page scrolls sideways by ${de.scrollWidth - de.clientWidth} px`);
+            const sections = [...document.querySelectorAll('header.labs-header, #history-section, details.labs-scenarios, details.report-diagnostics')];
+            if (sections.length < 4) problems.push(`only ${sections.length} of the page's four parts were drawn`);
+            const scrolls = el => /^(auto|scroll|hidden)$/.test(getComputedStyle(el).overflowX);
+            const name = el => el.localName + [...el.classList].map(c => '.' + c).join('');
+            const range = document.createRange();
+            for (const s of sections) {
+                const left = s.getBoundingClientRect().left + s.clientLeft, right = left + s.clientWidth;
+                let worst = null, worstOver = 1;
+                const walker = document.createTreeWalker(s, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+                for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+                    const text = n.nodeType === Node.TEXT_NODE;
+                    if (text && !n.data.trim()) continue;
+                    const el = text ? n.parentElement : n;
+                    let r;
+                    if (text) { range.selectNodeContents(n); r = range.getBoundingClientRect(); } else r = el.getBoundingClientRect();
+                    if (r.width === 0) continue;
+                    const over = Math.max(r.right - right, left - r.left);
+                    if (over <= worstOver) continue;
+                    let elsewhere = false;
+                    for (let a = text ? el : el.parentElement; a && a !== s && !elsewhere; a = a.parentElement)
+                        elsewhere = scrolls(a);
+                    if (!elsewhere) { worst = el; worstOver = over; }
+                }
+                if (worst) problems.push(`${name(worst)} runs ${Math.round(worstOver)} px past the edge of ${name(s)}`);
+            }
+            return JSON.stringify({ problems });
+        }
+        """;
+
     private async Task Sweep(string url, bool runReport, string? injectedCss = null)
     {
         await using var context = await _browser.Browser.NewContextAsync(new BrowserNewContextOptions

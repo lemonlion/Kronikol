@@ -1,0 +1,47 @@
+        /* The labs page beside the report: its header, and the table of every scenario's history */
+        .labs-header h1 {
+            overflow-wrap: anywhere;
+        }
+        .labs-badge {
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 0.45em;
+            font-weight: 600;
+            padding: 0.2em 0.7em;
+            border-radius: 1em;
+            background: rgb(255, 243, 205);
+            color: rgb(122, 92, 0);
+            border: 1px solid rgb(232, 200, 110);
+        }
+        .labs-about, .labs-meta {
+            color: rgb(90, 90, 90);
+            overflow-wrap: anywhere;
+        }
+        .labs-meta code {
+            overflow-wrap: anywhere;
+        }
+        .labs-scenarios {
+            margin: 1em 0;
+        }
+        .labs-table-wrap {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .labs-scenario-table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 0.9em;
+        }
+        .labs-scenario-table th, .labs-scenario-table td {
+            text-align: left;
+            vertical-align: top;
+            padding: 0.3em 0.6em;
+            border-bottom: 1px solid rgb(225, 225, 225);
+            overflow-wrap: anywhere;
+        }
+        .labs-scenario-table .labs-feature th {
+            background: rgb(245, 245, 245);
+        }
+        .labs-stable {
+            color: rgb(120, 120, 120);
+        }

@@ -34,6 +34,9 @@
 		<EmbeddedResource Include="PlantUml\plantuml-render.js" />
 		<EmbeddedResource Include="Reports\advanced-search.js" />
 		<EmbeddedResource Include="Reports\stylesheets.css" />
+		<EmbeddedResource Include="Reports\history-styles.css" />
+		<EmbeddedResource Include="Reports\report-diagnostics-styles.css" />
+		<EmbeddedResource Include="Reports\labs-styles.css" />
 		<EmbeddedResource Include="Reports\context-menu-styles.css" />
 		<EmbeddedResource Include="Reports\inline-svg-styles.css" />
 		<EmbeddedResource Include="Reports\collapsible-notes-styles.css" />

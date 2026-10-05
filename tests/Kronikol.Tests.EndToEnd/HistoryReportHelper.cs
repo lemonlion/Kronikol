@@ -45,10 +45,8 @@ internal static class HistoryReportHelper
         }
     ];
 
-    /// <summary>Writes the report into <paramref name="tempDir"/>, copies it to <paramref name="outputDir"/>, and returns its file URL.</summary>
-    /// <param name="tweak">Changes an earlier run before it is recorded: its 0-based index and the run as seeded.</param>
-    /// <param name="wide">Adds a third feature of four passing scenarios, so the run has the five scenarios a pace is taken over.</param>
-    public static string Generate(string tempDir, string outputDir, string fileName, Func<int, HistoryRun, HistoryRun>? tweak = null, bool wide = false)
+    /// <summary>The features, the seeded ledger's verdicts for the current run, when it ended, and the ledger.</summary>
+    private static (Feature[] Features, HistoryVerdicts Verdicts, DateTimeOffset At, string Ledger) Seed(string tempDir, Func<int, HistoryRun, HistoryRun>? tweak, bool wide)
     {
         var features = Features();
         if (wide)
@@ -88,6 +86,15 @@ internal static class HistoryReportHelper
         var held = HistoryLedgerReader.Read(ledger, 50).Ledger ?? throw new InvalidOperationException("the seeded ledger did not read back");
         var verdicts = HistoryAnalyzer.Analyse(held, roster, run, new HistoryAnalysisOptions { MinRuns = 3 });
 
+        return (features, verdicts, at, ledger);
+    }
+
+    /// <summary>Writes the report into <paramref name="tempDir"/>, copies it to <paramref name="outputDir"/>, and returns its file URL.</summary>
+    /// <param name="tweak">Changes an earlier run before it is recorded: its 0-based index and the run as seeded.</param>
+    /// <param name="wide">Adds a third feature of four passing scenarios, so the run has the five scenarios a pace is taken over.</param>
+    public static string Generate(string tempDir, string outputDir, string fileName, Func<int, HistoryRun, HistoryRun>? tweak = null, bool wide = false)
+    {
+        var (features, verdicts, at, _) = Seed(tempDir, tweak, wide);
         var diagrams = features.SelectMany(f => f.Scenarios).Select(s => new DiagramAsCode(s.Id, "", PlantUmlSource)).ToArray();
         var path = ReportGenerator.GenerateHtmlReport(
             diagrams, features,
@@ -102,5 +109,47 @@ internal static class HistoryReportHelper
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// What a run writes by default from the same seeded ledger (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md): a real run,
+    /// no option set about history or diagnostics, which writes a report with no history in it and the labs page beside
+    /// it holding the history and <paramref name="diagnostics"/>. Both are copied to <paramref name="outputDir"/>.
+    /// Returns the page's file URL and the report's.
+    /// </summary>
+    public static (string Page, string Report) GenerateWithLabsPage(string tempDir, string outputDir, string reportFileName, IReadOnlyList<DiagnosticEntry>? diagnostics = null)
+    {
+        var (features, _, at, ledger) = Seed(tempDir, null, wide: false);
+        var name = Path.GetFileNameWithoutExtension(reportFileName);
+        var directory = Path.Combine(tempDir, "run-" + Guid.NewGuid().ToString("N")[..8]);
+        var options = new ReportConfigurationOptions
+        {
+            ReportsFolderPath = directory,
+            HtmlTestRunReportFileName = name,
+            SuiteName = Suite,
+            // Named, because the test process has KRONIKOL_HISTORY=off.
+            HistoryFilePath = ledger,
+            HistoryRunId = "e2e:99:1",
+            HistoryMinRuns = 3,
+            HistoryBranch = "",
+            InternalFlowTracking = false,
+            GenerateComponentDiagram = false,
+            GenerateSpecificationsReport = false,
+            GenerateSpecificationsData = false,
+            WriteRunSummaryToConsole = false
+        };
+        var collector = new ReportDiagnosticsCollector();
+        foreach (var entry in diagnostics ?? [])
+            collector.Add(entry.Kind, entry.Message);
+        using (ReportDiagnosticsScope.Begin(collector))
+            ReportGenerator.CreateStandardReportsWithDiagrams(features, at.UtcDateTime.AddMinutes(-1), at.UtcDateTime, options);
+
+        var report = Path.Combine(directory, name + ".html");
+        var page = Path.Combine(directory, LabsReportGenerator.FileName(name));
+        if (!File.Exists(page))
+            throw new InvalidOperationException("the run wrote no labs page");
+        File.Copy(report, Path.Combine(outputDir, Path.GetFileName(report)), true);
+        File.Copy(page, Path.Combine(outputDir, Path.GetFileName(page)), true);
+        return (new Uri(page).AbsoluteUri, new Uri(report).AbsoluteUri);
     }
 }

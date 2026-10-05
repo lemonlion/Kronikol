@@ -126,6 +126,9 @@ public static class MergedRunOutputs
             candidates.Add(Path.GetFileName(dataFilePath));
         if (written.Contains(ReportGenerator.FailuresDigestFileName))
             candidates.Add(ReportGenerator.FailuresDigestFileName);
+        // Written by the render before this, by the same rule: after the report, so the pointer's first .html is the report.
+        if (MergeableReportRenderer.LabsPageWritten(report, options, history))
+            candidates.Add(Path.GetFileName(MergeableReportRenderer.LabsPagePath(html)));
 
         var summary = RunSummaryConsoleWriter.Summarise(
             report.Features,

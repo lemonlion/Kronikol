@@ -331,7 +331,8 @@ public static class RunSummaryConsoleWriter
         summary.Files.FirstOrDefault(f => IsDataFile(f.Name))?.Name ?? "TestRunReport.json";
 
     private static string HtmlFileName(RunSummary summary) =>
-        summary.Files.FirstOrDefault(f => f.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase))?.Name ?? "TestRunReport.html";
+        summary.Files.FirstOrDefault(f => f.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase)
+                                          && !f.Name.EndsWith(LabsReportGenerator.Suffix, StringComparison.OrdinalIgnoreCase))?.Name ?? "TestRunReport.html";
 
     /// <summary>
     /// A file name, plus its size when the size is the point: the data file is the one an agent is tempted

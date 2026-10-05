@@ -181,7 +181,7 @@ public class MergeCommandTests
     }
 
     [Fact]
-    public void Merge_with_a_ledger_renders_history_and_never_writes_to_it()
+    public void Merge_with_a_ledger_puts_history_on_the_labs_page_and_never_writes_to_it()
     {
         var dir = Path.Combine(Path.GetTempPath(), "kronikol-cli-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
@@ -216,10 +216,15 @@ public class MergeCommandTests
             var exit = MergeCommand.Run([Path.Combine(dir, "shards"), "-o", output, "--history", ledger], outWriter, errWriter, _ => null);
 
             Assert.True(exit == 0, errWriter.ToString());
-            var html = File.ReadAllText(output);
-            Assert.Contains("<details id=\"history-section\"", html);
-            Assert.Contains("data-history-verdicts=\"broke\"", html);
-            Assert.Contains("<span class=\"history-sparkline\"", html); // the element: the stylesheet names the class too
+            // The merged report is a default report: no history in it (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md).
+            // What --history read is on the labs page beside it, named after it.
+            Assert.DoesNotContain("history-", File.ReadAllText(output));
+            var page = File.ReadAllText(Path.Combine(dir, "Combined.labs.html"));
+            Assert.Contains("<details id=\"history-section\" class=\"history-section\" open>", page);
+            Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", page);
+            Assert.Contains("<span class=\"history-sparkline\"", page);
+            Assert.Contains("<a class=\"history-link\" href=\"Combined.html#sid-", page);
+            Assert.Contains("Combined.labs.html", outWriter.ToString());
             var digest = File.ReadAllText(Path.Combine(dir, "Failures.md"));
             Assert.Contains("**History:**", digest);
             Assert.Contains("**broke**", digest);
@@ -228,7 +233,8 @@ public class MergeCommandTests
 
             var plain = Path.Combine(dir, "Plain.html");
             Assert.Equal(0, MergeCommand.Run([Path.Combine(dir, "shards"), "-o", plain], new StringWriter(), new StringWriter()));
-            Assert.DoesNotContain("<details id=\"history-section\"", File.ReadAllText(plain));
+            Assert.DoesNotContain("history-", File.ReadAllText(plain));
+            Assert.False(File.Exists(Path.Combine(dir, "Plain.labs.html")), "a merge with no history and no diagnostics wrote a page");
 
             // On a pull request build the merge reads against the branch the pull request targets, as the
             // shards' runs did: a stream with nothing on it, here, so the reading is a cold start on it.

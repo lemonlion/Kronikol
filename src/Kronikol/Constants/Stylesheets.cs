@@ -7,20 +7,37 @@ namespace Kronikol;
 /// </summary>
 public class Stylesheets
 {
-    private static readonly Lazy<string> HtmlReportStyleSheetLazy = new(() =>
+    private static readonly Lazy<string> HtmlReportStyleSheetLazy = new(() => Load("stylesheets.css"));
+    private static readonly Lazy<string> HistoryStyleSheetLazy = new(() => Load("history-styles.css"));
+    private static readonly Lazy<string> ReportDiagnosticsStyleSheetLazy = new(() => Load("report-diagnostics-styles.css"));
+    private static readonly Lazy<string> LabsStyleSheetLazy = new(() => Load("labs-styles.css"));
+
+    private static string Load(string fileName)
     {
         var assembly = Assembly.GetExecutingAssembly();
         var resourceName = assembly.GetManifestResourceNames()
-            .FirstOrDefault(n => n.EndsWith("stylesheets.css", StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException("Embedded resource stylesheets.css not found.");
+            .FirstOrDefault(n => n.EndsWith("." + fileName, StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException($"Embedded resource {fileName} not found.");
         using var stream = assembly.GetManifestResourceStream(resourceName)!;
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
-    });
+    }
 
     /// <summary>The main HTML-report stylesheet, externalized to <c>Reports/stylesheets.css</c> so the
-    /// exact bytes can be shared with the Kronikol4J port (JAVA_PORT_PLAN section 4.2).</summary>
+    /// exact bytes can be shared with the Kronikol4J port (JAVA_PORT_PLAN section 4.2). Since 4.6.0 it holds no
+    /// rules for the history views or the report diagnostics section, which have sheets of their own that a page
+    /// carries only when it draws them.</summary>
     public static string HtmlReportStyleSheet => HtmlReportStyleSheetLazy.Value;
+
+    /// <summary>The rules of the cross-run history views: the per-scenario sparkline and verdict pill, and the History
+    /// section. Carried by a report that draws them and by the labs page.</summary>
+    internal static string HistoryStyleSheet => HistoryStyleSheetLazy.Value;
+
+    /// <summary>The rules of the Report diagnostics section. Carried by a report that draws it and by the labs page.</summary>
+    internal static string ReportDiagnosticsStyleSheet => ReportDiagnosticsStyleSheetLazy.Value;
+
+    /// <summary>The labs page's own rules: its header and its table of every scenario's history.</summary>
+    internal static string LabsStyleSheet => LabsStyleSheetLazy.Value;
 
     /// <summary>The violet overlay that is the default <see cref="ReportConfigurationOptions.HtmlSpecificationsCustomStyleSheet"/>:
     /// it recolours <see cref="HtmlReportStyleSheet"/> and the component sheets rather than replacing them, and is

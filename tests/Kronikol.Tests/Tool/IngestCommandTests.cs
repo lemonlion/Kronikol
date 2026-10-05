@@ -493,10 +493,16 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("Other: free text without a kind", printed);
         Assert.Contains("Other: NoSuchKind: still free text", printed);
 
-        // The HTML section is off unless the run asks for it; the data file carries the diagnostic either way.
+        // The HTML section is off unless the run asks for it; the data file carries the diagnostic either way, and the
+        // labs page beside the report lists it, named by the pointer after the report.
         var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
         Assert.DoesNotContain("<summary>Report diagnostics (", html);
         Assert.DoesNotContain("tap-di-redis: decoding disabled on 1 connection(s)", html);
+        var page = File.ReadAllText(Path.Combine(output, "TestRunReport.labs.html"));
+        Assert.Contains("<details class=\"report-diagnostics\" open>", page);
+        Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", page);
+        Assert.True(printed.IndexOf("TestRunReport.labs.html", StringComparison.Ordinal) > printed.IndexOf("TestRunReport.html", StringComparison.Ordinal),
+            $"the pointer does not list the page after the report:\n{printed}");
         using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
         Assert.Contains(json.RootElement.GetProperty("diagnostics").EnumerateArray(),
             d => d.GetProperty("kind").GetString() == "CaptureDegraded");

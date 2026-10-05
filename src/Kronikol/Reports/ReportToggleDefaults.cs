@@ -85,7 +85,7 @@ public record ReportToggleDefaults
 
     /// <summary>The report diagnostics disclosure starts open (test run report only). Default: <c>false</c>.
     /// Inert unless <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> renders the section,
-    /// which it does not by default.</summary>
+    /// which it does not by default. The labs page's list is always open.</summary>
     public bool? DiagnosticsOpen { get; set; }
 
     /// <summary>Rule sections start open. Default: <c>true</c>.</summary>

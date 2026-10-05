@@ -34,6 +34,8 @@ public record ResolvedToggleDefaults
     public bool FailureClustersOpen { get; init; } = true;
     public bool StepsSectionOpen { get; init; } = true;
     public bool DiagramsSectionOpen { get; init; } = true;
+    /// <summary>Whether the report's Report diagnostics section starts open (<see cref="ReportToggleDefaults.DiagnosticsOpen"/>);
+    /// the section is drawn only when <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> asks for it.</summary>
     public bool DiagnosticsOpen { get; init; }
     public bool RulesOpen { get; init; } = true;
     public bool BackgroundStepsOpen { get; init; }

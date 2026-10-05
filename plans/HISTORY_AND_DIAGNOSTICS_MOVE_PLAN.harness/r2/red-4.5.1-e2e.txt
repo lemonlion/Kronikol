@@ -1,0 +1,18 @@
+R2's Playwright facts run at v4.5.1, HistoryReportHelper.GenerateWithLabsPage copied in (it names the page by
+string and does not require it). Each failing fact and the start of its message.
+Failed: 7 Total tests: 7
+
+EndToEnd.DefaultReportWithoutHistoryTests.A_verdict_query_matches_nothing_and_raises_no_error
+    System.TimeoutException : Timeout 5000ms exceeded.
+EndToEnd.DefaultReportWithoutHistoryTests.No_sparkline_or_verdict_is_painted_in_any_scenario_header
+    Microsoft.Playwright.PlaywrightException : Locator expected to have count '0' But was: '4' Call log:
+EndToEnd.DefaultReportWithoutHistoryTests.The_filtered_export_carries_no_history
+    Assert.DoesNotContain() Failure: Sub-string found
+EndToEnd.LabsPageTests.A_scenario_named_on_the_page_opens_in_the_report
+    Microsoft.Playwright.PlaywrightException : net::ERR_FILE_NOT_FOUND at file:///<temp>/... Call log: - navigating to "file:///<temp>/... waiting until "load"
+EndToEnd.LabsPageTests.Each_sparkline_paints_a_stop_per_run
+    Microsoft.Playwright.PlaywrightException : net::ERR_FILE_NOT_FOUND at file:///<temp>/... Call log: - navigating to "file:///<temp>/... waiting until "load"
+EndToEnd.LabsPageTests.The_page_opens_with_its_history_and_its_diagnostics_open
+    Microsoft.Playwright.PlaywrightException : net::ERR_FILE_NOT_FOUND at file:///<temp>/... Call log: - navigating to "file:///<temp>/... waiting until "load"
+EndToEnd.LabsPageTests.The_page_runs_no_script
+    Microsoft.Playwright.PlaywrightException : net::ERR_FILE_NOT_FOUND at file:///<temp>/... Call log: - navigating to "file:///<temp>/... waiting until "load"

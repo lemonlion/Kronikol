@@ -59,7 +59,11 @@ function run_search_scenarios() {
             if (cats) cats.split(',').forEach(function(t) { tags.add(t.trim()); });
             if (labels) labels.split(',').forEach(function(t) { tags.add(t.trim()); });
 
+// kron:verdicts
             let result = advancedSearchMatch(input, item.searchText, tags, item.status, item.verdicts);
+// kron:else
+//|            let result = advancedSearchMatch(input, item.searchText, tags, item.status);
+// kron:/verdicts
             if (result === null) {
                 advancedFailed = true;
                 break;

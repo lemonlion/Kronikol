@@ -8,8 +8,9 @@ namespace Kronikol.Tests.Ingestion;
 /// <summary>
 /// <see cref="IngestRequest.HostDiagnostics"/>: what a host already knows about its capture components
 /// (a tap whose decoder gave up, oversize payloads skipped) travels into <see cref="IngestResult.Diagnostics"/>,
-/// the "Report diagnostics" section of <c>TestRunReport.html</c> and the <c>diagnostics</c> array of
-/// <c>TestRunReport.json</c> — a dead tap is a line in the report, not only in a log.
+/// the labs page beside the report, the "Report diagnostics" section of <c>TestRunReport.html</c> when it is asked
+/// for, and the <c>diagnostics</c> array of <c>TestRunReport.json</c> — a dead tap is a line on a page, not only in a
+/// log.
 /// </summary>
 [Collection("DiagramsFetcher")]
 public class IngestHostDiagnosticsTests : IDisposable
@@ -78,8 +79,8 @@ public class IngestHostDiagnosticsTests : IDisposable
 
         var html = File.ReadAllText(result.TestRunReportHtml);
         Assert.Contains("class=\"report-diagnostics\"", html);
-        // Anchored on the elements: the stylesheet holds the words "Report diagnostics (" in a comment and the
-        // kind's class in a selector, so a bare substring passed without the section.
+        // Anchored on the elements: the section's stylesheet, which comes with it, holds the kind's class in a
+        // selector, so a bare substring would pass on the stylesheet alone.
         Assert.Contains("<summary>Report diagnostics (", html);
         Assert.Contains("<span class=\"report-diagnostic-kind report-diagnostic-kind-capturedegraded\">CaptureDegraded</span>", html);
         Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", html);
@@ -141,12 +142,16 @@ public class IngestHostDiagnosticsTests : IDisposable
     {
         var quiet = IngestPipeline.Run(Request("SectionOff", [DeadTap, HostNote], showSection: false));
 
-        // Emitted markup, not the class name: the stylesheet names the section either way.
+        // The whole file: since 4.6.0 a report without the section carries none of its stylesheet either.
         var html = File.ReadAllText(quiet.TestRunReportHtml);
-        Assert.DoesNotContain("<details class=\"report-diagnostics\"", html);
+        Assert.DoesNotContain("report-diagnostic", html);
         Assert.DoesNotContain("<summary>Report diagnostics (", html);
 
-        // Only the HTML section goes: the result and TestRunReport.json say everything they said before.
+        // Only the report's section goes: the labs page beside it lists them, and the result and TestRunReport.json
+        // say everything they said before.
+        var page = File.ReadAllText(Path.Combine(Path.GetDirectoryName(quiet.TestRunReportHtml)!, "TestRunReport.labs.html"));
+        Assert.Contains("<details class=\"report-diagnostics\" open>", page);
+        Assert.Contains(System.Net.WebUtility.HtmlEncode(DeadTap.Message), page);
         Assert.Equal(DeadTap, quiet.Diagnostics[0]);
         using var json = ReadJson(quiet);
         var written = json.RootElement.GetProperty("diagnostics").EnumerateArray().ToArray();

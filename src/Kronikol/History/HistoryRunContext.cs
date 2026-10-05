@@ -5,8 +5,8 @@ namespace Kronikol.History;
 
 /// <summary>
 /// Everything a report generation knows about history, gathered once before any output is written and
-/// handed to every writer that wants it — the digest, the CTRF document, the console pointer, the HTML —
-/// so they all say the same thing about the same run.
+/// handed to every writer that wants it — the digest, the CTRF document, the console pointer, the labs page and
+/// any report that asks for history — so they all say the same thing about the same run.
 /// </summary>
 public sealed class HistoryRunContext
 {

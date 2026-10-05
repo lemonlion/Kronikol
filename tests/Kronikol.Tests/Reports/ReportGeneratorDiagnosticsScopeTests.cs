@@ -58,9 +58,10 @@ public class ReportGeneratorDiagnosticsScopeTests : IDisposable
 
         var diagnostics = DiagnosticsIn(_dir);
         Assert.Contains(diagnostics, d => d.GetProperty("kind").GetString() == nameof(DiagnosticKind.RenderFailure));
-        // The HTML section is off by default (3.21.0). The stylesheet names it in every report, so the check
-        // reads the element, never the bare words.
-        Assert.DoesNotContain("<details class=\"report-diagnostics\"", File.ReadAllText(Path.Combine(_dir, "TestRunReport.html")));
+        // The HTML section is off by default (3.21.0), and since 4.6.0 its stylesheet goes with it, so the whole file
+        // is checked. The diagnostic is on the labs page beside the report.
+        Assert.DoesNotContain("report-diagnostic", File.ReadAllText(Path.Combine(_dir, "TestRunReport.html")));
+        Assert.Contains("<details class=\"report-diagnostics\" open>", File.ReadAllText(Path.Combine(_dir, "TestRunReport.labs.html")));
     }
 
     [Fact]

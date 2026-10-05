@@ -157,7 +157,8 @@ public class RunRotationTests : IDisposable
         }
 
         Run(ExecutionResult.Failed, o => History(o, "local:first:1"));
-        var kept = new[] { "TestRunReport.json", "TestRunReport.html", "Failures.md", "Failures.jsonl", HistoryFormat.FragmentFileName };
+        // The labs page too: a run that reads history writes it, a first run against an empty ledger included.
+        var kept = new[] { "TestRunReport.json", "TestRunReport.html", "TestRunReport.labs.html", "Failures.md", "Failures.jsonl", HistoryFormat.FragmentFileName };
         var first = Snapshot(Reports, kept);
         Assert.Contains("# Failures — 1 of 2 scenarios", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
 
@@ -181,7 +182,7 @@ public class RunRotationTests : IDisposable
         Assert.Equal("local:second:1", Manifest().Run);
         Assert.Equal(0, Manifest().Failed);
         Assert.Equal(
-            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.json", "TestRunReport.schema.json", "query.cs"],
+            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.json", "TestRunReport.labs.html", "TestRunReport.schema.json", "query.cs"],
             TopLevel(Reports));
     }
 
@@ -698,6 +699,65 @@ public class RunRotationTests : IDisposable
         Assert.Equal("second run's pixels", File.ReadAllText(Path.Combine(Reports, "attachments", "overview.png")));
     }
 
+    // ─── 14. The labs page ─────────────────────────────────────
+
+    [Fact]
+    public void A_directory_with_no_manifest_rotates_the_labs_page_with_the_report()
+    {
+        WrittenBeforeManifestsExisted(ExecutionResult.Failed, o => { o.HistoryFilePath = Ledger; o.HistoryBranch = ""; });
+        var old = Snapshot(Reports, "TestRunReport.labs.html");
+
+        Run(ExecutionResult.Passed);
+
+        var retained = Path.Combine(Runs, Assert.Single(RetainedNames()));
+        Assert.True(old["TestRunReport.labs.html"].AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(retained, "TestRunReport.labs.html"))),
+            "the old run's labs page is not under runs/");
+        // This run read no history and recorded nothing, so it wrote no page, and the old one is not left on top as its.
+        Assert.False(File.Exists(Path.Combine(Reports, "TestRunReport.labs.html")), "the old run's page stayed on top");
+    }
+
+    [Fact]
+    public void An_attachment_still_moves_when_the_run_wrote_a_labs_page()
+    {
+        var source = Path.Combine(_root, "captures");
+        Directory.CreateDirectory(source);
+        var shot = Path.Combine(source, "checkout_failure.png");
+        void History(ReportConfigurationOptions o) { o.HistoryFilePath = Ledger; o.HistoryBranch = ""; }
+
+        File.WriteAllText(shot, "first run's pixels");
+        Run(ExecutionResult.Failed, History, features: Features(ExecutionResult.Failed, new FileAttachment("checkout_failure.png", shot)));
+        Assert.Contains("TestRunReport.labs.html", Manifest().Files);
+
+        File.WriteAllText(shot, "second run's pixels");
+        Run(ExecutionResult.Failed, History, features: Features(ExecutionResult.Failed, new FileAttachment("checkout_failure.png", shot)));
+
+        // Moved, not copied: the page is the run's own file, never "another report" that may link to it.
+        var retained = Path.Combine(Runs, Assert.Single(RetainedNames()));
+        Assert.Equal("first run's pixels", File.ReadAllText(Path.Combine(retained, "attachments", "checkout_failure.png")));
+        Assert.Equal("second run's pixels", File.ReadAllText(Path.Combine(Reports, "attachments", "checkout_failure.png")));
+        Assert.True(File.Exists(Path.Combine(retained, "TestRunReport.labs.html")));
+    }
+
+    [Fact]
+    public void Two_reports_in_one_folder_each_write_and_rotate_their_own_labs_page()
+    {
+        void Named(ReportConfigurationOptions o, string name) { o.HtmlTestRunReportFileName = name; o.HistoryFilePath = Ledger; o.HistoryBranch = ""; }
+
+        Run(ExecutionResult.Failed, o => Named(o, "Checkout"));
+        Run(ExecutionResult.Failed, o => Named(o, "Payments"));
+        Assert.True(File.Exists(Path.Combine(Reports, "Checkout.labs.html")));
+        Assert.True(File.Exists(Path.Combine(Reports, "Payments.labs.html")));
+        var checkout = Snapshot(Reports, "Checkout.labs.html");
+
+        Run(ExecutionResult.Passed, o => Named(o, "Payments"));
+
+        var retained = Path.Combine(Runs, Assert.Single(RetainedNames()));
+        Assert.True(File.Exists(Path.Combine(retained, "Payments.labs.html")));
+        Assert.False(File.Exists(Path.Combine(retained, "Checkout.labs.html")), "Payments' rotation took Checkout's page");
+        Assert.True(checkout["Checkout.labs.html"].AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(Reports, "Checkout.labs.html"))));
+        Assert.True(File.Exists(Path.Combine(Reports, "Payments.labs.html")));
+    }
+
     // ─── 15. The manifest lists what reached disk ──────────────
 
     [Fact]
@@ -721,6 +781,9 @@ public class RunRotationTests : IDisposable
             o.GenerateCtrfReport = true;
             o.WriteCiSummary = true;
             o.DiagnosticMode = true;
+            // History read, so the labs page is written too.
+            o.HistoryFilePath = Ledger;
+            o.HistoryBranch = "";
         }, features: Features(ExecutionResult.Failed, new FileAttachment("shot.png", shot)));
 
         Assert.DoesNotContain(diagnostics, d => d.Kind == DiagnosticKind.OutputFailure);
@@ -733,7 +796,7 @@ public class RunRotationTests : IDisposable
 
         Assert.Equal(onDisk, manifest.Files.Concat(manifest.Attachments).Order(StringComparer.Ordinal).ToArray());
         // Named, so that a manifest that lists nothing and a directory that holds nothing cannot agree.
-        foreach (var expected in new[] { "TestRunReport.html", "TestRunReport.json", "TestRunReport.schema.json", "ComponentDiagram.html", "ComponentDiagram.svg", "CiSummary.md", "DiagnosticReport.html", "Failures.md", "Failures.jsonl", "Specifications.html", "Specifications.yml", "Specifications.md", "ctrf-report.json" })
+        foreach (var expected in new[] { "TestRunReport.html", "TestRunReport.json", "TestRunReport.labs.html", "TestRunReport.schema.json", "ComponentDiagram.html", "ComponentDiagram.svg", "CiSummary.md", "DiagnosticReport.html", "Failures.md", "Failures.jsonl", "Specifications.html", "Specifications.yml", "Specifications.md", "ctrf-report.json" })
             Assert.Contains(expected, manifest.Files);
         Assert.Equal(["attachments/shot.png"], manifest.Attachments);
         Assert.Equal(manifest.Files.Order(StringComparer.Ordinal).ToArray(), manifest.Files.ToArray());

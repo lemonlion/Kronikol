@@ -452,7 +452,7 @@ internal static class IngestCommand
             var summary = RunSummaryConsoleWriter.Summarise(
                 result.Features,
                 result.ReportsDirectory,
-                new[] { "TestRunReport.html", "TestRunReport.json", "Failures.md" }.Where(written.Contains),
+                new[] { "TestRunReport.html", "TestRunReport.json", "Failures.md", LabsReportGenerator.FileName("TestRunReport") }.Where(written.Contains),
                 agentInstructionsWritten: File.Exists(Path.Combine(result.ReportsDirectory, AgentInstructionsGenerator.ClaudeFileName)),
                 // The same suite the pipeline wrote the report under. Without it this pointer prints ids
                 // computed with no suite at all, addressing a report whose own ids were computed with one
@@ -690,10 +690,11 @@ internal static class IngestCommand
         w.WriteLine("  --diagnostic <kind>:<msg> Carry a host diagnostic into the report (repeatable) — e.g. a tap's capture");
         w.WriteLine("                           health: \"CaptureDegraded:tap-di-redis: decoding disabled on 1 connection\".");
         w.WriteLine("                           kind = a DiagnosticKind name (unknown → Other); it lands in IngestResult.Diagnostics");
-        w.WriteLine("                           and TestRunReport.json's diagnostics array, and in the HTML report's \"Report");
-        w.WriteLine("                           diagnostics\" section when --diagnostics-section asks for it.");
-        w.WriteLine("  --diagnostics-section    Render the \"Report diagnostics\" section in the HTML report. Off by default:");
-        w.WriteLine("                           every diagnostic is in TestRunReport.json and printed here either way.");
+        w.WriteLine("                           and TestRunReport.json's diagnostics array, on the labs page beside the report");
+        w.WriteLine("                           (TestRunReport.labs.html), and in the HTML report's \"Report diagnostics\"");
+        w.WriteLine("                           section when --diagnostics-section asks for it.");
+        w.WriteLine("  --diagnostics-section    Also render the \"Report diagnostics\" section in the HTML report. Off by default:");
+        w.WriteLine("                           every diagnostic is on the labs page, in TestRunReport.json and printed here.");
         w.WriteLine("  -h, --help               Show this help.");
         w.WriteLine();
         w.WriteLine("Example:");

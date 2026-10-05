@@ -2795,7 +2795,9 @@ public static class ReportTestHelper
     /// hold ordinary content: this page is about what sits around them, which no feature clips, so what
     /// overflows it scrolls the whole page sideways.
     /// </summary>
-    public static string GenerateReportWithEverySection(string tempDir, string outputDir, string fileName)
+    /// <param name="labsPageFileName">When given, the labs page drawn from the same history and diagnostics is written
+    /// beside the report under this name (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md), linking to it.</param>
+    public static string GenerateReportWithEverySection(string tempDir, string outputDir, string fileName, string? labsPageFileName = null)
     {
         const string suite = "BreakfastProvider.Tests.Component.LightBDD.xUnit3.OrderReconciliationAcrossRegions";
         const string error = "System.InvalidOperationException: Sequence contains no matching element in "
@@ -2866,6 +2868,13 @@ public static class ReportTestHelper
             new Uri("https://ledger.example.com/api/v1/orders/reconciliation/nightly-settlement-batches/2026-09-25/regions/eu-west-1/retry-after-timeout"),
             [], "Nightly Settlement Ledger Service (eu-west-1)", "Caller", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)).ToList();
         var background = new BackgroundCalls(3, [new BackgroundCallGroup("es1", Name(1), 3, at)], calls);
+
+        if (labsPageFileName is not null)
+        {
+            File.WriteAllText(Path.Combine(tempDir, labsPageFileName), LabsReportGenerator.Build(
+                new LabsPage("Test Run Report", features, suite, history, diagnostics, fileName, "e2e:99:1", at)));
+            File.Copy(Path.Combine(tempDir, labsPageFileName), Path.Combine(outputDir, labsPageFileName), true);
+        }
 
         var path = ReportGenerator.GenerateHtmlReport(
             diagrams, features,

@@ -1,7 +1,7 @@
 name: Kronikol history - read
 description: >
   Before the tests: fetches the cross-run history ledger, with its quarantine and aliases, from the data branch and
-  names it in KRONIKOL_HISTORY, so the run's own report, Failures.md and job summary carry the verdicts. Never fails
+  names it in KRONIKOL_HISTORY, so the run's own labs page, Failures.md and job summary carry the verdicts. Never fails
   the job. See README.md.
 
 inputs:

@@ -429,15 +429,26 @@ public record ReportConfigurationOptions
     public bool DiagnosticMode { get; set; }
 
     /// <summary>
-    /// Whether <c>TestRunReport.html</c> carries the "Report diagnostics" section: the collapsed list of
-    /// what the run recorded about itself — a tap whose decoder gave up, a skipped capture line, a render
-    /// that failed. Default: <c>false</c>, because on a healthy run it is a line of noise above the
-    /// features. Nothing else moves with it: every diagnostic still reaches
+    /// Whether <c>TestRunReport.html</c> also carries the "Report diagnostics" section: the collapsed list of
+    /// what the run recorded about itself, such as a tap whose decoder gave up, a skipped capture line or a render
+    /// that failed. Default: <c>false</c>, because on a healthy run it is a line of noise above the features.
+    /// The list is on the labs page beside the report whenever the run recorded an entry
+    /// (<see cref="GenerateLabsReport"/>), and every diagnostic still reaches
     /// <see cref="Kronikol.Ingestion.IngestResult.Diagnostics"/>, the <c>diagnostics</c> array of
-    /// <c>TestRunReport.json</c>, and the console. <see cref="ReportToggleDefaults.DiagnosticsOpen"/>
-    /// decides whether the section starts open, and is inert while this is <c>false</c>.
+    /// <c>TestRunReport.json</c>, and the console. <see cref="ReportToggleDefaults.DiagnosticsOpen"/> decides whether
+    /// the report's section starts open, and is inert while this is <c>false</c>; the labs page's list is always open.
     /// </summary>
     public bool ShowReportDiagnosticsSection { get; set; }
+
+    /// <summary>
+    /// Whether the run writes the labs page beside its report, <c>{HtmlTestRunReportFileName}.labs.html</c>
+    /// (<c>TestRunReport.labs.html</c> by default): the views still being designed, which a default report does not
+    /// carry. It holds the History section and every scenario's sparkline and verdict when the run read history and
+    /// <see cref="EmbedHistoryInReport"/> is on, and the Report diagnostics list when the run recorded a diagnostic;
+    /// with neither, no page is written. It has no script, and its scenario names link into the report.
+    /// Default: <c>true</c>.
+    /// </summary>
+    public bool GenerateLabsReport { get; set; } = true;
 
     /// <summary>When <c>true</c>, background steps are rendered inline with the scenario steps instead of in a separate collapsible section.</summary>
     [Obsolete("Background steps are inlined by default. Set SeparateBackgroundSteps = true for the old separate section.")]
@@ -618,8 +629,8 @@ public record ReportConfigurationOptions
 
     /// <summary>
     /// How many pass-or-fail verdicts a scenario needs before it can be called flaky or slower.
-    /// Default: 5. Below it the status verdicts (new, broke, failing, fixed) still apply and the report
-    /// says how many runs are recorded.
+    /// Default: 5. Below it the status verdicts (new, broke, failing, fixed) still apply, and the History
+    /// section says how many runs are recorded.
     /// </summary>
     public int HistoryMinRuns { get; set; } = 5;
 
@@ -746,9 +757,10 @@ public record ReportConfigurationOptions
     public string? HistoryBranch { get; set; }
 
     /// <summary>
-    /// A second branch stream to read the same run against, reported beside the run's own reading — on
-    /// the failures digest, the run-end pointer and the report's History section — as
-    /// <c>on main: 1 broke (against 12 earlier runs on main)</c>. Default: <c>null</c>, no second reading.
+    /// A second branch stream to read the same run against, reported beside the run's own reading (on the
+    /// failures digest, the run-end pointer and the History section, which is on the labs page and in a report that
+    /// asks for it) as <c>on main: 1 broke (against 12 earlier runs on main)</c>. Default: <c>null</c>, no second
+    /// reading.
     /// </summary>
     public string? HistoryCompareBranch { get; set; }
 
@@ -769,22 +781,35 @@ public record ReportConfigurationOptions
     public bool? WriteHistoryLedger { get; set; }
 
     /// <summary>
-    /// Whether the test run report embeds the history it read — a sparkline and verdict beside each
-    /// scenario, and the History section when <see cref="ShowHistorySection"/> asks for it. Default:
-    /// <c>true</c>. With no ledger the report is byte-for-byte what it was without history.
+    /// Whether the history a run read reaches its HTML: the labs page beside the report
+    /// (<see cref="GenerateLabsReport"/>) and the report's own opt-ins (<see cref="ShowScenarioHistory"/>,
+    /// <see cref="ShowHistorySection"/>). Default: <c>true</c>. <c>false</c> keeps history out of both;
+    /// <c>Failures.md</c>, the CTRF document, the console pointer, the fragment and the ledger are not affected.
+    /// A run with no ledger to read (history off, or no ledger found) has no history to show either way; one whose
+    /// ledger file does not exist yet reads it as empty, and shows its own first run.
     /// </summary>
     public bool EmbedHistoryInReport { get; set; } = true;
 
     /// <summary>
-    /// Whether <c>TestRunReport.html</c> carries the History section beside the timeline: the run's
-    /// summary line, the trend of the last runs, and the lists of what changed. Default: <c>false</c> —
-    /// a run where nothing changed still has the section to say so, and above the features that reads as
-    /// noise. Off, the history a run read is still beside the scenario it is about (the sparkline and the
-    /// verdict pill, which <see cref="EmbedHistoryInReport"/> governs), still in <c>Failures.md</c>, the
-    /// CTRF document and the ledger, and still what <c>kronikol query history</c> answers from.
-    /// <c>kronikol merge --history</c> turns it on for the merged report it was asked to render.
+    /// Whether <c>TestRunReport.html</c> also carries the History section beside the timeline: the run's
+    /// summary line, the trend of the last runs, and the lists of what changed. Default: <c>false</c>,
+    /// because a run where nothing changed still has the section to say so, and above the features that reads as
+    /// noise. The section is on the labs page beside the report whenever the run read history
+    /// (<see cref="GenerateLabsReport"/>), and the history a run read is still in <c>Failures.md</c>, the CTRF
+    /// document and the ledger, and still what <c>kronikol query history</c> answers from. It needs
+    /// <see cref="EmbedHistoryInReport"/>.
     /// </summary>
     public bool ShowHistorySection { get; set; }
+
+    /// <summary>
+    /// Whether <c>TestRunReport.html</c> carries each scenario's history in its header: a sparkline of the last
+    /// runs, a pill for a verdict that is not <c>stable</c>, and the <c>data-history-verdicts</c> attribute the
+    /// search box reads for <c>$flaky</c>, <c>$broke</c> and the other verdict operators, with the stylesheet and
+    /// the search code they need. Default: <c>false</c>: since 4.6.0 a default report carries no history, and the
+    /// same sparklines and verdicts are on the labs page beside it (<see cref="GenerateLabsReport"/>). It needs
+    /// <see cref="EmbedHistoryInReport"/>, and a ledger to read.
+    /// </summary>
+    public bool ShowScenarioHistory { get; set; }
 
     /// <summary>
     /// How many earlier runs are kept under <c>&lt;reports&gt;/runs/&lt;run&gt;/</c>. Before a run writes,

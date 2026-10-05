@@ -1,7 +1,7 @@
 # Kronikol history
 
-Cross-run history on GitHub Actions: each run's tests read against the runs before them, so a report, its
-`Failures.md` and the job summary say what is new, what has failed for a week and what flips, and each run is then
+Cross-run history on GitHub Actions: each run's tests read against the runs before them, so the labs page beside a
+report, its `Failures.md` and the job summary say what is new, what has failed for a week and what flips, and each run is then
 recorded for the next one. The ledger lives on an orphan data branch, `kronikol-history`, which shares no history
 with your code and stays out of every pull request's diff
 ([Cross-Run History](https://github.com/lemonlion/Kronikol/wiki/Cross-Run-History)).
@@ -149,7 +149,7 @@ examples keep the checkout, which works everywhere.
 
 **Why each part is there:**
 
-- **`read` before the tests.** A run reads the ledger at its end, so the verdicts reach its own report,
+- **`read` before the tests.** A run reads the ledger at its end, so the verdicts reach its own labs page,
   `Failures.md` and job summary, not only the next run's.
 - **`!cancelled()` on `save`, `gate` and the `history` job, rather than `always()`.** A failed run is the one most
   worth recording. A cancelled one is not a result.

@@ -1,0 +1,78 @@
+Each r2-* mutation (mutate.py) applied alone to a snapshot of R2's tree (2026-10-05), then the R2 facts run:
+the facts it turned red. Unit facts: tests/Kronikol.Tests filtered to the R2 classes (180 facts, one skipped).
+
+== r2-sparkline-without-opt-in | Total tests: 180  Passed: 177  Failed: 2  | build errors: 0
+     Kronikol.Tests.History.HistoryOutputsTests.A_default_report_carries_no_history_and_each_opt_in_brings_back_its_own [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.ShowHistorySection_brings_back_the_section_and_its_css_and_no_verdict_code [FAIL]
+== r2-history-css-always | Total tests: 180  Passed: 173  Failed: 6  | build errors: 0
+     Kronikol.Tests.History.HistoryOutputsTests.A_default_report_carries_no_history_and_each_opt_in_brings_back_its_own [FAIL]
+     Kronikol.Tests.History.HistoryOutputsTests.The_html_report_embeds_the_history_it_is_asked_for_unless_told_not_to [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.A_default_report_names_no_history_or_diagnostics_anywhere_in_the_file [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.EmbedHistoryInReport_off_keeps_history_out_of_the_report_and_the_page_whatever_the_opt_ins_say [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.ShowReportDiagnosticsSection_brings_back_the_section_and_its_css_and_no_history [FAIL]
+     Kronikol.Tests.Reports.Merge.MergeCommandTests.Merge_with_a_ledger_puts_history_on_the_labs_page_and_never_writes_to_it [FAIL]
+== r2-diagnostics-css-always | Total tests: 180  Passed: 173  Failed: 6  | build errors: 0
+     Kronikol.Tests.Ingestion.IngestHostDiagnosticsTests.The_html_section_is_left_out_unless_it_is_asked_for_and_the_data_file_carries_it_either_way [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.A_default_report_names_no_history_or_diagnostics_anywhere_in_the_file [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.A_report_that_asks_for_the_diagnostics_section_with_nothing_to_list_carries_neither_section_nor_css [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.ShowScenarioHistory_brings_back_the_sparkline_pill_attribute_verdict_code_and_their_css_and_no_section [FAIL]
+     Kronikol.Tests.Reports.Merge.MergedLabsPageTests.The_shards_diagnostics_are_listed_on_the_page_beside_the_merged_report [FAIL]
+     Kronikol.Tests.Reports.ReportGeneratorDiagnosticsScopeTests.A_normal_run_records_its_diagnostics_in_the_json [FAIL]
+== r2-fences-kept-by-default | Total tests: 180  Passed: 168  Failed: 11  | build errors: 0
+     Kronikol.Tests.History.HistoryOutputsTests.A_default_report_carries_no_history_and_each_opt_in_brings_back_its_own [FAIL]
+     Kronikol.Tests.History.HistoryOutputsTests.The_html_report_embeds_the_history_it_is_asked_for_unless_told_not_to [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.A_default_report_names_no_history_or_diagnostics_anywhere_in_the_file [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.EmbedHistoryInReport_off_keeps_history_out_of_the_report_and_the_page_whatever_the_opt_ins_say [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.ShowHistorySection_brings_back_the_section_and_its_css_and_no_verdict_code [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.ShowReportDiagnosticsSection_brings_back_the_section_and_its_css_and_no_history [FAIL]
+     Kronikol.Tests.Reports.Merge.MergeCommandTests.Merge_with_a_ledger_puts_history_on_the_labs_page_and_never_writes_to_it [FAIL]
+     Kronikol.Tests.Reports.VerdictFencesTests.Each_variant_is_the_bytes_it_was_before(advanced-search.js) [FAIL]
+     Kronikol.Tests.Reports.VerdictFencesTests.Each_variant_is_the_bytes_it_was_before(report-scenario-feature-map-helper.js) [FAIL]
+     Kronikol.Tests.Reports.VerdictFencesTests.Each_variant_is_the_bytes_it_was_before(report-search-function.js) [FAIL]
+     Kronikol.Tests.Reports.VerdictFencesTests.Each_variant_is_the_bytes_it_was_before(report-search-index.js) [FAIL]
+== r2-fences-stripped-when-asked | Total tests: 180  Passed: 173  Failed: 6  | build errors: 0
+     Kronikol.Tests.Reports.DefaultReportCleanTests.ShowScenarioHistory_brings_back_the_sparkline_pill_attribute_verdict_code_and_their_css_and_no_section [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.With_every_opt_in_on_the_report_carries_both_sections_and_the_scenario_history [FAIL]
+     Kronikol.Tests.Reports.VerdictFencesTests.Each_variant_is_the_bytes_it_was_before(advanced-search.js) [FAIL]
+     Kronikol.Tests.Reports.VerdictFencesTests.Each_variant_is_the_bytes_it_was_before(report-scenario-feature-map-helper.js) [FAIL]
+     Kronikol.Tests.Reports.VerdictFencesTests.Each_variant_is_the_bytes_it_was_before(report-search-function.js) [FAIL]
+     Kronikol.Tests.Reports.VerdictFencesTests.Each_variant_is_the_bytes_it_was_before(report-search-index.js) [FAIL]
+== r2-show-scenario-history-ignored | Total tests: 180  Passed: 175  Failed: 4  | build errors: 0
+     Kronikol.Tests.History.HistoryOutputsTests.A_default_report_carries_no_history_and_each_opt_in_brings_back_its_own [FAIL]
+     Kronikol.Tests.History.HistoryOutputsTests.The_html_report_embeds_the_history_it_is_asked_for_unless_told_not_to [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.ShowScenarioHistory_brings_back_the_sparkline_pill_attribute_verdict_code_and_their_css_and_no_section [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.With_every_opt_in_on_the_report_carries_both_sections_and_the_scenario_history [FAIL]
+== r2-embed-ignored-by-page | Total tests: 180  Passed: 176  Failed: 3  | build errors: 0
+     Kronikol.Tests.History.HistoryOutputsTests.The_html_report_embeds_the_history_it_is_asked_for_unless_told_not_to [FAIL]
+     Kronikol.Tests.Reports.DefaultReportCleanTests.EmbedHistoryInReport_off_keeps_history_out_of_the_report_and_the_page_whatever_the_opt_ins_say [FAIL]
+     Kronikol.Tests.Reports.LabsReportRunTests.EmbedHistoryInReport_off_keeps_history_off_the_page_too [FAIL]
+== r2-page-not-planned | Total tests: 180  Passed: 178  Failed: 1  | build errors: 0
+     Kronikol.Tests.Reports.RunRotationTests.A_directory_with_no_manifest_rotates_the_labs_page_with_the_report [FAIL]
+== r2-link-to-literal-report | Total tests: 180  Passed: 178  Failed: 1  | build errors: 0
+     Kronikol.Tests.Reports.LabsReportRunTests.The_page_is_named_after_the_report_and_links_to_it_by_that_name [FAIL]
+== r2-generate-labs-ignored | Total tests: 180  Passed: 178  Failed: 1  | build errors: 0
+     Kronikol.Tests.Reports.LabsReportRunTests.Switched_off_there_is_no_page_whatever_the_run_has [FAIL]
+== r2-empty-page-written | Total tests: 180  Passed: 169  Failed: 10  | build errors: 0
+     Kronikol.Tests.History.HistoryOutputsTests.The_html_report_embeds_the_history_it_is_asked_for_unless_told_not_to [FAIL]
+     Kronikol.Tests.Reports.LabsReportRunTests.A_run_with_nothing_for_the_page_writes_none [FAIL]
+     Kronikol.Tests.Reports.LabsReportRunTests.EmbedHistoryInReport_off_keeps_history_off_the_page_too [FAIL]
+     Kronikol.Tests.Reports.LabsReportTests.A_page_has_something_to_show_only_with_history_or_a_diagnostic [FAIL]
+     Kronikol.Tests.Reports.Merge.MergeCommandTests.Merge_with_a_ledger_puts_history_on_the_labs_page_and_never_writes_to_it [FAIL]
+     Kronikol.Tests.Reports.Merge.MergedLabsPageTests.A_merge_with_nothing_for_the_page_writes_none_and_neither_does_one_told_not_to [FAIL]
+     Kronikol.Tests.Reports.RunRotationTests.A_directory_with_no_manifest_rotates_the_labs_page_with_the_report [FAIL]
+     Kronikol.Tests.Reports.RunRotationTests.A_directory_written_before_manifests_existed_rotates_once_by_what_this_run_is_about_to_write [FAIL]
+     Kronikol.Tests.Reports.RunRotationTests.A_manifest_cannot_send_the_rotation_outside_the_directory_or_at_the_agent_files [FAIL]
+     Kronikol.Tests.Reports.RunRotationTests.With_keep_runs_at_zero_the_directory_is_what_it_always_was_plus_the_manifest [FAIL]
+== r2-merged-page-drops-diagnostics | Total tests: 180  Passed: 178  Failed: 1  | build errors: 0
+     Kronikol.Tests.Reports.Merge.MergedLabsPageTests.The_shards_diagnostics_are_listed_on_the_page_beside_the_merged_report [FAIL]
+== r2-f3-merged-section-drops-diagnostics | Total tests: 180  Passed: 178  Failed: 1  | build errors: 0
+     Kronikol.Tests.Reports.Merge.MergedLabsPageTests.A_merged_report_that_asks_for_the_diagnostics_section_lists_the_shards_diagnostics [FAIL]
+== r2-page-before-report-in-pointer | Total tests: 180  Passed: 178  Failed: 1  | build errors: 0
+     Kronikol.Tests.Reports.LabsReportRunTests.The_pointer_lists_the_page_after_the_report_and_its_never_open_line_still_names_the_report [FAIL]
+== r2-debug-section-names-the-page | Total tests: 180  Passed: 178  Failed: 1  | build errors: 0
+     Kronikol.Tests.Reports.LabsReportRunTests.The_debug_section_never_tells_a_reader_not_to_open_the_page [FAIL]
+
+== r2-table-wrap-does-not-scroll | Playwright: ViewportSweepTests Labs_page_fits_* (3 facts): Failed 1, Passed 2
+     Kronikol.Tests.EndToEnd.ViewportSweepTests.Labs_page_fits_every_width_with_text_at_200_percent [FAIL]
+       320 px: the page scrolls sideways by 84 px; table.labs-scenario-table runs 108 px past the edge of details.labs-scenarios
+     (before that fact existed the mutation survived: at text 100% the table fits at 320 px, so the 200% sweep was added)

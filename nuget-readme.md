@@ -62,7 +62,7 @@ See the [Quick Start guide](https://github.com/lemonlion/Kronikol/wiki/Quick-Sta
 - **PR reviews** — sequence diagrams make interaction changes immediately visible
 - **Onboarding** — new team members can browse reports to understand service interactions
 - **CI integration** — surface results in GitHub Actions / Azure DevOps job summaries
-- **Cross-run history** — an append-only ledger committed in your repository says whether a failure is a regression, has been failing since a particular run, or flips: in `Failures.md`, the CTRF document, the report (a sparkline and verdict per scenario, `$flaky` in the search box) and `kronikol history gate`
+- **Cross-run history** — an append-only ledger committed in your repository says whether a failure is a regression, has been failing since a particular run, or flips: in `Failures.md`, the CTRF document, the labs page beside the report (a sparkline and verdict per scenario; `ShowScenarioHistory` puts them in the report too, with `$flaky` in the search box) and `kronikol history gate`
 
 ## Query the report from the terminal
 

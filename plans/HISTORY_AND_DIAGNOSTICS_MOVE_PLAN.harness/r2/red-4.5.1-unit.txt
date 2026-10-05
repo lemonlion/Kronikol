@@ -1,0 +1,64 @@
+R2's behaviour facts (tests/Kronikol.Tests) run at v4.5.1 (4a1aad8b), the facts copied in, GenerateLabsReport and
+ShowScenarioHistory stubbed as properties that do nothing. Each failing fact and the start of its message.
+Failed: 30 Passed: 119 Skipped: 1 Total tests: 150
+
+History.HistoryOutputsTests.A_compare_branch_is_read_out_beside_the_run_s_own_stream
+    System.IO.FileNotFoundException : Could not find file '<temp>\cmp\TestRunReport.labs.html'.
+History.HistoryOutputsTests.A_default_report_carries_no_history_and_each_opt_in_brings_back_its_own
+    Assert.DoesNotContain() Failure: Sub-string found
+History.HistoryOutputsTests.A_run_reads_against_the_stream_it_is_told_to
+    System.IO.FileNotFoundException : Could not find file '<temp>\against\TestRunReport.labs.html'.
+History.HistoryOutputsTests.The_html_report_embeds_the_history_it_is_asked_for_unless_told_not_to
+    System.IO.FileNotFoundException : Could not find file '<temp>\h2\TestRunReport.labs.html'.
+Ingestion.IngestHostDiagnosticsTests.The_html_section_is_left_out_unless_it_is_asked_for_and_the_data_file_carries_it_either_way
+    Assert.DoesNotContain() Failure: Sub-string found
+Reports.DefaultReportCleanTests.A_default_report_names_no_history_or_diagnostics_anywhere_in_the_file
+    Assert.DoesNotContain() Failure: Sub-string found
+Reports.DefaultReportCleanTests.A_report_that_asks_for_the_diagnostics_section_with_nothing_to_list_carries_neither_section_nor_css
+    Assert.DoesNotContain() Failure: Sub-string found
+Reports.DefaultReportCleanTests.By_default_a_run_that_read_history_and_recorded_diagnostics_writes_the_same_reports_as_one_that_did_neither
+    System.IO.FileNotFoundException : Could not find file '<temp>\full\TestRunReport.labs.html'.
+Reports.DefaultReportCleanTests.EmbedHistoryInReport_off_keeps_history_out_of_the_report_and_the_page_whatever_the_opt_ins_say
+    Assert.DoesNotContain() Failure: Sub-string found
+Reports.DefaultReportCleanTests.ShowHistorySection_brings_back_the_section_and_its_css_and_no_verdict_code
+    Assert.DoesNotContain() Failure: Sub-string found
+Reports.DefaultReportCleanTests.ShowReportDiagnosticsSection_brings_back_the_section_and_its_css_and_no_history
+    Assert.DoesNotContain() Failure: Sub-string found
+Reports.DefaultReportCleanTests.ShowScenarioHistory_brings_back_the_sparkline_pill_attribute_verdict_code_and_their_css_and_no_section
+    Assert.DoesNotContain() Failure: Sub-string found
+Reports.LabsReportRunTests.A_compare_branch_is_read_out_on_the_page
+    System.IO.FileNotFoundException : Could not find file '<temp>\x2\TestRunReport.labs.html'.
+Reports.LabsReportRunTests.Diagnostics_alone_give_a_page_with_no_history_and_history_alone_one_with_no_diagnostics
+    System.IO.FileNotFoundException : Could not find file '<temp>\d1\TestRunReport.labs.html'.
+Reports.LabsReportRunTests.EmbedHistoryInReport_off_keeps_history_off_the_page_too
+    System.IO.FileNotFoundException : Could not find file '<temp>\e3\TestRunReport.labs.html'.
+Reports.LabsReportRunTests.The_debug_section_never_tells_a_reader_not_to_open_the_page
+    Assert.Contains() Failure: Sub-string not found
+Reports.LabsReportRunTests.The_page_is_named_after_the_report_and_links_to_it_by_that_name
+    System.IO.FileNotFoundException : Could not find file '<temp>\c2\Checkout.labs.html'.
+Reports.LabsReportRunTests.The_pointer_lists_the_page_after_the_report_and_its_never_open_line_still_names_the_report
+    the page is not listed after the report: Report diagnostics: 2 log entries across 1 test(s).
+Reports.LabsReportRunTests.With_no_option_set_a_run_that_read_history_and_recorded_a_diagnostic_writes_the_page_beside_its_report
+    System.IO.FileNotFoundException : Could not find file '<temp>\r2\TestRunReport.labs.html'.
+Reports.LabsReportRunTests.Without_a_report_the_page_is_still_written_and_names_its_scenarios_as_text
+    System.IO.FileNotFoundException : Could not find file '<temp>\t2\TestRunReport.labs.html'.
+Reports.Merge.MergeCommandTests.Merge_with_a_ledger_puts_history_on_the_labs_page_and_never_writes_to_it
+    Assert.DoesNotContain() Failure: Sub-string found
+Reports.Merge.MergedLabsPageTests.A_merged_report_that_asks_for_the_diagnostics_section_lists_the_shards_diagnostics
+    Assert.Contains() Failure: Sub-string not found
+Reports.Merge.MergedLabsPageTests.The_shards_diagnostics_are_listed_on_the_page_beside_the_merged_report
+    System.IO.FileNotFoundException : Could not find file '<temp>\Combined.labs.html'.
+Reports.ReportGeneratorDiagnosticsScopeTests.A_normal_run_records_its_diagnostics_in_the_json
+    Assert.DoesNotContain() Failure: Sub-string found
+Reports.RunRotationTests.A_directory_with_no_manifest_rotates_the_labs_page_with_the_report
+    System.IO.FileNotFoundException : Could not find file '<temp>\Reports\TestRunReport.labs.html'.
+Reports.RunRotationTests.A_failing_run_is_still_on_disk_after_the_green_run_that_followed_it
+    System.IO.FileNotFoundException : Could not find file '<temp>\Reports\TestRunReport.labs.html'.
+Reports.RunRotationTests.An_attachment_still_moves_when_the_run_wrote_a_labs_page
+    Assert.Contains() Failure: Item not found in collection
+Reports.RunRotationTests.The_manifest_lists_every_file_the_run_wrote_and_nothing_it_did_not
+    Assert.Contains() Failure: Item not found in collection
+Reports.RunRotationTests.Two_reports_in_one_folder_each_write_and_rotate_their_own_labs_page
+    Assert.True() Failure
+Tool.IngestCommandTests.Ingest_command_carries_host_diagnostics_into_the_report
+    System.IO.FileNotFoundException : Could not find file '<temp>\out\TestRunReport.labs.html'.

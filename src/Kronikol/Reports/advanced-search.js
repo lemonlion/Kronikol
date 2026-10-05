@@ -246,11 +246,17 @@ function advancedSearchParse(tokens) {
  * @param {string} searchText - Lowercased pre-computed search text for the scenario
  * @param {object} tags - A Set (or object with .has()) of lowercased tag strings
  * @param {string} status - The scenario status string (e.g. "Passed", "Failed")
+// kron:verdicts
  * @param {object} [verdicts] - A Set of the scenario's lowercased cross-run history verdicts
  *   ("flaky", "broke", "new"...), or null/undefined when the report carries no history
+// kron:/verdicts
  * @returns {boolean}
  */
+// kron:verdicts
 function advancedSearchEvaluate(ast, searchText, tags, status, verdicts) {
+// kron:else
+//|function advancedSearchEvaluate(ast, searchText, tags, status) {
+// kron:/verdicts
     if (!ast) return false;
 
     switch (ast.type) {
@@ -261,6 +267,7 @@ function advancedSearchEvaluate(ast, searchText, tags, status, verdicts) {
         case 'tag':
             return tags.has(ast.value);
         case 'status':
+// kron:verdicts
             // `$failed` is the execution result; `$flaky`, `$broke`, `$new`... are the cross-run
             // history verdicts, carried as their own set because a scenario is routinely both (a
             // flaky scenario's status is Passed). An execution-result name is always the status and
@@ -269,14 +276,31 @@ function advancedSearchEvaluate(ast, searchText, tags, status, verdicts) {
             if (ast.value === 'passed' || ast.value === 'failed' || ast.value === 'skipped' ||
                 ast.value === 'bypassed' || ast.value === 'skippedafterfailure') return false;
             return !!(verdicts && verdicts.has(ast.value));
+// kron:else
+//|            return status.toLowerCase() === ast.value;
+// kron:/verdicts
         case 'and':
+// kron:verdicts
             return advancedSearchEvaluate(ast.left, searchText, tags, status, verdicts) &&
                    advancedSearchEvaluate(ast.right, searchText, tags, status, verdicts);
+// kron:else
+//|            return advancedSearchEvaluate(ast.left, searchText, tags, status) &&
+//|                   advancedSearchEvaluate(ast.right, searchText, tags, status);
+// kron:/verdicts
         case 'or':
+// kron:verdicts
             return advancedSearchEvaluate(ast.left, searchText, tags, status, verdicts) ||
                    advancedSearchEvaluate(ast.right, searchText, tags, status, verdicts);
+// kron:else
+//|            return advancedSearchEvaluate(ast.left, searchText, tags, status) ||
+//|                   advancedSearchEvaluate(ast.right, searchText, tags, status);
+// kron:/verdicts
         case 'not':
+// kron:verdicts
             return !advancedSearchEvaluate(ast.operand, searchText, tags, status, verdicts);
+// kron:else
+//|            return !advancedSearchEvaluate(ast.operand, searchText, tags, status);
+// kron:/verdicts
         default:
             return false;
     }
@@ -286,10 +310,18 @@ function advancedSearchEvaluate(ast, searchText, tags, status, verdicts) {
  * Convenience entry point: tokenise → parse → evaluate.
  * Returns true/false on success, or null on parse error (caller falls back to legacy).
  */
+// kron:verdicts
 function advancedSearchMatch(input, searchText, tags, status, verdicts) {
+// kron:else
+//|function advancedSearchMatch(input, searchText, tags, status) {
+// kron:/verdicts
     var tokens = advancedSearchTokenise(input);
     if (tokens.length === 0) return null;
     var ast = advancedSearchParse(tokens);
     if (ast === null) return null;
+// kron:verdicts
     return advancedSearchEvaluate(ast, searchText, tags, status, verdicts);
+// kron:else
+//|    return advancedSearchEvaluate(ast, searchText, tags, status);
+// kron:/verdicts
 }

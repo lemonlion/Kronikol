@@ -285,47 +285,56 @@ public class HistoryOutputsTests : IDisposable
     }
 
     [Fact]
-    public void The_html_report_embeds_history_unless_told_not_to()
+    public void The_html_report_embeds_the_history_it_is_asked_for_unless_told_not_to()
     {
-        void Section(ReportConfigurationOptions o) { o.GenerateTestRunReport = true; o.ShowHistorySection = true; }
-        Run("h1", "test:1:1", Features(ExecutionResult.Passed), Section);
-        Run("h2", "test:2:1", Features(ExecutionResult.Failed), Section);
-        Run("h3", "test:3:1", Features(ExecutionResult.Failed), o => { Section(o); o.EmbedHistoryInReport = false; });
+        void AskForAll(ReportConfigurationOptions o) { o.GenerateTestRunReport = true; o.ShowHistorySection = true; o.ShowScenarioHistory = true; }
+        Run("h1", "test:1:1", Features(ExecutionResult.Passed), AskForAll);
+        Run("h2", "test:2:1", Features(ExecutionResult.Failed), AskForAll);
+        Run("h3", "test:3:1", Features(ExecutionResult.Failed), o => { AskForAll(o); o.EmbedHistoryInReport = false; });
 
         var second = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.html"));
         Assert.Contains("<details id=\"history-section\"", second);
         Assert.Contains("data-history-verdicts=\"broke\"", second);
         Assert.Contains("<span class=\"history-sparkline\"", second);
+        // And the labs page beside it, which carries history whatever the report's opt-ins say.
+        var page = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.labs.html"));
+        Assert.Contains("<details id=\"history-section\"", page);
+        Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", page);
 
-        // EmbedHistoryInReport is the master switch: nothing about history reaches the file, section asked for or not.
-        // Every assertion here names emitted markup: the stylesheet carries the class names either way.
+        // EmbedHistoryInReport is the master switch: nothing about history reaches the run's HTML, asked for or not.
         var third = File.ReadAllText(Path.Combine(Reports("h3"), "TestRunReport.html"));
-        Assert.DoesNotContain("<details id=\"history-section\"", third);
-        Assert.DoesNotContain("data-history-verdicts=\"", third);
-        Assert.DoesNotContain("<span class=\"history-sparkline\"", third);
-        // The ledger still saw the run: embedding is about the file, not about recording.
+        Assert.DoesNotContain("history-", third);
+        Assert.False(File.Exists(Path.Combine(Reports("h3"), "TestRunReport.labs.html")), "a page was written for history the run was told not to embed");
+        // The ledger still saw the run: embedding is about the HTML, not about recording.
         Assert.Contains("test:3:1", File.ReadAllText(Ledger));
     }
 
     [Fact]
-    public void The_history_section_is_left_out_of_the_report_unless_it_is_asked_for()
+    public void A_default_report_carries_no_history_and_each_opt_in_brings_back_its_own()
     {
         Run("h1", "test:1:1", Features(ExecutionResult.Passed), o => o.GenerateTestRunReport = true);
         Run("h2", "test:2:1", Features(ExecutionResult.Failed), o => o.GenerateTestRunReport = true);
         Run("h3", "test:3:1", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.ShowHistorySection = true; });
+        Run("h4", "test:4:1", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.ShowScenarioHistory = true; });
 
-        // A run that broke a scenario has as much to say as history ever has, and the section is still not there.
-        // The assertions name emitted markup, not class names: the stylesheet carries those either way.
+        // A run that broke a scenario has as much to say as history ever has, and a default report says none of it
+        // (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md): the whole file, since the stylesheet and the scripts no longer
+        // name the classes either. It is on the labs page beside the report.
         var byDefault = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.html"));
-        Assert.DoesNotContain("<details id=\"history-section\"", byDefault);
-        Assert.DoesNotContain("<summary class=\"h2\">History ", byDefault);
-        // Only the section goes. What the run read is still beside the scenario it is about.
-        Assert.Contains("data-history-verdicts=\"broke\"", byDefault);
-        Assert.Contains("<span class=\"history-sparkline\"", byDefault);
+        Assert.DoesNotContain("history-", byDefault);
+        Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.labs.html")));
 
-        var asked = File.ReadAllText(Path.Combine(Reports("h3"), "TestRunReport.html"));
-        Assert.Contains("<details id=\"history-section\"", asked);
-        Assert.Contains("<summary class=\"h2\">History ", asked);
+        var section = File.ReadAllText(Path.Combine(Reports("h3"), "TestRunReport.html"));
+        Assert.Contains("<details id=\"history-section\"", section);
+        Assert.Contains("<summary class=\"h2\">History ", section);
+        Assert.DoesNotContain("data-history-verdicts=\"", section);
+        Assert.DoesNotContain("<span class=\"history-sparkline\"", section);
+
+        var scenario = File.ReadAllText(Path.Combine(Reports("h4"), "TestRunReport.html"));
+        // The fourth run of P, F, F, F: the scenario is failing, no longer newly broken.
+        Assert.Contains("data-history-verdicts=\"failing\"", scenario);
+        Assert.Contains("<span class=\"history-sparkline\"", scenario);
+        Assert.DoesNotContain("<details id=\"history-section\"", scenario);
     }
 
     /// <summary>
@@ -369,7 +378,7 @@ public class HistoryOutputsTests : IDisposable
         var against = File.ReadAllText(Path.Combine(Reports("against"), "Failures.md"));
         Assert.Contains("**broke**", against);
         Assert.Contains("against 3 earlier runs on trunk", against);
-        Assert.Contains(@"data-history-verdicts=""broke""", File.ReadAllText(Path.Combine(Reports("against"), "TestRunReport.html")));
+        Assert.Contains(@"<span class=""history-verdict history-verdict-broke""", File.ReadAllText(Path.Combine(Reports("against"), "TestRunReport.labs.html")));
         // The run's own line still records under its own stream, so main's history stays main's.
         var ownLine = File.ReadAllLines(Ledger).Single(l => l.Contains(@"""id"":""test:9:2""", StringComparison.Ordinal));
         Assert.DoesNotContain(@"""branch"":""trunk""", ownLine);
@@ -388,6 +397,10 @@ public class HistoryOutputsTests : IDisposable
         var html = File.ReadAllText(Path.Combine(Reports("cmp"), "TestRunReport.html"));
         Assert.Contains(@"class=""history-compare""", html);
         Assert.Contains("on <code>trunk</code>: 1 broke", html);
+        // And on the labs page, with no option set for it.
+        var page = File.ReadAllText(Path.Combine(Reports("cmp"), "TestRunReport.labs.html"));
+        Assert.Contains(@"class=""history-compare""", page);
+        Assert.Contains("on <code>trunk</code>: 1 broke", page);
     }
 
     [Fact]

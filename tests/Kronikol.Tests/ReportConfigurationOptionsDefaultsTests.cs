@@ -45,6 +45,19 @@ public class ReportConfigurationOptionsDefaultsTests
     }
 
     [Fact]
+    public void History_and_diagnostics_are_on_the_labs_page_by_default_and_out_of_the_report()
+    {
+        // plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md: the page is written by default, every view the report can carry
+        // is an opt-in that defaults off, and history still reaches the HTML (the page) unless told not to.
+        var options = new ReportConfigurationOptions();
+        Assert.True(options.GenerateLabsReport);
+        Assert.False(options.ShowScenarioHistory);
+        Assert.False(options.ShowHistorySection);
+        Assert.False(options.ShowReportDiagnosticsSection);
+        Assert.True(options.EmbedHistoryInReport);
+    }
+
+    [Fact]
     public void Browser_render_options_default_to_four_workers_64MB_cache_and_12000px_fragments()
     {
         var options = new ReportConfigurationOptions();

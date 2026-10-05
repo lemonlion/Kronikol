@@ -1,0 +1,129 @@
+== run-01.html
+  raw 623,395 B   gzip-9 147,324 B   gzip-6 147,693 B
+  counts, whole file / markup only (script and style blocks removed):
+    <details class="scenario (prefix)    14 /    14
+    data-stable-id="                  12 /    11
+    id="sid-                           0 /     0
+    class="history-sparkline"          5 /     5
+    data-history-verdicts="           12 /    12
+    history-pill                       0 /     0
+    class="history-verdict             0 /     0
+    id="history-section"               0 /     0
+  scenario elements (markup): {'scenario': 5, 'group': 1, 'tr': 6}; distinct data-stable-id on scenario/tr: 8
+  scenario <details> class values: {'scenario happy-path': 2, 'scenario': 3, 'scenario scenario-parameterized': 1}
+  data-history-verdicts on scenario: {'stable': 5}
+  data-history-verdicts on group   : {'stable': 1}
+  data-history-verdicts on tr      : {'stable': 6}
+  code blocks: 16 (1 style, 15 script), 525,728 B raw (CSS 73,855, JS 451,873); gzip-9 of their concatenation 119,477 B
+  payload blocks (script type=application/json): iflow-segments 2,293 B, puml-data 11,133 B, kron-search-index 9,006 B
+  markup outside script/style: 75,235 B
+  history markup bytes: {'data-history-verdicts attrs': 372, 'history-sparkline spans': 1411, 'history-verdict pills': 0, 'history section': 0} total 1,783 B
+== run-11.html
+  raw 628,488 B   gzip-9 146,981 B   gzip-6 147,457 B
+  counts, whole file / markup only (script and style blocks removed):
+    <details class="scenario (prefix)    14 /    14
+    data-stable-id="                  12 /    11
+    id="sid-                           0 /     0
+    class="history-sparkline"          5 /     5
+    data-history-verdicts="           12 /    12
+    history-pill                       0 /     0
+    class="history-verdict             0 /     0
+    id="history-section"               0 /     0
+  scenario elements (markup): {'scenario': 5, 'group': 1, 'tr': 6}; distinct data-stable-id on scenario/tr: 8
+  scenario <details> class values: {'scenario happy-path': 2, 'scenario': 3, 'scenario scenario-parameterized': 1}
+  data-history-verdicts on scenario: {'stable': 5}
+  data-history-verdicts on group   : {'stable': 1}
+  data-history-verdicts on tr      : {'stable': 6}
+  code blocks: 16 (1 style, 15 script), 525,728 B raw (CSS 73,855, JS 451,873); gzip-9 of their concatenation 119,477 B
+  payload blocks (script type=application/json): iflow-segments 2,005 B, puml-data 11,178 B, kron-search-index 9,034 B
+  markup outside script/style: 80,543 B
+  history markup bytes: {'data-history-verdicts attrs': 372, 'history-sparkline spans': 6752, 'history-verdict pills': 0, 'history section': 0} total 7,124 B
+== run-off.html
+  raw 621,308 B   gzip-9 146,587 B   gzip-6 147,082 B
+  counts, whole file / markup only (script and style blocks removed):
+    <details class="scenario (prefix)    14 /    14
+    data-stable-id="                  12 /    11
+    id="sid-                           0 /     0
+    class="history-sparkline"          0 /     0
+    data-history-verdicts="            0 /     0
+    history-pill                       0 /     0
+    class="history-verdict             0 /     0
+    id="history-section"               0 /     0
+  scenario elements (markup): {'scenario': 5, 'group': 1, 'tr': 6}; distinct data-stable-id on scenario/tr: 8
+  scenario <details> class values: {'scenario happy-path': 2, 'scenario': 3, 'scenario scenario-parameterized': 1}
+  data-history-verdicts on scenario: {'(no attribute)': 5}
+  data-history-verdicts on group   : {'(no attribute)': 1}
+  data-history-verdicts on tr      : {'(no attribute)': 6}
+  code blocks: 16 (1 style, 15 script), 525,728 B raw (CSS 73,855, JS 451,873); gzip-9 of their concatenation 119,477 B
+  payload blocks (script type=application/json): iflow-segments 2,045 B, puml-data 11,067 B, kron-search-index 9,050 B
+  markup outside script/style: 73,418 B
+  history markup bytes: {'data-history-verdicts attrs': 0, 'history-sparkline spans': 0, 'history-verdict pills': 0, 'history section': 0} total 0 B
+
+== Scenario count used
+  leaf scenarios (one per test) = distinct data-stable-id on <details class="scenario ..."> (5) + on outline rows <tr> (3, each drawn twice: flat and grouped table) = 8
+  scenario headers = <details> whose class has the token "scenario" (plain 5 + outline groups 1) = 6; headers with a sparkline = 5 (groups and rows get none)
+
+== Verdicts in run-11, per leaf scenario (outline rows deduplicated; a group carries the union of its rows)
+  raw distribution: {'stable': 8}
+  classified: stable = empty, absent or only "stable"; not stable = anything else
+  not stable: 0 of 8; by first (primary) verdict: {}
+  outline group elements: {'stable': 1}
+
+== Difference, run-11 (history on, 10 earlier runs) minus run-off (history off)
+  raw    : +7,180 B total = +897.5 B per leaf scenario (8) = +1,196.7 B per header (6) = +1,436.0 B per sparkline (5)  (+1.16% of the off report)
+  gzip-9 : +394 B total = +49.2 B per leaf scenario (8) = +65.7 B per header (6) = +78.8 B per sparkline (5)  (+0.27% of the off report)
+  gzip-6 : +375 B total = +46.9 B per leaf scenario (8) = +62.5 B per header (6) = +75.0 B per sparkline (5)  (+0.25% of the off report)
+  code blocks identical with and without history: True; CSS+JS raw delta +0 B
+  payload iflow-segments: 2,005 vs 2,045 B (-40)
+  payload kron-search-index: 9,034 vs 9,050 B (-16)
+  payload puml-data: 11,178 vs 11,067 B (+111)
+  markup outside script/style: 80,543 vs 73,418 B (+7,125)
+  of which history markup in run-11: 7,124 B = 890.5 B per leaf scenario; parts {'data-history-verdicts attrs': 372, 'history-sparkline spans': 6752, 'history-verdict pills': 0, 'history section': 0}
+  verdict attribute bytes by element: {'scenario': 155, 'group': 31, 'tr': 186}
+  run-11 with its history markup stripped: raw 621,364 B (vs run-off 621,308, +56 B left over = timing/run noise, the JSON payloads above)
+  gzip cost of the history markup inside run-11 (run-11 minus run-11 stripped, same run so no timing noise): gzip-9 +497 B (+62.1/leaf, +99.4/sparkline), gzip-6 +468 B (+58.5/leaf, +93.6/sparkline)
+  sparkline span lengths (B): min 1342, median 1349, max 1359; excerpt: ' <span class="history-sparkline" role="img" aria-label="stable: passed in every one of the last 11 runs with a verdict" title="Last 10 runs, oldest first: PPPPPPPPPP\nstable: passed in every one of the'
+    title attribute bytes per sparkline: [949, 939, 949, 932, 933]
+    style attribute bytes per sparkline: [281, 281, 281, 281, 281]
+    aria-label attribute bytes per sparkline: [75, 75, 75, 75, 75]
+    tooltip lines: 12, lengths [38, 62, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83]; a run line: 'local:20261005T171923Z:2c5cec4b &#183; 2026-10-05 17:19 &#183; passed &#183; 225 ms'
+
+== History code every report carries, history on or off (measured in run-off.html)
+  CSS rules whose selector names history: 29, 4,303 B of the 73,840 B style block
+  JS lines handling history verdicts (verdict|hv): 22, 2,143 B
+
+== First run (empty ledger) vs off
+  raw    : run-01 623,395 B vs run-off 621,308 B (+2,087)
+  gzip-9 : run-01 147,324 B vs run-off 146,587 B (+737)
+  gzip-6 : run-01 147,693 B vs run-off 147,082 B (+611)
+  history markup in run-01: 1,783 B, parts {'data-history-verdicts attrs': 372, 'history-sparkline spans': 1411, 'history-verdict pills': 0, 'history section': 0}
+
+== Run-to-run, history on
+  name: raw B, gzip-9 B, history markup B | stripped of history: raw B, gzip-9 B | in-file gzip-9 cost of history B
+  run-01.html: 623,395  147,324  1,783 | 621,612  147,136 | +188
+  run-02.html: 624,109  146,830  2,784 | 621,325  146,580 | +250  (+714 raw vs previous)
+  run-03.html: 624,848  147,192  3,385 | 621,463  146,911 | +281  (+739 raw vs previous)
+  run-04.html: 625,185  147,112  3,866 | 621,319  146,811 | +301  (+337 raw vs previous)
+  run-05.html: 625,925  147,382  4,408 | 621,517  147,047 | +335  (+740 raw vs previous)
+  run-06.html: 626,470  146,965  5,168 | 621,302  146,546 | +419  (+545 raw vs previous)
+  run-07.html: 627,048  147,343  5,668 | 621,380  146,894 | +449  (+578 raw vs previous)
+  run-08.html: 627,358  147,102  6,108 | 621,250  146,640 | +462  (+310 raw vs previous)
+  run-09.html: 628,125  147,270  6,809 | 621,316  146,767 | +503  (+767 raw vs previous)
+  run-10.html: 628,574  147,120  7,125 | 621,449  146,629 | +491  (+449 raw vs previous)
+  run-11.html: 628,488  146,981  7,124 | 621,364  146,484 | +497  (-86 raw vs previous)
+  run noise with history removed: stripped gzip-9 ranges 146,484 to 147,136 (652 B spread); run-off gzip-9 146,587
+  run-10 vs run-11: raw 628,574 vs 628,488 (-86); stripped of history 621,449 vs 621,364 (-85)
+
+== Test runner summary per run (runs.log; the ledger path shortened)
+  run-01 exit=0 secs=8 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=4 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 1 s
+  run-02 exit=0 secs=2 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=5 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 290 ms
+  run-03 exit=0 secs=2 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=6 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 308 ms
+  run-04 exit=0 secs=3 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=7 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 395 ms
+  run-05 exit=0 secs=4 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=8 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 400 ms
+  run-06 exit=0 secs=3 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=9 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 303 ms
+  run-07 exit=0 secs=3 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=10 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 640 ms
+  run-08 exit=0 secs=3 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=11 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 282 ms
+  run-09 exit=0 secs=2 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=12 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 270 ms
+  run-10 exit=0 secs=2 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=13 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 280 ms
+  run-11 exit=0 secs=3 KRONIKOL_HISTORY=<s0>/ledger.jsonl ledger_lines=14 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 267 ms
+  run-off exit=0 secs=2 KRONIKOL_HISTORY=off ledger_lines=14 | Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 288 ms

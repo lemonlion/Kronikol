@@ -27,6 +27,10 @@ public partial class StylesheetRulesTests
         ("context-menu-styles.css", DiagramContextMenu.GetStyles()),
         ("inline-svg-styles.css", DiagramContextMenu.GetInlineSvgStyles()),
         ("VioletThemeStyleSheet", Violet),
+        // Split out of stylesheets.css in 4.6.0: carried only by a page that draws what they style.
+        ("history-styles.css", Stylesheets.HistoryStyleSheet),
+        ("report-diagnostics-styles.css", Stylesheets.ReportDiagnosticsStyleSheet),
+        ("labs-styles.css", Stylesheets.LabsStyleSheet),
     ];
 
     // ── T1: the widths (S1, S1b) ──

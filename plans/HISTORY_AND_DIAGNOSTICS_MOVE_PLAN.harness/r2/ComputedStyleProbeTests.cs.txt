@@ -1,0 +1,45 @@
+using Microsoft.Playwright;
+
+namespace Kronikol.Tests.EndToEnd;
+
+/// <summary>
+/// NOT SHIPPED: the plan's cascade check (HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md S8). Writes the computed style of every
+/// history and diagnostics element of the every-section report (history, both sections, scenario history) to the file
+/// KRONIKOL_STYLE_PROBE names, so the 4.5.1 and 4.6.0 renderings can be compared property by property.
+/// </summary>
+[Collection(PlaywrightCollections.Reports)]
+public class ComputedStyleProbeTests : PlaywrightTestBase
+{
+    public ComputedStyleProbeTests(PlaywrightFixture fixture) : base(fixture) { }
+
+    [Fact]
+    public async Task Probe()
+    {
+        var target = Environment.GetEnvironmentVariable("KRONIKOL_STYLE_PROBE");
+        if (string.IsNullOrEmpty(target))
+            return;
+        await Page.SetViewportSizeAsync(int.Parse(Environment.GetEnvironmentVariable("KRONIKOL_STYLE_PROBE_WIDTH") ?? "1280"), 900);
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithEverySection(TempDir, OutputDir, "StyleProbe.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
+        await Page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))");
+        var json = await Page.EvaluateAsync<string>("""
+            () => {
+                const pick = [...document.querySelectorAll('[class*="history-"], [class*="report-diagnostic"], #history-section *, .report-diagnostics *, [data-history-verdicts]')];
+                const path = el => { const parts = []; for (let e = el; e && e !== document.body; e = e.parentElement) { const i = [...e.parentElement.children].indexOf(e); parts.unshift(e.localName + ':' + i + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/).join('.') : '')); } return parts.join('>'); };
+                const out = {};
+                for (const el of pick) {
+                    const cs = getComputedStyle(el), props = {};
+                    for (let i = 0; i < cs.length; i++) props[cs[i]] = cs.getPropertyValue(cs[i]);
+                    for (const pseudo of ['::before', '::after']) {
+                        const ps = getComputedStyle(el, pseudo);
+                        props[pseudo + ' content'] = ps.content; props[pseudo + ' background-color'] = ps.backgroundColor; props[pseudo + ' color'] = ps.color;
+                    }
+                    out[path(el)] = props;
+                }
+                return JSON.stringify(out);
+            }
+            """);
+        await File.WriteAllTextAsync(target, json);
+    }
+}

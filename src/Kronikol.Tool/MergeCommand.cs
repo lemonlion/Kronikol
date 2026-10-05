@@ -108,11 +108,9 @@ internal static class MergeCommand
                 if (history is null)
                     return historyExit;
             }
-            // --history is a request for history in this report, so the History section comes with it; a
-            // report nobody asked history for is the one that leaves the section out.
-            written = MergeableReportRenderer.Render(merged, output, title,
-                options: new ReportConfigurationOptions { ShowHistorySection = history is not null },
-                history: history);
+            // A default report, as a run writes: what --history read is on the labs page beside it, with the
+            // shards' diagnostics (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md).
+            written = MergeableReportRenderer.Render(merged, output, title, options: new ReportConfigurationOptions(), history: history);
             @out.WriteLine($"Wrote combined report to {written}");
         }
         catch (FormatException ex)
@@ -166,8 +164,8 @@ internal static class MergeCommand
 
     /// <summary>
     /// The merged run read against the ledger <c>--history</c> named: the same analysis a run performs,
-    /// over the merged features, so the merged report renders history and the digest works through
-    /// regressions first. Never folds — the shards' fragments are <c>kronikol history record</c>'s job —
+    /// over the merged features, so the labs page beside the merged report shows history and the digest works
+    /// through regressions first. Never folds — the shards' fragments are <c>kronikol history record</c>'s job —
     /// because a merge is a render, and a render that also wrote to the ledger would record every
     /// re-render as a run.
     /// </summary>
@@ -360,7 +358,8 @@ internal static class MergeCommand
         w.WriteLine("  ReportConfigurationOptions.GenerateMergeableData = true) into one combined HTML report, and");
         w.WriteLine("  writes beside it what a run writes beside its report: the merged data file - readable with");
         w.WriteLine("  `kronikol query`, and usable as the baseline a later run diffs against - plus Failures.md and");
-        w.WriteLine("  Failures.jsonl, CLAUDE.md and AGENTS.md, and the data file's schema. Ends with the pointer");
+        w.WriteLine("  Failures.jsonl, CLAUDE.md and AGENTS.md, the data file's schema, and the labs page");
+        w.WriteLine("  (<output>.labs.html) when --history read a ledger or a shard recorded a diagnostic. Ends with the pointer");
         w.WriteLine("  a run prints: where the files are, how big the data file is, what failed, and the command");
         w.WriteLine("  that explains it. A shard given twice - the same artifact in two folders, a previous merge's");
         w.WriteLine("  output left in the directory - is counted once.");
@@ -372,17 +371,19 @@ internal static class MergeCommand
         w.WriteLine("  -o, --output <path>  Output HTML path (default: TestRunReport.html). The data file and its");
         w.WriteLine("                       schema take the same name with .json and .schema.json extensions.");
         w.WriteLine("  -t, --title <text>   Report title (default: \"Test Run Report\").");
-        w.WriteLine("      --no-json        Write the HTML only - no data file, and none of the files beside it.");
+        w.WriteLine("      --no-json        Write the HTML only (the report, and its labs page when it has one): no data");
+        w.WriteLine("                       file, and none of the other files beside it.");
         w.WriteLine("      --ci-summary     Also write CiSummary.md and post it to the CI job summary (GitHub Actions");
         w.WriteLine("                       step summary, Azure DevOps upload). Off, a failing merge on CI still posts");
         w.WriteLine("                       the short \"Debug this run\" section, as a failing run does.");
         w.WriteLine("      --publish-artifacts");
         w.WriteLine("                       Hand the output directory to the CI artifact upload (GitHub Actions");
         w.WriteLine("                       `reports-path` output, Azure DevOps artifact.upload).");
-        w.WriteLine("      --history <path> Read the cross-run ledger (.kronikol/history.jsonl) and render what the last runs");
-        w.WriteLine("                       said: the History section, sparklines and verdict pills in the HTML, and the");
-        w.WriteLine("                       history lines in Failures.md. Never writes to the ledger; `kronikol history");
-        w.WriteLine("                       record` folds the shards' History.run.json fragments into it.");
+        w.WriteLine("      --history <path> Read the cross-run ledger (.kronikol/history.jsonl) and show what the last runs");
+        w.WriteLine("                       said: the History section, sparklines and verdicts on the labs page beside the");
+        w.WriteLine("                       report, and the history lines in Failures.md and the pointer. The report itself");
+        w.WriteLine("                       carries no history. Never writes to the ledger; `kronikol history record` folds");
+        w.WriteLine("                       the shards' History.run.json fragments into it.");
         w.WriteLine("  -h, --help           Show this help.");
         w.WriteLine();
         w.WriteLine("Example:");

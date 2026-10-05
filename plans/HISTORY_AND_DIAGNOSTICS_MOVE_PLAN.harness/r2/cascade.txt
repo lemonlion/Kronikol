@@ -1,0 +1,11 @@
+The cascade check (plan section 7.4, risk: the history and diagnostics rules moved from the middle of stylesheets.css
+to sheets appended after it). ComputedStyleProbeTests.cs.txt, added for the run to tests/Kronikol.Tests.EndToEnd and
+removed after, renders ReportTestHelper.GenerateReportWithEverySection (History section, Report diagnostics section,
+per-scenario history: what 4.5.1 drew with both sections asked for, and what 4.6.0 draws with every opt-in on), opens
+every <details>, and records getComputedStyle (every property, and ::before/::after content and colours) of every
+element matching [class*="history-"], [class*="report-diagnostic"], #history-section *, .report-diagnostics * and
+[data-history-verdicts], keyed by its DOM path. Run at v4.5.1 (4a1aad8b) and on R2's tree, 2026-10-05.
+
+viewport 1280 x 900: 92 elements on each side, the same 92 paths, 0 property values differ
+viewport  375 x 900: 92 elements on each side, the same 92 paths, 0 property values differ
+                     (the 480 px rule applies on both: every sparkline is 48 px wide, 77.4375 px at 1280)

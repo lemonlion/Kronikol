@@ -24,7 +24,7 @@ internal static class Commands
     public static readonly Entry[] Table =
     [
         new("merge",
-            "Combine mergeable TestRunReport.json files into one TestRunReport.html plus the merged data file.",
+            "Combine mergeable TestRunReport.json files into one TestRunReport.html plus the merged data file (and the labs page).",
             (a, o, e) => MergeCommand.Run(a, o, e), MergeCommand.PrintUsage),
         new("ingest",
             "Replay NDJSON interaction captures (any language) into a full Kronikol report.",

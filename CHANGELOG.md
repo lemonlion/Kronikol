@@ -4,6 +4,65 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.6.0] - 2026-10-05
+
+**Minor - history and report diagnostics leave the default report, for a labs page beside it.**
+`plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md` R2, at the owner's ask: by default `TestRunReport.html` carries no history
+and no report diagnostics while their design is worked out. Two new options (`GenerateLabsReport`,
+`ShowScenarioHistory`) and a new page are new public surface, so the minor part moves (4.5.1 to 4.6.0). No existing
+option's default changes, and nothing is deprecated, renamed or removed. What a default report draws changes, which is
+a report output change, recorded in the Kronikol4J ledger. The history action's `VERSION` installs `Kronikol.Tool`
+4.6.0, and the templates pin 4.5.1.
+
+### Changed
+
+- **A default report carries no history and no report diagnostics.** A run that reads a ledger no longer draws a
+  sparkline, a verdict pill or a `data-history-verdicts` attribute in each scenario header, and a report carries the
+  stylesheet rules and the `$verdict` search code of those views only when it draws them. With default options, a run
+  that read a ledger and recorded diagnostics writes the same `TestRunReport.html` and `Specifications.html`, byte for
+  byte, as one that did neither. Measured on an 8-scenario suite with ten earlier runs, the history markup was 7,124
+  bytes (about 900 per scenario, most of it sparkline tooltips), and every report, with a ledger or without, carried
+  6.1 KB of history and diagnostics stylesheet rules and 1.3 KB of verdict search code. A default report's `advanced-search.js` and
+  `report-scenario-feature-map-helper.js` are again the bytes 3.10.0 shipped.
+- **`$flaky`, `$broke` and the other verdict operators match nothing in a default report**, without an error, since it
+  carries no verdicts. A report drawn with `ShowScenarioHistory` filters on them as before.
+- **`kronikol merge --history` leaves the merged report without history.** What it read is on the labs page beside
+  the merged report (`<output>.labs.html`), with the shards' diagnostics; the merged report drew the History section,
+  sparklines and pills.
+- **`MergeableReportRenderer.Render` follows its options as a run does.** History and diagnostics are in the merged
+  report only where `ShowScenarioHistory`, `ShowHistorySection` and `ShowReportDiagnosticsSection` ask, and on the labs
+  page beside it otherwise. A caller that hands `GenerateHtmlReport` verdicts still gets the per-scenario history.
+
+### Added
+
+- **The labs page, `TestRunReport.labs.html`**, beside the report and named after it (`Checkout.labs.html` beside
+  `Checkout.html`). It holds the History section, open; a table of every scenario's sparkline, verdict and evidence,
+  collapsed; and the Report diagnostics list, open. A run writes it when it read history or recorded a diagnostic, and
+  only then, so a run with neither leaves its reports directory as 4.5.1 did. It has no script, and its scenario names
+  link into the report by the `#sid-` anchor the report opens on load (they are text when no report is written). It
+  is listed in `Run.json` and moves with its run under `runs/`; the console pointer names it after the report, and the
+  CI "Debug this run" text never names it as the file not to open. `kronikol ingest` and `kronikol merge` write it
+  too. `GenerateLabsReport = false` turns it off.
+- **`ShowScenarioHistory`** (default `false`) puts the per-scenario history back into the report: the sparkline, the
+  verdict pill, the `data-history-verdicts` attribute, the `$verdict` search and the stylesheet rules they need.
+  `ShowHistorySection` and `ShowReportDiagnosticsSection` still bring back the two sections, each now with its own
+  stylesheet rules. `EmbedHistoryInReport` keeps history out of the report and the page alike.
+- `GenerateHtmlReport`, `ResolvedToggleDefaults.DiagnosticsOpen` and the `kronikol merge` and `kronikol ingest` usage
+  texts say where history and diagnostics are drawn.
+
+### Fixed
+
+- **A merged report's Report diagnostics section lists the shards' diagnostics.** `MergeableReportRenderer.Render`
+  did not hand `MergeableReport.Diagnostics` to the report, so a merged report that asked for the section showed none
+  of them. They are on the merged labs page as well.
+- **`EmbedHistoryInReport`'s doc said a run with no ledger draws no history.** A run whose ledger file does not exist
+  yet reads it as empty and draws its own first run; only a run with history off, or with no ledger found, has none.
+
+### To keep 4.5.1's report
+
+Set `ShowScenarioHistory = true`. The History and Report diagnostics sections have been off by default since 3.21.0;
+`ShowHistorySection` and `ShowReportDiagnosticsSection` bring them back.
+
 ## [4.5.1] - 2026-10-05
 
 **Patch - defects found while planning the move of history and diagnostics out of the default report.**

@@ -7,7 +7,8 @@ namespace Kronikol.Reports.Merge;
 /// Renders a (typically merged) <see cref="MergeableReport"/> into a single combined
 /// <c>TestRunReport.html</c>, reproducing the same report a single combined test run would have
 /// produced: per-scenario sequence/activity diagrams, the merged component diagram, internal-flow
-/// popups and flame charts, and the CI metadata banner.
+/// popups and flame charts, and the CI metadata banner. Like a run, it writes the labs page beside the report
+/// when there is history or a diagnostic for it, and draws those views in the report only where the options ask.
 /// </summary>
 public static class MergeableReportRenderer
 {
@@ -17,10 +18,18 @@ public static class MergeableReportRenderer
     /// <param name="report">The report to render (usually the output of <see cref="MergeableReportMerger.Merge"/>).</param>
     /// <param name="outputPath">Absolute or relative path of the HTML file to write.</param>
     /// <param name="title">Report title. Defaults to "Test Run Report".</param>
-    /// <param name="options">Optional configuration influencing component-diagram styling and internal-flow popup behaviour.</param>
-    /// <param name="history">The merged run read against a cross-run ledger, when <c>merge --history</c> named one; renders the
-    /// sparklines and the verdict pills, and the History section when <see cref="ReportConfigurationOptions.ShowHistorySection"/>
-    /// asks for it (<c>merge --history</c> does, having been asked for history).</param>
+    /// <param name="options">Optional configuration influencing component-diagram styling and internal-flow popup behaviour,
+    /// and what the report and the labs page carry, as a run's options do: the history and diagnostics views are in the
+    /// report only where <see cref="ReportConfigurationOptions.ShowScenarioHistory"/>,
+    /// <see cref="ReportConfigurationOptions.ShowHistorySection"/> and
+    /// <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> ask, and on the labs page,
+    /// <c>{name}.labs.html</c> beside the report, unless <see cref="ReportConfigurationOptions.GenerateLabsReport"/> is off.</param>
+    /// <param name="history">The merged run read against a cross-run ledger, when <c>merge --history</c> named one: drawn on the
+    /// labs page, and in the report where its options ask (<see cref="ReportConfigurationOptions.EmbedHistoryInReport"/> keeps
+    /// it out of both).</param>
+    /// <remarks>The labs page is written when the merge read history or its shards recorded diagnostics
+    /// (<see cref="MergeableReport.Diagnostics"/>), which since 4.6.0 also reach the report's diagnostics section when it is
+    /// asked for.</remarks>
     public static string Render(MergeableReport report, string outputPath, string? title = null, ReportConfigurationOptions? options = null, History.HistoryVerdicts? history = null)
     {
         options ??= new ReportConfigurationOptions();
@@ -54,7 +63,7 @@ public static class MergeableReportRenderer
             ? null
             : ReportGenerator.ScopeReportsDirectory(destinationDirectory);
 
-        var written = ReportGenerator.GenerateHtmlReport(
+        var written = ReportGenerator.GenerateHtmlReportCore(
             report.Diagrams,
             report.Features,
             report.StartTime,
@@ -90,9 +99,12 @@ public static class MergeableReportRenderer
             // run the merge and every `#sid-` link out of the data file would miss. The empty string says
             // "deliberately no suite", which both writers agree means the pre-3.1.0 id.
             suite: report.Suite ?? "",
-            history: history,
+            // The shards' own diagnostics: until 4.6.0 the merged report's section listed none of them (F3).
+            diagnostics: report.Diagnostics,
+            history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history : null,
             showHistorySection: options.ShowHistorySection,
-            showReportDiagnostics: options.ShowReportDiagnosticsSection);
+            showReportDiagnostics: options.ShowReportDiagnosticsSection,
+            showScenarioHistory: options.ShowScenarioHistory);
 
         // Normally a no-op now that the write is scoped to the destination. Kept for the one case the
         // scope cannot cover — an outputPath with no directory part at all — where the write lands under
@@ -106,8 +118,26 @@ public static class MergeableReportRenderer
             File.Copy(written, destination, overwrite: true);
         }
 
+        // The labs page beside the report, linked to it by the name it was written under.
+        if (LabsPageWritten(report, options, history))
+        {
+            var labsHistory = options.EmbedHistoryInReport ? history : null;
+            File.WriteAllText(LabsPagePath(destination), LabsReportGenerator.Build(new LabsPage(title, report.Features, report.Suite ?? "", labsHistory,
+                report.Diagnostics, Path.GetFileName(destination), EndedAt: new DateTimeOffset(report.EndTime.ToUniversalTime()),
+                CustomCss: options.CustomCss, CustomFaviconBase64: options.CustomFaviconBase64, CustomLogoHtml: options.CustomLogoHtml)));
+        }
+
         return destination;
     }
+
+    /// <summary>Whether <see cref="Render"/> writes the labs page for these inputs: the switch is on and there is history it may
+    /// show or a diagnostic to list.</summary>
+    internal static bool LabsPageWritten(MergeableReport report, ReportConfigurationOptions options, History.HistoryVerdicts? history) =>
+        options.GenerateLabsReport && LabsReportGenerator.HasContent(options.EmbedHistoryInReport ? history : null, report.Diagnostics);
+
+    /// <summary>The labs page beside the merged report at <paramref name="htmlPath"/>: <c>Combined.labs.html</c> for <c>Combined.html</c>.</summary>
+    internal static string LabsPagePath(string htmlPath) =>
+        Path.Combine(Path.GetDirectoryName(Path.GetFullPath(htmlPath)) ?? "", LabsReportGenerator.FileName(Path.GetFileNameWithoutExtension(htmlPath)));
 
     /// <summary>
     /// The popup data a merged report carries: the merged segment map, through the same wrapper as a live run's, with

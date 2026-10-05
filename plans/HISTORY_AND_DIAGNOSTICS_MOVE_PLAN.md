@@ -34,8 +34,10 @@ written by default whenever it has something to show.
 - Everything else that carries history or diagnostics stays as it is: the `diagnostics` array of
   `TestRunReport.json`, `Failures.md` and `Failures.jsonl`, CTRF, `History.run.json`, the ledger, `kronikol query
   history`, the console and CI lines.
-- A default report gets smaller: about 6 KB of CSS and 1.3 KB of script per report, plus an ESTIMATED 1.2 KB of markup
-  per scenario once a ledger holds a run (S0 measures it), about 1.2 MB on a 1,000-scenario report.
+- A default report gets smaller: 6.1 KB of stylesheet rules and 1.3 KB of script in every report, plus the history
+  markup, measured by S0 (harness `s0/`) at 7,124 bytes on an 8-scenario example suite with ten earlier runs: about
+  900 bytes per scenario raw, most of it sparkline tooltips that gain an 83-byte line a run up to the 10-run cap, and
+  about 60 bytes per scenario gzipped. On CI each tooltip line also carries a commit, so real suites cost more.
 - Two releases. 4.5.1 (patch) fixes ten defects this research found (section 9), among them three assertions that pass
   today only because the stylesheet happens to contain their text, and two tail writes that can cost a run its
   `Run.json`. 4.6.0 (minor) is the move: two new options, each defaulting to the new behaviour, as 3.21.0 did. No
@@ -723,3 +725,43 @@ ready for it.
     write always: the page is most useful in a run whose contexts were never enqueued, which is such a pass.
   The full core suite and the full Playwright suite (972 passed, 28 skipped) passed before the tag. The wiki edits wait
   in `wiki/r1_wiki.py` until 4.5.1 is published.
+- 2026-10-05: 4.5.1 published. Release run 37346008134 passed, with CI 37346005336, CodeQL 37346005294 and CI
+  Summary Preview 37346005255 on the same commit (4a1aad8b); nuget.org lists all 62 ids at 4.5.1. The wiki has R1's
+  edits (8f491c5) and Kronikol4J's ledger its line (f723514).
+- 2026-10-05, R2 = 4.6.0 (minor), executed. S0 ran first (harness `s0/`): on the ReqNRoll xUnit v3 example (8
+  scenarios, ten earlier runs) the history markup was 7,124 bytes, 897 per scenario, and no verdict was other than
+  `stable`; the first run against a ledger file that did not exist yet already drew a one-run sparkline on every
+  scenario, which the `EmbedHistoryInReport` doc denied (fixed in that doc). Departures from the plan, each decided while
+  executing it:
+  - The page is written whenever the run's verdicts are not null, which includes that first run (an empty ledger is
+    read, and the page says so). Section 3.3's "a first run with no diagnostics leaves the reports directory exactly as
+    4.5.0 does" holds only for a run with history off or no ledger found.
+  - `PlannedFiles` lists the page whenever `GenerateLabsReport` is on, not only when it will have content: content is
+    known only after the analysis, and a page an older run left is that run's to rotate either way.
+  - The fences are line comments with an else branch (`// kron:verdicts`, `// kron:else` with each stand-in line written
+    `//|`, `// kron:/verdicts`), not the `/* */` pair section 3.5 sketched: the default variant must restore lines the
+    verdict code replaced (four functions take a fifth argument), not only drop added ones. `VerdictFences` refuses an
+    unbalanced fence, and a fact holds every embedded script to that. The default variants of three scripts are the
+    3.10.0 bytes; `report-search-index.js`'s is 4.5.0's with c9c3b068 taken out (512bc85a changed it since).
+  - `MergeableReportRenderer.Render` writes the merged page itself (so a library caller who hands it history still gets
+    it somewhere), and `MergedRunOutputs` names it in the pointer by the same rule.
+  - The CI "Debug this run" text took the first `.html` the run listed for its "do not open" line, which with the report
+    switched off would have been the page: it now skips the page.
+  - The Playwright fixture for the page and the default report is a real run with default options against a seeded
+    ledger (`HistoryReportHelper.GenerateWithLabsPage`), so the default-report facts fail on 4.5.1 for their own reason.
+  - The labs page's table scrolls inside its wrap. At 100% text it fits at 320 px, so the wrap mutation survived the
+    sweep; a third sweep with text at 200% (WCAG 1.4.4, text-only zoom) is the fact that needs it.
+  - The wiki pass also fixed W1, W2, W4 and W7 of section 9's list, the merge workflow's upload example (a `#` after a
+    path in a `path: |` block is part of the path, not a comment), and listed the page on CI-Artifact-Upload.
+  Proofs: the behaviour facts failed at v4.5.1 for their own reasons (harness `r2/red-4.5.1-unit.txt`: 30 facts;
+  `r2/red-4.5.1-e2e.txt`: 7), with the two new options stubbed as properties that do nothing; each of the 16 `r2-*`
+  mutations turned at least one fact red (`mutations/r2-results.txt`); the cascade check found no computed style
+  changed by moving the rules, over 92 elements at 1280 and 375 px (`r2/cascade.txt`). The core suite passed 6,499
+  with 2 skipped, the history facts also under a push to main and a pull request's environment, the search-engine
+  suite 214, and the full Playwright suite 981 with 28 skipped. `release.slnf` packed in Release for every target
+  (62 packages), and BreakfastProvider's xUnit in-memory lane ran on those packages with nothing configured: 212 of
+  212 passed, twice; its `TestRunReport.html` holds no `history-`, `data-history-verdicts` or `report-diagnostic`,
+  and `TestRunReport.labs.html` (199 KB, 21 KB gzipped; 252 KB on the second run) holds the History section and 212
+  rows, all `stable`, linking into the report, and moved under `runs/` with its run.
+  While this ran, the owner saw the Report diagnostics section in a report a Node application's `kronikol ingest`
+  wrote with 4.5.1: its command line passed `--diagnostics-section`, the opt-in, which 4.6.0 keeps.
