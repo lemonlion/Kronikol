@@ -8,7 +8,9 @@ namespace Kronikol.Tests.EndToEnd;
 /// its History section open, its table of every scenario paints each sparkline's runs, its diagnostics list is open,
 /// and a scenario named on it opens that scenario in the report.
 /// </summary>
-[Collection(PlaywrightCollections.Reports)]
+// The fixture runs the report pipeline (HistoryReportHelper.GenerateWithLabsPage), whose diagram fetcher and log store are
+// process-wide: in the collection of the other classes that run it, so no two pipelines overlap.
+[Collection(PlaywrightCollections.Diagrams)]
 public class LabsPageTests : PlaywrightTestBase
 {
     public LabsPageTests(PlaywrightFixture fixture) : base(fixture) { }

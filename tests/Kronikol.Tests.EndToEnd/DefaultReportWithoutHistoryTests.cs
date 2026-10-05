@@ -7,7 +7,9 @@ namespace Kronikol.Tests.EndToEnd;
 /// is painted, a verdict query typed in the search box matches nothing without an error, and Export Filtered HTML
 /// carries no history. The history is on the labs page beside it (<see cref="LabsPageTests"/>).
 /// </summary>
-[Collection(PlaywrightCollections.Search)]
+// The fixture runs the report pipeline (HistoryReportHelper.GenerateWithLabsPage), whose diagram fetcher and log store are
+// process-wide: in the collection of the other classes that run it, so no two pipelines overlap.
+[Collection(PlaywrightCollections.Diagrams)]
 public class DefaultReportWithoutHistoryTests : PlaywrightTestBase
 {
     public DefaultReportWithoutHistoryTests(PlaywrightFixture fixture) : base(fixture) { }
