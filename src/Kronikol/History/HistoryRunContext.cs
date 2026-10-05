@@ -187,11 +187,6 @@ public sealed class HistoryRunContext
     }
 
     /// <summary>
-    /// Appends this run's line to the ledger, when the run writes one. Called after every output is on
-    /// disk, so a run whose report failed to write still has its fragment for the fold, and a lock that
-    /// cannot be won costs a diagnostic rather than the run.
-    /// </summary>
-    /// <summary>
     /// The lines this process appended, by ledger, suite and run id. A line with this run's id that is NOT
     /// here was written by another process - an earlier attempt of the same CI run, which a retry
     /// extension or a second workflow step starts - and is amended; one that is here is this same run
@@ -202,6 +197,11 @@ public sealed class HistoryRunContext
     /// <summary>Forgets what this process appended, so a test can stand in for a new process.</summary>
     internal static void ForgetAppendsForTests() => AppendedHere.Clear();
 
+    /// <summary>
+    /// Appends this run's line to the ledger, when the run writes one. Called after every output is on
+    /// disk, so a run whose report failed to write still has its fragment for the fold, and a lock that
+    /// cannot be won costs a diagnostic rather than the run.
+    /// </summary>
     public HistoryAppendResult? Append()
     {
         if (!WriteLedger || Location.Path is not { } path)

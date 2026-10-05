@@ -148,11 +148,6 @@ internal static class ReportScanner
     }
 
     /// <summary>
-    /// Turns the token stream into entities. Position is tracked as a list of path segments — property
-    /// names and array indices — so a value can be dispatched on where it sits rather than on how it was
-    /// reached, which is what lets the walk survive the window being refilled underneath it.
-    /// </summary>
-    /// <summary>
     /// The <c>b:</c> address of a body: the first four bytes of the SHA-1 of its UTF-8 form. A body's identity
     /// is its content. Eight hex characters of SHA-1 name it in five tokens and collide at a rate no report
     /// reaches; the point is that two identical bodies get one address, so an agent that has read one has read
@@ -163,6 +158,11 @@ internal static class ReportScanner
     /// </summary>
     internal static string HashBody(ReadOnlySpan<byte> utf8) => Kronikol.Reports.ReportPayloads.Address(utf8);
 
+    /// <summary>
+    /// Turns the token stream into entities. Position is tracked as a list of path segments — property
+    /// names and array indices — so a value can be dispatched on where it sits rather than on how it was
+    /// reached, which is what lets the walk survive the window being refilled underneath it.
+    /// </summary>
     private sealed class Walker(ReportIndex index)
     {
         private readonly List<Container> _containers = [];

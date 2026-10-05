@@ -1,0 +1,29 @@
+# R1 red run on v4.5.0 (unit facts), 2026-10-05
+
+     Failed: 23
+     Passed: 25
+Total tests: 48
+
+Kronikol.Tests.DocCommentPlacementTests.A_component_diagram_option_nothing_reads_says_so(option: "LowCoverageThreshold") [FAIL]
+Kronikol.Tests.DocCommentPlacementTests.A_component_diagram_option_nothing_reads_says_so(option: "MaxFlameChartTests") [FAIL]
+Kronikol.Tests.DocCommentPlacementTests.A_component_diagram_option_nothing_reads_says_so(option: "RelationshipFlowStyle") [FAIL]
+Kronikol.Tests.DocCommentPlacementTests.A_component_diagram_option_nothing_reads_says_so(option: "ShowRelationshipFlows") [FAIL]
+Kronikol.Tests.DocCommentPlacementTests.A_component_diagram_option_nothing_reads_says_so(option: "ShowSystemFlameChart") [FAIL]
+Kronikol.Tests.DocCommentPlacementTests.DiagnosticMode_names_the_page_it_writes [FAIL]
+Kronikol.Tests.DocCommentPlacementTests.HistoryRunContext_Append_carries_its_own_summary [FAIL]
+Kronikol.Tests.DocCommentPlacementTests.No_member_carries_two_summaries(assembly: "Kronikol") [FAIL]
+Kronikol.Tests.DocCommentPlacementTests.No_member_carries_two_summaries(assembly: "Kronikol.Tool") [FAIL]
+Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_page_goes_into_the_runs_directory_whatever_the_folder_option_holds(folder: "   ") [FAIL]
+Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_page_goes_into_the_runs_directory_whatever_the_folder_option_holds(folder: "") [FAIL]
+Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_page_goes_into_the_runs_directory_whatever_the_folder_option_holds(folder: null) [FAIL]
+Kronikol.Tests.Reports.ReportHtmlEncodingTests.No_text_from_the_run_is_drawn_as_markup(includeTestRunData: False, grouped: True) [FAIL]
+Kronikol.Tests.Reports.ReportHtmlEncodingTests.No_text_from_the_run_is_drawn_as_markup(includeTestRunData: True, grouped: False) [FAIL]
+Kronikol.Tests.Reports.ReportHtmlEncodingTests.No_text_from_the_run_is_drawn_as_markup(includeTestRunData: True, grouped: True) [FAIL]
+Kronikol.Tests.Reports.ReportHtmlEncodingTests.The_headers_show_the_names_as_written [FAIL]
+Kronikol.Tests.Reports.RunRotationTests.A_pass_with_no_scenarios_never_overwrites_the_diagnostic_page_the_previous_run_lists [FAIL]
+Kronikol.Tests.Reports.RunRotationTests.A_run_that_dies_after_its_outputs_does_not_leave_the_previous_runs_manifest_describing_them [FAIL]
+Kronikol.Tests.Reports.RunRotationTests.An_unwritable_ci_summary_costs_a_diagnostic_and_the_run_still_finishes [FAIL]
+Kronikol.Tests.Reports.RunRotationTests.An_unwritable_diagnostic_page_costs_a_diagnostic_and_the_run_still_finishes [FAIL]
+Kronikol.Tests.Reports.RunRotationTests.An_unwritable_diagnostic_page_in_a_pass_with_no_scenarios_costs_a_diagnostic_not_an_exception [FAIL]
+Kronikol.Tests.Reports.RunRotationTests.The_job_summary_is_still_written_when_CiSummary_md_cannot_be [FAIL]
+Kronikol.Tests.Tool.IngestCommandTests.The_pointer_names_only_the_files_this_ingest_wrote [FAIL]

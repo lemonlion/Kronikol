@@ -42,6 +42,22 @@ public class ComponentDiagramReportTests : IDisposable
     }
 
     [Fact]
+    public void A_report_in_performance_mode_draws_its_arrows_uncoloured_since_it_passes_no_stats()
+    {
+        // ArrowColorMode.Performance colours by P95 from relationship stats, and no generated report has passed
+        // any since 2.0.92-beta (ROADMAP Appendix C holds the choice to restore them). Its doc says so since 4.5.1.
+        var options = new ReportConfigurationOptions
+        {
+            ComponentDiagramOptions = new ComponentDiagramOptions { ArrowColorMode = ArrowColorMode.Performance },
+        };
+
+        var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport([MakeRequest()], options);
+
+        Assert.Contains(" --> ", result.PlantUml);
+        Assert.DoesNotContain("-[#", result.PlantUml);
+    }
+
+    [Fact]
     public void GenerateComponentDiagramReport_CreatesHtmlFile()
     {
         var logs = new[] { MakeRequest() };

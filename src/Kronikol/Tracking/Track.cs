@@ -155,12 +155,6 @@ public static class Track
     }
 
     /// <summary>
-    /// Called by the IL weaver (AssertionWeaver) to log a failing assertion with runtime variable values.
-    /// The weaver emits arrays of variable names and their boxed values; this method resolves
-    /// dotted property paths and substitutes formatted values into the expression text.
-    /// </summary>
-
-    /// <summary>
     /// Attaches a file to the current step (or to the scenario if no step is active).
     /// The file will be rendered as a download link in the report.
     /// </summary>
@@ -170,6 +164,11 @@ public static class Track
         StepCollector.AddAttachment(testId, filePath, name);
     }
 
+    /// <summary>
+    /// Called by the IL weaver (AssertionWeaver) to log a failing assertion with runtime variable values.
+    /// The weaver emits arrays of variable names and their boxed values; this method resolves
+    /// dotted property paths and substitutes formatted values into the expression text.
+    /// </summary>
     public static void AssertionFailedWithValues(string expression, string failureMessage, string[] varNames, object?[] varValues, string? callerFilePath = null, int callerLineNumber = 0)
     {
         var resolved = ResolveVariableValues(expression, varNames, varValues);

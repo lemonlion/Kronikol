@@ -756,7 +756,6 @@ public static class FailuresDigestGenerator
             ? $" ({(seconds < 1 ? (seconds * 1000).ToString("0", CultureInfo.InvariantCulture) + " ms" : seconds.ToString("0.##", CultureInfo.InvariantCulture) + " s")})"
             : "";
 
-    /// <summary>Keeps a captured value from breaking out of its table cell or its fence.</summary>
     /// <summary>
     /// Quotes a CAPTURED value as a Markdown inline code span that the value cannot break out of.
     ///
@@ -790,22 +789,12 @@ public static class FailuresDigestGenerator
         return fence + padding + escaped + padding + fence;
     }
 
+    /// <summary>Keeps a captured value from breaking out of its table cell or its fence.</summary>
     private static string Escape(string text) =>
         text.Replace("|", "\\|", StringComparison.Ordinal)
             .Replace("\r", "", StringComparison.Ordinal)
             .Replace("\n", " ", StringComparison.Ordinal);
 
-    /// <summary>
-    /// A captured message inside a fenced code block, with the fence sized so the message cannot close it.
-    ///
-    /// <para>It used to rewrite every <c>```</c> in the payload to <c>'''</c>. That kept the file
-    /// well-formed by falsifying the evidence, which is the one thing a failures digest may never do: an
-    /// assertion over Markdown — a README diff, a captured chat response, any library that formats its own
-    /// output — would be reported as a string the test never saw, and a reader comparing the digest to the
-    /// code would be looking for a difference that Kronikol introduced. CommonMark already has the answer:
-    /// an opening fence longer than any run inside the block, so nothing is removed and nothing is
-    /// substituted.</para>
-    /// </summary>
     /// <summary>
     /// Says how many rows a table stopped short of, or nothing when it stopped short of none.
     ///
@@ -823,6 +812,17 @@ public static class FailuresDigestGenerator
                         + "`Failures.jsonl`, and `kronikol query failures .` has them all._\n");
     }
 
+    /// <summary>
+    /// A captured message inside a fenced code block, with the fence sized so the message cannot close it.
+    ///
+    /// <para>It used to rewrite every <c>```</c> in the payload to <c>'''</c>. That kept the file
+    /// well-formed by falsifying the evidence, which is the one thing a failures digest may never do: an
+    /// assertion over Markdown — a README diff, a captured chat response, any library that formats its own
+    /// output — would be reported as a string the test never saw, and a reader comparing the digest to the
+    /// code would be looking for a difference that Kronikol introduced. CommonMark already has the answer:
+    /// an opening fence longer than any run inside the block, so nothing is removed and nothing is
+    /// substituted.</para>
+    /// </summary>
     private static string Block(string text)
     {
         var body = text.Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd();

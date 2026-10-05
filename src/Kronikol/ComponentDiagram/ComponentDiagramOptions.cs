@@ -31,16 +31,30 @@ public record ComponentDiagramOptions
     /// <summary>Custom formatter for relationship labels between components.</summary>
     public Func<ComponentRelationship, string>? RelationshipLabelFormatter { get; set; }
 
-    /// <summary>When <c>true</c>, relationship flow popups are shown for component connections. Default: <c>true</c>.</summary>
+    /// <summary>
+    /// Has no effect: nothing reads it. It was meant to show relationship flow popups for component connections.
+    /// Kept so that code which sets it still compiles; its removal waits for a major version.
+    /// </summary>
     public bool ShowRelationshipFlows { get; set; } = true;
 
-    /// <summary>Diagram style for relationship flow visualisations. Default: <see cref="InternalFlowDiagramStyle.ActivityDiagram"/>.</summary>
+    /// <summary>
+    /// Has no effect: nothing reads it. It was meant to choose the diagram style of relationship flow popups.
+    /// Kept so that code which sets it still compiles; its removal waits for a major version.
+    /// </summary>
     public InternalFlowDiagramStyle RelationshipFlowStyle { get; set; } = InternalFlowDiagramStyle.ActivityDiagram;
 
-    /// <summary>When <c>true</c>, a system-level flame chart is included. Default: <c>true</c>.</summary>
+    /// <summary>
+    /// Has no effect: nothing reads it. It was meant to add a system-level flame chart to the component diagram.
+    /// Kept so that code which sets it still compiles; its removal waits for a major version.
+    /// </summary>
     public bool ShowSystemFlameChart { get; set; } = true;
 
-    /// <summary>Components with fewer than this many test interactions are flagged as low coverage. Default: <c>3</c>.</summary>
+    /// <summary>
+    /// Has no effect: nothing reads it. Low-coverage arrows are drawn dashed only from relationship stats a caller
+    /// computes with <see cref="ComponentFlowSegmentBuilder.ComputeRelationshipStats"/>, which takes its own
+    /// threshold, and passes to <see cref="ComponentDiagramGenerator.GeneratePlantUml"/>; a generated report
+    /// passes none. Kept so that code which sets it still compiles; its removal waits for a major version.
+    /// </summary>
     public int LowCoverageThreshold { get; set; } = 3;
 
     /// <summary>Controls whether component diagram arrows are colored by dependency type or performance. Default: <see cref="ArrowColorMode.DependencyType"/>.</summary>
@@ -49,6 +63,9 @@ public record ComponentDiagramOptions
     /// <summary>Optional user overrides for dependency type colors (key = category string, value = hex color).</summary>
     public Dictionary<string, string>? DependencyColors { get; set; }
 
-    /// <summary>Maximum number of tests to display in the flame chart. Default: <c>50</c>.</summary>
+    /// <summary>
+    /// Has no effect: nothing reads it. It was meant to cap the tests a system-level flame chart shows. Kept so
+    /// that code which sets it still compiles; its removal waits for a major version.
+    /// </summary>
     public int MaxFlameChartTests { get; set; } = 50;
 }

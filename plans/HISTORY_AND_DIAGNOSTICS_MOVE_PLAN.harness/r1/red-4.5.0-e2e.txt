@@ -1,0 +1,10 @@
+# R1 red run on v4.5.0 (Playwright facts)
+
+     Failed: 5
+Total tests: 5
+
+Kronikol.Tests.EndToEnd.ComponentDiagramPageTests.The_diagram_draws_at_the_size_it_drew_in_quirks_mode [FAIL]
+Kronikol.Tests.EndToEnd.ComponentDiagramPageTests.The_page_is_drawn_in_standards_mode_and_names_itself [FAIL]
+Kronikol.Tests.EndToEnd.ExportFilteredCsvTests.A_filtered_export_lists_only_the_visible_scenarios [FAIL]
+Kronikol.Tests.EndToEnd.ExportFilteredCsvTests.Each_row_holds_the_feature_and_scenario_names_alone [FAIL]
+Kronikol.Tests.EndToEnd.NamesDrawnAsTextTests.Names_with_markup_characters_are_shown_as_written [FAIL]

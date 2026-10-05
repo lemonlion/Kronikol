@@ -25,6 +25,47 @@ public class IngestCommandTests : IDisposable
     }
 
     [Fact]
+    public void The_pointer_names_only_the_files_this_ingest_wrote()
+    {
+        // A Failures.md this ingest cannot replace, left by something earlier. No report of this run sits
+        // beside it, so no rotation moves it. Until 4.5.1 the pointer named the files that existed, so it
+        // handed the reader the earlier digest under this ingest's heading.
+        var output = Path.Combine(_dir, "out-stale");
+        Directory.CreateDirectory(output);
+        var stale = Path.Combine(output, "Failures.md");
+        const string earlier = "# Failures — from an earlier run\n";
+        File.WriteAllText(stale, earlier);
+        File.SetAttributes(stale, FileAttributes.ReadOnly);
+        try
+        {
+            const string testId = "5eed651916cd43dd8448eb211c80319c";
+            var captures = Path.Combine(_dir, "captures-stale");
+            Directory.CreateDirectory(captures);
+            var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/health", "api", "web",
+                statusCode: "200", requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(30));
+            File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+            File.WriteAllLines(Path.Combine(captures, "tests.ndjson"),
+            [
+                new TestRunRecord { Event = "start", TestId = testId, TestName = "health › answers", Feature = "health.spec.ts", Timestamp = T0 }.ToJson(),
+                new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 100, Timestamp = T0.AddSeconds(1) }.ToJson(),
+            ]);
+            var @out = new StringWriter();
+
+            var exit = IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", output], @out, new StringWriter());
+
+            Assert.SkipWhen(File.ReadAllText(stale) != earlier, "this user writes through a read-only attribute (root), so the digest was replaced");
+            Assert.Equal(0, exit);
+            var pointer = @out.ToString().Split('\n').Single(l => l.StartsWith("Kronikol: reports written to ", StringComparison.Ordinal));
+            Assert.Contains("TestRunReport.html", pointer);
+            Assert.DoesNotContain("Failures.md", pointer);
+        }
+        finally
+        {
+            File.SetAttributes(stale, FileAttributes.Normal);
+        }
+    }
+
+    [Fact]
     public void Ingest_command_round_trips_fixture_ndjson_to_a_report()
     {
         const string testId = "cafe651916cd43dd8448eb211c80319c";

@@ -130,6 +130,15 @@ function export_html() {
     a.click();
     URL.revokeObjectURL(a.href);
 }
+// The text a summary holds directly, outside its badges, labels and buttons: the name of the feature or
+// scenario it heads.
+function export_summary_name(summary) {
+    if (!summary) return '';
+    var text = '';
+    for (var n = summary.firstChild; n; n = n.nextSibling)
+        if (n.nodeType === 3) text += n.nodeValue;
+    return text.trim();
+}
 function export_csv() {
     var c = fc();
     var lines = ['Feature,Scenario,Status,Duration'];
@@ -137,8 +146,12 @@ function export_csv() {
         var d = c.items[i];
         if (d.el.style.display === 'none') continue;
         var f = d.f;
-        var fname = (f.querySelector('summary.h2') || f.querySelector('summary')).textContent.trim();
-        var sname = (d.el.querySelector('summary.h3') || d.el.querySelector('summary')).textContent.trim();
+        // A name column holds the name alone: a header also carries labels, the endpoint, the duration
+        // badge, the history pill and the copy and link buttons. A scenario's copy button holds its name.
+        var fname = export_summary_name(f.querySelector('summary.h2') || f.querySelector('summary'));
+        var ssum = d.el.querySelector('summary.h3') || d.el.querySelector('summary');
+        var copy = ssum ? ssum.querySelector('.copy-scenario-name') : null;
+        var sname = copy ? copy.getAttribute('data-scenario-name') : export_summary_name(ssum);
         var dur = d.el.getAttribute('data-duration-ms') || '';
         lines.push('"' + fname.replace(/"/g,'""') + '","' + sname.replace(/"/g,'""') + '","' + d.status + '","' + dur + '"');
     }

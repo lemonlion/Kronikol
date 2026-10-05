@@ -17,6 +17,52 @@ public class DiagnosticReportGeneratorTests : IDisposable
         TrackingComponentRegistry.Clear();
     }
 
+    // ─── Where the page goes ───────────────────────────────────
+
+    // Until 4.5.1 the page went to BaseDirectory joined with ReportsFolderPath, where every other output goes
+    // to the run's directory: a blank folder put it one level above the run (outside Run.json, the rotation
+    // and the upload), and a null one threw before the run could write its manifest.
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    public void The_page_goes_into_the_runs_directory_whatever_the_folder_option_holds(string? folder)
+    {
+        var runDirectory = Directory.CreateTempSubdirectory("kronikol-diagpage").FullName;
+        try
+        {
+            using (ReportGenerator.ScopeReportsDirectory(runDirectory))
+                DiagnosticReportGenerator.Generate([MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())], [],
+                    new ReportConfigurationOptions { ReportsFolderPath = folder! });
+
+            Assert.True(File.Exists(Path.Combine(runDirectory, "DiagnosticReport.html")));
+        }
+        finally
+        {
+            Directory.Delete(runDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Outside_a_run_the_page_goes_where_the_options_name()
+    {
+        var folder = Directory.CreateTempSubdirectory("kronikol-diagpage-options").FullName;
+        try
+        {
+            DiagnosticReportGenerator.Generate([MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())], [],
+                new ReportConfigurationOptions { ReportsFolderPath = folder });
+
+            Assert.True(File.Exists(Path.Combine(folder, "DiagnosticReport.html")));
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    // ─── What the page says ────────────────────────────────────
+
     [Fact]
     public void Unused_component_hint_mentions_ResolveDbContextOptions_not_PostConfigure()
     {

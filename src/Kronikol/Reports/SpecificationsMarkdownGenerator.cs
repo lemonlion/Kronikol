@@ -154,11 +154,6 @@ public static class SpecificationsMarkdownGenerator
     }
 
     /// <summary>
-    /// Text that has to stay on one line: a heading, a list item, a tag. Line breaks become spaces —
-    /// a step text written across three lines is one step, and rendering it as three list items would
-    /// claim two steps that were never written.
-    /// </summary>
-    /// <summary>
     /// A name, rendered so that it cannot change the document's shape.
     /// </summary>
     /// <remarks>
@@ -175,6 +170,11 @@ public static class SpecificationsMarkdownGenerator
             : inline;
     }
 
+    /// <summary>
+    /// Text that has to stay on one line: a heading, a list item, a tag. Line breaks become spaces —
+    /// a step text written across three lines is one step, and rendering it as three list items would
+    /// claim two steps that were never written.
+    /// </summary>
     private static string Inline(string? text)
     {
         if (text is not { Length: > 0 }) return "";

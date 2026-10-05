@@ -231,3 +231,9 @@ flip, a CLI flag and an end-to-end proof. The text as it stood is `git show a8ab
    drop it outright (removes `ShowNoteFontControls`, `NoteFontFamily`, `ReportToggleDefaults.NoteFont`, the
    `kronNoteMono` class and both handlers; breaking, so only here), or keep it opt-in as it is. Decide on
    whether anyone has set the option by then. No recommendation yet.
+8. **The five component diagram options nothing reads** (from `HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md` F10, 4.5.1):
+   `ShowRelationshipFlows`, `RelationshipFlowStyle`, `ShowSystemFlameChart`, `LowCoverageThreshold` and
+   `MaxFlameChartTests` on `ComponentDiagramOptions`. The features they configured left in 2.0.92-beta (74b9763c); since
+   4.5.1 their docs say they have no effect. Remove them here (breaking), unless the owner's `ROADMAP.md` Appendix C
+   choice restores relationship stats in reports first, in which case `LowCoverageThreshold` could be wired to
+   `ComputeRelationshipStats` instead. Recommendation: remove the other four either way.

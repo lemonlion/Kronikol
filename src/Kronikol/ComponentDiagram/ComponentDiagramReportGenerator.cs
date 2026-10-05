@@ -188,6 +188,9 @@ public static class ComponentDiagramReportGenerator
         bool useBrowserJs = false,
         ReportConfigurationOptions? reportOptions = null)
     {
+        // The title is text: written as it was, a "<" in it drew a tag and a quote ended the alt attribute.
+        var encodedTitle = System.Net.WebUtility.HtmlEncode(title);
+
         // Diagram rendering: browser SVG or server <img>
         string diagramHtml;
         if (useBrowserJs)
@@ -197,7 +200,7 @@ public static class ComponentDiagramReportGenerator
         }
         else
         {
-            diagramHtml = $"""<img src="{imgSrc}" alt="{title}" style="max-width: 100%;" />""";
+            diagramHtml = $"""<img src="{imgSrc}" alt="{encodedTitle}" style="max-width: 100%;" />""";
         }
 
         var contextMenuStyles = "";
@@ -212,10 +215,14 @@ public static class ComponentDiagramReportGenerator
                                + DiagramContextMenu.GetContextMenuScript();
         }
 
+        // A DOCTYPE, so the page is drawn in standards mode as the report is (until 4.5.1 it was drawn in
+        // quirks mode), and a title for its tab.
         return $$"""
+                <!DOCTYPE html>
                 <html>
                     <head>
                         <meta charset="utf-8">
+                        <title>{{encodedTitle}}</title>
                         <link rel="icon" href="{{Constants.DefaultFavicon.DataUri}}">
                         <style>
                             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 2rem; }
@@ -227,7 +234,7 @@ public static class ComponentDiagramReportGenerator
                         {{contextMenuScripts}}
                     </head>
                     <body>
-                        <h1>{{title}}</h1>
+                        <h1>{{encodedTitle}}</h1>
                         <div class="diagram-image">
                             {{diagramHtml}}
                         </div>

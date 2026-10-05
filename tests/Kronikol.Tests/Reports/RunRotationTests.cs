@@ -588,10 +588,18 @@ public class RunRotationTests : IDisposable
         Run(ExecutionResult.Failed, o => o.KeepRuns = 0);
         Assert.Equal(LocalId(1), Manifest().Run);
 
-        // CiSummary.md is written after the isolated outputs and is not one of them: a directory in its
-        // way throws out of the generator, which is as close to a kill as a test gets.
-        Directory.CreateDirectory(Path.Combine(Reports, "CiSummary.md"));
-        Assert.ThrowsAny<Exception>(() => Run(ExecutionResult.Passed, o => { o.KeepRuns = 0; o.WriteCiSummary = true; }));
+        // A run killed once its outputs are written and before its manifest. Until 4.5.1 a directory in
+        // CiSummary.md's way did this, since nothing isolated that write; now the generator's stand-in for a
+        // kill throws at that point.
+        ReportGenerator.AfterOutputsForTests.Value = () => throw new InvalidOperationException("killed after the outputs");
+        try
+        {
+            Assert.Throws<InvalidOperationException>(() => Run(ExecutionResult.Passed, o => o.KeepRuns = 0));
+        }
+        finally
+        {
+            ReportGenerator.AfterOutputsForTests.Value = null;
+        }
 
         Assert.Contains("# No failures", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
         Assert.False(File.Exists(Path.Combine(Reports, RunManifest.FileName)), "the first run's manifest still claims the directory");
@@ -757,6 +765,96 @@ public class RunRotationTests : IDisposable
         Assert.Contains("Failures2.md", Manifest().Files);
         Assert.DoesNotContain("Failures.md", Manifest().Files);
         Assert.Contains("# Failures — 1 of 2 scenarios", File.ReadAllText(Path.Combine(Reports, "Failures2.md")));
+    }
+
+    // ─── The writes after the output list (4.5.1) ─────────────
+
+    // DiagnosticReport.html and CiSummary.md were written after the isolated outputs with nothing around
+    // them, so one exception there left the generator before Run.json, the artifact publish, the CI debug
+    // section and the pointer. A directory where the file should go is the unwritable file here.
+
+    [Fact]
+    public void An_unwritable_diagnostic_page_costs_a_diagnostic_and_the_run_still_finishes()
+    {
+        Directory.CreateDirectory(Path.Combine(Reports, "DiagnosticReport.html"));
+
+        var (_, diagnostics) = Run(ExecutionResult.Failed, o => o.DiagnosticMode = true);
+
+        var failure = Assert.Single(diagnostics, d => d.Kind == DiagnosticKind.OutputFailure);
+        Assert.StartsWith("Could not write DiagnosticReport.html: ", failure.Message);
+        Assert.Equal(LocalId(1), Manifest().Run);
+        Assert.DoesNotContain("DiagnosticReport.html", Manifest().Files);
+        Assert.Contains("TestRunReport.html", Manifest().Files);
+    }
+
+    [Fact]
+    public void An_unwritable_ci_summary_costs_a_diagnostic_and_the_run_still_finishes()
+    {
+        Directory.CreateDirectory(Path.Combine(Reports, "CiSummary.md"));
+
+        var (_, diagnostics) = Run(ExecutionResult.Failed, o => o.WriteCiSummary = true);
+
+        var failure = Assert.Single(diagnostics, d => d.Kind == DiagnosticKind.OutputFailure);
+        Assert.StartsWith("Could not write CiSummary.md: ", failure.Message);
+        Assert.Equal(LocalId(1), Manifest().Run);
+        Assert.DoesNotContain("CiSummary.md", Manifest().Files);
+    }
+
+    [Fact]
+    public void The_job_summary_is_still_written_when_CiSummary_md_cannot_be()
+    {
+        Directory.CreateDirectory(Path.Combine(Reports, "CiSummary.md"));
+        var stepSummary = Path.Combine(_root, "step-summary.md");
+
+        Run(ExecutionResult.Failed, o => o.WriteCiSummary = true,
+            env: Env(("GITHUB_ACTIONS", "true"), ("GITHUB_RUN_ID", "7001"), ("GITHUB_RUN_ATTEMPT", "1"), ("GITHUB_STEP_SUMMARY", stepSummary)));
+
+        Assert.Contains("## Debug this run", File.ReadAllText(stepSummary));
+    }
+
+    [Fact]
+    public void A_pass_with_no_scenarios_never_overwrites_the_diagnostic_page_the_previous_run_lists()
+    {
+        Run(ExecutionResult.Failed, o => o.DiagnosticMode = true);
+        Assert.Contains("DiagnosticReport.html", Manifest().Files);
+        var runsPage = File.ReadAllBytes(Path.Combine(Reports, "DiagnosticReport.html"));
+
+        // A pass with no scenarios while tracking logs exist (xUnit v3's discovery pass, or a run whose tests
+        // never enqueued their contexts). Its page would sit where the previous run's manifest lists that
+        // run's own, and the next rotation would file it as that run's.
+        RequestResponseLogger.LogPair("Discovery", "discovery-" + Guid.NewGuid().ToString("N"), HttpMethod.Get, new Uri("http://payments/health"), "payments", "Test");
+        Run(ExecutionResult.Passed, o => o.DiagnosticMode = true, features: [], sameProcess: true);
+
+        Assert.True(runsPage.AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(Reports, "DiagnosticReport.html"))),
+            "the pass with no scenarios replaced the previous run's DiagnosticReport.html");
+
+        Run(ExecutionResult.Passed, o => o.DiagnosticMode = true);
+
+        var kept = Path.Combine(Runs, LocalName(1), "DiagnosticReport.html");
+        Assert.True(runsPage.AsSpan().SequenceEqual(File.ReadAllBytes(kept)), "the first run's kept copy is not its own page");
+    }
+
+    [Fact]
+    public void A_pass_with_no_scenarios_writes_its_diagnostic_page_where_no_run_lists_one()
+    {
+        RequestResponseLogger.LogPair("Discovery", "discovery-" + Guid.NewGuid().ToString("N"), HttpMethod.Get, new Uri("http://payments/health"), "payments", "Test");
+
+        Run(ExecutionResult.Passed, o => o.DiagnosticMode = true, features: []);
+
+        Assert.True(File.Exists(Path.Combine(Reports, "DiagnosticReport.html")));
+        Assert.False(File.Exists(Path.Combine(Reports, RunManifest.FileName)), "a pass with no scenarios is no run, and writes no manifest");
+    }
+
+    [Fact]
+    public void An_unwritable_diagnostic_page_in_a_pass_with_no_scenarios_costs_a_diagnostic_not_an_exception()
+    {
+        Directory.CreateDirectory(Path.Combine(Reports, "DiagnosticReport.html"));
+        RequestResponseLogger.LogPair("Discovery", "discovery-" + Guid.NewGuid().ToString("N"), HttpMethod.Get, new Uri("http://payments/health"), "payments", "Test");
+
+        var (_, diagnostics) = Run(ExecutionResult.Passed, o => o.DiagnosticMode = true, features: []);
+
+        var failure = Assert.Single(diagnostics, d => d.Kind == DiagnosticKind.OutputFailure);
+        Assert.StartsWith("Could not write DiagnosticReport.html: ", failure.Message);
     }
 
     // ─── 16. A held report (Windows: a reader with read-sharing blocks the move) ──

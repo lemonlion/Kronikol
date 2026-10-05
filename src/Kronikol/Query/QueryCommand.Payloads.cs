@@ -187,10 +187,6 @@ public static partial class QueryCommand
     }
 
     /// <summary>
-    /// Folds runs of identical calls into one row. A hundred and twenty calls to the same cache key are one
-    /// fact, and printing them separately is the difference between an answer that fits and one that does not.
-    /// </summary>
-    /// <summary>
     /// One folded run of identical calls. A record rather than the pre-rendered string this used to be,
     /// because a string is the one thing <c>--json</c> cannot make structure out of - and
     /// <see cref="Render"/> keeps the text byte-identical to what the string produced.
@@ -204,6 +200,10 @@ public static partial class QueryCommand
             + (BodyHash is { } hash ? $"  {hash} {QueryWriter.Size(BodyLength)}" : "");
     }
 
+    /// <summary>
+    /// Folds runs of identical calls into one row. A hundred and twenty calls to the same cache key are one
+    /// fact, and printing them separately is the difference between an answer that fits and one that does not.
+    /// </summary>
     private static List<CollapsedCall> Collapse(List<(ScenarioEntry Scenario, InteractionEntry Request, InteractionEntry? Response)> matches)
     {
         var rows = new List<CollapsedCall>();

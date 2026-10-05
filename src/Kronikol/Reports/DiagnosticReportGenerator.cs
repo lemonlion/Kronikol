@@ -10,6 +10,9 @@ namespace Kronikol.Reports;
 /// </summary>
 public static class DiagnosticReportGenerator
 {
+    /// <summary>The page's file name, beside the run's other reports.</summary>
+    internal const string FileName = "DiagnosticReport.html";
+
     public static void Generate(
         RequestResponseLog[] logs,
         Feature[] features,
@@ -27,12 +30,13 @@ public static class DiagnosticReportGenerator
         int? suppliedSpans)
     {
         var html = BuildHtml(logs, features, options, suppliedSpans);
-        var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, options.ReportsFolderPath);
+        // The run's own directory while a run is writing, else the one the options name. Until 4.5.1 this was
+        // BaseDirectory joined with ReportsFolderPath, which put the page one folder above a run's other files
+        // when the folder was blank, and threw when it was null.
+        var directory = ReportGenerator.ReportsDirectoryFor(options);
         Directory.CreateDirectory(directory);
-        var path = Path.Combine(directory, "DiagnosticReport.html");
+        var path = Path.Combine(directory, FileName);
         File.WriteAllText(path, html);
-        // Resolved here rather than from the run's ambient directory, so the run's manifest is told where
-        // the file actually went (a no-op outside a run, and for a file that landed somewhere else).
         RunFileCollector.Record(path);
     }
 

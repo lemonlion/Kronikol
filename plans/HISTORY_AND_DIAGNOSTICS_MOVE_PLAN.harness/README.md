@@ -16,3 +16,11 @@ the plans without opening a generated report. They are more detailed than the pl
 
 The plan's section 11 records the owner's decisions of 2026-10-05, which came after these inventories: they describe
 the code as it stood, not the design.
+
+Added while executing the plan:
+
+| Path | What it is |
+|---|---|
+| `mutations/mutate.py` | `apply <name>...` / `revert`: the source mutations behind the proofs (exact replacements, each matching once) |
+| `r1/red-4.5.0-unit.txt`, `r1/red-4.5.0-e2e.txt` | R1's new facts run in a worktree at v4.5.0 (tests copied in, one stub for the new seam): which failed |
+| `wiki/r1_wiki.py` | R1's wiki edits, applied to a wiki checkout after 4.5.1 is published |

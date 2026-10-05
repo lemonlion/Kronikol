@@ -58,7 +58,24 @@ public class ReportGeneratorDiagnosticsScopeTests : IDisposable
 
         var diagnostics = DiagnosticsIn(_dir);
         Assert.Contains(diagnostics, d => d.GetProperty("kind").GetString() == nameof(DiagnosticKind.RenderFailure));
-        Assert.Contains("Report diagnostics", File.ReadAllText(Path.Combine(_dir, "TestRunReport.html")));
+        // The HTML section is off by default (3.21.0). The stylesheet names it in every report, so the check
+        // reads the element, never the bare words.
+        Assert.DoesNotContain("<details class=\"report-diagnostics\"", File.ReadAllText(Path.Combine(_dir, "TestRunReport.html")));
+    }
+
+    [Fact]
+    public void Asked_for_the_report_lists_the_runs_diagnostics()
+    {
+        var testId = "diag-shown-" + Guid.NewGuid().ToString("N");
+        RequestResponseLogger.LogPair("Renders", testId, HttpMethod.Get, new Uri("http://svc/poisoned"), "Svc", "Test");
+        var options = Options(_dir);
+        options.ShowReportDiagnosticsSection = true;
+
+        ReportGenerator.CreateStandardReportsWithDiagrams(OneScenario(testId), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
+
+        var html = File.ReadAllText(Path.Combine(_dir, "TestRunReport.html"));
+        Assert.Contains("<details class=\"report-diagnostics\"", html);
+        Assert.Contains("<span class=\"report-diagnostic-kind report-diagnostic-kind-renderfailure\">RenderFailure</span>", html);
     }
 
     [Fact]

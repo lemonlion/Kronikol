@@ -414,7 +414,18 @@ public record ReportConfigurationOptions
     /// <summary>When <c>true</c>, automatically discovers OpenTelemetry activity sources.</summary>
     public bool ActivitySourceDiscovery { get; set; }
 
-    /// <summary>When <c>true</c>, enables diagnostic logging for troubleshooting report generation.</summary>
+    /// <summary>
+    /// When <c>true</c>, the run also writes <c>DiagnosticReport.html</c> beside its other reports: a page for
+    /// troubleshooting the tracking setup, with the options that shape capture, the logged calls per service and
+    /// per test, requests with no response, test ids with no scenario and scenarios with no calls, tracking
+    /// components that were never invoked, and HTTP client names no tracked handler matched. A pass that finds no
+    /// scenarios while calls were logged writes it too, unless the previous run's <c>Run.json</c> lists its own
+    /// copy. Default: <c>false</c>.
+    /// </summary>
+    /// <remarks>
+    /// The page's assertion value resolution section fills only when
+    /// <see cref="Kronikol.Tracking.Track.DiagnosticMode"/> is on as well; this option does not turn it on.
+    /// </remarks>
     public bool DiagnosticMode { get; set; }
 
     /// <summary>

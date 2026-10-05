@@ -4,6 +4,74 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.5.1] - 2026-10-05
+
+**Patch - defects found while planning the move of history and diagnostics out of the default report.**
+`plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md` R1 (section 9, F1, F2 and F4 to F11, and F12 found while fixing F2). Bug
+fixes and corrected doc comments, with nothing new for a consumer to call, so the patch part moves. Report output
+changes: names and titles are encoded, ComponentDiagram.html gains a DOCTYPE and a title, and the CSV export's name
+columns hold names. Kronikol4J draws names and its component page as 4.5.0 did, so its ledger gets a line. The history
+action's `VERSION` installs `Kronikol.Tool` 4.5.1.
+
+### Fixed
+
+- **Feature names, scenario names and the report's title are drawn as text.** The feature and scenario headers of
+  `TestRunReport.html` and `Specifications.html`, and the report's `<h1>`, wrote them as markup. A scenario named
+  `Place an order for <item>` showed `Place an order for ` and the browser built an element out of the rest; measured
+  on 4.5.0, a scenario named `Refund <img src=x onerror=...>` drew the image and ran its script. Names reach a report
+  from test code and, through `kronikol ingest` and `kronikol merge`, from files other tools wrote. Every other text the
+  report shows was already encoded: a new fact renders a report with a marker tag in every field a run hands it
+  (names, descriptions, endpoints, labels, categories, steps, errors, example values) and finds none drawn as markup.
+  A name holding `&`, `<`, `>`, `"` or `'` now appears in the page source as an entity, and on the page as written.
+  ComponentDiagram.html's heading and image text, the same.
+- **Export Filtered CSV's Feature and Scenario columns hold the names alone.** Each took its header's whole text, so a
+  row began `"Orders /api/orders smoke","Pay by card Happy Path`: a feature's endpoint and labels, and after a
+  scenario's name its labels, duration badge, history pill and the glyphs of its copy and link buttons. A scenario's
+  name now comes from its copy button, which holds it exactly, and a feature's from its header's own text.
+- **`DiagnosticReport.html` and `CiSummary.md` can no longer end a run before its `Run.json`.** Both were written after
+  the isolated output list with nothing around them, so one exception there (a directory in the file's way, a held
+  file) left the generator before `Run.json`, the CI artifact list, the CI debug section and the console pointer. Each
+  is now isolated as the outputs are: an `OutputFailure` diagnostic and a console warning, and the run goes on. The CI
+  writes after `Run.json` (the job summary, the artifact list, the debug section and the pointer) are isolated the same
+  way, the job summary is written even when `CiSummary.md` cannot be, and they read the environment the run was handed,
+  as `kronikol merge`'s already did.
+- **`DiagnosticReport.html` is written into the run's directory.** It went to the base directory joined with
+  `ReportsFolderPath`, where every other output goes to the run's directory: a blank folder put it one level above the
+  run's other files (outside `Run.json`, the rotation and the CI upload), and a null one threw.
+- **A pass with no scenarios no longer replaces the previous run's `DiagnosticReport.html`.** With `DiagnosticMode` on
+  and calls logged, a pass that found no scenarios (xUnit v3's discovery pass, or a run whose tests never enqueued their
+  contexts) wrote the page over the previous run's, and the next rotation filed it as that run's. It now keeps the
+  previous run's copy when that run's `Run.json` lists one, and says so on the console; otherwise it writes its own, as
+  before.
+- **`kronikol ingest`'s pointer names the files this ingest wrote.** It named `TestRunReport.html`,
+  `TestRunReport.json` and `Failures.md` whenever they existed, so a file this ingest could not write was named from an
+  earlier one, under this ingest's heading. It now reads them from the `Run.json` the ingest ends with, as a run names
+  only what its outputs wrote.
+- **ComponentDiagram.html is drawn in standards mode.** It had no DOCTYPE, so browsers drew it in quirks mode, and no
+  `<title>`. It has both; the diagram draws at the size it drew before (measured against the same page without its
+  DOCTYPE).
+- **Doc comments sit on the members they describe.** Eleven summaries had been left by later edits above the wrong
+  member, so the member they described had none and the one below them read two. Among the public ones,
+  `Track.Attachment` showed `Track.AssertionFailedWithValues`'s summary beside its own and
+  `InteractionShape.TemplateStatement` showed `InteractionShape.Calls`'s, while `AssertionFailedWithValues`, `Calls`
+  and `HistoryRunContext.Append` had none. A fact now fails on any member of `Kronikol` or `Kronikol.Tool` with two
+  summaries.
+- **`DiagnosticMode`'s doc names the page it writes** and what the page holds, and says that its assertion value
+  resolution section fills only when `Track.DiagnosticMode` is on as well. It said "enables diagnostic logging".
+- **Six component diagram docs say what a report draws.** Nothing reads `ShowRelationshipFlows`,
+  `RelationshipFlowStyle`, `ShowSystemFlameChart`, `LowCoverageThreshold` or `MaxFlameChartTests`; their docs said what
+  each did, and now say they have no effect (removing them waits for a major version, `plans/V5_PLAN.md`).
+  `ArrowColorMode.Performance` colours arrows only from relationship stats a caller passes in, and no generated report
+  has passed any since 2.0.92-beta, so a report in that mode draws its arrows uncoloured; its doc says so. Whether
+  reports draw the stats again is the owner's choice, in `plans/ROADMAP.md` Appendix C.
+- **Five test assertions read the elements they were written for.** Three about the Report diagnostics section and a
+  sparkline, and two about failure clusters, passed on text the embedded stylesheet holds (a CSS comment, a selector),
+  so they passed with the markup missing. Each now names the element, and was shown to fail with its markup removed.
+
+### Changed
+
+- **The project templates pin 4.5.0**, the release before this one, which nuget.org lists for every pinned id.
+
 ## [4.5.0] - 2026-10-01
 
 **Minor - calls through ClickHouse.Driver's `IClickHouseClient` are recorded (#126).**

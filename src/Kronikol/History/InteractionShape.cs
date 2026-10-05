@@ -122,10 +122,6 @@ public static partial class InteractionShape
     }
 
     /// <summary>
-    /// The calls in a log stream, in request order, each paired with its response by
-    /// <see cref="RequestResponseLog.RequestResponseId"/>. Markers and ignored records are not calls.
-    /// </summary>
-    /// <summary>
     /// A statement head templated: ids, timestamps and numbers as in a path, and what the statement carried
     /// as data reduced to a marker - the values of a document (<c>{v}</c>), the literals of a query
     /// (<c>'{s}'</c>, or <c>"{v}"</c> on the right of a comparison, which is where Cosmos DB puts a string
@@ -176,6 +172,10 @@ public static partial class InteractionShape
         return ComparisonBeforePattern().IsMatch(text[..match.Index]);
     }
 
+    /// <summary>
+    /// The calls in a log stream, in request order, each paired with its response by
+    /// <see cref="RequestResponseLog.RequestResponseId"/>. Markers and ignored records are not calls.
+    /// </summary>
     public static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs) => Calls(logs, null);
 
     /// <summary><see cref="Calls(IEnumerable{RequestResponseLog})"/> with the consumer's templating rules applied before the built-in ones.</summary>

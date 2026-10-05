@@ -78,8 +78,10 @@ public class IngestHostDiagnosticsTests : IDisposable
 
         var html = File.ReadAllText(result.TestRunReportHtml);
         Assert.Contains("class=\"report-diagnostics\"", html);
-        Assert.Contains("Report diagnostics (", html);
-        Assert.Contains("report-diagnostic-kind-capturedegraded", html);
+        // Anchored on the elements: the stylesheet holds the words "Report diagnostics (" in a comment and the
+        // kind's class in a selector, so a bare substring passed without the section.
+        Assert.Contains("<summary>Report diagnostics (", html);
+        Assert.Contains("<span class=\"report-diagnostic-kind report-diagnostic-kind-capturedegraded\">CaptureDegraded</span>", html);
         Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", html);
         // Messages are encoded, never injected.
         Assert.Contains("host note &lt;with markup&gt; &amp; symbols", html);

@@ -219,7 +219,7 @@ public class MergeCommandTests
             var html = File.ReadAllText(output);
             Assert.Contains("<details id=\"history-section\"", html);
             Assert.Contains("data-history-verdicts=\"broke\"", html);
-            Assert.Contains("history-sparkline", html);
+            Assert.Contains("<span class=\"history-sparkline\"", html); // the element: the stylesheet names the class too
             var digest = File.ReadAllText(Path.Combine(dir, "Failures.md"));
             Assert.Contains("**History:**", digest);
             Assert.Contains("**broke**", digest);

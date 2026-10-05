@@ -445,10 +445,14 @@ internal static class IngestCommand
             @out.WriteLine($"Replayed {result.InteractionCount} interaction record(s) into {result.ScenarioCount} scenario(s).");
             PrintDiagnostics(result.Diagnostics, @out);
             ExplainBlankSpecifications(result.Features, options, @out);
+            // What THIS ingest wrote, from the Run.json it ends with: a run names what its outputs wrote,
+            // never what exists, since a file an earlier ingest left behind exists and naming it hands the
+            // reader that run's bytes under this one's heading.
+            var written = RunManifest.TryRead(result.ReportsDirectory)?.Files ?? [];
             var summary = RunSummaryConsoleWriter.Summarise(
                 result.Features,
                 result.ReportsDirectory,
-                ["TestRunReport.html", "TestRunReport.json", "Failures.md"],
+                new[] { "TestRunReport.html", "TestRunReport.json", "Failures.md" }.Where(written.Contains),
                 agentInstructionsWritten: File.Exists(Path.Combine(result.ReportsDirectory, AgentInstructionsGenerator.ClaudeFileName)),
                 // The same suite the pipeline wrote the report under. Without it this pointer prints ids
                 // computed with no suite at all, addressing a report whose own ids were computed with one
@@ -571,7 +575,6 @@ internal static class IngestCommand
         return true;
     }
 
-    /// <summary>Whether an argument looks like a capture input (a path) rather than an option's value.</summary>
     /// <summary>
     /// Whether <paramref name="path"/> is OTLP/JSON (<c>{"resourceSpans":…}</c>) rather than interaction records: its first
     /// member, within the file's first few kilobytes, is <c>resourceSpans</c>.
@@ -598,6 +601,7 @@ internal static class IngestCommand
     private static readonly System.Text.RegularExpressions.Regex SpansHead =
         new(@"^\uFEFF?\s*\{\s*""resource_?[sS]pans""\s*:", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
+    /// <summary>Whether an argument looks like a capture input (a path) rather than an option's value.</summary>
     private static bool LooksLikeInput(string value) =>
         value.Contains('/') || value.Contains('\\') || File.Exists(value) || Directory.Exists(value);
 

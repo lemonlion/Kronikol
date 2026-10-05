@@ -698,3 +698,28 @@ ready for it.
 - 2026-10-05: green-lit ("implement the plan in full"); the owner chose both recommended names (Q2
   `{report}.labs.html`, Q14 `ShowScenarioHistory`). The other open questions are taken as recommended. Executed in
   a worktree of its own (`C:/Code/Kronikol-hdm`).
+- 2026-10-05, R1 = 4.5.1 (patch), executed. Every fix started from a fact that failed on 4.5.0 for its own reason
+  (harness `r1/red-4.5.0-unit.txt`: 23 unit facts; `r1/red-4.5.0-e2e.txt`: 5 Playwright facts). What went beyond
+  section 9, each found while executing it:
+  - F1 covered five assertions, not three: `FailureClusterReportTests` asserted `failure-clusters` twice, which the
+    stylesheet's `.failure-clusters` selector satisfies. The proof is by mutation (`mutations/mutate.py`, the `f1-*`
+    entries): with each piece of markup broken, all 17 facts of the old assertions still passed and each new one failed.
+    A new fact asks for the section and reads the run's render failure in it.
+  - F2: the Feature column had the same defect as the Scenario column (`"Orders /api/orders smoke"`).
+  - F12, new: feature and scenario names and the report's title were written into the HTML unencoded. Measured on 4.5.0,
+    a scenario named `Refund <img src=x onerror=...>` drew the image and ran its script, and `kronikol ingest` takes
+    names from files other tools wrote. A fact renders a marker tag in every field a run hands the report: exactly
+    those three leaked. ComponentDiagram.html's heading and `alt` text, the same. Kronikol4J writes them raw too.
+  - F4 isolated the CI tail after `Run.json` as well (job summary, artifact list, debug section, pointer), wrote the
+    job summary even when `CiSummary.md` cannot be written, and made those writes read the run's environment, as the
+    merge's already did. The test that used `CiSummary.md` as a stand-in for a killed run now uses an internal seam,
+    `ReportGenerator.AfterOutputsForTests`.
+  - F7 found eleven orphaned summaries, not two; `DocCommentPlacementTests` reads the shipped XML docs and fails on any
+    member (not type: partial types join one summary per file) with two.
+  - F10 also corrected `ArrowColorMode.Performance`: no generated report has passed relationship stats since
+    2.0.92-beta, so that mode draws uncoloured arrows. Their removal is `V5_PLAN.md` open question 8, and
+    `ROADMAP.md`'s Appendix C stats row mentions the docs.
+  - F11 keeps the previous run's `DiagnosticReport.html` when that run's `Run.json` lists it, rather than skipping the
+    write always: the page is most useful in a run whose contexts were never enqueued, which is such a pass.
+  The full core suite and the full Playwright suite (972 passed, 28 skipped) passed before the tag. The wiki edits wait
+  in `wiki/r1_wiki.py` until 4.5.1 is published.

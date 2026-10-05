@@ -213,7 +213,15 @@ public static class ReportGenerator
                     "is called in every test's DisposeAsync().");
 
                 if (options.DiagnosticMode)
-                    DiagnosticReportGenerator.Generate(RequestResponseLogger.RequestAndResponseLogs, features, options);
+                {
+                    // Never over the page the previous run's Run.json lists: this pass is no run, so the next
+                    // rotation would file its page under that run's name, in place of that run's own.
+                    if (RunManifest.TryRead(CurrentReportsDirectory) is { } previousRun
+                        && previousRun.Files.Contains(DiagnosticReportGenerator.FileName, StringComparer.Ordinal))
+                        Console.WriteLine($"⚠ {DiagnosticReportGenerator.FileName} was not written: the previous run's copy is kept, since its {RunManifest.FileName} lists it.");
+                    else
+                        RunIsolated(DiagnosticReportGenerator.FileName, () => DiagnosticReportGenerator.Generate(RequestResponseLogger.RequestAndResponseLogs, features, options));
+                }
             }
 
             return;
@@ -604,6 +612,7 @@ public static class ReportGenerator
         }
 
         var written = RunOutputs(actions);
+        AfterOutputsForTests.Value?.Invoke();
 
         // After every output is on disk: a run whose report failed to write still has its fragment, and a
         // ledger that stays locked past the retry budget costs a diagnostic, never the run.
@@ -617,8 +626,9 @@ public static class ReportGenerator
         foreach (var message in diagnostics)
             Console.WriteLine(message);
 
+        // Isolated as the output list is: written after it, an exception here ended the run before Run.json.
         if (options.DiagnosticMode)
-            DiagnosticReportGenerator.Generate(runLogs, features, options, suppliedSpans?.Count);
+            RunIsolated(DiagnosticReportGenerator.FileName, () => DiagnosticReportGenerator.Generate(runLogs, features, options, suppliedSpans?.Count));
 
         // Gathered once, from what THIS RUN actually wrote: an output the isolated list could not write is
         // never named by the pointer or offered in the CI summary. Existence alone is not the test — a
@@ -652,23 +662,31 @@ public static class ReportGenerator
                 QueryScriptWritten = written.Contains(QueryScriptGenerator.FileName)
             };
 
+        // The CI writes below read the run's environment (getEnv), as the rest of the run does, and each is
+        // isolated as the output list is: an exception in one costs a diagnostic, never Run.json or the pointer.
+        var ciEnvironment = CiEnvironmentDetector.Detect(getEnv);
         if (options.WriteCiSummary)
         {
-            var (truncatedDiagrams, fullDiagrams) = DefaultDiagramsFetcher.GetCiSummaryDiagrams(fetcherOptions);
-            var markdown = CiSummaryGenerator.GenerateMarkdown(features, truncatedDiagrams, fullDiagrams, startRunTime, endRunTime, options.MaxCiSummaryDiagrams,
-                options.DiagramFormat, options.PlantUmlServerBaseUrl, options.LocalDiagramRenderer);
+            string? markdown = null;
+            RunIsolated(CiSummaryFileName, () =>
+            {
+                var (truncatedDiagrams, fullDiagrams) = DefaultDiagramsFetcher.GetCiSummaryDiagrams(fetcherOptions);
+                markdown = CiSummaryGenerator.GenerateMarkdown(features, truncatedDiagrams, fullDiagrams, startRunTime, endRunTime, options.MaxCiSummaryDiagrams,
+                    options.DiagramFormat, options.PlantUmlServerBaseUrl, options.LocalDiagramRenderer);
 
-            // The job summary is written to a file descriptor rather than to stdout, so unlike the console
-            // pointer it survives every runner — which makes it the reliable place to say how to debug.
-            markdown += RunSummaryConsoleWriter.BuildCiSummarySection(runSummary);
+                // The job summary is written to a file descriptor rather than to stdout, so unlike the console
+                // pointer it survives every runner — which makes it the reliable place to say how to debug.
+                markdown += RunSummaryConsoleWriter.BuildCiSummarySection(runSummary);
 
-            var directory = CurrentReportsDirectory;
-            Directory.CreateDirectory(directory);
-            File.WriteAllText(Path.Combine(directory, "CiSummary.md"), markdown);
-            RunFileCollector.Record(Path.Combine(directory, "CiSummary.md"));
+                var directory = CurrentReportsDirectory;
+                Directory.CreateDirectory(directory);
+                File.WriteAllText(Path.Combine(directory, CiSummaryFileName), markdown);
+                RunFileCollector.Record(Path.Combine(directory, CiSummaryFileName));
+            });
 
-            var ciEnvironment = CiEnvironmentDetector.Detect();
-            CiSummaryWriter.Write(markdown, ciEnvironment);
+            // Written even when CiSummary.md could not be: the job summary is the channel that survives.
+            if (markdown is { } summary)
+                RunIsolated("the CI job summary", () => CiSummaryWriter.Write(summary, ciEnvironment, getEnv, File.AppendAllText, Console.WriteLine));
         }
 
         // The last file the run writes, after every other one: Run.json, naming the run and listing what
@@ -688,13 +706,13 @@ public static class ReportGenerator
 
         if (options.PublishCiArtifacts)
         {
-            var ciEnv = CiEnvironmentDetector.Detect();
             var ciReportsDir = CurrentReportsDirectory;
             if (Directory.Exists(ciReportsDir))
             {
-                CiArtifactPublisher.Publish(CiArtifactPublisher.ReportFiles(ciReportsDir), ciEnv, options.CiArtifactName, options.CiArtifactRetentionDays,
-                    Environment.GetEnvironmentVariable, File.AppendAllText, Console.WriteLine, File.Exists,
-                    CiArtifactPublisher.RetainedFiles(ciReportsDir));
+                RunIsolated("the CI artifact list", () =>
+                    CiArtifactPublisher.Publish(CiArtifactPublisher.ReportFiles(ciReportsDir), ciEnvironment, options.CiArtifactName, options.CiArtifactRetentionDays,
+                        getEnv, File.AppendAllText, Console.WriteLine, File.Exists,
+                        CiArtifactPublisher.RetainedFiles(ciReportsDir)));
             }
         }
 
@@ -706,20 +724,19 @@ public static class ReportGenerator
         // xUnit 2 swallowed both.
         //
         // Skipped when WriteCiSummary already ran, which appends the same block to the same place.
-        if (options.WriteCiDebugSection && !options.WriteCiSummary && runSummary.Failures.Count > 0)
+        if (options.WriteCiDebugSection && !options.WriteCiSummary && runSummary.Failures.Count > 0 && ciEnvironment != CiEnvironment.None)
         {
-            var ciEnvironment = CiEnvironmentDetector.Detect();
-            if (ciEnvironment != CiEnvironment.None)
+            RunIsolated("the CI debug section", () =>
             {
                 var debugSection = RunSummaryConsoleWriter.BuildCiSummarySection(runSummary);
                 Console.WriteLine(debugSection);
-                CiSummaryWriter.Write(debugSection, ciEnvironment);
-            }
+                CiSummaryWriter.Write(debugSection, ciEnvironment, getEnv, File.AppendAllText, Console.WriteLine);
+            });
         }
 
         // Last, so it is the final thing the run says.
         if (options.WriteRunSummaryToConsole)
-            RunSummaryConsoleWriter.Write(runSummary, CiEnvironmentDetector.Detect(), Console.WriteLine);
+            RunIsolated("the run summary", () => RunSummaryConsoleWriter.Write(runSummary, ciEnvironment, Console.WriteLine));
     }
 
     /// <summary>
@@ -765,9 +782,9 @@ public static class ReportGenerator
             planned.Add($"{componentFileName}.svg");
         }
         if (options.DiagnosticMode)
-            planned.Add("DiagnosticReport.html");
+            planned.Add(DiagnosticReportGenerator.FileName);
         if (options.WriteCiSummary)
-            planned.Add("CiSummary.md");
+            planned.Add(CiSummaryFileName);
         return planned;
     }
 
@@ -817,21 +834,51 @@ public static class ReportGenerator
 
         Parallel.Invoke(outputs.Select(output => (Action)(() =>
         {
-            try
-            {
-                output.Run();
+            if (RunIsolated(output.Name, output.Run))
                 lock (written)
                     written.Add(output.Name);
-            }
-            catch (Exception ex)
-            {
-                ReportDiagnosticsScope.Record(DiagnosticKind.OutputFailure, $"Could not write {output.Name}", ex);
-                Console.WriteLine($"⚠ WARNING: could not write {output.Name}: {ex.GetType().Name}: {ex.Message}");
-            }
         })).ToArray());
 
         return written;
     }
+
+    /// <summary>
+    /// Runs one output the way <see cref="RunOutputs"/> runs each of its own: an exception becomes an
+    /// <see cref="DiagnosticKind.OutputFailure"/> diagnostic and a console warning, and the run goes on.
+    /// For the writes that come after the output list, where an exception used to end the run before
+    /// <c>Run.json</c>, the artifact list and the pointer. Returns whether <paramref name="run"/> completed.
+    /// </summary>
+    private static bool RunIsolated(string name, Action run)
+    {
+        try
+        {
+            run();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ReportDiagnosticsScope.Record(DiagnosticKind.OutputFailure, $"Could not write {name}", ex);
+            Console.WriteLine($"⚠ WARNING: could not write {name}: {ex.GetType().Name}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Called once the output list has run, before anything after it: a test's stand-in for a process killed at
+    /// that point, since everything after the list is isolated and a failure there no longer ends the run.
+    /// Null outside tests.
+    /// </summary>
+    internal static readonly AsyncLocal<Action?> AfterOutputsForTests = new();
+
+    /// <summary>The job summary's copy in the reports directory, written when <see cref="ReportConfigurationOptions.WriteCiSummary"/> is on.</summary>
+    internal const string CiSummaryFileName = "CiSummary.md";
+
+    /// <summary>
+    /// The directory a writer that is handed the options, rather than called through <see cref="WriteFile"/>,
+    /// writes into: the run's own while one is in flight (or a merge's scoped one), else the one the options name.
+    /// </summary>
+    internal static string ReportsDirectoryFor(ReportConfigurationOptions options) =>
+        ActiveReportsDirectory.Value ?? ResolveReportsDirectory(options);
 
     /// <summary>
     /// Records an <see cref="DiagnosticKind.OptionNotApplied"/> for each option the run's rendering mode ignores:
@@ -1399,7 +1446,7 @@ public static class ReportGenerator
                             <meta charset="utf-8" />
                             <meta name="viewport" content="width=device-width, initial-scale=1" />
                             <meta name="generator" content="Kronikol v{{KronikolVersion}}" />
-                            <title>{{title}}</title>
+                            <title>{{System.Net.WebUtility.HtmlEncode(title)}}</title>
                             <style>
                                 {{combinedStylesheet}}
                                 {{contextMenuStyles}}
@@ -1454,7 +1501,7 @@ public static class ReportGenerator
         var body = new StringBuilder();
         if (customLogoHtml is not null)
             body.Append($"<div class=\"custom-logo\">{customLogoHtml}</div>");
-        body.Append($"<h1>{title}</h1>");
+        body.Append($"<h1>{System.Net.WebUtility.HtmlEncode(title)}</h1>");
 
         if (includeTestRunData)
         {
@@ -1900,7 +1947,7 @@ public static class ReportGenerator
             var featureAllSkipped = !featureHasFailures && feature.Scenarios.All(s => s.Result == ExecutionResult.Skipped);
             body.Append($"""
                      <details class="feature"{(toggles.FeaturesExpanded ? " open" : "")}>
-                        <summary class="h2{(featureHasFailures ? " failed" : featureAllSkipped ? " skipped" : "")}">{feature.DisplayName}{(feature.Endpoint is null ? "" : $" <div class=\"endpoint\">{System.Net.WebUtility.HtmlEncode(feature.Endpoint)}</div>")}{(feature.Labels is { Length: > 0 } fl ? string.Concat(fl.Select(l => $" <span class=\"label\">{System.Net.WebUtility.HtmlEncode(l)}</span>")) : "")}</summary>
+                        <summary class="h2{(featureHasFailures ? " failed" : featureAllSkipped ? " skipped" : "")}">{System.Net.WebUtility.HtmlEncode(feature.DisplayName)}{(feature.Endpoint is null ? "" : $" <div class=\"endpoint\">{System.Net.WebUtility.HtmlEncode(feature.Endpoint)}</div>")}{(feature.Labels is { Length: > 0 } fl ? string.Concat(fl.Select(l => $" <span class=\"label\">{System.Net.WebUtility.HtmlEncode(l)}</span>")) : "")}</summary>
                      """);
 
             if (feature.Description is not null)
@@ -2078,7 +2125,7 @@ public static class ReportGenerator
 
                 body.Append($"""
                          <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr}{historyAttr} data-stable-id="{scenarioStableId}" id="{anchorId}" tabindex="0">
-                            <summary class="h3{(failed ? " failed" : skipped ? " skipped" : "")}" title="{scenarioTooltip}">{scenario.DisplayName}{(scenario.IsHappyPath ? " <span class=\"label\">Happy Path</span>" : "")}{scenarioLabelsHtml}{durationBadge}{historyBadges}<button class="copy-scenario-name" title="Copy scenario name" data-scenario-name="{encodedName}" onclick="copy_scenario_name(this, event)">&#128203;</button><a class="scenario-link" href="#{anchorId}" title="Link to this scenario" onclick="event.stopPropagation()">&#128279;</a></summary>
+                            <summary class="h3{(failed ? " failed" : skipped ? " skipped" : "")}" title="{scenarioTooltip}">{encodedName}{(scenario.IsHappyPath ? " <span class=\"label\">Happy Path</span>" : "")}{scenarioLabelsHtml}{durationBadge}{historyBadges}<button class="copy-scenario-name" title="Copy scenario name" data-scenario-name="{encodedName}" onclick="copy_scenario_name(this, event)">&#128203;</button><a class="scenario-link" href="#{anchorId}" title="Link to this scenario" onclick="event.stopPropagation()">&#128279;</a></summary>
                          """);
 
                 if (failed)
@@ -4756,12 +4803,6 @@ public static class ReportGenerator
     }
 
     /// <summary>
-    /// An interaction in the data files. Everything the diagram renderer reads off the record travels with
-    /// it — the categorisation that decides participant shape, the phase, the W3C trace ids that bridge to
-    /// OpenTelemetry and application logs, which capture path produced it, and the derived duration —
-    /// so a reader of the JSON is never told less than a reader of the diagram.
-    /// </summary>
-    /// <summary>
     /// An interaction instant, as UTC, in the one format all three data writers share.
     /// </summary>
     /// <remarks>
@@ -4795,6 +4836,12 @@ public static class ReportGenerator
         _ => null
     };
 
+    /// <summary>
+    /// An interaction in the data files. Everything the diagram renderer reads off the record travels with
+    /// it — the categorisation that decides participant shape, the phase, the W3C trace ids that bridge to
+    /// OpenTelemetry and application logs, which capture path produced it, and the derived duration —
+    /// so a reader of the JSON is never told less than a reader of the diagram.
+    /// </summary>
     private static object MapLogJson(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null, ReportPayloads? payloads = null) => new
     {
         Type = log.Type.ToString(),

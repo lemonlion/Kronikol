@@ -41,7 +41,8 @@ public class FailureClusterReportTests
             ("t2", "Test 2", ExecutionResult.Failed, "Connection refused"),
             ("t3", "Test 3", ExecutionResult.Passed, null));
         var content = GenerateReport(features, "FailureClusters.html");
-        Assert.Contains("failure-clusters", content);
+        // The element, not the class name alone: the stylesheet names .failure-clusters in every report.
+        Assert.Contains("<details class=\"failure-clusters\"", content);
     }
 
     [Fact]
@@ -101,8 +102,8 @@ public class FailureClusterReportTests
                 Scenarios = [new Scenario { Id = "t2", DisplayName = "Test 2", Result = ExecutionResult.Failed, ErrorMessage = "Timeout" }]
             });
         var content = GenerateReport(features, "ClusterAcrossFeatures.html");
-        Assert.Contains("failure-clusters", content);
-        Assert.Contains("2 scenarios", content);
+        Assert.Contains("<details class=\"failure-clusters\"", content);
+        Assert.Contains("<span class=\"failure-cluster-count\">2 scenarios</span>", content);
     }
 
     [Fact]
