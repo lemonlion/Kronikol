@@ -141,8 +141,10 @@ internal static class HistoryReportHelper
         var collector = new ReportDiagnosticsCollector();
         foreach (var entry in diagnostics ?? [])
             collector.Add(entry.Kind, entry.Message);
+        // Run as a local run whatever the test process's environment: on CI the GITHUB_* variables put the run on its
+        // branch's stream, where the runs seeded above (built with no CI) are not, and it read as a cold start.
         using (ReportDiagnosticsScope.Begin(collector))
-            ReportGenerator.CreateStandardReportsWithDiagrams(features, at.UtcDateTime.AddMinutes(-1), at.UtcDateTime, options);
+            ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(features, at.UtcDateTime.AddMinutes(-1), at.UtcDateTime, options, null, _ => null);
 
         var report = Path.Combine(directory, name + ".html");
         var page = Path.Combine(directory, LabsReportGenerator.FileName(name));

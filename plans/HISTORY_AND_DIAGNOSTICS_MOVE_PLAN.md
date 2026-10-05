@@ -765,3 +765,9 @@ ready for it.
   rows, all `stable`, linking into the report, and moved under `runs/` with its run.
   While this ran, the owner saw the Report diagnostics section in a report a Node application's `kronikol ingest`
   wrote with 4.5.1: its command line passed `--diagnostics-section`, the opt-in, which 4.6.0 keeps.
+- 2026-10-05: 4.6.0's CI failed one Playwright fact on Linux, `LabsPageTests.Each_sparkline_paints_a_stop_per_run`
+  (one stop where seven were seeded): `HistoryReportHelper.GenerateWithLabsPage` seeded the ledger with no CI context
+  and then ran the generator in the process's environment, where `GITHUB_*` put the run on its branch's stream with
+  no earlier runs. The product is right; the helper now runs the generator in an empty environment, as the rotation
+  facts do, and the labs, default-report, sweep and History classes pass under no CI, a push to main and a pull
+  request (22 of 22 each). The environment variants of S8 had covered the unit facts only. Test-only, no bump.
