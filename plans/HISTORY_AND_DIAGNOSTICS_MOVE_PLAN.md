@@ -771,3 +771,9 @@ ready for it.
   no earlier runs. The product is right; the helper now runs the generator in an empty environment, as the rotation
   facts do, and the labs, default-report, sweep and History classes pass under no CI, a push to main and a pull
   request (22 of 22 each). The environment variants of S8 had covered the unit facts only. Test-only, no bump.
+- 2026-10-05: 4.6.0 published. Release run 37356032388 passed, with CodeQL 37356030202 and CI Summary Preview
+  37356030088 on a074cf14; that commit's CI (37356030150) failed the one fixture fact above, fixed in e4b59fe0, whose CI
+  (37357508742) passed on its second attempt. Its first attempt failed `ThemedSourceRendersTests.A_themed_source_
+  renders_unthemed_in_the_worker_and_the_engine_says_why`, which passed on a074cf14, on the re-run and four times
+  locally beside the labs classes; no earlier failure of it is on record. nuget.org lists all 62 ids at 4.6.0. The
+  wiki has R2's edits (f9642d5) and Kronikol4J's ledger its line (b8a3189).
