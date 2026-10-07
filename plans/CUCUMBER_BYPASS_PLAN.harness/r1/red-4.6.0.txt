@@ -1,0 +1,66 @@
+# R1's facts run against the 4.6.0 source (worktree at 37e93813; `git diff v4.6.0 HEAD -- src` is empty), 2026-10-07
+# Failed facts with their messages; passed facts are guards that hold on 4.6.0 too.
+Failed  Ingestion.Cucumber.CucumberBypassIngestTests.A_bypassed_last_step_is_read_from_the_tests_file
+        Assert.Equal() Failure: Collections differ ↓ (pos 2) Expected: [Passed, Passed, Bypassed] Actual: [Passed, Passed, Skipped] ↑ (pos 2)
+Failed  Ingestion.Cucumber.CucumberBypassIngestTests.A_bypassed_record_that_matches_no_gherkin_step_changes_nothing_and_is_counted_once
+        Assert.Single() Failure: The collection did not contain any matching items Expected: (predicate expression) Collection: []
+Failed  Ingestion.Cucumber.CucumberBypassIngestTests.A_tests_file_bypass_survives_the_merge_where_the_messages_say_the_step_passed
+        Assert.Equal() Failure: Collections differ ↓ (pos 1) Expected: [Passed, Bypassed, Passed] Actual: [Passed, Passed, Passed] ↑ (pos 1)
+Failed  Ingestion.Cucumber.CucumberBypassIngestTests.A_tests_file_step_finds_its_gherkin_step_by_text_in_order
+        Assert.Equal() Failure: Collections differ ↓ (pos 1) Expected: [Passed, Bypassed, Passed] Actual: [Passed, Passed, Passed] ↑ (pos 1)
+Failed  Ingestion.Cucumber.CucumberBypassIngestTests.The_issues_three_runs_give_one_answer
+        messages: the scenario was Skipped
+Failed  Ingestion.Cucumber.CucumberBypassIngestTests.The_synthesis_warnings_reach_the_ingest_diagnostics
+        Assert.Contains() Failure: Filter not matched in collection Collection: []
+Failed  Ingestion.Cucumber.CucumberBypassTests.A_bypass_in_the_last_attempt_is_read_after_an_earlier_attempt_failed
+        Assert.Equal() Failure: Collections differ ↓ (pos 1) Expected: [Passed, Bypassed, Passed] Actual: [Passed, Skipped, Passed] ↑ (pos 1)
+Failed  Ingestion.Cucumber.CucumberBypassTests.A_bypassed_step_before_a_step_that_skipped_the_rest_leaves_the_scenario_skipped
+        Assert.Equal() Failure: Collections differ ↓ (pos 1) Expected: [Passed, Bypassed, Passed, Skipped] Actual: [Passed, Skipped, Passed, Skipped] ↑ (pos 1)
+Failed  Ingestion.Cucumber.CucumberBypassTests.A_skipped_step_that_a_later_step_ran_after_is_bypassed_with_its_message_as_the_reason
+        Assert.Equal() Failure: Collections differ ↓ (pos 1) Expected: [Passed, Bypassed, Passed] Actual: [Passed, Skipped, Passed] ↑ (pos 1)
+Failed  Ingestion.Cucumber.CucumberBypassTests.The_golden_playwright_bdd_run_synthesises_as_it_did_before_the_bypass_rule
+        No pinned projection at C:\Code\Kronikol-bypass\tests\Kronikol.Tests\bin\Debug\net10.0\TestData\Cucumber\playwright-bdd-9.2-verdicts.json; this run's is at C:\Users\cex\AppData\Local\Temp\playwright-bdd-9.2-verdicts.actual.json.
+Failed  Ingestion.FeatureSynthesizerBypassTests.A_bypassed_step_makes_a_passed_scenario_bypassed
+        Assert.Equal() Failure: Values differ Expected: Bypassed Actual: Passed
+Failed  Ingestion.FeatureSynthesizerBypassTests.A_bypassed_sub_step_makes_a_passed_scenario_bypassed
+        Assert.Equal() Failure: Values differ Expected: Bypassed Actual: Passed
+Failed  Ingestion.FeatureSynthesizerBypassTests.A_failed_step_does_not_overturn_a_passed_end
+        Assert.Equal() Failure: Values differ Expected: Bypassed Actual: Passed
+Failed  Reports.CiSummaryCountsTests.A_bypassed_scenario_has_a_row_of_its_own
+        Assert.Contains() Failure: Sub-string not found String: "| Metric | Value |\n|---|---|\n| Status | ✅ Passed |"··· Not found: "| Scenarios | 3 |\n| Passed | 1 |\n| Failed | 0 |\n| "···
+Failed  Reports.CiSummaryCountsTests.A_scenario_skipped_after_a_failure_counts_as_skipped
+        Assert.Contains() Failure: Sub-string not found String: "| Metric | Value |\n|---|---|\n| Status | ❌ Failed |"··· Not found: "| Scenarios | 3 |\n| Passed | 0 |\n| Failed | 1 |\n| "···
+Failed  Reports.CiSummaryCountsTests.The_rows_add_up_to_the_scenarios_row(results: [Passed, Bypassed])
+        Assert.Equal() Failure: Values differ Expected: 2 Actual: 1
+Failed  Reports.CiSummaryCountsTests.The_rows_add_up_to_the_scenarios_row(results: [Skipped, SkippedAfterFailure, Failed, Bypassed])
+        Assert.Equal() Failure: Values differ Expected: 4 Actual: 2
+Failed  Tool.QuerySummaryCountsTests.Failures_with_nothing_failed_does_not_say_a_bypassed_scenario_did_not_run
+        Assert.Contains() Failure: Sub-string not found String: "nothing failed\n3 scenarios: 1 passed, 2 did not ru"··· Not found: "3 scenarios: 1 passed, 1 did not run, 1 bypassed"
+Failed  Tool.QuerySummaryCountsTests.Summary_counts_skipped_and_bypassed_scenarios_apart_from_passed_ones
+        Assert.Equal() Failure: Strings differ ↓ (pos 11) Expected: "Catalogue 1 passed, 2 skipped, 1 bypassed, 1 FAIL"··· Actual: "Catalogue 4 passed, 1 FAILED" ↑ (pos 11)
+Failed  Tool.QuerySummaryCountsTests.Summary_json_says_passed_for_the_scenarios_that_passed
+        Assert.Equal() Failure: Values differ Expected: 1 Actual: 4
+Failed  Tool.QuerySummaryCountsTests.Summary_names_only_the_counts_a_feature_has
+        Assert.Equal() Failure: Strings differ ↓ (pos 11) Expected: "Catalogue 0 passed, 1 bypassed" Actual: "Catalogue 1 passed" ↑ (pos 11)
+Passed  Ingestion.Cucumber.CucumberBypassIngestTests.A_tests_file_bypass_never_overturns_a_failed_gherkin_step
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran(includeHooks: False)
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran(includeHooks: True)
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "AMBIGUOUS")
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "PENDING")
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "UNDEFINED")
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_skipped_last_step_reads_as_skipped_with_its_message_a_comment
+Passed  Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: False)
+Passed  Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: True)
+Passed  Ingestion.Cucumber.CucumberBypassTests.Only_the_attempt_the_scenario_is_built_from_is_read
+Passed  Ingestion.Cucumber.CucumberBypassTests.Steps_skipped_after_a_failure_stay_skipped_and_the_scenario_failed(first: "FAILED", second: "SKIPPED", third: "SKIPPED")
+Passed  Ingestion.Cucumber.CucumberBypassTests.Steps_skipped_after_a_failure_stay_skipped_and_the_scenario_failed(first: "PASSED", second: "FAILED", third: "SKIPPED")
+Passed  Ingestion.Cucumber.CucumberBypassTests.What_playwright_bdd_wrote_reads_as_it_ran
+Passed  Ingestion.FeatureSynthesizerBypassTests.A_passed_scenario_with_no_bypassed_step_stays_passed
+Passed  Ingestion.FeatureSynthesizerBypassTests.A_scenario_with_no_end_keeps_its_defaulted_verdict
+Passed  Ingestion.FeatureSynthesizerBypassTests.Any_other_end_stands_beside_a_bypassed_step(endStatus: "bypassed", expected: Bypassed)
+Passed  Ingestion.FeatureSynthesizerBypassTests.Any_other_end_stands_beside_a_bypassed_step(endStatus: "failed", expected: Failed)
+Passed  Ingestion.FeatureSynthesizerBypassTests.Any_other_end_stands_beside_a_bypassed_step(endStatus: "skipped", expected: Skipped)
+Passed  Ingestion.FeatureSynthesizerBypassTests.Any_other_end_stands_beside_a_bypassed_step(endStatus: "timedOut", expected: Failed)
+Passed  Reports.CiSummaryCountsTests.A_run_with_no_bypass_writes_the_rows_it_always_wrote
+Passed  Reports.CiSummaryCountsTests.The_rows_add_up_to_the_scenarios_row(results: [Passed, Passed])
+Passed  Tool.QuerySummaryCountsTests.Failures_with_nothing_failed_keeps_its_line_for_a_run_with_no_bypass

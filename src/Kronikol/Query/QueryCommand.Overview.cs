@@ -78,14 +78,21 @@ public static partial class QueryCommand
 
         foreach (var feature in scenarios.GroupBy(s => s.FeatureName))
         {
+            // Counted, not inferred from the failures: a scenario that was skipped or bypassed did not pass.
             var featureFailed = feature.Count(s => s.Failed);
-            writer.Line($"{QueryWriter.OneLine(feature.Key, 80)}  {feature.Count() - featureFailed} passed"
+            var featurePassed = feature.Count(s => s.Result.Equals("Passed", StringComparison.OrdinalIgnoreCase));
+            var featureSkipped = feature.Count(s => s.Result.Equals("Skipped", StringComparison.OrdinalIgnoreCase)
+                                                    || s.Result.Equals("SkippedAfterFailure", StringComparison.OrdinalIgnoreCase));
+            var featureBypassed = feature.Count(s => s.Result.Equals("Bypassed", StringComparison.OrdinalIgnoreCase));
+            writer.Line($"{QueryWriter.OneLine(feature.Key, 80)}  {featurePassed} passed"
+                        + (featureSkipped > 0 ? $", {featureSkipped} skipped" : "")
+                        + (featureBypassed > 0 ? $", {featureBypassed} bypassed" : "")
                         + (featureFailed > 0 ? $", {featureFailed} FAILED" : ""));
             writer.Item(new
             {
                 feature = feature.Key,
                 total = feature.Count(),
-                passed = feature.Count() - featureFailed,
+                passed = featurePassed,
                 failed = featureFailed
             });
         }

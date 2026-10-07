@@ -3789,6 +3789,11 @@ public static class ReportGenerator
             body.Append($" <span class=\"step-duration\">({FormatDurationBadge(step.Duration.Value)})</span>");
         }
 
+        // A bypassed step says why, as its first comment line: the markup Kronikol4J writes for the same step. The reason
+        // was in the data and the query verbs, and on the page nowhere (#105).
+        if (step.Status == ExecutionResult.Bypassed && !string.IsNullOrWhiteSpace(step.BypassReason))
+            body.Append($"<div class=\"step-comment\">Bypassed: {System.Net.WebUtility.HtmlEncode(step.BypassReason)}</div>");
+
         if (step.Comments is { Length: > 0 })
         {
             foreach (var comment in step.Comments)

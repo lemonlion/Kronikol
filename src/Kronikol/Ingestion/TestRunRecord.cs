@@ -22,7 +22,8 @@ namespace Kronikol.Ingestion;
 /// <item><c>attachment</c> — a file or link produced by the test (<c>name</c>, <c>path</c>, optional
 /// <c>mediaType</c> and <c>step</c>): a screenshot, a trace archive, a link to another report. Without
 /// <c>step</c> it belongs to the scenario; with it, to that 0-based top-level step.</item>
-/// <item><c>end</c> — the verdict (<c>status</c>: passed | failed | skipped | timedOut | interrupted | bypassed; <c>durationMs</c>; optional <c>error</c>, <c>stackTrace</c>).</item>
+/// <item><c>end</c> — the verdict (<c>status</c>: passed | failed | skipped | timedOut | interrupted | bypassed; <c>durationMs</c>; optional <c>error</c>, <c>stackTrace</c>).
+/// A <c>passed</c> end with a <c>bypassed</c> step, at any level, makes the scenario <c>Bypassed</c>; every other end stands.</item>
 /// </list>
 /// <c>testId</c> must equal the <c>testId</c> stamped on the interaction records for attribution to work
 /// (or use <see cref="IngestRequest.AttributeByTestWindow"/> to attribute by time instead).
@@ -91,7 +92,11 @@ public sealed record TestRunRecord
     /// <summary>Steps only: a Gherkin data table — the first row is the header. Rendered as the step's <c>table</c> parameter.</summary>
     [JsonPropertyName("table")] public string[][]? Table { get; init; }
 
-    /// <summary>Steps only: why the step was skipped, when <c>status</c> is <c>bypassed</c>.</summary>
+    /// <summary>
+    /// Steps only: why the step was skipped over, when <c>status</c> is <c>bypassed</c>. With Cucumber Messages for the
+    /// same scenario, a level-0 <c>bypassed</c> step carries its status and this reason onto the Gherkin step with its
+    /// text (the k-th record with a text onto the k-th step with it).
+    /// </summary>
     [JsonPropertyName("bypassReason")] public string? BypassReason { get; init; }
 
     /// <summary><c>start</c> only: the feature's free-text description (the prose under <c>Feature:</c>).</summary>

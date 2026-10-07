@@ -4,6 +4,70 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.6.2] - 2026-10-07
+
+**Patch - a bypassed step reads as bypassed through `kronikol ingest` (#105).** `plans/CUCUMBER_BYPASS_PLAN.md` R1,
+green-lit as decision D34. Bug fixes and corrected doc comments, with nothing new for a consumer to call, so the patch
+part moves (4.6.1 to 4.6.2). Report output changes for a run with a bypassed step: an ingested scenario reads `Bypassed`
+where it read `Skipped` or `Passed`, a bypassed step's reason is drawn under it, and the CI summary gains a `Bypassed`
+row when there is one. Kronikol4J already drew a bypass reason so, and has no ingest, so its ledger gets a line only.
+The history action's `VERSION` installs `Kronikol.Tool` 4.6.2.
+
+### Fixed
+
+- **A Cucumber step that was skipped over while the steps after it ran is `Bypassed`.** A step reported `SKIPPED`
+  while a later Gherkin step of the same attempt finished `PASSED` or `FAILED` read as `Skipped`, its message a
+  comment, and made its scenario `Skipped` (history `S`). It is now `Bypassed`, its message the step's bypass reason
+  (`bypassReason` in the JSON, not a comment), as a LightBDD bypass or a tracked `SkipIf` step is. Hooks and steps that
+  never ran (`UNDEFINED`, `AMBIGUOUS`, `PENDING`) do not count as a later step that ran: both producers measured,
+  playwright-bdd 9.2 and cucumber-js 12.9, run after-hooks after the steps they skip, and cucumber-js reports a later
+  undefined step while it skips. Neither runs a step after skipping one for any other reason. A skipped last step still
+  reads `Skipped`: nothing in the messages tells it from a step that skipped the rest of the scenario.
+- **A bypassed step makes its scenario `Bypassed` in both ingest lanes.** The Cucumber lane ranks a scenario's steps
+  `Failed`, then `Skipped`, then `Bypassed`, then `Passed`, the order LightBDD's own status takes; it had no
+  `Bypassed`. In the tests-file lane a scenario took its `end` record's status alone, so a `bypassed` step left it
+  `Passed`. An `end` of `passed` with a `bypassed` step at any level now makes it `Bypassed`. Any other `end` stands,
+  since the contract makes it the verdict, and a scenario with no `end` keeps its defaulted verdict.
+- **A tests file's `bypassed` step survives an ingest that also reads Cucumber Messages.** The pipeline dropped every
+  step record of a scenario the messages own before the merge ran, so the reporter's bypass and its reason were lost.
+  A level-0 `bypassed` record now carries its status and reason onto the Gherkin step with its text (the k-th record
+  with a text onto the k-th step with it, read from the test's last attempt), unless that step failed. Records that
+  match no step are counted in one diagnostic.
+- **A bypassed step's reason is drawn in the report.** The step list drew a step's comments and never its
+  `BypassReason`, so a `SkipIf` step's reason and a tests file's `bypassReason` were in `TestRunReport.json` and the
+  query verbs and nowhere on the page, though the Step Tracking wiki page said they were shown. A bypassed step with a
+  reason now draws `Bypassed: <reason>` as its first comment line, as text: the line Kronikol4J already wrote.
+- **`kronikol query summary` counts what each feature's scenarios did.** Its per-feature line read `{total - failed}
+  passed`, so skipped and bypassed scenarios were counted as passed. It now reads `N passed, K skipped, B bypassed,
+  M FAILED`, leaving out the parts that are zero, and the JSON item's `passed` is the count of scenarios that passed.
+  `kronikol query failures` on a run with no failure no longer counts a bypassed scenario among those that "did not
+  run".
+- **The CI summary's rows add up.** `Passed`, `Failed` and `Skipped` were counted by exact result, so a `Bypassed` or
+  `SkippedAfterFailure` scenario was in the Scenarios total and in no row. `Skipped` now counts scenarios skipped after
+  a failure, and a `Bypassed` row is written when the run has a bypassed scenario; a run with neither writes the rows it
+  always wrote.
+- **What the Cucumber synthesis warns about reaches the run's diagnostics.** `CucumberSynthesisResult.Warnings` was
+  read by nothing, so a malformed line, a scenario that captured traffic cannot join (no `kronikol-test-id`), a
+  duplicate test id or an attachment that could not be written was said nowhere a user looks. Each is now a diagnostic,
+  printed by `kronikol ingest` and listed by `kronikol query summary`. The scenarios without a test id are named in one
+  warning rather than one each. The envelopes every producer writes and no report shows (`source`, `stepDefinition`,
+  `suggestion`, parameter types, run-level hooks) are counted without a warning; any other envelope Kronikol does not
+  read (a `parseError`, an `externalAttachment`, a type newer than the reader) is named. Found by
+  `plans/PHASE_FROM_STEPS_PLAN.md` (its F9).
+- **Doc comments.** `ExecutionResult.Bypassed` said "bypassed by the framework (e.g. inconclusive)"; no adapter maps an
+  inconclusive result to it (MSTest and NUnit map it to `Skipped`), and it now says what produces it. `TestRunRecord`,
+  `IngestRequest.CucumberMessagesFiles`, `CucumberFeatureMerger`, `CucumberFeatureSynthesizer` and its `MapStatus`
+  describe the bypass rule.
+
+### Changed in the output
+
+- An ingested scenario with a bypassed step is `Bypassed` in the report, `TestRunReport.json`, CTRF (`other`, with
+  `rawStatus` `Bypassed`) and history (`B`). Neither `B` nor `S` is a verdict, so no scenario turns flaky or failing by
+  the change. The pie chart's pass rate no longer counts such a scenario as passed, so a tests-file run that read 100%
+  reads less.
+- The six in-process adapters other than LightBDD (xUnit v2 and v3, NUnit, MSTest, TUnit, Reqnroll) still leave a
+  scenario with a `SkipIf` step at its framework's verdict, `Passed`; aligning them is the plan's Q2.
+
 ## [4.6.1] - 2026-10-07
 
 **Patch - `kronikol query diff --body` pairs a call across two runs by what it is (#115).**

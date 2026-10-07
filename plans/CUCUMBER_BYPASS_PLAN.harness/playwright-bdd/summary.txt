@@ -1,0 +1,21 @@
+== A step attaches kronikol-bypass and returns early (attempt 0)
+   PASSED   hook before-test-case-0
+            attachment kronikol-test-id (text/plain) body='id-1c1fefbcb2d2b7d02eb7-15c645b837c230b19309'
+   PASSED   the overview has loaded
+   PASSED   the local-only check attaches a bypass and returns
+            attachment kronikol-bypass (text/plain) body='Bypassed on dev: mock Gemini is not in the deployed path'
+   PASSED   the figure on screen is the figure the API returned
+== A step calls test.skip (attempt 0)
+   PASSED   hook before-test-case-0
+            attachment kronikol-test-id (text/plain) body='id-1c1fefbcb2d2b7d02eb7-16939df9c89245723077'
+   PASSED   the overview has loaded
+   SKIPPED  the local-only check calls test.skip
+   SKIPPED  the figure on screen is the figure the API returned
+== A step fails (attempt 0)
+   PASSED   hook before-test-case-0
+            attachment kronikol-test-id (text/plain) body='id-1c1fefbcb2d2b7d02eb7-e3ad8ba1a27eb5842b9f'
+   PASSED   the overview has loaded
+   FAILED   the check fails   message="Error: expected 3 to be 4\n\n   at ..\\steps\\steps.js:13\n\n  11 |   $test.skip(true, 'Skipped on dev: mock Gemini is not in th
+   SKIPPED  the figure on screen is the figure the API returned
+   PASSED   hook after-test-run-0
+            attachment error-context (text/markdown) body='IyBJbnN0cnVjdGlvbnMKCi0gRm9sbG93aW5nIFBsYXl3cmlnaHQgdGVzdCBm'

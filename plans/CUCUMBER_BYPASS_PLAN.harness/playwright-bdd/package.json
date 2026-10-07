@@ -1,0 +1,2 @@
+{ "name": "pwbdd-bypass-probe", "private": true, "type": "commonjs",
+  "devDependencies": { "@playwright/test": "1.62.1", "playwright-bdd": "9.2.0" } }

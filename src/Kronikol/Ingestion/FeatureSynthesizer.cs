@@ -181,7 +181,7 @@ public static class FeatureSynthesizer
                 Id = testId,
                 DisplayName = name,
                 Description = acc.Description,
-                Result = acc.HasEnd ? MapStatus(acc.Status) : resultWhenUnknown,
+                Result = acc.HasEnd ? RollUpBypass(MapStatus(acc.Status), steps, backgroundSteps) : resultWhenUnknown,
                 ResultDefaulted = !acc.HasEnd,
                 ErrorMessage = acc.Error,
                 ErrorStackTrace = acc.StackTrace,
@@ -500,6 +500,17 @@ public static class FeatureSynthesizer
                 TabularValue = new TabularParameterValue(columns, rows.ToArray()),
             }];
     }
+
+    /// <summary>
+    /// A passed scenario with a bypassed step, at any depth, is <see cref="ExecutionResult.Bypassed"/>, as LightBDD's own
+    /// status is (#105). Every other <c>end</c> stands: the contract makes it the verdict, and a reporter that wrote
+    /// <c>failed</c> or <c>skipped</c> knows more than its steps do.
+    /// </summary>
+    private static ExecutionResult RollUpBypass(ExecutionResult result, ScenarioStep[]? steps, ScenarioStep[]? backgroundSteps) =>
+        result == ExecutionResult.Passed && (AnyBypassed(steps) || AnyBypassed(backgroundSteps)) ? ExecutionResult.Bypassed : result;
+
+    private static bool AnyBypassed(ScenarioStep[]? steps) =>
+        steps is not null && steps.Any(s => s.Status == ExecutionResult.Bypassed || AnyBypassed(s.SubSteps));
 
     /// <summary>Maps a test-runner status word to <see cref="ExecutionResult"/> (Playwright, Jest, JUnit and xUnit vocabularies).</summary>
     public static ExecutionResult MapStatus(string? status) => status?.Trim().ToLowerInvariant() switch

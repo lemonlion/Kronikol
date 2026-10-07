@@ -21,8 +21,8 @@ public sealed class IngestRequest
     /// <c>--format message</c>, Cucumber-JVM <c>--plugin message:…</c>). When given, the Gherkin structure
     /// they carry — feature description, rules, background, keywords, tables, doc strings, example values —
     /// <em>wins</em> for every scenario they own; <see cref="TestsFile"/> still contributes assertions, UI
-    /// actions, attachments and the identity captured interactions join on. See
-    /// <see cref="Cucumber.CucumberFeatureMerger"/>.
+    /// actions, attachments, a <c>bypassed</c> step's status and reason (matched to its Gherkin step by text)
+    /// and the identity captured interactions join on. See <see cref="Cucumber.CucumberFeatureMerger"/>.
     /// </summary>
     public IReadOnlyList<string> CucumberMessagesFiles { get; init; } = [];
 
@@ -380,13 +380,24 @@ public static class IngestPipeline
         // Cucumber Messages (playwright-bdd's cucumberReporter('message') and friends): synthesised into the
         // same start/step/end records the tests file uses, so the Gherkin steps travel the existing marker,
         // attribution and naming paths untouched; the reporter's own step events for the scenarios the
-        // messages own are dropped so a diagram never grows two sets of delimiter bars.
+        // messages own are dropped so a diagram never grows two sets of delimiter bars. What a dropped step
+        // record said about a bypass is read first and applied to the Gherkin step it reports on.
         var cucumber = request.CucumberMessagesFiles.Count == 0 ? null
             : CucumberFeatureSynthesizer.BuildFromFiles(request.CucumberMessagesFiles,
-                new CucumberSynthesisOptions { IncludeHooks = request.IncludeHooks, DefaultFeatureName = request.DefaultFeatureName });
+                new CucumberSynthesisOptions { IncludeHooks = request.IncludeHooks, DefaultFeatureName = request.DefaultFeatureName },
+                CucumberTestsFileBypass.Collect(testRecords));
         var earlierAttemptRecords = 0;
         if (cucumber is not null)
         {
+            // The synthesis's own account: malformed lines, scenarios captured traffic cannot join, attachments that
+            // could not be written.
+            foreach (var warning in cucumber.Warnings)
+                diagnostics.Add(DiagnosticKind.Other, warning);
+            if (cucumber.UnmatchedTestsFileBypasses > 0)
+                diagnostics.Add(DiagnosticKind.Other,
+                    $"{cucumber.UnmatchedTestsFileBypasses} bypassed step record(s) of scenarios the Cucumber messages own matched no "
+                    + "Gherkin step by text; their bypass was not applied. A record finds its step by its text, at level 0.");
+
             testRecords.RemoveAll(r => CucumberFeatureMerger.IsReplacedStep(r, cucumber));
             testRecords.AddRange(cucumber.Markers);
             // An attempt that minted a test id of its own is not the scenario the messages built: its reporter records

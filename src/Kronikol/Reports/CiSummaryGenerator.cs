@@ -26,7 +26,8 @@ public static partial class CiSummaryGenerator
         var allScenarios = features.SelectMany(f => f.Scenarios).ToArray();
         var passed = allScenarios.Count(s => s.Result == ExecutionResult.Passed);
         var failed = allScenarios.Count(s => s.Result == ExecutionResult.Failed);
-        var skipped = allScenarios.Count(s => s.Result == ExecutionResult.Skipped);
+        var skipped = allScenarios.Count(s => s.Result is ExecutionResult.Skipped or ExecutionResult.SkippedAfterFailure);
+        var bypassed = allScenarios.Count(s => s.Result == ExecutionResult.Bypassed);
         var total = allScenarios.Length;
         var hasFailed = failed > 0;
         var status = hasFailed ? "❌ Failed" : "✅ Passed";
@@ -48,6 +49,10 @@ public static partial class CiSummaryGenerator
         sb.AppendLine($"| Passed | {passed} |");
         sb.AppendLine($"| Failed | {failed} |");
         sb.AppendLine($"| Skipped | {skipped} |");
+        // The rows add up to the Scenarios row. Bypassed only when there is one, so the summary of every run without a
+        // bypass reads as it always has.
+        if (bypassed > 0)
+            sb.AppendLine($"| Bypassed | {bypassed} |");
         sb.AppendLine($"| Duration | {duration} |");
         sb.AppendLine();
 

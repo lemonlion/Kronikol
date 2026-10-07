@@ -51,6 +51,13 @@ public sealed class CucumberMessages
     /// <summary>Envelopes of a type this reader does not consume (<c>source</c>, <c>stepDefinition</c>, …).</summary>
     public int UnknownEnvelopes { get; internal set; }
 
+    /// <summary>
+    /// The types among <see cref="UnknownEnvelopes"/> whose content a report could have needed: a <c>parseError</c>, an
+    /// <c>externalAttachment</c>, a type newer than this reader. The synthesis warns about these, and not about the
+    /// feature text, step definitions and the other envelopes no report shows.
+    /// </summary>
+    internal SortedSet<string> UnreadEnvelopeTypes { get; } = new(StringComparer.Ordinal);
+
     /// <summary>Human-readable diagnostics: malformed lines, unexpected shapes, version notes.</summary>
     public List<string> Warnings { get; } = [];
 
@@ -124,6 +131,18 @@ public static class CucumberMessagesReader
         ReadInto(into, reader, Path.GetFileName(path));
     }
 
+    /// <summary>
+    /// Envelopes of the protocol whose content no report shows, which every producer writes: the feature text, step
+    /// definitions, parameter types, snippet suggestions, run-level hooks. Skipping them loses nothing, so they are counted
+    /// in <see cref="CucumberMessages.UnknownEnvelopes"/> and never warned about. Any other envelope Kronikol does not read
+    /// (a <c>parseError</c>, an <c>externalAttachment</c>, a type newer than this reader) is named in
+    /// <see cref="CucumberMessages.UnreadEnvelopeTypes"/>.
+    /// </summary>
+    private static readonly HashSet<string> ProtocolEnvelopesNotRead = new(StringComparer.Ordinal)
+    {
+        "source", "stepDefinition", "parameterType", "undefinedParameterType", "suggestion", "testRunHookStarted", "testRunHookFinished",
+    };
+
     private static void ReadInto(CucumberMessages into, TextReader reader, string? sourceName)
     {
         var source = sourceName ?? "cucumber messages";
@@ -163,7 +182,14 @@ public static class CucumberMessagesReader
                 }
 
                 if (!handled)
+                {
                     into.UnknownEnvelopes++;
+                    foreach (var property in document.RootElement.EnumerateObject())
+                    {
+                        if (!ProtocolEnvelopesNotRead.Contains(property.Name))
+                            into.UnreadEnvelopeTypes.Add(property.Name);
+                    }
+                }
             }
         }
     }

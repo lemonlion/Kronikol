@@ -81,6 +81,12 @@ public sealed record CucumberSynthesisResult(
     public IReadOnlySet<string> EarlierAttemptTestIds { get; init; } = new HashSet<string>(StringComparer.Ordinal);
 
     /// <summary>
+    /// The tests file's bypassed step records of scenarios these messages own that matched no Gherkin step by text, so
+    /// their bypass was not applied. The pipeline reports the count as a diagnostic.
+    /// </summary>
+    internal int UnmatchedTestsFileBypasses { get; init; }
+
+    /// <summary>
     /// What the producing run executed on, as the messages' own <c>meta</c> envelope reports it, or
     /// <see cref="RunEnvironment.Unrecorded"/> when it does not report it.
     /// </summary>
@@ -108,6 +114,14 @@ public sealed record CucumberSynthesisResult(
 /// that contributes steps and diagram markers; earlier attempts leave a <c>retry N</c> label on the
 /// scenario so a flaky test stays visible.
 /// </para>
+/// <para>
+/// Bypasses: a Gherkin step reported <c>SKIPPED</c> while a later Gherkin step of the same attempt finished
+/// <c>PASSED</c> or <c>FAILED</c> was skipped over, not skipped with the rest, and is
+/// <see cref="ExecutionResult.Bypassed"/>, its message the step's <see cref="ScenarioStep.BypassReason"/>. Hooks and
+/// steps that never ran (<c>UNDEFINED</c>, <c>AMBIGUOUS</c>, <c>PENDING</c>) do not count as a later step that ran. A
+/// skipped last step stays <c>Skipped</c>: nothing in the messages tells it from one that skipped the rest. A scenario's
+/// result is its worst step's, Failed over Skipped over Bypassed over Passed.
+/// </para>
 /// </remarks>
 public static class CucumberFeatureSynthesizer
 {
@@ -118,17 +132,34 @@ public static class CucumberFeatureSynthesizer
     public static CucumberSynthesisResult BuildFromFiles(IEnumerable<string> paths, CucumberSynthesisOptions? options = null) =>
         Build(CucumberMessagesReader.ReadFiles(paths), options);
 
+    /// <summary>
+    /// As <see cref="BuildFromFiles(IEnumerable{string}, CucumberSynthesisOptions?)"/>, with a tests file's bypassed step
+    /// records to apply to the Gherkin steps they report on, which the pipeline drops with the reporter's other step
+    /// records of a scenario the messages own.
+    /// </summary>
+    internal static CucumberSynthesisResult BuildFromFiles(
+        IEnumerable<string> paths, CucumberSynthesisOptions? options, IReadOnlyList<CucumberTestsFileBypass> testsFileBypasses) =>
+        Build(CucumberMessagesReader.ReadFiles(paths), options, testsFileBypasses);
+
     /// <summary>Synthesises the report model from already-read messages.</summary>
-    public static CucumberSynthesisResult Build(CucumberMessages messages, CucumberSynthesisOptions? options = null)
+    public static CucumberSynthesisResult Build(CucumberMessages messages, CucumberSynthesisOptions? options = null) =>
+        Build(messages, options, []);
+
+    /// <summary>As <see cref="Build(CucumberMessages, CucumberSynthesisOptions?)"/>, with a tests file's bypassed step records.</summary>
+    internal static CucumberSynthesisResult Build(
+        CucumberMessages messages, CucumberSynthesisOptions? options, IReadOnlyList<CucumberTestsFileBypass> testsFileBypasses)
     {
         ArgumentNullException.ThrowIfNull(messages);
+        ArgumentNullException.ThrowIfNull(testsFileBypasses);
         options ??= new CucumberSynthesisOptions();
 
         var warnings = new List<string>(messages.Warnings);
         if (messages.MalformedLines > 0)
             warnings.Add($"Cucumber messages: {messages.MalformedLines} malformed line(s) skipped.");
-        if (messages.UnknownEnvelopes > 0)
-            warnings.Add($"Cucumber messages: {messages.UnknownEnvelopes} envelope(s) of unknown type ignored.");
+        // Not the envelopes every producer writes and no report shows (the feature text, step definitions): only a type
+        // whose content could have mattered, since the warnings reach the run's diagnostics.
+        if (messages.UnreadEnvelopeTypes.Count > 0)
+            warnings.Add($"Cucumber messages: envelopes of a type Kronikol does not read were ignored: {string.Join(", ", messages.UnreadEnvelopeTypes)}.");
 
         var gherkin = GherkinIndex.Build(messages);
         var pickles = ToDictionary(messages.Pickles, p => p.Id);
@@ -189,8 +220,12 @@ public static class CucumberFeatureSynthesizer
         var testNames = new Dictionary<string, string>(StringComparer.Ordinal);
         var stepWindows = new Dictionary<string, IReadOnlyList<CucumberStepWindow>>(StringComparer.Ordinal);
         var joined = new HashSet<string>(StringComparer.Ordinal);
+        var unjoined = new List<string>();
         var usedIds = new HashSet<string>(StringComparer.Ordinal);
         var earlierIds = new HashSet<string>(StringComparer.Ordinal);
+        var bypassesByTest = testsFileBypasses.GroupBy(b => b.TestId, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<CucumberTestsFileBypass>)g.ToList(), StringComparer.Ordinal);
+        var unmatchedBypasses = 0;
         DateTimeOffset? runStart = messages.TestRunStarted?.Timestamp?.ToInstant();
         DateTimeOffset? runEnd = messages.TestRunFinished?.Timestamp?.ToInstant();
 
@@ -210,12 +245,14 @@ public static class CucumberFeatureSynthesizer
 
             var attempts = attemptsByCase[testCaseId];
             var winner = attempts[^1];
-            var scenarioId = ResolveScenarioId(pickle, winner, attachmentsByAttempt, options, usedIds, joined, warnings);
+            var scenarioId = ResolveScenarioId(pickle, winner, attachmentsByAttempt, options, usedIds, joined, unjoined, warnings);
 
             var node = gherkin.FindScenario(pickle);
             var featureName = node?.Feature?.Name is { Length: > 0 } fn ? fn : options.DefaultFeatureName;
+            var bypasses = bypassesByTest.GetValueOrDefault(scenarioId) ?? [];
             var built = BuildScenario(scenarioId, pickle, node, testCase, winner, attempts, gherkin, hooks,
-                stepStarts, stepFinishes, caseFinishes, attachmentsByAttempt, attachmentWriter, options, warnings);
+                stepStarts, stepFinishes, caseFinishes, attachmentsByAttempt, attachmentWriter, options, bypasses, warnings);
+            unmatchedBypasses += bypasses.Count - built.MatchedBypasses;
 
             if (!featureGroups.TryGetValue(featureName, out var group))
             {
@@ -258,6 +295,18 @@ public static class CucumberFeatureSynthesizer
                 runEnd = runEnd is null || e > runEnd ? e : runEnd;
         }
 
+        // One warning for every scenario that cannot join, not one each: a producer with no Kronikol fixture writes the
+        // attachment for none of them, and the warnings reach the run's diagnostics.
+        if (unjoined.Count > 0)
+        {
+            const int named = 5;
+            var names = string.Join(", ", unjoined.Take(named).Select(n => $"'{n}'"))
+                        + (unjoined.Count > named ? $" and {unjoined.Count - named} more" : "");
+            warnings.Add(
+                $"Cucumber messages: {unjoined.Count} scenario(s) have no '{options.TestIdAttachmentName}' attachment, so " +
+                $"captured interactions cannot be joined to them: {names}.");
+        }
+
         var features = featureOrder.Select(name => featureGroups[name].ToFeature()).ToArray();
         var now = DateTimeOffset.UtcNow;
         return new CucumberSynthesisResult(
@@ -272,6 +321,7 @@ public static class CucumberFeatureSynthesizer
         {
             Environment = messages.Meta?.ToRunEnvironment() ?? RunEnvironment.Unrecorded,
             EarlierAttemptTestIds = earlierIds,
+            UnmatchedTestsFileBypasses = unmatchedBypasses,
         };
     }
 
@@ -281,7 +331,8 @@ public static class CucumberFeatureSynthesizer
         IReadOnlyList<TestRunRecord> Markers,
         DateTimeOffset? Start,
         DateTimeOffset? End,
-        string? Endpoint);
+        string? Endpoint,
+        int MatchedBypasses);
 
     private static BuiltScenario BuildScenario(
         string scenarioId,
@@ -298,11 +349,37 @@ public static class CucumberFeatureSynthesizer
         Dictionary<string, List<CucumberAttachment>> attachmentsByAttempt,
         AttachmentWriter attachmentWriter,
         CucumberSynthesisOptions options,
+        IReadOnlyList<CucumberTestsFileBypass> bypasses,
         List<string> warnings)
     {
         var attemptId = winner.Id ?? "";
         var pickleSteps = ToDictionary(pickle.Steps ?? [], s => s.Id);
         var exampleRow = FindExampleRow(pickle, gherkin);
+        var plan = testCase.TestSteps ?? [];
+
+        // The last Gherkin step of this attempt that ran its body. A step reported SKIPPED before it was skipped over
+        // while the steps after it ran: Kronikol's own meaning of a bypass, and no Cucumber runner measured runs a step
+        // after skipping one for any other reason. Hooks run after skipped steps, and an UNDEFINED, AMBIGUOUS or PENDING
+        // step never ran its body, so none of them counts.
+        var lastRan = -1;
+        for (var i = 0; i < plan.Length; i++)
+        {
+            if (plan[i].Id is { Length: > 0 } id && plan[i].HookId is not { Length: > 0 }
+                && plan[i].PickleStepId is { Length: > 0 } psid && pickleSteps.ContainsKey(psid)
+                && RawStatus(stepFinishes.GetValueOrDefault(Key(attemptId, id)!)?.TestStepResult) is "PASSED" or "FAILED")
+                lastRan = i;
+        }
+
+        // A tests-file bypass finds its step by text: the k-th record with a text is the k-th Gherkin step with it.
+        var bypassByText = new Dictionary<(string Text, int Occurrence), CucumberTestsFileBypass>();
+        foreach (var bypass in bypasses)
+        {
+            if (bypass.Occurrence > 0)
+                bypassByText.TryAdd((bypass.Text, bypass.Occurrence), bypass);
+        }
+
+        var textOccurrences = new Dictionary<string, int>(StringComparer.Ordinal);
+        var matchedBypasses = 0;
 
         var attachments = attachmentsByAttempt.TryGetValue(attemptId, out var list) ? list : [];
         var attachmentsByStep = new Dictionary<string, List<FileAttachment>>(StringComparer.Ordinal);
@@ -358,8 +435,9 @@ public static class CucumberFeatureSynthesizer
             Attempt = winner.Attempt + 1,
         });
 
-        foreach (var testStep in testCase.TestSteps ?? [])
+        for (var position = 0; position < plan.Length; position++)
         {
+            var testStep = plan[position];
             if (testStep.Id is not { Length: > 0 } testStepId)
                 continue;
             var key = Key(attemptId, testStepId)!;
@@ -445,17 +523,28 @@ public static class CucumberFeatureSynthesizer
             var gherkinStep = gherkin.FindStep(pickleStep);
             var keyword = NormaliseKeyword(gherkinStep?.Keyword);
             var isBackground = gherkinStep?.Id is { Length: > 0 } gid && gherkin.IsBackgroundStep(gid);
+            var text = pickleStep.Text ?? gherkinStep?.Text ?? "(step)";
+
+            var occurrence = textOccurrences[text.Trim()] = textOccurrences.GetValueOrDefault(text.Trim()) + 1;
+            var fromTestsFile = bypassByText.GetValueOrDefault((text.Trim(), occurrence));
+            if (fromTestsFile is not null)
+                matchedBypasses++;
+            var (stepStatus, bypassReason) = StepVerdict(status, RawStatus(result), position < lastRan, fromTestsFile, message);
+            var bypassed = stepStatus == ExecutionResult.Bypassed;
 
             var step = new ScenarioStep
             {
                 Keyword = keyword,
-                Text = pickleStep.Text ?? gherkinStep?.Text ?? "(step)",
-                Status = status,
+                Text = text,
+                Status = stepStatus,
+                BypassReason = bypassReason,
                 Duration = duration,
                 Attachments = stepAttachments,
-                Comments = message is null ? null : [message],
+                // A bypassed step's message is its reason and is said once, as the reason; one that says something else
+                // (a tests file gave the reason) stays a comment.
+                Comments = message is null || (bypassed && message == bypassReason) ? null : [message],
                 // What Failures.md prints under a failing step; the comments are what the HTML renders.
-                FailureMessage = status == ExecutionResult.Failed ? message : null,
+                FailureMessage = stepStatus == ExecutionResult.Failed ? message : null,
                 // The step contract: the feature file's name, and the step's own line in it (#76).
                 SourceFile = SourcePaths.FileName(node?.Uri ?? pickle.Uri),
                 SourceLine = gherkinStep?.Location?.Line is > 0 and var line ? line : null,
@@ -476,17 +565,19 @@ public static class CucumberFeatureSynthesizer
             if (started != default)
             {
                 windows.Add(new CucumberStepWindow(step, started, finishedAt ?? started, NullIfBlank(pickleStep.Type)));
-                // The pickle's resolved type, so a phase is found for a keyword in any language (Angenommen, Wenn).
-                markers.Add(StepMarkerRecord(scenarioId, step, started, duration, status, message, NullIfBlank(pickleStep.Type)));
+                // The pickle's resolved type, so a phase is found for a keyword in any language (Angenommen, Wenn). A
+                // bypassed step's marker carries its reason as the tests file's own record does, and no error.
+                markers.Add(StepMarkerRecord(scenarioId, step, started, duration, stepStatus, bypassed ? null : message,
+                    NullIfBlank(pickleStep.Type)));
             }
 
-            if (status == ExecutionResult.Failed)
+            if (stepStatus == ExecutionResult.Failed)
             {
                 errorMessage ??= message;
                 errorStack ??= stackTrace;
             }
 
-            worst = Worse(worst, status);
+            worst = Worse(worst, stepStatus);
         }
 
         // Attachments the producer pinned to a step that is not in the plan (a run-level hook, a step the
@@ -584,8 +675,29 @@ public static class CucumberFeatureSynthesizer
             Error = errorMessage,
         });
 
-        return new BuiltScenario(scenario, windows, markers, scenarioStart, scenarioEnd, endpoint);
+        return new BuiltScenario(scenario, windows, markers, scenarioStart, scenarioEnd, endpoint, matchedBypasses);
     }
+
+    /// <summary>
+    /// A Gherkin step's verdict once the bypass signals are read (#105). A step that did not fail is
+    /// <see cref="ExecutionResult.Bypassed"/> when the tests file says so, or when its producer reported it
+    /// <c>SKIPPED</c> and a later Gherkin step of the same attempt ran. Its reason is the tests file's
+    /// <c>bypassReason</c>, else the step's own message. A failed step stays failed whatever is said about it.
+    /// </summary>
+    private static (ExecutionResult Status, string? BypassReason) StepVerdict(
+        ExecutionResult status, string? rawStatus, bool aLaterStepRan, CucumberTestsFileBypass? fromTestsFile, string? message)
+    {
+        if (status == ExecutionResult.Failed)
+            return (status, null);
+        if (fromTestsFile is not null)
+            return (ExecutionResult.Bypassed, fromTestsFile.Reason ?? message);
+        if (rawStatus == "SKIPPED" && aLaterStepRan)
+            return (ExecutionResult.Bypassed, message);
+        return (status, null);
+    }
+
+    /// <summary>The producer's status word as written, upper-cased; <see cref="MapStatus"/> folds it into a verdict.</summary>
+    private static string? RawStatus(CucumberTestStepResult? result) => result?.Status?.Trim().ToUpperInvariant();
 
     private static TestRunRecord StepMarkerRecord(
         string scenarioId, ScenarioStep step, DateTimeOffset started, TimeSpan? duration,
@@ -600,6 +712,7 @@ public static class CucumberFeatureSynthesizer
             DurationMs = duration?.TotalMilliseconds,
             Status = status.ToString().ToLowerInvariant(),
             Error = error,
+            BypassReason = step.BypassReason,
             Level = 0,
             Table = MarkerTable(step),
             DocString = step.DocString,
@@ -625,8 +738,9 @@ public static class CucumberFeatureSynthesizer
 
     /// <summary>
     /// The scenario id interactions join on: the <c>kronikol-test-id</c> attachment when the fixture wrote
-    /// one, otherwise a minted <c>&lt;pickleId&gt;#&lt;attempt&gt;</c> with a warning — without the
-    /// attachment nothing captured on the wire can be attributed to this scenario.
+    /// one, otherwise a minted <c>&lt;pickleId&gt;#&lt;attempt&gt;</c>, its scenario named in
+    /// <paramref name="unjoined"/> for the one warning that lists them — without the attachment nothing
+    /// captured on the wire can be attributed to this scenario.
     /// </summary>
     private static string ResolveScenarioId(
         CucumberPickle pickle,
@@ -635,6 +749,7 @@ public static class CucumberFeatureSynthesizer
         CucumberSynthesisOptions options,
         HashSet<string> usedIds,
         HashSet<string> joined,
+        List<string> unjoined,
         List<string> warnings)
     {
         string? fromAttachment = null;
@@ -667,9 +782,7 @@ public static class CucumberFeatureSynthesizer
         }
         else
         {
-            warnings.Add(
-                $"Cucumber messages: scenario '{pickle.Name}' has no '{options.TestIdAttachmentName}' attachment — " +
-                "captured interactions cannot be joined to it.");
+            unjoined.Add(pickle.Name ?? pickle.Id ?? "(unnamed)");
         }
 
         var minted = $"{pickle.Id}#{winner.Attempt}";
@@ -711,15 +824,26 @@ public static class CucumberFeatureSynthesizer
         }
     }
 
-    /// <summary>Worst-wins: Failed beats Skipped beats Passed.</summary>
-    private static ExecutionResult Worse(ExecutionResult current, ExecutionResult candidate) => (current, candidate) switch
+    /// <summary>
+    /// Worst-wins: Failed beats Skipped beats Bypassed beats Passed, the order LightBDD's own status takes. A bypassed
+    /// scenario ran, all but what it skipped over; a skipped one did not run the rest of its steps.
+    /// </summary>
+    private static ExecutionResult Worse(ExecutionResult current, ExecutionResult candidate) =>
+        Rank(candidate) > Rank(current) ? candidate : current;
+
+    private static int Rank(ExecutionResult result) => result switch
     {
-        (ExecutionResult.Failed, _) or (_, ExecutionResult.Failed) => ExecutionResult.Failed,
-        (ExecutionResult.Skipped, _) or (_, ExecutionResult.Skipped) => ExecutionResult.Skipped,
-        _ => ExecutionResult.Passed,
+        ExecutionResult.Failed => 3,
+        ExecutionResult.Skipped or ExecutionResult.SkippedAfterFailure => 2,
+        ExecutionResult.Bypassed => 1,
+        _ => 0,
     };
 
-    /// <summary>Maps a Cucumber <c>TestStepResultStatus</c> to Kronikol's verdict vocabulary.</summary>
+    /// <summary>
+    /// Maps a Cucumber <c>TestStepResultStatus</c> to Kronikol's verdict vocabulary. The word alone never says
+    /// <see cref="ExecutionResult.Bypassed"/>: whether a <c>SKIPPED</c> step was bypassed is read from the steps after it
+    /// (see the remarks on <see cref="CucumberFeatureSynthesizer"/>).
+    /// </summary>
     public static ExecutionResult MapStatus(string? status) => status?.Trim().ToUpperInvariant() switch
     {
         "PASSED" => ExecutionResult.Passed,

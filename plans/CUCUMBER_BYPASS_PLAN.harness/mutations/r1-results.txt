@@ -1,0 +1,85 @@
+# R1 mutations, 2026-10-07: mutate.py r1 on the R1 work-in-progress commit (22), then r1-late on the final R1 commit (4).
+CAUGHT  hook counts as a step that ran: 6 fact(s) red, expected A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: False) [16 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: True) [1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.The_golden_playwright_bdd_run_synthesises_as_it_did_before_the_bypass_rule [36 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran(includeHooks: True) [2 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran(includeHooks: False) [< 1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.What_playwright_bdd_wrote_reads_as_it_ran [10 ms]
+CAUGHT  UNDEFINED counts as a step that ran: 3 fact(s) red, expected A_later_step_that_did_not_run_is_not_a_step_that_ran
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "UNDEFINED") [2 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: False) [10 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: True) [1 ms]
+CAUGHT  the first attempt is read, not the last: 1 fact(s) red, expected A_bypass_in_the_last_attempt_is_read_after_an_earlier_attempt_failed
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_bypass_in_the_last_attempt_is_read_after_an_earlier_attempt_failed [10 ms]
+CAUGHT  'later' dropped: any step that ran anywhere: 15 fact(s) red, expected Steps_skipped_after_a_failure_stay_skipped_and_the_scenario_failed
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.Steps_skipped_after_a_failure_stay_skipped_and_the_scenario_failed(first: "PASSED", second: "FAILED
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.Steps_skipped_after_a_failure_stay_skipped_and_the_scenario_failed(first: "FAILED", second: "SKIPPE
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "AMBIGUOUS") [< 1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "PENDING") [< 1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "UNDEFINED") [< 1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_bypassed_step_before_a_step_that_skipped_the_rest_leaves_the_scenario_skipped [2 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: False) [8 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: True) [1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.The_golden_playwright_bdd_run_synthesises_as_it_did_before_the_bypass_rule [25 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran(includeHooks: True) [2 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran(includeHooks: False) [< 1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.What_playwright_bdd_wrote_reads_as_it_ran [2 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_skipped_last_step_reads_as_skipped_with_its_message_a_comment [< 1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.A_tests_file_bypass_never_overturns_a_failed_gherkin_step [44 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.A_bypassed_last_step_is_read_from_the_tests_file [80 ms]
+CAUGHT  Bypassed ranked above Skipped: 1 fact(s) red, expected A_bypassed_step_before_a_step_that_skipped_the_rest_leaves_the_scenario_skipped
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_bypassed_step_before_a_step_that_skipped_the_rest_leaves_the_scenario_skipped [2 ms]
+CAUGHT  a failed tests-file step overturns a passed end: 1 fact(s) red, expected A_failed_step_does_not_overturn_a_passed_end
+           Failed Kronikol.Tests.Ingestion.FeatureSynthesizerBypassTests.A_failed_step_does_not_overturn_a_passed_end [2 ms]
+CAUGHT  a skipped end rolls up too: 1 fact(s) red, expected Any_other_end_stands_beside_a_bypassed_step
+           Failed Kronikol.Tests.Ingestion.FeatureSynthesizerBypassTests.Any_other_end_stands_beside_a_bypassed_step(endStatus: "skipped", expected: Skipped) [40 ms]
+CAUGHT  a scenario with no end rolls up too: 1 fact(s) red, expected A_scenario_with_no_end_keeps_its_defaulted_verdict
+           Failed Kronikol.Tests.Ingestion.FeatureSynthesizerBypassTests.A_scenario_with_no_end_keeps_its_defaulted_verdict [2 ms]
+CAUGHT  only top-level steps roll up: 1 fact(s) red, expected A_bypassed_sub_step_makes_a_passed_scenario_bypassed
+           Failed Kronikol.Tests.Ingestion.FeatureSynthesizerBypassTests.A_bypassed_sub_step_makes_a_passed_scenario_bypassed [14 ms]
+CAUGHT  join by position, not text: 2 fact(s) red, expected A_tests_file_step_finds_its_gherkin_step_by_text_in_order
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.A_tests_file_step_finds_its_gherkin_step_by_text_in_order [29 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.A_bypassed_record_that_matches_no_gherkin_step_changes_nothing_and_is_counted_once [17 ms]
+CAUGHT  the message kept as a comment as well as the reason: 3 fact(s) red, expected A_skipped_step_that_a_later_step_ran_after_is_bypassed_with_its_message_as_the_reason
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_skipped_step_that_a_later_step_ran_after_is_bypassed_with_its_message_as_the_reason [3 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.The_issues_three_runs_give_one_answer [392 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.A_bypassed_last_step_is_read_from_the_tests_file [70 ms]
+CAUGHT  the reason written as the marker's error: 1 fact(s) red, expected A_skipped_step_that_a_later_step_ran_after_is_bypassed_with_its_message_as_the_reason
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_skipped_step_that_a_later_step_ran_after_is_bypassed_with_its_message_as_the_reason [4 ms]
+CAUGHT  SkippedAfterFailure counted as passed in query summary: 2 fact(s) red, expected Summary_counts_skipped_and_bypassed_scenarios_apart_from_passed_ones
+           Failed Kronikol.Tests.Tool.QuerySummaryCountsTests.Summary_counts_skipped_and_bypassed_scenarios_apart_from_passed_ones [25 ms]
+           Failed Kronikol.Tests.Tool.QuerySummaryCountsTests.Summary_json_says_passed_for_the_scenarios_that_passed [21 ms]
+CAUGHT  CI summary: SkippedAfterFailure out of Skipped: 2 fact(s) red, expected A_scenario_skipped_after_a_failure_counts_as_skipped
+           Failed Kronikol.Tests.Reports.CiSummaryCountsTests.The_rows_add_up_to_the_scenarios_row(results: [Skipped, SkippedAfterFailure, Failed, Bypassed]) [3 ms]
+           Failed Kronikol.Tests.Reports.CiSummaryCountsTests.A_scenario_skipped_after_a_failure_counts_as_skipped [1 ms]
+CAUGHT  CI summary: a Bypassed row on every run: 2 fact(s) red, expected A_run_with_no_bypass_writes_the_rows_it_always_wrote
+           Failed Kronikol.Tests.Reports.CiSummaryCountsTests.A_scenario_skipped_after_a_failure_counts_as_skipped [3 ms]
+           Failed Kronikol.Tests.Reports.CiSummaryCountsTests.A_run_with_no_bypass_writes_the_rows_it_always_wrote [< 1 ms]
+CAUGHT  failures footer: a bypassed scenario 'did not run': 1 fact(s) red, expected Failures_with_nothing_failed_does_not_say_a_bypassed_scenario_did_not_run
+           Failed Kronikol.Tests.Tool.QuerySummaryCountsTests.Failures_with_nothing_failed_does_not_say_a_bypassed_scenario_did_not_run [8 ms]
+CAUGHT  the synthesis warnings dropped: 1 fact(s) red, expected The_synthesis_warnings_reach_the_ingest_diagnostics
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.The_synthesis_warnings_reach_the_ingest_diagnostics [196 ms]
+CAUGHT  the unmatched-records diagnostic dropped: 1 fact(s) red, expected A_bypassed_record_that_matches_no_gherkin_step_changes_nothing_and_is_counted_once
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.A_bypassed_record_that_matches_no_gherkin_step_changes_nothing_and_is_counted_once [31 ms]
+CAUGHT  a nested record matches a Gherkin step: 1 fact(s) red, expected A_bypassed_record_that_matches_no_gherkin_step_changes_nothing_and_is_counted_once
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.A_bypassed_record_that_matches_no_gherkin_step_changes_nothing_and_is_counted_once [31 ms]
+CAUGHT  every attempt of the tests file is read: 1 fact(s) red, expected Only_the_tests_files_last_attempt_is_read
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.Only_the_tests_files_last_attempt_is_read [32 ms]
+CAUGHT  a tests-file bypass overturns a failed step: 1 fact(s) red, expected A_tests_file_bypass_never_overturns_a_failed_gherkin_step
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.A_tests_file_bypass_never_overturns_a_failed_gherkin_step [297 ms]
+CAUGHT  PENDING read as skipped over: 1 fact(s) red, expected A_pending_step_that_a_later_step_ran_after_stays_skipped
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_pending_step_that_a_later_step_ran_after_stays_skipped [6 ms]
+22 of 22 mutations caught by the fact named
+CAUGHT  the bypass reason not drawn: 2 fact(s) red, expected A_bypassed_step_draws_its_reason_where_a_comment_is_drawn
+           Failed Kronikol.Tests.Reports.StepBypassReasonReportTests.The_reason_is_drawn_as_text [1 s]
+           Failed Kronikol.Tests.Reports.StepBypassReasonReportTests.A_bypassed_step_draws_its_reason_where_a_comment_is_drawn [465 ms]
+CAUGHT  the bypass reason drawn as markup: 1 fact(s) red, expected The_reason_is_drawn_as_text
+           Failed Kronikol.Tests.Reports.StepBypassReasonReportTests.The_reason_is_drawn_as_text [2 s]
+CAUGHT  a reason drawn for a step that was not bypassed: 1 fact(s) red, expected Only_a_bypassed_step_with_a_reason_draws_one
+           Failed Kronikol.Tests.Reports.StepBypassReasonReportTests.Only_a_bypassed_step_with_a_reason_draws_one [934 ms]
+CAUGHT  the envelopes every producer writes warned about: 3 fact(s) red, expected Counts_source_envelopes_as_unknown_rather_than_failing
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberMessagesReaderTests.An_envelope_whose_content_a_report_could_need_is_warned_about_by_type [13 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberMessagesReaderTests.Counts_source_envelopes_as_unknown_rather_than_failing [4 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.The_issues_three_runs_give_one_answer [383 ms]
+4 of 4 mutations caught by the fact named

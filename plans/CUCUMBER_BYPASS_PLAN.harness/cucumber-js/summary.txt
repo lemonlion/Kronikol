@@ -1,0 +1,11 @@
+== A step returns skipped (attempt 0)
+   PASSED   the overview has loaded
+   SKIPPED  the local-only check returns skipped
+   SKIPPED  the figure on screen is the figure the API returned
+   UNDEFINED a step nobody defined
+   PASSED   hook 4c88-b461-381fb581d694
+== A step fails (attempt 0)
+   PASSED   the overview has loaded
+   FAILED   the check fails   message='Error: expected 3 to be 4\n    at World.<anonymous> (C:\\fixture\\features\\step_definitions\\steps.js:4:45)'
+   SKIPPED  the figure on screen is the figure the API returned
+   PASSED   hook 46c4-97c0-1c2a781772cf

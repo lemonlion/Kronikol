@@ -39,9 +39,29 @@ public class CucumberMessagesReaderTests
         var messages = CucumberFixtures.Read();
 
         Assert.Equal(2, messages.UnknownEnvelopes);
-        // The count is what the synthesiser turns into a diagnostic; the reader itself never fails.
+        // Every producer writes them and no report shows them, so they are counted and never warned about: the
+        // synthesis's warnings reach the run's diagnostics (#105), where this one would stand on every ingest.
+        Assert.Empty(messages.UnreadEnvelopeTypes);
+        Assert.DoesNotContain(CucumberFeatureSynthesizer.Build(messages).Warnings,
+            w => w.Contains("does not read", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void An_envelope_whose_content_a_report_could_need_is_warned_about_by_type()
+    {
+        var messages = CucumberMessagesReader.Read(new StringReader(
+            """
+            {"source":{"uri":"features/a.feature","data":"Feature: A","mediaType":"text/x.cucumber.gherkin+plain"}}
+            {"parseError":{"source":{"uri":"features/b.feature"},"message":"(3:5): expected: #TagLine, got 'Scenari: x'"}}
+            {"someFutureEnvelope":{"id":"1"}}
+            {"stepDefinition":{"id":"sd1"}}
+            {"pickle":{"id":"p1","name":"Only pickle","steps":[]}}
+            """));
+
+        Assert.Equal(4, messages.UnknownEnvelopes);
+        Assert.Equal(["parseError", "someFutureEnvelope"], messages.UnreadEnvelopeTypes);
         Assert.Contains(CucumberFeatureSynthesizer.Build(messages).Warnings,
-            w => w.Contains("unknown type", StringComparison.OrdinalIgnoreCase));
+            w => w == "Cucumber messages: envelopes of a type Kronikol does not read were ignored: parseError, someFutureEnvelope.");
     }
 
     [Fact]

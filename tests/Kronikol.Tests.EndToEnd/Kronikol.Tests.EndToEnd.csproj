@@ -29,6 +29,10 @@
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- The OpenTelemetry-under-Jest spike's spans (plans/INGEST_FIDELITY_PLAN.md S0). -->
     <Content Include="..\Kronikol.Tests\TestData\Ingest\otel-jest-v2.spans.jsonl" Link="TestData\otel-jest-v2.spans.jsonl" CopyToOutputDirectory="PreserveNewest" />
+    <!-- #105's own run and the playwright-bdd bypass probe (plans/CUCUMBER_BYPASS_PLAN.md T20). -->
+    <Content Include="..\Kronikol.Tests\TestData\Cucumber\issue-105-messages.ndjson" Link="TestData\issue-105-messages.ndjson" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Kronikol.Tests\TestData\Cucumber\issue-105-tests.ndjson" Link="TestData\issue-105-tests.ndjson" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Kronikol.Tests\TestData\Cucumber\playwright-bdd-9.2-bypass-messages.ndjson" Link="TestData\playwright-bdd-9.2-bypass-messages.ndjson" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -38,9 +38,15 @@ public static partial class QueryCommand
             // Counted, not inferred from the absence of failures. A scenario that was skipped did not
             // pass, and saying it did is the one line here that ends an investigation.
             var passed = index.Scenarios.Count(s => s.Result.Equals("Passed", StringComparison.OrdinalIgnoreCase));
+            // A bypassed scenario ran: a step of it was skipped over while the steps after it ran.
+            var bypassed = index.Scenarios.Count(s => s.Result.Equals("Bypassed", StringComparison.OrdinalIgnoreCase));
+            var notRun = index.Scenarios.Count - passed - bypassed;
             writer.Footer(passed == index.Scenarios.Count
                 ? $"{index.Scenarios.Count} scenarios, all passed · next: scenarios · services"
-                : $"{index.Scenarios.Count} scenarios: {passed} passed, {index.Scenarios.Count - passed} did not run · next: scenarios · services");
+                : $"{index.Scenarios.Count} scenarios: {passed} passed"
+                  + (notRun > 0 ? $", {notRun} did not run" : "")
+                  + (bypassed > 0 ? $", {bypassed} bypassed" : "")
+                  + " · next: scenarios · services");
             return 0;
         }
 

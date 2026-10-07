@@ -14,7 +14,8 @@ namespace Kronikol.Ingestion.Cucumber;
 /// <item>For a scenario the messages own, the Cucumber-built <see cref="Scenario"/> replaces the one the
 /// tests file produced: feature, description, rule, background, keywords, tables, doc strings, example
 /// values and outcomes all come from Gherkin. The reporter's own <c>step</c> events for that scenario are
-/// therefore dropped rather than duplicated.</item>
+/// therefore dropped rather than duplicated, all but what a <c>bypassed</c> one says: its status and reason are
+/// carried onto the Gherkin step with its text before the drop (<see cref="IngestPipeline"/>).</item>
 /// <item>The tests file still contributes what only it knows: <c>assertion</c> events (nested under the
 /// Gherkin step whose time window contains them — the ✓/✗ rows), attachments the reporter recorded on the
 /// scenario or its steps, and the failure text when Gherkin carried none.</item>
@@ -89,7 +90,8 @@ public static class CucumberFeatureMerger
 
     /// <summary>
     /// True for a tests-file <c>step</c> record that the messages replace: the reporter's own step events
-    /// for a BDD scenario would otherwise draw a second set of delimiter bars next to the Gherkin ones.
+    /// for a BDD scenario would otherwise draw a second set of delimiter bars next to the Gherkin ones. A
+    /// <c>bypassed</c> one is replaced too, once the synthesis has applied its status and reason to its Gherkin step.
     /// </summary>
     public static bool IsReplacedStep(TestRunRecord record, CucumberSynthesisResult cucumber)
     {

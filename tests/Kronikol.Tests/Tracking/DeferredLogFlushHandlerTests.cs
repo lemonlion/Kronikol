@@ -109,6 +109,9 @@ public class DeferredLogFlushHandlerTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.True(PendingRequestResponseLogs.Count > 0, "Pending logs should NOT have been flushed");
         Assert.Empty(GetLogsForTest());
+
+        // The entry this fact left queued would be flushed by the next test of the collection that flushes.
+        PendingRequestResponseLogs.Clear();
     }
 
     private class FakeInnerHandler : HttpMessageHandler

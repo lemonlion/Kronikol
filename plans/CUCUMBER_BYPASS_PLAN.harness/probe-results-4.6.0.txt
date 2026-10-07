@@ -1,0 +1,61 @@
+== A: ingest --cucumber-messages issue/messages.ndjson
+scenario result=Skipped history=S
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Skipped   bypassReason=None comments=['Bypassed on dev: mock Gemini is not in the deployed path'] :: mock Gemini served the summary
+  And   Passed    bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+   query summary: Bypass prototype  1 passed
+== B: ingest --tests issue/tests.jsonl
+scenario result=Passed history=P
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Bypassed  bypassReason='Bypassed on dev: mock Gemini is not in the deployed path' comments=[] :: mock Gemini served the summary
+  And   Passed    bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+   query summary: Bypass prototype  1 passed
+== C: ingest --tests issue/tests.jsonl --cucumber-messages issue/messages.ndjson
+scenario result=Skipped history=S
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Skipped   bypassReason=None comments=['Bypassed on dev: mock Gemini is not in the deployed path'] :: mock Gemini served the summary
+  And   Passed    bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+   query summary: Bypass prototype  1 passed
+== D-failed-then-skipped: ingest --cucumber-messages issue/messages-ffs.ndjson
+scenario result=Failed history=F
+  Given Failed    bypassReason=None comments=['Error: expected 3 to be 4'] :: the overview has loaded
+  Then  Skipped   bypassReason=None comments=[] :: mock Gemini served the summary
+  And   Skipped   bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+   query summary: Bypass prototype  0 passed, 1 FAILED
+== E-last-step-skipped: ingest --cucumber-messages issue/messages-last.ndjson
+scenario result=Skipped history=S
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Passed    bypassReason=None comments=[] :: mock Gemini served the summary
+  And   Skipped   bypassReason=None comments=['Bypassed on dev: mock Gemini is not in the deployed path'] :: the figure on screen is the figure the API returned
+   query summary: Bypass prototype  1 passed
+== F-bypass-attachment: ingest --cucumber-messages issue/messages-attach.ndjson
+scenario result=Passed history=P
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Passed    bypassReason=None comments=[] :: mock Gemini served the summary
+  And   Passed    bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+   query summary: Bypass prototype  1 passed
+== G-playwright-bdd-9.2.0: ingest --cucumber-messages playwright-bdd/messages.ndjson
+scenario result=Passed history=PSF
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Passed    bypassReason=None comments=[] :: the local-only check attaches a bypass and returns
+  And   Passed    bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+scenario result=Skipped history=PSF
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Skipped   bypassReason=None comments=[] :: the local-only check calls test.skip
+  And   Skipped   bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+scenario result=Failed history=PSF
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Failed    bypassReason=None comments=["Error: expected 3 to be 4\n\n   at ..\\steps\\steps.js:13\n\n  11 |   $test.skip(true, 'Skipped on dev: mock Gemini is not in the deployed path');\n  12 | });\n> 13 | Then('the check fails', async () => { throw new Error('expected 3 to be 4'); });\n     |                                             ^\n  14 | Then('the figure on screen is the figure the API returned', async () => {});\n  15 |"] :: the check fails
+  And   Skipped   bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+   query summary: Bypass probe  2 passed, 1 FAILED
+== H-cucumber-js-12.9.0: ingest --cucumber-messages cucumber-js/messages.ndjson
+scenario result=Failed history=FF
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Skipped   bypassReason=None comments=[] :: the local-only check returns skipped
+  And   Skipped   bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+  And   Failed    bypassReason=None comments=[] :: a step nobody defined
+scenario result=Failed history=FF
+  Given Passed    bypassReason=None comments=[] :: the overview has loaded
+  Then  Failed    bypassReason=None comments=['expected 3 to be 4'] :: the check fails
+  And   Skipped   bypassReason=None comments=[] :: the figure on screen is the figure the API returned
+   query summary: Skip probe  0 passed, 2 FAILED

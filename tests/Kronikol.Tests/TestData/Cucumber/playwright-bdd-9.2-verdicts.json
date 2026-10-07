@@ -1,0 +1,409 @@
+{
+  "Scenarios": [
+    {
+      "Id": "cf4f9d081a93d41397e4d56436a5ce94",
+      "DisplayName": "A simple passing scenario",
+      "Result": "Passed",
+      "BackgroundSteps": [
+        {
+          "Keyword": "Given",
+          "Text": "the catalogue is loaded",
+          "Status": "Passed"
+        }
+      ],
+      "Steps": [
+        {
+          "Keyword": "Given",
+          "Text": "a customer named \"Ada\"",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "When",
+          "Text": "the customer places an order",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "And",
+          "Text": "the customer opens the \"overview\" page",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "Then",
+          "Text": "the order is confirmed",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "But",
+          "Text": "the order is confirmed",
+          "Status": "Passed"
+        }
+      ]
+    },
+    {
+      "Id": "0e7471099be0982b536bdbe46e899a21",
+      "DisplayName": "A scenario with a data table and a doc string",
+      "Result": "Passed",
+      "BackgroundSteps": [
+        {
+          "Keyword": "Given",
+          "Text": "the catalogue is loaded",
+          "Status": "Passed"
+        }
+      ],
+      "Steps": [
+        {
+          "Keyword": "Given",
+          "Text": "the following order lines:",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "When",
+          "Text": "the payload is submitted:",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "Then",
+          "Text": "the order is confirmed",
+          "Status": "Passed"
+        }
+      ]
+    },
+    {
+      "Id": "e768f825532d73553fb892a6c08c63af",
+      "DisplayName": "A failing scenario",
+      "Result": "Failed",
+      "ErrorMessage": "Error: Deliberate failure: the widget did not appear\n\n   at ..\\steps\\steps.ts:55\n\n  53 |\n  54 | When('the step blows up', async ({}) => {\n> 55 |   throw new Error('Deliberate failure: the widget did not appear');\n     |         ^\n  56 | });\n  57 |\n  58 | When('the flaky step runs', async ({ $testInfo }) => {",
+      "Labels": [
+        "failing",
+        "retry 1"
+      ],
+      "BackgroundSteps": [
+        {
+          "Keyword": "Given",
+          "Text": "the catalogue is loaded",
+          "Status": "Passed"
+        }
+      ],
+      "Steps": [
+        {
+          "Keyword": "Given",
+          "Text": "a customer named \"Ada\"",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "When",
+          "Text": "the step blows up",
+          "Status": "Failed",
+          "Comments": [
+            "Error: Deliberate failure: the widget did not appear\n\n   at ..\\steps\\steps.ts:55\n\n  53 |\n  54 | When('the step blows up', async ({}) => {\n> 55 |   throw new Error('Deliberate failure: the widget did not appear');\n     |         ^\n  56 | });\n  57 |\n  58 | When('the flaky step runs', async ({ $testInfo }) => {"
+          ],
+          "FailureMessage": "Error: Deliberate failure: the widget did not appear\n\n   at ..\\steps\\steps.ts:55\n\n  53 |\n  54 | When('the step blows up', async ({}) => {\n> 55 |   throw new Error('Deliberate failure: the widget did not appear');\n     |         ^\n  56 | });\n  57 |\n  58 | When('the flaky step runs', async ({ $testInfo }) => {"
+        },
+        {
+          "Keyword": "Then",
+          "Text": "the order is confirmed",
+          "Status": "Skipped"
+        }
+      ]
+    },
+    {
+      "Id": "e8701186ba6e270e5586ef9b9f9360a4",
+      "DisplayName": "An outline over pages",
+      "Result": "Passed",
+      "BackgroundSteps": [
+        {
+          "Keyword": "Given",
+          "Text": "the catalogue is loaded",
+          "Status": "Passed"
+        }
+      ],
+      "Steps": [
+        {
+          "Keyword": "Given",
+          "Text": "a customer named \"Ada\"",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "When",
+          "Text": "the customer opens the \"overview\" page",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "Then",
+          "Text": "the order is confirmed",
+          "Status": "Passed"
+        }
+      ]
+    },
+    {
+      "Id": "0c2c6eddc137fa9eb351f59dd93798b5",
+      "DisplayName": "An outline over pages",
+      "Result": "Passed",
+      "BackgroundSteps": [
+        {
+          "Keyword": "Given",
+          "Text": "the catalogue is loaded",
+          "Status": "Passed"
+        }
+      ],
+      "Steps": [
+        {
+          "Keyword": "Given",
+          "Text": "a customer named \"Grace\"",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "When",
+          "Text": "the customer opens the \"customers\" page",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "Then",
+          "Text": "the order is confirmed",
+          "Status": "Passed"
+        }
+      ]
+    },
+    {
+      "Id": "ae698eda4d8551faaa82efb9eb80c4d4",
+      "DisplayName": "A flaky scenario that passes on the second attempt",
+      "Result": "Passed",
+      "Labels": [
+        "retry 1"
+      ],
+      "Steps": [
+        {
+          "Keyword": "Given",
+          "Text": "a customer named \"Flaky\"",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "When",
+          "Text": "the flaky step runs",
+          "Status": "Passed"
+        },
+        {
+          "Keyword": "Then",
+          "Text": "the order is confirmed",
+          "Status": "Passed"
+        }
+      ]
+    }
+  ],
+  "Markers": [
+    {
+      "Event": "start",
+      "TestId": "cf4f9d081a93d41397e4d56436a5ce94"
+    },
+    {
+      "Event": "step",
+      "TestId": "cf4f9d081a93d41397e4d56436a5ce94",
+      "Text": "the catalogue is loaded",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "cf4f9d081a93d41397e4d56436a5ce94",
+      "Text": "a customer named \"Ada\"",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "cf4f9d081a93d41397e4d56436a5ce94",
+      "Text": "the customer places an order",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "cf4f9d081a93d41397e4d56436a5ce94",
+      "Text": "the customer opens the \"overview\" page",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "cf4f9d081a93d41397e4d56436a5ce94",
+      "Text": "the order is confirmed",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "cf4f9d081a93d41397e4d56436a5ce94",
+      "Text": "the order is confirmed",
+      "Status": "passed"
+    },
+    {
+      "Event": "end",
+      "TestId": "cf4f9d081a93d41397e4d56436a5ce94",
+      "Status": "passed"
+    },
+    {
+      "Event": "start",
+      "TestId": "0e7471099be0982b536bdbe46e899a21"
+    },
+    {
+      "Event": "step",
+      "TestId": "0e7471099be0982b536bdbe46e899a21",
+      "Text": "the catalogue is loaded",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "0e7471099be0982b536bdbe46e899a21",
+      "Text": "the following order lines:",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "0e7471099be0982b536bdbe46e899a21",
+      "Text": "the payload is submitted:",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "0e7471099be0982b536bdbe46e899a21",
+      "Text": "the order is confirmed",
+      "Status": "passed"
+    },
+    {
+      "Event": "end",
+      "TestId": "0e7471099be0982b536bdbe46e899a21",
+      "Status": "passed"
+    },
+    {
+      "Event": "start",
+      "TestId": "e768f825532d73553fb892a6c08c63af"
+    },
+    {
+      "Event": "start",
+      "TestId": "e768f825532d73553fb892a6c08c63af"
+    },
+    {
+      "Event": "step",
+      "TestId": "e768f825532d73553fb892a6c08c63af",
+      "Text": "the catalogue is loaded",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "e768f825532d73553fb892a6c08c63af",
+      "Text": "a customer named \"Ada\"",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "e768f825532d73553fb892a6c08c63af",
+      "Text": "the step blows up",
+      "Status": "failed",
+      "Error": "Error: Deliberate failure: the widget did not appear\n\n   at ..\\steps\\steps.ts:55\n\n  53 |\n  54 | When('the step blows up', async ({}) => {\n> 55 |   throw new Error('Deliberate failure: the widget did not appear');\n     |         ^\n  56 | });\n  57 |\n  58 | When('the flaky step runs', async ({ $testInfo }) => {"
+    },
+    {
+      "Event": "step",
+      "TestId": "e768f825532d73553fb892a6c08c63af",
+      "Text": "the order is confirmed",
+      "Status": "skipped"
+    },
+    {
+      "Event": "end",
+      "TestId": "e768f825532d73553fb892a6c08c63af",
+      "Status": "failed",
+      "Error": "Error: Deliberate failure: the widget did not appear\n\n   at ..\\steps\\steps.ts:55\n\n  53 |\n  54 | When('the step blows up', async ({}) => {\n> 55 |   throw new Error('Deliberate failure: the widget did not appear');\n     |         ^\n  56 | });\n  57 |\n  58 | When('the flaky step runs', async ({ $testInfo }) => {"
+    },
+    {
+      "Event": "start",
+      "TestId": "e8701186ba6e270e5586ef9b9f9360a4"
+    },
+    {
+      "Event": "step",
+      "TestId": "e8701186ba6e270e5586ef9b9f9360a4",
+      "Text": "the catalogue is loaded",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "e8701186ba6e270e5586ef9b9f9360a4",
+      "Text": "a customer named \"Ada\"",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "e8701186ba6e270e5586ef9b9f9360a4",
+      "Text": "the customer opens the \"overview\" page",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "e8701186ba6e270e5586ef9b9f9360a4",
+      "Text": "the order is confirmed",
+      "Status": "passed"
+    },
+    {
+      "Event": "end",
+      "TestId": "e8701186ba6e270e5586ef9b9f9360a4",
+      "Status": "passed"
+    },
+    {
+      "Event": "start",
+      "TestId": "0c2c6eddc137fa9eb351f59dd93798b5"
+    },
+    {
+      "Event": "step",
+      "TestId": "0c2c6eddc137fa9eb351f59dd93798b5",
+      "Text": "the catalogue is loaded",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "0c2c6eddc137fa9eb351f59dd93798b5",
+      "Text": "a customer named \"Grace\"",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "0c2c6eddc137fa9eb351f59dd93798b5",
+      "Text": "the customer opens the \"customers\" page",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "0c2c6eddc137fa9eb351f59dd93798b5",
+      "Text": "the order is confirmed",
+      "Status": "passed"
+    },
+    {
+      "Event": "end",
+      "TestId": "0c2c6eddc137fa9eb351f59dd93798b5",
+      "Status": "passed"
+    },
+    {
+      "Event": "start",
+      "TestId": "ae698eda4d8551faaa82efb9eb80c4d4"
+    },
+    {
+      "Event": "start",
+      "TestId": "ae698eda4d8551faaa82efb9eb80c4d4"
+    },
+    {
+      "Event": "step",
+      "TestId": "ae698eda4d8551faaa82efb9eb80c4d4",
+      "Text": "a customer named \"Flaky\"",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "ae698eda4d8551faaa82efb9eb80c4d4",
+      "Text": "the flaky step runs",
+      "Status": "passed"
+    },
+    {
+      "Event": "step",
+      "TestId": "ae698eda4d8551faaa82efb9eb80c4d4",
+      "Text": "the order is confirmed",
+      "Status": "passed"
+    },
+    {
+      "Event": "end",
+      "TestId": "ae698eda4d8551faaa82efb9eb80c4d4",
+      "Status": "passed"
+    }
+  ]
+}

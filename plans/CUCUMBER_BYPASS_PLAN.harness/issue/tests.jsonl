@@ -1,0 +1,5 @@
+{"event":"start","testId":"proto-bypass-1","testName":"A local-only assertion is bypassed live and the rest still run","feature":"Bypass prototype","timestamp":"2026-09-28T14:23:24.837Z"}
+{"event":"step","testId":"proto-bypass-1","text":"the overview has loaded","keyword":"Given","level":0,"status":"passed","durationMs":1,"timestamp":"2026-09-28T14:23:24.838Z"}
+{"event":"step","testId":"proto-bypass-1","text":"mock Gemini served the summary","keyword":"Then","level":0,"status":"bypassed","bypassReason":"Bypassed on dev: mock Gemini is not in the deployed path","durationMs":1,"timestamp":"2026-09-28T14:23:24.839Z"}
+{"event":"step","testId":"proto-bypass-1","text":"the figure on screen is the figure the API returned","keyword":"And","level":0,"status":"passed","durationMs":1,"timestamp":"2026-09-28T14:23:24.840Z"}
+{"event":"end","testId":"proto-bypass-1","status":"passed","durationMs":5,"timestamp":"2026-09-28T14:23:24.842Z"}

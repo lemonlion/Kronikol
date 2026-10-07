@@ -14,7 +14,12 @@ public enum ExecutionResult
     /// <summary>The scenario was explicitly skipped (e.g. via <c>[Skip]</c> or <c>[Ignore]</c>).</summary>
     Skipped,
 
-    /// <summary>The scenario was bypassed by the framework (e.g. inconclusive).</summary>
+    /// <summary>
+    /// Some of the logic in a step was intentionally skipped over at runtime while the steps after it ran: a LightBDD
+    /// bypass, a tracked step's <c>SkipIf</c>, a tests file's <c>bypassed</c> step, or a Cucumber step reported
+    /// <c>SKIPPED</c> that a later step ran after. On a scenario: a step of it was bypassed and none failed or skipped
+    /// the rest (the LightBDD adapter and <c>kronikol ingest</c>; the other adapters keep the framework's verdict).
+    /// </summary>
     Bypassed,
 
     /// <summary>The scenario was skipped because a prior scenario in the same group failed.</summary>

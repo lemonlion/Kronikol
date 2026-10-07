@@ -84,6 +84,10 @@ public class PendingRequestResponseLogsTests
     [Fact]
     public void Count_reflects_pending_entries()
     {
+        // FlushAll drains every pending entry, so one an earlier test of the collection left queued would be flushed too
+        // and the count would end below where it began (it failed so on a full run, after a fact that leaves its entry
+        // queued on purpose ran first): start from none.
+        PendingRequestResponseLogs.Clear();
         var countBefore = PendingRequestResponseLogs.Count;
 
         PendingRequestResponseLogs.Enqueue(new PendingLogEntry(
