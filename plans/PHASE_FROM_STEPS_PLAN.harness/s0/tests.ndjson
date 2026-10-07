@@ -1,0 +1,3 @@
+{"event":"start","testId":"t1","testName":"Shows an order","feature":"Orders","timestamp":"2026-01-01T10:00:00.000Z"}
+{"event":"step","testId":"t1","text":"When the order is fetched","keywordType":"Action","status":"passed","durationMs":10,"timestamp":"2026-01-01T10:00:00.000Z"}
+{"event":"end","testId":"t1","status":"passed","durationMs":10,"timestamp":"2026-01-01T10:00:00.010Z"}

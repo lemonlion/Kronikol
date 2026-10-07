@@ -1,0 +1,359 @@
+  Determining projects to restore...
+tests\Kronikol.Tests\Kronikol.Tests.csproj : warning NU1902: Package 'AngleSharp' 1.4.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-pgww-w46g-26qg
+  Restored src\Kronikol.Tool\Kronikol.Tool.csproj (in 296 ms).
+  Restored src\Kronikol.xUnit3\Kronikol.xUnit3.csproj (in 309 ms).
+  Restored src\Kronikol.Extensions.AtlasDataApi\Kronikol.Extensions.AtlasDataApi.csproj (in 309 ms).
+  Restored src\Kronikol.ReqNRoll.Core\Kronikol.ReqNRoll.Core.csproj (in 308 ms).
+  Restored src\Kronikol.Extensions.DispatchProxy\Kronikol.Extensions.DispatchProxy.csproj (in 309 ms).
+  Restored src\Kronikol.ReqNRoll.xUnit3\Kronikol.ReqNRoll.xUnit3.csproj (in 310 ms).
+  Restored src\Kronikol.ReqNRoll.xUnit2\Kronikol.ReqNRoll.xUnit2.csproj (in 309 ms).
+  Restored src\Kronikol.ReqNRoll.TUnit\Kronikol.ReqNRoll.TUnit.csproj (in 309 ms).
+  Restored src\Kronikol.Extensions.BigQuery\Kronikol.Extensions.BigQuery.csproj (in 309 ms).
+  Restored src\Kronikol\Kronikol.csproj (in 308 ms).
+  Restored src\Kronikol.LightBDD.Core\Kronikol.LightBDD.Core.csproj (in 308 ms).
+  Restored src\Kronikol.Extensions.Otlp\Kronikol.Extensions.Otlp.csproj (in 309 ms).
+  Restored src\Kronikol.Extensions.OpenTelemetry\Kronikol.Extensions.OpenTelemetry.csproj (in 309 ms).
+  Restored src\Kronikol.BDDfy.xUnit3\Kronikol.BDDfy.xUnit3.csproj (in 309 ms).
+  Restored src\Kronikol.LightBDD.xUnit3\Kronikol.LightBDD.xUnit3.csproj (in 310 ms).
+  Restored tests\Kronikol.Tests\Kronikol.Tests.csproj (in 308 ms).
+tests\Kronikol.Tests\Kronikol.Tests.csproj : warning NU1902: Package 'AngleSharp' 1.4.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-pgww-w46g-26qg
+src\Kronikol\PlantUml\PlantUmlCreator.cs(1500,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\PlantUml\NodeJsPlantUmlRenderer.cs(54,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Reports\Merge\MergeableReportReader.cs(92,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes)'. [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1090,55): warning CS1573: Parameter 'Verdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1090,95): warning CS1573: Parameter 'Subjects' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1090,112): warning CS1573: Parameter 'LedgerPath' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1090,146): warning CS1573: Parameter 'LedgerSource' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1091,10): warning CS1573: Parameter 'BehaviourVerdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1091,67): warning CS1573: Parameter 'Analysis' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1091,108): warning CS1573: Parameter 'Shapes' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1107,48): warning CS1573: Parameter 'Subject' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1107,73): warning CS1573: Parameter 'Entry' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1107,117): warning CS1573: Parameter 'RunId' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+src\Kronikol\Query\QueryCommand.History.cs(1107,128): warning CS1573: Parameter 'RunsAgo' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+  Kronikol -> src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.OpenTelemetry -> src\Kronikol.Extensions.OpenTelemetry\bin\Debug\net10.0\Kronikol.Extensions.OpenTelemetry.dll
+src\Kronikol.LightBDD.Core\StepTrackingStepDecorator.cs(10,69): warning CS0419: Ambiguous reference in cref attribute: 'StepCollector.StartStep'. Assuming 'Kronikol.Tracking.StepCollector.StartStep(string?, string, string[]?, object?[]?)', but could have also matched other overloads including 'Kronikol.Tracking.StepCollector.StartStep(string?, string?, string, string[]?, object?[]?)'. [src\Kronikol.LightBDD.Core\Kronikol.LightBDD.Core.csproj::TargetFramework=net10.0]
+src\Kronikol.LightBDD.Core\StepTrackingStepDecorator.cs(11,20): warning CS0419: Ambiguous reference in cref attribute: 'StepCollector.CompleteStep'. Assuming 'Kronikol.Tracking.StepCollector.CompleteStep(bool, string?)', but could have also matched other overloads including 'Kronikol.Tracking.StepCollector.CompleteStep(string?, bool, string?)'. [src\Kronikol.LightBDD.Core\Kronikol.LightBDD.Core.csproj::TargetFramework=net10.0]
+  Kronikol.ReqNRoll.Core -> src\Kronikol.ReqNRoll.Core\bin\Debug\net10.0\Kronikol.ReqNRoll.Core.dll
+  Kronikol.xUnit3 -> src\Kronikol.xUnit3\bin\Debug\net10.0\Kronikol.xUnit3.dll
+  Kronikol.Extensions.BigQuery -> src\Kronikol.Extensions.BigQuery\bin\Debug\net10.0\Kronikol.Extensions.BigQuery.dll
+  Kronikol.Extensions.DispatchProxy -> src\Kronikol.Extensions.DispatchProxy\bin\Debug\net10.0\Kronikol.Extensions.DispatchProxy.dll
+  Kronikol.Extensions.AtlasDataApi -> src\Kronikol.Extensions.AtlasDataApi\bin\Debug\net10.0\Kronikol.Extensions.AtlasDataApi.dll
+  Kronikol.LightBDD.Core -> src\Kronikol.LightBDD.Core\bin\Debug\net10.0\Kronikol.LightBDD.Core.dll
+  Kronikol.Extensions.Otlp -> src\Kronikol.Extensions.Otlp\bin\Debug\net10.0\Kronikol.Extensions.Otlp.dll
+  Kronikol.BDDfy.xUnit3 -> src\Kronikol.BDDfy.xUnit3\bin\Debug\net10.0\Kronikol.BDDfy.xUnit3.dll
+  Kronikol.ReqNRoll.TUnit -> src\Kronikol.ReqNRoll.TUnit\bin\Debug\net10.0\Kronikol.ReqNRoll.TUnit.dll
+  Kronikol.ReqNRoll.xUnit2 -> src\Kronikol.ReqNRoll.xUnit2\bin\Debug\net10.0\Kronikol.ReqNRoll.xUnit2.dll
+  Kronikol.ReqNRoll.xUnit3 -> src\Kronikol.ReqNRoll.xUnit3\bin\Debug\net10.0\Kronikol.ReqNRoll.xUnit3.dll
+  Kronikol.LightBDD.xUnit3 -> src\Kronikol.LightBDD.xUnit3\bin\Debug\net10.0\Kronikol.LightBDD.xUnit3.dll
+  Kronikol.Tool -> src\Kronikol.Tool\bin\Debug\net10.0\Kronikol.Tool.dll
+tests\Kronikol.Tests\Ingestion\FeatureSynthesizerTests.cs(174,47): warning CS8604: Possible null reference argument for parameter 'actualArray' in 'void Assert.Equal<string>(ReadOnlySpan<string> expectedSpan, string[] actualArray)'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Ingestion\FeatureSynthesizerTests.cs(253,78): warning CS8604: Possible null reference argument for parameter 'actualArray' in 'void Assert.Equal<string>(ReadOnlySpan<string> expectedSpan, string[] actualArray)'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TrackAttachmentTests.cs(29,23): warning CS8604: Possible null reference argument for parameter 'collection' in 'FileAttachment Assert.Single<FileAttachment>(IEnumerable<FileAttachment> collection)'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TrackAttachmentTests.cs(30,36): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TrackAttachmentTests.cs(31,45): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TrackAttachmentTests.cs(59,31): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TrackAttachmentTests.cs(60,32): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TrackAttachmentTests.cs(102,23): warning CS8604: Possible null reference argument for parameter 'collection' in 'ScenarioStep Assert.Single<ScenarioStep>(IEnumerable<ScenarioStep> collection)'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TrackAttachmentTests.cs(103,24): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TrackAttachmentTests.cs(104,36): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TrackAttachmentTests.cs(104,36): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(12,35): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(18,37): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(24,42): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\AttachmentCopyTests.cs(49,52): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(33,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\AttachmentCopyTests.cs(63,50): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(41,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(49,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(57,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(66,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(74,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(82,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(90,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\AttachmentCopyTests.cs(158,48): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(98,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\AttachmentCopyTests.cs(219,47): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\AttachmentCopyTests.cs(261,21): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\AttachmentCopyTests.cs(262,21): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\AttachmentCopyTests.cs(283,46): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\YamlExtensionsTests.cs(106,22): warning CS0618: 'YamlExtensions.SanitiseForYml(string)' is obsolete: 'Mutilates the value rather than escaping it, and does not handle newlines. Use ToYamlScalar.' [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\ReqNRoll\AttachmentCapturingOutputHelperTests.cs(38,23): warning CS8604: Possible null reference argument for parameter 'collection' in 'FileAttachment Assert.Single<FileAttachment>(IEnumerable<FileAttachment> collection)'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\ReqNRoll\AttachmentCapturingOutputHelperTests.cs(39,40): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\CiArtifactPublisherTests.cs(25,13): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\BackgroundStepsDetectorTests.cs(145,25): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\BackgroundStepsDetectorTests.cs(315,27): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\BackgroundStepsDetectorTests.cs(316,27): warning CS8602: Dereference of a possibly null reference. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\DiffFormsTests.cs(127,41): warning CS8620: Argument of type '(string, string, int)[]' cannot be used for parameter 'scenarios' of type '(string Name, string? StableId, int V)[]' in 'string DiffFormsTests.Write(string fileName, params (string Name, string? StableId, int V)[] scenarios)' due to differences in the nullability of reference types. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\DiffFormsTests.cs(128,42): warning CS8620: Argument of type '(string, string, int)[]' cannot be used for parameter 'scenarios' of type '(string Name, string? StableId, int V)[]' in 'string DiffFormsTests.Write(string fileName, params (string Name, string? StableId, int V)[] scenarios)' due to differences in the nullability of reference types. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\DescribeTests.cs(159,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\QueryEngineHomeTests.cs(45,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\QueryHistoryLedgerOnlyTests.cs(135,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\Merge\MergeWritesTheRunOutputsTests.cs(162,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\PlantUmlWorkerHostTests.cs(155,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\ParameterGrouperTests.cs(445,56): warning CS8604: Possible null reference argument for parameter 'actualArray' in 'void Assert.Equal<string>(ReadOnlySpan<string> expectedSpan, string[] actualArray)'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(14,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(21,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(28,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(35,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(42,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(49,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(56,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(63,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(70,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(77,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\StepKeywordCollapserTests.cs(84,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\DataFormatParityTests.cs(12,54): warning CS0419: Ambiguous reference in cref attribute: 'ReportGenerator.GenerateTestRunReportData'. Assuming 'Kronikol.Reports.ReportGenerator.GenerateTestRunReportData(Kronikol.Reports.Feature[], System.DateTime, System.DateTime, string, Kronikol.Reports.DataFormat, Kronikol.DefaultDiagramsFetcher.DiagramAsCode[]?, Kronikol.Tracking.RequestResponseLog[]?, System.Collections.Generic.IReadOnlyList<Kronikol.Reports.DiagnosticEntry>?, bool, Kronikol.Reports.CiMetadata?, string?, Kronikol.Reports.RunEnvironment?)', but could have also matched other overloads including 'Kronikol.Reports.ReportGenerator.GenerateTestRunReportData(Kronikol.Reports.Feature[], System.DateTime, System.DateTime, string, Kronikol.Reports.DataFormat, Kronikol.DefaultDiagramsFetcher.DiagramAsCode[]?, Kronikol.Tracking.RequestResponseLog[]?, System.Collections.Generic.IReadOnlyList<Kronikol.Reports.DiagnosticEntry>?, bool, Kronikol.Reports.CiMetadata?, string?, Kronikol.Reports.RunEnvironment?, (System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string?>> StepPaths, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<Kronikol.Reports.ReportGenerator.ScenarioAnnotation>> Annotations)?, bool)'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\RunEndPointerSafetyTests.cs(12,58): warning CS0419: Ambiguous reference in cref attribute: 'RunSummaryConsoleWriter.Write'. Assuming 'Kronikol.Reports.RunSummaryConsoleWriter.Write(Kronikol.Reports.RunSummary, Kronikol.Reports.CiEnvironment, System.Action<string>)', but could have also matched other overloads including 'Kronikol.Reports.RunSummaryConsoleWriter.Write(Kronikol.Reports.RunSummary, Kronikol.Reports.CiEnvironment, System.Action<string>, System.Action<string>)'. [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Ingestion\InteractionRecordTests.cs(452,13): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\History\HistoryLedgerTests.cs(659,14): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\History\HistoryLedgerTests.cs(682,32): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\PlantUml\EngineCacheTests.cs(139,27): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\PlantUml\EngineCacheTests.cs(130,20): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\PlantUml\EngineCacheTests.cs(136,9): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Sql\TrackingDbDataReaderTests.cs(311,22): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\TabularAttributes\TabularResolverTests.cs(110,9): warning xUnit2013: Do not use Assert.Equal() to check for collection size. Use Assert.Single instead. (https://xunit.net/xunit.analyzers/rules/xUnit2013) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\TabularAttributes\TabularResolverTests.cs(137,9): warning xUnit2013: Do not use Assert.Equal() to check for collection size. Use Assert.Single instead. (https://xunit.net/xunit.analyzers/rules/xUnit2013) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\CaptureRedactionTests.cs(25,22): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\CaptureRedactionTests.cs(41,22): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\CaptureRedactionTests.cs(54,22): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\CaptureRedactionTests.cs(67,9): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\CaptureRedactionTests.cs(79,26): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\CaptureRedactionTests.cs(94,22): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\ExportCommandTests.cs(156,29): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\ExportCommandTests.cs(141,23): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\ExportCommandTests.cs(156,21): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\PlantUml\NodeJsPlantUmlRendererTests.cs(992,128): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\PlantUml\NodeJsPlantUmlRendererTests.cs(992,25): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\InitAgentsIgnoreTests.cs(77,9): warning xUnit2013: Do not use Assert.Equal() to check for collection size. Use Assert.Single instead. (https://xunit.net/xunit.analyzers/rules/xUnit2013) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\DetachHostedServicesTests.cs(78,15): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tool\QueryEngineHomeTests.cs(34,9): warning xUnit2029: Do not use Assert.Empty to check if a value does not exist in a collection. Use Assert.DoesNotContain instead. (https://xunit.net/xunit.analyzers/rules/xUnit2029) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\DocumentOwnershipTests.cs(274,20): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Templates\HistoryActionStaticTests.cs(209,13): warning xUnit2029: Do not use Assert.Empty to check if a value does not exist in a collection. Use Assert.DoesNotContain instead. (https://xunit.net/xunit.analyzers/rules/xUnit2029) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Templates\HistoryActionStaticTests.cs(282,13): warning xUnit2029: Do not use Assert.Empty to check if a value does not exist in a collection. Use Assert.DoesNotContain instead. (https://xunit.net/xunit.analyzers/rules/xUnit2029) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Templates\HistoryActionStaticTests.cs(355,13): warning xUnit2029: Do not use Assert.Empty to check if a value does not exist in a collection. Use Assert.DoesNotContain instead. (https://xunit.net/xunit.analyzers/rules/xUnit2029) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TestIdentityScopeTests.cs(30,20): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TestIdentityScopeTests.cs(47,19): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Tracking\TestIdentityScopeTests.cs(242,13): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\QueryScriptTests.cs(275,21): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\RunEnvironmentProvenanceTests.cs(120,21): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\SearchIndexVectorTests.cs(26,9): warning xUnit2000: The literal or constant value SearchIndexBuilder.FnvOffset should be passed as the 'expected' argument in the call to 'Assert.Equal(expected, actual)' in method 'Fnv_constants_match_vectors' on type 'SearchIndexVectorTests'. Swap the parameter values. (https://xunit.net/xunit.analyzers/rules/xUnit2000) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+tests\Kronikol.Tests\Reports\SearchIndexVectorTests.cs(27,9): warning xUnit2000: The literal or constant value SearchIndexBuilder.FnvPrime should be passed as the 'expected' argument in the call to 'Assert.Equal(expected, actual)' in method 'Fnv_constants_match_vectors' on type 'SearchIndexVectorTests'. Swap the parameter values. (https://xunit.net/xunit.analyzers/rules/xUnit2000) [tests\Kronikol.Tests\Kronikol.Tests.csproj]
+  Kronikol.Tests -> tests\Kronikol.Tests\bin\Debug\net10.0\Kronikol.Tests.dll
+Test run for tests\Kronikol.Tests\bin\Debug\net10.0\Kronikol.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:06.60]     Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.Both_halves_of_a_late_call_carry_one_phase_in_the_data_file [FAIL]
+[xUnit.net 00:00:06.65]     Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.A_phase_from_steps_report_heads_no_query_answer [FAIL]
+[xUnit.net 00:00:06.66]     Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.A_healthy_phase_from_steps_ingest_records_no_diagnostic [FAIL]
+[xUnit.net 00:00:06.69]     Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.A_healthy_phase_from_steps_run_writes_no_labs_page_with_history_off [FAIL]
+[xUnit.net 00:00:06.71]     Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.The_response_halfs_address_shows_its_calls_phase [FAIL]
+  Failed Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.Both_halves_of_a_late_call_carry_one_phase_in_the_data_file [486 ms]
+  Error Message:
+   Assert.All() Failure: 1 out of 4 items in the collection did not pass.
+[3]: Item:  {
+                          "type": "Response",
+                          "method": "GET",
+                          "uri": "http://db/orders/1",
+                          "serviceName": "db",
+                          "callerName": "orders-test",
+                          "content": null,
+                          "headers": [],
+                          "statusCode": null,
+                          "statusText": null,
+                          "traceId": "fe5feb92-aee6-ec2f-3ad7-1c777531578f",
+                          "requestResponseId": "fe5feb92-aee6-ec2f-3ad7-1c777531578f",
+                          "timestamp": "2026-10-06T10:00:02.000Z",
+                          "metaType": "Default",
+                          "dependencyCategory": null,
+                          "callerDependencyCategory": null,
+                          "phase": "Unknown",
+                          "attributionSource": null,
+                          "expiredFrom": null,
+                          "error": null,
+                          "isUserAction": false,
+                          "activityTraceId": null,
+                          "activitySpanId": null,
+                          "capturedBy": null,
+                          "durationMs": 1997,
+                          "stepPath": "0"
+                        }
+     Error: Assert.Equal() Failure: Strings differ
+                       ↓ (pos 0)
+            Expected: "Action"
+            Actual:   "Unknown"
+                       ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.Both_halves_of_a_late_call_carry_one_phase_in_the_data_file() in tests\Kronikol.Tests\Ingestion\IngestPhaseFromStepsTests.cs:line 52
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.A_phase_from_steps_report_heads_no_query_answer [46 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Filter matched in collection
+             ↓ (pos 0)
+Collection: ["! 3 interaction record(s) took their phase from th"···, "nothing failed", "1 scenarios, all passed · next: scenarios · servic"···, ""]
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.A_phase_from_steps_report_heads_no_query_answer() in tests\Kronikol.Tests\Ingestion\IngestPhaseFromStepsTests.cs:line 75
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.A_healthy_phase_from_steps_ingest_records_no_diagnostic [15 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Filter matched in collection
+             ↓ (pos 0)
+Collection: [Other: 3 interaction record(s) took their phase from the step they happened during.]
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.A_healthy_phase_from_steps_ingest_records_no_diagnostic() in tests\Kronikol.Tests\Ingestion\IngestPhaseFromStepsTests.cs:line 40
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.A_healthy_phase_from_steps_run_writes_no_labs_page_with_history_off [25 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.A_healthy_phase_from_steps_run_writes_no_labs_page_with_history_off() in tests\Kronikol.Tests\Ingestion\IngestPhaseFromStepsTests.cs:line 62
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.The_response_halfs_address_shows_its_calls_phase [23 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "! 3 interaction record(s) took their phase from th"···
+Not found: "phase Action"
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestPhaseFromStepsTests.The_response_halfs_address_shows_its_calls_phase() in tests\Kronikol.Tests\Ingestion\IngestPhaseFromStepsTests.cs:line 91
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.10]     Kronikol.Tests.Tool.IngestCommandTests.The_usage_says_a_response_takes_its_requests_phase [FAIL]
+  Failed Kronikol.Tests.Tool.IngestCommandTests.The_usage_says_a_response_takes_its_requests_phase [< 1 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "Usage: kronikol ingest <inputs...> [--tests <file>"···
+Not found: "a response takes its request's phase"
+  Stack Trace:
+     at Kronikol.Tests.Tool.IngestCommandTests.The_usage_says_a_response_takes_its_requests_phase() in tests\Kronikol.Tests\Tool\IngestCommandTests.cs:line 75
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:12.82]     Kronikol.Tests.Tool.IngestCommandTests.Ingest_prints_a_phase_count_of_zero [FAIL]
+  Failed Kronikol.Tests.Tool.IngestCommandTests.Ingest_prints_a_phase_count_of_zero [36 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in collection
+Collection: ["Ingesting 1 capture file(s):", "  <temp>\\kronikol-c"···, "Tests file: <temp>\\"···, "Replayed 6 interaction record(s) into 1 scenario(s"···, "Kronikol: reports written to <temp>"···, ···]
+Not found:  "--phase-from-steps: 0 interaction record(s) took t"···
+  Stack Trace:
+     at Kronikol.Tests.Tool.IngestCommandTests.Ingest_prints_a_phase_count_of_zero() in tests\Kronikol.Tests\Tool\IngestCommandTests.cs:line 55
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:15.51]     Kronikol.Tests.Tool.IngestCommandTests.Ingest_prints_the_phase_count_as_a_line_after_replayed [FAIL]
+  Failed Kronikol.Tests.Tool.IngestCommandTests.Ingest_prints_the_phase_count_as_a_line_after_replayed [39 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "--phase-from-steps: 4 interaction record(s) took t"···
+Actual:   "  Other: 3 interaction record(s) took their phase "···
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Tool.IngestCommandTests.Ingest_prints_the_phase_count_as_a_line_after_replayed() in tests\Kronikol.Tests\Tool\IngestCommandTests.cs:line 41
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:15.71]     Kronikol.Tests.Ingestion.IngestAttributionTests.A_response_that_lands_in_a_later_step_keeps_its_requests_phase [FAIL]
+  Failed Kronikol.Tests.Ingestion.IngestAttributionTests.A_response_that_lands_in_a_later_step_keeps_its_requests_phase [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Setup"
+Actual:   "Action"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestAttributionTests.A_response_that_lands_in_a_later_step_keeps_its_requests_phase() in tests\Kronikol.Tests\Ingestion\IngestAttributionTests.cs:line 211
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:15.74]     Kronikol.Tests.Ingestion.IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(written: "Teardown") [FAIL]
+[xUnit.net 00:00:15.74]     Kronikol.Tests.Ingestion.IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(written: " unknown") [FAIL]
+[xUnit.net 00:00:15.74]     Kronikol.Tests.Ingestion.IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(written: "7") [FAIL]
+[xUnit.net 00:00:15.77]     Kronikol.Tests.Ingestion.IngestAttributionTests.A_capturers_phase_on_either_half_is_the_pairs [FAIL]
+  Failed Kronikol.Tests.Ingestion.IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(written: "Teardown") [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Action"
+Actual:   "Teardown"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(String written) in tests\Kronikol.Tests\Ingestion\IngestAttributionTests.cs:line 279
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Ingestion.IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(written: " unknown") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Action"
+Actual:   " unknown"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(String written) in tests\Kronikol.Tests\Ingestion\IngestAttributionTests.cs:line 279
+   at InvokeStub_IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Ingestion.IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(written: "7") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Action"
+Actual:   "7"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(String written) in tests\Kronikol.Tests\Ingestion\IngestAttributionTests.cs:line 279
+   at InvokeStub_IngestAttributionTests.A_phase_that_names_no_member_is_taken_from_the_steps(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Ingestion.IngestAttributionTests.A_capturers_phase_on_either_half_is_the_pairs [1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 4 items in the collection did not pass.
+[1]: Item:  InteractionRecord { Type = Response, Method = GET, Uri = http://db/op, ServiceName = db, CallerName = data-insights, Content = , Headers = , StatusCode = , Error = , TraceId = , RequestResponseId = p, Timestamp = 22/08/2026 10:00:02 +00:00, TestId = t, TestName = , DependencyCategory = , CallerDependencyCategory = , Phase = Action, MetaType = , Kind = , DurationMs = , Text = , Keyword = , Table = , DocString = , Passed = , Message = , MarkerKind = , PlantUml = , MarkerEnd = , IsRawMarker = False, IsUserAction = False, IsMarker = False, ActivityTraceId = , ActivitySpanId = , TrackingIgnore = , CapturedBy =  }
+     Error: Assert.Equal() Failure: Strings differ
+                       ↓ (pos 0)
+            Expected: "Setup"
+            Actual:   "Action"
+                       ↑ (pos 0)
+[2]: Item:  InteractionRecord { Type = Request, Method = GET, Uri = http://db/op, ServiceName = db, CallerName = data-insights, Content = , Headers = , StatusCode = , Error = , TraceId = , RequestResponseId = q, Timestamp = 22/08/2026 10:00:03 +00:00, TestId = t, TestName = , DependencyCategory = , CallerDependencyCategory = , Phase = Action, MetaType = , Kind = , DurationMs = , Text = , Keyword = , Table = , DocString = , Passed = , Message = , MarkerKind = , PlantUml = , MarkerEnd = , IsRawMarker = False, IsUserAction = False, IsMarker = False, ActivityTraceId = , ActivitySpanId = , TrackingIgnore = , CapturedBy =  }
+     Error: Assert.Equal() Failure: Strings differ
+                       ↓ (pos 0)
+            Expected: "Setup"
+            Actual:   "Action"
+                       ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestAttributionTests.A_capturers_phase_on_either_half_is_the_pairs() in tests\Kronikol.Tests\Ingestion\IngestAttributionTests.cs:line 246
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:15.84]     Kronikol.Tests.Ingestion.IngestAttributionTests.A_response_read_before_its_request_is_judged_on_the_pairs_start [FAIL]
+[xUnit.net 00:00:15.84]     Kronikol.Tests.Ingestion.IngestAttributionTests.Tagged_counts_every_record_given_a_phase [FAIL]
+  Failed Kronikol.Tests.Ingestion.IngestAttributionTests.A_response_read_before_its_request_is_judged_on_the_pairs_start [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "Action"
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestAttributionTests.A_response_read_before_its_request_is_judged_on_the_pairs_start() in tests\Kronikol.Tests\Ingestion\IngestAttributionTests.cs:line 227
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Ingestion.IngestAttributionTests.Tagged_counts_every_record_given_a_phase [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 4
+Actual:   3
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestAttributionTests.Tagged_counts_every_record_given_a_phase() in tests\Kronikol.Tests\Ingestion\IngestAttributionTests.cs:line 321
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:15.96]     Kronikol.Tests.Ingestion.IngestAttributionTests.A_response_after_its_step_ended_takes_its_requests_phase [FAIL]
+  Failed Kronikol.Tests.Ingestion.IngestAttributionTests.A_response_after_its_step_ended_takes_its_requests_phase [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "Action"
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Ingestion.IngestAttributionTests.A_response_after_its_step_ended_takes_its_requests_phase() in tests\Kronikol.Tests\Ingestion\IngestAttributionTests.cs:line 191
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:    16, Passed:    66, Skipped:     0, Total:    82, Duration: 9 s - Kronikol.Tests.dll (net10.0)
+exit 1

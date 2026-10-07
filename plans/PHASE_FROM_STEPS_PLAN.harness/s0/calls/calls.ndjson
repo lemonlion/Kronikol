@@ -1,0 +1,4 @@
+{"type":"Request","testId":"t1","requestResponseId":"a","method":"GET","uri":"http://orders-api/orders/1","serviceName":"orders-api","callerName":"Test","timestamp":"2026-01-01T10:00:00.001Z"}
+{"type":"Request","testId":"t1","requestResponseId":"b","method":"GET","uri":"db://orders/1","serviceName":"Database","callerName":"orders-api","timestamp":"2026-01-01T10:00:00.003Z"}
+{"type":"Response","testId":"t1","requestResponseId":"a","method":"GET","uri":"http://orders-api/orders/1","serviceName":"orders-api","callerName":"Test","statusCode":"OK","timestamp":"2026-01-01T10:00:00.008Z"}
+{"type":"Response","testId":"t1","requestResponseId":"b","method":"GET","uri":"db://orders/1","serviceName":"Database","callerName":"orders-api","statusCode":"OK","timestamp":"2026-01-01T10:00:02.000Z"}

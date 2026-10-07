@@ -462,12 +462,17 @@ public static class IngestAttribution
     }
 
     /// <summary>
-    /// Tags interactions with the phase of the step they happened during, as an in-process run's calls carry the
-    /// ambient <c>TestPhaseContext</c>. Only records whose own phase is unset or <see cref="TestPhase.Unknown"/> are
-    /// touched, so a capturer that knows better still wins. A phase draws nothing on its own: the Setup partition
-    /// needs the Setup/Action boundary, which the pipeline adds when <c>SeparateSetup</c> is on.
+    /// Tags interactions with the phase of the step their call started in, as an in-process run's calls carry the
+    /// ambient <c>TestPhaseContext</c>. A request and its response (the records sharing a non-empty
+    /// <c>requestResponseId</c>) take one phase: the one a capturer wrote on either half, the request's when both carry
+    /// one, else that of the step of the record's test whose window holds the pair's earliest timestamp, which is how the
+    /// run window and the attempt filter judge a pair. So a response answered after its step ended takes its request's
+    /// phase. A record with no pair id is judged on its own timestamp. Only records whose phase is unset or names no
+    /// <see cref="TestPhase"/> member but <see cref="TestPhase.Unknown"/> (as the replay reads it) are touched, so a
+    /// capturer's phase on a half is kept. A phase draws nothing on its own: the Setup partition needs the Setup/Action
+    /// boundary, which the pipeline adds when <c>SeparateSetup</c> is on.
     /// </summary>
-    /// <returns>The records with phases applied, in the same order, and how many were tagged.</returns>
+    /// <returns>The records with phases applied, in the same order, and how many records were given a phase.</returns>
     public static (List<InteractionRecord> Records, int Tagged) ApplyPhaseFromSteps(
         IReadOnlyList<InteractionRecord> records,
         IReadOnlyList<StepWindow> stepWindows)
@@ -478,19 +483,39 @@ public static class IngestAttribution
         if (stepWindows.Count == 0)
             return (records.ToList(), 0);
 
+        // First pass: each pair's start and the phase a capturer wrote on it, so a response read before its request, or
+        // answered after its step ended, is phased as its call was.
+        var pairs = new Dictionary<string, PairPhase>(StringComparer.Ordinal);
+        foreach (var record in records)
+        {
+            if (record.IsMarker || record.RequestResponseId is not { Length: > 0 } id)
+                continue;
+            if (!pairs.TryGetValue(id, out var pair))
+                pairs[id] = pair = new PairPhase();
+            if (record.Timestamp is { } at && (pair.Start is null || at < pair.Start))
+                pair.Start = at;
+            if (record.ResolvedPhase is not TestPhase.Unknown and var written && (pair.Written is null || (!pair.WrittenOnRequest && !IsResponse(record))))
+            {
+                pair.Written = written;
+                pair.WrittenOnRequest = !IsResponse(record);
+            }
+        }
+
         var byTest = stepWindows.ToLookup(w => w.TestId, StringComparer.Ordinal);
         var result = new List<InteractionRecord>(records.Count);
         var tagged = 0;
 
         foreach (var record in records)
         {
-            if (record.IsMarker || !string.IsNullOrWhiteSpace(record.Phase) && !string.Equals(record.Phase, nameof(TestPhase.Unknown), StringComparison.OrdinalIgnoreCase))
+            if (record.IsMarker || record.ResolvedPhase != TestPhase.Unknown)
             {
                 result.Add(record);
                 continue;
             }
 
-            var phase = FindPhase(byTest[record.TestId], record.Timestamp);
+            var phase = record.RequestResponseId is { Length: > 0 } id && pairs.TryGetValue(id, out var pair)
+                ? pair.Written ?? FindPhase(byTest[record.TestId], pair.Start)
+                : FindPhase(byTest[record.TestId], record.Timestamp);
             if (phase is null)
             {
                 result.Add(record);
@@ -502,6 +527,14 @@ public static class IngestAttribution
         }
 
         return (result, tagged);
+    }
+
+    /// <summary>One pair's start (its earliest timestamp) and the phase a capturer wrote on it, for <see cref="ApplyPhaseFromSteps"/>.</summary>
+    private sealed class PairPhase
+    {
+        public DateTimeOffset? Start { get; set; }
+        public TestPhase? Written { get; set; }
+        public bool WrittenOnRequest { get; set; }
     }
 
     private static TestPhase? FindPhase(IEnumerable<StepWindow> windows, DateTimeOffset? timestamp)

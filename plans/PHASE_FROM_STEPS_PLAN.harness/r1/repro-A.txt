@@ -1,0 +1,60 @@
+################ RUN A  (cwd: <scratch>/s0-r1) ################
+$ dotnet <scratch>/k-tool-r1/Kronikol.Tool.dll ingest calls/calls.ndjson --tests tests.ndjson --phase-from-steps --diagnostics-section -o outA
+Ingesting 1 capture file(s):
+  <scratch>\s0-r1\calls\calls.ndjson
+Tests file: <scratch>\s0-r1\tests.ndjson
+Report diagnostics: 6 log entries across 1 test(s).
+Replayed 6 interaction record(s) into 1 scenario(s).
+--phase-from-steps: 4 interaction record(s) took the phase of the step their call started in.
+Kronikol: reports written to <scratch>\s0-r1\outA  (TestRunReport.html · TestRunReport.json 6.8 KB · Failures.md)
+[exit code: 0]
+--- top-level entries of outA (name, bytes, f=file d=dir):
+  AGENTS.md	9096	f
+  CLAUDE.md	9096	f
+  ComponentDiagram.html	167231	f
+  Failures.jsonl	148	f
+  Failures.md	466	f
+  Run.json	497	f
+  Specifications.html	505581	f
+  Specifications.yml	189	f
+  TestRunReport.html	506081	f
+  TestRunReport.json	6957	f
+  TestRunReport.schema.json	49908	f
+  query.cs	6835	f
+--- labs page TestRunReport.labs.html: NO
+--- Run.json:
+  run: local:20260101T100002Z:d69bc5eb | partial: None
+  files: ['ComponentDiagram.html', 'Failures.jsonl', 'Failures.md', 'Specifications.html', 'Specifications.yml', 'TestRunReport.html', 'TestRunReport.json', 'TestRunReport.schema.json']
+--- TestRunReport.json interactions and diagnostics:
+scenario id=t1 name='Shows an order' result=Passed steps=['When the order is fetched']
+httpInteractions: 4
+  in  rrId       type      phase    | timestamp (extra)         stepPath (extra)
+  a   b975c10c   Request   Action   | 2026-01-01T10:00:00.001Z  "0"
+  a   b975c10c   Response  Action   | 2026-01-01T10:00:00.008Z  "0"
+  b   fe5feb92   Request   Action   | 2026-01-01T10:00:00.003Z  "0"
+  b   fe5feb92   Response  Action   | 2026-01-01T10:00:02.000Z  "0"
+background.interactions: 0
+top-level diagnostics: 0
+--- $ query failures outA
+nothing failed
+1 scenarios, all passed · next: scenarios · services
+[exit 0]
+--- $ query summary outA
+TestRunReport.json  6.8 KB  Kronikol 4.6.1+c9c417112048b306865b25082f39d7adc324b896
+2026-01-01T10:00:00Z → 2026-01-01T10:00:02Z
+1 scenarios · 0 failed · 4 interactions · 0 distinct bodies
+
+Orders  1 passed
+
+Slowest:
+  s0  0.01s  Shows an order
+next: scenarios · services
+[exit 0]
+--- $ query interactions outA s0 --json
+{"formatVersion":1,"command":"interactions","report":"outA\\TestRunReport.json","kronikolVersion":"4.6.1\u002Bc9c417112048b306865b25082f39d7adc324b896","notes":[],"items":[{"address":"s0/i0","scenario":"s0","service":"orders-api","method":"GET","uri":"http://orders-api/orders/1","summary":"GET /orders/1","status":"OK","statusCode":null,"durationMs":7,"stepPath":"0","request":{"bodyHash":null,"bodyLength":0},"response":{"bodyHash":null,"bodyLength":0}},{"address":"s0/i2","scenario":"s0","service":"Database","method":"GET","uri":"db://orders/1","summary":"GET /1","status":"OK","statusCode":null,"durationMs":1997,"stepPath":"0","request":{"bodyHash":null,"bodyLength":0},"response":{"bodyHash":null,"bodyLength":0}}],"total":2,"truncated":null,"next":null,"error":null}
+[exit 0]
+--- $ query interactions outA --group-by phase
+phase   calls errors   median      max bodies
+Action      2      0      2 s      2 s      0
+1 buckets
+[exit 0]

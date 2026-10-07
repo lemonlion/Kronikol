@@ -175,6 +175,153 @@ public class IngestAttributionTests : IDisposable
     }
 
     [Fact]
+    public void A_response_after_its_step_ended_takes_its_requests_phase()
+    {
+        // #130's call b: a database read made inside a 10 ms When step and answered two seconds later.
+        var stepWindows = IngestAttribution.BuildStepWindows(
+            [new TestRunRecord { Event = "step", TestId = "t", Keyword = "When", Text = "the order is placed", DurationMs = 10, Timestamp = T0 }]);
+
+        var (records, tagged) = IngestAttribution.ApplyPhaseFromSteps(
+        [
+            Anonymous("db", 0.003, testId: "t", pairId: "b"),
+            Anonymous("db", 2, testId: "t", pairId: "b", type: "Response"),
+        ], stepWindows);
+
+        Assert.Equal(nameof(TestPhase.Action), records[0].Phase);
+        Assert.Equal(nameof(TestPhase.Action), records[1].Phase);
+        Assert.Equal(2, tagged);
+    }
+
+    [Fact]
+    public void A_response_that_lands_in_a_later_step_keeps_its_requests_phase()
+    {
+        var stepWindows = IngestAttribution.BuildStepWindows(
+        [
+            new TestRunRecord { Event = "step", TestId = "t", Keyword = "Given", Text = "the seed exists", DurationMs = 1000, Timestamp = T0 },
+            new TestRunRecord { Event = "step", TestId = "t", Keyword = "When", Text = "the order is placed", DurationMs = 1000, Timestamp = T0.AddSeconds(1) },
+        ]);
+
+        var (records, _) = IngestAttribution.ApplyPhaseFromSteps(
+        [
+            Anonymous("db", 0.5, testId: "t", pairId: "seed"),
+            Anonymous("db", 1.5, testId: "t", pairId: "seed", type: "Response"),
+        ], stepWindows);
+
+        Assert.Equal(nameof(TestPhase.Setup), records[0].Phase);
+        Assert.Equal(nameof(TestPhase.Setup), records[1].Phase);
+    }
+
+    [Fact]
+    public void A_response_read_before_its_request_is_judged_on_the_pairs_start()
+    {
+        var stepWindows = IngestAttribution.BuildStepWindows(
+            [new TestRunRecord { Event = "step", TestId = "t", Keyword = "When", Text = "the order is placed", DurationMs = 1000, Timestamp = T0.AddSeconds(1) }]);
+
+        // The response line comes first in the file, and its own timestamp is outside every step.
+        var (records, tagged) = IngestAttribution.ApplyPhaseFromSteps(
+        [
+            Anonymous("db", 5, testId: "t", pairId: "late", type: "Response"),
+            Anonymous("db", 1.5, testId: "t", pairId: "late"),
+        ], stepWindows);
+
+        Assert.Equal(nameof(TestPhase.Action), records[0].Phase);
+        Assert.Equal(nameof(TestPhase.Action), records[1].Phase);
+        Assert.Equal(2, tagged);
+    }
+
+    [Fact]
+    public void A_capturers_phase_on_either_half_is_the_pairs()
+    {
+        var stepWindows = IngestAttribution.BuildStepWindows(
+            [new TestRunRecord { Event = "step", TestId = "t", Keyword = "When", Text = "the order is placed", DurationMs = 5000, Timestamp = T0 }]);
+
+        var (records, _) = IngestAttribution.ApplyPhaseFromSteps(
+        [
+            Anonymous("db", 1, testId: "t", pairId: "p") with { Phase = nameof(TestPhase.Setup) },
+            Anonymous("db", 2, testId: "t", pairId: "p", type: "Response"),
+            Anonymous("db", 3, testId: "t", pairId: "q"),
+            Anonymous("db", 4, testId: "t", pairId: "q", type: "Response") with { Phase = nameof(TestPhase.Setup) },
+        ], stepWindows);
+
+        Assert.All(records, r => Assert.Equal(nameof(TestPhase.Setup), r.Phase));
+    }
+
+    [Fact]
+    public void Halves_the_capturer_phased_each_keep_their_own()
+    {
+        var stepWindows = IngestAttribution.BuildStepWindows(
+            [new TestRunRecord { Event = "step", TestId = "t", Keyword = "When", Text = "the order is placed", DurationMs = 5000, Timestamp = T0 }]);
+
+        var (records, tagged) = IngestAttribution.ApplyPhaseFromSteps(
+        [
+            Anonymous("db", 1, testId: "t", pairId: "p") with { Phase = nameof(TestPhase.Setup) },
+            Anonymous("db", 2, testId: "t", pairId: "p", type: "Response") with { Phase = nameof(TestPhase.Action) },
+        ], stepWindows);
+
+        Assert.Equal(nameof(TestPhase.Setup), records[0].Phase);
+        Assert.Equal(nameof(TestPhase.Action), records[1].Phase);
+        Assert.Equal(0, tagged);
+    }
+
+    [Theory]
+    [InlineData("7")]
+    [InlineData("Teardown")]
+    [InlineData(" unknown")]
+    public void A_phase_that_names_no_member_is_taken_from_the_steps(string written)
+    {
+        // The replay reads each of these as Unknown (InteractionRecord.ResolvedPhase), so the pass must too.
+        var stepWindows = IngestAttribution.BuildStepWindows(
+            [new TestRunRecord { Event = "step", TestId = "t", Keyword = "When", Text = "the order is placed", DurationMs = 5000, Timestamp = T0 }]);
+
+        var (records, tagged) = IngestAttribution.ApplyPhaseFromSteps(
+            [Anonymous("db", 1, testId: "t") with { Phase = written }], stepWindows);
+
+        Assert.Equal(nameof(TestPhase.Action), records[0].Phase);
+        Assert.Equal(1, tagged);
+    }
+
+    [Fact]
+    public void A_record_without_a_pair_id_is_phased_on_its_own_timestamp()
+    {
+        var stepWindows = IngestAttribution.BuildStepWindows(
+        [
+            new TestRunRecord { Event = "step", TestId = "t", Keyword = "Given", Text = "the seed exists", DurationMs = 1000, Timestamp = T0 },
+            new TestRunRecord { Event = "step", TestId = "t", Keyword = "When", Text = "the order is placed", DurationMs = 1000, Timestamp = T0.AddSeconds(1) },
+        ]);
+
+        // Neither a missing nor an empty pair id makes a pair, so none of these takes another's phase.
+        var (records, tagged) = IngestAttribution.ApplyPhaseFromSteps(
+        [
+            Anonymous("db", 0.5, testId: "t"),
+            Anonymous("db", 1.5, testId: "t", pairId: "", type: "Response"),
+            Anonymous("db", 1.6, testId: "t", type: "Response"),
+        ], stepWindows);
+
+        Assert.Equal(nameof(TestPhase.Setup), records[0].Phase);
+        Assert.Equal(nameof(TestPhase.Action), records[1].Phase);
+        Assert.Equal(nameof(TestPhase.Action), records[2].Phase);
+        Assert.Equal(3, tagged);
+    }
+
+    [Fact]
+    public void Tagged_counts_every_record_given_a_phase()
+    {
+        // #130's repro: call a is answered inside the 10 ms When step, call b two seconds after it.
+        var stepWindows = IngestAttribution.BuildStepWindows(
+            [new TestRunRecord { Event = "step", TestId = "t", Keyword = "When", Text = "the order is placed", DurationMs = 10, Timestamp = T0 }]);
+
+        var (_, tagged) = IngestAttribution.ApplyPhaseFromSteps(
+        [
+            Anonymous("api", 0.001, testId: "t", pairId: "a"),
+            Anonymous("db", 0.003, testId: "t", pairId: "b"),
+            Anonymous("api", 0.008, testId: "t", pairId: "a", type: "Response"),
+            Anonymous("db", 2, testId: "t", pairId: "b", type: "Response"),
+        ], stepWindows);
+
+        Assert.Equal(4, tagged);
+    }
+
+    [Fact]
     public void Phase_from_steps_tags_interactions_with_the_step_they_happened_during()
     {
         var stepWindows = IngestAttribution.BuildStepWindows(

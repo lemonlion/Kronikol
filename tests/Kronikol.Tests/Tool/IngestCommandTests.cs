@@ -24,6 +24,80 @@ public class IngestCommandTests : IDisposable
         try { Directory.Delete(_dir, true); } catch { /* best effort */ }
     }
 
+    private const string PhaseLinePrefix = "--phase-from-steps: ";
+
+    [Fact]
+    public void Ingest_prints_the_phase_count_as_a_line_after_replayed()
+    {
+        // #130: the count was a diagnostic of kind Other, printed among the diagnostics and kept in every query answer.
+        var captures = PhaseRepro("phase-line", stepDurationMs: 10);
+        var @out = new StringWriter();
+
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", Path.Combine(_dir, "out-phase-line"), "--phase-from-steps"], @out, new StringWriter()));
+
+        var lines = @out.ToString().Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
+        var replayed = Array.FindIndex(lines, l => l.StartsWith("Replayed ", StringComparison.Ordinal));
+        Assert.True(replayed >= 0, @out.ToString());
+        Assert.Equal(PhaseLinePrefix + "4 interaction record(s) took the phase of the step their call started in.", lines[replayed + 1]);
+        Assert.DoesNotContain(lines, l => l.TrimStart().StartsWith("Other:", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Ingest_prints_a_phase_count_of_zero()
+    {
+        // A step with no durationMs is an instant, so calls made after it fall in no window: zero is the count worth seeing.
+        var captures = PhaseRepro("phase-zero", stepDurationMs: null, firstCallAtMs: 5);
+        var @out = new StringWriter();
+
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", Path.Combine(_dir, "out-phase-zero"), "--phase-from-steps"], @out, new StringWriter()));
+
+        var lines = @out.ToString().Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
+        Assert.Contains(PhaseLinePrefix + "0 interaction record(s) took the phase of the step their call started in.", lines);
+    }
+
+    [Fact]
+    public void Ingest_without_phase_from_steps_prints_no_phase_line()
+    {
+        var captures = PhaseRepro("phase-off", stepDurationMs: 10);
+        var @out = new StringWriter();
+
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", Path.Combine(_dir, "out-phase-off")], @out, new StringWriter()));
+
+        Assert.DoesNotContain(PhaseLinePrefix, @out.ToString());
+        Assert.Contains("Replayed ", @out.ToString());
+    }
+
+    [Fact]
+    public void The_usage_says_a_response_takes_its_requests_phase()
+    {
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("a response takes its request's phase", usage.ToString());
+    }
+
+    /// <summary>
+    /// #130's repro as files: one test whose When step (10 ms, or an instant with no duration) makes two calls, the second
+    /// a database read answered 2 s later.
+    /// </summary>
+    private string PhaseRepro(string name, int? stepDurationMs, double firstCallAtMs = 1)
+    {
+        const string testId = "places-an-order";
+        var captures = Path.Combine(_dir, "captures-" + name);
+        Directory.CreateDirectory(captures);
+        var (aRequest, aResponse) = InteractionRecord.Pair(testId, null, "POST", "http://localhost:8081/orders", "api", "web",
+            statusCode: "201", requestTimestamp: T0.AddMilliseconds(firstCallAtMs), responseTimestamp: T0.AddMilliseconds(firstCallAtMs + 7));
+        var (bRequest, bResponse) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:5432/orders/1", "db", "web",
+            statusCode: "200", requestTimestamp: T0.AddMilliseconds(firstCallAtMs + 2), responseTimestamp: T0.AddSeconds(2));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [aRequest.ToJson(), bRequest.ToJson(), aResponse.ToJson(), bResponse.ToJson()]);
+        File.WriteAllLines(Path.Combine(captures, "tests.ndjson"),
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "orders › places an order", Feature = "orders.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "step", TestId = testId, Keyword = "When", Text = "the order is placed", DurationMs = stepDurationMs, Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddMilliseconds(10) }.ToJson(),
+        ]);
+        return captures;
+    }
+
     [Fact]
     public void The_pointer_names_only_the_files_this_ingest_wrote()
     {

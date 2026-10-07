@@ -186,10 +186,13 @@ public sealed class IngestRequest
     public DateTimeOffset? RunEndedAt { get; init; }
 
     /// <summary>
-    /// Give interactions the phase of the top-level step they happened during — <c>Given</c>/<c>Context</c>
+    /// Give interactions the phase of the top-level step their call started in: <c>Given</c>/<c>Context</c>
     /// becomes <see cref="TestPhase.Setup"/>, <c>When</c>/<c>Then</c> becomes <see cref="TestPhase.Action"/>,
-    /// <c>And</c>/<c>But</c> inherit. The phase is each call's <c>phase</c> in the data files and for
-    /// <c>kronikol query</c>. Default <c>false</c>.
+    /// <c>And</c>/<c>But</c> inherit. A request and its response take one phase, so a response answered after its step
+    /// ended takes its request's, and a phase a capturer wrote on either half wins
+    /// (<see cref="IngestAttribution.ApplyPhaseFromSteps"/> states the rule). The phase is each call's <c>phase</c> in the
+    /// data files and for <c>kronikol query</c>. <c>kronikol ingest</c> prints how many records took a phase; the count is
+    /// not a diagnostic. Default <c>false</c>.
     /// </summary>
     /// <remarks>
     /// A phase draws nothing on its own. The Setup partition is <see cref="ReportConfigurationOptions.SeparateSetup"/>'s:
@@ -296,6 +299,12 @@ public sealed record IngestResult(
     /// diagnostics, never a reason for a run to fail, so nothing here throws.
     /// </remarks>
     public IReadOnlyList<DiagnosticEntry> Diagnostics { get; init; } = [];
+
+    /// <summary>
+    /// How many interaction records <see cref="IngestRequest.PhaseFromSteps"/> gave a phase; 0 when it is off. Printed by
+    /// <c>kronikol ingest</c>, and not a diagnostic: it is the run doing what it was asked.
+    /// </summary>
+    internal int PhasedRecords { get; init; }
 }
 
 /// <summary>
@@ -422,7 +431,7 @@ public static class IngestPipeline
         var current = attempts.Current(testRecords);
 
         records = DropOutsideRunWindow(records, testRecords, request, diagnostics);
-        records = Attribute(records, testRecords, current, request, diagnostics);
+        records = Attribute(records, testRecords, current, request, diagnostics, out var phasedRecords);
         records = DropEarlierAttempts(records, attempts, ref earlierAttemptRecords);
         if (earlierAttemptRecords > 0)
             diagnostics.Add(DiagnosticKind.Other,
@@ -480,6 +489,7 @@ public static class IngestPipeline
             return new IngestResult(logs.Count, 0, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: false)
             {
                 Diagnostics = diagnostics.Entries,
+                PhasedRecords = phasedRecords,
             };
 
         // Cleaned by the generator's beforeFirstWrite hook below, not here: a run with scenarios first
@@ -507,6 +517,7 @@ public static class IngestPipeline
         return new IngestResult(logs.Count, scenarioCount, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: true)
         {
             Diagnostics = diagnostics.Entries,
+            PhasedRecords = phasedRecords,
         };
     }
 
@@ -710,8 +721,9 @@ public static class IngestPipeline
     /// </remarks>
     private static List<InteractionRecord> Attribute(
         List<InteractionRecord> records, List<TestRunRecord> testRecords, List<TestRunRecord> currentAttempts,
-        IngestRequest request, ReportDiagnosticsCollector diagnostics)
+        IngestRequest request, ReportDiagnosticsCollector diagnostics, out int phasedRecords)
     {
+        phasedRecords = 0;
         if (request.AttributeByClaims)
         {
             var claimWindows = IngestAttribution.BuildClaimWindows(testRecords);
@@ -752,10 +764,9 @@ public static class IngestPipeline
             // A retried test's phases come from the attempt the report shows: an earlier attempt's last step would carry
             // its phase into the next attempt's first And.
             var stepWindows = IngestAttribution.BuildStepWindows(currentAttempts);
-            var (phasedRecords, tagged) = IngestAttribution.ApplyPhaseFromSteps(records, stepWindows);
-            records = phasedRecords;
-            if (tagged > 0)
-                diagnostics.Add(DiagnosticKind.Other, $"{tagged} interaction record(s) took their phase from the step they happened during.");
+            // The count is the run working as asked, so it is not a diagnostic (an empty list is the happy path, and every
+            // query answer would carry it): kronikol ingest prints it beside "Replayed".
+            (records, phasedRecords) = IngestAttribution.ApplyPhaseFromSteps(records, stepWindows);
         }
 
         if (request.MergeDuplicateInteractions)

@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.7.1] - 2026-10-07
+
+**Patch - `kronikol ingest --phase-from-steps` gives a call's two halves one phase, and its count is no longer a diagnostic (#130).**
+`plans/PHASE_FROM_STEPS_PLAN.md` R1, with every open question taken as recommended (`plans/ROADMAP.md` D35). Bug
+fixes, with nothing new for a consumer to call, so the patch part moves (4.7.0 to 4.7.1). Some outputs change, as
+the fixes must; each is named below.
+
+- **The count is no longer a diagnostic.** `--phase-from-steps` (`IngestRequest.PhaseFromSteps`) recorded how many
+  records it gave a phase as a diagnostic of kind `Other`, so every healthy run that used it carried one.
+  `kronikol query` printed it as a `!` line above every answer, `failures` included when nothing failed;
+  `--diagnostics-section` listed it; and with history off it alone made the run write `TestRunReport.labs.html`.
+  `kronikol ingest` now prints the count as a line after `Replayed …` whenever the option is given, zero included
+  (`--phase-from-steps: 4 interaction record(s) took the phase of the step their call started in.`), and
+  `IngestResult.Diagnostics` no longer holds it.
+- **A request and its response take one phase.** Each record took the phase of the step its own timestamp fell in,
+  so the response to a call that outlived its step took no phase, or the next step's, while its request took the
+  phase of the step it was made in. The records sharing a `requestResponseId` now take one phase: the one a
+  capturer wrote on either half (the request's, when both carry one), else that of the step the call started in,
+  judged on the pair's earliest record as the run window and the attempt filter judge it. A half whose capturer
+  wrote a phase keeps it. Such a response's `phase` changes in `TestRunReport.json`, the XML and the YAML, and for
+  `kronikol query http`. `IngestAttribution.ApplyPhaseFromSteps` behaves the same way, keeps its signature, and
+  still counts records.
+- **A phase that names no `TestPhase` member is taken from the steps.** A `phase` of `"7"`, `"Teardown"` or
+  `" unknown"` was kept, and the replay then reported it as `Unknown`. It is now read as the replay reads it.
+
+The wiki's ingest Diagnostics table used the count as its `Other` example and lacked nine kinds an ingest can record;
+it now has a row for each.
+
+Proofs (`plans/PHASE_FROM_STEPS_PLAN.harness/`): the 17 new facts (19 cases) on 4.6.1, where the 16 cases expected to
+fail each failed for its own reason and the three guards passed (`r1/`); 11 mutations, each turning a fact red
+(`mutations/r1-results.txt`); and the issue's repro on the new tool, copied outside every checkout, with history off:
+the new line, four `Action` phases, no diagnostic, no labs page and no `!` line (`r1/repro-B.txt`). The core suite
+passes 6,623 with 2 skipped, the Playwright suite 982 with 28 skipped, the search-engine suite 214, and `release.slnf` builds and
+packs in Release for every target (62 packages). Kronikol4J does not have ingest, so there is no ledger entry.
+
 ## [4.7.0] - 2026-10-07
 
 **Minor - a `kronikol-bypass` attachment bypasses a Cucumber step (#105).** `plans/CUCUMBER_BYPASS_PLAN.md` R2. A new

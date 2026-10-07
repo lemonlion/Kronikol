@@ -443,6 +443,10 @@ internal static class IngestCommand
             }
 
             @out.WriteLine($"Replayed {result.InteractionCount} interaction record(s) into {result.ScenarioCount} scenario(s).");
+            // One line, not a diagnostic: the diagnostics list means "silence is a clean run", and this is the option
+            // doing what it was asked. Zero is printed too, since it is the value worth a look (steps with no durationMs).
+            if (phaseFromSteps)
+                @out.WriteLine($"--phase-from-steps: {result.PhasedRecords} interaction record(s) took the phase of the step their call started in.");
             PrintDiagnostics(result.Diagnostics, @out);
             ExplainBlankSpecifications(result.Features, options, @out);
             // What THIS ingest wrote, from the Run.json it ends with: a run names what its outputs wrote,
@@ -673,8 +677,9 @@ internal static class IngestCommand
         w.WriteLine("  --run-start <iso>        Explicit run window bounds (UTC); each implies --run-window.");
         w.WriteLine("  --run-end <iso>");
         w.WriteLine("  --phase-from-steps       Give each interaction the phase (Setup or Action) of the Given/When/Then step");
-        w.WriteLine("                           it happened during, in the data files and for kronikol query. The diagram's");
-        w.WriteLine("                           Setup partition is --separate-setup's.");
+        w.WriteLine("                           its call started in (a response takes its request's phase), in the data");
+        w.WriteLine("                           files and for kronikol query, and print how many records took one. The");
+        w.WriteLine("                           diagram's Setup partition is --separate-setup's.");
         w.WriteLine("  --separate-setup         Draw each test's setup calls inside a Setup partition: the calls before its");
         w.WriteLine("                           first When/Then step that follows a Given step, else before its first call");
         w.WriteLine("                           phased Action that follows one phased Setup. A capture's own boundary wins.");
