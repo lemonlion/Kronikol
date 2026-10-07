@@ -55,7 +55,9 @@ What they showed is in the plan's §11 log.
 | `r1/red-4.6.0.txt` | R1's first facts against the 4.6.0 source: 21 red, each for its own reason, and the guards green |
 | `r1/red-4.6.0-all.txt` | R1's facts as committed (the paint facts and the facts added during the work among them) against the 4.6.0 source |
 | `r1/probe-results.txt` | `probe.sh` on the R1 build |
+| `r2/red-on-r1.txt` | R2's facts against R1's source: every R2 fact red, R1's green |
+| `r2/probe-results.txt` | `probe.sh` on the R2 build: run F (the attachment) and G's first scenario now `Bypassed` |
 | `mutations/mutate.py [r1\|r1-late\|r2]` | Applies each mutation alone to a clean checkout, builds, runs the bypass facts, and says which fact caught it. Run it from the root of a worktree holding the release's commit, never the shared checkout |
-| `mutations/r1-results.txt` | Its output for R1: every mutation caught by the fact it names |
+| `mutations/r1-results.txt`, `mutations/r2-results.txt` | Its output for each release: every mutation caught by the fact it names |
 
 The probe now finds `query summary`'s count line by its words: since R1 a run's diagnostics can stand above the header.

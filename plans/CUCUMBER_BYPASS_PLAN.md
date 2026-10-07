@@ -1,8 +1,8 @@
 # Cucumber bypass plan: #105
 
 **Written:** 2026-10-06, at 4.6.0 (`37e93813`), eight days after #105 was filed. **Status: green-lit 2026-10-07 by the
-owner ("complete the plan in full"), decision D34, every question as recommended; executed the same day as R1 (patch)
-and R2 (minor), §11.** Evidence
+owner ("complete the plan in full"), decision D34, every question as recommended; executed the same day as R1 (patch,
+4.6.2) and R2 (minor, 4.7.0), §11.** Evidence
 labels: **RUN** (measured here), **READ** (in the source, `file:line` at `37e93813`), **INFERRED** (reasoned from facts,
 stated by none), **ISSUE** (taken from #105, not re-measured). The probes behind every RUN line are in
 [`CUCUMBER_BYPASS_PLAN.harness/`](CUCUMBER_BYPASS_PLAN.harness/README.md), with their output: the issue's three ingests
@@ -463,3 +463,12 @@ that day gave the lower issue the lower number). `ROADMAP.md` §7 lists #105 and
     expected row (the step `Bypassed` with its reason in `bypassReason`, the scenario `Bypassed`, history `B`); D, E, G
     and H as §4 says; F (the attachment) `Passed`, since R1 does not read the attachment (`r1/probe-results.txt`).
   - **Numbering.** #115's session was ready first and released 4.6.1, so R1 is 4.6.2 and R2 4.7.0, each pushed only once the release before it is listed on NuGet (the templates pin it). **Suites.** On the work's last commit, before the numbers were taken: the core suite 6,556 passed and 2 skipped, its one failure a fact that read a process-wide queue another fact had left an entry in (fixed in R1: `PendingRequestResponseLogsTests.Count_reflects_pending_entries` starts from an empty queue, and `DeferredLogFlushHandlerTests`' fact that leaves its entry queued on purpose clears it); the full Playwright suite 986 passed and 28 skipped; StepTracking 43, AssertionTracking (three targets) and LightBDD.xUnit3 26 passed; `release.slnf` built in Release for every target, with no warning in a file this plan touched. On the release commits: 4.6.2 (R1, on 4.6.1): the core suite 6,595 passed and 2 skipped, the full Playwright suite 985 passed and 28 skipped, StepTracking, LightBDD.xUnit3 and AssertionTracking (three targets) passed, `release.slnf` built in Release for every target, and the probe read runs A to H as above.
+- **2026-10-07, R2 as 4.7.0.** The `kronikol-bypass` attachment (§4.1 rule 1, with Q6's fixed name and Q10's comment on
+  a failed step) and `skipped` and `bypassed` in `summary --json` (Q7). Red first: R2's facts against R1's source, 11
+  failed, the paint fact among them, and R1's 24 passed (`r2/red-on-r1.txt`). Mutations: 9 of 9 caught by the fact each
+  names (`mutations/r2-results.txt`). The probe on the R2 build reads run F and playwright-bdd's attaching scenario as
+  `Bypassed` (`r2/probe-results.txt`). Suites on 4.7.0: the core suite 6,604 passed and 2 skipped, the full Playwright suite 986 passed and 28 skipped,
+  and `release.slnf` built in Release for every target, with no warning in a file this plan touched. **F19**, found
+  while assembling it: the `kronikol-test-debugging` skill's command reference (`references/commands.md`, both
+  copies) still called `kronikol query summary`'s feature lines pass/fail after R1 made them count skipped and
+  bypassed scenarios; R2 corrects it.

@@ -28,6 +28,11 @@ public sealed class CucumberSynthesisOptions
     /// Name of the attachment carrying the Kronikol test id (32 hex characters), written by the test
     /// fixture so that captured interactions, UI actions and assertions all join this scenario (§4.4).
     /// </summary>
+    /// <remarks>
+    /// Its sibling convention has a fixed name: a step that attaches <c>kronikol-bypass</c> (matched ignoring case) is
+    /// <see cref="ExecutionResult.Bypassed"/>, its body the reason, whatever status its runner gave it, unless it failed.
+    /// Neither attachment is ever written out as a file.
+    /// </remarks>
     public string TestIdAttachmentName { get; init; } = "kronikol-test-id";
 
     /// <summary>Write plain-text attachment bodies out as files too. Default <c>false</c> — text attachments are usually diagnostics noise.</summary>
@@ -119,8 +124,10 @@ public sealed record CucumberSynthesisResult(
 /// <c>PASSED</c> or <c>FAILED</c> was skipped over, not skipped with the rest, and is
 /// <see cref="ExecutionResult.Bypassed"/>, its message the step's <see cref="ScenarioStep.BypassReason"/>. Hooks and
 /// steps that never ran (<c>UNDEFINED</c>, <c>AMBIGUOUS</c>, <c>PENDING</c>) do not count as a later step that ran. A
-/// skipped last step stays <c>Skipped</c>: nothing in the messages tells it from one that skipped the rest. A scenario's
-/// result is its worst step's, Failed over Skipped over Bypassed over Passed.
+/// skipped last step stays <c>Skipped</c>: nothing in the messages tells it from one that skipped the rest, unless the
+/// step says so: a step that attaches <c>kronikol-bypass</c> is bypassed whatever status its runner gave it, unless it
+/// failed, the attachment's body its reason. A scenario's result is its worst step's, Failed over Skipped over Bypassed
+/// over Passed.
 /// </para>
 /// </remarks>
 public static class CucumberFeatureSynthesizer
@@ -384,11 +391,24 @@ public static class CucumberFeatureSynthesizer
         var attachments = attachmentsByAttempt.TryGetValue(attemptId, out var list) ? list : [];
         var attachmentsByStep = new Dictionary<string, List<FileAttachment>>(StringComparer.Ordinal);
         var scenarioAttachments = new List<FileAttachment>();
+        // A kronikol-bypass attachment is a signal, as the test id is, never a file: the first body with text on a step
+        // is its reason. One on no step bypasses nothing and is counted for a warning.
+        var bypassAttachments = new Dictionary<string, string?>(StringComparer.Ordinal);
+        var strayBypassAttachments = 0;
 
         foreach (var attachment in attachments)
         {
             if (IsTestIdAttachment(attachment, options))
                 continue;
+            if (IsBypassAttachment(attachment))
+            {
+                if (attachment.TestStepId is { Length: > 0 } bypassedStepId)
+                    bypassAttachments[bypassedStepId] = bypassAttachments.GetValueOrDefault(bypassedStepId) ?? NullIfBlank(DecodeText(attachment)?.Trim());
+                else
+                    strayBypassAttachments++;
+                continue;
+            }
+
             if (attachmentWriter.Materialise(attachment) is not { } file)
                 continue;
             if (attachment.TestStepId is { Length: > 0 } stepId)
@@ -472,6 +492,9 @@ public static class CucumberFeatureSynthesizer
 
             if (testStep.HookId is { Length: > 0 } hookId)
             {
+                // Only a Gherkin step can be bypassed.
+                if (bypassAttachments.Remove(testStepId))
+                    strayBypassAttachments++;
                 var hook = hooks.GetValueOrDefault(hookId);
                 if (!options.IncludeHooks)
                 {
@@ -529,8 +552,18 @@ public static class CucumberFeatureSynthesizer
             var fromTestsFile = bypassByText.GetValueOrDefault((text.Trim(), occurrence));
             if (fromTestsFile is not null)
                 matchedBypasses++;
-            var (stepStatus, bypassReason) = StepVerdict(status, RawStatus(result), position < lastRan, fromTestsFile, message);
+            var attached = bypassAttachments.Remove(testStepId, out var attachedReason);
+            var (stepStatus, bypassReason) = StepVerdict(
+                status, RawStatus(result), position < lastRan, fromTestsFile, message, attached, attachedReason);
             var bypassed = stepStatus == ExecutionResult.Bypassed;
+
+            // A bypassed step's message is its reason and is said once, as the reason; one that says something else
+            // stays a comment. A failed step that attached a bypass keeps what it meant to skip as a comment too.
+            var comments = new List<string>();
+            if (message is not null && !(bypassed && message == bypassReason))
+                comments.Add(message);
+            if (stepStatus == ExecutionResult.Failed && attachedReason is not null)
+                comments.Add(attachedReason);
 
             var step = new ScenarioStep
             {
@@ -540,9 +573,7 @@ public static class CucumberFeatureSynthesizer
                 BypassReason = bypassReason,
                 Duration = duration,
                 Attachments = stepAttachments,
-                // A bypassed step's message is its reason and is said once, as the reason; one that says something else
-                // (a tests file gave the reason) stays a comment.
-                Comments = message is null || (bypassed && message == bypassReason) ? null : [message],
+                Comments = comments.Count > 0 ? comments.ToArray() : null,
                 // What Failures.md prints under a failing step; the comments are what the HTML renders.
                 FailureMessage = stepStatus == ExecutionResult.Failed ? message : null,
                 // The step contract: the feature file's name, and the step's own line in it (#76).
@@ -587,6 +618,13 @@ public static class CucumberFeatureSynthesizer
             if (!consumedAttachments.Contains(stepId))
                 scenarioAttachments.AddRange(orphans);
         }
+
+        // A bypass attachment made in a hook, on no step, or on a step the plan does not hold bypassed nothing.
+        strayBypassAttachments += bypassAttachments.Count;
+        if (strayBypassAttachments > 0)
+            warnings.Add(
+                $"Cucumber messages: {strayBypassAttachments} '{BypassAttachmentName}' attachment(s) of scenario '{displayName}' were " +
+                "not made in a Gherkin step (a hook, or no step) and bypass nothing: only a Gherkin step can be bypassed.");
 
         if (!sawStep)
             worst = ExecutionResult.Skipped;
@@ -680,15 +718,19 @@ public static class CucumberFeatureSynthesizer
 
     /// <summary>
     /// A Gherkin step's verdict once the bypass signals are read (#105). A step that did not fail is
-    /// <see cref="ExecutionResult.Bypassed"/> when the tests file says so, or when its producer reported it
-    /// <c>SKIPPED</c> and a later Gherkin step of the same attempt ran. Its reason is the tests file's
-    /// <c>bypassReason</c>, else the step's own message. A failed step stays failed whatever is said about it.
+    /// <see cref="ExecutionResult.Bypassed"/> when it attached <c>kronikol-bypass</c>, when the tests file says so, or
+    /// when its producer reported it <c>SKIPPED</c> and a later Gherkin step of the same attempt ran. Its reason is the
+    /// first of those to give one: the attachment's body, the tests file's <c>bypassReason</c>, the step's own message.
+    /// A failed step stays failed whatever is said about it.
     /// </summary>
     private static (ExecutionResult Status, string? BypassReason) StepVerdict(
-        ExecutionResult status, string? rawStatus, bool aLaterStepRan, CucumberTestsFileBypass? fromTestsFile, string? message)
+        ExecutionResult status, string? rawStatus, bool aLaterStepRan, CucumberTestsFileBypass? fromTestsFile, string? message,
+        bool attached, string? attachedReason)
     {
         if (status == ExecutionResult.Failed)
             return (status, null);
+        if (attached)
+            return (ExecutionResult.Bypassed, attachedReason ?? fromTestsFile?.Reason ?? message);
         if (fromTestsFile is not null)
             return (ExecutionResult.Bypassed, fromTestsFile.Reason ?? message);
         if (rawStatus == "SKIPPED" && aLaterStepRan)
@@ -807,6 +849,15 @@ public static class CucumberFeatureSynthesizer
 
     private static bool IsTestIdAttachment(CucumberAttachment attachment, CucumberSynthesisOptions options) =>
         string.Equals(attachment.FileName, options.TestIdAttachmentName, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The attachment a step makes to say it was bypassed, its body the reason (#105). Its name is fixed: the convention
+    /// is the test id's, and the CLI sets neither.
+    /// </summary>
+    private const string BypassAttachmentName = "kronikol-bypass";
+
+    private static bool IsBypassAttachment(CucumberAttachment attachment) =>
+        string.Equals(attachment.FileName, BypassAttachmentName, StringComparison.OrdinalIgnoreCase);
 
     private static string? DecodeText(CucumberAttachment attachment)
     {

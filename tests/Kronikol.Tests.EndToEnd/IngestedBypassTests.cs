@@ -43,6 +43,28 @@ public class IngestedBypassTests(PlaywrightFixture fixture) : PlaywrightTestBase
         Assert.Equal("Bypassed", await Page.Locator("details.scenario").First.GetAttributeAsync("data-status"));
     }
 
+    [Fact]
+    public async Task A_step_that_attached_kronikol_bypass_is_drawn_bypassed_with_its_reason()
+    {
+        // playwright-bdd 9.2.0 as published: the step attached kronikol-bypass and returned, and was reported PASSED.
+        await Page.GotoAsync(Ingest("attached", null, "playwright-bdd-9.2-bypass-messages.ndjson"));
+        await ExpandFirstScenarioWithDiagram();
+
+        var step = Page.Locator(".step", new() { HasTextString = "the local-only check attaches a bypass and returns" }).First;
+        var status = step.Locator(".step-status").First;
+        await status.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+        Assert.Equal("↷", (await status.InnerTextAsync()).Trim());
+        Assert.Equal(BypassBlue, await status.EvaluateAsync<string>("el => getComputedStyle(el).backgroundColor"));
+
+        var reason = Page.GetByText($"Bypassed: {Reason}", new() { Exact = true }).First;
+        await reason.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+        var box = await reason.BoundingBoxAsync();
+        Assert.True(box is { Width: > 0, Height: > 0 }, "The bypass reason has no area on the page.");
+
+        // The attachment is consumed: no link to a kronikol-bypass file is drawn anywhere.
+        Assert.Equal(0, await Page.Locator("a", new() { HasTextString = "kronikol-bypass" }).CountAsync());
+    }
+
     /// <summary>Ingests the named fixtures into a report of their own; returns the page's address.</summary>
     private string Ingest(string name, string? tests, string? messages)
     {

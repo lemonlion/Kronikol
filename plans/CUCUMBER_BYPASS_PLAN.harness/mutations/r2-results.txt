@@ -1,0 +1,31 @@
+# R2 mutations, 2026-10-07: mutate.py r2 on the R2 commit.
+CAUGHT  the attachment ignored: 9 fact(s) red, expected A_step_that_attaches_kronikol_bypass_is_bypassed_with_the_body_as_its_reason
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_base64_body_is_decoded_and_the_first_body_with_text_is_the_reason [6 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_step_that_attaches_kronikol_bypass_is_bypassed_with_the_body_as_its_reason [3 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.The_attachment_bypasses_a_skipped_last_step_which_nothing_else_in_the_messages_can [< 1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.What_playwright_bdd_wrote_reads_as_it_ran [2 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.An_empty_body_bypasses_with_no_reason [< 1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.On_a_hook_the_attachment_bypasses_nothing_and_says_so(includeHooks: False) [3 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.On_a_hook_the_attachment_bypasses_nothing_and_says_so(includeHooks: True) [1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.The_attachment_is_never_written_out_as_a_file [2 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_failed_step_stays_failed_and_keeps_the_body_as_a_comment [2 ms]
+CAUGHT  the attachment overrides a failed step: 2 fact(s) red, expected A_failed_step_stays_failed_and_keeps_the_body_as_a_comment
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_failed_step_stays_failed_and_keeps_the_body_as_a_comment [1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassIngestTests.A_tests_file_bypass_never_overturns_a_failed_gherkin_step [21 ms]
+CAUGHT  the attachment written out as a file: 2 fact(s) red, expected The_attachment_is_never_written_out_as_a_file
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.On_a_hook_the_attachment_bypasses_nothing_and_says_so(includeHooks: False) [3 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.The_attachment_is_never_written_out_as_a_file [2 ms]
+CAUGHT  a failed step drops the body: 1 fact(s) red, expected A_failed_step_stays_failed_and_keeps_the_body_as_a_comment
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_failed_step_stays_failed_and_keeps_the_body_as_a_comment [4 ms]
+CAUGHT  no warning for an attachment that bypasses nothing: 2 fact(s) red, expected On_a_hook_the_attachment_bypasses_nothing_and_says_so
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.On_a_hook_the_attachment_bypasses_nothing_and_says_so(includeHooks: False) [1 ms]
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.On_a_hook_the_attachment_bypasses_nothing_and_says_so(includeHooks: True) [< 1 ms]
+CAUGHT  the last body is the reason, not the first: 1 fact(s) red, expected A_base64_body_is_decoded_and_the_first_body_with_text_is_the_reason
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_base64_body_is_decoded_and_the_first_body_with_text_is_the_reason [5 ms]
+CAUGHT  the name matched with its case: 1 fact(s) red, expected A_base64_body_is_decoded_and_the_first_body_with_text_is_the_reason
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_base64_body_is_decoded_and_the_first_body_with_text_is_the_reason [32 ms]
+CAUGHT  a BASE64 body not decoded: 1 fact(s) red, expected A_base64_body_is_decoded_and_the_first_body_with_text_is_the_reason
+           Failed Kronikol.Tests.Ingestion.Cucumber.CucumberBypassTests.A_base64_body_is_decoded_and_the_first_body_with_text_is_the_reason [5 ms]
+CAUGHT  summary JSON without the skipped count: 1 fact(s) red, expected Summary_json_says_passed_for_the_scenarios_that_passed
+           Failed Kronikol.Tests.Tool.QuerySummaryCountsTests.Summary_json_says_passed_for_the_scenarios_that_passed [15 ms]
+9 of 9 mutations caught by the fact named

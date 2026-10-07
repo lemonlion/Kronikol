@@ -101,8 +101,8 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 ## Overview
 
 ### `summary <report>`
-Run header, per-feature pass/fail, the failures, the slowest scenarios, diagnostics. ~1–2 KB. Always the
-first command.
+Run header, per-feature counts (passed, then skipped, bypassed and FAILED where a feature has any), the
+failures, the slowest scenarios, diagnostics. ~1–2 KB. Always the first command.
 
 ### `scenarios <report> [flags]`
 | Flag | Effect |

@@ -338,6 +338,148 @@ public class CucumberBypassTests
         Assert.Equal(ExecutionResult.Bypassed, scenario.Result);
     }
 
+    // ---- the kronikol-bypass attachment (§4.1 rule 1) --------------------------------------------
+
+    private static Attachment Bypass(string body, string? encoding = null) => new("kronikol-bypass", body, encoding);
+
+    [Fact]
+    public void A_step_that_attaches_kronikol_bypass_is_bypassed_with_the_body_as_its_reason()
+    {
+        // What playwright-bdd as published writes for a step that attaches and returns early: PASSED.
+        var result = Synthesise(Stream(
+        [
+            new("the overview has loaded", "PASSED"),
+            new("mock Gemini served the summary", "PASSED", Attachments: [Bypass(Reason)]),
+            new("the figure on screen is the figure the API returned", "PASSED"),
+        ]));
+
+        var scenario = Only(result);
+        Assert.Equal([ExecutionResult.Passed, ExecutionResult.Bypassed, ExecutionResult.Passed], Statuses(scenario));
+        Assert.Equal(Reason, scenario.Steps![1].BypassReason);
+        Assert.Null(scenario.Steps[1].Comments);
+        Assert.Equal(ExecutionResult.Bypassed, scenario.Result);
+        Assert.Equal(("bypassed", Reason), (StepMarkers(result)[1].Status, StepMarkers(result)[1].BypassReason));
+    }
+
+    [Fact]
+    public void The_attachment_bypasses_a_skipped_last_step_which_nothing_else_in_the_messages_can()
+    {
+        var scenario = Only(Synthesise(Stream(
+        [
+            new("the overview has loaded", "PASSED"),
+            new("the figure on screen is the figure the API returned", "PASSED"),
+            new("mock Gemini served the summary", "SKIPPED", "a message the producer wrote", Attachments: [Bypass(Reason)]),
+        ])));
+
+        Assert.Equal([ExecutionResult.Passed, ExecutionResult.Passed, ExecutionResult.Bypassed], Statuses(scenario));
+        Assert.Equal(Reason, scenario.Steps![2].BypassReason);
+        Assert.Equal(["a message the producer wrote"], scenario.Steps[2].Comments!);
+        Assert.Equal(ExecutionResult.Bypassed, scenario.Result);
+    }
+
+    [Fact]
+    public void The_attachment_is_never_written_out_as_a_file()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "kronikol-bypass-attachments-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var scenario = Only(Synthesise(Stream(
+                [
+                    new("the overview has loaded", "PASSED", Attachments: [new("a note", "kept as a file")]),
+                    new("mock Gemini served the summary", "PASSED", Attachments: [Bypass(Reason)]),
+                ]),
+                new CucumberSynthesisOptions { WriteTextAttachments = true, AttachmentsDirectory = directory }));
+
+            Assert.Equal(ExecutionResult.Bypassed, scenario.Steps![1].Status);
+            Assert.Null(scenario.Steps[1].Attachments);
+            Assert.Single(scenario.Steps[0].Attachments!); // other text attachments are still written, as asked
+            Assert.Single(Directory.GetFiles(directory));
+        }
+        finally
+        {
+            try { Directory.Delete(directory, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void A_failed_step_stays_failed_and_keeps_the_body_as_a_comment()
+    {
+        var scenario = Only(Synthesise(Stream(
+        [
+            new("the overview has loaded", "PASSED"),
+            new("mock Gemini served the summary", "FAILED", "Error: expected 3 to be 4", Attachments: [Bypass(Reason)]),
+            new("the figure on screen is the figure the API returned", "SKIPPED"),
+        ])));
+
+        var failed = scenario.Steps![1];
+        Assert.Equal(ExecutionResult.Failed, failed.Status);
+        Assert.Null(failed.BypassReason);
+        Assert.Equal(["Error: expected 3 to be 4", Reason], failed.Comments!);
+        Assert.Equal("Error: expected 3 to be 4", failed.FailureMessage);
+        Assert.Equal(ExecutionResult.Failed, scenario.Result);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void On_a_hook_the_attachment_bypasses_nothing_and_says_so(bool includeHooks)
+    {
+        var result = Synthesise(Stream(
+        [
+            new("the overview has loaded", "PASSED"),
+            new("After hook", "PASSED", Hook: true, Attachments: [Bypass(Reason)]),
+        ]), new CucumberSynthesisOptions { IncludeHooks = includeHooks, WriteTextAttachments = true });
+
+        var scenario = Only(result);
+        Assert.DoesNotContain(ExecutionResult.Bypassed, Statuses(scenario));
+        Assert.Equal(ExecutionResult.Passed, scenario.Result);
+        Assert.Null(scenario.Attachments);
+        var warning = Assert.Single(result.Warnings, w => w.Contains("kronikol-bypass"));
+        Assert.Contains("a scenario with a bypass", warning);
+    }
+
+    [Fact]
+    public void An_empty_body_bypasses_with_no_reason()
+    {
+        var scenario = Only(Synthesise(Stream(
+        [
+            new("mock Gemini served the summary", "PASSED", Attachments: [Bypass("")]),
+            new("the figure on screen is the figure the API returned", "PASSED"),
+        ])));
+
+        Assert.Equal(ExecutionResult.Bypassed, scenario.Steps![0].Status);
+        Assert.Null(scenario.Steps[0].BypassReason);
+    }
+
+    [Fact]
+    public void A_base64_body_is_decoded_and_the_first_body_with_text_is_the_reason()
+    {
+        var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(Reason));
+        var scenario = Only(Synthesise(Stream(
+        [
+            new("mock Gemini served the summary", "PASSED", Attachments: [Bypass("  "), new("Kronikol-Bypass", encoded, "BASE64"), Bypass("a later reason")]),
+        ])));
+
+        Assert.Equal(ExecutionResult.Bypassed, scenario.Steps![0].Status);
+        Assert.Equal(Reason, scenario.Steps[0].BypassReason);
+    }
+
+    [Fact]
+    public void An_attachment_of_an_earlier_attempt_bypasses_nothing()
+    {
+        var scenario = Only(Synthesise(Attempts(
+            [
+                new("the overview has loaded", "PASSED"),
+                new("mock Gemini served the summary", "PASSED", Attachments: [Bypass(Reason)]),
+            ],
+            [
+                new("the overview has loaded", "PASSED"),
+                new("mock Gemini served the summary", "PASSED"),
+            ])));
+
+        Assert.Equal([ExecutionResult.Passed, ExecutionResult.Passed], Statuses(scenario));
+    }
+
     // ---- the producers measured ------------------------------------------------------------------
 
     [Theory]
@@ -378,8 +520,10 @@ public class CucumberBypassTests
         Assert.Equal(ExecutionResult.Failed, fails.Result);
 
         var attached = Named("A step attaches kronikol-bypass and returns early");
-        Assert.Equal([ExecutionResult.Passed, ExecutionResult.Passed, ExecutionResult.Passed], Statuses(attached));
-        Assert.Equal(ExecutionResult.Passed, attached.Result);
+        Assert.Equal([ExecutionResult.Passed, ExecutionResult.Bypassed, ExecutionResult.Passed], Statuses(attached));
+        Assert.Equal(Reason, attached.Steps![1].BypassReason);
+        Assert.Equal(ExecutionResult.Bypassed, attached.Result);
+        Assert.DoesNotContain(result.Warnings, w => w.Contains("kronikol-bypass"));
     }
 
     [Fact]

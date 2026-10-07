@@ -93,7 +93,9 @@ public static partial class QueryCommand
                 feature = feature.Key,
                 total = feature.Count(),
                 passed = featurePassed,
-                failed = featureFailed
+                failed = featureFailed,
+                skipped = featureSkipped,
+                bypassed = featureBypassed
             });
         }
 

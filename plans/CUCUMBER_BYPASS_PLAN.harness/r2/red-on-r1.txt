@@ -1,0 +1,47 @@
+# R2's facts (the R2 commit's tests) against R1's source, 2026-10-07. R1's facts in the same classes pass; the R2 facts fail.
+Failed  EndToEnd.IngestedBypassTests.A_step_that_attached_kronikol_bypass_is_drawn_bypassed_with_its_reason
+        Assert.Equal() Failure: Strings differ ↓ (pos 0) Expected: "↷" Actual: "✓" ↑ (pos 0)
+Failed  Ingestion.Cucumber.CucumberBypassTests.A_base64_body_is_decoded_and_the_first_body_with_text_is_the_reason
+        Assert.Equal() Failure: Values differ Expected: Bypassed Actual: Passed
+Failed  Ingestion.Cucumber.CucumberBypassTests.A_failed_step_stays_failed_and_keeps_the_body_as_a_comment
+        Assert.Equal() Failure: Collections differ ↓ (pos 1) Expected: ["Error: expected 3 to be 4", "Bypassed on dev: mock Gemini is not in the deploye"···] Actual: ["Error: expected 3 to be 4"]
+Failed  Ingestion.Cucumber.CucumberBypassTests.A_step_that_attaches_kronikol_bypass_is_bypassed_with_the_body_as_its_reason
+        Assert.Equal() Failure: Collections differ ↓ (pos 1) Expected: [Passed, Bypassed, Passed] Actual: [Passed, Passed, Passed] ↑ (pos 1)
+Failed  Ingestion.Cucumber.CucumberBypassTests.An_empty_body_bypasses_with_no_reason
+        Assert.Equal() Failure: Values differ Expected: Bypassed Actual: Passed
+Failed  Ingestion.Cucumber.CucumberBypassTests.On_a_hook_the_attachment_bypasses_nothing_and_says_so(includeHooks: False)
+        Assert.Null() Failure: Value is not null Expected: null Actual: [FileAttachment { Name = kronikol-bypass.txt, RelativePath = C:\Users\cex\AppData\Local\Temp\kronikol-cucumber-attachments\bab47883ff4349b2819c690c8b6f81b6\0000-kronikol-bypass.txt, MediaType = text/plain, IsInlineImage = False, IsUrl =
+Failed  Ingestion.Cucumber.CucumberBypassTests.On_a_hook_the_attachment_bypasses_nothing_and_says_so(includeHooks: True)
+        Assert.Single() Failure: The collection did not contain any matching items Expected: (predicate expression) Collection: []
+Failed  Ingestion.Cucumber.CucumberBypassTests.The_attachment_bypasses_a_skipped_last_step_which_nothing_else_in_the_messages_can
+        Assert.Equal() Failure: Collections differ ↓ (pos 2) Expected: [Passed, Passed, Bypassed] Actual: [Passed, Passed, Skipped] ↑ (pos 2)
+Failed  Ingestion.Cucumber.CucumberBypassTests.The_attachment_is_never_written_out_as_a_file
+        Assert.Equal() Failure: Values differ Expected: Bypassed Actual: Passed
+Failed  Ingestion.Cucumber.CucumberBypassTests.What_playwright_bdd_wrote_reads_as_it_ran
+        Assert.Equal() Failure: Collections differ ↓ (pos 1) Expected: [Passed, Bypassed, Passed] Actual: [Passed, Passed, Passed] ↑ (pos 1)
+Failed  Tool.QuerySummaryCountsTests.Summary_json_says_passed_for_the_scenarios_that_passed
+        System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+Passed  EndToEnd.IngestedBypassTests.The_issues_scenario_is_drawn_bypassed_with_its_reason(name: "both", tests: "issue-105-tests.ndjson", messages: "issue-105-messages.ndjson")
+Passed  EndToEnd.IngestedBypassTests.The_issues_scenario_is_drawn_bypassed_with_its_reason(name: "messages", tests: null, messages: "issue-105-messages.ndjson")
+Passed  EndToEnd.IngestedBypassTests.The_issues_scenario_is_drawn_bypassed_with_its_reason(name: "tests", tests: "issue-105-tests.ndjson", messages: null)
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_bypass_in_the_last_attempt_is_read_after_an_earlier_attempt_failed
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_bypassed_step_before_a_step_that_skipped_the_rest_leaves_the_scenario_skipped
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran(includeHooks: False)
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran(includeHooks: True)
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "AMBIGUOUS")
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "PENDING")
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_later_step_that_did_not_run_is_not_a_step_that_ran(later: "UNDEFINED")
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_pending_step_that_a_later_step_ran_after_stays_skipped
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_skipped_last_step_reads_as_skipped_with_its_message_a_comment
+Passed  Ingestion.Cucumber.CucumberBypassTests.A_skipped_step_that_a_later_step_ran_after_is_bypassed_with_its_message_as_the_reason
+Passed  Ingestion.Cucumber.CucumberBypassTests.An_attachment_of_an_earlier_attempt_bypasses_nothing
+Passed  Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: False)
+Passed  Ingestion.Cucumber.CucumberBypassTests.Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: True)
+Passed  Ingestion.Cucumber.CucumberBypassTests.Only_the_attempt_the_scenario_is_built_from_is_read
+Passed  Ingestion.Cucumber.CucumberBypassTests.Steps_skipped_after_a_failure_stay_skipped_and_the_scenario_failed(first: "FAILED", second: "SKIPPED", third: "SKIPPED")
+Passed  Ingestion.Cucumber.CucumberBypassTests.Steps_skipped_after_a_failure_stay_skipped_and_the_scenario_failed(first: "PASSED", second: "FAILED", third: "SKIPPED")
+Passed  Ingestion.Cucumber.CucumberBypassTests.The_golden_playwright_bdd_run_synthesises_as_it_did_before_the_bypass_rule
+Passed  Tool.QuerySummaryCountsTests.Failures_with_nothing_failed_does_not_say_a_bypassed_scenario_did_not_run
+Passed  Tool.QuerySummaryCountsTests.Failures_with_nothing_failed_keeps_its_line_for_a_run_with_no_bypass
+Passed  Tool.QuerySummaryCountsTests.Summary_counts_skipped_and_bypassed_scenarios_apart_from_passed_ones
+Passed  Tool.QuerySummaryCountsTests.Summary_names_only_the_counts_a_feature_has

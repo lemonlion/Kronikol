@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.7.0] - 2026-10-07
+
+**Minor - a `kronikol-bypass` attachment bypasses a Cucumber step (#105).** `plans/CUCUMBER_BYPASS_PLAN.md` R2. A new
+input convention a producer can write, and two new members in `kronikol query summary --json`, are new surface, so the
+minor part moves (4.6.2 to 4.7.0). Nothing existing changes for a run that writes no such attachment. Kronikol4J has no
+Cucumber Messages ingest, so its ledger gets a line only. The history action's `VERSION` installs `Kronikol.Tool` 4.7.0.
+
+### Added
+
+- **The `kronikol-bypass` step attachment.** A step that attaches `text/plain` named `kronikol-bypass` (matched ignoring
+  case) is `Bypassed`, with the attachment's body as its reason, whatever status its runner gave it, unless it failed.
+  It works with any Cucumber Messages producer that can attach, playwright-bdd as published included:
+  `await $testInfo.attach('kronikol-bypass', { body: reason, contentType: 'text/plain' })` before the step returns early,
+  which playwright-bdd reports as `PASSED`. It also covers a bypassed last step, which nothing else in the messages can.
+  The first body with text is the reason, an empty body bypasses with no reason, and a `BASE64` body is decoded. The
+  attachment is never written out as a file, whatever `WriteTextAttachments` says. On a failed step it bypasses nothing
+  and its body joins the step's comments; made in a hook or on no step, it bypasses nothing and a warning names the
+  scenario.
+- **`kronikol query summary --json` counts `skipped` and `bypassed` per feature**, beside `total`, `passed` and
+  `failed` (`skipped` includes scenarios skipped after a failure).
+
+### Fixed
+
+- The `kronikol-test-debugging` skill's command reference (`references/commands.md`, which `kronikol init agents`
+  installs) still called `kronikol query summary`'s feature lines pass/fail. Since 4.6.2 they also count skipped and
+  bypassed scenarios, and the reference now says so.
+
 ## [4.6.2] - 2026-10-07
 
 **Patch - a bypassed step reads as bypassed through `kronikol ingest` (#105).** `plans/CUCUMBER_BYPASS_PLAN.md` R1,

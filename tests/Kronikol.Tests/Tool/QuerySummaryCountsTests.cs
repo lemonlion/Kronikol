@@ -75,6 +75,8 @@ public class QuerySummaryCountsTests : IDisposable
         Assert.Equal(5, item.GetProperty("total").GetInt32());
         Assert.Equal(1, item.GetProperty("passed").GetInt32());
         Assert.Equal(1, item.GetProperty("failed").GetInt32());
+        Assert.Equal(2, item.GetProperty("skipped").GetInt32());
+        Assert.Equal(1, item.GetProperty("bypassed").GetInt32());
     }
 
     [Fact]
