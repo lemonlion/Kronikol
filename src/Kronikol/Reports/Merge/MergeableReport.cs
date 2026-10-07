@@ -87,6 +87,13 @@ public sealed record MergeableReport
     public IReadOnlyDictionary<string, List<string?>> StepPaths { get; init; } =
         new Dictionary<string, List<string?>>(StringComparer.Ordinal);
 
+    /// <summary>
+    /// The calls the run's first-call warm-up slowed down and each scenario's share of it, as the run that wrote the file
+    /// found them (plans/WARM_UP_PLAN.md 4.3). Carried, never recomputed: a merge of shards from several processes would
+    /// judge one process's first call against another's, and a shard written before the marks carries none.
+    /// </summary>
+    internal WarmUpResult WarmUp { get; init; } = WarmUpResult.None;
+
     /// <summary>Diagnostics the run recorded - notably <see cref="DiagnosticKind.ResultDefaulted"/>,
     /// without which a scenario defaulted to Passed is indistinguishable from a real pass.</summary>
     public IReadOnlyList<DiagnosticEntry> Diagnostics { get; init; } = [];

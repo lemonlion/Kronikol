@@ -124,6 +124,14 @@ internal sealed class ScenarioEntry
     public string Name { get; set; } = "";
     public string Result { get; set; } = "";
     public double DurationSeconds { get; set; }
+
+    /// <summary>The seconds of <see cref="DurationSeconds"/> the run's first-call warm-up took; null when the scenario
+    /// carries none, or the report was written before the marks (plans/WARM_UP_PLAN.md).</summary>
+    public double? WarmUpSeconds { get; set; }
+
+    /// <summary>The scenario's own time: its duration less the first-call warm-up it paid.</summary>
+    public double TimeLeftSeconds => DurationSeconds - (WarmUpSeconds ?? 0);
+
     public bool IsHappyPath { get; set; }
     public string? ErrorMessage { get; set; }
     public string? ErrorStackTrace { get; set; }
@@ -235,6 +243,10 @@ internal sealed class InteractionEntry
     public string? RequestResponseId { get; set; }
     public string? TraceId { get; set; }
     public double? DurationMs { get; set; }
+
+    /// <summary>The call's first-call warm-up mark, on its request record; null on every other call.</summary>
+    public WarmUpEntry? WarmUp { get; set; }
+
     public string? StepPath { get; set; }
     public string? Phase { get; set; }
     public string? MetaType { get; set; }
@@ -277,6 +289,20 @@ internal sealed class AnnotationEntry
     public int Index { get; set; }
     public string Kind { get; set; } = "";
     public string Text { get; set; } = "";
+}
+
+/// <summary>A call's <c>warmUp</c> object, as the index reads it (plans/WARM_UP_PLAN.md 4.4).</summary>
+internal sealed class WarmUpEntry
+{
+    public string Kind { get; set; } = "";
+    public string Shape { get; set; } = "";
+    public double BaselineMs { get; set; }
+    public int BaselineCalls { get; set; }
+
+    /// <summary>On a call that waited, the requestResponseId of the run's first call of its shape.</summary>
+    public string? First { get; set; }
+
+    public bool Waited => Kind == "waited";
 }
 
 internal sealed class AttachmentEntry

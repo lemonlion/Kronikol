@@ -3,7 +3,7 @@
 # Usage: runlanes.sh <out-dir> <lane:count> [<lane:count> ...]   lanes: ReqNRoll, xUnit, NUnit, TUnit, LightBDD
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-BP="$HERE/bp"
+BP="${BP:-$HERE/bp}"   # S7: BP=<scratch clone> runs a clone elsewhere
 OUT="$1"; shift
 mkdir -p "$OUT"
 export KRONIKOL_HISTORY=off

@@ -506,6 +506,17 @@ internal sealed class QueryWriter
     public static string Size(int bytes) =>
         bytes < 1024 ? bytes + " B" : (bytes / 1024.0).ToString("0.#") + " KB";
 
+    /// <summary>
+    /// <paramref name="item"/> as the JSON it serializes to, with one more member at its end: for a member only some items
+    /// carry, which an anonymous type cannot leave out.
+    /// </summary>
+    public static object WithMember(object item, string name, object? value)
+    {
+        var node = JsonSerializer.SerializeToNode(item, Compact)!.AsObject();
+        node[name] = JsonSerializer.SerializeToNode(value, Compact);
+        return node;
+    }
+
     public static string Duration(double? ms) =>
         ms is null ? "" : ms < 1000 ? $"{ms:0} ms" : $"{ms / 1000:0.##} s";
 

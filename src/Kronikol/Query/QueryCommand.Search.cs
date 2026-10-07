@@ -728,6 +728,11 @@ public static partial class QueryCommand
         var fresh = new List<RunChange>();
         var slower = new List<RunChange>();
         var matched = new List<(ScenarioEntry Then, ScenarioEntry Now)>();
+        // Each scenario's own time where both runs carry first-call warm-up marks (plans/WARM_UP_PLAN.md Q7): the scenario
+        // that went first pays the app's warm-up, and which one that is can change between runs. A run written before the
+        // marks, or that paid none, is read by wall time on both sides, as it was.
+        var leftOut = left.Scenarios.Any(s => s.WarmUpSeconds is not null) && right.Scenarios.Any(s => s.WarmUpSeconds is not null);
+        double Seconds(ScenarioEntry scenario) => leftOut ? scenario.TimeLeftSeconds : scenario.DurationSeconds;
         var freshScenarios = new List<ScenarioEntry>();
 
         foreach (var (id, nowGroup) in after)
@@ -757,10 +762,10 @@ public static partial class QueryCommand
                         $"  BROKE {now.Address} {QueryWriter.OneLine(now.Name, 70)}"
                         + (now.ErrorMessage is { } e ? $"\n          {QueryWriter.OneLine(e, 100)}" : "")));
 
-                if (then.DurationSeconds > 0.1 && now.DurationSeconds > then.DurationSeconds * 1.5)
+                if (Seconds(then) > 0.1 && Seconds(now) > Seconds(then) * 1.5)
                     slower.Add(new RunChange("slower", now.Address, now.StableId, now.Name, now.Result, null,
-                        then.DurationSeconds, now.DurationSeconds,
-                        $"  {now.Address} {then.DurationSeconds:0.##}s → {now.DurationSeconds:0.##}s  {QueryWriter.OneLine(now.Name, 60)}"));
+                        Seconds(then), Seconds(now),
+                        $"  {now.Address} {Seconds(then):0.##}s → {Seconds(now):0.##}s  {QueryWriter.OneLine(now.Name, 60)}"));
             }
         }
 

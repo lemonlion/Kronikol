@@ -1,0 +1,35 @@
+# S7 (plans/WARM_UP_PLAN.md 6.6), 2026-10-07: BreakfastProvider 106702b in a scratch clone, its 27 Kronikol pins on local 4.8.0
+# packages; runlanes.sh xUnit:2 ReqNRoll:3, then compare_marks.py over the five reports.
+
+## Round 1 (4.8.0 before the fix): two parallel ReqNRoll reports disagreed with the spec on the run's first call
+ReqNRoll-1: script 42 marks in 36 scenarios, report 42 in 36: equal
+ReqNRoll-2: script 38 marks in 31 scenarios, report 40 in 33: 21 differences
+ReqNRoll-3: script 44 marks in 33 scenarios, report 44 in 33: 11 differences
+xUnit-1: script 7 marks in 6 scenarios, report 7 in 6: equal
+xUnit-2: script 7 marks in 6 scenarios, report 7 in 6: equal
+
+## Round 3 (4.8.0 with starts taken as the file writes them; round 2 ran the old library from the NuGet cache)
+ReqNRoll-1: script 33 marks in 26 scenarios, report 33 in 26: equal
+ReqNRoll-2: script 38 marks in 33 scenarios, report 38 in 33: equal
+ReqNRoll-3: script 51 marks in 38 scenarios, report 51 in 38: equal
+xUnit-1: script 8 marks in 7 scenarios, report 8 in 7: equal
+xUnit-2: script 9 marks in 8 scenarios, report 9 in 8: equal
+
+## Control: one xUnit run on 4.7.3 (no marks). The comparison must fail and list every mark the spec finds.
+xUnit-1: script 9 marks in 7 scenarios, report 0 in 0: 16 differences
+  missing  0c0b9537-2cb2-4008-9016-f0ba69272f21  first POST /recipe-reviews  69 ms
+  missing  4613377a-5936-423c-8e93-ac8549609271  first PUT /customer-preferences/{id}  2042 ms
+  missing  4cb02b88-1dfe-4682-bd87-883ddefc102b  first POST /feedback  58 ms
+  missing  5d618069-8082-4b7f-a7f4-b95cc014806f  first POST /order-timings  90 ms
+  missing  9badee14-b549-402e-a6e3-fa82760cf5b2  first POST /orders  324 ms
+  missing  ce811bca-c453-407f-8c36-28592fe81c04  first POST /pancakes  152 ms
+  missing  dab2630f-87b3-4a4f-a369-227306b05ff2  first GET /feedback/{id}  2397 ms
+  missing  e6f6caf6-0aea-4e07-81de-d9e4303d3f77  first POST /graphql  783 ms
+  missing  fd0d720d-f0dd-449f-99f5-cbe5c9f56b3b  first GET /recipe-reviews/{id}  68 ms
+  scenario 0411cac5ad6d5ef3ca4d54641e76846f12a4e9bc601b469afe6fd23357ed6b1c  script 783.061 ms, report None ms
+  scenario 04d2e19b72d8f237743b0f13864adb4f24f7d091648e45afd7bd7adede1392a1  script 57.88 ms, report None ms
+  scenario 2c94dc6df41f0ecd242f31e9574f88327ef052c0cd8f36ab9d0b105f25383235  script 137.046 ms, report None ms
+  scenario 557b11c055c9af27312d37b78dd2ff6c0205c47763206d51561b575039121ec0  script 90.487 ms, report None ms
+  scenario 8d44ddc6586ea35dfd364d7b057fad7bf625c9d774d436c6fb879c5f6f45059d  script 2041.7420000000002 ms, report None ms
+  scenario e5f8b2f1ba024f260d9cf5b7596ebf5ea61d7588b6d10ef2f9ce732a84507f02  script 475.85699999999997 ms, report None ms
+  scenario fcd4212c05515f8a46a7a3dcd46335c7e4b775350d8639bb945eccabaa95b8d9  script 2397.305 ms, report None ms

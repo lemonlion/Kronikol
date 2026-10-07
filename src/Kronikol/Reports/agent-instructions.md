@@ -109,7 +109,7 @@ person, hand them the `#sid-` link: it opens that scenario with its diagram, not
 | which assertions failed? | `kronikol query assertions . --failed` |
 | what changed since the last run? | `kronikol query diff old.json new.json` — matched on `stableId` |
 | has this failed before? is it flaky? is this new? | `kronikol query history . s3` — the ledger's verdict with the evidence: a regression, flaky, or failing since which run; `failures` prints the same line under each failure |
-| why is it slow? | `kronikol query services . --sort duration` then `kronikol query flow . s3` |
+| why is it slow? | `kronikol query summary .` (Slowest leaves out the app's first-call warm-up and says where it went), then `kronikol query services . --sort duration` and `kronikol query flow . s3` |
 
 Full list: `kronikol query --help`; as one JSON document for tooling, `kronikol query --describe` (no report needed).
 

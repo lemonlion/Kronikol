@@ -124,12 +124,15 @@ public class QueryScriptEndToEndTests : IClassFixture<QueryScriptEndToEndTests.R
             var passing = "e2e-" + Guid.NewGuid().ToString("N");
             var browsing = "e2e-" + Guid.NewGuid().ToString("N");
 
+            // Timed, so the run's first POST /charge (600 ms against a later 5 ms) is a first-call warm-up and the answers
+            // below include the lines that say so (plans/WARM_UP_PLAN.md T34).
+            var at = DateTimeOffset.UtcNow.AddMinutes(-1);
             RequestResponseLogger.LogPair("Pay with an expired card", failing, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test",
-                requestContent: """{"card":"4000 0000 0000 0069","amount":1200}""",
-                responseContent: """{"status":"declined","reason":"expired_card"}""", statusCode: HttpStatusCode.PaymentRequired);
+                """{"card":"4000 0000 0000 0069","amount":1200}""", """{"status":"declined","reason":"expired_card"}""", HttpStatusCode.PaymentRequired,
+                TestPhase.Unknown, null, null, requestAt: at, responseAt: at.AddMilliseconds(600));
             RequestResponseLogger.LogPair("Pay with a valid card", passing, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test",
-                requestContent: """{"card":"4242 4242 4242 4242","amount":1200}""",
-                responseContent: """{"status":"captured","id":"ch_1"}""", statusCode: HttpStatusCode.Created);
+                """{"card":"4242 4242 4242 4242","amount":1200}""", """{"status":"captured","id":"ch_1"}""", HttpStatusCode.Created,
+                TestPhase.Unknown, null, null, requestAt: at.AddSeconds(1), responseAt: at.AddSeconds(1).AddMilliseconds(5));
             RequestResponseLogger.LogPair("Browse the catalogue", browsing, HttpMethod.Get, new Uri("http://catalogue/items?page=1"), "catalogue", "Test",
                 responseContent: """{"items":[{"sku":"A1","price":1200}]}""", statusCode: HttpStatusCode.OK);
 
@@ -142,7 +145,7 @@ public class QueryScriptEndToEndTests : IClassFixture<QueryScriptEndToEndTests.R
                     [
                         new Scenario
                         {
-                            Id = failing, DisplayName = "Pay with an expired card", Result = ExecutionResult.Failed,
+                            Id = failing, DisplayName = "Pay with an expired card", Result = ExecutionResult.Failed, Duration = TimeSpan.FromSeconds(0.9),
                             ErrorMessage = "Assert.Equal() Failure: Values differ\nExpected: captured\nActual:   declined",
                             Steps =
                             [
@@ -153,7 +156,7 @@ public class QueryScriptEndToEndTests : IClassFixture<QueryScriptEndToEndTests.R
                         },
                         new Scenario
                         {
-                            Id = passing, DisplayName = "Pay with a valid card", Result = ExecutionResult.Passed,
+                            Id = passing, DisplayName = "Pay with a valid card", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(0.4),
                             Steps = [new ScenarioStep { Keyword = "Then", Text = "the charge is captured", Status = ExecutionResult.Passed }]
                         }
                     ]
@@ -327,6 +330,18 @@ public class QueryScriptEndToEndTests : IClassFixture<QueryScriptEndToEndTests.R
         var args = invocation.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         AssertSame(Tool(_reports.Run, args), Script(_reports.Run, args), $"query {invocation}");
+    }
+
+    [Fact]
+    public void The_report_answers_with_the_first_call_warm_up()
+    {
+        // Guards the theory above: it holds the script to the tool over the lines the warm-up adds (summary, flow,
+        // interactions) only while the report carries one.
+        RequireSdk10();
+        var summary = System.Text.Encoding.UTF8.GetString(Tool(_reports.Run, ["summary", "."]).Stdout);
+
+        Assert.Contains("First-call warm-up:", summary);
+        Assert.Contains("warm-up", System.Text.Encoding.UTF8.GetString(Tool(_reports.Run, ["interactions", "."]).Stdout));
     }
 
     /// <summary>

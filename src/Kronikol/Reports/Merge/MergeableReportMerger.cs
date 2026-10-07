@@ -59,9 +59,38 @@ public static class MergeableReportMerger
             Interactions = reports.SelectMany(r => r.Interactions).ToArray(),
             PayloadsCompressed = reports.Any(r => r.PayloadsCompressed),
             StepPaths = MergeByScenario(reports.Select(r => r.StepPaths)),
+            // Each shard's own marks, carried: never recomputed over the merged calls (plans/WARM_UP_PLAN.md 4.3).
+            WarmUp = MergeWarmUp(reports.Select(r => r.WarmUp)),
             Annotations = MergeByScenario(reports.Select(r => r.Annotations)),
             Diagnostics = [.. reports.SelectMany(r => r.Diagnostics), .. duplicateDiagnostics, .. DisagreementDiagnostics(reports)]
         };
+    }
+
+    /// <summary>The shards' warm-up marks, unioned: a call's id is a Guid and a scenario's is unique once
+    /// <see cref="DisambiguateRuntimeIds"/> has run, so the first entry wins as it does for every side table.</summary>
+    private static WarmUpResult MergeWarmUp(IEnumerable<WarmUpResult> sources)
+    {
+        var calls = new Dictionary<Guid, WarmUpMark>();
+        var scenarios = new Dictionary<string, double>(StringComparer.Ordinal);
+        foreach (var source in sources)
+        {
+            foreach (var (id, mark) in source.Calls)
+                calls.TryAdd(id, mark);
+            foreach (var (id, ms) in source.ScenarioMs)
+                scenarios.TryAdd(id, ms);
+        }
+        return calls.Count == 0 && scenarios.Count == 0 ? WarmUpResult.None : new WarmUpResult(calls, scenarios);
+    }
+
+    /// <summary>A shard's marks without the scenarios the merge dropped, and without those scenarios' calls.</summary>
+    private static WarmUpResult WithoutScenarios(WarmUpResult warmUp, Tracking.RequestResponseLog[] interactions, HashSet<string> dropped)
+    {
+        if (warmUp.Calls.Count == 0 && warmUp.ScenarioMs.Count == 0)
+            return warmUp;
+        var droppedCalls = interactions.Where(i => dropped.Contains(i.TestId)).Select(i => i.RequestResponseId).ToHashSet();
+        return new WarmUpResult(
+            warmUp.Calls.Where(e => !droppedCalls.Contains(e.Key)).ToDictionary(e => e.Key, e => e.Value),
+            warmUp.ScenarioMs.Where(e => !dropped.Contains(e.Key)).ToDictionary(e => e.Key, e => e.Value, StringComparer.Ordinal));
     }
 
     /// <summary>
@@ -204,6 +233,7 @@ public static class MergeableReportMerger
                 Interactions = report.Interactions.Where(i => !duplicateIds.Contains(i.TestId)).ToArray(),
                 Diagrams = report.Diagrams.Where(d => !duplicateIds.Contains(d.TestRuntimeId)).ToArray(),
                 StepPaths = report.StepPaths.Where(e => !duplicateIds.Contains(e.Key)).ToDictionary(e => e.Key, e => e.Value, StringComparer.Ordinal),
+                WarmUp = WithoutScenarios(report.WarmUp, report.Interactions, duplicateIds),
                 Annotations = report.Annotations.Where(e => !duplicateIds.Contains(e.Key)).ToDictionary(e => e.Key, e => e.Value, StringComparer.Ordinal),
                 WholeTestFlow = report.WholeTestFlow.Where(e => !duplicateIds.Contains(e.Key)).ToDictionary(e => e.Key, e => e.Value, StringComparer.Ordinal)
             });
@@ -301,6 +331,9 @@ public static class MergeableReportMerger
                 .ToArray(),
             Diagrams = report.Diagrams.Select(d => d with { TestRuntimeId = Id(d.TestRuntimeId) }).ToArray(),
             StepPaths = report.StepPaths.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal),
+            WarmUp = report.WarmUp.ScenarioMs.Count == 0
+                ? report.WarmUp
+                : report.WarmUp with { ScenarioMs = report.WarmUp.ScenarioMs.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal) },
             Annotations = report.Annotations.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal),
             InternalFlowSegments = report.InternalFlowSegments.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal),
             WholeTestFlow = report.WholeTestFlow.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal)

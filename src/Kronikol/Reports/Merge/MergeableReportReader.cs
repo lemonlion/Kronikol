@@ -70,6 +70,8 @@ public static class MergeableReportReader
         var diagrams = new List<DiagramAsCode>();
         var interactions = new List<RequestResponseLog>();
         var stepPaths = new Dictionary<string, List<string?>>(StringComparer.Ordinal);
+        var warmUpCalls = new Dictionary<Guid, WarmUpMark>();
+        var warmUpScenarios = new Dictionary<string, double>(StringComparer.Ordinal);
         var annotations = new Dictionary<string, List<ReportGenerator.ScenarioAnnotation>>(StringComparer.Ordinal);
         var defaultedResults = new List<string>();
         var notes = new ParseNotes();
@@ -81,6 +83,8 @@ public static class MergeableReportReader
             {
                 var scenario = ReadScenario(se, notes);
                 scenarios.Add(scenario);
+                if (ReadDouble(se, "warmUpSeconds") is double warmUpSeconds and > 0)
+                    warmUpScenarios[scenario.Id] = warmUpSeconds * 1000;
 
                 if (!DeclaresAResult(se))
                     defaultedResults.Add(scenario.DisplayName ?? scenario.Id);
@@ -89,7 +93,7 @@ public static class MergeableReportReader
                     foreach (var d in diags.EnumerateArray())
                         diagrams.Add(new DiagramAsCode(scenario.Id, "", Payload(d, notes) ?? ""));
 
-                ReadInteractions(se, scenario.DisplayName, scenario.Id, interactions, stepPaths, notes);
+                ReadInteractions(se, scenario.DisplayName, scenario.Id, interactions, stepPaths, notes, warmUpCalls);
                 ReadAnnotations(se, scenario.Id, annotations, notes);
             }
 
@@ -126,6 +130,7 @@ public static class MergeableReportReader
             Environment = ReadEnvironment(root),
             Interactions = interactions.ToArray(),
             StepPaths = stepPaths,
+            WarmUp = warmUpCalls.Count == 0 && warmUpScenarios.Count == 0 ? WarmUpResult.None : new WarmUpResult(warmUpCalls, warmUpScenarios),
             Annotations = annotations,
             PayloadsCompressed = notes.CompressedPayloads,
             Diagnostics = [.. ReadDiagnostics(root), .. DefaultedResultDiagnostics(defaultedResults), .. notes.Diagnostics()]
@@ -479,7 +484,7 @@ public static class MergeableReportReader
     /// re-derived: the derivation walks the markers, which are gone.
     /// </summary>
     private static void ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into,
-        Dictionary<string, List<string?>>? stepPaths, ParseNotes notes)
+        Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)
     {
         // A scenario holds its calls as httpInteractions, with their step paths; the background block as interactions.
         var member = stepPaths is null ? "interactions" : "httpInteractions";
@@ -542,10 +547,26 @@ public static class MergeableReportReader
 
             into.Add(log);
             paths.Add(GetString(element, "stepPath"));
+            if (warmUpCalls is not null && log.Type == RequestResponseType.Request && ReadWarmUp(element) is { } mark)
+                warmUpCalls[log.RequestResponseId] = mark;
         }
 
         if (paths.Count > 0 && stepPaths is not null)
             stepPaths[testId] = paths;
+    }
+
+    /// <summary>A call's <c>warmUp</c> object (4.4), or null when it has none or it is not one this build reads.</summary>
+    private static WarmUpMark? ReadWarmUp(JsonElement element)
+    {
+        if (!element.TryGetProperty("warmUp", out var mark) || mark.ValueKind != JsonValueKind.Object)
+            return null;
+        if (GetString(mark, "kind") is not ({ } kind and (WarmUpMark.FirstKind or WarmUpMark.WaitedKind))
+            || GetString(mark, "shape") is not { } shape
+            || ReadDouble(mark, "baselineMs") is not { } baselineMs
+            || !mark.TryGetProperty("baselineCalls", out var calls) || !calls.TryGetInt32(out var baselineCalls))
+            return null;
+        return new WarmUpMark(kind, shape, baselineMs, baselineCalls,
+            Guid.TryParse(GetString(mark, "first"), out var first) ? first : null);
     }
 
     private static RequestResponseType ReadInteractionType(JsonElement element, ParseNotes notes)

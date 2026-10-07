@@ -1,0 +1,17 @@
+# R1 mutations (mutate.py, the library built alone and copied into the test bin). Control: the warm-up facts pass 54 of 54 on the unmutated build. The last one was added after S7 (starts as the data file writes them).
+CAUGHT  Two baseline calls instead of one (T3)  [FullyQualifiedName~One_later_call_is_enough_to_compare_with]  failed 1, passed 0
+CAUGHT  The baseline taken from all later calls, overlapping ones included (T8)  [FullyQualifiedName~The_baseline_is_the_calls_that_started_after_the_first_ended]  failed 1, passed 0
+CAUGHT  No released-together test (T8)  [FullyQualifiedName~A_call_that_overlapped_the_first_and_was_released_with_it_waited_for_it]  failed 1, passed 0
+CAUGHT  The 5xx guard removed (T18)  [FullyQualifiedName~A_failing_first_call_is_not_compared_with_calls_that_succeeded]  failed 1, passed 0
+CAUGHT  Ratio 5 (T13)  [FullyQualifiedName~The_ratio_and_the_floor_are_both_inclusive]  failed 1, passed 3
+CAUGHT  Floor 25 ms (T13)  [FullyQualifiedName~The_ratio_and_the_floor_are_both_inclusive]  failed 1, passed 3
+CAUGHT  File order instead of timestamps (T17)  [FullyQualifiedName~The_order_is_the_runs_not_the_data_files]  failed 1, passed 0
+CAUGHT  The app's calls judged too (T4, T14)  [FullyQualifiedName~The_apps_own_calls_are_not_judged_and_the_warm_up_is_the_test_calls_time|FullyQualifiedName~A_caller_that_is_also_called_in_its_scenario_is_the_app_and_is_not_judged]  failed 2, passed 0
+CAUGHT  A merge recomputes the marks (T22)  [FullyQualifiedName~Shards_that_carry_no_marks_get_none_though_their_merged_calls_would]  failed 1, passed 0
+CAUGHT  warmUp: null written on every record (T20)  [FullyQualifiedName~A_marked_call_carries_its_mark_on_its_request_record_and_nowhere_else|FullyQualifiedName~A_run_with_no_warm_up_writes_no_warm_up_keys]  failed 2, passed 0
+CAUGHT  The cap at the scenario duration removed (T12)  [FullyQualifiedName~A_warm_up_longer_than_its_scenario_is_capped_at_the_scenarios_duration]  failed 1, passed 0
+CAUGHT  Overlapping warm-up counted twice (T12)  [FullyQualifiedName~Overlapping_warm_up_calls_in_one_scenario_are_counted_once]  failed 1, passed 0
+CAUGHT  Slowest by wall time again (T30)  [FullyQualifiedName~Summary_ranks_slowest_by_the_time_left_and_says_where_the_warm_up_went]  failed 1, passed 0
+CAUGHT  --slower-than by wall time again  [FullyQualifiedName~Slower_than_reads_the_time_left]  failed 1, passed 0
+CAUGHT  diff's Slower by wall time again  [FullyQualifiedName~Diff_reads_the_time_left_when_both_runs_carry_marks]  failed 1, passed 0
+CAUGHT  Starts read to the tick, not as the data file writes them (S7)  [FullyQualifiedName~Calls_that_start_in_one_millisecond_are_ordered_as_the_data_file_records_them]  failed 1, passed 0

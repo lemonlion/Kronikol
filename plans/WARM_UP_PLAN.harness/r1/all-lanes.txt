@@ -1,0 +1,42 @@
+# R1 on every corpus lane (S7): WarmUpCalls.Find against `warmup.py marks corpus --json`, call for call
+# (kind, shape, baselineMs to 6 places, baselineCalls, first) and each scenario's warm-up within 1 ms.
+# A temporary theory over these lanes (WarmUpCorpusTests, not committed) passed 36 of 36 on 2026-10-07.
+
+ci-2026-10-05/bddfy: 16 marks in 14 scenarios  passed
+ci-2026-10-05/docker-sut_bddfy: 9 marks in 6 scenarios  passed
+ci-2026-10-05/docker-sut_lightbdd: 7 marks in 7 scenarios  passed
+ci-2026-10-05/docker-sut_nunit: 10 marks in 8 scenarios  passed
+ci-2026-10-05/docker-sut_reqnroll: 13 marks in 10 scenarios  passed
+ci-2026-10-05/docker-sut_tunit: 9 marks in 8 scenarios  passed
+ci-2026-10-05/docker-sut_xunit: 9 marks in 6 scenarios  passed
+ci-2026-10-05/docker_bddfy: 13 marks in 12 scenarios  passed
+ci-2026-10-05/docker_lightbdd: 14 marks in 12 scenarios  passed
+ci-2026-10-05/docker_nunit: 9 marks in 8 scenarios  passed
+ci-2026-10-05/docker_reqnroll: 18 marks in 15 scenarios  passed
+ci-2026-10-05/docker_tunit: 10 marks in 8 scenarios  passed
+ci-2026-10-05/docker_xunit: 9 marks in 6 scenarios  passed
+ci-2026-10-05/lightbdd: 17 marks in 13 scenarios  passed
+ci-2026-10-05/nunit: 13 marks in 10 scenarios  passed
+ci-2026-10-05/reqnroll: 18 marks in 17 scenarios  passed
+ci-2026-10-05/tunit: 7 marks in 6 scenarios  passed
+ci-2026-10-05/xunit: 10 marks in 7 scenarios  passed
+example-api/BDDfy.xUnit3: 1 marks in 1 scenarios  passed
+example-api/LightBDD.TUnit: 0 marks in 0 scenarios  passed
+example-api/LightBDD.xUnit2: 1 marks in 1 scenarios  passed
+example-api/LightBDD.xUnit3: 0 marks in 0 scenarios  passed
+example-api/NUnit4: 1 marks in 1 scenarios  passed
+example-api/ReqNRoll.TUnit: 0 marks in 0 scenarios  passed
+example-api/ReqNRoll.xUnit2: 1 marks in 1 scenarios  passed
+example-api/ReqNRoll.xUnit3: 2 marks in 2 scenarios  passed
+example-api/TUnit: 0 marks in 0 scenarios  passed
+example-api/xUnit2: 1 marks in 1 scenarios  passed
+example-api/xUnit3: 0 marks in 0 scenarios  passed
+local-windows/ReqNRoll-1: 40 marks in 30 scenarios  passed
+local-windows/ReqNRoll-2: 38 marks in 35 scenarios  passed
+local-windows/ReqNRoll-3: 42 marks in 33 scenarios  passed
+local-windows/xUnit-1: 9 marks in 7 scenarios  passed
+local-windows/xUnit-2: 9 marks in 7 scenarios  passed
+local-windows/xUnit-initialize-on-startup: 9 marks in 7 scenarios  passed
+local-windows/xUnit-initialize-with-warmup-query: 7 marks in 6 scenarios  passed
+
+total: 372 marks over 36 lanes

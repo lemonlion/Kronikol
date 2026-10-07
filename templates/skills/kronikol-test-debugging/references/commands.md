@@ -104,6 +104,13 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 Run header, per-feature counts (passed, then skipped, bypassed and FAILED where a feature has any), the
 failures, the slowest scenarios, diagnostics. ~1–2 KB. Always the first command.
 
+When the run paid a first-call warm-up (the first request down a path costing ten times and more what later
+ones do: JIT, a schema build, a first connection), Slowest ranks each scenario by its own time, the warm-up
+left out, under the heading `Slowest, first-call warm-up left out:`, and a line under it says where the
+warm-up went: `First-call warm-up: 2.65s in 7 scenarios; the most in s49, 1.19s of its 1.27s (flow s49)`.
+`--json`: a `slowest[]` item gains `warmUpSeconds` when it has one, and a `warmUp` member (`seconds`,
+`scenarios`, `calls`, `largest`) appears when the run has any. A report with no warm-up reads as before.
+
 ### `scenarios <report> [flags]`
 | Flag | Effect |
 |---|---|
@@ -111,7 +118,7 @@ failures, the slowest scenarios, diagnostics. ~1–2 KB. Always the first comman
 | `--feature X` | substring match on feature name |
 | `--label L` | matches scenario labels, categories and feature labels |
 | `--grep T` | substring match on scenario name |
-| `--slower-than 5` | seconds |
+| `--slower-than 5` | seconds of the scenario's own time: a first-call warm-up it paid is left out |
 
 ### `services <report> [s3] [--sort duration\|bytes\|errors]`
 Per service: call count, errors, bytes, median and max duration, status mix. Scoped to one scenario when
@@ -167,6 +174,10 @@ ends `inside s3/i8`, an address `http` takes, so `flow s3 --service orders-db` s
 belonged to and `--errors-only` shows a failing call with the failure inside it. A request that never got an
 answer says `no response` where the status goes.
 
+A call the run's first-call warm-up slowed down gains one field after its duration:
+`first POST /orders of the run: later calls 7.6 ms median (39)`, or, for a call that started while that one
+ran and waited for it, `waited for s88/i1, the run's first POST /graphql: later calls 43 ms median (5)`.
+
 ### `annotations <report> s3`
 The example-row markers (`Row 3`) and any fragment the test author injected with
 `DefaultTrackingDiagramOverride.InsertPlantUml`, each with the interaction index it sat before. Step and
@@ -210,7 +221,9 @@ Nothing here prints a payload that was not named.
 ### `interactions <report> [s3] [flags]`
 One row per request: address, service, method and path, status, duration, and body pointers
 (`b:hash` + size) for the request and the response. Without an address it covers the whole run — rows
-print full `s3/i47` addresses either way.
+print full `s3/i47` addresses either way. A call the run's first-call warm-up slowed down reads ` warm-up`
+after its duration, and its `--json` item gains `warmUp` (`kind` `first` or `waited`, `shape`, `baselineMs`,
+`baselineCalls`, and `first`, the requestResponseId of the call a waiter waited for).
 
 | Flag | Effect |
 |---|---|
@@ -420,9 +433,10 @@ $.total: 4173 → 3902
 - Two scenario addresses are refused with a pointer at `compare`.
 
 **Run diff** (two files) reports what broke, was fixed, is new, got slower, disappeared — matched on
-`stableId`, so one row of a scenario outline is distinguished from another. A pair that cannot be
-matched — only one side has `stableId`s, or none agree while the scenario names do — is refused with exit
-2 naming the side or the two suites, never "matched by position" into a page of new-and-gone. Sections
+`stableId`, so one row of a scenario outline is distinguished from another. Slower compares each scenario's
+own time, the first-call warm-up left out, when both runs carry warm-up marks, and wall time otherwise. A pair
+that cannot be matched — only one side has `stableId`s, or none agree while the scenario names do — is refused
+with exit 2 naming the side or the two suites, never "matched by position" into a page of new-and-gone. Sections
 are cut for the terminal (15 rows, `Gone` 10) with `… N more (--json lists every row)`; `--json` is the
 uncut list, `--count` the number of rows it holds, and `--offset`/`--limit` are refused here.
 

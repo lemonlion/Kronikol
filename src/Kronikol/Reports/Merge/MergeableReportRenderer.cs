@@ -197,7 +197,9 @@ public static class MergeableReportRenderer
             // environment of whatever machine happens to be collecting the artifacts.
             environment: report.Environment ?? RunEnvironment.Unrecorded,
             // Compressed when any shard was (MergeableReport.PayloadsCompressed).
-            compressPayloads: report.PayloadsCompressed);
+            compressPayloads: report.PayloadsCompressed,
+            // The shards' own marks, never recomputed over the merged calls.
+            warmUp: report.WarmUp);
     }
 
     /// <summary>

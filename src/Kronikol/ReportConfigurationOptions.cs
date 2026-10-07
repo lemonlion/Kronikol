@@ -709,7 +709,10 @@ public record ReportConfigurationOptions
     /// <c>shapeRules</c>, and fingerprints made under different rules are never compared: editing a rule
     /// costs one quiet run. A pattern that does not compile, or that runs past 250 ms on some text, is
     /// skipped and reported as a <see cref="Reports.DiagnosticKind.HistoryShapeTemplate"/> diagnostic; it
-    /// never fails the run. Every shard of a sharded run must be given the same rules. Default: none.
+    /// never fails the run. Every shard of a sharded run must be given the same rules. The same rules fold the
+    /// ids in the shapes the first-call warm-up is judged by (<c>warmUp</c> in the data files): without one, a
+    /// path whose ids no built-in rule knows is a new shape on every call, and its first call is never marked.
+    /// Default: none.
     /// </summary>
     public IList<History.HistoryShapeTemplate> HistoryShapeTemplates { get; set; } = [];
 

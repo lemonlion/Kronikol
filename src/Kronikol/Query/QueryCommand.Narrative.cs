@@ -568,6 +568,7 @@ public static partial class QueryCommand
                 QueryWriter.OneLine(interaction.Summary(), 60),
                 status,
                 QueryWriter.Duration(timing),
+                WarmUpField(index, interaction.WarmUp),
                 interaction.BodyHash is { } hash ? $"{hash} {QueryWriter.Size(interaction.BodyLength)}" : null,
                 parent is { } named && named != implied ? $"inside {scenario.Address}/i{named}" : null
             ];
@@ -598,6 +599,29 @@ public static partial class QueryCommand
         writer.Footer($"{shown.Count} calls shown · http {scenario.Address}/iN --keys for a payload"
                       + (indented ? " · indented calls ran inside the call above them" : ""));
         return 0;
+    }
+
+    /// <summary>
+    /// flow's field for a call the run's first-call warm-up slowed down, after its duration and before its body hash
+    /// (plans/WARM_UP_PLAN.md 4.5), so neither the line's start nor its "inside" ending moves.
+    /// </summary>
+    private static string? WarmUpField(ReportIndex index, WarmUpEntry? warmUp)
+    {
+        if (warmUp is null)
+            return null;
+        var baseline = warmUp.BaselineMs < 1000 ? $"{warmUp.BaselineMs:0.#} ms" : $"{warmUp.BaselineMs / 1000:0.##} s";
+        var later = $"later calls {baseline} median ({warmUp.BaselineCalls})";
+        if (!warmUp.Waited)
+            return $"first {warmUp.Shape} of the run: {later}";
+        var first = warmUp.First is { } id
+            ? index.Scenarios.SelectMany(s => s.Interactions
+                    .Where(i => i.RequestResponseId == id && i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase))
+                    .Select(i => i.Address(s)))
+                .FirstOrDefault()
+            : null;
+        return first is null
+            ? $"waited for the run's first {warmUp.Shape}: {later}"
+            : $"waited for {first}, the run's first {warmUp.Shape}: {later}";
     }
 
     private static bool TryScenario(ReportIndex index, QueryOptions options, TextWriter error, out ScenarioEntry scenario) =>

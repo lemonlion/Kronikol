@@ -118,7 +118,7 @@ def load(loader):
     data = loader()
     scenarios, calls = [], []
     for s in data['scenarios']:
-        sc = {'feature': s['feature'], 'name': s['name'], 'result': s.get('result'),
+        sc = {'feature': s['feature'], 'name': s['name'], 'id': s.get('id'), 'result': s.get('result'),
               'wall': (s.get('durationSeconds') or 0.0) * 1000.0, 'calls': []}
         services = {c['service'] for c in s['calls']}
         for c in s['calls']:
@@ -184,7 +184,7 @@ def detect(calls, variant='P'):
         med = statistics.median(c['dur'] for c in later)
         if not (first['dur'] >= ratio * med and first['dur'] - med >= floor):
             continue
-        first['warm'] = ('first', med, len(later))
+        first['warm'] = ('first', med, len(later), None)
         marked.append(first)
         for c in cs[1:]:
             if not (first['start'] <= c['start'] < first['end']):
@@ -193,7 +193,7 @@ def detect(calls, variant='P'):
             released = ('release' in waiters and abs((c['end'] - first['end']).total_seconds() * 1000.0) <= RELEASE_MS
                         and c['dur'] - med >= floor)
             if by_ratio or released:
-                c['warm'] = ('waited', med, len(later))
+                c['warm'] = ('waited', med, len(later), first['rid'])
                 marked.append(c)
     return marked
 
@@ -268,6 +268,20 @@ def cmd_extract(a):
 
 
 def cmd_marks(a):
+    if a.json:
+        out = {}
+        for lane, loader in lanes_under(a.root):
+            scenarios, calls = load(loader)
+            marked = detect(calls, a.variant)
+            out[lane] = {
+                'calls': {c['rid']: {'kind': c['warm'][0], 'shape': f"{c['shape'][1]} {c['shape'][2]}", 'baselineMs': c['warm'][1],
+                                     'baselineCalls': c['warm'][2], 'first': c['warm'][3] if len(c['warm']) > 3 else None}
+                          for c in marked},
+                'scenarios': {sc['id']: warm_up_ms(sc) for sc in scenarios if warm_up_ms(sc) > 0},
+            }
+        json.dump(out, sys.stdout, indent=1, sort_keys=True)
+        print()
+        return
     for lane, loader in lanes_under(a.root):
         scenarios, calls = load(loader)
         marked = detect(calls, a.variant)
@@ -483,7 +497,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
     p = sub.add_parser('extract'); p.add_argument('src'); p.add_argument('out'); p.set_defaults(f=cmd_extract)
-    p = sub.add_parser('marks'); p.add_argument('root'); p.add_argument('--variant', default='P', choices=list(VARIANTS)); p.set_defaults(f=cmd_marks)
+    p = sub.add_parser('marks'); p.add_argument('root'); p.add_argument('--variant', default='P', choices=list(VARIANTS)); p.add_argument('--json', action='store_true'); p.set_defaults(f=cmd_marks)
     p = sub.add_parser('variants'); p.add_argument('root'); p.set_defaults(f=cmd_variants)
     p = sub.add_parser('truth'); p.add_argument('root'); p.add_argument('--lanes', default='xunit,nunit,tunit,reqnroll,lightbdd')
     p.add_argument('--list', choices=list(VARIANTS)); p.set_defaults(f=cmd_truth)

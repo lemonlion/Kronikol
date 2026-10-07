@@ -123,20 +123,46 @@ public static partial class QueryCommand
             writer.Data("failedTotal", failed);
         }
 
-        var slowest = scenarios.OrderByDescending(s => s.DurationSeconds).Take(3).ToArray();
+        // Ranked by each scenario's own time when the run paid a first-call warm-up (plans/WARM_UP_PLAN.md): whichever
+        // scenario went first carries the app's one-time cost, and ranking it first sends a reader to the wrong test.
+        var warmed = scenarios.Where(s => s.WarmUpSeconds is > 0).ToArray();
+        var slowest = scenarios.OrderByDescending(s => s.TimeLeftSeconds).Take(3).ToArray();
         if (slowest.Length > 0 && slowest[0].DurationSeconds > 0)
         {
             writer.Line();
-            writer.Line("Slowest:");
+            writer.Line(warmed.Length > 0 ? "Slowest, first-call warm-up left out:" : "Slowest:");
             foreach (var scenario in slowest)
-                writer.Line($"  {scenario.Address}  {scenario.DurationSeconds:0.##}s  {QueryWriter.OneLine(scenario.Name, 70)}");
+                writer.Line($"  {scenario.Address}  {scenario.TimeLeftSeconds:0.##}s  {QueryWriter.OneLine(scenario.Name, 70)}");
 
-            writer.Data("slowest", slowest.Select(s => new
+            writer.Data("slowest", slowest.Select(s => s.WarmUpSeconds is { } warmUp
+                ? (object)new
+                {
+                    address = s.Address,
+                    durationSeconds = s.DurationSeconds,
+                    warmUpSeconds = warmUp,
+                    scenario = s.Name
+                }
+                : new
+                {
+                    address = s.Address,
+                    durationSeconds = s.DurationSeconds,
+                    scenario = s.Name
+                }));
+        }
+
+        if (warmed.Length > 0)
+        {
+            var largest = warmed.OrderByDescending(s => s.WarmUpSeconds).First();
+            var total = warmed.Sum(s => s.WarmUpSeconds!.Value);
+            writer.Line($"First-call warm-up: {total:0.##}s in {warmed.Length} scenario{(warmed.Length == 1 ? "" : "s")}; the most in {largest.Address}, "
+                        + $"{largest.WarmUpSeconds:0.##}s of its {largest.DurationSeconds:0.##}s (flow {largest.Address})");
+            writer.Data("warmUp", new
             {
-                address = s.Address,
-                durationSeconds = s.DurationSeconds,
-                scenario = s.Name
-            }));
+                seconds = total,
+                scenarios = warmed.Length,
+                calls = scenarios.Sum(s => s.Interactions.Count(i => i.WarmUp is not null)),
+                largest = new { address = largest.Address, warmUpSeconds = largest.WarmUpSeconds, durationSeconds = largest.DurationSeconds }
+            });
         }
 
         if (index.Diagnostics.Count > 0)
@@ -244,7 +270,8 @@ public static partial class QueryCommand
             return false;
         if (options.Grep is { } grep && !scenario.Name.Contains(grep, StringComparison.OrdinalIgnoreCase))
             return false;
-        if (options.SlowerThan is { } slower && scenario.DurationSeconds < slower)
+        // The scenario's own time: a scenario slow only because it paid the run's first-call warm-up is not slow.
+        if (options.SlowerThan is { } slower && scenario.TimeLeftSeconds < slower)
             return false;
         return true;
     }

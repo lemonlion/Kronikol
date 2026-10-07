@@ -247,6 +247,9 @@ public static class ReportGenerator
         // so the diagrams, the data files, the history line and the digest all agree about whose it is.
         var runLogs = BackgroundAttribution.Expire(features, RequestResponseLogger.RequestAndResponseLogs);
         var background = BackgroundAttribution.Summarise(runLogs, features);
+        // The calls the run's first-call warm-up slowed down (plans/WARM_UP_PLAN.md), found once for every output, with the
+        // consumer's shape templates when set (Q12).
+        var warmUp = WarmUpCalls.Find(features, runLogs, HistoryShapeRules.Create(options.HistoryShapeTemplates));
         foreach (var group in background.AfterScenarioEnd)
             ReportDiagnosticsScope.Record(DiagnosticKind.BackgroundCalls,
                 $"{group.Calls} call{(group.Calls == 1 ? "" : "s")} arrived after '{group.ScenarioName}' ended and are listed as background calls",
@@ -506,12 +509,12 @@ public static class ReportGenerator
                 // shard written that way carried no interactions at all, the gap 3.8.0 closed for the
                 // standard file and this branch kept.
                 Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => WriteFile(
-                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, dataLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment, attribution.Value, suppliedSpans?.Count),
+                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, dataLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment, attribution.Value, suppliedSpans?.Count, warmUp),
                     $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"));
             }
             else
             {
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment, attribution.Value, options.CompressTestRunReportPayloads));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment, attribution.Value, options.CompressTestRunReportPayloads, warmUp));
             }
         }
 
@@ -4376,7 +4379,7 @@ public static class ReportGenerator
     /// </summary>
     internal static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams, RequestResponseLog[]? trackedLogs, IReadOnlyList<DiagnosticEntry>? diagnostics, bool fullStepDetail, CiMetadata? ciMetadata, string? suite, RunEnvironment? environment,
         (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution,
-        bool compressPayloads = false)
+        bool compressPayloads = false, WarmUpResult? warmUp = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         // Diagram markers belong to the diagram, not the interaction list: exported as-is they read as
@@ -4384,12 +4387,14 @@ public static class ReportGenerator
         var logLookup = trackedLogs?.Where(l => !l.IsDiagramMarker).ToLookup(l => l.TestId);
         var durations = ComputeInteractionDurations(trackedLogs);
         var (stepPaths, annotations) = attribution ?? AttributeInteractionsToSteps(trackedLogs, features);
+        // A run hands in what it found once for every output; a caller with the calls alone gets the same reading.
+        warmUp ??= WarmUpCalls.Find(features, trackedLogs);
 
         return format switch
         {
-            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads), fileName),
-            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment), fileName),
-            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment), fileName),
+            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads, warmUp), fileName),
+            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment, warmUp), fileName),
+            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment, warmUp), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
@@ -4531,7 +4536,7 @@ public static class ReportGenerator
     /// the two halves — so the data files derive it too rather than making every reader do the join.
     /// Both halves of a pair get the same value; an unanswered request gets none.
     /// </summary>
-    private static Dictionary<Guid, double> ComputeInteractionDurations(RequestResponseLog[]? trackedLogs)
+    internal static Dictionary<Guid, double> ComputeInteractionDurations(RequestResponseLog[]? trackedLogs)
     {
         var durations = new Dictionary<Guid, double>();
         if (trackedLogs is null)
@@ -4579,7 +4584,7 @@ public static class ReportGenerator
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false)
+    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false, WarmUpResult? warmUp = null)
     {
         var payloads = new ReportPayloads(compressPayloads);
         // Resolved ONCE and used for both the key and the ids under it. Writing `suite ?? RunSuite.Current`
@@ -4607,7 +4612,7 @@ public static class ReportGenerator
         if (MapEnvironmentJson(environment) is { } environmentJson)
             data["environment"] = environmentJson;
 
-        data["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, resolvedSuite, payloads);
+        data["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, resolvedSuite, payloads, warmUp);
         data["background"] = MapBackgroundJson(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations, payloads);
         data["diagnostics"] = MapDiagnosticsJson(diagnostics);
         // Known only once every payload is written; the key keeps its place at the top of the file.
@@ -4621,7 +4626,7 @@ public static class ReportGenerator
     /// and the enriched "mergeable" JSON. Keeping a single source of truth ensures the mergeable
     /// format remains a strict superset that the merge reader can parse.
     /// </summary>
-    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, string? suite = null, ReportPayloads? payloads = null)
+    private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, string? suite = null, ReportPayloads? payloads = null, WarmUpResult? warmUp = null)
     {
         Func<ScenarioStep, object> stepMapper = fullStepDetail ? MapStepJsonFull : MapStepJson;
         return features.OrderBy(f => f.DisplayName).Select(f => (object)new Dictionary<string, object?>
@@ -4666,6 +4671,11 @@ public static class ReportGenerator
                     ["steps"] = (s.Steps ?? []).Select(stepMapper).ToArray()
                 };
 
+                // Beside durationSeconds, and only on a scenario that carries one (plans/WARM_UP_PLAN.md 4.4), so a run
+                // with no warm-up writes the bytes it wrote before.
+                if (warmUp is not null && warmUp.ScenarioMs.TryGetValue(s.Id, out var warmUpMs))
+                    scenario = InsertAfter(scenario, "durationSeconds", "warmUpSeconds", Math.Round(warmUpMs / 1000, 7));
+
                 if (diagramLookup != null)
                     scenario["diagrams"] = diagramLookup[s.Id].Select(d => payloads is null ? d : payloads.Write(d)).ToArray();
 
@@ -4673,7 +4683,7 @@ public static class ReportGenerator
                 {
                     var paths = stepPaths is not null && stepPaths.TryGetValue(s.Id, out var p) ? p : null;
                     scenario["httpInteractions"] = logLookup[s.Id]
-                        .Select((l, i) => MapLogJson(l, durations, paths is not null && i < paths.Count ? paths[i] : null, payloads))
+                        .Select((l, i) => MapLogJson(l, durations, paths is not null && i < paths.Count ? paths[i] : null, payloads, warmUp))
                         .ToArray();
                     scenario["annotations"] = (annotations is not null && annotations.TryGetValue(s.Id, out var a) ? a : [])
                         .Select(x => (object)new { x.Index, Kind = x.Kind.ToString(), x.Text })
@@ -4705,7 +4715,8 @@ public static class ReportGenerator
         string? suite = null,
         RunEnvironment? environment = null,
         (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution = null,
-        int? suppliedSpans = null)
+        int? suppliedSpans = null,
+        WarmUpResult? warmUp = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
 
@@ -4755,7 +4766,7 @@ public static class ReportGenerator
             relationships, internalFlowSegmentData, wholeTestFlow,
             options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs,
             stepPathsOverride: attribution?.StepPaths, annotationsOverride: attribution?.Annotations,
-            suite: suite, environment: environment, compressPayloads: options.CompressTestRunReportPayloads);
+            suite: suite, environment: environment, compressPayloads: options.CompressTestRunReportPayloads, warmUp: warmUp);
     }
 
     /// <summary>
@@ -4789,9 +4800,12 @@ public static class ReportGenerator
         IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotationsOverride = null,
         string? suite = null,
         RunEnvironment? environment = null,
-        bool compressPayloads = false)
+        bool compressPayloads = false,
+        WarmUpResult? warmUp = null)
     {
         var payloads = new ReportPayloads(compressPayloads);
+        // A merge hands in the shards' marks, None included, and never has them recomputed here.
+        warmUp ??= WarmUpCalls.Find(features, trackedLogs);
 
         // The same derivation the standard writer does. Without it the "superset" was missing the one
         // thing that dominates a report - every captured call - so a merged run could be read but not
@@ -4823,7 +4837,7 @@ public static class ReportGenerator
             ["suite"] = suite,
             ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
             ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
-            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail: true, durations, stepPaths, annotations, suite, payloads),
+            ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail: true, durations, stepPaths, annotations, suite, payloads, warmUp),
             ["wholeTestVisualization"] = wholeTestVisualization.ToString(),
             ["componentRelationships"] = (componentRelationships ?? []).Select(r => new
             {
@@ -4897,13 +4911,13 @@ public static class ReportGenerator
     /// OpenTelemetry and application logs, which capture path produced it, and the derived duration —
     /// so a reader of the JSON is never told less than a reader of the diagram.
     /// </summary>
-    private static object MapLogJson(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null, ReportPayloads? payloads = null) => new
+    private static object MapLogJson(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null, ReportPayloads? payloads = null, WarmUpResult? warmUp = null) => new InteractionJson
     {
         Type = log.Type.ToString(),
         Method = MethodText(log.Method),
         Uri = log.Uri.ToString(),
-        log.ServiceName,
-        log.CallerName,
+        ServiceName = log.ServiceName,
+        CallerName = log.CallerName,
         Content = payloads is null ? log.Content : payloads.Write(log.Content),
         Headers = log.Headers.Select(h => new { h.Key, h.Value }).ToArray(),
         StatusCode = InteractionStatus.Split(log.StatusCode).Code,
@@ -4912,19 +4926,89 @@ public static class ReportGenerator
         RequestResponseId = log.RequestResponseId.ToString(),
         Timestamp = log.Timestamp is { } jsonAt ? FormatInstant(jsonAt) : null,
         MetaType = log.MetaType.ToString(),
-        log.DependencyCategory,
-        log.CallerDependencyCategory,
+        DependencyCategory = log.DependencyCategory,
+        CallerDependencyCategory = log.CallerDependencyCategory,
         Phase = log.Phase.ToString(),
         AttributionSource = log.AttributionSource?.ToString(),
         ExpiredFrom = log.ExpiredFromTestId,
-        log.Error,
-        log.IsUserAction,
-        log.ActivityTraceId,
-        log.ActivitySpanId,
-        log.CapturedBy,
+        Error = log.Error,
+        IsUserAction = log.IsUserAction,
+        ActivityTraceId = log.ActivityTraceId,
+        ActivitySpanId = log.ActivitySpanId,
+        CapturedBy = log.CapturedBy,
         DurationMs = durations is not null && durations.TryGetValue(log.RequestResponseId, out var ms) ? ms : (double?)null,
+        // On the request record, the half that starts the call; the service is the record's own.
+        WarmUp = log.Type == RequestResponseType.Request && warmUp is not null && warmUp.Calls.TryGetValue(log.RequestResponseId, out var mark)
+            ? MapWarmUpJson(mark)
+            : null,
         StepPath = stepPath
     };
+
+    /// <summary>
+    /// A call's record in the JSON data files. A class rather than an anonymous type only so <see cref="WarmUp"/> can be
+    /// left out of a call that has none (plans/WARM_UP_PLAN.md 4.4): every other member is written as it always was, in
+    /// the same order, nulls included, so <c>TestRunReport.pin.json</c> holds.
+    /// </summary>
+    private sealed class InteractionJson
+    {
+        public required string Type { get; init; }
+        public string? Method { get; init; }
+        public required string Uri { get; init; }
+        public string? ServiceName { get; init; }
+        public string? CallerName { get; init; }
+        public object? Content { get; init; }
+        public required object Headers { get; init; }
+        public int? StatusCode { get; init; }
+        public string? StatusText { get; init; }
+        public required string TraceId { get; init; }
+        public required string RequestResponseId { get; init; }
+        public string? Timestamp { get; init; }
+        public required string MetaType { get; init; }
+        public string? DependencyCategory { get; init; }
+        public string? CallerDependencyCategory { get; init; }
+        public required string Phase { get; init; }
+        public string? AttributionSource { get; init; }
+        public string? ExpiredFrom { get; init; }
+        public string? Error { get; init; }
+        public bool IsUserAction { get; init; }
+        public string? ActivityTraceId { get; init; }
+        public string? ActivitySpanId { get; init; }
+        public string? CapturedBy { get; init; }
+        public double? DurationMs { get; init; }
+
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<string, object?>? WarmUp { get; init; }
+
+        public string? StepPath { get; init; }
+    }
+
+    /// <summary>A call's warm-up mark in the JSON data files: <c>first</c> names the run's first call only on a call that waited.</summary>
+    private static Dictionary<string, object?> MapWarmUpJson(WarmUpMark mark)
+    {
+        var json = new Dictionary<string, object?>
+        {
+            ["kind"] = mark.Kind,
+            ["shape"] = mark.Shape,
+            ["baselineMs"] = Math.Round(mark.BaselineMs, 4),
+            ["baselineCalls"] = mark.BaselineCalls
+        };
+        if (mark.First is { } first)
+            json["first"] = first.ToString();
+        return json;
+    }
+
+    /// <summary>A copy of <paramref name="source"/> with <paramref name="key"/> written right after <paramref name="after"/>.</summary>
+    private static Dictionary<string, object?> InsertAfter(Dictionary<string, object?> source, string after, string key, object? value)
+    {
+        var copy = new Dictionary<string, object?>(source.Count + 1);
+        foreach (var (name, existing) in source)
+        {
+            copy[name] = existing;
+            if (name == after)
+                copy[key] = value;
+        }
+        return copy;
+    }
 
     /// <summary>
     /// An attachment in the data files: the display name, where it is, and the media type the producer
@@ -5035,7 +5119,7 @@ public static class ReportGenerator
         s.TableReferenceFormattedValue
     };
 
-    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
+    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, WarmUpResult? warmUp = null)
     {
         var resolvedSuite = suite ?? RunSuite.Current;
         var doc = new XDocument(
@@ -5070,6 +5154,9 @@ public static class ReportGenerator
                                         s.Description != null ? new XElement("Description", s.Description) : null,
                                         new XElement("Result", s.Result.ToString()),
                                         new XElement("DurationSeconds", (s.Duration?.TotalSeconds ?? 0.0).ToString("F3", CultureInfo.InvariantCulture)),
+                                        warmUp is not null && warmUp.ScenarioMs.TryGetValue(s.Id, out var xmlWarmUpMs)
+                                            ? new XElement("WarmUpSeconds", (xmlWarmUpMs / 1000).ToString("F3", CultureInfo.InvariantCulture))
+                                            : null,
                                         new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLower()),
                                         s.ErrorMessage != null ? new XElement("ErrorMessage", s.ErrorMessage) : null,
                                         s.ErrorStackTrace != null ? new XElement("ErrorStackTrace", s.ErrorStackTrace) : null,
@@ -5097,7 +5184,7 @@ public static class ReportGenerator
                                     {
                                         var logs = logLookup[s.Id].ToArray();
                                         if (logs.Length > 0)
-                                            scenarioElements.Add(new XElement("HttpInteractions", logs.Select((l, i) => MapLogXml(l, durations, StepPathAt(stepPaths, s.Id, i)))));
+                                            scenarioElements.Add(new XElement("HttpInteractions", logs.Select((l, i) => MapLogXml(l, durations, StepPathAt(stepPaths, s.Id, i), warmUp))));
 
                                         if (annotations is not null && annotations.TryGetValue(s.Id, out var scenarioAnnotations) && scenarioAnnotations.Count > 0)
                                             scenarioElements.Add(new XElement("Annotations", scenarioAnnotations.Select(a =>
@@ -5148,7 +5235,7 @@ public static class ReportGenerator
                 d.ScenarioId is { Length: > 0 } scenarioId ? new XElement("ScenarioId", scenarioId) : null)));
 
     /// <inheritdoc cref="MapLogJson"/>
-    private static XElement MapLogXml(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null) =>
+    private static XElement MapLogXml(RequestResponseLog log, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null, WarmUpResult? warmUp = null) =>
         new("HttpInteraction",
             new XElement("Type", log.Type.ToString()),
             // Omitted when there is none, like every other line here. It used to be written
@@ -5183,6 +5270,14 @@ public static class ReportGenerator
             log.CapturedBy != null ? new XElement("CapturedBy", log.CapturedBy) : null,
             durations is not null && durations.TryGetValue(log.RequestResponseId, out var ms)
                 ? new XElement("DurationMs", ms.ToString("F3", CultureInfo.InvariantCulture))
+                : null,
+            log.Type == RequestResponseType.Request && warmUp is not null && warmUp.Calls.TryGetValue(log.RequestResponseId, out var xmlMark)
+                ? new XElement("WarmUp",
+                    new XElement("Kind", xmlMark.Kind),
+                    new XElement("Shape", xmlMark.Shape),
+                    new XElement("BaselineMs", xmlMark.BaselineMs.ToString("F3", CultureInfo.InvariantCulture)),
+                    new XElement("BaselineCalls", xmlMark.BaselineCalls.ToString(CultureInfo.InvariantCulture)),
+                    xmlMark.First is { } xmlFirst ? new XElement("First", xmlFirst.ToString()) : null)
                 : null,
             stepPath != null ? new XElement("StepPath", stepPath) : null
         );
@@ -5298,7 +5393,7 @@ public static class ReportGenerator
             AppendYaml(yml, indent + "  - ", item);
     }
 
-    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null)
+    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, WarmUpResult? warmUp = null)
     {
         var resolvedSuite = suite ?? RunSuite.Current;
         var yml = new StringBuilder();
@@ -5357,6 +5452,8 @@ public static class ReportGenerator
                     yml.Append("        SourceLine: " + scenario.SourceLine.Value.ToString(CultureInfo.InvariantCulture) + "\n");
                 AppendYaml(yml, "        Result: ", scenario.Result.ToString());
                 yml.Append("        DurationSeconds: " + (scenario.Duration?.TotalSeconds ?? 0.0).ToString("F3", CultureInfo.InvariantCulture) + "\n");
+                if (warmUp is not null && warmUp.ScenarioMs.TryGetValue(scenario.Id, out var ymlWarmUpMs))
+                    yml.Append("        WarmUpSeconds: " + (ymlWarmUpMs / 1000).ToString("F3", CultureInfo.InvariantCulture) + "\n");
                 if (scenario.EndedAt is { } ymlEndedAt)
                     AppendYaml(yml, "        EndedAt: ", FormatInstant(ymlEndedAt));
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
@@ -5424,7 +5521,7 @@ public static class ReportGenerator
                     {
                         yml.Append("        HttpInteractions:\n");
                         for (var i = 0; i < logs.Length; i++)
-                            AppendTestRunYamlLog(yml, logs[i], "          ", durations, StepPathAt(stepPaths, scenario.Id, i));
+                            AppendTestRunYamlLog(yml, logs[i], "          ", durations, StepPathAt(stepPaths, scenario.Id, i), warmUp);
                     }
 
                     if (annotations is not null && annotations.TryGetValue(scenario.Id, out var scenarioAnnotations) && scenarioAnnotations.Count > 0)
@@ -5531,7 +5628,7 @@ public static class ReportGenerator
     }
 
     /// <inheritdoc cref="MapLogJson"/>
-    private static void AppendTestRunYamlLog(StringBuilder yml, RequestResponseLog log, string indent, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null)
+    private static void AppendTestRunYamlLog(StringBuilder yml, RequestResponseLog log, string indent, IReadOnlyDictionary<Guid, double>? durations = null, string? stepPath = null, WarmUpResult? warmUp = null)
     {
         AppendYaml(yml, indent + "- Type: ", log.Type.ToString());
         AppendYamlNullable(yml, indent + "  Method: ", MethodText(log.Method));
@@ -5573,6 +5670,16 @@ public static class ReportGenerator
             AppendYaml(yml, indent + "  CapturedBy: ", log.CapturedBy);
         if (durations is not null && durations.TryGetValue(log.RequestResponseId, out var ms))
             yml.Append(indent + "  DurationMs: " + ms.ToString("F3", CultureInfo.InvariantCulture) + "\n");
+        if (log.Type == RequestResponseType.Request && warmUp is not null && warmUp.Calls.TryGetValue(log.RequestResponseId, out var ymlMark))
+        {
+            yml.Append(indent + "  WarmUp:\n");
+            AppendYaml(yml, indent + "    Kind: ", ymlMark.Kind);
+            AppendYaml(yml, indent + "    Shape: ", ymlMark.Shape);
+            yml.Append(indent + "    BaselineMs: " + ymlMark.BaselineMs.ToString("F3", CultureInfo.InvariantCulture) + "\n");
+            yml.Append(indent + "    BaselineCalls: " + ymlMark.BaselineCalls.ToString(CultureInfo.InvariantCulture) + "\n");
+            if (ymlMark.First is { } ymlFirst)
+                AppendYaml(yml, indent + "    First: ", ymlFirst.ToString());
+        }
         if (stepPath is not null)
             AppendYaml(yml, indent + "  StepPath: ", stepPath);
         if (log.Headers.Length > 0)
@@ -6274,6 +6381,7 @@ public static class ReportGenerator
                                         ["description"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The scenario's own free-text description (the prose under Scenario:)" },
                                         ["result"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = resultEnumValues, ["description"] = "The scenario's verdict" },
                                         ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["description"] = "Wall-clock seconds the scenario took; 0 when unknown" },
+                                        ["warmUpSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["minimum"] = 0, ["description"] = "Seconds of durationSeconds that the run's first-call warm-up took: the time the scenario's calls marked warmUp cover, each instant counted once, never more than durationSeconds. durationSeconds less this is the scenario's own time. Present only on a scenario that carries such a call." },
                                         ["endedAt"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["format"] = "date-time", ["description"] = "When the scenario finished (UTC), as the framework recorded it; null when the adapter did not record one. A call that inherited this scenario's context after this moment is background (see httpInteractions[].attributionSource = Expired)" },
                                         ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Marked as the happy path (an @happy-path tag or the adapter's attribute); the report lists happy paths first" },
                                         ["errorMessage"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The failure message the framework reported, when the scenario failed" },
@@ -6569,6 +6677,21 @@ public static class ReportGenerator
                         ["activityTraceId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C trace id — the bridge to OpenTelemetry traces and application logs. Unlike traceId, which is Kronikol's own identifier for the request/response pair.", ["examples"] = new[] { "4bf92f3577b34da6a3ce929d0e0e4736" } },
                         ["activitySpanId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C span id" },
                         ["capturedBy"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which capture path produced this entry: wire (proxy/TCP tap) or span (OpenTelemetry receiver)" },
+                        ["warmUp"] = new Dictionary<string, object?>
+                        {
+                            ["type"] = "object",
+                            ["additionalProperties"] = false,
+                            ["required"] = new[] { "kind", "shape", "baselineMs", "baselineCalls" },
+                            ["description"] = "Present on the request record of a call the run's first-call warm-up slowed down: the run's first call of its shape (service, method and templated path) when it took at least 10 times and 50 ms more than the median of the shape's calls that started after it ended, or a call that started while that one ran and waited for it. Absent on every other record.",
+                            ["properties"] = new Dictionary<string, object?>
+                            {
+                                ["kind"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = new[] { "first", "waited" }, ["description"] = "first: the run's first call of its shape. waited: a call that started while that one ran and waited for it." },
+                                ["shape"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The method and the templated path (ids, numbers and timestamps folded, the query string left out), plus the templated statement head for a statement-shaped dependency. The service is the record's own serviceName." },
+                                ["baselineMs"] = new Dictionary<string, object?> { ["type"] = "number", ["minimum"] = 0, ["description"] = "The median duration of the shape's calls that started after the first one ended." },
+                                ["baselineCalls"] = new Dictionary<string, object?> { ["type"] = "integer", ["minimum"] = 1, ["description"] = "How many calls baselineMs is the median of." },
+                                ["first"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "On a call that waited, the requestResponseId of the run's first call of its shape." }
+                            }
+                        },
                         ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response: the capturer's own measurement when the record carried one (durationMs on the NDJSON input), otherwise derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered and nothing was measured, when timestamps are absent, or when both records carry the same instant (a call logged after the fact, which measured nothing)." },
                         ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } }
                     }
@@ -6750,6 +6873,14 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "ActivitySpanId"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "CapturedBy"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "DurationMs"), new XAttribute("type", "xs:decimal"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "WarmUp"), new XAttribute("minOccurs", "0"),
+                    new XElement(xs + "complexType",
+                        new XElement(xs + "sequence",
+                            new XElement(xs + "element", new XAttribute("name", "Kind"), new XAttribute("type", "xs:string")),
+                            new XElement(xs + "element", new XAttribute("name", "Shape"), new XAttribute("type", "xs:string")),
+                            new XElement(xs + "element", new XAttribute("name", "BaselineMs"), new XAttribute("type", "xs:decimal")),
+                            new XElement(xs + "element", new XAttribute("name", "BaselineCalls"), new XAttribute("type", "xs:int")),
+                            new XElement(xs + "element", new XAttribute("name", "First"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))))),
                 new XElement(xs + "element", new XAttribute("name", "StepPath"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
             ));
 
@@ -6762,6 +6893,7 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "Description"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Result"), new XAttribute("type", "ExecutionResult")),
                 new XElement(xs + "element", new XAttribute("name", "DurationSeconds"), new XAttribute("type", "xs:decimal")),
+                new XElement(xs + "element", new XAttribute("name", "WarmUpSeconds"), new XAttribute("type", "xs:decimal"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "IsHappyPath"), new XAttribute("type", "xs:boolean")),
                 new XElement(xs + "element", new XAttribute("name", "ErrorMessage"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "ErrorStackTrace"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),

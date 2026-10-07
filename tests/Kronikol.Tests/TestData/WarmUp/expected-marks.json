@@ -1,0 +1,234 @@
+{
+ "reqnroll": {
+  "calls": {
+   "08c1b97e-8e57-44be-a5e1-a4445fbe4c52": {
+    "baselineCalls": 2,
+    "baselineMs": 4.928,
+    "first": null,
+    "kind": "first",
+    "shape": "GET /orders/{id}"
+   },
+   "0e048845-a274-4780-83e5-68531818edf4": {
+    "baselineCalls": 1,
+    "baselineMs": 4.0647,
+    "first": null,
+    "kind": "first",
+    "shape": "GET /equipment-readings/equipment/Oven-{id}"
+   },
+   "14a37bb4-a22e-4524-851b-b074f2f83c6e": {
+    "baselineCalls": 1,
+    "baselineMs": 5.9965,
+    "first": null,
+    "kind": "first",
+    "shape": "GETORDERSTATUS /breakfast.BreakfastGrpc/GetOrderStatus"
+   },
+   "2237cf15-4e58-4061-98d3-73512ee482dd": {
+    "baselineCalls": 4,
+    "baselineMs": 8.19815,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /reservations"
+   },
+   "38ad2703-300b-42cc-a5b6-e841576db18e": {
+    "baselineCalls": 37,
+    "baselineMs": 11.6692,
+    "first": "b9d51d33-e126-4c07-94b2-f2ae2a97adeb",
+    "kind": "waited",
+    "shape": "POST /orders"
+   },
+   "42d586f2-cb7b-416d-824a-7d29de28d879": {
+    "baselineCalls": 5,
+    "baselineMs": 43.0371,
+    "first": "6416a9ee-d8dc-44c5-9666-6e094f535e65",
+    "kind": "waited",
+    "shape": "POST /graphql"
+   },
+   "49996bcd-b157-4543-aecc-b17f8aae372a": {
+    "baselineCalls": 4,
+    "baselineMs": 4.1629,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /inventory"
+   },
+   "609f4d82-af74-4688-bcda-fe4e66135ccc": {
+    "baselineCalls": 42,
+    "baselineMs": 7.88075,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /pancakes"
+   },
+   "6416a9ee-d8dc-44c5-9666-6e094f535e65": {
+    "baselineCalls": 5,
+    "baselineMs": 43.0371,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /graphql"
+   },
+   "7bda2912-e8d1-4cdc-8526-9d1e407a3460": {
+    "baselineCalls": 1,
+    "baselineMs": 5.5287,
+    "first": null,
+    "kind": "first",
+    "shape": "GET /customer-preferences/{id}"
+   },
+   "84af3da0-811b-4067-a752-108b0b979665": {
+    "baselineCalls": 4,
+    "baselineMs": 19.99485,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /equipment-readings"
+   },
+   "a3d9ba9e-13d2-47d3-a4c8-d2d13db3bcce": {
+    "baselineCalls": 5,
+    "baselineMs": 43.0371,
+    "first": "6416a9ee-d8dc-44c5-9666-6e094f535e65",
+    "kind": "waited",
+    "shape": "POST /graphql"
+   },
+   "b9961a7e-d124-43d3-b451-a16a6b5ab59b": {
+    "baselineCalls": 3,
+    "baselineMs": 6.8632,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /staff"
+   },
+   "b9d51d33-e126-4c07-94b2-f2ae2a97adeb": {
+    "baselineCalls": 37,
+    "baselineMs": 11.6692,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /orders"
+   },
+   "d143b54e-23dc-471b-93cf-f1624fbffd7e": {
+    "baselineCalls": 43,
+    "baselineMs": 4.4576,
+    "first": null,
+    "kind": "first",
+    "shape": "GET /milk"
+   },
+   "f00b6845-b675-4f3a-806a-ff50555d4d09": {
+    "baselineCalls": 4,
+    "baselineMs": 4.09535,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /feedback"
+   },
+   "f72adf3a-00a8-466d-ba94-f6d72aa2f19b": {
+    "baselineCalls": 4,
+    "baselineMs": 13.596049999999998,
+    "first": null,
+    "kind": "first",
+    "shape": "GET /health"
+   },
+   "fbeec896-d4fb-4498-aa34-1fe120c4e182": {
+    "baselineCalls": 4,
+    "baselineMs": 2.3009500000000003,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /recipe-reviews"
+   }
+  },
+  "scenarios": {
+   "02ebb6f9-acca-4da8-81c9-d157fe875359": 79.21300000000001,
+   "0b334da3-ff3b-415b-a618-7e52a1cef0ec": 202.913,
+   "17632e2a-5e72-403c-861d-aabd1ff77ced": 1415.961,
+   "20f634b7-af47-4c98-9f76-a5af71b9baf1": 405.505,
+   "240eda77-5124-4e4d-9307-ad24929ebf77": 79.566,
+   "2a75b24a-3eda-41ca-a3ca-ca6768f2a1a0": 580.763,
+   "36566610-bc59-4cd6-897b-87a7c1926707": 766.3919999999999,
+   "56500ce5-8fc6-4f79-9027-000b22540f34": 96.33,
+   "6487af6c-e3cd-4c34-bc68-d6665974ba69": 348.597,
+   "8073304b-447a-4f0f-8016-5fb71a538489": 90.96,
+   "838209b7-6b8e-48bb-aacd-bef0d556b6c6": 237.475,
+   "97d6c9a1-ded9-4f3a-a672-75338cff799f": 980.784,
+   "bd777b4e-7d49-427a-a73f-5ab096eafd36": 76.30099999999999,
+   "c6db9cff-c522-443b-a831-191446d826dc": 114.856,
+   "cfdf6969-1781-4358-8f7c-37d6cd718198": 123.605,
+   "e78a2bdb-67e4-4960-9311-27f80273f9d4": 76.83800000000001,
+   "f62a7c52-27c5-4fa2-bc15-0eef616e3056": 295.545
+  }
+ },
+ "xunit": {
+  "calls": {
+   "0af4fdc9-cefa-453b-968e-fefb1f27f367": {
+    "baselineCalls": 4,
+    "baselineMs": 2.1470000000000002,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /recipe-reviews"
+   },
+   "2201d7c5-37a2-4cb5-b9f9-5adc14919b8d": {
+    "baselineCalls": 39,
+    "baselineMs": 7.6044,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /orders"
+   },
+   "4754a219-f5a8-4ba3-ba9c-01f2eed3f4e4": {
+    "baselineCalls": 44,
+    "baselineMs": 5.21995,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /pancakes"
+   },
+   "7161acee-70ad-4bd3-ad70-dfc0a6193bda": {
+    "baselineCalls": 45,
+    "baselineMs": 2.3141,
+    "first": null,
+    "kind": "first",
+    "shape": "GET /milk"
+   },
+   "843cd35d-b177-4ac8-9216-521874934b45": {
+    "baselineCalls": 4,
+    "baselineMs": 2.4504,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /feedback"
+   },
+   "94797d1d-95e0-4130-9290-f4760d51ccd7": {
+    "baselineCalls": 4,
+    "baselineMs": 3.4352,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /reservations"
+   },
+   "9c22ee6e-8fe6-43b6-945b-6acf5881e38e": {
+    "baselineCalls": 4,
+    "baselineMs": 2.2794499999999998,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /inventory"
+   },
+   "a884066f-223c-4182-b6ec-6c65ec1d09b5": {
+    "baselineCalls": 1,
+    "baselineMs": 2.0334,
+    "first": null,
+    "kind": "first",
+    "shape": "GET /recipe-reviews/{id}"
+   },
+   "abb3c3c5-f2ff-47ca-aae2-68a731e964b9": {
+    "baselineCalls": 7,
+    "baselineMs": 7.5872,
+    "first": null,
+    "kind": "first",
+    "shape": "POST /graphql"
+   },
+   "f60d0e43-6c45-4391-b98d-1aeed8dd68f4": {
+    "baselineCalls": 1,
+    "baselineMs": 7.4684,
+    "first": null,
+    "kind": "first",
+    "shape": "GETORDERSTATUS /breakfast.BreakfastGrpc/GetOrderStatus"
+   }
+  },
+  "scenarios": {
+   "2366b71be49152bcbf317ed3476ceb8cacdbcf80ccfb2f1978de8243e37d4a41": 126.15399999999998,
+   "69cedd2d26f94f6761cc8c67183f81bfdead99722944cd8b4dc3d8f0ca670977": 1188.9299999999998,
+   "7645afe2c9801887c5cbf3d786dbe822b445704a6a2267ceef96a5aae90111a9": 57.504,
+   "83888046d15822b097fcb192dad180d8cfe2a25e52bcf1d7e82d397e289053e1": 171.839,
+   "88b73e8badddc841b148b867a6b202511190d4fc27b9bbd35a752135050d0844": 285.479,
+   "a41724cca4bdf24303e0f57366d26140d0ca96a4d201d6c1a41070e3e0667266": 745.672,
+   "e8b79f8bcb4151fdee03b845c6b69fb6c021d8d24d22847c5ebfc52042fd8ca6": 76.209
+  }
+ }
+}

@@ -117,14 +117,15 @@ public static partial class QueryCommand
                 ? $"  → {QueryWriter.Size(response.BodyLength)} {responseHash}"
                 : "";
             writer.Line($"{interaction.Address(scenario),-9} {interaction.ServiceName,-16} {QueryWriter.OneLine(interaction.Summary(), 62),-62} "
-                        + $"{StatusOf(response).Text ?? "",-6} {QueryWriter.Duration(interaction.DurationMs ?? response?.DurationMs),8}{payload}{responsePayload}");
+                        + $"{StatusOf(response).Text ?? "",-6} {QueryWriter.Duration(interaction.DurationMs ?? response?.DurationMs),8}"
+                        + $"{(interaction.WarmUp is null ? "" : " warm-up")}{payload}{responsePayload}");
         }, options.RerunArgs(), row =>
         {
             var (scenario, interaction, response) = row;
             // Addresses and metadata only. Serializing the entry wholesale would put a captured body into
             // a listing that promises never to print one - the invariant No_overview_command_emits_a_payload
             // guards, and which a projector is exactly the way to break by accident.
-            return new
+            var item = new
             {
                 address = interaction.Address(scenario),
                 scenario = scenario.Address,
@@ -141,6 +142,17 @@ public static partial class QueryCommand
                     ? null
                     : new { bodyHash = response.BodyHash, bodyLength = response.BodyLength }
             };
+            // Only on a marked call, so every other item reads as it did.
+            return interaction.WarmUp is { } warmUp
+                ? QueryWriter.WithMember(item, "warmUp", new
+                {
+                    kind = warmUp.Kind,
+                    shape = warmUp.Shape,
+                    baselineMs = warmUp.BaselineMs,
+                    baselineCalls = warmUp.BaselineCalls,
+                    first = warmUp.First
+                })
+                : item;
         });
 
         if (unevaluable > 0)

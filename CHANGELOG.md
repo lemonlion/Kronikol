@@ -4,11 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [4.8.0] - 2026-10-07
+
+**Minor - a scenario's duration says how much of it was the app's first-call warm-up (#113).**
+`plans/WARM_UP_PLAN.md` R1. Two fields in a published format and its schemas, and new lines in `kronikol query`, are
+new surface, so the minor part moves (4.7.3 to 4.8.0). `durationSeconds` is unchanged, and a run with no warm-up writes
+no new key. Kronikol4J does not mirror it; its ledger has the line. The history action's `VERSION` installs
+`Kronikol.Tool` 4.8.0, and the templates pin 4.7.3. It also carries the documentation fix merged since 4.7.3, which
+was waiting under Unreleased.
+
+### Added
+
+- **The run marks its first-call warm-up.** The first request down each path can cost tens of times what later ones
+  do (JIT, a schema build, a first connection), and whichever scenario goes first pays it. For each kind of call a test
+  makes (its service, its method and its path with ids, numbers and timestamps folded and the query string left out;
+  a statement's templated head for a database), the run's first call is a warm-up when it took at least 10 times and
+  50 ms more than the median of the calls of its kind that started after it ended, and so is a call that started
+  while it ran and waited for it (10 times that median too, or released within 50 ms of it). A first call that failed
+  with a 5xx is compared only with later calls that failed so. The app's own calls, events and the background are not
+  judged. The rule reads each call as the data file records it (its start to the millisecond), so the marks a report
+  carries can be found again from the report itself. On BreakfastProvider's CI run of 2026-10-05 the rule marks 10 calls in 7 of 212 scenarios (xUnit) and 18 in
+  17 of 214 (ReqNRoll), and explains 25 of the 57 cross-framework anomalies with none over-subtracted.
+- **`warmUpSeconds` and `warmUp` in the data files.** `TestRunReport.json`, YAML, XML and the mergeable file gain
+  `warmUpSeconds` on a scenario that carries such calls (the time they cover, each instant counted once, never more
+  than `durationSeconds`, so `durationSeconds - warmUpSeconds` is the scenario's own time) and `warmUp` on each marked
+  call's request record (`kind` `first` or `waited`, `shape`, `baselineMs`, `baselineCalls`, and `first`, the
+  `requestResponseId` of the call a waiter waited for). The JSON schema, which the YAML file shares, declares and
+  describes them, and the XSD takes them as optional elements, so a document written before still validates.
+- **`kronikol query` reads them.** `summary` ranks Slowest by each scenario's own time, under the heading
+  `Slowest, first-call warm-up left out:`, and a line under it says where the warm-up went; `--json` gains
+  `warmUpSeconds` on a `slowest[]` item and a `warmUp` member. `flow` names a marked call's warm-up after its
+  duration (`first POST /orders of the run: later calls 7.6 ms median (39)`), `interactions` reads ` warm-up` after
+  it and its `--json` items gain `warmUp`. `scenarios --slower-than` reads each scenario's own time, and `diff`'s
+  Slower does where both runs carry marks. A report with no marks reads as it did.
+- **A merge carries each shard's marks** and never recomputes them: each shard is a process that paid its own
+  warm-up, and the merged calls of several would be judged against each other. `kronikol ingest` marks an ingested
+  run by the same rule.
+- `HistoryShapeTemplates` also fold the ids in the warm-up's shapes, and the agent text and the skill's commands
+  reference say what the new lines mean.
+
+### Documentation
 
 - `ReportConfigurationOptions.HistoryFilePath`'s documentation says where an ingest looks for the ledger: above the
   directory it is run in, then the reports directory (4.7.2's change; the doc named only the test output and the
   reports directory). Documentation only; it ships in the package's XML docs, so the next release carries it.
+
 
 ## [4.7.3] - 2026-10-07
 

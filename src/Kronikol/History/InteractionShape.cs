@@ -223,11 +223,17 @@ public static partial class InteractionShape
         if (!DependencyCategories.IsStatementShaped(log.DependencyCategory) || string.IsNullOrWhiteSpace(log.Content))
             return templated;
 
+        return templated + " " + StatementHead(log.Content, rules);
+    }
+
+    /// <summary>
+    /// The templated first line of a statement, cut to a length a shape can carry: what tells one statement on a
+    /// connection from another (the warm-up rule's shapes use it too, <see cref="Reports.WarmUpCalls"/>).
+    /// </summary>
+    internal static string StatementHead(string content, HistoryShapeRules? rules) =>
         // Templated before it is cut: cut first, an id straddling the limit kept its first characters, and
         // a scenario writing a fresh id read as behaviour-changed on every run.
-        var head = FailureText.Truncate(TemplateStatement(FailureText.Truncate(FailureText.FirstLine(log.Content), HeadRaw), rules), HeadLength);
-        return templated + " " + head;
-    }
+        FailureText.Truncate(TemplateStatement(FailureText.Truncate(FailureText.FirstLine(content), HeadRaw), rules), HeadLength);
 
     /// <summary>The two fingerprints and the call count for a scenario's calls.</summary>
     public static (string ShapeSet, string ShapeOrdered, int Calls) Fingerprint(IReadOnlyList<ShapeCall> calls)

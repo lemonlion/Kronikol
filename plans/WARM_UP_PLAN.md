@@ -609,6 +609,40 @@ for #122 or says it did not.
     OTLP (115), TcpTap (265, 4 skipped without Docker) and rewriter (23) suites pass, and `release.slnf` builds in
     Release for every target. Kronikol4J already writes a point and Gregorian dates (`Locale.ROOT`, ISO chronology)
     and has no server-side flame chart.
+  - **4.7.3 published.** #130 took 4.7.1 and 4.7.2 first, so R0 shipped as 4.7.3 (44c535c4, tag `v4.7.3`, templates
+    pinned to 4.7.2): CI 37614414051, Release 37614416399 and CodeQL 37614414070 passed; nuget.org lists all 62 ids; the wiki has R0's edits
+    (`0bbae05`) and Kronikol4J's ledger its line (`959cca3`). Found while R1's suite ran beside it: R0's culture pipeline fact
+    read the process's live environment, so a run could find a history ledger above the test output (or a CI variable
+    another fact had set) that the other culture's run did not, and write a labs page only one of them had; it now runs
+    with history off and no other environment. That fact is in 4.7.3.
+  - **R1 = 4.8.0 (minor).** `WarmUpCalls` (the rule of 4.1, `warmup.py marks` being its spec), computed once per run
+    with the consumer's `HistoryShapeTemplates` (Q12) and handed to every writer: `warmUpSeconds` on a scenario and
+    `warmUp` on a marked call's request record in JSON, YAML, XML and the mergeable file, with the JSON schema and the
+    XSD; a merge carries each shard's marks and never runs the rule (T22); `kronikol ingest` gets the pass through the
+    run's pipeline (T23); the CLI's `summary`, `flow`, `interactions`, `scenarios --slower-than` and the run diff's
+    Slower read them; the agent text, both `SKILL.md` copies and both `commands.md` copies say so. A merge fact
+    compared two random ids in the order they were made; found when the suite ran it on a new base, and fixed before
+    the release.
+  - Proof (harness `r1/`): the plan asked for each fact red on 4.6.0, but R1's facts are written against R0's API, so
+    they ran on 4.7.3 with a stub `WarmUpCalls` (marking nothing) and the mergeable writer's `warmUp` parameter
+    accepted and ignored: 41 facts and theory rows failed, each because no mark was written or read
+    (`red-4.7.3-core.txt`), and the 12 that passed are the facts that a call is not marked (an event, the background, a
+    shape called once, an untimed call, calls that all take as long, a polling scenario, the 5xx guard's success case,
+    and the ratio and floor rows under the line), a merge of shards without marks writing none, the corpus's own
+    precondition, a run with no warm-up writing no key, the XSD taking a document without marks, and the CLI's "a
+    report without marks reads as before". 15 mutations each caught by the fact named (`mutations.txt`). The pass equals `warmup.py marks` on every
+    lane of the corpus, 372 marks over 36 lanes (`all-lanes.txt`). The core suite (6,881 passed, 2 skipped), the full
+    Playwright suite (991 passed, 28 skipped), and `release.slnf` builds and packs in Release for every target (62 packages).
+  - S7 (harness `breakfastprovider/`: `bp_pin.py`, `runlanes.sh` with `BP=`, `compare_marks.py`): BreakfastProvider at
+    `106702b` in a scratch clone, its 27 pins on the local 4.8.0 packages. The first round (xUnit twice, ReqNRoll three
+    times) agreed with `warmup.py marks` on three reports and not on two: in the parallel ReqNRoll runs four
+    `GET /milk` calls started in one millisecond, the data file writes a start to the millisecond, and the pass, reading
+    ticks the file does not hold, took a different call as the run's first than a reader of the report does. So the
+    marks a report carried could not be found again from the report. The pass now takes each start as the file writes
+    it (`Calls_that_start_in_one_millisecond_are_ordered_as_the_data_file_records_them`, red first; a 16th mutation,
+    starts read to the tick, is caught by it). On the repacked 4.8.0 (a second round ran the old library, still in the NuGet cache under the same version) all five
+    reports equal the spec call for call: xUnit 8 and 9 marks, ReqNRoll 33, 38 and 51 (`r1/s7/compare.txt`). Control: one
+    xUnit run on 4.7.3 fails the same comparison and lists all 9 marks the spec finds as missing.
 
 ## Appendix A. Edit sites at `37e93813`
 

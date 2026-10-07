@@ -297,6 +297,8 @@ internal static class ReportScanner
                 "features", "scenarios", "httpInteractions", "annotations", "attachments", "diagnostics",
                 "steps", "backgroundSteps", "subSteps", "headers", "labels", "categories", "exampleValues",
                 "diagrams", "comments", "parameters", "attempt", "endedAt",
+                // The first-call warm-up marks (plans/WARM_UP_PLAN.md).
+                "warmUp", "warmUpSeconds", "shape", "baselineMs", "baselineCalls", "first",
                 // Run identity (3.1.0). Interned for the same reason as the rest: the scanner
                 // sees these on every report and an uninterned name allocates per document.
                 "ciMetadata", "environment", "provider", "buildNumber", "branch", "commitSha",
@@ -696,6 +698,20 @@ internal static class ReportScanner
 
         private void Interaction(InteractionEntry interaction, string key, ref Utf8JsonReader reader, long windowStart)
         {
+            if (At("warmUp"))
+            {
+                var mark = interaction.WarmUp ??= new WarmUpEntry();
+                switch (key)
+                {
+                    case "kind": mark.Kind = reader.GetString() ?? ""; break;
+                    case "shape": mark.Shape = reader.GetString() ?? ""; break;
+                    case "baselineMs": mark.BaselineMs = reader.TokenType == JsonTokenType.Number && reader.TryGetDouble(out var baseline) ? baseline : 0; break;
+                    case "baselineCalls": mark.BaselineCalls = reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var calls) ? calls : 0; break;
+                    case "first": mark.First = reader.GetString(); break;
+                }
+                return;
+            }
+
             if (At("headers", "#") && key == "key")
             {
                 interaction.HeaderCount++;
@@ -862,6 +878,7 @@ internal static class ReportScanner
                 case "name": scenario.Name = reader.GetString() ?? ""; break;
                 case "result": scenario.Result = reader.GetString() ?? ""; break;
                 case "durationSeconds": scenario.DurationSeconds = reader.TokenType == JsonTokenType.Number && reader.TryGetDouble(out var d) ? d : 0; break;
+                case "warmUpSeconds": scenario.WarmUpSeconds = reader.TokenType == JsonTokenType.Number && reader.TryGetDouble(out var w) && w > 0 ? w : null; break;
                 case "isHappyPath": scenario.IsHappyPath = reader.TokenType == JsonTokenType.True; break;
                 case "errorMessage": scenario.ErrorMessage = reader.GetString(); break;
                 case "errorStackTrace": scenario.ErrorStackTrace = reader.GetString(); break;
