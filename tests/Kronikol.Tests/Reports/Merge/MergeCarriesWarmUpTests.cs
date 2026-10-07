@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using AngleSharp;
 using Kronikol.Ingestion;
 using Kronikol.Reports;
 using Kronikol.Tool;
@@ -43,6 +44,8 @@ public class MergeCarriesWarmUpTests : IDisposable
             .ToDictionary(s => s.GetProperty("id").GetString()!, s => s.GetProperty("warmUpSeconds").GetDouble());
         Assert.Equal(0.6, warmUps["a1"], 6);
         Assert.Equal(0.7, warmUps["b1"], 6);
+        // The merged report draws the marks it carries (R2).
+        Assert.Equal(["600", "700"], MarkedInReport().Order());
     }
 
     [Fact]
@@ -56,6 +59,7 @@ public class MergeCarriesWarmUpTests : IDisposable
 
         Assert.DoesNotContain(Records(merged), r => r.TryGetProperty("warmUp", out _));
         Assert.DoesNotContain(Scenarios(merged), s => s.TryGetProperty("warmUpSeconds", out _));
+        Assert.Empty(MarkedInReport());
     }
 
     [Fact]
@@ -92,6 +96,7 @@ public class MergeCarriesWarmUpTests : IDisposable
         var mark = Assert.Single(Records(json), r => r.TryGetProperty("warmUp", out _));
         Assert.Equal("first", mark.GetProperty("warmUp").GetProperty("kind").GetString());
         Assert.Equal(0.6, Assert.Single(Scenarios(json), s => s.TryGetProperty("warmUpSeconds", out _)).GetProperty("warmUpSeconds").GetDouble(), 6);
+        Assert.Equal(["600"], MarkedInReport(Path.Combine(output, "TestRunReport.html")));
     }
 
     private (string Path, Guid First) Shard(string name, double startMs, double firstMs, WarmUpResult? warmUp)
@@ -138,6 +143,14 @@ public class MergeCarriesWarmUpTests : IDisposable
         logs.Add(new RequestResponseLog(scenario, scenario, HttpMethod.Post, "{}", uri, [], "orders", "Test", RequestResponseType.Response, trace, id, false, HttpStatusCode.OK)
             { Timestamp = T0.AddTicks((long)Math.Round((startMs + durationMs) * TimeSpan.TicksPerMillisecond)) });
         return id;
+    }
+
+    /// <summary>The <c>data-warmup-ms</c> of every scenario the merged (or ingested) report draws a mark on.</summary>
+    private string[] MarkedInReport(string? path = null)
+    {
+        var html = File.ReadAllText(path ?? System.IO.Path.Combine(_directory, "Combined.html"));
+        var document = BrowsingContext.New(AngleSharp.Configuration.Default).OpenAsync(req => req.Content(html)).GetAwaiter().GetResult();
+        return document.QuerySelectorAll("details.scenario[data-warmup-ms]").Select(e => e.GetAttribute("data-warmup-ms")!).ToArray();
     }
 
     private static IEnumerable<JsonElement> Scenarios(JsonDocument json) =>

@@ -107,7 +107,9 @@ public static class MergeableReportRenderer
             history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history : null,
             showHistorySection: options.ShowHistorySection,
             showReportDiagnostics: options.ShowReportDiagnosticsSection,
-            showScenarioHistory: options.ShowScenarioHistory);
+            showScenarioHistory: options.ShowScenarioHistory,
+            // The shards' own marks, carried as the data file carries them.
+            warmUp: report.WarmUp);
 
         // Normally a no-op now that the write is scoped to the destination. Kept for the one case the
         // scope cannot cover — an outputPath with no directory part at all — where the write lands under

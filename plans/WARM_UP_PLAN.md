@@ -643,6 +643,29 @@ for #122 or says it did not.
     starts read to the tick, is caught by it). On the repacked 4.8.0 (a second round ran the old library, still in the NuGet cache under the same version) all five
     reports equal the spec call for call: xUnit 8 and 9 marks, ReqNRoll 33, 38 and 51 (`r1/s7/compare.txt`). Control: one
     xUnit run on 4.7.3 fails the same comparison and lists all 9 marks the spec finds as missing.
+  - **4.8.0 published** (722474a4, tag `v4.8.0`, templates pinned to 4.7.3): CI 37619133098 and Release 37619134790 passed; nuget.org lists all 62 ids; the
+    wiki has R1's edits (`e6ab68c`) and Kronikol4J's ledger its line (`d998248`).
+  - **R2 = 4.9.0 (minor).** Q5 = A: a marked scenario's duration badge keeps its wall time and adds the warm-up as
+    muted text (`2.0s · 1.5s warm-up`), with `data-warmup-ms` and a tooltip naming the calls; its colour follows the time
+    left. The Scenario Timeline shades the warm-up's share of a bar (Q6: shade only). The P50 to P99 filter takes its
+    percentiles over the time left and compares it, with a title on its label; a parameterized group sums its rows'
+    warm-up (Q7). `warm-up-styles.css` is appended only to a page that draws a mark (T44: a page without one is the
+    page written without the pass, byte for byte). `Specifications.html` gets the run's one reading, and a merged report
+    draws what its shards carried. Section 8's two R2 rows: the nearest-rank percentile and the timeline tooltip's
+    colours. The context menu's diagram file name drops the marker with the badge it sits in (`context-menu-script.js:25`
+    removes `.duration-badge`; read, not run).
+  - Proof (harness `r2/`): R2's facts on R1's tree with two compile stubs (the `warmUp` parameter ignored and the
+    rules never appended): every fact failed for its own reason; the passes are three guards and the one-value
+    percentile row (`red-4.8.0-core.txt`, `red-4.8.0-e2e.txt`). 12 mutations each caught, the filter reading wall time
+    by T42 and the marker on every badge by T40 (`mutations.txt`). The core suite (6,897 passed, 2 skipped), the full
+    Playwright suite (995 passed, 28 skipped), and `release.slnf` builds and packs in Release for every target.
+  - S7 (`breakfastprovider/html_marks.py`): on local 4.9.0 packages, one xUnit and one ReqNRoll run of BreakfastProvider (`106702b`, scratch clone):
+    `TestRunReport.html` and `Specifications.html` each draw exactly the marks `TestRunReport.json` records (xUnit 7;
+    ReqNRoll 32, two of them through their groups' sums), with the rules once (`r2/s7/pages.txt`). Control: one xUnit
+    run on 4.8.0 fails the same check (6 marks in the data, none drawn).
+  - #122 was still open at R2's consumer check (Q14 asked for it first): a BDDfy scenario's recorded duration can be
+    shorter than its calls, so its warm-up is capped at it (4.1 step 7) and its time left can read zero. The wiki's
+    BDDfy page says so. Leftovers are in `ROADMAP.md` Appendix C: Q8, Q10, Q15, and section 8's group row.
 
 ## Appendix A. Edit sites at `37e93813`
 

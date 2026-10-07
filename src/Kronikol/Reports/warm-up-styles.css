@@ -1,0 +1,14 @@
+
+        /* The run's first-call warm-up (plans/WARM_UP_PLAN.md R2), carried only by a page that draws a mark. */
+        .duration-badge .warm-up-note {
+            font-weight: normal;
+            opacity: 0.75;
+        }
+        .timeline-bar .timeline-warm-up {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            border-radius: 3px 0 0 3px;
+            background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0 3px, rgba(255, 255, 255, 0.15) 3px 6px);
+        }

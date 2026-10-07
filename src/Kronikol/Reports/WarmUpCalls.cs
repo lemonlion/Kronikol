@@ -16,7 +16,10 @@ namespace Kronikol.Reports;
 /// <param name="BaselineCalls">How many calls that median is over.</param>
 /// <param name="First">For a call that waited, the <see cref="RequestResponseLog.RequestResponseId"/> of the run's first
 /// call of its shape; null for the first call itself.</param>
-internal sealed record WarmUpMark(string Kind, string Shape, double BaselineMs, int BaselineCalls, Guid? First)
+/// <param name="DurationMs">The call's own duration, as the data files write it.</param>
+/// <param name="ScenarioId">The scenario the call belongs to.</param>
+internal sealed record WarmUpMark(string Kind, string Shape, double BaselineMs, int BaselineCalls, Guid? First,
+    double DurationMs = 0, string ScenarioId = "")
 {
     /// <summary>The run's first call of its shape.</summary>
     public const string FirstKind = "first";
@@ -177,7 +180,7 @@ internal static partial class WarmUpCalls
             return;
 
         var shape = first.Shape;
-        marks[first.Id] = new WarmUpMark(WarmUpMark.FirstKind, shape, median, later.Count, null);
+        marks[first.Id] = new WarmUpMark(WarmUpMark.FirstKind, shape, median, later.Count, null, first.Duration, first.ScenarioId);
         foreach (var call in calls.Skip(1))
         {
             if (call.Start < first.Start || call.Start >= firstEnd)
@@ -185,7 +188,7 @@ internal static partial class WarmUpCalls
             var byRatio = call.Duration >= Ratio * median && call.Duration - median >= FloorMs;
             var released = Math.Abs((call.End!.Value - firstEnd).TotalMilliseconds) <= ReleaseMs && call.Duration - median >= FloorMs;
             if (byRatio || released)
-                marks[call.Id] = new WarmUpMark(WarmUpMark.WaitedKind, shape, median, later.Count, first.Id);
+                marks[call.Id] = new WarmUpMark(WarmUpMark.WaitedKind, shape, median, later.Count, first.Id, call.Duration, call.ScenarioId);
         }
     }
 

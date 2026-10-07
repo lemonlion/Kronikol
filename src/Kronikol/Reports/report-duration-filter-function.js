@@ -13,7 +13,9 @@ function filter_duration() {
     for (var i = 0; i < c.items.length; i++) {
         if (!c.items[i].el.hasAttribute('data-duration-ms')) { c.items[i].dur = true; continue; }
         var ms = parseFloat(c.items[i].el.getAttribute('data-duration-ms'));
-        c.items[i].dur = ms > 0 && ms < thresholdMs;
+        // Each scenario's own time: the first-call warm-up it paid (data-warmup-ms) is left out, as the percentiles are.
+        var warmUp = parseFloat(c.items[i].el.getAttribute('data-warmup-ms') || '0');
+        c.items[i].dur = ms > 0 && ms - warmUp < thresholdMs;
     }
     applyVisibility(c);
     update_url_hash();

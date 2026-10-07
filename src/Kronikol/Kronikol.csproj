@@ -35,6 +35,7 @@
 		<EmbeddedResource Include="Reports\advanced-search.js" />
 		<EmbeddedResource Include="Reports\stylesheets.css" />
 		<EmbeddedResource Include="Reports\history-styles.css" />
+		<EmbeddedResource Include="Reports\warm-up-styles.css" />
 		<EmbeddedResource Include="Reports\report-diagnostics-styles.css" />
 		<EmbeddedResource Include="Reports\labs-styles.css" />
 		<EmbeddedResource Include="Reports\context-menu-styles.css" />

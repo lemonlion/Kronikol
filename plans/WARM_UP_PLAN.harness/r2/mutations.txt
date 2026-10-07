@@ -1,0 +1,12 @@
+CAUGHT  The filter reads wall time (T42)  [e2e: FullyQualifiedName~The_percentile_filter_ranks_by_each_scenarios_own_time]  failed 1, passed 0
+CAUGHT  The marker drawn on every badge (T40)  [e2e: FullyQualifiedName~The_marker_and_its_tooltip_are_on_the_marked_scenario_alone]  failed 1, passed 0
+CAUGHT  The marker drawn on every badge (unit)  [core: FullyQualifiedName~A_scenario_with_no_warm_up_is_drawn_as_before]  failed 1, passed 0
+CAUGHT  The badge coloured by wall time  [core: FullyQualifiedName~The_badge_colour_follows_the_time_left]  failed 1, passed 0
+CAUGHT  The percentiles over wall time  [core: FullyQualifiedName~The_percentiles_are_over_each_scenarios_time_left]  failed 1, passed 0
+CAUGHT  The old percentile pick  [core: FullyQualifiedName~A_percentile_is_the_nearest_rank]  failed 3, passed 1
+CAUGHT  The warm-up rules on every page (T44)  [core: FullyQualifiedName~Only_a_page_that_draws_a_mark_carries_the_warm_up_rules|FullyQualifiedName~A_page_with_no_mark_is_the_page_written_without_the_pass]  failed 1, passed 1
+CAUGHT  No timeline shading (T41)  [e2e: FullyQualifiedName~The_timeline_shades_the_warm_ups_share_of_the_bar]  failed 1, passed 0
+CAUGHT  A group sums no warm-up  [core: FullyQualifiedName~A_parameterized_group_sums_its_rows_warm_up_as_it_sums_their_durations]  failed 1, passed 0
+CAUGHT  A caller with the calls alone gets no marks  [core: FullyQualifiedName~A_marked_scenario_keeps_its_wall_time_and_adds_its_warm_up_as_muted_text]  failed 1, passed 0
+CAUGHT  A merged report judges the merged calls  [core: FullyQualifiedName~Shards_that_carry_no_marks_get_none_though_their_merged_calls_would]  failed 1, passed 0
+CAUGHT  The timeline tooltip names skipped bars yellow again  [core: FullyQualifiedName~The_timeline_names_the_colours_it_paints]  failed 1, passed 0

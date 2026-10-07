@@ -548,7 +548,7 @@ public static class MergeableReportReader
             into.Add(log);
             paths.Add(GetString(element, "stepPath"));
             if (warmUpCalls is not null && log.Type == RequestResponseType.Request && ReadWarmUp(element) is { } mark)
-                warmUpCalls[log.RequestResponseId] = mark;
+                warmUpCalls[log.RequestResponseId] = mark with { DurationMs = log.DurationMs ?? 0, ScenarioId = testId };
         }
 
         if (paths.Count > 0 && stepPaths is not null)

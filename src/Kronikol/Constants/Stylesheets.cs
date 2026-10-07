@@ -11,6 +11,7 @@ public class Stylesheets
     private static readonly Lazy<string> HistoryStyleSheetLazy = new(() => Load("history-styles.css"));
     private static readonly Lazy<string> ReportDiagnosticsStyleSheetLazy = new(() => Load("report-diagnostics-styles.css"));
     private static readonly Lazy<string> LabsStyleSheetLazy = new(() => Load("labs-styles.css"));
+    private static readonly Lazy<string> WarmUpStyleSheetLazy = new(() => Load("warm-up-styles.css"));
 
     private static string Load(string fileName)
     {
@@ -38,6 +39,10 @@ public class Stylesheets
 
     /// <summary>The labs page's own rules: its header and its table of every scenario's history.</summary>
     internal static string LabsStyleSheet => LabsStyleSheetLazy.Value;
+
+    /// <summary>The rules of the first-call warm-up's marks: the muted text in a duration badge and the shaded share of a
+    /// timeline bar (plans/WARM_UP_PLAN.md R2). Carried only by a page that draws a mark.</summary>
+    internal static string WarmUpStyleSheet => WarmUpStyleSheetLazy.Value;
 
     /// <summary>The violet overlay that is the default <see cref="ReportConfigurationOptions.HtmlSpecificationsCustomStyleSheet"/>:
     /// it recolours <see cref="HtmlReportStyleSheet"/> and the component sheets rather than replacing them, and is

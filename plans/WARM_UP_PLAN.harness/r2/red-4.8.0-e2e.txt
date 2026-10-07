@@ -1,0 +1,10 @@
+# R2's Playwright facts on R1's tree (4.8.0 content) with the same two stubs.
+
+Kronikol.Tests.EndToEnd.WarmUpMarkTests.The_marker_and_its_tooltip_are_on_the_marked_scenario_alone  {'Failed': 1}
+    x1: Microsoft.Playwright.PlaywrightException : Locator expected to have count '1'
+Kronikol.Tests.EndToEnd.WarmUpMarkTests.The_percentile_filter_ranks_by_each_scenarios_own_time  {'Failed': 1}
+    x1: Microsoft.Playwright.PlaywrightException : Locator expected to have text 'P90 (1.2s)'
+Kronikol.Tests.EndToEnd.WarmUpMarkTests.The_specifications_page_draws_the_same_mark_and_the_exports_keep_what_they_kept  {'Failed': 1}
+    x1: Microsoft.Playwright.PlaywrightException : Locator expected to have text
+Kronikol.Tests.EndToEnd.WarmUpMarkTests.The_timeline_shades_the_warm_ups_share_of_the_bar  {'Failed': 1}
+    x1: Microsoft.Playwright.PlaywrightException : TypeError: Cannot read properties of null (reading 'parentElement')

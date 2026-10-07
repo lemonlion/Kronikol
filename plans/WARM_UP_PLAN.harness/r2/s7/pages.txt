@@ -1,0 +1,25 @@
+# S7 for R2 (plans/WARM_UP_PLAN.md 6.6), 2026-10-07: BreakfastProvider 106702b in a scratch clone on local 4.9.0 packages,
+# one xUnit and one ReqNRoll run; html_marks.py checks TestRunReport.html and Specifications.html against TestRunReport.json.
+
+TestRunReport.html: 7 marked in the data (7 drawn alone, 0 in 0 groups), 7 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 7 marked in the data (7 drawn alone, 0 in 0 groups), 7 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+html_marks xUnit exit 0
+TestRunReport.html: 32 marked in the data (30 drawn alone, 2 in 2 groups), 32 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 32 marked in the data (30 drawn alone, 2 in 2 groups), 32 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+html_marks ReqNRoll exit 0
+
+## Control: one xUnit run on 4.8.0, whose pages draw no mark. The same check must fail.
+TestRunReport.html: 6 marked in the data (6 drawn alone, 0 in 0 groups), 0 notes, warm-up rules 0x, wrong 6, unmarked drawn 0: DIFFERS
+  758c8d6c6e3ee2ce: data 2060 ms, page 0 ms
+  72d459d9241781f1: data 2712 ms, page 0 ms
+  cee75210ed63373b: data 88 ms, page 0 ms
+  3acd39e66e292bde: data 669 ms, page 0 ms
+  d484d08e58fa3eb8: data 148 ms, page 0 ms
+  63ee279c52be38b5: data 988 ms, page 0 ms
+Specifications.html: 6 marked in the data (6 drawn alone, 0 in 0 groups), 0 notes, warm-up rules 0x, wrong 6, unmarked drawn 0: DIFFERS
+  758c8d6c6e3ee2ce: data 2060 ms, page 0 ms
+  72d459d9241781f1: data 2712 ms, page 0 ms
+  cee75210ed63373b: data 88 ms, page 0 ms
+  3acd39e66e292bde: data 669 ms, page 0 ms
+  d484d08e58fa3eb8: data 148 ms, page 0 ms
+  63ee279c52be38b5: data 988 ms, page 0 ms

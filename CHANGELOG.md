@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.9.0] - 2026-10-07
+
+**Minor - the report shows the first-call warm-up (#113).**
+`plans/WARM_UP_PLAN.md` R2. The report's badge, timeline and duration filter gain a mark, which is new UI, so the
+minor part moves (4.8.0 to 4.9.0). A page with no mark is written as before, byte for byte. Kronikol4J does not mirror
+it; its ledger has the line. The history action's `VERSION` installs `Kronikol.Tool` 4.9.0, and the templates pin
+4.8.0.
+
+### Added
+
+- **A marked scenario's duration badge says how much was warm-up.** The badge keeps the wall time as its text and
+  adds the run's first-call warm-up as muted text, as in `1.3s · 1.2s warm-up`; hovering it names the calls, slowest
+  first, with the median of the later calls of each kind (`1.27 s, 1.19 s of it first-call warm-up: POST /orders
+  661 ms (later calls 7.6 ms), GET /milk 82 ms (2.3 ms)`), and a call that waited for the run's first says so. Its
+  colour is the one the time left earns, so a scenario slow only because it went first is not coloured slow. A
+  parameterized group sums its rows' warm-up as it sums their durations.
+- **The Scenario Timeline shades the warm-up's share** of a marked scenario's bar, from its start, with the badge's
+  tooltip. The bars keep their order, which is elapsed time.
+- **The P50 to P99 duration filter ranks by each scenario's own time**: the percentiles are taken over the time left
+  and the filter compares it (`data-duration-ms` less the new `data-warmup-ms`), and the filter's label says so in its
+  title. Export Filtered CSV still writes wall time; Export Filtered HTML keeps the mark and its tooltip.
+- The rules are in a new `warm-up-styles.css`, appended only to a page that draws a mark. `Specifications.html` draws
+  the same marks, and a merged report draws the marks its shards carried.
+
+### Fixed
+
+- A duration percentile is the nearest rank. Whenever the number of scenarios times the percentile was a whole
+  number, the button's threshold was one scenario too high: the P50 of two scenarios took the longer of the two, and
+  the P90 of ten the longest.
+- The Scenario Timeline's tooltip named skipped bars yellow; they are painted grey, and bypassed ones orange, which
+  it did not name.
+
 ## [4.8.0] - 2026-10-07
 
 **Minor - a scenario's duration says how much of it was the app's first-call warm-up (#113).**

@@ -488,12 +488,12 @@ public static class ReportGenerator
 
         if (options.GenerateSpecificationsReport)
         {
-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReport(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite));
+            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite, warmUp: warmUp));
         }
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, showScenarioHistory: options.ShowScenarioHistory));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp));
         }
 
         if (options.GenerateSpecificationsData)
@@ -1245,10 +1245,17 @@ public static class ReportGenerator
         bool showHistorySection = false,
         bool showReportDiagnostics = false,
         ComponentDiagramReportGenerator.DrawnDiagram? componentDiagramDrawn = null,
-        bool showScenarioHistory = false)
+        bool showScenarioHistory = false,
+        WarmUpResult? warmUp = null)
     {
         if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
             return WriteFile(string.Empty, fileName);
+
+        // The run's first-call warm-up (plans/WARM_UP_PLAN.md R2): a run hands in what it found once for every output, a
+        // merge what its shards carried; a caller with the calls alone gets the same reading. A page with no mark is
+        // written as it was without them.
+        warmUp ??= trackedLogs is null ? WarmUpResult.None : WarmUpCalls.Find(features, trackedLogs);
+        var warmUpByScenario = warmUp.Calls.Values.ToLookup(m => m.ScenarioId, StringComparer.Ordinal);
 
         // Defaulted here as well as in the data writers, and for the same reason: the HTML's
         // data-stable-id attributes and the data file's stableId values are the same identity, and a
@@ -1396,6 +1403,7 @@ public static class ReportGenerator
         var combinedStylesheet = Stylesheets.HtmlReportStyleSheet
                                  + (history is not null && (showHistorySection || drawsVerdicts) ? Stylesheets.HistoryStyleSheet : "")
                                  + (includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 } ? Stylesheets.ReportDiagnosticsStyleSheet : "")
+                                 + (warmUp.ScenarioMs.Count > 0 ? Stylesheets.WarmUpStyleSheet : "")
                                  + "\n";
         var themeStyles = string.IsNullOrEmpty(stylesheet) ? "" : "\n" + stylesheet;
 
@@ -1744,17 +1752,19 @@ public static class ReportGenerator
         // Duration filter (only shown when scenarios have duration data)
         if (hasDurations)
         {
+            // Each scenario's own time: a scenario slow only because it paid the run's first-call warm-up is not slow
+            // (plans/WARM_UP_PLAN.md R2), and report-duration-filter-function.js compares the same number.
             var durationsMs = features.SelectMany(f => f.Scenarios)
                 .Where(s => s.Duration.HasValue)
-                .Select(s => s.Duration!.Value.TotalMilliseconds)
+                .Select(s => s.Duration!.Value.TotalMilliseconds - WarmUpMsOf(warmUp, s.Id))
                 .OrderBy(d => d)
                 .ToArray();
-            var p50Ms = durationsMs.Length > 0 ? durationsMs[(int)(durationsMs.Length * 0.50)] : 0;
-            var p90Ms = durationsMs.Length > 0 ? durationsMs[(int)(durationsMs.Length * 0.90)] : 0;
-            var p95Ms = durationsMs.Length > 0 ? durationsMs[(int)(durationsMs.Length * 0.95)] : 0;
-            var p99Ms = durationsMs.Length > 0 ? durationsMs[(int)(durationsMs.Length * 0.99)] : 0;
+            var p50Ms = Percentile(durationsMs, 0.50);
+            var p90Ms = Percentile(durationsMs, 0.90);
+            var p95Ms = Percentile(durationsMs, 0.95);
+            var p99Ms = Percentile(durationsMs, 0.99);
 
-            body.Append(CultureInfo.InvariantCulture, $"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label">Duration ≥:</span><button class="percentile-btn" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" data-custom="1" onclick="set_percentile(this)">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" /><span class="duration-filters-unit">seconds</span></span></div>""");
+            body.Append(CultureInfo.InvariantCulture, $"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label"{(warmUp.ScenarioMs.Count > 0 ? " title=\"Each scenario's own time: the first-call warm-up it paid is left out\"" : "")}>Duration ≥:</span><button class="percentile-btn" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" data-custom="1" onclick="set_percentile(this)">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" /><span class="duration-filters-unit">seconds</span></span></div>""");
         }
 
         if (allDependencies.Count > 0)
@@ -1949,7 +1959,7 @@ public static class ReportGenerator
             {
                 var maxDuration = timelineScenarios.Max(x => x.Scenario.Duration!.Value.TotalMilliseconds);
                 body.Append($"<div id=\"scenario-timeline\" class=\"scenario-timeline\"{(showTimelinePanel ? "" : " style=\"display:none\"")}>");
-                body.Append("<div class=\"timeline-header\">Scenario Timeline <span class=\"timeline-info\" title=\"The Scenario Timeline shows every test scenario ordered by duration (longest first). Each bar is proportional to the scenario's elapsed time, colour-coded by result: green = passed, red = failed, yellow = skipped. Use it to quickly spot slow tests, compare relative durations, and identify performance outliers across the entire test run.\">&#x1F6C8;</span></div>");
+                body.Append("<div class=\"timeline-header\">Scenario Timeline <span class=\"timeline-info\" title=\"The Scenario Timeline shows every test scenario ordered by duration (longest first). Each bar is proportional to the scenario's elapsed time, colour-coded by result: green = passed, red = failed, grey = skipped, orange = bypassed. Use it to quickly spot slow tests, compare relative durations, and identify performance outliers across the entire test run.\">&#x1F6C8;</span></div>");
                 foreach (var (featureName, scenario) in timelineScenarios)
                 {
                     var durationMs = scenario.Duration!.Value.TotalMilliseconds;
@@ -1963,7 +1973,17 @@ public static class ReportGenerator
                     };
                     body.Append($"<div class=\"timeline-row\">");
                     body.Append($"<div class=\"timeline-label\" title=\"{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}\">{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}</div>");
-                    body.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-track\"><div class=\"timeline-bar {statusClass}\" style=\"width:{widthPercent:F1}%\" title=\"{FormatDurationBadge(scenario.Duration.Value)}\"></div></div>");
+                    var timelineWarmUpMs = WarmUpMsOf(warmUp, scenario.Id);
+                    if (timelineWarmUpMs > 0)
+                    {
+                        // The warm-up's share of the bar, shaded from its start: the bar is elapsed time, the share is what
+                        // the run's first calls took of it.
+                        var tooltip = System.Net.WebUtility.HtmlEncode(WarmUpTooltip(scenario.Duration.Value, timelineWarmUpMs, warmUpByScenario[scenario.Id]));
+                        body.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-track\"><div class=\"timeline-bar {statusClass}\" style=\"width:{widthPercent:F1}%\" title=\"{tooltip}\">"
+                            + $"<div class=\"timeline-warm-up\" style=\"width:{timelineWarmUpMs / durationMs * 100:F1}%\"></div></div></div>");
+                    }
+                    else
+                        body.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-track\"><div class=\"timeline-bar {statusClass}\" style=\"width:{widthPercent:F1}%\" title=\"{FormatDurationBadge(scenario.Duration.Value)}\"></div></div>");
                     body.Append($"<div class=\"timeline-duration\">{FormatDurationBadge(scenario.Duration.Value)}</div>");
                     body.Append("</div>");
                 }
@@ -2093,7 +2113,8 @@ public static class ReportGenerator
                         // identity schemes and the deep link from a flat row resolves to nothing.
                         suite: suite,
                         history: scenarioHistory,
-                        historySlots: historySlots);
+                        historySlots: historySlots,
+                        warmUp: warmUp);
                     continue;
                 }
 
@@ -2111,8 +2132,11 @@ public static class ReportGenerator
                 {
                     var durationMs = scenario.Duration.Value.TotalMilliseconds;
                     durationAttr = string.Create(CultureInfo.InvariantCulture, $" data-duration-ms=\"{durationMs:F0}\"");
-                    var durationClass = durationMs < 2000 ? "duration-fast" : durationMs < 5000 ? "duration-moderate" : "duration-slow";
-                    durationBadge = $" <span class=\"duration-badge {durationClass}\">{FormatDurationBadge(scenario.Duration.Value)}</span>";
+                    var scenarioWarmUpMs = WarmUpMsOf(warmUp, scenario.Id);
+                    var durationClass = DurationClass(durationMs - scenarioWarmUpMs);
+                    durationBadge = scenarioWarmUpMs > 0
+                        ? WarmUpBadge(durationClass, scenario.Duration.Value, scenarioWarmUpMs, warmUpByScenario[scenario.Id], ref durationAttr)
+                        : $" <span class=\"duration-badge {durationClass}\">{FormatDurationBadge(scenario.Duration.Value)}</span>";
                 }
 
                 // Deep link anchor ID
@@ -2851,7 +2875,8 @@ public static class ReportGenerator
         ResolvedToggleDefaults? toggleDefaults = null,
         string? suite = null,
         HistoryVerdicts? history = null,
-        Dictionary<string, int>? historySlots = null)
+        Dictionary<string, int>? historySlots = null,
+        WarmUpResult? warmUp = null)
     {
         var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn;
         var scenarios = group.Scenarios;
@@ -2934,8 +2959,11 @@ public static class ReportGenerator
         // Total duration
         var totalDuration = scenarios.Where(s => s.Duration.HasValue).Select(s => s.Duration!.Value).Aggregate(TimeSpan.Zero, (acc, d) => acc + d);
         var durationAttr = totalDuration > TimeSpan.Zero ? string.Create(CultureInfo.InvariantCulture, $" data-duration-ms=\"{totalDuration.TotalMilliseconds:F0}\"") : "";
+        var groupWarmUpMs = scenarios.Sum(s => WarmUpMsOf(warmUp, s.Id));
         var durationBadge = totalDuration > TimeSpan.Zero
-            ? $" <span class=\"duration-badge {(totalDuration.TotalMilliseconds < 2000 ? "duration-fast" : totalDuration.TotalMilliseconds < 5000 ? "duration-moderate" : "duration-slow")}\">{FormatDurationBadge(totalDuration)}</span>"
+            ? groupWarmUpMs > 0
+                ? WarmUpBadge(DurationClass(totalDuration.TotalMilliseconds - groupWarmUpMs), totalDuration, groupWarmUpMs, scenarios.SelectMany(s => warmUp is null ? Enumerable.Empty<WarmUpMark>() : warmUp.Calls.Values.Where(m => m.ScenarioId == s.Id)), ref durationAttr)
+                : $" <span class=\"duration-badge {DurationClass(totalDuration.TotalMilliseconds)}\">{FormatDurationBadge(totalDuration)}</span>"
             : "";
 
         // Pass/fail summary
@@ -4192,6 +4220,57 @@ public static class ReportGenerator
 
     private static readonly Regex StripTabularParamSuffixCompiledRegex = new(@"\s*\[[a-zA-Z_]\w*:\s*""<\$[a-zA-Z_]\w*>""\]", RegexOptions.Compiled);
     private static Regex StripTabularParamSuffixRegex() => StripTabularParamSuffixCompiledRegex;
+
+    /// <summary>The badge colour for a duration: under 2 s fast, under 5 s moderate, else slow.</summary>
+    private static string DurationClass(double ms) => ms < 2000 ? "duration-fast" : ms < 5000 ? "duration-moderate" : "duration-slow";
+
+    /// <summary>The milliseconds of a scenario's duration its first-call warm-up took; 0 when it paid none.</summary>
+    private static double WarmUpMsOf(WarmUpResult? warmUp, string scenarioId) =>
+        warmUp is not null && warmUp.ScenarioMs.TryGetValue(scenarioId, out var ms) ? ms : 0;
+
+    /// <summary>The value at <paramref name="p"/> of sorted values, by nearest rank: the P50 of two is the smaller, where
+    /// <c>sorted[(int)(n * p)]</c> picked the larger until 4.9.0.</summary>
+    private static double Percentile(double[] sorted, double p) =>
+        sorted.Length == 0 ? 0 : sorted[Math.Clamp((int)Math.Ceiling(p * sorted.Length) - 1, 0, sorted.Length - 1)];
+
+    /// <summary>
+    /// A duration badge that says how much of it was the run's first-call warm-up (plans/WARM_UP_PLAN.md Q5, A): the wall
+    /// time stays its text, the warm-up follows as muted text, the tooltip names the calls, and its colour is the one
+    /// the time left earns. <paramref name="durationAttr"/> gains <c>data-warmup-ms</c>, which the duration filter
+    /// subtracts.
+    /// </summary>
+    private static string WarmUpBadge(string durationClass, TimeSpan duration, double warmUpMs, IEnumerable<WarmUpMark> calls, ref string durationAttr)
+    {
+        durationAttr += string.Create(CultureInfo.InvariantCulture, $" data-warmup-ms=\"{warmUpMs:F0}\"");
+        var tooltip = System.Net.WebUtility.HtmlEncode(WarmUpTooltip(duration, warmUpMs, calls));
+        return $" <span class=\"duration-badge {durationClass}\" title=\"{tooltip}\">{FormatDurationBadge(duration)}"
+               + $"<span class=\"warm-up-note\"> · {FormatDurationBadge(TimeSpan.FromMilliseconds(warmUpMs))} warm-up</span></span>";
+    }
+
+    /// <summary>
+    /// <c>1.27 s, 1.19 s of it first-call warm-up: POST /orders 661 ms (later calls 7.6 ms), GET /milk 82 ms (2.3 ms)</c>:
+    /// the slowest call first, and a call that waited for the run's first says so.
+    /// </summary>
+    internal static string WarmUpTooltip(TimeSpan duration, double warmUpMs, IEnumerable<WarmUpMark> calls)
+    {
+        static string Time(double ms) => ms >= 1000
+            ? string.Create(CultureInfo.InvariantCulture, $"{ms / 1000:0.##} s")
+            : string.Create(CultureInfo.InvariantCulture, $"{ms:0} ms");
+        static string Baseline(double ms) => string.Create(CultureInfo.InvariantCulture, $"{ms:0.#} ms");
+
+        var text = new StringBuilder($"{Time(duration.TotalMilliseconds)}, {Time(warmUpMs)} of it first-call warm-up: ");
+        var first = true;
+        foreach (var call in calls.OrderByDescending(c => c.DurationMs))
+        {
+            if (!first)
+                text.Append(", ");
+            text.Append(call.Shape).Append(' ').Append(Time(call.DurationMs))
+                .Append(call.Kind == WarmUpMark.WaitedKind ? ", waiting for the run's first" : "")
+                .Append(" (").Append(first ? "later calls " : "").Append(Baseline(call.BaselineMs)).Append(')');
+            first = false;
+        }
+        return text.ToString();
+    }
 
     internal static string FormatDurationBadge(TimeSpan duration)
     {

@@ -1,0 +1,34 @@
+# R2's facts on R1's tree (4.8.0 content) with two compile stubs: GenerateHtmlReportCore's warmUp parameter, ignored, and
+# Stylesheets.WarmUpStyleSheet, the rules never appended. Per new fact: outcome and first line of each failure.
+
+Kronikol.Tests.Reports.WarmUpHtmlTests.A_marked_scenario_keeps_its_wall_time_and_adds_its_warm_up_as_muted_text  {'Failed': 1}
+    x1: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.Reports.WarmUpHtmlTests.A_page_with_no_mark_is_the_page_written_without_the_pass  {'Passed': 1}
+Kronikol.Tests.Reports.WarmUpHtmlTests.A_parameterized_group_sums_its_rows_warm_up_as_it_sums_their_durations  {'Failed': 1}
+    x1: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.Reports.WarmUpHtmlTests.A_percentile_is_the_nearest_rank  {'Passed': 1, 'Failed': 3}
+    x3: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.Reports.WarmUpHtmlTests.A_scenario_with_no_warm_up_is_drawn_as_before  {'Passed': 1}
+Kronikol.Tests.Reports.WarmUpHtmlTests.Only_a_page_that_draws_a_mark_carries_the_warm_up_rules  {'Failed': 1}
+    x1: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.WarmUpHtmlTests.The_badge_colour_follows_the_time_left  {'Failed': 1}
+    x1: Assert.Contains() Failure: Item not found in collection
+Kronikol.Tests.Reports.WarmUpHtmlTests.The_badge_tooltip_names_each_call_and_its_later_calls_median  {'Failed': 1}
+    x1: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.Reports.WarmUpHtmlTests.The_filter_label_has_no_title_when_nothing_is_marked  {'Passed': 1}
+Kronikol.Tests.Reports.WarmUpHtmlTests.The_percentiles_are_over_each_scenarios_time_left  {'Failed': 1}
+    x1: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.Reports.WarmUpHtmlTests.The_timeline_names_the_colours_it_paints  {'Failed': 1}
+    x1: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.WarmUpHtmlTests.The_timeline_shades_the_warm_up_share_of_a_marked_bar  {'Failed': 1}
+    x1: System.NullReferenceException : Object reference not set to an instance of an object.
+Kronikol.Tests.Reports.WarmUpPagesTests.The_report_and_the_specifications_draw_the_same_marks  {'Failed': 1}
+    x1: Assert.Single() Failure: The collection was empty
+
+new methods not in this trx: Dispose
+
+# Facts R2 extended (an assertion on the merged and the ingested report's HTML):
+--- Failed Kronikol.Tests.Reports.Merge.MergeCarriesWarmUpTests.Each_shards_first_call_keeps_its_mark
+    Assert.Equal() Failure: Collections differ
+--- Failed Kronikol.Tests.Reports.Merge.MergeCarriesWarmUpTests.An_ingested_feed_is_marked_by_the_same_rule
+    Assert.Equal() Failure: Collections differ
