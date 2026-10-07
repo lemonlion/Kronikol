@@ -11,7 +11,8 @@ namespace Kronikol.Reports;
 /// </summary>
 /// <param name="Kind"><see cref="FirstKind"/> or <see cref="WaitedKind"/>.</param>
 /// <param name="Shape">The method and the templated path (and, for a statement-shaped dependency, the templated statement
-/// head), as in <c>POST /orders/{id}</c>. The service is the call's own.</param>
+/// head), as in <c>POST /orders/{id}</c>. The method is the shape's first call's, as the data file writes it; calls whose
+/// methods differ only in case are one shape. The service is the call's own.</param>
 /// <param name="BaselineMs">The median duration of the shape's calls that started after the first one ended.</param>
 /// <param name="BaselineCalls">How many calls that median is over.</param>
 /// <param name="First">For a call that waited, the <see cref="RequestResponseLog.RequestResponseId"/> of the run's first
@@ -76,7 +77,7 @@ internal static partial class WarmUpCalls
         var calls = TestCalls(logs, scenarios, durations, rules);
 
         var marks = new Dictionary<Guid, WarmUpMark>();
-        foreach (var shape in calls.GroupBy(c => (c.Service, c.Method, c.Shape)))
+        foreach (var shape in calls.GroupBy(c => (c.Service, c.Method, c.Target)))
             Judge(shape.ToList(), marks);
         if (marks.Count == 0)
             return WarmUpResult.None;
@@ -102,7 +103,7 @@ internal static partial class WarmUpCalls
     private static DateTimeOffset? AsWritten(DateTimeOffset? start) =>
         start is { } at ? new DateTimeOffset(at.UtcTicks - at.UtcTicks % TimeSpan.TicksPerMillisecond, TimeSpan.Zero) : null;
 
-    private sealed record Call(Guid Id, int Order, string ScenarioId, string Service, string Method, string Shape,
+    private sealed record Call(Guid Id, int Order, string ScenarioId, string Service, string Method, string Target, string Shape,
         DateTimeOffset? StartAt, double? DurationMs, int? Status)
     {
         public DateTimeOffset Start => StartAt!.Value;
@@ -143,8 +144,11 @@ internal static partial class WarmUpCalls
             if (request.MetaType == RequestResponseMetaType.Event || services[request.TestId].Contains(request.CallerName))
                 continue;
             responses.TryGetValue(request.RequestResponseId, out var response);
+            // Grouped by the upper-cased method (warmup.py's shape_of) and named with the method as the data file writes
+            // it, so a gRPC GetOrderStatus is not written GETORDERSTATUS.
+            var target = TargetOf(request, rules);
             calls.Add(new Call(request.RequestResponseId, calls.Count, request.TestId, request.ServiceName,
-                MethodOf(request).ToUpperInvariant(), ShapeOf(request, rules), AsWritten(request.Timestamp),
+                MethodOf(request).ToUpperInvariant(), target, $"{ReportGenerator.MethodText(request.Method)} {target}", AsWritten(request.Timestamp),
                 durations.TryGetValue(request.RequestResponseId, out var ms) ? ms : null,
                 InteractionStatus.Split(response?.StatusCode).Code));
         }
@@ -221,15 +225,15 @@ internal static partial class WarmUpCalls
     }
 
     /// <summary>
-    /// 4.1 step 2: the method and the templated path, without the query string or the fragment, so neither splits a
+    /// 4.1 step 2, after the method: the templated path, without the query string or the fragment, so neither splits a
     /// shape; a statement-shaped dependency, whose URI names the connection, adds its templated statement head.
     /// </summary>
-    private static string ShapeOf(RequestResponseLog request, HistoryShapeRules? rules)
+    private static string TargetOf(RequestResponseLog request, HistoryShapeRules? rules)
     {
-        var shape = MethodOf(request).ToUpperInvariant() + " " + InteractionShape.Template(PathOf(request.Uri.ToString()), rules);
+        var path = InteractionShape.Template(PathOf(request.Uri.ToString()), rules);
         return DependencyCategories.IsStatementShaped(request.DependencyCategory) && !string.IsNullOrWhiteSpace(request.Content)
-            ? shape + " " + InteractionShape.StatementHead(request.Content, rules)
-            : shape;
+            ? path + " " + InteractionShape.StatementHead(request.Content, rules)
+            : path;
     }
 
     /// <summary>The path of the URI the data file writes: an absolute URI loses its scheme and authority, and any URI

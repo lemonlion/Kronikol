@@ -1,0 +1,2 @@
+live: script 6 marks in 5 scenarios, report 6 in 5: 1 differences
+  differs  406cb440-75c9-4a08-81da-7f0d8f363ac8  script {'kind': 'first', 'shape': 'GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus', 'baselineCalls': 1, 'first': None} 4.5973 ms, report {'kind': 'first', 'shape': 'GETORDERSTATUS /breakfast.BreakfastGrpc/GetOrderStatus', 'baselineCalls': 1, 'first': None} 4.5973 ms

@@ -322,7 +322,40 @@ public class WarmUpCallsTests
         var found = run.Find();
 
         Assert.Equal([insert, select], found.Calls.Keys.OrderBy(k => k == select));
-        Assert.StartsWith("QUERY / SELECT", found.Calls[select].Shape);
+        // The method as the data file writes it: an operation label is not upper-cased (ReportGenerator.MethodText).
+        Assert.StartsWith("Query / SELECT", found.Calls[select].Shape);
+    }
+
+    [Fact]
+    public void A_shape_names_its_method_as_the_data_file_writes_it()
+    {
+        // A gRPC call's method is the operation's name. The data file writes it as captured, and the shape wrote the
+        // run's first GetOrderStatus as GETORDERSTATUS (4.8.0, measured on BreakfastProvider).
+        const string uri = "grpc:///breakfast.BreakfastGrpc/GetOrderStatus";
+        var run = new Run().Scenario("s1");
+        var first = run.Call("s1", 0, 600, method: "GetOrderStatus", uri: uri, service: "Breakfast Provider", category: DependencyCategories.Grpc);
+        run.Call("s1", 700, 5, method: "GetOrderStatus", uri: uri, service: "Breakfast Provider", category: DependencyCategories.Grpc);
+
+        var mark = Assert.Single(run.Find().Calls);
+
+        Assert.Equal(first, mark.Key);
+        Assert.Equal("GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus", mark.Value.Shape);
+    }
+
+    [Fact]
+    public void Methods_that_differ_only_in_case_are_one_shape_named_by_its_first_call()
+    {
+        // warmup.py groups by the upper-cased method; only the shape's name keeps the case, the first call's.
+        var run = new Run().Scenario("s1");
+        var first = run.Call("s1", 0, 600, method: "get");
+        run.Call("s1", 700, 5, method: "GET");
+        run.Call("s1", 800, 5, method: "GET");
+
+        var mark = Assert.Single(run.Find().Calls);
+
+        Assert.Equal(first, mark.Key);
+        Assert.Equal(2, mark.Value.BaselineCalls);
+        Assert.Equal("get /orders", mark.Value.Shape);
     }
 
     [Fact]

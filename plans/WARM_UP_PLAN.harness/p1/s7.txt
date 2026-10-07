@@ -1,0 +1,29 @@
+S7 for 4.9.1: BreakfastProvider c2920cc (scratch clone) on local 4.9.1 packages (62, release.slnf Release), one xUnit and one ReqNRoll run.
+[18:05:48] build release.slnf
+[18:07:01] pack
+packages: 62
+package references moved: 27
+[18:07:23] build
+[18:07:52] xUnit run 1
+[18:11:19] xUnit run 1 rc=0 206s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json
+[18:11:19] ReqNRoll run 1
+[18:11:34] ReqNRoll run 1 rc=2 13s report=tests/BreakfastProvider.Tests.Component.ReqNRoll/bin/Debug/net10.0/Reports/TestRunReport.json
+[18:11:34] done
+ReqNRoll-1: script 35 marks in 32 scenarios, report 35 in 32: equal
+xUnit-1: script 8 marks in 7 scenarios, report 8 in 7: equal
+xUnit-1:
+TestRunReport.html: 7 marked in the data (7 drawn alone, 0 in 0 groups), 7 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 7 marked in the data (7 drawn alone, 0 in 0 groups), 7 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+ReqNRoll-1:
+TestRunReport.html: 32 marked in the data (27 drawn alone, 5 in 5 groups), 32 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 32 marked in the data (27 drawn alone, 5 in 5 groups), 32 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+[18:11:35] S7 done
+
+Restored Kronikol.dll carries the fix (HttpVerbs occurrences: 1).
+
+The ReqNRoll run passed 214 of 214 and then failed its assembly fixture's DisposeAsync (NullReferenceException in WebApplicationFactory.DisposeAsync, from BreakfastProvider's AppManager.DisposeFactory in AfterTestRun). Reruns:
+s7-p1-491 run 1:  total: 214  failed: 0  succeeded: 214  teardown NRE: 0
+s7-p1-491 run 2:  total: 214  failed: 1  succeeded: 213  teardown NRE: 0
+s7-p1-490 run 1:  total: 214  failed: 0  succeeded: 214  teardown NRE: 0
+s7-p1-490 run 2:  total: 214  failed: 0  succeeded: 214  teardown NRE: 0
+s7-p1-491 run 2's failure: 'A request with a correlation id should forward it to the supplier service', Expected requests not to be empty (DownstreamRequestSteps.AssertDownstreamReceivedCorrelationId reads the consumer's fake during the scenario; no report code has run).

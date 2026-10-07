@@ -185,6 +185,8 @@ def detect(calls, variant='P'):
         if not (first['dur'] >= ratio * med and first['dur'] - med >= floor):
             continue
         first['warm'] = ('first', med, len(later), None)
+        # Named with the method as the data file writes it, the first call's (4.9.1); grouped by the upper-cased one.
+        first['name'] = f"{first['method']} {first['shape'][2]}"
         marked.append(first)
         for c in cs[1:]:
             if not (first['start'] <= c['start'] < first['end']):
@@ -194,6 +196,7 @@ def detect(calls, variant='P'):
                         and c['dur'] - med >= floor)
             if by_ratio or released:
                 c['warm'] = ('waited', med, len(later), first['rid'])
+                c['name'] = first['name']
                 marked.append(c)
     return marked
 
@@ -274,7 +277,7 @@ def cmd_marks(a):
             scenarios, calls = load(loader)
             marked = detect(calls, a.variant)
             out[lane] = {
-                'calls': {c['rid']: {'kind': c['warm'][0], 'shape': f"{c['shape'][1]} {c['shape'][2]}", 'baselineMs': c['warm'][1],
+                'calls': {c['rid']: {'kind': c['warm'][0], 'shape': c['name'], 'baselineMs': c['warm'][1],
                                      'baselineCalls': c['warm'][2], 'first': c['warm'][3] if len(c['warm']) > 3 else None}
                           for c in marked},
                 'scenarios': {sc['id']: warm_up_ms(sc) for sc in scenarios if warm_up_ms(sc) > 0},

@@ -403,7 +403,9 @@ public static class FailuresDigestGenerator
     /// </summary>
     private static string Summarise(RequestResponseLog log)
     {
-        var method = log.Method.Value?.ToString()?.ToUpperInvariant();
+        // As the data file writes it (ReportGenerator.MethodText): an operation label keeps its case, so the Call
+        // column reads GetOrderStatus where TestRunReport.json does.
+        var method = ReportGenerator.MethodText(log.Method);
         var target = Uri.TryCreate(log.Uri.ToString(), UriKind.Absolute, out var uri)
             ? uri.PathAndQuery is "/" or "" ? uri.Host : uri.PathAndQuery
             : log.Uri.ToString();
@@ -444,7 +446,10 @@ public static class FailuresDigestGenerator
     /// </summary>
     private static bool IsStatementLike(string? method) =>
         method is { Length: > 0 }
-        && method is not ("GET" or "POST" or "PUT" or "PATCH" or "DELETE" or "HEAD" or "OPTIONS" or "TRACE" or "CONNECT");
+        && !HttpVerbs.Contains(method);
+
+    private static readonly HashSet<string> HttpVerbs = new(StringComparer.OrdinalIgnoreCase)
+        { "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE", "CONNECT" };
 
     // The fourth first-line implementation this file used to contain, and the last one standing on its
     // own. It was not a cluster key — it summarises a SQL statement — but it trimmed where the shared one

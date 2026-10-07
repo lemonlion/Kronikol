@@ -20,7 +20,7 @@
     "baselineMs": 5.9965,
     "first": null,
     "kind": "first",
-    "shape": "GETORDERSTATUS /breakfast.BreakfastGrpc/GetOrderStatus"
+    "shape": "GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus"
    },
    "2237cf15-4e58-4061-98d3-73512ee482dd": {
     "baselineCalls": 4,
@@ -218,7 +218,7 @@
     "baselineMs": 7.4684,
     "first": null,
     "kind": "first",
-    "shape": "GETORDERSTATUS /breakfast.BreakfastGrpc/GetOrderStatus"
+    "shape": "GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus"
    }
   },
   "scenarios": {

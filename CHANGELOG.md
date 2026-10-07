@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.9.1] - 2026-10-07
+
+**Patch - the warm-up's tooltip and its call names read as the rest of the report does (#113).**
+Found by checking BreakfastProvider's live report on 4.9.0. Bug fixes only, nothing new to call, so the patch part
+moves (4.9.0 to 4.9.1). One fix changes a value the data files write: a warm-up's `shape` names a method that is not an
+HTTP verb as the record's own `method` field writes it (below). Kronikol4J does not mirror the warm-up; its ledger has
+the line. The history action's `VERSION` installs `Kronikol.Tool` 4.9.1, and the templates pin 4.9.0.
+
+### Fixed
+
+- **The warm-up tooltip read a different time from the badge it sits on.** The duration badge and the Scenario
+  Timeline cut a time under a second to its whole milliseconds, and the tooltip rounded it, so a badge reading
+  `696ms · 612ms warm-up` had a tooltip starting `697 ms, 613 ms of it`, and one just under a second read `1000 ms`
+  beside `999ms`. The tooltip now cuts as the badge does.
+- **A warm-up's shape upper-cased a method that is not an HTTP verb.** The rule groups calls by the upper-cased
+  method, as `warmup.py` does, and wrote the shape with that key, so a gRPC call recorded as `GetOrderStatus` was named
+  `GETORDERSTATUS /breakfast.BreakfastGrpc/GetOrderStatus` in `TestRunReport.json` (and the YAML, XML and mergeable
+  files) and in the tooltip, and a SQL `Query` as `QUERY`. The shape now names the method as the data file writes it
+  for the shape's first call: an `HttpMethod` upper-cased, any other label as captured. Calls whose methods differ only
+  in case are still one shape. Behaviour change: such a mark's `shape` value changes; an HTTP call's does not.
+- **`Failures.md` upper-cased a call's method in its Call column**, so a gRPC `GetOrderStatus` read `GETORDERSTATUS`
+  where `TestRunReport.json` reads `GetOrderStatus`. It now writes the method as the data file does, and an
+  uncategorised call whose method is a verb written in lower case (`get`) is still named by its target, never its body.
+
+Each fix has a fact that failed on 4.9.0 for its own reason, and undoing the fix alone turns its fact red
+(`plans/WARM_UP_PLAN.harness/p1/`).
+
 ## [4.9.0] - 2026-10-07
 
 **Minor - the report shows the first-call warm-up (#113).**

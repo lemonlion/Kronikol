@@ -1,0 +1,17 @@
+  Failed Kronikol.Tests.Reports.WarmUpCallsTests.Statements_with_different_heads_on_one_connection_are_two_shapes [17 ms]
+Expected start: "Query / SELECT"
+  Failed Kronikol.Tests.Reports.DigestCallScopeTests.A_call_is_named_by_its_method_as_the_data_file_writes_it [< 1 ms]
+  Failed Kronikol.Tests.Reports.DigestCallScopeTests.An_uncategorised_verb_written_in_lower_case_is_still_a_verb [< 1 ms]
+  Failed Kronikol.Tests.Reports.WarmUpCallsTests.A_shape_names_its_method_as_the_data_file_writes_it [< 1 ms]
+Expected: "GetOrderStatus /breakfast.BreakfastGrpc/GetOrderSt"···
+Actual:   "GETORDERSTATUS /breakfast.BreakfastGrpc/GetOrderSt"···
+  Failed Kronikol.Tests.Reports.WarmUpCallsTests.Methods_that_differ_only_in_case_are_one_shape_named_by_its_first_call [< 1 ms]
+Expected: "get /orders"
+Actual:   "GET /orders"
+  Failed Kronikol.Tests.Reports.WarmUpHtmlTests.The_tooltip_reads_each_time_as_the_badge_writes_it(durationMs: 696.60000000000002, firstMs: 612.70000000000005, text: "696ms", note: " · 612ms warm-up"
+Expected: "696 ms, 612 ms of it first-call warm-up: POST /ord"···
+Actual:   "697 ms, 613 ms of it first-call warm-up: POST /ord"···
+  Failed Kronikol.Tests.Reports.WarmUpHtmlTests.The_tooltip_reads_each_time_as_the_badge_writes_it(durationMs: 1999.7, firstMs: 999.70000000000005, text: "2.0s", note: " · 999ms warm-up", tooltip: "2
+Expected: "2 s, 999 ms of it first-call warm-up: POST /orders"···
+Actual:   "2 s, 1000 ms of it first-call warm-up: POST /order"···
+Failed!  - Failed:     7, Passed:    53, Skipped:     0, Total:    60, Duration: 10 s - Kronikol.Tests.dll (net10.0)

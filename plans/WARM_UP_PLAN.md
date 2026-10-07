@@ -666,6 +666,29 @@ for #122 or says it did not.
   - #122 was still open at R2's consumer check (Q14 asked for it first): a BDDfy scenario's recorded duration can be
     shorter than its calls, so its warm-up is capped at it (4.1 step 7) and its time left can read zero. The wiki's
     BDDfy page says so. Leftovers are in `ROADMAP.md` Appendix C: Q8, Q10, Q15, and section 8's group row.
+  - **4.9.0 published** (417c8e58, tag `v4.9.0`, templates pinned to 4.8.0): CI 37621065092, Release 37621091570 and
+    CodeQL 37621064989 passed; nuget.org lists all 62 ids; the wiki has R2's edit (db4e473) and Kronikol4J's ledger its
+    line (4b1332d). #122 and #123 carry a cross-reference (comments 6038266305 and 6038266760).
+  - **BreakfastProvider on 4.9.0** (`c2920cc`, pushed from a scratch clone: 27 package pins and 7 history action refs,
+    4.0.2 to 4.9.0): CI 37623742367 and a second run, 37624895707, passed on all 58 lanes. The xUnit report it published
+    draws the 5 warm-ups its data file records on `TestRunReport.html` and `Specifications.html` (`html_marks.py`), and
+    a Playwright check of the live page found each note painted at opacity 0.75 and each timeline shade at the
+    warm-up's share of its bar. #113 closed the same day (comment 6042582071).
+  - **4.9.1 (patch)**, from that live check: the tooltip rounded a time under a second where the badge and the timeline
+    cut it (badge `696ms · 612ms warm-up`, tooltip `697 ms, 613 ms`); the shape upper-cased a method that is not an
+    HTTP verb (`GETORDERSTATUS`), where the data writers keep such a label as captured (`ReportGenerator.MethodText`);
+    and `Failures.md` did the same in its Call column (older, from `e91cffb4`). `warmup.py` names a shape by its first
+    call's method as the file writes it, grouping as before, and `expected-marks.json` moved by those two gRPC shapes
+    only. Proofs (harness `p1/`): the new facts failed on 4.9.0 for their own reasons (`red-4.9.0.txt`), each of 5
+    mutations was caught (`mutations.txt`), and `compare_marks.py` finds exactly the gRPC shape on the live 4.9.0 report
+    (`control-live-4.9.0.txt`). The core suite passes 6,903 with 2 skipped, the full Playwright suite 995 with 28
+    skipped.
+    S7 (`p1/s7.txt`): on local 4.9.1 packages, one xUnit and one ReqNRoll run of BreakfastProvider (`c2920cc`,
+    scratch clone) carry the spec's marks call for call (8 in 7 scenarios; 35 in 32), the gRPC shapes included, and
+    both pages draw exactly what the data records. That ReqNRoll run passed 214 of 214 and then failed its assembly
+    fixture's teardown in BreakfastProvider's own `WebApplicationFactory` disposal, which four reruns (two on 4.9.1,
+    two on 4.9.0) did not repeat; one 4.9.1 rerun failed a correlation-id assertion that reads the consumer's fake
+    during its scenario, before any report code runs. No wiki edit: its examples read the same under the fixes.
 
 ## Appendix A. Edit sites at `37e93813`
 

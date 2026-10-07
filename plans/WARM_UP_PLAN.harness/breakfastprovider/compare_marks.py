@@ -54,7 +54,7 @@ def main():
                 problems.append(f'  extra    {rid}  {actual[rid]}')
                 continue
             c, m = expected[rid], actual[rid]
-            want = {'kind': c['warm'][0], 'shape': f'{c["shape"][1]} {c["shape"][2]}', 'baselineCalls': c['warm'][2],
+            want = {'kind': c['warm'][0], 'shape': c['name'], 'baselineCalls': c['warm'][2],
                     'first': c['warm'][3] if len(c['warm']) > 3 else None}
             got = {'kind': m.get('kind'), 'shape': m.get('shape'), 'baselineCalls': m.get('baselineCalls'), 'first': m.get('first')}
             if want != got or abs(c['warm'][1] - m.get('baselineMs', -1)) > 0.001:

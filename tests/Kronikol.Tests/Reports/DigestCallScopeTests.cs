@@ -200,6 +200,55 @@ public class DigestCallScopeTests
     }
 
     [Fact]
+    public void A_call_is_named_by_its_method_as_the_data_file_writes_it()
+    {
+        // A gRPC call's method is the operation's name, and the data writers keep it as captured
+        // (ReportGenerator.MethodText); the digest upper-cased it, so the Call column read GETORDERSTATUS
+        // where TestRunReport.json reads GetOrderStatus.
+        var pairId = Guid.NewGuid();
+        var traceId = Guid.NewGuid();
+        var uri = new Uri("grpc:///breakfast.BreakfastGrpc/GetOrderStatus");
+
+        var digest = Generate(WithNestedFailure(),
+        [
+            Marker("t0", "a basket"),
+            Marker("t0", "the order is placed"),
+            new RequestResponseLog("t0", "t0", "GetOrderStatus", "{}", uri, [], "Breakfast Provider", "test",
+                RequestResponseType.Request, traceId, pairId, false,
+                DependencyCategory: Kronikol.Constants.DependencyCategories.Grpc) { Timestamp = T0 },
+            new RequestResponseLog("t0", "t0", "GetOrderStatus", "{}", uri, [], "Breakfast Provider", "test",
+                RequestResponseType.Response, traceId, pairId, false, HttpStatusCode.OK,
+                DependencyCategory: Kronikol.Constants.DependencyCategories.Grpc) { Timestamp = T0.AddMilliseconds(1) }
+        ]);
+
+        Assert.Contains("GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus", digest.Markdown, StringComparison.Ordinal);
+        Assert.DoesNotContain("GETORDERSTATUS", digest.Markdown, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_uncategorised_verb_written_in_lower_case_is_still_a_verb()
+    {
+        // The verb check compared the upper-cased method. With the case kept, "get" must still be a verb, so the
+        // Call column names its target and never its body.
+        var pairId = Guid.NewGuid();
+        var traceId = Guid.NewGuid();
+        var uri = new Uri("http://orders/orders/1");
+
+        var digest = Generate(WithNestedFailure(),
+        [
+            Marker("t0", "a basket"),
+            Marker("t0", "the order is placed"),
+            new RequestResponseLog("t0", "t0", "get", "{\"Item\":\"Some_Eggs\"}", uri, [], "Orders", "test",
+                RequestResponseType.Request, traceId, pairId, false) { Timestamp = T0 },
+            new RequestResponseLog("t0", "t0", "get", "", uri, [], "Orders", "test",
+                RequestResponseType.Response, traceId, pairId, false, HttpStatusCode.OK) { Timestamp = T0.AddMilliseconds(1) }
+        ]);
+
+        Assert.DoesNotContain("Some_Eggs", digest.Markdown, StringComparison.Ordinal);
+        Assert.Contains("get /orders/1", digest.Markdown, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_statement_with_a_real_operation_label_is_still_shown()
     {
         // Non-vacuity: the statement IS the identity of a database call, and this must not have turned

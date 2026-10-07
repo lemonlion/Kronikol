@@ -25,6 +25,8 @@ for spec in "$@"; do
     rep=$(find "$proj/bin" -name TestRunReport.json -path '*Reports*' -newermt "@$start" 2>/dev/null | head -1)
     mkdir -p "$OUT/$lane-$i"
     if [ -n "$rep" ]; then cp "$rep" "$OUT/$lane-$i/TestRunReport.json"; fi
+    # The pages too, for html_marks.py (4.9.1)
+    if [ -n "$rep" ]; then for page in TestRunReport.html Specifications.html; do [ -f "$(dirname "$rep")/$page" ] && cp "$(dirname "$rep")/$page" "$OUT/$lane-$i/"; done; fi
     echo "[$(date +%T)] $lane run $i rc=$rc $((end-start))s report=${rep:-none}" | tee -a "$OUT/log.txt"
     git checkout -q -- docs 2>/dev/null
   done

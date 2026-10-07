@@ -4253,9 +4253,11 @@ public static class ReportGenerator
     /// </summary>
     internal static string WarmUpTooltip(TimeSpan duration, double warmUpMs, IEnumerable<WarmUpMark> calls)
     {
+        // Under a second, cut to whole milliseconds as the badge and the timeline write it (FormatDurationBadge), so the
+        // tooltip never reads 697 ms beside a badge reading 696ms.
         static string Time(double ms) => ms >= 1000
             ? string.Create(CultureInfo.InvariantCulture, $"{ms / 1000:0.##} s")
-            : string.Create(CultureInfo.InvariantCulture, $"{ms:0} ms");
+            : string.Create(CultureInfo.InvariantCulture, $"{Math.Floor(ms):0} ms");
         static string Baseline(double ms) => string.Create(CultureInfo.InvariantCulture, $"{ms:0.#} ms");
 
         var text = new StringBuilder($"{Time(duration.TotalMilliseconds)}, {Time(warmUpMs)} of it first-call warm-up: ");
@@ -4977,7 +4979,7 @@ public static class ReportGenerator
     /// field names <c>Publish</c> as an example value, in mixed case, so the file and its contract had
     /// disagreed since the field existed.
     /// </remarks>
-    private static string? MethodText(OneOf<HttpMethod, string> method) => method.Value switch
+    internal static string? MethodText(OneOf<HttpMethod, string> method) => method.Value switch
     {
         HttpMethod verb => verb.ToString().ToUpperInvariant(),
         string label => label,

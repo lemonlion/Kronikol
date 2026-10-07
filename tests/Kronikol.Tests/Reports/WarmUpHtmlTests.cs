@@ -48,6 +48,28 @@ public class WarmUpHtmlTests : IDisposable
             Badge(Scenario(page, "s2")).GetAttribute("title"));
     }
 
+    [Theory]
+    // The badge cuts a time under a second to its whole milliseconds, as it always has; the tooltip rounded it, so the
+    // badge read 696ms and its tooltip 697 ms (4.9.0, measured on BreakfastProvider's live report).
+    [InlineData(696.6, 612.7, "696ms", " · 612ms warm-up", "696 ms, 612 ms of it first-call warm-up: POST /orders 612 ms (later calls 5 ms)")]
+    // Just under a second the tooltip wrote 1000 ms beside a badge reading 999ms.
+    [InlineData(1999.7, 999.7, "2.0s", " · 999ms warm-up", "2 s, 999 ms of it first-call warm-up: POST /orders 999 ms (later calls 5 ms)")]
+    public void The_tooltip_reads_each_time_as_the_badge_writes_it(double durationMs, double firstMs, string text, string note, string tooltip)
+    {
+        var (features, logs) = Marked(firstMs);
+        features[0].Scenarios[0].Duration = TimeSpan.FromTicks((long)Math.Round(durationMs * TimeSpan.TicksPerMillisecond));
+
+        var page = Page((features, logs));
+
+        var badge = Badge(Scenario(page, "s1"));
+        Assert.Equal(text, badge.ChildNodes.OfType<IText>().Single().Data);
+        Assert.Equal(note, badge.QuerySelector(":scope > .warm-up-note")!.TextContent);
+        Assert.Equal(tooltip, badge.GetAttribute("title"));
+        var row = page.QuerySelectorAll("#scenario-timeline .timeline-row").Single(r => r.QuerySelector(".timeline-label")!.TextContent == "Place");
+        Assert.Equal(text, row.QuerySelector(".timeline-duration")!.TextContent);
+        Assert.Equal(tooltip, row.QuerySelector(".timeline-bar")!.GetAttribute("title"));
+    }
+
     [Fact]
     public void The_badge_colour_follows_the_time_left()
     {

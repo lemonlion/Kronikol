@@ -1,0 +1,14 @@
+M1 the tooltip rounds a time under a second: caught
+    Failed Kronikol.Tests.Reports.WarmUpHtmlTests.The_tooltip_reads_each_time_as_the_badge_writes_it(durationMs: 696.60000000000002, firstMs: 612.70000000000005, text: "696ms", note: " · 612ms warm-up", tooltip: "696 ms, 612 ms of it first-call warm-up: POST /ord"···)
+    Failed Kronikol.Tests.Reports.WarmUpHtmlTests.The_tooltip_reads_each_time_as_the_badge_writes_it(durationMs: 1999.7, firstMs: 999.70000000000005, text: "2.0s", note: " · 999ms warm-up", tooltip: "2 s, 999 ms of it first-call warm-up: POST /orders"···)
+M2 the shape upper-cases its method: caught
+    Failed Kronikol.Tests.Reports.WarmUpCallsTests.A_shape_names_its_method_as_the_data_file_writes_it
+    Failed Kronikol.Tests.Reports.WarmUpCorpusTests.The_pass_marks_what_the_spec_marks(lane: "xunit")
+    Failed Kronikol.Tests.Reports.WarmUpCorpusTests.The_pass_marks_what_the_spec_marks(lane: "reqnroll")
+M3 calls are grouped by the written method: caught
+    Failed Kronikol.Tests.Reports.WarmUpCallsTests.Methods_that_differ_only_in_case_are_one_shape_named_by_its_first_call
+M4 Failures.md upper-cases the method: caught
+    Failed Kronikol.Tests.Reports.DigestCallScopeTests.A_call_is_named_by_its_method_as_the_data_file_writes_it
+M5 the verb check is case-sensitive: caught
+    Failed Kronikol.Tests.Reports.DigestCallScopeTests.An_uncategorised_verb_written_in_lower_case_is_still_a_verb
+exit 0
