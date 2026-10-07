@@ -1,0 +1,20 @@
+| Lane | V0 | V3 | PU | P | P5 | P20 | PS | PL |
+|---|---|---|---|---|---|---|---|---|
+| bddfy | 15 in 13 | 16 in 14 | 16 in 14 | 16 in 14 | 22 in 20 | 10 in 8 | 17 in 15 | 20 in 18 |
+| docker-sut_bddfy | 8 in 6 | 8 in 6 | 9 in 6 | 9 in 6 | 15 in 12 | 3 in 3 | 8 in 5 | 9 in 6 |
+| docker-sut_lightbdd | 6 in 6 | 7 in 7 | 7 in 7 | 7 in 7 | 20 in 17 | 0 in 0 | 3 in 3 | 7 in 7 |
+| docker-sut_nunit | 9 in 8 | 10 in 8 | 10 in 8 | 10 in 8 | 15 in 13 | 6 in 6 | 8 in 7 | 11 in 9 |
+| docker-sut_reqnroll | 11 in 8 | 12 in 9 | 13 in 10 | 13 in 10 | 19 in 14 | 9 in 7 | 11 in 8 | 14 in 11 |
+| docker-sut_tunit | 6 in 6 | 9 in 8 | 9 in 8 | 9 in 8 | 16 in 15 | 6 in 6 | 6 in 6 | 12 in 11 |
+| docker-sut_xunit | 8 in 6 | 9 in 6 | 9 in 6 | 9 in 6 | 14 in 11 | 4 in 4 | 8 in 6 | 9 in 6 |
+| docker_bddfy | 11 in 11 | 12 in 12 | 13 in 12 | 13 in 12 | 18 in 17 | 8 in 8 | 14 in 13 | 17 in 15 |
+| docker_lightbdd | 11 in 9 | 13 in 11 | 14 in 12 | 14 in 12 | 22 in 18 | 9 in 8 | 12 in 10 | 17 in 15 |
+| docker_nunit | 9 in 8 | 9 in 8 | 9 in 8 | 9 in 8 | 15 in 14 | 9 in 8 | 8 in 8 | 9 in 8 |
+| docker_reqnroll | 14 in 11 | 18 in 15 | 18 in 15 | 18 in 15 | 28 in 24 | 10 in 9 | 15 in 12 | 20 in 17 |
+| docker_tunit | 7 in 6 | 10 in 8 | 10 in 8 | 10 in 8 | 15 in 13 | 7 in 6 | 7 in 7 | 12 in 10 |
+| docker_xunit | 7 in 5 | 9 in 6 | 9 in 6 | 9 in 6 | 16 in 12 | 7 in 4 | 8 in 6 | 10 in 7 |
+| lightbdd | 15 in 12 | 17 in 13 | 17 in 13 | 17 in 13 | 26 in 20 | 13 in 9 | 17 in 13 | 19 in 14 |
+| nunit | 12 in 10 | 13 in 10 | 13 in 10 | 13 in 10 | 19 in 15 | 8 in 6 | 12 in 10 | 13 in 10 |
+| reqnroll | 13 in 12 | 16 in 15 | 18 in 17 | 18 in 17 | 28 in 26 | 8 in 7 | 16 in 14 | 21 in 19 |
+| tunit | 6 in 6 | 7 in 6 | 7 in 6 | 7 in 6 | 14 in 12 | 4 in 4 | 8 in 8 | 9 in 8 |
+| xunit | 8 in 6 | 10 in 7 | 10 in 7 | 10 in 7 | 16 in 12 | 5 in 4 | 10 in 8 | 12 in 9 |

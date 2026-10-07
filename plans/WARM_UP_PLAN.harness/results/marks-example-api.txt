@@ -1,0 +1,18 @@
+== BDDfy.xUnit3: 2 scenarios, 8 test calls, 1 warm-up calls in 1 scenarios
+   first  GET /milk  148 ms (baseline median 2.9 ms over 1)  in 'Calling Create Cake Endpoint Without Eggs Returns Bad Request' (29 ms)
+== LightBDD.TUnit: 3 scenarios, 14 test calls, 0 warm-up calls in 0 scenarios
+== LightBDD.xUnit2: 3 scenarios, 14 test calls, 1 warm-up calls in 1 scenarios
+   first  GET /milk  167 ms (baseline median 9.5 ms over 2)  in 'Calling Create Cake Endpoint Without Eggs' (303 ms)
+== LightBDD.xUnit3: 6 scenarios, 14 test calls, 0 warm-up calls in 0 scenarios
+== NUnit4: 2 scenarios, 8 test calls, 1 warm-up calls in 1 scenarios
+   first  GET /milk  119 ms (baseline median 4.8 ms over 1)  in 'Calling create cake endpoint returns cake' (176 ms)
+== ReqNRoll.TUnit: 2 scenarios, 8 test calls, 0 warm-up calls in 0 scenarios
+== ReqNRoll.xUnit2: 2 scenarios, 8 test calls, 1 warm-up calls in 1 scenarios
+   first  GET /milk  106 ms (baseline median 2.5 ms over 1)  in 'Calling Create Cake Endpoint Successfully' (245 ms)
+== ReqNRoll.xUnit3: 8 scenarios, 16 test calls, 2 warm-up calls in 2 scenarios
+   first  GET /milk  358 ms (baseline median 5.2 ms over 2)  in 'The baked cake contains the requested milk' (567 ms)
+   waited GET /milk  358 ms (baseline median 5.2 ms over 2)  in 'Calling Create Cake Endpoint Successfully' (567 ms)
+== TUnit: 12 scenarios, 8 test calls, 0 warm-up calls in 0 scenarios
+== xUnit2: 2 scenarios, 8 test calls, 1 warm-up calls in 1 scenarios
+   first  GET /milk  126 ms (baseline median 2.7 ms over 1)  in 'Calling create cake endpoint without eggs returns bad request' (231 ms)
+== xUnit3: 3 scenarios, 0 test calls, 0 warm-up calls in 0 scenarios

@@ -1,0 +1,9 @@
+window 2026-09-14 .. 2026-10-06T23:59:59Z; passing runs per in-memory lane: {'bddfy': 55, 'lightbdd': 54, 'nunit': 54, 'reqnroll': 55, 'xunit': 54, 'tunit': 53}
+| Scenario | xunit | nunit | tunit | reqnroll | lightbdd | bddfy |
+|---|---|---|---|---|---|---|
+| Order status via grpc should return order details | 1,194 (671 to 1,325) | 34 (23 to 47) | 24 (13 to 29) | 73 (27 to 1,622) | 81 (33 to 2,033) | 21 (7 to 86) |
+| Equipment alerts should contain data ingested via event hub consumer | 786 (399 to 891) | 37 (24 to 67) | 25 (14 to 129) | 94 (26 to 2,896) | 213 (41 to 3,275) | 37 (15 to 84) |
+| Audit logs should be filterable by entity id | 31 (21 to 55) | 975 (554 to 1,130) | 64 (18 to 798) | 90 (32 to 2,802) | 59 (40 to 194) | 6 (3 to 39) |
+| Audit logs should be returned in descending timestamp order | 51 (29 to 86) | 38 (24 to 49) | 728 (17 to 1,047) | 71 (29 to 183) | 106 (39 to 2,538) | 22 (9 to 94) |
+| Batch completions should contain data ingested via pubsub consumer | 34 (22 to 45) | 725 (417 to 854) | 631 (307 to 698) | 111 (37 to 2,250) | 148 (42 to 2,437) | 36 (13 to 77) |
+| Retrieving non-existent customer preferences should return not found | 18 (12 to 24) | 8 (5 to 11) | 5 (2 to 26) | 749 (20 to 1,659) | 610 (16 to 1,830) | 3 (1 to 44) |

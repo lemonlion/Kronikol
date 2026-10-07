@@ -1,0 +1,55 @@
+lanes: docker-sut_xunit, docker-sut_nunit, docker-sut_tunit, docker-sut_reqnroll, docker-sut_lightbdd
+| Variant | Anomalies | Explained | Over-subtracted | Warm-up on a scenario that is not an anomaly |
+|---|---|---|---|---|
+| V0 | 53 | 8 | 4 | 11 |
+| V3 | 53 | 13 | 5 | 13 |
+| PU | 53 | 14 | 5 | 13 |
+| P | 53 | 14 | 5 | 13 |
+| P5 | 51 | 16 | 8 | 26 |
+| P20 | 49 | 7 | 4 | 5 |
+| PS | 51 | 7 | 5 | 7 |
+| PL | 53 | 14 | 7 | 15 |
+   over-subtracted docker-sut_nunit Batch completions should contain data ingested via pubsub consumer     wall    968 warm-up    882 left     86 reference  1169
+   over-subtracted docker-sut_reqnroll Batch completions should contain data ingested via pubsub consumer     wall   3691 warm-up   3380 left    311 reference  1169
+   over-subtracted docker-sut_tunit Batch completions should contain data ingested via pubsub consumer     wall    991 warm-up    941 left     50 reference  1169
+   over-subtracted docker-sut_tunit Retrieving existing customer preferences should return the preferences wall    374 warm-up    365 left      9 reference    61
+   over-subtracted docker-sut_xunit Equipment alerts should contain data ingested via event hub consumer   wall   1117 warm-up   1020 left     96 reference  1151
+   unexplained     docker-sut_lightbdd Cancelling An Already Cancelled Reservation Should Return A Conflict R wall    157 warm-up      0 left    157 reference    52
+   unexplained     docker-sut_lightbdd Creating A Reservation Should Return The Confirmed Reservation         wall    312 warm-up      0 left    312 reference    29
+   unexplained     docker-sut_lightbdd Creating An Order Should Produce A Retrievable Audit Log Entry         wall   1449 warm-up      0 left   1449 reference   147
+   unexplained     docker-sut_lightbdd Deleting A Staff Member Should Return No Content                       wall   1154 warm-up    552 left    602 reference    71
+   unexplained     docker-sut_lightbdd Ingredient Shipments Should Be Recorded When Delivered Via EventGrid W wall    235 warm-up      0 left    235 reference    68
+   unexplained     docker-sut_lightbdd Order Summaries Should Contain Ingested Order Data                     wall    345 warm-up      0 left    345 reference    94
+   unexplained     docker-sut_lightbdd Recipe Reports Should Contain Ingested Recipe Data                     wall    762 warm-up      0 left    762 reference    57
+   unexplained     docker-sut_lightbdd Recording Waste With Missing Ingredient Name Should Return Bad Request wall    111 warm-up      0 left    111 reference     7
+   unexplained     docker-sut_lightbdd Recording Waste With Zero Quantity Should Return Bad Request           wall    115 warm-up      0 left    115 reference     5
+   unexplained     docker-sut_lightbdd Retrieving An Existing Inventory Item Should Return The Item           wall   1104 warm-up    560 left    544 reference   106
+   unexplained     docker-sut_lightbdd Retrieving An Existing Staff Member Should Return The Member           wall    158 warm-up      0 left    158 reference    40
+   unexplained     docker-sut_lightbdd Retrieving Non Existent Review Should Return Not Found                 wall    125 warm-up      0 left    125 reference     7
+   unexplained     docker-sut_lightbdd Streaming Order Updates Should Return The Current Status               wall    490 warm-up      0 left    490 reference   122
+   unexplained     docker-sut_lightbdd The GraphQL Schema Definition Endpoint Should Return The Schema Defini wall    530 warm-up      0 left    530 reference    65
+   unexplained     docker-sut_lightbdd The Grpc Proto Endpoint Should Return The Proto File                   wall    118 warm-up      0 left    118 reference     7
+   unexplained     docker-sut_lightbdd Updating An Existing Note Should Return The Updated Note               wall    157 warm-up      0 left    157 reference    20
+   unexplained     docker-sut_lightbdd Updating Customer Preferences Should Return The Updated Preferences    wall    177 warm-up      0 left    177 reference    16
+   unexplained     docker-sut_nunit Equipment alerts should contain data ingested via event hub consumer   wall   2103 warm-up      0 left   2103 reference   225
+   unexplained     docker-sut_reqnroll Adding a new topping should return the created topping                 wall    258 warm-up      0 left    258 reference    41
+   unexplained     docker-sut_reqnroll Cancelling an already cancelled reservation should return a conflict r wall    552 warm-up    205 left    346 reference    58
+   unexplained     docker-sut_reqnroll Grpc server reflection should describe the breakfast service           wall    221 warm-up      0 left    221 reference    36
+   unexplained     docker-sut_reqnroll Listing feedback for an order should return the feedback               wall    770 warm-up    414 left    355 reference    67
+   unexplained     docker-sut_reqnroll Listing notes by recipe should return matching notes                   wall    732 warm-up    468 left    264 reference   111
+   unexplained     docker-sut_reqnroll Listing usage by ingredient should return matching records             wall   1013 warm-up      0 left   1013 reference   262
+   unexplained     docker-sut_reqnroll Listing waste by recipe should return matching records                 wall   1294 warm-up    497 left    797 reference   240
+   unexplained     docker-sut_reqnroll Order status for non-existent order should return not found            wall    476 warm-up      0 left    476 reference    55
+   unexplained     docker-sut_reqnroll Pancake recipe summary should return correct data                      wall    382 warm-up      0 left    382 reference    40
+   unexplained     docker-sut_reqnroll Recording an order timing should return the created record             wall    144 warm-up      0 left    144 reference    16
+   unexplained     docker-sut_reqnroll Retrieving an existing inventory item should return the item           wall    207 warm-up      0 left    207 reference    31
+   unexplained     docker-sut_reqnroll Retrieving an existing staff member should return the member           wall    234 warm-up      0 left    234 reference    40
+   unexplained     docker-sut_reqnroll Submitting a recipe review should return the created review            wall    123 warm-up      0 left    123 reference    11
+   unexplained     docker-sut_reqnroll The Grpc contract endpoint should return a valid specification         wall   1011 warm-up      0 left   1011 reference    72
+   unexplained     docker-sut_reqnroll The OpenApi endpoint should return a valid specification               wall    835 warm-up      0 left    835 reference   261
+   unexplained     docker-sut_reqnroll Unknown recipe type should return zero batches                         wall    565 warm-up      0 left    565 reference    10
+   unexplained     docker-sut_reqnroll Updating an inventory item should return the updated item              wall    215 warm-up      0 left    215 reference    70
+   unexplained     docker-sut_tunit Equipment alerts should contain data ingested via event hub consumer   wall   2077 warm-up      0 left   2077 reference   225
+   unexplained     docker-sut_xunit Consuming recipe cost event should trigger downstream processing       wall    110 warm-up      0 left    110 reference     8
+   unexplained     docker-sut_xunit Listing feedback for an order should return the feedback               wall    511 warm-up    333 left    178 reference    67
+   unexplained     docker-sut_xunit Retrieving an existing inventory item should return the item           wall    181 warm-up      0 left    181 reference    31

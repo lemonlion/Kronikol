@@ -1,0 +1,18 @@
+diff --git a/src/BreakfastProvider.Api/StartupExtensions.cs b/src/BreakfastProvider.Api/StartupExtensions.cs
+index 6d3d3e0..1144b70 100644
+--- a/src/BreakfastProvider.Api/StartupExtensions.cs
++++ b/src/BreakfastProvider.Api/StartupExtensions.cs
+@@ -184,7 +184,12 @@ public static class StartupExtensions
+             .AddProjections()
+             .AddFiltering()
+             .AddSorting()
+-            .RegisterDbContextFactory<ReportingDbContext>();
++            .RegisterDbContextFactory<ReportingDbContext>()
++            .InitializeOnStartup(warmup: async (executor, ct) =>
++                await executor.ExecuteAsync(
++                    HotChocolate.Execution.OperationRequestBuilder.New()
++                        .SetDocument("{ orderSummaries { orderId customerName itemCount tableNumber status createdAt } }")
++                        .Build(), ct));
+ 
+         return services;
+     }

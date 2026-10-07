@@ -1,0 +1,43 @@
+lanes: xunit, nunit, tunit, reqnroll, lightbdd
+| Variant | Anomalies | Explained | Over-subtracted | Warm-up on a scenario that is not an anomaly |
+|---|---|---|---|---|
+| V0 | 57 | 15 | 0 | 10 |
+| V3 | 57 | 23 | 0 | 10 |
+| PU | 57 | 25 | 0 | 10 |
+| P | 57 | 25 | 0 | 10 |
+| P5 | 54 | 26 | 1 | 24 |
+| P20 | 56 | 15 | 0 | 1 |
+| PS | 57 | 19 | 0 | 11 |
+| PL | 58 | 27 | 0 | 13 |
+   unexplained     lightbdd   Consuming An Order Served Event Should Trigger Downstream Processing   wall    401 warm-up      0 left    401 reference    27
+   unexplained     lightbdd   Deleting A Staff Member Should Return No Content                       wall    203 warm-up    113 left     91 reference    39
+   unexplained     lightbdd   Deleting A Waste Record Should Return No Content                       wall    549 warm-up      0 left    549 reference    37
+   unexplained     lightbdd   Listing Feedback For An Order Should Return The Feedback               wall   1659 warm-up   1249 left    410 reference    47
+   unexplained     lightbdd   Listing Timings By Station Should Return Matching Records              wall    177 warm-up      0 left    177 reference    46
+   unexplained     lightbdd   Listing Waste By Recipe Should Return Matching Records                 wall    301 warm-up      0 left    301 reference    39
+   unexplained     lightbdd   Recipe Reports Should Contain Ingested Recipe Data                     wall    144 warm-up      0 left    144 reference    41
+   unexplained     lightbdd   Retrieving An Existing Reservation Should Return The Reservation       wall    141 warm-up      0 left    141 reference    29
+   unexplained     lightbdd   Retrieving Non Existent Review Should Return Not Found                 wall    209 warm-up      0 left    209 reference     4
+   unexplained     lightbdd   The AsyncApi UI Endpoint Should Return A Valid Page                    wall    337 warm-up      0 left    337 reference     8
+   unexplained     lightbdd   Toppings Should Exclude Raspberries When Feature Flag Is Disabled      wall    304 warm-up      0 left    304 reference    96
+   unexplained     lightbdd   Toppings Should Include Raspberries When Feature Flag Is Enabled       wall    317 warm-up      0 left    317 reference    96
+   unexplained     lightbdd   Updating An Existing Note Should Return The Updated Note               wall    217 warm-up     93 left    125 reference    25
+   unexplained     lightbdd   Updating Customer Preferences Should Return The Updated Preferences    wall    181 warm-up     77 left    104 reference    16
+   unexplained     lightbdd   Waffle Recipe Summary Should Return Correct Data                       wall    163 warm-up      0 left    163 reference     5
+   unexplained     nunit      Getting usage summary should return aggregated data                    wall    415 warm-up    122 left    294 reference   134
+   unexplained     reqnroll   Adding a staff member with an invalid role should return a bad request wall    113 warm-up      0 left    113 reference    11
+   unexplained     reqnroll   Consuming an order served event should trigger downstream processing   wall    741 warm-up      0 left    741 reference    27
+   unexplained     reqnroll   Consuming recipe cost event should trigger downstream processing       wall    289 warm-up      0 left    289 reference    48
+   unexplained     reqnroll   Creating an order should write an outbox message that gets processed   wall   2367 warm-up   1416 left    951 reference   103
+   unexplained     reqnroll   Listing feedback for an order should return the feedback               wall    403 warm-up    296 left    107 reference    47
+   unexplained     reqnroll   Listing reviews by recipe should return matching reviews               wall    204 warm-up      0 left    204 reference    36
+   unexplained     reqnroll   Listing waste by recipe should return matching records                 wall    474 warm-up      0 left    474 reference    39
+   unexplained     reqnroll   Order summaries should contain ingested order data                     wall    238 warm-up      0 left    238 reference    58
+   unexplained     reqnroll   Retrieving an existing inventory item should return the item           wall    151 warm-up     76 left     75 reference    10
+   unexplained     reqnroll   The GraphQL UI endpoint should return a valid page                     wall    309 warm-up      0 left    309 reference    23
+   unexplained     reqnroll   The GraphQL schema definition endpoint should return the schema defini wall   1187 warm-up      0 left   1187 reference    56
+   unexplained     xunit      Consuming recipe cost event should trigger downstream processing       wall    487 warm-up      0 left    487 reference    48
+   unexplained     xunit      Listing feedback for an order should return the feedback               wall    462 warm-up    285 left    176 reference    47
+   unexplained     xunit      Listing timings by station should return matching records              wall    271 warm-up      0 left    271 reference    46
+   unexplained     xunit      Menu should return cached results on subsequent requests               wall    140 warm-up      0 left    140 reference    27
+   unexplained     xunit      Request with correlation id should forward it to supplier service      wall    129 warm-up      0 left    129 reference    24

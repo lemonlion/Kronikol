@@ -1,0 +1,18 @@
+bddfy                  of the 10 slowest by wall time 2 carry a warm-up (388%, 41%); 1 leave the ten when ranked by time left
+docker-sut_bddfy       of the 10 slowest by wall time 3 carry a warm-up (1268%, 525%, 1530%); 3 leave the ten when ranked by time left
+docker-sut_lightbdd    of the 10 slowest by wall time 2 carry a warm-up (48%, 51%); 0 leave the ten when ranked by time left
+docker-sut_nunit       of the 10 slowest by wall time 6 carry a warm-up (79%, 84%, 91%, 36%, 95%, 91%); 4 leave the ten when ranked by time left
+docker-sut_reqnroll    of the 10 slowest by wall time 6 carry a warm-up (92%, 94%, 88%, 38%, 54%, 64%); 5 leave the ten when ranked by time left
+docker-sut_tunit       of the 10 slowest by wall time 6 carry a warm-up (86%, 95%, 39%, 98%, 99%, 51%); 5 leave the ten when ranked by time left
+docker-sut_xunit       of the 10 slowest by wall time 5 carry a warm-up (89%, 91%, 34%, 65%, 94%); 2 leave the ten when ranked by time left
+docker_bddfy           of the 10 slowest by wall time 3 carry a warm-up (102%, 141%, 556%); 3 leave the ten when ranked by time left
+docker_lightbdd        of the 10 slowest by wall time 6 carry a warm-up (5%, 9%, 85%, 91%, 76%, 98%); 4 leave the ten when ranked by time left
+docker_nunit           of the 10 slowest by wall time 5 carry a warm-up (81%, 91%, 92%, 69%, 98%); 4 leave the ten when ranked by time left
+docker_reqnroll        of the 10 slowest by wall time 5 carry a warm-up (58%, 83%, 92%, 91%, 64%); 4 leave the ten when ranked by time left
+docker_tunit           of the 10 slowest by wall time 5 carry a warm-up (92%, 88%, 94%, 99%, 97%); 5 leave the ten when ranked by time left
+docker_xunit           of the 10 slowest by wall time 3 carry a warm-up (94%, 91%, 96%); 3 leave the ten when ranked by time left
+lightbdd               of the 10 slowest by wall time 5 carry a warm-up (89%, 75%, 89%, 93%, 93%); 4 leave the ten when ranked by time left
+nunit                  of the 10 slowest by wall time 6 carry a warm-up (93%, 86%, 96%, 97%, 29%, 70%); 5 leave the ten when ranked by time left
+reqnroll               of the 10 slowest by wall time 4 carry a warm-up (60%, 87%, 94%, 97%); 3 leave the ten when ranked by time left
+tunit                  of the 10 slowest by wall time 5 carry a warm-up (90%, 97%, 98%, 31%, 71%); 4 leave the ten when ranked by time left
+xunit                  of the 10 slowest by wall time 3 carry a warm-up (94%, 94%, 62%); 3 leave the ten when ranked by time left

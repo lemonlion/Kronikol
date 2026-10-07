@@ -1,0 +1,69 @@
+lanes: docker_xunit, docker_nunit, docker_tunit, docker_reqnroll, docker_lightbdd
+| Variant | Anomalies | Explained | Over-subtracted | Warm-up on a scenario that is not an anomaly |
+|---|---|---|---|---|
+| V0 | 72 | 12 | 4 | 6 |
+| V3 | 72 | 18 | 4 | 9 |
+| PU | 72 | 18 | 4 | 10 |
+| P | 72 | 18 | 4 | 10 |
+| P5 | 71 | 21 | 4 | 20 |
+| P20 | 72 | 14 | 4 | 3 |
+| PS | 73 | 12 | 3 | 5 |
+| PL | 73 | 20 | 4 | 11 |
+   over-subtracted docker_lightbdd Cancelling A Reservation Should Return The Cancelled Reservation       wall    189 warm-up    147 left     42 reference   118
+   over-subtracted docker_nunit Batch completions should contain data ingested via pubsub consumer     wall    631 warm-up    579 left     51 reference   133
+   over-subtracted docker_tunit Batch completions should contain data ingested via pubsub consumer     wall    751 warm-up    707 left     43 reference   133
+   over-subtracted docker_xunit Equipment alerts should contain data ingested via event hub consumer   wall    872 warm-up    797 left     75 reference  2072
+   unexplained     docker_lightbdd Adding A New Topping Should Return The Created Topping                 wall    464 warm-up    370 left     94 reference    32
+   unexplained     docker_lightbdd Consuming Customer Feedback Event Should Trigger Downstream Processing wall    784 warm-up      0 left    784 reference    76
+   unexplained     docker_lightbdd Creating A Reservation Should Return The Confirmed Reservation         wall    143 warm-up      0 left    143 reference    31
+   unexplained     docker_lightbdd Deleting A Waste Record Should Return No Content                       wall    364 warm-up      0 left    364 reference    96
+   unexplained     docker_lightbdd Grpc Server Reflection Should List The Breakfast Service               wall    176 warm-up      0 left    176 reference    37
+   unexplained     docker_lightbdd Recording Waste With Zero Quantity Should Return Bad Request           wall    225 warm-up      0 left    225 reference     4
+   unexplained     docker_lightbdd Retrieving Non Existent Review Should Return Not Found                 wall    135 warm-up      0 left    135 reference     3
+   unexplained     docker_lightbdd The GraphQL Schema Definition Endpoint Should Return The Schema Defini wall    402 warm-up      0 left    402 reference    53
+   unexplained     docker_lightbdd The GraphQL UI Endpoint Should Return A Valid Page                     wall    515 warm-up      0 left    515 reference    23
+   unexplained     docker_nunit Audit logs should be filterable by entity id                           wall   1360 warm-up   1107 left    252 reference   100
+   unexplained     docker_nunit Deleting a waste record should return no content                       wall    750 warm-up      0 left    750 reference    96
+   unexplained     docker_nunit Recipe reports should contain ingested recipe data                     wall    231 warm-up      0 left    231 reference    57
+   unexplained     docker_reqnroll Audit logs should be filterable by entity id                           wall    294 warm-up      0 left    294 reference    91
+   unexplained     docker_reqnroll Batch completions should contain data ingested via pubsub consumer     wall    441 warm-up      0 left    441 reference    97
+   unexplained     docker_reqnroll Cancelling an already cancelled reservation should return a conflict r wall   1995 warm-up   1841 left    154 reference    55
+   unexplained     docker_reqnroll Consuming customer feedback event should trigger downstream processing wall   1382 warm-up      0 left   1382 reference    76
+   unexplained     docker_reqnroll Consuming recipe cost event should trigger downstream processing       wall    188 warm-up      0 left    188 reference    44
+   unexplained     docker_reqnroll Creating an order should emit a structured log entry                   wall   1116 warm-up      0 left   1116 reference   294
+   unexplained     docker_reqnroll Creating an order should produce a retrievable audit log entry         wall   4618 warm-up   3847 left    771 reference   128
+   unexplained     docker_reqnroll Deleting a reading should remove it from the list                      wall    156 warm-up      0 left    156 reference    47
+   unexplained     docker_reqnroll Deleting an existing topping should return no content                  wall    147 warm-up     65 left     82 reference     4
+   unexplained     docker_reqnroll Deleting an inventory item should return no content                    wall    174 warm-up      0 left    174 reference    55
+   unexplained     docker_reqnroll Getting the timing summary should return aggregated data               wall    215 warm-up      0 left    215 reference    46
+   unexplained     docker_reqnroll Goat milk endpoint should return not found when feature is disabled    wall    600 warm-up      0 left    600 reference    75
+   unexplained     docker_reqnroll Grpc server reflection should describe the breakfast service           wall    143 warm-up      0 left    143 reference    32
+   unexplained     docker_reqnroll Ingredient shipments should be recorded when delivered via eventgrid w wall   5367 warm-up   3116 left   2252 reference    55
+   unexplained     docker_reqnroll Listing all inventory items should return all items                    wall    223 warm-up      0 left    223 reference    68
+   unexplained     docker_reqnroll Listing feedback for an order should return the feedback               wall    277 warm-up     97 left    180 reference    67
+   unexplained     docker_reqnroll Listing reviews by recipe should return matching reviews               wall    723 warm-up      0 left    723 reference    37
+   unexplained     docker_reqnroll Listing timings by station should return matching records              wall    365 warm-up      0 left    365 reference    46
+   unexplained     docker_reqnroll Listing waste by recipe should return matching records                 wall    801 warm-up    499 left    302 reference    65
+   unexplained     docker_reqnroll Pancake recipe summary should return correct data                      wall    601 warm-up      0 left    601 reference    28
+   unexplained     docker_reqnroll Recording an equipment reading should return the created record        wall    133 warm-up      0 left    133 reference    17
+   unexplained     docker_reqnroll Recording an order timing should return the created record             wall    464 warm-up    344 left    120 reference    10
+   unexplained     docker_reqnroll Retrieving an existing inventory item should return the item           wall    368 warm-up      0 left    368 reference    81
+   unexplained     docker_reqnroll Retrieving an existing staff member should return the member           wall    294 warm-up      0 left    294 reference    44
+   unexplained     docker_reqnroll Retrieving non-existent customer preferences should return not found   wall   1690 warm-up   1543 left    147 reference    23
+   unexplained     docker_reqnroll Saving customer preferences with missing customer name should return b wall    108 warm-up      0 left    108 reference     4
+   unexplained     docker_reqnroll Submitting a recipe review should return the created review            wall    358 warm-up    229 left    128 reference    20
+   unexplained     docker_reqnroll The AsyncApi endpoint should return a valid specification              wall    774 warm-up      0 left    774 reference   143
+   unexplained     docker_reqnroll The GraphQL schema definition endpoint should return the schema defini wall    272 warm-up      0 left    272 reference    53
+   unexplained     docker_reqnroll The Grpc contract endpoint should return a valid specification         wall    297 warm-up      0 left    297 reference    47
+   unexplained     docker_reqnroll The OpenApi endpoint should return a valid specification               wall    833 warm-up      0 left    833 reference   235
+   unexplained     docker_reqnroll The Scalar UI endpoint should return a valid page                      wall    628 warm-up      0 left    628 reference   117
+   unexplained     docker_reqnroll Updating an existing topping should return the updated topping         wall    126 warm-up      0 left    126 reference     9
+   unexplained     docker_reqnroll Updating an inventory item should return the updated item              wall    293 warm-up      0 left    293 reference    67
+   unexplained     docker_reqnroll Updating customer preferences should return the updated preferences    wall    357 warm-up    278 left     78 reference    13
+   unexplained     docker_reqnroll Waffle recipe summary should return correct data                       wall    128 warm-up      0 left    128 reference     5
+   unexplained     docker_xunit Consuming recipe cost event should trigger downstream processing       wall   1035 warm-up      0 left   1035 reference    44
+   unexplained     docker_xunit Listing feedback for an order should return the feedback               wall    413 warm-up    258 left    154 reference    67
+   unexplained     docker_xunit Menu endpoint should return all menu items with availability           wall    195 warm-up      0 left    195 reference    44
+   unexplained     docker_xunit Order exceeding maximum items per order should be rejected             wall    896 warm-up      0 left    896 reference   209
+   unexplained     docker_xunit Order status for non existent order should return not found            wall    242 warm-up      0 left    242 reference    39
+   unexplained     docker_xunit Request with correlation id should forward it to supplier service      wall    154 warm-up      0 left    154 reference    42

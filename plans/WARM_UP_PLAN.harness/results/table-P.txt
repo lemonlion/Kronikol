@@ -1,0 +1,9 @@
+variant P; wall ms, then ' / time left' where the scenario carries a warm-up
+| Scenario | xunit | nunit | tunit | reqnroll | lightbdd | bddfy |
+|---|---|---|---|---|---|---|
+| Order status via grpc should return order details | 1,265 / 76 | 38 | 23 | 73 | 82 | 43 |
+| Equipment alerts should contain data ingested via event hub consumer | 791 / 45 | 45 | 21 | 458 / 52 | 105 | 34 |
+| Audit logs should be filterable by entity id | 32 | 1,012 / 71 | 593 / 57 | 90 | 79 | 5 |
+| Audit logs should be returned in descending timestamp order | 48 | 42 | 25 | 55 | 95 | 13 |
+| Batch completions should contain data ingested via pubsub consumer | 41 | 843 / 34 | 463 / 12 | 65 | 1,334 / 97 | 26 |
+| Retrieving non-existent customer preferences should return not found | 23 | 10 | 4 | 596 / 16 | 47 | 2 |

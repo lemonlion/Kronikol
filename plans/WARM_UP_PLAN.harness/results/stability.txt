@@ -1,0 +1,18 @@
+ReqNRoll, three local runs
+| Variant | wall moves by 200 ms or more | time left moves by 200 ms or more | scenario names |
+|---|---|---|---|
+| V0 | 56 | 39 | 166 |
+| V3 | 56 | 31 | 166 |
+| PU | 56 | 30 | 166 |
+| P | 56 | 30 | 166 |
+| PS | 56 | 30 | 166 |
+| PL | 56 | 28 | 166 |
+xUnit, two local runs
+| Variant | wall moves by 200 ms or more | time left moves by 200 ms or more | scenario names |
+|---|---|---|---|
+| V0 | 6 | 3 | 212 |
+| V3 | 6 | 3 | 212 |
+| PU | 6 | 3 | 212 |
+| P | 6 | 3 | 212 |
+| PS | 6 | 3 | 212 |
+| PL | 6 | 3 | 212 |

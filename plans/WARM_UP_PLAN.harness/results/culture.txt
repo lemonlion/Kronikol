@@ -1,0 +1,3 @@
+en-US: DurationSeconds=1.234 (parses as a number: True); timeline style="width:12.3%"; query tool "1.27 s", Slowest "1.23s"
+de-DE: DurationSeconds=1,234 (parses as a number: False); timeline style="width:12,3%"; query tool "1,27 s", Slowest "1,23s"
+fr-FR: DurationSeconds=1,234 (parses as a number: False); timeline style="width:12,3%"; query tool "1,27 s", Slowest "1,23s"
