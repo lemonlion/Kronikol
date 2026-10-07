@@ -576,3 +576,9 @@ with Q7, would decide whether consumer rules reach the query engine; neither wai
     differs on exactly the 13 and 41 wrong pairs.
   - **S7** (`s7/`): two runs from `kronikol ingest`, `kronikol merge` and Kronikol4J's serializer pair as the rule pairs
     them (15, 81 and 15 addresses); nothing else was found.
+- **2026-10-07, published.** 4.6.1 is `c9c41711`, tagged `v4.6.1`. Release run 37600554365 passed, with CI 37600552210
+  (31 of 31 jobs), CodeQL 37600552119 and CI Summary Preview 37600552216 on that commit; nuget.org lists all 62 ids at
+  4.6.1. The wiki has the edits (`cab9ae4`: Querying-Reports, and Tabular-Attributes, whose `compare` and `diff`
+  examples had no report and took `s3` as one, found by §6.4's grep). #115 is closed with a comment. Before the tag, a
+  rerun of the core suite after the version bump failed `NodeJsCodeCacheTests` once: it deletes the machine's one V8
+  cache file, and another session's suite on the same machine rebuilt it; it passed run alone.
