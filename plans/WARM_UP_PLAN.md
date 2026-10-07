@@ -689,6 +689,15 @@ for #122 or says it did not.
     fixture's teardown in BreakfastProvider's own `WebApplicationFactory` disposal, which four reruns (two on 4.9.1,
     two on 4.9.0) did not repeat; one 4.9.1 rerun failed a correlation-id assertion that reads the consumer's fake
     during its scenario, before any report code runs. No wiki edit: its examples read the same under the fixes.
+  - **4.9.1 published** (f6bf1d03, tag `v4.9.1`, templates pinned to 4.9.0): CI 37657680768, Release 37657683353 and
+    CodeQL 37657680843 passed; nuget.org lists all 62 ids; Kronikol4J's ledger has its line (39e66f6), and the wiki
+    needed no edit.
+  - **BreakfastProvider on 4.9.1** (`0ee43e8`, from the scratch clone: 27 pins and 7 action refs, 4.9.0 to 4.9.1). On
+    the published packages its xUnit lane passed 212 of 212 locally, with marks and pages equal. CI 37661428172 and a
+    second run, 37662667173, passed on all 58 lanes. The live xUnit report (`p1/live-4.9.1.txt`, `p1/livepaint.cs`)
+    draws the data's 8 warm-ups on both pages, carries the spec's 11 marks, names the gRPC warm-up
+    `GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus`, and paints each badge's times as its tooltip reads them.
+    #113 has a follow-up comment naming 4.9.1 (6043672681). The plan is complete.
 
 ## Appendix A. Edit sites at `37e93813`
 

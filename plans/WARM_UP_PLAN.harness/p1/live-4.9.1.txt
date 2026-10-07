@@ -1,0 +1,16 @@
+The live xUnit report BreakfastProvider published from 0ee43e8 (CI 37661428172), fetched 2026-10-07 after the run: kronikolVersion 4.9.1+f6bf1d03b2ab0d9a973d15b0ab11063099eed190.
+
+TestRunReport.html: 8 marked in the data (8 drawn alone, 0 in 0 groups), 8 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 8 marked in the data (8 drawn alone, 0 in 0 groups), 8 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+live-491: script 11 marks in 8 scenarios, report 11 in 8: equal
+
+Painted (scratchpad live-paint/livepaint.cs: badge text | class | note opacity | timeline shade vs warm-up share | tooltip):
+8 marked scenarios painted
+97ms · 57ms warm-up | duration-badge duration-fast | note opacity 0.75 | shade 0.586 vs 0.582 | 97 ms, 57 ms of it first-call warm-up: POST /daily-specials/orders 57 ms (later calls 1.8 ms)
+438ms · 270ms warm-up | duration-badge duration-fast | note opacity 0.75 | shade 0.617 vs 0.619 | 438 ms, 270 ms of it first-call warm-up: POST /feedback 270 ms (later calls 2.1 ms)
+1.2s · 1.1s warm-up | duration-badge duration-fast | note opacity 0.75 | shade 0.946 vs 0.946 | 1.17 s, 1.11 s of it first-call warm-up: POST /orders 626 ms (later calls 7 ms), POST /pancakes 407 ms (4.8 ms), GET /milk 75 ms (2 ms)
+137ms · 120ms warm-up | duration-badge duration-fast | note opacity 0.75 | shade 0.875 vs 0.877 | 137 ms, 120 ms of it first-call warm-up: GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus 120 ms (later calls 7.2 ms)
+95ms · 52ms warm-up | duration-badge duration-fast | note opacity 0.75 | shade 0.551 vs 0.547 | 95 ms, 52 ms of it first-call warm-up: POST /inventory 52 ms (later calls 1.8 ms)
+186ms · 167ms warm-up | duration-badge duration-fast | note opacity 0.75 | shade 0.896 vs 0.893 | 186 ms, 167 ms of it first-call warm-up: GET /recipe-reviews/{id} 105 ms (later calls 1.8 ms), POST /recipe-reviews 61 ms (2.5 ms)
+760ms · 719ms warm-up | duration-badge duration-fast | note opacity 0.75 | shade 0.946 vs 0.946 | 760 ms, 719 ms of it first-call warm-up: POST /graphql 719 ms (later calls 7.7 ms)
+102ms · 65ms warm-up | duration-badge duration-fast | note opacity 0.75 | shade 0.638 vs 0.637 | 102 ms, 65 ms of it first-call warm-up: POST /reservations 65 ms (later calls 3 ms)
