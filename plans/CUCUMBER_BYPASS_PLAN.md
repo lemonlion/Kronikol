@@ -1,8 +1,8 @@
 # Cucumber bypass plan: #105
 
 **Written:** 2026-10-06, at 4.6.0 (`37e93813`), eight days after #105 was filed. **Status: green-lit 2026-10-07 by the
-owner ("complete the plan in full"), decision D34, every question as recommended; executed the same day as R1 (patch,
-4.6.2) and R2 (minor, 4.7.0), §11.** Evidence
+owner ("complete the plan in full"), decision D34, every question as recommended; executed and published the same day as R1
+(patch, 4.6.2) and R2 (minor, 4.7.0), §11.** Evidence
 labels: **RUN** (measured here), **READ** (in the source, `file:line` at `37e93813`), **INFERRED** (reasoned from facts,
 stated by none), **ISSUE** (taken from #105, not re-measured). The probes behind every RUN line are in
 [`CUCUMBER_BYPASS_PLAN.harness/`](CUCUMBER_BYPASS_PLAN.harness/README.md), with their output: the issue's three ingests
@@ -472,3 +472,8 @@ that day gave the lower issue the lower number). `ROADMAP.md` §7 lists #105 and
   while assembling it: the `kronikol-test-debugging` skill's command reference (`references/commands.md`, both
   copies) still called `kronikol query summary`'s feature lines pass/fail after R1 made them count skipped and
   bypassed scenarios; R2 corrects it.
+- **2026-10-07, published.** 4.6.2: Release 37603756671 passed, with CI 37603753441, CodeQL 37603753432 and CI Summary
+  Preview 37603753369 on `96fe030f`; nuget.org listed all 62 ids at 11:20; wiki `b18fbc5`, Kronikol4J ledger `8a368c4`.
+  4.7.0: Release 37606798674 passed, with CI 37606793759 and CI Summary Preview 37606793636 on `affc13d0` (CodeQL
+  37606793650 was still running when this was written); nuget.org listed all 62 ids at 11:37; wiki `3f791d5`, Kronikol4J
+  ledger `dce15c5`. #105 closed with a comment naming both releases.
