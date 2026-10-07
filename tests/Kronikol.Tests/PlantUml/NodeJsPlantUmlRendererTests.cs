@@ -170,15 +170,27 @@ public class NodeJsPlantUmlRendererTests
         var plain = "@startuml\nAlice -> Bob : hello\n@enduml";
         var themed = "@startuml\n!theme cerulean\nAlice -> Bob : hello\n@enduml";
 
-        var watch = Stopwatch.StartNew();
-        var results = NodeJsPlantUmlRenderer.RenderMany([themed, plain]);
-        watch.Stop();
+        // The defect this guards waited for the 20 s poll on the themed diagram, and on the plain one after it in
+        // the batch too, so 10 s separates the two. It is wall-clock on a shared machine: a full suite beside another
+        // session's suites once took 16 s. A real regression loses every attempt and a spike does not repeat, so the
+        // first of up to three attempts under the bound passes.
+        var attempts = new List<long>();
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var watch = Stopwatch.StartNew();
+            var results = NodeJsPlantUmlRenderer.RenderMany([themed, plain]);
+            watch.Stop();
 
-        Assert.All(results, r => Assert.True(r.Succeeded, r.Error));
-        // The theme bundle cannot load here, so the engine draws the diagram without it, exactly as the
-        // unthemed source draws.
-        Assert.Equal(WithoutProcessingInstructions(results[1].Svg!), WithoutProcessingInstructions(results[0].Svg!));
-        Assert.True(watch.ElapsedMilliseconds < 10_000, $"two diagrams took {watch.ElapsedMilliseconds} ms");
+            Assert.All(results, r => Assert.True(r.Succeeded, r.Error));
+            // The theme bundle cannot load here, so the engine draws the diagram without it, exactly as the
+            // unthemed source draws.
+            Assert.Equal(WithoutProcessingInstructions(results[1].Svg!), WithoutProcessingInstructions(results[0].Svg!));
+            if (watch.ElapsedMilliseconds < 10_000)
+                return;
+            attempts.Add(watch.ElapsedMilliseconds);
+        }
+
+        Assert.Fail($"Two diagrams took {string.Join(", ", attempts)} ms in three attempts, as if the themed one waited for the theme bundle.");
     }
 
     [Fact]

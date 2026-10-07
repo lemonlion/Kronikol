@@ -44,6 +44,11 @@ EDITS = {
          "   above the tool's own folder first, so a tool built inside a checkout read and appended to that checkout's\n"
          "   ledger, whatever it was replaying.\n"),
     ],
+    "Report-Configuration.md": [
+        ("for the nearest `.kronikol` or `.git` directory above the test output or the reports directory.",
+         "for the nearest `.kronikol` or `.git` directory above the test output or the reports directory (for an ingest, "
+         "above the directory it is run in, then the reports directory)."),
+    ],
     "Diagnostics-and-Debugging.md": [
         ("| `UnattributedInteractions` | How many records window attribution claimed, and how many remain unattributed. |",
          "| `UnattributedInteractions` | How many records could not be attributed to a test. |"),

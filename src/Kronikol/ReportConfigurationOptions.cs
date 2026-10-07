@@ -602,8 +602,9 @@ public record ReportConfigurationOptions
     /// <para>Default: <c>null</c>, which resolves the ledger in this order: the <c>KRONIKOL_HISTORY</c>
     /// environment variable (the value <c>off</c> switches history off for the run), then
     /// <c>&lt;repository root&gt;/.kronikol/history.jsonl</c> for the nearest repository or
-    /// <c>.kronikol</c> directory above the test output or the reports directory. A relative path is
-    /// taken against the repository root when there is one. When nothing resolves, the run still writes
+    /// <c>.kronikol</c> directory above the test output or the reports directory (for an ingest, above the
+    /// directory it is run in, then the reports directory). A relative path is taken against the repository
+    /// root when there is one. When nothing resolves, the run still writes
     /// its <c>History.run.json</c> fragment and records a <c>HistoryUnavailable</c> diagnostic saying how
     /// to enable it.</para>
     /// </summary>

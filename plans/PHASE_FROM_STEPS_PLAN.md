@@ -53,7 +53,7 @@ neither is in this plan; §7 says why the order does not matter.
     happened while measuring this plan).
   - Cucumber synthesis warnings are never read.
   - The wire/span merger can leave a call unphased.
-  - The wiki's ingest diagnostics table lacks five kinds.
+  - The wiki's ingest diagnostics table lacks five kinds (nine, found while executing R1; see the Log).
 
 ## 0. Findings
 
@@ -68,7 +68,7 @@ neither is in this plan; §7 says why the order does not matter.
 | F7 | **The wire/span merger never reconciles phases** (`InteractionMerger.cs:312-320`, `Adopt`). A wire call still unattributed when phases are applied gets none, and keeps none after the merge hands it its span twin's test | READ, INFERRED | Q6 |
 | F8 | **Background steps open no phase window** (`IngestAttribution.cs:448`, pinned by `Background_and_nested_steps_open_no_phase_window`), so calls made during a Cucumber Background are never phased | READ | Q7 |
 | F9 | **`CucumberSynthesisResult.Warnings` is never read** in `src/` (`CucumberFeatureSynthesizer.cs:61`, written at 127-131, 201, 207, 664-671, 975) | READ | §8 |
-| F10 | **The wiki's ingest Diagnostics table** uses F1's line as its `Other` example and has no row for `StepAttributionMismatch`, `ResultDefaulted`, `BackgroundCalls`, `ReportRotationFailed` or `OptionNotApplied` (`Ingesting-External-Captures.md:620-634`) | READ | §6, R1 |
+| F10 | **The wiki's ingest Diagnostics table** uses F1's line as its `Other` example and has no row for `StepAttributionMismatch`, `ResultDefaulted`, `BackgroundCalls`, `ReportRotationFailed` or `OptionNotApplied` (`Ingesting-External-Captures.md:620-634`) | READ | §6, R1 **Executed (4.7.1):** the table lacked nine kinds, the four `History*` kinds too, and each now has a row. |
 
 ## 1. How far each claim was checked
 
@@ -406,7 +406,7 @@ The per-release checklist:
 - **Stage:** stage 1, the patch train, by rule 1 (defects before features).
 - **Row and decision:** the next free stage 1 row and decision number at green-light. On 2026-10-06 other plans took
   rows 1.17 (#115), 1.18 (#105) and 1.19 (#113), and D33 (#113), so at the time of writing they would be 1.20 and
-  D34. This plan reserves neither; `ROADMAP.md` is not edited until the owner places it.
+  D34. This plan reserves neither; `ROADMAP.md` is not edited until the owner places it. **Placed at the green light, 2026-10-07: row 1.20 and D35** (D34 went to #105).
 - **Files and order:** it touches `Ingestion/` and `Kronikol.Tool/IngestCommand.cs`. #128 and #129 touch
   `Reports/ReportGenerator.cs` and `PlantUml/StepBarPlantUml.cs`, so the three can land in any order.
 - **This plan's other findings:** §8's items go in the same row, as `INGEST_FIDELITY_PLAN.md` §8 went into row 1.15.
@@ -417,10 +417,10 @@ Each is a patch unless marked.
 
 | # | Defect | Level | Recommendation |
 |---|---|---|---|
-| 1 | F6. `kronikol ingest` reads and appends to the ledger of whatever git checkout holds the tool's folder. While measuring, a Debug build in this repo's `bin/` appended three lines to `C:\Code\Kronikol\.kronikol\history.jsonl` and printed `HistoryPartialRun` (removed afterwards; a copy is kept outside the repo) | RUN | A history-area patch: an ingest resolves the ledger from the reports folder, then the current directory, never the tool's folder |
-| 2 | F7. Phases are applied before the merge, which keeps the wire halves' phases and discards the span twins' | READ, INFERRED | Q6: measure first |
-| 3 | F9. Cucumber synthesis warnings reach no reader | READ | Print them, or record those that change the report as diagnostics |
-| 4 | `ProvenanceNotes` prints one message per kind, so two unrelated `Other` lines read as the first one "(×2)" | READ | Design, not a defect on its own; R2 removes the case where it hides a failure |
+| 1 | F6. `kronikol ingest` reads and appends to the ledger of whatever git checkout holds the tool's folder. While measuring, a Debug build in this repo's `bin/` appended three lines to `C:\Code\Kronikol\.kronikol\history.jsonl` and printed `HistoryPartialRun` (removed afterwards; a copy is kept outside the repo) | RUN | A history-area patch: an ingest resolves the ledger from the reports folder, then the current directory, never the tool's folder **Fixed in 4.7.2:** an ingest looks above the directory it runs in, then above the reports directory. |
+| 2 | F7. Phases are applied before the merge, which keeps the wire halves' phases and discards the span twins' | READ, INFERRED | Q6: measure first **Measured and fixed in 4.7.2 (Q6):** both halves of a merged call were `Unknown`; it now takes its span twin's phase. |
+| 3 | F9. Cucumber synthesis warnings reach no reader | READ | Print them, or record those that change the report as diagnostics **Taken by #105's session:** 4.6.2 records the warnings in the run's diagnostics. |
+| 4 | `ProvenanceNotes` prints one message per kind, so two unrelated `Other` lines read as the first one "(×2)" | READ | Design, not a defect on its own; R2 removes the case where it hides a failure **Left as a design question** (`ROADMAP.md` Appendix C). |
 
 ## 9. What is not known
 
@@ -451,9 +451,9 @@ Each is a patch unless marked.
 | Q2 | Ask 3: a diagnostic for the calls the pass could not phase | **Not in R1.** Calls in hooks, between steps, in Background steps (F8) and in tests with no steps fall outside every step on a healthy run, as do calls folded into "Traffic outside any test", so the count would be the same noise in many suites. If wanted, S0b measures it first, and the actionable case gets the diagnostic: a step with no `durationMs`, whose window holds only its own instant. A new kind is a minor; the number on Q1's line is a patch |
 | Q3 | A public `IngestResult` member for the count | **No.** No reader has asked, and it would be a minor |
 | Q4 | Take R2 (F4) | **Yes**, as its own patch after R1, or inside R1 if the owner wants one release. Same principle as ask 1, and it stops a success line from standing in for a failure |
-| Q5 | `ExclusiveOnly`'s line at zero (F5) | **Record it only when records were left ambiguous**, and print the zero case as a console line, as R1 does. The console line still proves the mode ran; a non-zero count is a real loss and stays a diagnostic |
-| Q6 | The merger's phases (F7) | **Measure first**, with a wire capture plus spans and parallel workers. If it reproduces, a merged call takes its span pair's phase when its wire pair has none (`Adopt`). A patch |
-| Q7 | Background steps open no phase window (F8) | **Measure the in-process answer first.** It belongs with roadmap row 1.15's item 6 (four step-to-phase vocabularies that disagree on And and But) |
+| Q5 | `ExclusiveOnly`'s line at zero (F5) | **Record it only when records were left ambiguous**, and print the zero case as a console line, as R1 does. The console line still proves the mode ran; a non-zero count is a real loss and stays a diagnostic **Taken without the console line:** no CLI flag sets the mode (see the Log). |
+| Q6 | The merger's phases (F7) | **Measure first**, with a wire capture plus spans and parallel workers. If it reproduces, a merged call takes its span pair's phase when its wire pair has none (`Adopt`). A patch **Measured: it reproduced, and 4.7.2 fixes it.** |
+| Q7 | Background steps open no phase window (F8) | **Measure the in-process answer first.** It belongs with roadmap row 1.15's item 6 (four step-to-phase vocabularies that disagree on And and But) **Recorded on row 1.15** (READ: no example's Background step makes a call; see the Log). |
 
 ## Appendix A. Edit sites
 
@@ -524,3 +524,19 @@ Each is a patch unless marked.
     diagnostics.
   - §8 item 4 (one message per kind in the query header) stays a design question; R2 removes the case where it hid a
     failure.
+- 2026-10-07, **published**: 4.7.1 (Release 37609580833, CI 37609577845, CodeQL 37609577842 and CI Summary Preview
+  37609577958 passed; nuget.org listed all 62 ids at 12:03; wiki `fe8069c`) and 4.7.2 (Release 37611619603, CI
+  37611615817, CodeQL 37611615810 and CI Summary Preview 37611615803 passed; nuget.org listed all 62 ids at
+  12:23; wiki `0da3f31`, which also corrects Report-Configuration's `HistoryFilePath` row). #130 closed with a comment
+  naming both releases and leaving the Jest acceptance to the owner. The execution checklist's sweep found
+  `ReportConfigurationOptions.HistoryFilePath`'s XML doc, which 4.7.2 left naming only the test output and the reports
+  directory: fixed in this no-bump commit under `## [Unreleased]`, for the next release to carry. One more thing to
+  explain: `DetachHostedServicesTests` timed out once in 4.7.2's core suite while another session's suites ran on this
+  machine. The identity it reads is AsyncLocal and no static is shared with another class, so a starved thread pool is
+  the likely cause; 4.7.2 makes the probe fail its test with its own exception and waits 30 s instead of 10. This
+  commit's core-suite run, under the same load, failed
+  `NodeJsPlantUmlRendererTests.A_themed_source_renders_unthemed_instead_of_timing_out` once: two diagrams took
+  16,025 ms against its 10 s bound, where alone they take under one. The defect it guards waited 20 s, so the bound
+  stays; the fact now passes on the first of up to three attempts under it, as
+  `Batch_of_five_is_faster_than_five_single_spawns` in the same class does, and a bound forced to 1 ms fails it with
+  all three timings.

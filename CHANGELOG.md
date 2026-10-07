@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+- `ReportConfigurationOptions.HistoryFilePath`'s documentation says where an ingest looks for the ledger: above the
+  directory it is run in, then the reports directory (4.7.2's change; the doc named only the test output and the
+  reports directory). Documentation only; it ships in the package's XML docs, so the next release carries it.
+
 ## [4.7.3] - 2026-10-07
 
 **Patch - durations and dates read the same on every machine, and timing defects found on the way.**
