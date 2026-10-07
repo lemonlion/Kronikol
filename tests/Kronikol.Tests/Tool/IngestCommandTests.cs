@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Kronikol.Ingestion;
 using Kronikol.Reports;
 using Kronikol.Tool;
@@ -22,6 +23,45 @@ public class IngestCommandTests : IDisposable
         RequestResponseLogger.Redaction = null;
         DefaultDiagramsFetcher.Reset();
         try { Directory.Delete(_dir, true); } catch { /* best effort */ }
+    }
+
+    [Fact]
+    public void Ingest_finds_the_history_ledger_from_where_it_is_run_not_from_the_tools_folder()
+    {
+        // plans/PHASE_FROM_STEPS_PLAN.md section 8.1 (F6): the ledger was looked for above the tool's own folder first,
+        // so a tool built inside a checkout read and appended to that checkout's ledger whatever directory it was run
+        // from. This test's bin is inside the repository's checkout, so the tool beside it reproduces that.
+        var project = Path.Combine(_dir, "project");
+        Directory.CreateDirectory(Path.Combine(project, ".kronikol"));
+        var captures = PhaseRepro("ledger", stepDurationMs: 10);
+        var start = new ProcessStartInfo("dotnet")
+        {
+            WorkingDirectory = project,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        foreach (var arg in new[] { Path.Combine(AppContext.BaseDirectory, "Kronikol.Tool.dll"), "ingest", captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", Path.Combine(project, "Reports") })
+            start.ArgumentList.Add(arg);
+        // History on, and a local run: on CI the ledger is left to the history action, so nothing would be written.
+        foreach (var name in start.Environment.Keys.ToArray())
+        {
+            if (name is "KRONIKOL_HISTORY" or "CI" or "TF_BUILD"
+                || name.StartsWith("GITHUB_", StringComparison.OrdinalIgnoreCase) || name.StartsWith("RUNNER_", StringComparison.OrdinalIgnoreCase)
+                || name.StartsWith("BUILD_", StringComparison.OrdinalIgnoreCase) || name.StartsWith("SYSTEM_", StringComparison.OrdinalIgnoreCase)
+                || name.StartsWith("AGENT_", StringComparison.OrdinalIgnoreCase))
+                start.Environment.Remove(name);
+        }
+
+        using var process = Process.Start(start)!;
+        var output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+        var error = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
+        Assert.True(process.WaitForExit(TimeSpan.FromMinutes(2)), "kronikol ingest did not finish");
+        Assert.Equal(0, process.ExitCode);
+
+        var ledger = Path.Combine(project, ".kronikol", "history.jsonl");
+        Assert.True(File.Exists(ledger), "No ledger above the directory the ingest ran in; it was looked for elsewhere. " + output.Result + error.Result);
+        Assert.NotEmpty(File.ReadAllLines(ledger).Where(l => l.Length > 0));
     }
 
     private const string PhaseLinePrefix = "--phase-from-steps: ";
@@ -75,18 +115,66 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("a response takes its request's phase", usage.ToString());
     }
 
+    private const string WindowLinePrefix = "--attribute-by-window: ";
+
+    [Fact]
+    public void Ingest_prints_the_window_attribution_count_as_a_line_after_replayed()
+    {
+        var captures = PhaseRepro("window-line", stepDurationMs: 10, callTestId: "session");
+        var @out = new StringWriter();
+
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", Path.Combine(_dir, "out-window-line"), "--attribute-by-window", "session"], @out, new StringWriter()));
+
+        var lines = @out.ToString().Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
+        var replayed = Array.FindIndex(lines, l => l.StartsWith("Replayed ", StringComparison.Ordinal));
+        Assert.True(replayed >= 0, @out.ToString());
+        Assert.Equal(WindowLinePrefix + "4 interaction record(s) attributed to a test by time window.", lines[replayed + 1]);
+        Assert.DoesNotContain(lines, l => l.Contains("UnattributedInteractions", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Ingest_prints_a_window_attribution_count_of_zero()
+    {
+        // Every call already names its test, so the pass has nothing to do; zero says it ran.
+        var captures = PhaseRepro("window-zero", stepDurationMs: 10);
+        var @out = new StringWriter();
+
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", Path.Combine(_dir, "out-window-zero"), "--attribute-by-window"], @out, new StringWriter()));
+
+        Assert.Contains(WindowLinePrefix + "0 interaction record(s) attributed to a test by time window.", @out.ToString().Split('\n').Select(l => l.TrimEnd('\r')));
+    }
+
+    [Fact]
+    public void Ingest_without_attribute_by_window_prints_no_window_line()
+    {
+        var captures = PhaseRepro("window-off", stepDurationMs: 10);
+        var @out = new StringWriter();
+
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", Path.Combine(_dir, "out-window-off")], @out, new StringWriter()));
+
+        Assert.DoesNotContain(WindowLinePrefix, @out.ToString());
+    }
+
+    [Fact]
+    public void The_usage_says_window_attribution_prints_its_count()
+    {
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("print how many it attributed", usage.ToString());
+    }
+
     /// <summary>
     /// #130's repro as files: one test whose When step (10 ms, or an instant with no duration) makes two calls, the second
     /// a database read answered 2 s later.
     /// </summary>
-    private string PhaseRepro(string name, int? stepDurationMs, double firstCallAtMs = 1)
+    private string PhaseRepro(string name, int? stepDurationMs, double firstCallAtMs = 1, string? callTestId = null)
     {
         const string testId = "places-an-order";
         var captures = Path.Combine(_dir, "captures-" + name);
         Directory.CreateDirectory(captures);
-        var (aRequest, aResponse) = InteractionRecord.Pair(testId, null, "POST", "http://localhost:8081/orders", "api", "web",
+        var (aRequest, aResponse) = InteractionRecord.Pair(callTestId ?? testId, null, "POST", "http://localhost:8081/orders", "api", "web",
             statusCode: "201", requestTimestamp: T0.AddMilliseconds(firstCallAtMs), responseTimestamp: T0.AddMilliseconds(firstCallAtMs + 7));
-        var (bRequest, bResponse) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:5432/orders/1", "db", "web",
+        var (bRequest, bResponse) = InteractionRecord.Pair(callTestId ?? testId, null, "GET", "http://localhost:5432/orders/1", "db", "web",
             statusCode: "200", requestTimestamp: T0.AddMilliseconds(firstCallAtMs + 2), responseTimestamp: T0.AddSeconds(2));
         File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [aRequest.ToJson(), bRequest.ToJson(), aResponse.ToJson(), bResponse.ToJson()]);
         File.WriteAllLines(Path.Combine(captures, "tests.ndjson"),

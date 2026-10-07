@@ -1,3 +1,5 @@
+using Kronikol.Tracking;
+
 namespace Kronikol.Ingestion;
 
 /// <summary>
@@ -19,7 +21,8 @@ namespace Kronikol.Ingestion;
 /// content and no span id is wire-like. Records that are neither (or that carry no timestamp) are never
 /// merged; nothing is ever dropped without a twin.</para>
 /// <para>The merged pair keeps the wire record's position, content, status and label, takes the span
-/// record's <c>testId</c>/<c>traceId</c>/<c>activityTraceId</c>/<c>activitySpanId</c>, and records the
+/// record's <c>testId</c>/<c>traceId</c>/<c>activityTraceId</c>/<c>activitySpanId</c> (and its <c>phase</c>, when the
+/// wire record has none), and records the
 /// fact on the request as the pseudo-header <c>x-kronikol-captured-by: wire + span</c> (and in
 /// <see cref="InteractionRecord.CapturedBy"/>), so the diagram note says where the arrow came from.</para>
 /// </remarks>
@@ -316,6 +319,9 @@ public static class InteractionMerger
         TraceId = span.TraceId ?? wire.TraceId,
         ActivityTraceId = span.ActivityTraceId ?? wire.ActivityTraceId,
         ActivitySpanId = span.ActivitySpanId ?? wire.ActivitySpanId,
+        // A wire record the phase pass could not place (it named no test yet) takes its twin's phase, as it takes its
+        // test: until #130's R2 the merged call kept none.
+        Phase = wire.ResolvedPhase == TestPhase.Unknown ? span.Phase ?? wire.Phase : wire.Phase,
         CapturedBy = MergedSource,
     };
 

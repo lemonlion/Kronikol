@@ -305,6 +305,12 @@ public sealed record IngestResult(
     /// <c>kronikol ingest</c>, and not a diagnostic: it is the run doing what it was asked.
     /// </summary>
     internal int PhasedRecords { get; init; }
+
+    /// <summary>
+    /// How many interaction records <see cref="IngestRequest.AttributeByTestWindow"/> attributed to a test; 0 when it is
+    /// off. Printed by <c>kronikol ingest</c>, and not a diagnostic: it is the run doing what it was asked.
+    /// </summary>
+    internal int WindowAttributedRecords { get; init; }
 }
 
 /// <summary>
@@ -431,7 +437,7 @@ public static class IngestPipeline
         var current = attempts.Current(testRecords);
 
         records = DropOutsideRunWindow(records, testRecords, request, diagnostics);
-        records = Attribute(records, testRecords, current, request, diagnostics, out var phasedRecords);
+        records = Attribute(records, testRecords, current, request, diagnostics, out var windowAttributedRecords, out var phasedRecords);
         records = DropEarlierAttempts(records, attempts, ref earlierAttemptRecords);
         if (earlierAttemptRecords > 0)
             diagnostics.Add(DiagnosticKind.Other,
@@ -489,6 +495,7 @@ public static class IngestPipeline
             return new IngestResult(logs.Count, 0, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: false)
             {
                 Diagnostics = diagnostics.Entries,
+                WindowAttributedRecords = windowAttributedRecords,
                 PhasedRecords = phasedRecords,
             };
 
@@ -509,7 +516,9 @@ public static class IngestPipeline
             ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(synthesised.Features, synthesised.Start, synthesised.End, options, cucumber?.Environment ?? RunEnvironment.Unrecorded,
                 Environment.GetEnvironmentVariable,
                 beforeFirstWrite: request.CleanAttachments ? directory => CleanAttachmentsFolder(directory, diagnostics) : null,
-                spans: DistinctSpans(request.Spans, diagnostics));
+                spans: DistinctSpans(request.Spans, diagnostics),
+                // The ledger of the project the ingest is run in, never that of whatever checkout holds the tool's build.
+                historyBaseDirectory: Directory.GetCurrentDirectory());
         }
 
         DefaultDiagramsFetcher.Reset();
@@ -517,6 +526,7 @@ public static class IngestPipeline
         return new IngestResult(logs.Count, scenarioCount, synthesised.Features, reportsDirectory, synthesised.Start, synthesised.End, Generated: true)
         {
             Diagnostics = diagnostics.Entries,
+            WindowAttributedRecords = windowAttributedRecords,
             PhasedRecords = phasedRecords,
         };
     }
@@ -721,16 +731,18 @@ public static class IngestPipeline
     /// </remarks>
     private static List<InteractionRecord> Attribute(
         List<InteractionRecord> records, List<TestRunRecord> testRecords, List<TestRunRecord> currentAttempts,
-        IngestRequest request, ReportDiagnosticsCollector diagnostics, out int phasedRecords)
+        IngestRequest request, ReportDiagnosticsCollector diagnostics, out int windowAttributedRecords, out int phasedRecords)
     {
+        // What a pass did is the run working as asked, never a diagnostic: the list is "what went wrong", every kronikol
+        // query answer carries it, and UnattributedInteractions means "could not be attributed" (#130). The counts
+        // reach kronikol ingest's console through IngestResult; what a pass could not do is recorded below.
+        windowAttributedRecords = 0;
         phasedRecords = 0;
         if (request.AttributeByClaims)
         {
             var claimWindows = IngestAttribution.BuildClaimWindows(testRecords);
-            var (claimedRecords, claimed, contested, contests) = IngestAttribution.AttributeByClaimsNamingContests(records, claimWindows, request.WindowAttributionFallbackId);
+            var (claimedRecords, _, contested, contests) = IngestAttribution.AttributeByClaimsNamingContests(records, claimWindows, request.WindowAttributionFallbackId);
             records = claimedRecords;
-            if (claimed > 0)
-                diagnostics.Add(DiagnosticKind.UnattributedInteractions, $"{claimed} interaction record(s) attributed to a test by content claims.");
             if (contested > 0)
             {
                 // Named, because the cause is nearly always one test: a sweep that claims every seeded
@@ -745,18 +757,14 @@ public static class IngestPipeline
         if (request.AttributeByTestWindow)
         {
             var windows = IngestAttribution.BuildWindows(testRecords);
-            var (attributedRecords, attributed, ambiguous) = IngestAttribution.AttributeByWindow(
+            int ambiguous;
+            (records, windowAttributedRecords, ambiguous) = IngestAttribution.AttributeByWindow(
                 records, windows, request.WindowAttribution, request.WindowAttributionFallbackId);
-            records = attributedRecords;
-            if (attributed > 0)
-                diagnostics.Add(DiagnosticKind.UnattributedInteractions, $"{attributed} interaction record(s) attributed to a test by time window.");
-            if (request.WindowAttribution == WindowAttributionMode.ExclusiveOnly)
-            {
-                // Always, even at zero: the line is what proves the mode ran (a parallel suite whose
-                // taps died would otherwise be indistinguishable from one whose attribution is exact).
+            // Only when records were left ambiguous: zero is the mode working as asked (its caller chose it, so needs no
+            // proof that it ran), and a record two windows held is a real loss.
+            if (request.WindowAttribution == WindowAttributionMode.ExclusiveOnly && ambiguous > 0)
                 diagnostics.Add(DiagnosticKind.Other,
                     $"WindowAttribution ExclusiveOnly: {ambiguous} interaction record(s) fell inside more than one test window and stayed unattributed.");
-            }
         }
 
         if (request.PhaseFromSteps)
@@ -764,8 +772,6 @@ public static class IngestPipeline
             // A retried test's phases come from the attempt the report shows: an earlier attempt's last step would carry
             // its phase into the next attempt's first And.
             var stepWindows = IngestAttribution.BuildStepWindows(currentAttempts);
-            // The count is the run working as asked, so it is not a diagnostic (an empty list is the happy path, and every
-            // query answer would carry it): kronikol ingest prints it beside "Replayed".
             (records, phasedRecords) = IngestAttribution.ApplyPhaseFromSteps(records, stepWindows);
         }
 

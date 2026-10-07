@@ -164,7 +164,10 @@ public static class ReportGenerator
     /// </remarks>
     // spans: the spans an ingest was handed (IngestRequest.Spans), drawn in place of this process's span store, which is
     // then neither read nor written; null reads the store, as an in-process run always has.
-    internal static void CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite = null, IReadOnlyList<FlowSpan>? spans = null)
+    // historyBaseDirectory: where the history ledger is looked for first (then above the reports directory); null is this
+    // process's base directory, right for a test binary built inside its repository. An ingest passes the directory it
+    // runs in: the tool's own folder says nothing about whose run it is replaying.
+    internal static void CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite = null, IReadOnlyList<FlowSpan>? spans = null, string? historyBaseDirectory = null)
     {
         var previous = ActiveReportsDirectory.Value;
         ActiveReportsDirectory.Value = ResolveReportsDirectory(options);
@@ -179,7 +182,7 @@ public static class ReportGenerator
         var runFiles = RunFileCollector.Begin(ActiveReportsDirectory.Value);
         try
         {
-            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options, environment, getEnv, beforeFirstWrite, spans);
+            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options, environment, getEnv, beforeFirstWrite, spans, historyBaseDirectory);
         }
         finally
         {
@@ -189,7 +192,7 @@ public static class ReportGenerator
         }
     }
 
-    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite, IReadOnlyList<FlowSpan>? suppliedSpans)
+    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite, IReadOnlyList<FlowSpan>? suppliedSpans, string? historyBaseDirectory)
     {
         // Guard: skip report generation entirely when there are zero scenarios.
         // This prevents the xUnit v3 test-discovery pass (which triggers
@@ -359,7 +362,7 @@ public static class ReportGenerator
         // and it is null only when history is switched off.
         var runEndedAt = new DateTimeOffset(endRunTime.ToUniversalTime());
         var history = HistoryRunContext.Create(features, dataLogs, suite, ciMetadata, runEndedAt,
-            options, CurrentReportsDirectory, KronikolVersion, getEnv);
+            options, CurrentReportsDirectory, KronikolVersion, getEnv, historyBaseDirectory);
 
         var specsDataExtension = GetDataFormatExtension(options.SpecificationsDataFormat);
         var testRunDataExtension = GetDataFormatExtension(options.TestRunReportDataFormat);

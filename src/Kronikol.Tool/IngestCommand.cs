@@ -443,8 +443,11 @@ internal static class IngestCommand
             }
 
             @out.WriteLine($"Replayed {result.InteractionCount} interaction record(s) into {result.ScenarioCount} scenario(s).");
-            // One line, not a diagnostic: the diagnostics list means "silence is a clean run", and this is the option
-            // doing what it was asked. Zero is printed too, since it is the value worth a look (steps with no durationMs).
+            // One line per pass, in the order the passes run, not a diagnostic: the diagnostics list means "silence is a
+            // clean run", and this is the option doing what it was asked. Zero is printed too, since it is the value worth a
+            // look (a capture whose calls already name their tests, steps with no durationMs).
+            if (attributeByWindow)
+                @out.WriteLine($"--attribute-by-window: {result.WindowAttributedRecords} interaction record(s) attributed to a test by time window.");
             if (phaseFromSteps)
                 @out.WriteLine($"--phase-from-steps: {result.PhasedRecords} interaction record(s) took the phase of the step their call started in.");
             PrintDiagnostics(result.Diagnostics, @out);
@@ -668,8 +671,9 @@ internal static class IngestCommand
         w.WriteLine("                           the producer wrote them (default: upper-case the first letter of");
         w.WriteLine("                           keyword-less labels and of every title).");
         w.WriteLine("  --attribute-by-window [id]  Attribute interactions that carry no testId to the test that was");
-        w.WriteLine("                           running at their timestamp; the optional id is the capturer's");
-        w.WriteLine("                           fallback marker (e.g. \"session\") which counts as \"no testId\".");
+        w.WriteLine("                           running at their timestamp, and print how many it attributed; the");
+        w.WriteLine("                           optional id is the capturer's fallback marker (e.g. \"session\") which");
+        w.WriteLine("                           counts as \"no testId\".");
         w.WriteLine("  --run-window             Keep only this run's traffic: drop interactions whose request lies before");
         w.WriteLine("                           the earliest tests record (a testrun/started marker, if the host writes one)");
         w.WriteLine("                           or after the testrun end marker — the previous run's and the stack's start-up");

@@ -497,3 +497,30 @@ Each is a patch unless marked.
   - Fact 7 is a guard no plan mutation could turn red (M1 makes it pass), so it got its own: M10, records with no pair
     id keyed together as one pair.
   - The acceptance on the owner's Jest suite is the owner's (§4.4).
+- 2026-10-07, **R2 = 4.7.2** (patch). Shipped: F4 and F5 (Q5), and two defects found on the way: Q6's merger phase and
+  §8 item 1, the ledger an ingest finds. Proofs, each red first:
+  - On R1: 9 facts red for their own reasons (the window, claims and `ExclusiveOnly` diagnostics; the CLI line, its
+    zero and the usage; the end-to-end fact; the merged call), the guard green; the ledger fact red on R1, where the
+    tool from the test's bin appended to the worktree's own ledger (4 lines, deleted).
+  - 11 mutations (`harness/mutations/r2-results.txt`; `mutate_r2.py`).
+  - The core suite (6,575 passed, 2 skipped before the rebase; 6,633 passed, 2 skipped on the release commit), the Playwright suite
+    (982 passed, 28 skipped), the search-engine suite (214), and `release.slnf` built in Release and packed (62 packages).
+  What differed:
+  - Q5 assumed a console line for `ExclusiveOnly` at zero, but no CLI flag sets that mode (`--attribute-by-window` is
+    the innermost rule), and neither does any flag set content claims. So only the window pass's count is printed,
+    and the two API-only counts leave the diagnostics with no replacement, as R1's did (Q3: no public member).
+  - Q6 measured (RUN): a wire record that named no test when phases were given took its span twin's test in the merge
+    and not its phase, so both halves of the merged call were `Unknown`. `Adopt` now takes the twin's phase when the
+    wire record has none; a guard fact keeps a phase the wire capturer wrote. It rode with R2, as Q6 allowed.
+  - §8 item 1 rode with R2 rather than wait for a release of its own: the ingest hands the generator the directory it
+    runs in as the history base directory (an internal parameter), checked by a fact that runs the tool from the test's
+    bin, inside the checkout, as a child process.
+  - Q7 (READ, not RUN: no example's Background step makes a call): in-process, ReqNRoll, LightBDD and BDDfy phase
+    every step from its keyword (`PhaseConfiguration.ResolvePhaseFromStepType`, Given, And and But are `Setup`),
+    Background steps included, while an ingest opens no window for a Background step (`IngestAttribution.cs:448`,
+    pinned by `Background_and_nested_steps_open_no_phase_window`). The two lanes disagree; recorded on row 1.15's
+    item 6 (the step-to-phase vocabularies), with no code change.
+  - §8 item 3 (F9, Cucumber synthesis warnings) was taken by #105's session: 4.6.2 records them in the run's
+    diagnostics.
+  - §8 item 4 (one message per kind in the query header) stays a design question; R2 removes the case where it hid a
+    failure.

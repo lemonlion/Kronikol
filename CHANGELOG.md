@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.7.2] - 2026-10-07
+
+**Patch - what `kronikol ingest`'s attribution passes did is no longer a diagnostic, a merged call keeps its phase, and an ingest's history ledger is its project's (#130).**
+`plans/PHASE_FROM_STEPS_PLAN.md` R2 (`plans/ROADMAP.md` D35), with two defects the plan found on the way (its Q6
+and section 8, item 1). Bug fixes, with nothing new for a consumer to call, so the patch part moves (4.7.1 to
+4.7.2).
+
+- **What an attribution pass attributed is no longer a diagnostic.** Window attribution (`--attribute-by-window`,
+  `IngestRequest.AttributeByTestWindow`) and content claims (`IngestRequest.AttributeByClaims`) recorded their
+  successes ("N interaction record(s) attributed to a test by time window.") as `UnattributedInteractions`, the kind
+  that means a record could not be attributed. Those lines headed every `kronikol query` answer, and since the header
+  shows the first message of each kind, a run that also left records unattributed showed the success line "(×2)"
+  in place of the failure. `kronikol ingest` now prints the window pass's count as a line after `Replayed …`
+  whenever `--attribute-by-window` is given, zero included
+  (`--attribute-by-window: 4 interaction record(s) attributed to a test by time window.`), and
+  `IngestResult.Diagnostics` holds neither success. `N interaction record(s) could not be attributed to a test.` is
+  recorded as before.
+- **`ExclusiveOnly` records its count only when records were left ambiguous.** `WindowAttributionMode.ExclusiveOnly`
+  recorded `WindowAttribution ExclusiveOnly: 0 interaction record(s) …` as `Other` on every run, so a run whose
+  attribution was exact carried a diagnostic. It is recorded when one or more records fell inside two windows.
+- **A merged call keeps the phase its span twin was given.** With `--merge-duplicates` and `--phase-from-steps`, a
+  wire record that named no test when phases were given took its span twin's test in the merge but not the twin's
+  phase, so the merged call had none (measured: both halves `Unknown`). It now takes the twin's phase when it has
+  none of its own; a phase the wire capturer wrote is kept.
+- **An ingest's history ledger is its project's.** `kronikol ingest` and `IngestPipeline.Run` looked for the ledger
+  above the tool's own folder first, so a tool built inside a git checkout read and appended to that checkout's
+  `.kronikol/history.jsonl`, whatever it was replaying (found while measuring #130: a build in this repository
+  appended three lines to the repository's own ledger). An ingest now looks above the directory it is run in, then
+  above the reports directory. `HistoryFilePath` and `KRONIKOL_HISTORY` still come first. An installed tool, whose
+  folder is in no checkout, looked above the reports directory alone. It now looks above the directory it is run in
+  first, which is the same project whenever the reports are written inside the project it is run from.
+
+Proofs (`plans/PHASE_FROM_STEPS_PLAN.harness/`): on 4.7.1's code, the nine new and changed facts that cover the
+first three each failed for its own reason, and the merged call's halves were both `Unknown` (`r2/red-on-r1.txt`);
+the ledger fact, which runs the tool from the test project's output inside this repository's checkout, failed
+there, the ingest having appended to the checkout's own ledger (`r2/red-ledger-on-r1.txt`); 11 mutations, each
+turning a fact red (`mutations/r2-results.txt`). The core suite passes 6,633 with 2 skipped, the Playwright suite 982 with 28
+skipped, the search-engine suite 214, and `release.slnf` builds and packs in Release for every target (62
+packages). Kronikol4J does not have ingest, so there is no ledger entry.
+
 ## [4.7.1] - 2026-10-07
 
 **Patch - `kronikol ingest --phase-from-steps` gives a call's two halves one phase, and its count is no longer a diagnostic (#130).**

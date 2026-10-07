@@ -1,4 +1,5 @@
 using Kronikol.Ingestion;
+using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
@@ -440,7 +441,9 @@ public class IngestAttributionTests : IDisposable
         var logs = InteractionsInReport(result).Where(i => i.ScenarioId == "first").ToArray();
         Assert.Equal(nameof(TestPhase.Setup), Assert.Single(logs).Phase);
 
-        Assert.Contains(result.Diagnostics, d => d.Kind == DiagnosticKind.UnattributedInteractions && d.Message.Contains("attributed to a test by time window"));
+        // What the pass attributed is the run working as asked: counted for the CLI, not recorded as a diagnostic (#130).
+        Assert.DoesNotContain(result.Diagnostics, d => d.Message.Contains("attributed to a test by", StringComparison.Ordinal));
+        Assert.Equal(1, result.WindowAttributedRecords);
     }
 
     [Fact]
@@ -850,26 +853,185 @@ public class IngestAttributionTests : IDisposable
     }
 
     [Fact]
-    public void The_pipeline_reports_the_exclusive_mode_even_when_nothing_was_ambiguous()
+    public void Window_attribution_records_no_diagnostic_for_the_records_it_attributed()
     {
-        // The line's presence is the proof the mode ran: a parallel suite whose taps died would
-        // otherwise be indistinguishable from one whose attribution is exact.
+        // #130, R2 (F4): a record attributed is the pass working as asked, so it is not recorded under the kind that
+        // means "could not be attributed", and no query answer is headed by it.
         var options = IngestPipeline.DefaultOptions();
-        options.ReportsFolderPath = Path.Combine(_dir, "ExclusiveDiagnostic");
+        options.ReportsFolderPath = Path.Combine(_dir, "WindowSuccess");
         options.GenerateComponentDiagram = false;
 
         var result = IngestPipeline.Run(new IngestRequest
         {
-            Interactions = [Anonymous("redis", 2)],
+            Interactions = [Anonymous("redis", 2), Anonymous("redis", 3)],
             TestRecords = TwoTests,
             Options = options,
             AttributeByTestWindow = true,
-            WindowAttribution = WindowAttributionMode.ExclusiveOnly,
+        });
+
+        Assert.DoesNotContain(result.Diagnostics, d => d.Kind == DiagnosticKind.UnattributedInteractions);
+        Assert.Equal(2, result.WindowAttributedRecords);
+        var output = new StringWriter();
+        Assert.Equal(0, QueryCommand.Run(["failures", options.ReportsFolderPath], output, new StringWriter()));
+        Assert.DoesNotContain(output.ToString().Split('\n'), l => l.StartsWith('!'));
+    }
+
+    [Fact]
+    public void Claims_attribution_records_no_diagnostic_for_the_records_it_attributed()
+    {
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "ClaimsSuccess");
+        options.GenerateComponentDiagram = false;
+
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            Interactions = [Anonymous("redis", 2) with { Uri = "http://redis/customer-42" }],
+            TestRecords =
+            [
+                new TestRunRecord { Event = "start", TestId = "first", TestName = "first", Claims = ["customer-42"], Timestamp = T0.AddSeconds(1) },
+                new TestRunRecord { Event = "end", TestId = "first", Status = "passed", Timestamp = T0.AddSeconds(5) },
+            ],
+            Options = options,
             AttributeByClaims = true,
         });
 
-        Assert.Contains(result.Diagnostics, d =>
-            d.Kind == DiagnosticKind.Other
-            && d.Message.Contains("WindowAttribution ExclusiveOnly: 0 interaction record(s)"));
+        Assert.Single(InteractionsInReport(result), i => i.ScenarioId == "first");
+        Assert.DoesNotContain(result.Diagnostics, d => d.Kind == DiagnosticKind.UnattributedInteractions);
+    }
+
+    [Fact]
+    public void Records_left_unattributed_are_the_only_unattributed_interactions_entry()
+    {
+        // The query header prints the first message of each kind with a count, and the success line was recorded first,
+        // so it stood in for the failure as "(×2)".
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "WindowPartial");
+        options.GenerateComponentDiagram = false;
+
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            Interactions = [Anonymous("redis", 2), Anonymous("redis", 30)],
+            TestRecords = TwoTests,
+            Options = options,
+            AttributeByTestWindow = true,
+            FoldUnknownTestsInto = new UnknownTestFold("Traffic outside any test"),
+        });
+
+        var entry = Assert.Single(result.Diagnostics, d => d.Kind == DiagnosticKind.UnattributedInteractions);
+        Assert.Equal("1 interaction record(s) could not be attributed to a test.", entry.Message);
+        var output = new StringWriter();
+        Assert.Equal(0, QueryCommand.Run(["failures", options.ReportsFolderPath], output, new StringWriter()));
+        var notes = output.ToString().Split('\n').Where(l => l.StartsWith('!')).ToArray();
+        Assert.Contains(notes, l => l.Contains("could not be attributed to a test", StringComparison.Ordinal));
+        Assert.DoesNotContain(notes, l => l.Contains("attributed to a test by", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void The_exclusive_mode_records_its_count_only_when_records_were_left_ambiguous()
+    {
+        // Zero is the mode working as asked (the caller chose it, so it knows it ran). A record two windows held is a real
+        // loss, and stays a diagnostic.
+        IngestResult Run(string name, TestRunRecord[] tests) => IngestPipeline.Run(new IngestRequest
+        {
+            Interactions = [Anonymous("redis", 2)],
+            TestRecords = tests,
+            Options = IngestPipeline.DefaultOptions() with { ReportsFolderPath = Path.Combine(_dir, name), GenerateComponentDiagram = false },
+            AttributeByTestWindow = true,
+            WindowAttribution = WindowAttributionMode.ExclusiveOnly,
+        });
+
+        var exact = Run("ExclusiveExact", TwoTests);
+        Assert.DoesNotContain(exact.Diagnostics, d => d.Message.Contains("ExclusiveOnly", StringComparison.Ordinal));
+
+        var overlapping = Run("ExclusiveOverlap",
+        [
+            new() { Event = "start", TestId = "first", TestName = "first", Timestamp = T0.AddSeconds(1) },
+            new() { Event = "start", TestId = "second", TestName = "second", Timestamp = T0.AddSeconds(1.5) },
+            new() { Event = "end", TestId = "first", Status = "passed", Timestamp = T0.AddSeconds(5) },
+            new() { Event = "end", TestId = "second", Status = "passed", Timestamp = T0.AddSeconds(5) },
+        ]);
+        Assert.Contains(overlapping.Diagnostics, d => d.Kind == DiagnosticKind.Other
+            && d.Message.Contains("WindowAttribution ExclusiveOnly: 1 interaction record(s) fell inside more than one test window", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void A_merged_call_takes_its_span_twins_phase_when_its_wire_half_has_none()
+    {
+        // The wire tap could not name the test, so the phase pass skipped it; the span twin, which names it, was phased.
+        // The merge hands the wire record the span's test and, until R2, not its phase.
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "MergedPhase");
+        options.GenerateComponentDiagram = false;
+        InteractionRecord Half(string type, double at, string source, string testId) => new()
+        {
+            Type = type, Method = "GET", Uri = "redis://cache/basket-1", ServiceName = "redis", CallerName = "api",
+            TestId = testId, RequestResponseId = source + "-1", Timestamp = T0.AddSeconds(at), CapturedBy = source,
+            Content = source == InteractionMerger.WireSource ? "basket" : null,
+            ActivitySpanId = source == InteractionMerger.SpanSource ? "00f067aa0ba902b7" : null,
+        };
+
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            Interactions =
+            [
+                Half("Request", 2, InteractionMerger.WireSource, ""), Half("Response", 2.2, InteractionMerger.WireSource, ""),
+                Half("Request", 2, InteractionMerger.SpanSource, "first"), Half("Response", 2.2, InteractionMerger.SpanSource, "first"),
+            ],
+            TestRecords =
+            [
+                new TestRunRecord { Event = "start", TestId = "first", TestName = "first", Timestamp = T0.AddSeconds(1) },
+                new TestRunRecord { Event = "step", TestId = "first", Keyword = "When", Text = "the basket is read", DurationMs = 3000, Timestamp = T0.AddSeconds(1) },
+                new TestRunRecord { Event = "end", TestId = "first", Status = "passed", Timestamp = T0.AddSeconds(5) },
+            ],
+            Options = options,
+            PhaseFromSteps = true,
+            MergeDuplicateInteractions = true,
+        });
+
+        // One call, its two halves: the span twin was folded into the wire record.
+        var merged = InteractionsInReport(result).Where(i => i.ScenarioId == "first").ToArray();
+        Assert.Equal(2, merged.Length);
+        Assert.All(merged, i => Assert.Equal(nameof(TestPhase.Action), i.Phase));
+    }
+
+    [Fact]
+    public void A_merged_call_keeps_the_phase_its_wire_half_carries()
+    {
+        // The wire tap wrote a phase of its own, and the steps give the span twin another: the wire half keeps its own,
+        // as a capturer's phase is kept everywhere else.
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "MergedWirePhase");
+        options.GenerateComponentDiagram = false;
+        InteractionRecord Half(string type, double at, string source, string testId) => new()
+        {
+            Type = type, Method = "GET", Uri = "redis://cache/basket-1", ServiceName = "redis", CallerName = "api",
+            TestId = testId, RequestResponseId = source + "-1", Timestamp = T0.AddSeconds(at), CapturedBy = source,
+            Content = source == InteractionMerger.WireSource ? "basket" : null,
+            Phase = source == InteractionMerger.WireSource ? nameof(TestPhase.Setup) : null,
+            ActivitySpanId = source == InteractionMerger.SpanSource ? "00f067aa0ba902b7" : null,
+        };
+
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            Interactions =
+            [
+                Half("Request", 2, InteractionMerger.WireSource, ""), Half("Response", 2.2, InteractionMerger.WireSource, ""),
+                Half("Request", 2, InteractionMerger.SpanSource, "first"), Half("Response", 2.2, InteractionMerger.SpanSource, "first"),
+            ],
+            TestRecords =
+            [
+                new TestRunRecord { Event = "start", TestId = "first", TestName = "first", Timestamp = T0.AddSeconds(1) },
+                new TestRunRecord { Event = "step", TestId = "first", Keyword = "When", Text = "the basket is read", DurationMs = 3000, Timestamp = T0.AddSeconds(1) },
+                new TestRunRecord { Event = "end", TestId = "first", Status = "passed", Timestamp = T0.AddSeconds(5) },
+            ],
+            Options = options,
+            PhaseFromSteps = true,
+            MergeDuplicateInteractions = true,
+        });
+
+        // One call, its two halves: the span twin was folded into the wire record.
+        var merged = InteractionsInReport(result).Where(i => i.ScenarioId == "first").ToArray();
+        Assert.Equal(2, merged.Length);
+        Assert.All(merged, i => Assert.Equal(nameof(TestPhase.Setup), i.Phase));
     }
 }

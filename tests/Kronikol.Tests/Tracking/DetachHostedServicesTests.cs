@@ -23,13 +23,22 @@ public class DetachHostedServicesTests
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            DetachedAtStart = TestIdentityScope.IsDetached;
-            await Task.Yield();
-            DetachedAfterAwait = TestIdentityScope.IsDetached;
-            ResolvedInLoop = TestInfoResolver.ResolveWithSource(null, () => ("Outer test", "outer-id"));
-            using (TestIdentityScope.Begin("Correlated message", "msg-id"))
-                ResolvedInMessageScope = TestInfoResolver.ResolveWithSource(null, () => ("Outer test", "outer-id"));
-            Observed.TrySetResult();
+            try
+            {
+                DetachedAtStart = TestIdentityScope.IsDetached;
+                await Task.Yield();
+                DetachedAfterAwait = TestIdentityScope.IsDetached;
+                ResolvedInLoop = TestInfoResolver.ResolveWithSource(null, () => ("Outer test", "outer-id"));
+                using (TestIdentityScope.Begin("Correlated message", "msg-id"))
+                    ResolvedInMessageScope = TestInfoResolver.ResolveWithSource(null, () => ("Outer test", "outer-id"));
+                Observed.TrySetResult();
+            }
+            catch (Exception exception)
+            {
+                // A BackgroundService's own exception only faults its task, so the test waited out its timeout without
+                // saying why; it fails with the exception instead.
+                Observed.TrySetException(exception);
+            }
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
@@ -75,7 +84,8 @@ public class DetachHostedServicesTests
             Assert.False(TestIdentityScope.IsDetached);
             Assert.Equal("outer-id", TestIdentityScope.Current?.Id);
         }
-        await probe.Observed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        // 30 s, not 10: the loop starts on the thread pool, which a full suite beside other suites can starve.
+        await probe.Observed.Task.WaitAsync(TimeSpan.FromSeconds(30));
 
         Assert.True(probe.DetachedAtStart);
         Assert.True(probe.DetachedAfterAwait);
