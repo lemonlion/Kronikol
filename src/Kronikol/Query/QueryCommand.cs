@@ -43,6 +43,10 @@ public static partial class QueryCommand
     /// </summary>
     internal static int Run(IReadOnlyList<string> args, TextWriter @out, TextWriter error, Func<string, string?>? getEnv, string? workingDirectory = null)
     {
+        // What the engine prints is read by scripts and agents, which expect `1.27 s` on every machine: under a
+        // comma-decimal culture every duration it printed read `1,27 s` until 4.7.3. Nothing a consumer wrote runs in
+        // here, so the whole invocation formats under the invariant culture rather than each line asking for it.
+        using var culture = InvariantCultureScope.Begin();
         getEnv ??= Environment.GetEnvironmentVariable;
         // Injected for the same reason as getEnv: the history verb walks up from the working directory
         // when nothing else names a ledger, and a test that runs inside this repository would otherwise

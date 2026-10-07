@@ -397,6 +397,19 @@ public class SkillDriftTests
     /// the fallback a user without the .NET tool reaches for was a version behind the one every test here
     /// exercises. The drift is invisible from inside either copy.</para>
     /// </summary>
+    /// <summary>
+    /// The reference's <c>--json</c> row names every verb that writes the envelope (plans/WARM_UP_PLAN.md section 8):
+    /// until 4.7.3 it named seven of the nine, without <c>repro</c> and <c>history</c>.
+    /// </summary>
+    [Fact]
+    public void The_json_row_names_every_verb_that_takes_json()
+    {
+        var row = Reference.Split('\n').Single(line => line.StartsWith("| `--json` |", StringComparison.Ordinal));
+        var named = Regex.Matches(row.Split("**")[0], "`([a-z]+)`").Select(m => m.Groups[1].Value).Where(v => v != "json").Order(StringComparer.Ordinal);
+
+        Assert.Equal(VerbTable.JsonVerbs.Order(StringComparer.Ordinal), named);
+    }
+
     [Fact]
     public void The_two_copies_of_the_skill_are_the_same_files()
     {

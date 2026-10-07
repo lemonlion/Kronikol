@@ -221,8 +221,8 @@ internal static partial class HistoryCommand
             }
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             foreach (var entry in list.Entries)
-                @out.WriteLine($"{entry.StableId}  {entry.Reason}" + (entry.AddedBy is { } by ? $"  by {by}" : "") + $"  since {entry.AddedOn:yyyy-MM-dd}"
-                               + (entry.Until is { } until ? $"  until {until:yyyy-MM-dd}" + (entry.AppliesOn(today) ? "" : "  (expired)") : ""));
+                @out.WriteLine($"{entry.StableId}  {entry.Reason}" + (entry.AddedBy is { } by ? $"  by {by}" : "") + $"  since {Day(entry.AddedOn)}"
+                               + (entry.Until is { } until ? $"  until {Day(until)}" + (entry.AppliesOn(today) ? "" : "  (expired)") : ""));
             return 0;
         }
 
@@ -248,10 +248,13 @@ internal static partial class HistoryCommand
 
         list.Add(id, args.Reason.Trim(), args.By, DateOnly.FromDateTime(DateTime.UtcNow), args.Until);
         list.Save(path);
-        @out.WriteLine($"quarantined {id}: {args.Reason.Trim()}" + (args.Until is { } u ? $" until {u:yyyy-MM-dd}" : "") + $" → {path}");
+        @out.WriteLine($"quarantined {id}: {args.Reason.Trim()}" + (args.Until is { } u ? $" until {Day(u)}" : "") + $" → {path}");
         @out.WriteLine("It still runs and still records; it carries the quarantined verdict and does not trip the gate. Commit the file.");
         return 0;
     }
+
+    /// <summary>A day as the quarantine file writes it, the same on every machine: a Thai one wrote 2569 for 2026 until 4.7.3.</summary>
+    private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static string? ParseStableId(string text)
     {
@@ -471,7 +474,7 @@ internal static partial class HistoryCommand
         {
             var line = run.Partial is null ? run with { Partial = HistoryAnalyzer.IsPartial(roster, LastFullRoster(ledgerPath, run.Suite), 0.10) } : run;
             var result = HistoryLedgerWriter.Append(ledgerPath, roster, line, Commands.Version, shapes: shapes);
-            var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {roster.Count} scenarios  {run.At:yyyy-MM-dd'T'HH:mm:ss'Z'}";
+            var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {roster.Count} scenarios  {run.At.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)}";
             switch (result.Outcome)
             {
                 case HistoryAppendOutcome.Appended: imported++; @out.WriteLine($"imported   {label}"); break;

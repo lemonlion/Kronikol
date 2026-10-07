@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <!-- The OpenTelemetry-under-Jest spike's spans (plans/INGEST_FIDELITY_PLAN.md S0), read by the line reader's facts. -->
+    <Compile Include="..\Kronikol.Tests\CultureRun.cs" Link="CultureRun.cs" />
     <Content Include="..\Kronikol.Tests\TestData\Ingest\otel-jest-v2.spans.jsonl" Link="TestData\otel-jest-v2.spans.jsonl" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

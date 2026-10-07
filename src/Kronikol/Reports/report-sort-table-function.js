@@ -4,9 +4,14 @@ function sort_table(col) {
     var tbody = table.querySelector('tbody');
     var rows = Array.from(tbody.querySelectorAll('tr'));
     var asc = table.getAttribute('data-sort-col') === '' + col && table.getAttribute('data-sort-dir') !== 'asc';
+    // A cell whose text is not its value (a duration: "500ms", "1m 5s") carries the value in data-sort.
+    function value(cell) {
+        var sort = cell.getAttribute('data-sort');
+        return sort !== null ? sort : cell.textContent.trim();
+    }
     rows.sort(function(a, b) {
-        var ac = a.cells[col].textContent.trim();
-        var bc = b.cells[col].textContent.trim();
+        var ac = value(a.cells[col]);
+        var bc = value(b.cells[col]);
         var an = parseFloat(ac), bn = parseFloat(bc);
         if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
         return asc ? ac.localeCompare(bc) : bc.localeCompare(ac);

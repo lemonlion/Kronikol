@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
@@ -89,13 +90,13 @@ public sealed class ProxyTap : IAsyncDisposable
         var forwardFailures = ForwardFailures;
         if (forwardFailures > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {forwardFailures:N0} request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {forwardFailures:N0} request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams")));
 
         var handled = RequestsHandled;
         var uncaptured = handled - RequestsCaptured;
         if (uncaptured > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {uncaptured:N0} of {handled:N0} forwarded request(s) carried no test identity and were not captured (no test-tracking headers or traceparent reached this hop; CaptureUnattributedRequests is off)"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {uncaptured:N0} of {handled:N0} forwarded request(s) carried no test identity and were not captured (no test-tracking headers or traceparent reached this hop; CaptureUnattributedRequests is off)")));
 
         return entries;
     }

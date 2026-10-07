@@ -53,10 +53,55 @@ public class MergeKeepsCallErrorsTests : IDisposable
     }
 
     /// <summary>
+    /// The merged report lists the calls of no scenario as a run's report does (plans/WARM_UP_PLAN.md section 8). Until
+    /// 4.7.3 the merged data file carried them and its HTML had no Background calls section at all.
+    /// </summary>
+    [Fact]
+    public void A_merged_report_draws_the_background_calls_section()
+    {
+        WriteShard("runner1.json", "a1", "Orders");
+        WriteShard("runner2.json", "b1", "Payments");
+
+        Merge().Dispose();
+        var html = File.ReadAllText(Path.Combine(_directory, "Combined.html"));
+
+        Assert.Contains("<details class=\"background-calls\">", html, StringComparison.Ordinal);
+        Assert.Contains("<td>/x</td>", html, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Two shards whose scenarios share a runtime id: the merge renames the second shard's, and an expired call keeps
+    /// naming its own shard's scenario (plans/WARM_UP_PLAN.md section 8). Until 4.7.3 the rename reached the calls'
+    /// <c>TestId</c> and not their <c>expiredFrom</c>, so the second shard's late call was counted against the first
+    /// shard's scenario.
+    /// </summary>
+    [Fact]
+    public void An_expired_call_follows_its_scenario_when_the_merge_renames_it()
+    {
+        WriteShard("runner1.json", "a1", "Orders", duration: TimeSpan.FromSeconds(1));
+        WriteShard("runner2.json", "a1", "Orders", duration: TimeSpan.FromSeconds(2));
+
+        using var merged = Merge();
+        var root = merged.RootElement;
+
+        var ids = root.GetProperty("features").EnumerateArray().SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
+            .Select(s => s.GetProperty("id").GetString()).Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(["a1", "a1#1"], ids);
+        var groups = root.GetProperty("background").GetProperty("afterScenarioEnd").EnumerateArray()
+            .Select(g => (g.GetProperty("scenarioId").GetString(), g.GetProperty("calls").GetInt32()))
+            .OrderBy(g => g.Item1, StringComparer.Ordinal).ToArray();
+        Assert.Equal([("a1", 1), ("a1#1", 1)], groups);
+        var expiredFrom = root.GetProperty("background").GetProperty("interactions").EnumerateArray()
+            .Where(i => i.GetProperty("type").GetString() == "Request")
+            .Select(i => i.GetProperty("expiredFrom").GetString()).Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(["a1", "a1#1"], expiredFrom);
+    }
+
+    /// <summary>
     /// One scenario with a call made under the test framework's context that threw, and a call that inherited the
     /// scenario's context after it ended, which the report moves to the background block.
     /// </summary>
-    private void WriteShard(string name, string scenarioId, string service)
+    private void WriteShard(string name, string scenarioId, string service, TimeSpan? duration = null)
     {
         var at = new DateTimeOffset(Start).AddSeconds(1);
         var uri = new Uri($"http://{service.ToLowerInvariant()}/x");
@@ -75,7 +120,7 @@ public class MergeKeepsCallErrorsTests : IDisposable
         ];
 
         var json = ReportGenerator.GenerateMergeableReportJson(
-            [new Feature { DisplayName = service, Scenarios = [new Scenario { Id = scenarioId, DisplayName = "Call " + service, Result = ExecutionResult.Failed, EndedAt = at.AddSeconds(1) }] }],
+            [new Feature { DisplayName = service, Scenarios = [new Scenario { Id = scenarioId, DisplayName = "Call " + service, Result = ExecutionResult.Failed, EndedAt = at.AddSeconds(1), Duration = duration }] }],
             Start, Start.AddMinutes(1),
             new[] { new DiagramAsCode(scenarioId, "", $"@startuml\nTest -> {service} : POST /x\n@enduml") }.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind),
             [new ComponentRelationship("Test", service, "HTTP", new HashSet<string> { "POST /x" }, 1, 1, "http")],

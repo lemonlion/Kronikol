@@ -128,27 +128,27 @@ public sealed class OtlpTap : IAsyncDisposable
         var dropped = PayloadsDropped;
         if (dropped > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {dropped:N0} export payload(s) dropped because the mapping queue was full (QueueCapacity {_options.QueueCapacity}) — their spans are missing from the diagrams; the exporter was never delayed"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {dropped:N0} export payload(s) dropped because the mapping queue was full (QueueCapacity {_options.QueueCapacity}) — their spans are missing from the diagrams; the exporter was never delayed")));
 
         var rejected = PayloadsRejected;
         if (rejected > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {rejected:N0} export request(s) refused with 413 Payload Too Large (MaxRequestBytes {_options.MaxRequestBytes:N0}) — their spans were never read"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {rejected:N0} export request(s) refused with 413 Payload Too Large (MaxRequestBytes {_options.MaxRequestBytes:N0}) — their spans were never read")));
 
         var failed = PayloadsFailed;
         if (failed > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {failed:N0} export payload(s) failed while being decoded, mapped or written to the sink — their spans are lost (see the tap's log for the exception)"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {failed:N0} export payload(s) failed while being decoded, mapped or written to the sink — their spans are lost (see the tap's log for the exception)")));
 
         var unauthenticated = UnauthenticatedRequests;
         if (unauthenticated > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {unauthenticated:N0} export request(s) rejected with 401 — ExpectedHeaders not satisfied; if that was your exporter, its spans never reached the report"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {unauthenticated:N0} export request(s) rejected with 401 — ExpectedHeaders not satisfied; if that was your exporter, its spans never reached the report")));
 
         var forwardFailures = ForwardFailures;
         if (forwardFailures > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {forwardFailures:N0} export(s) could not be forwarded to {_options.ForwardBaseUri} and were answered 502 Bad Gateway — the spans were still mapped here, but the real collector never saw them"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {forwardFailures:N0} export(s) could not be forwarded to {_options.ForwardBaseUri} and were answered 502 Bad Gateway — the spans were still mapped here, but the real collector never saw them")));
 
         return entries;
     }

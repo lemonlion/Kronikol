@@ -1,0 +1,4 @@
+Kronikol.Tests.AssertionRewriter.RewrittenFileNameTests.A_file_is_named_for_a_hash_of_its_path_that_is_the_same_in_every_process  {'Failed': 1}
+    x1: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.AssertionRewriter.RewrittenFileNameTests.Two_files_of_one_name_in_different_folders_do_not_collide  {'Failed': 1}
+    x1: Assert.Equal() Failure: Strings differ

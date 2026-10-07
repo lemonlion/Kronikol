@@ -30,6 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\CultureRun.cs" Link="CultureRun.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol\Kronikol.csproj" />
     <ProjectReference Include="..\..\src\Kronikol.Extensions.TcpTap\Kronikol.Extensions.TcpTap.csproj" />
     <!-- The in-process extensions the golden label tests compare against. The MongoDB extension is referenced

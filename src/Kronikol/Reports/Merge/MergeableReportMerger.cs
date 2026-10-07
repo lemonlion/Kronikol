@@ -294,7 +294,11 @@ public static class MergeableReportMerger
             Features = report.Features
                 .Select(f => f with { Scenarios = f.Scenarios.Select(s => renames.TryGetValue(s.Id, out var fresh) ? s with { Id = fresh } : s).ToArray() })
                 .ToArray(),
-            Interactions = report.Interactions.Select(i => i with { TestId = Id(i.TestId) }).ToArray(),
+            // expiredFrom names a scenario too: an expired call follows its own shard's scenario, which until 4.7.3
+            // kept the old id and was counted against the other shard's.
+            Interactions = report.Interactions
+                .Select(i => i with { TestId = Id(i.TestId), ExpiredFromTestId = i.ExpiredFromTestId is { } from ? Id(from) : null })
+                .ToArray(),
             Diagrams = report.Diagrams.Select(d => d with { TestRuntimeId = Id(d.TestRuntimeId) }).ToArray(),
             StepPaths = report.StepPaths.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal),
             Annotations = report.Annotations.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal),

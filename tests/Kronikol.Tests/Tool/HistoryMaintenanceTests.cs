@@ -217,7 +217,46 @@ public class HistoryMaintenanceTests : IDisposable
         Assert.Contains("doctor: healthy", output.ToString());
     }
 
+    [Theory]
+    [MemberData(nameof(CultureRun.Data), MemberType = typeof(CultureRun))]
+    public void Quarantine_prints_gregorian_dates_on_every_machine(string culture)
+    {
+        Seed(Roster("Suite", ("aaaabbbbccccdddd", "Pay")), "P");
+        var before = DateTime.UtcNow.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+
+        var added = CultureRun.Under(culture, () => Run("quarantine", "sid:aaaabbbbccccdddd", "--reason", "ticket 123", "--until", "2026-12-31", "--history", Ledger));
+        var listed = CultureRun.Under(culture, () => Run("quarantine", "--list", "--history", Ledger));
+        var after = DateTime.UtcNow.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+
+        Assert.Contains("quarantined aaaabbbbccccdddd: ticket 123 until 2026-12-31 → ", added.Out);
+        Assert.Contains("  until 2026-12-31", listed.Out);
+        Assert.True(listed.Out.Contains($"  since {before}", StringComparison.Ordinal) || listed.Out.Contains($"  since {after}", StringComparison.Ordinal), listed.Out);
+    }
+
     // ─── import ────────────────────────────────────────────────
+
+    [Theory]
+    [MemberData(nameof(CultureRun.Data), MemberType = typeof(CultureRun))]
+    public void Import_prints_each_run_with_a_gregorian_time_on_every_machine(string culture)
+    {
+        var directory = Path.Combine(_dir, "old-run");
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, "TestRunReport.json"), """
+            {
+              "kronikolVersion": "3.2.0", "formatVersion": 1, "suite": "Suite",
+              "startTime": "2026-08-01T10:00:00Z", "endTime": "2026-08-01T10:05:00Z",
+              "ciMetadata": { "provider": "GitHubActions", "branch": "main", "commitSha": "abc", "runId": "500", "runAttempt": "1" },
+              "features": [ { "name": "Checkout", "labels": [], "scenarios": [
+                { "id": "t0", "stableId": "aaaabbbbccccdddd", "name": "Pay", "result": "Passed", "durationSeconds": 1.5, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }
+              ] } ]
+            }
+            """);
+
+        var (output, error, exit) = CultureRun.Under(culture, () => Run("import", directory, "--history", Ledger));
+
+        Assert.True(exit == 0, error);
+        Assert.Matches(@"imported   gh:500:1  Suite  1 scenarios  2026-08-01T10:0\d:00Z", output);
+    }
 
     [Fact]
     public void Import_reads_a_kronikol_report_that_has_no_fragment()

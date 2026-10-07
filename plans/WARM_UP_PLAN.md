@@ -580,6 +580,35 @@ for #122 or says it did not.
   - Measured F12 with `culture/culture.cs`.
   - Placed as row 1.19 and D33 in `ROADMAP.md`, after rows 1.17 (#115) and 1.18 (#105), written the same day by other
     sessions; numbers agreed with them before writing.
+- **2026-10-07.** Green-lit by the owner ("complete the plan in full, in a separate worktree"): Q5 = A, every other
+  question as recommended, and BreakfastProvider's pin moved after the last release. D33 taken. Executed in worktrees of
+  its own (`C:/Code/Kronikol-warmup` for R0, `-r1` for R1, `-red` for the red proof, `-mut` for mutations), alongside
+  three peer sessions releasing #115 (4.6.1) and #105 (4.6.2, 4.7.0) first.
+  - **R0 = 4.7.3 (patch).** F12 measured wider than planned (RUN, `culture/`, and the facts below): besides the XML and
+    YAML durations and the timeline's widths, every data file's `startTime` and `endTime` were written in the
+    machine's calendar and time separator (th-TH wrote the year 2569, ar-SA 1447, fi-FI `10.05.07`), as were the
+    report header, the diagnostic report's first and last seen, `history quarantine` and `history import`; the duration
+    badge, the filter's attributes, the pie chart's SVG numbers, the flame chart's positions, the console's sizes, the
+    engine cache's refusal, the TcpTap, Mongo, OTLP and ProxyTap messages and a Spanner result's floats used the
+    culture too, and `--slower-than 1,5` read 15. All now invariant; the query engine runs under the invariant culture
+    as a whole (`InvariantCultureScope`), and a source lint (`CultureInvariantSourceTests`) holds every other format
+    to `CultureInfo.InvariantCulture`. Two process-random outputs found on the way: the flame chart's colour came from
+    `string.GetHashCode()` (now the browser's hash) and the assertion rewriter named its files with it (now SHA-256).
+  - Section 8's patch rows, each red first: the feature summary sorts durations by `data-sort`; a merge reads an
+    unknown duration as unknown (no `0ms` badge), draws the Background calls section, and renames `expiredFrom` with
+    `testId` (reproduced before the fix: the expired group followed the other shard's scenario); `Failures.md` reads a
+    measured `durationMs`; `TrackingProxy` stamps a call's start and end, and two records with one instant carry no
+    duration; `services` times every call once. "A derived `durationMs` read back as measured" was not observable: the
+    value read back is the one the timestamps give, so it was left. `commands.md`'s `--json` row and sort lines and
+    the wiki's `KRONIKOL_SHARD` were docs fixes. The percentile pick, the group sum and the timeline's tooltip colours
+    stay with R2, which rewrites those lines.
+  - Proof (harness `r0/`): every new fact red on v4.6.0 for its own reason (`red-4.6.0-*.txt`: 104 core facts, 3
+    Spanner, 3 OTLP, 3 TcpTap, 2 rewriter, 5 Playwright; the only passes are en-US control rows and two guards), and
+    11 mutations each caught by the fact named (`mutations.txt`, `mutate.py`). The core suite (6,691 passed, 2
+    skipped, before the rebase onto 4.7.0), the full Playwright suite (987 passed, 29 skipped), the Spanner (167),
+    OTLP (115), TcpTap (265, 4 skipped without Docker) and rewriter (23) suites pass, and `release.slnf` builds in
+    Release for every target. Kronikol4J already writes a point and Gregorian dates (`Locale.ROOT`, ISO chronology)
+    and has no server-side flame chart.
 
 ## Appendix A. Edit sites at `37e93813`
 

@@ -60,7 +60,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--limit N` | cap rows. The verbs that list rows |
 | `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps`, `compare` |
 | `--out FILE` | write the answer to a file instead of the terminal; prints one line. Lifts the byte budget — a file is not a context window. `http`, `body`, `note` and `diagram` write the payload; every other verb writes what it would have printed |
-| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `services`, `interactions`, `assertions`, `diff`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
+| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `repro`, `services`, `interactions`, `assertions`, `diff`, `history`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
 | `--history FILE` | the cross-run ledger `history` reads, instead of `$KRONIKOL_HISTORY` or the `.kronikol/history.jsonl` above the report. `history` only |
 | `--flaky`, `--new`, `--failing`, `--regressed`, `--changed` | which verdicts `history` lists; several combine as OR. `history` only |
 | `--branch NAME`, `--compare-branch NAME` | the branch stream `history` reads against, and a second one to read the same run against. `history` only |
@@ -115,8 +115,8 @@ failures, the slowest scenarios, diagnostics. ~1–2 KB. Always the first comman
 
 ### `services <report> [s3] [--sort duration\|bytes\|errors]`
 Per service: call count, errors, bytes, median and max duration, status mix. Scoped to one scenario when
-given an address. `--sort` takes `calls` (the default), `duration`, `bytes` or `errors`; anything else
-exits 2.
+given an address. `--sort` takes `calls` (the default), `duration` (the time its calls took in all; each
+call counted once, whichever record carries its time), `bytes` or `errors`; anything else exits 2.
 
 **This is the only command that answers a negative question.** A service that is not in the table was
 never called — no payload needed to establish that.
@@ -260,7 +260,8 @@ Dimensions (comma list, any order): `service`, `method`, `status`, `path` (URI p
 `step`, `phase`, `category`, `kind` (metaType), `capturedBy`. `bodies` is the number of distinct
 response bodies in the bucket — a bucket with 120 calls and 1 body is one fact. Index-only unless
 combined with `--where`; composes with every filter. Default sort is calls descending;
-`--sort errors|duration` (a bucket has no single byte total, so `--sort bytes` — valid on `services` —
+`--sort errors|duration` (`duration` orders buckets by their median, where `services` orders by the
+total; a bucket has no single byte total, so `--sort bytes` — valid on `services` —
 exits 2 here rather than quietly ordering by calls). The `next:` line carries `--sort` forward: an offset
 counted against one ordering is meaningless against another. **`--sort` needs `--group-by`** — the
 ungrouped listing is capture order and cannot be sorted, so it exits 2 rather than accepting a flag it

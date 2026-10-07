@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using global::MongoDB.Bson;
 using Kronikol.Tracking;
@@ -120,7 +121,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
                 // Too big to buffer: skip exactly this message. Its $db and collection are inside the skipped
                 // BSON, so nothing can be recorded — but the loss is counted and reported.
                 BeginSkip(ref _skipCommandBytes, _commands, header.MessageLength);
-                _context.Log($"OP_MSG command of {header.MessageLength:N0} bytes skipped — larger than MaxBufferedBytes ({_options.MaxBufferedBytes:N0}); not recorded.");
+                _context.Log(string.Create(CultureInfo.InvariantCulture, $"OP_MSG command of {header.MessageLength:N0} bytes skipped — larger than MaxBufferedBytes ({_options.MaxBufferedBytes:N0}); not recorded."));
                 return;
             }
 
@@ -157,7 +158,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
                 if (_pending.Remove(header.ResponseTo, out var pending))
                 {
                     PublishOldestUnanswered();
-                    RecordPair(pending, null, timestamp, $"[reply of {header.MessageLength:N0} bytes skipped — larger than the capture cap]");
+                    RecordPair(pending, null, timestamp, string.Create(CultureInfo.InvariantCulture, $"[reply of {header.MessageLength:N0} bytes skipped — larger than the capture cap]"));
                 }
 
                 return;

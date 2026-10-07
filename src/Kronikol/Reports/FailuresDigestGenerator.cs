@@ -389,10 +389,13 @@ public static class FailuresDigestGenerator
                && failingStep.AsSpan(0, attributed.Length).SequenceEqual(attributed);
     }
 
+    // The time the data file writes (ReportGenerator.ComputeInteractionDurations): a capturer's measurement first, then the
+    // gap between the two records. Until 4.7.3 the digest read the gap alone, so a call ingested as one record had none.
     private static double? Duration(RequestResponseLog request, RequestResponseLog? response) =>
-        request.Timestamp is { } start && response?.Timestamp is { } end && end >= start
+        request.DurationMs ?? response?.DurationMs
+        ?? (request.Timestamp is { } start && response?.Timestamp is { } end && end > start
             ? (end - start).TotalMilliseconds
-            : null;
+            : null);
 
     /// <summary>
     /// One line for a call: <c>METHOD /path</c> for HTTP, the first line of the statement for anything

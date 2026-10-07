@@ -183,6 +183,39 @@ public class FailuresDigestGeneratorTests
         Assert.DoesNotContain("4111111111111111", digest.Markdown);
     }
 
+    /// <summary>
+    /// A call's time is the one the data file and <c>kronikol query</c> show: the time its capturer measured, when it
+    /// measured one, before the gap between the two records' timestamps (plans/WARM_UP_PLAN.md section 8). Until 4.7.3
+    /// the digest read the timestamps alone, so an ingested call sent as one record had no time here, and a measured one
+    /// showed the gap.
+    /// </summary>
+    [Fact]
+    public void A_call_shows_the_time_its_capturer_measured()
+    {
+        var logs = CallLogs();
+        var request = logs.Single(l => l.Type == RequestResponseType.Request && !l.IsDiagramMarker);
+        logs[Array.IndexOf(logs, request)] = request with { DurationMs = 812.4 };
+        // The response's timestamp is 35 ms after the request's.
+
+        var digest = Generate(WithSteps(), logs);
+
+        Assert.Contains("| 812 ms |", digest.Markdown);
+        Assert.DoesNotContain("| 35 ms |", digest.Markdown);
+        Assert.Contains("\"durationMs\":812.4", digest.Jsonl.Replace(" ", ""), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_call_sent_as_one_record_shows_its_measured_time()
+    {
+        var logs = CallLogs().Where(l => l.Type == RequestResponseType.Request).ToArray();
+        var request = logs.Single(l => !l.IsDiagramMarker);
+        logs[Array.IndexOf(logs, request)] = request with { DurationMs = 61.5 };
+
+        var digest = Generate(WithSteps(), logs);
+
+        Assert.Contains("| 62 ms |", digest.Markdown);
+    }
+
     [Fact]
     public void A_sql_call_shows_its_first_line_capped()
     {

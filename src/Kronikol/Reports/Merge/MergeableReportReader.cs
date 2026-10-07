@@ -211,7 +211,9 @@ public static class MergeableReportReader
         DisplayName = GetString(se, "name") ?? "",
         Description = GetString(se, "description"),
         Result = ReadEnum(GetString(se, "result"), ExecutionResult.Passed),
-        Duration = se.TryGetProperty("durationSeconds", out var d) && d.ValueKind == JsonValueKind.Number
+        // The data file writes an unknown duration as 0 (its schema says so), which reads back as no duration: until
+        // 4.7.3 it read as a measured zero, and every such scenario had a "0ms" badge in the merged report.
+        Duration = se.TryGetProperty("durationSeconds", out var d) && d.ValueKind == JsonValueKind.Number && d.GetDouble() > 0
             ? TimeSpan.FromSeconds(d.GetDouble())
             : null,
         IsHappyPath = se.TryGetProperty("isHappyPath", out var hp) && hp.ValueKind == JsonValueKind.True,

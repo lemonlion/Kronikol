@@ -240,7 +240,9 @@ internal sealed class QueryOptions
 
                 case "--slower-than":
                     if (Next(arg) is not { } slower) return null;
-                    if (!double.TryParse(slower.TrimEnd('s'), out var parsedSlower))
+                    // Seconds with a decimal point on every machine. Without NumberStyles.Float a separator counted as
+                    // thousands: "1.5" read as 15 under a comma-decimal culture until 4.7.3, and "1,5" as 15 under the rest.
+                    if (!double.TryParse(slower.TrimEnd('s'), NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedSlower))
                     {
                         error.WriteLine("--slower-than takes a number of seconds.");
                         return null;

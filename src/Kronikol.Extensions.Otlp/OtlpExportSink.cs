@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Threading.Channels;
 using Kronikol.Reports;
 using Kronikol.Tracking;
@@ -112,12 +113,12 @@ public sealed class OtlpExportSink : IRequestResponseSink, IAsyncDisposable
         var dropped = EntriesDropped;
         if (dropped > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {dropped:N0} captured entr{(dropped == 1 ? "y" : "ies")} dropped because the export queue was full (QueueCapacity {_options.QueueCapacity}) — their spans never reached the collector; capture was never delayed"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {dropped:N0} captured entr{(dropped == 1 ? "y" : "ies")} dropped because the export queue was full (QueueCapacity {_options.QueueCapacity}) — their spans never reached the collector; capture was never delayed")));
 
         var failed = SpansFailed;
         if (failed > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {failed:N0} span(s) in {BatchesFailed:N0} batch(es) could not be delivered to {_options.Endpoint} — the collector was down or rejecting exports; the observed system was never delayed"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {failed:N0} span(s) in {BatchesFailed:N0} batch(es) could not be delivered to {_options.Endpoint} — the collector was down or rejecting exports; the observed system was never delayed")));
 
         return entries;
     }

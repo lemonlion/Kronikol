@@ -1,0 +1,2 @@
+Kronikol.Tests.Otlp.OtlpTapTests.Diagnostics_write_counts_with_commas_between_thousands_on_every_machine  {'Failed': 3, 'Passed': 1}
+    x3: Assert.StartsWith() Failure: String start does not match

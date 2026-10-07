@@ -80,10 +80,7 @@ public class RewriteAssertionsTask : Microsoft.Build.Utilities.Task
             }
 
             // Write rewritten file to intermediate directory
-            var fileName = Path.GetFileName(filePath);
-            // Use a hash of the original path to avoid collisions
-            var hash = Math.Abs(filePath.GetHashCode()).ToString();
-            var rewrittenPath = Path.Combine(IntermediateDir, $"{hash}_{fileName}");
+            var rewrittenPath = Path.Combine(IntermediateDir, RewrittenFileNames.Of(filePath));
             File.WriteAllText(rewrittenPath, newRoot.ToFullString());
 
             var newItem = new TaskItem(rewrittenPath);

@@ -388,6 +388,25 @@ public class MongoDecoderTests
 
     private static BsonDocument BigDocument(int size) => new() { { "_id", 1 }, { "blob", new string('m', size) } };
 
+    [Theory]
+    [MemberData(nameof(CultureRun.Data), MemberType = typeof(CultureRun))]
+    public void AnOversizeReplyIsCountedWithCommasBetweenThousandsOnEveryMachine(string culture)
+    {
+        // The placeholder is the captured response: under a culture that writes 20.123 a reader saw twenty bytes.
+        CultureRun.Under(culture, () =>
+        {
+            using var harness = DecoderHarness.Mongo(o => o.MaxBufferedBytes = 4096);
+            var reply = MongoWire.Msg(2, 1, CursorReply(BigDocument(20_000)));
+            harness.Deliver(TapDirection.ClientToServer, MongoWire.Msg(1, 0, Find("Trial")));
+            harness.DeliverChunked(TapDirection.ServerToClient, reply, 1024);
+
+            var size = reply.Length.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+            Assert.Contains(",", size);
+            Assert.Equal($"[reply of {size} bytes skipped — larger than the capture cap]", Assert.Single(harness.Sink.Responses).Content);
+            Assert.Contains($"(largest {size} B", Assert.Single(harness.Tap.Diagnostics()).Message);
+        });
+    }
+
     [Fact]
     public void AnOversizeReplyIsSkippedButStillClosesTheArrow()
     {
@@ -402,7 +421,7 @@ public class MongoDecoderTests
         var response = Assert.Single(harness.Sink.Responses);
         Assert.Equal("Find ← Trial", Method(response));
         Assert.Equal("mongodb:///app/Trial", response.Uri.ToString());
-        Assert.Equal($"[reply of {reply.Length:N0} bytes skipped — larger than the capture cap]", response.Content);
+        Assert.Equal($"[reply of {reply.Length.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} bytes skipped — larger than the capture cap]", response.Content);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode!.Value);
         Assert.Equal(1, harness.Tap.OversizePayloadsSkipped);
         Assert.Equal(reply.Length, harness.Tap.LargestOversizePayload);

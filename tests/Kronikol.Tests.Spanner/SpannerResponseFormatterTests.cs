@@ -192,6 +192,34 @@ public class SpannerResponseFormatterTests
         Assert.Contains("true", result);
     }
 
+    [Theory]
+    [MemberData(nameof(CultureRun.Data), MemberType = typeof(CultureRun))]
+    public void FormatResultSet_FullRows_writes_a_float_the_same_on_every_machine(string culture)
+    {
+        var rs = new ResultSet
+        {
+            Metadata = new ResultSetMetadata
+            {
+                RowType = new StructType
+                {
+                    Fields =
+                    {
+                        new StructType.Types.Field { Name = "Score", Type = new Type { Code = TypeCode.Float64 } },
+                        new StructType.Types.Field { Name = "Delta", Type = new Type { Code = TypeCode.Float64 } }
+                    }
+                }
+            },
+            Rows = { new ListValue { Values = { Value.ForNumber(1234.5), Value.ForNumber(-0.25) } } }
+        };
+
+        var result = CultureRun.Under(culture, () => SpannerResponseFormatter.FormatResultSet(rs, SpannerResponseDetail.FullRows, 5));
+        var expected = CultureRun.Under("en-US", () => SpannerResponseFormatter.FormatResultSet(rs, SpannerResponseDetail.FullRows, 5));
+
+        Assert.Contains("1234.5", result);
+        Assert.Contains("-0.25", result);
+        Assert.Equal(expected, result);
+    }
+
     // ─── FormatCommitResponse ───────────────────────────────
 
     [Fact]

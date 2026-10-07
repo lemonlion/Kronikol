@@ -494,6 +494,25 @@ public class OtlpTapTests
         Assert.Empty(tap.Diagnostics());
     }
 
+    [Theory]
+    [MemberData(nameof(CultureRun.Data), MemberType = typeof(CultureRun))]
+    public async Task Diagnostics_write_counts_with_commas_between_thousands_on_every_machine(string culture)
+    {
+        // The messages are English: under a culture that writes 1.000 the limit read as one byte.
+        var rejecting = Options(new ListSink());
+        rejecting.Name = "otlp-di";
+        rejecting.MaxRequestBytes = 1000;
+        await using var tap = new OtlpTap(rejecting);
+        await tap.StartAsync();
+        byte[] padded = [.. OtlpGoldens.Utf8(OtlpGoldens.MongoFindOldSemconv), .. Enumerable.Repeat((byte)' ', 5000)];
+        using (var tooLarge = await PostAsync(tap, padded, "application/json"))
+            Assert.Equal(HttpStatusCode.RequestEntityTooLarge, tooLarge.StatusCode);
+
+        var rejected = Assert.Single(CultureRun.Under(culture, () => tap.Diagnostics()));
+
+        Assert.StartsWith("otlp-di: 1 export request(s) refused with 413 Payload Too Large (MaxRequestBytes 1,000)", rejected.Message);
+    }
+
     [Fact]
     public async Task Diagnostics_name_rejected_payloads_and_a_sink_that_throws()
     {

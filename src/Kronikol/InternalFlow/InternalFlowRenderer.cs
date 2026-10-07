@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 namespace Kronikol.InternalFlow;
@@ -353,21 +354,33 @@ public static class InternalFlowRenderer
         var leftPct = (offsetMs / totalMs) * 100;
         var widthPct = Math.Max((durationMs / totalMs) * 100, 0.5); // min 0.5% so it's visible
 
-        var source = System.Net.WebUtility.HtmlEncode(
-            string.IsNullOrEmpty(node.Span.Source) ? "Unknown" : node.Span.Source);
+        var rawSource = string.IsNullOrEmpty(node.Span.Source) ? "Unknown" : node.Span.Source;
+        var source = System.Net.WebUtility.HtmlEncode(rawSource);
         var name = System.Net.WebUtility.HtmlEncode(node.Span.Name);
         var durationText = durationMs >= 1 ? $" ({durationMs:F0}ms)" : "";
 
-        var hue = Math.Abs(source.GetHashCode()) % 360;
+        // The hue the browser's flame chart gives the source (flame-chart-render-script.js hashCode): string.GetHashCode
+        // is randomised per process, so the same source changed colour from one run to the next until 4.7.3.
+        var hue = Math.Abs((long)SourceHash(rawSource)) % 360;
         var color = $"hsl({hue}, 60%, {70 + Math.Min(depth * 5, 20)}%)";
 
-        sb.Append($"<div class=\"iflow-flame-bar\" style=\"margin-left:{leftPct:F2}%;width:{widthPct:F2}%;background:{color}\" ");
+        // Percentages a browser reads, with a point on every machine (a comma-decimal culture wrote 12,30%, which it drops).
+        sb.Append(CultureInfo.InvariantCulture, $"<div class=\"iflow-flame-bar\" style=\"margin-left:{leftPct:F2}%;width:{widthPct:F2}%;background:{color}\" ");
         sb.Append($"title=\"[{source}] {name}{durationText}\">");
         sb.Append($"<span class=\"iflow-flame-label\">{name}{durationText}</span>");
         sb.AppendLine("</div>");
 
         foreach (var child in node.Children)
             RenderFlameNode(sb, child, earliest, totalMs, depth + 1);
+    }
+
+    /// <summary>Java's string hash, which the browser's flame chart computes in JavaScript: the same for a source in every process.</summary>
+    private static int SourceHash(string text)
+    {
+        var hash = 0;
+        foreach (var c in text)
+            hash = unchecked(hash * 31 + c);
+        return hash;
     }
 
     /// <summary>
@@ -396,7 +409,7 @@ public static class InternalFlowRenderer
             {
                 var leftPct = (offsetMs / totalMs) * 100;
                 var encodedLabel = System.Net.WebUtility.HtmlEncode(label);
-                sb.Append($"<div class=\"iflow-boundary-marker\" style=\"left:{leftPct:F2}%\" ");
+                sb.Append(CultureInfo.InvariantCulture, $"<div class=\"iflow-boundary-marker\" style=\"left:{leftPct:F2}%\" ");
                 sb.AppendLine($"title=\"{encodedLabel}\"></div>");
             }
         }

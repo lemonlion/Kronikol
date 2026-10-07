@@ -295,6 +295,63 @@ public class TrackingProxyTests
         Assert.All(logs, l => Assert.Null(l.DependencyCategory));
     }
 
+    /// <summary>
+    /// A proxied call is stamped when it starts and when it ends (plans/WARM_UP_PLAN.md section 8). Until 4.7.3 both
+    /// records were stamped when it ended, so every proxied call (MediatR, a DispatchProxy) took 0 ms in the data files,
+    /// <c>kronikol query</c> and <c>Failures.md</c>.
+    /// </summary>
+    [Fact]
+    public async Task An_async_call_is_timed_from_its_start_to_its_end()
+    {
+        var proxy = TrackingProxy<ICalculator>.Create(new SlowCalculator(), new TrackingProxyOptions
+        {
+            ServiceName = "Calculator",
+            CurrentTestInfoFetcher = () => (TestName, _testId)
+        });
+
+        await proxy.MultiplyAsync(2, 3);
+
+        var logs = GetLogsForTest();
+        var elapsed = logs.Single(l => l.Type == RequestResponseType.Response).Timestamp!.Value
+                      - logs.Single(l => l.Type == RequestResponseType.Request).Timestamp!.Value;
+        Assert.True(elapsed >= TimeSpan.FromMilliseconds(50), $"took {elapsed.TotalMilliseconds} ms");
+    }
+
+    [Fact]
+    public void A_call_is_timed_from_its_start_to_its_end()
+    {
+        var proxy = TrackingProxy<ICalculator>.Create(new SlowCalculator(), new TrackingProxyOptions
+        {
+            ServiceName = "Calculator",
+            CurrentTestInfoFetcher = () => (TestName, _testId)
+        });
+
+        proxy.Add(2, 3);
+
+        var logs = GetLogsForTest();
+        var elapsed = logs.Single(l => l.Type == RequestResponseType.Response).Timestamp!.Value
+                      - logs.Single(l => l.Type == RequestResponseType.Request).Timestamp!.Value;
+        Assert.True(elapsed >= TimeSpan.FromMilliseconds(25), $"took {elapsed.TotalMilliseconds} ms");
+    }
+
+    private class SlowCalculator : ICalculator
+    {
+        public int Add(int a, int b)
+        {
+            Thread.Sleep(30);
+            return a + b;
+        }
+
+        public async Task<int> MultiplyAsync(int a, int b)
+        {
+            await Task.Delay(60);
+            return a * b;
+        }
+
+        public int Divide(int a, int b) => a / b;
+        public void Reset() { }
+    }
+
     public interface ICalculator
     {
         int Add(int a, int b);

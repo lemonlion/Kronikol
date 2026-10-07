@@ -101,6 +101,9 @@ public static class MergeableReportRenderer
             suite: report.Suite ?? "",
             // The shards' own diagnostics: until 4.6.0 the merged report's section listed none of them (F3).
             diagnostics: report.Diagnostics,
+            // The calls of no scenario the shards wrote: the merged data file carried them, and until 4.7.3 its HTML drew
+            // no Background calls section.
+            background: BackgroundAttribution.Summarise(report.Interactions, report.Features),
             history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history : null,
             showHistorySection: options.ShowHistorySection,
             showReportDiagnostics: options.ShowReportDiagnosticsSection,

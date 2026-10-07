@@ -331,6 +331,10 @@ public static partial class QueryCommand
 
     private sealed class ServiceStats(string name)
     {
+        // One time per call. The data file writes a call's durationMs on both of its records, so a call is timed by
+        // whichever record carries it, once: until 4.7.3 only the response's was read, and a call recorded as one record
+        // (the NDJSON ingest contract allows it, with the capturer's measurement) took no time here.
+        private readonly Dictionary<string, double> _durationByCall = new(StringComparer.Ordinal);
         private readonly List<double> _durations = [];
         private readonly Dictionary<string, int> _statuses = new(StringComparer.OrdinalIgnoreCase);
 
@@ -357,7 +361,10 @@ public static partial class QueryCommand
                     Errors++;
             }
 
-            if (interaction.Type.Equals("Response", StringComparison.OrdinalIgnoreCase) && interaction.DurationMs is { } ms)
+            if (interaction.DurationMs is { } ms
+                && (interaction.RequestResponseId is { Length: > 0 } call
+                    ? _durationByCall.TryAdd(call, ms)
+                    : interaction.Type.Equals("Response", StringComparison.OrdinalIgnoreCase)))
             {
                 _durations.Add(ms);
                 TotalMs += ms;

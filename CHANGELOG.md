@@ -4,6 +4,50 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.7.3] - 2026-10-07
+
+**Patch - durations and dates read the same on every machine, and timing defects found on the way.**
+`plans/WARM_UP_PLAN.md` R0: #113's F12, widened to every number and date a run writes, and the plan's section 8 rows.
+Bug fixes only, nothing new for a consumer to call, so the patch part moves (4.7.2 to 4.7.3). On a machine whose
+culture writes a decimal comma or another calendar, several files now read as they do on en-US; those report output
+changes are recorded in the Kronikol4J ledger. The history action's `VERSION` installs `Kronikol.Tool` 4.7.3, and the
+templates pin 4.7.2.
+
+### Fixed
+
+- **Durations and dates are written the same on every machine.** On a machine whose culture writes a decimal comma
+  (de-DE, fr-FR, fi-FI and others), XML and YAML wrote `DurationSeconds` as `1,234`, which their readers do not take as
+  a number; the Scenario Timeline wrote each bar's width as `12,3%`, which a browser drops, so every bar was drawn 2 px
+  wide; the duration badge, the duration filter's attributes, the pie chart's SVG numbers and the flame chart's
+  positions used the comma too; and `kronikol query` printed `1,27 s`. Under a culture with another calendar or time
+  separator, every data file's `startTime` and `endTime` were written in that calendar (th-TH wrote the year 2569,
+  ar-SA 1447) or with dots between hours and minutes (fi-FI), and so were the report header's date and times, the
+  diagnostic report's first and last seen, `kronikol history quarantine`'s dates and `kronikol history import`'s run
+  labels. All of them now write invariant numbers and Gregorian ISO 8601 dates, as do the console's file sizes, the
+  engine cache's refusal, the TcpTap, Mongo, OTLP and ProxyTap messages, and a Spanner result's float values.
+- **`--slower-than 1.5` reads one and a half seconds on every machine.** Under a decimal-comma culture it was refused,
+  and `1,5` was read as 15.
+- **A flame chart bar has the same colour in every run.** Its hue came from `string.GetHashCode()`, which .NET
+  randomises per process; it now comes from the hash the browser's renderer uses, so both draw a source alike.
+- **The assertion rewriter names its rewritten files the same in every build**, from a hash of the path:
+  `GetHashCode()` changed per build, and `Math.Abs` of `int.MinValue` threw.
+- **The feature summary sorts its duration columns by time.** It sorted on the number at the start of each cell, so
+  `500ms` came above `1m 5s`.
+- **A merged report**: a scenario whose duration was unknown (written as 0) has no `0ms` badge; the Background calls
+  section the shards wrote is drawn, where the merged data file carried it and its HTML did not; and when two shards'
+  runtime ids collide, a call's `expiredFrom` is renamed with its `testId`, so an expired call follows its own shard's
+  scenario.
+- **`Failures.md` shows the time a call's capturer measured**, where it timed calls from their two timestamps only, so
+  a call ingested as one record with its `durationMs` showed no time.
+- **Calls through `TrackingProxy` are timed from their start to their end.** Both records carried the instant the call
+  returned, so every call read 0 ms. A pair logged with one instant (`RequestResponseLogger.LogPair`) now has no
+  `durationMs`, where it had a measured 0.
+- **`kronikol query services` times every call once**, from whichever record carries its time; it read the response's
+  alone, so a call recorded as one record took no time there while `interactions --group-by service` counted it.
+- The `kronikol-test-debugging` skill's `--json` row names `repro` and `history`, and its commands reference says
+  `services --sort duration` orders by total time and `interactions --group-by --sort duration` by the median. The
+  wiki's sharding example no longer sets `KRONIKOL_SHARD`, which nothing reads.
+
 ## [4.7.2] - 2026-10-07
 
 **Patch - what `kronikol ingest`'s attribution passes did is no longer a diagnostic, a merged call keeps its phase, and an ingest's history ledger is its project's (#130).**

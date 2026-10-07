@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Kronikol.InternalFlow;
 using Kronikol.Tracking;
@@ -109,8 +110,8 @@ public static class DiagnosticReportGenerator
                 var timestamps = g.Where(l => l.Timestamp.HasValue).Select(l => l.Timestamp!.Value).ToArray();
                 // UTC, and said so in the column heading: these are compared against instants from other
                 // machines, and an unconverted local reading with no label cannot be compared with anything.
-                var first = timestamps.Length > 0 ? timestamps.Min().ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") : "?";
-                var last = timestamps.Length > 0 ? timestamps.Max().ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") : "?";
+                var first = timestamps.Length > 0 ? timestamps.Min().ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "?";
+                var last = timestamps.Length > 0 ? timestamps.Max().ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "?";
                 sb.AppendLine($"<tr><td>{Escape(g.Key.ServiceName)}</td><td>{Escape(g.Key.Method)}</td><td>{g.Count()}</td><td>{first}</td><td>{last}</td></tr>");
             }
             sb.AppendLine("</table>");

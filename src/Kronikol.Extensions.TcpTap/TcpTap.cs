@@ -361,7 +361,7 @@ public class TcpTap : IAsyncDisposable
                 continue;
 
             Interlocked.Increment(ref _stuckConnectionsReaped);
-            var detail = $"a command sent at {oldest:HH:mm:ss}Z is still unanswered after {threshold} — closed so a wedged client can reconnect";
+            var detail = string.Create(CultureInfo.InvariantCulture, $"a command sent at {oldest:HH:mm:ss}Z is still unanswered after {threshold} — closed so a wedged client can reconnect");
             _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap connection {state.ConnectionId} reaped: {detail}");
             Degrade(state.ConnectionId, CaptureDegradationKind.StuckConnectionReaped, detail);
             try { client.Dispose(); } catch { /* already closing */ }
@@ -478,7 +478,7 @@ public class TcpTap : IAsyncDisposable
         _options.Log?.Invoke(
             $"[{_options.DisplayName}] tcp-tap {what} on connection {connectionId} ({detail}); " +
             "nothing on this connection is decoded from now on — forwarding continues untouched.");
-        Degrade(connectionId, CaptureDegradationKind.DecodingDisabled, $"{detail} — arrows on this connection after {now:HH:mm:ss}Z are missing");
+        Degrade(connectionId, CaptureDegradationKind.DecodingDisabled, string.Create(CultureInfo.InvariantCulture, $"{detail} — arrows on this connection after {now:HH:mm:ss}Z are missing"));
     }
 
     internal void Degrade(long connectionId, CaptureDegradationKind kind, string detail)
@@ -535,44 +535,44 @@ public class TcpTap : IAsyncDisposable
         if (disabled > 0)
         {
             var firstTicks = Interlocked.Read(ref _firstDisabledAtTicks);
-            var since = firstTicks == 0 ? "" : $" after {new DateTimeOffset(firstTicks, TimeSpan.Zero):HH:mm:ss}Z";
+            var since = firstTicks == 0 ? "" : string.Create(CultureInfo.InvariantCulture, $" after {new DateTimeOffset(firstTicks, TimeSpan.Zero):HH:mm:ss}Z");
             var reason = Volatile.Read(ref _lastDisabledReason);
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: decoding disabled on {disabled:N0} connection(s) — {_options.ServiceName} arrows on them{since} are missing" +
+                string.Create(CultureInfo.InvariantCulture, $"{name}: decoding disabled on {disabled:N0} connection(s) — {_options.ServiceName} arrows on them{since} are missing") +
                 (reason is null ? "" : $" ({reason})")));
         }
 
         var oversize = OversizePayloadsSkipped;
         if (oversize > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {oversize:N0} oversize payload(s) streamed past (largest {LargestOversizePayload:N0} B, {BytesSkipped:N0} B not kept) — values recorded as previews"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {oversize:N0} oversize payload(s) streamed past (largest {LargestOversizePayload:N0} B, {BytesSkipped:N0} B not kept) — values recorded as previews")));
 
         var resets = DecoderResets;
         if (resets > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: decoder reset {resets:N0} time(s) after a desynchronised stream — interactions after a reset may be mis-paired until the connection goes idle; the first is stamped \"resynchronised — pairing uncertain\""));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: decoder reset {resets:N0} time(s) after a desynchronised stream — interactions after a reset may be mis-paired until the connection goes idle; the first is stamped \"resynchronised — pairing uncertain\"")));
 
         var dropped = SegmentsDropped;
         if (dropped > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {dropped:N0} segment(s) dropped because the decode queue was full ({SegmentsDroppedClientToServer:N0} service→server, {SegmentsDroppedServerToClient:N0} server→service) — interactions may be missing or mis-paired; forwarding was unaffected"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {dropped:N0} segment(s) dropped because the decode queue was full ({SegmentsDroppedClientToServer:N0} service→server, {SegmentsDroppedServerToClient:N0} server→service) — interactions may be missing or mis-paired; forwarding was unaffected")));
 
         var closedMid = ConnectionsClosedMidMessage;
         if (closedMid > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {closedMid:N0} connection(s) closed mid-message — their last command(s) were not recorded"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {closedMid:N0} connection(s) closed mid-message — their last command(s) were not recorded")));
 
         var reaped = StuckConnectionsReaped;
         if (reaped > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {reaped:N0} stuck connection(s) reaped (a command unanswered for {_options.ReapStuckConnectionsAfter}) so a wedged client could reconnect"));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {reaped:N0} stuck connection(s) reaped (a command unanswered for {_options.ReapStuckConnectionsAfter}) so a wedged client could reconnect")));
 
         if (_options.DecodingStallBytes is { } stallBytes && BytesSinceLastInteraction >= stallBytes)
         {
             var last = LastInteractionAt;
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                $"{name}: {BytesSinceLastInteraction:N0} B have flowed since the last recorded interaction" +
-                (last is null ? " (none recorded yet)" : $" at {last.Value:HH:mm:ss}Z") +
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {BytesSinceLastInteraction:N0} B have flowed since the last recorded interaction") +
+                (last is null ? " (none recorded yet)" : string.Create(CultureInfo.InvariantCulture, $" at {last.Value:HH:mm:ss}Z")) +
                 " — decoding may have stalled, or the traffic is all excluded chatter"));
         }
 

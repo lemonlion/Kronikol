@@ -1616,9 +1616,11 @@ public static class ReportGenerator
                     var totalDuration = durations.Length > 0 ? durations.Aggregate(TimeSpan.Zero, (a, b) => a + b) : TimeSpan.Zero;
                     var avgDuration = durations.Length > 0 ? totalDuration / durations.Length : TimeSpan.Zero;
                     var maxDuration = durations.Length > 0 ? durations.Max() : TimeSpan.Zero;
-                    body.Append($"<td>{FormatDuration(totalDuration)}</td>");
-                    body.Append($"<td>{FormatDuration(avgDuration)}</td>");
-                    body.Append($"<td>{FormatDuration(maxDuration)}</td>");
+                    // The cell's text is rounded and mixes units ("500ms", "1m 5s"), so sort_table reads data-sort, the
+                    // milliseconds: on the text, "1m 5s" sorted as 1, below "500ms", until 4.7.3.
+                    body.Append(CultureInfo.InvariantCulture, $"<td data-sort=\"{totalDuration.TotalMilliseconds:F0}\">{FormatDuration(totalDuration)}</td>");
+                    body.Append(CultureInfo.InvariantCulture, $"<td data-sort=\"{avgDuration.TotalMilliseconds:F0}\">{FormatDuration(avgDuration)}</td>");
+                    body.Append(CultureInfo.InvariantCulture, $"<td data-sort=\"{maxDuration.TotalMilliseconds:F0}\">{FormatDuration(maxDuration)}</td>");
                 }
 
                 body.Append("</tr>");
@@ -1635,9 +1637,9 @@ public static class ReportGenerator
                         <table>
                             <tr><td colspan="2" class="column-header">Execution</td><td colspan="2" class="column-header">Content</td></tr>
                             <tr><td>Overall status:</td><td>{overallStatus}</td><td>Features: </td><td>{numberOfFeatures}</td></tr>
-                            <tr><td>Start Date:</td><td>{startRunTime:yyyy-MM-dd} (UTC)</td><td>Scenarios: </td><td>{scenarios.Length}</td></tr>
-                            <tr><td>Start Time:</td><td>{startRunTime:HH:mm:ss} (UTC)</td><td>Passed Scenarios: </td><td>{passedScenarios.Length}</td></tr>
-                            <tr><td>End Time:</td><td>{endRunTime:HH:mm:ss} (UTC)</td><td>Failed Scenarios: </td><td>{failedScenarios.Length}</td></tr>
+                            <tr><td>Start Date:</td><td>{startRunTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)} (UTC)</td><td>Scenarios: </td><td>{scenarios.Length}</td></tr>
+                            <tr><td>Start Time:</td><td>{startRunTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} (UTC)</td><td>Passed Scenarios: </td><td>{passedScenarios.Length}</td></tr>
+                            <tr><td>End Time:</td><td>{endRunTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} (UTC)</td><td>Failed Scenarios: </td><td>{failedScenarios.Length}</td></tr>
                             <tr><td>Duration:</td><td>{FormatDuration(endRunTime - startRunTime)}</td><td>Skipped Scenarios: </td><td>{skippedScenarios.Length}</td></tr>
                             <tr style="display:none"><td>Kronikol Version:</td><td>{KronikolVersion}</td><td></td><td></td></tr>
                         </table>
@@ -1749,7 +1751,7 @@ public static class ReportGenerator
             var p95Ms = durationsMs.Length > 0 ? durationsMs[(int)(durationsMs.Length * 0.95)] : 0;
             var p99Ms = durationsMs.Length > 0 ? durationsMs[(int)(durationsMs.Length * 0.99)] : 0;
 
-            body.Append($"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label">Duration ≥:</span><button class="percentile-btn" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" data-custom="1" onclick="set_percentile(this)">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" /><span class="duration-filters-unit">seconds</span></span></div>""");
+            body.Append(CultureInfo.InvariantCulture, $"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label">Duration ≥:</span><button class="percentile-btn" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" data-custom="1" onclick="set_percentile(this)">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" /><span class="duration-filters-unit">seconds</span></span></div>""");
         }
 
         if (allDependencies.Count > 0)
@@ -1958,7 +1960,7 @@ public static class ReportGenerator
                     };
                     body.Append($"<div class=\"timeline-row\">");
                     body.Append($"<div class=\"timeline-label\" title=\"{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}\">{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}</div>");
-                    body.Append($"<div class=\"timeline-track\"><div class=\"timeline-bar {statusClass}\" style=\"width:{widthPercent:F1}%\" title=\"{FormatDurationBadge(scenario.Duration.Value)}\"></div></div>");
+                    body.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-track\"><div class=\"timeline-bar {statusClass}\" style=\"width:{widthPercent:F1}%\" title=\"{FormatDurationBadge(scenario.Duration.Value)}\"></div></div>");
                     body.Append($"<div class=\"timeline-duration\">{FormatDurationBadge(scenario.Duration.Value)}</div>");
                     body.Append("</div>");
                 }
@@ -2105,7 +2107,7 @@ public static class ReportGenerator
                 if (scenario.Duration.HasValue)
                 {
                     var durationMs = scenario.Duration.Value.TotalMilliseconds;
-                    durationAttr = $" data-duration-ms=\"{durationMs:F0}\"";
+                    durationAttr = string.Create(CultureInfo.InvariantCulture, $" data-duration-ms=\"{durationMs:F0}\"");
                     var durationClass = durationMs < 2000 ? "duration-fast" : durationMs < 5000 ? "duration-moderate" : "duration-slow";
                     durationBadge = $" <span class=\"duration-badge {durationClass}\">{FormatDurationBadge(scenario.Duration.Value)}</span>";
                 }
@@ -2237,7 +2239,7 @@ public static class ReportGenerator
                 if (hasWholeTestFlow && medianSpanCount > 0 && wholeTestContent!.Value.SpanCount >= medianSpanCount * 10 && wholeTestContent.Value.SpanCount > 100)
                 {
                     var count = wholeTestContent.Value.SpanCount;
-                    spanWarning = $"<span class=\"span-count-warning\">(Warning: {count:N0} spans. This might indicate a problem/recursive loop in your test.)</span>";
+                    spanWarning = string.Create(CultureInfo.InvariantCulture, $"<span class=\"span-count-warning\">(Warning: {count:N0} spans. This might indicate a problem/recursive loop in your test.)</span>");
                 }
 
                 if (hasSequenceDiagrams || hasWholeTestFlow)
@@ -2675,9 +2677,10 @@ public static class ReportGenerator
             var dash = circumference * pct / 100.0;
             var gap = circumference - dash;
             var dashOffset = -offset * circumference / 100.0;
-            sb.Append($"<circle cx=\"50\" cy=\"50\" r=\"{radius:F1}\" fill=\"none\" stroke=\"{color}\" stroke-width=\"12\" " +
-                      $"stroke-dasharray=\"{dash:F2} {gap:F2}\" stroke-dashoffset=\"{dashOffset:F2}\" transform=\"rotate(-90 50 50)\">" +
-                      $"<title>{label}: {count} ({pct:F0}%)</title></circle>");
+            sb.Append(CultureInfo.InvariantCulture,
+                $"<circle cx=\"50\" cy=\"50\" r=\"{radius:F1}\" fill=\"none\" stroke=\"{color}\" stroke-width=\"12\" " +
+                $"stroke-dasharray=\"{dash:F2} {gap:F2}\" stroke-dashoffset=\"{dashOffset:F2}\" transform=\"rotate(-90 50 50)\">" +
+                $"<title>{label}: {count} ({pct:F0}%)</title></circle>");
             offset += pct;
         }
 
@@ -2927,7 +2930,7 @@ public static class ReportGenerator
 
         // Total duration
         var totalDuration = scenarios.Where(s => s.Duration.HasValue).Select(s => s.Duration!.Value).Aggregate(TimeSpan.Zero, (acc, d) => acc + d);
-        var durationAttr = totalDuration > TimeSpan.Zero ? $" data-duration-ms=\"{totalDuration.TotalMilliseconds:F0}\"" : "";
+        var durationAttr = totalDuration > TimeSpan.Zero ? string.Create(CultureInfo.InvariantCulture, $" data-duration-ms=\"{totalDuration.TotalMilliseconds:F0}\"") : "";
         var durationBadge = totalDuration > TimeSpan.Zero
             ? $" <span class=\"duration-badge {(totalDuration.TotalMilliseconds < 2000 ? "duration-fast" : totalDuration.TotalMilliseconds < 5000 ? "duration-moderate" : "duration-slow")}\">{FormatDurationBadge(totalDuration)}</span>"
             : "";
@@ -4193,7 +4196,7 @@ public static class ReportGenerator
         if (total.TotalSeconds < 1)
             return $"{(int)total.TotalMilliseconds}ms";
         if (total.TotalMinutes < 1)
-            return $"{total.TotalSeconds:F1}s";
+            return string.Create(CultureInfo.InvariantCulture, $"{total.TotalSeconds:F1}s");
         return $"{(int)total.TotalMinutes}m {total.Seconds}s";
     }
 
@@ -4549,8 +4552,10 @@ public static class ReportGenerator
             if (request?.Timestamp is not { } start || response?.Timestamp is not { } end)
                 continue;
 
+            // Two records stamped with one instant measured nothing (a pair logged after the call, a deferred flush, a
+            // response the producer did not stamp): no duration, where until 4.7.3 every reader showed 0 ms.
             var elapsed = (end - start).TotalMilliseconds;
-            if (elapsed >= 0)
+            if (elapsed > 0)
                 durations[pair.Key] = elapsed;
         }
 
@@ -4592,8 +4597,8 @@ public static class ReportGenerator
             ["formatVersion"] = ReportFormatVersion,
             ["kronikolVersion"] = KronikolVersion,
             ["suite"] = resolvedSuite,
-            ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
+            ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
             // Before `features`, which is nearly the whole file: a streaming reader and a person
             // running `head` both see which run this is without the megabytes after it.
             ["ciMetadata"] = MapCiMetadataJson(ciMetadata)
@@ -4816,8 +4821,8 @@ public static class ReportGenerator
             ["kronikolVersion"] = string.IsNullOrEmpty(kronikolVersion) ? KronikolVersion : kronikolVersion,
             ["mergeableFormatVersion"] = Merge.MergeableReportReader.MergeableFormatVersion,
             ["suite"] = suite,
-            ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            ["startTime"] = startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
+            ["endTime"] = endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
             ["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail: true, durations, stepPaths, annotations, suite, payloads),
             ["wholeTestVisualization"] = wholeTestVisualization.ToString(),
             ["componentRelationships"] = (componentRelationships ?? []).Select(r => new
@@ -5038,8 +5043,8 @@ public static class ReportGenerator
                 new XElement("FormatVersion", ReportFormatVersion),
                 new XElement("KronikolVersion", KronikolVersion),
                 resolvedSuite is { Length: > 0 } xmlSuite ? new XElement("Suite", xmlSuite) : null,
-                new XElement("StartTime", startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
-                new XElement("EndTime", endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
+                new XElement("StartTime", startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)),
+                new XElement("EndTime", endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)),
                 MapCiMetadataXml(ciMetadata),
                 ResolveEnvironment(environment) is { } xmlEnvironment
                     ? new XElement("Environment",
@@ -5064,7 +5069,7 @@ public static class ReportGenerator
                                         new XElement("Name", s.DisplayName),
                                         s.Description != null ? new XElement("Description", s.Description) : null,
                                         new XElement("Result", s.Result.ToString()),
-                                        new XElement("DurationSeconds", (s.Duration?.TotalSeconds ?? 0.0).ToString("F3")),
+                                        new XElement("DurationSeconds", (s.Duration?.TotalSeconds ?? 0.0).ToString("F3", CultureInfo.InvariantCulture)),
                                         new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLower()),
                                         s.ErrorMessage != null ? new XElement("ErrorMessage", s.ErrorMessage) : null,
                                         s.ErrorStackTrace != null ? new XElement("ErrorStackTrace", s.ErrorStackTrace) : null,
@@ -5210,7 +5215,7 @@ public static class ReportGenerator
             step.Keyword != null ? new XElement("Keyword", step.Keyword) : null,
             new XElement("Text", step.Text),
             step.Status != null ? new XElement("Status", step.Status.ToString()) : null,
-            step.Duration != null ? new XElement("DurationSeconds", step.Duration.Value.TotalSeconds.ToString("F3")) : null,
+            step.Duration != null ? new XElement("DurationSeconds", step.Duration.Value.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture)) : null,
             step.FailureMessage != null ? new XElement("FailureMessage", step.FailureMessage) : null,
             step.SourceFile != null ? new XElement("SourceFile", step.SourceFile) : null,
             step.SourceLine != null ? new XElement("SourceLine", step.SourceLine.Value.ToString(CultureInfo.InvariantCulture)) : null,
@@ -5302,8 +5307,8 @@ public static class ReportGenerator
         AppendYamlIfPresent(yml, "Suite: ", resolvedSuite);
         // Quoted, by the emitter: an unquoted 2026-01-01T10:00:00Z is a timestamp to a YAML 1.1
         // parser, and the schema says these two are strings.
-        AppendYaml(yml, "StartTime: ", startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"));
-        AppendYaml(yml, "EndTime: ", endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"));
+        AppendYaml(yml, "StartTime: ", startTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+        AppendYaml(yml, "EndTime: ", endTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
         yml.Append("CiMetadata:\n");
         AppendYaml(yml, "  Provider: ", (ciMetadata?.Provider ?? CiEnvironment.None).ToString());
         AppendYamlIfPresent(yml, "  BuildNumber: ", ciMetadata?.BuildNumber);
@@ -5351,7 +5356,7 @@ public static class ReportGenerator
                 if (scenario.SourceLine is not null)
                     yml.Append("        SourceLine: " + scenario.SourceLine.Value.ToString(CultureInfo.InvariantCulture) + "\n");
                 AppendYaml(yml, "        Result: ", scenario.Result.ToString());
-                yml.Append("        DurationSeconds: " + (scenario.Duration?.TotalSeconds ?? 0.0).ToString("F3") + "\n");
+                yml.Append("        DurationSeconds: " + (scenario.Duration?.TotalSeconds ?? 0.0).ToString("F3", CultureInfo.InvariantCulture) + "\n");
                 if (scenario.EndedAt is { } ymlEndedAt)
                     AppendYaml(yml, "        EndedAt: ", FormatInstant(ymlEndedAt));
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
@@ -5497,7 +5502,7 @@ public static class ReportGenerator
         AppendYaml(yml, indent + "  Text: ", step.Text);
         AppendYamlNullable(yml, indent + "  Status: ", step.Status?.ToString());
         if (step.Duration != null)
-            yml.Append(indent + "  DurationSeconds: " + step.Duration.Value.TotalSeconds.ToString("F3") + "\n");
+            yml.Append(indent + "  DurationSeconds: " + step.Duration.Value.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture) + "\n");
         if (step.FailureMessage != null)
             AppendYaml(yml, indent + "  FailureMessage: ", step.FailureMessage);
         if (step.SourceFile != null)
@@ -6564,7 +6569,7 @@ public static class ReportGenerator
                         ["activityTraceId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C trace id — the bridge to OpenTelemetry traces and application logs. Unlike traceId, which is Kronikol's own identifier for the request/response pair.", ["examples"] = new[] { "4bf92f3577b34da6a3ce929d0e0e4736" } },
                         ["activitySpanId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "W3C span id" },
                         ["capturedBy"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which capture path produced this entry: wire (proxy/TCP tap) or span (OpenTelemetry receiver)" },
-                        ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response: the capturer's own measurement when the record carried one (durationMs on the NDJSON input), otherwise derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered and nothing was measured or timestamps are absent." },
+                        ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response: the capturer's own measurement when the record carried one (durationMs on the NDJSON input), otherwise derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered and nothing was measured, when timestamps are absent, or when both records carry the same instant (a call logged after the fact, which measured nothing)." },
                         ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } }
                     }
                 }

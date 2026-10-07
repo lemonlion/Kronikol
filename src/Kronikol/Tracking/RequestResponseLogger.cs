@@ -103,15 +103,40 @@ public static class RequestResponseLogger
         string? dependencyCategory = null,
         AttributionSource? source = null)
     {
+        // Logged after the call, so both records carry this one instant, which the data files read as a call that
+        // measured nothing (no durationMs) rather than one that took no time.
+        var now = DateTimeOffset.UtcNow;
+        LogPair(testName, testId, method, uri, serviceName, callerName, requestContent, responseContent, statusCode, phase,
+            dependencyCategory, source, requestAt: now, responseAt: now);
+    }
+
+    /// <summary>
+    /// The same pair, stamped when the call started and when it ended, by a caller that saw both (the tracking proxy).
+    /// </summary>
+    internal static void LogPair(
+        string testName,
+        string testId,
+        OneOf<HttpMethod, string> method,
+        Uri uri,
+        string serviceName,
+        string callerName,
+        string? requestContent,
+        string? responseContent,
+        HttpStatusCode? statusCode,
+        TestPhase phase,
+        string? dependencyCategory,
+        AttributionSource? source,
+        DateTimeOffset requestAt,
+        DateTimeOffset responseAt)
+    {
         var traceId = Guid.NewGuid();
         var requestResponseId = Guid.NewGuid();
-        var now = DateTimeOffset.UtcNow;
 
         Log(new RequestResponseLog(testName, testId, method, requestContent, uri,
             [], serviceName, callerName, RequestResponseType.Request, traceId, requestResponseId, false,
             DependencyCategory: dependencyCategory)
         {
-            Timestamp = now,
+            Timestamp = requestAt,
             Phase = phase,
             AttributionSource = source
         });
@@ -121,7 +146,7 @@ public static class RequestResponseLogger
             statusCode is not null ? (OneOf<HttpStatusCode, string>)statusCode.Value : null,
             DependencyCategory: dependencyCategory)
         {
-            Timestamp = now,
+            Timestamp = responseAt,
             Phase = phase,
             AttributionSource = source
         });

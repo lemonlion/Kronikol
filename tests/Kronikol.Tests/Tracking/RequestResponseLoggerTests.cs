@@ -16,6 +16,35 @@ public class RequestResponseLoggerTests
             .ToArray();
     }
 
+    /// <summary>
+    /// A pair logged after the call measured nothing, and the data file says so rather than claiming the call took no
+    /// time (plans/WARM_UP_PLAN.md section 8). Until 4.7.3 both records carried one instant, and every reader of the file
+    /// showed 0 ms.
+    /// </summary>
+    [Fact]
+    public void LogPair_calls_carry_no_duration_into_the_data_file()
+    {
+        RequestResponseLogger.LogPair(
+            testName: "My Test",
+            testId: _testId,
+            method: "Blob Upload",
+            uri: new Uri("https://blob.core.windows.net/container/file.json"),
+            serviceName: "Blob Storage",
+            callerName: "My API");
+        Kronikol.Reports.Feature[] features =
+        [
+            new() { DisplayName = "Blobs", Scenarios = [new Kronikol.Reports.Scenario { Id = _testId, DisplayName = "My Test", Result = Kronikol.Reports.ExecutionResult.Passed }] }
+        ];
+
+        var path = Kronikol.Reports.ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow,
+            $"LogPair_{Guid.NewGuid():N}.json", Kronikol.Reports.DataFormat.Json, null, GetLogsFromThisTest());
+
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        var calls = document.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions").EnumerateArray().ToArray();
+        Assert.Equal(2, calls.Length);
+        Assert.All(calls, call => Assert.Equal(System.Text.Json.JsonValueKind.Null, call.GetProperty("durationMs").ValueKind));
+    }
+
     [Fact]
     public void LogPair_creates_request_and_response_entries()
     {

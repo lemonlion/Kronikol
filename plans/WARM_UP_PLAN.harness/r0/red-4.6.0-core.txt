@@ -1,0 +1,73 @@
+Kronikol.Tests.CultureInvariantSourceTests.Every_format_with_a_separator_or_a_date_names_the_invariant_culture  {'Failed': 1}
+    x1: Formatted with the machine's culture:
+Kronikol.Tests.CultureInvariantSourceTests.The_rule_finds_what_it_is_for  {'Passed': 14}
+Kronikol.Tests.PlantUml.EngineCacheTests.The_refusal_counts_the_bytes_with_commas_between_thousands_on_every_machine  {'Passed': 1, 'Failed': 3}
+    x3: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.CultureInvariantOutputTests.A_flame_bar_has_the_colour_the_browser_gives_its_source_in_every_process  {'Failed': 1}
+    x1: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.CultureInvariantOutputTests.Every_data_format_writes_the_same_bytes_under_the_culture_as_under_en_us  {'Failed': 11, 'Passed': 1}
+    x11: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.Reports.CultureInvariantOutputTests.Every_data_format_writes_the_start_and_end_as_gregorian_iso_8601  {'Passed': 1, 'Failed': 3}
+    x3: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.Reports.CultureInvariantOutputTests.The_console_summary_writes_file_sizes_with_a_point  {'Passed': 1, 'Failed': 3}
+    x3: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.Reports.CultureInvariantOutputTests.The_cultures_differ_from_en_us_where_each_fact_says  {'Passed': 1}
+Kronikol.Tests.Reports.CultureInvariantOutputTests.The_diagnostic_report_writes_first_and_last_seen_as_gregorian_times_with_colons  {'Failed': 3, 'Passed': 1}
+    x3: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.CultureInvariantOutputTests.The_duration_badge_writes_seconds_with_a_point  {'Failed': 3, 'Passed': 1}
+    x3: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.CultureInvariantOutputTests.The_flame_chart_renderers_write_their_percentages_with_a_point  {'Failed': 3, 'Passed': 1}
+    x3: Assert.Equal() Failure: Collections differ at index 0
+Kronikol.Tests.Reports.CultureInvariantOutputTests.The_pie_chart_writes_svg_numbers_a_browser_reads  {'Failed': 3, 'Passed': 1}
+    x3: Assert.Equal() Failure: Collections differ at index 0
+Kronikol.Tests.Reports.CultureInvariantOutputTests.The_summary_writes_the_start_as_a_gregorian_date_and_times_with_colons  {'Failed': 3, 'Passed': 1}
+    x3: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.CultureInvariantOutputTests.The_timeline_writes_each_bar_width_with_a_point  {'Failed': 3, 'Passed': 1}
+    x3: Assert.Equal() Failure: Collections differ at index 0
+Kronikol.Tests.Reports.CultureInvariantOutputTests.Xml_durations_are_numbers_written_with_a_point  {'Passed': 1, 'Failed': 3}
+    x3: Assert.Equal() Failure: Collections differ at index 0
+Kronikol.Tests.Reports.CultureInvariantOutputTests.Yaml_durations_are_numbers_written_with_a_point  {'Passed': 1, 'Failed': 3}
+    x3: Assert.Equal() Failure: Collections differ at index 0
+Kronikol.Tests.Reports.CultureInvariantPipelineTests.Every_file_a_run_writes_is_the_same_under_the_culture_as_under_en_us  {'Failed': 4}
+    x1: TestRunReport.html differs at character 522219:
+    x1: TestRunReport.html differs at character 521854:
+    x1: TestRunReport.html differs at character 521756:
+    x1: TestRunReport.html differs at character 522338:
+Kronikol.Tests.Reports.FailuresDigestGeneratorTests.A_call_sent_as_one_record_shows_its_measured_time  {'Failed': 1}
+    x1: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.FailuresDigestGeneratorTests.A_call_shows_the_time_its_capturer_measured  {'Failed': 1}
+    x1: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.Merge.MergeKeepsCallErrorsTests.A_merged_report_draws_the_background_calls_section  {'Failed': 1}
+    x1: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Reports.Merge.MergeKeepsCallErrorsTests.An_expired_call_follows_its_scenario_when_the_merge_renames_it  {'Failed': 1}
+    x1: Assert.Equal() Failure: Collections differ
+Kronikol.Tests.Reports.Merge.MergeReadsDurationsTests.A_scenario_without_a_duration_has_no_badge_after_a_merge  {'Failed': 1}
+    x1: Assert.Equal() Failure: Collections differ
+Kronikol.Tests.Tool.HistoryMaintenanceTests.Import_prints_each_run_with_a_gregorian_time_on_every_machine  {'Failed': 3, 'Passed': 1}
+    x3: Assert.Matches() Failure: Pattern not found in value
+Kronikol.Tests.Tool.HistoryMaintenanceTests.Quarantine_prints_gregorian_dates_on_every_machine  {'Passed': 2, 'Failed': 2}
+    x2: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Tool.QueryCultureTests.Every_verb_is_held_to_it  {'Passed': 1}
+Kronikol.Tests.Tool.QueryCultureTests.Every_verb_prints_under_the_culture_what_it_prints_under_en_us  {'Passed': 53, 'Failed': 27}
+    x27: Assert.Equal() Failure: Strings differ
+Kronikol.Tests.Tool.QueryCultureTests.Interactions_print_call_durations_with_a_point  {'Passed': 1, 'Failed': 3}
+    x3: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Tool.QueryCultureTests.Slower_than_reads_its_seconds_with_a_point  {'Passed': 1, 'Failed': 3}
+    x1: Assert.Contains() Failure: Sub-string not found
+    x2: exit 2: --slower-than takes a number of seconds.
+Kronikol.Tests.Tool.QueryCultureTests.Slower_than_refuses_a_decimal_comma_rather_than_reading_it_as_thousands  {'Failed': 3, 'Passed': 1}
+    x3: Assert.Equal() Failure: Values differ
+Kronikol.Tests.Tool.QueryCultureTests.Summary_prints_slowest_durations_with_a_point  {'Failed': 3, 'Passed': 1}
+    x3: Assert.Contains() Failure: Sub-string not found
+Kronikol.Tests.Tool.ServicesDurationTests.A_call_recorded_as_one_record_is_timed_once  {'Failed': 1}
+    x1: Assert.Equal() Failure: Values are not within 3 decimal places
+Kronikol.Tests.Tool.SkillDriftTests.The_json_row_names_every_verb_that_takes_json  {'Failed': 1}
+    x1: Assert.Equal() Failure: Collections differ at index 3
+Kronikol.Tests.Tracking.RequestResponseLoggerTests.LogPair_calls_carry_no_duration_into_the_data_file  {'Failed': 1}
+    x1: Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+Kronikol.Tests.Tracking.TrackingProxyTests.A_call_is_timed_from_its_start_to_its_end  {'Failed': 1}
+    x1: took 0 ms
+Kronikol.Tests.Tracking.TrackingProxyTests.An_async_call_is_timed_from_its_start_to_its_end  {'Failed': 1}
+    x1: took 0 ms
+
+new methods not in this trx: Dispose, Reset

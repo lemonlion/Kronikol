@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 namespace Kronikol.Reports;
@@ -349,8 +350,9 @@ public static class RunSummaryConsoleWriter
             || name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
             || name.EndsWith(".yml", StringComparison.OrdinalIgnoreCase));
 
+    // With a point on every machine, as the rest of the line's English is: a comma-decimal culture wrote "1,5 KB".
     internal static string Size(long bytes) =>
         bytes < 1024 ? $"{bytes} B"
-        : bytes < 1024 * 1024 ? $"{bytes / 1024.0:0.#} KB"
-        : $"{bytes / (1024.0 * 1024.0):0.#} MB";
+        : bytes < 1024 * 1024 ? string.Create(CultureInfo.InvariantCulture, $"{bytes / 1024.0:0.#} KB")
+        : string.Create(CultureInfo.InvariantCulture, $"{bytes / (1024.0 * 1024.0):0.#} MB");
 }

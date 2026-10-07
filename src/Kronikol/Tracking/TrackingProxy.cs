@@ -89,6 +89,9 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
     {
         if (targetMethod is null) return null;
 
+        // Stamped on the request record, so a proxied call is timed from here to its end: until 4.7.3 both records were
+        // stamped when it ended, and every proxied call took 0 ms.
+        var startedAt = DateTimeOffset.UtcNow;
         var methodName = targetMethod.Name;
         var uri = new Uri($"{_options.UriScheme}://{_sanitisedHostname}/{typeof(T).Name}/{methodName}");
         var requestContent = args is { Length: > 0 }
@@ -109,10 +112,10 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
             var result = targetMethod.Invoke(_target, args);
 
             if (result is Task task)
-                return HandleAsyncResult(task, targetMethod, methodName, uri, requestContent, activity);
+                return HandleAsyncResult(task, targetMethod, methodName, uri, requestContent, activity, startedAt);
 
             var responseContent = TrackingSafeSerializer.Serialize(result, _options.SerializerOptions);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.OK, activity);
+            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.OK, activity, startedAt);
             InternalFlowSpanStore.Complete(activity);
             return result;
         }
@@ -120,7 +123,7 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
         {
             var responseContent = $"{ex.InnerException.GetType().Name}: {ex.InnerException.Message}";
             activity?.SetStatus(ActivityStatusCode.Error, responseContent);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity);
+            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity, startedAt);
             InternalFlowSpanStore.Complete(activity);
             throw ex.InnerException;
         }
@@ -128,20 +131,20 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
         {
             var responseContent = $"{ex.GetType().Name}: {ex.Message}";
             activity?.SetStatus(ActivityStatusCode.Error, responseContent);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity);
+            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity, startedAt);
             InternalFlowSpanStore.Complete(activity);
             throw;
         }
     }
 
     private async Task<TResult> HandleAsyncResultTyped<TResult>(
-        Task<TResult> task, string methodName, Uri uri, string? requestContent, Activity? activity)
+        Task<TResult> task, string methodName, Uri uri, string? requestContent, Activity? activity, DateTimeOffset startedAt)
     {
         try
         {
             var result = await task;
             var responseContent = TrackingSafeSerializer.Serialize(result, _options.SerializerOptions);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.OK, activity);
+            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.OK, activity, startedAt);
             InternalFlowSpanStore.Complete(activity);
             return result;
         }
@@ -149,33 +152,33 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
         {
             var responseContent = $"{ex.GetType().Name}: {ex.Message}";
             activity?.SetStatus(ActivityStatusCode.Error, responseContent);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity);
+            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity, startedAt);
             InternalFlowSpanStore.Complete(activity);
             throw;
         }
     }
 
     private async Task HandleAsyncResultVoid(
-        Task task, string methodName, Uri uri, string? requestContent, Activity? activity)
+        Task task, string methodName, Uri uri, string? requestContent, Activity? activity, DateTimeOffset startedAt)
     {
         try
         {
             await task;
-            LogInteraction(methodName, uri, requestContent, null, HttpStatusCode.OK, activity);
+            LogInteraction(methodName, uri, requestContent, null, HttpStatusCode.OK, activity, startedAt);
             InternalFlowSpanStore.Complete(activity);
         }
         catch (Exception ex)
         {
             var responseContent = $"{ex.GetType().Name}: {ex.Message}";
             activity?.SetStatus(ActivityStatusCode.Error, responseContent);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity);
+            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity, startedAt);
             InternalFlowSpanStore.Complete(activity);
             throw;
         }
     }
 
     private object? HandleAsyncResult(Task task, MethodInfo targetMethod, string methodName,
-        Uri uri, string? requestContent, Activity? activity)
+        Uri uri, string? requestContent, Activity? activity, DateTimeOffset startedAt)
     {
         var returnType = targetMethod.ReturnType;
 
@@ -185,14 +188,14 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
             var method = typeof(TrackingProxy<T>)
                 .GetMethod(nameof(HandleAsyncResultTyped), BindingFlags.NonPublic | BindingFlags.Instance)!
                 .MakeGenericMethod(resultType);
-            return method.Invoke(this, [task, methodName, uri, requestContent, activity]);
+            return method.Invoke(this, [task, methodName, uri, requestContent, activity, startedAt]);
         }
 
-        return HandleAsyncResultVoid(task, methodName, uri, requestContent, activity);
+        return HandleAsyncResultVoid(task, methodName, uri, requestContent, activity, startedAt);
     }
 
     private void LogInteraction(string methodName, Uri uri, string? requestContent,
-        string? responseContent, HttpStatusCode statusCode, Activity? activity)
+        string? responseContent, HttpStatusCode statusCode, Activity? activity, DateTimeOffset startedAt)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
@@ -220,6 +223,7 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
             responseContent,
             statusCode,
             TestPhaseContext.Current,
-            _options.DependencyCategory, source: testInfo.Value.Source);
+            _options.DependencyCategory, testInfo.Value.Source,
+            requestAt: startedAt, responseAt: DateTimeOffset.UtcNow);
     }
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Google.Cloud.Spanner.V1;
 using Google.Protobuf;
@@ -193,7 +194,9 @@ public static class SpannerResponseFormatter
             return value.BoolValue ? "true" : "false";
 
         if (value.KindCase == Value.KindOneofCase.NumberValue)
-            return value.NumberValue.ToString("G");
+            // A point on every machine, as the row's other values are written: "G" alone wrote 99,5 under a
+            // comma-decimal culture until 4.7.3, into the captured response itself.
+            return value.NumberValue.ToString("G", CultureInfo.InvariantCulture);
 
         if (value.KindCase == Value.KindOneofCase.StringValue)
             return TruncateValue(value.StringValue);

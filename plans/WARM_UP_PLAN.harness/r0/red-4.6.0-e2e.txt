@@ -1,0 +1,6 @@
+Kronikol.Tests.EndToEnd.DurationPaintTests.The_features_summary_sorts_its_duration_columns_by_time  {'Failed': 1}
+    x1: Assert.Equal() Failure: Collections differ at index 0
+Kronikol.Tests.EndToEnd.DurationPaintTests.The_pie_chart_paints_its_rings  {'Failed': 2}
+    x2: Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+Kronikol.Tests.EndToEnd.DurationPaintTests.The_timeline_paints_each_bar_at_its_share_of_the_longest  {'Failed': 2}
+    x2: Assert.InRange() Failure: Value not in range

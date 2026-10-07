@@ -19,4 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Spanner\Kronikol.Extensions.Spanner.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\CultureRun.cs" Link="CultureRun.cs" />
+  </ItemGroup>
 </Project>

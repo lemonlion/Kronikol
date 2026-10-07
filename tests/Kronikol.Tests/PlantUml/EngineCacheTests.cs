@@ -95,13 +95,26 @@ public sealed class EngineCacheTests : IDisposable
         Assert.Contains(Sri(Engine), e.Message);
         Assert.Contains(Sri(Wrong), e.Message);
         Assert.Contains(_dir, e.Message);
-        Assert.Contains($"{Wrong.Length:N0} bytes", e.Message);
+        Assert.Contains($"({Wrong.Length} bytes)", e.Message);
         // Both remedies of plan §3.3 item 3: a proxy to look for, and the directory to delete.
         Assert.Contains("proxy", e.Message);
         Assert.Contains($"delete {_dir}", e.Message);
         Assert.Equal(2, calls[Base + "/plantuml.js"]);
         Assert.False(File.Exists(PathOf("plantuml.js")));
         Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
+    }
+
+    [Theory]
+    [MemberData(nameof(CultureRun.Data), MemberType = typeof(CultureRun))]
+    public void The_refusal_counts_the_bytes_with_commas_between_thousands_on_every_machine(string culture)
+    {
+        // The message is English: under a culture that writes 1.234.567 it read as a little over one byte.
+        var portal = new byte[1_234_567];
+
+        var e = CultureRun.Under(culture, () => Assert.Throws<InvalidOperationException>(() =>
+            Cache(url => url.EndsWith("/plantuml.js", StringComparison.Ordinal) ? portal : Viz).EnsureFiles()));
+
+        Assert.Contains("(1,234,567 bytes)", e.Message);
     }
 
     [Fact]

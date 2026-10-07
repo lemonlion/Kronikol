@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 
 namespace Kronikol.PlantUml;
@@ -133,10 +134,11 @@ internal sealed class EngineCache(string directory, Func<string, byte[]> downloa
             }
         }
 
-        throw new InvalidOperationException(
+        // The count with commas between thousands on every machine: the sentence is English.
+        throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture,
             $"The PlantUML engine file {url} does not match its known hash, twice: expected {expected}, got {actual} " +
             $"({bytes.Length:N0} bytes). Something between this machine and the CDN may be rewriting JavaScript (a proxy, " +
-            $"a captive portal); check for one, or delete {directory} to force a fresh download.");
+            $"a captive portal); check for one, or delete {directory} to force a fresh download."));
     }
 
     private void Install(string target, string file, byte[] bytes, string expected)
