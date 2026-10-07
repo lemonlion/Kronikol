@@ -79,7 +79,7 @@ internal static class VerbTable
         new("--failed", null, "Only what failed."),
         new("--errors-only", null, "Only calls whose response was an error."),
         new("--headers", null, "Print the call's headers."),
-        new("--body", "[s3/i47]", "On http: print the whole payload. On diff between two runs: the call whose bodies to compare, resolved in the old run."),
+        new("--body", "[s3/i47]", "On http: print the whole payload. On diff between two runs: the call whose bodies to compare, resolved in the old run and paired in the new by its service, method and URI."),
         new("--keys", null, "The body's shape - keys and array lengths - without its values."),
         new("--values", null, "On grep: say where in each matching body the value sits, as a --path an agent can pull."),
         new("--group", null, "On interactions: fold consecutive identical calls into one row with a range address."),
@@ -250,7 +250,8 @@ internal static class VerbTable
             ["--baseline", "--baseline-run", "--body", "--count", "--offset", "--limit", "--json"], Json: true,
             [
                 "  diff         <report> s3/i47 s7/i47          two bodies in one report — only the differing paths (also b:hashes)",
-                "  diff         <old.json> <new.json> [--body s3/i47]   two runs matched on stableId; --body diffs one call across them",
+                "  diff         <old.json> <new.json> [--body s3/i47]   two runs matched on stableId; --body diffs one call across them,",
+                "                                                 paired by service, method and URI (refused, exit 2, when none pairs)",
                 "  diff         <report> --baseline               the same, against last-green: <reports>/baseline/TestRunReport.json,",
                 "                                                 else $KRONIKOL_BASELINE (a report, or a directory holding one)",
                 "  diff         <report> --baseline-run ID        the same, against a run kept under <reports>/runs/: last-failed, previous,",
@@ -311,6 +312,6 @@ internal static class VerbTable
     [
         (0, "Answered."),
         (1, "The report could not be read: not a file, not valid JSON, not a Kronikol report, a format this build does not understand, or replaced by a finishing run while it was being read (run the command again)."),
-        (2, "Bad usage: an unknown verb, a malformed or out-of-range address, a flag the verb does not read, a directory holding several reports.")
+        (2, "Bad usage: an unknown verb, a malformed or out-of-range address, a flag the verb does not read, a directory holding several reports; or a pair of runs, or a call, that diff cannot match.")
     ];
 }

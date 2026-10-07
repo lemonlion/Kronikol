@@ -53,7 +53,7 @@ internal sealed class QueryOptions
     public string? GroupBy { get; private set; }
     public string? Tolerance { get; private set; }
 
-    /// <summary>The body address a cross-run <c>diff --body s3/i47</c> names (distinct from the bare <c>--body</c> bool).</summary>
+    /// <summary>The call a cross-run <c>diff --body s3/i47</c> names, resolved in the old report (distinct from the bare <c>--body</c> bool). Only <c>diff</c> gives the flag a value.</summary>
     public string? BodyAddress { get; private set; }
 
     public bool Failed { get; private set; }
@@ -186,8 +186,12 @@ internal sealed class QueryOptions
     /// </summary>
     public bool Describe { get; set; }
 
-    /// <summary>Null when a flag was malformed; the message has already been written to <paramref name="error"/>.</summary>
-    public static QueryOptions? Parse(IReadOnlyList<string> args, TextWriter error)
+    /// <summary>
+    /// Null when a flag was malformed; the message has already been written to <paramref name="error"/>.
+    /// <paramref name="verb"/> is the verb the arguments are for, which decides one thing here: only
+    /// <c>diff</c> gives <c>--body</c> a value.
+    /// </summary>
+    public static QueryOptions? Parse(IReadOnlyList<string> args, TextWriter error, string? verb = null)
     {
         var options = new QueryOptions();
 
@@ -290,14 +294,26 @@ internal sealed class QueryOptions
                     // s0/1` printed a full unfiltered run diff at exit 0 and never mentioned the request
                     // it had been asked about. That is the silence the per-verb flag validator exists to
                     // remove, arriving through a flag's VALUE instead of through its name.
-                    if (i + 1 < args.Count && !args[i + 1].StartsWith("--", StringComparison.Ordinal))
+                    //
+                    // The value is diff's alone. Without the verb, `http r.json --body s0/i0` gave the address to
+                    // a value nothing on http reads and answered "Which interaction?", and `http r.json s0/i0
+                    // --body s0/i1` printed the call without the body asked for.
+                    if (verb is "diff" && i + 1 < args.Count && !args[i + 1].StartsWith("--", StringComparison.Ordinal))
                     {
                         var given = args[++i];
-                        if (!Address.TryParse(given, out var bodyAddress)
-                            || bodyAddress.Kind is not (AddressKind.Interaction or AddressKind.Body))
+                        var parsed = Address.TryParse(given, out var bodyAddress);
+                        if (parsed && bodyAddress.Kind == AddressKind.Body)
                         {
-                            error.WriteLine($"--body {given}: not a call or body address.");
-                            error.WriteLine("Give it s3/i47 (a call) or b:4bdea521 (a body), or pass --body on its own to print the payload.");
+                            // Offered by this very message until 4.6.1, and refused by the only reader of the value.
+                            error.WriteLine($"--body {given}: a body hash names bytes, not a call, so it cannot be followed into another run.");
+                            error.WriteLine($"Two bodies are compared in one report: kronikol query diff <report> {given} b:<other>.");
+                            return null;
+                        }
+
+                        if (!parsed || bodyAddress.Kind != AddressKind.Interaction)
+                        {
+                            error.WriteLine($"--body {given}: not a call address.");
+                            error.WriteLine("Give it the call to compare across the two runs, like s3/i47: an address the old report lists.");
                             return null;
                         }
 

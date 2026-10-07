@@ -594,30 +594,6 @@ public static partial class QueryCommand
         return 0;
     }
 
-    private static InteractionEntry? FindResponse(ScenarioEntry scenario, InteractionEntry request)
-    {
-        // The report carries the exact pairing key — requestResponseId, the same identity the diagram
-        // pipeline groups on. Under interleaved parallel calls to one service the old proximity scan
-        // attached the wrong response; the scan survives only for entries that carry no id.
-        if (request.RequestResponseId is { } id)
-        {
-            foreach (var candidate in scenario.Interactions)
-                if (candidate.Type.Equals("Response", StringComparison.OrdinalIgnoreCase)
-                    && candidate.RequestResponseId == id)
-                    return candidate;
-            return null;
-        }
-
-        for (var i = request.Ordinal + 1; i < scenario.Interactions.Count && i <= request.Ordinal + 4; i++)
-        {
-            var candidate = scenario.Interactions[i];
-            if (candidate.Type.Equals("Response", StringComparison.OrdinalIgnoreCase)
-                && candidate.ServiceName == request.ServiceName)
-                return candidate;
-        }
-        return null;
-    }
-
     private static bool TryScenario(ReportIndex index, QueryOptions options, TextWriter error, out ScenarioEntry scenario) =>
         TryScenario(index, options, error, out scenario, out _);
 

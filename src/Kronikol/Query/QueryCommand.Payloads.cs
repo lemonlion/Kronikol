@@ -235,6 +235,14 @@ public static partial class QueryCommand
             return 2;
         }
 
+        // One call per answer. A second address was dropped at exit 0, and an answer about the first read as
+        // the answer about both.
+        if (options.Positional.Count > 1)
+        {
+            error.WriteLine($"http describes one call; {options.Positional[1]} would be ignored, so it is refused. Ask for each call on its own.");
+            return 2;
+        }
+
         // A content address is a legitimate thing to be holding: it is what every listing prints beside a
         // call, and it is the only address a `grep` hit carries. Being told "that is the wrong kind of
         // address" by the command whose whole job is to describe the call is a dead end with the answer

@@ -125,6 +125,21 @@ public class BaselineDiffTests : IDisposable
         Assert.Contains("- " + Path.Combine("baseline", "TestRunReport.json"), output);
     }
 
+    [Fact]
+    public void A_body_across_the_baseline_labels_the_two_sides_apart()
+    {
+        // The body form labelled each side with its file name, and both are TestRunReport.json.
+        var current = WriteReport(_directory, "TestRunReport.json", "Passed", body: "{\"v\":2}");
+        WriteReport(Path.Combine(_directory, "baseline"), "TestRunReport.json", "Passed", body: "{\"v\":1}");
+
+        var (output, error, exit) = Run(current, "--baseline", "--body", "s0/i0");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("- " + Path.Combine("baseline", "TestRunReport.json") + " s0/i0", output);
+        Assert.Contains("+ TestRunReport.json s0/i0", output);
+        Assert.Contains("$.v: 1 → 2", output);
+    }
+
     // ─── What must not change ──────────────────────────────────
 
     [Fact]
@@ -243,15 +258,21 @@ public class BaselineDiffTests : IDisposable
         return (output.ToString(), error.ToString(), exit);
     }
 
-    /// <summary>One scenario, one stableId, one result - enough for the diff to have an opinion.</summary>
-    private static string WriteReport(string directory, string name, string result, string[]? services = null)
+    /// <summary>
+    /// One scenario, one stableId, one result - enough for the diff to have an opinion. A <paramref name="body"/>
+    /// is one call to OrdersApi whose request carries it.
+    /// </summary>
+    private static string WriteReport(string directory, string name, string result, string[]? services = null, string? body = null)
     {
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, name);
         var interactions = string.Join(",\n                      ", (services ?? [])
             .Select(service => $$"""
                 { "type": "Request", "method": "GET", "uri": "https://{{service}}/x", "serviceName": "{{service}}", "callerName": "Test", "headers": [] }
-                """));
+                """)
+            .Concat(body is null ? [] : [$$"""
+                { "type": "Request", "method": "POST", "uri": "https://OrdersApi/orders", "serviceName": "OrdersApi", "callerName": "Test", "headers": [], "content": {{System.Text.Json.JsonSerializer.Serialize(body)}}, "requestResponseId": "{{Guid.NewGuid()}}" }
+                """]));
         File.WriteAllText(path, $$"""
             {
               "kronikolVersion": "3.1.0",

@@ -234,6 +234,18 @@ matters.
   - `! N scenarios share a stableId` (`diff`) — a `[Theory]` with repeated data, the same `Examples:` row
     in two blocks, or a retry. Those scenarios are **matched in order**, not by identity, so a change in
     how many times a row runs re-pairs every one of them and the rows either side may be misattributed.
+  - `! s4 is the 2nd of 2 scenarios with sid:… in old.json; new.json has 1, compared with its first`
+    (`diff --body`) — the test ran fewer times in the new run (a retry that did not recur, a repeated row
+    that now runs once), so the call is looked for in the first run of it there. Same test, other attempt.
+  - `! no call in new.json s9 has that URI; matched on its shape /orders/{id}
+    (the URIs differ in what looks like an id)` (`diff --body`) — the call's URI carries an id, timestamp or number the run
+    generated, so no call in the new scenario has the same one, and it was paired with the call whose URI
+    differs only there. The `call:` line shows both URIs; if they are not the same endpoint, the pair is wrong.
+  - `! Redis Set /app:x is made 3× in old.json s4 and 3× in new.json s9; this is the 2nd, matched in order`
+    (`diff --body`) — several calls share the service, method and URI, so the n-th is paired with the n-th.
+    Calls made concurrently need not keep their order: if the diff reads like two different payloads, try
+    the others (`interactions <new> s9 --service Redis` lists them). When nothing pairs at all, `diff`
+    exits 2 and lists the calls the new scenario made instead; it never diffs whatever sits at the ordinal.
   - `! a body was capped at capture time` (`diff`) — the comparison covers only the bytes that were kept,
     so "identical" means identical as far as the cap.
   - `! this body was capped at capture time` (`http`, `body`) — the rest was never recorded. It is not

@@ -259,12 +259,14 @@ public static partial class QueryCommand
         writer.Line($"bodies: {leftBodies.Count} vs {rightBodies.Count}, {shared} byte-identical");
 
         // The footer's claim — the first differing call is usually the answer — as an address, not advice.
-        var leftPairs = AllInteractions(index, left).ToList();
-        var rightPairs = AllInteractions(index, right).ToList();
-        for (var i = 0; i < Math.Min(leftPairs.Count, rightPairs.Count); i++)
+        // Each call is compared with the same call in the other scenario, paired as `diff --body` pairs one
+        // across runs: by position, two scenarios whose calls ran in another order had their first two
+        // different calls suggested as the pair to diff.
+        foreach (var (_, leftRequest, leftResponse) in AllInteractions(index, left))
         {
-            var (_, leftRequest, leftResponse) = leftPairs[i];
-            var (_, rightRequest, rightResponse) = rightPairs[i];
+            if (CallPairing.Pair(left, leftRequest, right).Partner is not { } rightRequest)
+                continue;
+            var rightResponse = FindResponse(right, rightRequest);
             if (leftRequest.BodyHash is not null && rightRequest.BodyHash is not null && leftRequest.BodyHash != rightRequest.BodyHash)
             {
                 writer.Line($"first differing body: diff {leftRequest.Address(left)} {rightRequest.Address(right)}");
@@ -488,11 +490,11 @@ public static partial class QueryCommand
         return ReportGate.Refuse(index, resolved, error) is null ? index : null;
     }
 
-    /// <summary>One side's provenance header, prefixed with which side it is.</summary>
-    private static void WriteSideProvenance(ReportIndex index, string side, QueryWriter writer)
+    /// <summary>One side's provenance header, prefixed with which side it is, written where <paramref name="note"/> writes.</summary>
+    private static void WriteSideProvenance(ReportIndex index, string side, Action<string> note)
     {
         foreach (var line in QueryCommand.ProvenanceNotes(index))
-            writer.Note($"! {side}: {line}");
+            note($"! {side}: {line}");
     }
 
     /// <summary>
@@ -581,10 +583,62 @@ public static partial class QueryCommand
             return 2;
         }
 
+        // So does --baseline. Beside a second report it diffed the baseline and dropped the report; beside
+        // two addresses it diffed the bodies and dropped the flag. Both at exit 0.
+        if (options.Baseline && options.Positional.Count > 0)
+        {
+            error.WriteLine($"--baseline names the old side itself; {options.Positional[0]} cannot be given beside it (a body across the two runs is --body s3/i47).");
+            return 2;
+        }
+
         // A first positional that parses as an address is a body diff inside the single report;
-        // otherwise it is the second report of the two-file run diff.
+        // otherwise it is the second report of the two-file run diff. Each form refuses what it does not
+        // read, before a line is written: every flag below is legal for `diff`, so the per-verb check cannot
+        // see that the form chosen would drop it.
         if (options.Positional.Count > 0 && Address.TryParse(options.Positional[0], out _))
+        {
+            if (options.BodyAddress is not null || options.Body)
+            {
+                error.WriteLine("--body names a call to compare across two runs (diff <old.json> <new.json> --body s3/i47), so beside two addresses in one report it is refused rather than ignored.");
+                return 2;
+            }
+
+            if (options.Positional.Count > 2)
+            {
+                error.WriteLine($"diff compares two bodies; {options.Positional[2]} would be ignored, so it is refused. Compare it with one of them in a call of its own.");
+                return 2;
+            }
+
             return BodyDiff(given, options, writer, error);
+        }
+
+        // Two runs, compared whole or for one call. A third positional is dropped by both.
+        if (options.Positional.Count > 1)
+        {
+            var extra = options.Positional[1];
+            error.WriteLine(Address.TryParse(extra, out var mistaken) && mistaken.Kind == AddressKind.Interaction && options.BodyAddress is null
+                ? $"diff compares two reports, or two bodies in one report; {extra} beside two reports would be ignored, so it is refused. One call across the two runs is: {QueryOptions.Shell(["kronikol", "query", "diff", options.File!, options.Positional[0], "--body", extra])}"
+                : $"diff compares two reports; {extra} would be ignored, so it is refused.");
+            return 2;
+        }
+
+        if (options.BodyAddress is null)
+        {
+            if (options.Body)
+            {
+                error.WriteLine("--body names the call to compare across the two runs: --body s3/i47, an address the old report lists. On its own it would be ignored, so it is refused.");
+                return 2;
+            }
+
+            // The run diff prints every section at once, cut for the terminal; --json is the uncut list.
+            // Paging rows that render under five headings is a feature, not a fix (plans/DIFF_BODY_CALL_PAIRING_PLAN.md Q9).
+            if (options.Given.FirstOrDefault(flag => flag is "--offset" or "--limit") is { } paging)
+            {
+                error.WriteLine($"The run diff does not read {paging}, so it is refused rather than ignored: it prints every change at once, and --json lists every row uncut.");
+                error.WriteLine("--offset and --limit page a body diff: diff <old.json> <new.json> --body s3/i47.");
+                return 2;
+            }
+        }
 
         ReportIndex left, right;
         if (options.BaselineRun is { } wantedRun)
@@ -636,16 +690,21 @@ public static partial class QueryCommand
         // with two reports in scope does not say which one it is about. The side is the whole point: a
         // defaulted verdict on the NEW run turns a scenario that died mid-run into `Fixed`, and the same
         // diagnostic on the OLD run means the opposite. `WriteProvenance` returns early for this verb so
-        // that these can be written once both sides are resolved and can be named.
-        WriteSideProvenance(left, "old", writer);
-        WriteSideProvenance(right, "new", writer);
+        // that these can be written once both sides are resolved and can be named. Under --count they go
+        // to stderr, as every verb's do: the answer is one token.
+        var note = NoteSink(options, writer, error);
+        WriteSideProvenance(left, "old", note);
+        WriteSideProvenance(right, "new", note);
 
         // Under --baseline both files are usually called TestRunReport.json, so a bare file name would
         // label the two sides identically.
         var (leftLabel, rightLabel) = DiffLabels(left.Path, right.Path);
-        writer.Line($"- {leftLabel}  {left.StartTime}  {left.Scenarios.Count} scenarios, {left.Scenarios.Count(s => s.Failed)} failed");
-        writer.Line($"+ {rightLabel}  {right.StartTime}  {right.Scenarios.Count} scenarios, {right.Scenarios.Count(s => s.Failed)} failed");
-        writer.Line();
+        if (!options.Count)
+        {
+            writer.Line($"- {leftLabel}  {left.StartTime}  {left.Scenarios.Count} scenarios, {left.Scenarios.Count(s => s.Failed)} failed");
+            writer.Line($"+ {rightLabel}  {right.StartTime}  {right.Scenarios.Count} scenarios, {right.Scenarios.Count(s => s.Failed)} failed");
+            writer.Line();
+        }
 
         // A report older than 3.0.47 carries no stableId at all, so every scenario lands in the
         // empty-string group. That is not a collision - it is a file with no cross-run identity, and
@@ -653,13 +712,13 @@ public static partial class QueryCommand
         // retries)" about the whole file would be alarming and untrue.
         var unidentified = before.Values.Concat(after.Values).Where(group => group[0].StableId.Length == 0).Sum(group => group.Count);
         if (unidentified > 0)
-            writer.Note("! this report has no stableIds (written before 3.0.47) — scenarios matched by position");
+            note("! this report has no stableIds (written before 3.0.47) — scenarios matched by position");
 
         var repeated = before.Values.Concat(after.Values)
             .Where(group => group.Count > 1 && group[0].StableId.Length > 0)
             .Sum(group => group.Count);
         if (repeated > 0)
-            writer.Note($"! {repeated} scenarios share a stableId (repeated rows or retries) — matched in order");
+            note($"! {repeated} scenarios share a stableId (repeated rows or retries) — matched in order");
 
         // Records, not pre-rendered strings. The text below renders them back byte for byte; a
         // string is the one thing `items` cannot make structure out of, and these six sections are
@@ -717,6 +776,21 @@ public static partial class QueryCommand
                 $"  {QueryWriter.OneLine(scenario.Name, 80)}"))
             .ToList();
 
+        var leftCarries = ReportScanner.CarriesInteractions(left);
+        var rightCarries = ReportScanner.CarriesInteractions(right);
+
+        // How many changes: the rows `items` holds, the same number --json gives as its length. The flag
+        // was declared for this verb and read only by the body forms, so the whole run diff came back.
+        if (options.Count)
+        {
+            if (!leftCarries)
+                note("! old: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared");
+            if (!rightCarries)
+                note("! new: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared");
+            writer.Count(broke.Count + fixedUp.Count + fresh.Count + slower.Count + goneRows.Count);
+            return 0;
+        }
+
         Section("Broken", broke);
         Section("Fixed", fixedUp);
         Section("New", fresh);
@@ -726,6 +800,9 @@ public static partial class QueryCommand
             writer.Line($"Gone ({goneRows.Count}):");
             foreach (var row in goneRows.Take(10))
                 writer.Line(row.Text);
+            // Cut at ten with nothing said but the count in the heading.
+            if (goneRows.Count > 10)
+                writer.Line($"  … {goneRows.Count - 10} more (--json lists every row)");
             writer.Line();
         }
 
@@ -735,12 +812,10 @@ public static partial class QueryCommand
         // more than last time needs no warning - and only over the scenarios both runs hold. A side
         // that cannot carry traffic at all is said, and left out of the comparison rather than read as
         // a run that lost all of it.
-        var leftCarries = ReportScanner.CarriesInteractions(left);
-        var rightCarries = ReportScanner.CarriesInteractions(right);
         if (!leftCarries)
-            writer.Note("! old: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared");
+            note("! old: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared");
         if (!rightCarries)
-            writer.Note("! new: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared");
+            note("! new: a mergeable file written before 3.1.0 carries no interactions — tracked calls not compared");
         var trackingRows = leftCarries && rightCarries ? TrackingLosses(matched, gone, freshScenarios) : [];
         if (trackingRows.Count > 0)
         {
@@ -748,12 +823,12 @@ public static partial class QueryCommand
             foreach (var row in trackingRows.Take(10))
                 writer.Line("  " + row);
             if (trackingRows.Count > 10)
-                writer.Line($"  … and {trackingRows.Count - 10} more");
+                writer.Line($"  … and {trackingRows.Count - 10} more (--json lists every row)");
             writer.Line();
         }
 
         if (broke.Count == 0 && fixedUp.Count == 0 && fresh.Count == 0 && slower.Count == 0 && goneRows.Count == 0 && trackingRows.Count == 0)
-            writer.Note(leftCarries && rightCarries
+            note(leftCarries && rightCarries
                 ? "no change in results, timings or tracked calls"
                 : "no change in results or timings");
 
@@ -787,7 +862,7 @@ public static partial class QueryCommand
             foreach (var row in rows.Take(15))
                 writer.Line(row.Text);
             if (rows.Count > 15)
-                writer.Line($"  … {rows.Count - 15} more");
+                writer.Line($"  … {rows.Count - 15} more (--json lists every row)");
             writer.Line();
         }
     }

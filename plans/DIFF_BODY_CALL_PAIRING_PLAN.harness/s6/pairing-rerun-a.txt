@@ -1,0 +1,71 @@
+old: C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/ab901813-9a7c-410e-bc3b-5345a77b5c52/scratchpad/bp-runs/xunit-4.0.2-a.json
+     4.0.2+e3093c36731b87e716c5421c245288c13ff0b365 2026-10-06T07:38:17Z 212 scenarios
+new: C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/ab901813-9a7c-410e-bc3b-5345a77b5c52/scratchpad/bp-runs/xunit-4.0.2-b.json
+     4.0.2+e3093c36731b87e716c5421c245288c13ff0b365 2026-10-06T07:41:15Z 212 scenarios
+  addresses with a body                                                       1518
+  bug: ...and that different call carries a body (a confident wrong diff)     12
+  bug: ...and that different call has no body (refused as 'carries no body')  1
+  bug: ordinal diffs a different call, key finds the call                     13
+  call rule (path key, via the request): nothing pairs                        96
+  design: exact                                                               1422
+  design: finds the call where ordinal took a different one                   13
+  design: refused                                                             2
+  design: shape                                                               94
+  entries with no stepPath                                                    1492
+  key: fewer calls with the key                                               2
+  key: n-th of several                                                        252
+  key: no call with the key                                                   94
+  key: pairs a different index than ordinal                                   13
+  key: unique                                                                 1170
+  key refuses; ordinal partner has the same shape                             94
+  ordinal: a different call                                                   13
+  ordinal: out of range                                                       2
+  ordinal: same key                                                           1409
+  ordinal: same shape, different URI                                          94
+  path key: no call (or too few) with the key                                 96
+  scenario: matched                                                           212
+  scenario: same call sequence (exact keys)                                   163
+  scenario: same calls, reordered                                             5
+  scenario: same shapes, reordered                                            5
+  shape fallback: agrees with ordinal                                         94
+  shape fallback: n-th of several                                             46
+  shape fallback: nothing                                                     2
+  shape fallback: unique                                                      48
+  step key: a path-key tie that the stepPath makes unique                     1
+  tie (other): n-th of several                                                55
+  tie (statement): n-th of several                                            197
+  tie (statement): the key holds different statements                         9
+examples (refused):
+    s10/i47 (new s10) response Breakfast Provider GET /audit-logs?entityId=c2db8074-5c87-4bc3-a867-cbcd74c185ef
+      new i47: /audit-logs?entityId=7d1ae87f-3ae6-49b5-8430-7846cc0fc32b
+    s13/i3 (new s13) response Breakfast Provider GET /audit-logs?entityType=NonExistent_7458616416948518793
+      new i3: /audit-logs?entityType=NonExistent_2660247214825557518
+    s18/i7 (new s18) response Breakfast Provider GET /chef-notes/recipe/Recipe-f71841749c9745c2a6d4f604fbc2230e
+      new i7: /chef-notes/recipe/Recipe-918f38ce1edd4680bf92c9d666b74f52
+    s19/i3 (new s19) response Breakfast Provider GET /chef-notes/dbae1eb7-e05e-4310-8b4a-24fae2460c5f
+      new i3: /chef-notes/7a1410e8-64fb-44ae-828d-e1361ba28d4a
+    s20/i7 (new s20) response Breakfast Provider GET /chef-notes/3c0f5a45-ea44-42b1-9ad4-8c877fb45ad9
+      new i7: /chef-notes/1e2f984b-7ff4-40a7-9250-6343435a82d5
+examples (statements):
+    s39/i2 (new s39) response ClickHouse  clickhouse:/// (3 share the key, 3 statements)
+    s39/i6 (new s39) response ClickHouse  clickhouse:/// (3 share the key, 3 statements)
+    s39/i10 (new s39) response ClickHouse  clickhouse:/// (3 share the key, 3 statements)
+    s40/i2 (new s40) response ClickHouse  clickhouse:/// (2 share the key, 2 statements)
+    s40/i6 (new s40) response ClickHouse  clickhouse:/// (2 share the key, 2 statements)
+examples (moved):
+    s58/i4 (new s58) response Goat Service GET /health -> i6
+    s58/i6 (new s58) response Kitchen Service GET /health -> i4
+    s59/i3 (new s59) response Kitchen Service GET /health -> i4
+    s59/i4 (new s59) response Goat Service GET /health -> i3
+    s60/i5 (new s60) response Supplier Service GET /health -> i7
+examples (wrong diff):
+    s58/i4 (new s58) response Goat Service GET /health
+      ordinal partner i4: response Kitchen Service GET /health
+    s58/i6 (new s58) response Kitchen Service GET /health
+      ordinal partner i6: response Goat Service GET /health
+    s59/i3 (new s59) response Kitchen Service GET /health
+      ordinal partner i3: response Goat Service GET /health
+    s59/i4 (new s59) response Goat Service GET /health
+      ordinal partner i4: response Kitchen Service GET /health
+    s60/i5 (new s60) response Supplier Service GET /health
+      ordinal partner i5: response Cow Service GET /health

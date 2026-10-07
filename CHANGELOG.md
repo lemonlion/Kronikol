@@ -4,6 +4,58 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.6.1] - 2026-10-07
+
+**Patch - `kronikol query diff --body` pairs a call across two runs by what it is (#115).**
+`plans/DIFF_BODY_CALL_PAIRING_PLAN.md`, with every open question taken as recommended (`plans/ROADMAP.md` D36). Bug
+fixes on one code path, with nothing new for a consumer to call, so the patch part moves (4.6.0 to 4.6.1). Some
+answers change, as a fix must: a call 4.6.0 diffed against another call is now diffed against itself or refused with
+exit 2, and a flag or a positional `diff` dropped is refused. The `--json` answer of `diff <old> <new> --body` gains
+`left`, `right` and `pairing`, which name the two calls it compared, as the run diff's `left` and `right` name its two
+reports. Report output is unchanged, so Kronikol4J's ledger gets no line. The history action's `VERSION` installs
+`Kronikol.Tool` 4.6.1, and the templates pin 4.6.0.
+
+### Fixed
+
+- **`diff <old> <new> --body ADDR` pairs the call by what it is, not by its position** (#115). It found the scenario by
+  `stableId` and then took the interaction with the same ordinal, so where a service makes its calls concurrently, and
+  their order changes from run to run, it compared two different calls and exited 0. Measured on two runs of one
+  BreakfastProvider commit, 13 of 1,518 addresses, among them a health check whose responses from two services were
+  reported `byte-identical`, which hides a change as easily as it invents one; across an upgrade, 41 of 1,096. The call
+  is now the one with the same service, method and path and query (not the host and port, which a container runtime
+  picks per run), the n-th of several for the n-th, said in a note; a response is paired through the request it
+  answers, so a request and its response always pair with the two halves of one call. When no call has that URI, the
+  one whose URI differs only in what looks like an id, a timestamp or a number, as the history fingerprint templates
+  it, said in a note: on the measured runs, 94 addresses whose URI carried an id the test generated. **When no call
+  pairs, the diff exits 2** and lists the calls the new scenario makes to that service, where 4.6.0 diffed whatever sat
+  at the ordinal. The `+` label carries the paired call's own address, and a `call:` line names the call. On both
+  measured pairs of runs the built tool pairs all 2,614 addresses as the rule does, and differs from 4.6.0 on exactly
+  the wrong pairs.
+- Both body-diff forms print the provenance notes every other verb prints (`! old: report predates step attribution…`
+  across two runs, unprefixed in one report); they printed none. Under `--count` they go to stderr.
+- Under `--baseline` and `--baseline-run`, the two sides of `--body` are labelled apart by their directories, where both
+  read `TestRunReport.json`.
+- `--body` refuses a pair of reports the run diff refuses (ids computed under different suites, one side without
+  `stableId`s) with the run diff's reason, and "carries no body" names the file it is about.
+- `--body` says when the new run holds a test fewer times than the old one did (a retry that did not recur), and the
+  call is looked for in its first run there; it took the first one without a word.
+- `--body` across two reports without `stableId`s pairs the scenario by position, as the run diff does, where it
+  refused with an empty `sid:`.
+- `diff <old> <new> --count` prints the number of changes the run diff lists, the length of its `--json` `items`; it
+  printed the whole run diff.
+- The run diff's cut sections say `--json` lists every row, and `Gone`, cut at ten rows with nothing said, says so too.
+- `compare`'s "first differing body" compares each call with the same call in the other scenario, paired the same way;
+  by position it could suggest diffing two different calls.
+- **`diff` refuses, with exit 2, a flag or a positional the form it chose does not read**, where it dropped them at exit
+  0. `diff old.json new.json s3/i47`, #115's question with `--body` forgotten, printed the whole run diff, and now names
+  `diff old.json new.json --body s3/i47`; a third report or address, `--baseline` or `--body` beside two addresses, a
+  second report beside `--baseline`, a bare `--body` beside two reports, and `--offset` or `--limit` on the run diff were
+  all ignored.
+- `--body` takes a value only for `diff`: `http report.json --body s3/i47` prints the body, where it answered "Which
+  interaction?", and `http` refuses a second address, which it ignored. A `b:` value for `diff --body` is refused with
+  the reason (a hash names bytes, not a call); the hint no longer offers it.
+- Exit code 2's description (`--describe`, `--help`) names a pair of runs, or a call, that `diff` cannot match.
+
 ## [4.6.0] - 2026-10-05
 
 **Minor - history and report diagnostics leave the default report, for a labs page beside it.**

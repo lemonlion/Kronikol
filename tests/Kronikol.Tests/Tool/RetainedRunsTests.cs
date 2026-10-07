@@ -33,23 +33,23 @@ public class RetainedRunsTests : IDisposable
         return (output.ToString(), error.ToString(), exit);
     }
 
-    private static string Report(string pay, string runId, bool attachment = false) => $$"""
+    private static string Report(string pay, string runId, bool attachment = false, string? body = null) => $$"""
         {
           "kronikolVersion": "3.9.0", "formatVersion": 1, "suite": "Suite",
           "startTime": "2026-09-12T10:00:00Z", "endTime": "2026-09-12T10:05:00Z",
           "ciMetadata": { "provider": "GitHubActions", "buildNumber": "42", "branch": "main", "commitSha": "abc1234", "pipelineUrl": null, "repository": "o/r", "runId": "{{runId}}", "runAttempt": "1" },
           "features": [ { "name": "Checkout", "labels": [], "scenarios": [
-            { "id": "t0", "stableId": "{{PayId}}", "name": "Pay by card", "result": "{{pay}}", "durationSeconds": 0.1, "errorMessage": {{(pay == "Failed" ? "\"Expected 200 but got 500\"" : "null")}}, "labels": [], "categories": [], "steps": [], "httpInteractions": [],
+            { "id": "t0", "stableId": "{{PayId}}", "name": "Pay by card", "result": "{{pay}}", "durationSeconds": 0.1, "errorMessage": {{(pay == "Failed" ? "\"Expected 200 but got 500\"" : "null")}}, "labels": [], "categories": [], "steps": [], "httpInteractions": [{{(body is null ? "" : $$"""{ "type": "Request", "method": "POST", "uri": "https://pay/charge", "serviceName": "pay", "callerName": "test", "headers": [], "content": {{System.Text.Json.JsonSerializer.Serialize(body)}}, "requestResponseId": "{{Guid.NewGuid()}}" }""")}}],
               "attachments": [ {{(attachment ? "{ \"name\": \"checkout.png\", \"relativePath\": \"attachments/checkout.png\", \"mediaType\": \"image/png\" }" : "")}} ] },
             { "id": "t1", "stableId": "{{RefundId}}", "name": "Refund an order", "result": "Passed", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] } ] } ]
         }
         """;
 
     /// <summary>One run's files in <paramref name="directory"/>: the report, its manifest, and - for a run that kept them - its fragment and an attachment.</summary>
-    private static void WriteRun(string directory, string runId, string pay, DateTimeOffset at, bool withFragmentAndAttachment = false)
+    private static void WriteRun(string directory, string runId, string pay, DateTimeOffset at, bool withFragmentAndAttachment = false, string? body = null)
     {
         Directory.CreateDirectory(directory);
-        File.WriteAllText(Path.Combine(directory, "TestRunReport.json"), Report(pay, runId, withFragmentAndAttachment));
+        File.WriteAllText(Path.Combine(directory, "TestRunReport.json"), Report(pay, runId, withFragmentAndAttachment, body));
         File.WriteAllText(Path.Combine(directory, "TestRunReport.html"), "<html></html>");
         var files = new List<string> { "TestRunReport.json", "TestRunReport.html" };
         var attachments = new List<string>();
@@ -256,6 +256,21 @@ public class RetainedRunsTests : IDisposable
         Assert.Contains("- " + Path.Combine("gh_7_1", "TestRunReport.json"), output);
         Assert.Contains("+ " + Path.Combine("gh_8_1", "TestRunReport.json"), output);
         Assert.Contains("Fixed (1):", output);
+    }
+
+    [Fact]
+    public void Diff_baseline_run_with_a_body_labels_the_two_sides_apart()
+    {
+        // Both files are TestRunReport.json, and the body form labelled each side with its file name alone.
+        WriteRun(Path.Combine(Reports, "runs", "gh_7_1"), "7", "Failed", Noon.AddMinutes(-20), body: "{\"amount\":1}");
+        WriteRun(Reports, "9", "Passed", Noon, body: "{\"amount\":2}");
+
+        var (output, error, exit) = Query("diff", Reports, "--baseline-run", "gh_7_1", "--body", "s0/i0");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("- " + Path.Combine("runs", "gh_7_1", "TestRunReport.json") + " s0/i0", output);
+        Assert.Contains("+ TestRunReport.json s0/i0", output);
+        Assert.Contains("$.amount: 1 → 2", output);
     }
 
     [Fact]

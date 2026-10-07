@@ -1,0 +1,242 @@
+Kronikol.Tool built from main at 37e93813 (4.6.0), run 2026-10-06 against BreakfastProvider's xUnit lane reports.
+Each block: the command, its output, its exit code.
+
+== 1. A wrong pair reported as byte-identical (same-version pair). s58 fans out GET /health to three services at once.
+
+$ kronikol query interactions xunit-4.0.2-a.json s58
+s58/i0    Breakfast Provider GET /health                                                    OK        10 ms  → 1.5 KB b:6e9a2f2d
+s58/i1    Goat Service     GET /health                                                    OK         2 ms  → 20 B b:fd354a40
+s58/i2    Kitchen Service  GET /health                                                    OK         2 ms  → 20 B b:fd354a40
+s58/i3    Supplier Service GET /health                                                    OK         2 ms  → 20 B b:fd354a40
+4 calls
+[exit 0]
+
+$ kronikol query interactions xunit-4.0.2-b.json s58
+s58/i0    Breakfast Provider GET /health                                                    OK         8 ms  → 1.5 KB b:6e9a2f2d
+s58/i1    Goat Service     GET /health                                                    OK         3 ms  → 20 B b:fd354a40
+s58/i2    Supplier Service GET /health                                                    OK         2 ms  → 20 B b:fd354a40
+s58/i3    Kitchen Service  GET /health                                                    OK         2 ms  → 20 B b:fd354a40
+4 calls
+[exit 0]
+
+$ kronikol query diff xunit-4.0.2-a.json xunit-4.0.2-b.json --body s58/i4
+- xunit-4.0.2-a.json s58/i4  b:fd354a40
++ xunit-4.0.2-b.json s58/i4  b:fd354a40
+
+byte-identical
+
+[exit 0]
+
+== 2. The same across an upgrade, and a wrong pair reported as 'carries no body' about an address both files hold.
+
+$ kronikol query diff xunit-3.20.0.json xunit-3.27.0.json --body s59/i3
+- xunit-3.20.0.json s59/i3  b:fd354a40
++ xunit-3.27.0.json s59/i3  b:fd354a40
+
+byte-identical
+
+[exit 0]
+
+$ kronikol query diff xunit-3.20.0.json xunit-3.27.0.json --body s10/i29
+s10/i29 carries no body.
+[exit 2]
+
+$ kronikol query http xunit-3.20.0.json s10/i29
+s10/i29  Response  Caller → Breakfast Provider
+POST http://localhost/orders
+status 500 InternalServerError
+took 3 ms
+answers s10/i28 · 168 B b:2ca100f2
+trace 6f308cd7e3d6a05cd8f2805127cfd0d8 span 1157fa2fc34fbb5d   (W3C — matches your OTel traces and app logs)
+body: 6.7 KB · b:007a0c5d
+--keys to see its shape · --path $.x to pull one value · --body for all of it · --out F to save it
+[exit 0]
+
+$ kronikol query http xunit-3.27.0.json s10/i29
+s10/i29  Request  Breakfast Provider → CosmosDB
+Create https://localhost:9999/orders
+took 1 ms
+response s10/i30 · 1.2 KB b:e27c7695
+category CosmosDB
+body: none
+
+[exit 0]
+
+== 3. Under --baseline both sides carry one label (both files are TestRunReport.json).
+
+$ kronikol query diff TestRunReport.json --baseline --body s58/i4
+- TestRunReport.json s58/i4  b:fd354a40
++ TestRunReport.json s58/i4  b:fd354a40
+
+byte-identical
+
+[exit 0]
+
+== 4. Neither body diff prints the provenance note every other verb prints (a 3.0.44-shaped report).
+
+$ kronikol query interactions unenriched.json s0
+! report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.
+s0/i0     api              GET /x                                                                          body 7 B b:9f89c740
+s0/i1     api              GET /y                                                                          body 7 B b:8b06b16d
+2 calls
+[exit 0]
+
+$ kronikol query diff unenriched.json s0/i0 s0/i1
+- s0/i0  b:9f89c740  7 B
++ s0/i1  b:8b06b16d  7 B
+
+$.a: 1 → 2
+1 paths differ
+[exit 0]
+
+$ kronikol query diff unenriched.json unenriched.json --body s0/i0
+- unenriched.json s0/i0  b:9f89c740
++ unenriched.json s0/i0  b:9f89c740
+
+byte-identical
+
+[exit 0]
+
+== 5. The run diff ignores --count: the whole run diff, exit 0. The cross-run body form counts the wrong pair of section 1.
+
+$ kronikol query diff xunit-4.0.2-a.json xunit-4.0.2-b.json --count
+- xunit-4.0.2-a.json  2026-10-06T07:38:17Z  212 scenarios, 0 failed
++ xunit-4.0.2-b.json  2026-10-06T07:41:15Z  212 scenarios, 0 failed
+
+Tracking (2):
+  total  1325 → 1324 calls  (-1)
+  CosmosDB  199 → 198 calls  (-1)
+
+matched on stableId · compare s3 s7 for two scenarios in one run
+[exit 0]
+
+$ kronikol query diff xunit-4.0.2-a.json xunit-4.0.2-b.json --body s58/i4 --count
+0
+[exit 0]
+
+== 6. compare's 'first differing body' on two health-check scenarios: right here, because the first call is stable.
+
+$ kronikol query compare xunit-4.0.2-a.json s58 s59
+s58 Health check should report degraded when cow service is unav…  [Passed]  0.06s
+s59 Health check should report degraded when multiple downstream…  [Passed]  0.07s
+
+steps: 0 vs 0
+  identical
+calls: 4 vs 3
+    1  - Goat Service GET /health
+       + Kitchen Service GET /health
+    2  - Kitchen Service GET /health
+       + Goat Service GET /health
+    3  - Supplier Service GET /health
+       + (none)
+
+bodies: 2 vs 2, 1 byte-identical
+first differing body: diff s58/i7 s59/i5
+a passing neighbour is the best oracle for a failing scenario — the first differing call is usually the answer
+[exit 0]
+
+== 7. diff ignores what the form it chose does not read. noids.json is unenriched.json without its stableId.
+
+$ kronikol query diff xunit-4.0.2-a.json xunit-4.0.2-b.json s58/i4
+- xunit-4.0.2-a.json  2026-10-06T07:38:17Z  212 scenarios, 0 failed
++ xunit-4.0.2-b.json  2026-10-06T07:41:15Z  212 scenarios, 0 failed
+
+Tracking (2):
+  total  1325 → 1324 calls  (-1)
+  CosmosDB  199 → 198 calls  (-1)
+
+matched on stableId · compare s3 s7 for two scenarios in one run
+[exit 0]
+
+$ kronikol query diff xunit-4.0.2-a.json xunit-4.0.2-b.json xunit-3.20.0.json
+- xunit-4.0.2-a.json  2026-10-06T07:38:17Z  212 scenarios, 0 failed
++ xunit-4.0.2-b.json  2026-10-06T07:41:15Z  212 scenarios, 0 failed
+
+[exit 0]
+
+$ kronikol query diff unenriched.json s0/i0 s0/i1 --body s0/i0
+- s0/i0  b:9f89c740  7 B
++ s0/i1  b:8b06b16d  7 B
+
+$.a: 1 → 2
+1 paths differ
+[exit 0]
+
+$ kronikol query diff unenriched.json s0/i0 s0/i1 --baseline
+- s0/i0  b:9f89c740  7 B
++ s0/i1  b:8b06b16d  7 B
+
+$.a: 1 → 2
+1 paths differ
+[exit 0]
+
+$ kronikol query diff unenriched.json unenriched.json --body
+! old: report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.
+! new: report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.
+- unenriched.json  2026-01-01T10:00:00Z  1 scenarios, 0 failed
++ unenriched.json  2026-01-01T10:00:00Z  1 scenarios, 0 failed
+
+[exit 0]
+
+$ kronikol query diff unenriched.json unenriched.json --body b:9f89c740
+--body takes an interaction address like s3/i47, resolved in the old report.
+[exit 2]
+
+$ kronikol query diff noids.json noids.json
+! old: report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.
+! new: report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.
+- noids.json  2026-01-01T10:00:00Z  1 scenarios, 0 failed
++ noids.json  2026-01-01T10:00:00Z  1 scenarios, 0 failed
+
+! this report has no stableIds (written before 3.0.47) — scenarios matched by position
+no change in results, timings or tracked calls
+matched on stableId · compare s3 s7 for two scenarios in one run
+[exit 0]
+
+$ kronikol query diff noids.json noids.json --body s0/i0
+No scenario in noids.json with stableId sid: (Checkout).
+[exit 2]
+
+== 8. The run diff ignores --limit and --offset: the same text, and 25 JSON items either way.
+
+$ kronikol query diff xunit-3.20.0.json xunit-3.27.0.json  --json | items, total, next
+25 None None
+
+$ kronikol query diff xunit-3.20.0.json xunit-3.27.0.json --limit 1 --json | items, total, next
+25 None None
+
+$ kronikol query diff xunit-3.20.0.json xunit-3.27.0.json --offset 5 --limit 1 --json | items, total, next
+25 None None
+
+$ kronikol query diff xunit-3.20.0.json xunit-3.27.0.json --limit 1   (text: identical to the run without it)
+identical
+
+== 9. --body's value form reaches http, which never reads it.
+
+$ kronikol query http unenriched.json --body s0/i0
+Which interaction? Pass an address like s3/i47 — 'interactions s3' lists them.
+[exit 2]
+
+$ kronikol query http unenriched.json s0/i0 --body s0/i1
+! report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.
+s0/i0  Request  test → api
+GET http://api/x
+body: 7 B · b:9f89c740
+--keys to see its shape · --path $.x to pull one value · --body for all of it · --out F to save it
+[exit 0]
+
+$ kronikol query http unenriched.json s0/i0 s0/i1
+! report predates step attribution and assertion detail — stepPath, assertion messages and source locations are absent. Re-run the suite on a current Kronikol to get them.
+s0/i0  Request  test → api
+GET http://api/x
+body: 7 B · b:9f89c740
+--keys to see its shape · --path $.x to pull one value · --body for all of it · --out F to save it
+[exit 0]
+
+== 10. Beside --baseline a second report is dropped: the baseline is diffed instead (layout of section 3).
+
+$ kronikol query diff TestRunReport.json ../bp-runs/xunit-3.20.0.json --baseline
+- baseline\TestRunReport.json  2026-10-06T07:38:17Z  212 scenarios, 0 failed
++ TestRunReport.json  2026-10-06T07:41:15Z  212 scenarios, 0 failed
+
+[exit 0]

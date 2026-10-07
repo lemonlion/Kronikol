@@ -111,7 +111,7 @@ public static partial class QueryCommand
         if (VerbTable.Find(command) is null)
             return Unknown(command, error);
 
-        var options = QueryOptions.Parse(args.Skip(1).ToList(), error);
+        var options = QueryOptions.Parse(args.Skip(1).ToList(), error, command);
         if (options is null)
             return 2;
 
@@ -352,9 +352,10 @@ public static partial class QueryCommand
     /// </remarks>
     private static void WriteProvenance(QueryWriter writer, ReportIndex index, string command, QueryOptions options, TextWriter error)
     {
-        // `diff` holds two reports and an unlabelled note would not say which one it is about, so it
-        // writes its own header - named by side - once both are resolved. See Diff in
-        // QueryCommand.Search.cs.
+        // `diff` holds two reports and an unlabelled note would not say which one it is about, so each of
+        // its forms writes its own header: the run diff and a body across two runs name each note's side
+        // once both are resolved (Diff in QueryCommand.Search.cs, CrossRunBodyDiff), and two bodies in one
+        // report write this report's unprefixed (BodyDiff, QueryCommand.Diff.cs).
         if (command is "diff")
             return;
 

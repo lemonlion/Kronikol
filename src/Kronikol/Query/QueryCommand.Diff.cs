@@ -7,11 +7,19 @@ namespace Kronikol.Query;
 /// Structural body diff — the most common debugging move, "this call succeeded in the passing scenario,
 /// what was different in mine?", answered by printing only the paths that differ instead of two whole
 /// payloads. Works inside one report (<c>diff s3/i47 s7/i47</c>, <c>diff b:a b:b</c>) and across two
-/// runs (<c>diff old.json new.json --body s3/i47</c>, matched by stableId).
+/// runs (<c>diff old.json new.json --body s3/i47</c>: the scenario matched by stableId, the call by its
+/// service, method and URI, see <see cref="CallPairing"/>).
 /// </summary>
 public static partial class QueryCommand
 {
     private readonly record struct BodyRef(string Label, string Hash, int Length, string? Content);
+
+    /// <summary>
+    /// Where a note goes: into the answer, or to stderr under <c>--count</c>, whose stdout is one token by
+    /// contract - the rule <see cref="WriteProvenance"/> applies for every other verb.
+    /// </summary>
+    private static Action<string> NoteSink(QueryOptions options, QueryWriter writer, TextWriter error) =>
+        options.Count && !options.Json ? error.WriteLine : writer.Note;
 
     private static int BodyDiff(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
@@ -33,6 +41,13 @@ public static partial class QueryCommand
 
         if (!TryResolveBody(index, first, error, out var left) || !TryResolveBody(index, second, error, out var right))
             return 2;
+
+        // The header every other verb gets from WriteProvenance, which skips `diff` so that the two-report
+        // forms can name the side a note is about. This form holds one report, so it is unprefixed; it used
+        // to print none, so a body diff on a report that predates step attribution said nothing about it.
+        var note = NoteSink(options, writer, error);
+        foreach (var line in ProvenanceNotes(index))
+            note("! " + line);
 
         return EmitBodyDiff(writer, options, error, left, right);
     }
@@ -77,7 +92,13 @@ public static partial class QueryCommand
         }
     }
 
-    /// <summary>Cross-run: the address is resolved in the old report and matched into the new by stableId — ordinals shift between runs, stableId is the cross-run key the run diff already uses.</summary>
+    /// <summary>
+    /// Cross-run: the address is resolved in the old report; the scenario is matched into the new by
+    /// stableId, as the run diff matches it, and the call by what it is - its service, method and URI
+    /// (<see cref="CallPairing"/>) - because ordinals shift between runs for calls as they do for scenarios.
+    /// A call nothing pairs with is refused with exit 2 and the calls the new scenario does make, never
+    /// diffed against whatever sits at its ordinal.
+    /// </summary>
     private static int CrossRunBodyDiff(ReportIndex left, ReportIndex right, string addressText,
         QueryOptions options, QueryWriter writer, TextWriter error)
     {
@@ -87,51 +108,178 @@ public static partial class QueryCommand
             return 2;
         }
 
+        // Under --baseline both files are usually called TestRunReport.json, and a bare file name labelled
+        // the two sides of the body identically.
+        var (leftLabel, rightLabel) = DiffLabels(left.Path, right.Path);
+
         if (left.Scenario(address.Scenario) is not { } oldScenario)
         {
-            error.WriteLine($"No scenario s{address.Scenario} in {Path.GetFileName(left.Path)} — it has {left.Scenarios.Count}.");
+            error.WriteLine($"No scenario s{address.Scenario} in {leftLabel} — it has {left.Scenarios.Count}.");
             return 2;
         }
 
+        // The run diff's refusals first: a pair of runs whose scenarios cannot be matched is refused with its
+        // reason here too, rather than with a stableId the other report happens not to hold.
+        var before = GroupByStableId(left);
+        var after = GroupByStableId(right);
+        if (RefuseUnmatchable(left, right, before, after, error) is { } refusal)
+            return refusal;
+
         // Repeated rows and retries share a stableId; the n-th holder in the old report is matched to the
-        // n-th in the new, falling back to the first when the new run has fewer of them.
-        var position = left.Scenarios.Where(s => s.StableId == oldScenario.StableId).ToList().IndexOf(oldScenario);
-        var candidates = right.Scenarios.Where(s => s.StableId.Length > 0 && s.StableId == oldScenario.StableId).ToList();
-        var match = position >= 0 && position < candidates.Count ? candidates[position] : candidates.FirstOrDefault();
-        if (match is null)
+        // n-th in the new. Reports without stableIds share the empty one, which makes this the match by
+        // position the run diff makes for them.
+        var holders = before[oldScenario.StableId];
+        var position = holders.IndexOf(oldScenario);
+        var candidates = after.GetValueOrDefault(oldScenario.StableId) ?? [];
+        var unidentified = oldScenario.StableId.Length == 0;
+        string? scenarioNote = null;
+        ScenarioEntry match;
+        if (position < candidates.Count)
         {
-            error.WriteLine($"No scenario in {Path.GetFileName(right.Path)} with stableId sid:{oldScenario.StableId} ({QueryWriter.OneLine(oldScenario.Name, 60)}).");
+            match = candidates[position];
+        }
+        else if (candidates.Count == 0)
+        {
+            error.WriteLine($"No scenario in {rightLabel} with stableId sid:{oldScenario.StableId} ({QueryWriter.OneLine(oldScenario.Name, 60)}).");
             return 2;
+        }
+        else if (unidentified)
+        {
+            // By position there is no first-holder fallback: the first scenario of the other report is
+            // another test, not this one run once more.
+            error.WriteLine($"No scenario in {rightLabel} at {oldScenario.Address}'s position: neither report has stableIds, so scenarios are matched by position, and {rightLabel} has {candidates.Count}.");
+            return 2;
+        }
+        else
+        {
+            // The same test, which the new run held fewer times: compared, and said, where it used to be silent.
+            match = candidates[0];
+            scenarioNote = $"! {oldScenario.Address} is the {Nth(position + 1)} of {holders.Count} scenarios with sid:{oldScenario.StableId} in {leftLabel}; {rightLabel} has {candidates.Count}, compared with its first";
         }
 
         var oldInteraction = oldScenario.Interactions.FirstOrDefault(i => i.Ordinal == address.Interaction);
         if (oldInteraction is null)
         {
-            error.WriteLine($"No interaction i{address.Interaction} in {oldScenario.Address} — it has {oldScenario.Interactions.Count}.");
-            return 2;
-        }
-        var newInteraction = match.Interactions.FirstOrDefault(i => i.Ordinal == address.Interaction);
-        if (newInteraction is null)
-        {
-            error.WriteLine($"i{address.Interaction} is out of range — {match.Address} in {Path.GetFileName(right.Path)} has {match.Interactions.Count} interactions.");
+            error.WriteLine($"No interaction i{address.Interaction} in {leftLabel} {oldScenario.Address} — it has {oldScenario.Interactions.Count}.");
             return 2;
         }
 
-        if (oldInteraction.BodyHash is not { } oldHash || newInteraction.BodyHash is not { } newHash)
+        var oldAddress = oldInteraction.Address(oldScenario);
+        if (oldInteraction.BodyHash is not { } oldHash)
         {
-            error.WriteLine($"{(oldInteraction.BodyHash is null ? oldScenario.Address : match.Address)}/i{address.Interaction} carries no body.");
+            error.WriteLine($"{leftLabel} {oldAddress} carries no body — 'interactions {oldScenario.Address}' shows which calls do.");
             return 2;
         }
 
-        var leftRef = new BodyRef($"{Path.GetFileName(left.Path)} {oldScenario.Address}/i{address.Interaction}",
-            oldHash, oldInteraction.BodyLength, PayloadReader.Read(left, oldInteraction.Body));
-        var rightRef = new BodyRef($"{Path.GetFileName(right.Path)} {match.Address}/i{address.Interaction}",
-            newHash, newInteraction.BodyLength, PayloadReader.Read(right, newInteraction.Body));
-        return EmitBodyDiff(writer, options, error, leftRef, rightRef);
+        var pairing = CallPairing.Pair(oldScenario, oldInteraction, match);
+        if (pairing.Partner is not { } newInteraction)
+            return RefuseUnpaired(right, leftLabel, rightLabel, oldScenario, oldInteraction, match, pairing, error);
+
+        var newAddress = newInteraction.Address(match);
+        if (newInteraction.BodyHash is not { } newHash)
+        {
+            error.WriteLine($"{rightLabel} {newAddress} carries no body, so there is nothing to compare {leftLabel} {oldAddress} with.");
+            return 2;
+        }
+
+        // The notes, once the answer is certain: which report each side is, how the scenario and the call
+        // were matched where that was not the plain case.
+        var note = NoteSink(options, writer, error);
+        WriteSideProvenance(left, "old", note);
+        WriteSideProvenance(right, "new", note);
+        if (unidentified)
+            note("! this report has no stableIds (written before 3.0.47) — scenarios matched by position");
+        if (scenarioNote is not null)
+            note(scenarioNote);
+        var keyText = CallPairing.Describe(oldInteraction, pairing.OnShape ? pairing.Shape : pairing.Target);
+        if (pairing.OnShape)
+            note($"! no call in {rightLabel} {match.Address} has that URI; matched on its shape {pairing.Shape} (the URIs differ in what looks like an id)");
+        if (pairing.OldCount > 1 || pairing.NewCount > 1)
+            note($"! {keyText} is made {pairing.OldCount}× in {leftLabel} {oldScenario.Address} and {pairing.NewCount}× in {rightLabel} {match.Address}; this is the {Nth(pairing.Position)}, matched in order");
+
+        writer.Data("left", CallSide(left, oldScenario, oldInteraction));
+        writer.Data("right", CallSide(right, match, newInteraction));
+        writer.Data("pairing", pairing.OnShape
+            ? new { on = "shape", position = pairing.Position, old = pairing.OldCount, @new = pairing.NewCount, shape = pairing.Shape }
+            : new { on = "uri", position = pairing.Position, old = pairing.OldCount, @new = pairing.NewCount });
+
+        // What call this is, so a reader can check the pair: the URI both sides share, or on the shape both.
+        var half = oldInteraction.Type.ToLowerInvariant();
+        var call = pairing.OnShape
+            ? $"call: {CallPairing.Describe(oldInteraction, pairing.Target)} → {CallPairing.Target(pairing.PartnerCall!)}  ({half})"
+            : $"call: {CallPairing.Describe(oldInteraction, pairing.Target)}  ({half})";
+
+        var leftRef = new BodyRef($"{leftLabel} {oldAddress}", oldHash, oldInteraction.BodyLength, PayloadReader.Read(left, oldInteraction.Body));
+        var rightRef = new BodyRef($"{rightLabel} {newAddress}", newHash, newInteraction.BodyLength, PayloadReader.Read(right, newInteraction.Body));
+        return EmitBodyDiff(writer, options, error, leftRef, rightRef, call);
     }
 
+    /// <summary>One side of a call pairing, as <c>--json</c> names it.</summary>
+    private static object CallSide(ReportIndex index, ScenarioEntry scenario, InteractionEntry entry) => new
+    {
+        report = index.Path,
+        address = entry.Address(scenario),
+        half = entry.Type.ToLowerInvariant(),
+        service = entry.ServiceName,
+        method = entry.Method,
+        uri = entry.Uri,
+        bodyHash = entry.BodyHash,
+        bodyLength = entry.BodyLength
+    };
+
+    /// <summary>
+    /// The refusal of a call nothing in the new scenario pairs with, on stderr (the <c>--json</c> envelope's
+    /// <c>message</c> is its first line, its <c>hint</c> the rest): what was looked for, the calls the new
+    /// scenario makes to the same service, and the way to both bodies.
+    /// </summary>
+    private static int RefuseUnpaired(ReportIndex right, string leftLabel, string rightLabel, ScenarioEntry oldScenario,
+        InteractionEntry oldInteraction, ScenarioEntry match, CallPairing.Result pairing, TextWriter error)
+    {
+        var oldAddress = oldInteraction.Address(oldScenario);
+        var call = CallPairing.Describe(oldInteraction, pairing.Target);
+        var head = $"No call in {rightLabel} {match.Address} matches {leftLabel} {oldAddress}, {call}: ";
+        var calls = CallPairing.Describe(oldInteraction, "");
+        error.WriteLine(head + pairing.Reason switch
+        {
+            CallPairing.Refusal.NoResponse =>
+                $"the call it pairs with, {pairing.PartnerCall!.Address(match)}, has no response recorded.",
+            CallPairing.Refusal.Fewer when pairing.OnShape =>
+                $"{match.Address} makes {pairing.NewCount} {calls} calls shaped {pairing.Shape} once those with the same URI are paired; {leftLabel} {oldAddress} is the {Nth(pairing.Position)} of {pairing.OldCount}.",
+            CallPairing.Refusal.Fewer =>
+                $"{match.Address} makes {pairing.NewCount} {call} calls; {leftLabel} {oldAddress} is the {Nth(pairing.Position)} of {pairing.OldCount}.",
+            _ =>
+                $"{match.Address} makes no {calls} call to that URI or to one shaped like it."
+        });
+
+        // The calls it does make: the same service and method, else the same service, else none.
+        var requests = match.Interactions.Where(i => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase)).ToList();
+        var sameMethod = requests.Where(i => i.ServiceName == oldInteraction.ServiceName
+            && string.Equals(i.Method ?? "", oldInteraction.Method ?? "", StringComparison.OrdinalIgnoreCase)).ToList();
+        var sameService = requests.Where(i => i.ServiceName == oldInteraction.ServiceName).ToList();
+        var (listed, noun) = sameMethod.Count > 0 ? (sameMethod, calls) : (sameService, oldInteraction.ServiceName);
+        if (listed.Count == 0)
+        {
+            error.WriteLine($"{match.Address} makes no {oldInteraction.ServiceName} calls.");
+        }
+        else
+        {
+            const int shown = 6;
+            var rows = string.Join(", ", listed.Take(shown).Select(i => $"{i.Address(match)} {QueryWriter.OneLine(CallPairing.Target(i), 80)}"));
+            error.WriteLine($"{match.Address}'s {noun} calls: {rows}" + (listed.Count > shown ? $" ({shown} of {listed.Count})" : ""));
+        }
+
+        error.WriteLine($"`{QueryOptions.Shell(["kronikol", "query", "interactions", right.Path, match.Address, "--service", oldInteraction.ServiceName])}` lists them; "
+            + "`http <report> <address> --body --out FILE` saves either body");
+        return 2;
+    }
+
+    /// <summary>1st, 2nd, 3rd, 4th, 11th, 21st.</summary>
+    private static string Nth(int n) =>
+        n.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        + ((n % 100) is 11 or 12 or 13 ? "th" : (n % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" });
+
     private static int EmitBodyDiff(QueryWriter writer, QueryOptions options, TextWriter error,
-        BodyRef left, BodyRef right)
+        BodyRef left, BodyRef right, string? call = null)
     {
         if (left.Hash == right.Hash)
         {
@@ -143,6 +291,8 @@ public static partial class QueryCommand
             }
             writer.Line($"- {left.Label}  {left.Hash}");
             writer.Line($"+ {right.Label}  {right.Hash}");
+            if (call is not null)
+                writer.Line(call);
             writer.Line();
             writer.Line("byte-identical");
             // No rows to page, so `items` stays empty and this is what says the empty array means
@@ -170,6 +320,8 @@ public static partial class QueryCommand
 
         writer.Line($"- {left.Label}  {left.Hash}  {QueryWriter.Size(Encoding.UTF8.GetByteCount(left.Content))}");
         writer.Line($"+ {right.Label}  {right.Hash}  {QueryWriter.Size(Encoding.UTF8.GetByteCount(right.Content))}");
+        if (call is not null)
+            writer.Line(call);
         if (left.Content.Contains("…truncated (", StringComparison.Ordinal) || right.Content.Contains("…truncated (", StringComparison.Ordinal))
             writer.Note("! a body was capped at capture time — the rest was never recorded, so this diff covers what was");
         writer.Line();

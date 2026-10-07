@@ -34,6 +34,35 @@ public static partial class QueryCommand
     }
 
     /// <summary>
+    /// The response a request got: the exact pairing id when the entry carries one, a short forward scan
+    /// for the same service when it does not. Internal, beside <see cref="FindRequest"/>, because the call
+    /// pairing of <c>diff --body</c> (<see cref="CallPairing"/>) finds the same half of a call this way.
+    /// </summary>
+    internal static InteractionEntry? FindResponse(ScenarioEntry scenario, InteractionEntry request)
+    {
+        // The report carries the exact pairing key — requestResponseId, the same identity the diagram
+        // pipeline groups on. Under interleaved parallel calls to one service the old proximity scan
+        // attached the wrong response; the scan survives only for entries that carry no id.
+        if (request.RequestResponseId is { } id)
+        {
+            foreach (var candidate in scenario.Interactions)
+                if (candidate.Type.Equals("Response", StringComparison.OrdinalIgnoreCase)
+                    && candidate.RequestResponseId == id)
+                    return candidate;
+            return null;
+        }
+
+        for (var i = request.Ordinal + 1; i < scenario.Interactions.Count && i <= request.Ordinal + 4; i++)
+        {
+            var candidate = scenario.Interactions[i];
+            if (candidate.Type.Equals("Response", StringComparison.OrdinalIgnoreCase)
+                && candidate.ServiceName == request.ServiceName)
+                return candidate;
+        }
+        return null;
+    }
+
+    /// <summary>
     /// The request a response answers — <see cref="FindResponse"/> run backwards, and by the same rule:
     /// the exact pairing id when the entry carries one, a short backward scan when it does not.
     /// </summary>

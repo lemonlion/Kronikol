@@ -42,6 +42,9 @@ public class CountFlagTests : IDisposable
         ("grep", ["4173"]),
         ("trace", ["s0/i0"]),
         ("diff", ["s0/i1", "s1/i1"]),
+        // The run diff and a body across two runs: {report} is the report again, as the second run.
+        ("diff", ["{report}"]),
+        ("diff", ["{report}", "--body", "s0/i1"]),
         // This test process runs with KRONIKOL_HISTORY=off, so the ledger is named: {ledger} is an empty one.
         ("history", ["--history", "{ledger}"]),
     ];
@@ -61,7 +64,7 @@ public class CountFlagTests : IDisposable
         var ledger = Path.Combine(_directory, "history.jsonl");
         File.WriteAllText(ledger, "");
 
-        var (output, error, exit) = RunFull(verb, Report(), [.. args.Select(a => a == "{ledger}" ? ledger : a), "--count"]);
+        var (output, error, exit) = RunFull(verb, Report(), [.. args.Select(a => a == "{ledger}" ? ledger : a == "{report}" ? Report() : a), "--count"]);
 
         Assert.True(exit == 0, $"exit {exit}: {error}");
         Assert.Matches(@"^\d+\n$", output);
@@ -77,7 +80,7 @@ public class CountFlagTests : IDisposable
             .Select(verb => verb.Key)
             .Order(StringComparer.Ordinal);
 
-        Assert.Equal(declared, Counting.Select(c => c.Verb).Order(StringComparer.Ordinal));
+        Assert.Equal(declared, Counting.Select(c => c.Verb).Distinct().Order(StringComparer.Ordinal));
     }
 
     // ─── trace ─────────────────────────────────────────────────

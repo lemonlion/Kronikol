@@ -140,6 +140,17 @@ public class DescribeTests : IDisposable
     }
 
     [Fact]
+    public void Exit_code_2_names_a_pair_diff_cannot_match()
+    {
+        // Since 3.6.0 the run diff exits 2 for a pair of runs it cannot match, and since 4.6.1 `--body` for a
+        // call it cannot pair; the table said 2 was an address or a flag and nothing about either.
+        var meaning = Document().GetProperty("exitCodes").EnumerateArray()
+            .Single(e => e.GetProperty("code").GetInt32() == 2).GetProperty("meaning").GetString();
+
+        Assert.Contains("a pair of runs, or a call, that diff cannot match", meaning);
+    }
+
+    [Fact]
     public void The_universal_flags_are_the_ones_every_invocation_accepts()
     {
         var universal = Document().GetProperty("universalFlags").EnumerateArray().Select(f => f.GetProperty("name").GetString()).ToArray();

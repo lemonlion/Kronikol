@@ -1,0 +1,15 @@
+s0/i1	s0/i1	s0/i1	exact	diffed
+s0/i3	s0/i5	s0/i5	exact	diffed
+s0/i5	s0/i3	s0/i3	exact	diffed
+s1/i0	s1/i0	s1/i0	exact	diffed
+s1/i1	s1/i1	s1/i1	exact	diffed
+s1/i2	s1/i2	s1/i2	shape	diffed
+s1/i3	s1/i3	s1/i3	shape	diffed
+s2/i0	s2/i0	s2/i0	exact	diffed
+s2/i1	s2/i1	s2/i1	exact	diffed
+s2/i2	s2/i2	s2/i2	exact	diffed
+s2/i3	s2/i3	s2/i3	exact	diffed
+s2/i4	s2/i4	s2/i4	exact	diffed
+s2/i5	s2/i5	s2/i5	exact	diffed
+s2/i6	-	-	refused	exit 2: No call in java-2.json s2 matches java-1.json s2/i6, CosmosDB QUERY /orders: s2 makes 3 CosmosDB QUERY /orders calls; java-1.json s2/i6 is the 4th of 4.
+s2/i7	-	-	refused	exit 2: No call in java-2.json s2 matches java-1.json s2/i7, CosmosDB QUERY /orders: s2 makes 3 CosmosDB QUERY /orders calls; java-1.json s2/i7 is the 4th of 4.

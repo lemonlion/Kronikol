@@ -381,8 +381,9 @@ candidates; an unenriched report or an untraced call is told to re-run on a curr
 ### `compare <report> s3 s7`
 Two scenarios side by side: example values, the first differing steps, the first differing calls, and how
 many bodies are byte-identical — plus the address of the first differing body, ready to paste into
-`diff` (`first differing body: diff s3/i12 s7/i12`). A passing neighbour is the best available oracle
-for a failing scenario.
+`diff` (`first differing body: diff s3/i12 s7/i14`): the first call whose body differs from the same call
+in the other scenario, paired by service, method and URI as `diff --body` pairs one across runs, not by
+position. A passing neighbour is the best available oracle for a failing scenario.
 
 ### `diff` — bodies and runs
 
@@ -418,11 +419,26 @@ $.total: 4173 → 3902
 - Two scenario addresses are refused with a pointer at `compare`.
 
 **Run diff** (two files) reports what broke, was fixed, is new, got slower, disappeared — matched on
-`stableId`, so one row of a scenario outline is distinguished from another. `--body s3/i47` resolves the
-address in the *old* report, matches the scenario into the new run by `stableId` (ordinals shift between
-runs), and diffs that one call's bodies across the two files. A pair that cannot be matched — only one
-side has `stableId`s, or none agree while the scenario names do — is refused with exit 2 naming the side
-or the two suites, never "matched by position" into a page of new-and-gone.
+`stableId`, so one row of a scenario outline is distinguished from another. A pair that cannot be
+matched — only one side has `stableId`s, or none agree while the scenario names do — is refused with exit
+2 naming the side or the two suites, never "matched by position" into a page of new-and-gone. Sections
+are cut for the terminal (15 rows, `Gone` 10) with `… N more (--json lists every row)`; `--json` is the
+uncut list, `--count` the number of rows it holds, and `--offset`/`--limit` are refused here.
+
+**`--body s3/i47`** resolves the address in the *old* report, matches the scenario into the new run by
+`stableId` (ordinals shift between runs), and pairs the **call by what it is**: the same service, method
+and path and query (the host and port are ignored), the n-th of several for the n-th; a response through
+the request it answers. When no call has that URI, the one whose URI differs only in an id, a timestamp
+or a number (`/orders/{id}`), with a `!` note. The `+` label is the partner's own address and a `call:`
+line names it; `--json` adds `left`, `right` and `pairing` (`on: uri | shape`). When nothing pairs — the
+new scenario makes no such call, or makes it fewer times — it exits 2 with the calls it did make, rather
+than diffing whatever sits at the same ordinal (which, under concurrent calls, is another call: #115).
+`--body`'s value is a call address; a `b:` hash is refused (two bodies in one report are
+`diff <report> b:… b:…`).
+
+Each form refuses, with exit 2, what it does not read rather than dropping it: `diff old new s3/i47`
+names `--body s3/i47`; a third report or address, `--baseline` or `--body` beside two addresses, and a
+second report beside `--baseline` are all refused.
 
 It also reports **Tracking** losses, over the scenarios both runs hold: services that captured fewer
 calls than in the older run, any that fell to zero, a service one scenario stopped seeing entirely while

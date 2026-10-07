@@ -2273,7 +2273,9 @@ public class QueryCommandTests : IDisposable
     /// <summary>
     /// The same run written a second time with an extra feature that sorts first — every scenario's
     /// ordinal shifts by one while its stableId stays put — and t5's payments total drifted to 4174.
-    /// The cross-run <c>diff --body</c> fixture: ordinal matching would land on the wrong scenario.
+    /// The cross-run <c>diff --body</c> fixture: ordinal matching would land on the wrong scenario. t5's
+    /// receipt is printed before its charge this time, as concurrent calls reorder, so matching the call by
+    /// its ordinal would land on the wrong call as well (#115).
     /// </summary>
     private string ShiftedReport()
     {
@@ -2296,7 +2298,7 @@ public class QueryCommandTests : IDisposable
             }
         }.Concat(BuildFeatures(allPassing: false)).ToArray();
 
-        return _shifted = Write("Shifted.json", features, BuildLogs(totalDrift: true), BuildDiagrams());
+        return _shifted = Write("Shifted.json", features, BuildLogs(totalDrift: true, receiptFirst: true), BuildDiagrams());
     }
 
     private string? _manyFailures;
@@ -2581,7 +2583,7 @@ public class QueryCommandTests : IDisposable
     /// </summary>
     private const string LeakedTrace = "4bf92f35feedfacefeedfacefeedface";
 
-    private static RequestResponseLog[] BuildLogs(bool totalDrift = false)
+    private static RequestResponseLog[] BuildLogs(bool totalDrift = false, bool receiptFirst = false)
     {
         var logs = new List<RequestResponseLog>();
         var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
@@ -2649,11 +2651,12 @@ public class QueryCommandTests : IDisposable
         // ── t5/t6: near-identical paired bodies differing in a few paths — the body-diff fixture —
         //        plus a non-JSON pair for the line-diff fallback.
         var t5 = start.AddSeconds(30);
-        logs.AddRange(Pair("t5", "payments", "POST", "http://payments/charge", "{\"basket\":1}",
+        var charge = Pair("t5", "payments", "POST", "http://payments/charge", "{\"basket\":1}",
             HttpStatusCode.OK, t5, "{\"customer\":{\"region\":\"EU\"},\"items\":[{\"sku\":\"a\",\"price\":12.5},{\"sku\":\"b\",\"price\":3}],\"total\":" + (totalDrift ? "4174" : "4173") + "}",
-            w3cTraceId: LeakedTrace, spanId: "5555666677778888"));
-        logs.AddRange(Pair("t5", "printer", "POST", "http://printer/receipt", "print receipt please",
-            HttpStatusCode.OK, t5.AddSeconds(1), "receipt\ntotal: 4173"));
+            w3cTraceId: LeakedTrace, spanId: "5555666677778888");
+        var receipt = Pair("t5", "printer", "POST", "http://printer/receipt", "print receipt please",
+            HttpStatusCode.OK, t5.AddSeconds(1), "receipt\ntotal: 4173");
+        logs.AddRange(receiptFirst ? [.. receipt, .. charge] : [.. charge, .. receipt]);
         logs.AddRange(Pair("t5", "catalog", "GET", "http://catalog/tags", "{}",
             HttpStatusCode.OK, t5.AddSeconds(2), "{\"tags\":[\"a\",\"b\",\"c\",\"d\",\"e\"]}"));
         var t6 = start.AddSeconds(40);
